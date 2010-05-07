@@ -513,6 +513,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
   GstJifMuxMarker *m;
   GList *node;
   guint size = self->priv->scan_size;
+  gboolean writer_status = TRUE;
 
   /* iterate list and collect size */
   for (node = self->priv->markers; node; node = g_list_next (node)) {
@@ -541,26 +542,33 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
 
   /* memcopy markers */
   writer = gst_byte_writer_new_with_buffer (buf, TRUE);
-  for (node = self->priv->markers; node; node = g_list_next (node)) {
+  for (node = self->priv->markers; node && writer_status;
+      node = g_list_next (node)) {
     m = (GstJifMuxMarker *) node->data;
 
-    gst_byte_writer_put_uint8 (writer, 0xff);
-    gst_byte_writer_put_uint8 (writer, m->marker);
+    writer_status &= gst_byte_writer_put_uint8 (writer, 0xff);
+    writer_status &= gst_byte_writer_put_uint8 (writer, m->marker);
 
     GST_DEBUG_OBJECT (self, "marker = %2x, size = %u", m->marker, m->size + 2);
 
     if (m->size) {
-      gst_byte_writer_put_uint16_be (writer, m->size + 2);
-      gst_byte_writer_put_data (writer, m->data, m->size);
+      writer_status &= gst_byte_writer_put_uint16_be (writer, m->size + 2);
+      writer_status &= gst_byte_writer_put_data (writer, m->data, m->size);
     }
 
     if (m->marker == SOS) {
       GST_DEBUG_OBJECT (self, "scan data, size = %u", self->priv->scan_size);
-      gst_byte_writer_put_data (writer, self->priv->scan_data,
+      writer_status &= gst_byte_writer_put_data (writer, self->priv->scan_data,
           self->priv->scan_size);
     }
   }
   gst_byte_writer_free (writer);
+
+  if (!writer_status) {
+    GST_WARNING_OBJECT (self, "Failed to write to buffer, calculated size "
+        "was probably too short");
+    g_assert_not_reached ();
+  }
 
   *new_buf = buf;
   return GST_FLOW_OK;
