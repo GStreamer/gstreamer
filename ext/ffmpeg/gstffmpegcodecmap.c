@@ -1381,6 +1381,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           gst_ff_aud_caps_new (context, codec_id, "audio/x-nellymoser", NULL);
       break;
 
+    case CODEC_ID_SIPR:
+    {
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-sipro", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "leaf_size", G_TYPE_INT, context->block_align,
+            "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+      }
+    }
+      break;
+
     case CODEC_ID_RA_144:
     case CODEC_ID_RA_288:
     case CODEC_ID_COOK:
@@ -2322,6 +2333,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_COOK:
     case CODEC_ID_RA_288:
     case CODEC_ID_RA_144:
+    case CODEC_ID_SIPR:
     {
       gint leaf_size;
       gint bitrate;
@@ -3121,6 +3133,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     }
     if (id != CODEC_ID_NONE)
       video = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-sipro")) {
+    id = CODEC_ID_SIPR;
+    audio = TRUE;
   } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
     gint raversion;
 
