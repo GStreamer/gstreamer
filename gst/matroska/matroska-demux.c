@@ -2574,18 +2574,32 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux)
   if ((ret = gst_ebml_read_header (ebml, &doctype, &version)) != GST_FLOW_OK)
     return ret;
 
-  if (!doctype || strcmp (doctype, "matroska") != 0) {
-    GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
-        ("Input is not a matroska stream (doctype=%s)",
-            doctype ? doctype : "none"));
+  ret = GST_FLOW_ERROR;
+  if (doctype) {
+    GEnumClass *doctype_class;
+    GEnumValue *doctype_value;
+    doctype_class = g_type_class_ref (GST_TYPE_MATROSKA_DOCTYPE);
+    doctype_value = g_enum_get_value_by_nick (doctype_class, doctype);
+    if (doctype_value) {
+      guint max_version =
+          doctype_value->value == GST_MATROSKA_DOCTYPE_MATROSKA ? 2 : 1;
+      if (version <= max_version) {
+        GST_INFO_OBJECT (demux, "Input is %s version %d", doctype, version);
+        ret = GST_FLOW_OK;
+      } else {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+            ("Demuxer version (%d) is too old to read %s version %d",
+                max_version, doctype, version));
+      }
+    } else {
+      GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
+          ("Input is not a matroska stream (doctype=%s)", doctype));
+    }
+    g_type_class_unref (doctype_class);
     g_free (doctype);
-    return GST_FLOW_ERROR;
-  }
-  g_free (doctype);
-  if (version > 2) {
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-        ("Demuxer version (2) is too old to read stream version %d", version));
-    return GST_FLOW_ERROR;
+  } else {
+    GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
+        ("Input is not a matroska stream"));
   }
 
   return ret;
