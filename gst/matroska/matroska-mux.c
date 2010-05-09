@@ -61,10 +61,12 @@ enum
 {
   ARG_0,
   ARG_WRITING_APP,
+  ARG_DOCTYPE,
   ARG_MATROSKA_VERSION,
   ARG_MIN_INDEX_INTERVAL
 };
 
+#define  DEFAULT_DOCTYPE                 GST_MATROSKA_DOCTYPE_MATROSKA
 #define  DEFAULT_MATROSKA_VERSION        1
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
@@ -297,6 +299,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_string ("writing-app", "Writing application.",
           "The name the application that creates the matroska file.",
           NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DOCTYPE,
+      g_param_spec_enum ("doctype", "DocType.",
+          "The type of document.", GST_TYPE_MATROSKA_DOCTYPE,
+          DEFAULT_DOCTYPE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MATROSKA_VERSION,
       g_param_spec_int ("version", "Matroska version",
           "This parameter determines what matroska features can be used.",
@@ -337,6 +343,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
 
   /* property defaults */
+  mux->doctype = DEFAULT_DOCTYPE;
   mux->matroska_version = DEFAULT_MATROSKA_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
@@ -1980,6 +1987,9 @@ static void
 gst_matroska_mux_start (GstMatroskaMux * mux)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
+  GEnumClass *doctype_class;
+  GEnumValue *doctype_value;
+  const gchar *doctype;
   guint32 seekhead_id[] = { GST_MATROSKA_ID_SEGMENTINFO,
     GST_MATROSKA_ID_TRACKS,
     GST_MATROSKA_ID_CUES,
@@ -1995,7 +2005,13 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
 
   /* we start with a EBML header */
-  gst_ebml_write_header (ebml, "matroska", mux->matroska_version);
+  doctype_class = g_type_class_ref (GST_TYPE_MATROSKA_DOCTYPE);
+  doctype_value = g_enum_get_value (doctype_class, mux->doctype);
+  doctype = doctype_value->value_nick;
+  g_type_class_unref (doctype_class);
+  GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
+      doctype, mux->matroska_version);
+  gst_ebml_write_header (ebml, doctype, mux->matroska_version);
 
   /* start a segment */
   mux->segment_pos =
@@ -2768,6 +2784,9 @@ gst_matroska_mux_set_property (GObject * object,
       g_free (mux->writing_app);
       mux->writing_app = g_value_dup_string (value);
       break;
+    case ARG_DOCTYPE:
+      mux->doctype = g_value_get_enum (value);
+      break;
     case ARG_MATROSKA_VERSION:
       mux->matroska_version = g_value_get_int (value);
       break;
@@ -2792,6 +2811,9 @@ gst_matroska_mux_get_property (GObject * object,
   switch (prop_id) {
     case ARG_WRITING_APP:
       g_value_set_string (value, mux->writing_app);
+      break;
+    case ARG_DOCTYPE:
+      g_value_set_enum (value, mux->doctype);
       break;
     case ARG_MATROSKA_VERSION:
       g_value_set_int (value, mux->matroska_version);

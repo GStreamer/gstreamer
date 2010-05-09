@@ -85,6 +85,9 @@ typedef struct _GstMatroskaMux {
   /* Application name (for the writing application header element) */
   gchar          *writing_app;
 
+  /* EBML DocType. */
+  gint           doctype;
+
   /* Matroska version. */
   guint          matroska_version;
 
