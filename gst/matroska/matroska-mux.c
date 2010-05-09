@@ -62,12 +62,12 @@ enum
   ARG_0,
   ARG_WRITING_APP,
   ARG_DOCTYPE,
-  ARG_MATROSKA_VERSION,
+  ARG_DOCTYPE_VERSION,
   ARG_MIN_INDEX_INTERVAL
 };
 
 #define  DEFAULT_DOCTYPE                 GST_MATROSKA_DOCTYPE_MATROSKA
-#define  DEFAULT_MATROSKA_VERSION        1
+#define  DEFAULT_DOCTYPE_VERSION         1
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
 
@@ -303,10 +303,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_enum ("doctype", "DocType.",
           "The type of document.", GST_TYPE_MATROSKA_DOCTYPE,
           DEFAULT_DOCTYPE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MATROSKA_VERSION,
-      g_param_spec_int ("version", "Matroska version",
+  g_object_class_install_property (gobject_class, ARG_DOCTYPE_VERSION,
+      g_param_spec_int ("version", "DocType version",
           "This parameter determines what matroska features can be used.",
-          1, 2, DEFAULT_MATROSKA_VERSION, G_PARAM_READWRITE));
+          1, 2, DEFAULT_DOCTYPE_VERSION, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MIN_INDEX_INTERVAL,
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
           "entries", "An index entry is created every so many nanoseconds.",
@@ -344,7 +344,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
 
   /* property defaults */
   mux->doctype = DEFAULT_DOCTYPE;
-  mux->matroska_version = DEFAULT_MATROSKA_VERSION;
+  mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
 
@@ -2010,8 +2010,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   doctype = doctype_value->value_nick;
   g_type_class_unref (doctype_class);
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
-      doctype, mux->matroska_version);
-  gst_ebml_write_header (ebml, doctype, mux->matroska_version);
+      doctype, mux->doctype_version);
+  gst_ebml_write_header (ebml, doctype, mux->doctype_version);
 
   /* start a segment */
   mux->segment_pos =
@@ -2612,7 +2612,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     relative_timestamp64 -= mux->time_scale / 2;
   }
   relative_timestamp = relative_timestamp64 / (gint64) mux->time_scale;
-  if (mux->matroska_version > 1 && !write_duration) {
+  if (mux->doctype == GST_MATROSKA_DOCTYPE_MATROSKA && mux->doctype_version > 1
+      && !write_duration) {
     int flags =
         GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
 
@@ -2787,8 +2788,8 @@ gst_matroska_mux_set_property (GObject * object,
     case ARG_DOCTYPE:
       mux->doctype = g_value_get_enum (value);
       break;
-    case ARG_MATROSKA_VERSION:
-      mux->matroska_version = g_value_get_int (value);
+    case ARG_DOCTYPE_VERSION:
+      mux->doctype_version = g_value_get_int (value);
       break;
     case ARG_MIN_INDEX_INTERVAL:
       mux->min_index_interval = g_value_get_int64 (value);
@@ -2815,8 +2816,8 @@ gst_matroska_mux_get_property (GObject * object,
     case ARG_DOCTYPE:
       g_value_set_enum (value, mux->doctype);
       break;
-    case ARG_MATROSKA_VERSION:
-      g_value_set_int (value, mux->matroska_version);
+    case ARG_DOCTYPE_VERSION:
+      g_value_set_int (value, mux->doctype_version);
       break;
     case ARG_MIN_INDEX_INTERVAL:
       g_value_set_int64 (value, mux->min_index_interval);

@@ -88,8 +88,8 @@ typedef struct _GstMatroskaMux {
   /* EBML DocType. */
   gint           doctype;
 
-  /* Matroska version. */
-  guint          matroska_version;
+  /* DocType version. */
+  guint          doctype_version;
 
   /* state */
   GstMatroskaMuxState state;
