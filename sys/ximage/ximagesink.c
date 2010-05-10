@@ -1658,6 +1658,11 @@ gst_ximagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   ximagesink = GST_XIMAGESINK (vsink);
 
+  /* This shouldn't really happen because state changes will fail
+   * if the xcontext can't be allocated */
+  if (!ximagesink->xcontext)
+    return GST_FLOW_ERROR;
+
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XIMAGE_BUFFER (buf)) {
@@ -1767,6 +1772,11 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   GstVideoRectangle dst, src, result;
 
   ximagesink = GST_XIMAGESINK (bsink);
+
+  /* This shouldn't really happen because state changes will fail
+   * if the xcontext can't be allocated */
+  if (!ximagesink->xcontext)
+    return GST_FLOW_ERROR;
 
   GST_LOG_OBJECT (ximagesink,
       "a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
