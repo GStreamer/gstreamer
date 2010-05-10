@@ -133,6 +133,7 @@ check_PROGRAMS = \
 	elements/camerabin \
 	elements/dataurisrc \
 	elements/legacyresample \
+	elements/jifmux \
 	elements/jpegparse \
 	elements/qtmux \
 	elements/selector \
@@ -163,6 +164,15 @@ elements_camerabin_LDADD = \
         $(GST_CHECK_LIBS) \
          -lgstinterfaces-@GST_MAJORMINOR@
 elements_camerabin_SOURCES = elements/camerabin.c
+
+exif_CFLAGS =
+exif_LDADD =
+if test x$HAVE_EXIF = xyes; then
+  exif_CFLAGS = -DHAVE_EXIF
+
+elements_jifmux_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(exif_CFLAGS)
+elements_jifmux_LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS) $(EXIF_LIBS)
+elements_jifmux_SOURCES = elements/jifmux.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
