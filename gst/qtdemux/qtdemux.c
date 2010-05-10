@@ -4676,10 +4676,11 @@ ctts:
         cur->pts_offset = ctts_soffset;
         cur++;
 
-        if (G_UNLIKELY (cur > last))
+        if (G_UNLIKELY (cur > last)) {
           /* save state */
           stream->ctts_sample_index = j + 1;
-        goto done;
+          goto done;
+        }
       }
       stream->ctts_sample_index = 0;
       stream->ctts_index++;
