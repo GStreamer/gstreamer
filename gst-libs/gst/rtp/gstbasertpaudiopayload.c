@@ -426,6 +426,9 @@ gst_base_rtp_audio_payload_set_meta (GstBaseRTPAudioPayload * payload,
 
   priv->offset += payload_len;
 
+  /* Set the duration from the size */
+  GST_BUFFER_DURATION (buffer) = priv->bytes_to_time (payload, payload_len);
+
   /* remember the last rtptime/timestamp pair. We will use this to realign our
    * RTP timestamp after a buffer discont */
   priv->last_rtptime = GST_BUFFER_OFFSET (buffer);
