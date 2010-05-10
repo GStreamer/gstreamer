@@ -1193,7 +1193,7 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
 
   ret = gst_flv_mux_push (mux, tag);
 
-  if (ret == GST_FLOW_OK)
+  if (ret == GST_FLOW_OK && GST_BUFFER_TIMESTAMP_IS_VALID (tag))
     cpad->last_timestamp = GST_BUFFER_TIMESTAMP (tag);
 
   return ret;
