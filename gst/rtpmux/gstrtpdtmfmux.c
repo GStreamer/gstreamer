@@ -134,12 +134,25 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
               mux->last_priority_end);
         else
           mux->last_priority_end = running_ts + GST_BUFFER_DURATION (buffer);
+        GST_LOG_OBJECT (mux, "Got buffer %p on priority pad %s,"
+            " blocking regular pads until %" GST_TIME_FORMAT, buffer,
+            GST_PAD_NAME (pad), GST_TIME_ARGS (mux->last_priority_end));
+      } else {
+        GST_WARNING_OBJECT (mux, "Buffer %p on pad %s has an invalid duration,"
+            " not blocking other pad", buffer, GST_PAD_NAME (pad));
       }
     } else {
       if (GST_CLOCK_TIME_IS_VALID (mux->last_priority_end) &&
-          running_ts < mux->last_priority_end)
+          running_ts < mux->last_priority_end) {
+        GST_LOG_OBJECT (mux, "Dropping buffer %p because running time"
+            " %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT, buffer,
+            GST_TIME_ARGS (running_ts), GST_TIME_ARGS (mux->last_priority_end));
         goto drop_buffer;
+      }
     }
+  } else {
+    GST_LOG_OBJECT (mux, "Buffer %p on pad %s has an invalid timestamp,"
+        " letting through", GST_PAD_NAME (pad));
   }
   GST_OBJECT_UNLOCK (mux);
 
