@@ -97,7 +97,7 @@ enum
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-matroska")
+    GST_STATIC_CAPS ("video/x-matroska; video/webm")
     );
 
 /* TODO: fill in caps! */
