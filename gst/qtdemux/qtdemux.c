@@ -1318,6 +1318,8 @@ qtdemux_ensure_index (GstQTDemux * qtdemux)
 {
   guint i;
 
+  GST_DEBUG_OBJECT (qtdemux, "collecting all metadata for all streams");
+
   /* Build complete index */
   for (i = 0; i < qtdemux->n_streams; i++) {
     QtDemuxStream *stream = qtdemux->streams[i];
@@ -1345,13 +1347,17 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
+#ifndef GST_DISABLE_GST_DEBUG
       GstClockTime ts = gst_util_get_timestamp ();
+#endif
       /* Build complete index for seeking */
       if (!qtdemux_ensure_index (qtdemux))
         goto index_failed;
+#ifndef GST_DISABLE_GST_DEBUG
       ts = gst_util_get_timestamp () - ts;
       GST_INFO_OBJECT (qtdemux,
           "Time taken to parse index %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+#endif
     }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
@@ -4318,10 +4324,13 @@ static gboolean
 qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 {
   gint i, j, k;
-  //gint index = 0;
   QtDemuxSample *samples, *first, *cur, *last;
   guint32 n_samples_per_chunk;
   guint32 n_samples;
+
+  GST_LOG_OBJECT (qtdemux, "parsing samples for stream fourcc %"
+      GST_FOURCC_FORMAT ", pad %s", GST_FOURCC_ARGS (stream->fourcc),
+      stream->pad ? GST_PAD_NAME (stream->pad) : "(NULL)");
 
   n_samples = stream->n_samples;
 
