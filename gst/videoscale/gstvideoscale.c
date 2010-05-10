@@ -336,7 +336,7 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   /* if pixel aspect ratio, make a range of it */
-  if (gst_structure_get_value (structure, "pixel-aspect-ratio")) {
+  if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
     gst_structure_set (structure,
         "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   }
@@ -565,9 +565,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   /* we have both PAR but they might not be fixated */
   if (from_par && to_par) {
     gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
-
     gint count = 0, w = 0, h = 0;
-
     guint num, den;
 
     /* from_par should be fixed */
@@ -663,11 +661,15 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     if (gst_structure_get_int (ins, "width", &width)) {
       if (gst_structure_has_field (outs, "width")) {
         gst_structure_fixate_field_nearest_int (outs, "width", width);
+      } else {
+        gst_structure_set (outs, "width", G_TYPE_INT, width, NULL);
       }
     }
     if (gst_structure_get_int (ins, "height", &height)) {
       if (gst_structure_has_field (outs, "height")) {
         gst_structure_fixate_field_nearest_int (outs, "height", height);
+      } else {
+        gst_structure_set (outs, "height", G_TYPE_INT, height, NULL);
       }
     }
   }
