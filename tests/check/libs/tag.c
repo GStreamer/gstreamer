@@ -1144,6 +1144,36 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, -0.75);
   do_exif_tag_serialization_deserialization (GST_TAG_GEO_LOCATION_LONGITUDE,
       &value);
+
+  g_value_set_double (&value, 0.0);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+  g_value_set_double (&value, 180.5);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, &value);
+  g_value_set_double (&value, 0.12345);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, &value);
+  g_value_set_double (&value, 359.9);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, &value);
+
+  g_value_set_double (&value, 0.0);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_ELEVATION, &value);
+  g_value_set_double (&value, 321.456);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_ELEVATION, &value);
+  g_value_set_double (&value, -12.56);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_ELEVATION, &value);
+
+  g_value_set_double (&value, 0);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, &value);
+  g_value_set_double (&value, 100 / 3.6);
+  do_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, &value);
   g_value_unset (&value);
 }
 
