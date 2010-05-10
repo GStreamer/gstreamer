@@ -424,6 +424,60 @@ avcc_error:
   }
 }
 
+static void
+gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
+{
+  const gchar *ps;
+  gchar **params;
+  guint len, num_sps, num_pps;
+  gint i;
+  GstBuffer *buf;
+
+  ps = rtph264pay->sprop_parameter_sets;
+  if (ps == NULL)
+    return;
+
+  gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
+
+  params = g_strsplit (ps, ",", 0);
+  len = g_strv_length (params);
+
+  GST_DEBUG_OBJECT (rtph264pay, "we have %d params", len);
+
+  num_sps = num_pps = 0;
+
+  for (i = 0; params[i]; i++) {
+    gsize nal_len;
+    guint8 *nalp;
+    guint save = 0;
+    gint state = 0;
+
+    nal_len = strlen (params[i]);
+    buf = gst_buffer_new_and_alloc (nal_len);
+    nalp = GST_BUFFER_DATA (buf);
+
+    nal_len = g_base64_decode_step (params[i], nal_len, nalp, &state, &save);
+    GST_BUFFER_SIZE (buf) = nal_len;
+
+    if (!nal_len) {
+      gst_buffer_unref (buf);
+      continue;
+    }
+
+    /* append to the right list */
+    if ((nalp[0] & 0x1f) == 7) {
+      GST_DEBUG_OBJECT (rtph264pay, "adding param %d as SPS %d", i, num_sps);
+      rtph264pay->sps = g_list_append (rtph264pay->sps, buf);
+      num_sps++;
+    } else {
+      GST_DEBUG_OBJECT (rtph264pay, "adding param %d as PPS %d", i, num_pps);
+      rtph264pay->pps = g_list_append (rtph264pay->pps, buf);
+      num_pps++;
+    }
+  }
+  g_strfreev (params);
+}
+
 static guint
 next_start_code (guint8 * data, guint size)
 {
@@ -962,6 +1016,9 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
                   "sprop-parameter-sets", G_TYPE_STRING,
                   rtph264pay->sprop_parameter_sets, NULL))
             goto caps_rejected;
+
+          /* parse SPS and PPS from provided parameter set (for insertion) */
+          gst_rtp_h264_pay_parse_sprop_parameter_sets (rtph264pay);
 
           rtph264pay->update_caps = FALSE;
 
