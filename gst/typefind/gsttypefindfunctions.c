@@ -2823,25 +2823,20 @@ ircam_type_find (GstTypeFind * tf, gpointer ununsed)
   }
 }
 
-
-/*** video/x-matroska ***/
-static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska");
-
-#define MATROSKA_CAPS (gst_static_caps_get(&matroska_caps))
-static void
-matroska_type_find (GstTypeFind * tf, gpointer ununsed)
+/* EBML typefind helper */
+static gboolean
+ebml_check_header (GstTypeFind * tf, const gchar * doctype, int doctype_len)
 {
   /* 4 bytes for EBML ID, 1 byte for header length identifier */
   guint8 *data = gst_type_find_peek (tf, 0, 4 + 1);
   gint len_mask = 0x80, size = 1, n = 1, total;
-  guint8 probe_data[] = { 'm', 'a', 't', 'r', 'o', 's', 'k', 'a' };
 
   if (!data)
-    return;
+    return FALSE;
 
   /* ebml header? */
   if (data[0] != 0x1A || data[1] != 0x45 || data[2] != 0xDF || data[3] != 0xA3)
-    return;
+    return FALSE;
 
   /* length of header */
   total = data[4];
@@ -2850,7 +2845,7 @@ matroska_type_find (GstTypeFind * tf, gpointer ununsed)
     len_mask >>= 1;
   }
   if (size > 8)
-    return;
+    return FALSE;
   total &= (len_mask - 1);
   while (n < size)
     total = (total << 8) | data[4 + n++];
@@ -2859,17 +2854,39 @@ matroska_type_find (GstTypeFind * tf, gpointer ununsed)
    * EBML length tag and the actual header */
   data = gst_type_find_peek (tf, 0, 4 + size + total);
   if (!data)
-    return;
+    return FALSE;
 
-  /* the header must contain the document type 'matroska'. For now,
-   * we don't parse the whole header but simply check for the
-   * availability of that array of characters inside the header.
-   * Not fully fool-proof, but good enough. */
-  for (n = 4 + size; n <= 4 + size + total - sizeof (probe_data); n++)
-    if (!memcmp (&data[n], probe_data, sizeof (probe_data))) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
-      break;
-    }
+  /* the header must contain the doctype. For now, we don't parse the
+   * whole header but simply check for the availability of that array
+   * of characters inside the header. Not fully fool-proof, but good
+   * enough. */
+  for (n = 4 + size; n <= 4 + size + total - doctype_len; n++)
+    if (!memcmp (&data[n], doctype, doctype_len))
+      return TRUE;
+
+  return FALSE;
+}
+
+/*** video/x-matroska ***/
+static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska");
+
+#define MATROSKA_CAPS (gst_static_caps_get(&matroska_caps))
+static void
+matroska_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  if (ebml_check_header (tf, "matroska", 8))
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MATROSKA_CAPS);
+}
+
+/*** video/webm ***/
+static GstStaticCaps webm_caps = GST_STATIC_CAPS ("video/webm");
+
+#define WEBM_CAPS (gst_static_caps_get(&webm_caps))
+static void
+webm_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  if (ebml_check_header (tf, "webm", 4))
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, WEBM_CAPS);
 }
 
 /*** application/mxf ***/
@@ -3666,6 +3683,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *bmp_exts[] = { "bmp", NULL };
   static const gchar *tiff_exts[] = { "tif", "tiff", NULL };
   static const gchar *matroska_exts[] = { "mkv", "mka", NULL };
+  static const gchar *webm_exts[] = { "webm", "weba", "webv", NULL };
   static const gchar *mve_exts[] = { "mve", NULL };
   static const gchar *dv_exts[] = { "dv", "dif", NULL };
   static const gchar *amr_exts[] = { "amr", NULL };
@@ -3853,6 +3871,8 @@ plugin_init (GstPlugin * plugin)
       pnm_type_find, pnm_exts, PNM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
       matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/webm", GST_RANK_PRIMARY,
+      webm_type_find, webm_exts, WEBM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/mxf", GST_RANK_PRIMARY,
       mxf_type_find, mxf_exts, MXF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-mve", GST_RANK_SECONDARY,
