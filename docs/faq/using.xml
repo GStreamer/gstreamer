@@ -61,7 +61,7 @@ A (non-complete) list of output plug-ins for audio is
 <listitem><para>artsdsink for aRTs output (not ported to 0.10 yet)</para></listitem>
 <listitem><para>alsasink for ALSA output</para></listitem>
 <listitem><para>alsaspdifsink for ALSA S/PDIF output</para></listitem>
-<listitem><para>jacksink for JACK output (not available yet)</para></listitem>
+<listitem><para>jackaudiosink for JACK output</para></listitem>
 </itemizedlist>
 First of all, run gst-inspect on the output plug-in you want to use to
 make sure you have it installed.  For example, if you use OSS, run
