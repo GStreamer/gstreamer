@@ -41,7 +41,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapidecode);
 /* ElementFactory information */
 static const GstElementDetails gst_vaapidecode_details =
     GST_ELEMENT_DETAILS(
-        "Video decode",
+        "VA-API decoder",
         "Codec/Decoder/Video",
         GST_PLUGIN_DESC,
         "Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>");

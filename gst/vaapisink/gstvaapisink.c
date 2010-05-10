@@ -49,9 +49,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
 /* ElementFactory information */
 static const GstElementDetails gst_vaapisink_details =
     GST_ELEMENT_DETAILS(
-        "Video sink",
+        "VA-API sink",
         "Sink/Video",
-        "A VA-API based videosink",
+        GST_PLUGIN_DESC,
         "Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>");
 
 /* Default template */

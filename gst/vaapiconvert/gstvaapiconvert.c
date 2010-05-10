@@ -41,9 +41,9 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapiconvert);
 /* ElementFactory information */
 static const GstElementDetails gst_vaapiconvert_details =
     GST_ELEMENT_DETAILS(
-        "Video convert",
-        "Convert/Video",
-        "A VA-API based videoconvert",
+        "VA-API colorspace converter",
+        "Filter/Converter/Video",
+        GST_PLUGIN_DESC,
         "Gwenole Beauchesne <gbeauchesne@splitted-desktop.com>");
 
 /* Default templates */
