@@ -488,6 +488,10 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstVideoScale *videoscale = GST_VIDEO_SCALE (trans);
   gboolean ret;
+  const GstStructure *ins, *outs;
+  gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
+  gint from_par_n, from_par_d, to_par_n, to_par_d;
+  gint gcd;
 
   ret = parse_caps (in, &videoscale->format, &videoscale->from_width,
       &videoscale->from_height, &videoscale->interlaced);
@@ -515,10 +519,41 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   videoscale->tmp_buf =
       g_malloc (videoscale->dest.stride * 4 * (videoscale->interlaced ? 2 : 1));
 
-  /* FIXME: par */
-  GST_DEBUG_OBJECT (videoscale, "from=%dx%d, size %d -> to=%dx%d, size %d",
-      videoscale->from_width, videoscale->from_height, videoscale->src_size,
-      videoscale->to_width, videoscale->to_height, videoscale->dest_size);
+  ins = gst_caps_get_structure (in, 0);
+  outs = gst_caps_get_structure (out, 0);
+
+  if (!gst_structure_get_fraction (ins, "pixel-aspect-ratio", &from_par_n,
+          &from_par_d))
+    from_par_n = from_par_d = 1;
+  if (!gst_structure_get_fraction (outs, "pixel-aspect-ratio", &to_par_n,
+          &to_par_d))
+    to_par_n = to_par_d = 1;
+
+  if (gst_util_fraction_multiply (videoscale->from_width,
+          videoscale->from_height, from_par_n, from_par_d, &from_dar_n,
+          &from_dar_d)) {
+    gcd = gst_util_greatest_common_divisor (from_dar_n, from_dar_d);
+    from_dar_n /= gcd;
+    from_dar_d /= gcd;
+  } else {
+    from_dar_n = from_dar_d = -1;
+  }
+
+  if (gst_util_fraction_multiply (videoscale->to_width, videoscale->to_height,
+          to_par_n, to_par_d, &to_dar_n, &to_dar_d)) {
+    gcd = gst_util_greatest_common_divisor (to_dar_n, to_dar_d);
+    to_dar_n /= gcd;
+    to_dar_d /= gcd;
+  } else {
+    to_dar_n = to_dar_d = -1;
+  }
+
+  GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %d "
+      "-> to=%dx%d (par=%d/%d dar=%d/%d), size %d",
+      videoscale->from_width, videoscale->from_height, from_par_n, from_par_d,
+      from_dar_n, from_dar_d, videoscale->src_size, videoscale->to_width,
+      videoscale->to_height, to_par_n, to_par_d, to_dar_n, to_dar_d,
+      videoscale->dest_size);
 
 done:
   return ret;
