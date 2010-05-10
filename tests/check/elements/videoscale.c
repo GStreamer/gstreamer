@@ -2,7 +2,7 @@
  *
  * unit test for videoscale
  *
- * Copyright (C) <2009> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2009,2010> Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -309,6 +309,195 @@ CREATE_TEST (test_upscale_1x240_640x480_method_0, 0, 1, 240, 640, 480);
 CREATE_TEST (test_upscale_1x240_640x480_method_1, 1, 1, 240, 640, 480);
 CREATE_TEST (test_upscale_1x240_640x480_method_2, 2, 1, 240, 640, 480);
 
+typedef struct
+{
+  gint width, height;
+  gint par_n, par_d;
+  gboolean ok;
+  GMainLoop *loop;
+} TestNegotiationData;
+
+static void
+_test_negotiation_message (GstBus * bus, GstMessage * message,
+    TestNegotiationData * data)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_WARNING:
+      g_assert_not_reached ();
+      break;
+    case GST_MESSAGE_EOS:
+      g_main_loop_quit (data->loop);
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+_test_negotiation_notify_caps (GObject * src, GParamSpec * pspec,
+    TestNegotiationData * data)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  gint width, height;
+  gint par_n = 0, par_d = 0;
+
+  g_object_get (src, "caps", &caps, NULL);
+  if (caps == NULL)
+    return;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  fail_unless (gst_structure_get_int (s, "width", &width));
+  fail_unless (gst_structure_get_int (s, "height", &height));
+  fail_unless (gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n,
+          &par_d) || (data->par_n == 1 && data->par_d == 1));
+
+  gst_caps_unref (caps);
+
+  fail_unless_equals_int (width, data->width);
+  fail_unless_equals_int (height, data->height);
+  if (par_n != 0 || par_d != 0) {
+    fail_unless_equals_int (par_n, data->par_n);
+    fail_unless_equals_int (par_d, data->par_d);
+  }
+
+  data->ok = (width == data->width) && (height == data->height)
+      && (par_n == data->par_n) && (par_d == data->par_d);
+
+  g_main_loop_quit (data->loop);
+}
+
+static void
+_test_negotiation (const gchar * src_templ, const gchar * sink_templ,
+    gint width, gint height, gint par_n, gint par_d)
+{
+  GstElement *pipeline;
+  GstElement *src, *capsfilter1, *scale, *capsfilter2, *sink;
+  GstBus *bus;
+  GMainLoop *loop;
+  GstCaps *caps;
+  TestNegotiationData data = { 0, 0, 0, 0, FALSE, NULL };
+  GstPad *pad;
+
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  fail_unless (pipeline != NULL);
+
+  src = gst_element_factory_make ("videotestsrc", "src");
+  fail_unless (src != NULL);
+  g_object_set (G_OBJECT (src), "num-buffers", 1, NULL);
+
+  capsfilter1 = gst_element_factory_make ("capsfilter", "filter1");
+  fail_unless (capsfilter1 != NULL);
+  caps = gst_caps_from_string (src_templ);
+  fail_unless (caps != NULL);
+  g_object_set (G_OBJECT (capsfilter1), "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  scale = gst_element_factory_make ("videoscale", "scale");
+  fail_unless (scale != NULL);
+
+  capsfilter2 = gst_element_factory_make ("capsfilter", "filter2");
+  fail_unless (capsfilter2 != NULL);
+  caps = gst_caps_from_string (sink_templ);
+  fail_unless (caps != NULL);
+  g_object_set (G_OBJECT (capsfilter2), "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  pad = gst_element_get_static_pad (capsfilter2, "sink");
+  fail_unless (pad != NULL);
+  g_signal_connect (pad, "notify::caps",
+      G_CALLBACK (_test_negotiation_notify_caps), &data);
+  gst_object_unref (pad);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_unless (sink != NULL);
+  g_object_set (sink, "async", FALSE, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, capsfilter1, scale, capsfilter2,
+      sink, NULL);
+  fail_unless (gst_element_link_many (src, capsfilter1, scale, capsfilter2,
+          sink, NULL));
+
+  loop = g_main_loop_new (NULL, FALSE);
+
+  bus = gst_element_get_bus (pipeline);
+  fail_unless (bus != NULL);
+  gst_bus_add_signal_watch (bus);
+
+  data.loop = loop;
+  data.width = width;
+  data.height = height;
+  data.par_n = par_n;
+  data.par_d = par_d;
+  data.ok = FALSE;
+
+  g_signal_connect (bus, "message", G_CALLBACK (_test_negotiation_message),
+      &data);
+
+  gst_object_unref (bus);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+
+  g_main_loop_run (loop);
+
+  fail_unless (data.ok == TRUE);
+
+  fail_unless (gst_element_set_state (pipeline,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
+}
+
+GST_START_TEST (test_negotiation)
+{
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=720,height=576,pixel-aspect-ratio=16/15",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=768,height=576",
+      768, 576, 1, 1);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=320",
+      640, 320, 2, 3);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=320,pixel-aspect-ratio=[0/1, 1/1]",
+      640, 320, 2, 3);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048],pixel-aspect-ratio=1/1",
+      1536, 2048, 1, 1);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560,pixel-aspect-ratio=1/1",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048]",
+      1920, 2048, 4, 5);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=[1, 2048],height=[1, 2048]",
+      1920, 2048, 4, 5);
+
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=1920,height=2560",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=1200,height=[1, 2048],pixel-aspect-ratio=1/1",
+      1200, 1600, 1, 1);
+
+  /* Doesn't keep DAR but must be possible! */
+  _test_negotiation
+      ("video/x-raw-yuv,format=(fourcc)AYUV,width=320,height=240,pixel-aspect-ratio=1/1",
+      "video/x-raw-yuv,format=(fourcc)AYUV,width=200,height=200,pixel-aspect-ratio=1/2",
+      200, 200, 1, 2);
+}
+
+GST_END_TEST;
+
 static Suite *
 videoscale_suite (void)
 {
@@ -354,6 +543,7 @@ videoscale_suite (void)
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_0);
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_1);
   tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_2);
+  tcase_add_test (tc_chain, test_negotiation);
 
   return s;
 }
