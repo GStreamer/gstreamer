@@ -91,9 +91,8 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
       gst_element_factory_make ("encodebin", "internal-encodebin");
   /* Limit encodebin buffering to 1 buffer since we know the various
    * stream fed to it are decoupled already */
-  g_object_set (self->encodebin, "queue-buffers-max", 1,
-		"queue-bytes-max", 0, "queue-time-max", 0,
-		NULL);
+  g_object_set (self->encodebin, "queue-buffers-max", (guint32) 1,
+      "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0, NULL);
 
   if (G_UNLIKELY (self->playsink == NULL))
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
