@@ -1294,6 +1294,8 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
     g_mutex_unlock (ximagesink->x_lock);
     g_free (xcontext->par);
     g_free (xcontext);
+    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+        ("Could not get supported pixmap formats"), (NULL));
     return NULL;
   }
 
