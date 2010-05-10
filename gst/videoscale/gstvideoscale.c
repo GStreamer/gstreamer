@@ -335,17 +335,13 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-  gst_caps_merge_structure (ret, gst_structure_copy (structure));
-
   /* if pixel aspect ratio, make a range of it */
   if (gst_structure_get_value (structure, "pixel-aspect-ratio")) {
     gst_structure_set (structure,
         "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-
-    gst_caps_merge_structure (ret, structure);
-  } else {
-    gst_structure_free (structure);
   }
+  gst_caps_merge_structure (ret, gst_structure_copy (structure));
+  gst_structure_free (structure);
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
@@ -580,16 +576,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     from_par_n = gst_value_get_fraction_numerator (from_par);
     from_par_d = gst_value_get_fraction_denominator (from_par);
 
-    /* fixate the out PAR */
-    if (!gst_value_is_fixed (to_par)) {
-      GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", from_par_n,
-          from_par_d);
-      gst_structure_fixate_field_nearest_fraction (outs, "pixel-aspect-ratio",
-          from_par_n, from_par_d);
-    }
-
-    to_par_n = gst_value_get_fraction_numerator (to_par);
-    to_par_d = gst_value_get_fraction_denominator (to_par);
+    gst_structure_get_int (ins, "width", &from_w);
+    gst_structure_get_int (ins, "height", &from_h);
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
@@ -600,11 +588,27 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     if (count == 2) {
       GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
           w, h);
+      if (!gst_value_is_fixed (to_par)) {
+        if (gst_video_calculate_display_ratio (&num, &den, from_w, from_h,
+                from_par_n, from_par_d, w, h)) {
+          GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", num, den);
+          gst_structure_fixate_field_nearest_fraction (outs,
+              "pixel-aspect-ratio", num, den);
+        }
+      }
       return;
     }
 
-    gst_structure_get_int (ins, "width", &from_w);
-    gst_structure_get_int (ins, "height", &from_h);
+    /* fixate the out PAR */
+    if (!gst_value_is_fixed (to_par)) {
+      GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", from_par_n,
+          from_par_d);
+      gst_structure_fixate_field_nearest_fraction (outs, "pixel-aspect-ratio",
+          from_par_n, from_par_d);
+    }
+
+    to_par_n = gst_value_get_fraction_numerator (to_par);
+    to_par_d = gst_value_get_fraction_denominator (to_par);
 
     if (!gst_video_calculate_display_ratio (&num, &den, from_w, from_h,
             from_par_n, from_par_d, to_par_n, to_par_d)) {
