@@ -383,6 +383,37 @@
   [self initTextures];
 }
 
+- (void) haveSuperviewReal:(NSMutableArray *)closure {
+	BOOL haveSuperview = [self superview] != nil;
+	[closure addObject:[NSNumber numberWithBool:haveSuperview]];
+}
+
+- (BOOL) haveSuperview {
+	NSMutableArray *closure = [NSMutableArray arrayWithCapacity:1];
+	[self performSelectorOnMainThread:@selector(haveSuperviewReal:)
+			withObject:(id)closure waitUntilDone:YES];
+
+	return [[closure objectAtIndex:0] boolValue];
+}
+
+- (void) addToSuperviewReal:(NSView *)superview {
+	NSRect bounds;
+	[superview addSubview:self];
+	bounds = [superview bounds];
+	[self setFrame:bounds];
+	[self setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
+}
+
+- (void) addToSuperview: (NSView *)superview {
+	[self performSelectorOnMainThread:@selector(addToSuperviewReal:)
+			withObject:superview waitUntilDone:YES];
+}
+
+- (void) removeFromSuperview: (id)unused
+{
+	[self removeFromSuperview];
+}
+
 - (void) dealloc {
   GST_LOG ("dealloc called");
   if (data) g_free(data);

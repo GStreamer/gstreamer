@@ -70,6 +70,7 @@ struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
+  NSView *superview;
 };
 
 struct _GstOSXVideoSinkClass {

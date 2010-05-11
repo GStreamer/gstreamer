@@ -37,6 +37,7 @@
  */
 
 #include "config.h"
+#include <gst/interfaces/xoverlay.h>
 
 #include "osxvideosink.h"
 #include <unistd.h>
@@ -52,7 +53,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-raw-yuv, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], "
-	"height = (int) [ 1, MAX ], "
+        "height = (int) [ 1, MAX ], "
 #if G_BYTE_ORDER == G_BIG_ENDIAN
        "format = (fourcc) YUY2")
 #else
@@ -63,27 +64,30 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 enum
 {
   ARG_0,
-  ARG_EMBED
+  ARG_EMBED,
 };
+
+static void gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink);
 
 static GstVideoSinkClass *parent_class = NULL;
 
 /* This function handles osx window creation */
-static GstOSXWindow *
-gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
+static gboolean
+gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
     gint height)
 {
   NSRect rect;
   GstOSXWindow *osxwindow = NULL;
   GstStructure *s;
   GstMessage *msg;
+  gboolean res = TRUE;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  g_return_val_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink), NULL);
+  g_return_val_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink), FALSE);
 
   GST_DEBUG_OBJECT (osxvideosink, "Creating new OSX window");
 
-  osxwindow = g_new0 (GstOSXWindow, 1);
+  osxvideosink->osxwindow = osxwindow = g_new0 (GstOSXWindow, 1);
 
   osxwindow->width = width;
   osxwindow->height = height;
@@ -97,17 +101,44 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
   osxwindow->gstview =[[GstGLView alloc] initWithFrame:rect];
 
   s = gst_structure_new ("have-ns-view",
-	   "nsview", G_TYPE_POINTER, osxwindow->gstview,
-	   nil);
+     "nsview", G_TYPE_POINTER, osxwindow->gstview,
+     nil);
 
   msg = gst_message_new_element (GST_OBJECT (osxvideosink), s);
   gst_element_post_message (GST_ELEMENT (osxvideosink), msg);
 
-  GST_LOG_OBJECT (osxvideosink, "'have-ns-view' message sent");
+  GST_INFO_OBJECT (osxvideosink, "'have-ns-view' message sent");
+
+  /* check if have-ns-view was handled and osxwindow->gstview was added to a
+   * superview
+   */
+  if ([osxwindow->gstview haveSuperview] == NO) {
+    /* have-ns-view wasn't handled, post prepare-xwindow-id */
+    if (osxvideosink->superview == NULL) {
+      GST_INFO_OBJECT (osxvideosink, "emitting prepare-xwindow-id");
+      gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (osxvideosink));
+    }
+
+    if (osxvideosink->superview != NULL) {
+      /* prepare-xwindow-id was handled, we have the superview in
+       * osxvideosink->superview. We now add osxwindow->gstview to the superview
+       * from the main thread
+       */
+      GST_INFO_OBJECT (osxvideosink, "we have a superview, adding our view to it");
+      [osxwindow->gstview performSelectorOnMainThread:@selector(addToSuperview:)
+          withObject:osxvideosink->superview waitUntilDone:YES];
+    } else {
+      /* the view wasn't added to a superview. It's possible that the
+       * application handled have-ns-view, stored our view internally and is
+       * going to add it to a superview later (webkit does that now).
+       */
+      GST_INFO_OBJECT (osxvideosink, "no superview");
+    }
+  }
 
   [pool release];
 
-  return osxwindow;
+  return res;
 }
 
 static void
@@ -119,6 +150,11 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
   pool = [[NSAutoreleasePool alloc] init];
 
   if (osxvideosink->osxwindow) {
+    if (osxvideosink->superview) {
+      [osxvideosink->osxwindow->gstview
+          performSelectorOnMainThread:@selector(removeFromSuperview:)
+            withObject:(id)nil waitUntilDone:YES];
+    }
     [osxvideosink->osxwindow->gstview release];
 
     g_free (osxvideosink->osxwindow);
@@ -193,8 +229,8 @@ gst_osx_video_sink_change_state (GstElement * element,
   osxvideosink = GST_OSX_VIDEO_SINK (element);
 
   GST_DEBUG_OBJECT (osxvideosink, "%s => %s", 
-		    gst_element_state_get_name(GST_STATE_TRANSITION_CURRENT (transition)),
-		    gst_element_state_get_name(GST_STATE_TRANSITION_NEXT (transition)));
+        gst_element_state_get_name(GST_STATE_TRANSITION_CURRENT (transition)),
+        gst_element_state_get_name(GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -203,10 +239,12 @@ gst_osx_video_sink_change_state (GstElement * element,
       /* Creating our window and our image */
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 320;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 240;
-      osxvideosink->osxwindow =
-          gst_osx_video_sink_osxwindow_new (osxvideosink,
+      if (!gst_osx_video_sink_osxwindow_create (osxvideosink,
           GST_VIDEO_SINK_WIDTH (osxvideosink),
-          GST_VIDEO_SINK_HEIGHT (osxvideosink));
+          GST_VIDEO_SINK_HEIGHT (osxvideosink))) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
+      }
       break;
     default:
       break;
@@ -226,6 +264,7 @@ gst_osx_video_sink_change_state (GstElement * element,
       break;
   }
 
+done:
   return ret;
 }
 
@@ -298,10 +337,12 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+
 static void
 gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
 {
   osxvideosink->osxwindow = NULL;
+  osxvideosink->superview = NULL;
 }
 
 static void
@@ -315,6 +356,17 @@ gst_osx_video_sink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_osx_video_sink_sink_template_factory));
+}
+
+static void
+gst_osx_video_sink_finalize (GObject *object)
+{
+  GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (object);
+
+  if (osxvideosink->superview)
+    [osxvideosink->superview release];
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -333,6 +385,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
 
   gobject_class->set_property = gst_osx_video_sink_set_property;
   gobject_class->get_property = gst_osx_video_sink_get_property;
+  gobject_class->finalize = gst_osx_video_sink_finalize;
 
   gstbasesink_class->set_caps = gst_osx_video_sink_setcaps;
   gstbasesink_class->preroll = gst_osx_video_sink_show_frame;
@@ -349,6 +402,41 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_EMBED,
       g_param_spec_boolean ("embed", "embed", "For ABI compatiblity only, do not use",
           FALSE, G_PARAM_READWRITE));
+}
+
+static gboolean
+gst_osx_video_sink_interface_supported (GstImplementsInterface * iface, GType type)
+{
+  g_assert (type == GST_TYPE_X_OVERLAY);
+  return TRUE;
+}
+
+static void
+gst_osx_video_sink_interface_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = gst_osx_video_sink_interface_supported;
+}
+
+static void
+gst_osx_video_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
+{
+  GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
+
+  if (osxvideosink->superview) {
+    GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
+    [osxvideosink->superview release];
+  }
+
+  GST_INFO_OBJECT (osxvideosink, "set xwindow id 0x%lx", window_id);
+  osxvideosink->superview = [((NSView *) window_id) retain];
+}
+
+static void
+gst_osx_video_sink_xoverlay_init (GstXOverlayClass * iface)
+{
+  iface->set_xwindow_id = gst_osx_video_sink_set_xwindow_id;
+  iface->expose = NULL;
+  iface->handle_events = NULL;
 }
 
 /* ============================================================= */
@@ -381,9 +469,25 @@ gst_osx_video_sink_get_type (void)
       (GInstanceInitFunc) gst_osx_video_sink_init,
     };
 
+    static const GInterfaceInfo iface_info = {
+      (GInterfaceInitFunc) gst_osx_video_sink_interface_init,
+      NULL,
+      NULL,
+    };
+
+    static const GInterfaceInfo overlay_info = {
+      (GInterfaceInitFunc) gst_osx_video_sink_xoverlay_init,
+      NULL,
+      NULL,
+    };
+
     osxvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstOSXVideoSink", &osxvideosink_info, 0);
 
+    g_type_add_interface_static (osxvideosink_type,
+        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
+    g_type_add_interface_static (osxvideosink_type, GST_TYPE_X_OVERLAY,
+        &overlay_info);
   }
 
   return osxvideosink_type;
