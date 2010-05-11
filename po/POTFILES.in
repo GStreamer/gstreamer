@@ -15,6 +15,9 @@ sys/oss/gstossmixer.c
 sys/oss/gstossmixertrack.c
 sys/oss/gstosssink.c
 sys/oss/gstosssrc.c
+sys/oss4/oss4-mixer.c
+sys/oss4/oss4-sink.c
+sys/oss4/oss4-source.c
 sys/sunaudio/gstsunaudiomixertrack.c
 sys/v4l2/gstv4l2src.c
 sys/v4l2/v4l2_calls.c

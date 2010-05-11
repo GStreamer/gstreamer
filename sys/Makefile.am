@@ -10,6 +10,13 @@ else
 OSS_DIR=
 endif
 
+if USE_OSS4
+OSS4_DIR=oss4
+else
+OSS4_DIR=
+endif
+
+
 if USE_DIRECTSOUND
 DIRECTSOUND_DIR=directsound
 else
@@ -70,8 +77,8 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(DIRECTSOUND_DIR) $(OSS_DIR) $(OSS4_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=directsound oss osxaudio osxvideo sunaudio v4l2 waveform ximage
+DIST_SUBDIRS=directsound oss oss4 osxaudio osxvideo sunaudio v4l2 waveform ximage
 
 include $(top_srcdir)/common/parallel-subdirs.mak

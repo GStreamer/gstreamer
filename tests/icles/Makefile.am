@@ -18,6 +18,17 @@ else
 V4L2_TESTS =
 endif
 
+if USE_OSS4
+OSS4_TESTS=test-oss4
+
+test_oss4_SOURCES = test-oss4.c
+test_oss4_CFLAGS  = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_oss4_LDADD   = $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_LIBS)
+test_oss4_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+else
+OSS4_TESTS=
+endif
+
 if USE_X
 X_TESTS = ximagesrc-test
 
@@ -40,5 +51,5 @@ videocrop2_test_SOURCES = videocrop2-test.c
 videocrop2_test_CFLAGS  = $(GST_CFLAGS)
 videocrop2_test_LDADD   = $(GST_LIBS)
 
-noinst_PROGRAMS = $(GTK_TESTS) $(V4L2_TESTS) $(X_TESTS) videocrop-test videobox-test videocrop2-test
+noinst_PROGRAMS = $(GTK_TESTS) $(OSS4_TESTS) $(V4L2_TESTS) $(X_TESTS) videocrop-test videobox-test videocrop2-test
 

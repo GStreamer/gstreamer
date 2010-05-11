@@ -433,6 +433,15 @@ dnl Some old BSD versions and also newer OpenBSD versions :
  ])
 ])
 
+dnl *** oss4 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSS4, true)
+AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
+  AC_MSG_CHECKING([Checking if we can build the OSS4 elements])
+  AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/stat.h sys/types.h],
+      [test -z "$OSS4_MISSING_HEADER" && HAVE_OSS4="yes"],
+      [OSS4_MISSING_HEADER="yes";HAVE_OSS4="no"])
+])
+
 dnl *** Sun Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
 AG_GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
@@ -990,6 +999,7 @@ AM_CONDITIONAL(USE_LIBCACA, false)
 AM_CONDITIONAL(USE_LIBDV, false)
 AM_CONDITIONAL(USE_LIBPNG, false)
 AM_CONDITIONAL(USE_OSS, false)
+AM_CONDITIONAL(USE_OSS4, false)
 AM_CONDITIONAL(USE_OSX_AUDIO, false)
 AM_CONDITIONAL(USE_OSX_VIDEO, false)
 AM_CONDITIONAL(USE_PULSE, false)
@@ -1130,9 +1140,10 @@ ext/wavpack/Makefile
 sys/Makefile
 sys/directsound/Makefile
 sys/oss/Makefile
-sys/sunaudio/Makefile
+sys/oss4/Makefile
 sys/osxaudio/Makefile
 sys/osxvideo/Makefile
+sys/sunaudio/Makefile
 sys/v4l2/Makefile
 sys/waveform/Makefile
 sys/ximage/Makefile
