@@ -285,7 +285,6 @@ AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(invtelecine)
-AG_GST_CHECK_PLUGIN(imagefreeze)
 AG_GST_CHECK_PLUGIN(jpegformat)
 AG_GST_CHECK_PLUGIN(librfb)
 AG_GST_CHECK_PLUGIN(liveadder)
@@ -1632,7 +1631,6 @@ gst/h264parse/Makefile
 gst/hdvparse/Makefile
 gst/id3tag/Makefile
 gst/invtelecine/Makefile
-gst/imagefreeze/Makefile
 gst/jpegformat/Makefile
 gst/legacyresample/Makefile
 gst/librfb/Makefile

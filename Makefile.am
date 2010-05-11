@@ -46,12 +46,15 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/ext/ivorbis/.libs/*.{so,dll,DLL,dylib} \
-	$(top_builddir)/tests/check/elements/capssetter
+	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/tests/check/elements/capssetter \
+	$(top_builddir)/tests/check/elements/imagefreeze
 
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/aacparse \
 	$(top_srcdir)/gst/amrparse \
 	$(top_srcdir)/gst/flacparse \
+	$(top_srcdir)/gst/imagefreeze \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/tests/examples/shapewipe
 	$(top_srcdir)/ext/ivorbis
