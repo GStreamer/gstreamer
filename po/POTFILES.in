@@ -4,6 +4,3 @@ ext/sndfile/gstsfsrc.c
 gst/aiff/aiffparse.c
 gst/nuvdemux/gstnuvdemux.c
 sys/dvb/gstdvbsrc.c
-sys/oss4/oss4-mixer.c
-sys/oss4/oss4-sink.c
-sys/oss4/oss4-source.c

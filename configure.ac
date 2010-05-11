@@ -1400,15 +1400,6 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
 ])
 
-dnl *** oss4 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSS4, true)
-AG_GST_CHECK_FEATURE(OSS4, [Open Sound System 4], oss4, [
-  AC_MSG_CHECKING([Checking if we can build the OSS4 elements])
-  AC_CHECK_HEADERS([fcntl.h sys/ioctl.h sys/stat.h sys/types.h],
-      [test -z "$OSS4_MISSING_HEADER" && HAVE_OSS4="yes"],
-      [OSS4_MISSING_HEADER="yes";HAVE_OSS4="no"])
-])
-
 dnl *** wininet ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WININET, true)
 AG_GST_CHECK_FEATURE(WININET, [Windows internet library], wininet, [
@@ -1540,7 +1531,6 @@ AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_DVB, false)
-AM_CONDITIONAL(USE_OSS4, false)
 AM_CONDITIONAL(USE_WININET, false)
 AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
@@ -1679,7 +1669,6 @@ sys/dshowsrcwrapper/Makefile
 sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
-sys/oss4/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile

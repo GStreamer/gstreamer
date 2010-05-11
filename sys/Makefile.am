@@ -46,12 +46,6 @@ else
 DVB_DIR=
 endif
 
-if USE_OSS4
-OSS4_DIR=oss4
-else
-OSS4_DIR=
-endif
-
 if USE_OSX_VIDEO
 OSX_VIDEO_DIR=osxvideo
 else
@@ -82,9 +76,9 @@ else
 VDPAU_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
+SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
 
 DIST_SUBDIRS = acmenc acmmp3dec directdraw directsound dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
-			   oss4 osxvideo qtwrapper vcd vdpau wasapi wininet winks winscreencap
+		osxvideo qtwrapper vcd vdpau wasapi wininet winks winscreencap
 
 include $(top_srcdir)/common/parallel-subdirs.mak
