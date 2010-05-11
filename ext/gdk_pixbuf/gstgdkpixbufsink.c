@@ -109,9 +109,16 @@ enum
   PROP_LAST
 };
 
+#ifdef GDK_PIXBUF3
+typedef GstGdkPixbufSink GstGdkPixbufSink3;
+typedef GstGdkPixbufSinkClass GstGdkPixbufSink3Class;
 
+GST_BOILERPLATE (GstGdkPixbufSink3, gst_gdk_pixbuf_sink, GstVideoSink,
+    GST_TYPE_VIDEO_SINK);
+#else
 GST_BOILERPLATE (GstGdkPixbufSink, gst_gdk_pixbuf_sink, GstVideoSink,
     GST_TYPE_VIDEO_SINK);
+#endif
 
 static void gst_gdk_pixbuf_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);

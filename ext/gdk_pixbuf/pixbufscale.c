@@ -81,8 +81,13 @@ gst_pixbufscale_method_get_type (void)
   };
 
   if (!pixbufscale_method_type) {
+#ifdef GDK_PIXBUF3
+    pixbufscale_method_type =
+        g_enum_register_static ("GstPixbuf3ScaleMethod", pixbufscale_methods);
+#else
     pixbufscale_method_type =
         g_enum_register_static ("GstPixbufScaleMethod", pixbufscale_methods);
+#endif
   }
   return pixbufscale_method_type;
 }
@@ -108,8 +113,16 @@ static gboolean gst_pixbufscale_handle_src_event (GstPad * pad,
 
 static gboolean parse_caps (GstCaps * caps, gint * width, gint * height);
 
+#ifdef GDK_PIXBUF3
+typedef GstPixbufScale GstPixbufScale3;
+typedef GstPixbufScaleClass GstPixbufScale3Class;
+
+GST_BOILERPLATE (GstPixbufScale3, gst_pixbufscale, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
+#else
 GST_BOILERPLATE (GstPixbufScale, gst_pixbufscale, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
+#endif
 
 static void
 gst_pixbufscale_base_init (gpointer g_class)
@@ -469,14 +482,20 @@ gst_pixbufscale_handle_src_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+#ifdef GDK_PIXBUF3
+#define GDKPIXBUFSCALE "gdkpixbufscale3"
+#else
+#define GDKPIXBUFSCALE "gdkpixbufscale"
+#endif
+
 gboolean
 pixbufscale_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "gdkpixbufscale", GST_RANK_NONE,
+  if (!gst_element_register (plugin, GDKPIXBUFSCALE, GST_RANK_NONE,
           GST_TYPE_PIXBUFSCALE))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (pixbufscale_debug, "gdkpixbufscale", 0,
+  GST_DEBUG_CATEGORY_INIT (pixbufscale_debug, GDKPIXBUFSCALE, 0,
       "pixbufscale element");
 
   return TRUE;

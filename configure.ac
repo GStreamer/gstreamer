@@ -725,6 +725,11 @@ AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
   AG_GST_PKG_CHECK_MODULES(GDK_PIXBUF, gdk-pixbuf-2.0 >= 2.8.0)
 ])
 
+translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF3, true)
+AG_GST_CHECK_FEATURE(GDK_PIXBUF3, [GDK pixbuf], gdkpixbuf3, [
+  AG_GST_PKG_CHECK_MODULES(GDK_PIXBUF3, gdk-pixbuf-3.0)
+])
+
 dnl *** HAL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HAL, true)
 AG_GST_CHECK_FEATURE(HAL, [HAL libraries], halelements, [
