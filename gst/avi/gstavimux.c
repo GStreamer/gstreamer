@@ -934,6 +934,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   if (!avipad->auds.format)
     goto refuse_caps;
 
+  avipad->parent.hdr.fcc_handler = avipad->auds.format;
   gst_avi_mux_audsink_set_fields (avimux, avipad);
 
   gst_object_unref (avimux);
@@ -2069,6 +2070,9 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
     if (!avipad->collect)
       continue;
 
+    if (!avipad->hdr.fcc_handler)
+      goto not_negotiated;
+
     buffer = gst_collect_pads_peek (avimux->collect, avipad->collect);
     if (!buffer)
       continue;
@@ -2096,6 +2100,14 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
     gst_avi_mux_stop_file (avimux);
     gst_pad_push_event (avimux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
+  }
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (avimux, CORE, NEGOTIATION, (NULL),
+        ("pad %s not negotiated", GST_PAD_NAME (avipad->collect->pad)));
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
