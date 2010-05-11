@@ -334,19 +334,17 @@ static gboolean
 gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
-    GstPad *other_pad;
     GstCaps *other_caps = NULL;
     GstStructure *structure;
     const GValue *v_width, *v_height, *v_framerate, *v_par;
+    gboolean success;
 
-    if (pad == decode->sinkpad) {
-        other_pad  = decode->srcpad;
-        other_caps = gst_caps_from_string(gst_vaapidecode_src_caps_str);
-    }
-    else {
-        other_pad  = decode->sinkpad;
-        other_caps = gst_caps_from_string(gst_vaapidecode_sink_caps_str);
-    }
+    g_return_val_if_fail(pad == decode->sinkpad, FALSE);
+    decode->decoder_caps = gst_caps_ref(caps);
+
+    other_caps = gst_caps_from_string(gst_vaapidecode_src_caps_str);
+    if (!other_caps)
+        return FALSE;
 
     /* Negotiation succeeded, so now configure ourselves */
     structure    = gst_caps_get_structure(caps, 0);
@@ -354,9 +352,6 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
     v_height     = gst_structure_get_value(structure, "height");
     v_framerate  = gst_structure_get_value(structure, "framerate");
     v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
-
-    if (pad == decode->sinkpad)
-        decode->decoder_caps = gst_caps_ref(caps);
 
     structure = gst_caps_get_structure(other_caps, 0);
     gst_structure_set_value(structure, "width", v_width);
@@ -366,7 +361,9 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
     if (v_par)
         gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
 
-    return gst_pad_set_caps(other_pad, other_caps);
+    success = gst_pad_set_caps(decode->srcpad, other_caps);
+    gst_caps_unref(other_caps);
+    return success;
 }
 
 static GstFlowReturn
