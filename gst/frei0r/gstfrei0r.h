@@ -32,9 +32,9 @@ typedef struct _GstFrei0rPropertyValue GstFrei0rPropertyValue;
 
 struct _GstFrei0rPropertyValue {
   union {
-    gboolean b;
-    gdouble d;
-    gchar *s;
+    f0r_param_bool b;
+    f0r_param_double d;
+    f0r_param_string *s;
     f0r_param_position_t position;
     f0r_param_color_t color;
   } data;

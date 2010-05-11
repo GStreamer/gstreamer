@@ -287,7 +287,7 @@ gst_frei0r_get_property (f0r_instance_t * instance, GstFrei0rFuncTable * ftable,
       if (instance)
         ftable->get_param_value (instance, &d, prop->prop_idx);
       else
-        d = property_cache[prop->prop_idx].data.b ? 1.0 : 0.0;
+        d = property_cache[prop->prop_idx].data.b;
 
       g_value_set_boolean (value, (d < 0.5) ? FALSE : TRUE);
       break;
@@ -387,7 +387,7 @@ gst_frei0r_set_property (f0r_instance_t * instance, GstFrei0rFuncTable * ftable,
 
       if (instance)
         ftable->set_param_value (instance, &d, prop->prop_idx);
-      property_cache[prop->prop_idx].data.b = b;
+      property_cache[prop->prop_idx].data.b = d;
       break;
     }
     case F0R_PARAM_DOUBLE:{
