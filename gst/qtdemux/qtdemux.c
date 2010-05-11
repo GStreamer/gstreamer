@@ -1401,7 +1401,6 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
     gboolean set, QtDemuxStream ** _stream, gint * _index, gint64 * _time)
 {
   gint i, n, index;
-  guint32 ts_timescale = -1;    /* the timescale corresponding to min_time */
   gint64 time, min_time;
   QtDemuxStream *stream;
 
@@ -1413,7 +1412,6 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
     QtDemuxStream *str;
     gint inc;
     gboolean set_sample;
-
 
     str = qtdemux->streams[n];
     set_sample = !set;
@@ -1438,10 +1436,10 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
         }
         /* determine min/max time */
         time = str->samples[i].timestamp + str->samples[i].pts_offset;
-        if (min_time == -1 || (!fw && min_time > time) ||
-            (fw && min_time < time)) {
+        time = gst_util_uint64_scale (time, GST_SECOND, str->timescale);
+        if (min_time == -1 || (!fw && time > min_time) ||
+            (fw && time < min_time)) {
           min_time = time;
-          ts_timescale = str->timescale;
         }
         /* determine stream with leading sample, to get its position */
         if (!stream || (fw
@@ -1459,8 +1457,8 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
       gst_qtdemux_move_stream (qtdemux, str, str->n_samples);
   }
 
-  if (_time && ts_timescale != -1)
-    *_time = gst_util_uint64_scale (min_time, GST_SECOND, ts_timescale);
+  if (_time)
+    *_time = min_time;
   if (_stream)
     *_stream = stream;
   if (_index)
@@ -1528,7 +1526,9 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
         if (stop > 0) {
           gst_qtdemux_find_sample (demux, stop, FALSE, FALSE, NULL, NULL,
               &stop);
-          stop = MAX (stop, 0);
+          /* keyframe seeking should already arrange for start >= stop,
+           * but make sure in other rare cases */
+          stop = MAX (stop, start);
         }
       } else {
         GST_DEBUG_OBJECT (demux, "unsupported segment format, ignoring");
@@ -1542,17 +1542,6 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
           "applied rate %g, format %d, start %" GST_TIME_FORMAT ", "
           "stop %" GST_TIME_FORMAT, update, rate, arate, GST_FORMAT_TIME,
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
-
-      /* FIXME: workaround/safety check for broken files (don't want to end
-       * up with NULL events if stop < start). Figure out real cause of this
-       * and fix it. */
-      if (stop < start) {
-        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
-            (_("This file is invalid and cannot be played.")),
-            ("stop %" GST_TIME_FORMAT " < start %" GST_TIME_FORMAT,
-                GST_TIME_ARGS (stop), GST_TIME_ARGS (start)));
-        return FALSE;
-      }
 
       gst_qtdemux_push_event (demux,
           gst_event_new_new_segment_full (update, rate, arate, GST_FORMAT_TIME,
@@ -1734,6 +1723,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->n_audio_streams = 0;
       qtdemux->n_sub_streams = 0;
       gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
+      qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
+      qtdemux->seek_offset = 0;
       break;
     }
     default:
