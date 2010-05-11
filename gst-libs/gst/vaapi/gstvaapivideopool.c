@@ -146,7 +146,7 @@ gst_vaapi_video_pool_get_property(
 
     switch (prop_id) {
     case PROP_DISPLAY:
-        g_value_set_object(value, pool->priv->display);
+        g_value_set_object(value, gst_vaapi_video_pool_get_display(pool));
         break;
     case PROP_CAPS:
         g_value_set_pointer(value, gst_vaapi_video_pool_get_caps(pool));
@@ -228,6 +228,23 @@ gst_vaapi_video_pool_init(GstVaapiVideoPool *pool)
     priv->capacity      = 0;
 
     g_queue_init(&priv->free_objects);
+}
+
+/**
+ * gst_vaapi_video_pool_get_display:
+ * @pool: a #GstVaapiVideoPool
+ *
+ * Retrieves the #GstVaapiDisplay the @pool is bound to. The @pool
+ * owns the returned object and it shall not be unref'ed.
+ *
+ * Return value: the #GstVaapiDisplay the @pool is bound to
+ */
+GstVaapiDisplay *
+gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_POOL(pool), NULL);
+
+    return pool->priv->display;
 }
 
 /**

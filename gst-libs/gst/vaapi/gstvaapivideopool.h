@@ -88,6 +88,9 @@ struct _GstVaapiVideoPoolClass {
 GType
 gst_vaapi_video_pool_get_type(void);
 
+GstVaapiDisplay *
+gst_vaapi_video_pool_get_display(GstVaapiVideoPool *pool);
+
 GstCaps *
 gst_vaapi_video_pool_get_caps(GstVaapiVideoPool *pool);
 
