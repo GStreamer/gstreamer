@@ -235,6 +235,7 @@ GObject
         GstID3Demux
       GstFlxDec
       GstDeinterlace
+      GstImageFreeze
       GstY4mEncode
       GstInterleave
       GstDeinterleave

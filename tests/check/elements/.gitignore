@@ -28,6 +28,7 @@ flvmux
 icydemux
 id3demux
 id3v2mux
+imagefreeze
 interleave
 jpegenc
 level

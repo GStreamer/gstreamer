@@ -92,6 +92,7 @@
     <xi:include href="xml/element-icydemux.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-id3v2mux.xml" />
+    <xi:include href="xml/element-imagefreeze.xml" />
     <xi:include href="xml/element-interleave.xml" />
     <xi:include href="xml/element-jpegdec.xml" />
     <xi:include href="xml/element-jpegenc.xml" />
@@ -198,6 +199,7 @@
     <xi:include href="xml/plugin-halelements.xml" />
     <xi:include href="xml/plugin-icydemux.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
+    <xi:include href="xml/plugin-imagefreeze.xml" />
     <xi:include href="xml/plugin-interleave.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-level.xml" />

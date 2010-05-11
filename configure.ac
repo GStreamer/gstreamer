@@ -316,6 +316,7 @@ AG_GST_CHECK_PLUGIN(interleave)
 AG_GST_CHECK_PLUGIN(flx)
 AG_GST_CHECK_PLUGIN(goom)
 AG_GST_CHECK_PLUGIN(goom2k1)
+AG_GST_CHECK_PLUGIN(imagefreeze)
 AG_GST_CHECK_PLUGIN(law)
 AG_GST_CHECK_PLUGIN(level)
 AG_GST_CHECK_PLUGIN(matroska)
@@ -1079,6 +1080,7 @@ gst/equalizer/Makefile
 gst/flv/Makefile
 gst/id3demux/Makefile
 gst/icydemux/Makefile
+gst/imagefreeze/Makefile
 gst/interleave/Makefile
 gst/goom/Makefile
 gst/goom2k1/Makefile

@@ -1083,6 +1083,20 @@ gst_id3v2_mux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-imagefreeze</FILE>
+<TITLE>imagefreeze</TITLE>
+GstImageFreeze
+<SUBSECTION Standard>
+GstImageFreezeClass
+GST_IMAGE_FREEZE
+GST_IMAGE_FREEZE_CLASS
+GST_IS_IMAGE_FREEZE
+GST_IS_IMAGE_FREEZE_CLASS
+GST_TYPE_IMAGE_FREEZE
+gst_image_freeze_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-interleave</FILE>
 <TITLE>interleave</TITLE>
 GstInterleave

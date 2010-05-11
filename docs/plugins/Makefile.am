@@ -169,6 +169,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/law/mulaw-encode.h \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
+	$(top_srcdir)/gst/imagefreeze/gstimagefreeze.h \
 	$(top_srcdir)/gst/interleave/deinterleave.h \
 	$(top_srcdir)/gst/interleave/interleave.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
