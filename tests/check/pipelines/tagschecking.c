@@ -261,6 +261,10 @@ test_tags (const gchar * tag_str, const gchar * caps, const gchar * muxer,
 
 GST_START_TEST (test_common_tags)
 {
+  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+    GST_INFO ("Skipping test, qtdemux either not available or too old");
+    return;
+  }
   test_tags (COMMON_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (COMMON_TAGS, H264_CAPS, "mp4mux", "qtdemux");
   test_tags (COMMON_TAGS, H264_CAPS, "gppmux", "qtdemux");
@@ -278,6 +282,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_geo_location_tags)
 {
+  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+    GST_INFO ("Skipping test, qtdemux either not available or too old");
+    return;
+  }
   test_tags (GEO_LOCATION_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (GEO_LOCATION_TAGS, H264_CAPS, "mp4mux", "qtdemux");
   test_tags (GEO_LOCATION_TAGS, H264_CAPS, "gppmux", "qtdemux");
@@ -291,6 +299,11 @@ GST_END_TEST;
 
 GST_START_TEST (test_user_tags)
 {
+  if (!gst_default_registry_check_feature_version ("qtdemux", 0, 10, 23)) {
+    GST_INFO ("Skipping test, qtdemux either not available or too old");
+    return;
+  }
+
   test_tags (USER_TAGS, H264_CAPS, "qtmux", "qtdemux");
   test_tags (USER_TAGS, H264_CAPS, "mp4mux", "qtdemux");
   test_tags (USER_TAGS, H264_CAPS, "gppmux", "qtdemux");
