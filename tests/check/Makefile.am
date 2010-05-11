@@ -125,7 +125,6 @@ check_PROGRAMS = \
 	elements/autoconvert \
 	elements/asfmux \
 	elements/camerabin \
-	elements/capssetter \
 	elements/dataurisrc \
 	elements/imagefreeze \
 	elements/legacyresample \

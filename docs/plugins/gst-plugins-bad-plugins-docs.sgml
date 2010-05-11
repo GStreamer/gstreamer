@@ -26,7 +26,6 @@
     <xi:include href="xml/element-assrender.xml" />
     <xi:include href="xml/element-autoconvert.xml" />
     <xi:include href="xml/element-camerabin.xml" />
-    <xi:include href="xml/element-capssetter.xml" />
     <xi:include href="xml/element-celtdec.xml" />
     <xi:include href="xml/element-celtenc.xml" />
     <xi:include href="xml/element-dataurisrc.xml" />

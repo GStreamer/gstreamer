@@ -10,27 +10,6 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>capssetter</name>
-      <longname>CapsSetter</longname>
-      <class>Generic</class>
-      <description>Set/merge caps on stream</description>
-      <author>Mark Nauwelaerts &lt;mnauw@users.sourceforge.net&gt;</author>
-      <pads>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
       <name>fpsdisplaysink</name>
       <longname>Measure and show framerate on videosink</longname>
       <class>Sink/Video</class>

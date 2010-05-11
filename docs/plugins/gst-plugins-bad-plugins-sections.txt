@@ -141,20 +141,6 @@ gst_camerabin_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-capssetter</FILE>
-<TITLE>capssetter</TITLE>
-GstCapsSetter
-<SUBSECTION Standard>
-GstCapsSetterClass
-GST_TYPE_CAPS_SETTER
-GST_CAPS_SETTER
-GST_IS_CAPS_SETTER
-GST_CAPS_SETTER_CLASS
-GST_IS_CAPS_SETTER_CLASS
-gst_caps_setter_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-celtdec</FILE>
 <TITLE>celtdec</TITLE>
 GstCeltDec
