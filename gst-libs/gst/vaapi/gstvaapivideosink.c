@@ -105,12 +105,13 @@ gst_vaapi_video_sink_lookup(GstElement *element)
             break;
 
         element = gst_pad_get_parent_element(peer);
-        if (element) {
-            if (GST_VAAPI_IS_VIDEO_SINK(element))
-                sink = GST_VAAPI_VIDEO_SINK(element);
-            g_object_unref(element);
-        }
         g_object_unref(peer);
+        if (!element)
+            break;
+
+        if (GST_VAAPI_IS_VIDEO_SINK(element))
+            sink = GST_VAAPI_VIDEO_SINK(element);
+        g_object_unref(element);
     }
     return sink;
 }
