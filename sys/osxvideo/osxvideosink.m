@@ -424,11 +424,20 @@ gst_osx_video_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
 
   if (osxvideosink->superview) {
     GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
+    if (osxvideosink->osxwindow) {
+      [osxvideosink->osxwindow->gstview
+          performSelectorOnMainThread:@selector(removeFromSuperview:)
+            withObject:(id)nil waitUntilDone:YES];
+    }
     [osxvideosink->superview release];
   }
 
   GST_INFO_OBJECT (osxvideosink, "set xwindow id 0x%lx", window_id);
   osxvideosink->superview = [((NSView *) window_id) retain];
+  if (osxvideosink->osxwindow) {
+      [osxvideosink->osxwindow->gstview performSelectorOnMainThread:@selector(addToSuperview:)
+          withObject:osxvideosink->superview waitUntilDone:YES];
+  }
 }
 
 static void
