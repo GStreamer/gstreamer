@@ -297,6 +297,9 @@ gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps)
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
   gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+  if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
+    gst_structure_fixate_field_nearest_fraction (structure,
+        "pixel-aspect-ratio", 1, 1);
 }
 
 static void
