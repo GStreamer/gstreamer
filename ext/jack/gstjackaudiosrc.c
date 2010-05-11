@@ -98,6 +98,7 @@ gst_jack_audio_src_allocate_channels (GstJackAudioSrc * src, gint channels)
 
   /* alloc enough input ports */
   src->ports = g_realloc (src->ports, sizeof (jack_port_t *) * channels);
+  src->buffers = g_realloc (src->buffers, sizeof (sample_t *) * channels);
 
   /* create an input port for each channel */
   while (src->port_count < channels) {
@@ -138,6 +139,8 @@ gst_jack_audio_src_free_channels (GstJackAudioSrc * src)
   }
   g_free (src->ports);
   src->ports = NULL;
+  g_free (src->buffers);
+  src->buffers = NULL;
 }
 
 /* ringbuffer abstract base class */
@@ -203,46 +206,34 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 {
   GstJackAudioSrc *src;
   GstRingBuffer *buf;
-  GstJackRingBuffer *abuf;
   gint len, givenLen;
-  guint8 *writeptr, *dataStart;
+  guint8 *writeptr;
   gint writeseg;
   gint channels, i, j;
-  sample_t **buffers, *data;
+  sample_t *data;
 
   buf = GST_RING_BUFFER_CAST (arg);
-  abuf = GST_JACK_RING_BUFFER_CAST (arg);
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
 
   channels = buf->spec.channels;
   len = sizeof (sample_t) * nframes * channels;
-
-  /* alloc pointers to samples */
-  buffers = g_alloca (sizeof (sample_t *) * channels);
-  data = g_alloca (len);
-
   /* get input buffers */
   for (i = 0; i < channels; i++)
-    buffers[i] = (sample_t *) jack_port_get_buffer (src->ports[i], nframes);
-
-  //writeptr = data; 
-  dataStart = (guint8 *) data;
-
-  /* the samples in the jack input buffers have to be interleaved into the 
-   * ringbuffer 
-   */
-  for (i = 0; i < nframes; ++i)
-    for (j = 0; j < channels; ++j)
-      *data++ = buffers[j][i];
+    src->buffers[i] =
+        (sample_t *) jack_port_get_buffer (src->ports[i], nframes);
 
   if (gst_ring_buffer_prepare_read (buf, &writeseg, &writeptr, &givenLen)) {
-    memcpy (writeptr, (char *) dataStart, givenLen);
+    /* the samples in the jack input buffers have to be interleaved into the 
+     * ringbuffer 
+     */
+    data = (sample_t *) writeptr;
+    for (i = 0; i < nframes; ++i)
+      for (j = 0; j < channels; ++j)
+        *data++ = src->buffers[j][i];
+
 
     GST_DEBUG ("copy %d frames: %p, %d bytes, %d channels", nframes, writeptr,
         len / channels, channels);
-
-    /* clear written samples in the ringbuffer */
-    // gst_ring_buffer_clear(buf, 0);
 
     /* we wrote one segment */
     gst_ring_buffer_advance (buf, 1);
@@ -728,6 +719,7 @@ gst_jack_audio_src_init (GstJackAudioSrc * src, GstJackAudioSrcClass * gclass)
   src->server = g_strdup (DEFAULT_PROP_SERVER);
   src->ports = NULL;
   src->port_count = 0;
+  src->buffers = NULL;
 }
 
 static void
