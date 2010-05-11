@@ -23,6 +23,7 @@
 #define GST_VAAPI_VIDEO_BUFFER_H
 
 #include <gst/gstbuffer.h>
+#include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfaceproxy.h>
@@ -84,7 +85,7 @@ GType
 gst_vaapi_video_buffer_get_type(void);
 
 GstBuffer *
-gst_vaapi_video_buffer_new(void);
+gst_vaapi_video_buffer_new(GstVaapiDisplay *display);
 
 GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
@@ -97,6 +98,9 @@ gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
 
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
+
+GstVaapiDisplay *
+gst_vaapi_video_buffer_get_display(GstVaapiVideoBuffer *buffer);
 
 GstVaapiImage *
 gst_vaapi_video_buffer_get_image(GstVaapiVideoBuffer *buffer);

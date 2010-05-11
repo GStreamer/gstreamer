@@ -281,6 +281,7 @@ gst_vaapisink_buffer_alloc(
     GstBuffer  **pout_buffer
 )
 {
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstBuffer *buffer;
     GstCaps *sink_caps;
 
@@ -291,7 +292,7 @@ gst_vaapisink_buffer_alloc(
     if (!gst_caps_is_always_compatible(caps, sink_caps))
         goto error_invalid_caps;
 
-    buffer = gst_vaapi_video_buffer_new();
+    buffer = gst_vaapi_video_buffer_new(sink->display);
     if (!buffer)
         goto error_create_buffer;
 

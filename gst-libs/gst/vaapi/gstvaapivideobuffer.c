@@ -25,8 +25,9 @@
 
 #include "config.h"
 #include "gstvaapivideobuffer.h"
-#include <gst/vaapi/gstvaapiimagepool.h>
-#include <gst/vaapi/gstvaapisurfacepool.h>
+#include "gstvaapiimagepool.h"
+#include "gstvaapisurfacepool.h"
+#include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -39,12 +40,41 @@ G_DEFINE_TYPE(GstVaapiVideoBuffer, gst_vaapi_video_buffer, GST_TYPE_BUFFER);
                                  GstVaapiVideoBufferPrivate))
 
 struct _GstVaapiVideoBufferPrivate {
+    GstVaapiDisplay            *display;
     GstVaapiVideoPool          *image_pool;
     GstVaapiImage              *image;
     GstVaapiVideoPool          *surface_pool;
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
 };
+
+static void
+set_display(GstVaapiVideoBuffer *buffer, GstVaapiDisplay *display)
+{
+    GstVaapiVideoBufferPrivate * const priv = buffer->priv;
+
+    if (priv->display) {
+        g_object_unref(priv->display);
+        priv->display = NULL;
+    }
+
+    if (display)
+        priv->display = g_object_ref(display);
+}
+
+static inline void
+set_image(GstVaapiVideoBuffer *buffer, GstVaapiImage *image)
+{
+    buffer->priv->image = g_object_ref(image);
+    set_display(buffer, GST_VAAPI_OBJECT_DISPLAY(image));
+}
+
+static inline void
+set_surface(GstVaapiVideoBuffer *buffer, GstVaapiSurface *surface)
+{
+    buffer->priv->surface = g_object_ref(surface);
+    set_display(buffer, GST_VAAPI_OBJECT_DISPLAY(surface));
+}
 
 static void
 gst_vaapi_video_buffer_destroy_image(GstVaapiVideoBuffer *buffer)
@@ -98,6 +128,8 @@ gst_vaapi_video_buffer_finalize(GstMiniObject *object)
     gst_vaapi_video_buffer_destroy_image(buffer);
     gst_vaapi_video_buffer_destroy_surface(buffer);
 
+    set_display(buffer, NULL);
+
     parent_class = GST_MINI_OBJECT_CLASS(gst_vaapi_video_buffer_parent_class);
     if (parent_class->finalize)
         parent_class->finalize(object);
@@ -120,6 +152,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 
     priv                = GST_VAAPI_VIDEO_BUFFER_GET_PRIVATE(buffer);
     buffer->priv        = priv;
+    priv->display       = NULL;
     priv->image_pool    = NULL;
     priv->image         = NULL;
     priv->surface_pool  = NULL;
@@ -129,6 +162,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 
 /**
  * gst_vaapi_video_buffer_new:
+ * @display: a #GstVaapiDisplay
  *
  * Creates an empty #GstBuffer. The caller is responsible for completing
  * the initialization of the buffer with the gst_vaapi_video_buffer_set_*()
@@ -143,9 +177,18 @@ _gst_vaapi_video_buffer_new(void)
 }
 
 GstBuffer *
-gst_vaapi_video_buffer_new(void)
+gst_vaapi_video_buffer_new(GstVaapiDisplay *display)
 {
-    return _gst_vaapi_video_buffer_new();
+    GstBuffer *buffer;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), NULL);
+
+    buffer = _gst_vaapi_video_buffer_new();
+    if (!buffer)
+        return NULL;
+
+    set_display(GST_VAAPI_VIDEO_BUFFER(buffer), display);
+    return buffer;
 }
 
 /**
@@ -179,8 +222,10 @@ gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
         ((is_image_pool &&
           gst_vaapi_video_buffer_set_image_from_pool(buffer, pool)) ||
          (is_surface_pool &&
-          gst_vaapi_video_buffer_set_surface_from_pool(buffer, pool))))
+          gst_vaapi_video_buffer_set_surface_from_pool(buffer, pool)))) {
+        set_display(buffer, gst_vaapi_video_pool_get_display(pool));
         return GST_BUFFER(buffer);
+    }
 
     gst_mini_object_unref(GST_MINI_OBJECT(buffer));
     return NULL;
@@ -253,6 +298,24 @@ gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 }
 
 /**
+ * gst_vaapi_video_buffer_get_display:
+ * @buffer: a #GstVaapiVideoBuffer
+ *
+ * Retrieves the #GstVaapiDisplay the @buffer is bound to. The @buffer
+ * owns the returned #GstVaapiDisplay object so the caller is
+ * responsible for calling g_object_ref() when needed.
+ *
+ * Return value: the #GstVaapiDisplay the @buffer is bound to
+ */
+GstVaapiDisplay *
+gst_vaapi_video_buffer_get_display(GstVaapiVideoBuffer *buffer)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), NULL);
+
+    return buffer->priv->display;
+}
+
+/**
  * gst_vaapi_video_buffer_get_image:
  * @buffer: a #GstVaapiVideoBuffer
  *
@@ -292,7 +355,7 @@ gst_vaapi_video_buffer_set_image(
     gst_vaapi_video_buffer_destroy_image(buffer);
 
     if (image)
-        buffer->priv->image = g_object_ref(image);
+        set_image(buffer, image);
 }
 
 /**
@@ -312,15 +375,18 @@ gst_vaapi_video_buffer_set_image_from_pool(
     GstVaapiVideoPool   *pool
 )
 {
+    GstVaapiImage *image;
+
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_IMAGE_POOL(pool), FALSE);
 
     gst_vaapi_video_buffer_destroy_image(buffer);
 
     if (pool) {
-        buffer->priv->image = gst_vaapi_video_pool_get_object(pool);
-        if (!buffer->priv->image)
+        image = gst_vaapi_video_pool_get_object(pool);
+        if (!image)
             return FALSE;
+        set_image(buffer, image);
         buffer->priv->image_pool = g_object_ref(pool);
     }
     return TRUE;
@@ -366,7 +432,7 @@ gst_vaapi_video_buffer_set_surface(
     gst_vaapi_video_buffer_destroy_surface(buffer);
 
     if (surface)
-        buffer->priv->surface = g_object_ref(surface);
+        set_surface(buffer, surface);
 }
 
 /**
@@ -386,15 +452,18 @@ gst_vaapi_video_buffer_set_surface_from_pool(
     GstVaapiVideoPool   *pool
 )
 {
+    GstVaapiSurface *surface;
+
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer), FALSE);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_POOL(pool), FALSE);
 
     gst_vaapi_video_buffer_destroy_surface(buffer);
 
     if (pool) {
-        buffer->priv->surface = gst_vaapi_video_pool_get_object(pool);
-        if (!buffer->priv->surface)
+        surface = gst_vaapi_video_pool_get_object(pool);
+        if (!surface)
             return FALSE;
+        set_surface(buffer, surface);
         buffer->priv->surface_pool = g_object_ref(pool);
     }
     return TRUE;
@@ -434,14 +503,18 @@ gst_vaapi_video_buffer_set_surface_proxy(
     GstVaapiSurfaceProxy *proxy
 )
 {
+    GstVaapiSurface *surface;
+
     g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
     gst_vaapi_video_buffer_destroy_surface(buffer);
 
     if (proxy) {
-        GstVaapiVideoBufferPrivate * const priv = buffer->priv;
-        priv->proxy   = g_object_ref(proxy);
-        priv->surface = g_object_ref(GST_VAAPI_SURFACE_PROXY_SURFACE(proxy));
+        surface = GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
+        if (!surface)
+            return;
+        set_surface(buffer, surface);
+        buffer->priv->proxy = g_object_ref(proxy);
     }
 }
