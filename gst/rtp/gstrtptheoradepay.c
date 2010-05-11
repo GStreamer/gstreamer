@@ -315,12 +315,10 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* see how the configuration parameters will be transmitted */
   delivery_method = gst_structure_get_string (structure, "delivery-method");
-  if (delivery_method == NULL)
-    goto no_delivery_method;
 
   /* read and parse configuration string */
   configuration = gst_structure_get_string (structure, "configuration");
-  if (!g_ascii_strcasecmp (delivery_method, "inline")) {
+  if (configuration) {
     GstBuffer *confbuf;
     guint8 *data;
     gsize size;
@@ -339,7 +337,8 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
     if (!gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf))
       goto invalid_configuration;
-  } else if (!g_ascii_strcasecmp (delivery_method, "in_band")) {
+  } else if (!delivery_method ||
+      !g_ascii_strcasecmp (delivery_method, "in_band")) {
     /* headers will (also) be transmitted in the RTP packets */
     GST_DEBUG_OBJECT (rtptheoradepay, "expecting in_band configuration");
   } else if (g_str_has_prefix (delivery_method, "out_band/")) {
@@ -363,11 +362,6 @@ unsupported_delivery_method:
   {
     GST_ERROR_OBJECT (rtptheoradepay,
         "unsupported delivery-method \"%s\" specified", delivery_method);
-    return FALSE;
-  }
-no_delivery_method:
-  {
-    GST_ERROR_OBJECT (rtptheoradepay, "no delivery-method specified");
     return FALSE;
   }
 no_configuration:
