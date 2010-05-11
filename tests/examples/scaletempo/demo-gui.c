@@ -725,7 +725,11 @@ create_action (ActionEntry * p)
   gtk_action_connect_accelerator (p->action);
 
   p->button = gtk_button_new ();
+#if GTK_CHECK_VERSION (2, 16, 0)
+  gtk_activatable_set_related_action (GTK_ACTIVATABLE (p->button), p->action);
+#else
   gtk_action_connect_proxy (p->action, p->button);
+#endif
   gtk_button_set_image (GTK_BUTTON (p->button),
       gtk_action_create_icon (p->action, GTK_ICON_SIZE_BUTTON));
   g_signal_connect (G_OBJECT (p->action), "activate", p->callback, p->data);
@@ -981,7 +985,12 @@ demo_gui_show_func (DemoGui * gui)
   gtk_action_set_accel_group (toggle_advanced, accel_group);
   gtk_action_connect_accelerator (toggle_advanced);
   gtk_toggle_action_set_active (GTK_TOGGLE_ACTION (toggle_advanced), FALSE);
+#if GTK_CHECK_VERSION (2, 16, 0)
+  gtk_activatable_set_related_action (GTK_ACTIVATABLE (adv_check),
+      toggle_advanced);
+#else
   gtk_action_connect_proxy (toggle_advanced, adv_check);
+#endif
   g_signal_connect (G_OBJECT (toggle_advanced), "activate",
       G_CALLBACK (demo_gui_do_toggle_advanced), build_gvalue_array (4,
           G_TYPE_OBJECT, gui, G_TYPE_OBJECT, stride_ui, G_TYPE_OBJECT,
@@ -996,7 +1005,12 @@ demo_gui_show_func (DemoGui * gui)
   gtk_action_connect_accelerator (toggle_disabled);
   gtk_toggle_action_set_active (GTK_TOGGLE_ACTION (toggle_disabled), FALSE);
   disabled_check = gtk_check_button_new ();
+#if GTK_CHECK_VERSION (2, 16, 0)
+  gtk_activatable_set_related_action (GTK_ACTIVATABLE (disabled_check),
+      toggle_disabled);
+#else
   gtk_action_connect_proxy (toggle_disabled, disabled_check);
+#endif
   g_signal_connect (G_OBJECT (toggle_disabled), "activate",
       G_CALLBACK (demo_gui_do_toggle_disabled), build_gvalue_array (3,
           G_TYPE_OBJECT, gui, G_TYPE_OBJECT, toggle_advanced, G_TYPE_OBJECT,
