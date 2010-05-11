@@ -36,6 +36,7 @@ GObject
           GstAudioSink
             GstEsdSink
             GstOssSink
+            GstOss4Sink
         GstCACASink
         GstVideoSink
           GstGdkPixbufSink
@@ -55,6 +56,7 @@ GObject
             GstAudioSrc
               GstPulseSrc
               GstOssSrc
+              GstOss4Source
           GstV4l2Src
           GstXImageSrc
           GstMultiFileSrc
@@ -136,6 +138,7 @@ GObject
       GstPngEnc
       GstGdkPixbuf
       GstOssMixerElement
+      GstOss4Mixer
       GstShapeWipe
       GstAviDemux
       GstAviMux
@@ -254,8 +257,8 @@ GObject
     GstPlugin
     GstRegistry
     GstRingBuffer
-      GstAudioSinkRingBuffer
       GstAudioSrcRingBuffer
+      GstAudioSinkRingBuffer
   GstSignalObject
   GstCmmlTagStream
   GstCmmlTagHead

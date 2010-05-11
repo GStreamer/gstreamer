@@ -17,6 +17,7 @@ GstRTSPSrc GstChildProxy GstURIHandler
 GstRgVolume GstChildProxy
 GstAspectRatioCrop GstChildProxy
 GstPulseSink GstStreamVolume GstImplementsInterface GstPropertyProbe
+GstOss4Sink GstStreamVolume GstPropertyProbe
 GstV4l2Sink GstImplementsInterface GstColorBalance GstVideoOrientation GstPropertyProbe
 GstShout2send GstTagSetter
 GstUDPSink GstURIHandler
@@ -25,6 +26,7 @@ GstHDV1394Src GstURIHandler GstPropertyProbe
 GstSoupHTTPSrc GstURIHandler
 GstPulseSrc GstImplementsInterface GstMixer GstPropertyProbe
 GstOssSrc GstImplementsInterface GstMixer
+GstOss4Source GstImplementsInterface GstMixer GstPropertyProbe
 GstV4l2Src GstURIHandler GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation GstPropertyProbe
 GstUDPSrc GstURIHandler
 GstWavpackEnc GstPreset
@@ -41,6 +43,7 @@ GstIirEqualizer10Bands GstChildProxy GstPreset
 GstPulseMixer GstImplementsInterface GstMixer GstPropertyProbe
 GstSpeexEnc GstTagSetter GstPreset
 GstOssMixerElement GstImplementsInterface GstMixer
+GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstAviMux GstTagSetter
 GstMatroskaMux GstTagSetter
 GstDeinterlace GstChildProxy

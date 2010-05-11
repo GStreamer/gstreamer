@@ -108,6 +108,9 @@
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-optv.xml" />
+    <xi:include href="xml/element-oss4mixer.xml" />
+    <xi:include href="xml/element-oss4sink.xml" />
+    <xi:include href="xml/element-oss4src.xml" />
     <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
@@ -209,6 +212,7 @@
     <xi:include href="xml/plugin-multifile.xml" />
     <xi:include href="xml/plugin-multipart.xml" />
     <xi:include href="xml/plugin-navigationtest.xml" />
+    <xi:include href="xml/plugin-oss4.xml" />
     <xi:include href="xml/plugin-ossaudio.xml" />
     <xi:include href="xml/plugin-osxaudio.xml" />
     <xi:include href="xml/plugin-osxvideo.xml" />

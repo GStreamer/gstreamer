@@ -1,0 +1,53 @@
+<plugin>
+  <name>oss4</name>
+  <description>Open Sound System (OSS) version 4 support for GStreamer</description>
+  <filename>../../sys/oss4/.libs/libgstoss4audio.so</filename>
+  <basename>libgstoss4audio.so</basename>
+  <version>0.10.22.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>oss4mixer</name>
+      <longname>OSS v4 Audio Mixer</longname>
+      <class>Generic/Audio</class>
+      <description>Control sound input and output levels with OSS4</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+    
+      </pads>
+    </element>
+    <element>
+      <name>oss4sink</name>
+      <longname>OSS v4 Audio Sink</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card via OSS version 4</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-alaw, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-mulaw, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)32, depth=(int)32, signed=(boolean)true, endianness=(int)1234, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)32, depth=(int){ 32, 24 }, signed=(boolean)true, endianness=(int)4321, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int){ 32, 24 }, depth=(int)24, signed=(boolean)true, endianness=(int)1234, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean){ false, true }, endianness=(int){ 1234, 4321 }, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)8, depth=(int)8, signed=(boolean){ true, false }, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>oss4src</name>
+      <longname>OSS v4 Audio Source</longname>
+      <class>Source/Audio</class>
+      <description>Capture from a sound card via OSS version 4</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-alaw, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-mulaw, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)32, depth=(int)32, signed=(boolean)true, endianness=(int)1234, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)32, depth=(int){ 32, 24 }, signed=(boolean)true, endianness=(int)4321, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int){ 32, 24 }, depth=(int)24, signed=(boolean)true, endianness=(int)1234, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean){ false, true }, endianness=(int){ 1234, 4321 }, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]; audio/x-raw-int, width=(int)8, depth=(int)8, signed=(boolean){ true, false }, rate=(int)[ 1, 192000 ], channels=(int)[ 1, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
