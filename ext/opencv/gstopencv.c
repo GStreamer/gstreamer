@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include "gstcvsmooth.h"
 #include "gstedgedetect.h"
 #include "gstfaceblur.h"
 #include "gstfacedetect.h"
@@ -33,6 +34,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_cv_smooth_plugin_init (plugin))
+    return FALSE;
 
   if (!gst_edgedetect_plugin_init (plugin))
     return FALSE;
