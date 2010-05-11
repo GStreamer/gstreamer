@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 
 GType gst_break_my_data_get_type (void);
+GType gst_caps_setter_get_type (void);
 GType gst_rnd_buffer_size_get_type (void);
 GType gst_navseek_get_type (void);
 GType gst_progress_report_get_type (void);
@@ -39,6 +40,8 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
           gst_break_my_data_get_type ())
+      || !gst_element_register (plugin, "capssetter", GST_RANK_NONE,
+          gst_caps_setter_get_type ())
       || !gst_element_register (plugin, "rndbuffersize", GST_RANK_NONE,
           gst_rnd_buffer_size_get_type ())
       || !gst_element_register (plugin, "navseek", GST_RANK_NONE,

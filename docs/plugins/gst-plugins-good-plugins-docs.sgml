@@ -51,6 +51,7 @@
     <xi:include href="xml/element-cairotextoverlay.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-cairorender.xml" />
+    <xi:include href="xml/element-capssetter.xml" />
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
     <xi:include href="xml/element-cutter.xml" />

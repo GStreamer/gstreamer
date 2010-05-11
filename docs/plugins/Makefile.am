@@ -138,6 +138,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/avi/gstavimux.h \
 	$(top_srcdir)/gst/avi/gstavisubtitle.h \
 	$(top_srcdir)/gst/cutter/gstcutter.h \
+	$(top_srcdir)/gst/debugutils/gstcapssetter.h \
 	$(top_srcdir)/gst/debugutils/gsttaginject.h \
 	$(top_srcdir)/gst/debugutils/progressreport.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \

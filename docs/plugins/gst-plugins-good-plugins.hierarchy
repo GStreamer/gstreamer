@@ -96,6 +96,7 @@ GObject
           GstAlphaColor
         GstVideoBox
         GstBreakMyData
+        GstCapsSetter
         GstNavSeek
         GstProgressReport
         GstTagInject

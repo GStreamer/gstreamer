@@ -20638,3 +20638,32 @@
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstCapsSetter::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Merge caps</NICK>
+<BLURB>Merge these caps (thereby overwriting) in the stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCapsSetter::join</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Join</NICK>
+<BLURB>Match incoming caps' mime-type to mime-type of provided caps.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCapsSetter::replace</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Replace</NICK>
+<BLURB>Drop fields of incoming caps.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>

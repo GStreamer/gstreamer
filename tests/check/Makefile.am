@@ -107,6 +107,7 @@ check_PROGRAMS = \
 	elements/audiowsinclimit \
 	elements/avimux \
 	elements/avisubtitle \
+	elements/capssetter \
 	elements/deinterlace \
 	elements/deinterleave \
 	elements/equalizer \
