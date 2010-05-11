@@ -42,10 +42,6 @@
  * Since: 0.10.7
  */
 
-/* TODO: - add "volume" property for stream volume control and intercept tags
- *         to set stream title
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -72,7 +68,7 @@ GST_DEBUG_CATEGORY_EXTERN (oss4sink_debug);
 
 static void gst_oss4_sink_init_interfaces (GType type);
 static void gst_oss4_sink_dispose (GObject * object);
-static void gst_oss4_sink_finalise (GObject * object);
+static void gst_oss4_sink_finalize (GObject * object);
 
 static void gst_oss4_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -148,7 +144,7 @@ gst_oss4_sink_class_init (GstOss4SinkClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss4_sink_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_oss4_sink_finalise);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_oss4_sink_finalize);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss4_sink_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss4_sink_set_property);
 
@@ -203,7 +199,7 @@ gst_oss4_sink_init (GstOss4Sink * osssink, GstOss4SinkClass * klass)
 }
 
 static void
-gst_oss4_sink_finalise (GObject * object)
+gst_oss4_sink_finalize (GObject * object)
 {
   GstOss4Sink *osssink = GST_OSS4_SINK (object);
 
