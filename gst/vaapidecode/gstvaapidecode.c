@@ -446,6 +446,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
         "src"
     );
 
+    gst_pad_use_fixed_caps(decode->srcpad);
     gst_pad_set_event_function(decode->srcpad, gst_vaapidecode_src_event);
     gst_element_add_pad(GST_ELEMENT(decode), decode->srcpad);
 }
