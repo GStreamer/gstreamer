@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-28 02:51+0100\n"
+"POT-Creation-Date: 2010-05-11 16:06+0100\n"
 "PO-Revision-Date: 2009-11-15 22:55+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -180,26 +180,329 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Kan het audio-apparaat niet openen voor opnemen."
 
-msgid "Gain"
-msgstr "Versterking"
+msgid "Could not open audio device for mixer control handling."
+msgstr "Kan het audio-apparaat niet openen voor de mixerbesturing."
+
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie van "
+"het Open Soundsysteem wordt niet ondersteund door dit element."
+
+msgid "Master"
+msgstr "Master"
+
+msgid "Front"
+msgstr "Voorzijde"
+
+msgid "Rear"
+msgstr "Achterzijde"
+
+msgid "Headphones"
+msgstr "Hoofdtelefoon"
+
+msgid "Center"
+msgstr "Midden"
+
+msgid "LFE"
+msgstr "LFE"
+
+msgid "Surround"
+msgstr "Surround"
+
+msgid "Side"
+msgstr "Zijkant"
 
 msgid "Built-in Speaker"
 msgstr "Ingebouwde luidspreker"
-
-msgid "Headphone"
-msgstr "Hoofdtelefoon"
-
-msgid "Line Out"
-msgstr "Line-out"
-
-msgid "SPDIF Out"
-msgstr "SPDIF-out"
 
 msgid "AUX 1 Out"
 msgstr "AUX 1-out"
 
 msgid "AUX 2 Out"
 msgstr "AUX 2-out"
+
+msgid "AUX Out"
+msgstr "AUX-out"
+
+msgid "3D Depth"
+msgstr "3D diepte"
+
+msgid "3D Center"
+msgstr "3D midden"
+
+msgid "3D Enhance"
+msgstr "3D verbeteren"
+
+msgid "Telephone"
+msgstr "Telefoon"
+
+msgid "Line Out"
+msgstr "Line-out"
+
+msgid "Line In"
+msgstr "Line-in"
+
+msgid "Internal CD"
+msgstr "Interne cd"
+
+msgid "Video In"
+msgstr "Video-in"
+
+msgid "AUX 1 In"
+msgstr "AUX 1-in"
+
+msgid "AUX 2 In"
+msgstr "AUX 2-in"
+
+msgid "AUX In"
+msgstr "AUX-in"
+
+msgid "Record Gain"
+msgstr "Opnameversterking"
+
+msgid "Output Gain"
+msgstr "Uitgangversterking"
+
+msgid "Microphone Boost"
+msgstr "Microfoon-boost"
+
+msgid "Loopback"
+msgstr "Terugkoppeling"
+
+msgid "Diagnostic"
+msgstr "Diagnostiek"
+
+msgid "Bass Boost"
+msgstr "Lage tonen-boost"
+
+msgid "Playback Ports"
+msgstr "Afspeelpoorten"
+
+msgid "Input"
+msgstr "Invoer"
+
+msgid "Record Source"
+msgstr "Opnamebron"
+
+msgid "Monitor Source"
+msgstr "Monitorbron"
+
+msgid "Keyboard Beep"
+msgstr "Toetsenbordpiep"
+
+msgid "Simulate Stereo"
+msgstr "Stereo simuleren"
+
+msgid "Stereo"
+msgstr "Stereo"
+
+msgid "Surround Sound"
+msgstr "Surround geluid"
+
+msgid "Microphone Gain"
+msgstr "Microfoonversterking"
+
+msgid "Speaker Source"
+msgstr "Luidsprekerbron"
+
+msgid "Microphone Source"
+msgstr "Microfoonbron"
+
+msgid "Jack"
+msgstr "Jack"
+
+msgid "Center / LFE"
+msgstr "Midden / LFE"
+
+msgid "Stereo Mix"
+msgstr "Stereo mix"
+
+msgid "Mono Mix"
+msgstr "Mono mix"
+
+msgid "Input Mix"
+msgstr "Invoer mix"
+
+msgid "SPDIF In"
+msgstr "SPDIF-in"
+
+msgid "SPDIF Out"
+msgstr "SPDIF-out"
+
+msgid "Microphone 1"
+msgstr "Microfoon 1"
+
+msgid "Microphone 2"
+msgstr "Microfoon 2"
+
+msgid "Digital Out"
+msgstr "Digitaal-out"
+
+msgid "Digital In"
+msgstr "Digitaal-in"
+
+msgid "HDMI"
+msgstr "HDMI"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Handset"
+msgstr "Mobieltje"
+
+msgid "Other"
+msgstr "Overige"
+
+msgid "None"
+msgstr "Geen"
+
+msgid "On"
+msgstr "Aan"
+
+msgid "Off"
+msgstr "Uit"
+
+msgid "Mute"
+msgstr "Gedempt"
+
+msgid "Fast"
+msgstr "Snel"
+
+msgid "Very Low"
+msgstr "Zeer laag"
+
+msgid "Low"
+msgstr "Laag"
+
+msgid "Medium"
+msgstr "Gemiddeld"
+
+msgid "High"
+msgstr "Hoog"
+
+msgid "Very High"
+msgstr "Zeer hoog"
+
+msgid "Production"
+msgstr "Productie"
+
+msgid "Front Panel Microphone"
+msgstr "Microfoon in frontpaneel"
+
+msgid "Front Panel Line In"
+msgstr "Lijn-in in frontpaneel"
+
+msgid "Front Panel Headphones"
+msgstr "Hoofdtelefoon in frontpaneel"
+
+msgid "Front Panel Line Out"
+msgstr "Lijn-in in frontpaneel"
+
+msgid "Green Connector"
+msgstr "Groene connector"
+
+msgid "Pink Connector"
+msgstr "Roze connector"
+
+msgid "Blue Connector"
+msgstr "Blauwe connector"
+
+msgid "White Connector"
+msgstr "Witte connector"
+
+msgid "Black Connector"
+msgstr "Zwarte connector"
+
+msgid "Gray Connector"
+msgstr "Grijze connector"
+
+msgid "Orange Connector"
+msgstr "Oranje connector"
+
+msgid "Red Connector"
+msgstr "Rode connector"
+
+msgid "Yellow Connector"
+msgstr "Gele connector"
+
+msgid "Green Front Panel Connector"
+msgstr "Groene connector in frontpaneel"
+
+msgid "Pink Front Panel Connector"
+msgstr "Roze connector in frontpaneel"
+
+msgid "Blue Front Panel Connector"
+msgstr "Blauwe connector in frontpaneel"
+
+msgid "White Front Panel Connector"
+msgstr "Witte connector in frontpaneel"
+
+msgid "Black Front Panel Connector"
+msgstr "Zwarte connector in frontpaneel"
+
+msgid "Gray Front Panel Connector"
+msgstr "Grijze connector in frontpaneel"
+
+msgid "Orange Front Panel Connector"
+msgstr "Oranje connector in frontpaneel"
+
+msgid "Red Front Panel Connector"
+msgstr "Rode connector in frontpaneel"
+
+msgid "Yellow Front Panel Connector"
+msgstr "Gele connector in frontpaneel"
+
+msgid "Spread Output"
+msgstr "Spread Output"
+
+msgid "Downmix"
+msgstr "Downmix"
+
+msgid "Virtual Mixer Input"
+msgstr "Virtuele mixer-invoer"
+
+msgid "Virtual Mixer Output"
+msgstr "Virtuele mixer-uitvoer"
+
+msgid "Virtual Mixer Channels"
+msgstr "Virtuele mixer-kanalen"
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "%s-functie"
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr "%s-functie"
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Kan het audio-apparaat niet openen voor afspelen. Deze versie van het Open "
+"Soundsysteem wordt niet ondersteund door dit element."
+
+msgid "Playback is not supported by this audio device."
+msgstr "Afspelen wordt door dit audio-apparaat niet ondersteund."
+
+msgid "Audio playback error."
+msgstr "Fout bij audio-afspelen."
+
+msgid "Recording is not supported by this audio device."
+msgstr "Opnemen wordt door dit audio-apparaat niet ondersteund."
+
+msgid "Error recording from audio device."
+msgstr "Fout bij opnemen met dit audio-apparaat."
+
+msgid "Gain"
+msgstr "Versterking"
+
+msgid "Headphone"
+msgstr "Hoofdtelefoon"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-28 02:51+0100\n"
+"POT-Creation-Date: 2010-05-11 16:06+0100\n"
 "PO-Revision-Date: 2009-11-11 22:11+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -186,26 +186,329 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Äänilaitetta ei voitu avata nauhoitusta varten."
 
-msgid "Gain"
-msgstr "Herkkyys"
+msgid "Could not open audio device for mixer control handling."
+msgstr "Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi."
+
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi. Tämä elementti "
+"ei tue tätä versiota Open Sound Systemistä."
+
+msgid "Master"
+msgstr "Pää"
+
+msgid "Front"
+msgstr "Etu"
+
+msgid "Rear"
+msgstr "Taka"
+
+msgid "Headphones"
+msgstr "Kuulokkeet"
+
+msgid "Center"
+msgstr "Keski"
+
+msgid "LFE"
+msgstr "LFE"
+
+msgid "Surround"
+msgstr "Surround"
+
+msgid "Side"
+msgstr "Sivu"
 
 msgid "Built-in Speaker"
 msgstr "Sisäänrakennettu kaiutin"
-
-msgid "Headphone"
-msgstr "Kuulokkeet"
-
-msgid "Line Out"
-msgstr "Linja ulos"
-
-msgid "SPDIF Out"
-msgstr "SPDIF ulos"
 
 msgid "AUX 1 Out"
 msgstr "AUX 1 ulos"
 
 msgid "AUX 2 Out"
 msgstr "AUX 2 ulos"
+
+msgid "AUX Out"
+msgstr "AUX ulos"
+
+msgid "3D Depth"
+msgstr "3D-syvyys"
+
+msgid "3D Center"
+msgstr "3D-keski"
+
+msgid "3D Enhance"
+msgstr "3D-parannus"
+
+msgid "Telephone"
+msgstr "Puhelin"
+
+msgid "Line Out"
+msgstr "Linja ulos"
+
+msgid "Line In"
+msgstr "Linja sisään"
+
+msgid "Internal CD"
+msgstr "Sisäinen CD"
+
+msgid "Video In"
+msgstr "Video sisään"
+
+msgid "AUX 1 In"
+msgstr "AUX 1 sisään"
+
+msgid "AUX 2 In"
+msgstr "AUX 2 sisään"
+
+msgid "AUX In"
+msgstr "AUX sisään"
+
+msgid "Record Gain"
+msgstr "Nauhoitusvahvistus"
+
+msgid "Output Gain"
+msgstr "Ulostulovahvistus"
+
+msgid "Microphone Boost"
+msgstr "Mikrofoni-lisä"
+
+msgid "Loopback"
+msgstr "Silmukka"
+
+msgid "Diagnostic"
+msgstr "Diagnosointi"
+
+msgid "Bass Boost"
+msgstr "Basso-lisä"
+
+msgid "Playback Ports"
+msgstr "Toistoportit"
+
+msgid "Input"
+msgstr "Sisääntulo"
+
+msgid "Record Source"
+msgstr "Nauhoituslähde"
+
+msgid "Monitor Source"
+msgstr "Monitorointilähde"
+
+msgid "Keyboard Beep"
+msgstr "Näppäimistöpiippaus"
+
+msgid "Simulate Stereo"
+msgstr "Simuloitu stereo"
+
+msgid "Stereo"
+msgstr "Stereo"
+
+msgid "Surround Sound"
+msgstr "Surround-ääni"
+
+msgid "Microphone Gain"
+msgstr "Mikrofonivahvistus"
+
+msgid "Speaker Source"
+msgstr "Kaiutinlähde"
+
+msgid "Microphone Source"
+msgstr "Mikrofonilähde"
+
+msgid "Jack"
+msgstr "Jakki"
+
+msgid "Center / LFE"
+msgstr "Keski / LFE"
+
+msgid "Stereo Mix"
+msgstr "Stereomiksaus"
+
+msgid "Mono Mix"
+msgstr "Monomiksaus"
+
+msgid "Input Mix"
+msgstr "Sisääntulomiksaus"
+
+msgid "SPDIF In"
+msgstr "SPDIF sisään"
+
+msgid "SPDIF Out"
+msgstr "SPDIF ulos"
+
+msgid "Microphone 1"
+msgstr "Mikrofoni 1"
+
+msgid "Microphone 2"
+msgstr "Mikrofoni 2"
+
+msgid "Digital Out"
+msgstr "Digitaalinen ulos"
+
+msgid "Digital In"
+msgstr "Digitaalinen sisään"
+
+msgid "HDMI"
+msgstr "HDMI"
+
+msgid "Modem"
+msgstr "Modeemi"
+
+msgid "Handset"
+msgstr "Luuri"
+
+msgid "Other"
+msgstr "Muu"
+
+msgid "None"
+msgstr "Ei mikään"
+
+msgid "On"
+msgstr "Päällä"
+
+msgid "Off"
+msgstr "Poissa"
+
+msgid "Mute"
+msgstr "Vaimenna"
+
+msgid "Fast"
+msgstr "Nopea"
+
+msgid "Very Low"
+msgstr "Erittäin matala"
+
+msgid "Low"
+msgstr "Matala"
+
+msgid "Medium"
+msgstr "Keskitaso"
+
+msgid "High"
+msgstr "Korkea"
+
+msgid "Very High"
+msgstr "Erittäin korkea"
+
+msgid "Production"
+msgstr "Tuotanto"
+
+msgid "Front Panel Microphone"
+msgstr "Etupaneelin mikrofoni"
+
+msgid "Front Panel Line In"
+msgstr "Etupaneelin linjasisääntulo"
+
+msgid "Front Panel Headphones"
+msgstr "Etupaneelin kuulokkeet"
+
+msgid "Front Panel Line Out"
+msgstr "Etupaneelin linja ulos"
+
+msgid "Green Connector"
+msgstr "Vihreä liitin"
+
+msgid "Pink Connector"
+msgstr "Violetti liitin"
+
+msgid "Blue Connector"
+msgstr "Sininen liitin"
+
+msgid "White Connector"
+msgstr "Valkoinen liitin"
+
+msgid "Black Connector"
+msgstr "Musta liitin"
+
+msgid "Gray Connector"
+msgstr "Harmaa liitin"
+
+msgid "Orange Connector"
+msgstr "Oranssi liitin"
+
+msgid "Red Connector"
+msgstr "Punainen liitin"
+
+msgid "Yellow Connector"
+msgstr "Keltainen liitin"
+
+msgid "Green Front Panel Connector"
+msgstr "Vihreä etupaneelin liitin"
+
+msgid "Pink Front Panel Connector"
+msgstr "Violetti etupaneelin liitin"
+
+msgid "Blue Front Panel Connector"
+msgstr "Sininen etupaneelin liitin"
+
+msgid "White Front Panel Connector"
+msgstr "Valkoinen etupaneelin liitin"
+
+msgid "Black Front Panel Connector"
+msgstr "Musta etupaneelin liitin"
+
+msgid "Gray Front Panel Connector"
+msgstr "Harmaa etupaneelin liitin"
+
+msgid "Orange Front Panel Connector"
+msgstr "Oranssi etupaneelin liitin"
+
+msgid "Red Front Panel Connector"
+msgstr "Punainen etupaneelin liitin"
+
+msgid "Yellow Front Panel Connector"
+msgstr "Keltainen etupaneelin liitin"
+
+msgid "Spread Output"
+msgstr "Leviävä ulostulo"
+
+msgid "Downmix"
+msgstr "Alasmiksaus"
+
+msgid "Virtual Mixer Input"
+msgstr "Näennäinen mikserisisääntulo"
+
+msgid "Virtual Mixer Output"
+msgstr "Näennäinen mikseriulostulo"
+
+msgid "Virtual Mixer Channels"
+msgstr "Näennäiset mikserikanavat"
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, fuzzy, c-format
+msgid "%s %d Function"
+msgstr "%s-toiminto"
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr "%s-toiminto"
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Äänialaitetta ei voitu avata toistoa varten. Tämä elementti ei tue tätä "
+"versiota Open Sound Systemistä."
+
+msgid "Playback is not supported by this audio device."
+msgstr "Tämä äänilaite ei tue toistamista."
+
+msgid "Audio playback error."
+msgstr "Äänentoistovirhe."
+
+msgid "Recording is not supported by this audio device."
+msgstr "Tämä äänilaite ei tue nauhoitusta."
+
+msgid "Error recording from audio device."
+msgstr "Virhe nauhoitettaessa äänilaitteelta."
+
+msgid "Gain"
+msgstr "Herkkyys"
+
+msgid "Headphone"
+msgstr "Kuulokkeet"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -330,104 +633,50 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
 
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr "Laitteen \"%s\" osaamia videomuotoja ei voitu luetteloida"
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "GStreamerin oletusäänilähteen kuvaus"
+
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "GStreamerin oletusääninielun kuvaus"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "kuvaus musiikin ja elokuvien GStreamer-ääninielulle"
+
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "kuvaus ääni- ja videoneuvottelun GStreamer-ääninielulle"
+
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "Gstreamerin visualisointien oletusliitännäinen"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "GStreamerin oletusvideonielu"
+
+#~ msgid "default GStreamer video source"
+#~ msgstr "GStreamerin oletusvideolähde"
+
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "GStreamerin oletusääninielu"
+
+#~ msgid "default GStreamer audio source"
+#~ msgstr "GStreamerin oletusäänilähde"
 
 #~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "Puskurityyppi ei ole tuettu, indeksi on rajojen ulkopuolella, puskureita "
-#~ "ei ole vielä varattu tai käyttäjän osoitin tai pituus ovat virheelliset. "
-#~ "laite %s"
+#~ "GStreamer voi nauhoittaa videota käyttäen useita eri lähde-elementtejä. "
+#~ "Muutamia vaihtoehtoja ovat v4lsrc ja videotestsrc.. Videolähde voi olla "
+#~ "myös liukuhihnan osa eikä vain yksi elementti."
 
 #~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Videoruutujen nouto laitteelta \"%s\" epäonnistui. Muisti ei riittänyt."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "muisti ei riitä käyttäjän osoitinpuskurin jonoon lisäämiseen. laite %s"
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Vapaita puskureita ei löytynyt indeksillä %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Laite \"%s\" ei tue videokuvan kaappausta"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Laitteelta \"%s\" ei voi kaapata tarkkuudella %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Laitteelta \"%s\" ei voi kaapata annetussa muodossa"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Laitteelta \"%s\" ei voitu hakea puskuritilaa."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Laitteelta \"%s\" ei voitu hakea riittävästi puskuritilaa."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Virhe aloitettaessa virran kaappaus laitteelta \"%s\"."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Virhe keskeytettäessä virran kaappaus laitteelta \"%s\"."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Laitteen \"%s\" ohjainattribuutteja ei voitu lukea."
-
-#~ msgid "Could not read from CD."
-#~ msgstr "CD-levyltä ei voitu lukea."
-
-#~ msgid "Disc is not an Audio CD."
-#~ msgstr "Levy ei ole ääni-CD."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Tiedosto on salattu eikä sitä voida näyttää."
-
-#~ msgid "Could not set parameters on device '%s'"
-#~ msgstr "Laitteelle \"%s\" ei voitu asettaa parametreja"
-
-#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
-#~ msgstr "Laitteelta \"%s\" ei voi kaapata nopeudella %d/%d ruutua sekunnissa"
-
-#~ msgid "Describes the selected input element."
-#~ msgstr "Kuvaa valitun lähde-elementin."
-
-#~ msgid "Describes the selected output element for Audio/Video Conferencing."
-#~ msgstr "Kuvaa ääni- ja videoneuvotteluille valitun ulostuloelementin."
-
-#~ msgid "Describes the selected output element for Music and Movies."
-#~ msgstr "Kuvaa musiikille ja elokuville valitun ulostuloelementin."
-
-#~ msgid "Describes the selected output element."
-#~ msgstr "Kuvaa valitun ulostuloelementin."
-
-#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "GStreamer-ääninielu ääni- ja videoneuvotteluille"
-
-#~ msgid "GStreamer audiosink for Music and Movies"
-#~ msgstr "GStreamer-ääninielu äänelle ja elokuville"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
 #~ "a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "GStreamer voi soittaa ääntä käyttäen useita eri nieluelementtejä. "
-#~ "Muutamia vaihtoehtoja ovat osssink, esdsink ja alsasink. Ääninielu voi "
-#~ "olla myös liukuhihnan osa eikä vain yksi elementti."
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer voi toistaa videota käyttäen useita eri nieluelementtejä. "
-#~ "Muutamia vaihtoehtoja ovat xvimagesink, ximagesink, sdlvideosink ja "
-#~ "aasink. Videonielu voi olla myös liukuhihnan osa eikä vain yksi elementti."
+#~ "GStreamer voi nauhoittaa ääntä käyttäen useita eri lähde-elementtejä. "
+#~ "Muutamia vaihtoehtoja ovat osssrc, esdsrc ja alsasrc. Äänilähde voi olla "
+#~ "myös liukuhihnan osa eikä vain yksi elementti."
 
 #~ msgid ""
 #~ "GStreamer can put visualization plugins in a pipeline to transform audio "
@@ -441,46 +690,100 @@ msgstr "Ei voitu toimia ilman kelloa"
 #~ "liukuhihnan osa eikä vain yksi elementti."
 
 #~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
-#~ "a partial pipeline instead of just one element."
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "GStreamer voi nauhoittaa ääntä käyttäen useita eri lähde-elementtejä. "
-#~ "Muutamia vaihtoehtoja ovat osssrc, esdsrc ja alsasrc. Äänilähde voi olla "
-#~ "myös liukuhihnan osa eikä vain yksi elementti."
+#~ "GStreamer voi toistaa videota käyttäen useita eri nieluelementtejä. "
+#~ "Muutamia vaihtoehtoja ovat xvimagesink, ximagesink, sdlvideosink ja "
+#~ "aasink. Videonielu voi olla myös liukuhihnan osa eikä vain yksi elementti."
 
 #~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
-#~ "partial pipeline instead of just one element."
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "a partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "GStreamer voi nauhoittaa videota käyttäen useita eri lähde-elementtejä. "
-#~ "Muutamia vaihtoehtoja ovat v4lsrc ja videotestsrc.. Videolähde voi olla "
-#~ "myös liukuhihnan osa eikä vain yksi elementti."
+#~ "GStreamer voi soittaa ääntä käyttäen useita eri nieluelementtejä. "
+#~ "Muutamia vaihtoehtoja ovat osssink, esdsink ja alsasink. Ääninielu voi "
+#~ "olla myös liukuhihnan osa eikä vain yksi elementti."
 
-#~ msgid "default GStreamer audio source"
-#~ msgstr "GStreamerin oletusäänilähde"
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "GStreamer-ääninielu äänelle ja elokuville"
 
-#~ msgid "default GStreamer audiosink"
-#~ msgstr "GStreamerin oletusääninielu"
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "GStreamer-ääninielu ääni- ja videoneuvotteluille"
 
-#~ msgid "default GStreamer video source"
-#~ msgstr "GStreamerin oletusvideolähde"
+#~ msgid "Describes the selected output element."
+#~ msgstr "Kuvaa valitun ulostuloelementin."
 
-#~ msgid "default GStreamer videosink"
-#~ msgstr "GStreamerin oletusvideonielu"
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Kuvaa musiikille ja elokuville valitun ulostuloelementin."
 
-#~ msgid "default GStreamer visualization plugin"
-#~ msgstr "Gstreamerin visualisointien oletusliitännäinen"
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr "Kuvaa ääni- ja videoneuvotteluille valitun ulostuloelementin."
 
-#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "kuvaus ääni- ja videoneuvottelun GStreamer-ääninielulle"
+#~ msgid "Describes the selected input element."
+#~ msgstr "Kuvaa valitun lähde-elementin."
 
-#~ msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgstr "kuvaus musiikin ja elokuvien GStreamer-ääninielulle"
+#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata nopeudella %d/%d ruutua sekunnissa"
 
-#~ msgid "description for default GStreamer audiosink"
-#~ msgstr "GStreamerin oletusääninielun kuvaus"
+#~ msgid "Could not set parameters on device '%s'"
+#~ msgstr "Laitteelle \"%s\" ei voitu asettaa parametreja"
 
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "GStreamerin oletusäänilähteen kuvaus"
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Tiedosto on salattu eikä sitä voida näyttää."
+
+#~ msgid "Disc is not an Audio CD."
+#~ msgstr "Levy ei ole ääni-CD."
+
+#~ msgid "Could not read from CD."
+#~ msgstr "CD-levyltä ei voitu lukea."
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "Laitteen \"%s\" ohjainattribuutteja ei voitu lukea."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Virhe keskeytettäessä virran kaappaus laitteelta \"%s\"."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Virhe aloitettaessa virran kaappaus laitteelta \"%s\"."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Laitteelta \"%s\" ei voitu hakea riittävästi puskuritilaa."
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Laitteelta \"%s\" ei voitu hakea puskuritilaa."
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata annetussa muodossa"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Laitteelta \"%s\" ei voi kaapata tarkkuudella %dx%d"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Laite \"%s\" ei tue videokuvan kaappausta"
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Vapaita puskureita ei löytynyt indeksillä %d."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "muisti ei riitä käyttäjän osoitinpuskurin jonoon lisäämiseen. laite %s"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Videoruutujen nouto laitteelta \"%s\" epäonnistui. Muisti ei riittänyt."
+
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Puskurityyppi ei ole tuettu, indeksi on rajojen ulkopuolella, puskureita "
+#~ "ei ole vielä varattu tai käyttäjän osoitin tai pituus ovat virheelliset. "
+#~ "laite %s"
+
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr "Laitteen \"%s\" osaamia videomuotoja ei voitu luetteloida"

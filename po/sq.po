@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-28 02:51+0100\n"
+"POT-Creation-Date: 2010-05-11 16:06+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -169,26 +169,343 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "I pamundur hapja e dispozitivit CD për lexim."
 
-msgid "Gain"
+#, fuzzy
+msgid "Could not open audio device for mixer control handling."
+msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."
+
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
 msgstr ""
+
+msgid "Master"
+msgstr ""
+
+msgid "Front"
+msgstr ""
+
+#, fuzzy
+msgid "Rear"
+msgstr "Regjistrimi"
+
+msgid "Headphones"
+msgstr ""
+
+msgid "Center"
+msgstr ""
+
+msgid "LFE"
+msgstr ""
+
+msgid "Surround"
+msgstr ""
+
+#, fuzzy
+msgid "Side"
+msgstr "Video"
 
 #, fuzzy
 msgid "Built-in Speaker"
 msgstr "Zë folës"
 
-msgid "Headphone"
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+msgid "Telephone"
 msgstr ""
 
 msgid "Line Out"
 msgstr ""
 
+#, fuzzy
+msgid "Line In"
+msgstr "Linja-hyrje"
+
+msgid "Internal CD"
+msgstr ""
+
+#, fuzzy
+msgid "Video In"
+msgstr "Video"
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+#, fuzzy
+msgid "Record Gain"
+msgstr "Regjistrimi"
+
+#, fuzzy
+msgid "Output Gain"
+msgstr "Out-gain"
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Mikrofoni"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr ""
+
+#, fuzzy
+msgid "Record Source"
+msgstr "Regjistrimi"
+
+#, fuzzy
+msgid "Monitor Source"
+msgstr "Ekrani"
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr ""
+
+msgid "Surround Sound"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Mikrofoni"
+
+#, fuzzy
+msgid "Speaker Source"
+msgstr "Zë folës"
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Mikrofoni"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr ""
+
+msgid "Stereo Mix"
+msgstr ""
+
+msgid "Mono Mix"
+msgstr ""
+
+msgid "Input Mix"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
 msgid "SPDIF Out"
 msgstr ""
 
-msgid "AUX 1 Out"
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Mikrofoni"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Mikrofoni"
+
+#, fuzzy
+msgid "Digital Out"
+msgstr "Dixhitale-1"
+
+#, fuzzy
+msgid "Digital In"
+msgstr "Dixhitale-1"
+
+msgid "HDMI"
 msgstr ""
 
-msgid "AUX 2 Out"
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Mute"
+msgstr ""
+
+msgid "Fast"
+msgstr ""
+
+msgid "Very Low"
+msgstr ""
+
+msgid "Low"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "High"
+msgstr ""
+
+msgid "Very High"
+msgstr ""
+
+msgid "Production"
+msgstr ""
+
+#, fuzzy
+msgid "Front Panel Microphone"
+msgstr "Mikrofoni"
+
+msgid "Front Panel Line In"
+msgstr ""
+
+msgid "Front Panel Headphones"
+msgstr ""
+
+msgid "Front Panel Line Out"
+msgstr ""
+
+msgid "Green Connector"
+msgstr ""
+
+msgid "Pink Connector"
+msgstr ""
+
+msgid "Blue Connector"
+msgstr ""
+
+msgid "White Connector"
+msgstr ""
+
+msgid "Black Connector"
+msgstr ""
+
+msgid "Gray Connector"
+msgstr ""
+
+msgid "Orange Connector"
+msgstr ""
+
+msgid "Red Connector"
+msgstr ""
+
+msgid "Yellow Connector"
+msgstr ""
+
+msgid "Green Front Panel Connector"
+msgstr ""
+
+msgid "Pink Front Panel Connector"
+msgstr ""
+
+msgid "Blue Front Panel Connector"
+msgstr ""
+
+msgid "White Front Panel Connector"
+msgstr ""
+
+msgid "Black Front Panel Connector"
+msgstr ""
+
+msgid "Gray Front Panel Connector"
+msgstr ""
+
+msgid "Orange Front Panel Connector"
+msgstr ""
+
+msgid "Red Front Panel Connector"
+msgstr ""
+
+msgid "Yellow Front Panel Connector"
+msgstr ""
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+msgid "Virtual Mixer Input"
+msgstr ""
+
+msgid "Virtual Mixer Output"
+msgstr ""
+
+msgid "Virtual Mixer Channels"
+msgstr ""
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, c-format
+msgid "%s %d Function"
+msgstr ""
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+
+msgid "Playback is not supported by this audio device."
+msgstr ""
+
+msgid "Audio playback error."
+msgstr ""
+
+msgid "Recording is not supported by this audio device."
+msgstr ""
+
+msgid "Error recording from audio device."
+msgstr ""
+
+msgid "Gain"
+msgstr ""
+
+msgid "Headphone"
 msgstr ""
 
 #, fuzzy, c-format
@@ -310,84 +627,12 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr ""
 
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "E pamundur hapja e file \"%s\" në shkrim."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Gabim gjatë mbylljes së file \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "E pamundur hapja e file \"%s\" për lexim."
-
-#~ msgid "No filename specified."
-#~ msgstr "Nuk është përcaktuar emri i file."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "I pamundur shkrimi tek file \"%s\"."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "E pamundur hapja e dispozitivit të kontrollit \"%s\" për shkrim."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "I pamundur konfigurimi i dispozitivit të zërit \"%s\"."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "I pamundur rregullimi i dispozitivit audio \"%s\" në %d Hz."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "E pamundur hapja e dispozitivit video \"%s\" për shkrim."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "E pamundur mbyllja e dispozitivit video \"%s\"."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
 #~ msgstr ""
-#~ "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr ""
-#~ "E pamundur futja në dispozitivin \"%s\", kontrollo të drejtat e tij."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Dispozitivi \"%s\" nuk ekziston."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për shkrim."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim."
-
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "E pamundur hapja e file vfs \"%s\" për lexim."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Nuk është dhënë asnjë emër file"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Nuk është dhënë asnjë emër file"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "E pamundur mbyllja e file vfs \"%s\"."
-
-#, fuzzy
-#~ msgid "Your OSS device doesn't support mono or stereo."
-#~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
-
-#~ msgid "No device specified."
-#~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
-
-#~ msgid "Device is not open."
-#~ msgstr "Dispozitivi nuk është hapur."
-
-#~ msgid "Device is open."
-#~ msgstr "Dispozitivi është i hapur."
+#~ "Nuk arrin të gjehet asnjë element ngjyra e hapësirës.\n"
+#~ "Ju lutem instaloni një dhe rinisni."
 
 #~ msgid ""
 #~ "The %s element could not be found. This element is essential for "
@@ -398,9 +643,81 @@ msgstr ""
 #~ "playback. Ju lutem instaloni plug-in e duhur dhe kontrollo funksionimin "
 #~ "duke ekzekutuar 'gst-inspect %s'"
 
-#~ msgid ""
-#~ "No usable colorspace element could be found.\n"
-#~ "Please install one and restart."
+#~ msgid "Device is open."
+#~ msgstr "Dispozitivi është i hapur."
+
+#~ msgid "Device is not open."
+#~ msgstr "Dispozitivi nuk është hapur."
+
+#~ msgid "No device specified."
+#~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
+
+#, fuzzy
+#~ msgid "Your OSS device doesn't support mono or stereo."
+#~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "E pamundur mbyllja e file vfs \"%s\"."
+
+#~ msgid "No filename given"
+#~ msgstr "Nuk është dhënë asnjë emër file"
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
+
+#, fuzzy
+#~ msgid "No filename given."
+#~ msgstr "Nuk është dhënë asnjë emër file"
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "E pamundur hapja e file vfs \"%s\" për lexim."
+
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
+
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim."
+
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për shkrim."
+
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Dispozitivi \"%s\" nuk ekziston."
+
+#~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr ""
-#~ "Nuk arrin të gjehet asnjë element ngjyra e hapësirës.\n"
-#~ "Ju lutem instaloni një dhe rinisni."
+#~ "E pamundur futja në dispozitivin \"%s\", kontrollo të drejtat e tij."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr ""
+#~ "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "E pamundur mbyllja e dispozitivit video \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "E pamundur hapja e dispozitivit video \"%s\" për shkrim."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "I pamundur rregullimi i dispozitivit audio \"%s\" në %d Hz."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "I pamundur konfigurimi i dispozitivit të zërit \"%s\"."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "E pamundur hapja e dispozitivit të kontrollit \"%s\" për shkrim."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "I pamundur shkrimi tek file \"%s\"."
+
+#~ msgid "No filename specified."
+#~ msgstr "Nuk është përcaktuar emri i file."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Gabim gjatë mbylljes së file \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "E pamundur hapja e file \"%s\" në shkrim."

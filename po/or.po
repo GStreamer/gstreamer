@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-28 02:51+0100\n"
+"POT-Creation-Date: 2010-05-11 16:06+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -173,26 +173,341 @@ msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋ
 msgid "Could not open audio device for recording."
 msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-msgid "Gain"
+#, fuzzy
+msgid "Could not open audio device for mixer control handling."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#, fuzzy
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+msgid "Master"
 msgstr ""
+
+msgid "Front"
+msgstr ""
+
+#, fuzzy
+msgid "Rear"
+msgstr "ଅନୁଲିପିକରଣ"
+
+msgid "Headphones"
+msgstr ""
+
+msgid "Center"
+msgstr ""
+
+msgid "LFE"
+msgstr ""
+
+msgid "Surround"
+msgstr ""
+
+#, fuzzy
+msgid "Side"
+msgstr "ଭିଡିଓ"
 
 #, fuzzy
 msgid "Built-in Speaker"
 msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
 
-msgid "Headphone"
+msgid "AUX 1 Out"
+msgstr ""
+
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+msgid "Telephone"
 msgstr ""
 
 msgid "Line Out"
 msgstr ""
 
+#, fuzzy
+msgid "Line In"
+msgstr "ଲାଇନ-ଇନ"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "Record Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Output Gain"
+msgstr "ନିର୍ଗମ-ବୃଦ୍ଧି"
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr ""
+
+msgid "Record Source"
+msgstr ""
+
+#, fuzzy
+msgid "Monitor Source"
+msgstr "ପ୍ରଦର୍ଶିକା"
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr ""
+
+msgid "Surround Sound"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#, fuzzy
+msgid "Speaker Source"
+msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr ""
+
+msgid "Stereo Mix"
+msgstr ""
+
+msgid "Mono Mix"
+msgstr ""
+
+msgid "Input Mix"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
 msgid "SPDIF Out"
 msgstr ""
 
-msgid "AUX 1 Out"
+#, fuzzy
+msgid "Microphone 1"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#, fuzzy
+msgid "Digital Out"
+msgstr "ସାଂଖ୍ଯିକ-୧"
+
+#, fuzzy
+msgid "Digital In"
+msgstr "ସାଂଖ୍ଯିକ-୧"
+
+msgid "HDMI"
 msgstr ""
 
-msgid "AUX 2 Out"
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Mute"
+msgstr ""
+
+msgid "Fast"
+msgstr ""
+
+msgid "Very Low"
+msgstr ""
+
+msgid "Low"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "High"
+msgstr ""
+
+msgid "Very High"
+msgstr ""
+
+msgid "Production"
+msgstr ""
+
+#, fuzzy
+msgid "Front Panel Microphone"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+msgid "Front Panel Line In"
+msgstr ""
+
+msgid "Front Panel Headphones"
+msgstr ""
+
+msgid "Front Panel Line Out"
+msgstr ""
+
+msgid "Green Connector"
+msgstr ""
+
+msgid "Pink Connector"
+msgstr ""
+
+msgid "Blue Connector"
+msgstr ""
+
+msgid "White Connector"
+msgstr ""
+
+msgid "Black Connector"
+msgstr ""
+
+msgid "Gray Connector"
+msgstr ""
+
+msgid "Orange Connector"
+msgstr ""
+
+msgid "Red Connector"
+msgstr ""
+
+msgid "Yellow Connector"
+msgstr ""
+
+msgid "Green Front Panel Connector"
+msgstr ""
+
+msgid "Pink Front Panel Connector"
+msgstr ""
+
+msgid "Blue Front Panel Connector"
+msgstr ""
+
+msgid "White Front Panel Connector"
+msgstr ""
+
+msgid "Black Front Panel Connector"
+msgstr ""
+
+msgid "Gray Front Panel Connector"
+msgstr ""
+
+msgid "Orange Front Panel Connector"
+msgstr ""
+
+msgid "Red Front Panel Connector"
+msgstr ""
+
+msgid "Yellow Front Panel Connector"
+msgstr ""
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+msgid "Virtual Mixer Input"
+msgstr ""
+
+msgid "Virtual Mixer Output"
+msgstr ""
+
+msgid "Virtual Mixer Channels"
+msgstr ""
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, c-format
+msgid "%s %d Function"
+msgstr ""
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+
+msgid "Playback is not supported by this audio device."
+msgstr ""
+
+msgid "Audio playback error."
+msgstr ""
+
+msgid "Recording is not supported by this audio device."
+msgstr ""
+
+msgid "Error recording from audio device."
+msgstr ""
+
+msgid "Gain"
+msgstr ""
+
+msgid "Headphone"
 msgstr ""
 
 #, fuzzy, c-format

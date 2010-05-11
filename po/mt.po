@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-28 02:51+0100\n"
+"POT-Creation-Date: 2010-05-11 16:06+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -170,26 +170,368 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Audio device ma jistax jintuża biex tirrekordja."
 
-msgid "Gain"
-msgstr "Gain"
+msgid "Could not open audio device for mixer control handling."
+msgstr "Ma nistax niftaħ apparat tal-awdjo għal mixer control handling."
+
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo għal mixer control handling. Din il-"
+"verzjoni ta' Open Sound System mhux issapportjata minn din l-element."
+
+#, fuzzy
+msgid "Master"
+msgstr "Fast"
+
+msgid "Front"
+msgstr "Quddiem"
+
+msgid "Rear"
+msgstr "Wara"
+
+msgid "Headphones"
+msgstr "Headphones"
+
+#, fuzzy
+msgid "Center"
+msgstr "Center / LFE"
+
+msgid "LFE"
+msgstr ""
+
+#, fuzzy
+msgid "Surround"
+msgstr "Surround sound"
+
+msgid "Side"
+msgstr "Ġenb"
 
 #, fuzzy
 msgid "Built-in Speaker"
 msgstr "Speaker"
 
-msgid "Headphone"
+msgid "AUX 1 Out"
 msgstr ""
 
+msgid "AUX 2 Out"
+msgstr ""
+
+msgid "AUX Out"
+msgstr ""
+
+msgid "3D Depth"
+msgstr ""
+
+msgid "3D Center"
+msgstr ""
+
+msgid "3D Enhance"
+msgstr ""
+
+#, fuzzy
+msgid "Telephone"
+msgstr "Headphones"
+
 msgid "Line Out"
+msgstr ""
+
+#, fuzzy
+msgid "Line In"
+msgstr "Line-in"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "Video In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "AUX In"
+msgstr ""
+
+msgid "Record Gain"
+msgstr ""
+
+msgid "Output Gain"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Boost"
+msgstr "Mikrofonu"
+
+msgid "Loopback"
+msgstr ""
+
+msgid "Diagnostic"
+msgstr ""
+
+msgid "Bass Boost"
+msgstr ""
+
+msgid "Playback Ports"
+msgstr ""
+
+msgid "Input"
+msgstr "Input"
+
+msgid "Record Source"
+msgstr ""
+
+msgid "Monitor Source"
+msgstr ""
+
+msgid "Keyboard Beep"
+msgstr ""
+
+msgid "Simulate Stereo"
+msgstr ""
+
+msgid "Stereo"
+msgstr "Stereo"
+
+#, fuzzy
+msgid "Surround Sound"
+msgstr "Surround sound"
+
+#, fuzzy
+msgid "Microphone Gain"
+msgstr "Mikrofonu"
+
+msgid "Speaker Source"
+msgstr ""
+
+#, fuzzy
+msgid "Microphone Source"
+msgstr "Mikrofonu"
+
+msgid "Jack"
+msgstr ""
+
+msgid "Center / LFE"
+msgstr "Center / LFE"
+
+#, fuzzy
+msgid "Stereo Mix"
+msgstr "Stereo"
+
+msgid "Mono Mix"
+msgstr ""
+
+#, fuzzy
+msgid "Input Mix"
+msgstr "Input mix"
+
+msgid "SPDIF In"
 msgstr ""
 
 msgid "SPDIF Out"
 msgstr ""
 
-msgid "AUX 1 Out"
+#, fuzzy
+msgid "Microphone 1"
+msgstr "Mikrofonu"
+
+#, fuzzy
+msgid "Microphone 2"
+msgstr "Mikrofonu"
+
+msgid "Digital Out"
 msgstr ""
 
-msgid "AUX 2 Out"
+msgid "Digital In"
+msgstr ""
+
+msgid "HDMI"
+msgstr ""
+
+msgid "Modem"
+msgstr ""
+
+msgid "Handset"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "On"
+msgstr "On"
+
+msgid "Off"
+msgstr "Off"
+
+msgid "Mute"
+msgstr ""
+
+msgid "Fast"
+msgstr "Fast"
+
+msgid "Very Low"
+msgstr ""
+
+msgid "Low"
+msgstr "Low"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "High"
+msgstr "High"
+
+#, fuzzy
+msgid "Very High"
+msgstr "Very high"
+
+msgid "Production"
+msgstr "Production"
+
+#, fuzzy
+msgid "Front Panel Microphone"
+msgstr "Mikrofonu tal-panella ta' quddiem"
+
+#, fuzzy
+msgid "Front Panel Line In"
+msgstr "Front panel line-in"
+
+#, fuzzy
+msgid "Front Panel Headphones"
+msgstr "Front panel headphones"
+
+#, fuzzy
+msgid "Front Panel Line Out"
+msgstr "Front panel line-in"
+
+#, fuzzy
+msgid "Green Connector"
+msgstr "Connector aħdar"
+
+#, fuzzy
+msgid "Pink Connector"
+msgstr "Connector roża"
+
+#, fuzzy
+msgid "Blue Connector"
+msgstr "Connector Blu"
+
+#, fuzzy
+msgid "White Connector"
+msgstr "Connector abjad"
+
+#, fuzzy
+msgid "Black Connector"
+msgstr "Connector iswed"
+
+#, fuzzy
+msgid "Gray Connector"
+msgstr "Connector Griż"
+
+#, fuzzy
+msgid "Orange Connector"
+msgstr "Connector oranġjo"
+
+#, fuzzy
+msgid "Red Connector"
+msgstr "Connector aħmar"
+
+#, fuzzy
+msgid "Yellow Connector"
+msgstr "Connector isfar"
+
+#, fuzzy
+msgid "Green Front Panel Connector"
+msgstr "Front panel connector aħdar"
+
+#, fuzzy
+msgid "Pink Front Panel Connector"
+msgstr "Front panel connector roża"
+
+#, fuzzy
+msgid "Blue Front Panel Connector"
+msgstr "Front panel connector blu"
+
+#, fuzzy
+msgid "White Front Panel Connector"
+msgstr "Front panel connector abjad"
+
+#, fuzzy
+msgid "Black Front Panel Connector"
+msgstr "Front panel connector iswed"
+
+#, fuzzy
+msgid "Gray Front Panel Connector"
+msgstr "Front panel connector Griż"
+
+#, fuzzy
+msgid "Orange Front Panel Connector"
+msgstr "Front Panel connector oranġjo"
+
+#, fuzzy
+msgid "Red Front Panel Connector"
+msgstr "Front panel connector aħmar"
+
+#, fuzzy
+msgid "Yellow Front Panel Connector"
+msgstr "Front panel connector isfar"
+
+msgid "Spread Output"
+msgstr ""
+
+msgid "Downmix"
+msgstr ""
+
+#, fuzzy
+msgid "Virtual Mixer Input"
+msgstr "Virtual mixer input"
+
+#, fuzzy
+msgid "Virtual Mixer Output"
+msgstr "Virtual mixer output"
+
+#, fuzzy
+msgid "Virtual Mixer Channels"
+msgstr "Virtual mixer input"
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, c-format
+msgid "%s %d Function"
+msgstr ""
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr ""
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo biex indoqq. Dil il-verżjoni ta' Open "
+"Sound System mhux issapportjatha minn dan l-element."
+
+msgid "Playback is not supported by this audio device."
+msgstr "Id-daqq mhux issappartjat minn dan l-apparat tal-awdjo."
+
+msgid "Audio playback error."
+msgstr "Żball fiid-daqq tal-awdjo."
+
+msgid "Recording is not supported by this audio device."
+msgstr "Irrekordjar mhux issapportjat minn dan l-apparat tal-awdjo."
+
+msgid "Error recording from audio device."
+msgstr "Żball fl-irrekordjar mill-apparat tal-awdjo."
+
+msgid "Gain"
+msgstr "Gain"
+
+msgid "Headphone"
 msgstr ""
 
 #, fuzzy, c-format
@@ -319,21 +661,32 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
 
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Problem biex inwaqqaf streaming capture mill-apparat '%s'."
 
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Problem biex nibda streaming capture mill-apparat '%s'."
 
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Ma nistax nirċievi biżżejjed buffers mill-apparat '%s'."
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Ma nistax nirċievi buffers mill-apparat '%s'."
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Appart '%s' ma jistax jagħmel capture bi %dx%d"
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Appart '%s' ma jagħmilx video capture"
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Ma nstab l-ebda buffer free fl-indiċi %d tal-pool."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr "insufficient memory to enqueue a user pointer buffer. device %s."
 
 #~ msgid ""
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."
@@ -341,29 +694,18 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 #~ "Problema biex inġib video frames mill-apparat '%s'. Il-memorja allokata "
 #~ "mhijiex biżżejjed."
 
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgid ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
 
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Ma nstab l-ebda buffer free fl-indiċi %d tal-pool."
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgstr ""
+#~ "Failed to enumerate possible video formats device '%s' can work with"
 
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Appart '%s' ma jagħmilx video capture"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Appart '%s' ma jistax jagħmel capture bi %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Ma nistax nirċievi buffers mill-apparat '%s'."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Ma nistax nirċievi biżżejjed buffers mill-apparat '%s'."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Problem biex nibda streaming capture mill-apparat '%s'."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Problem biex inwaqqaf streaming capture mill-apparat '%s'."
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
