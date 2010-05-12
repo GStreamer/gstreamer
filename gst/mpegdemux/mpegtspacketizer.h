@@ -148,6 +148,8 @@ GstStructure *mpegts_packetizer_parse_sdt (MpegTSPacketizer *packetizer,
   MpegTSPacketizerSection *section);
 GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer *packetizer,
   MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_tdt (MpegTSPacketizer *packetizer,
+  MpegTSPacketizerSection *section);
 
 G_END_DECLS
 

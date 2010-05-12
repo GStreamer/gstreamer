@@ -1940,6 +1940,75 @@ error:
   return NULL;
 }
 
+GstStructure *
+mpegts_packetizer_parse_tdt (MpegTSPacketizer * packetizer,
+    MpegTSPacketizerSection * section)
+{
+  GstStructure *tdt = NULL;
+  guint16 mjd;
+  guint year, month, day, hour, minute, second;
+  guint8 *data, *end, *utc_ptr;
+
+  GST_DEBUG ("TDT");
+  /* length always 8 */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (section->buffer) != 8)) {
+    GST_WARNING ("PID %d invalid TDT size %d",
+        section->pid, section->section_length);
+    goto error;
+  }
+
+  data = GST_BUFFER_DATA (section->buffer);
+  end = data + GST_BUFFER_SIZE (section->buffer);
+
+  section->table_id = *data++;
+  section->section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+  data += 2;
+
+  if (data + section->section_length != end) {
+    GST_WARNING ("PID %d invalid TDT section length %d expected %d",
+        section->pid, section->section_length, (gint) (end - data));
+    goto error;
+  }
+
+  mjd = GST_READ_UINT16_BE (data);
+  data += 2;
+  utc_ptr = data;
+  if (mjd == G_MAXUINT16) {
+    year = 1900;
+    month = day = hour = minute = second = 0;
+  } else {
+    /* See EN 300 468 Annex C */
+    year = (guint32) (((mjd - 15078.2) / 365.25));
+    month = (guint8) ((mjd - 14956.1 - (guint) (year * 365.25)) / 30.6001);
+    day = mjd - 14956 - (guint) (year * 365.25) - (guint) (month * 30.6001);
+    if (month == 14 || month == 15) {
+      year++;
+      month = month - 1 - 12;
+    } else {
+      month--;
+    }
+    year += 1900;
+    hour = ((utc_ptr[0] & 0xF0) >> 4) * 10 + (utc_ptr[0] & 0x0F);
+    minute = ((utc_ptr[1] & 0xF0) >> 4) * 10 + (utc_ptr[1] & 0x0F);
+    second = ((utc_ptr[2] & 0xF0) >> 4) * 10 + (utc_ptr[2] & 0x0F);
+  }
+  tdt = gst_structure_new ("tdt",
+      "year", G_TYPE_UINT, year,
+      "month", G_TYPE_UINT, month,
+      "day", G_TYPE_UINT, day,
+      "hour", G_TYPE_UINT, hour,
+      "minute", G_TYPE_UINT, minute, "second", G_TYPE_UINT, second, NULL);
+
+  return tdt;
+
+error:
+  if (tdt)
+    gst_structure_free (tdt);
+
+  return NULL;
+}
+
+
 void
 mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
 {
@@ -2199,6 +2268,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
       /* flush stuffing bytes */
       mpegts_packetizer_clear_section (packetizer, stream);
     } else {
+      GST_DEBUG ("section not complete");
       /* section not complete yet */
       section->complete = FALSE;
     }
@@ -2209,6 +2279,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
 
 out:
   packet->data = data;
+  GST_DEBUG ("result: %d complete: %d", res, section->complete);
   return res;
 }
 

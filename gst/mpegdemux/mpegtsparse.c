@@ -1095,16 +1095,28 @@ mpegts_parse_apply_eit (MpegTSParse * parse,
           gst_structure_copy (eit_info)));
 }
 
+static void
+mpegts_parse_apply_tdt (MpegTSParse * parse,
+    guint16 tdt_pid, GstStructure * tdt_info)
+{
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (tdt_info)));
+}
+
 static gboolean
 mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
 {
   gboolean res = TRUE;
   GstStructure *structure = NULL;
 
-  if (G_UNLIKELY (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
-              GST_BUFFER_SIZE (section->buffer)) != 0)) {
-    GST_WARNING_OBJECT (parse, "bad crc in psi pid 0x%x", section->pid);
-    return FALSE;
+  /* table ids 0x70 - 0x72 do not have a crc */
+  if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x72)) {
+    if (G_UNLIKELY (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
+                GST_BUFFER_SIZE (section->buffer)) != 0)) {
+      GST_WARNING_OBJECT (parse, "bad crc in psi pid 0x%x", section->pid);
+      return FALSE;
+    }
   }
 
   switch (section->table_id) {
@@ -1183,6 +1195,14 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
       structure = mpegts_packetizer_parse_eit (parse->packetizer, section);
       if (G_LIKELY (structure))
         mpegts_parse_apply_eit (parse, section->pid, structure);
+      else
+        res = FALSE;
+      break;
+    case 0x70:
+      /* TDT (Time and Date table) */
+      structure = mpegts_packetizer_parse_tdt (parse->packetizer, section);
+      if (G_LIKELY (structure))
+        mpegts_parse_apply_tdt (parse, section->pid, structure);
       else
         res = FALSE;
       break;
