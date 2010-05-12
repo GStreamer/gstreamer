@@ -4531,6 +4531,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
                     &data_len)) != GST_FLOW_OK)
           break;
 
+        if (G_UNLIKELY (stream == NULL)) {
+          GST_WARNING_OBJECT (demux,
+              "Unexpected CodecState subelement - ignoring");
+          break;
+        }
+
         g_free (stream->codec_state);
         stream->codec_state = data;
         stream->codec_state_size = data_len;
