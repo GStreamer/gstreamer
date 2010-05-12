@@ -162,10 +162,15 @@ error_commit_buffer:
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
-    if (!decode->display)
-        decode->display =
-            gst_vaapi_display_lookup_downstream(GST_ELEMENT(decode));
-    return decode->display != NULL;
+    GstVaapiDisplay *display;
+
+    if (!decode->display) {
+        display = gst_vaapi_display_lookup_downstream(GST_ELEMENT(decode));
+        if (!display)
+            return FALSE;
+        decode->display = g_object_ref(display);
+    }
+    return TRUE;
 }
 
 static gboolean
