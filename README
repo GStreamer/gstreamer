@@ -62,10 +62,6 @@ Hardware requirements
 Usage
 -----
 
-The GStreamer pipeline currently has to be built manually.
-i.e. neither decodebin{,2} nor playbin{,2} would select the VA-API
-elements automatically.
-
   * Play an H.264 video with an MP4 container in fullscreen mode
   $ gst-launch-0.10 -v filesrc location=/path/to/video.mp4 ! \
       qtdemux ! vaapidecode ! vaapisink fullscreen=true
