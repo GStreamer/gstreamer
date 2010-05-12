@@ -74,6 +74,8 @@ struct _GstVaapiSink {
     GstVaapiTexture    *texture;
     guint               video_width;
     guint               video_height;
+    gint                video_par_n;
+    gint                video_par_d;
     GstVaapiRectangle   display_rect;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;

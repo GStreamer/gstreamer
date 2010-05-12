@@ -124,15 +124,14 @@ gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
+static gboolean
+update_display_rect(GstVaapiSink *sink, guint display_width, guint display_height);
+
 static void
 gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
     XWindowAttributes wattr;
-
-    if (sink->window &&
-        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
-        return;
 
     gst_vaapi_display_lock(sink->display);
     XGetWindowAttributes(
@@ -141,8 +140,17 @@ gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
         &wattr
     );
     gst_vaapi_display_unlock(sink->display);
-    sink->window_width  = wattr.width;
-    sink->window_height = wattr.height;
+
+    if (wattr.width  != sink->window_width ||
+        wattr.height != sink->window_height) {
+        update_display_rect(sink, wattr.width, wattr.height);
+        sink->window_width  = wattr.width;
+        sink->window_height = wattr.height;
+    }
+
+    if (sink->window &&
+        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
+        return;
 
     if (sink->window) {
         g_object_unref(sink->window);
@@ -270,16 +278,82 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 }
 
 static gboolean
+update_display_rect(GstVaapiSink *sink, guint display_width, guint display_height)
+{
+    GstVaapiRectangle * const display_rect = &sink->display_rect;
+    guint num, den, display_par_n, display_par_d;
+    double display_ratio;
+    gboolean success;
+
+    gst_vaapi_display_get_pixel_aspect_ratio(
+        sink->display,
+        &display_par_n, &display_par_d
+    );
+
+    success = gst_video_calculate_display_ratio(
+        &num, &den,
+        sink->video_width, sink->video_height,
+        sink->video_par_n, sink->video_par_d,
+        display_par_n, display_par_d
+    );
+    if (!success)
+        return FALSE;
+    GST_DEBUG("video size %dx%d, calculated display ratio %d/%d",
+              sink->video_width, sink->video_height, num, den);
+
+    if ((sink->video_height % den) == 0) {
+        GST_DEBUG("keeping video height");
+        display_rect->width  =
+            gst_util_uint64_scale_int(sink->video_height, num, den);
+        display_rect->height = sink->video_height;
+    }
+    else if ((sink->video_width % num) == 0) {
+        GST_DEBUG("keeping video width");
+        display_rect->width  = sink->video_width;
+        display_rect->height =
+            gst_util_uint64_scale_int(sink->video_width, den, num);
+    }
+    else {
+        GST_DEBUG("approximating while keeping video height");
+        display_rect->width  =
+            gst_util_uint64_scale_int(sink->video_height, num, den);
+        display_rect->height = sink->video_height;
+    }
+    display_ratio = (gdouble)display_rect->width / display_rect->height;
+    GST_DEBUG("scaling to %ux%u", display_rect->width, display_rect->height);
+
+    if (sink->fullscreen ||
+        display_rect->width  > display_width ||
+        display_rect->height > display_height) {
+        if (sink->video_width > sink->video_height) {
+            display_rect->width  = display_width;
+            display_rect->height = display_width / display_ratio;
+        }
+        else {
+            display_rect->width  = display_height * display_ratio;
+            display_rect->height = display_height;
+        }
+    }
+    GST_DEBUG("display size %ux%u", display_rect->width, display_rect->height);
+
+    if (sink->fullscreen) {
+        display_rect->x  = (display_width  - display_rect->width)  / 2;
+        display_rect->y  = (display_height - display_rect->height) / 2;
+    }
+    else {
+        display_rect->x  = 0;
+        display_rect->y  = 0;
+    }
+    return TRUE;
+}
+
+static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVaapiRectangle * const disp_rect = &sink->display_rect;
-    guint num, den;
-    guint win_width, win_height;
-    guint display_width, display_height, display_par_n, display_par_d;
+    guint display_width, display_height, win_width, win_height;
     gint video_width, video_height, video_par_n = 1, video_par_d = 1;
-    gdouble win_ratio;
 
     if (!structure)
         return FALSE;
@@ -291,79 +365,30 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     sink->video_height = video_height;
 
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
+    sink->video_par_n  = video_par_n;
+    sink->video_par_d  = video_par_d;
+
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
-    gst_vaapi_display_get_pixel_aspect_ratio(
-        sink->display,
-        &display_par_n, &display_par_d
-    );
-
-    if (!gst_video_calculate_display_ratio(&num, &den,
-                                           video_width, video_height,
-                                           video_par_n, video_par_d,
-                                           display_par_n, display_par_d))
+    if (!update_display_rect(sink, display_width, display_height))
         return FALSE;
-    GST_DEBUG("video size %dx%d, calculated display ratio %d/%d",
-              video_width, video_height, num, den);
-
-    if ((video_height % den) == 0) {
-        GST_DEBUG("keeping video height");
-        win_width  = gst_util_uint64_scale_int(video_height, num, den);
-        win_height = video_height;
-    }
-    else if ((video_width % num) == 0) {
-        GST_DEBUG("keeping video width");
-        win_width  = video_width;
-        win_height = gst_util_uint64_scale_int(video_width, den, num);
-    }
-    else {
-        GST_DEBUG("approximating while keeping video height");
-        win_width  = gst_util_uint64_scale_int (video_height, num, den);
-        win_height = video_height;
-    }
-    win_ratio = (gdouble)win_width / win_height;
-    GST_DEBUG("scaling to %ux%u", win_width, win_height);
-
-    if (sink->fullscreen ||
-        win_width > display_width || win_height > display_height) {
-        if (video_width > video_height) {
-            win_width  = display_width;
-            win_height = display_width / win_ratio;
-        }
-        else {
-            win_width  = display_height * win_ratio;
-            win_height = display_height;
-        }
-    }
-    GST_DEBUG("window size %ux%u", win_width, win_height);
-
-    if (!sink->window) {
-        gst_vaapi_display_lock(sink->display);
-        gst_x_overlay_prepare_xwindow_id(GST_X_OVERLAY(sink));
-        gst_vaapi_display_unlock(sink->display);
-        if (sink->window) {
-            win_width  = sink->window_width;
-            win_height = sink->window_height;
-        }
-    }
 
     if (sink->fullscreen) {
-        disp_rect->x  = (display_width - win_width) / 2;
-        disp_rect->y  = (display_height - win_height) / 2;
+        win_width  = display_width;
+        win_height = display_height;
     }
     else {
-        disp_rect->x  = 0;
-        disp_rect->y  = 0;
+        win_width  = sink->display_rect.width;
+        win_height = sink->display_rect.height;
     }
-    disp_rect->width  = win_width;
-    disp_rect->height = win_height;
 
     if (sink->window)
         gst_vaapi_window_set_size(sink->window, win_width, win_height);
     else {
-        if (sink->fullscreen) {
-            win_width  = display_width;
-            win_height = display_height;
-        }
+        gst_vaapi_display_lock(sink->display);
+        gst_x_overlay_prepare_xwindow_id(GST_X_OVERLAY(sink));
+        gst_vaapi_display_unlock(sink->display);
+        if (sink->window)
+            return TRUE;
         if (!gst_vaapisink_ensure_window(sink, win_width, win_height))
             return FALSE;
         gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
@@ -768,6 +793,8 @@ gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->texture        = NULL;
     sink->video_width    = 0;
     sink->video_height   = 0;
+    sink->video_par_n    = 1;
+    sink->video_par_d    = 1;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;
     sink->use_glx        = USE_VAAPISINK_GLX;
