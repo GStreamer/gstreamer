@@ -776,11 +776,11 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 }
 
 /*
- * Read the next element as an ASCII string.
+ * Read the next element as a C string.
  */
 
-GstFlowReturn
-gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
+static GstFlowReturn
+gst_ebml_read_string (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
   guint8 *data;
   guint size;
@@ -798,6 +798,36 @@ gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 }
 
 /*
+ * Read the next element as an ASCII string.
+ */
+
+GstFlowReturn
+gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
+{
+  GstFlowReturn ret;
+  gchar *iter;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  guint64 oldoff = ebml->offset;
+#endif
+
+  ret = gst_ebml_read_string (ebml, id, str);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  for (iter = *str; *iter != '\0'; iter++) {
+    if (G_UNLIKELY (*iter & 0x80)) {
+      GST_ERROR_OBJECT (ebml,
+          "Invalid ASCII string at offset %" G_GUINT64_FORMAT, oldoff);
+      g_free (*str);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  return ret;
+}
+
+/*
  * Read the next element as a UTF-8 string.
  */
 
@@ -810,7 +840,7 @@ gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
   guint64 oldoff = ebml->offset;
 #endif
 
-  ret = gst_ebml_read_ascii (ebml, id, str);
+  ret = gst_ebml_read_string (ebml, id, str);
   if (ret != GST_FLOW_OK)
     return ret;
 
