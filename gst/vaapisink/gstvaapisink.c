@@ -121,6 +121,9 @@ gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
 
 /* GstXOverlay interface */
 
+static gboolean
+gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid);
+
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
@@ -131,38 +134,8 @@ static void
 gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
-    XWindowAttributes wattr;
 
-    gst_vaapi_display_lock(sink->display);
-    XGetWindowAttributes(
-        gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(sink->display)),
-        xid,
-        &wattr
-    );
-    gst_vaapi_display_unlock(sink->display);
-
-    if (wattr.width  != sink->window_width ||
-        wattr.height != sink->window_height) {
-        update_display_rect(sink, wattr.width, wattr.height);
-        sink->window_width  = wattr.width;
-        sink->window_height = wattr.height;
-    }
-
-    if (sink->window &&
-        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
-        return;
-
-    if (sink->window) {
-        g_object_unref(sink->window);
-        sink->window = NULL;
-    }
-
-#if USE_VAAPISINK_GLX
-    if (sink->use_glx)
-        sink->window = gst_vaapi_window_glx_new_with_xid(sink->display, xid);
-    else
-#endif
-        sink->window = gst_vaapi_window_x11_new_with_xid(sink->display, xid);
+    gst_vaapisink_ensure_window_xid(sink, xid);
 }
 
 static void
@@ -213,6 +186,23 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
 }
 
 static inline gboolean
+gst_vaapisink_ensure_display(GstVaapiSink *sink)
+{
+    if (!sink->display) {
+#if USE_VAAPISINK_GLX
+        if (sink->use_glx)
+            sink->display = gst_vaapi_display_glx_new(sink->display_name);
+        else
+#endif
+            sink->display = gst_vaapi_display_x11_new(sink->display_name);
+        if (!sink->display || !gst_vaapi_display_get_display(sink->display))
+            return FALSE;
+        g_object_set(sink, "synchronous", sink->synchronous, NULL);
+    }
+    return sink->display != NULL;
+}
+
+static inline gboolean
 gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 {
     GstVaapiDisplay * const display = sink->display;
@@ -233,21 +223,45 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
     return sink->window != NULL;
 }
 
-static inline gboolean
-gst_vaapisink_ensure_display(GstVaapiSink *sink)
+static gboolean
+gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid)
 {
-    if (!sink->display) {
-#if USE_VAAPISINK_GLX
-        if (sink->use_glx)
-            sink->display = gst_vaapi_display_glx_new(sink->display_name);
-        else
-#endif
-            sink->display = gst_vaapi_display_x11_new(sink->display_name);
-        if (!sink->display || !gst_vaapi_display_get_display(sink->display))
-            return FALSE;
-        g_object_set(sink, "synchronous", sink->synchronous, NULL);
+    XWindowAttributes wattr;
+
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+
+    gst_vaapi_display_lock(sink->display);
+    XGetWindowAttributes(
+        gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(sink->display)),
+        xid,
+        &wattr
+    );
+    gst_vaapi_display_unlock(sink->display);
+
+    if (wattr.width  != sink->window_width ||
+        wattr.height != sink->window_height) {
+        update_display_rect(sink, wattr.width, wattr.height);
+        sink->window_width  = wattr.width;
+        sink->window_height = wattr.height;
     }
-    return sink->display != NULL;
+
+    if (sink->window &&
+        gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)) == xid)
+        return TRUE;
+
+    if (sink->window) {
+        g_object_unref(sink->window);
+        sink->window = NULL;
+    }
+
+#if USE_VAAPISINK_GLX
+    if (sink->use_glx)
+        sink->window = gst_vaapi_window_glx_new_with_xid(sink->display, xid);
+    else
+#endif
+        sink->window = gst_vaapi_window_x11_new_with_xid(sink->display, xid);
+    return sink->window != NULL;
 }
 
 static gboolean
