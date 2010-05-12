@@ -672,7 +672,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 
     return gst_element_register(plugin,
                                 GST_PLUGIN_NAME,
-                                GST_RANK_NONE,
+                                GST_RANK_SECONDARY,
                                 GST_TYPE_VAAPICONVERT);
 }
 
