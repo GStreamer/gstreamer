@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-05
+gst-vaapi NEWS -- summary of changes.  2010-05-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.1 - DD.May.2010
+* Fix integration within the playbin2 pipeline
 
 Version 0.2.0 - 05.May.2010
 * Relicense gst-libs/ code to LGPL v2.1+

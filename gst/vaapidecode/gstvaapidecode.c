@@ -31,6 +31,7 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
+#include <gst/vaapi/gstvaapiutils_gst.h>
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -157,26 +158,13 @@ error_commit_buffer:
     }
 }
 
-static gboolean
+static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
-    GstVaapiVideoSink *sink;
-    GstVaapiDisplay *display;
-
-    if (decode->display)
-        return TRUE;
-
-    /* Look for a downstream vaapisink */
-    sink = gst_vaapi_video_sink_lookup(GST_ELEMENT(decode));
-    if (!sink)
-        return FALSE;
-
-    display = gst_vaapi_video_sink_get_display(sink);
-    if (!display)
-        return FALSE;
-
-    decode->display = g_object_ref(display);
-    return TRUE;
+    if (!decode->display)
+        decode->display =
+            gst_vaapi_display_lookup_downstream(GST_ELEMENT(decode));
+    return decode->display != NULL;
 }
 
 static gboolean
