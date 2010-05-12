@@ -154,6 +154,13 @@ PKG_CHECK_MODULES([GST_VIDEO],
 AC_SUBST(GST_VIDEO_CFLAGS)
 AC_SUBST(GST_VIDEO_LIBS)
 
+dnl Check for GStreamer interfaces
+PKG_CHECK_MODULES([GST_INTERFACES],
+    [gstreamer-interfaces-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
+)
+AC_SUBST(GST_INTERFACES_CFLAGS)
+AC_SUBST(GST_INTERFACES_LIBS)
+
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking

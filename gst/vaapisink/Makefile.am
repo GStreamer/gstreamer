@@ -23,12 +23,14 @@ libgstvaapisink_la_CFLAGS =	\
 	$(libgstvaapi_CFLAGS)	\
 	$(GST_CFLAGS)		\
 	$(GST_VIDEO_CFLAGS)	\
+	$(GST_INTERFACES_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 
 libgstvaapisink_la_LIBADD =	\
 	$(libgstvaapi_LIBS)	\
 	$(GST_LIBS)		\
 	$(GST_VIDEO_LIBS)	\
+	$(GST_INTERFACES_LIBS)	\
 	$(GST_PLUGINS_BASE_LIBS)
 
 libgstvaapisink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
