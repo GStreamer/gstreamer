@@ -49,7 +49,7 @@ static const GstElementDetails gst_vaapiconvert_details =
 /* Default templates */
 static const char gst_vaapiconvert_yuv_caps_str[] =
     "video/x-raw-yuv, "
-    "width = (int) [ 1, MAX ], "
+    "width  = (int) [ 1, MAX ], "
     "height = (int) [ 1, MAX ]; ";
 
 static const char gst_vaapiconvert_vaapi_caps_str[] =
@@ -83,8 +83,11 @@ enum {
     PROP_DIRECT_RENDERING,
 };
 
-static gboolean gst_vaapiconvert_start(GstBaseTransform *trans);
-static gboolean gst_vaapiconvert_stop(GstBaseTransform *trans);
+static gboolean
+gst_vaapiconvert_start(GstBaseTransform *trans);
+
+static gboolean
+gst_vaapiconvert_stop(GstBaseTransform *trans);
 
 static GstFlowReturn
 gst_vaapiconvert_transform(
@@ -151,7 +154,8 @@ gst_vaapiconvert_destroy(GstVaapiConvert *convert)
     }
 }
 
-static void gst_vaapiconvert_base_init(gpointer klass)
+static void
+gst_vaapiconvert_base_init(gpointer klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
@@ -291,7 +295,8 @@ gst_vaapiconvert_init(GstVaapiConvert *convert, GstVaapiConvertClass *klass)
     g_object_unref(sinkpad);
 }
 
-static gboolean gst_vaapiconvert_start(GstBaseTransform *trans)
+static gboolean
+gst_vaapiconvert_start(GstBaseTransform *trans)
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
     GstVaapiVideoSink *sink;
@@ -310,7 +315,8 @@ static gboolean gst_vaapiconvert_start(GstBaseTransform *trans)
     return TRUE;
 }
 
-static gboolean gst_vaapiconvert_stop(GstBaseTransform *trans)
+static gboolean
+gst_vaapiconvert_stop(GstBaseTransform *trans)
 {
     GstVaapiConvert * const convert = GST_VAAPICONVERT(trans);
 
@@ -665,7 +671,8 @@ gst_vaapiconvert_prepare_output_buffer(
     return GST_FLOW_OK;
 }
 
-static gboolean plugin_init(GstPlugin *plugin)
+static gboolean
+plugin_init(GstPlugin *plugin)
 {
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapiconvert,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);

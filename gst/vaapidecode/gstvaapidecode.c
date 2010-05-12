@@ -51,7 +51,7 @@ static const GstElementDetails gst_vaapidecode_details =
 /* Default templates */
 #define GST_CAPS_CODEC(CODEC)                   \
     CODEC ", "                                  \
-    "width = (int) [ 1, MAX ], "                \
+    "width  = (int) [ 1, MAX ], "               \
     "height = (int) [ 1, MAX ]; "
 
 static const char gst_vaapidecode_sink_caps_str[] =
@@ -537,7 +537,8 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     gst_element_add_pad(GST_ELEMENT(decode), decode->srcpad);
 }
 
-static gboolean plugin_init(GstPlugin *plugin)
+static gboolean
+plugin_init(GstPlugin *plugin)
 {
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidecode,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);

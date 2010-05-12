@@ -90,12 +90,14 @@ gst_vaapi_video_sink_do_get_display(GstVaapiVideoSink *sink)
     return gst_vaapisink_get_display(GST_VAAPISINK(sink));
 }
 
-static void gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
+static void
+gst_vaapi_video_sink_iface_init(GstVaapiVideoSinkInterface *iface)
 {
     iface->get_display = gst_vaapi_video_sink_do_get_display;
 }
 
-static void gst_vaapisink_iface_init(GType type)
+static void
+gst_vaapisink_iface_init(GType type)
 {
     const GType g_define_type_id = type;
 
@@ -571,7 +573,8 @@ gst_vaapisink_get_property(
     }
 }
 
-static void gst_vaapisink_base_init(gpointer klass)
+static void
+gst_vaapisink_base_init(gpointer klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
@@ -583,7 +586,8 @@ static void gst_vaapisink_base_init(gpointer klass)
     );
 }
 
-static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
+static void
+gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 {
     GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
     GstBaseSinkClass * const basesink_class = GST_BASE_SINK_CLASS(klass);
@@ -653,7 +657,8 @@ static void gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               G_PARAM_READWRITE));
 }
 
-static void gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
+static void
+gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
 {
     sink->display_name   = NULL;
     sink->display        = NULL;
@@ -677,7 +682,8 @@ gst_vaapisink_get_display(GstVaapiSink *sink)
     return sink->display;
 }
 
-static gboolean plugin_init(GstPlugin *plugin)
+static gboolean
+plugin_init(GstPlugin *plugin)
 {
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
