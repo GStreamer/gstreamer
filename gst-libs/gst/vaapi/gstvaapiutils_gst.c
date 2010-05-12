@@ -55,7 +55,7 @@ lookup_through_peer_buffer(GstElement *element)
 
     GST_DEBUG("looking for a GstVaapiVideoBuffer from peer");
 
-    /* Lookup for a GstVaapiVideoBuffer from peer */
+    /* Look for a GstVaapiVideoBuffer from peer */
     pad = gst_element_get_static_pad(element, "src");
     if (!pad)
         return NULL;
