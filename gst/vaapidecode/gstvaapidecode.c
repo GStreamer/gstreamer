@@ -168,38 +168,49 @@ gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 }
 
 static gboolean
-gst_vaapidecode_create(GstVaapiDecode *decode)
+gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
     if (!gst_vaapidecode_ensure_display(decode))
         return FALSE;
 
     if (decode->use_ffmpeg)
-        decode->decoder =
-            gst_vaapi_decoder_ffmpeg_new(decode->display, decode->decoder_caps);
-    return decode->decoder != NULL;
+        decode->decoder = gst_vaapi_decoder_ffmpeg_new(decode->display, caps);
+    if (!decode->decoder)
+        return FALSE;
+
+    decode->decoder_caps = gst_caps_ref(caps);
+    return TRUE;
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    if (decode->decoder_caps) {
-        gst_caps_unref(decode->decoder_caps);
-        decode->decoder_caps = NULL;
-    }
-
     if (decode->decoder) {
         gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
         decode->decoder = NULL;
     }
 
-    if (decode->display) {
-        g_object_unref(decode->display);
-        decode->display = NULL;
+    if (decode->decoder_caps) {
+        gst_caps_unref(decode->decoder_caps);
+        decode->decoder_caps = NULL;
     }
 }
 
-static void gst_vaapidecode_base_init(gpointer klass)
+static gboolean
+gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
+{
+    if (decode->decoder &&
+        decode->decoder_caps &&
+        gst_caps_is_always_compatible(caps, decode->decoder_caps))
+        return TRUE;
+
+    gst_vaapidecode_destroy(decode);
+    return gst_vaapidecode_create(decode, caps);
+}
+
+static void
+gst_vaapidecode_base_init(gpointer klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
@@ -221,7 +232,14 @@ static void gst_vaapidecode_base_init(gpointer klass)
 static void
 gst_vaapidecode_finalize(GObject *object)
 {
-    gst_vaapidecode_destroy(GST_VAAPIDECODE(object));
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
+
+    gst_vaapidecode_destroy(decode);
+
+    if (decode->display) {
+        g_object_unref(decode->display);
+        decode->display = NULL;
+    }
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -328,7 +346,6 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
     gboolean success;
 
     g_return_val_if_fail(pad == decode->sinkpad, FALSE);
-    decode->decoder_caps = gst_caps_ref(caps);
 
     other_caps = gst_caps_from_string(gst_vaapidecode_src_caps_str);
     if (!other_caps)
@@ -351,18 +368,16 @@ gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
 
     success = gst_pad_set_caps(decode->srcpad, other_caps);
     gst_caps_unref(other_caps);
-    return success;
+    if (!success)
+        return FALSE;
+
+    return gst_vaapidecode_reset(decode, caps);
 }
 
 static GstFlowReturn
 gst_vaapidecode_chain(GstPad *pad, GstBuffer *buf)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
-
-    if (!decode->decoder) {
-        if (!gst_vaapidecode_create(decode))
-            goto error_create_decoder;
-    }
 
     if (!gst_vaapi_decoder_put_buffer(decode->decoder, buf))
         goto error_push_buffer;
@@ -371,12 +386,6 @@ gst_vaapidecode_chain(GstPad *pad, GstBuffer *buf)
     return gst_vaapidecode_step(decode);
 
     /* ERRORS */
-error_create_decoder:
-    {
-        GST_DEBUG("failed to create decoder");
-        gst_buffer_unref(buf);
-        return GST_FLOW_UNEXPECTED;
-    }
 error_push_buffer:
     {
         GST_DEBUG("failed to push input buffer to decoder");
