@@ -70,6 +70,7 @@ IGNORE_HFILES = \
 	gstvaapiobject_priv.h \
 	gstvaapiutils.h \
 	gstvaapiutils_glx.h \
+	gstvaapiutils_gst.h \
 	gstvaapiutils_x11.h \
 	$(NULL)
 
