@@ -3,6 +3,7 @@ Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.2.1 - DD.May.2010
 * Fix integration within the playbin2 pipeline
+* Fix vaapidecode to expose the HW supported caps only
 
 Version 0.2.0 - 05.May.2010
 * Relicense gst-libs/ code to LGPL v2.1+

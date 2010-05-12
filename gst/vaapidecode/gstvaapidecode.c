@@ -28,6 +28,7 @@
 
 #include "config.h"
 #include "gstvaapidecode.h"
+#include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
@@ -241,6 +242,11 @@ gst_vaapidecode_finalize(GObject *object)
         decode->display = NULL;
     }
 
+    if (decode->allowed_caps) {
+        gst_caps_unref(decode->allowed_caps);
+        decode->allowed_caps = NULL;
+    }
+
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -337,6 +343,87 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 }
 
 static gboolean
+gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
+{
+    GstVaapiDisplay *display;
+    GstCaps *decode_caps;
+    guint i, n_decode_caps;
+
+    if (decode->allowed_caps)
+        return TRUE;
+
+    if (gst_vaapidecode_ensure_display(decode))
+        display = g_object_ref(decode->display);
+    else {
+        display = gst_vaapi_display_x11_new(NULL);
+        if (!display)
+            goto error_no_display;
+    }
+
+    decode_caps = gst_vaapi_display_get_decode_caps(display);
+    if (!decode_caps)
+        goto error_no_decode_caps;
+    n_decode_caps = gst_caps_get_size(decode_caps);
+
+    decode->allowed_caps = gst_caps_new_empty();
+    if (!decode->allowed_caps)
+        goto error_no_memory;
+
+    for (i = 0; i < n_decode_caps; i++) {
+        GstStructure *structure;
+        structure = gst_caps_get_structure(decode_caps, i);
+        if (!structure)
+            continue;
+        structure = gst_structure_copy(structure);
+        if (!structure)
+            continue;
+        gst_structure_remove_field(structure, "profile");
+        gst_structure_set(
+            structure,
+            "width",  GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            NULL
+        );
+        gst_caps_merge_structure(decode->allowed_caps, structure);
+    }
+
+    gst_caps_unref(decode_caps);
+    g_object_unref(display);
+    return TRUE;
+
+    /* ERRORS */
+error_no_display:
+    {
+        GST_DEBUG("failed to retrieve VA display");
+        return FALSE;
+    }
+error_no_decode_caps:
+    {
+        GST_DEBUG("failed to retrieve VA decode caps");
+        g_object_unref(display);
+        return FALSE;
+    }
+error_no_memory:
+    {
+        GST_DEBUG("failed to allocate allowed-caps set");
+        gst_caps_unref(decode_caps);
+        g_object_unref(display);
+        return FALSE;
+    }
+}
+
+static GstCaps *
+gst_vaapidecode_get_caps(GstPad *pad)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
+
+    if (!gst_vaapidecode_ensure_allowed_caps(decode))
+        return gst_caps_new_empty();
+
+    return gst_caps_ref(decode->allowed_caps);
+}
+
+static gboolean
 gst_vaapidecode_set_caps(GstPad *pad, GstCaps *caps)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(GST_OBJECT_PARENT(pad));
@@ -424,6 +511,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
     decode->display      = NULL;
     decode->decoder      = NULL;
     decode->decoder_caps = NULL;
+    decode->allowed_caps = NULL;
     decode->use_ffmpeg   = TRUE;
 
     /* Pad through which data comes in to the element */
@@ -432,6 +520,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
         "sink"
     );
 
+    gst_pad_set_getcaps_function(decode->sinkpad, gst_vaapidecode_get_caps);
     gst_pad_set_setcaps_function(decode->sinkpad, gst_vaapidecode_set_caps);
     gst_pad_set_chain_function(decode->sinkpad, gst_vaapidecode_chain);
     gst_pad_set_event_function(decode->sinkpad, gst_vaapidecode_sink_event);
