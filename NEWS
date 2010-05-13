@@ -1,7 +1,7 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-12
+gst-vaapi NEWS -- summary of changes.  2010-05-13
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.2.1 - 12.May.2010
+Version 0.2.1 - 13.May.2010
 * Fix integration within the playbin2 pipeline
 * Fix vaapidecode to expose the HW supported caps only
 * Add GstXOverlay interface to vaapisink (e.g. for Totem)
