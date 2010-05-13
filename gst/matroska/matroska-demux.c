@@ -4636,6 +4636,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
 
+      if (G_UNLIKELY (lace_size[n] > size)) {
+        GST_WARNING_OBJECT (demux, "Invalid lace size");
+        break;
+      }
+
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
       GST_DEBUG_OBJECT (demux, "created subbuffer %p", sub);
