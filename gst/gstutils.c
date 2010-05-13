@@ -3989,10 +3989,8 @@ gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
 
   /* simplify */
   gcd = gst_util_greatest_common_divisor (N, D);
-  if (gcd) {
-    N /= gcd;
-    D /= gcd;
-  }
+  N /= gcd;
+  D /= gcd;
 
   /* set results */
   *dest_n = N;
@@ -4038,6 +4036,9 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
 
   *res_n = a_n * b_n;
   *res_d = a_d * b_d;
+  gcd = gst_util_greatest_common_divisor (*res_n, *res_d);
+  *res_n /= gcd;
+  *res_d /= gcd;
 
   return TRUE;
 }
