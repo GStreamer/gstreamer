@@ -609,8 +609,8 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
       &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
-  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET (buf) = frame->presentation_frame_number;
+  GST_BUFFER_OFFSET_END (buf) = frame->presentation_frame_number + 1;
 
   if (frame->is_sync_point) {
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
