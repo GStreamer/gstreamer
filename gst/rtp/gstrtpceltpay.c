@@ -141,7 +141,16 @@ gst_rtp_celt_pay_add_queued (GstRtpCELTPay * rtpceltpay, GstBuffer * buffer,
   g_queue_push_tail (rtpceltpay->queue, buffer);
   rtpceltpay->sbytes += ssize;
   rtpceltpay->bytes += size;
-  rtpceltpay->qduration += duration;
+  /* only add durations when we have a valid previous duration */
+  if (rtpceltpay->qduration != -1) {
+    if (duration != -1)
+      /* only add valid durations */
+      rtpceltpay->qduration += duration;
+    else
+      /* if we add a buffer without valid duration, our total queued duration
+       * becomes unknown */
+      rtpceltpay->qduration = -1;
+  }
 }
 
 static gboolean
@@ -396,9 +405,12 @@ gst_rtp_celt_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   GST_DEBUG_OBJECT (rtpceltpay, "bytes for size %u", ssize);
 
-  /* calculate the size and duration of the packet */
+  /* calculate what the new size and duration would be of the packet */
   payload_len = ssize + size + rtpceltpay->bytes + rtpceltpay->sbytes;
-  packet_dur = rtpceltpay->qduration + duration;
+  if (rtpceltpay->qduration != -1 && duration != -1)
+    packet_dur = rtpceltpay->qduration + duration;
+  else
+    packet_dur = 0;
 
   packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
 
