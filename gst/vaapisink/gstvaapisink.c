@@ -211,6 +211,8 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
         sink->display,
         &display_par_n, &display_par_d
     );
+    GST_DEBUG("display pixel-aspect-ratio %d/%d",
+              display_par_n, display_par_d);
 
     success = gst_video_calculate_display_ratio(
         &num, &den,
@@ -220,7 +222,7 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     );
     if (!success)
         return FALSE;
-    GST_DEBUG("video size %dx%d, calculated display ratio %d/%d",
+    GST_DEBUG("video size %dx%d, calculated render ratio %d/%d",
               sink->video_width, sink->video_height, num, den);
 
     if ((sink->video_height % den) == 0) {
@@ -380,6 +382,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
     sink->video_par_n  = video_par_n;
     sink->video_par_d  = video_par_d;
+    GST_DEBUG("video pixel-aspect-ratio %d/%d", video_par_n, video_par_d);
 
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
     if (!gst_vaapisink_ensure_render_rect(sink, display_width, display_height))
