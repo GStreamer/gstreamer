@@ -264,8 +264,6 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_scale_transform);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_scale_fixate_caps);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
-
-  trans_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
@@ -544,6 +542,10 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   if (to_dar_n != from_dar_n || to_dar_d != from_dar_d)
     GST_WARNING_OBJECT (videoscale, "Can't keep DAR!");
+
+  gst_base_transform_set_passthrough (trans,
+      (videoscale->from_width == videoscale->to_width
+          && videoscale->from_height == videoscale->to_height));
 
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d (par=%d/%d dar=%d/%d), size %d "
       "-> to=%dx%d (par=%d/%d dar=%d/%d), size %d",
