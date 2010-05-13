@@ -392,6 +392,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   int flags = 0;
   int status;
   vpx_codec_iter_t iter = NULL;
+  const vpx_codec_cx_pkt_t *pkt;
 
   GST_DEBUG ("finish");
 
@@ -404,28 +405,37 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     GST_ERROR ("encode returned %d %s", status, vpx_error_name (status));
   }
 
-  frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
-  while (frame != NULL) {
-    const vpx_codec_cx_pkt_t *pkt;
+  pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
+  while (pkt != NULL) {
+    gboolean invisible, keyframe;
 
-    pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
-    if (pkt) {
-      GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
+    GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
 
-      frame->src_buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
-
-      memcpy (GST_BUFFER_DATA (frame->src_buffer),
-          pkt->data.frame.buf, pkt->data.frame.sz);
-
-      frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
-
-      if (frame->coder_hook)
-        g_free (frame->coder_hook);
-
-      gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+    if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
+      GST_ERROR ("non frame pkt");
+      continue;
     }
 
+    invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
+    keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+    /* FIXME: This is wrong for invisible frames, we need to get
+     * a new frame that is not in the encoder list */
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+
+    /* FIXME: If frame is NULL something went really wrong! */
+
+    frame->src_buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
+
+    memcpy (GST_BUFFER_DATA (frame->src_buffer),
+        pkt->data.frame.buf, pkt->data.frame.sz);
+    frame->is_sync_point = keyframe;
+
+    if (frame->coder_hook)
+      g_free (frame->coder_hook);
+
+    gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+
+    pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
 
   return TRUE;
@@ -547,33 +557,40 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_ERROR ("encode returned %d %s", status, vpx_error_name (status));
   }
 
-  frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
-  if (pkt != NULL) {
+  while (pkt != NULL) {
+    gboolean invisible, keyframe;
+
     GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
       GST_ERROR ("non frame pkt");
+      continue;
     }
+
+    invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
+    keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+    /* FIXME: This is wrong for invisible frames, we need to get
+     * a new frame that is not in the encoder list */
+    frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+    /* FIXME: If frame is NULL something went really wrong! */
 
     frame->src_buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
     memcpy (GST_BUFFER_DATA (frame->src_buffer),
         pkt->data.frame.buf, pkt->data.frame.sz);
-    frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
-  }
+    frame->is_sync_point = keyframe;
 
-  if (frame->src_buffer) {
     if (frame->coder_hook)
       g_free (frame->coder_hook);
 
     gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+
+    pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
 
   return TRUE;
 }
-
-
 
 static GstFlowReturn
 gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
@@ -592,8 +609,8 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
       &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
 
   if (frame->is_sync_point) {
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
