@@ -4026,17 +4026,21 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
   g_return_val_if_fail (a_d != 0, FALSE);
   g_return_val_if_fail (b_d != 0, FALSE);
 
+  gcd = gst_util_greatest_common_divisor (a_n, a_d);
+  a_n /= gcd;
+  a_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor (b_n, b_d);
+  b_n /= gcd;
+  b_d /= gcd;
+
   gcd = gst_util_greatest_common_divisor (a_n, b_d);
-  if (gcd) {
-    a_n /= gcd;
-    b_d /= gcd;
-  }
+  a_n /= gcd;
+  b_d /= gcd;
 
   gcd = gst_util_greatest_common_divisor (a_d, b_n);
-  if (gcd) {
-    a_d /= gcd;
-    b_n /= gcd;
-  }
+  a_d /= gcd;
+  b_n /= gcd;
 
   /* This would result in overflow */
   if (a_n != 0 && G_MAXINT / ABS (a_n) < ABS (b_n))
@@ -4048,10 +4052,8 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
   *res_d = a_d * b_d;
 
   gcd = gst_util_greatest_common_divisor (*res_n, *res_d);
-  if (gcd) {
-    *res_n /= gcd;
-    *res_d /= gcd;
-  }
+  *res_n /= gcd;
+  *res_d /= gcd;
 
   return TRUE;
 }
@@ -4083,6 +4085,14 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
   g_return_val_if_fail (a_d != 0, FALSE);
   g_return_val_if_fail (b_d != 0, FALSE);
 
+  gcd = gst_util_greatest_common_divisor (a_n, a_d);
+  a_n /= gcd;
+  a_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor (b_n, b_d);
+  b_n /= gcd;
+  b_d /= gcd;
+
   if (a_n == 0) {
     *res_n = b_n;
     *res_d = b_d;
@@ -4109,6 +4119,9 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
   if (gcd) {
     *res_n /= gcd;
     *res_d /= gcd;
+  } else {
+    /* res_n == 0 */
+    *res_d = 1;
   }
 
   return TRUE;
