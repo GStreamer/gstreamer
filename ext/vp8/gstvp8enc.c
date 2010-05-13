@@ -547,6 +547,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GST_ERROR ("encode returned %d %s", status, vpx_error_name (status));
   }
 
+  frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   if (pkt != NULL) {
     GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
