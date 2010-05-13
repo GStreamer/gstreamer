@@ -601,6 +601,9 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     if (!surface)
         return GST_FLOW_UNEXPECTED;
 
+    GST_DEBUG("render surface %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
+
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
 #if USE_VAAPISINK_GLX
