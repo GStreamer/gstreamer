@@ -173,37 +173,20 @@ gst_video_calculate_display_ratio (guint * dar_n, guint * dar_d,
     guint display_par_n, guint display_par_d)
 {
   gint num, den;
-
-  GValue display_ratio = { 0, };
-  GValue tmp = { 0, };
-  GValue tmp2 = { 0, };
+  gint tmp_n, tmp_d;
 
   g_return_val_if_fail (dar_n != NULL, FALSE);
   g_return_val_if_fail (dar_d != NULL, FALSE);
 
-  g_value_init (&display_ratio, GST_TYPE_FRACTION);
-  g_value_init (&tmp, GST_TYPE_FRACTION);
-  g_value_init (&tmp2, GST_TYPE_FRACTION);
-
   /* Calculate (video_width * video_par_n * display_par_d) /
    * (video_height * video_par_d * display_par_n) */
-  gst_value_set_fraction (&display_ratio, video_width, video_height);
-  gst_value_set_fraction (&tmp, video_par_n, video_par_d);
-
-  if (!gst_value_fraction_multiply (&tmp2, &display_ratio, &tmp))
+  if (!gst_util_fraction_multiply (video_width, video_height, video_par_n,
+          video_par_d, &tmp_n, &tmp_d))
     goto error_overflow;
 
-  gst_value_set_fraction (&tmp, display_par_d, display_par_n);
-
-  if (!gst_value_fraction_multiply (&display_ratio, &tmp2, &tmp))
+  if (!gst_util_fraction_multiply (tmp_n, tmp_d, display_par_d, display_par_n,
+          &num, &den))
     goto error_overflow;
-
-  num = gst_value_get_fraction_numerator (&display_ratio);
-  den = gst_value_get_fraction_denominator (&display_ratio);
-
-  g_value_unset (&display_ratio);
-  g_value_unset (&tmp);
-  g_value_unset (&tmp2);
 
   g_return_val_if_fail (num > 0, FALSE);
   g_return_val_if_fail (den > 0, FALSE);
@@ -213,9 +196,6 @@ gst_video_calculate_display_ratio (guint * dar_n, guint * dar_d,
 
   return TRUE;
 error_overflow:
-  g_value_unset (&display_ratio);
-  g_value_unset (&tmp);
-  g_value_unset (&tmp2);
   return FALSE;
 }
 
