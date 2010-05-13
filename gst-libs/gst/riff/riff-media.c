@@ -859,8 +859,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         "height", G_TYPE_INT, strf->height, NULL);
   } else {
     gst_caps_set_simple (caps,
-        "width", GST_TYPE_INT_RANGE, 16, 4096,
-        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
   }
 
   /* extradata */
