@@ -43,9 +43,9 @@
 #include "gst/gst-i18n-plugin.h"
 #include <jerror.h>
 
-#define MIN_WIDTH  16
+#define MIN_WIDTH  1
 #define MAX_WIDTH  65535
-#define MIN_HEIGHT 8
+#define MIN_HEIGHT 1
 #define MAX_HEIGHT 65535
 
 #define CINFO_GET_JPEGDEC(cinfo_ptr) \
