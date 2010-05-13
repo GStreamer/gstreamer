@@ -67,7 +67,10 @@ Description: GStreamer libraries from the "vaapi" set
 Package: libgstvaapi-dev
 Architecture: any
 Section: libdevel
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends},
+	 libgstvaapi@GST_VAAPI_MAJOR_VERSION@ (= ${Source-Version}),
+	 libgstvaapi-x11-@GST_VAAPI_MAJOR_VERSION@ (= ${Source-Version}),
+	 libgstvaapi-glx-@GST_VAAPI_MAJOR_VERSION@ (= ${Source-Version})
 Description: GStreamer development files for libraries from the "vaapi" set
  GStreamer/VA-API development files.
  .
