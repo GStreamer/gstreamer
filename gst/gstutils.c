@@ -3989,8 +3989,10 @@ gst_util_double_to_fraction (gdouble src, gint * dest_n, gint * dest_d)
 
   /* simplify */
   gcd = gst_util_greatest_common_divisor (N, D);
-  N /= gcd;
-  D /= gcd;
+  if (gcd) {
+    N /= gcd;
+    D /= gcd;
+  }
 
   /* set results */
   *dest_n = N;
@@ -4025,20 +4027,31 @@ gst_util_fraction_multiply (gint a_n, gint a_d, gint b_n, gint b_d,
   g_return_val_if_fail (b_d != 0, FALSE);
 
   gcd = gst_util_greatest_common_divisor (a_n, b_d);
-  a_n /= gcd;
-  b_d /= gcd;
-  gcd = gst_util_greatest_common_divisor (a_d, b_n);
-  a_d /= gcd;
-  b_n /= gcd;
+  if (gcd) {
+    a_n /= gcd;
+    b_d /= gcd;
+  }
 
-  g_return_val_if_fail (a_n == 0 || G_MAXINT / ABS (a_n) >= ABS (b_n), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
+  gcd = gst_util_greatest_common_divisor (a_d, b_n);
+  if (gcd) {
+    a_d /= gcd;
+    b_n /= gcd;
+  }
+
+  /* This would result in overflow */
+  if (a_n != 0 && G_MAXINT / ABS (a_n) < ABS (b_n))
+    return FALSE;
+  if (G_MAXINT / ABS (a_d) < ABS (b_d))
+    return FALSE;
 
   *res_n = a_n * b_n;
   *res_d = a_d * b_d;
+
   gcd = gst_util_greatest_common_divisor (*res_n, *res_d);
-  *res_n /= gcd;
-  *res_d /= gcd;
+  if (gcd) {
+    *res_n /= gcd;
+    *res_d /= gcd;
+  }
 
   return TRUE;
 }
@@ -4081,16 +4094,22 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
     return TRUE;
   }
 
-  g_return_val_if_fail (a_n == 0 || G_MAXINT / ABS (a_n) >= ABS (b_n), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
-  g_return_val_if_fail (G_MAXINT / ABS (a_d) >= ABS (b_d), FALSE);
+  /* This would result in overflow */
+  if (G_MAXINT / ABS (a_n) < ABS (b_n))
+    return FALSE;
+  if (G_MAXINT / ABS (a_d) < ABS (b_d))
+    return FALSE;
+  if (G_MAXINT / ABS (a_d) < ABS (b_d))
+    return FALSE;
 
   *res_n = (a_n * b_d) + (a_d * b_n);
   *res_d = a_d * b_d;
 
   gcd = gst_util_greatest_common_divisor (*res_n, *res_d);
-  *res_n /= gcd;
-  *res_d /= gcd;
+  if (gcd) {
+    *res_n /= gcd;
+    *res_d /= gcd;
+  }
 
   return TRUE;
 }
