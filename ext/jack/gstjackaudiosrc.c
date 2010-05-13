@@ -206,31 +206,35 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 {
   GstJackAudioSrc *src;
   GstRingBuffer *buf;
-  gint len, givenLen;
+  gint len;
   guint8 *writeptr;
   gint writeseg;
-  gint channels, i, j;
+  gint channels, i, j, flen;
   sample_t *data;
 
   buf = GST_RING_BUFFER_CAST (arg);
   src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
 
   channels = buf->spec.channels;
-  len = sizeof (sample_t) * nframes * channels;
+
   /* get input buffers */
   for (i = 0; i < channels; i++)
     src->buffers[i] =
         (sample_t *) jack_port_get_buffer (src->ports[i], nframes);
 
-  if (gst_ring_buffer_prepare_read (buf, &writeseg, &writeptr, &givenLen)) {
-    /* the samples in the jack input buffers have to be interleaved into the 
-     * ringbuffer 
-     */
+  if (gst_ring_buffer_prepare_read (buf, &writeseg, &writeptr, &len)) {
+    flen = len / channels;
+
+    /* the number of samples must be exactly the segment size */
+    if (nframes * sizeof (sample_t) != flen)
+      goto wrong_size;
+
+    /* the samples in the jack input buffers have to be interleaved into the
+     * ringbuffer */
     data = (sample_t *) writeptr;
     for (i = 0; i < nframes; ++i)
       for (j = 0; j < channels; ++j)
         *data++ = src->buffers[j][i];
-
 
     GST_DEBUG ("copy %d frames: %p, %d bytes, %d channels", nframes, writeptr,
         len / channels, channels);
@@ -239,6 +243,14 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
     gst_ring_buffer_advance (buf, 1);
   }
   return 0;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_ERROR_OBJECT (src, "nbytes (%d) != flen (%d)",
+        (gint) (nframes * sizeof (sample_t)), flen);
+    return 1;
+  }
 }
 
 /* we error out */
