@@ -42,6 +42,8 @@
 
 #define MAX_FRAGS 256
 
+static const guint8 sipr_subpk_size[4] = { 29, 19, 37, 20 };
+
 typedef struct _GstRMDemuxIndex GstRMDemuxIndex;
 
 struct _GstRMDemuxStream
@@ -1387,6 +1389,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       case GST_RM_AUD_ATRC:
         codec_name = "Sony ATRAC3";
         stream_caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+        stream->needs_descrambling = TRUE;
+        stream->subpackets_needed = stream->height;
+        stream->subpackets = NULL;
         break;
 
         /* RealAudio G2 audio */
@@ -1400,15 +1405,28 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* RALF is lossless */
       case GST_RM_AUD_RALF:
-        /* FIXME: codec_name = */
+        codec_name = "Real Audio Lossless (RALF)";
         GST_DEBUG_OBJECT (rmdemux, "RALF");
         stream_caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
         break;
 
-        /* Sipro/ACELP.NET Voice Codec (MIME unknown) */
       case GST_RM_AUD_SIPR:
-        /* FIXME: codec_name = */
+
+        if (stream->flavor > 3) {
+          GST_WARNING_OBJECT (rmdemux, "bad SIPR flavor %d, freeing it",
+              stream->flavor);
+          g_free (stream);
+          goto beach;
+        }
+
+        codec_name = "Sipro/ACELP.NET Voice";
+        GST_DEBUG_OBJECT (rmdemux, "SIPR");
         stream_caps = gst_caps_new_simple ("audio/x-sipro", NULL);
+        stream->needs_descrambling = TRUE;
+        stream->subpackets_needed = stream->height;
+        stream->subpackets = NULL;
+        stream->leaf_size = sipr_subpk_size[stream->flavor];
+
         break;
 
       default:
@@ -1730,7 +1748,6 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
           break;
         }
       }
-
       /*  14_4, 28_8, cook, dnet, sipr, raac, racp, ralf, atrc */
       GST_DEBUG_OBJECT (rmdemux,
           "Audio stream with rate=%d sample_width=%d n_channels=%d",
@@ -1905,8 +1922,7 @@ gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
 }
 
 static GstFlowReturn
-gst_rmdemux_descramble_cook_audio (GstRMDemux * rmdemux,
-    GstRMDemuxStream * stream)
+gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
   GstFlowReturn ret;
   GstBuffer *outbuf;
@@ -2037,6 +2053,59 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
 }
 
 static GstFlowReturn
+gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream)
+{
+  GstFlowReturn ret;
+  GstBuffer *outbuf;
+  guint packet_size = stream->packet_size;
+  guint height = stream->subpackets->len;
+  guint leaf_size = stream->leaf_size;
+  guint p;
+
+  g_assert (stream->height == height);
+
+  GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
+      leaf_size, height);
+
+  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+      GST_BUFFER_OFFSET_NONE, height * packet_size,
+      GST_PAD_CAPS (stream->pad), &outbuf);
+
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  for (p = 0; p < height; ++p) {
+    GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
+    guint8 *b_data = GST_BUFFER_DATA (b);
+
+    if (p == 0)
+      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
+
+    memcpy (GST_BUFFER_DATA (outbuf) + packet_size * p, b_data, packet_size);
+  }
+
+  GST_LOG_OBJECT (rmdemux, "pushing buffer timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+
+  if (stream->discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    stream->discont = FALSE;
+  }
+
+  outbuf = gst_rm_utils_descramble_sipr_buffer (outbuf);
+
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (stream->pad));
+  ret = gst_pad_push (stream->pad, outbuf);
+
+done:
+
+  gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream, GstBuffer * buf, gboolean keyframe)
 {
@@ -2064,11 +2133,15 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
       ret = gst_rmdemux_descramble_dnet_audio (rmdemux, stream);
       break;
     case GST_RM_AUD_COOK:
-      ret = gst_rmdemux_descramble_cook_audio (rmdemux, stream);
+    case GST_RM_AUD_ATRC:
+      ret = gst_rmdemux_descramble_audio (rmdemux, stream);
       break;
     case GST_RM_AUD_RAAC:
     case GST_RM_AUD_RACP:
       ret = gst_rmdemux_descramble_mp4a_audio (rmdemux, stream);
+      break;
+    case GST_RM_AUD_SIPR:
+      ret = gst_rmdemux_descramble_sipr_audio (rmdemux, stream);
       break;
     default:
       g_assert_not_reached ();
