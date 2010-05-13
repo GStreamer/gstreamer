@@ -2411,6 +2411,9 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       GST_DEBUG_OBJECT (qtmux, "missing or invalid fourcc in jp2 caps");
       goto refuse_caps;
     }
+  } else if (strcmp (mimetype, "video/x-vp8") == 0) {
+    entry.fourcc = FOURCC_VP80;
+    sync = FALSE;
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
