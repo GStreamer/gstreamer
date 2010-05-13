@@ -1638,6 +1638,9 @@
   <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-preroll']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-buffer']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-buffer-list']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/method[@cname='gst_app_sink_pull_buffer']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/method[@cname='gst_app_sink_pull_preroll']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@cname='GstAppSink']/method[@cname='gst_app_sink_pull_buffer_list']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@cname='GstAppSrc']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/object[@cname='GstAppSrc']/method[@cname='gst_app_src_set_callbacks']" name="hidden">1</attr>
