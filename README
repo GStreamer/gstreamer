@@ -53,9 +53,9 @@ Software requirements
 Hardware requirements
 
   * AMD platforms with UVD2 (XvBA supported)
-  * Intel Poulsbo (US15W)
   * Intel Eaglelake (G45)
   * Intel Ironlake (HD Graphics)
+  * Intel Poulsbo (US15W)
   * NVIDIA platforms with PureVideo (VDPAU supported)
 
 
