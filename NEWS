@@ -1,8 +1,12 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-13
+gst-vaapi NEWS -- summary of changes.  2010-05-DD
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.2.1 - 13.May.2010
+Version 0.2.2 - DD.May.2010
+* Fix packaging dependencies
 * Fix OpenGL texture internal format (Clutter)
+* Fix foreign window size for embedding (Totem)
+
+Version 0.2.1 - 12.May.2010
 * Fix integration within the playbin2 pipeline
 * Fix vaapidecode to expose the HW supported caps only
 * Add GstXOverlay interface to vaapisink (Totem media player)
