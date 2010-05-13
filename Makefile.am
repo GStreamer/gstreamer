@@ -16,6 +16,7 @@ deb:
 deb.upstream: dist
 	-mkdir -p $(DEB_BUILDDIR)
 	cd $(DEB_BUILDDIR)				&& \
+	rm -rf $(PACKAGE)-$(VERSION)			&& \
 	tar zxvf ../$(PACKAGE)-$(VERSION).tar.gz	&& \
 	cd $(PACKAGE)-$(VERSION)			&& \
 	$(LN_S) debian.upstream debian			&& \
