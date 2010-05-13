@@ -295,8 +295,10 @@ gst_vaapi_decoder_ffmpeg_close(GstVaapiDecoderFfmpeg *ffdecoder)
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
 
     if (priv->avctx) {
-        if (priv->is_opened)
+        if (priv->is_opened) {
             avcodec_close(priv->avctx);
+            priv->is_opened = FALSE;
+        }
         av_freep(&priv->avctx->extradata);
         priv->avctx->extradata_size = 0;
     }
