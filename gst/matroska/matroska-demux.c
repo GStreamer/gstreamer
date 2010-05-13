@@ -3349,8 +3349,10 @@ gst_matroska_demux_parse_metadata (GstMatroskaDemux * demux)
   GList *l;
   GstEbmlLevel *curlevel;
 
-  /* Can't be NULL at this point */
-  g_assert (ebml->level != NULL);
+  if (ebml->level == NULL) {
+    GST_ERROR_OBJECT (demux, "Unexpected metadata, bailing");
+    return GST_FLOW_ERROR;
+  }
   curlevel = ebml->level->data;
 
   /* Make sure we don't parse a tags element twice and
