@@ -848,8 +848,11 @@ gst_asf_mux_write_extended_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
     /* TODO check if audio is seekable */
     GST_WRITE_UINT32_LE (*buf + 68, 0x0);
   } else {
-    /* video has indexes, so it is seekable */
-    GST_WRITE_UINT32_LE (*buf + 68, 0x2);
+    /* video has indexes, so it is seekable unless we are streaming */
+    if (asfmux->prop_is_live)
+      GST_WRITE_UINT32_LE (*buf + 68, 0x0);
+    else
+      GST_WRITE_UINT32_LE (*buf + 68, 0x2);
   }
 
   GST_WRITE_UINT16_LE (*buf + 72, asfpad->stream_number);
