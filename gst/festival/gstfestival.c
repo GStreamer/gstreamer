@@ -490,9 +490,10 @@ gst_festival_change_state (GstElement * element, GstStateChange transition)
   g_return_val_if_fail (GST_IS_FESTIVAL (element), GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_OBJECT_FLAG_IS_SET (element, GST_FESTIVAL_OPEN))
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_FESTIVAL_OPEN)) {
       GST_DEBUG ("Closing connection ");
-    gst_festival_close (GST_FESTIVAL (element));
+      gst_festival_close (GST_FESTIVAL (element));
+    }
   } else {
     if (!GST_OBJECT_FLAG_IS_SET (element, GST_FESTIVAL_OPEN)) {
       GST_DEBUG ("Opening connection ");
