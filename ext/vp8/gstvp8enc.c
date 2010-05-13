@@ -417,6 +417,8 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
       memcpy (GST_BUFFER_DATA (frame->src_buffer),
           pkt->data.frame.buf, pkt->data.frame.sz);
 
+      frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+
       if (frame->coder_hook)
         g_free (frame->coder_hook);
 
@@ -557,8 +559,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
     memcpy (GST_BUFFER_DATA (frame->src_buffer),
         pkt->data.frame.buf, pkt->data.frame.sz);
+    frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
   }
-  //frame->is_sync_point = TRUE;
 
   if (frame->src_buffer) {
     if (frame->coder_hook)
