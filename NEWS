@@ -1,7 +1,7 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-DD
+gst-vaapi NEWS -- summary of changes.  2010-05-14
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.2.2 - DD.May.2010
+Version 0.2.2 - 14.May.2010
 * Fix packaging dependencies
 * Fix a crash in the FFmpeg decoder on close
 * Fix OpenGL texture internal format (Clutter)
