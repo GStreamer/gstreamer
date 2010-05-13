@@ -3599,6 +3599,11 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
         g_cond_signal (camera->cond);
       }
       g_mutex_unlock (camera->capture_mutex);
+
+      /* unblock the viewfinder, but keep the property as is */
+      gst_pad_set_blocked_async (camera->pad_src_view, FALSE,
+          (GstPadBlockCallback) camerabin_pad_blocked, camera);
+
       g_signal_handlers_disconnect_by_func (camera->src_vid_src,
           gst_camerabin_scene_mode_notify_cb, camera);
       g_signal_handlers_disconnect_by_func (camera->src_vid_src,
