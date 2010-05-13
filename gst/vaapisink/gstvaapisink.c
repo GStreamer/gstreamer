@@ -292,25 +292,27 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 static gboolean
 gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid)
 {
-    XWindowAttributes wattr;
+    Window rootwin;
+    unsigned int width, height, border_width, depth;
+    int x, y;
 
     if (!gst_vaapisink_ensure_display(sink))
         return FALSE;
 
     gst_vaapi_display_lock(sink->display);
-    XGetWindowAttributes(
+    XGetGeometry(
         gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(sink->display)),
         xid,
-        &wattr
+        &rootwin,
+        &x, &y, &width, &height, &border_width, &depth
     );
     gst_vaapi_display_unlock(sink->display);
 
-    if (wattr.width  != sink->window_width ||
-        wattr.height != sink->window_height) {
-        if (!gst_vaapisink_ensure_render_rect(sink, wattr.width, wattr.height))
+    if (width != sink->window_width || height != sink->window_height) {
+        if (!gst_vaapisink_ensure_render_rect(sink, width, height))
             return FALSE;
-        sink->window_width  = wattr.width;
-        sink->window_height = wattr.height;
+        sink->window_width  = width;
+        sink->window_height = height;
     }
 
     if (sink->window &&
