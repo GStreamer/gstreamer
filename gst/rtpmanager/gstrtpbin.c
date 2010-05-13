@@ -34,7 +34,7 @@
  * manager and after being validated forwarded on #GstRtpSsrcDemux element. Each
  * RTP stream is demuxed based on the SSRC and send to a #GstRtpJitterBuffer. After
  * the packets are released from the jitterbuffer, they will be forwarded to a
- * #GstRtpSsrcDemux element. The #GstRtpSsrcDemux element will demux the packets based
+ * #GstRtpPtDemux element. The #GstRtpPtDemux element will demux the packets based
  * on the payload type and will create a unique pad recv_rtp_src_\%d_\%d_\%d on
  * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
