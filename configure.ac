@@ -1478,6 +1478,17 @@ AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
   AG_GST_PKG_CHECK_MODULES(ZBAR, zbar >= 0.9)
 ])
 
+dnl *** vp8 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VP8, vp8)
+AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
+  AG_GST_CHECK_LIBHEADER(VPX, vpx,
+                        vpx_codec_version, ,
+                        vpx/vpx_codec.h,
+			HAVE_VP8=yes
+                        VPX_LIBS="-lvpx"
+                        AC_SUBST(VPX_LIBS))
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1537,6 +1548,7 @@ AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
+AM_CONDITIONAL(USE_VP8, false)
 
 fi dnl of EXT plugins
 
@@ -1733,6 +1745,7 @@ ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
+ext/vp8/Makefile
 ext/xvid/Makefile
 ext/zbar/Makefile
 po/Makefile.in

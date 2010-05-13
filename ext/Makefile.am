@@ -342,6 +342,12 @@ endif
 TARKIN_DIR=
 # endif
 
+if USE_VP8
+VP8_DIR=vp8
+else
+VP8_DIR=
+endif
+
 # if USE_XINE
 # XINE_DIR=xine
 # else
@@ -417,6 +423,7 @@ SUBDIRS=\
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
+	$(VP8_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR) \
 	$(ZBAR_DIR)
@@ -467,6 +474,7 @@ DIST_SUBDIRS = \
 	swfdec \
 	theora \
 	timidity \
+	vp8 \
 	xvid \
 	zbar
 
