@@ -39,6 +39,7 @@ GstTagList    *gst_rm_utils_read_tags     (const guint8            * data,
                                            GstRmUtilsStringReadFunc  func);
 
 GstBuffer     *gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf);
+GstBuffer     *gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf);
 
 G_END_DECLS
 

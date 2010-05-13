@@ -140,3 +140,51 @@ gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
   }
   return buf;
 }
+
+static const gint sipr_swaps[38][2] = {
+  {0, 63}, {1, 22}, {2, 44}, {3, 90},
+  {5, 81}, {7, 31}, {8, 86}, {9, 58},
+  {10, 36}, {12, 68}, {13, 39}, {14, 73},
+  {15, 53}, {16, 69}, {17, 57}, {19, 88},
+  {20, 34}, {21, 71}, {24, 46}, {25, 94},
+  {26, 54}, {28, 75}, {29, 50}, {32, 70},
+  {33, 92}, {35, 74}, {38, 85}, {40, 56},
+  {42, 87}, {43, 65}, {45, 59}, {48, 79},
+  {49, 93}, {51, 89}, {55, 95}, {61, 76},
+  {67, 83}, {77, 80}
+};
+
+GstBuffer *
+gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf)
+{
+  guint8 *data;
+  guint size;
+  gint n, bs;
+
+  buf = gst_buffer_make_writable (buf);
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  bs = size * 2 / 96;
+
+  for (n = 0; n < 38; n++) {
+    int j;
+    int i = bs * sipr_swaps[n][0];
+    int o = bs * sipr_swaps[n][1];
+
+    /* swap 4bit-nibbles of block 'i' with 'o' */
+    for (j = 0; j < bs; j++, i++, o++) {
+      int x, y;
+
+      x = (data[i >> 1] >> (4 * (i & 1))) & 0xF;
+      y = (data[o >> 1] >> (4 * (o & 1))) & 0xF;
+
+      data[o >> 1] = (x << (4 * (o & 1))) |
+          (data[o >> 1] & (0xF << (4 * !(o & 1))));
+      data[i >> 1] = (y << (4 * (i & 1))) |
+          (data[i >> 1] & (0xF << (4 * !(i & 1))));
+    }
+  }
+  return buf;
+}
