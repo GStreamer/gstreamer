@@ -468,7 +468,7 @@ gst_festival_open (GstFestival * festival)
         ("Could not talk to festival server (no server running or wrong host/port?)");
     return FALSE;
   }
-
+  GST_OBJECT_FLAG_SET (festival, GST_FESTIVAL_OPEN);
   return TRUE;
 }
 
@@ -480,7 +480,7 @@ gst_festival_close (GstFestival * festival)
 
   if (festival->info->server_fd != -1)
     close (festival->info->server_fd);
-
+  GST_OBJECT_FLAG_UNSET (festival, GST_FESTIVAL_OPEN);
   return;
 }
 
@@ -491,9 +491,11 @@ gst_festival_change_state (GstElement * element, GstStateChange transition)
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
     if (GST_OBJECT_FLAG_IS_SET (element, GST_FESTIVAL_OPEN))
-      gst_festival_close (GST_FESTIVAL (element));
+      GST_DEBUG ("Closing connection ");
+    gst_festival_close (GST_FESTIVAL (element));
   } else {
     if (!GST_OBJECT_FLAG_IS_SET (element, GST_FESTIVAL_OPEN)) {
+      GST_DEBUG ("Opening connection ");
       if (!gst_festival_open (GST_FESTIVAL (element)))
         return GST_STATE_CHANGE_FAILURE;
     }
