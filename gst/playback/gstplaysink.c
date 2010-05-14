@@ -1993,7 +1993,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   if (need_text && !need_video) {
     if (playsink->video_pad) {
       need_video = TRUE;
-    } else if (!need_audio) {
+    } else if (need_audio) {
       GST_ELEMENT_WARNING (playsink, STREAM, FORMAT,
           (_("Can't play a text file without video or visualizations.")),
           ("Have text pad but no video pad or visualizations"));
