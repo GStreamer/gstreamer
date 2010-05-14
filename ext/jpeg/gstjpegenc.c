@@ -342,8 +342,10 @@ gst_jpegenc_getcaps (GstPad * pad)
 
   othercaps = gst_pad_get_allowed_caps (jpegenc->srcpad);
   if (othercaps == NULL ||
-      gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
-    return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+      gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps)) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    goto done;
+  }
 
   caps = gst_caps_new_empty ();
   templ = gst_pad_get_pad_template_caps (pad);
@@ -365,6 +367,10 @@ gst_jpegenc_getcaps (GstPad * pad)
       gst_caps_merge_structure (caps, structure);
     }
   }
+
+done:
+
+  gst_caps_replace (&othercaps, NULL);
   gst_object_unref (jpegenc);
 
   return caps;
