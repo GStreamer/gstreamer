@@ -41,6 +41,9 @@ GstTagList    *gst_rm_utils_read_tags     (const guint8            * data,
 GstBuffer     *gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf);
 GstBuffer     *gst_rm_utils_descramble_sipr_buffer (GstBuffer * buf);
 
+void gst_rm_utils_run_tests (void);
+
+
 G_END_DECLS
 
 #endif /* __GST_RM_UTILS_H__ */

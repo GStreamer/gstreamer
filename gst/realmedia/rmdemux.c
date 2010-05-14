@@ -261,6 +261,8 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
   rmdemux->first_ts = GST_CLOCK_TIME_NONE;
   rmdemux->base_ts = GST_CLOCK_TIME_NONE;
   rmdemux->need_newsegment = TRUE;
+
+  gst_rm_utils_run_tests ();
 }
 
 static gboolean
