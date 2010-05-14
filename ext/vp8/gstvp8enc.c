@@ -1,6 +1,7 @@
 /* VP8
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2010 Entropy Wave Inc
+ * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,6 +30,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
+#include <gst/tag/tag.h>
 #include <string.h>
 #include <math.h>
 
@@ -74,13 +76,19 @@ struct _GstVP8Enc
 
   int resolution_id;
   int n_frames;
-
+  int keyframe_distance;
 };
 
 struct _GstVP8EncClass
 {
   GstBaseVideoEncoderClass base_video_encoder_class;
 };
+
+typedef struct
+{
+  vpx_image_t *image;
+  GList *invisible;
+} GstVP8EncCoderHook;
 
 /* GstVP8Enc signals and args */
 enum
@@ -368,6 +376,12 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   GstCaps *caps;
   const GstVideoState *state;
   GstVP8Enc *encoder;
+  GstTagList *tags;
+  GstBuffer *stream_hdr, *vorbiscomment;
+  guint8 *data;
+  GstStructure *s;
+  GValue array = { 0 };
+  GValue value = { 0 };
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
@@ -380,6 +394,50 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
       state->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
       state->par_d, NULL);
+
+
+  /* Create Ogg stream-info */
+  stream_hdr = gst_buffer_new_and_alloc (24);
+  data = GST_BUFFER_DATA (stream_hdr);
+
+  GST_WRITE_UINT32_BE (data, 0x56503830);       /* "VP80" */
+  GST_WRITE_UINT8 (data + 4, 1);        /* Major version 1 */
+  GST_WRITE_UINT8 (data + 5, 0);        /* Minor version 0 */
+  GST_WRITE_UINT16_BE (data + 6, state->width);
+  GST_WRITE_UINT16_BE (data + 8, state->height);
+  GST_WRITE_UINT24_BE (data + 10, state->par_n);
+  GST_WRITE_UINT24_BE (data + 13, state->par_d);
+  GST_WRITE_UINT32_BE (data + 16, state->fps_n);
+  GST_WRITE_UINT32_BE (data + 20, state->fps_d);
+
+  /* FIXME: Collect tags */
+  tags = gst_tag_list_new ();
+  vorbiscomment =
+      gst_tag_list_to_vorbiscomment_buffer (tags,
+      (const guint8 *) "VP8_TAG", 7, NULL);
+  gst_tag_list_free (tags);
+
+  /* mark buffers */
+  GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  /* put buffers in a fixed list */
+  g_value_init (&array, GST_TYPE_ARRAY);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  gst_value_set_buffer (&value, stream_hdr);
+  gst_value_array_append_value (&array, &value);
+  g_value_unset (&value);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  gst_value_set_buffer (&value, vorbiscomment);
+  gst_value_array_append_value (&array, &value);
+  gst_structure_set_value (s, "streamheader", &array);
+  g_value_unset (&value);
+  g_value_unset (&array);
+
+  gst_buffer_unref (stream_hdr);
+  gst_buffer_unref (vorbiscomment);
 
   return caps;
 }
@@ -407,6 +465,8 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   while (pkt != NULL) {
+    GstBuffer *buffer;
+    GstVP8EncCoderHook *hook;
     gboolean invisible, keyframe;
 
     GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
@@ -418,22 +478,26 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
     keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
-    /* FIXME: This is wrong for invisible frames, we need to get
-     * a new frame that is not in the encoder list */
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
-
+    hook = frame->coder_hook;
     /* FIXME: If frame is NULL something went really wrong! */
 
-    frame->src_buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
+    buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
-    memcpy (GST_BUFFER_DATA (frame->src_buffer),
-        pkt->data.frame.buf, pkt->data.frame.sz);
-    frame->is_sync_point = keyframe;
+    memcpy (GST_BUFFER_DATA (buffer), pkt->data.frame.buf, pkt->data.frame.sz);
+    frame->is_sync_point = frame->is_sync_point || keyframe;
 
-    if (frame->coder_hook)
-      g_free (frame->coder_hook);
+    if (hook->image)
+      g_free (hook->image);
+    hook->image = NULL;
 
-    gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+    if (invisible) {
+      hook->invisible = g_list_append (hook->invisible, buffer);
+    } else {
+      frame->src_buffer = buffer;
+      gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+      frame = NULL;
+    }
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
@@ -486,6 +550,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   vpx_codec_iter_t iter = NULL;
   const vpx_codec_cx_pkt_t *pkt;
   vpx_image_t *image;
+  GstVP8EncCoderHook *hook;
 
   GST_DEBUG ("handle_frame");
 
@@ -543,7 +608,10 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
       base_video_encoder->state.width,
       base_video_encoder->state.height, 1,
       GST_BUFFER_DATA (frame->sink_buffer));
-  frame->coder_hook = image;
+
+  hook = g_new0 (GstVP8EncCoderHook, 1);
+  hook->image = image;
+  frame->coder_hook = hook;
 
 #if 0
   if (encoder->force_keyframe) {
@@ -559,6 +627,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   while (pkt != NULL) {
+    GstBuffer *buffer;
     gboolean invisible, keyframe;
 
     GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
@@ -570,21 +639,25 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
     keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
-    /* FIXME: This is wrong for invisible frames, we need to get
-     * a new frame that is not in the encoder list */
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+    hook = frame->coder_hook;
     /* FIXME: If frame is NULL something went really wrong! */
 
-    frame->src_buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
+    buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
-    memcpy (GST_BUFFER_DATA (frame->src_buffer),
-        pkt->data.frame.buf, pkt->data.frame.sz);
-    frame->is_sync_point = keyframe;
+    memcpy (GST_BUFFER_DATA (buffer), pkt->data.frame.buf, pkt->data.frame.sz);
+    frame->is_sync_point = frame->is_sync_point || keyframe;
 
-    if (frame->coder_hook)
-      g_free (frame->coder_hook);
+    if (hook->image)
+      g_free (hook->image);
+    hook->image = NULL;
 
-    gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+    if (invisible) {
+      hook->invisible = g_list_append (hook->invisible, buffer);
+    } else {
+      frame->src_buffer = buffer;
+      gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+    }
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
@@ -592,40 +665,98 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   return TRUE;
 }
 
+static guint64
+_to_granulepos (guint64 frame_end_number, guint inv_count, guint keyframe_dist)
+{
+  guint64 granulepos;
+  guint inv;
+
+  inv = (inv_count == 0) ? 0x3 : inv_count - 1;
+
+  granulepos = (frame_end_number << 32) | (inv << 30) | (keyframe_dist << 3);
+  return granulepos;
+}
+
 static GstFlowReturn
 gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
-  GstBuffer *buf = frame->src_buffer;
+  GstVP8Enc *encoder;
+  GstBuffer *buf;
   const GstVideoState *state;
   GstFlowReturn ret;
+  GstVP8EncCoderHook *hook = frame->coder_hook;
+  GList *l;
+  gint inv_count;
 
   GST_DEBUG ("shape_output");
 
+  encoder = GST_VP8_ENC (base_video_encoder);
+
   state = gst_base_video_encoder_get_state (base_video_encoder);
+
+  for (inv_count = 0, l = hook->invisible; l; inv_count++, l = l->next) {
+    buf = l->data;
+
+    if (l == hook->invisible && frame->is_sync_point) {
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+      encoder->keyframe_distance = 0;
+    } else {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+      encoder->keyframe_distance++;
+    }
+
+    GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
+        &base_video_encoder->segment, frame->presentation_frame_number);
+    GST_BUFFER_DURATION (buf) = 0;
+    GST_BUFFER_OFFSET_END (buf) =
+        _to_granulepos (frame->presentation_frame_number + 1,
+        inv_count, encoder->keyframe_distance);
+    GST_BUFFER_OFFSET (buf) =
+        gst_util_uint64_scale (frame->presentation_frame_number + 1,
+        GST_SECOND * state->fps_d, state->fps_n);
+
+    gst_buffer_set_caps (buf, base_video_encoder->caps);
+    ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
+
+    if (ret != GST_FLOW_OK)
+      goto done;
+  }
+
+  buf = frame->src_buffer;
+  frame->src_buffer = NULL;
+
+  if (!hook->invisible && frame->is_sync_point) {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    encoder->keyframe_distance = 0;
+  } else {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    encoder->keyframe_distance++;
+  }
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
       &base_video_encoder->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
       &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET (buf) = frame->presentation_frame_number;
-  GST_BUFFER_OFFSET_END (buf) = frame->presentation_frame_number + 1;
-
-  if (frame->is_sync_point) {
-    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-  } else {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
+  GST_BUFFER_OFFSET_END (buf) =
+      _to_granulepos (frame->presentation_frame_number + 1,
+      0, encoder->keyframe_distance);
+  GST_BUFFER_OFFSET (buf) =
+      gst_util_uint64_scale (frame->presentation_frame_number + 1,
+      GST_SECOND * state->fps_d, state->fps_n);
 
   gst_buffer_set_caps (buf, base_video_encoder->caps);
 
   ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
-  if (ret != GST_FLOW_OK) {
+  if (ret != GST_FLOW_OK)
     GST_ERROR ("flow error %d", ret);
-  }
 
-  frame->src_buffer = NULL;
+done:
+  g_list_foreach (hook->invisible, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (hook->invisible);
+  g_free (hook);
+  frame->coder_hook = NULL;
 
   return ret;
 }
