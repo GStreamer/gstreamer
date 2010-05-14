@@ -276,7 +276,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   long status;
   vpx_codec_iter_t iter = NULL;
   vpx_image_t *img;
-
+  vpx_codec_err_t res;
 
   GST_DEBUG ("handle_frame");
 
@@ -285,11 +285,14 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   if (!dec->decoder_inited) {
     vpx_codec_stream_info_t stream_info;
 
-    vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
+    memset (&stream_info, 0, sizeof (stream_info));
+    stream_info.sz = sizeof (stream_info);
+
+    res = vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
         GST_BUFFER_DATA (frame->sink_buffer),
         GST_BUFFER_SIZE (frame->sink_buffer), &stream_info);
 
-    if (!stream_info.is_kf) {
+    if (res != VPX_CODEC_OK || !stream_info.is_kf) {
       gst_base_video_decoder_skip_frame (decoder, frame);
       return GST_FLOW_OK;
     }
