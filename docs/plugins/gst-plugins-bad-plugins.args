@@ -18504,66 +18504,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstOss4Sink::device</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>OSS4 device (e.g. /dev/oss/hdaudio0/pcm0 or /dev/dspN) (NULL = use first available playback device).</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOss4Sink::device-name</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Device name</NICK>
-<BLURB>Human-readable name of the sound device.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOss4Source::device</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>OSS4 device (e.g. /dev/oss/hdaudio0/pcm0 or /dev/dspN) (NULL = use first available device).</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOss4Source::device-name</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Device name</NICK>
-<BLURB>Human-readable name of the sound device.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOss4Mixer::device</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>OSS mixer device (e.g. /dev/oss/hdaudio0/mix0 or /dev/mixerN) (NULL = use first mixer device found).</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstOss4Mixer::device-name</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Device name</NICK>
-<BLURB>Human-readable name of the sound device.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstDiracEnc::cpd</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[1,100]</RANGE>
@@ -23321,36 +23261,6 @@
 <NICK>Write id3v2 tag</NICK>
 <BLURB>Write an id3v2 tag at the start of the file.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCapsSetter::caps</NAME>
-<TYPE>GstCaps*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Merge caps</NICK>
-<BLURB>Merge these caps (thereby overwriting) in the stream.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCapsSetter::join</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Join</NICK>
-<BLURB>Match incoming caps' mime-type to mime-type of provided caps.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCapsSetter::replace</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Replace</NICK>
-<BLURB>Drop fields of incoming caps.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

@@ -28,7 +28,6 @@ GObject
             GstSDLAudioSink
             GstNasSink
             GstApExSink
-            GstOss4Sink
           GstJackAudioSink
         GstSFSink
         AlsaSPDIFSink
@@ -50,7 +49,6 @@ GObject
           GstStereo
         GstDtmfDetect
         GstBayer2RGB
-        GstCapsSetter
         GstVideoFilter
           GstVideoAnalyse
           GstVideoDetect
@@ -120,8 +118,6 @@ GObject
           GstDc1394
           GstBaseAudioSrc
             GstJackAudioSrc
-            GstAudioSrc
-              GstOss4Source
           GstMythtvSrc
           GstMMS
           GstNeonhttpSrc
@@ -366,7 +362,6 @@ GObject
         ladspa-hpf
         ladspa-delay-5s
         ladspa-noise-white
-      GstOss4Mixer
       GstVMncDec
       GstBaseRTPDepayload
         GstRtpDTMFDepay
