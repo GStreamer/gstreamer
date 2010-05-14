@@ -62,11 +62,6 @@ struct _GstVP8Dec
   /* state */
 
   gboolean decoder_inited;
-  gboolean have_video_info;
-  gboolean is_625;
-  gboolean is_wide;
-  gboolean is_422;
-
 };
 
 struct _GstVP8DecClass
@@ -221,6 +216,7 @@ gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
 
   decoder->packetized = TRUE;
+  gst_vp8_dec->decoder_inited = FALSE;
 
   vpx_codec_dec_init (&gst_vp8_dec->decoder, &vpx_codec_vp8_dx_algo, NULL,
       flags);
@@ -246,7 +242,6 @@ gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
   decoder = GST_VP8_DEC (base_video_decoder);
 
   decoder->decoder_inited = FALSE;
-  decoder->have_video_info = FALSE;
 
   vpx_codec_dec_init (&decoder->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
 
@@ -287,16 +282,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   dec = GST_VP8_DEC (decoder);
 
-  gst_base_video_decoder_set_sync_point (decoder);
-
   if (!dec->decoder_inited) {
-
-    dec->decoder_inited = TRUE;
-
-    gst_vp8_dec_send_tags (dec);
-  }
-
-  if (!dec->have_video_info) {
     vpx_codec_stream_info_t stream_info;
 
     vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
@@ -312,14 +298,13 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder->state.width = stream_info.w;
     decoder->state.height = stream_info.h;
     decoder->state.format = GST_VIDEO_FORMAT_I420;
-
-    decoder->state.fps_n = 30;
-    decoder->state.fps_d = 1;
-    decoder->state.par_n = 1;
-    decoder->state.par_d = 1;
-
-    dec->have_video_info = TRUE;
+    gst_vp8_dec_send_tags (dec);
+    dec->decoder_inited = TRUE;
   }
+
+  if (!GST_BUFFER_FLAG_IS_SET (frame->sink_buffer, GST_BUFFER_FLAG_DELTA_UNIT))
+    gst_base_video_decoder_set_sync_point (decoder);
+
 #if 0
   if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder)) == NULL) {
     GstCaps *caps;
@@ -348,32 +333,38 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     return GST_FLOW_ERROR;
   }
 
-  while ((img = vpx_codec_get_frame (&dec->decoder, &iter))) {
+  img = vpx_codec_get_frame (&dec->decoder, &iter);
+  if (img) {
     int i;
 
-    for (i = 0; i < decoder->state.height; i++) {
-      memcpy (GST_BUFFER_DATA (frame->src_buffer) + i * decoder->state.width,
-          img->planes[0] + i * img->stride[0], decoder->state.width);
+    ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
+
+    if (ret == GST_FLOW_OK) {
+      for (i = 0; i < decoder->state.height; i++) {
+        memcpy (GST_BUFFER_DATA (frame->src_buffer) + i * decoder->state.width,
+            img->planes[0] + i * img->stride[0], decoder->state.width);
+      }
+      for (i = 0; i < decoder->state.height / 2; i++) {
+        memcpy (GST_BUFFER_DATA (frame->src_buffer) +
+            decoder->state.width * decoder->state.height +
+            i * decoder->state.width / 2,
+            img->planes[1] + i * img->stride[1], decoder->state.width / 2);
+      }
+      for (i = 0; i < decoder->state.height / 2; i++) {
+        memcpy (GST_BUFFER_DATA (frame->src_buffer) +
+            decoder->state.width * decoder->state.height +
+            decoder->state.width * decoder->state.height / 4 +
+            i * decoder->state.width / 2,
+            img->planes[2] + i * img->stride[2], decoder->state.width / 2);
+      }
     }
-    for (i = 0; i < decoder->state.height / 2; i++) {
-      memcpy (GST_BUFFER_DATA (frame->src_buffer) +
-          decoder->state.width * decoder->state.height +
-          i * decoder->state.width / 2,
-          img->planes[1] + i * img->stride[1], decoder->state.width / 2);
-    }
-    for (i = 0; i < decoder->state.height / 2; i++) {
-      memcpy (GST_BUFFER_DATA (frame->src_buffer) +
-          decoder->state.width * decoder->state.height +
-          decoder->state.width * decoder->state.height / 4 +
-          i * decoder->state.width / 2,
-          img->planes[2] + i * img->stride[2], decoder->state.width / 2);
-    }
-    vpx_img_free (img);
+
+    gst_base_video_decoder_finish_frame (decoder, frame);
+
+    do {
+      vpx_img_free (img);
+    } while ((img = vpx_codec_get_frame (&dec->decoder, &iter)));
   }
-
-  gst_base_video_decoder_finish_frame (decoder, frame);
-
-  ret = GST_FLOW_OK;
 out:
 
   return ret;
