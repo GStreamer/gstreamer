@@ -52,7 +52,7 @@ static const char *basic_auth_path = "/basic_auth";
 static const char *digest_auth_path = "/digest_auth";
 
 static int run_server (guint * http_port, guint * https_port);
-
+static void stop_server (void);
 
 static void
 handoff_cb (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
@@ -451,6 +451,7 @@ souphttpsrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   run_server (&http_port, &https_port);
+  g_atexit (stop_server);
   tcase_add_test (tc_chain, test_first_buffer_has_offset);
   tcase_add_test (tc_chain, test_redirect_yes);
   tcase_add_test (tc_chain, test_redirect_no);
@@ -559,10 +560,12 @@ server_callback (SoupServer * server, SoupMessage * msg,
   GST_DEBUG ("  -> %d %s", msg->status_code, msg->reason_phrase);
 }
 
+static SoupServer *server;      /* NULL */
+static SoupServer *ssl_server;  /* NULL */
+
 int
 run_server (guint * http_port, guint * https_port)
 {
-  SoupServer *server, *ssl_server;
   guint port = SOUP_ADDRESS_ANY_PORT;
   guint ssl_port = SOUP_ADDRESS_ANY_PORT;
   const char *ssl_cert_file = GST_TEST_FILES_PATH "/test-cert.pem";
@@ -613,4 +616,19 @@ run_server (guint * http_port, guint * https_port)
   }
 
   return 0;
+}
+
+static void
+stop_server (void)
+{
+  GST_INFO ("cleaning up");
+
+  if (server) {
+    g_object_unref (server);
+    server = NULL;
+  }
+  if (ssl_server) {
+    g_object_unref (ssl_server);
+    ssl_server = NULL;
+  }
 }
