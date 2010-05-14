@@ -71,7 +71,6 @@ struct _GstSchroEnc
   /* state */
   SchroEncoder *encoder;
   SchroVideoFormat *video_format;
-  GstVideoFrame *eos_frame;
   GstBuffer *seq_header_buffer;
 
   guint64 last_granulepos;
@@ -108,8 +107,7 @@ static gboolean gst_schro_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_schro_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame);
+static gboolean gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder);
 static GstFlowReturn gst_schro_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_schro_enc_shape_output (GstBaseVideoEncoder *
@@ -438,14 +436,11 @@ gst_schro_enc_stop (GstBaseVideoEncoder * base_video_encoder)
 }
 
 static gboolean
-gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame)
+gst_schro_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstSchroEnc *schro_enc = GST_SCHRO_ENC (base_video_encoder);
 
   GST_DEBUG ("finish");
-
-  schro_enc->eos_frame = frame;
 
   schro_encoder_end_of_stream (schro_enc->encoder);
   gst_schro_enc_process (schro_enc);
@@ -661,11 +656,12 @@ gst_schro_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      frame->presentation_frame_number);
+      &base_video_encoder->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
+      &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      frame->system_frame_number);
+      &base_video_encoder->segment, frame->system_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
   if (frame->is_sync_point &&
@@ -690,15 +686,16 @@ gst_schro_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      frame->presentation_frame_number);
+      &base_video_encoder->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
+      &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      frame->decode_frame_number);
+      &base_video_encoder->segment, frame->decode_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      frame->system_frame_number);
+      &base_video_encoder->segment, frame->system_frame_number);
 
   if (frame->is_sync_point &&
       frame->presentation_frame_number == frame->system_frame_number) {
@@ -782,7 +779,8 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
 
         if (voidptr == NULL) {
           GST_DEBUG ("got eos");
-          frame = schro_enc->eos_frame;
+          //frame = schro_enc->eos_frame;
+          frame = NULL;
         }
 
         if (SCHRO_PARSE_CODE_IS_SEQ_HEADER (encoded_buffer->data[4])) {

@@ -472,7 +472,7 @@ gst_schro_parse_shape_output_quicktime (GstBaseVideoParse * base_video_parse,
   state = gst_base_video_parse_get_state (base_video_parse);
 
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      frame->system_frame_number);
+      &base_video_parse->segment, frame->system_frame_number);
 
   if (frame->is_sync_point &&
       frame->presentation_frame_number == frame->system_frame_number) {

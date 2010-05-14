@@ -93,9 +93,8 @@ static GstFlowReturn gst_schro_dec_parse_data (GstBaseVideoDecoder *
 static int gst_schro_dec_scan_for_sync (GstBaseVideoDecoder *
     base_video_decoder, gboolean at_eos, int offset, int n);
 static GstFlowReturn gst_schro_dec_handle_frame (GstBaseVideoDecoder * decoder,
-    GstVideoFrame * frame);
-static GstFlowReturn gst_schro_dec_finish (GstBaseVideoDecoder *
-    base_video_decoder, GstVideoFrame * frame);
+    GstVideoFrame * frame, GstClockTimeDiff deadline);
+static gboolean gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder);
 static void gst_schrodec_send_tags (GstSchroDec * schro_dec);
 
 static GstStaticPadTemplate gst_schro_dec_sink_template =
@@ -269,9 +268,6 @@ error:
 static gboolean
 gst_schro_dec_start (GstBaseVideoDecoder * dec)
 {
-  if (dec->codec_data) {
-    GST_DEBUG_OBJECT (dec, "codec data!");
-  }
 
   return TRUE;
 }
@@ -470,6 +466,7 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
 
     gst_base_video_decoder_set_sync_point (base_video_decoder);
 
+#if 0
     if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->last_sink_timestamp)) {
       base_video_decoder->current_frame->presentation_timestamp =
           base_video_decoder->last_sink_timestamp;
@@ -500,9 +497,7 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
         GST_DEBUG ("gp pt %lld dist %d delay %d dt %lld", pt, dist, delay, dt);
       }
 #endif
-      state =
-          gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER
-          (schro_decoder));
+      state = gst_base_video_decoder_get_state (base_video_decoder);
       base_video_decoder->current_frame->presentation_timestamp =
           gst_util_uint64_scale (granulepos_to_frame
           (base_video_decoder->last_sink_offset_end), state->fps_d * GST_SECOND,
@@ -510,6 +505,7 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     } else {
       base_video_decoder->current_frame->presentation_timestamp = -1;
     }
+#endif
 
     g_free (data);
   }
@@ -685,7 +681,7 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
 
 GstFlowReturn
 gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame)
+    GstVideoFrame * frame, GstClockTimeDiff deadline)
 {
   GstSchroDec *schro_dec;
   int schro_ret;
@@ -710,9 +706,8 @@ gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   return gst_schro_dec_process (schro_dec, FALSE);
 }
 
-GstFlowReturn
-gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame)
+gboolean
+gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder)
 {
   GstSchroDec *schro_dec;
 
