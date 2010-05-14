@@ -112,8 +112,15 @@ typedef struct
 } GstPlayTextChain;
 
 #define GST_PLAY_SINK_GET_LOCK(playsink) (&((GstPlaySink *)playsink)->lock)
-#define GST_PLAY_SINK_LOCK(playsink)     g_static_rec_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink))
-#define GST_PLAY_SINK_UNLOCK(playsink)   g_static_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink))
+#define GST_PLAY_SINK_LOCK(playsink)     G_STMT_START { \
+  GST_LOG_OBJECT (playsink, "locking from thread %p", g_thread_self ()); \
+  g_static_rec_mutex_lock (GST_PLAY_SINK_GET_LOCK (playsink)); \
+  GST_LOG_OBJECT (playsink, "locked from thread %p", g_thread_self ()); \
+} G_STMT_END
+#define GST_PLAY_SINK_UNLOCK(playsink)   G_STMT_START { \
+  GST_LOG_OBJECT (playsink, "unlocking from thread %p", g_thread_self ()); \
+  g_static_rec_mutex_unlock (GST_PLAY_SINK_GET_LOCK (playsink)); \
+} G_STMT_END
 
 struct _GstPlaySink
 {
@@ -1995,7 +2002,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       GST_ELEMENT_ERROR (playsink, STREAM, FORMAT,
           (_("Can't play a text file without video or visualizations.")),
           ("Have text pad but no video pad or visualizations"));
-      GST_PLAY_SINK_LOCK (playsink);
+      GST_PLAY_SINK_UNLOCK (playsink);
       return FALSE;
     }
   }
