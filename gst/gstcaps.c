@@ -512,6 +512,7 @@ no_string:
 }
 
 /* manipulation */
+
 static GstStructure *
 gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
 {
@@ -781,7 +782,6 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
     }
   }
 }
-
 
 /**
  * gst_caps_get_size:
@@ -1171,6 +1171,8 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
   return gst_caps_is_subset (caps1, caps2) && gst_caps_is_subset (caps2, caps1);
 }
 
+/* intersect operation */
+
 typedef struct
 {
   GstStructure *dest;
@@ -1371,48 +1373,6 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
   return FALSE;
 }
 
-#if 0
-static GstStructure *
-gst_caps_structure_union (const GstStructure * struct1,
-    const GstStructure * struct2)
-{
-  int i;
-  GstStructure *dest;
-  const GstStructureField *field1;
-  const GstStructureField *field2;
-  int ret;
-
-  /* FIXME this doesn't actually work */
-
-  if (struct1->name != struct2->name)
-    return NULL;
-
-  dest = gst_structure_id_empty_new (struct1->name);
-
-  for (i = 0; i < struct1->fields->len; i++) {
-    GValue dest_value = { 0 };
-
-    field1 = GST_STRUCTURE_FIELD (struct1, i);
-    field2 = gst_structure_id_get_field (struct2, field1->name);
-
-    if (field2 == NULL) {
-      continue;
-    } else {
-      if (gst_value_union (&dest_value, &field1->value, &field2->value)) {
-        gst_structure_set_value (dest, g_quark_to_string (field1->name),
-            &dest_value);
-      } else {
-        ret = gst_value_compare (&field1->value, &field2->value);
-      }
-    }
-  }
-
-  return dest;
-}
-#endif
-
-/* operations */
-
 /**
  * gst_caps_intersect:
  * @caps1: a #GstCaps to intersect
@@ -1497,13 +1457,14 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   return dest;
 }
 
+/* subtract operation */
+
 typedef struct
 {
   const GstStructure *subtract_from;
   GSList *put_into;
 }
 SubtractionEntry;
-
 
 static gboolean
 gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
@@ -1635,6 +1596,48 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
   return dest;
 }
 
+/* union operation */
+
+#if 0
+static GstStructure *
+gst_caps_structure_union (const GstStructure * struct1,
+    const GstStructure * struct2)
+{
+  int i;
+  GstStructure *dest;
+  const GstStructureField *field1;
+  const GstStructureField *field2;
+  int ret;
+
+  /* FIXME this doesn't actually work */
+
+  if (struct1->name != struct2->name)
+    return NULL;
+
+  dest = gst_structure_id_empty_new (struct1->name);
+
+  for (i = 0; i < struct1->fields->len; i++) {
+    GValue dest_value = { 0 };
+
+    field1 = GST_STRUCTURE_FIELD (struct1, i);
+    field2 = gst_structure_id_get_field (struct2, field1->name);
+
+    if (field2 == NULL) {
+      continue;
+    } else {
+      if (gst_value_union (&dest_value, &field1->value, &field2->value)) {
+        gst_structure_set_value (dest, g_quark_to_string (field1->name),
+            &dest_value);
+      } else {
+        ret = gst_value_compare (&field1->value, &field2->value);
+      }
+    }
+  }
+
+  return dest;
+}
+#endif
+
 /**
  * gst_caps_union:
  * @caps1: a #GstCaps to union
@@ -1671,6 +1674,8 @@ gst_caps_union (const GstCaps * caps1, const GstCaps * caps2)
   gst_caps_do_simplify (dest1);
   return dest1;
 }
+
+/* normalize/simplify operations */
 
 typedef struct _NormalizeForeach
 {
@@ -1923,6 +1928,8 @@ gst_caps_do_simplify (GstCaps * caps)
   /* gst_caps_do_simplify (caps); */
   return TRUE;
 }
+
+/* persistence */
 
 #ifndef GST_DISABLE_LOADSAVE
 /**
