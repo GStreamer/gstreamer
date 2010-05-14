@@ -97,8 +97,6 @@ static gboolean gst_vp8_dec_stop (GstBaseVideoDecoder * decoder);
 static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
-static int gst_vp8_dec_scan_for_sync (GstBaseVideoDecoder * decoder,
-    gboolean at_eos, int offset, int n);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     GstVideoFrame * frame);
 
@@ -155,7 +153,6 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   base_video_decoder_class->start = gst_vp8_dec_start;
   base_video_decoder_class->stop = gst_vp8_dec_stop;
   base_video_decoder_class->reset = gst_vp8_dec_reset;
-  base_video_decoder_class->scan_for_sync = gst_vp8_dec_scan_for_sync;
   base_video_decoder_class->parse_data = gst_vp8_dec_parse_data;
   base_video_decoder_class->handle_frame = gst_vp8_dec_handle_frame;
 }
@@ -234,6 +231,7 @@ gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
 static gboolean
 gst_vp8_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
+
   return TRUE;
 }
 
@@ -241,6 +239,7 @@ static gboolean
 gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVP8Dec *decoder;
+  int flags = 0;
 
   GST_DEBUG ("reset");
 
@@ -248,6 +247,8 @@ gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
 
   decoder->decoder_inited = FALSE;
   decoder->have_video_info = FALSE;
+
+  vpx_codec_dec_init (&decoder->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
 
   return TRUE;
 }
@@ -272,28 +273,6 @@ gst_vp8_dec_send_tags (GstVP8Dec * dec)
       GST_BASE_VIDEO_CODEC_SRC_PAD (dec), list);
 }
 
-static int
-gst_vp8_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
-    gboolean at_eos, int offset, int n)
-{
-  int n_available =
-      gst_adapter_available (base_video_decoder->input_adapter) - offset;
-
-  if (n_available < 4) {
-    if (at_eos) {
-      return n_available;
-    } else {
-      return 0;
-    }
-  }
-
-  n_available -= 3;
-
-  return
-      gst_adapter_masked_scan_uint32_compat (base_video_decoder->input_adapter,
-      0xf00fff3f, 0x1f07003f, offset, MIN (n, n_available - 3));
-}
-
 static GstFlowReturn
 gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 {
@@ -316,19 +295,22 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
     gst_vp8_dec_send_tags (dec);
   }
-#if 0
-  status =
-      dec->decoder->
-      GetCompressedFrameDetails (GST_BUFFER_DATA (frame->sink_buffer),
-      pCompDetails);
-#endif
 
   if (!dec->have_video_info) {
-#if 0
-    decoder->state.width = pCompDetails->SamplesPerLine;
-    decoder->state.height = pCompDetails->ActiveLinePerFrame *
-        pCompDetails->FieldFrameCount;
-#endif
+    vpx_codec_stream_info_t stream_info;
+
+    vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
+        GST_BUFFER_DATA (frame->sink_buffer),
+        GST_BUFFER_SIZE (frame->sink_buffer), &stream_info);
+
+    if (!stream_info.is_kf) {
+      gst_base_video_decoder_skip_frame (decoder, frame);
+      return GST_FLOW_OK;
+    }
+
+    /* should set size here */
+    decoder->state.width = stream_info.w;
+    decoder->state.height = stream_info.h;
     decoder->state.format = GST_VIDEO_FORMAT_I420;
 
     decoder->state.fps_n = 30;
@@ -338,7 +320,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
     dec->have_video_info = TRUE;
   }
-
+#if 0
   if (GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder)) == NULL) {
     GstCaps *caps;
 
@@ -351,6 +333,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
     gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (decoder), caps);
   }
+#endif
 
   ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
   if (ret != GST_FLOW_OK) {
