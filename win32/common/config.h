@@ -40,7 +40,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Good Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Good Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -144,6 +144,9 @@
 /* Define to enable building of plug-ins with external deps. */
 #undef HAVE_EXTERNAL
 
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
 /* FIONREAD ioctl found in sys/filio.h */
 #undef HAVE_FIONREAD_IN_SYS_FILIO
 
@@ -228,6 +231,9 @@
 /* Define to enable OSS audio (used by ossaudio). */
 #undef HAVE_OSS
 
+/* Define to enable Open Sound System 4 (used by oss4). */
+#undef HAVE_OSS4
+
 /* Define if OSS includes are in /machine/ */
 #undef HAVE_OSS_INCLUDE_IN_MACHINE
 
@@ -294,6 +300,9 @@
 /* Define to enable Sun Audio (used by sunaudio). */
 #undef HAVE_SUNAUDIO
 
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#undef HAVE_SYS_IOCTL_H
+
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
@@ -359,7 +368,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.22.1"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.22.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -368,7 +377,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.22.1"
+#define PACKAGE_VERSION "0.10.22.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -399,7 +408,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.22.1"
+#define VERSION "0.10.22.2"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API
