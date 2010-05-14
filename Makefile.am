@@ -41,6 +41,8 @@ include $(top_srcdir)/common/coverage/lcov.mak
 # cruft: plugins that have been merged or moved or renamed
 
 CRUFT_FILES = \
+	$(top_builddir)/common/shave \
+	$(top_builddir)/common/shave-libtool \
 	$(top_builddir)/gst/aacparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/amrparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/flacparse/.libs/*.{so,dll,DLL,dylib} \
