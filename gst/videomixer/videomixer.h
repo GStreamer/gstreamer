@@ -99,6 +99,9 @@ struct _GstVideoMixer
   gint fps_n;
   gint fps_d;
 
+  gint par_n;
+  gint par_d;
+
   /* Next available sinkpad index */
   gint next_sinkpad;
 

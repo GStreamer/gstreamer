@@ -58,6 +58,8 @@ struct _GstVideoMixerPad
   guint in_width, in_height;
   gint fps_n;
   gint fps_d;
+  gint par_n;
+  gint par_d;
 
   gint xpos, ypos;
   guint zorder;

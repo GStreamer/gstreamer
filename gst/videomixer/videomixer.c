@@ -280,7 +280,7 @@ static void
 gst_videomixer_set_master_geometry (GstVideoMixer * mix)
 {
   GSList *walk;
-  gint width = 0, height = 0, fps_n = 0, fps_d = 0;
+  gint width = 0, height = 0, fps_n = 0, fps_d = 0, par_n = 0, par_d = 0;
   GstVideoMixerPad *master = NULL;
 
   walk = mix->sinkpads;
@@ -300,6 +300,8 @@ gst_videomixer_set_master_geometry (GstVideoMixer * mix)
         ((gint64) fps_n * mixpad->fps_d < (gint64) mixpad->fps_n * fps_d)) {
       fps_n = mixpad->fps_n;
       fps_d = mixpad->fps_d;
+      par_n = mixpad->par_n;
+      par_d = mixpad->par_d;
       GST_DEBUG_OBJECT (mixpad, "becomes the master pad");
       master = mixpad;
     }
@@ -308,7 +310,7 @@ gst_videomixer_set_master_geometry (GstVideoMixer * mix)
   /* set results */
   if (mix->master != master || mix->in_width != width
       || mix->in_height != height || mix->fps_n != fps_n
-      || mix->fps_d != fps_d) {
+      || mix->fps_d != fps_d || mix->par_n != par_n || mix->par_d != par_d) {
     mix->setcaps = TRUE;
     mix->sendseg = TRUE;
     gst_videomixer_reset_qos (mix);
@@ -317,6 +319,8 @@ gst_videomixer_set_master_geometry (GstVideoMixer * mix)
     mix->in_height = height;
     mix->fps_n = fps_n;
     mix->fps_d = fps_d;
+    mix->par_n = par_n;
+    mix->par_d = par_d;
   }
 }
 
@@ -328,7 +332,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   GstStructure *structure;
   gint in_width, in_height;
   gboolean ret = FALSE;
-  const GValue *framerate;
+  const GValue *framerate, *par;
 
   GST_INFO_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, vscaps);
 
@@ -344,10 +348,17 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
       || !gst_structure_get_int (structure, "height", &in_height)
       || (framerate = gst_structure_get_value (structure, "framerate")) == NULL)
     goto beach;
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   GST_VIDEO_MIXER_STATE_LOCK (mix);
   mixpad->fps_n = gst_value_get_fraction_numerator (framerate);
   mixpad->fps_d = gst_value_get_fraction_denominator (framerate);
+  if (par) {
+    mixpad->par_n = gst_value_get_fraction_numerator (par);
+    mixpad->par_d = gst_value_get_fraction_denominator (par);
+  } else {
+    mixpad->par_n = mixpad->par_d = 1;
+  }
 
   mixpad->in_width = in_width;
   mixpad->in_height = in_height;
@@ -383,22 +394,14 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
     acceptedCaps = gst_caps_make_writable (acceptedCaps);
     GST_LOG_OBJECT (pad, "master's caps %" GST_PTR_FORMAT, acceptedCaps);
     if (GST_CAPS_IS_SIMPLE (acceptedCaps)) {
-      int templCapsSize =
-          gst_caps_get_size (gst_pad_get_pad_template_caps (pad));
-      guint i;
-      for (i = 0; i < templCapsSize; i++) {
-        GstCaps *caps1 = gst_caps_copy (acceptedCaps);
-        GstCaps *caps2 =
-            gst_caps_copy_nth (gst_pad_get_pad_template_caps (pad), i);
-        gst_caps_merge (caps1, caps2);
-        gst_caps_do_simplify (caps1);
-        if (GST_CAPS_IS_SIMPLE (caps1)) {
-          gst_caps_replace (&acceptedCaps, caps1);
-          gst_caps_unref (caps1);
-          break;
-        }
-        gst_caps_unref (caps1);
-      }
+      GstStructure *s;
+      s = gst_caps_get_structure (acceptedCaps, 0);
+      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+      if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
+        gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+            NULL);
     }
   } else {
     acceptedCaps = gst_pad_get_fixed_caps_func (pad);
@@ -407,7 +410,9 @@ gst_videomixer_pad_sink_acceptcaps (GstPad * pad, GstCaps * vscaps)
   GST_INFO_OBJECT (pad, "vscaps: %" GST_PTR_FORMAT, vscaps);
   GST_INFO_OBJECT (pad, "acceptedCaps: %" GST_PTR_FORMAT, acceptedCaps);
 
-  ret = gst_caps_is_always_compatible (vscaps, acceptedCaps);
+  ret = gst_caps_can_intersect (vscaps, acceptedCaps);
+  GST_INFO_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT, (ret ? "" : "not "),
+      vscaps);
   gst_caps_unref (acceptedCaps);
   GST_VIDEO_MIXER_STATE_UNLOCK (mix);
   gst_object_unref (mix);
@@ -636,6 +641,7 @@ gst_videomixer_reset (GstVideoMixer * mix)
   mix->out_width = 0;
   mix->out_height = 0;
   mix->fps_n = mix->fps_d = 0;
+  mix->par_n = mix->par_d = 1;
   mix->setcaps = FALSE;
   mix->sendseg = FALSE;
 
@@ -1430,7 +1436,8 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
         (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps,
         "width", G_TYPE_INT, mix->in_width,
-        "height", G_TYPE_INT, mix->in_height, NULL);
+        "height", G_TYPE_INT, mix->in_height,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, mix->par_n, mix->par_d, NULL);
 
     mix->out_width = mix->in_width;
     mix->out_height = mix->in_height;
