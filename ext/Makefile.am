@@ -100,10 +100,10 @@ else
 DTS_DIR=
 endif
 
-if USE_DVDNAV
- DVDNAV_DIR = resindvd
+if USE_RESINDVD
+ RESINDVD_DIR = resindvd
 else
- DVDNAV_DIR =
+ RESINDVD_DIR =
 endif
 
 if USE_FAAC
@@ -384,7 +384,7 @@ SUBDIRS=\
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
 	$(DTS_DIR) \
-	$(DVDNAV_DIR) \
+	$(RESINDVD_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \

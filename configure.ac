@@ -723,11 +723,11 @@ return 0;
   fi
 ])
 
-dnl *** dvdnav for resindvd ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
-AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
-  PKG_CHECK_MODULES(DVDNAV, dvdnav >= 4.1.2, HAVE_DVDNAV="yes", [
-    HAVE_DVDNAV="no"
+dnl *** resindvd ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_RESINDVD, true)
+AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
+  PKG_CHECK_MODULES(DVDNAV, dvdnav >= 4.1.2 dvdread >= 4.1.2, HAVE_RESINDVD="yes", [
+    HAVE_RESINDVD="no"
     AC_MSG_RESULT(no)
   ])
 ])
@@ -1496,7 +1496,7 @@ AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_DIRAC, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIVX, false)
-AM_CONDITIONAL(USE_DVDNAV, false)
+AM_CONDITIONAL(USE_RESINDVD, false)
 AM_CONDITIONAL(USE_METADATA, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
