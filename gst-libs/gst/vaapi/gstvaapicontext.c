@@ -617,6 +617,22 @@ gst_vaapi_context_get_surface(GstVaapiContext *context)
 }
 
 /**
+ * gst_vaapi_context_get_surface_count:
+ * @context: a #GstVaapiContext
+ *
+ * Retrieves the number of free surfaces left in the pool.
+ *
+ * Return value: the number of free surfaces available in the pool
+ */
+guint
+gst_vaapi_context_get_surface_count(GstVaapiContext *context)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), 0);
+
+    return gst_vaapi_video_pool_get_size(context->priv->surfaces_pool);
+}
+
+/**
  * gst_vaapi_context_put_surface:
  * @context: a #GstVaapiContext
  * @surface: the #GstVaapiSurface to release

@@ -433,6 +433,7 @@ gst_vaapi_context_set_profile
 gst_vaapi_context_get_entrypoint
 gst_vaapi_context_get_size
 gst_vaapi_context_get_surface
+gst_vaapi_context_get_surface_count
 gst_vaapi_context_put_surface
 gst_vaapi_context_find_surface_by_id
 <SUBSECTION Standard>

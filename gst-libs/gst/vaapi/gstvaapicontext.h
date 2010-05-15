@@ -122,6 +122,9 @@ gst_vaapi_context_get_size(
 GstVaapiSurface *
 gst_vaapi_context_get_surface(GstVaapiContext *context);
 
+guint
+gst_vaapi_context_get_surface_count(GstVaapiContext *context);
+
 void
 gst_vaapi_context_put_surface(GstVaapiContext *context, GstVaapiSurface *surface);
 
