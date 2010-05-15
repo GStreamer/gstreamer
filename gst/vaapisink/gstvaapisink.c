@@ -207,6 +207,8 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     double display_ratio;
     gboolean success;
 
+    GST_DEBUG("ensure render rect within %ux%u bounds", width, height);
+
     gst_vaapi_display_get_pixel_aspect_ratio(
         sink->display,
         &display_par_n, &display_par_d
@@ -222,7 +224,7 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     );
     if (!success)
         return FALSE;
-    GST_DEBUG("video size %dx%d, calculated render ratio %d/%d",
+    GST_DEBUG("video size %dx%d, calculated ratio %d/%d",
               sink->video_width, sink->video_height, num, den);
 
     if ((sink->video_height % den) == 0) {
@@ -257,7 +259,6 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
             display_rect->height = height;
         }
     }
-    GST_DEBUG("display size %ux%u", display_rect->width, display_rect->height);
 
     if (sink->fullscreen) {
         display_rect->x  = (width  - display_rect->width)  / 2;
@@ -267,6 +268,10 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
         display_rect->x  = 0;
         display_rect->y  = 0;
     }
+
+    GST_DEBUG("render rect (%d,%d):%ux%u",
+              display_rect->x, display_rect->y,
+              display_rect->width, display_rect->height);
     return TRUE;
 }
 
