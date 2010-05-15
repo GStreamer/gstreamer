@@ -132,6 +132,14 @@ gst_vaapi_decoder_ensure_context(
 ) attribute_hidden;
 
 gboolean
+gst_vaapi_decoder_push_buffer_sub(
+    GstVaapiDecoder *decoder,
+    GstBuffer       *buffer,
+    guint            offset,
+    guint            size
+) attribute_hidden;
+
+gboolean
 gst_vaapi_decoder_push_surface(
     GstVaapiDecoder *decoder,
     GstVaapiSurface *surface,

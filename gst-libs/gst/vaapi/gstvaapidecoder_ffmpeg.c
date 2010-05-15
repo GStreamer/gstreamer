@@ -490,8 +490,8 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
     GstVaapiDecoderFfmpeg * const ffdecoder = GST_VAAPI_DECODER_FFMPEG(decoder);
     GstVaapiDecoderFfmpegPrivate * const priv = ffdecoder->priv;
     GstClockTime inbuf_ts;
-    guchar *inbuf, *outbuf;
-    gint inbuf_size, outbuf_size;
+    guchar *outbuf;
+    gint inbuf_ofs, inbuf_size, outbuf_size;
     gboolean got_frame;
 
     g_return_val_if_fail(priv->is_constructed,
@@ -503,7 +503,7 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;
     }
 
-    inbuf      = GST_BUFFER_DATA(buffer);
+    inbuf_ofs  = 0;
     inbuf_size = GST_BUFFER_SIZE(buffer);
     inbuf_ts   = GST_BUFFER_TIMESTAMP(buffer);
 
@@ -513,23 +513,30 @@ gst_vaapi_decoder_ffmpeg_decode(GstVaapiDecoder *decoder, GstBuffer *buffer)
                 priv->pctx,
                 priv->avctx,
                 &outbuf, &outbuf_size,
-                inbuf, inbuf_size,
+                GST_BUFFER_DATA(buffer) + inbuf_ofs, inbuf_size,
                 inbuf_ts, inbuf_ts
             );
             got_frame = outbuf && outbuf_size > 0;
 
             if (parsed_size > 0) {
-                inbuf      += parsed_size;
+                inbuf_ofs  += parsed_size;
                 inbuf_size -= parsed_size;
             }
         } while (!got_frame && inbuf_size > 0);
         inbuf_ts    = priv->pctx->pts;
     }
     else {
-        outbuf      = inbuf;
+        outbuf      = GST_BUFFER_DATA(buffer);
         outbuf_size = inbuf_size;
-        got_frame   = inbuf && inbuf_size > 0;
+        got_frame   = outbuf && outbuf_size > 0;
+        inbuf_ofs   = inbuf_size;
+        inbuf_size  = 0;
     }
+
+    if (inbuf_size > 0 &&
+        !gst_vaapi_decoder_push_buffer_sub(decoder, buffer,
+                                           inbuf_ofs, inbuf_size))
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
 
     if (!got_frame && !GST_BUFFER_IS_EOS(buffer))
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
