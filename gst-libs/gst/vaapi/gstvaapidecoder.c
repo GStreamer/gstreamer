@@ -183,6 +183,8 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
     if (!profile)
         return;
 
+    priv->caps = gst_caps_copy(caps);
+
     priv->codec = gst_vaapi_profile_get_codec(profile);
     if (!priv->codec)
         return;
@@ -195,6 +197,11 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
     if (gst_structure_get_fraction(structure, "framerate", &v1, &v2)) {
         priv->fps_n = v1;
         priv->fps_d = v2;
+    }
+
+    if (gst_structure_get_fraction(structure, "pixel-aspect-ratio", &v1, &v2)) {
+        priv->par_n = v1;
+        priv->par_d = v2;
     }
 
     v_codec_data = gst_structure_get_value(structure, "codec_data");
@@ -216,6 +223,11 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
     set_codec_data(decoder, NULL);
+
+    if (priv->caps) {
+        gst_caps_unref(priv->caps);
+        priv->caps = NULL;
+    }
 
     if (priv->context) {
         g_object_unref(priv->context);
@@ -280,6 +292,9 @@ gst_vaapi_decoder_get_property(
     case PROP_DISPLAY:
         g_value_set_object(value, priv->display);
         break;
+    case PROP_CAPS:
+        gst_value_set_caps(value, priv->caps);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -317,7 +332,7 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
          g_param_spec_pointer("caps",
                               "Decoder caps",
                               "The decoder caps",
-                              G_PARAM_WRITABLE|G_PARAM_CONSTRUCT_ONLY));
+                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -327,14 +342,32 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 
     decoder->priv               = priv;
     priv->context               = NULL;
+    priv->caps                  = NULL;
     priv->codec                 = 0;
     priv->codec_data            = NULL;
     priv->width                 = 0;
     priv->height                = 0;
-    priv->fps_n                 = 1000;
-    priv->fps_d                 = 30;
+    priv->fps_n                 = 0;
+    priv->fps_d                 = 0;
+    priv->par_n                 = 0;
+    priv->par_d                 = 0;
     priv->buffers               = g_queue_new();
     priv->surfaces              = g_queue_new();
+}
+
+/**
+ * gst_vaapi_decoder_get_caps:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Retrieves the @decoder caps. The deocder owns the returned caps, so
+ * use gst_caps_ref() whenever necessary.
+ *
+ * Return value: the @decoder caps
+ */
+GstCaps *
+gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
+{
+    return decoder->priv->caps;
 }
 
 /**
@@ -399,6 +432,84 @@ gst_vaapi_decoder_get_surface(
     return proxy;
 }
 
+void
+gst_vaapi_decoder_set_picture_size(
+    GstVaapiDecoder    *decoder,
+    guint               width,
+    guint               height
+)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    g_object_freeze_notify(G_OBJECT(decoder));
+
+    if (priv->width != width) {
+        GST_DEBUG("picture width changed to %d", width);
+        priv->width = width;
+        gst_caps_set_simple(priv->caps, "width", G_TYPE_INT, width, NULL);
+        g_object_notify(G_OBJECT(decoder), "caps");
+    }
+
+    if (priv->height != height) {
+        GST_DEBUG("picture height changed to %d", height);
+        priv->height = height;
+        gst_caps_set_simple(priv->caps, "height", G_TYPE_INT, height, NULL);
+        g_object_notify(G_OBJECT(decoder), "caps");
+    }
+
+    g_object_thaw_notify(G_OBJECT(decoder));
+}
+
+void
+gst_vaapi_decoder_set_framerate(
+    GstVaapiDecoder    *decoder,
+    guint               fps_n,
+    guint               fps_d
+)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (!fps_n || !fps_d)
+        return;
+
+    if (priv->fps_n != fps_n || priv->fps_d != fps_d) {
+        GST_DEBUG("framerate changed to %u/%u", fps_n, fps_d);
+        priv->fps_n = fps_n;
+        priv->fps_d = fps_d;
+        gst_caps_set_simple(
+            priv->caps,
+            "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+            NULL
+        );
+        g_object_notify(G_OBJECT(decoder), "caps");
+    }
+}
+
+void
+gst_vaapi_decoder_set_pixel_aspect_ratio(
+    GstVaapiDecoder    *decoder,
+    guint               par_n,
+    guint               par_d
+)
+{
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    if (!par_n || !par_d)
+        return;
+
+    if (priv->par_n != par_n || priv->par_d != par_d) {
+        GST_DEBUG("pixel-aspect-ratio changed to %u/%u", par_n, par_d);
+        priv->par_n = par_n;
+        priv->par_d = par_d;
+        gst_caps_set_simple(
+            priv->caps,
+            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+            NULL
+        );
+        g_object_notify(G_OBJECT(decoder), "caps");
+    }
+}
+
 gboolean
 gst_vaapi_decoder_ensure_context(
     GstVaapiDecoder    *decoder,
@@ -409,6 +520,8 @@ gst_vaapi_decoder_ensure_context(
 )
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+
+    gst_vaapi_decoder_set_picture_size(decoder, width, height);
 
     if (priv->context)
         return gst_vaapi_context_reset(priv->context,

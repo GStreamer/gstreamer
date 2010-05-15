@@ -167,6 +167,18 @@ get_context(AVCodecContext *avctx)
     if (!avctx->coded_width || !avctx->coded_height)
         return NULL;
 
+    gst_vaapi_decoder_set_framerate(
+        decoder,
+        avctx->time_base.den / avctx->ticks_per_frame,
+        avctx->time_base.num
+    );
+
+    gst_vaapi_decoder_set_pixel_aspect_ratio(
+        decoder,
+        avctx->sample_aspect_ratio.num,
+        avctx->sample_aspect_ratio.den
+    );
+
     success = gst_vaapi_decoder_ensure_context(
         decoder,
         vactx->profile,

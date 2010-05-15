@@ -112,15 +112,39 @@ G_BEGIN_DECLS
 struct _GstVaapiDecoderPrivate {
     GstVaapiDisplay    *display;
     GstVaapiContext    *context;
+    GstCaps            *caps;
     GstVaapiCodec       codec;
     GstBuffer          *codec_data;
     guint               width;
     guint               height;
     guint               fps_n;
     guint               fps_d;
+    guint               par_n;
+    guint               par_d;
     GQueue             *buffers;
     GQueue             *surfaces;
 };
+
+void
+gst_vaapi_decoder_set_picture_size(
+    GstVaapiDecoder    *decoder,
+    guint               width,
+    guint               height
+) attribute_hidden;
+
+void
+gst_vaapi_decoder_set_framerate(
+    GstVaapiDecoder    *decoder,
+    guint               fps_n,
+    guint               fps_d
+) attribute_hidden;
+
+void
+gst_vaapi_decoder_set_pixel_aspect_ratio(
+    GstVaapiDecoder    *decoder,
+    guint               par_n,
+    guint               par_d
+) attribute_hidden;
 
 gboolean
 gst_vaapi_decoder_ensure_context(
@@ -149,4 +173,3 @@ gst_vaapi_decoder_push_surface(
 G_END_DECLS
 
 #endif /* GST_VAAPI_DECODER_PRIV_H */
-

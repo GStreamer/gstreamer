@@ -452,6 +452,7 @@ GstVaapiDecoderStatus
 <TITLE>GstVaapiDecoder</TITLE>
 GstVaapiDecoder
 GstVaapiDecoderClass
+gst_vaapi_decoder_get_caps
 gst_vaapi_decoder_put_buffer
 gst_vaapi_decoder_get_surface
 <SUBSECTION Standard>

@@ -110,6 +110,9 @@ struct _GstVaapiDecoderClass {
 GType
 gst_vaapi_decoder_get_type(void);
 
+GstCaps *
+gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder);
+
 gboolean
 gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf);
 
