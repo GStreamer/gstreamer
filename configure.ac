@@ -690,11 +690,11 @@ AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
   if test $HAVE_LIBVISUAL = no
   then
     AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0)
-    if test x$HAVE_LIBVISUAL == xyes; then
+    if test x$HAVE_LIBVISUAL = xyes; then
       LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.2`"
     fi
   else
-    if test x$HAVE_LIBVISUAL == xyes; then
+    if test x$HAVE_LIBVISUAL = xyes; then
       LIBVIS_PLUGINSDIR="`$PKG_CONFIG --variable=pluginsbasedir libvisual-0.4`"
     fi
   fi
