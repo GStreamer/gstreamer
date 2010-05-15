@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-14
+gst-vaapi NEWS -- summary of changes.  2010-05-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.3 - DD.May.2010
+* Fix memory leak of encoded buffers
 
 Version 0.2.2 - 14.May.2010
 * Fix packaging dependencies

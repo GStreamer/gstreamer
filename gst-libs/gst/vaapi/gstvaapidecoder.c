@@ -105,6 +105,7 @@ decode_step(GstVaapiDecoder *decoder)
 
         status = GST_VAAPI_DECODER_GET_CLASS(decoder)->decode(decoder, buffer);
         GST_DEBUG("decode frame (status = %d)", status);
+        gst_buffer_unref(buffer);
         if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
 
