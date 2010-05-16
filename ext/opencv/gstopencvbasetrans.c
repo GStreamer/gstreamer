@@ -212,14 +212,14 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 {
   GstOpencvBaseTransform *transform = GST_OPENCV_BASE_TRANSFORM (trans);
   gint in_width, in_height;
-  gint in_depth, in_type, in_channels;
+  gint in_depth, in_channels;
   gint out_width, out_height;
-  gint out_depth, out_type, out_channels;
+  gint out_depth, out_channels;
   GError *in_err = NULL;
   GError *out_err = NULL;
 
   if (!gst_opencv_parse_iplimage_params_from_caps (incaps, &in_width,
-      &in_height, &in_depth, &in_type, &in_channels, &in_err)) {
+      &in_height, &in_depth, &in_channels, &in_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse input caps: %s",
         in_err->message);
     g_error_free (in_err);
@@ -227,7 +227,7 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   }
 
   if (!gst_opencv_parse_iplimage_params_from_caps (outcaps, &out_width,
-      &out_height, &out_depth, &out_type, &out_channels, &out_err)) {
+      &out_height, &out_depth, &out_channels, &out_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse output caps: %s",
         out_err->message);
     g_error_free (out_err);

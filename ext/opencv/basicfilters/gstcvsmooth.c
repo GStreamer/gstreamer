@@ -55,13 +55,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_smooth_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24")
+    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
+        "video/x-raw-gray, depth=(int)8, bpp=(int)8")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24")
+    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
+        "video/x-raw-gray, depth=(int)8, bpp=(int)8")
     );
 
 /* Filter signals and args */

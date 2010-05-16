@@ -33,7 +33,10 @@ gboolean
 gst_opencv_get_ipldepth (gint depth, gint bpp, gint * ipldepth);
 
 gboolean gst_opencv_parse_iplimage_params_from_caps
-    (GstCaps * caps, gint * width, gint * height, gint * depth, gint * type,
+    (GstCaps * caps, gint * width, gint * height, gint * depth,
+    gint * channels, GError ** err);
+gboolean gst_opencv_parse_iplimage_params_from_structure
+    (GstStructure * structure, gint * width, gint * height, gint * depth,
     gint * channels, GError ** err);
 
 #endif /* __GST_OPENCV_UTILS__ */
