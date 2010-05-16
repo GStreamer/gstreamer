@@ -108,15 +108,20 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
     GstFlowReturn ret;
+    guint tries;
 
     for (;;) {
+        tries = 0;
+    again:
         proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
         if (!proxy) {
             if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
                 /* Wait for a VA surface to be displayed and free'd */
+                if (++tries > 100)
+                    goto error_decode_timeout;
                 GTimeVal timeout;
                 g_get_current_time(&timeout);
-                g_time_val_add(&timeout, 100);
+                g_time_val_add(&timeout, 10000); /* 10 ms each step */
                 g_mutex_lock(decode->decoder_mutex);
                 g_cond_timed_wait(
                     decode->decoder_ready,
@@ -124,7 +129,7 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
                     &timeout
                 );
                 g_mutex_unlock(decode->decoder_mutex);
-                continue;
+                goto again;
             }
             if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
                 goto error_decode;
@@ -163,6 +168,12 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
     return GST_FLOW_OK;
 
     /* ERRORS */
+error_decode_timeout:
+    {
+        GST_DEBUG("decode timeout. Decoder required a VA surface but none "
+                  "got available within one second");
+        return GST_FLOW_UNEXPECTED;
+    }
 error_decode:
     {
         GST_DEBUG("decode error %d", status);
