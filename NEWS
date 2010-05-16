@@ -3,6 +3,7 @@ Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.2.3 - DD.May.2010
 * Fix memory leak of encoded buffers
+* Fix decoder caps to report codec aliases
 * Fix VC-1 decoding through the playbin2 pipeline
 
 Version 0.2.2 - 14.May.2010

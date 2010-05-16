@@ -71,4 +71,3 @@ Caveats
 -------
 
   * No ad-hoc parser, vaapidecoder currently relies on FFmpeg
-  * MPEG-4 Part-2 (DivX) has decoding bugs

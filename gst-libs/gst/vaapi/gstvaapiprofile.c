@@ -285,18 +285,27 @@ gst_vaapi_profile_get_va_profile(GstVaapiProfile profile)
 GstCaps *
 gst_vaapi_profile_get_caps(GstVaapiProfile profile)
 {
-    const GstVaapiProfileMap * const m = get_profiles_map(profile);
-    GstCaps *caps;
+    const GstVaapiProfileMap *m;
+    GstCaps *out_caps, *caps;
 
-    if (!m)
+    out_caps = gst_caps_new_empty();
+    if (!out_caps)
         return NULL;
 
-    caps = gst_caps_from_string(m->caps_str);
-    if (!caps)
-        return NULL;
-
-    gst_caps_set_simple(caps, "profile", G_TYPE_STRING, m->profile_str, NULL);
-    return caps;
+    for (m = gst_vaapi_profiles; m->profile; m++) {
+        if (m->profile != profile)
+            continue;
+        caps = gst_caps_from_string(m->caps_str);
+        if (!caps)
+            continue;
+        gst_caps_set_simple(
+            caps,
+            "profile", G_TYPE_STRING, m->profile_str,
+            NULL
+        );
+        gst_caps_merge(out_caps, caps);
+    }
+    return out_caps;
 }
 
 /**
