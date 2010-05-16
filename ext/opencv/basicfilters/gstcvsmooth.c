@@ -127,8 +127,8 @@ static void gst_cv_smooth_set_property (GObject * object, guint prop_id,
 static void gst_cv_smooth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvBaseTransform * filter,
-    GstBuffer * buf, IplImage * img);
+static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvBaseTransform *
+    filter, GstBuffer * buf, IplImage * img);
 static GstFlowReturn gst_cv_smooth_transform (GstOpencvBaseTransform * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
@@ -188,20 +188,34 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           DEFAULT_CV_SMOOTH_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
   g_object_class_install_property (gobject_class, PROP_PARAM1,
-      g_param_spec_int ("param1", "param1",
-          "Param1 (Check cvSmooth OpenCV docs)", 1, G_MAXINT, DEFAULT_PARAM1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("param1", "param1 (aperture width)",
+          "The aperture width (Must be positive and odd)."
+          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
+          "/documentation/image_filtering.html#cvSmooth", 1, G_MAXINT,
+          DEFAULT_PARAM1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PARAM2,
-      g_param_spec_int ("param2", "param2",
-          "Param2 (Check cvSmooth OpenCV docs)", 0, G_MAXINT, DEFAULT_PARAM2,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_int ("param2", "param2 (aperture height)",
+          "The aperture height, if zero, the width is used."
+          "(Must be positive and odd or zero, unuset in median and bilateral "
+          "types). Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
+          "/documentation/image_filtering.html#cvSmooth", 0, G_MAXINT,
+          DEFAULT_PARAM2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PARAM3,
-      g_param_spec_double ("param3", "param3",
-          "Param3 (Check cvSmooth OpenCV docs)", 0, G_MAXDOUBLE, DEFAULT_PARAM3,
+      g_param_spec_double ("param3", "param3 (gaussian standard deviation or "
+          "color sigma",
+          "If type is gaussian, this means the standard deviation."
+          "If type is bilateral, this means the color-sigma. If zero, "
+          "Default values are used."
+          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
+          "/documentation/image_filtering.html#cvSmooth",
+          0, G_MAXDOUBLE, DEFAULT_PARAM3,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PARAM4,
-      g_param_spec_double ("param4", "param4",
-          "Param4 (Check cvSmooth OpenCV docs)", 0, G_MAXDOUBLE, DEFAULT_PARAM4,
+      g_param_spec_double ("param4", "param4 (spatial sigma, bilateral only)",
+          "Only used in bilateral type, means the spatial-sigma."
+          "Check cvSmooth OpenCV docs: http://opencv.willowgarage.com"
+          "/documentation/image_filtering.html#cvSmooth",
+          0, G_MAXDOUBLE, DEFAULT_PARAM4,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

@@ -79,10 +79,10 @@ static gboolean gst_opencv_base_transform_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_opencv_base_transform_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
-static GstFlowReturn gst_opencv_base_transform_transform (GstBaseTransform * trans,
-    GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_opencv_base_transform_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size);
+static GstFlowReturn gst_opencv_base_transform_transform (GstBaseTransform *
+    trans, GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_opencv_base_transform_get_unit_size (GstBaseTransform *
+    trans, GstCaps * caps, guint * size);
 
 static void gst_opencv_base_transform_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -109,7 +109,8 @@ gst_opencv_base_transform_get_type (void)
     };
 
     _type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstOpencvBaseTransform", &opencv_base_transform_info, G_TYPE_FLAG_ABSTRACT);
+        "GstOpencvBaseTransform", &opencv_base_transform_info,
+        G_TYPE_FLAG_ABSTRACT);
     g_once_init_leave (&opencv_base_transform_type, _type);
   }
   return opencv_base_transform_type;
@@ -145,10 +146,11 @@ gst_opencv_base_transform_class_init (GstOpencvBaseTransformClass * klass)
   basetrans_class = (GstBaseTransformClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_opencv_base_transform_debug, "opencvbasetransform", 0,
-      "opencvbasetransform element");
+  GST_DEBUG_CATEGORY_INIT (gst_opencv_base_transform_debug,
+      "opencvbasetransform", 0, "opencvbasetransform element");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_opencv_base_transform_finalize);
+  gobject_class->finalize =
+      GST_DEBUG_FUNCPTR (gst_opencv_base_transform_finalize);
   gobject_class->set_property = gst_opencv_base_transform_set_property;
   gobject_class->get_property = gst_opencv_base_transform_get_property;
 
@@ -165,8 +167,8 @@ gst_opencv_base_transform_init (GstOpencvBaseTransform * transform,
 }
 
 static GstFlowReturn
-gst_opencv_base_transform_transform (GstBaseTransform * trans, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_opencv_base_transform_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstOpencvBaseTransform *transform;
   GstOpencvBaseTransformClass *fclass;
@@ -219,7 +221,7 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GError *out_err = NULL;
 
   if (!gst_opencv_parse_iplimage_params_from_caps (incaps, &in_width,
-      &in_height, &in_depth, &in_channels, &in_err)) {
+          &in_height, &in_depth, &in_channels, &in_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse input caps: %s",
         in_err->message);
     g_error_free (in_err);
@@ -227,7 +229,7 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   }
 
   if (!gst_opencv_parse_iplimage_params_from_caps (outcaps, &out_width,
-      &out_height, &out_depth, &out_channels, &out_err)) {
+          &out_height, &out_depth, &out_channels, &out_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse output caps: %s",
         out_err->message);
     g_error_free (out_err);
@@ -245,7 +247,7 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       cvCreateImageHeader (cvSize (in_width, in_height), in_depth, in_channels);
   transform->out_cvImage =
       cvCreateImageHeader (cvSize (out_width, out_height), out_depth,
-          out_channels);
+      out_channels);
 
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (transform),
       transform->in_place);
@@ -294,7 +296,8 @@ gst_opencv_base_transform_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_opencv_base_transform_set_in_place (GstOpencvBaseTransform * transform, gboolean ip)
+gst_opencv_base_transform_set_in_place (GstOpencvBaseTransform * transform,
+    gboolean ip)
 {
   transform->in_place = ip;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (transform), ip);
