@@ -82,6 +82,15 @@ enum
   PROP_PARAM4
 };
 
+/* blur-no-scale only handle: gray 8bits -> gray 16bits
+ * FIXME there is no way in base transform to override pad's getcaps
+ * to be property-sensitive, instead of using the template caps as
+ * the base caps, this might lead us to negotiating rgb in this
+ * smooth type.
+ *
+ * Keep it deactivated for now.
+ */
+
 #define GST_TYPE_CV_SMOOTH_TYPE (gst_cv_smooth_type_get_type ())
 static GType
 gst_cv_smooth_type_get_type (void)
@@ -89,7 +98,7 @@ gst_cv_smooth_type_get_type (void)
   static GType cv_smooth_type_type = 0;
 
   static const GEnumValue smooth_types[] = {
-    {CV_BLUR_NO_SCALE, "CV Blur No Scale", "blur-no-scale"},
+/*    {CV_BLUR_NO_SCALE, "CV Blur No Scale", "blur-no-scale"}, */
     {CV_BLUR, "CV Blur", "blur"},
     {CV_GAUSSIAN, "CV Gaussian", "gaussian"},
     {CV_MEDIAN, "CV Median", "median"},
