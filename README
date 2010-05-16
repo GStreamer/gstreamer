@@ -45,7 +45,7 @@ Requirements
 
 Software requirements
 
-  * libgstreamer0.10-dev >= 0.10.0
+  * libgstreamer0.10-dev >= 0.10.10
   * libgstreamer-plugins-base0.10-dev >= 0.10.16
   * libva-dev >= 0.31.0-1+sds9 (VA/GLX)
   * libavcodec-dev >= 0.6 or with <libavcodec/vaapi.h>
