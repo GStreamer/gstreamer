@@ -50,6 +50,7 @@
 #include <gst/gst.h>
 
 #include "gstopencvbasetrans.h"
+#include "gstopencvutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_opencv_base_transform_debug);
 #define GST_CAT_DEFAULT gst_opencv_base_transform_debug
@@ -210,13 +211,26 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstOpencvBaseTransform *transform = GST_OPENCV_BASE_TRANSFORM (trans);
-  GstStructure *structure;
-  gint width, height;
+  gint in_width, in_height;
+  gint in_depth, in_type, in_channels;
+  gint out_width, out_height;
+  gint out_depth, out_type, out_channels;
+  GError *in_err = NULL;
+  GError *out_err = NULL;
 
-  structure = gst_caps_get_structure (incaps, 0);
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height)) {
-    GST_WARNING_OBJECT (transform, "No width/height on caps");
+  if (!gst_opencv_parse_iplimage_params_from_caps (incaps, &in_width,
+      &in_height, &in_depth, &in_type, &in_channels, &in_err)) {
+    GST_WARNING_OBJECT (transform, "Failed to parse input caps: %s",
+        in_err->message);
+    g_error_free (in_err);
+    return FALSE;
+  }
+
+  if (!gst_opencv_parse_iplimage_params_from_caps (outcaps, &out_width,
+      &out_height, &out_depth, &out_type, &out_channels, &out_err)) {
+    GST_WARNING_OBJECT (transform, "Failed to parse output caps: %s",
+        out_err->message);
+    g_error_free (out_err);
     return FALSE;
   }
 
@@ -227,11 +241,11 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     cvReleaseImage (&transform->out_cvImage);
   }
 
-  /* FIXME - how do we know it is IPL_DEPTH_8U? */
   transform->cvImage =
-      cvCreateImageHeader (cvSize (width, height), IPL_DEPTH_8U, 3);
+      cvCreateImageHeader (cvSize (in_width, in_height), in_depth, in_channels);
   transform->out_cvImage =
-      cvCreateImageHeader (cvSize (width, height), IPL_DEPTH_8U, 3);
+      cvCreateImageHeader (cvSize (out_width, out_height), out_depth,
+          out_channels);
 
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (transform),
       transform->in_place);

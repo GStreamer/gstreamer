@@ -5,7 +5,7 @@ SUBDIRS = basicfilters edgedetect faceblur facedetect pyramidsegment templatemat
 plugin_LTLIBRARIES = libgstopencv.la
 
 # sources used to compile this plug-in
-libgstopencv_la_SOURCES = gstopencv.c gstopencvbasetrans.c
+libgstopencv_la_SOURCES = gstopencv.c gstopencvbasetrans.c gstopencvutils.c
 
 # flags used to compile this facedetect
 # add other _CFLAGS and _LIBS as needed
@@ -40,4 +40,4 @@ libgstopencv_la_DEPENDENCIES = \
 								 $(top_builddir)/ext/opencv/textwrite/libgsttextwrite.la
 
 # headers we need but don't want installed
-noinst_HEADERS = gstopencvbasetrans.h
+noinst_HEADERS = gstopencvbasetrans.h gstopencvutils.h
