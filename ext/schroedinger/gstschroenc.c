@@ -783,17 +783,20 @@ gst_schro_enc_process (GstSchroEnc * schro_enc)
           frame = NULL;
         }
 
-        if (SCHRO_PARSE_CODE_IS_SEQ_HEADER (encoded_buffer->data[4])) {
-          frame->is_sync_point = TRUE;
-        }
+        /* FIXME: Get the frame from somewhere somehow... */
+        if (frame) {
+          if (SCHRO_PARSE_CODE_IS_SEQ_HEADER (encoded_buffer->data[4])) {
+            frame->is_sync_point = TRUE;
+          }
 
-        frame->src_buffer = gst_schro_wrap_schro_buffer (encoded_buffer);
+          frame->src_buffer = gst_schro_wrap_schro_buffer (encoded_buffer);
 
-        ret = gst_base_video_encoder_finish_frame (base_video_encoder, frame);
+          ret = gst_base_video_encoder_finish_frame (base_video_encoder, frame);
 
-        if (ret != GST_FLOW_OK) {
-          GST_DEBUG ("pad_push returned %d", ret);
-          return ret;
+          if (ret != GST_FLOW_OK) {
+            GST_DEBUG ("pad_push returned %d", ret);
+            return ret;
+          }
         }
         break;
       case SCHRO_STATE_AGAIN:
