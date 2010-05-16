@@ -89,7 +89,6 @@ struct _GstDiracEnc
   dirac_encoder_context_t enc_ctx;
   dirac_encoder_t *encoder;
   dirac_sourceparams_t *src_params;
-  GstVideoFrame *eos_frame;
   GstBuffer *seq_header_buffer;
   GstDiracEncOutputType output_format;
   guint64 last_granulepos;
@@ -150,9 +149,8 @@ static gboolean gst_dirac_enc_set_format (GstBaseVideoEncoder *
     base_video_encoder, GstVideoState * state);
 static gboolean gst_dirac_enc_start (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_dirac_enc_stop (GstBaseVideoEncoder * base_video_encoder);
-static gboolean gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame);
-static GstFlowReturn gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
+static gboolean gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder);
+static gboolean gst_dirac_enc_handle_frame (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
 static GstFlowReturn gst_dirac_enc_shape_output (GstBaseVideoEncoder *
     base_video_encoder, GstVideoFrame * frame);
@@ -829,26 +827,23 @@ gst_dirac_enc_stop (GstBaseVideoEncoder * base_video_encoder)
 }
 
 static gboolean
-gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder,
-    GstVideoFrame * frame)
+gst_dirac_enc_finish (GstBaseVideoEncoder * base_video_encoder)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
 
   GST_DEBUG ("finish");
-
-  dirac_enc->eos_frame = frame;
 
   gst_dirac_enc_process (dirac_enc, TRUE);
 
   return TRUE;
 }
 
-static GstFlowReturn
+static gboolean
 gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
 {
   GstDiracEnc *dirac_enc = GST_DIRAC_ENC (base_video_encoder);
-  GstFlowReturn ret;
+  gboolean ret;
   int r;
   const GstVideoState *state;
   uint8_t *data;
@@ -951,7 +946,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   }
   if (r != (int) GST_BUFFER_SIZE (frame->sink_buffer)) {
     GST_ERROR ("failed to push picture");
-    return GST_FLOW_ERROR;
+    return FALSE;
   }
 
   GST_DEBUG ("handle frame");
@@ -964,7 +959,7 @@ gst_dirac_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
   ret = gst_dirac_enc_process (dirac_enc, FALSE);
 
-  return ret;
+  return (ret == GST_FLOW_OK);
 }
 
 #if 0
@@ -1149,26 +1144,31 @@ gst_dirac_enc_process (GstDiracEnc * dirac_enc, gboolean end_sequence)
         gst_buffer_unref (outbuf);
         return GST_FLOW_ERROR;
       case ENC_STATE_EOS:
-        frame = dirac_enc->eos_frame;
+        frame =
+            gst_base_video_encoder_get_oldest_frame (GST_BASE_VIDEO_ENCODER
+            (dirac_enc));
 
-        frame->src_buffer = outbuf;
-        GST_BUFFER_SIZE (outbuf) = dirac_enc->encoder->enc_buf.size;
+        /* FIXME: Get the frame from somewhere somehow... */
+        if (frame) {
+          frame->src_buffer = outbuf;
+          GST_BUFFER_SIZE (outbuf) = dirac_enc->encoder->enc_buf.size;
 
-        ret =
-            gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER
-            (dirac_enc), frame);
+          ret =
+              gst_base_video_encoder_finish_frame (GST_BASE_VIDEO_ENCODER
+              (dirac_enc), frame);
 
-        if (ret != GST_FLOW_OK) {
-          GST_DEBUG ("pad_push returned %d", ret);
-          return ret;
+          if (ret != GST_FLOW_OK) {
+            GST_DEBUG ("pad_push returned %d", ret);
+            return ret;
+          }
         }
         break;
       case ENC_STATE_AVAIL:
         GST_DEBUG ("AVAIL");
         /* FIXME this doesn't reorder frames */
         frame =
-            gst_base_video_encoder_get_frame (GST_BASE_VIDEO_ENCODER
-            (dirac_enc), dirac_enc->pull_frame_num);
+            gst_base_video_encoder_get_oldest_frame (GST_BASE_VIDEO_ENCODER
+            (dirac_enc));
         if (frame == NULL) {
           GST_ERROR ("didn't get frame %d", dirac_enc->pull_frame_num);
         }
@@ -1262,10 +1262,12 @@ gst_dirac_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      frame->presentation_frame_number);
+      &base_video_encoder->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
+      &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
+  GST_BUFFER_OFFSET_END (buf) =
+      gst_video_state_get_timestamp (state, &base_video_encoder->segment,
       frame->system_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
@@ -1291,15 +1293,17 @@ gst_dirac_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      frame->presentation_frame_number);
+      &base_video_encoder->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
+      &base_video_encoder->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
+  GST_BUFFER_OFFSET_END (buf) =
+      gst_video_state_get_timestamp (state, &base_video_encoder->segment,
       frame->decode_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      frame->system_frame_number);
+      &base_video_encoder->segment, frame->system_frame_number);
 
   if (frame->is_sync_point &&
       frame->presentation_frame_number == frame->system_frame_number) {
