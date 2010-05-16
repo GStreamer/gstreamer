@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include "gstcvdilate.h"
+#include "gstcverode.h"
 #include "gstcvsmooth.h"
 #include "gstedgedetect.h"
 #include "gstfaceblur.h"
@@ -34,6 +36,13 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+
+  if (!gst_cv_dilate_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_cv_erode_plugin_init (plugin))
+    return FALSE;
+
   if (!gst_cv_smooth_plugin_init (plugin))
     return FALSE;
 
