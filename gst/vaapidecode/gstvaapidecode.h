@@ -63,6 +63,8 @@ struct _GstVaapiDecode {
     GstPad             *srcpad;
     GstVaapiDisplay    *display;
     GstVaapiDecoder    *decoder;
+    GMutex             *decoder_mutex;
+    GCond              *decoder_ready;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     unsigned int        use_ffmpeg      : 1;

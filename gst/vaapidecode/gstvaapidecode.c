@@ -93,6 +93,14 @@ enum {
     PROP_USE_FFMPEG,
 };
 
+static void
+gst_vaapidecode_release(GstVaapiDecode *decode, GObject *dead_object)
+{
+    g_mutex_lock(decode->decoder_mutex);
+    g_cond_signal(decode->decoder_ready);
+    g_mutex_unlock(decode->decoder_mutex);
+}
+
 static GstFlowReturn
 gst_vaapidecode_step(GstVaapiDecode *decode)
 {
@@ -104,11 +112,31 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
     for (;;) {
         proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
         if (!proxy) {
+            if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
+                /* Wait for a VA surface to be displayed and free'd */
+                GTimeVal timeout;
+                g_get_current_time(&timeout);
+                g_time_val_add(&timeout, 100);
+                g_mutex_lock(decode->decoder_mutex);
+                g_cond_timed_wait(
+                    decode->decoder_ready,
+                    decode->decoder_mutex,
+                    &timeout
+                );
+                g_mutex_unlock(decode->decoder_mutex);
+                continue;
+            }
             if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
                 goto error_decode;
             /* More data is needed */
             break;
         }
+
+        g_object_weak_ref(
+            G_OBJECT(proxy),
+            (GWeakNotify)gst_vaapidecode_release,
+            decode
+        );
 
         buffer = NULL;
         ret = gst_pad_alloc_buffer(
@@ -179,6 +207,14 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     if (!gst_vaapidecode_ensure_display(decode))
         return FALSE;
 
+    decode->decoder_mutex = g_mutex_new();
+    if (!decode->decoder_mutex)
+        return FALSE;
+
+    decode->decoder_ready = g_cond_new();
+    if (!decode->decoder_ready)
+        return FALSE;
+
     if (decode->use_ffmpeg)
         decode->decoder = gst_vaapi_decoder_ffmpeg_new(decode->display, caps);
     if (!decode->decoder)
@@ -191,6 +227,17 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
+    if (decode->decoder_ready) {
+        gst_vaapidecode_release(decode, NULL);
+        g_cond_free(decode->decoder_ready);
+        decode->decoder_ready = NULL;
+    }
+
+    if (decode->decoder_mutex) {
+        g_mutex_free(decode->decoder_mutex);
+        decode->decoder_mutex = NULL;
+    }
+
     if (decode->decoder) {
         gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
@@ -513,11 +560,13 @@ gst_vaapidecode_init(GstVaapiDecode *decode, GstVaapiDecodeClass *klass)
 {
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
 
-    decode->display      = NULL;
-    decode->decoder      = NULL;
-    decode->decoder_caps = NULL;
-    decode->allowed_caps = NULL;
-    decode->use_ffmpeg   = TRUE;
+    decode->display             = NULL;
+    decode->decoder             = NULL;
+    decode->decoder_mutex       = NULL;
+    decode->decoder_ready       = NULL;
+    decode->decoder_caps        = NULL;
+    decode->allowed_caps        = NULL;
+    decode->use_ffmpeg          = TRUE;
 
     /* Pad through which data comes in to the element */
     decode->sinkpad = gst_pad_new_from_template(
