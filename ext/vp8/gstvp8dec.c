@@ -367,6 +367,9 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     do {
       vpx_img_free (img);
     } while ((img = vpx_codec_get_frame (&dec->decoder, &iter)));
+  } else {
+    /* Invisible frame */
+    gst_base_video_decoder_skip_frame (decoder, frame);
   }
 out:
 
