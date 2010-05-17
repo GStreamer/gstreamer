@@ -1782,7 +1782,7 @@ gst_mpegts_demux_parse_adaptation_field (GstMpegTSStream * stream,
                     pmt_stream = demux->streams[demux->streams[j]->PMT_pid];
                     GST_DEBUG_OBJECT (demux, "Updating base_time on all es "
                         "pids belonging to PMT 0x%02x", stream->PMT_pid);
-                    for (i = 0; i <= pmt_stream->PMT.entries->len; i++) {
+                    for (i = 0; i < pmt_stream->PMT.entries->len; i++) {
                       GstMpegTSPMTEntry *cur_entry =
                           &g_array_index (pmt_stream->PMT.entries,
                           GstMpegTSPMTEntry, i);
