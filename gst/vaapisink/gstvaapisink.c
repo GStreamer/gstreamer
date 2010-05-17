@@ -555,15 +555,30 @@ render_reflection(GstVaapiSink *sink)
 }
 
 static gboolean
-gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
+gst_vaapisink_show_frame_glx(
+    GstVaapiSink    *sink,
+    GstVaapiSurface *surface,
+    guint            flags
+)
 {
     GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
     GLenum target;
     GLuint texture;
 
-    if (!sink->use_reflection)
-        return gst_vaapi_window_glx_put_texture(window, sink->texture,
-                                                NULL, &sink->display_rect);
+    gst_vaapi_window_glx_make_current(window);
+    if (!sink->texture) {
+        sink->texture = gst_vaapi_texture_new(
+            sink->display,
+            GL_TEXTURE_2D,
+            GL_BGRA,
+            sink->video_width,
+            sink->video_height
+        );
+        if (!sink->texture)
+            goto error_create_texture;
+    }
+    if (!gst_vaapi_texture_put_surface(sink->texture, surface, flags))
+        goto error_transfer_surface;
 
     target  = gst_vaapi_texture_get_target(sink->texture);
     texture = gst_vaapi_texture_get_id(sink->texture);
@@ -575,21 +590,53 @@ gst_vaapisink_show_frame_glx(GstVaapiSink *sink)
     glEnable(target);
     glBindTexture(target, texture);
     {
-        glPushMatrix();
-        glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
-        glTranslatef(50.0f, 0.0f, 0.0f);
+        if (sink->use_reflection) {
+            glPushMatrix();
+            glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
+            glTranslatef(50.0f, 0.0f, 0.0f);
+        }
         render_frame(sink);
-        glPushMatrix();
-        glTranslatef(0.0, (GLfloat)sink->display_rect.height + 5.0f, 0.0f);
-        render_reflection(sink);
-        glPopMatrix();
-        glPopMatrix();
+        if (sink->use_reflection) {
+            glPushMatrix();
+            glTranslatef(0.0, (GLfloat)sink->display_rect.height + 5.0f, 0.0f);
+            render_reflection(sink);
+            glPopMatrix();
+            glPopMatrix();
+        }
     }
     glBindTexture(target, 0);
     glDisable(target);
+    gst_vaapi_window_glx_swap_buffers(window);
     return TRUE;
+
+    /* ERRORS */
+error_create_texture:
+    {
+        GST_DEBUG("could not create VA/GLX texture");
+        return FALSE;
+    }
+error_transfer_surface:
+    {
+        GST_DEBUG("could not transfer VA surface to texture");
+        return FALSE;
+    }
 }
 #endif
+
+static inline gboolean
+gst_vaapisink_show_frame_x11(
+    GstVaapiSink    *sink,
+    GstVaapiSurface *surface,
+    guint            flags
+)
+{
+    if (!gst_vaapi_window_put_surface(sink->window, surface,
+                                      NULL, &sink->display_rect, flags)) {
+        GST_DEBUG("could not render VA surface");
+        return FALSE;
+    }
+    return TRUE;
+}
 
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
@@ -598,6 +645,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
     GstVaapiSurface *surface;
     guint flags;
+    gboolean success;
 
     if (!sink->window)
         return GST_FLOW_UNEXPECTED;
@@ -612,41 +660,12 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
 
 #if USE_VAAPISINK_GLX
-    if (sink->use_glx) {
-        GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
-        gst_vaapi_window_glx_make_current(window);
-        if (!sink->texture) {
-            sink->texture = gst_vaapi_texture_new(
-                sink->display,
-                GL_TEXTURE_2D,
-                GL_BGRA,
-                sink->video_width,
-                sink->video_height
-            );
-            if (!sink->texture) {
-                GST_DEBUG("could not create VA/GLX texture");
-                return GST_FLOW_UNEXPECTED;
-            }
-        }
-        if (!gst_vaapi_texture_put_surface(sink->texture, surface, flags)) {
-            GST_DEBUG("could not transfer VA surface to texture");
-            return GST_FLOW_UNEXPECTED;
-        }
-        if (!gst_vaapisink_show_frame_glx(sink)) {
-            GST_DEBUG("could not render VA/GLX texture");
-            return GST_FLOW_UNEXPECTED;
-        }
-        gst_vaapi_window_glx_swap_buffers(window);
-        return GST_FLOW_OK;
-    }
+    if (sink->use_glx)
+        success = gst_vaapisink_show_frame_glx(sink, surface, flags);
+    else
 #endif
-
-    if (!gst_vaapi_window_put_surface(sink->window, surface,
-                                      NULL, &sink->display_rect, flags)) {
-        GST_DEBUG("could not render VA surface");
-        return GST_FLOW_UNEXPECTED;
-    }
-    return GST_FLOW_OK;
+        success = gst_vaapisink_show_frame_x11(sink, surface, flags);
+    return success ? GST_FLOW_OK : GST_FLOW_UNEXPECTED;
 }
 
 static void
