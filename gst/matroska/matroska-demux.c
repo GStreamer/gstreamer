@@ -2581,15 +2581,13 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux)
     doctype_class = g_type_class_ref (GST_TYPE_MATROSKA_DOCTYPE);
     doctype_value = g_enum_get_value_by_nick (doctype_class, doctype);
     if (doctype_value) {
-      guint max_version =
-          doctype_value->value == GST_MATROSKA_DOCTYPE_MATROSKA ? 2 : 1;
-      if (version <= max_version) {
+      if (version <= 2) {
         GST_INFO_OBJECT (demux, "Input is %s version %d", doctype, version);
         ret = GST_FLOW_OK;
       } else {
         GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-            ("Demuxer version (%d) is too old to read %s version %d",
-                max_version, doctype, version));
+            ("Demuxer version (2) is too old to read %s version %d",
+                doctype, version));
       }
     } else {
       GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),

@@ -2600,7 +2600,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     }
   }
 
-  /* write the block, for Matroska v2 and WebM use SimpleBlock if possible
+  /* write the block, for doctype v2 use SimpleBlock if possible
    * one slice (*breath*).
    * FIXME: Need to do correct lacing! */
   relative_timestamp64 = GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time;
@@ -2612,10 +2612,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     relative_timestamp64 -= mux->time_scale / 2;
   }
   relative_timestamp = relative_timestamp64 / (gint64) mux->time_scale;
-  if (((mux->doctype == GST_MATROSKA_DOCTYPE_MATROSKA
-              && mux->doctype_version > 1)
-          || mux->doctype == GST_MATROSKA_DOCTYPE_WEBM)
-      && !write_duration) {
+  if (mux->doctype_version > 1 && !write_duration) {
     int flags =
         GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
 
