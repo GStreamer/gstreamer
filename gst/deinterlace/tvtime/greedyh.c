@@ -731,6 +731,9 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     case GST_VIDEO_FORMAT_YVYU:
       scanline = klass->scanline_yuy2;
       break;
+    case GST_VIDEO_FORMAT_UYVY:
+      scanline = klass->scanline_uyvy;
+      break;
     case GST_VIDEO_FORMAT_AYUV:
       scanline = klass->scanline_ayuv;
       break;
@@ -989,6 +992,7 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 
   dim_class->deinterlace_frame_yuy2 = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_yvyu = deinterlace_frame_di_greedyh_packed;
+  dim_class->deinterlace_frame_uyvy = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_ayuv = deinterlace_frame_di_greedyh_packed;
   dim_class->deinterlace_frame_y444 = deinterlace_frame_di_greedyh_planar;
   dim_class->deinterlace_frame_i420 = deinterlace_frame_di_greedyh_planar;
