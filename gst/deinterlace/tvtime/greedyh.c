@@ -665,39 +665,46 @@ greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
 #define IS_MMXEXT
 #define SIMD_TYPE MMXEXT
 #define C_FUNCT_YUY2 greedyh_scanline_C_yuy2
+#define C_FUNCT_UYVY greedyh_scanline_C_uyvy
 #define C_FUNCT_PLANAR_Y greedyh_scanline_C_planar_y
 #define C_FUNCT_PLANAR_UV greedyh_scanline_C_planar_uv
 #define FUNCT_NAME_YUY2 greedyh_scanline_MMXEXT_yuy2
+#define FUNCT_NAME_UYVY greedyh_scanline_MMXEXT_uyvy
 #define FUNCT_NAME_PLANAR_Y greedyh_scanline_MMXEXT_planar_y
 #define FUNCT_NAME_PLANAR_UV greedyh_scanline_MMXEXT_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMXEXT
 #undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_UYVY
 #undef FUNCT_NAME_PLANAR_Y
 #undef FUNCT_NAME_PLANAR_UV
 
 #define IS_3DNOW
 #define SIMD_TYPE 3DNOW
 #define FUNCT_NAME_YUY2 greedyh_scanline_3DNOW_yuy2
+#define FUNCT_NAME_UYVY greedyh_scanline_3DNOW_uyvy
 #define FUNCT_NAME_PLANAR_Y greedyh_scanline_3DNOW_planar_y
 #define FUNCT_NAME_PLANAR_UV greedyh_scanline_3DNOW_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_3DNOW
 #undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_UYVY
 #undef FUNCT_NAME_PLANAR_Y
 #undef FUNCT_NAME_PLANAR_UV
 
 #define IS_MMX
 #define SIMD_TYPE MMX
 #define FUNCT_NAME_YUY2 greedyh_scanline_MMX_yuy2
+#define FUNCT_NAME_UYVY greedyh_scanline_MMX_uyvy
 #define FUNCT_NAME_PLANAR_Y greedyh_scanline_MMX_planar_y
 #define FUNCT_NAME_PLANAR_UV greedyh_scanline_MMX_planar_uv
 #include "greedyh.asm"
 #undef SIMD_TYPE
 #undef IS_MMX
 #undef FUNCT_NAME_YUY2
+#undef FUNCT_NAME_UYVY
 #undef FUNCT_NAME_PLANAR_Y
 #undef FUNCT_NAME_PLANAR_UV
 #undef C_FUNCT_YUY2
@@ -1003,19 +1010,23 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
 #ifdef BUILD_X86_ASM
   if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
     klass->scanline_yuy2 = greedyh_scanline_MMXEXT_yuy2;
+    klass->scanline_uyvy = greedyh_scanline_MMXEXT_uyvy;
   } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
     klass->scanline_yuy2 = greedyh_scanline_3DNOW_yuy2;
+    klass->scanline_uyvy = greedyh_scanline_3DNOW_uyvy;
   } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
     klass->scanline_yuy2 = greedyh_scanline_MMX_yuy2;
+    klass->scanline_uyvy = greedyh_scanline_MMX_uyvy;
   } else {
     klass->scanline_yuy2 = greedyh_scanline_C_yuy2;
+    klass->scanline_uyvy = greedyh_scanline_C_uyvy;
   }
 #else
   klass->scanline_yuy2 = greedyh_scanline_C_yuy2;
+  klass->scanline_uyvy = greedyh_scanline_C_uyvy;
 #endif
   /* TODO: MMX implementation of these two */
   klass->scanline_ayuv = greedyh_scanline_C_ayuv;
-  klass->scanline_uyvy = greedyh_scanline_C_uyvy;
   klass->scanline_planar_y = greedyh_scanline_C_planar_y;
   klass->scanline_planar_uv = greedyh_scanline_C_planar_uv;
 }
