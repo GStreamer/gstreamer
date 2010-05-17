@@ -67,7 +67,7 @@ enum
 };
 
 #define  DEFAULT_DOCTYPE                 GST_MATROSKA_DOCTYPE_MATROSKA
-#define  DEFAULT_DOCTYPE_VERSION         1
+#define  DEFAULT_DOCTYPE_VERSION         2
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
 
