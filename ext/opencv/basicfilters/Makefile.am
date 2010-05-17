@@ -4,6 +4,7 @@ noinst_LTLIBRARIES = libgstbasicfilters.la
 libgstbasicfilters_la_SOURCES = gstcvsmooth.c \
     gstcvdilateerode.c \
     gstcvdilate.c \
+    gstcvequalizehist.c \
     gstcverode.c
 
 # flags used to compile this pyramidsegment
@@ -16,4 +17,5 @@ libgstbasicfilters_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = gstcvsmooth.h \
                  gstcvdilateerode.h \
                  gstcvdilate.h \
+                 gstcvequalizehist.h \
                  gstcverode.h
