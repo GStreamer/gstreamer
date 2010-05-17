@@ -58,7 +58,6 @@ struct _Gst1394Clock {
 
   raw1394handle_t handle;
 
-  GstClockTime last_time;
   guint32 cycle_timer_lo;
   guint32 cycle_timer_hi;
 };

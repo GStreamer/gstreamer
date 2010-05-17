@@ -82,7 +82,6 @@ gst_1394_clock_class_init (Gst1394ClockClass * klass)
 static void
 gst_1394_clock_init (Gst1394Clock * clock)
 {
-  clock->last_time = 0;
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
 
