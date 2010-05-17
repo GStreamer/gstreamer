@@ -612,6 +612,7 @@ EXPORTS
 	gst_pad_is_blocked
 	gst_pad_is_blocking
 	gst_pad_is_linked
+	gst_pad_is_negotiable
 	gst_pad_iterate_internal_links
 	gst_pad_iterate_internal_links_default
 	gst_pad_link
@@ -665,6 +666,7 @@ EXPORTS
 	gst_pad_set_internal_link_function
 	gst_pad_set_iterate_internal_links_function
 	gst_pad_set_link_function
+	gst_pad_set_negotiable
 	gst_pad_set_query_function
 	gst_pad_set_query_type_function
 	gst_pad_set_setcaps_function

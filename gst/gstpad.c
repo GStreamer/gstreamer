@@ -984,6 +984,62 @@ gst_pad_is_active (GstPad * pad)
 }
 
 /**
+ * gst_pad_is_negotiable:
+ * @pad: the #GstPad to query
+ *
+ * Query if a pad is negotiable
+ *
+ * Returns: TRUE if the pad is negotiable.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.30
+ */
+gboolean
+gst_pad_is_negotiable (GstPad * pad)
+{
+  gboolean result = FALSE;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  result = GST_PAD_IS_NEGOTIABLE (pad);
+  GST_OBJECT_UNLOCK (pad);
+
+  return result;
+}
+
+/**
+ * gst_pad_set_negotiable:
+ * @pad: the #GstPad to set negotiable or not
+ * @negotiable: whether or not the pad should be set negotiable or not
+ *
+ * Sets a pad 'negotiable' if @negotiable is TRUE. A pad in that state will
+ * forward pad queries. Pads are set to negotiable by their container element in
+ * GST_STATE_READY and unset in GST_STATE_NULL.
+ *
+ * MT safe.
+ *
+ * Returns: #TRUE if the operation was successfull.
+ *
+ * Since: 0.10.30
+ */
+gboolean
+gst_pad_set_negotiable (GstPad * pad, gboolean negotiable)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+  if (negotiable)
+    GST_PAD_SET_NEGOTIABLE (pad);
+  else
+    GST_PAD_UNSET_NEGOTIABLE (pad);
+  GST_OBJECT_UNLOCK (pad);
+
+  return TRUE;
+}
+
+/**
  * gst_pad_set_blocked_async_full:
  * @pad: the #GstPad to block or unblock
  * @blocked: boolean indicating whether the pad should be blocked or unblocked

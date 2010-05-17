@@ -541,6 +541,7 @@ typedef enum {
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
  * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
  * @GST_PAD_BLOCKING: is pad currently blocking on a buffer or event
+ * @GST_PAD_NEGOTIABLE: can pad handle caps requests. Since 0.10.30
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -551,6 +552,7 @@ typedef enum {
   GST_PAD_IN_GETCAPS    = (GST_OBJECT_FLAG_LAST << 2),
   GST_PAD_IN_SETCAPS    = (GST_OBJECT_FLAG_LAST << 3),
   GST_PAD_BLOCKING	= (GST_OBJECT_FLAG_LAST << 4),
+  GST_PAD_NEGOTIABLE    = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
   GST_PAD_FLAG_LAST     = (GST_OBJECT_FLAG_LAST << 8)
 } GstPadFlags;
@@ -746,11 +748,15 @@ struct _GstPadClass {
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
+#define GST_PAD_IS_NEGOTIABLE(pad)      (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_NEGOTIABLE))
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 
 #define GST_PAD_SET_FLUSHING(pad)	(GST_OBJECT_FLAG_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLUSHING))
+
+#define GST_PAD_SET_NEGOTIABLE(pad)          (GST_OBJECT_FLAG_SET (pad, GST_PAD_NEGOTIABLE))
+#define GST_PAD_UNSET_NEGOTIABLE(pad)        (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_NEGOTIABLE))
 
 /**
  * GST_PAD_GET_STREAM_LOCK:
@@ -970,6 +976,9 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 /* misc helper functions */
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
+
+gboolean                gst_pad_is_negotiable			(GstPad *pad);
+gboolean                gst_pad_set_negotiable			(GstPad *pad, gboolean negotiable);
 
 #ifndef GST_DISABLE_LOADSAVE
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
