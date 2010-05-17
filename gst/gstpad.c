@@ -4689,8 +4689,9 @@ dropping:
 get_range_failed:
   {
     *buffer = NULL;
-    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
-        "getrange failed %s", gst_flow_get_name (ret));
+    GST_CAT_LEVEL_LOG (GST_CAT_SCHEDULING,
+        (ret >= GST_FLOW_UNEXPECTED) ? GST_LEVEL_INFO : GST_LEVEL_WARNING,
+        pad, "getrange failed, flow: %s", gst_flow_get_name (ret));
     return ret;
   }
 not_negotiated:
