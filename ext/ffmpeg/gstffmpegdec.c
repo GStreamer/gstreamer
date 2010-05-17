@@ -1659,6 +1659,18 @@ opaque_find (GstFFMpegDec * ffmpegdec, gpointer opaque_val, guint64 * _ts,
   return FALSE;
 }
 
+static void
+flush_opaque (GstFFMpegDec * ffmpegdec)
+{
+  GList *tmp;
+
+  for (tmp = ffmpegdec->opaque; tmp; tmp = tmp->next)
+    g_slice_free (GstDataPassThrough, tmp->data);
+  if (ffmpegdec->opaque)
+    g_list_free (ffmpegdec->opaque);
+  ffmpegdec->opaque = NULL;
+}
+
 /* gst_ffmpegdec_[video|audio]_frame:
  * ffmpegdec:
  * data: pointer to the data to decode
@@ -2741,6 +2753,7 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (ffmpegdec);
       clear_queued (ffmpegdec);
       g_free (ffmpegdec->padded);
+      flush_opaque (ffmpegdec);
       ffmpegdec->padded = NULL;
       ffmpegdec->padded_size = 0;
       ffmpegdec->can_allocate_aligned = TRUE;
