@@ -63,7 +63,26 @@ struct _GstCameraBin
   GstCameraBinFlags flags;
   gboolean stop_requested;        /* TRUE if capturing stop needed */
   gboolean paused;                /* TRUE if capturing paused */
-  gboolean block_viewfinder;      /* TRUE if viewfinder blocks after capture */
+
+  /*
+   * Those 2 booleans work together.
+   *
+   * 'block_viewfinder_prop' is the property, 'block_viewfinder_trigger'
+   * is the flag that actually makes the viewfinder block after capture.
+   * We need both to avoid blocking the viewfinder if the application resets
+   * the flag after issuing the 'capture-start', but before the actual
+   * blocking happens. This causes the viewfinder to block even though
+   * the application resetted the flag to keep it running already.
+   *
+   * Here's how this should work:
+   * When a capture is started, the property is checked, if it is TRUE, the
+   * trigger is set to TRUE. The blocking will only happen if
+   * the trigger is TRUE after image capture finishes, ff the property
+   * is reset before the blocking happens, the trigger goes to
+   * FALSE and no blocking happens.
+   */
+  gboolean block_viewfinder_prop; /* TRUE if viewfinder blocks after capture */
+  gboolean block_viewfinder_trigger;
 
   /* Resolution of the buffers configured to camerabin */
   gint width;

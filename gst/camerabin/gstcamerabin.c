@@ -1616,10 +1616,12 @@ gst_camerabin_send_video_eos (GstCameraBin * camera)
     gst_pad_send_event (videopad, gst_event_new_eos ());
     gst_object_unref (videopad);
     /* Block viewfinder after capturing if requested by application */
-    if (camera->block_viewfinder) {
+    GST_OBJECT_LOCK (camera);
+    if (camera->block_viewfinder_trigger) {
       gst_pad_set_blocked_async (camera->pad_src_view, TRUE,
           (GstPadBlockCallback) camerabin_pad_blocked, camera);
     }
+    GST_OBJECT_UNLOCK (camera);
     camera->eos_handled = TRUE;
   } else {
     GST_INFO_OBJECT (camera, "dropping duplicate EOS");
@@ -1831,10 +1833,12 @@ gst_camerabin_have_src_buffer (GstPad * pad, GstBuffer * buffer,
       gst_structure_new ("img-eos", NULL));
 
   /* Prevent video source from pushing frames until we want them */
-  if (camera->block_viewfinder) {
+  GST_OBJECT_LOCK (camera);
+  if (camera->block_viewfinder_trigger) {
     gst_pad_set_blocked_async (camera->pad_src_view, TRUE,
         (GstPadBlockCallback) camerabin_pad_blocked, camera);
   }
+  GST_OBJECT_UNLOCK (camera);
 
   /* our work is done, disconnect */
   gst_pad_remove_buffer_probe (pad, camera->image_captured_id);
@@ -2552,13 +2556,16 @@ gst_camerabin_change_viewfinder_blocking (GstCameraBin * camera,
   gboolean old_value;
 
   GST_OBJECT_LOCK (camera);
-  old_value = camera->block_viewfinder;
-  camera->block_viewfinder = blocked;
+  old_value = camera->block_viewfinder_prop;
+  camera->block_viewfinder_prop = blocked;
+  if (blocked == FALSE) {
+    camera->block_viewfinder_trigger = FALSE;
+  }
   GST_OBJECT_UNLOCK (camera);
 
-  /* "block_viewfinder" is now set and will be checked after capture */
+  /* "block_viewfinder_prop" is now set and will be checked after capture */
   GST_DEBUG_OBJECT (camera, "viewfinder blocking set to %d, was %d",
-      camera->block_viewfinder, old_value);
+      camera->block_viewfinder_prop, old_value);
 
   if (old_value == blocked)
     return;
@@ -2868,11 +2875,18 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    * GstCameraBin:block-after-capture:
    *
    * Block viewfinder after capture.
-   * When set to TRUE, camerabin will freeze the viewfinder after capturing.
+   * If it is TRUE when 'capture-start' is issued, camerabin will prepare to
+   * block and freeze the viewfinder after capturing. Setting it to FALSE will
+   * abort the blocking if it hasn't happened yet, or will enable again the
+   * viewfinder if it is already blocked. Note that setting this property
+   * to TRUE after 'capture-start' will only work for the next capture. This
+   * makes possible for applications to set the property to FALSE to abort
+   * the current blocking and already set it back to TRUE again to block at
+   * the next capture.
+   *
    * This is useful if application wants to display the preview image
    * and running the viewfinder at the same time would be just a waste of
-   * CPU cycles. Viewfinder can be enabled again by setting this property to
-   * FALSE.
+   * CPU cycles.
    */
 
   g_object_class_install_property (gobject_class, ARG_BLOCK_VIEWFINDER,
@@ -3516,7 +3530,7 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, camera->app_viewfinder_filter);
       break;
     case ARG_BLOCK_VIEWFINDER:
-      g_value_set_boolean (value, camera->block_viewfinder);
+      g_value_set_boolean (value, camera->block_viewfinder_prop);
       break;
     case ARG_IMAGE_CAPTURE_WIDTH:
       g_value_set_int (value, camera->image_capture_width);
@@ -3746,6 +3760,10 @@ gst_camerabin_capture_start (GstCameraBin * camera)
     return;
   }
   g_mutex_unlock (camera->capture_mutex);
+
+  GST_OBJECT_LOCK (camera);
+  camera->block_viewfinder_trigger = camera->block_viewfinder_prop;
+  GST_OBJECT_UNLOCK (camera);
 
   if (camera->active_bin) {
     if (camera->active_bin == camera->imgbin) {
