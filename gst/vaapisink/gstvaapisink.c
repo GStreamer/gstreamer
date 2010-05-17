@@ -486,14 +486,11 @@ gst_vaapisink_buffer_alloc(
 )
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstStructure *structure;
     GstBuffer *buffer;
-    GstCaps *sink_caps;
 
-    sink_caps = gst_static_pad_template_get_caps(&gst_vaapisink_sink_factory);
-    if (!sink_caps)
-        goto error_no_sink_caps;
-
-    if (!gst_caps_is_always_compatible(caps, sink_caps))
+    structure = gst_caps_get_structure(caps, 0);
+    if (!gst_structure_has_name(structure, "video/x-vaapi-surface"))
         goto error_invalid_caps;
 
     buffer = gst_vaapi_video_buffer_new(sink->display);
@@ -501,26 +498,18 @@ gst_vaapisink_buffer_alloc(
         goto error_create_buffer;
 
     gst_buffer_set_caps(buffer, caps);
-    gst_caps_unref(sink_caps);
     *pout_buffer = buffer;
     return GST_FLOW_OK;
 
     /* ERRORS */
-error_no_sink_caps:
-    {
-        GST_DEBUG("failed to get static sink caps");
-        return GST_FLOW_UNEXPECTED;
-    }
 error_invalid_caps:
     {
         GST_DEBUG("failed to validate input caps");
-        gst_caps_unref(sink_caps);
         return GST_FLOW_UNEXPECTED;
     }
 error_create_buffer:
     {
         GST_DEBUG("failed to create video buffer");
-        gst_caps_unref(sink_caps);
         return GST_FLOW_UNEXPECTED;
     }
 }
