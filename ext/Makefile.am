@@ -276,12 +276,6 @@ TIMIDITY_DIR=
 endif
 endif
 
-# if USE_POLYP
-# POLYP_DIR=polyp
-# else
-POLYP_DIR=
-# endif
-
 if USE_SCHRO
 SCHRO_DIR=schroedinger
 else
@@ -411,7 +405,6 @@ SUBDIRS=\
 	$(NEON_DIR) \
 	$(OFA_DIR) \
 	$(RSVG_DIR) \
-	$(POLYP_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
