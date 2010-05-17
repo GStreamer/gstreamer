@@ -591,6 +591,9 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   /* check template is properly set */
   fail_unless (GST_PAD_PAD_TEMPLATE (ghostpad) == ghosttempl);
 
+  /* Set pad negotiable so the getcaps call goes through */
+  gst_pad_set_negotiable (ghostpad, TRUE);
+
   /* check ghostpad caps are from the sinkpad */
   newcaps = gst_pad_get_caps (ghostpad);
   fail_unless (newcaps != NULL);
@@ -644,6 +647,9 @@ GST_START_TEST (test_ghost_pads_new_no_target_from_template)
   gst_caps_unref (newcaps);
 
   fail_unless (gst_ghost_pad_set_target ((GstGhostPad *) ghostpad, sinkpad));
+
+  /* set pad negotiable so the getcaps call goes through */
+  gst_pad_set_negotiable (ghostpad, TRUE);
 
   /* check ghostpad caps are now from the target pad */
   newcaps = gst_pad_get_caps (ghostpad);
