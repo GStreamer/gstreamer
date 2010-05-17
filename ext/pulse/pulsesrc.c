@@ -396,6 +396,9 @@ gst_pulsesrc_device_description (GstPulseSrc * pulsesrc)
   pa_operation *o = NULL;
   gchar *t;
 
+  if (!pulsesrc->mainloop)
+    goto no_mainloop;
+
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
   if (!pulsesrc->stream)
@@ -429,6 +432,12 @@ unlock:
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
   return t;
+
+no_mainloop:
+  {
+    GST_DEBUG_OBJECT (pulsesrc, "have no mainloop");
+    return NULL;
+  }
 }
 
 static void
