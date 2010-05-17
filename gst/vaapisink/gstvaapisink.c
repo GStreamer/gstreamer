@@ -186,6 +186,57 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     }
 }
 
+/* Checks whether a ConfigureNotify event is in the queue */
+typedef struct _ConfigureNotifyEventPendingArgs ConfigureNotifyEventPendingArgs;
+struct _ConfigureNotifyEventPendingArgs {
+    Window      window;
+    guint       width;
+    guint       height;
+    gboolean    match;
+};
+
+static Bool
+configure_notify_event_pending_cb(Display *dpy, XEvent *xev, XPointer arg)
+{
+    ConfigureNotifyEventPendingArgs * const args =
+        (ConfigureNotifyEventPendingArgs *)arg;
+
+    if (xev->type == ConfigureNotify &&
+        xev->xconfigure.window == args->window &&
+        xev->xconfigure.width  == args->width  &&
+        xev->xconfigure.height == args->height)
+        args->match = TRUE;
+
+    /* XXX: this is a hack to traverse the whole queue because we
+       can't use XPeekIfEvent() since it could block */
+    return False;
+}
+
+static gboolean
+configure_notify_event_pending(
+    GstVaapiSink *sink,
+    Window        window,
+    guint         width,
+    guint         height
+)
+{
+    ConfigureNotifyEventPendingArgs args;
+    XEvent xev;
+
+    args.window = window;
+    args.width  = width;
+    args.height = height;
+    args.match  = FALSE;
+
+    /* XXX: don't use XPeekIfEvent() because it might block */
+    XCheckIfEvent(
+        gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(sink->display)),
+        &xev,
+        configure_notify_event_pending_cb, (XPointer)&args
+    );
+    return args.match;
+}
+
 static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
@@ -319,7 +370,8 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, XID xid)
     );
     gst_vaapi_display_unlock(sink->display);
 
-    if (width != sink->window_width || height != sink->window_height) {
+    if ((width != sink->window_width || height != sink->window_height) &&
+        !configure_notify_event_pending(sink, xid, width, height)) {
         if (!gst_vaapisink_ensure_render_rect(sink, width, height))
             return FALSE;
         sink->window_width  = width;
