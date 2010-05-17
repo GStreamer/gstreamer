@@ -132,6 +132,10 @@ gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
+    /* Disable GLX rendering when vaapisink is using a foreign X
+       window. It's pretty much useless */
+    sink->use_glx = FALSE;
+
     gst_vaapisink_ensure_window_xid(sink, xid);
 }
 

@@ -1,5 +1,8 @@
-gst-vaapi NEWS -- summary of changes.  2010-05-16
+gst-vaapi NEWS -- summary of changes.  2010-05-DD
 Copyright (C) 2010 Splitted-Desktop Systems
+
+Version 0.2.4 - DD.May.2010
+* Disable GLX rendering when vaapisink uses a foreign X window
 
 Version 0.2.3 - 16.May.2010
 * Fix memory leak of encoded buffers
