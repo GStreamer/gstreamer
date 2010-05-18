@@ -1577,10 +1577,10 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 
       GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
           "queue is full, waiting for free space");
-      while (gst_queue2_is_filled (queue)) {
+      do {
         /* Wait for space to be available, we could be unlocked because of a flush. */
         GST_QUEUE2_WAIT_DEL_CHECK (queue, queue->sinkresult, out_flushing);
-      }
+      } while (gst_queue2_is_filled (queue));
 
       /* and continue if we were running before */
       if (started)
@@ -1912,9 +1912,15 @@ gst_queue2_is_filled (GstQueue2 * queue)
 
   /* if using a ring buffer we're filled if all ring buffer space is used
    * _by the current range_ */
-  if (QUEUE_IS_USING_RING_BUFFER (queue))
-    return queue->cur_level.bytes >= MIN (queue->max_level.bytes,
-        queue->ring_buffer_max_size);
+  if (QUEUE_IS_USING_RING_BUFFER (queue)) {
+    guint max_bytes = queue->max_level.bytes;
+    guint64 rb_size = queue->ring_buffer_max_size;
+    GST_DEBUG_OBJECT (queue,
+        "max bytes %u, rb size %" G_GUINT64_FORMAT ", cur bytes %u", max_bytes,
+        rb_size, queue->cur_level.bytes);
+    return queue->cur_level.bytes >= (max_bytes ? MIN (max_bytes,
+            rb_size) : rb_size);
+  }
 
   /* if using file, we're never filled if we don't have EOS */
   if (QUEUE_IS_USING_TEMP_FILE (queue))
@@ -2438,6 +2444,8 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
 
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
+
+  GST_QUEUE2_SIGNAL_DEL (queue);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   gst_object_unref (queue);
