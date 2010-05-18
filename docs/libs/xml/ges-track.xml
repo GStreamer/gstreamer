@@ -1,0 +1,257 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESTrack">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESTrack.top_of_page">GESTrack</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESTrack</refname>
+<refpurpose>Composition of objects</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESTrack.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESTrack-struct">GESTrack</link>;
+enum                <link linkend="GESTrackType">GESTrackType</link>;
+                    <link linkend="GESTrackClass">GESTrackClass</link>;
+<link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link> *          <link linkend="ges-track-audio-raw-new">ges_track_audio_raw_new</link>             ();
+<link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link> *          <link linkend="ges-track-video-raw-new">ges_track_video_raw_new</link>             ();
+<link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link>*           <link linkend="ges-track-new">ges_track_new</link>                       (<parameter><link linkend="GESTrackType"><type>GESTrackType</type></link> type</parameter>,
+                                                         <parameter><link linkend="GstCaps"><type>GstCaps</type></link> *caps</parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-track-add-object">ges_track_add_object</link>                (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *object</parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-track-remove-object">ges_track_remove_object</link>             (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *object</parameter>);
+<link linkend="void"><returnvalue>void</returnvalue></link>                <link linkend="ges-track-set-caps">ges_track_set_caps</link>                  (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter>const <link linkend="GstCaps"><type>GstCaps</type></link> *caps</parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESTrack.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GstObject">GstObject</link>
+         +----<link linkend="GstElement">GstElement</link>
+               +----<link linkend="GstBin">GstBin</link>
+                     +----GESTrack
+</synopsis>
+</refsect1>
+<refsect1 id="GESTrack.implemented-interfaces" role="impl_interfaces">
+<title role="impl_interfaces.title">Implemented Interfaces</title>
+<para>
+GESTrack implements
+ <link linkend="GstChildProxy">GstChildProxy</link>.</para>
+</refsect1>
+<refsect1 id="GESTrack.properties" role="properties">
+<title role="properties.title">Properties</title>
+<synopsis>
+  &quot;<link linkend="GESTrack--caps">caps</link>&quot;                     <link linkend="GstCaps"><type>GstCaps</type></link>*              : Read / Write / Construct
+  &quot;<link linkend="GESTrack--track-type">track-type</link>&quot;               <link linkend="GESTrackType"><type>GESTrackType</type></link>          : Read / Write / Construct Only
+</synopsis>
+</refsect1>
+
+<refsect1 id="GESTrack.description" role="desc">
+<title role="desc.title">Description</title>
+<para>
+Corresponds to one output format (i.e. audio OR video).
+</para>
+<para>
+Contains the compatible TrackObject(s).
+</para>
+<para>
+Wraps GNonLin's 'gnlcomposition' element.
+</para>
+</refsect1>
+<refsect1 id="GESTrack.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESTrack-struct" role="struct">
+<title>GESTrack</title>
+<indexterm zone="GESTrack-struct"><primary>GESTrack</primary></indexterm>
+<programlisting>typedef struct {
+  GESTrackType type;
+} GESTrack;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESTrackType" role="enum">
+<title>enum GESTrackType</title>
+<indexterm zone="GESTrackType"><primary>GESTrackType</primary></indexterm>
+<programlisting>typedef enum {
+  GES_TRACK_TYPE_AUDIO&#160;= 0,
+  GES_TRACK_TYPE_VIDEO&#160;= 1,
+  GES_TRACK_TYPE_TEXT&#160;= 2,
+  GES_TRACK_TYPE_CUSTOM&#160;= 3
+} GESTrackType;
+</programlisting>
+<para>
+Types of content handled by a track. If the content is not one of
+<parameter>GEST_TRACK_TYPE_AUDIO</parameter>, <parameter>GES_TRACK_TYPE_VIDEO</parameter> or <parameter>GES_TRACK_TYPE_TEXT</parameter>,
+the user of the <link linkend="GESTrack"><type>GESTrack</type></link> must set the type to <parameter>GES_TRACK_TYPE_CUSTOM</parameter>.
+</para><variablelist role="enum">
+<varlistentry id="GES-TRACK-TYPE-AUDIO:CAPS" role="constant">
+<term><literal>GES_TRACK_TYPE_AUDIO</literal></term>
+<listitem><simpara>An audio track
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="GES-TRACK-TYPE-VIDEO:CAPS" role="constant">
+<term><literal>GES_TRACK_TYPE_VIDEO</literal></term>
+<listitem><simpara>A video track
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="GES-TRACK-TYPE-TEXT:CAPS" role="constant">
+<term><literal>GES_TRACK_TYPE_TEXT</literal></term>
+<listitem><simpara>A text (subtitle) track
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="GES-TRACK-TYPE-CUSTOM:CAPS" role="constant">
+<term><literal>GES_TRACK_TYPE_CUSTOM</literal></term>
+<listitem><simpara>A custom-content track
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2 id="GESTrackClass" role="struct">
+<title>GESTrackClass</title>
+<indexterm zone="GESTrackClass"><primary>GESTrackClass</primary></indexterm>
+<programlisting>typedef struct {
+  GstBinClass parent_class;
+} GESTrackClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="ges-track-audio-raw-new" role="function">
+<title>ges_track_audio_raw_new ()</title>
+<indexterm zone="ges-track-audio-raw-new"><primary>ges_track_audio_raw_new</primary></indexterm>
+<programlisting><link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link> *          ges_track_audio_raw_new             ();</programlisting>
+<para>
+Creates a new <link linkend="GESTrack"><type>GESTrack</type></link> of type <link linkend="GES-TRACK-TYPE-AUDIO:CAPS"><type>GES_TRACK_TYPE_AUDIO</type></link> and with generic
+raw audio caps ("audio/x-raw-int;audio/x-raw-float");
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> A new <link linkend="GESTrack"><type>GESTrack</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-track-video-raw-new" role="function">
+<title>ges_track_video_raw_new ()</title>
+<indexterm zone="ges-track-video-raw-new"><primary>ges_track_video_raw_new</primary></indexterm>
+<programlisting><link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link> *          ges_track_video_raw_new             ();</programlisting>
+<para>
+Creates a new <link linkend="GESTrack"><type>GESTrack</type></link> of type <link linkend="GES-TRACK-TYPE-VIDEO:CAPS"><type>GES_TRACK_TYPE_VIDEO</type></link> and with generic
+raw video caps ("video/x-raw-yuv;video/x-raw-rgb");
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> A new <link linkend="GESTrack"><type>GESTrack</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-track-new" role="function">
+<title>ges_track_new ()</title>
+<indexterm zone="ges-track-new"><primary>ges_track_new</primary></indexterm>
+<programlisting><link linkend="GESTrack"><returnvalue>GESTrack</returnvalue></link>*           ges_track_new                       (<parameter><link linkend="GESTrackType"><type>GESTrackType</type></link> type</parameter>,
+                                                         <parameter><link linkend="GstCaps"><type>GstCaps</type></link> *caps</parameter>);</programlisting>
+<para>
+Creates a new <link linkend="GESTrack"><type>GESTrack</type></link> with the given <parameter>type</parameter> and <parameter>caps</parameter>.
+</para>
+<para>
+The newly created track will steal a reference to the caps. If you wish to 
+use those caps elsewhere, you will have to take an extra reference.
+</para><variablelist role="params">
+<varlistentry><term><parameter>type</parameter>&#160;:</term>
+<listitem><simpara>The type of track
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>caps</parameter>&#160;:</term>
+<listitem><simpara>The caps to restrict the output of the track to.
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> A new <link linkend="GESTrack"><type>GESTrack</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-track-add-object" role="function">
+<title>ges_track_add_object ()</title>
+<indexterm zone="ges-track-add-object"><primary>ges_track_add_object</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_track_add_object                (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *object</parameter>);</programlisting>
+<para>
+Adds the given object to the track.
+</para><variablelist role="params">
+<varlistentry><term><parameter>track</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTrack"><type>GESTrack</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>object</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTrackObject"><type>GESTrackObject</type></link> to add
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> <link linkend="TRUE:CAPS"><type>TRUE</type></link> if the object was properly added. <link linkend="FALSE:CAPS"><type>FALSE</type></link> if the track does not
+want to accept the object.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-track-remove-object" role="function">
+<title>ges_track_remove_object ()</title>
+<indexterm zone="ges-track-remove-object"><primary>ges_track_remove_object</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_track_remove_object             (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *object</parameter>);</programlisting>
+<para>
+Removes the object from the track.
+</para><variablelist role="params">
+<varlistentry><term><parameter>track</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTrack"><type>GESTrack</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>object</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTrackObject"><type>GESTrackObject</type></link> to remove
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> <link linkend="TRUE:CAPS"><type>TRUE</type></link> if the object was removed, else <link linkend="FALSE:CAPS"><type>FALSE</type></link> if the track
+could not remove the object (like if it didn't belong to the track).
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-track-set-caps" role="function">
+<title>ges_track_set_caps ()</title>
+<indexterm zone="ges-track-set-caps"><primary>ges_track_set_caps</primary></indexterm>
+<programlisting><link linkend="void"><returnvalue>void</returnvalue></link>                ges_track_set_caps                  (<parameter><link linkend="GESTrack"><type>GESTrack</type></link> *track</parameter>,
+                                                         <parameter>const <link linkend="GstCaps"><type>GstCaps</type></link> *caps</parameter>);</programlisting>
+<para>
+Sets the given <parameter>caps</parameter> on the track.
+</para><variablelist role="params">
+<varlistentry><term><parameter>track</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTrack"><type>GESTrack</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>caps</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GstCaps"><type>GstCaps</type></link> to set
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+<refsect1 id="GESTrack.property-details" role="property_details">
+<title role="property_details.title">Property Details</title>
+<refsect2 id="GESTrack--caps" role="property"><title>The <literal>&quot;caps&quot;</literal> property</title>
+<indexterm zone="GESTrack--caps"><primary>GESTrack:caps</primary></indexterm>
+<programlisting>  &quot;caps&quot;                     <link linkend="GstCaps"><type>GstCaps</type></link>*              : Read / Write / Construct</programlisting>
+<para>
+Caps used to filter/choose the output stream. This is generally set to
+a generic set of caps like 'video/x-raw-rgb;video/x-raw-yuv' for raw video.
+</para>
+<para>
+Default value: <link linkend="GST-CAPS-ANY:CAPS"><type>GST_CAPS_ANY</type></link>.
+</para></refsect2>
+<refsect2 id="GESTrack--track-type" role="property"><title>The <literal>&quot;track-type&quot;</literal> property</title>
+<indexterm zone="GESTrack--track-type"><primary>GESTrack:track-type</primary></indexterm>
+<programlisting>  &quot;track-type&quot;               <link linkend="GESTrackType"><type>GESTrackType</type></link>          : Read / Write / Construct Only</programlisting>
+<para>
+Type of stream the track outputs. This is used when creating the <link linkend="GESTrack"><type>GESTrack</type></link>
+to specify in generic terms what type of content will be outputted.
+</para>
+<para>
+It also serves as a 'fast' way to check what type of data will be outputted
+from the <link linkend="GESTrack"><type>GESTrack</type></link> without having to actually check the <link linkend="GESTrack"><type>GESTrack</type></link>'s caps
+property.
+</para><para>Default value: GES_TRACK_TYPE_CUSTOM</para>
+</refsect2>
+</refsect1>
+
+</refentry>

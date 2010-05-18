@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="ges-Initialization">
+<refmeta>
+<refentrytitle role="top_of_page" id="ges-Initialization.top_of_page">Initialization</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>Initialization</refname>
+<refpurpose>Initialization.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="ges-Initialization.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+<link linkend="void"><returnvalue>void</returnvalue></link>                <link linkend="ges-init">ges_init</link>                            (<parameter><type>void</type></parameter>);
+</synopsis>
+</refsynopsisdiv>
+
+<refsect1 id="ges-Initialization.description" role="desc">
+<title role="desc.title">Description</title>
+
+</refsect1>
+<refsect1 id="ges-Initialization.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="ges-init" role="function">
+<title>ges_init ()</title>
+<indexterm zone="ges-init"><primary>ges_init</primary></indexterm>
+<programlisting><link linkend="void"><returnvalue>void</returnvalue></link>                ges_init                            (<parameter><type>void</type></parameter>);</programlisting>
+<para>
+Initialize the GStreamer Editing Service. Call this before any usage of
+GES.
+</para></refsect2>
+
+</refsect1>
+
+</refentry>

@@ -1,0 +1,111 @@
+<!-- ##### SECTION Title ##### -->
+GESTrack
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESTrack ##### -->
+<para>
+
+</para>
+
+@type: 
+
+<!-- ##### ARG GESTrack:caps ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GESTrack:track-type ##### -->
+<para>
+
+</para>
+
+<!-- ##### ENUM GESTrackType ##### -->
+<para>
+
+</para>
+
+@GES_TRACK_TYPE_AUDIO: 
+@GES_TRACK_TYPE_VIDEO: 
+@GES_TRACK_TYPE_TEXT: 
+@GES_TRACK_TYPE_CUSTOM: 
+
+<!-- ##### STRUCT GESTrackClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
+<!-- ##### FUNCTION ges_track_audio_raw_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_track_video_raw_new ##### -->
+<para>
+
+</para>
+
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_track_new ##### -->
+<para>
+
+</para>
+
+@type: 
+@caps: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_track_add_object ##### -->
+<para>
+
+</para>
+
+@track: 
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_track_remove_object ##### -->
+<para>
+
+</para>
+
+@track: 
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_track_set_caps ##### -->
+<para>
+
+</para>
+
+@track: 
+@caps: 
+
+

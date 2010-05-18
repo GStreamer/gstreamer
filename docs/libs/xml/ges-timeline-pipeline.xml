@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESTimelinePipeline">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESTimelinePipeline.top_of_page">GESTimelinePipeline</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESTimelinePipeline</refname>
+<refpurpose>Convenience <link linkend="GstPipeline"><type>GstPipeline</type></link> for editing.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESTimelinePipeline.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESTimelinePipeline-struct">GESTimelinePipeline</link>;
+                    <link linkend="GESTimelinePipelineClass">GESTimelinePipelineClass</link>;
+enum                <link linkend="GESPipelineFlags">GESPipelineFlags</link>;
+<link linkend="GESTimelinePipeline"><returnvalue>GESTimelinePipeline</returnvalue></link>* <link linkend="ges-timeline-pipeline-new">ges_timeline_pipeline_new</link>          (<parameter><type>void</type></parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-timeline-pipeline-add-timeline">ges_timeline_pipeline_add_timeline</link>  (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="GESTimeline"><type>GESTimeline</type></link> *timeline</parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-timeline-pipeline-set-mode">ges_timeline_pipeline_set_mode</link>      (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="GESPipelineFlags"><type>GESPipelineFlags</type></link> mode</parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-timeline-pipeline-set-render-settings">ges_timeline_pipeline_set_render_settings</link>
+                                                        (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="gchar"><type>gchar</type></link> *output_uri</parameter>,
+                                                         <parameter><link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> *profile</parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESTimelinePipeline.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GstObject">GstObject</link>
+         +----<link linkend="GstElement">GstElement</link>
+               +----<link linkend="GstBin">GstBin</link>
+                     +----<link linkend="GstPipeline">GstPipeline</link>
+                           +----GESTimelinePipeline
+</synopsis>
+</refsect1>
+<refsect1 id="GESTimelinePipeline.implemented-interfaces" role="impl_interfaces">
+<title role="impl_interfaces.title">Implemented Interfaces</title>
+<para>
+GESTimelinePipeline implements
+ <link linkend="GstChildProxy">GstChildProxy</link>.</para>
+</refsect1>
+
+<refsect1 id="GESTimelinePipeline.description" role="desc">
+<title role="desc.title">Description</title>
+<para>
+<link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> allows developers to view and render <link linkend="GESTimeline"><type>GESTimeline</type></link>
+in a simple fashion.
+Its usage is inspired by the 'playbin' element from gst-plugins-base.
+</para>
+</refsect1>
+<refsect1 id="GESTimelinePipeline.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESTimelinePipeline-struct" role="struct">
+<title>GESTimelinePipeline</title>
+<indexterm zone="GESTimelinePipeline-struct"><primary>GESTimelinePipeline</primary></indexterm>
+<programlisting>typedef struct _GESTimelinePipeline GESTimelinePipeline;</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESTimelinePipelineClass" role="struct">
+<title>GESTimelinePipelineClass</title>
+<indexterm zone="GESTimelinePipelineClass"><primary>GESTimelinePipelineClass</primary></indexterm>
+<programlisting>typedef struct {
+  GstPipelineClass parent_class;
+} GESTimelinePipelineClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESPipelineFlags" role="enum">
+<title>enum GESPipelineFlags</title>
+<indexterm zone="GESPipelineFlags"><primary>GESPipelineFlags</primary></indexterm>
+<programlisting>typedef enum {
+  TIMELINE_MODE_PREVIEW_AUDIO&#160;= 1 &lt;&lt; 0,
+  TIMELINE_MODE_PREVIEW_VIDEO&#160;= 1 &lt;&lt; 1,
+  TIMELINE_MODE_PREVIEW		= TIMELINE_MODE_PREVIEW_AUDIO | TIMELINE_MODE_PREVIEW_VIDEO,
+  TIMELINE_MODE_RENDER		= 1 &lt;&lt; 2,
+  TIMELINE_MODE_SMART_RENDER&#160;= 1 &lt;&lt; 3
+} GESPipelineFlags;
+</programlisting>
+<para>
+The various modes the <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> can be configured to.
+</para><variablelist role="enum">
+<varlistentry id="TIMELINE-MODE-PREVIEW-AUDIO:CAPS" role="constant">
+<term><literal>TIMELINE_MODE_PREVIEW_AUDIO</literal></term>
+<listitem><simpara>output audio to the soundcard
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="TIMELINE-MODE-PREVIEW-VIDEO:CAPS" role="constant">
+<term><literal>TIMELINE_MODE_PREVIEW_VIDEO</literal></term>
+<listitem><simpara>output video to the screen
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="TIMELINE-MODE-PREVIEW:CAPS" role="constant">
+<term><literal>TIMELINE_MODE_PREVIEW</literal></term>
+<listitem><simpara>output audio/video to soundcard/screen (default)
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="TIMELINE-MODE-RENDER:CAPS" role="constant">
+<term><literal>TIMELINE_MODE_RENDER</literal></term>
+<listitem><simpara>render timeline (forces decoding)
+</simpara></listitem>
+</varlistentry>
+<varlistentry id="TIMELINE-MODE-SMART-RENDER:CAPS" role="constant">
+<term><literal>TIMELINE_MODE_SMART_RENDER</literal></term>
+<listitem><simpara>render timeline (tries to avoid decoding/reencoding)
+</simpara></listitem>
+</varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-timeline-pipeline-new" role="function">
+<title>ges_timeline_pipeline_new ()</title>
+<indexterm zone="ges-timeline-pipeline-new"><primary>ges_timeline_pipeline_new</primary></indexterm>
+<programlisting><link linkend="GESTimelinePipeline"><returnvalue>GESTimelinePipeline</returnvalue></link>* ges_timeline_pipeline_new          (<parameter><type>void</type></parameter>);</programlisting>
+<para>
+Creates a new conveninence <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link>.
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> the new <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-timeline-pipeline-add-timeline" role="function">
+<title>ges_timeline_pipeline_add_timeline ()</title>
+<indexterm zone="ges-timeline-pipeline-add-timeline"><primary>ges_timeline_pipeline_add_timeline</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_timeline_pipeline_add_timeline  (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="GESTimeline"><type>GESTimeline</type></link> *timeline</parameter>);</programlisting>
+<para>
+Sets the timeline to use in this pipeline.
+</para>
+<para>
+The reference to the <parameter>timeline</parameter> will be stolen by the <parameter>pipeline</parameter>.
+</para><variablelist role="params">
+<varlistentry><term><parameter>pipeline</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>timeline</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTimeline"><type>GESTimeline</type></link> to set on the <parameter>pipeline</parameter>.
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> TRUE if the <parameter>timeline</parameter> could be successfully set on the <parameter>pipeline</parameter>,
+else FALSE.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-timeline-pipeline-set-mode" role="function">
+<title>ges_timeline_pipeline_set_mode ()</title>
+<indexterm zone="ges-timeline-pipeline-set-mode"><primary>ges_timeline_pipeline_set_mode</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_timeline_pipeline_set_mode      (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="GESPipelineFlags"><type>GESPipelineFlags</type></link> mode</parameter>);</programlisting>
+<para>
+switches the <parameter>pipeline</parameter> to the specified <parameter>mode</parameter>. The default mode when
+creating a <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> is <link linkend="TIMELINE-MODE-PREVIEW:CAPS"><type>TIMELINE_MODE_PREVIEW</type></link>.
+</para>
+<para>
+Note: The <parameter>pipeline</parameter> will be set to <link linkend="GST-STATE-NULL:CAPS"><type>GST_STATE_NULL</type></link> during this call due to
+the internal changes that happen. The caller will therefore have to 
+set the <parameter>pipeline</parameter> to the requested state after calling this method.
+</para><variablelist role="params">
+<varlistentry><term><parameter>pipeline</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>mode</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESPipelineFlags"><type>GESPipelineFlags</type></link> to use
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> <link linkend="TRUE:CAPS"><literal>TRUE</literal></link> if the mode was properly set, else <link linkend="FALSE:CAPS"><literal>FALSE</literal></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-timeline-pipeline-set-render-settings" role="function">
+<title>ges_timeline_pipeline_set_render_settings ()</title>
+<indexterm zone="ges-timeline-pipeline-set-render-settings"><primary>ges_timeline_pipeline_set_render_settings</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_timeline_pipeline_set_render_settings
+                                                        (<parameter><link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link> *pipeline</parameter>,
+                                                         <parameter><link linkend="gchar"><type>gchar</type></link> *output_uri</parameter>,
+                                                         <parameter><link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> *profile</parameter>);</programlisting>
+<para>
+Specify where the pipeline shall be rendered and with what settings.
+</para>
+<para>
+This method must be called before setting the pipeline mode to
+<link linkend="TIMELINE-MODE-RENDER:CAPS"><type>TIMELINE_MODE_RENDER</type></link>
+</para><variablelist role="params">
+<varlistentry><term><parameter>pipeline</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESTimelinePipeline"><type>GESTimelinePipeline</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>output_uri</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="URI:CAPS"><literal>URI</literal></link> to which the timeline will be rendered
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>profile</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GstEncodingProfile"><type>GstEncodingProfile</type></link> to use to render the timeline
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> <link linkend="TRUE:CAPS"><literal>TRUE</literal></link> if the settings were aknowledged properly, else <link linkend="FALSE:CAPS"><literal>FALSE</literal></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+</refentry>

@@ -1,0 +1,98 @@
+<!-- ##### SECTION Title ##### -->
+GESTimelineLayer
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESTimelineLayer ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GESTimelineLayer::object-added ##### -->
+<para>
+
+</para>
+
+@gestimelinelayer: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GESTimelineLayer::object-removed ##### -->
+<para>
+
+</para>
+
+@gestimelinelayer: the object which received the signal.
+@arg1: 
+
+<!-- ##### ARG GESTimelineLayer:priority ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GESTimelineLayerClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@object_added: 
+@object_removed: 
+
+<!-- ##### FUNCTION ges_timeline_layer_add_object ##### -->
+<para>
+
+</para>
+
+@layer: 
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_layer_new ##### -->
+<para>
+
+</para>
+
+@void: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_layer_remove_object ##### -->
+<para>
+
+</para>
+
+@layer: 
+@object: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_layer_set_priority ##### -->
+<para>
+
+</para>
+
+@layer: 
+@priority: 
+
+

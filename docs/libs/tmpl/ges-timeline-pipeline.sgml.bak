@@ -1,0 +1,88 @@
+<!-- ##### SECTION Title ##### -->
+GESTimelinePipeline
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESTimelinePipeline ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GESTimelinePipelineClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
+<!-- ##### ENUM GESPipelineFlags ##### -->
+<para>
+
+</para>
+
+@TIMELINE_MODE_PREVIEW_AUDIO: 
+@TIMELINE_MODE_PREVIEW_VIDEO: 
+@TIMELINE_MODE_PREVIEW: 
+@TIMELINE_MODE_RENDER: 
+@TIMELINE_MODE_SMART_RENDER: 
+
+<!-- ##### FUNCTION ges_timeline_pipeline_new ##### -->
+<para>
+
+</para>
+
+@void: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_pipeline_add_timeline ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@timeline: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_pipeline_set_mode ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@mode: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_pipeline_set_render_settings ##### -->
+<para>
+
+</para>
+
+@pipeline: 
+@output_uri: 
+@profile: 
+@Returns: 
+
+

@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESSimpleTimelineLayer">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESSimpleTimelineLayer.top_of_page">GESSimpleTimelineLayer</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESSimpleTimelineLayer</refname>
+<refpurpose>High-level <link linkend="GESTimelineLayer"><type>GESTimelineLayer</type></link></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESSimpleTimelineLayer.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESSimpleTimelineLayer-struct">GESSimpleTimelineLayer</link>;
+                    <link linkend="GESSimpleTimelineLayerClass">GESSimpleTimelineLayerClass</link>;
+<link linkend="GESSimpleTimelineLayer"><returnvalue>GESSimpleTimelineLayer</returnvalue></link>* <link linkend="ges-simple-timeline-layer-new">ges_simple_timeline_layer_new</link>   (<parameter><type>void</type></parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-simple-timeline-layer-add-object">ges_simple_timeline_layer_add_object</link>
+                                                        (<parameter><link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link> *layer</parameter>,
+                                                         <parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="gint"><type>gint</type></link> position</parameter>);
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            <link linkend="ges-simple-timeline-layer-move-object">ges_simple_timeline_layer_move_object</link>
+                                                        (<parameter><link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link> *layer</parameter>,
+                                                         <parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="gint"><type>gint</type></link> newposition</parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESSimpleTimelineLayer.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GESTimelineLayer">GESTimelineLayer</link>
+         +----GESSimpleTimelineLayer
+</synopsis>
+</refsect1>
+
+<refsect1 id="GESSimpleTimelineLayer.description" role="desc">
+<title role="desc.title">Description</title>
+<para>
+<link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link> allows using <link linkend="GESTimelineObject"><type>GESTimelineObject</type></link>(s) with a list-like
+API.
+</para>
+</refsect1>
+<refsect1 id="GESSimpleTimelineLayer.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESSimpleTimelineLayer-struct" role="struct">
+<title>GESSimpleTimelineLayer</title>
+<indexterm zone="GESSimpleTimelineLayer-struct"><primary>GESSimpleTimelineLayer</primary></indexterm>
+<programlisting>typedef struct _GESSimpleTimelineLayer GESSimpleTimelineLayer;</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESSimpleTimelineLayerClass" role="struct">
+<title>GESSimpleTimelineLayerClass</title>
+<indexterm zone="GESSimpleTimelineLayerClass"><primary>GESSimpleTimelineLayerClass</primary></indexterm>
+<programlisting>typedef struct {
+  GESTimelineLayerClass parent_class;
+} GESSimpleTimelineLayerClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="ges-simple-timeline-layer-new" role="function">
+<title>ges_simple_timeline_layer_new ()</title>
+<indexterm zone="ges-simple-timeline-layer-new"><primary>ges_simple_timeline_layer_new</primary></indexterm>
+<programlisting><link linkend="GESSimpleTimelineLayer"><returnvalue>GESSimpleTimelineLayer</returnvalue></link>* ges_simple_timeline_layer_new   (<parameter><type>void</type></parameter>);</programlisting>
+<para>
+Creates a new <link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link>.
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> The new <link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-simple-timeline-layer-add-object" role="function">
+<title>ges_simple_timeline_layer_add_object ()</title>
+<indexterm zone="ges-simple-timeline-layer-add-object"><primary>ges_simple_timeline_layer_add_object</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_simple_timeline_layer_add_object
+                                                        (<parameter><link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link> *layer</parameter>,
+                                                         <parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="gint"><type>gint</type></link> position</parameter>);</programlisting>
+<para>
+Adds the object at the given position in the layer. The position is where
+the object will be inserted. To put the object before all objects, use
+position 0. To put after all objects, use position -1.
+</para>
+<para>
+The layer will steal a reference to the provided object.
+</para><variablelist role="params">
+<varlistentry><term><parameter>layer</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>object</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> to add
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>position</parameter>&#160;:</term>
+<listitem><simpara>the position at which to add the object
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> TRUE if the object was successfuly added, else FALSE.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-simple-timeline-layer-move-object" role="function">
+<title>ges_simple_timeline_layer_move_object ()</title>
+<indexterm zone="ges-simple-timeline-layer-move-object"><primary>ges_simple_timeline_layer_move_object</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            ges_simple_timeline_layer_move_object
+                                                        (<parameter><link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link> *layer</parameter>,
+                                                         <parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="gint"><type>gint</type></link> newposition</parameter>);</programlisting>
+<para>
+Moves the object to the given position in the layer. To put the object before
+all other objects, use position 0. To put the objects after all objects, use
+position -1.
+</para><variablelist role="params">
+<varlistentry><term><parameter>layer</parameter>&#160;:</term>
+<listitem><simpara>a <link linkend="GESSimpleTimelineLayer"><type>GESSimpleTimelineLayer</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>object</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> to move
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>newposition</parameter>&#160;:</term>
+<listitem><simpara>the new position at which to move the object
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> TRUE if the object was successfuly moved, else FALSE.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+</refentry>

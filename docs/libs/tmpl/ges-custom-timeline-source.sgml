@@ -1,0 +1,57 @@
+<!-- ##### SECTION Title ##### -->
+GESCustomTimelineSource
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESCustomTimelineSource ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GESCustomTimelineSourceClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
+<!-- ##### USER_FUNCTION FillTrackObjectUserFunc ##### -->
+<para>
+
+</para>
+
+@object: 
+@trobject: 
+@gnlobj: 
+@user_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_custom_timeline_source_new ##### -->
+<para>
+
+</para>
+
+@func: 
+@user_data: 
+@Returns: 
+
+

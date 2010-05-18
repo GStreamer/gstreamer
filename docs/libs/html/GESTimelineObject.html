@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GESTimelineObject</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GStreamer Editing Services 0.10.0.1 Reference Manual">
+<link rel="up" href="ch02.html" title="Base Classes">
+<link rel="prev" href="GESTimelineLayer.html" title="GESTimelineLayer">
+<link rel="next" href="GESTimelineSource.html" title="GESTimelineSource">
+<meta name="generator" content="GTK-Doc V1.14 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="GESTimelineLayer.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GStreamer Editing Services 0.10.0.1 Reference Manual</th>
+<td><a accesskey="n" href="GESTimelineSource.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GESTimelineObject.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GESTimelineObject.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GESTimelineObject.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#GESTimelineObject.properties" class="shortcut">Properties</a>
+</td></tr>
+</table>
+<div class="refentry" title="GESTimelineObject">
+<a name="GESTimelineObject"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GESTimelineObject.top_of_page"></a>GESTimelineObject</span></h2>
+<p>GESTimelineObject — Base Class for objects in a <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a></p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GESTimelineObject.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">
+#include &lt;ges/ges.h&gt;
+
+                    <a class="link" href="GESTimelineObject.html#GESTimelineObject-struct" title="GESTimelineObject">GESTimelineObject</a>;
+                    <a class="link" href="GESTimelineObject.html#GESTimelineObjectClass" title="GESTimelineObjectClass">GESTimelineObjectClass</a>;
+<a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="returnvalue">GESTrackObject</span></a> *    (<a class="link" href="GESTimelineObject.html#CreateTrackObjectFunc" title="CreateTrackObjectFunc ()">*CreateTrackObjectFunc</a>)            (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            (<a class="link" href="GESTimelineObject.html#FillTrackObjectFunc" title="FillTrackObjectFunc ()">*FillTrackObjectFunc</a>)              (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *trobject</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/GstElement.html"><span class="type">GstElement</span></a> *gnlobj</code></em>);
+#define             <a class="link" href="GESTimelineObject.html#GES-TIMELINE-OBJECT-DURATION:CAPS" title="GES_TIMELINE_OBJECT_DURATION()">GES_TIMELINE_OBJECT_DURATION</a>        (obj)
+#define             <a class="link" href="GESTimelineObject.html#GES-TIMELINE-OBJECT-INPOINT:CAPS" title="GES_TIMELINE_OBJECT_INPOINT()">GES_TIMELINE_OBJECT_INPOINT</a>         (obj)
+#define             <a class="link" href="GESTimelineObject.html#GES-TIMELINE-OBJECT-PRIORITY:CAPS" title="GES_TIMELINE_OBJECT_PRIORITY()">GES_TIMELINE_OBJECT_PRIORITY</a>        (obj)
+#define             <a class="link" href="GESTimelineObject.html#GES-TIMELINE-OBJECT-START:CAPS" title="GES_TIMELINE_OBJECT_START()">GES_TIMELINE_OBJECT_START</a>           (obj)
+<span class="returnvalue">void</span>                <a class="link" href="GESTimelineObject.html#ges-timeline-object-set-inpoint" title="ges_timeline_object_set_inpoint ()">ges_timeline_object_set_inpoint</a>     (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> inpoint</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GESTimelineObject.html#ges-timeline-object-set-start" title="ges_timeline_object_set_start ()">ges_timeline_object_set_start</a>       (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> start</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GESTimelineObject.html#ges-timeline-object-set-duration" title="ges_timeline_object_set_duration ()">ges_timeline_object_set_duration</a>    (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> duration</code></em>);
+<a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="returnvalue">GESTrackObject</span></a> *    <a class="link" href="GESTimelineObject.html#ges-timeline-object-find-track-object" title="ges_timeline_object_find_track_object ()">ges_timeline_object_find_track_object</a>
+                                                        (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GESTimelineObject.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----GESTimelineObject
+         +----<a class="link" href="GESTimelineSource.html" title="GESTimelineSource">GESTimelineSource</a>
+         +----<a class="link" href="GESTimelineTransition.html" title="GESTimelineTransition">GESTimelineTransition</a>
+</pre>
+</div>
+<div class="refsect1" title="Properties">
+<a name="GESTimelineObject.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="GESTimelineObject.html#GESTimelineObject--duration" title='The "duration" property'>duration</a>"                 <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write
+  "<a class="link" href="GESTimelineObject.html#GESTimelineObject--in-point" title='The "in-point" property'>in-point</a>"                 <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write
+  "<a class="link" href="GESTimelineObject.html#GESTimelineObject--priority" title='The "priority" property'>priority</a>"                 <a href="../glib/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read / Write
+  "<a class="link" href="GESTimelineObject.html#GESTimelineObject--start" title='The "start" property'>start</a>"                    <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GESTimelineObject.description"></a><h2>Description</h2>
+<p>
+Responsible for creating the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a>(s) for given <span class="type">GESTimelineTrack</span>(s)
+</p>
+<p>
+Keeps a reference to the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a>(s) it created and sets/updates their properties.
+</p>
+</div>
+<div class="refsect1" title="Details">
+<a name="GESTimelineObject.details"></a><h2>Details</h2>
+<div class="refsect2" title="GESTimelineObject">
+<a name="GESTimelineObject-struct"></a><h3>GESTimelineObject</h3>
+<pre class="programlisting">typedef struct {
+  GESTimelineLayer * layer;
+} GESTimelineObject;
+</pre>
+<p>
+The GESTimelineObject subclass. Subclasses can access these fields.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *<em class="structfield"><code><a name="GESTimelineObject-struct.layer"></a>layer</code></em>;</span></p></td>
+<td>the <span class="type">GESTImelineLayer</span> where this object is being used.
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GESTimelineObjectClass">
+<a name="GESTimelineObjectClass"></a><h3>GESTimelineObjectClass</h3>
+<pre class="programlisting">typedef struct {
+  GObjectClass parent_class;
+
+  CreateTrackObjectFunc create_track_object;
+  /* FIXME : might need a release_track_object */
+  FillTrackObjectFunc fill_track_object;
+  gboolean need_fill_track;
+} GESTimelineObjectClass;
+</pre>
+<p>
+Subclasses can override the <em class="parameter"><code>create_track_object</code></em> and <em class="parameter"><code>fill_track_object</code></em> methods.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><a href="../gobject/gobject-The-Base-Object-Type.html#GObjectClass"><span class="type">GObjectClass</span></a> <em class="structfield"><code><a name="GESTimelineObjectClass.parent-class"></a>parent_class</code></em>;</span></p></td>
+<td>object parent class
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><a class="link" href="GESTimelineObject.html#CreateTrackObjectFunc" title="CreateTrackObjectFunc ()"><span class="type">CreateTrackObjectFunc</span></a> <em class="structfield"><code><a name="GESTimelineObjectClass.create-track-object"></a>create_track_object</code></em>;</span></p></td>
+<td>method to create a <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> for a given <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>.
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><a class="link" href="GESTimelineObject.html#FillTrackObjectFunc" title="FillTrackObjectFunc ()"><span class="type">FillTrackObjectFunc</span></a> <em class="structfield"><code><a name="GESTimelineObjectClass.fill-track-object"></a>fill_track_object</code></em>;</span></p></td>
+<td>method to fill an associated <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a>.
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> <em class="structfield"><code><a name="GESTimelineObjectClass.need-fill-track"></a>need_fill_track</code></em>;</span></p></td>
+<td>Set to TRUE if <em class="parameter"><code>fill_track_object</code></em> needs to be called.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="CreateTrackObjectFunc ()">
+<a name="CreateTrackObjectFunc"></a><h3>CreateTrackObjectFunc ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="returnvalue">GESTrackObject</span></a> *    (*CreateTrackObjectFunc)            (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);</pre>
+<p>
+A function that will be called when the <em class="parameter"><code>object</code></em> is added to a
+<a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a>.
+</p>
+<p>
+The implementer of this function shall return the proper <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a>
+that should be controlled by <em class="parameter"><code>object</code></em> for the given <em class="parameter"><code>track</code></em>.
+</p>
+<p>
+If the <em class="parameter"><code>object</code></em> can't support the media-type of the <em class="parameter"><code>track</code></em>, this function
+should return <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> to be used, or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="FillTrackObjectFunc ()">
+<a name="FillTrackObjectFunc"></a><h3>FillTrackObjectFunc ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            (*FillTrackObjectFunc)              (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *trobject</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/GstElement.html"><span class="type">GstElement</span></a> *gnlobj</code></em>);</pre>
+<p>
+A function that will be called when the GNonLin object of a corresponding
+track object needs to be filled.
+</p>
+<p>
+The implementer of this function shall add the proper <a href="../gstreamer-0.10/GstElement.html"><span class="type">GstElement</span></a> to <em class="parameter"><code>gnlobj</code></em>
+using <a href="../gstreamer-0.10/GstBin.html#gst-bin-add"><code class="function">gst_bin_add()</code></a>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> controlling the track object
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>trobject</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>gnlobj</code></em> :</span></p></td>
+<td>the GNonLin object that needs to be filled.
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the implementer succesfully filled the <em class="parameter"><code>gnlobj</code></em>, else <a href="../glib/glib-Standard-Macros.html#FALSE:CAPS"><span class="type">FALSE</span></a>.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GES_TIMELINE_OBJECT_DURATION()">
+<a name="GES-TIMELINE-OBJECT-DURATION:CAPS"></a><h3>GES_TIMELINE_OBJECT_DURATION()</h3>
+<pre class="programlisting">#define GES_TIMELINE_OBJECT_DURATION(obj) (((GESTimelineObject*)obj)-&gt;duration)
+</pre>
+<p>
+The duration position of the object (in nanoseconds).
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>obj</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GES_TIMELINE_OBJECT_INPOINT()">
+<a name="GES-TIMELINE-OBJECT-INPOINT:CAPS"></a><h3>GES_TIMELINE_OBJECT_INPOINT()</h3>
+<pre class="programlisting">#define GES_TIMELINE_OBJECT_INPOINT(obj) (((GESTimelineObject*)obj)-&gt;inpoint)
+</pre>
+<p>
+The in-point of the object (in nanoseconds).
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>obj</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GES_TIMELINE_OBJECT_PRIORITY()">
+<a name="GES-TIMELINE-OBJECT-PRIORITY:CAPS"></a><h3>GES_TIMELINE_OBJECT_PRIORITY()</h3>
+<pre class="programlisting">#define GES_TIMELINE_OBJECT_PRIORITY(obj) (((GESTimelineObject*)obj)-&gt;priority)
+</pre>
+<p>
+The priority of the object.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>obj</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GES_TIMELINE_OBJECT_START()">
+<a name="GES-TIMELINE-OBJECT-START:CAPS"></a><h3>GES_TIMELINE_OBJECT_START()</h3>
+<pre class="programlisting">#define GES_TIMELINE_OBJECT_START(obj) (((GESTimelineObject*)obj)-&gt;start)
+</pre>
+<p>
+The start position of the object (in nanoseconds).
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>obj</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_object_set_inpoint ()">
+<a name="ges-timeline-object-set-inpoint"></a><h3>ges_timeline_object_set_inpoint ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                ges_timeline_object_set_inpoint     (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> inpoint</code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>inpoint</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_object_set_start ()">
+<a name="ges-timeline-object-set-start"></a><h3>ges_timeline_object_set_start ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                ges_timeline_object_set_start       (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> start</code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>start</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_object_set_duration ()">
+<a name="ges-timeline-object-set-duration"></a><h3>ges_timeline_object_set_duration ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                ges_timeline_object_set_duration    (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a> duration</code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>duration</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_object_find_track_object ()">
+<a name="ges-timeline-object-find-track-object"></a><h3>ges_timeline_object_find_track_object ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="returnvalue">GESTrackObject</span></a> *    ges_timeline_object_find_track_object
+                                                        (<em class="parameter"><code><a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> *object</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);</pre>
+<p>
+Finds the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> controlled by <em class="parameter"><code>object</code></em> that is used in <em class="parameter"><code>track</code></em>.
+</p>
+<p>
+Note: The reference count of the returned <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> will be increased,
+unref when done with it.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> The <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> used by <em class="parameter"><code>track</code></em>, else <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a>.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1" title="Property Details">
+<a name="GESTimelineObject.property-details"></a><h2>Property Details</h2>
+<div class="refsect2" title='The "duration" property'>
+<a name="GESTimelineObject--duration"></a><h3>The <code class="literal">"duration"</code> property</h3>
+<pre class="programlisting">  "duration"                 <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write</pre>
+<p>
+The duration (in nanoseconds) which will be used in the container <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+starting from 'in-point'.
+</p>
+<p>Default value: 1000000000</p>
+</div>
+<hr>
+<div class="refsect2" title='The "in-point" property'>
+<a name="GESTimelineObject--in-point"></a><h3>The <code class="literal">"in-point"</code> property</h3>
+<pre class="programlisting">  "in-point"                 <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write</pre>
+<p>
+The in-point at which this <a class="link" href="GESTimelineObject.html" title="GESTimelineObject"><span class="type">GESTimelineObject</span></a> will start outputting data
+from its contents (in nanoseconds).
+</p>
+<p>
+Ex : an in-point of 5 seconds means that the first outputted buffer will
+be the one located 5 seconds in the controlled resource.
+</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2" title='The "priority" property'>
+<a name="GESTimelineObject--priority"></a><h3>The <code class="literal">"priority"</code> property</h3>
+<pre class="programlisting">  "priority"                 <a href="../glib/glib-Basic-Types.html#guint"><span class="type">guint</span></a>                 : Read / Write</pre>
+<p>The priority of the object.</p>
+<p>Default value: 0</p>
+</div>
+<hr>
+<div class="refsect2" title='The "start" property'>
+<a name="GESTimelineObject--start"></a><h3>The <code class="literal">"start"</code> property</h3>
+<pre class="programlisting">  "start"                    <a href="../glib/glib-Basic-Types.html#guint64"><span class="type">guint64</span></a>               : Read / Write</pre>
+<p>
+The position of the object in the <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> (in nanoseconds).
+</p>
+<p>Default value: 0</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.14</div>
+</body>
+</html>

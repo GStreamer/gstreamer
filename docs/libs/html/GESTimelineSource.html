@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GESTimelineSource</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GStreamer Editing Services 0.10.0.1 Reference Manual">
+<link rel="up" href="ch02.html" title="Base Classes">
+<link rel="prev" href="GESTimelineObject.html" title="GESTimelineObject">
+<link rel="next" href="GESTimelineFileSource.html" title="GESTimelineFileSource">
+<meta name="generator" content="GTK-Doc V1.14 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="GESTimelineObject.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GStreamer Editing Services 0.10.0.1 Reference Manual</th>
+<td><a accesskey="n" href="GESTimelineFileSource.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GESTimelineSource.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GESTimelineSource.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GESTimelineSource.object-hierarchy" class="shortcut">Object Hierarchy</a>
+</td></tr>
+</table>
+<div class="refentry" title="GESTimelineSource">
+<a name="GESTimelineSource"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GESTimelineSource.top_of_page"></a>GESTimelineSource</span></h2>
+<p>GESTimelineSource — Base Class for sources of a <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a></p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GESTimelineSource.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">
+#include &lt;ges/ges.h&gt;
+
+                    <a class="link" href="GESTimelineSource.html#GESTimelineSource-struct" title="GESTimelineSource">GESTimelineSource</a>;
+                    <a class="link" href="GESTimelineSource.html#GESTimelineSourceClass" title="GESTimelineSourceClass">GESTimelineSourceClass</a>;
+<a class="link" href="GESTimelineSource.html" title="GESTimelineSource"><span class="returnvalue">GESTimelineSource</span></a>*  <a class="link" href="GESTimelineSource.html#ges-timeline-source-new" title="ges_timeline_source_new ()">ges_timeline_source_new</a>             (<em class="parameter"><code><span class="type">void</span></code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GESTimelineSource.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----<a class="link" href="GESTimelineObject.html" title="GESTimelineObject">GESTimelineObject</a>
+         +----GESTimelineSource
+               +----<a class="link" href="GESTimelineFileSource.html" title="GESTimelineFileSource">GESTimelineFileSource</a>
+               +----<a class="link" href="GESCustomTimelineSource.html" title="GESCustomTimelineSource">GESCustomTimelineSource</a>
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GESTimelineSource.description"></a><h2>Description</h2>
+</div>
+<div class="refsect1" title="Details">
+<a name="GESTimelineSource.details"></a><h2>Details</h2>
+<div class="refsect2" title="GESTimelineSource">
+<a name="GESTimelineSource-struct"></a><h3>GESTimelineSource</h3>
+<pre class="programlisting">typedef struct _GESTimelineSource GESTimelineSource;</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="GESTimelineSourceClass">
+<a name="GESTimelineSourceClass"></a><h3>GESTimelineSourceClass</h3>
+<pre class="programlisting">typedef struct {
+  GESTimelineObjectClass parent_class;
+} GESTimelineSourceClass;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_source_new ()">
+<a name="ges-timeline-source-new"></a><h3>ges_timeline_source_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTimelineSource.html" title="GESTimelineSource"><span class="returnvalue">GESTimelineSource</span></a>*  ges_timeline_source_new             (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+</td>
+</tr></tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.14</div>
+</body>
+</html>

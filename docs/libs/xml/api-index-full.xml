@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<!DOCTYPE indexdiv PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<indexdiv>
+<indexdiv><title>C</title>
+<indexentry><primaryie linkends="CreateTrackObjectFunc"><link linkend="CreateTrackObjectFunc">CreateTrackObjectFunc</link>, user_function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESCustomTimelineSource-struct"><link linkend="GESCustomTimelineSource-struct">GESCustomTimelineSource</link>, struct in <link linkend="GESCustomTimelineSource">GESCustomTimelineSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESCustomTimelineSourceClass"><link linkend="GESCustomTimelineSourceClass">GESCustomTimelineSourceClass</link>, struct in <link linkend="GESCustomTimelineSource">GESCustomTimelineSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-custom-timeline-source-new"><link linkend="ges-custom-timeline-source-new">ges_custom_timeline_source_new</link>, function in <link linkend="GESCustomTimelineSource">GESCustomTimelineSource</link></primaryie></indexentry>
+</indexdiv>
+<indexdiv><title>F</title>
+<indexentry><primaryie linkends="FillTrackObjectFunc"><link linkend="FillTrackObjectFunc">FillTrackObjectFunc</link>, user_function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="FillTrackObjectUserFunc"><link linkend="FillTrackObjectUserFunc">FillTrackObjectUserFunc</link>, user_function in <link linkend="GESCustomTimelineSource">GESCustomTimelineSource</link></primaryie></indexentry>
+</indexdiv>
+<indexdiv><title>I</title>
+<indexentry><primaryie linkends="ges-init"><link linkend="ges-init">ges_init</link>, function in <link linkend="ges-Initialization">Initialization</link></primaryie></indexentry>
+</indexdiv>
+<indexdiv><title>P</title>
+<indexentry><primaryie linkends="GESPipelineFlags"><link linkend="GESPipelineFlags">GESPipelineFlags</link>, enum in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+</indexdiv>
+<indexdiv><title>S</title>
+<indexentry><primaryie linkends="GESSimpleTimelineLayer-struct"><link linkend="GESSimpleTimelineLayer-struct">GESSimpleTimelineLayer</link>, struct in <link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESSimpleTimelineLayerClass"><link linkend="GESSimpleTimelineLayerClass">GESSimpleTimelineLayerClass</link>, struct in <link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-simple-timeline-layer-add-object"><link linkend="ges-simple-timeline-layer-add-object">ges_simple_timeline_layer_add_object</link>, function in <link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-simple-timeline-layer-move-object"><link linkend="ges-simple-timeline-layer-move-object">ges_simple_timeline_layer_move_object</link>, function in <link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-simple-timeline-layer-new"><link linkend="ges-simple-timeline-layer-new">ges_simple_timeline_layer_new</link>, function in <link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></primaryie></indexentry>
+</indexdiv>
+<indexdiv><title>T</title>
+<indexentry><primaryie linkends="GESTimeline-struct"><link linkend="GESTimeline-struct">GESTimeline</link>, struct in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimeline-layer-added"><link linkend="GESTimeline-layer-added">GESTimeline::layer-added</link>, object signal in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimeline-layer-removed"><link linkend="GESTimeline-layer-removed">GESTimeline::layer-removed</link>, object signal in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimeline-track-added"><link linkend="GESTimeline-track-added">GESTimeline::track-added</link>, object signal in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimeline-track-removed"><link linkend="GESTimeline-track-removed">GESTimeline::track-removed</link>, object signal in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineClass"><link linkend="GESTimelineClass">GESTimelineClass</link>, struct in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineFileSource-struct"><link linkend="GESTimelineFileSource-struct">GESTimelineFileSource</link>, struct in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineFileSource--max-duration"><link linkend="GESTimelineFileSource--max-duration">GESTimelineFileSource:max-duration</link>, object property in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineFileSource--mute"><link linkend="GESTimelineFileSource--mute">GESTimelineFileSource:mute</link>, object property in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineFileSource--uri"><link linkend="GESTimelineFileSource--uri">GESTimelineFileSource:uri</link>, object property in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineFileSourceClass"><link linkend="GESTimelineFileSourceClass">GESTimelineFileSourceClass</link>, struct in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineLayer-struct"><link linkend="GESTimelineLayer-struct">GESTimelineLayer</link>, struct in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineLayer-object-added"><link linkend="GESTimelineLayer-object-added">GESTimelineLayer::object-added</link>, object signal in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineLayer-object-removed"><link linkend="GESTimelineLayer-object-removed">GESTimelineLayer::object-removed</link>, object signal in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineLayer--priority"><link linkend="GESTimelineLayer--priority">GESTimelineLayer:priority</link>, object property in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineLayerClass"><link linkend="GESTimelineLayerClass">GESTimelineLayerClass</link>, struct in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObject-struct"><link linkend="GESTimelineObject-struct">GESTimelineObject</link>, struct in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObject--duration"><link linkend="GESTimelineObject--duration">GESTimelineObject:duration</link>, object property in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObject--in-point"><link linkend="GESTimelineObject--in-point">GESTimelineObject:in-point</link>, object property in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObject--priority"><link linkend="GESTimelineObject--priority">GESTimelineObject:priority</link>, object property in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObject--start"><link linkend="GESTimelineObject--start">GESTimelineObject:start</link>, object property in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineObjectClass"><link linkend="GESTimelineObjectClass">GESTimelineObjectClass</link>, struct in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelinePipeline-struct"><link linkend="GESTimelinePipeline-struct">GESTimelinePipeline</link>, struct in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelinePipelineClass"><link linkend="GESTimelinePipelineClass">GESTimelinePipelineClass</link>, struct in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineSource-struct"><link linkend="GESTimelineSource-struct">GESTimelineSource</link>, struct in <link linkend="GESTimelineSource">GESTimelineSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineSourceClass"><link linkend="GESTimelineSourceClass">GESTimelineSourceClass</link>, struct in <link linkend="GESTimelineSource">GESTimelineSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineTransition-struct"><link linkend="GESTimelineTransition-struct">GESTimelineTransition</link>, struct in <link linkend="GESTimelineTransition">GESTimelineTransition</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTimelineTransitionClass"><link linkend="GESTimelineTransitionClass">GESTimelineTransitionClass</link>, struct in <link linkend="GESTimelineTransition">GESTimelineTransition</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-add-layer"><link linkend="ges-timeline-add-layer">ges_timeline_add_layer</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-add-track"><link linkend="ges-timeline-add-track">ges_timeline_add_track</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-filesource-new"><link linkend="ges-timeline-filesource-new">ges_timeline_filesource_new</link>, function in <link linkend="GESTimelineFileSource">GESTimelineFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-get-tracks"><link linkend="ges-timeline-get-tracks">ges_timeline_get_tracks</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-get-track-for-pad"><link linkend="ges-timeline-get-track-for-pad">ges_timeline_get_track_for_pad</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-layer-add-object"><link linkend="ges-timeline-layer-add-object">ges_timeline_layer_add_object</link>, function in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-layer-new"><link linkend="ges-timeline-layer-new">ges_timeline_layer_new</link>, function in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-layer-remove-object"><link linkend="ges-timeline-layer-remove-object">ges_timeline_layer_remove_object</link>, function in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-layer-set-priority"><link linkend="ges-timeline-layer-set-priority">ges_timeline_layer_set_priority</link>, function in <link linkend="GESTimelineLayer">GESTimelineLayer</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-load-from-uri"><link linkend="ges-timeline-load-from-uri">ges_timeline_load_from_uri</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-new"><link linkend="ges-timeline-new">ges_timeline_new</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TIMELINE-OBJECT-DURATION:CAPS"><link linkend="GES-TIMELINE-OBJECT-DURATION:CAPS">GES_TIMELINE_OBJECT_DURATION</link>, macro in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-object-find-track-object"><link linkend="ges-timeline-object-find-track-object">ges_timeline_object_find_track_object</link>, function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TIMELINE-OBJECT-INPOINT:CAPS"><link linkend="GES-TIMELINE-OBJECT-INPOINT:CAPS">GES_TIMELINE_OBJECT_INPOINT</link>, macro in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TIMELINE-OBJECT-PRIORITY:CAPS"><link linkend="GES-TIMELINE-OBJECT-PRIORITY:CAPS">GES_TIMELINE_OBJECT_PRIORITY</link>, macro in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-object-set-duration"><link linkend="ges-timeline-object-set-duration">ges_timeline_object_set_duration</link>, function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-object-set-inpoint"><link linkend="ges-timeline-object-set-inpoint">ges_timeline_object_set_inpoint</link>, function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-object-set-start"><link linkend="ges-timeline-object-set-start">ges_timeline_object_set_start</link>, function in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TIMELINE-OBJECT-START:CAPS"><link linkend="GES-TIMELINE-OBJECT-START:CAPS">GES_TIMELINE_OBJECT_START</link>, macro in <link linkend="GESTimelineObject">GESTimelineObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-pipeline-add-timeline"><link linkend="ges-timeline-pipeline-add-timeline">ges_timeline_pipeline_add_timeline</link>, function in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-pipeline-new"><link linkend="ges-timeline-pipeline-new">ges_timeline_pipeline_new</link>, function in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-pipeline-set-mode"><link linkend="ges-timeline-pipeline-set-mode">ges_timeline_pipeline_set_mode</link>, function in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-pipeline-set-render-settings"><link linkend="ges-timeline-pipeline-set-render-settings">ges_timeline_pipeline_set_render_settings</link>, function in <link linkend="GESTimelinePipeline">GESTimelinePipeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-remove-layer"><link linkend="ges-timeline-remove-layer">ges_timeline_remove_layer</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-remove-track"><link linkend="ges-timeline-remove-track">ges_timeline_remove_track</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-save"><link linkend="ges-timeline-save">ges_timeline_save</link>, function in <link linkend="GESTimeline">GESTimeline</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-source-new"><link linkend="ges-timeline-source-new">ges_timeline_source_new</link>, function in <link linkend="GESTimelineSource">GESTimelineSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-timeline-transition-new"><link linkend="ges-timeline-transition-new">ges_timeline_transition_new</link>, function in <link linkend="GESTimelineTransition">GESTimelineTransition</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrack-struct"><link linkend="GESTrack-struct">GESTrack</link>, struct in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrack--caps"><link linkend="GESTrack--caps">GESTrack:caps</link>, object property in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrack--track-type"><link linkend="GESTrack--track-type">GESTrack:track-type</link>, object property in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackClass"><link linkend="GESTrackClass">GESTrackClass</link>, struct in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackFileSource-struct"><link linkend="GESTrackFileSource-struct">GESTrackFileSource</link>, struct in <link linkend="GESTrackFileSource">GESTrackFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackFileSource--uri"><link linkend="GESTrackFileSource--uri">GESTrackFileSource:uri</link>, object property in <link linkend="GESTrackFileSource">GESTrackFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackFileSourceClass"><link linkend="GESTrackFileSourceClass">GESTrackFileSourceClass</link>, struct in <link linkend="GESTrackFileSource">GESTrackFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject-struct"><link linkend="GESTrackObject-struct">GESTrackObject</link>, struct in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject--active"><link linkend="GESTrackObject--active">GESTrackObject:active</link>, object property in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject--duration"><link linkend="GESTrackObject--duration">GESTrackObject:duration</link>, object property in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject--in-point"><link linkend="GESTrackObject--in-point">GESTrackObject:in-point</link>, object property in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject--priority"><link linkend="GESTrackObject--priority">GESTrackObject:priority</link>, object property in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObject--start"><link linkend="GESTrackObject--start">GESTrackObject:start</link>, object property in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackObjectClass"><link linkend="GESTrackObjectClass">GESTrackObjectClass</link>, struct in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackSource-struct"><link linkend="GESTrackSource-struct">GESTrackSource</link>, struct in <link linkend="GESTrackSource">GESTrackSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackSourceClass"><link linkend="GESTrackSourceClass">GESTrackSourceClass</link>, struct in <link linkend="GESTrackSource">GESTrackSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GESTrackType"><link linkend="GESTrackType">GESTrackType</link>, enum in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-add-object"><link linkend="ges-track-add-object">ges_track_add_object</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-audio-raw-new"><link linkend="ges-track-audio-raw-new">ges_track_audio_raw_new</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-filesource-new"><link linkend="ges-track-filesource-new">ges_track_filesource_new</link>, function in <link linkend="GESTrackFileSource">GESTrackFileSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-new"><link linkend="ges-track-new">ges_track_new</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TRACK-OBJECT-DURATION:CAPS"><link linkend="GES-TRACK-OBJECT-DURATION:CAPS">GES_TRACK_OBJECT_DURATION</link>, macro in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TRACK-OBJECT-INPOINT:CAPS"><link linkend="GES-TRACK-OBJECT-INPOINT:CAPS">GES_TRACK_OBJECT_INPOINT</link>, macro in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TRACK-OBJECT-PRIORITY:CAPS"><link linkend="GES-TRACK-OBJECT-PRIORITY:CAPS">GES_TRACK_OBJECT_PRIORITY</link>, macro in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-object-set-active"><link linkend="ges-track-object-set-active">ges_track_object_set_active</link>, function in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="GES-TRACK-OBJECT-START:CAPS"><link linkend="GES-TRACK-OBJECT-START:CAPS">GES_TRACK_OBJECT_START</link>, macro in <link linkend="GESTrackObject">GESTrackObject</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-remove-object"><link linkend="ges-track-remove-object">ges_track_remove_object</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-set-caps"><link linkend="ges-track-set-caps">ges_track_set_caps</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-source-new"><link linkend="ges-track-source-new">ges_track_source_new</link>, function in <link linkend="GESTrackSource">GESTrackSource</link></primaryie></indexentry>
+<indexentry><primaryie linkends="ges-track-video-raw-new"><link linkend="ges-track-video-raw-new">ges_track_video_raw_new</link>, function in <link linkend="GESTrack">GESTrack</link></primaryie></indexentry>
+</indexdiv>
+</indexdiv>

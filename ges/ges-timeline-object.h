@@ -62,6 +62,24 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
 					 GESTrackObject * trobject,
 					 GstElement * gnlobj);
 
+/**
+ * CreateTrackObjectFunc:
+ * @object: a #GESTimelineObject
+ * @track: a #GESTrack
+ *
+ * A function that will be called when the @object is added to a
+ * #GESTimelineLayer.
+ *
+ * The implementer of this function shall return the proper #GESTrackObject
+ * that should be controlled by @object for the given @track.
+ *
+ * If the @object can't support the media-type of the @track, this function
+ * should return %NULL.
+ *
+ * Returns: the #GESTrackObject to be used, or %NULL.
+ */
+typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
+						  GESTrack * track);
 
 /**
  * GES_TIMELINE_OBJECT_START:
@@ -131,8 +149,7 @@ struct _GESTimelineObject {
 struct _GESTimelineObjectClass {
   GObjectClass parent_class;
 
-  GESTrackObject*	(*create_track_object)	(GESTimelineObject * object,
-						 GESTrack * track);
+  CreateTrackObjectFunc create_track_object;
   /* FIXME : might need a release_track_object */
   FillTrackObjectFunc	fill_track_object;
   gboolean need_fill_track;

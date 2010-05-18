@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESTimelineFileSource">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESTimelineFileSource.top_of_page">GESTimelineFileSource</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESTimelineFileSource</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESTimelineFileSource.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESTimelineFileSource-struct">GESTimelineFileSource</link>;
+                    <link linkend="GESTimelineFileSourceClass">GESTimelineFileSourceClass</link>;
+<link linkend="GESTimelineFileSource"><returnvalue>GESTimelineFileSource</returnvalue></link>* <link linkend="ges-timeline-filesource-new">ges_timeline_filesource_new</link>      (<parameter><link linkend="gchar"><type>gchar</type></link> *uri</parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESTimelineFileSource.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GESTimelineObject">GESTimelineObject</link>
+         +----<link linkend="GESTimelineSource">GESTimelineSource</link>
+               +----GESTimelineFileSource
+</synopsis>
+</refsect1>
+<refsect1 id="GESTimelineFileSource.properties" role="properties">
+<title role="properties.title">Properties</title>
+<synopsis>
+  &quot;<link linkend="GESTimelineFileSource--max-duration">max-duration</link>&quot;             <link linkend="guint64"><type>guint64</type></link>               : Read / Write / Construct
+  &quot;<link linkend="GESTimelineFileSource--mute">mute</link>&quot;                     <link linkend="gboolean"><type>gboolean</type></link>              : Read / Write / Construct
+  &quot;<link linkend="GESTimelineFileSource--uri">uri</link>&quot;                      <link linkend="gchar"><type>gchar</type></link>*                : Read / Write / Construct Only
+</synopsis>
+</refsect1>
+
+<refsect1 id="GESTimelineFileSource.description" role="desc">
+<title role="desc.title">Description</title>
+
+</refsect1>
+<refsect1 id="GESTimelineFileSource.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESTimelineFileSource-struct" role="struct">
+<title>GESTimelineFileSource</title>
+<indexterm zone="GESTimelineFileSource-struct"><primary>GESTimelineFileSource</primary></indexterm>
+<programlisting>typedef struct _GESTimelineFileSource GESTimelineFileSource;</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESTimelineFileSourceClass" role="struct">
+<title>GESTimelineFileSourceClass</title>
+<indexterm zone="GESTimelineFileSourceClass"><primary>GESTimelineFileSourceClass</primary></indexterm>
+<programlisting>typedef struct {
+  GESTimelineSourceClass parent_class;
+} GESTimelineFileSourceClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="ges-timeline-filesource-new" role="function">
+<title>ges_timeline_filesource_new ()</title>
+<indexterm zone="ges-timeline-filesource-new"><primary>ges_timeline_filesource_new</primary></indexterm>
+<programlisting><link linkend="GESTimelineFileSource"><returnvalue>GESTimelineFileSource</returnvalue></link>* ges_timeline_filesource_new      (<parameter><link linkend="gchar"><type>gchar</type></link> *uri</parameter>);</programlisting>
+<para>
+Creates a new <link linkend="GESTimelineFileSource"><type>GESTimelineFileSource</type></link> for the provided <parameter>uri</parameter>.
+</para><variablelist role="params">
+<varlistentry><term><parameter>uri</parameter>&#160;:</term>
+<listitem><simpara>the URI the source should control
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> The newly created <link linkend="GESTimelineFileSource"><type>GESTimelineFileSource</type></link>, or NULL if there was an
+error.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+<refsect1 id="GESTimelineFileSource.property-details" role="property_details">
+<title role="property_details.title">Property Details</title>
+<refsect2 id="GESTimelineFileSource--max-duration" role="property"><title>The <literal>&quot;max-duration&quot;</literal> property</title>
+<indexterm zone="GESTimelineFileSource--max-duration"><primary>GESTimelineFileSource:max-duration</primary></indexterm>
+<programlisting>  &quot;max-duration&quot;             <link linkend="guint64"><type>guint64</type></link>               : Read / Write / Construct</programlisting>
+<para>
+The maximum duration (in nanoseconds) of the file.
+</para>
+<para>
+If not set before adding the object to a layer, it will be discovered
+asynchronously. Connect to 'notify::max-duration' to be notified of it.
+</para><para>Default value: 18446744073709551615</para>
+</refsect2>
+<refsect2 id="GESTimelineFileSource--mute" role="property"><title>The <literal>&quot;mute&quot;</literal> property</title>
+<indexterm zone="GESTimelineFileSource--mute"><primary>GESTimelineFileSource:mute</primary></indexterm>
+<programlisting>  &quot;mute&quot;                     <link linkend="gboolean"><type>gboolean</type></link>              : Read / Write / Construct</programlisting>
+<para>
+Whether the sound will be played or not.
+</para><para>Default value: FALSE</para>
+</refsect2>
+<refsect2 id="GESTimelineFileSource--uri" role="property"><title>The <literal>&quot;uri&quot;</literal> property</title>
+<indexterm zone="GESTimelineFileSource--uri"><primary>GESTimelineFileSource:uri</primary></indexterm>
+<programlisting>  &quot;uri&quot;                      <link linkend="gchar"><type>gchar</type></link>*                : Read / Write / Construct Only</programlisting>
+<para>
+The location of the file/resource to use.
+</para><para>Default value: NULL</para>
+</refsect2>
+</refsect1>
+
+</refentry>

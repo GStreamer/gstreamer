@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GESTrackFileSource</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GStreamer Editing Services 0.10.0.1 Reference Manual">
+<link rel="up" href="ch02.html" title="Base Classes">
+<link rel="prev" href="GESTrackSource.html" title="GESTrackSource">
+<link rel="next" href="ch03.html" title="Simple Timeline interface">
+<meta name="generator" content="GTK-Doc V1.14 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="GESTrackSource.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GStreamer Editing Services 0.10.0.1 Reference Manual</th>
+<td><a accesskey="n" href="ch03.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GESTrackFileSource.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GESTrackFileSource.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GESTrackFileSource.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#GESTrackFileSource.properties" class="shortcut">Properties</a>
+</td></tr>
+</table>
+<div class="refentry" title="GESTrackFileSource">
+<a name="GESTrackFileSource"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GESTrackFileSource.top_of_page"></a>GESTrackFileSource</span></h2>
+<p>GESTrackFileSource</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GESTrackFileSource.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">
+#include &lt;ges/ges.h&gt;
+
+                    <a class="link" href="GESTrackFileSource.html#GESTrackFileSource-struct" title="GESTrackFileSource">GESTrackFileSource</a>;
+                    <a class="link" href="GESTrackFileSource.html#GESTrackFileSourceClass" title="GESTrackFileSourceClass">GESTrackFileSourceClass</a>;
+<a class="link" href="GESTrackFileSource.html" title="GESTrackFileSource"><span class="returnvalue">GESTrackFileSource</span></a>* <a class="link" href="GESTrackFileSource.html#ges-track-filesource-new" title="ges_track_filesource_new ()">ges_track_filesource_new</a>            (<em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GESTrackFileSource.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----<a class="link" href="GESTrackObject.html" title="GESTrackObject">GESTrackObject</a>
+         +----<a class="link" href="GESTrackSource.html" title="GESTrackSource">GESTrackSource</a>
+               +----GESTrackFileSource
+</pre>
+</div>
+<div class="refsect1" title="Properties">
+<a name="GESTrackFileSource.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="GESTrackFileSource.html#GESTrackFileSource--uri" title='The "uri" property'>uri</a>"                      <a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read / Write / Construct Only
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GESTrackFileSource.description"></a><h2>Description</h2>
+<p>
+</p>
+</div>
+<div class="refsect1" title="Details">
+<a name="GESTrackFileSource.details"></a><h2>Details</h2>
+<div class="refsect2" title="GESTrackFileSource">
+<a name="GESTrackFileSource-struct"></a><h3>GESTrackFileSource</h3>
+<pre class="programlisting">typedef struct {
+  gchar *uri;
+} GESTrackFileSource;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="GESTrackFileSourceClass">
+<a name="GESTrackFileSourceClass"></a><h3>GESTrackFileSourceClass</h3>
+<pre class="programlisting">typedef struct {
+  GESTrackObjectClass parent_class;
+} GESTrackFileSourceClass;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_filesource_new ()">
+<a name="ges-track-filesource-new"></a><h3>ges_track_filesource_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrackFileSource.html" title="GESTrackFileSource"><span class="returnvalue">GESTrackFileSource</span></a>* ges_track_filesource_new            (<em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1" title="Property Details">
+<a name="GESTrackFileSource.property-details"></a><h2>Property Details</h2>
+<div class="refsect2" title='The "uri" property'>
+<a name="GESTrackFileSource--uri"></a><h3>The <code class="literal">"uri"</code> property</h3>
+<pre class="programlisting">  "uri"                      <a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read / Write / Construct Only</pre>
+<p>
+The location of the file/resource to use.
+</p>
+<p>Default value: NULL</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.14</div>
+</body>
+</html>

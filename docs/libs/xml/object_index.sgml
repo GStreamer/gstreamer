@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!DOCTYPE informaltable PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<informaltable pgwide="1" frame="none">
+<tgroup cols="3">
+<colspec colwidth="1*"/>
+<colspec colwidth="1*"/>
+<colspec colwidth="1*"/>
+<tbody>
+<row>
+<entry><link linkend="GESCustomTimelineSource">GESCustomTimelineSource</link></entry>
+<entry><link linkend="GESSimpleTimelineLayer">GESSimpleTimelineLayer</link></entry>
+<entry><link linkend="GESTimeline">GESTimeline</link></entry>
+</row>
+<row>
+<entry><link linkend="GESTimelineFileSource">GESTimelineFileSource</link></entry>
+<entry><link linkend="GESTimelineLayer">GESTimelineLayer</link></entry>
+<entry><link linkend="GESTimelineObject">GESTimelineObject</link></entry>
+</row>
+<row>
+<entry><link linkend="GESTimelinePipeline">GESTimelinePipeline</link></entry>
+<entry><link linkend="GESTimelineSource">GESTimelineSource</link></entry>
+<entry><link linkend="GESTimelineTransition">GESTimelineTransition</link></entry>
+</row>
+<row>
+<entry><link linkend="GESTrack">GESTrack</link></entry>
+<entry><link linkend="GESTrackFileSource">GESTrackFileSource</link></entry>
+<entry><link linkend="GESTrackObject">GESTrackObject</link></entry>
+</row>
+<row>
+<entry><link linkend="GESTrackSource">GESTrackSource</link></entry>
+<entry><link linkend="GObject">GObject</link></entry>
+<entry><link linkend="GstBin">GstBin</link></entry>
+</row>
+<row>
+<entry><link linkend="GstElement">GstElement</link></entry>
+<entry><link linkend="GstObject">GstObject</link></entry>
+<entry><link linkend="GstPipeline">GstPipeline</link></entry>
+</row>
+</row>
+</tbody></tgroup></informaltable>

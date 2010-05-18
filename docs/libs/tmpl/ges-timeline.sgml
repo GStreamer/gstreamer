@@ -1,0 +1,158 @@
+<!-- ##### SECTION Title ##### -->
+GESTimeline
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESTimeline ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GESTimeline::layer-added ##### -->
+<para>
+
+</para>
+
+@gestimeline: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GESTimeline::layer-removed ##### -->
+<para>
+
+</para>
+
+@gestimeline: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GESTimeline::track-added ##### -->
+<para>
+
+</para>
+
+@gestimeline: the object which received the signal.
+@arg1: 
+
+<!-- ##### SIGNAL GESTimeline::track-removed ##### -->
+<para>
+
+</para>
+
+@gestimeline: the object which received the signal.
+@arg1: 
+
+<!-- ##### STRUCT GESTimelineClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+@track_added: 
+@track_removed: 
+@layer_added: 
+@layer_removed: 
+
+<!-- ##### FUNCTION ges_timeline_new ##### -->
+<para>
+
+</para>
+
+@void: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_add_layer ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_remove_layer ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@layer: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_add_track ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@track: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_remove_track ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@track: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_get_track_for_pad ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@pad: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_load_from_uri ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_save ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@uri: 
+@Returns: 
+
+
+<!-- ##### FUNCTION ges_timeline_get_tracks ##### -->
+<para>
+
+</para>
+
+@timeline: 
+@Returns: 
+
+

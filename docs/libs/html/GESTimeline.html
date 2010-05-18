@@ -1,0 +1,505 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GESTimeline</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GStreamer Editing Services 0.10.0.1 Reference Manual">
+<link rel="up" href="ch02.html" title="Base Classes">
+<link rel="prev" href="ch02.html" title="Base Classes">
+<link rel="next" href="GESTimelineLayer.html" title="GESTimelineLayer">
+<meta name="generator" content="GTK-Doc V1.14 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="ch02.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GStreamer Editing Services 0.10.0.1 Reference Manual</th>
+<td><a accesskey="n" href="GESTimelineLayer.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GESTimeline.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GESTimeline.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GESTimeline.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#GESTimeline.implemented-interfaces" class="shortcut">Implemented Interfaces</a>
+                   | 
+                  <a href="#GESTimeline.signals" class="shortcut">Signals</a>
+</td></tr>
+</table>
+<div class="refentry" title="GESTimeline">
+<a name="GESTimeline"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GESTimeline.top_of_page"></a>GESTimeline</span></h2>
+<p>GESTimeline — Multimedia timeline</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GESTimeline.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">
+#include &lt;ges/ges.h&gt;
+
+                    <a class="link" href="GESTimeline.html#GESTimeline-struct" title="GESTimeline">GESTimeline</a>;
+                    <a class="link" href="GESTimeline.html#GESTimelineClass" title="GESTimelineClass">GESTimelineClass</a>;
+<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="returnvalue">GESTimeline</span></a>*        <a class="link" href="GESTimeline.html#ges-timeline-new" title="ges_timeline_new ()">ges_timeline_new</a>                    (<em class="parameter"><code><span class="type">void</span></code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTimeline.html#ges-timeline-add-layer" title="ges_timeline_add_layer ()">ges_timeline_add_layer</a>              (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTimeline.html#ges-timeline-remove-layer" title="ges_timeline_remove_layer ()">ges_timeline_remove_layer</a>           (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTimeline.html#ges-timeline-add-track" title="ges_timeline_add_track ()">ges_timeline_add_track</a>              (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTimeline.html#ges-timeline-remove-track" title="ges_timeline_remove_track ()">ges_timeline_remove_track</a>           (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);
+<a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          <a class="link" href="GESTimeline.html#ges-timeline-get-track-for-pad" title="ges_timeline_get_track_for_pad ()">ges_timeline_get_track_for_pad</a>      (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/GstPad.html"><span class="type">GstPad</span></a> *pad</code></em>);
+<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="returnvalue">GESTimeline</span></a>*        <a class="link" href="GESTimeline.html#ges-timeline-load-from-uri" title="ges_timeline_load_from_uri ()">ges_timeline_load_from_uri</a>          (<em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTimeline.html#ges-timeline-save" title="ges_timeline_save ()">ges_timeline_save</a>                   (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);
+<a href="../glib/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             <a class="link" href="GESTimeline.html#ges-timeline-get-tracks" title="ges_timeline_get_tracks ()">ges_timeline_get_tracks</a>             (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GESTimeline.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----<a href="../gstreamer-0.10/GstObject.html">GstObject</a>
+         +----<a href="../gstreamer-0.10/GstElement.html">GstElement</a>
+               +----<a href="../gstreamer-0.10/GstBin.html">GstBin</a>
+                     +----GESTimeline
+</pre>
+</div>
+<div class="refsect1" title="Implemented Interfaces">
+<a name="GESTimeline.implemented-interfaces"></a><h2>Implemented Interfaces</h2>
+<p>
+GESTimeline implements
+ <a href="../gstreamer-0.10/GstChildProxy.html">GstChildProxy</a>.</p>
+</div>
+<div class="refsect1" title="Signals">
+<a name="GESTimeline.signals"></a><h2>Signals</h2>
+<pre class="synopsis">
+  "<a class="link" href="GESTimeline.html#GESTimeline-layer-added" title='The "layer-added" signal'>layer-added</a>"                                    : Run First
+  "<a class="link" href="GESTimeline.html#GESTimeline-layer-removed" title='The "layer-removed" signal'>layer-removed</a>"                                  : Run First
+  "<a class="link" href="GESTimeline.html#GESTimeline-track-added" title='The "track-added" signal'>track-added</a>"                                    : Run First
+  "<a class="link" href="GESTimeline.html#GESTimeline-track-removed" title='The "track-removed" signal'>track-removed</a>"                                  : Run First
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GESTimeline.description"></a><h2>Description</h2>
+<p>
+<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> is the central object for any multimedia timeline.
+</p>
+<p>
+Contains a list of <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> which users should use to arrange the
+various timeline objects through time.
+</p>
+<p>
+The output type is determined by the <span class="type">GESTimelineTrack</span> that are set on
+the <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>.
+</p>
+</div>
+<div class="refsect1" title="Details">
+<a name="GESTimeline.details"></a><h2>Details</h2>
+<div class="refsect2" title="GESTimeline">
+<a name="GESTimeline-struct"></a><h3>GESTimeline</h3>
+<pre class="programlisting">typedef struct _GESTimeline GESTimeline;</pre>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GESTimelineClass">
+<a name="GESTimelineClass"></a><h3>GESTimelineClass</h3>
+<pre class="programlisting">typedef struct {
+  GstBinClass parent_class;
+
+  void (*track_added) (GESTimeline *timeline, GESTrack * track);
+  void (*track_removed) (GESTimeline *timeline, GESTrack * track);
+  void (*layer_added) (GESTimeline *timeline, GESTimelineLayer *layer);
+  void (*layer_removed) (GESTimeline *timeline, GESTimelineLayer *layer);
+} GESTimelineClass;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_new ()">
+<a name="ges-timeline-new"></a><h3>ges_timeline_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="returnvalue">GESTimeline</span></a>*        ges_timeline_new                    (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<p>
+Creates a new empty <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> The new timeline.
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_add_layer ()">
+<a name="ges-timeline-add-layer"></a><h3>ges_timeline_add_layer ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_timeline_add_layer              (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer</code></em>);</pre>
+<p>
+Add the layer to the timeline. The reference to the <em class="parameter"><code>layer</code></em> will be stolen
+by the <em class="parameter"><code>timeline</code></em>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>layer</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> to add
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the layer was properly added, else FALSE.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_remove_layer ()">
+<a name="ges-timeline-remove-layer"></a><h3>ges_timeline_remove_layer ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_timeline_remove_layer           (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer</code></em>);</pre>
+<p>
+Removes the layer from the timeline. The reference that the <em class="parameter"><code>timeline</code></em> holds on
+the layer will be dropped. If you wish to use the <em class="parameter"><code>layer</code></em> after calling this
+method, you need to take a reference before calling.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>layer</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> to remove
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the layer was properly removed, else FALSE.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_add_track ()">
+<a name="ges-timeline-add-track"></a><h3>ges_timeline_add_track ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_timeline_add_track              (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);</pre>
+<p>
+Add a track to the timeline. The reference to the track will be stolen by the
+pipeline.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> to add
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the track was properly added, else FALSE.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_remove_track ()">
+<a name="ges-timeline-remove-track"></a><h3>ges_timeline_remove_track ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_timeline_remove_track           (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>);</pre>
+<p>
+Remove the <em class="parameter"><code>track</code></em> from the <em class="parameter"><code>timeline</code></em>. The reference stolen when adding the
+<em class="parameter"><code>track</code></em> will be removed. If you wish to use the <em class="parameter"><code>track</code></em> after calling this
+function you must ensure that you have a reference to it.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> to remove
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the <em class="parameter"><code>track</code></em> was properly removed, else FALSE.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_get_track_for_pad ()">
+<a name="ges-timeline-get-track-for-pad"></a><h3>ges_timeline_get_track_for_pad ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          ges_timeline_get_track_for_pad      (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/GstPad.html"><span class="type">GstPad</span></a> *pad</code></em>);</pre>
+<p>
+Search the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> corresponding to the given <em class="parameter"><code>timeline</code></em>'s <em class="parameter"><code>pad</code></em>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>The <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>pad</code></em> :</span></p></td>
+<td>The <a href="../gstreamer-0.10/GstPad.html"><span class="type">GstPad</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> The corresponding <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> if it is found, or <a href="../glib/glib-Standard-Macros.html#NULL:CAPS"><span class="type">NULL</span></a> if there is
+an error.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_load_from_uri ()">
+<a name="ges-timeline-load-from-uri"></a><h3>ges_timeline_load_from_uri ()</h3>
+<pre class="programlisting"><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="returnvalue">GESTimeline</span></a>*        ges_timeline_load_from_uri          (<em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);</pre>
+<p>
+Creates a timeline from the contents of given uri.
+</p>
+<p>
+NOT_IMPLEMENTED !
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
+<td>The URI to load from
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> A new <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> if loading was successful, else NULL.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_save ()">
+<a name="ges-timeline-save"></a><h3>ges_timeline_save ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_timeline_save                   (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>,
+                                                         <em class="parameter"><code><a href="../glib/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *uri</code></em>);</pre>
+<p>
+Saves the timeline to the given location
+</p>
+<p>
+NOT_IMPLEMENTED !
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
+<td>The location to save to
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> TRUE if the timeline was successfully saved to the given location,
+else FALSE.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_timeline_get_tracks ()">
+<a name="ges-timeline-get-tracks"></a><h3>ges_timeline_get_tracks ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Doubly-Linked-Lists.html#GList"><span class="returnvalue">GList</span></a> *             ges_timeline_get_tracks             (<em class="parameter"><code><a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline</code></em>);</pre>
+<p>
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td>
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1" title="Signal Details">
+<a name="GESTimeline.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2" title='The "layer-added" signal'>
+<a name="GESTimeline-layer-added"></a><h3>The <code class="literal">"layer-added"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>      *timeline,
+                                                        <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer,
+                                                        <a href="../glib/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>          user_data)      : Run First</pre>
+<p>
+Will be emitted after the layer was added to the timeline.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>layer</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> that was added to the timeline
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title='The "layer-removed" signal'>
+<a name="GESTimeline-layer-removed"></a><h3>The <code class="literal">"layer-removed"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>      *timeline,
+                                                        <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> *layer,
+                                                        <a href="../glib/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>          user_data)      : Run First</pre>
+<p>
+Will be emitted after the layer was removed from the timeline.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>layer</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimelineLayer.html" title="GESTimelineLayer"><span class="type">GESTimelineLayer</span></a> that was removed from the timeline
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title='The "track-added" signal'>
+<a name="GESTimeline-track-added"></a><h3>The <code class="literal">"track-added"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline,
+                                                        <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>    *track,
+                                                        <a href="../glib/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)      : Run First</pre>
+<p>
+Will be emitted after the track was added to the timeline.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> that was added to the timeline
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title='The "track-removed" signal'>
+<a name="GESTimeline-track-removed"></a><h3>The <code class="literal">"track-removed"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a> *timeline,
+                                                        <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>    *track,
+                                                        <a href="../glib/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>     user_data)      : Run First</pre>
+<p>
+Will be emitted after the track was removed from the timeline.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>timeline</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTimeline.html" title="GESTimeline"><span class="type">GESTimeline</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> that was removed from the timeline
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.14</div>
+</body>
+</html>

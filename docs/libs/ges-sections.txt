@@ -142,6 +142,7 @@ GES_TYPE_TIMELINE_LAYER
 <TITLE>GESTimelineObject</TITLE>
 GESTimelineObject
 GESTimelineObjectClass
+CreateTrackObjectFunc
 FillTrackObjectFunc
 GES_TIMELINE_OBJECT_DURATION
 GES_TIMELINE_OBJECT_INPOINT

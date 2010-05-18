@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GESTrack</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GStreamer Editing Services 0.10.0.1 Reference Manual">
+<link rel="up" href="ch02.html" title="Base Classes">
+<link rel="prev" href="GESTimelineTransition.html" title="GESTimelineTransition">
+<link rel="next" href="GESTrackObject.html" title="GESTrackObject">
+<meta name="generator" content="GTK-Doc V1.14 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="GESTimelineTransition.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="ch02.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GStreamer Editing Services 0.10.0.1 Reference Manual</th>
+<td><a accesskey="n" href="GESTrackObject.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GESTrack.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GESTrack.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GESTrack.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#GESTrack.implemented-interfaces" class="shortcut">Implemented Interfaces</a>
+                   | 
+                  <a href="#GESTrack.properties" class="shortcut">Properties</a>
+</td></tr>
+</table>
+<div class="refentry" title="GESTrack">
+<a name="GESTrack"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GESTrack.top_of_page"></a>GESTrack</span></h2>
+<p>GESTrack — Composition of objects</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GESTrack.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">
+#include &lt;ges/ges.h&gt;
+
+                    <a class="link" href="GESTrack.html#GESTrack-struct" title="GESTrack">GESTrack</a>;
+enum                <a class="link" href="GESTrack.html#GESTrackType" title="enum GESTrackType">GESTrackType</a>;
+                    <a class="link" href="GESTrack.html#GESTrackClass" title="GESTrackClass">GESTrackClass</a>;
+<a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          <a class="link" href="GESTrack.html#ges-track-audio-raw-new" title="ges_track_audio_raw_new ()">ges_track_audio_raw_new</a>             ();
+<a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          <a class="link" href="GESTrack.html#ges-track-video-raw-new" title="ges_track_video_raw_new ()">ges_track_video_raw_new</a>             ();
+<a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a>*           <a class="link" href="GESTrack.html#ges-track-new" title="ges_track_new ()">ges_track_new</a>                       (<em class="parameter"><code><a class="link" href="GESTrack.html#GESTrackType" title="enum GESTrackType"><span class="type">GESTrackType</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a> *caps</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTrack.html#ges-track-add-object" title="ges_track_add_object ()">ges_track_add_object</a>                (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *object</code></em>);
+<a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GESTrack.html#ges-track-remove-object" title="ges_track_remove_object ()">ges_track_remove_object</a>             (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *object</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GESTrack.html#ges-track-set-caps" title="ges_track_set_caps ()">ges_track_set_caps</a>                  (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code>const <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a> *caps</code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GESTrack.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="../gobject/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----<a href="../gstreamer-0.10/GstObject.html">GstObject</a>
+         +----<a href="../gstreamer-0.10/GstElement.html">GstElement</a>
+               +----<a href="../gstreamer-0.10/GstBin.html">GstBin</a>
+                     +----GESTrack
+</pre>
+</div>
+<div class="refsect1" title="Implemented Interfaces">
+<a name="GESTrack.implemented-interfaces"></a><h2>Implemented Interfaces</h2>
+<p>
+GESTrack implements
+ <a href="../gstreamer-0.10/GstChildProxy.html">GstChildProxy</a>.</p>
+</div>
+<div class="refsect1" title="Properties">
+<a name="GESTrack.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="GESTrack.html#GESTrack--caps" title='The "caps" property'>caps</a>"                     <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a>*              : Read / Write / Construct
+  "<a class="link" href="GESTrack.html#GESTrack--track-type" title='The "track-type" property'>track-type</a>"               <a class="link" href="GESTrack.html#GESTrackType" title="enum GESTrackType"><span class="type">GESTrackType</span></a>          : Read / Write / Construct Only
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GESTrack.description"></a><h2>Description</h2>
+<p>
+Corresponds to one output format (i.e. audio OR video).
+</p>
+<p>
+Contains the compatible TrackObject(s).
+</p>
+<p>
+Wraps GNonLin's 'gnlcomposition' element.
+</p>
+</div>
+<div class="refsect1" title="Details">
+<a name="GESTrack.details"></a><h2>Details</h2>
+<div class="refsect2" title="GESTrack">
+<a name="GESTrack-struct"></a><h3>GESTrack</h3>
+<pre class="programlisting">typedef struct {
+  GESTrackType type;
+} GESTrack;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="enum GESTrackType">
+<a name="GESTrackType"></a><h3>enum GESTrackType</h3>
+<pre class="programlisting">typedef enum {
+  GES_TRACK_TYPE_AUDIO = 0,
+  GES_TRACK_TYPE_VIDEO = 1,
+  GES_TRACK_TYPE_TEXT = 2,
+  GES_TRACK_TYPE_CUSTOM = 3
+} GESTrackType;
+</pre>
+<p>
+Types of content handled by a track. If the content is not one of
+<em class="parameter"><code>GEST_TRACK_TYPE_AUDIO</code></em>, <em class="parameter"><code>GES_TRACK_TYPE_VIDEO</code></em> or <em class="parameter"><code>GES_TRACK_TYPE_TEXT</code></em>,
+the user of the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> must set the type to <em class="parameter"><code>GES_TRACK_TYPE_CUSTOM</code></em>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><a name="GES-TRACK-TYPE-AUDIO:CAPS"></a><span class="term"><code class="literal">GES_TRACK_TYPE_AUDIO</code></span></p></td>
+<td>An audio track
+</td>
+</tr>
+<tr>
+<td><p><a name="GES-TRACK-TYPE-VIDEO:CAPS"></a><span class="term"><code class="literal">GES_TRACK_TYPE_VIDEO</code></span></p></td>
+<td>A video track
+</td>
+</tr>
+<tr>
+<td><p><a name="GES-TRACK-TYPE-TEXT:CAPS"></a><span class="term"><code class="literal">GES_TRACK_TYPE_TEXT</code></span></p></td>
+<td>A text (subtitle) track
+</td>
+</tr>
+<tr>
+<td><p><a name="GES-TRACK-TYPE-CUSTOM:CAPS"></a><span class="term"><code class="literal">GES_TRACK_TYPE_CUSTOM</code></span></p></td>
+<td>A custom-content track
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="GESTrackClass">
+<a name="GESTrackClass"></a><h3>GESTrackClass</h3>
+<pre class="programlisting">typedef struct {
+  GstBinClass parent_class;
+} GESTrackClass;
+</pre>
+<p>
+</p>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_audio_raw_new ()">
+<a name="ges-track-audio-raw-new"></a><h3>ges_track_audio_raw_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          ges_track_audio_raw_new             ();</pre>
+<p>
+Creates a new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> of type <a class="link" href="GESTrack.html#GES-TRACK-TYPE-AUDIO:CAPS"><span class="type">GES_TRACK_TYPE_AUDIO</span></a> and with generic
+raw audio caps ("audio/x-raw-int;audio/x-raw-float");
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> A new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>.
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_video_raw_new ()">
+<a name="ges-track-video-raw-new"></a><h3>ges_track_video_raw_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a> *          ges_track_video_raw_new             ();</pre>
+<p>
+Creates a new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> of type <a class="link" href="GESTrack.html#GES-TRACK-TYPE-VIDEO:CAPS"><span class="type">GES_TRACK_TYPE_VIDEO</span></a> and with generic
+raw video caps ("video/x-raw-yuv;video/x-raw-rgb");
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> A new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>.
+</td>
+</tr></tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_new ()">
+<a name="ges-track-new"></a><h3>ges_track_new ()</h3>
+<pre class="programlisting"><a class="link" href="GESTrack.html" title="GESTrack"><span class="returnvalue">GESTrack</span></a>*           ges_track_new                       (<em class="parameter"><code><a class="link" href="GESTrack.html#GESTrackType" title="enum GESTrackType"><span class="type">GESTrackType</span></a> type</code></em>,
+                                                         <em class="parameter"><code><a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a> *caps</code></em>);</pre>
+<p>
+Creates a new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> with the given <em class="parameter"><code>type</code></em> and <em class="parameter"><code>caps</code></em>.
+</p>
+<p>
+The newly created track will steal a reference to the caps. If you wish to 
+use those caps elsewhere, you will have to take an extra reference.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>type</code></em> :</span></p></td>
+<td>The type of track
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>caps</code></em> :</span></p></td>
+<td>The caps to restrict the output of the track to.
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> A new <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_add_object ()">
+<a name="ges-track-add-object"></a><h3>ges_track_add_object ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_track_add_object                (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *object</code></em>);</pre>
+<p>
+Adds the given object to the track.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> to add
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS"><span class="type">TRUE</span></a> if the object was properly added. <a href="../glib/glib-Standard-Macros.html#FALSE:CAPS"><span class="type">FALSE</span></a> if the track does not
+want to accept the object.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_remove_object ()">
+<a name="ges-track-remove-object"></a><h3>ges_track_remove_object ()</h3>
+<pre class="programlisting"><a href="../glib/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            ges_track_remove_object             (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code><a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> *object</code></em>);</pre>
+<p>
+Removes the object from the track.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>object</code></em> :</span></p></td>
+<td>the <a class="link" href="GESTrackObject.html" title="GESTrackObject"><span class="type">GESTrackObject</span></a> to remove
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="../glib/glib-Standard-Macros.html#TRUE:CAPS"><span class="type">TRUE</span></a> if the object was removed, else <a href="../glib/glib-Standard-Macros.html#FALSE:CAPS"><span class="type">FALSE</span></a> if the track
+could not remove the object (like if it didn't belong to the track).
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="ges_track_set_caps ()">
+<a name="ges-track-set-caps"></a><h3>ges_track_set_caps ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                ges_track_set_caps                  (<em class="parameter"><code><a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> *track</code></em>,
+                                                         <em class="parameter"><code>const <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a> *caps</code></em>);</pre>
+<p>
+Sets the given <em class="parameter"><code>caps</code></em> on the track.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>track</code></em> :</span></p></td>
+<td>a <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>caps</code></em> :</span></p></td>
+<td>the <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a> to set
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1" title="Property Details">
+<a name="GESTrack.property-details"></a><h2>Property Details</h2>
+<div class="refsect2" title='The "caps" property'>
+<a name="GESTrack--caps"></a><h3>The <code class="literal">"caps"</code> property</h3>
+<pre class="programlisting">  "caps"                     <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GstCaps"><span class="type">GstCaps</span></a>*              : Read / Write / Construct</pre>
+<p>
+Caps used to filter/choose the output stream. This is generally set to
+a generic set of caps like 'video/x-raw-rgb;video/x-raw-yuv' for raw video.
+</p>
+<p>
+Default value: <a href="../gstreamer-0.10/gstreamer-GstCaps.html#GST-CAPS-ANY:CAPS"><span class="type">GST_CAPS_ANY</span></a>.
+</p>
+</div>
+<hr>
+<div class="refsect2" title='The "track-type" property'>
+<a name="GESTrack--track-type"></a><h3>The <code class="literal">"track-type"</code> property</h3>
+<pre class="programlisting">  "track-type"               <a class="link" href="GESTrack.html#GESTrackType" title="enum GESTrackType"><span class="type">GESTrackType</span></a>          : Read / Write / Construct Only</pre>
+<p>
+Type of stream the track outputs. This is used when creating the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>
+to specify in generic terms what type of content will be outputted.
+</p>
+<p>
+It also serves as a 'fast' way to check what type of data will be outputted
+from the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a> without having to actually check the <a class="link" href="GESTrack.html" title="GESTrack"><span class="type">GESTrack</span></a>'s caps
+property.
+</p>
+<p>Default value: GES_TRACK_TYPE_CUSTOM</p>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.14</div>
+</body>
+</html>

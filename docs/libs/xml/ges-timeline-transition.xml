@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESTimelineTransition">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESTimelineTransition.top_of_page">GESTimelineTransition</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESTimelineTransition</refname>
+<refpurpose>Base Class for transitions in a <link linkend="GESTimelineLayer"><type>GESTimelineLayer</type></link></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESTimelineTransition.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESTimelineTransition-struct">GESTimelineTransition</link>;
+                    <link linkend="GESTimelineTransitionClass">GESTimelineTransitionClass</link>;
+<link linkend="GESTimelineTransition"><returnvalue>GESTimelineTransition</returnvalue></link>* <link linkend="ges-timeline-transition-new">ges_timeline_transition_new</link>      (<parameter><type>void</type></parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESTimelineTransition.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GESTimelineObject">GESTimelineObject</link>
+         +----GESTimelineTransition
+</synopsis>
+</refsect1>
+
+<refsect1 id="GESTimelineTransition.description" role="desc">
+<title role="desc.title">Description</title>
+
+</refsect1>
+<refsect1 id="GESTimelineTransition.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESTimelineTransition-struct" role="struct">
+<title>GESTimelineTransition</title>
+<indexterm zone="GESTimelineTransition-struct"><primary>GESTimelineTransition</primary></indexterm>
+<programlisting>typedef struct _GESTimelineTransition GESTimelineTransition;</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESTimelineTransitionClass" role="struct">
+<title>GESTimelineTransitionClass</title>
+<indexterm zone="GESTimelineTransitionClass"><primary>GESTimelineTransitionClass</primary></indexterm>
+<programlisting>typedef struct {
+  GESTimelineObjectClass parent_class;
+} GESTimelineTransitionClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="ges-timeline-transition-new" role="function">
+<title>ges_timeline_transition_new ()</title>
+<indexterm zone="ges-timeline-transition-new"><primary>ges_timeline_transition_new</primary></indexterm>
+<programlisting><link linkend="GESTimelineTransition"><returnvalue>GESTimelineTransition</returnvalue></link>* ges_timeline_transition_new      (<parameter><type>void</type></parameter>);</programlisting>
+<para>
+</para><variablelist role="params">
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara>
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+</refentry>

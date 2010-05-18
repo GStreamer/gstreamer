@@ -1,0 +1,61 @@
+<!-- ##### SECTION Title ##### -->
+GESTimelineFileSource
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GESTimelineFileSource ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ARG GESTimelineFileSource:max-duration ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GESTimelineFileSource:mute ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GESTimelineFileSource:uri ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GESTimelineFileSourceClass ##### -->
+<para>
+
+</para>
+
+@parent_class: 
+
+<!-- ##### FUNCTION ges_timeline_filesource_new ##### -->
+<para>
+
+</para>
+
+@uri: 
+@Returns: 
+
+

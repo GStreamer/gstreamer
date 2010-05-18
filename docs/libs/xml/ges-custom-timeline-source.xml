@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<refentry id="GESCustomTimelineSource">
+<refmeta>
+<refentrytitle role="top_of_page" id="GESCustomTimelineSource.top_of_page">GESCustomTimelineSource</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>
+  GES Library
+</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>GESCustomTimelineSource</refname>
+<refpurpose>Convenience <link linkend="GESTimelineSource"><type>GESTimelineSource</type></link></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv id="GESCustomTimelineSource.synopsis" role="synopsis">
+<title role="synopsis.title">Synopsis</title>
+
+<synopsis>
+#include &lt;ges/ges.h&gt;
+
+                    <link linkend="GESCustomTimelineSource-struct">GESCustomTimelineSource</link>;
+                    <link linkend="GESCustomTimelineSourceClass">GESCustomTimelineSourceClass</link>;
+<link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            (<link linkend="FillTrackObjectUserFunc">*FillTrackObjectUserFunc</link>)          (<parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *trobject</parameter>,
+                                                         <parameter><link linkend="GstElement"><type>GstElement</type></link> *gnlobj</parameter>,
+                                                         <parameter><link linkend="gpointer"><type>gpointer</type></link> user_data</parameter>);
+<link linkend="GESCustomTimelineSource"><returnvalue>GESCustomTimelineSource</returnvalue></link> * <link linkend="ges-custom-timeline-source-new">ges_custom_timeline_source_new</link>
+                                                        (<parameter><link linkend="FillTrackObjectUserFunc"><type>FillTrackObjectUserFunc</type></link> func</parameter>,
+                                                         <parameter><link linkend="gpointer"><type>gpointer</type></link> user_data</parameter>);
+</synopsis>
+</refsynopsisdiv>
+<refsect1 id="GESCustomTimelineSource.object-hierarchy" role="object_hierarchy">
+<title role="object_hierarchy.title">Object Hierarchy</title>
+<synopsis>
+  <link linkend="GObject">GObject</link>
+   +----<link linkend="GESTimelineObject">GESTimelineObject</link>
+         +----<link linkend="GESTimelineSource">GESTimelineSource</link>
+               +----GESCustomTimelineSource
+</synopsis>
+</refsect1>
+
+<refsect1 id="GESCustomTimelineSource.description" role="desc">
+<title role="desc.title">Description</title>
+<para>
+<link linkend="GESCustomTimelineSource"><type>GESCustomTimelineSource</type></link> allows creating <link linkend="GESTimelineSource"><type>GESTimelineSource</type></link>(s) without the
+need to subclass.
+</para>
+<para>
+Its usage should be limited to testing and prototyping purposes.
+</para>
+</refsect1>
+<refsect1 id="GESCustomTimelineSource.details" role="details">
+<title role="details.title">Details</title>
+<refsect2 id="GESCustomTimelineSource-struct" role="struct">
+<title>GESCustomTimelineSource</title>
+<indexterm zone="GESCustomTimelineSource-struct"><primary>GESCustomTimelineSource</primary></indexterm>
+<programlisting>typedef struct _GESCustomTimelineSource GESCustomTimelineSource;</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="GESCustomTimelineSourceClass" role="struct">
+<title>GESCustomTimelineSourceClass</title>
+<indexterm zone="GESCustomTimelineSourceClass"><primary>GESCustomTimelineSourceClass</primary></indexterm>
+<programlisting>typedef struct {
+  GESTimelineSourceClass parent_class;
+} GESCustomTimelineSourceClass;
+</programlisting>
+<para>
+</para></refsect2>
+<refsect2 id="FillTrackObjectUserFunc" role="function">
+<title>FillTrackObjectUserFunc ()</title>
+<indexterm zone="FillTrackObjectUserFunc"><primary>FillTrackObjectUserFunc</primary></indexterm>
+<programlisting><link linkend="gboolean"><returnvalue>gboolean</returnvalue></link>            (*FillTrackObjectUserFunc)          (<parameter><link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> *object</parameter>,
+                                                         <parameter><link linkend="GESTrackObject"><type>GESTrackObject</type></link> *trobject</parameter>,
+                                                         <parameter><link linkend="GstElement"><type>GstElement</type></link> *gnlobj</parameter>,
+                                                         <parameter><link linkend="gpointer"><type>gpointer</type></link> user_data</parameter>);</programlisting>
+<para>
+A function that will be called when the GNonLin object of a corresponding
+track object needs to be filled.
+</para>
+<para>
+The implementer of this function shall add the proper <link linkend="GstElement"><type>GstElement</type></link> to <parameter>gnlobj</parameter>
+using <link linkend="gst-bin-add"><function>gst_bin_add()</function></link>.
+</para><variablelist role="params">
+<varlistentry><term><parameter>object</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTimelineObject"><type>GESTimelineObject</type></link> controlling the track object
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>trobject</parameter>&#160;:</term>
+<listitem><simpara>the <link linkend="GESTrackObject"><type>GESTrackObject</type></link>
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>gnlobj</parameter>&#160;:</term>
+<listitem><simpara>the GNonLin object that needs to be filled.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>user_data</parameter>&#160;:</term>
+<listitem><simpara>the gpointer to optional user data
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> TRUE if the implementer succesfully filled the <parameter>gnlobj</parameter>, else <link linkend="FALSE:CAPS"><type>FALSE</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+<refsect2 id="ges-custom-timeline-source-new" role="function">
+<title>ges_custom_timeline_source_new ()</title>
+<indexterm zone="ges-custom-timeline-source-new"><primary>ges_custom_timeline_source_new</primary></indexterm>
+<programlisting><link linkend="GESCustomTimelineSource"><returnvalue>GESCustomTimelineSource</returnvalue></link> * ges_custom_timeline_source_new
+                                                        (<parameter><link linkend="FillTrackObjectUserFunc"><type>FillTrackObjectUserFunc</type></link> func</parameter>,
+                                                         <parameter><link linkend="gpointer"><type>gpointer</type></link> user_data</parameter>);</programlisting>
+<para>
+Creates a new <link linkend="GESCustomTimelineSource"><type>GESCustomTimelineSource</type></link>.
+</para><variablelist role="params">
+<varlistentry><term><parameter>func</parameter>&#160;:</term>
+<listitem><simpara>The <link linkend="FillTrackObjectUserFunc"><type>FillTrackObjectUserFunc</type></link> that will be used to fill the track objects.
+</simpara></listitem></varlistentry>
+<varlistentry><term><parameter>user_data</parameter>&#160;:</term>
+<listitem><simpara>a gpointer that will be used when <parameter>func</parameter> is called.
+</simpara></listitem></varlistentry>
+<varlistentry><term><emphasis>Returns</emphasis>&#160;:</term><listitem><simpara> The new <link linkend="GESCustomTimelineSource"><type>GESCustomTimelineSource</type></link>.
+</simpara></listitem></varlistentry>
+</variablelist></refsect2>
+
+</refsect1>
+
+</refentry>
