@@ -338,7 +338,6 @@ gst_vp8_enc_start (GstBaseVideoEncoder * base_video_encoder)
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
-
   return TRUE;
 }
 
@@ -596,15 +595,16 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
     status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
         &cfg, 0);
+    if (status) {
+      GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
+          ("Failed to initialize VP8 encoder"), (NULL));
+      return GST_FLOW_ERROR;
+    }
+
     gst_base_video_encoder_set_latency (base_video_encoder, 0,
         gst_util_uint64_scale (encoder->max_latency,
             base_video_encoder->state.fps_d * GST_SECOND,
             base_video_encoder->state.fps_n));
-    if (status) {
-      GST_ERROR ("encoder input error");
-      return GST_FLOW_ERROR;
-    }
-
     encoder->inited = TRUE;
   }
 
