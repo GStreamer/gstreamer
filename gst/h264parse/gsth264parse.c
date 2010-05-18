@@ -2333,6 +2333,7 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (h264parse, "received FLUSH stop");
       gst_segment_init (&h264parse->segment, GST_FORMAT_UNDEFINED);
       gst_h264_parse_clear_queues (h264parse);
+      h264parse->last_outbuf_dts = GST_CLOCK_TIME_NONE;
       res = gst_pad_push_event (h264parse->srcpad, event);
       break;
     case GST_EVENT_EOS:
