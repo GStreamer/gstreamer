@@ -50,21 +50,26 @@ GType ges_track_type_get_type (void);
 
 /**
  * GESTrackType:
+ * @GES_TRACK_TYPE_UNKNOWN: A track of unknown type (i.e. invalid)
  * @GES_TRACK_TYPE_AUDIO: An audio track
  * @GES_TRACK_TYPE_VIDEO: A video track
  * @GES_TRACK_TYPE_TEXT: A text (subtitle) track
  * @GES_TRACK_TYPE_CUSTOM: A custom-content track
  *
  * Types of content handled by a track. If the content is not one of
- * @GEST_TRACK_TYPE_AUDIO, @GES_TRACK_TYPE_VIDEO or @GES_TRACK_TYPE_TEXT,
+ * @GES_TRACK_TYPE_AUDIO, @GES_TRACK_TYPE_VIDEO or @GES_TRACK_TYPE_TEXT,
  * the user of the #GESTrack must set the type to @GES_TRACK_TYPE_CUSTOM.
+ *
+ * @GES_TRACK_TYPE_UNKNOWN is for internal purposes and should not be used
+ * by users
  */
 
 typedef enum {
-  GES_TRACK_TYPE_AUDIO	= 0,
-  GES_TRACK_TYPE_VIDEO	= 1,
-  GES_TRACK_TYPE_TEXT	= 2,
-  GES_TRACK_TYPE_CUSTOM	= 3
+  GES_TRACK_TYPE_UNKNOWN = 1 << 0,
+  GES_TRACK_TYPE_AUDIO   = 1 << 1,
+  GES_TRACK_TYPE_VIDEO   = 1 << 2,
+  GES_TRACK_TYPE_TEXT    = 1 << 3,
+  GES_TRACK_TYPE_CUSTOM  = 1 << 4,
 } GESTrackType;
 
 struct _GESTrack {

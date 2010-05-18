@@ -47,11 +47,12 @@ static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 
-#define C_ENUM(v) ((gint) v)
+#define C_ENUM(v) ((guint) v)
 static void
 register_ges_track_type_select_result (GType * id)
 {
-  static const GEnumValue values[] = {
+  static const GFlagsValue values[] = {
+    {C_ENUM (GES_TRACK_TYPE_UNKNOWN), "GES_TRACK_TYPE_UNKNOWN", "unknown"},
     {C_ENUM (GES_TRACK_TYPE_AUDIO), "GES_TRACK_TYPE_AUDIO", "audio"},
     {C_ENUM (GES_TRACK_TYPE_VIDEO), "GES_TRACK_TYPE_VIDEO", "video"},
     {C_ENUM (GES_TRACK_TYPE_TEXT), "GES_TRACK_TYPE_TEXT", "text"},
@@ -59,7 +60,7 @@ register_ges_track_type_select_result (GType * id)
     {0, NULL, NULL}
   };
 
-  *id = g_enum_register_static ("GESTrackType", values);
+  *id = g_flags_register_static ("GESTrackType", values);
 }
 
 GType
@@ -83,7 +84,7 @@ ges_track_get_property (GObject * object, guint property_id,
       gst_value_set_caps (value, track->caps);
       break;
     case ARG_TYPE:
-      g_value_set_enum (value, track->type);
+      g_value_set_flags (value, track->type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -101,7 +102,7 @@ ges_track_set_property (GObject * object, guint property_id,
       ges_track_set_caps (track, gst_value_get_caps (value));
       break;
     case ARG_TYPE:
-      track->type = g_value_get_enum (value);
+      track->type = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -168,7 +169,7 @@ ges_track_class_init (GESTrackClass * klass)
    * property.
    */
   g_object_class_install_property (object_class, ARG_TYPE,
-      g_param_spec_enum ("track-type", "TrackType",
+      g_param_spec_flags ("track-type", "TrackType",
           "Type of stream the track outputs",
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_CUSTOM,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
