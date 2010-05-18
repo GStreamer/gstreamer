@@ -136,6 +136,7 @@ gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
        window. It's pretty much useless */
     sink->use_glx = FALSE;
 
+    sink->foreign_window = TRUE;
     gst_vaapisink_ensure_window_xid(sink, xid);
 }
 
@@ -303,7 +304,7 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     display_ratio = (gdouble)display_rect->width / display_rect->height;
     GST_DEBUG("scaling to %ux%u", display_rect->width, display_rect->height);
 
-    if (sink->fullscreen ||
+    if (sink->fullscreen || sink->foreign_window ||
         display_rect->width > width || display_rect->height > height) {
         if (sink->video_width > sink->video_height) {
             display_rect->width  = width;
@@ -883,6 +884,7 @@ gst_vaapisink_init(GstVaapiSink *sink, GstVaapiSinkClass *klass)
     sink->video_height   = 0;
     sink->video_par_n    = 1;
     sink->video_par_d    = 1;
+    sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;
     sink->use_glx        = USE_VAAPISINK_GLX;

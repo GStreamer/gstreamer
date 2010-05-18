@@ -77,6 +77,7 @@ struct _GstVaapiSink {
     gint                video_par_n;
     gint                video_par_d;
     GstVaapiRectangle   display_rect;
+    guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
     guint               use_glx         : 1;
