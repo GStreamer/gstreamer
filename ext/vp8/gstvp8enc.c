@@ -641,8 +641,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     }
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
-    frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+    frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     hook = frame->coder_hook;
     /* FIXME: If frame is NULL something went really wrong! */
 
