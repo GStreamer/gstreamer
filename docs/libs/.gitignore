@@ -10,3 +10,8 @@ ges.interfaces
 ges.prerequisites
 ges.signals
 *.stamp
+
+html/
+tmpl/
+xml/
+doc-registry.xml
