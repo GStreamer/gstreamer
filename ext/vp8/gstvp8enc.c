@@ -72,6 +72,7 @@ struct _GstVP8Enc
 
   /* state */
 
+  gboolean force_keyframe;
   gboolean inited;
 
   int resolution_id;
@@ -570,8 +571,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
     cfg.g_w = base_video_encoder->state.width;
     cfg.g_h = base_video_encoder->state.height;
-    //cfg.g_timebase.num = base_video_encoder->state.fps_n;
-    //cfg.g_timebase.den = base_video_encoder->state.fps_d;
+    cfg.g_timebase.num = base_video_encoder->state.fps_d;
+    cfg.g_timebase.den = base_video_encoder->state.fps_n;
 
     cfg.g_error_resilient = encoder->error_resilient;
     cfg.g_pass = VPX_RC_ONE_PASS;
@@ -617,11 +618,9 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   hook->image = image;
   frame->coder_hook = hook;
 
-#if 0
   if (encoder->force_keyframe) {
     flags |= VPX_EFLAG_FORCE_KF;
   }
-#endif
 
   status = vpx_codec_encode (&encoder->encoder, image,
       encoder->n_frames, 1, flags, speed_table[encoder->speed]);
@@ -632,7 +631,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   while (pkt != NULL) {
     GstBuffer *buffer;
-    gboolean invisible, keyframe;
+    gboolean invisible;
 
     GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
 
@@ -642,7 +641,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     }
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
-    keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+    frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
     hook = frame->coder_hook;
     /* FIXME: If frame is NULL something went really wrong! */
@@ -650,7 +649,6 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
     memcpy (GST_BUFFER_DATA (buffer), pkt->data.frame.buf, pkt->data.frame.sz);
-    frame->is_sync_point = frame->is_sync_point || keyframe;
 
     if (hook->image)
       g_free (hook->image);
