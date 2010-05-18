@@ -123,7 +123,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B, YVYU, Y444 }") "; "
         GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
         GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR)
+        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
+        GST_VIDEO_CAPS_GRAY8)
     );
 /* *INDENT-ON* */
 
@@ -415,7 +416,10 @@ gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
   /* prepare a cached image description  */
   enc->channels = 3 + (gst_video_format_has_alpha (format) ? 1 : 0);
   /* ... but any alpha is disregarded in encoding */
-  enc->channels = 3;
+  if (gst_video_format_is_gray (format))
+    enc->channels = 1;
+  else
+    enc->channels = 3;
   enc->h_max_samp = 0;
   enc->v_max_samp = 0;
   for (i = 0; i < enc->channels; ++i) {
@@ -481,7 +485,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 
   jpegenc->cinfo.image_width = width = jpegenc->width;
   jpegenc->cinfo.image_height = height = jpegenc->height;
-  jpegenc->cinfo.input_components = 3;
+  jpegenc->cinfo.input_components = jpegenc->channels;
 
   GST_DEBUG_OBJECT (jpegenc, "width %d, height %d", width, height);
   GST_DEBUG_OBJECT (jpegenc, "format %d", jpegenc->format);
@@ -489,6 +493,9 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   if (gst_video_format_is_rgb (jpegenc->format)) {
     GST_DEBUG_OBJECT (jpegenc, "RGB");
     jpegenc->cinfo.in_color_space = JCS_RGB;
+  } else if (gst_video_format_is_gray (jpegenc->format)) {
+    GST_DEBUG_OBJECT (jpegenc, "gray");
+    jpegenc->cinfo.in_color_space = JCS_GRAYSCALE;
   } else {
     GST_DEBUG_OBJECT (jpegenc, "YUV");
     jpegenc->cinfo.in_color_space = JCS_YCbCr;
@@ -505,7 +512,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   GST_DEBUG_OBJECT (jpegenc, "h_max_samp=%d, v_max_samp=%d",
       jpegenc->h_max_samp, jpegenc->v_max_samp);
   /* image dimension info */
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < jpegenc->channels; i++) {
     GST_DEBUG_OBJECT (jpegenc, "comp %i: h_samp=%d, v_samp=%d", i,
         jpegenc->h_samp[i], jpegenc->v_samp[i]);
     jpegenc->cinfo.comp_info[i].h_samp_factor = jpegenc->h_samp[i];
@@ -564,13 +571,10 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   width = jpegenc->width;
   height = jpegenc->height;
 
-  base[0] = data + jpegenc->offset[0];
-  base[1] = data + jpegenc->offset[1];
-  base[2] = data + jpegenc->offset[2];
-
-  end[0] = base[0] + jpegenc->cheight[0] * jpegenc->stride[0];
-  end[1] = base[1] + jpegenc->cheight[1] * jpegenc->stride[1];
-  end[2] = base[2] + jpegenc->cheight[2] * jpegenc->stride[2];
+  for (i = 0; i < jpegenc->channels; i++) {
+    base[i] = data + jpegenc->offset[i];
+    end[i] = base[i] + jpegenc->cheight[i] * jpegenc->stride[i];
+  }
 
   jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (jpegenc->output_buffer);
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (jpegenc->output_buffer);
