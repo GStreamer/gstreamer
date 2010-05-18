@@ -71,7 +71,7 @@ gst_mini_object_get_type (void)
   static GType _gst_mini_object_type = 0;
 
   if (G_UNLIKELY (_gst_mini_object_type == 0)) {
-    GTypeValueTable value_table = {
+    static const GTypeValueTable value_table = {
       gst_value_mini_object_init,
       gst_value_mini_object_free,
       gst_value_mini_object_copy,
@@ -81,7 +81,7 @@ gst_mini_object_get_type (void)
       (char *) "p",
       gst_value_mini_object_lcopy
     };
-    GTypeInfo mini_object_info = {
+    static const GTypeInfo mini_object_info = {
       sizeof (GstMiniObjectClass),
 #if 0
       gst_mini_object_base_init,
@@ -95,14 +95,12 @@ gst_mini_object_get_type (void)
       sizeof (GstMiniObject),
       0,
       (GInstanceInitFunc) gst_mini_object_init,
-      NULL
+      &value_table
     };
     static const GTypeFundamentalInfo mini_object_fundamental_info = {
       (G_TYPE_FLAG_CLASSED | G_TYPE_FLAG_INSTANTIATABLE |
           G_TYPE_FLAG_DERIVABLE | G_TYPE_FLAG_DEEP_DERIVABLE)
     };
-
-    mini_object_info.value_table = &value_table;
 
     _gst_mini_object_type = g_type_fundamental_next ();
     g_type_register_fundamental (_gst_mini_object_type, "GstMiniObject",
