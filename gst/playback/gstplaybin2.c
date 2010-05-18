@@ -559,6 +559,10 @@ static GstElementClass *parent_class;
 
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
+static GstStaticCaps av_raw_caps = GST_STATIC_CAPS ("audio/x-raw-int; "
+    "video/x-raw-float; "
+    "video/x-raw-yuv; " "video/x-raw-rgb; " "video/x-raw-gray;");
+
 #define REMOVE_SIGNAL(obj,id)            \
 if (id) {                                \
   g_signal_handler_disconnect (obj, id); \
@@ -3179,6 +3183,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
     if (!uridecodebin)
       goto no_decodebin;
+    g_object_set (uridecodebin, "caps", gst_static_caps_get (&av_raw_caps),
+        NULL);
     gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
     group->uridecodebin = gst_object_ref (uridecodebin);
   }
@@ -3250,7 +3256,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
       suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);
       if (!suburidecodebin)
         goto no_decodebin;
-
+      g_object_set (uridecodebin, "caps", gst_static_caps_get (&av_raw_caps),
+          NULL);
       gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
       group->suburidecodebin = gst_object_ref (suburidecodebin);
     }
