@@ -67,7 +67,8 @@ static GstStaticPadTemplate pngenc_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB ";"
+        GST_VIDEO_CAPS_GRAY8)
     );
 
 /* static GstElementClass *parent_class = NULL; */
@@ -160,6 +161,8 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
 
   if (pngenc->bpp == 32)
     pngenc->stride = pngenc->width * 4;
+  else if (pngenc->bpp == 8)
+    pngenc->stride = GST_ROUND_UP_4 (pngenc->width);
   else
     pngenc->stride = GST_ROUND_UP_4 (pngenc->width * 3);
 
@@ -235,6 +238,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstPngEnc *pngenc;
   gint row_index;
+  gint color_type;
   png_byte *row_pointers[MAX_HEIGHT];
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *encoded_buf = NULL;
@@ -278,12 +282,19 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
       PNG_FILTER_NONE | PNG_FILTER_VALUE_NONE);
   png_set_compression_level (pngenc->png_struct_ptr, pngenc->compression_level);
 
+  if (pngenc->bpp == 32)
+    color_type = PNG_COLOR_TYPE_RGBA;
+  else if (pngenc->bpp == 8)
+    color_type = PNG_COLOR_TYPE_GRAY;
+  else
+    color_type = PNG_COLOR_TYPE_RGB;
+
   png_set_IHDR (pngenc->png_struct_ptr,
       pngenc->png_info_ptr,
       pngenc->width,
       pngenc->height,
       8,
-      (pngenc->bpp == 32) ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB,
+      color_type,
       PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
