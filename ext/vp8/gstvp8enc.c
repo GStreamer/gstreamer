@@ -78,6 +78,8 @@ struct _GstVP8Enc
   int resolution_id;
   int n_frames;
   int keyframe_distance;
+
+  GstPadEventFunction base_sink_event_func;
 };
 
 struct _GstVP8EncClass
@@ -132,6 +134,8 @@ static GstFlowReturn gst_vp8_enc_shape_output (GstBaseVideoEncoder * encoder,
     GstVideoFrame * frame);
 static GstCaps *gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder);
 
+static gboolean gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event);
+
 GType gst_vp8_enc_get_type (void);
 
 static const char *vpx_error_name (vpx_codec_err_t status);
@@ -153,8 +157,24 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-vp8")
     );
 
-GST_BOILERPLATE (GstVP8Enc, gst_vp8_enc, GstBaseVideoEncoder,
-    GST_TYPE_BASE_VIDEO_ENCODER);
+static void
+do_init (GType vp8enc_type)
+{
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (vp8enc_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
+  g_type_add_interface_static (vp8enc_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstVP8Enc, gst_vp8_enc, GstBaseVideoEncoder,
+    GST_TYPE_BASE_VIDEO_ENCODER, do_init);
 
 static void
 gst_vp8_enc_base_init (gpointer g_class)
@@ -244,6 +264,12 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->error_resilient = DEFAULT_ERROR_RESILIENT;
   gst_vp8_enc->max_latency = DEFAULT_MAX_LATENCY;
   gst_vp8_enc->keyframe_interval = DEFAULT_KEYFRAME_INTERVAL;
+
+  /* FIXME: Add sink/src event vmethods */
+  gst_vp8_enc->base_sink_event_func =
+      GST_PAD_EVENTFUNC (GST_BASE_VIDEO_CODEC_SINK_PAD (gst_vp8_enc));
+  gst_pad_set_event_function (GST_BASE_VIDEO_CODEC_SINK_PAD (gst_vp8_enc),
+      gst_vp8_enc_sink_event);
 }
 
 static void
@@ -328,7 +354,6 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-
 static gboolean
 gst_vp8_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
@@ -353,6 +378,8 @@ gst_vp8_enc_stop (GstBaseVideoEncoder * base_video_encoder)
     encoder->inited = FALSE;
   }
 
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (encoder));
+
   return TRUE;
 }
 
@@ -376,7 +403,8 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   GstCaps *caps;
   const GstVideoState *state;
   GstVP8Enc *encoder;
-  GstTagList *tags;
+  GstTagList *tags = NULL;
+  const GstTagList *iface_tags;
   GstBuffer *stream_hdr, *vorbiscomment;
   guint8 *data;
   GstStructure *s;
@@ -410,12 +438,15 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   GST_WRITE_UINT32_BE (data + 16, state->fps_n);
   GST_WRITE_UINT32_BE (data + 20, state->fps_d);
 
-  /* FIXME: Collect tags */
-  tags = gst_tag_list_new ();
+  iface_tags =
+      gst_tag_setter_get_tag_list (GST_TAG_SETTER (base_video_encoder));
+  if (!iface_tags)
+    tags = gst_tag_list_new ();
   vorbiscomment =
-      gst_tag_list_to_vorbiscomment_buffer (tags,
+      gst_tag_list_to_vorbiscomment_buffer ((iface_tags) ? iface_tags : tags,
       (const guint8 *) "VP8_TAG", 7, NULL);
-  gst_tag_list_free (tags);
+  if (tags)
+    gst_tag_list_free (tags);
 
   /* mark buffers */
   GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
@@ -759,6 +790,27 @@ done:
   g_list_free (hook->invisible);
   g_free (hook);
   frame->coder_hook = NULL;
+
+  return ret;
+}
+
+static gboolean
+gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstVP8Enc *enc = GST_VP8_ENC (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    GstTagList *list;
+    GstTagSetter *setter = GST_TAG_SETTER (enc);
+    const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
+
+    gst_event_parse_tag (event, &list);
+    gst_tag_setter_merge_tags (setter, list, mode);
+  }
+
+  ret = enc->base_sink_event_func (pad, event);
+  gst_object_unref (enc);
 
   return ret;
 }
