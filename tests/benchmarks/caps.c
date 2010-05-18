@@ -36,16 +36,6 @@
   "signed = (boolean) { true, false }"
 
 
-static GstClockTime
-gst_get_current_time (void)
-{
-  GTimeVal tv;
-
-  g_get_current_time (&tv);
-  return GST_TIMEVAL_TO_TIME (tv);
-}
-
-
 gint
 main (gint argc, gchar * argv[])
 {
@@ -58,18 +48,18 @@ main (gint argc, gchar * argv[])
 
   protocaps = gst_caps_from_string (GST_AUDIO_INT_PAD_TEMPLATE_CAPS);
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   capses = g_new (GstCaps *, NUM_CAPS);
   for (i = 0; i < NUM_CAPS; i++)
     capses[i] = gst_caps_copy (protocaps);
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - creating %d caps\n",
       GST_TIME_ARGS (end - start), i);
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   for (i = 0; i < NUM_CAPS; i++)
     gst_caps_unref (capses[i]);
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - destroying %d caps\n",
       GST_TIME_ARGS (end - start), i);
 

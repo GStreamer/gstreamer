@@ -26,15 +26,6 @@
 #define SINK_ELEMENT "fakesink"
 
 
-static GstClockTime
-gst_get_current_time (void)
-{
-  GTimeVal tv;
-
-  g_get_current_time (&tv);
-  return GST_TIMEVAL_TO_TIME (tv);
-}
-
 gint
 main (gint argc, gchar * argv[])
 {
@@ -58,7 +49,7 @@ main (gint argc, gchar * argv[])
   g_print
       ("*** benchmarking this pipeline: %s num-buffers=%u ! %u * identity ! %s\n",
       src_name, buffers, identities, sink_name);
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   pipeline = gst_element_factory_make ("pipeline", NULL);
   g_assert (pipeline);
   src = gst_element_factory_make (src_name, NULL);
@@ -86,40 +77,40 @@ main (gint argc, gchar * argv[])
   }
   if (!gst_element_link (last, sink))
     g_assert_not_reached ();
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - creating %u identity elements\n",
       GST_TIME_ARGS (end - start), identities);
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     g_assert_not_reached ();
   if (gst_element_get_state (pipeline, NULL, NULL,
           GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_FAILURE)
     g_assert_not_reached ();
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - setting pipeline to playing\n",
       GST_TIME_ARGS (end - start));
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   msg = gst_bus_poll (gst_element_get_bus (pipeline),
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   gst_message_unref (msg);
   g_print ("%" GST_TIME_FORMAT " - putting %u buffers through\n",
       GST_TIME_ARGS (end - start), buffers);
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   if (gst_element_set_state (pipeline,
           GST_STATE_NULL) != GST_STATE_CHANGE_SUCCESS)
     g_assert_not_reached ();
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - setting pipeline to NULL\n",
       GST_TIME_ARGS (end - start));
 
-  start = gst_get_current_time ();
+  start = gst_util_get_timestamp ();
   g_object_unref (pipeline);
-  end = gst_get_current_time ();
+  end = gst_util_get_timestamp ();
   g_print ("%" GST_TIME_FORMAT " - unreffing pipeline\n",
       GST_TIME_ARGS (end - start));
 
