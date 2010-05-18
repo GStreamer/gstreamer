@@ -1,6 +1,7 @@
 /* VP8 plugin
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2008,2009,2010 Entropy Wave Inc
+ * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -155,11 +156,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 static void
 gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
 {
-
   GST_DEBUG ("gst_vp8_dec_init");
-
-  //gst_vp8_dec->decoder = ;
-
 }
 
 static void
@@ -173,7 +170,6 @@ gst_vp8_dec_finalize (GObject * object)
   gst_vp8_dec = GST_VP8_DEC (object);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-
 }
 
 static void
@@ -212,14 +208,10 @@ gst_vp8_dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
 {
-  int flags = 0;
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
 
   decoder->packetized = TRUE;
   gst_vp8_dec->decoder_inited = FALSE;
-
-  vpx_codec_dec_init (&gst_vp8_dec->decoder, &vpx_codec_vp8_dx_algo, NULL,
-      flags);
 
   return TRUE;
 }
@@ -227,7 +219,11 @@ gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
 static gboolean
 gst_vp8_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
+  GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (base_video_decoder);
 
+  if (gst_vp8_dec->decoder_inited)
+    vpx_codec_destroy (&gst_vp8_dec->decoder);
+  gst_vp8_dec->decoder_inited = FALSE;
   return TRUE;
 }
 
@@ -235,15 +231,14 @@ static gboolean
 gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVP8Dec *decoder;
-  int flags = 0;
 
   GST_DEBUG ("reset");
 
   decoder = GST_VP8_DEC (base_video_decoder);
 
+  if (decoder->decoder_inited)
+    vpx_codec_destroy (&decoder->decoder);
   decoder->decoder_inited = FALSE;
-
-  vpx_codec_dec_init (&decoder->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
 
   return TRUE;
 }
@@ -283,6 +278,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   dec = GST_VP8_DEC (decoder);
 
   if (!dec->decoder_inited) {
+    int flags = 0;
     vpx_codec_stream_info_t stream_info;
 
     memset (&stream_info, 0, sizeof (stream_info));
@@ -302,6 +298,14 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder->state.height = stream_info.h;
     decoder->state.format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
+
+    res =
+        vpx_codec_dec_init (&dec->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
+    if (res != VPX_CODEC_OK) {
+      GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
+          ("Failed to initialize VP8 decoder"), (NULL));
+      return GST_FLOW_ERROR;
+    }
     dec->decoder_inited = TRUE;
   }
 
