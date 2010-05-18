@@ -410,7 +410,11 @@ gst_speex_enc_convert_sink (GstPad * pad, GstFormat src_format,
 static gint64
 gst_speex_enc_get_latency (GstSpeexEnc * enc)
 {
-  return 30 * GST_MSECOND;
+  /* See the Speex manual section "Latency and algorithmic delay" */
+  if (enc->rate == 8000)
+    return 30 * GST_MSECOND;
+  else
+    return 34 * GST_MSECOND;
 }
 
 static const GstQueryType *
