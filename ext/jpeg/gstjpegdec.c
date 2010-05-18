@@ -67,7 +67,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") "; "
         GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
         GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
-        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR)
+        GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
+        GST_VIDEO_CAPS_GRAY8)
     );
 /* *INDENT-ON* */
 
@@ -747,6 +748,42 @@ gst_jpeg_dec_ensure_buffers (GstJpegDec * dec, guint maxrowbytes)
 }
 
 static void
+gst_jpeg_dec_decode_grayscale (GstJpegDec * dec, guchar * base[1],
+    guint width, guint height, guint pstride, guint rstride)
+{
+  guchar *rows[16];
+  guchar **scanarray[1] = { rows };
+  gint i, j, k;
+  gint lines;
+
+  GST_DEBUG_OBJECT (dec, "indirect decoding of grayscale");
+
+  if (G_UNLIKELY (!gst_jpeg_dec_ensure_buffers (dec, GST_ROUND_UP_32 (width))))
+    return;
+
+  memcpy (rows, dec->idr_y, 16 * sizeof (gpointer));
+
+  i = 0;
+  while (i < height) {
+    lines = jpeg_read_raw_data (&dec->cinfo, scanarray, DCTSIZE);
+    if (G_LIKELY (lines > 0)) {
+      for (j = 0; (j < DCTSIZE) && (i < height); j++, i++) {
+        gint p;
+
+        p = 0;
+        for (k = 0; k < width; k++) {
+          base[0][p] = rows[j][k];
+          p += pstride;
+        }
+        base[0] += rstride;
+      }
+    } else {
+      GST_INFO_OBJECT (dec, "jpeg_read_raw_data() returned 0");
+    }
+  }
+}
+
+static void
 gst_jpeg_dec_decode_rgb (GstJpegDec * dec, guchar * base[3],
     guint width, guint height, guint pstride, guint rstride)
 {
@@ -1092,6 +1129,16 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
     /* equal for all components */
     dec->stride = gst_video_format_get_row_stride (format, 0, width);
     dec->inc = gst_video_format_get_pixel_stride (format, 0);
+  } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
+    /* TODO is anything else then 8bit supported in jpeg? */
+    format = GST_VIDEO_FORMAT_GRAY8;
+    caps = gst_video_format_new_caps (format, width, height,
+        dec->framerate_numerator, dec->framerate_denominator, 1, 1);
+    dec->outsize = gst_video_format_get_size (format, width, height);
+    dec->offset[0] =
+        gst_video_format_get_component_offset (format, 0, width, height);
+    dec->stride = gst_video_format_get_row_stride (format, 0, width);
+    dec->inc = gst_video_format_get_pixel_stride (format, 0);
   } else {
     /* go for plain and simple I420 */
     /* TODO other YUV cases ? */
@@ -1258,11 +1305,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   /* sanity checks to get safe and reasonable output */
   switch (dec->cinfo.jpeg_color_space) {
     case JCS_GRAYSCALE:
+      if (dec->cinfo.num_components != 1)
+        goto invalid_yuvrgbgrayscale;
       break;
     case JCS_RGB:
       if (dec->cinfo.num_components != 3 || dec->cinfo.max_v_samp_factor > 1 ||
           dec->cinfo.max_h_samp_factor > 1)
-        goto invalid_yuvrgb;
+        goto invalid_yuvrgbgrayscale;
       break;
     case JCS_YCbCr:
       if (dec->cinfo.num_components != 3 ||
@@ -1270,7 +1319,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
           r_v < dec->cinfo.comp_info[1].v_samp_factor ||
           r_h < dec->cinfo.comp_info[0].h_samp_factor ||
           r_h < dec->cinfo.comp_info[1].h_samp_factor)
-        goto invalid_yuvrgb;
+        goto invalid_yuvrgbgrayscale;
       break;
     default:
       g_assert_not_reached ();
@@ -1322,6 +1371,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     base[1] = outdata + dec->offset[1];
     base[2] = outdata + dec->offset[2];
     gst_jpeg_dec_decode_rgb (dec, base, width, height, dec->inc, dec->stride);
+  } else if (dec->cinfo.jpeg_color_space == JCS_GRAYSCALE) {
+    base[0] = outdata + dec->offset[0];
+    gst_jpeg_dec_decode_grayscale (dec, base, width, height, dec->inc,
+        dec->stride);
   } else {
     /* mind the swap, jpeglib outputs blue chroma first
      * ensonic: I see no swap?
@@ -1495,10 +1548,10 @@ unsupported_colorspace:
     ret = GST_FLOW_ERROR;
     goto done;
   }
-invalid_yuvrgb:
+invalid_yuvrgbgrayscale:
   {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Picture is corrupt or unhandled YUV/RGB layout"));
+        ("Picture is corrupt or unhandled YUV/RGB/grayscale layout"));
     ret = GST_FLOW_ERROR;
     goto done;
   }
