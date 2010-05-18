@@ -763,7 +763,15 @@ update_buffering (GstQueue2 * queue)
     percent = 100;
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
-    percent = GET_PERCENT (bytes);
+
+    if (!QUEUE_IS_USING_RING_BUFFER (queue)) {
+      percent = GET_PERCENT (bytes);
+    } else {
+      guint max_bytes = queue->max_level.bytes;
+      guint64 rb_size = queue->ring_buffer_max_size;
+      max_bytes = max_bytes ? MIN (max_bytes, rb_size) : rb_size;
+      percent = max_bytes ? queue->cur_level.bytes * 100 / max_bytes : 0;
+    }
     percent = MAX (percent, GET_PERCENT (time));
     percent = MAX (percent, GET_PERCENT (buffers));
 
