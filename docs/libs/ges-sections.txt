@@ -9,7 +9,9 @@ ges_init
 <SECTION>
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
+GESTrack
 GESTrackType
+GESTrackClass
 ges_track_audio_raw_new
 ges_track_video_raw_new
 ges_track_new
@@ -17,11 +19,9 @@ ges_track_add_object
 ges_track_remove_object
 ges_track_set_caps
 <SUBSECTION Standard>
-GESTrack
 ges_track_set_timeline
 ges_track_get_type
 ges_track_type_get_type
-GESTrackClass
 GES_IS_TRACK
 GES_IS_TRACK_CLASS
 GES_TRACK
@@ -170,14 +170,14 @@ ges_timeline_object_get_type
 <SECTION>
 <FILE>ges-timeline-pipeline</FILE>
 <TITLE>GESTimelinePipeline</TITLE>
+GESTimelinePipeline
+GESTimelinePipelineClass
 GESPipelineFlags
 ges_timeline_pipeline_new
 ges_timeline_pipeline_add_timeline
 ges_timeline_pipeline_set_mode
 ges_timeline_pipeline_set_render_settings
 <SUBSECTION Standard>
-GESTimelinePipeline
-GESTimelinePipelineClass
 ges_timeline_pipeline_get_type
 GES_TIMELINE_PIPELINE
 GES_TIMELINE_PIPELINE_CLASS
