@@ -43,13 +43,14 @@ G_BEGIN_DECLS
 
 typedef enum {
   GST_MATROSKA_DEMUX_STATE_START,
+  GST_MATROSKA_DEMUX_STATE_SEGMENT,
   GST_MATROSKA_DEMUX_STATE_HEADER,
   GST_MATROSKA_DEMUX_STATE_DATA,
   GST_MATROSKA_DEMUX_STATE_SEEK
 } GstMatroskaDemuxState;
 
 typedef struct _GstMatroskaDemux {
-  GstEbmlRead              parent;
+  GstElement              parent;
 
   /* < private > */
 
@@ -75,6 +76,7 @@ typedef struct _GstMatroskaDemux {
   GstMatroskaDemuxState    state;
   guint                    level_up;
   guint64                  seek_block;
+  gboolean                 seek_first;
 
   /* did we parse cues/tracks/segmentinfo already? */
   gboolean                 index_parsed;
@@ -82,6 +84,7 @@ typedef struct _GstMatroskaDemux {
   gboolean                 segmentinfo_parsed;
   gboolean                 attachments_parsed;
   GList                   *tags_parsed;
+  GList                   *seek_parsed;
 
   /* start-of-segment */
   guint64                  ebml_segment_start;
@@ -101,12 +104,17 @@ typedef struct _GstMatroskaDemux {
   GstEvent                *new_segment;
   GstTagList              *global_tags;
 
-  /* push based mode usual suspects */
+  /* pull mode caching */
+  GstBuffer *cached_buffer;
+
+  /* push and pull mode */
   guint64                  offset;
-  GstAdapter              *adapter;
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
+
+  /* push based mode usual suspects */
+  GstAdapter              *adapter;
   /* index stuff */
   gboolean                 seekable;
   gboolean                 building_index;
@@ -122,7 +130,7 @@ typedef struct _GstMatroskaDemux {
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {
-  GstEbmlReadClass parent;
+  GstElementClass parent;
 } GstMatroskaDemuxClass;
 
 gboolean gst_matroska_demux_plugin_init (GstPlugin *plugin);

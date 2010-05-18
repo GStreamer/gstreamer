@@ -23,6 +23,7 @@
 #define __GST_EBML_READ_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbytereader.h>
 
 G_BEGIN_DECLS
 
@@ -39,47 +40,42 @@ G_BEGIN_DECLS
 #define GST_EBML_READ_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EBML_READ, GstEbmlReadClass))
 
-/* custom flow return code */
-#define  GST_FLOW_END  GST_FLOW_CUSTOM_SUCCESS
+GST_DEBUG_CATEGORY_EXTERN (ebmlread_debug);
 
-typedef struct _GstEbmlLevel {
-  guint64 start;
-  guint64 length;
-} GstEbmlLevel;
+/* custom flow return code */
+#define  GST_FLOW_PARSE  GST_FLOW_CUSTOM_ERROR
+
+typedef struct _GstEbmlMaster {
+  guint64       offset;
+  GstByteReader br;
+} GstEbmlMaster;
 
 typedef struct _GstEbmlRead {
-  GstElement parent;
+  GstElement *el;
 
-  GstBuffer *cached_buffer;
-  gboolean push_cache;
-
-  GstPad *sinkpad;
+  GstBuffer *buf;
   guint64 offset;
 
-  GList *level;
+  GArray *readers;
 } GstEbmlRead;
 
-typedef struct _GstEbmlReadClass {
-  GstElementClass parent;
-} GstEbmlReadClass;
+typedef const guint8 * (*GstPeekData) (gpointer * context, guint peek);
 
-GType    gst_ebml_read_get_type          (void);
+/* returns UNEXPECTED if not enough data */
+GstFlowReturn gst_ebml_peek_id_length    (guint32 * _id, guint64 * _length,
+                                          guint * _needed,
+                                          GstPeekData peek, gpointer * ctx,
+                                          GstElement * el, guint64 offset);
 
-void          gst_ebml_level_free        (GstEbmlLevel *level);
-
-void          gst_ebml_read_reset_cache (GstEbmlRead * ebml,
-                                          GstBuffer * buffer,
+void          gst_ebml_read_init         (GstEbmlRead * ebml,
+                                          GstElement * el, GstBuffer * buf,
                                           guint64 offset);
 
-GstFlowReturn gst_ebml_peek_id           (GstEbmlRead *ebml,
-                                          guint       *level_up,
-                                          guint32     *id);
+void          gst_ebml_read_clear        (GstEbmlRead * ebml);
 
-GstFlowReturn gst_ebml_read_seek         (GstEbmlRead *ebml,
-                                          guint64      offset);
+GstFlowReturn gst_ebml_peek_id           (GstEbmlRead * ebml, guint32 * id);
 
-gint64        gst_ebml_read_get_length   (GstEbmlRead *ebml);
-
+/* return _PARSE if not enough data to read what is needed, _ERROR or _OK */
 GstFlowReturn gst_ebml_read_skip         (GstEbmlRead *ebml);
 
 GstFlowReturn gst_ebml_read_buffer       (GstEbmlRead *ebml,
@@ -113,6 +109,8 @@ GstFlowReturn gst_ebml_read_date         (GstEbmlRead *ebml,
 GstFlowReturn gst_ebml_read_master       (GstEbmlRead *ebml,
                                           guint32     *id);
 
+GstFlowReturn gst_ebml_read_pop_master   (GstEbmlRead *ebml);
+
 GstFlowReturn gst_ebml_read_binary       (GstEbmlRead *ebml,
                                           guint32     *id,
                                           guint8     **binary,
@@ -121,6 +119,51 @@ GstFlowReturn gst_ebml_read_binary       (GstEbmlRead *ebml,
 GstFlowReturn gst_ebml_read_header       (GstEbmlRead *read,
                                           gchar      **doctype,
                                           guint       *version);
+
+/* Returns current (absolute) position of Ebml parser,
+ * i.e. taking into account offset provided at init */
+static inline guint64
+gst_ebml_read_get_pos (GstEbmlRead * ebml)
+{
+  GstEbmlMaster *m;
+
+  g_return_val_if_fail (ebml->readers, 0);
+  g_return_val_if_fail (ebml->readers->len, 0);
+
+  m = &(g_array_index (ebml->readers, GstEbmlMaster, ebml->readers->len - 1));
+  return m->offset + gst_byte_reader_get_pos (&m->br);
+}
+
+/* Returns starting offset of Ebml parser */
+static inline guint64
+gst_ebml_read_get_offset (GstEbmlRead * ebml)
+{
+  return ebml->offset;
+}
+
+static inline GstByteReader *
+gst_ebml_read_br (GstEbmlRead * ebml)
+{
+  g_return_val_if_fail (ebml->readers, NULL);
+  g_return_val_if_fail (ebml->readers->len, NULL);
+
+  return &(g_array_index (ebml->readers,
+          GstEbmlMaster, ebml->readers->len - 1).br);
+}
+
+static inline gboolean
+gst_ebml_read_has_remaining (GstEbmlRead * ebml, guint64 bytes_needed,
+    gboolean auto_pop)
+{
+  gboolean res;
+
+  res = (gst_byte_reader_get_remaining (gst_ebml_read_br (ebml)) >= bytes_needed);
+  if (G_LIKELY (!res && auto_pop)) {
+    gst_ebml_read_pop_master (ebml);
+  }
+
+  return G_LIKELY (res);
+}
 
 G_END_DECLS
 
