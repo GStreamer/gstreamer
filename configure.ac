@@ -164,6 +164,14 @@ fi
 AC_SUBST(GST_PROFILE_LIBS)
 AC_SUBST(GST_PROFILE_CFLAGS)
 
+dnl check for gstreamer-discoverer
+PKG_CHECK_MODULES(GST_DISCOVERER, gstreamer-discoverer-$GST_MAJORMINOR, HAVE_GST_DISCOVERER="yes", HAVE_GST_DISCOVERER="no")
+if test "x$HAVE_GST_DISCOVERER" != "xyes"; then
+  AC_ERROR([gst-discoverer is required for rendering support])
+fi
+AC_SUBST(GST_DISCOVERER_LIBS)
+AC_SUBST(GST_DISCOVERER_CFLAGS)
+
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
