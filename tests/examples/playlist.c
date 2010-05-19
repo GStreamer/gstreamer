@@ -27,7 +27,8 @@
 #include <gst/profile/gstprofile.h>
 
 static GstEncodingProfile *
-make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction, gchar * container)
+make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
+    gchar * container)
 {
   GstEncodingProfile *profile;
   GstStreamEncodingProfile *stream;
@@ -38,8 +39,8 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction, 
       gst_caps_from_string (audio), NULL, NULL, 0);
   gst_encoding_profile_add_stream (profile, stream);
   stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_VIDEO,
-      gst_caps_from_string (video), NULL, 
-					    gst_caps_from_string(video_restriction), 0);
+      gst_caps_from_string (video), NULL,
+      gst_caps_from_string (video_restriction), 0);
   gst_encoding_profile_add_stream (profile, stream);
   return profile;
 }
@@ -73,13 +74,16 @@ create_timeline (int nbargs, gchar ** argv)
   for (i = 0; i < nbargs / 3; i++) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
     GESTimelineFileSource *src = ges_timeline_filesource_new (uri);
+    guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
+    guint64 duration = atoi (argv[i * 3 + 2]) * GST_SECOND;
+
+    g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT
+        "\n", uri, GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
 
     g_assert (src);
     g_free (uri);
 
-    g_object_set (src,
-        "in-point", atoi (argv[i * 3 + 1]) * GST_SECOND,
-        "duration", atoi (argv[i * 3 + 2]) * GST_SECOND, NULL);
+    g_object_set (src, "in-point", inpoint, "duration", duration, NULL);
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
@@ -136,9 +140,9 @@ main (int argc, gchar ** argv)
     {"vformat", 'v', 0, G_OPTION_ARG_STRING, &video,
         "Video format", "<GstCaps>"},
     {"aformat", 'a', 0, G_OPTION_ARG_STRING, &audio,
-     "Audio format", "<GstCaps>"},
+        "Audio format", "<GstCaps>"},
     {"vrestriction", 'x', 0, G_OPTION_ARG_STRING, &video_restriction,
-     "Video restriction", "<GstCaps>"},
+        "Video restriction", "<GstCaps>"},
     {NULL}
   };
   GOptionContext *ctx;
@@ -153,7 +157,8 @@ main (int argc, gchar ** argv)
   g_option_context_set_summary (ctx,
       "If not specified, this example will playback the files\n" "\n"
       "The files should be layed out in triplets of:\n" " * filename\n"
-      " * inpoint (in seconds)\n" " * duration (in seconds)");
+      " * inpoint (in seconds)\n"
+      " * duration (in seconds) If 0, full file length");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
