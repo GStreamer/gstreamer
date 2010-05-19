@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 
+#include "gstpragma.h"
 #include "gstrtpsbcpay.h"
 #include <math.h>
 #include <string.h>
