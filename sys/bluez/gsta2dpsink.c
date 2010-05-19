@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "gstpragma.h"
 #include "gsta2dpsink.h"
 
 GType gst_avdtp_sink_get_type (void);
