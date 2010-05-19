@@ -64,6 +64,12 @@ struct _GstVP8Dec
   /* state */
 
   gboolean decoder_inited;
+
+  /* properties */
+  gboolean post_processing;
+  enum vp8_postproc_level post_processing_flags;
+  gint deblocking_level;
+  gint noise_level;
 };
 
 struct _GstVP8DecClass
@@ -78,10 +84,46 @@ enum
   LAST_SIGNAL
 };
 
+
+#define DEFAULT_POST_PROCESSING FALSE
+#define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK)
+#define DEFAULT_DEBLOCKING_LEVEL 4
+#define DEFAULT_NOISE_LEVEL 0
+
 enum
 {
-  ARG_0
+  PROP_0,
+  PROP_POST_PROCESSING,
+  PROP_POST_PROCESSING_FLAGS,
+  PROP_DEBLOCKING_LEVEL,
+  PROP_NOISE_LEVEL
 };
+
+#define C_FLAGS(v) ((guint) v)
+#define GST_VP8_DEC_TYPE_POST_PROCESSING_FLAGS (gst_vp8_dec_post_processing_flags_get_type())
+static GType
+gst_vp8_dec_post_processing_flags_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (VP8_DEBLOCK), "Deblock", "deblock"},
+    {C_FLAGS (VP8_DEMACROBLOCK), "Demacroblock", "demacroblock"},
+    {C_FLAGS (VP8_ADDNOISE), "Add noise", "addnoise"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstVP8DecPostProcessingFlags", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
+#undef C_FLAGS
 
 static void gst_vp8_dec_finalize (GObject * object);
 static void gst_vp8_dec_set_property (GObject * object, guint prop_id,
@@ -147,6 +189,29 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   gobject_class->get_property = gst_vp8_dec_get_property;
   gobject_class->finalize = gst_vp8_dec_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_POST_PROCESSING,
+      g_param_spec_boolean ("post-processing", "Post Processing",
+          "Enable post processing", DEFAULT_POST_PROCESSING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_POST_PROCESSING_FLAGS,
+      g_param_spec_flags ("post-processing-flags", "Post Processing Flags",
+          "Flags to control post processing",
+          GST_VP8_DEC_TYPE_POST_PROCESSING_FLAGS, DEFAULT_POST_PROCESSING_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEBLOCKING_LEVEL,
+      g_param_spec_uint ("deblocking-level", "Deblocking Level",
+          "Deblocking level",
+          0, 16, DEFAULT_DEBLOCKING_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_NOISE_LEVEL,
+      g_param_spec_uint ("noise-level", "Noise Level",
+          "Noise level",
+          0, 16, DEFAULT_NOISE_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   base_video_decoder_class->start = gst_vp8_dec_start;
   base_video_decoder_class->stop = gst_vp8_dec_stop;
   base_video_decoder_class->reset = gst_vp8_dec_reset;
@@ -158,6 +223,10 @@ static void
 gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
 {
   GST_DEBUG_OBJECT (gst_vp8_dec, "gst_vp8_dec_init");
+  gst_vp8_dec->post_processing = DEFAULT_POST_PROCESSING;
+  gst_vp8_dec->post_processing_flags = DEFAULT_POST_PROCESSING_FLAGS;
+  gst_vp8_dec->deblocking_level = DEFAULT_DEBLOCKING_LEVEL;
+  gst_vp8_dec->noise_level = DEFAULT_NOISE_LEVEL;
 }
 
 static void
@@ -177,14 +246,27 @@ static void
 gst_vp8_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVP8Dec *src;
+  GstVP8Dec *dec;
 
   g_return_if_fail (GST_IS_GST_VP8_DEC (object));
-  src = GST_VP8_DEC (object);
+  dec = GST_VP8_DEC (object);
 
   GST_DEBUG_OBJECT (object, "gst_vp8_dec_set_property");
   switch (prop_id) {
+    case PROP_POST_PROCESSING:
+      dec->post_processing = g_value_get_boolean (value);
+      break;
+    case PROP_POST_PROCESSING_FLAGS:
+      dec->post_processing_flags = g_value_get_flags (value);
+      break;
+    case PROP_DEBLOCKING_LEVEL:
+      dec->deblocking_level = g_value_get_uint (value);
+      break;
+    case PROP_NOISE_LEVEL:
+      dec->noise_level = g_value_get_uint (value);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -193,18 +275,29 @@ static void
 gst_vp8_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVP8Dec *src;
+  GstVP8Dec *dec;
 
   g_return_if_fail (GST_IS_GST_VP8_DEC (object));
-  src = GST_VP8_DEC (object);
+  dec = GST_VP8_DEC (object);
 
   switch (prop_id) {
+    case PROP_POST_PROCESSING:
+      g_value_set_boolean (value, dec->post_processing);
+      break;
+    case PROP_POST_PROCESSING_FLAGS:
+      g_value_set_flags (value, dec->post_processing_flags);
+      break;
+    case PROP_DEBLOCKING_LEVEL:
+      g_value_set_uint (value, dec->deblocking_level);
+      break;
+    case PROP_NOISE_LEVEL:
+      g_value_set_uint (value, dec->noise_level);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
-
 
 static gboolean
 gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
@@ -348,6 +441,9 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder->state.format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
 
+    if (dec->post_processing)
+      flags |= VPX_CODEC_USE_POSTPROC;
+
     status =
         vpx_codec_dec_init (&dec->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
     if (status != VPX_CODEC_OK) {
@@ -356,6 +452,21 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
               gst_vpx_error_name (status)));
       return GST_FLOW_ERROR;
     }
+
+    if (dec->post_processing) {
+      vp8_postproc_cfg_t pp_cfg = { 0, };
+
+      pp_cfg.post_proc_flag = dec->post_processing_flags;
+      pp_cfg.deblocking_level = dec->deblocking_level;
+      pp_cfg.noise_level = dec->noise_level;
+
+      status = vpx_codec_control (&dec->decoder, VP8_SET_POSTPROC, &pp_cfg);
+      if (status != VPX_CODEC_OK) {
+        GST_WARNING_OBJECT (dec, "Couldn't set postprocessing settings: %s",
+            gst_vpx_error_name (status));
+      }
+    }
+
     dec->decoder_inited = TRUE;
   }
 
