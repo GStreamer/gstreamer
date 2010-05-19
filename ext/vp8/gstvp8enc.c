@@ -68,7 +68,7 @@ struct _GstVP8Enc
   double quality;
   gboolean error_resilient;
   int max_latency;
-  int keyframe_interval;
+  int max_keyframe_distance;
   int speed;
 
   /* state */
@@ -104,7 +104,7 @@ enum
 #define DEFAULT_QUALITY 5
 #define DEFAULT_ERROR_RESILIENT FALSE
 #define DEFAULT_MAX_LATENCY 10
-#define DEFAULT_KEYFRAME_INTERVAL 60
+#define DEFAULT_MAX_KEYFRAME_DISTANCE 60
 #define DEFAULT_SPEED 0
 
 enum
@@ -114,7 +114,7 @@ enum
   PROP_QUALITY,
   PROP_ERROR_RESILIENT,
   PROP_MAX_LATENCY,
-  PROP_KEYFRAME_INTERVAL,
+  PROP_MAX_KEYFRAME_DISTANCE,
   PROP_SPEED
 };
 
@@ -237,10 +237,10 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           0, 100, DEFAULT_MAX_LATENCY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  g_object_class_install_property (gobject_class, PROP_KEYFRAME_INTERVAL,
-      g_param_spec_int ("keyframe-interval", "Key frame interval",
+  g_object_class_install_property (gobject_class, PROP_MAX_KEYFRAME_DISTANCE,
+      g_param_spec_int ("max-keyframe-distance", "Maximum Key frame distance",
           "Maximum distance between key frames",
-          1, 1000, DEFAULT_KEYFRAME_INTERVAL,
+          1, 9999, DEFAULT_MAX_KEYFRAME_DISTANCE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_SPEED,
@@ -260,7 +260,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->quality = DEFAULT_QUALITY;
   gst_vp8_enc->error_resilient = DEFAULT_ERROR_RESILIENT;
   gst_vp8_enc->max_latency = DEFAULT_MAX_LATENCY;
-  gst_vp8_enc->keyframe_interval = DEFAULT_KEYFRAME_INTERVAL;
+  gst_vp8_enc->max_keyframe_distance = DEFAULT_MAX_KEYFRAME_DISTANCE;
 
   /* FIXME: Add sink/src event vmethods */
   gst_vp8_enc->base_sink_event_func =
@@ -306,8 +306,8 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_MAX_LATENCY:
       gst_vp8_enc->max_latency = g_value_get_int (value);
       break;
-    case PROP_KEYFRAME_INTERVAL:
-      gst_vp8_enc->keyframe_interval = g_value_get_int (value);
+    case PROP_MAX_KEYFRAME_DISTANCE:
+      gst_vp8_enc->max_keyframe_distance = g_value_get_int (value);
       break;
     case PROP_SPEED:
       gst_vp8_enc->speed = g_value_get_int (value);
@@ -339,8 +339,8 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_MAX_LATENCY:
       g_value_set_int (value, gst_vp8_enc->max_latency);
       break;
-    case PROP_KEYFRAME_INTERVAL:
-      g_value_set_int (value, gst_vp8_enc->keyframe_interval);
+    case PROP_MAX_KEYFRAME_DISTANCE:
+      g_value_set_int (value, gst_vp8_enc->max_keyframe_distance);
       break;
     case PROP_SPEED:
       g_value_set_int (value, gst_vp8_enc->speed);
@@ -631,13 +631,11 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
       cfg.rc_min_quantizer = 63 - encoder->quality * 5.0;
       cfg.rc_max_quantizer = 63 - encoder->quality * 5.0;
       cfg.rc_target_bitrate = encoder->bitrate;
-      cfg.rc_buf_sz = 1000;     // FIXME 1000 ms
-      cfg.rc_buf_initial_sz = 1000;     // FIXME 1000 ms
     }
 
     cfg.kf_mode = VPX_KF_AUTO;
     cfg.kf_min_dist = 0;
-    cfg.kf_max_dist = encoder->keyframe_interval;
+    cfg.kf_max_dist = encoder->max_keyframe_distance;
 
     status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
         &cfg, 0);
