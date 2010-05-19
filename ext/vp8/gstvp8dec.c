@@ -409,7 +409,7 @@ static GstFlowReturn
 gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 {
   GstVP8Dec *dec;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   vpx_codec_err_t status;
   vpx_codec_iter_t iter = NULL;
   vpx_image_t *img;
@@ -488,13 +488,6 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   }
 #endif
 
-  ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
-  if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (decoder, "failed to get buffer: %s",
-        gst_flow_get_name (ret));
-    goto out;
-  }
-
   status = vpx_codec_decode (&dec->decoder,
       GST_BUFFER_DATA (frame->sink_buffer),
       GST_BUFFER_SIZE (frame->sink_buffer), NULL, 0);
@@ -506,13 +499,14 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
   if (img) {
-
     ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
 
-    if (ret == GST_FLOW_OK)
+    if (ret == GST_FLOW_OK) {
       gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
-
-    gst_base_video_decoder_finish_frame (decoder, frame);
+      gst_base_video_decoder_finish_frame (decoder, frame);
+    } else {
+      gst_base_video_decoder_skip_frame (decoder, frame);
+    }
 
     vpx_img_free (img);
 
@@ -524,7 +518,6 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     /* Invisible frame */
     gst_base_video_decoder_skip_frame (decoder, frame);
   }
-out:
 
   return ret;
 }
