@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include <gst/discoverer/gstdiscoverer.h>
 #include <ges/ges-types.h>
 
 G_BEGIN_DECLS
@@ -54,6 +55,13 @@ struct _GESTimeline {
   /*< private >*/
   GList *layers; /* A list of GESTimelineLayer sorted by priority */
   GList *tracks; /* A list of private track data */
+
+  /* discoverer used for virgin sources */
+  GstDiscoverer *discoverer;
+  /* Objects that are being discovered FIXME : LOCK ! */
+  GList *pendingobjects;
+  /* Whether we are changing state asynchronously or not */
+  gboolean async_pending;
 };
 
 struct _GESTimelineClass {

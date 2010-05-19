@@ -60,9 +60,19 @@ enum
   LAST_SIGNAL
 };
 
+static GstBinClass *parent_class;
+
 static guint ges_timeline_signals[LAST_SIGNAL] = { 0 };
 
 gint custom_find_track (TrackPrivate * priv, GESTrack * track);
+static GstStateChangeReturn
+ges_timeline_change_state (GstElement * element, GstStateChange transition);
+static void
+discoverer_ready_cb (GstDiscoverer * discoverer, GESTimeline * timeline);
+static void
+discoverer_discovered_cb (GstDiscoverer * discoverer,
+    GstDiscovererInformation * info, GError * err, GESTimeline * timeline);
+
 static void
 ges_timeline_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -86,6 +96,13 @@ ges_timeline_set_property (GObject * object, guint property_id,
 static void
 ges_timeline_dispose (GObject * object)
 {
+  GESTimeline *timeline = GES_TIMELINE (object);
+
+  if (timeline->discoverer) {
+    gst_discoverer_stop (timeline->discoverer);
+    g_object_unref (timeline->discoverer);
+    timeline->discoverer = NULL;
+  }
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
 
@@ -99,12 +116,16 @@ static void
 ges_timeline_class_init (GESTimelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  element_class->change_state = ges_timeline_change_state;
 
   object_class->get_property = ges_timeline_get_property;
   object_class->set_property = ges_timeline_set_property;
   object_class->dispose = ges_timeline_dispose;
   object_class->finalize = ges_timeline_finalize;
-
 
   /**
    * GESTimeline::track-added
@@ -161,6 +182,14 @@ ges_timeline_init (GESTimeline * self)
 {
   self->layers = NULL;
   self->tracks = NULL;
+
+  /* New discoverer with a 15s timeout */
+  self->discoverer = gst_discoverer_new (15 * GST_SECOND);
+  g_signal_connect (self->discoverer, "ready", G_CALLBACK (discoverer_ready_cb),
+      self);
+  g_signal_connect (self->discoverer, "discovered",
+      G_CALLBACK (discoverer_discovered_cb), self);
+  gst_discoverer_start (self->discoverer);
 }
 
 /**
@@ -216,12 +245,9 @@ ges_timeline_save (GESTimeline * timeline, gchar * uri)
 }
 
 static void
-layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
-    GESTimeline * timeline)
+add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
 {
   GList *tmp;
-
-  GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
 
   for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *priv = (TrackPrivate *) tmp->data;
@@ -238,6 +264,151 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
     GST_LOG ("Got new TrackObject %p, adding it to track", trobj);
     ges_track_add_object (track, trobj);
+  }
+}
+
+static void
+do_async_start (GESTimeline * timeline)
+{
+  GstMessage *message;
+
+  timeline->async_pending = TRUE;
+
+  message = gst_message_new_async_start (GST_OBJECT_CAST (timeline), FALSE);
+  parent_class->handle_message (GST_BIN_CAST (timeline), message);
+}
+
+static void
+do_async_done (GESTimeline * timeline)
+{
+  GstMessage *message;
+
+  if (timeline->async_pending) {
+    GST_DEBUG_OBJECT (timeline, "Emitting async-done");
+    message = gst_message_new_async_done (GST_OBJECT_CAST (timeline));
+    parent_class->handle_message (GST_BIN_CAST (timeline), message);
+
+    timeline->async_pending = FALSE;
+  }
+}
+
+static void
+discoverer_ready_cb (GstDiscoverer * discoverer, GESTimeline * timeline)
+{
+  do_async_done (timeline);
+}
+
+static void
+discoverer_discovered_cb (GstDiscoverer * discoverer,
+    GstDiscovererInformation * info, GError * err, GESTimeline * timeline)
+{
+  GList *tmp;
+  gboolean found = FALSE;
+  GESTimelineFileSource *tfs = NULL;
+
+  GST_DEBUG ("Discovered uri %s", info->uri);
+
+  /* Find corresponding TimelineFileSource in the sources */
+  for (tmp = timeline->pendingobjects; tmp; tmp = tmp->next) {
+    tfs = (GESTimelineFileSource *) tmp->data;
+
+    if (!g_strcmp0 (tfs->uri, info->uri)) {
+      found = TRUE;
+      break;
+    }
+  }
+
+  if (found) {
+    /* Remove object from list */
+    timeline->pendingobjects =
+        g_list_delete_link (timeline->pendingobjects, tmp);
+
+    /* FIXME : Handle errors in discovery */
+
+    /* Update timelinefilesource properties based on info */
+    for (tmp = info->stream_list; tmp; tmp = tmp->next) {
+      GstStreamInformation *sinf = (GstStreamInformation *) tmp->data;
+
+      if (sinf->streamtype == GST_STREAM_AUDIO)
+        tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
+      else if ((sinf->streamtype == GST_STREAM_VIDEO) ||
+          (sinf->streamtype == GST_STREAM_IMAGE))
+        tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
+    }
+
+    g_object_set (tfs, "max-duration", info->duration, NULL);
+
+    /* Continue the processing on tfs */
+    add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
+  }
+}
+
+static GstStateChangeReturn
+ges_timeline_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GESTimeline *timeline = GES_TIMELINE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (timeline->pendingobjects) {
+        do_async_start (timeline);
+        ret = GST_STATE_CHANGE_ASYNC;
+      }
+      break;
+    default:
+      break;
+  }
+
+  {
+    GstStateChangeReturn bret;
+
+    bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+    if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
+      do_async_done (timeline);
+      ret = bret;
+    }
+  }
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      do_async_done (timeline);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+
+}
+
+static void
+layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
+    GESTimeline * timeline)
+{
+  GList *tmp;
+
+  GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
+
+  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+    GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (object);
+
+    /* Send the filesource to the discoverer if:
+     * * it doesn't have specified supported formats
+     * * OR it doesn't have a specified max-duration
+     * * OR it doesn't have a valid duration  */
+
+    if (tfs->supportedformats == GES_TRACK_TYPE_UNKNOWN ||
+        tfs->maxduration == GST_CLOCK_TIME_NONE || object->duration == 0) {
+      GST_LOG ("Incomplete TimelineFileSource, discovering it");
+      timeline->pendingobjects =
+          g_list_append (timeline->pendingobjects, object);
+      gst_discoverer_append_uri (timeline->discoverer,
+          GES_TIMELINE_FILE_SOURCE (object)->uri);
+    } else
+      add_object_to_tracks (timeline, object);
+  } else {
+    add_object_to_tracks (timeline, object);
   }
 
   GST_DEBUG ("done");
