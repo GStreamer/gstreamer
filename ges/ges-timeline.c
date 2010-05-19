@@ -386,8 +386,6 @@ static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
-  GList *tmp;
-
   GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
 
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
