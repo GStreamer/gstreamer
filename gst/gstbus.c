@@ -865,7 +865,8 @@ gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
  * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
  *
- * Adds a bus watch to the default main context with the given @priority.
+ * Adds a bus watch to the default main context with the given @priority (e.g.
+ * %G_PRIORITY_DEFAULT).
  * This function is used to receive asynchronous messages in the main loop.
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
@@ -901,7 +902,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * @func: A function to call when a message is received.
  * @user_data: user data passed to @func.
  *
- * Adds a bus watch to the default main context with the default priority.
+ * Adds a bus watch to the default main context with the default priority
+ * (%G_PRIORITY_DEFAULT).
  * This function is used to receive asynchronous messages in the main loop.
  * There can only be a single bus watch per bus, you must remove it before you
  * can set a new one.
@@ -1191,7 +1193,8 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * @bus: a #GstBus on which you want to receive the "message" signal
  * @priority: The priority of the watch.
  *
- * Adds a bus signal watch to the default main context with the given priority.
+ * Adds a bus signal watch to the default main context with the given @priority
+ * (e.g. %G_PRIORITY_DEFAULT).
  * After calling this statement, the bus will emit the "message" signal for each
  * message posted on the bus when the main loop is running.
  *
@@ -1245,8 +1248,8 @@ add_failed:
  * gst_bus_add_signal_watch:
  * @bus: a #GstBus on which you want to receive the "message" signal
  *
- * Adds a bus signal watch to the default main context with the default
- * priority.
+ * Adds a bus signal watch to the default main context with the default priority
+ * (%G_PRIORITY_DEFAULT).
  * After calling this statement, the bus will emit the "message" signal for each
  * message posted on the bus.
  *
