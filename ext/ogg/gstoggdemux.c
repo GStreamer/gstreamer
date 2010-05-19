@@ -466,9 +466,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       }
     }
   } else if (pad->map.is_vp8) {
-    /* packet 0 is from the BOS page, packet 1 is the vorbiscomment page */
-    if (packet->packetno == 1 && packet->bytes >= 7
-        && memcmp (packet->packet, "VP8_TAG", 7) == 0) {
+    if (packet->bytes >= 7 && memcmp (packet->packet, "OggVP8 ", 7) == 0) {
       GstTagList *tags;
 
       buf = gst_buffer_new ();
@@ -477,7 +475,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_BUFFER_SIZE (buf) = packet->bytes;
 
       tags = gst_tag_list_from_vorbiscomment_buffer (buf,
-          (const guint8 *) "VP8_TAG", 7, NULL);
+          (const guint8 *) "OggVP8 ", 7, NULL);
       gst_buffer_unref (buf);
       buf = NULL;
 
@@ -486,12 +484,14 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
         gst_element_found_tags_for_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad),
             tags);
       } else {
-        GST_DEBUG_OBJECT (ogg, "failed to extract tags from vorbis comment");
+        GST_DEBUG_OBJECT (ogg,
+            "failed to extract VP8 tags from vorbis comment");
       }
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
-    } else if (packet->b_o_s) {
+    } else if (packet->b_o_s || (packet->bytes >= 4
+            && memcmp (packet->packet, "/VP8 ", 4) == 0)) {
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;

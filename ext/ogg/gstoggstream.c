@@ -592,6 +592,23 @@ granulepos_to_key_granule_vp8 (GstOggStream * pad, gint64 granulepos)
   return pts - dist;
 }
 
+static gboolean
+is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
+{
+  /* stream info */
+  if (packet->bytes > 4 && packet->packet[0] == 0x2f &&
+      packet->packet[1] == 0x56 && packet->packet[2] == 0x50 &&
+      packet->packet[3] == 0x38)
+    return TRUE;
+  /* comment */
+  if (packet->bytes > 7 && packet->packet[0] == 0x4f &&
+      packet->packet[1] == 0x67 && packet->packet[2] == 0x67 &&
+      packet->packet[3] == 0x56 && packet->packet[4] == 0x50 &&
+      packet->packet[5] == 0x38 && packet->packet[6] == 0x20)
+    return TRUE;
+  return FALSE;
+}
+
 /* vorbis */
 
 static gboolean
@@ -1626,13 +1643,13 @@ static const GstOggMap mappers[] = {
     granulepos_to_key_granule_dirac
   },
   {
-    "VP80\1", 5, 4,
+    "/VP8\1", 5, 4,
     "video/x-vp8",
     setup_vp8_mapper,
     granulepos_to_granule_vp8,
     granule_to_granulepos_vp8,
     is_keyframe_vp8,
-    is_header_count,
+    is_header_vp8,
     packet_duration_vp8,
     granulepos_to_key_granule_vp8
   },
