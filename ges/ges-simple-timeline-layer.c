@@ -148,6 +148,7 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
   layer->adding_object = FALSE;
 
   GST_DEBUG ("Adding object %p to the list", object);
+
   layer->objects = g_list_insert (layer->objects, object, position);
 
   /* recalculate positions */
@@ -243,4 +244,6 @@ ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
     sl->objects = g_list_append (sl->objects, object);
     gstl_recalculate (sl);
   }
+  g_signal_connect_swapped (object, "notify::duration",
+      G_CALLBACK (gstl_recalculate), layer);
 }
