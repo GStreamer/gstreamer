@@ -38,6 +38,7 @@
 #include <vpx/vpx_encoder.h>
 #include <vpx/vp8cx.h>
 
+#include "gstvp8utils.h"
 
 GST_DEBUG_CATEGORY (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug
@@ -137,9 +138,6 @@ static GstCaps *gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder);
 static gboolean gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event);
 
 GType gst_vp8_enc_get_type (void);
-
-static const char *vpx_error_name (vpx_codec_err_t status);
-
 
 static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -250,14 +248,13 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           "Speed",
           0, 2, DEFAULT_SPEED,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
 }
 
 static void
 gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
 {
 
-  GST_DEBUG ("init");
+  GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
   gst_vp8_enc->bitrate = DEFAULT_BITRATE;
   gst_vp8_enc->quality = DEFAULT_QUALITY;
@@ -277,7 +274,7 @@ gst_vp8_enc_finalize (GObject * object)
 {
   GstVP8Enc *gst_vp8_enc;
 
-  GST_DEBUG ("finalize");
+  GST_DEBUG_OBJECT (object, "finalize");
 
   g_return_if_fail (GST_IS_GST_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
@@ -295,7 +292,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
   g_return_if_fail (GST_IS_GST_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
-  GST_DEBUG ("gst_vp8_enc_set_property");
+  GST_DEBUG_OBJECT (object, "gst_vp8_enc_set_property");
   switch (prop_id) {
     case PROP_BITRATE:
       gst_vp8_enc->bitrate = g_value_get_int (value);
@@ -359,7 +356,7 @@ gst_vp8_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
   GstVP8Enc *encoder;
 
-  GST_DEBUG ("start");
+  GST_DEBUG_OBJECT (base_video_encoder, "start");
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
@@ -370,6 +367,8 @@ static gboolean
 gst_vp8_enc_stop (GstBaseVideoEncoder * base_video_encoder)
 {
   GstVP8Enc *encoder;
+
+  GST_DEBUG_OBJECT (base_video_encoder, "stop");
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
@@ -389,10 +388,9 @@ gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
 {
   GstVP8Enc *encoder;
 
-  GST_DEBUG ("set_format");
+  GST_DEBUG_OBJECT (base_video_encoder, "set_format");
 
   encoder = GST_VP8_ENC (base_video_encoder);
-
 
   return TRUE;
 }
@@ -422,7 +420,6 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
       state->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n,
       state->par_d, NULL);
-
 
   /* Create Ogg stream-info */
   stream_hdr = gst_buffer_new_and_alloc (24);
@@ -479,11 +476,11 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   GstVP8Enc *encoder;
   GstVideoFrame *frame;
   int flags = 0;
-  int status;
+  vpx_codec_err_t status;
   vpx_codec_iter_t iter = NULL;
   const vpx_codec_cx_pkt_t *pkt;
 
-  GST_DEBUG ("finish");
+  GST_DEBUG_OBJECT (base_video_encoder, "finish");
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
@@ -491,7 +488,9 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
       vpx_codec_encode (&encoder->encoder, NULL, encoder->n_frames, 1, flags,
       0);
   if (status != 0) {
-    GST_ERROR ("encode returned %d %s", status, vpx_error_name (status));
+    GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
+        gst_vpx_error_name (status));
+    return FALSE;
   }
 
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
@@ -500,18 +499,19 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     GstVP8EncCoderHook *hook;
     gboolean invisible, keyframe;
 
-    GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
+    GST_DEBUG_OBJECT (encoder, "packet %d type %d", pkt->data.frame.sz,
+        pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
-      GST_ERROR ("non frame pkt");
+      GST_ERROR_OBJECT (encoder, "non frame pkt");
       continue;
     }
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
     keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+    g_assert (frame != NULL);
     hook = frame->coder_hook;
-    /* FIXME: If frame is NULL something went really wrong! */
 
     buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
@@ -534,33 +534,6 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
   }
 
   return TRUE;
-}
-
-static const char *
-vpx_error_name (vpx_codec_err_t status)
-{
-  switch (status) {
-    case VPX_CODEC_OK:
-      return "OK";
-    case VPX_CODEC_ERROR:
-      return "error";
-    case VPX_CODEC_MEM_ERROR:
-      return "mem error";
-    case VPX_CODEC_ABI_MISMATCH:
-      return "abi mismatch";
-    case VPX_CODEC_INCAPABLE:
-      return "incapable";
-    case VPX_CODEC_UNSUP_BITSTREAM:
-      return "unsupported bitstream";
-    case VPX_CODEC_UNSUP_FEATURE:
-      return "unsupported feature";
-    case VPX_CODEC_CORRUPT_FRAME:
-      return "corrupt frame";
-    case VPX_CODEC_INVALID_PARAM:
-      return "invalid parameter";
-    default:
-      return "unknown";
-  }
 }
 
 static vpx_image_t *
@@ -612,14 +585,14 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   GstVP8Enc *encoder;
   const GstVideoState *state;
   guint8 *src;
-  long status;
+  vpx_codec_err_t status;
   int flags = 0;
   vpx_codec_iter_t iter = NULL;
   const vpx_codec_cx_pkt_t *pkt;
   vpx_image_t *image;
   GstVP8EncCoderHook *hook;
 
-  GST_DEBUG ("handle_frame");
+  GST_DEBUG_OBJECT (base_video_encoder, "handle_frame");
 
   encoder = GST_VP8_ENC (base_video_encoder);
   src = GST_BUFFER_DATA (frame->sink_buffer);
@@ -627,13 +600,19 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
   encoder->n_frames++;
 
-  GST_DEBUG ("res id %d size %d %d", encoder->resolution_id,
-      state->width, state->height);
+  GST_DEBUG_OBJECT (base_video_encoder, "res id %d size %d %d",
+      encoder->resolution_id, state->width, state->height);
 
   if (!encoder->inited) {
     vpx_codec_enc_cfg_t cfg;
 
-    vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &cfg, 0);
+    status = vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &cfg, 0);
+    if (status != VPX_CODEC_OK) {
+      GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
+          ("Failed to get default encoder configuration"), ("%s",
+              gst_vpx_error_name (status)));
+      return FALSE;
+    }
 
     cfg.g_w = base_video_encoder->state.width;
     cfg.g_h = base_video_encoder->state.height;
@@ -664,7 +643,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
         &cfg, 0);
     if (status) {
       GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
-          ("Failed to initialize VP8 encoder"), (NULL));
+          ("Failed to initialize encoder"), ("%s",
+              gst_vpx_error_name (status)));
       return GST_FLOW_ERROR;
     }
 
@@ -688,7 +668,12 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   status = vpx_codec_encode (&encoder->encoder, image,
       encoder->n_frames, 1, flags, speed_table[encoder->speed]);
   if (status != 0) {
-    GST_ERROR ("encode returned %d %s", status, vpx_error_name (status));
+    GST_ELEMENT_ERROR (encoder, LIBRARY, ENCODE,
+        ("Failed to encode frame"), ("%s", gst_vpx_error_name (status)));
+    g_slice_free (GstVP8EncCoderHook, hook);
+    frame->coder_hook = NULL;
+    g_slice_free (vpx_image_t, image);
+    return FALSE;
   }
 
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
@@ -696,18 +681,19 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstBuffer *buffer;
     gboolean invisible;
 
-    GST_DEBUG ("packet %d type %d", pkt->data.frame.sz, pkt->kind);
+    GST_DEBUG_OBJECT (encoder, "packet %d type %d", pkt->data.frame.sz,
+        pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
-      GST_ERROR ("non frame pkt");
+      GST_ERROR_OBJECT (encoder, "non frame pkt");
       continue;
     }
 
     invisible = (pkt->data.frame.flags & VPX_FRAME_IS_INVISIBLE) != 0;
     frame = gst_base_video_encoder_get_oldest_frame (base_video_encoder);
+    g_assert (frame != NULL);
     frame->is_sync_point = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
     hook = frame->coder_hook;
-    /* FIXME: If frame is NULL something went really wrong! */
 
     buffer = gst_buffer_new_and_alloc (pkt->data.frame.sz);
 
@@ -754,7 +740,7 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   GList *l;
   gint inv_count;
 
-  GST_DEBUG ("shape_output");
+  GST_DEBUG_OBJECT (base_video_encoder, "shape_output");
 
   encoder = GST_VP8_ENC (base_video_encoder);
 
@@ -784,8 +770,10 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
     gst_buffer_set_caps (buf, base_video_encoder->caps);
     ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (encoder, "flow error %d", ret);
       goto done;
+    }
   }
 
   buf = frame->src_buffer;
@@ -814,8 +802,9 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
   gst_buffer_set_caps (buf, base_video_encoder->caps);
 
   ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
-  if (ret != GST_FLOW_OK)
-    GST_ERROR ("flow error %d", ret);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (encoder, "flow error %d", ret);
+  }
 
 done:
   g_list_foreach (hook->invisible, (GFunc) gst_mini_object_unref, NULL);
