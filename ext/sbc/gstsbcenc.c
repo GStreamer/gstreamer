@@ -27,6 +27,7 @@
 
 #include <string.h>
 
+#include "gstpragma.h"
 #include "gstsbcutil.h"
 #include "gstsbcenc.h"
 
