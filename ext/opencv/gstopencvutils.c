@@ -53,6 +53,8 @@ gst_opencv_get_ipl_depth_and_channels (GstStructure * structure,
   if (depth / *channels == 8) {
     /* TODO signdness? */
     *ipldepth = IPL_DEPTH_8U;
+  } else if (depth / *channels == 16) {
+    *ipldepth = IPL_DEPTH_16U;
   } else {
     g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
         "Unsupported depth/channels %d/%d", depth, *channels);
@@ -86,6 +88,7 @@ gboolean
 gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
     gint * height, gint * ipldepth, gint * channels, GError ** err)
 {
-  return gst_opencv_parse_iplimage_params_from_structure (
-      gst_caps_get_structure (caps, 0), width, height, ipldepth, channels, err);
+  return
+      gst_opencv_parse_iplimage_params_from_structure (gst_caps_get_structure
+      (caps, 0), width, height, ipldepth, channels, err);
 }
