@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-timeline-source.h>
+#include <ges/ges-track.h>
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,12 @@ struct _GESTimelineFileSource {
   gchar *uri;
 
   gboolean mute;
+
+  guint64 maxduration;
+
+  /* The formats supported by this filesource
+   * TODO : Could maybe be moved to a parent class */
+  GESTrackType supportedformats;
 };
 
 struct _GESTimelineFileSourceClass {

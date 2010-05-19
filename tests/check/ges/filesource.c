@@ -43,6 +43,15 @@ GST_START_TEST (test_filesource_basic)
   fail_unless (g_ascii_strcasecmp (uri, TEST_URI) == 0);
   g_free (uri);
 
+  /* Make sure no track object is created for an incompatible
+   * track. */
+  trackobject =
+      ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (source),
+      track);
+  fail_unless (trackobject == NULL);
+
+  /* Make sure the track object is created for a compatible track. */
+  g_object_set (source, "supported-formats", GES_TRACK_TYPE_CUSTOM, NULL);
   trackobject =
       ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (source),
       track);
@@ -92,7 +101,8 @@ GST_START_TEST (test_filesource_properties)
 
   /* Set some properties */
   g_object_set (object, "start", (guint64) 42, "duration", (guint64) 51,
-      "in-point", (guint64) 12, NULL);
+      "in-point", (guint64) 12, "supported-formats", GES_TRACK_TYPE_AUDIO,
+      NULL);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 42);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);

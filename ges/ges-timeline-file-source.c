@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:ges-timeline-filesource
+ * @short_description: 
+ */
+
 #include "ges-internal.h"
 #include "ges-timeline-file-source.h"
 #include "ges-timeline-source.h"
@@ -30,11 +35,16 @@ enum
 {
   PROP_0,
   PROP_URI,
-  PROP_MUTE
+  PROP_MAX_DURATION,
+  PROP_MUTE,
+  PROP_SUPPORTED_FORMATS
 };
 
 static void
 ges_tl_filesource_set_mute (GESTimelineFileSource * self, gboolean mute);
+static void
+ges_tl_filesource_set_max_duration (GESTimelineFileSource * self,
+    guint64 maxduration);
 
 static GESTrackObject
     * ges_tl_filesource_create_track_object (GESTimelineObject * obj,
@@ -53,6 +63,12 @@ ges_tl_filesource_get_property (GObject * object, guint property_id,
     case PROP_MUTE:
       g_value_set_boolean (value, tfs->mute);
       break;
+    case PROP_MAX_DURATION:
+      g_value_set_uint64 (value, tfs->maxduration);
+      break;
+    case PROP_SUPPORTED_FORMATS:
+      g_value_set_flags (value, tfs->supportedformats);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -70,6 +86,12 @@ ges_tl_filesource_set_property (GObject * object, guint property_id,
       break;
     case PROP_MUTE:
       ges_tl_filesource_set_mute (tfs, g_value_get_boolean (value));
+      break;
+    case PROP_MAX_DURATION:
+      ges_tl_filesource_set_max_duration (tfs, g_value_get_uint64 (value));
+      break;
+    case PROP_SUPPORTED_FORMATS:
+      tfs->supportedformats = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -105,7 +127,7 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
 
 
   /**
-   * GESTimelineFileSource:uri
+   * GESTimelineFileSource:uri:
    *
    * The location of the file/resource to use.
    */
@@ -114,13 +136,36 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
-   * GESTimelineFileSource:mute
+   * GESTimelineFileSource:max-duration:
+   *
+   * The maximum duration (in nanoseconds) of the file.
+   *
+   * If not set before adding the object to a layer, it will be discovered
+   * asynchronously. Connect to 'notify::max-duration' to be notified of it.
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DURATION,
+      g_param_spec_uint64 ("max-duration", "Maximum duration",
+          "The duration of the file", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTimelineFileSource:mute:
    *
    * Whether the sound will be played or not.
    */
   g_object_class_install_property (object_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTimelineFileSource:supported-formats:
+   *
+   * Whether the sound will be played or not.
+   */
+  g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
+      g_param_spec_flags ("supported-formats", "Supported formats",
+          "Formats supported by the file", GES_TYPE_TRACK_TYPE,
+          GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   timobj_class->create_track_object = ges_tl_filesource_create_track_object;
   timobj_class->need_fill_track = FALSE;
@@ -129,6 +174,8 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
 static void
 ges_tl_filesource_init (GESTimelineFileSource * self)
 {
+  /* Setting the duration to -1 by default. */
+  GES_TIMELINE_OBJECT (self)->duration = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -150,12 +197,30 @@ ges_tl_filesource_set_mute (GESTimelineFileSource * self, gboolean mute)
   }
 }
 
+static void
+ges_tl_filesource_set_max_duration (GESTimelineFileSource * self,
+    guint64 maxduration)
+{
+  GESTimelineObject *object = GES_TIMELINE_OBJECT (self);
+
+  self->maxduration = maxduration;
+  if (object->duration == GST_CLOCK_TIME_NONE || object->duration == 0) {
+    /* If we don't have a valid duration, use the max duration */
+    g_object_set (self, "duration", self->maxduration - object->inpoint, NULL);
+  }
+}
+
 static GESTrackObject *
 ges_tl_filesource_create_track_object (GESTimelineObject * obj,
     GESTrack * track)
 {
   GESTimelineFileSource *tfs = (GESTimelineFileSource *) obj;
   GESTrackObject *res;
+
+  if (!(tfs->supportedformats & track->type)) {
+    GST_DEBUG ("We don't support this track format");
+    return NULL;
+  }
 
   GST_DEBUG ("Creating a GESTrackFileSource");
 
