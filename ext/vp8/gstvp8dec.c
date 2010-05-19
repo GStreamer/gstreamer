@@ -36,6 +36,7 @@
 #include <vpx/vpx_decoder.h>
 #include <vpx/vp8dx.h>
 
+#include "gstvp8utils.h"
 
 GST_DEBUG_CATEGORY (gst_vp8dec_debug);
 #define GST_CAT_DEFAULT gst_vp8dec_debug
@@ -156,7 +157,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 static void
 gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
 {
-  GST_DEBUG ("gst_vp8_dec_init");
+  GST_DEBUG_OBJECT (gst_vp8_dec, "gst_vp8_dec_init");
 }
 
 static void
@@ -164,7 +165,7 @@ gst_vp8_dec_finalize (GObject * object)
 {
   GstVP8Dec *gst_vp8_dec;
 
-  GST_DEBUG ("finalize");
+  GST_DEBUG_OBJECT (object, "finalize");
 
   g_return_if_fail (GST_IS_GST_VP8_DEC (object));
   gst_vp8_dec = GST_VP8_DEC (object);
@@ -181,7 +182,7 @@ gst_vp8_dec_set_property (GObject * object, guint prop_id,
   g_return_if_fail (GST_IS_GST_VP8_DEC (object));
   src = GST_VP8_DEC (object);
 
-  GST_DEBUG ("gst_vp8_dec_set_property");
+  GST_DEBUG_OBJECT (object, "gst_vp8_dec_set_property");
   switch (prop_id) {
     default:
       break;
@@ -210,6 +211,7 @@ gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
 {
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
 
+  GST_DEBUG_OBJECT (gst_vp8_dec, "start");
   decoder->packetized = TRUE;
   gst_vp8_dec->decoder_inited = FALSE;
 
@@ -221,6 +223,7 @@ gst_vp8_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (base_video_decoder);
 
+  GST_DEBUG_OBJECT (gst_vp8_dec, "stop");
   if (gst_vp8_dec->decoder_inited)
     vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
@@ -232,7 +235,7 @@ gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVP8Dec *decoder;
 
-  GST_DEBUG ("reset");
+  GST_DEBUG_OBJECT (base_video_decoder, "reset");
 
   decoder = GST_VP8_DEC (base_video_decoder);
 
@@ -246,7 +249,6 @@ gst_vp8_dec_reset (GstBaseVideoDecoder * base_video_decoder)
 static GstFlowReturn
 gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder, gboolean at_eos)
 {
-
   return GST_FLOW_OK;
 }
 
@@ -315,12 +317,11 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 {
   GstVP8Dec *dec;
   GstFlowReturn ret;
-  long status;
+  vpx_codec_err_t status;
   vpx_codec_iter_t iter = NULL;
   vpx_image_t *img;
-  vpx_codec_err_t res;
 
-  GST_DEBUG ("handle_frame");
+  GST_DEBUG_OBJECT (decoder, "handle_frame");
 
   dec = GST_VP8_DEC (decoder);
 
@@ -331,11 +332,12 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     memset (&stream_info, 0, sizeof (stream_info));
     stream_info.sz = sizeof (stream_info);
 
-    res = vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
+    status = vpx_codec_peek_stream_info (&vpx_codec_vp8_dx_algo,
         GST_BUFFER_DATA (frame->sink_buffer),
         GST_BUFFER_SIZE (frame->sink_buffer), &stream_info);
 
-    if (res != VPX_CODEC_OK || !stream_info.is_kf) {
+    if (status != VPX_CODEC_OK || !stream_info.is_kf) {
+      GST_WARNING_OBJECT (decoder, "No keyframe, skipping");
       gst_base_video_decoder_skip_frame (decoder, frame);
       return GST_FLOW_OK;
     }
@@ -346,11 +348,12 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder->state.format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
 
-    res =
+    status =
         vpx_codec_dec_init (&dec->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
-    if (res != VPX_CODEC_OK) {
+    if (status != VPX_CODEC_OK) {
       GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
-          ("Failed to initialize VP8 decoder"), (NULL));
+          ("Failed to initialize VP8 decoder"), ("%s",
+              gst_vpx_error_name (status)));
       return GST_FLOW_ERROR;
     }
     dec->decoder_inited = TRUE;
@@ -376,7 +379,8 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
   if (ret != GST_FLOW_OK) {
-    GST_WARNING ("failed to get buffer");
+    GST_WARNING_OBJECT (decoder, "failed to get buffer: %s",
+        gst_flow_get_name (ret));
     goto out;
   }
 
@@ -384,6 +388,8 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
       GST_BUFFER_DATA (frame->sink_buffer),
       GST_BUFFER_SIZE (frame->sink_buffer), NULL, 0);
   if (status) {
+    GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
+        ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)));
     return GST_FLOW_ERROR;
   }
 

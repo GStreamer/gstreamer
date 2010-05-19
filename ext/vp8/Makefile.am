@@ -4,6 +4,7 @@ plugin_LTLIBRARIES = \
 libgstvp8_la_SOURCES = \
 	gstvp8dec.c \
 	gstvp8enc.c \
+	gstvp8utils.c \
 	plugin.c \
 	gst/video/gstbasevideocodec.c \
 	gst/video/gstbasevideodecoder.c \
@@ -33,6 +34,7 @@ libgstvp8_la_LIBADD += $(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_MAJORMINOR@ -lgstv
 libgstvp8_la_LIBADD += $(VPX_LIBS)
 
 noinst_HEADERS = \
+	gstvp8utils.h \
 	gst/video/gstbasevideocodec.h \
 	gst/video/gstbasevideodecoder.h \
 	gst/video/gstbasevideoencoder.h \
