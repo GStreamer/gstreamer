@@ -560,7 +560,7 @@ static GstElementClass *parent_class;
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
 static GstStaticCaps av_raw_caps = GST_STATIC_CAPS ("audio/x-raw-int; "
-    "video/x-raw-float; "
+    "audio/x-raw-float; "
     "video/x-raw-yuv; " "video/x-raw-rgb; " "video/x-raw-gray;");
 
 #define REMOVE_SIGNAL(obj,id)            \
