@@ -519,7 +519,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     frame->is_sync_point = frame->is_sync_point || keyframe;
 
     if (hook->image)
-      g_free (hook->image);
+      g_slice_free (vpx_image_t, hook->image);
     hook->image = NULL;
 
     if (invisible) {
@@ -561,6 +561,42 @@ vpx_error_name (vpx_codec_err_t status)
     default:
       return "unknown";
   }
+}
+
+static vpx_image_t *
+gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
+{
+  vpx_image_t *image = g_slice_new0 (vpx_image_t);
+  GstBaseVideoEncoder *encoder = (GstBaseVideoEncoder *) enc;
+  guint8 *data = GST_BUFFER_DATA (buffer);
+
+  image->fmt = IMG_FMT_I420;
+  image->bps = 12;
+  image->x_chroma_shift = image->y_chroma_shift = 1;
+  image->img_data = data;
+  image->w = image->d_w = encoder->state.width;
+  image->h = image->d_h = encoder->state.height;
+
+  image->stride[PLANE_Y] =
+      gst_video_format_get_row_stride (encoder->state.format, 0,
+      encoder->state.width);
+  image->stride[PLANE_U] =
+      gst_video_format_get_row_stride (encoder->state.format, 1,
+      encoder->state.width);
+  image->stride[PLANE_V] =
+      gst_video_format_get_row_stride (encoder->state.format, 2,
+      encoder->state.width);
+  image->planes[PLANE_Y] =
+      data + gst_video_format_get_component_offset (encoder->state.format, 0,
+      encoder->state.width, encoder->state.height);
+  image->planes[PLANE_U] =
+      data + gst_video_format_get_component_offset (encoder->state.format, 1,
+      encoder->state.width, encoder->state.height);
+  image->planes[PLANE_V] =
+      data + gst_video_format_get_component_offset (encoder->state.format, 2,
+      encoder->state.width, encoder->state.height);
+
+  return image;
 }
 
 static const int speed_table[] = {
@@ -639,13 +675,9 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     encoder->inited = TRUE;
   }
 
-  image = g_malloc0 (sizeof (vpx_image_t));
-  vpx_img_wrap (image, IMG_FMT_I420,
-      base_video_encoder->state.width,
-      base_video_encoder->state.height, 1,
-      GST_BUFFER_DATA (frame->sink_buffer));
+  image = gst_vp8_enc_buffer_to_image (encoder, frame->sink_buffer);
 
-  hook = g_new0 (GstVP8EncCoderHook, 1);
+  hook = g_slice_new0 (GstVP8EncCoderHook);
   hook->image = image;
   frame->coder_hook = hook;
 
@@ -682,7 +714,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     memcpy (GST_BUFFER_DATA (buffer), pkt->data.frame.buf, pkt->data.frame.sz);
 
     if (hook->image)
-      g_free (hook->image);
+      g_slice_free (vpx_image_t, hook->image);
     hook->image = NULL;
 
     if (invisible) {
@@ -788,7 +820,7 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
 done:
   g_list_foreach (hook->invisible, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (hook->invisible);
-  g_free (hook);
+  g_slice_free (GstVP8EncCoderHook, hook);
   frame->coder_hook = NULL;
 
   return ret;

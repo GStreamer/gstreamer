@@ -263,6 +263,53 @@ gst_vp8_dec_send_tags (GstVP8Dec * dec)
       GST_BASE_VIDEO_CODEC_SRC_PAD (dec), list);
 }
 
+static void
+gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
+    GstBuffer * buffer)
+{
+  GstBaseVideoDecoder *decoder = (GstBaseVideoDecoder *) dec;
+  int stride, w, h, i;
+  guint8 *d;
+
+  d = GST_BUFFER_DATA (buffer) +
+      gst_video_format_get_component_offset (decoder->state.format, 0,
+      decoder->state.width, decoder->state.height);
+  stride =
+      gst_video_format_get_row_stride (decoder->state.format, 0,
+      decoder->state.width);
+  h = gst_video_format_get_component_height (decoder->state.format, 0,
+      decoder->state.height);
+  h = MIN (h, img->h);
+  w = gst_video_format_get_component_width (decoder->state.format, 0,
+      decoder->state.width);
+  w = MIN (w, img->w);
+
+  for (i = 0; i < h; i++)
+    memcpy (d + i * stride, img->planes[PLANE_Y] + i * img->stride[PLANE_Y], w);
+
+  d = GST_BUFFER_DATA (buffer) +
+      gst_video_format_get_component_offset (decoder->state.format, 1,
+      decoder->state.width, decoder->state.height);
+  stride =
+      gst_video_format_get_row_stride (decoder->state.format, 1,
+      decoder->state.width);
+  h = gst_video_format_get_component_height (decoder->state.format, 1,
+      decoder->state.height);
+  h = MIN (h, img->h >> img->y_chroma_shift);
+  w = gst_video_format_get_component_width (decoder->state.format, 1,
+      decoder->state.width);
+  w = MIN (w, img->w >> img->x_chroma_shift);
+  for (i = 0; i < h; i++)
+    memcpy (d + i * stride, img->planes[PLANE_U] + i * img->stride[PLANE_U], w);
+
+  d = GST_BUFFER_DATA (buffer) +
+      gst_video_format_get_component_offset (decoder->state.format, 2,
+      decoder->state.width, decoder->state.height);
+  /* Same stride, height, width as above */
+  for (i = 0; i < h; i++)
+    memcpy (d + i * stride, img->planes[PLANE_V] + i * img->stride[PLANE_V], w);
+}
+
 static GstFlowReturn
 gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 {
@@ -342,35 +389,20 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
   if (img) {
-    int i;
 
     ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
 
-    if (ret == GST_FLOW_OK) {
-      for (i = 0; i < decoder->state.height; i++) {
-        memcpy (GST_BUFFER_DATA (frame->src_buffer) + i * decoder->state.width,
-            img->planes[0] + i * img->stride[0], decoder->state.width);
-      }
-      for (i = 0; i < decoder->state.height / 2; i++) {
-        memcpy (GST_BUFFER_DATA (frame->src_buffer) +
-            decoder->state.width * decoder->state.height +
-            i * decoder->state.width / 2,
-            img->planes[1] + i * img->stride[1], decoder->state.width / 2);
-      }
-      for (i = 0; i < decoder->state.height / 2; i++) {
-        memcpy (GST_BUFFER_DATA (frame->src_buffer) +
-            decoder->state.width * decoder->state.height +
-            decoder->state.width * decoder->state.height / 4 +
-            i * decoder->state.width / 2,
-            img->planes[2] + i * img->stride[2], decoder->state.width / 2);
-      }
-    }
+    if (ret == GST_FLOW_OK)
+      gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
 
     gst_base_video_decoder_finish_frame (decoder, frame);
 
-    do {
+    vpx_img_free (img);
+
+    while ((img = vpx_codec_get_frame (&dec->decoder, &iter))) {
+      GST_WARNING_OBJECT (decoder, "Multiple decoded frames... dropping");
       vpx_img_free (img);
-    } while ((img = vpx_codec_get_frame (&dec->decoder, &iter)));
+    }
   } else {
     /* Invisible frame */
     gst_base_video_decoder_skip_frame (decoder, frame);
