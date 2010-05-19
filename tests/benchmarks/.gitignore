@@ -1,9 +1,10 @@
 Makefile
 Makefile.in
-gstbufferstress
 caps
+capsnego
 complexity
 controller
+gstbufferstress
 gstclockstress
 gstpollstress
 mass-elements

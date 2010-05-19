@@ -1,5 +1,6 @@
 noinst_PROGRAMS = \
         caps \
+        capsnego \
         complexity \
         controller \
         init \
