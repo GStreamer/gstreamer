@@ -1104,13 +1104,22 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
 
     if (offset + length < range->writing_pos)
       return TRUE;
+    else
+      GST_DEBUG_OBJECT (queue,
+          "Need more data (%" G_GUINT64_FORMAT " bytes more)",
+          range->writing_pos - (offset + length));
 
   } else {
     GST_INFO_OBJECT (queue, "not found in any range");
     /* we don't have the range, see how far away we are, FIXME, find a good
      * threshold based on the incomming rate. */
     if (!queue->is_eos && queue->current) {
-      if (offset < queue->current->writing_pos + 200000) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue) && (offset < queue->current->offset
+              || offset >
+              queue->current->writing_pos + queue->max_level.bytes -
+              queue->cur_level.bytes)) {
+        perform_seek_to_offset (queue, offset);
+      } else if (offset < queue->current->writing_pos + 200000) {
         update_cur_pos (queue, queue->current, offset + length);
         GST_INFO_OBJECT (queue, "wait for data");
         return FALSE;
@@ -1499,11 +1508,20 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 
         if (new_writing_pos > range_data_start) {
           if (new_writing_pos >= range_data_end) {
+            GST_DEBUG_OBJECT (queue,
+                "Removing range: offset %" G_GUINT64_FORMAT ", wpos %"
+                G_GUINT64_FORMAT, range->offset, range->writing_pos);
             /* remove range */
             range_to_destroy = range;
             if (prev)
               prev->next = range->next;
           } else {
+            GST_DEBUG_OBJECT (queue,
+                "advancing offsets from %" G_GUINT64_FORMAT " (%"
+                G_GUINT64_FORMAT ") to %" G_GUINT64_FORMAT " (%"
+                G_GUINT64_FORMAT ")", range->offset, range->rb_offset,
+                range->offset + new_writing_pos - range_data_start,
+                new_writing_pos);
             range->offset += (new_writing_pos - range_data_start);
             range->rb_offset = new_writing_pos;
           }
@@ -1515,11 +1533,20 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
           goto next_range;
 
         if (new_wpos_virt > rb_size && new_writing_pos >= range_data_end) {
+          GST_DEBUG_OBJECT (queue,
+              "Removing range: offset %" G_GUINT64_FORMAT ", wpos %"
+              G_GUINT64_FORMAT, range->offset, range->writing_pos);
           /* remove range */
           range_to_destroy = range;
           if (prev)
             prev->next = range->next;
         } else {
+          GST_DEBUG_OBJECT (queue,
+              "advancing offsets from %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT
+              ") to %" G_GUINT64_FORMAT " (%" G_GUINT64_FORMAT ")",
+              range->offset, range->rb_offset,
+              range->offset + new_writing_pos - range_data_start,
+              new_writing_pos);
           range->offset += (new_wpos_virt - range_data_start);
           range->rb_offset = new_writing_pos;
         }
@@ -1563,8 +1590,9 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
     }
 
     /* update the writing positions */
-    GST_INFO_OBJECT (queue, "wrote %u bytes to %" G_GUINT64_FORMAT, buf_size,
-        writing_pos);
+    GST_INFO_OBJECT (queue,
+        "wrote %u bytes to %" G_GUINT64_FORMAT " (%u bytes remaining to write)",
+        buf_size, writing_pos, rem_size);
     queue->current->writing_pos += buf_size;
     queue->current->rb_writing_pos = writing_pos = new_writing_pos;
 
@@ -1585,10 +1613,12 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 
       GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
           "queue is full, waiting for free space");
+      GST_DEBUG_OBJECT (queue, "ring buffer full, waiting for space");
       do {
         /* Wait for space to be available, we could be unlocked because of a flush. */
         GST_QUEUE2_WAIT_DEL_CHECK (queue, queue->sinkresult, out_flushing);
       } while (gst_queue2_is_filled (queue));
+      GST_DEBUG_OBJECT (queue, "flushed/space made");
 
       /* and continue if we were running before */
       if (started)
@@ -2450,6 +2480,8 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
   length = (length == -1) ? DEFAULT_BUFFER_SIZE : length;
   offset = (offset == -1) ? queue->current->reading_pos : offset;
 
+  GST_DEBUG_OBJECT (queue,
+      "Getting range: offset %" G_GUINT64_FORMAT ", length %u", offset, length);
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
 
