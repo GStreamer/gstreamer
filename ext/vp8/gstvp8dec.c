@@ -44,7 +44,7 @@
 
 #include "gstvp8utils.h"
 
-#if CONFIG_VP8_DECODER
+#ifdef HAVE_VP8_DECODER
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8dec_debug);
 #define GST_CAT_DEFAULT gst_vp8dec_debug
@@ -532,4 +532,4 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   return ret;
 }
 
-#endif /* CONFIG_VP8_DECODER */
+#endif /* HAVE_VP8_DECODER */
