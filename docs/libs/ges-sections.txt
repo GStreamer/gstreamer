@@ -97,6 +97,7 @@ ges_track_filesource_get_type
 GESTimeline
 GESTimelineClass
 ges_timeline_new
+ges_timeline_new_audio_video
 ges_timeline_add_layer
 ges_timeline_remove_layer
 ges_timeline_add_track

@@ -1,6 +1,5 @@
 /* GStreamer Editing Services
- * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
- *               2009 Nokia Corporation
+ * Copyright (C) 2010 Edward Hervey <edward.hervey@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,35 +17,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GES_H__
-#define __GES_H__
+#ifndef _GES_UTILS
+#define _GES_UTILS
 
-#include <glib.h>
+#include <glib-object.h>
 #include <gst/gst.h>
-
 #include <ges/ges-types.h>
-
-#include <ges/ges-timeline.h>
-#include <ges/ges-timeline-layer.h>
-#include <ges/ges-simple-timeline-layer.h>
-#include <ges/ges-timeline-object.h>
-#include <ges/ges-timeline-pipeline.h>
-#include <ges/ges-timeline-source.h>
-#include <ges/ges-timeline-transition.h>
-#include <ges/ges-track.h>
-#include <ges/ges-track-object.h>
-#include <ges/ges-track-source.h>
-
-#include <ges/ges-custom-timeline-source.h>
-#include <ges/ges-timeline-file-source.h>
-#include <ges/ges-track-filesource.h>
-
-#include <ges/ges-utils.h>
 
 G_BEGIN_DECLS
 
-void ges_init (void);
+GESTimeline * ges_timeline_new_audio_video ();
 
 G_END_DECLS
 
-#endif /* __GES_H__ */
+#endif /* _GES_UTILS */
+
