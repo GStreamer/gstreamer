@@ -600,29 +600,33 @@ gst_ebml_write_master_start (GstEbmlWrite * ebml, guint32 id)
 
 
 /**
- * gst_ebml_write_master_finish:
+ * gst_ebml_write_master_finish_full:
  * @ebml: #GstEbmlWrite
  * @startpos: Master starting position.
  *
- * Finish writing master element.
+ * Finish writing master element.  Size of master element is difference between
+ * current position and the element start, and @extra_size added to this.
  */
 void
-gst_ebml_write_master_finish (GstEbmlWrite * ebml, guint64 startpos)
+gst_ebml_write_master_finish_full (GstEbmlWrite * ebml, guint64 startpos,
+    guint64 extra_size)
 {
   guint64 pos = ebml->pos;
   GstBuffer *buf;
 
   gst_ebml_write_seek (ebml, startpos);
-  buf = gst_ebml_write_element_new (ebml, 0);
-  startpos =
-      GUINT64_TO_BE ((G_GINT64_CONSTANT (1) << 56) | (pos - startpos - 8));
-  memcpy (GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf), (guint8 *) & startpos,
-      8);
-  GST_BUFFER_SIZE (buf) += 8;
+  buf = gst_buffer_new_and_alloc (8);
+  GST_WRITE_UINT64_BE (GST_BUFFER_DATA (buf),
+      (G_GINT64_CONSTANT (1) << 56) | (pos - startpos - 8 + extra_size));
   gst_ebml_write_element_push (ebml, buf);
   gst_ebml_write_seek (ebml, pos);
 }
 
+void
+gst_ebml_write_master_finish (GstEbmlWrite * ebml, guint64 startpos)
+{
+  gst_ebml_write_master_finish_full (ebml, startpos, 0);
+}
 
 /**
  * gst_ebml_write_binary:

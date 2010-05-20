@@ -107,6 +107,9 @@ guint64 gst_ebml_write_master_start  (GstEbmlWrite *ebml,
                                       guint32       id);
 void    gst_ebml_write_master_finish (GstEbmlWrite *ebml,
                                       guint64       startpos);
+void    gst_ebml_write_master_finish_full (GstEbmlWrite * ebml,
+                                      guint64 startpos,
+                                      guint64 extra_size);
 void    gst_ebml_write_binary        (GstEbmlWrite *ebml,
                                       guint32       id,
                                       guchar       *binary,
