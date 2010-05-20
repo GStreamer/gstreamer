@@ -18,7 +18,10 @@ libgstbasevideo_@GST_MAJORMINOR@include_HEADERS = \
 	gstbasevideoencoder.h \
 	gstbasevideoparse.h
 
-libgstbasevideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -DGST_USE_UNSTABLE_API
+libgstbasevideo_@GST_MAJORMINOR@_la_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS) -DGST_USE_UNSTABLE_API \
+	$(GST_CFLAGS)
 libgstbasevideo_@GST_MAJORMINOR@_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) -lgstvideo-@GST_MAJORMINOR@
 libgstbasevideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

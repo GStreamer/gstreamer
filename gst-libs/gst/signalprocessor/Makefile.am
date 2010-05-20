@@ -5,6 +5,7 @@ libgstsignalprocessor_@GST_MAJORMINOR@include_HEADERS = gstsignalprocessor.h
 
 libgstsignalprocessor_@GST_MAJORMINOR@_la_SOURCES = gstsignalprocessor.c
 libgstsignalprocessor_@GST_MAJORMINOR@_la_CFLAGS = \
+    $(GST_PLUGINS_BAD_CFLAGS) \
     $(GST_PLUGINS_BASE_CFLAGS) \
     $(GST_CONTROLLER_CFLAGS) $(GST_CFLAGS)
 libgstsignalprocessor_@GST_MAJORMINOR@_la_LIBADD = \

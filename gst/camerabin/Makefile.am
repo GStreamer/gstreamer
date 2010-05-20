@@ -25,7 +25,7 @@ libgstcamerabin_la_SOURCES = gstcamerabin.c             \
 
 nodist_libgstcamerabin_la_SOURCES = $(built_sources)
 libgstcamerabin_la_CFLAGS = \
-	-I$(top_builddir)/gst-libs \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstcamerabin_la_LIBADD = \

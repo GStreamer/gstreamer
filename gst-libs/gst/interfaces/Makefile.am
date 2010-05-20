@@ -29,7 +29,10 @@ libgstphotography_@GST_MAJORMINOR@_la_SOURCES = \
 nodist_libgstphotography_@GST_MAJORMINOR@_la_SOURCES = 	\
 	$(built_sources)
 
-libgstphotography_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) -DGST_USE_UNSTABLE_API
+libgstphotography_@GST_MAJORMINOR@_la_CFLAGS = \
+	-DGST_USE_UNSTABLE_API \
+	$(GST_PLUGINS_BAD_CFLAGS) \
+	$(GST_CFLAGS)
 libgstphotography_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) 
 libgstphotography_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

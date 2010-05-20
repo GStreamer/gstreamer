@@ -6,7 +6,7 @@ GST_CAMERABIN_GTK_EXAMPLES = gst-camera
 
 gst_camera_SOURCES = gst-camera.h gst-camera.c
 gst_camera_CFLAGS  = \
-        -I$(top_builddir)/gst-libs \
+        $(GST_PLUGINS_BAD_CFLAGS) \
         $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(GTK_CFLAGS) \
 	$(GMODULE_EXPORT_CFLAGS) \

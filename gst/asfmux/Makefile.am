@@ -11,7 +11,7 @@ libgstasfmux_la_SOURCES = gstasfmux.c \
 
 # flags used to compile this plugin
 # add other _CFLAGS and _LIBS as needed
-libgstasfmux_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+libgstasfmux_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) 
 libgstasfmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
                          -lgstrtp-@GST_MAJORMINOR@
 libgstasfmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

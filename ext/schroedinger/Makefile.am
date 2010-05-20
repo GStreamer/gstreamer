@@ -11,9 +11,10 @@ libgstschro_la_SOURCES = \
 	gstschroparse.c \
 	gstschroutils.c
 libgstschro_la_CFLAGS = \
-	$(GST_CFLAGS) \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
         $(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
 	-DGST_USE_UNSTABLE_API \
 	$(SCHRO_CFLAGS)
 libgstschro_la_LIBADD = \
