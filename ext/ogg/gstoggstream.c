@@ -495,17 +495,17 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
 {
   gint width, height, par_n, par_d, fps_n, fps_d;
 
-  if (packet->bytes < 24) {
+  if (packet->bytes < 26) {
     GST_DEBUG ("Failed to parse VP8 BOS page");
     return FALSE;
   }
 
-  width = GST_READ_UINT16_BE (packet->packet + 6);
-  height = GST_READ_UINT16_BE (packet->packet + 8);
-  par_n = GST_READ_UINT24_BE (packet->packet + 10);
-  par_d = GST_READ_UINT24_BE (packet->packet + 13);
-  fps_n = GST_READ_UINT32_BE (packet->packet + 16);
-  fps_d = GST_READ_UINT32_BE (packet->packet + 20);
+  width = GST_READ_UINT16_BE (packet->packet + 8);
+  height = GST_READ_UINT16_BE (packet->packet + 10);
+  par_n = GST_READ_UINT24_BE (packet->packet + 12);
+  par_d = GST_READ_UINT24_BE (packet->packet + 15);
+  fps_n = GST_READ_UINT32_BE (packet->packet + 18);
+  fps_d = GST_READ_UINT32_BE (packet->packet + 22);
 
   pad->is_vp8 = TRUE;
   pad->granulerate_n = fps_n;
@@ -595,16 +595,9 @@ granulepos_to_key_granule_vp8 (GstOggStream * pad, gint64 granulepos)
 static gboolean
 is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
 {
-  /* stream info */
-  if (packet->bytes > 4 && packet->packet[0] == 0x2f &&
+  if (packet->bytes > 6 && packet->packet[0] == 0x4F &&
       packet->packet[1] == 0x56 && packet->packet[2] == 0x50 &&
-      packet->packet[3] == 0x38)
-    return TRUE;
-  /* comment */
-  if (packet->bytes > 7 && packet->packet[0] == 0x4f &&
-      packet->packet[1] == 0x67 && packet->packet[2] == 0x67 &&
-      packet->packet[3] == 0x56 && packet->packet[4] == 0x50 &&
-      packet->packet[5] == 0x38 && packet->packet[6] == 0x20)
+      packet->packet[3] == 0x38 && packet->packet[4] == 0x30)
     return TRUE;
   return FALSE;
 }
@@ -1643,7 +1636,7 @@ static const GstOggMap mappers[] = {
     granulepos_to_key_granule_dirac
   },
   {
-    "/VP8\1", 5, 4,
+    "OVP80\1", 6, 4,
     "video/x-vp8",
     setup_vp8_mapper,
     granulepos_to_granule_vp8,

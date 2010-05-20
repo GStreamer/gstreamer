@@ -466,7 +466,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       }
     }
   } else if (pad->map.is_vp8) {
-    if (packet->bytes >= 7 && memcmp (packet->packet, "OggVP8 ", 7) == 0) {
+    if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
       GstTagList *tags;
 
       buf = gst_buffer_new ();
@@ -475,7 +475,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_BUFFER_SIZE (buf) = packet->bytes;
 
       tags = gst_tag_list_from_vorbiscomment_buffer (buf,
-          (const guint8 *) "OggVP8 ", 7, NULL);
+          (const guint8 *) "OVP80\2 ", 7, NULL);
       gst_buffer_unref (buf);
       buf = NULL;
 
@@ -490,8 +490,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
-    } else if (packet->b_o_s || (packet->bytes >= 4
-            && memcmp (packet->packet, "/VP8 ", 4) == 0)) {
+    } else if (packet->b_o_s || (packet->bytes >= 6
+            && memcmp (packet->packet, "OVP80\1", 4) == 0)) {
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
