@@ -34,6 +34,11 @@
 #include <string.h>
 #include <math.h>
 
+/* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
+ * which causes compilation failures */
+#ifdef HAVE_CONFIG_H
+#undef HAVE_CONFIG_H
+#endif
 
 #include <vpx/vpx_encoder.h>
 #include <vpx/vp8cx.h>
