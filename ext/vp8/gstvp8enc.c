@@ -463,7 +463,8 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   if (iface_tags) {
     vorbiscomment =
         gst_tag_list_to_vorbiscomment_buffer ((iface_tags) ? iface_tags : tags,
-        (const guint8 *) "OVP80\2 ", 7, NULL);
+        (const guint8 *) "OVP80\2 ", 7,
+        "Encoded with GStreamer vp8enc " PACKAGE_VERSION);
 
     GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);
 
