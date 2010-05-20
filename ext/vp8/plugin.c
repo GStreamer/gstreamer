@@ -25,22 +25,23 @@
 
 #include <gst/gst.h>
 
+#include <vpx/vpx_config.h>
+
 GType gst_vp8_dec_get_type (void);
 GType gst_vp8_enc_get_type (void);
-
-GST_DEBUG_CATEGORY_EXTERN (gst_vp8dec_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_vp8enc_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_vp8dec_debug, "vp8dec", 0, "VP8 Decoder");
-  GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
-
+#if CONFIG_VP8_DECODER
   gst_element_register (plugin, "vp8dec", GST_RANK_PRIMARY,
       gst_vp8_dec_get_type ());
+#endif
+
+#if CONFIG_VP8_ENCODER
   gst_element_register (plugin, "vp8enc", GST_RANK_PRIMARY,
       gst_vp8_enc_get_type ());
+#endif
 
   return TRUE;
 }

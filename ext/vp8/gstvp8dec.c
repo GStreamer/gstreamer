@@ -44,7 +44,9 @@
 
 #include "gstvp8utils.h"
 
-GST_DEBUG_CATEGORY (gst_vp8dec_debug);
+#if CONFIG_VP8_DECODER
+
+GST_DEBUG_CATEGORY_STATIC (gst_vp8dec_debug);
 #define GST_CAT_DEFAULT gst_vp8dec_debug
 
 #define GST_TYPE_VP8_DEC \
@@ -223,6 +225,8 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   base_video_decoder_class->reset = gst_vp8_dec_reset;
   base_video_decoder_class->parse_data = gst_vp8_dec_parse_data;
   base_video_decoder_class->handle_frame = gst_vp8_dec_handle_frame;
+
+  GST_DEBUG_CATEGORY_INIT (gst_vp8dec_debug, "vp8dec", 0, "VP8 Decoder");
 }
 
 static void
@@ -527,3 +531,5 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   return ret;
 }
+
+#endif /* CONFIG_VP8_DECODER */
