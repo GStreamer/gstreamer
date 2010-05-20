@@ -1636,7 +1636,7 @@ static const GstOggMap mappers[] = {
     granulepos_to_key_granule_dirac
   },
   {
-    "OVP80\1", 6, 4,
+    "OVP80\1\1", 7, 4,
     "video/x-vp8",
     setup_vp8_mapper,
     granulepos_to_granule_vp8,
