@@ -45,7 +45,9 @@
 
 #include "gstvp8utils.h"
 
-GST_DEBUG_CATEGORY (gst_vp8enc_debug);
+#if CONFIG_VP8_ENCODER
+
+GST_DEBUG_CATEGORY_STATIC (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug
 
 #define GST_TYPE_VP8_ENC \
@@ -253,6 +255,8 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           "Speed",
           0, 2, DEFAULT_SPEED,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
 
 static void
@@ -839,3 +843,5 @@ gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event)
 
   return ret;
 }
+
+#endif /* CONFIG_VP8_ENCODER */
