@@ -428,18 +428,20 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   g_value_init (&value, GST_TYPE_BUFFER);
 
   /* Create Ogg stream-info */
-  stream_hdr = gst_buffer_new_and_alloc (24);
+  stream_hdr = gst_buffer_new_and_alloc (26);
   data = GST_BUFFER_DATA (stream_hdr);
 
-  GST_WRITE_UINT32_BE (data, 0x2F565038);       /* "/VP8" */
-  GST_WRITE_UINT8 (data + 4, 1);        /* Major version 1 */
-  GST_WRITE_UINT8 (data + 5, 0);        /* Minor version 0 */
-  GST_WRITE_UINT16_BE (data + 6, state->width);
-  GST_WRITE_UINT16_BE (data + 8, state->height);
-  GST_WRITE_UINT24_BE (data + 10, state->par_n);
-  GST_WRITE_UINT24_BE (data + 13, state->par_d);
-  GST_WRITE_UINT32_BE (data + 16, state->fps_n);
-  GST_WRITE_UINT32_BE (data + 20, state->fps_d);
+  GST_WRITE_UINT8 (data, 0x4F);
+  GST_WRITE_UINT32_BE (data + 1, 0x56503830);   /* "VP80" */
+  GST_WRITE_UINT8 (data + 5, 0x01);     /* stream info header */
+  GST_WRITE_UINT8 (data + 6, 1);        /* Major version 1 */
+  GST_WRITE_UINT8 (data + 7, 0);        /* Minor version 0 */
+  GST_WRITE_UINT16_BE (data + 8, state->width);
+  GST_WRITE_UINT16_BE (data + 10, state->height);
+  GST_WRITE_UINT24_BE (data + 12, state->par_n);
+  GST_WRITE_UINT24_BE (data + 15, state->par_d);
+  GST_WRITE_UINT32_BE (data + 18, state->fps_n);
+  GST_WRITE_UINT32_BE (data + 22, state->fps_d);
 
   GST_BUFFER_FLAG_SET (stream_hdr, GST_BUFFER_FLAG_IN_CAPS);
   gst_value_set_buffer (&value, stream_hdr);
@@ -452,7 +454,7 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   if (iface_tags) {
     vorbiscomment =
         gst_tag_list_to_vorbiscomment_buffer ((iface_tags) ? iface_tags : tags,
-        (const guint8 *) "OggVP8 ", 7, NULL);
+        (const guint8 *) "OVP80\2 ", 7, NULL);
 
     GST_BUFFER_FLAG_SET (vorbiscomment, GST_BUFFER_FLAG_IN_CAPS);
 
