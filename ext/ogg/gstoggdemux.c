@@ -490,8 +490,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
-    } else if (packet->b_o_s || (packet->bytes >= 6
-            && memcmp (packet->packet, "OVP80", 6) == 0)) {
+    } else if (packet->b_o_s || (packet->bytes >= 5
+            && memcmp (packet->packet, "OVP80", 5) == 0)) {
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
