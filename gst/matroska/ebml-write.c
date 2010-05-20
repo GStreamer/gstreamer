@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_ebml_write_debug);
 #define GST_CAT_DEFAULT gst_ebml_write_debug
 
 #define _do_init(thing) \
-      GST_DEBUG_CATEGORY_INIT (gst_ebml_write_debug, "GstEbmlWrite", 0, "Write EBML structured data")
+      GST_DEBUG_CATEGORY_INIT (gst_ebml_write_debug, "ebmlwrite", 0, "Write EBML structured data")
 GST_BOILERPLATE_FULL (GstEbmlWrite, gst_ebml_write, GstObject, GST_TYPE_OBJECT,
     _do_init);
 
