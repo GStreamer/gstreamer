@@ -165,6 +165,7 @@ setup_matroskamux (GstStaticPadTemplate * srctemplate)
 
   GST_DEBUG ("setup_matroskamux");
   matroskamux = gst_check_setup_element ("matroskamux");
+  g_object_set (matroskamux, "version", 1, NULL);
   mysrcpad = setup_src_pad (matroskamux, srctemplate, NULL);
   mysinkpad = setup_sink_pad (matroskamux, &sinktemplate, NULL);
 
