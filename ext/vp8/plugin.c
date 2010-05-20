@@ -25,20 +25,18 @@
 
 #include <gst/gst.h>
 
-#include <vpx/vpx_config.h>
-
 GType gst_vp8_dec_get_type (void);
 GType gst_vp8_enc_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#if CONFIG_VP8_DECODER
+#ifdef HAVE_VP8_DECODER
   gst_element_register (plugin, "vp8dec", GST_RANK_PRIMARY,
       gst_vp8_dec_get_type ());
 #endif
 
-#if CONFIG_VP8_ENCODER
+#ifdef HAVE_VP8_DECODER
   gst_element_register (plugin, "vp8enc", GST_RANK_PRIMARY,
       gst_vp8_enc_get_type ());
 #endif

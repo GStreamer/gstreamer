@@ -1481,12 +1481,24 @@ AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
 dnl *** vp8 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VP8, vp8)
 AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
+  VPX_LIBS=""
   AG_GST_CHECK_LIBHEADER(VPX, vpx,
                         vpx_codec_version, ,
-                        vpx/vpx_codec.h,
-			HAVE_VP8=yes
-                        VPX_LIBS="-lvpx"
-                        AC_SUBST(VPX_LIBS))
+                        vpx/vpx_codec.h, [
+    HAVE_VP8_ENCODER=no
+    HAVE_VP8_DECODER=no
+    AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
+      HAVE_VP8=yes
+      AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
+      VPX_LIBS="-lvpx"
+    ])
+    AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
+      HAVE_VP8=yes
+      AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
+      VPX_LIBS="-lvpx"
+    ])
+  ])
+  AC_SUBST(VPX_LIBS)
 ])
 
 else

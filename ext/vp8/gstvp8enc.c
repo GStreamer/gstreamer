@@ -45,7 +45,7 @@
 
 #include "gstvp8utils.h"
 
-#if CONFIG_VP8_ENCODER
+#ifdef HAVE_VP8_ENCODER
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug
@@ -844,4 +844,4 @@ gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
-#endif /* CONFIG_VP8_ENCODER */
+#endif /* HAVE_VP8_ENCODER */
