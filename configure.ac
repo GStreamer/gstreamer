@@ -1487,6 +1487,9 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
                         vpx/vpx_codec.h, [
     HAVE_VP8_ENCODER=no
     HAVE_VP8_DECODER=no
+
+    OLD_LIBS="$LIBS"
+    LIBS="$LIBS -lm -lpthread"
     AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
@@ -1497,6 +1500,7 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
       AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
       VPX_LIBS="-lvpx"
     ])
+    LIBS="$OLD_LIBS"
   ])
   AC_SUBST(VPX_LIBS)
 ])
