@@ -169,7 +169,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst-libs/gst/interfaces/photography.h
 
 # Images to copy into HTML directory.
-HTML_IMAGES = $(srcdir)/figures/*.png
+HTML_IMAGES = figures/*.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files =
