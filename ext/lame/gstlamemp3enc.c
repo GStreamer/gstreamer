@@ -386,6 +386,57 @@ setup_failed:
   }
 }
 
+static gint64
+gst_lamemp3enc_get_latency (GstLameMP3Enc * lame)
+{
+  return gst_util_uint64_scale_int (lame_get_framesize (lame->lgf),
+      GST_SECOND, lame->samplerate);
+}
+
+static gboolean
+gst_lamemp3enc_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = TRUE;
+  GstLameMP3Enc *lame;
+  GstPad *peerpad;
+
+  lame = GST_LAMEMP3ENC (gst_pad_get_parent (pad));
+  peerpad = gst_pad_get_peer (GST_PAD (lame->sinkpad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      if ((res = gst_pad_query (peerpad, query))) {
+        gboolean live;
+        GstClockTime min_latency, max_latency;
+        gint64 latency;
+
+        if (lame->lgf == NULL)
+          break;
+
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+        latency = gst_lamemp3enc_get_latency (lame);
+
+        /* add our latency */
+        min_latency += latency;
+        if (max_latency != -1)
+          max_latency += latency;
+
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query (peerpad, query);
+      break;
+  }
+
+  gst_object_unref (peerpad);
+  gst_object_unref (lame);
+  return res;
+}
+
 static void
 gst_lamemp3enc_init (GstLameMP3Enc * lame)
 {
@@ -403,6 +454,8 @@ gst_lamemp3enc_init (GstLameMP3Enc * lame)
 
   lame->srcpad =
       gst_pad_new_from_static_template (&gst_lamemp3enc_src_template, "src");
+  gst_pad_set_query_function (lame->srcpad,
+      GST_DEBUG_FUNCPTR (gst_lamemp3enc_src_query));
   gst_pad_set_setcaps_function (lame->srcpad,
       GST_DEBUG_FUNCPTR (gst_lamemp3enc_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
@@ -745,6 +798,10 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame)
 
   if (lame->lgf == NULL)
     return FALSE;
+
+  /* post latency message on the bus */
+  gst_element_post_message (GST_ELEMENT (lame),
+      gst_message_new_latency (GST_OBJECT (lame)));
 
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
