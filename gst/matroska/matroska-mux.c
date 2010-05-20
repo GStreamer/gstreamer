@@ -2020,16 +2020,21 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENT);
   mux->segment_master = ebml->pos;
 
-  /* seekhead (table of contents) - we set the positions later */
-  mux->seekhead_pos = ebml->pos;
-  master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKHEAD);
-  for (i = 0; seekhead_id[i] != 0; i++) {
-    child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKENTRY);
-    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKID, seekhead_id[i]);
-    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKPOSITION, -1);
-    gst_ebml_write_master_finish (ebml, child);
+  /* the rest of the header is cached */
+  gst_ebml_write_set_cache (ebml, 0x1000);
+
+  if (!mux->is_live) {
+    /* seekhead (table of contents) - we set the positions later */
+    mux->seekhead_pos = ebml->pos;
+    master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKHEAD);
+    for (i = 0; seekhead_id[i] != 0; i++) {
+      child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKENTRY);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKID, seekhead_id[i]);
+      gst_ebml_write_uint (ebml, GST_MATROSKA_ID_SEEKPOSITION, -1);
+      gst_ebml_write_master_finish (ebml, child);
+    }
+    gst_ebml_write_master_finish (ebml, master);
   }
-  gst_ebml_write_master_finish (ebml, master);
 
   /* segment info */
   mux->info_pos = ebml->pos;
@@ -2182,7 +2187,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   }
 
   /* cues */
-  if (mux->index != NULL) {
+  if (mux->index != NULL && !mux->is_live) {
     guint n;
     guint64 master, pointentry_master, trackpos_master;
 
@@ -2213,7 +2218,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   /* tags */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
-  if (tags != NULL && !gst_tag_list_is_empty (tags)) {
+  if (tags != NULL && !gst_tag_list_is_empty (tags) && !mux->is_live) {
     guint64 master_tags, master_tag;
 
     GST_DEBUG ("Writing tags");
@@ -2237,81 +2242,84 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
    *     length pointer starts at 20.
    * - all entries are local to the segment (so pos - segment_master).
    * - so each entry is at 12 + 20 + num * 28. */
-  gst_ebml_replace_uint (ebml, mux->seekhead_pos + 32,
-      mux->info_pos - mux->segment_master);
-  gst_ebml_replace_uint (ebml, mux->seekhead_pos + 60,
-      mux->tracks_pos - mux->segment_master);
-  if (mux->index != NULL) {
-    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 88,
-        mux->cues_pos - mux->segment_master);
-  } else {
-    /* void'ify */
-    guint64 my_pos = ebml->pos;
+  if (!mux->is_live) {
+    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 32,
+        mux->info_pos - mux->segment_master);
+    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 60,
+        mux->tracks_pos - mux->segment_master);
+    if (mux->index != NULL) {
+      gst_ebml_replace_uint (ebml, mux->seekhead_pos + 88,
+          mux->cues_pos - mux->segment_master);
+    } else {
+      /* void'ify */
+      guint64 my_pos = ebml->pos;
 
-    gst_ebml_write_seek (ebml, mux->seekhead_pos + 68);
-    gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
-    gst_ebml_write_seek (ebml, my_pos);
-  }
-  if (tags != NULL) {
-    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 116,
-        mux->tags_pos - mux->segment_master);
-  } else {
-    /* void'ify */
-    guint64 my_pos = ebml->pos;
+      gst_ebml_write_seek (ebml, mux->seekhead_pos + 68);
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
+      gst_ebml_write_seek (ebml, my_pos);
+    }
+    if (tags != NULL) {
+      gst_ebml_replace_uint (ebml, mux->seekhead_pos + 116,
+          mux->tags_pos - mux->segment_master);
+    } else {
+      /* void'ify */
+      guint64 my_pos = ebml->pos;
 
-    gst_ebml_write_seek (ebml, mux->seekhead_pos + 96);
-    gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
-    gst_ebml_write_seek (ebml, my_pos);
-  }
-
-  /* update duration */
-  /* first get the overall duration */
-  /* a released track may have left a duration in here */
-  duration = mux->duration;
-  for (collected = mux->collect->data; collected;
-      collected = g_slist_next (collected)) {
-    GstMatroskaPad *collect_pad;
-    GstClockTime min_duration;  /* observed minimum duration */
-
-    collect_pad = (GstMatroskaPad *) collected->data;
-
-    GST_DEBUG_OBJECT (mux, "Pad %" GST_PTR_FORMAT " start ts %" GST_TIME_FORMAT
-        " end ts %" GST_TIME_FORMAT, collect_pad,
-        GST_TIME_ARGS (collect_pad->start_ts),
-        GST_TIME_ARGS (collect_pad->end_ts));
-
-    if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
-        GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
-      min_duration =
-          GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
-      if (collect_pad->duration < min_duration)
-        collect_pad->duration = min_duration;
-      GST_DEBUG_OBJECT (collect_pad, "final track duration: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (collect_pad->duration));
+      gst_ebml_write_seek (ebml, mux->seekhead_pos + 96);
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
+      gst_ebml_write_seek (ebml, my_pos);
     }
 
-    if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
-        duration < collect_pad->duration)
-      duration = collect_pad->duration;
-  }
-  if (duration != 0) {
-    GST_DEBUG_OBJECT (mux, "final total duration: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (duration));
-    pos = mux->ebml_write->pos;
-    gst_ebml_write_seek (ebml, mux->duration_pos);
-    gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
-        gst_guint64_to_gdouble (duration) /
-        gst_guint64_to_gdouble (mux->time_scale));
-    gst_ebml_write_seek (ebml, pos);
-  } else {
-    /* void'ify */
-    guint64 my_pos = ebml->pos;
+    /* update duration */
+    /* first get the overall duration */
+    /* a released track may have left a duration in here */
+    duration = mux->duration;
+    for (collected = mux->collect->data; collected;
+        collected = g_slist_next (collected)) {
+      GstMatroskaPad *collect_pad;
+      GstClockTime min_duration;        /* observed minimum duration */
 
-    gst_ebml_write_seek (ebml, mux->duration_pos);
-    gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 8);
-    gst_ebml_write_seek (ebml, my_pos);
-  }
+      collect_pad = (GstMatroskaPad *) collected->data;
 
+      GST_DEBUG_OBJECT (mux,
+          "Pad %" GST_PTR_FORMAT " start ts %" GST_TIME_FORMAT
+          " end ts %" GST_TIME_FORMAT, collect_pad,
+          GST_TIME_ARGS (collect_pad->start_ts),
+          GST_TIME_ARGS (collect_pad->end_ts));
+
+      if (GST_CLOCK_TIME_IS_VALID (collect_pad->start_ts) &&
+          GST_CLOCK_TIME_IS_VALID (collect_pad->end_ts)) {
+        min_duration =
+            GST_CLOCK_DIFF (collect_pad->start_ts, collect_pad->end_ts);
+        if (collect_pad->duration < min_duration)
+          collect_pad->duration = min_duration;
+        GST_DEBUG_OBJECT (collect_pad,
+            "final track duration: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (collect_pad->duration));
+      }
+
+      if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
+          duration < collect_pad->duration)
+        duration = collect_pad->duration;
+    }
+    if (duration != 0) {
+      GST_DEBUG_OBJECT (mux, "final total duration: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (duration));
+      pos = mux->ebml_write->pos;
+      gst_ebml_write_seek (ebml, mux->duration_pos);
+      gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
+          gst_guint64_to_gdouble (duration) /
+          gst_guint64_to_gdouble (mux->time_scale));
+      gst_ebml_write_seek (ebml, pos);
+    } else {
+      /* void'ify */
+      guint64 my_pos = ebml->pos;
+
+      gst_ebml_write_seek (ebml, mux->duration_pos);
+      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 8);
+      gst_ebml_write_seek (ebml, my_pos);
+    }
+  }
   /* finish segment - this also writes element length */
   gst_ebml_write_master_finish (ebml, mux->segment_pos);
 }
