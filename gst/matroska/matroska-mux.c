@@ -62,12 +62,14 @@ enum
   ARG_0,
   ARG_WRITING_APP,
   ARG_DOCTYPE_VERSION,
-  ARG_MIN_INDEX_INTERVAL
+  ARG_MIN_INDEX_INTERVAL,
+  ARG_IS_LIVE
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
+#define  DEFAULT_IS_LIVE                 FALSE
 
 /* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
 #define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
@@ -303,6 +305,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
           "entries", "An index entry is created every so many nanoseconds.",
           0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is Live",
+          "The stream is live and does not need an index", DEFAULT_IS_LIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -344,6 +350,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
+  mux->is_live = DEFAULT_IS_LIVE;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -2792,6 +2799,9 @@ gst_matroska_mux_set_property (GObject * object,
     case ARG_MIN_INDEX_INTERVAL:
       mux->min_index_interval = g_value_get_int64 (value);
       break;
+    case ARG_IS_LIVE:
+      mux->is_live = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2816,6 +2826,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case ARG_MIN_INDEX_INTERVAL:
       g_value_set_int64 (value, mux->min_index_interval);
+      break;
+    case ARG_IS_LIVE:
+      g_value_set_boolean (value, mux->is_live);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
