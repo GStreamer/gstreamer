@@ -59,7 +59,8 @@ ges_timeline_pipeline_finalize (GObject * object)
   GESTimelinePipeline *self = GES_TIMELINE_PIPELINE (object);
 
   if (self->playsink) {
-    gst_bin_remove (GST_BIN (object), self->playsink);
+    if (self->mode & (TIMELINE_MODE_PREVIEW))
+      gst_bin_remove (GST_BIN (object), self->playsink);
     gst_object_unref (self->playsink);
     self->playsink = NULL;
   }
