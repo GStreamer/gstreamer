@@ -62,7 +62,6 @@ gst_ebml_write_init (GstEbmlWrite * ebml, GstEbmlWriteClass * klass)
   ebml->pos = 0;
 
   ebml->cache = NULL;
-  ebml->cache_size = 0;
 }
 
 static void
@@ -73,7 +72,7 @@ gst_ebml_write_finalize (GObject * object)
   gst_object_unref (ebml->srcpad);
 
   if (ebml->cache) {
-    gst_buffer_unref (ebml->cache);
+    gst_byte_writer_free (ebml->cache);
     ebml->cache = NULL;
   }
 
@@ -116,10 +115,9 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
   ebml->pos = 0;
 
   if (ebml->cache) {
-    gst_buffer_unref (ebml->cache);
+    gst_byte_writer_free (ebml->cache);
     ebml->cache = NULL;
   }
-  ebml->cache_size = 0;
   ebml->last_write_result = GST_FLOW_OK;
   ebml->timestamp = GST_CLOCK_TIME_NONE;
   ebml->need_newsegment = TRUE;
@@ -159,16 +157,11 @@ gst_ebml_last_write_result (GstEbmlWrite * ebml)
 void
 gst_ebml_write_set_cache (GstEbmlWrite * ebml, guint size)
 {
-  /* FIXME: This is currently broken. I don't know why yet. */
-  return;
-
   g_return_if_fail (ebml->cache == NULL);
 
-  ebml->cache = gst_buffer_new_and_alloc (size);
-  ebml->cache_size = size;
-  GST_BUFFER_SIZE (ebml->cache) = 0;
-  GST_BUFFER_OFFSET (ebml->cache) = ebml->pos;
-  ebml->handled = 0;
+  GST_DEBUG ("Starting cache at %" G_GUINT64_FORMAT, ebml->pos);
+  ebml->cache = gst_byte_writer_new_with_size (size, FALSE);
+  ebml->cache_pos = ebml->pos;
 }
 
 /**
@@ -180,30 +173,27 @@ gst_ebml_write_set_cache (GstEbmlWrite * ebml, guint size)
 void
 gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
 {
+  GstBuffer *buffer;
+
   if (!ebml->cache)
     return;
 
-  /* this is very important. It may fail, in which case the client
-   * programmer didn't use the cache somewhere. That's fatal. */
-  g_assert (ebml->handled == GST_BUFFER_SIZE (ebml->cache));
-  g_assert (GST_BUFFER_SIZE (ebml->cache) +
-      GST_BUFFER_OFFSET (ebml->cache) == ebml->pos);
+  buffer = gst_byte_writer_free_and_get_buffer (ebml->cache);
+  ebml->cache = NULL;
+  GST_DEBUG ("Flushing cache of size %d", GST_BUFFER_SIZE (buffer));
 
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
       GstEvent *ev;
 
-      g_assert (ebml->handled == 0);
       ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
     }
-    ebml->last_write_result = gst_pad_push (ebml->srcpad, ebml->cache);
+    ebml->last_write_result = gst_pad_push (ebml->srcpad, buffer);
+  } else {
+    gst_buffer_unref (buffer);
   }
-
-  ebml->cache = NULL;
-  ebml->cache_size = 0;
-  ebml->handled = 0;
 }
 
 
@@ -226,17 +216,6 @@ gst_ebml_write_element_new (GstEbmlWrite * ebml, guint size)
   /* length, ID */
   size += 12;
 
-  /* prefer cache */
-  if (ebml->cache) {
-    if (ebml->cache_size - GST_BUFFER_SIZE (ebml->cache) < size) {
-      GST_LOG ("Cache available, but too small. Clearing...");
-      gst_ebml_write_flush_cache (ebml);
-    } else {
-      return ebml->cache;
-    }
-  }
-
-  /* else, use a one-element buffer. This is slower */
   buf = gst_buffer_new_and_alloc (size);
   GST_BUFFER_SIZE (buf) = 0;
   GST_BUFFER_TIMESTAMP (buf) = ebml->timestamp;
@@ -352,16 +331,14 @@ gst_ebml_write_element_data (GstBuffer * buf, guint8 * write, guint64 length)
 static void
 gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
 {
-  guint data_size = GST_BUFFER_SIZE (buf) - ebml->handled;
+  guint data_size = GST_BUFFER_SIZE (buf);
 
   ebml->pos += data_size;
-  if (buf == ebml->cache) {
-    ebml->handled += data_size;
-  }
 
   /* if there's no cache, then don't push it! */
   if (ebml->cache) {
-    g_assert (buf == ebml->cache);
+    gst_byte_writer_put_data (ebml->cache, GST_BUFFER_DATA (buf), data_size);
+    gst_buffer_unref (buf);
     return;
   }
 
@@ -369,7 +346,6 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     if (ebml->need_newsegment) {
       GstEvent *ev;
 
-      g_assert (ebml->handled == 0);
       ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
@@ -378,8 +354,7 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     gst_buffer_set_caps (buf, GST_PAD_CAPS (ebml->srcpad));
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
   } else {
-    if (buf != ebml->cache)
-      gst_buffer_unref (buf);
+    gst_buffer_unref (buf);
   }
 }
 
@@ -400,14 +375,11 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
    * knows what he's doing... */
   if (ebml->cache) {
     /* within bounds? */
-    if (pos >= GST_BUFFER_OFFSET (ebml->cache) &&
-        pos < GST_BUFFER_OFFSET (ebml->cache) + ebml->cache_size) {
-      GST_BUFFER_SIZE (ebml->cache) = pos - GST_BUFFER_OFFSET (ebml->cache);
-      if (ebml->pos > pos)
-        ebml->handled -= ebml->pos - pos;
-      else
-        ebml->handled += pos - ebml->pos;
+    if (pos >= ebml->cache_pos &&
+        pos <= ebml->cache_pos + ebml->cache->parent.size) {
       ebml->pos = pos;
+      gst_byte_writer_set_pos (ebml->cache, ebml->pos - ebml->cache_pos);
+      return;
     } else {
       GST_LOG ("Seek outside cache range. Clearing...");
       gst_ebml_write_flush_cache (ebml);

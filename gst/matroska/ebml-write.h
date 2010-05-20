@@ -25,6 +25,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/base/gstbytewriter.h>
 
 G_BEGIN_DECLS
 
@@ -48,9 +49,8 @@ typedef struct _GstEbmlWrite {
   guint64 pos;
   GstClockTime timestamp;
 
-  GstBuffer *cache;
-  guint cache_size;
-  guint handled;
+  GstByteWriter *cache;
+  guint64 cache_pos;
 
   GstFlowReturn last_write_result;
 
