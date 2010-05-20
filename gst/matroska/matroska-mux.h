@@ -86,7 +86,7 @@ typedef struct _GstMatroskaMux {
   gchar          *writing_app;
 
   /* EBML DocType. */
-  gint           doctype;
+  const gchar    *doctype;
 
   /* DocType version. */
   guint          doctype_version;

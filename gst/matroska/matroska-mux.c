@@ -61,12 +61,10 @@ enum
 {
   ARG_0,
   ARG_WRITING_APP,
-  ARG_DOCTYPE,
   ARG_DOCTYPE_VERSION,
   ARG_MIN_INDEX_INTERVAL
 };
 
-#define  DEFAULT_DOCTYPE                 GST_MATROSKA_DOCTYPE_MATROSKA
 #define  DEFAULT_DOCTYPE_VERSION         2
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
@@ -262,23 +260,6 @@ gst_matroska_mux_add_interfaces (GType type)
 static void
 gst_matroska_mux_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&videosink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audiosink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&subtitlesink_templ));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class, "Matroska muxer",
-      "Codec/Muxer",
-      "Muxes video/audio/subtitle streams into a matroska stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-
-  GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
-      "Matroska muxer");
 }
 
 static void
@@ -290,6 +271,22 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&videosink_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&audiosink_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&subtitlesink_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_templ));
+  gst_element_class_set_details_simple (gstelement_class, "Matroska muxer",
+      "Codec/Muxer",
+      "Muxes video/audio/subtitle streams into a matroska stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
+  GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
+      "Matroska muxer");
+
   gobject_class->finalize = gst_matroska_mux_finalize;
 
   gobject_class->get_property = gst_matroska_mux_get_property;
@@ -299,13 +296,9 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_string ("writing-app", "Writing application.",
           "The name the application that creates the matroska file.",
           NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_DOCTYPE,
-      g_param_spec_enum ("doctype", "DocType.",
-          "The type of document.", GST_TYPE_MATROSKA_DOCTYPE,
-          DEFAULT_DOCTYPE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DOCTYPE_VERSION,
       g_param_spec_int ("version", "DocType version",
-          "This parameter determines what matroska features can be used.",
+          "This parameter determines what Matroska features can be used.",
           1, 2, DEFAULT_DOCTYPE_VERSION, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MIN_INDEX_INTERVAL,
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
@@ -331,7 +324,13 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
 static void
 gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
 {
-  mux->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
+  GstPadTemplate *templ;
+
+  templ =
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
+  mux->srcpad = gst_pad_new_from_template (templ, "src");
+  g_object_unref (templ);
+
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
@@ -343,7 +342,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
 
   /* property defaults */
-  mux->doctype = DEFAULT_DOCTYPE;
+  mux->doctype = "matroska";
   mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
@@ -1987,8 +1986,6 @@ static void
 gst_matroska_mux_start (GstMatroskaMux * mux)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
-  GEnumClass *doctype_class;
-  GEnumValue *doctype_value;
   const gchar *doctype;
   guint32 seekhead_id[] = { GST_MATROSKA_ID_SEGMENTINFO,
     GST_MATROSKA_ID_TRACKS,
@@ -2005,10 +2002,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
 
   /* we start with a EBML header */
-  doctype_class = g_type_class_ref (GST_TYPE_MATROSKA_DOCTYPE);
-  doctype_value = g_enum_get_value (doctype_class, mux->doctype);
-  doctype = doctype_value->value_nick;
-  g_type_class_unref (doctype_class);
+  doctype = mux->doctype;
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
       doctype, mux->doctype_version);
   gst_ebml_write_header (ebml, doctype, mux->doctype_version);
@@ -2784,9 +2778,6 @@ gst_matroska_mux_set_property (GObject * object,
       g_free (mux->writing_app);
       mux->writing_app = g_value_dup_string (value);
       break;
-    case ARG_DOCTYPE:
-      mux->doctype = g_value_get_enum (value);
-      break;
     case ARG_DOCTYPE_VERSION:
       mux->doctype_version = g_value_get_int (value);
       break;
@@ -2812,9 +2803,6 @@ gst_matroska_mux_get_property (GObject * object,
     case ARG_WRITING_APP:
       g_value_set_string (value, mux->writing_app);
       break;
-    case ARG_DOCTYPE:
-      g_value_set_enum (value, mux->doctype);
-      break;
     case ARG_DOCTYPE_VERSION:
       g_value_set_int (value, mux->doctype_version);
       break;
@@ -2827,9 +2815,79 @@ gst_matroska_mux_get_property (GObject * object,
   }
 }
 
+#define parent_class webm_parent_class
+
+GType gst_webm_mux_get_type (void);
+
+typedef GstMatroskaMux GstWebMMux;
+typedef GstMatroskaMuxClass GstWebMMuxClass;
+#define GST_TYPE_WEBM_MUX \
+  (gst_webm_mux_get_type ())
+#define GST_WEBM_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WEBM_MUX, GstWebMMux))
+#define GST_WEBM_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_WEBM_MUX, GstWebMMuxClass))
+#define GST_IS_WEBM_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WEBM_MUX))
+#define GST_IS_WEBM_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WEBM_MUX))
+
+GST_BOILERPLATE (GstWebMMux, gst_webm_mux, GstMatroskaMux,
+    GST_TYPE_MATROSKA_MUX);
+
+static GstStaticPadTemplate webm_src_templ = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/webm")
+    );
+
+static GstStaticPadTemplate webm_videosink_templ =
+GST_STATIC_PAD_TEMPLATE ("video_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("video/x-vp8, " COMMON_VIDEO_CAPS)
+    );
+
+static GstStaticPadTemplate webm_audiosink_templ =
+GST_STATIC_PAD_TEMPLATE ("audio_%d",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("audio/x-vorbis, " COMMON_AUDIO_CAPS)
+    );
+
+static void
+gst_webm_mux_base_init (gpointer g_class)
+{
+}
+
+static void
+gst_webm_mux_class_init (GstWebMMuxClass * klass)
+{
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&webm_videosink_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&webm_audiosink_templ));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&webm_src_templ));
+  gst_element_class_set_details_simple (gstelement_class, "WebM muxer",
+      "Codec/Muxer",
+      "Muxes video/audio/subtitle streams into a WebM stream",
+      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+}
+
+static void
+gst_webm_mux_init (GstWebMMux * mux, GstWebMMuxClass * g_class)
+{
+  mux->doctype = "webm";
+}
+
 gboolean
 gst_matroska_mux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "matroskamux",
-      GST_RANK_PRIMARY, GST_TYPE_MATROSKA_MUX);
+      GST_RANK_PRIMARY, GST_TYPE_MATROSKA_MUX) &&
+      gst_element_register (plugin, "webmmux",
+      GST_RANK_PRIMARY, GST_TYPE_WEBM_MUX);
 }
