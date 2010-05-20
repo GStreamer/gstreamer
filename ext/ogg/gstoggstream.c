@@ -595,7 +595,7 @@ granulepos_to_key_granule_vp8 (GstOggStream * pad, gint64 granulepos)
 static gboolean
 is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
 {
-  if (packet->bytes > 6 && packet->packet[0] == 0x4F &&
+  if (packet->bytes >= 5 && packet->packet[0] == 0x4F &&
       packet->packet[1] == 0x56 && packet->packet[2] == 0x50 &&
       packet->packet[3] == 0x38 && packet->packet[4] == 0x30)
     return TRUE;
