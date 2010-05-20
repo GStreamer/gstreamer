@@ -9,7 +9,7 @@ pygstrtspserver_PYTHON =
 pygstrtspserverexecdir = $(pkgpyexecdir)
 pygstrtspserverexec_LTLIBRARIES = rtspserver.la
 
-DEFS = rtspserver-types.defs rtspserver.defs
+DEFS = $(srcdir)/rtspserver-types.defs $(srcdir)/rtspserver.defs
 defs_DATA = $(DEFS)
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 OVERRIDES = rtspserver.override
