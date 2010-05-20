@@ -27,14 +27,11 @@
 #include "ebml-ids.h"
 
 /*
- * EBML DocType. enum.
+ * EBML DocType.
  */
 
-#define GST_MATROSKA_DOCTYPE_MATROSKA              0
-#define GST_MATROSKA_DOCTYPE_WEBM                  1
-
-#define GST_TYPE_MATROSKA_DOCTYPE                  (gst_matroska_doctype_get_type())
-extern GType gst_matroska_doctype_get_type (void);
+#define GST_MATROSKA_DOCTYPE_MATROSKA              "matroska"
+#define GST_MATROSKA_DOCTYPE_WEBM                  "webm"
 
 /*
  * Matroska element IDs. max. 32-bit.

@@ -26,23 +26,6 @@
 
 #include "matroska-ids.h"
 
-GType
-gst_matroska_doctype_get_type (void)
-{
-  static GType doctype_type = 0;
-
-  static const GEnumValue doctype_types[] = {
-    {GST_MATROSKA_DOCTYPE_MATROSKA, "Matroska", "matroska"},
-    {GST_MATROSKA_DOCTYPE_WEBM, "WebM", "webm"},
-    {0, NULL, NULL}
-  };
-
-  if (!doctype_type) {
-    doctype_type = g_enum_register_static ("GstMatroskaDoctype", doctype_types);
-  }
-  return doctype_type;
-}
-
 gboolean
 gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
 {

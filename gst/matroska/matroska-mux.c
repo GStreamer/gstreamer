@@ -340,9 +340,9 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
       mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
+  mux->doctype = GST_MATROSKA_DOCTYPE_MATROSKA;
 
   /* property defaults */
-  mux->doctype = "matroska";
   mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
@@ -2880,7 +2880,7 @@ gst_webm_mux_class_init (GstWebMMuxClass * klass)
 static void
 gst_webm_mux_init (GstWebMMux * mux, GstWebMMuxClass * g_class)
 {
-  mux->doctype = "webm";
+  mux->doctype = GST_MATROSKA_DOCTYPE_WEBM;
 }
 
 gboolean

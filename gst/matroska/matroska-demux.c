@@ -2576,11 +2576,8 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux)
 
   ret = GST_FLOW_ERROR;
   if (doctype) {
-    GEnumClass *doctype_class;
-    GEnumValue *doctype_value;
-    doctype_class = g_type_class_ref (GST_TYPE_MATROSKA_DOCTYPE);
-    doctype_value = g_enum_get_value_by_nick (doctype_class, doctype);
-    if (doctype_value) {
+    if (g_str_equal (doctype, GST_MATROSKA_DOCTYPE_MATROSKA) ||
+        g_str_equal (doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
       if (version <= 2) {
         GST_INFO_OBJECT (demux, "Input is %s version %d", doctype, version);
         ret = GST_FLOW_OK;
@@ -2593,7 +2590,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux)
       GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
           ("Input is not a matroska stream (doctype=%s)", doctype));
     }
-    g_type_class_unref (doctype_class);
     g_free (doctype);
   } else {
     GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
