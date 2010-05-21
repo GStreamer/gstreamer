@@ -89,7 +89,7 @@ gst_webm_mux_class_init (GstWebMMuxClass * klass)
       gst_static_pad_template_get (&webm_src_templ));
   gst_element_class_set_details_simple (gstelement_class, "WebM muxer",
       "Codec/Muxer",
-      "Muxes video/audio/subtitle streams into a WebM stream",
+      "Muxes video and audio streams into a WebM stream",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 

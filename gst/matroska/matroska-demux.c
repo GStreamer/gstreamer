@@ -198,7 +198,7 @@ gst_matroska_demux_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class, "Matroska demuxer",
       "Codec/Demuxer",
-      "Demuxes a Matroska Stream into video/audio/subtitles",
+      "Demuxes Matroska/WebM streams into video/audio/subtitles",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 }
 
