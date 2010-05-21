@@ -72,6 +72,7 @@ struct _GstVP8Enc
 
   /* properties */
   int bitrate;
+  enum vpx_rc_mode mode;
   double quality;
   gboolean error_resilient;
   int max_latency;
@@ -108,6 +109,7 @@ enum
 };
 
 #define DEFAULT_BITRATE 0
+#define DEFAULT_MODE VPX_VBR
 #define DEFAULT_QUALITY 5
 #define DEFAULT_ERROR_RESILIENT FALSE
 #define DEFAULT_MAX_LATENCY 10
@@ -118,12 +120,35 @@ enum
 {
   PROP_0,
   PROP_BITRATE,
+  PROP_MODE,
   PROP_QUALITY,
   PROP_ERROR_RESILIENT,
   PROP_MAX_LATENCY,
   PROP_MAX_KEYFRAME_DISTANCE,
   PROP_SPEED
 };
+
+#define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
+static GType
+gst_vp8_enc_mode_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {VPX_VBR, "Variable Bit Rate (VBR) mode", "vbr"},
+    {VPX_CBR, "Constant Bit Rate (CBR) mode", "cbr"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstVP8EncMode", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
 
 static void gst_vp8_enc_finalize (GObject * object);
 static void gst_vp8_enc_set_property (GObject * object, guint prop_id,
@@ -226,6 +251,12 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           0, 1000000000, DEFAULT_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "Mode",
+          GST_VP8_ENC_MODE_TYPE, DEFAULT_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_double ("quality", "Quality",
           "Quality",
@@ -266,6 +297,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
   gst_vp8_enc->bitrate = DEFAULT_BITRATE;
+  gst_vp8_enc->mode = DEFAULT_MODE;
   gst_vp8_enc->quality = DEFAULT_QUALITY;
   gst_vp8_enc->error_resilient = DEFAULT_ERROR_RESILIENT;
   gst_vp8_enc->max_latency = DEFAULT_MAX_LATENCY;
@@ -306,6 +338,9 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       gst_vp8_enc->bitrate = g_value_get_int (value);
       break;
+    case PROP_MODE:
+      gst_vp8_enc->mode = g_value_get_enum (value);
+      break;
     case PROP_QUALITY:
       gst_vp8_enc->quality = g_value_get_double (value);
       break;
@@ -338,6 +373,9 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
   switch (prop_id) {
     case PROP_BITRATE:
       g_value_set_int (value, gst_vp8_enc->bitrate);
+      break;
+    case PROP_MODE:
+      g_value_set_enum (value, gst_vp8_enc->mode);
       break;
     case PROP_QUALITY:
       g_value_set_double (value, gst_vp8_enc->quality);
@@ -634,11 +672,10 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     cfg.g_pass = VPX_RC_ONE_PASS;
     cfg.g_lag_in_frames = encoder->max_latency;
 
+    cfg.rc_end_usage = encoder->mode;
     if (encoder->bitrate) {
-      cfg.rc_end_usage = VPX_CBR;
       cfg.rc_target_bitrate = encoder->bitrate / 1000;
     } else {
-      cfg.rc_end_usage = VPX_VBR;
       cfg.rc_min_quantizer = 63 - encoder->quality * 5.0;
       cfg.rc_max_quantizer = 63 - encoder->quality * 5.0;
       cfg.rc_target_bitrate = encoder->bitrate;
