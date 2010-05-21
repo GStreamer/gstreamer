@@ -431,6 +431,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
   if (!dec->decoder_inited) {
     int flags = 0;
     vpx_codec_stream_info_t stream_info;
+    vpx_codec_caps_t caps;
 
     memset (&stream_info, 0, sizeof (stream_info));
     stream_info.sz = sizeof (stream_info);
@@ -451,8 +452,16 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     decoder->state.format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
 
-    if (dec->post_processing)
-      flags |= VPX_CODEC_USE_POSTPROC;
+    caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
+
+    if (dec->post_processing) {
+      if (!(caps & VPX_CODEC_CAP_POSTPROC)) {
+        GST_WARNING_OBJECT (decoder,
+            "Decoder does not support post processing");
+      } else {
+        flags |= VPX_CODEC_USE_POSTPROC;
+      }
+    }
 
     status =
         vpx_codec_dec_init (&dec->decoder, &vpx_codec_vp8_dx_algo, NULL, flags);
@@ -463,7 +472,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
       return GST_FLOW_ERROR;
     }
 
-    if (dec->post_processing) {
+    if ((caps & VPX_CODEC_CAP_POSTPROC) && dec->post_processing) {
       vp8_postproc_cfg_t pp_cfg = { 0, };
 
       pp_cfg.post_proc_flag = dec->post_processing_flags;
