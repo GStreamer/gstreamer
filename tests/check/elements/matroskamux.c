@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/base/gstadapter.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -194,19 +195,16 @@ GST_START_TEST (test_ebml_header)
 {
   GstElement *matroskamux;
   GstBuffer *inbuffer, *outbuffer;
+  GstAdapter *adapter;
   int num_buffers;
   int i;
-  guint8 data0[12] =
-      { 0x1a, 0x45, 0xdf, 0xa3, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-    0xff
+  gint available;
+  guint8 data[] =
+      { 0x1a, 0x45, 0xdf, 0xa3, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14,
+    0x42, 0x82, 0x89, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61, 0x00,
+    0x42, 0x87, 0x81, 0x01,
+    0x42, 0x85, 0x81, 0x01
   };
-  guint8 data1[12] =
-      { 0x42, 0x82, 0x89, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61,
-    0x00
-  };
-  guint8 data2[4] = { 0x42, 0x87, 0x81, 0x01 };
-  guint8 data3[4] = { 0x42, 0x85, 0x81, 0x01 };
-  guint8 data4[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14 };
 
   matroskamux = setup_matroskamux (&srcac3template);
   fail_unless (gst_element_set_state (matroskamux,
@@ -217,38 +215,27 @@ GST_START_TEST (test_ebml_header)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
-  fail_unless (num_buffers >= 5,
+  fail_unless (num_buffers >= 1,
       "expected at least 5 buffers, but got only %d", num_buffers);
 
+  adapter = gst_adapter_new ();
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
     buffers = g_list_remove (buffers, outbuffer);
 
-    switch (i) {
-      case 0:
-        check_buffer_data (outbuffer, data0, sizeof (data0));
-        break;
-      case 1:
-        check_buffer_data (outbuffer, data1, sizeof (data1));
-        break;
-      case 2:
-        check_buffer_data (outbuffer, data2, sizeof (data2));
-        break;
-      case 3:
-        check_buffer_data (outbuffer, data3, sizeof (data3));
-        break;
-      case 4:
-        check_buffer_data (outbuffer, data4, sizeof (data4));
-        break;
-      default:
-        break;
-    }
-
     ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
-    gst_buffer_unref (outbuffer);
-    outbuffer = NULL;
+
+    gst_adapter_push (adapter, outbuffer);
   }
+
+  available = gst_adapter_available (adapter);
+  fail_unless (available >= sizeof (data));
+  outbuffer = gst_adapter_take_buffer (adapter, sizeof (data));
+  g_object_unref (adapter);
+
+  check_buffer_data (outbuffer, data, sizeof (data));
+  gst_buffer_unref (outbuffer);
 
   cleanup_matroskamux (matroskamux);
   g_list_free (buffers);
@@ -286,13 +273,19 @@ GST_START_TEST (test_vorbis_header)
   num_buffers = g_list_length (buffers);
 
   for (i = 0; i < num_buffers; ++i) {
+    gint j;
+
     outbuffer = GST_BUFFER (buffers->data);
     fail_if (outbuffer == NULL);
     buffers = g_list_remove (buffers, outbuffer);
 
-    if (!vorbis_header_found && GST_BUFFER_SIZE (outbuffer) == sizeof (data)) {
-      vorbis_header_found =
-          memcmp (GST_BUFFER_DATA (outbuffer), data, sizeof (data));
+    if (!vorbis_header_found && GST_BUFFER_SIZE (outbuffer) >= sizeof (data)) {
+      for (j = 0; j <= GST_BUFFER_SIZE (outbuffer) - sizeof (data); j++) {
+        if (memcmp (GST_BUFFER_DATA (outbuffer) + j, data, sizeof (data)) == 0) {
+          vorbis_header_found = TRUE;
+          break;
+        }
+      }
     }
 
     ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
@@ -317,11 +310,11 @@ GST_START_TEST (test_block_group)
   GstCaps *caps;
   int num_buffers;
   int i;
-  guint8 data0[9] = { 0xa0, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-  guint8 data1[2] = { 0xa1, 0x85 };
-  guint8 data2[4] = { 0x81, 0x00, 0x01, 0x00 };
-  guint8 data3[1] = { 0x42 };
-  guint8 data4[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07 };
+  guint8 data0[] = { 0xa0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,
+    0xa1, 0x85,
+    0x81, 0x00, 0x01, 0x00
+  };
+  guint8 data1[] = { 0x42 };
 
   matroskamux = setup_matroskamux (&srcac3template);
   fail_unless (gst_element_set_state (matroskamux,
@@ -363,7 +356,7 @@ GST_START_TEST (test_block_group)
 
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
-  fail_unless (num_buffers >= 5);
+  fail_unless (num_buffers >= 2);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
@@ -376,15 +369,6 @@ GST_START_TEST (test_block_group)
         break;
       case 1:
         check_buffer_data (outbuffer, data1, sizeof (data1));
-        break;
-      case 2:
-        check_buffer_data (outbuffer, data2, sizeof (data2));
-        break;
-      case 3:
-        check_buffer_data (outbuffer, data3, sizeof (data3));
-        break;
-      case 4:
-        check_buffer_data (outbuffer, data4, sizeof (data4));
         break;
       default:
         break;

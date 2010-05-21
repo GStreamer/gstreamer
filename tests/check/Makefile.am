@@ -194,6 +194,8 @@ elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10
 
 elements_level_LDADD = $(LDADD) $(LIBM)
 
+elements_matroskamux_LDADD = $(GST_BASE_LIBS) $(LDADD) $(LIBM)
+
 elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(WARNING_CFLAGS) $(ERROR_CFLAGS) $(GST_CHECK_CFLAGS)
 elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
