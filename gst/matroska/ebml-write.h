@@ -55,6 +55,10 @@ typedef struct _GstEbmlWrite {
   GstFlowReturn last_write_result;
 
   gboolean need_newsegment;
+
+  gboolean writing_streamheader;
+  GstByteWriter *streamheader;
+  guint64 streamheader_pos;
 } GstEbmlWrite;
 
 typedef struct _GstEbmlWriteClass {
@@ -67,6 +71,10 @@ GstEbmlWrite *gst_ebml_write_new     (GstPad *srcpad);
 void    gst_ebml_write_reset         (GstEbmlWrite *ebml);
 
 GstFlowReturn gst_ebml_last_write_result (GstEbmlWrite *ebml);
+
+/* Used to create streamheaders */
+void    gst_ebml_start_streamheader  (GstEbmlWrite *ebml);
+GstBuffer*    gst_ebml_stop_streamheader   (GstEbmlWrite *ebml);
 
 /*
  * Caching means that we do not push one buffer for

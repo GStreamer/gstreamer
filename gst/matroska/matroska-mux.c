@@ -2005,11 +2005,13 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
+  GstBuffer *streamheader_buffer;
 
   /* we start with a EBML header */
   doctype = mux->doctype;
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
       doctype, mux->doctype_version);
+  gst_ebml_start_streamheader (ebml);
   gst_ebml_write_header (ebml, doctype, mux->doctype_version);
 
   /* the rest of the header is cached */
@@ -2044,30 +2046,31 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
-  for (collected = mux->collect->data; collected;
-      collected = g_slist_next (collected)) {
-    GstMatroskaPad *collect_pad;
-    GstFormat format = GST_FORMAT_TIME;
-    GstPad *thepad;
-    gint64 trackduration;
+  if (!mux->is_live) {
+    for (collected = mux->collect->data; collected;
+        collected = g_slist_next (collected)) {
+      GstMatroskaPad *collect_pad;
+      GstFormat format = GST_FORMAT_TIME;
+      GstPad *thepad;
+      gint64 trackduration;
 
-    collect_pad = (GstMatroskaPad *) collected->data;
-    thepad = collect_pad->collect.pad;
+      collect_pad = (GstMatroskaPad *) collected->data;
+      thepad = collect_pad->collect.pad;
 
-    /* Query the total length of the track. */
-    GST_DEBUG_OBJECT (thepad, "querying peer duration");
-    if (gst_pad_query_peer_duration (thepad, &format, &trackduration)) {
-      GST_DEBUG_OBJECT (thepad, "duration: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (trackduration));
-      if (trackduration != GST_CLOCK_TIME_NONE && trackduration > duration) {
-        duration = (GstClockTime) trackduration;
+      /* Query the total length of the track. */
+      GST_DEBUG_OBJECT (thepad, "querying peer duration");
+      if (gst_pad_query_peer_duration (thepad, &format, &trackduration)) {
+        GST_DEBUG_OBJECT (thepad, "duration: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (trackduration));
+        if (trackduration != GST_CLOCK_TIME_NONE && trackduration > duration) {
+          duration = (GstClockTime) trackduration;
+        }
       }
     }
+    gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
+        gst_guint64_to_gdouble (duration) /
+        gst_guint64_to_gdouble (mux->time_scale));
   }
-  gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
-      gst_guint64_to_gdouble (duration) /
-      gst_guint64_to_gdouble (mux->time_scale));
-
   gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_MUXINGAPP,
       "GStreamer plugin version " PACKAGE_VERSION);
   if (mux->writing_app && mux->writing_app[0]) {
@@ -2101,6 +2104,29 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
   /* lastly, flush the cache */
   gst_ebml_write_flush_cache (ebml);
+  streamheader_buffer = gst_ebml_stop_streamheader (ebml);
+  /* lets set the pad caps, which is how the buffer caps is set currently :( */
+  {
+    GstCaps *caps;
+    GstStructure *s;
+    GValue streamheader = { 0 };
+    GValue bufval = { 0 };
+    if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+      caps = gst_caps_from_string ("video/webm");
+    } else {
+      caps = gst_caps_from_string ("video/x-matroska");
+    }
+    s = gst_caps_get_structure (caps, 0);
+    g_value_init (&streamheader, GST_TYPE_ARRAY);
+    g_value_init (&bufval, GST_TYPE_BUFFER);
+    gst_value_set_buffer (&bufval, streamheader_buffer);
+    gst_value_array_append_value (&streamheader, &bufval);
+    g_value_unset (&bufval);
+    gst_structure_set_value (s, "streamheader", &streamheader);
+    g_value_unset (&streamheader);
+    gst_pad_set_caps (mux->srcpad, caps);
+    gst_caps_unref (caps);
+  }
 }
 
 static void

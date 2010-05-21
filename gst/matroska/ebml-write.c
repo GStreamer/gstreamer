@@ -62,6 +62,9 @@ gst_ebml_write_init (GstEbmlWrite * ebml, GstEbmlWriteClass * klass)
   ebml->pos = 0;
 
   ebml->cache = NULL;
+  ebml->streamheader = NULL;
+  ebml->streamheader_pos = 0;
+  ebml->writing_streamheader = FALSE;
 }
 
 static void
@@ -74,6 +77,11 @@ gst_ebml_write_finalize (GObject * object)
   if (ebml->cache) {
     gst_byte_writer_free (ebml->cache);
     ebml->cache = NULL;
+  }
+
+  if (ebml->streamheader) {
+    gst_byte_writer_free (ebml->streamheader);
+    ebml->streamheader = NULL;
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
@@ -141,6 +149,33 @@ gst_ebml_last_write_result (GstEbmlWrite * ebml)
   return res;
 }
 
+
+void
+gst_ebml_start_streamheader (GstEbmlWrite * ebml)
+{
+  g_return_if_fail (ebml->streamheader == NULL);
+
+  GST_DEBUG ("Starting streamheader at %" G_GUINT64_FORMAT, ebml->pos);
+  ebml->streamheader = gst_byte_writer_new_with_size (1000, FALSE);
+  ebml->streamheader_pos = ebml->pos;
+  ebml->writing_streamheader = TRUE;
+}
+
+GstBuffer *
+gst_ebml_stop_streamheader (GstEbmlWrite * ebml)
+{
+  GstBuffer *buffer;
+
+  if (!ebml->streamheader)
+    return NULL;
+
+  buffer = gst_byte_writer_free_and_get_buffer (ebml->streamheader);
+  ebml->streamheader = NULL;
+  GST_DEBUG ("Streamheader was size %d", GST_BUFFER_SIZE (buffer));
+
+  ebml->writing_streamheader = FALSE;
+  return buffer;
+}
 
 /**
  * gst_ebml_write_set_cache:
@@ -336,6 +371,10 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
   ebml->pos += data_size;
 
   /* if there's no cache, then don't push it! */
+  if (ebml->writing_streamheader) {
+    gst_byte_writer_put_data (ebml->streamheader, GST_BUFFER_DATA (buf),
+        data_size);
+  }
   if (ebml->cache) {
     gst_byte_writer_put_data (ebml->cache, GST_BUFFER_DATA (buf), data_size);
     gst_buffer_unref (buf);
@@ -371,6 +410,19 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
 {
   GstEvent *event;
 
+  if (ebml->writing_streamheader) {
+    GST_DEBUG ("wanting to seek to pos %" G_GUINT64_FORMAT, pos);
+    if (pos >= ebml->streamheader_pos &&
+        pos <= ebml->streamheader_pos + ebml->streamheader->parent.size) {
+      gst_byte_writer_set_pos (ebml->streamheader,
+          pos - ebml->streamheader_pos);
+      GST_DEBUG ("seeked in streamheader to position %" G_GUINT64_FORMAT,
+          pos - ebml->streamheader_pos);
+    } else {
+      GST_WARNING
+          ("we are writing streamheader still and seek is out of bounds");
+    }
+  }
   /* Cache seeking. A bit dangerous, we assume the client writer
    * knows what he's doing... */
   if (ebml->cache) {
