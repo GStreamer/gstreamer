@@ -2020,9 +2020,6 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENT);
   mux->segment_master = ebml->pos;
 
-  /* the rest of the header is cached */
-  gst_ebml_write_set_cache (ebml, 0x1000);
-
   if (!mux->is_live) {
     /* seekhead (table of contents) - we set the positions later */
     mux->seekhead_pos = ebml->pos;
