@@ -26,13 +26,22 @@
 #include "matroska-demux.h"
 #include "matroska-mux.h"
 #include "matroska-ids.h"
+#include "webm-mux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gboolean ret;
+
   gst_matroska_register_tags ();
-  return gst_matroska_demux_plugin_init (plugin) &&
-      gst_matroska_mux_plugin_init (plugin);
+
+  ret = gst_matroska_demux_plugin_init (plugin);
+  ret &= gst_element_register (plugin, "matroskamux", GST_RANK_PRIMARY,
+      GST_TYPE_MATROSKA_MUX);
+  ret &= gst_element_register (plugin, "webmmux", GST_RANK_PRIMARY,
+      GST_TYPE_WEBM_MUX);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -204,7 +204,6 @@ G_LOCK_DEFINE_STATIC (used_uids);
 
 static void gst_matroska_mux_add_interfaces (GType type);
 
-GType gst_matroska_mux_get_type (void);
 GST_BOILERPLATE_FULL (GstMatroskaMux, gst_matroska_mux, GstElement,
     GST_TYPE_ELEMENT, gst_matroska_mux_add_interfaces);
 
@@ -2813,81 +2812,4 @@ gst_matroska_mux_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-#define parent_class webm_parent_class
-
-GType gst_webm_mux_get_type (void);
-
-typedef GstMatroskaMux GstWebMMux;
-typedef GstMatroskaMuxClass GstWebMMuxClass;
-#define GST_TYPE_WEBM_MUX \
-  (gst_webm_mux_get_type ())
-#define GST_WEBM_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_WEBM_MUX, GstWebMMux))
-#define GST_WEBM_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_WEBM_MUX, GstWebMMuxClass))
-#define GST_IS_WEBM_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_WEBM_MUX))
-#define GST_IS_WEBM_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_WEBM_MUX))
-
-GST_BOILERPLATE (GstWebMMux, gst_webm_mux, GstMatroskaMux,
-    GST_TYPE_MATROSKA_MUX);
-
-static GstStaticPadTemplate webm_src_templ = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/webm")
-    );
-
-static GstStaticPadTemplate webm_videosink_templ =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/x-vp8, " COMMON_VIDEO_CAPS)
-    );
-
-static GstStaticPadTemplate webm_audiosink_templ =
-GST_STATIC_PAD_TEMPLATE ("audio_%d",
-    GST_PAD_SINK,
-    GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("audio/x-vorbis, " COMMON_AUDIO_CAPS)
-    );
-
-static void
-gst_webm_mux_base_init (gpointer g_class)
-{
-}
-
-static void
-gst_webm_mux_class_init (GstWebMMuxClass * klass)
-{
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
-
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&webm_videosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&webm_audiosink_templ));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&webm_src_templ));
-  gst_element_class_set_details_simple (gstelement_class, "WebM muxer",
-      "Codec/Muxer",
-      "Muxes video/audio/subtitle streams into a WebM stream",
-      "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
-}
-
-static void
-gst_webm_mux_init (GstWebMMux * mux, GstWebMMuxClass * g_class)
-{
-  mux->doctype = GST_MATROSKA_DOCTYPE_WEBM;
-}
-
-gboolean
-gst_matroska_mux_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "matroskamux",
-      GST_RANK_PRIMARY, GST_TYPE_MATROSKA_MUX) &&
-      gst_element_register (plugin, "webmmux",
-      GST_RANK_PRIMARY, GST_TYPE_WEBM_MUX);
 }

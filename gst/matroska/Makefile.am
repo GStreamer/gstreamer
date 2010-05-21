@@ -7,6 +7,7 @@ libgstmatroska_la_SOURCES = \
 	matroska-demux.c \
 	matroska-ids.c \
 	matroska-mux.c \
+	webm-mux.c \
 	lzo.c
 
 noinst_HEADERS = \
@@ -16,6 +17,7 @@ noinst_HEADERS = \
 	matroska-demux.h \
 	matroska-ids.h \
 	matroska-mux.h \
+	webm-mux.h \
 	lzo.h
 
 libgstmatroska_la_CFLAGS = \
@@ -34,4 +36,3 @@ libgstmatroska_la_LIBADD = \
 	$(LIBM)
 libgstmatroska_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmatroska_la_LIBTOOLFLAGS = --tag=disable-static
-
