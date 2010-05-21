@@ -65,6 +65,8 @@ gst_ebml_write_init (GstEbmlWrite * ebml, GstEbmlWriteClass * klass)
   ebml->streamheader = NULL;
   ebml->streamheader_pos = 0;
   ebml->writing_streamheader = FALSE;
+
+  ebml->caps = NULL;
 }
 
 static void
@@ -84,6 +86,10 @@ gst_ebml_write_finalize (GObject * object)
     ebml->streamheader = NULL;
   }
 
+  if (ebml->caps) {
+    gst_caps_unref (ebml->caps);
+    ebml->caps = NULL;
+  }
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
@@ -216,7 +222,7 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
   buffer = gst_byte_writer_free_and_get_buffer (ebml->cache);
   ebml->cache = NULL;
   GST_DEBUG ("Flushing cache of size %d", GST_BUFFER_SIZE (buffer));
-
+  gst_buffer_set_caps (buffer, ebml->caps);
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
       GstEvent *ev;
@@ -224,6 +230,9 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
       ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
+    }
+    if (ebml->writing_streamheader) {
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
     }
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buffer);
   } else {
@@ -390,7 +399,10 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
         ebml->need_newsegment = FALSE;
     }
     buf = gst_buffer_make_metadata_writable (buf);
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (ebml->srcpad));
+    gst_buffer_set_caps (buf, ebml->caps);
+    if (ebml->writing_streamheader) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+    }
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
   } else {
     gst_buffer_unref (buf);

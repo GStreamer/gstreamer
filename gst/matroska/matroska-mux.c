@@ -2007,16 +2007,10 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
   GstBuffer *streamheader_buffer;
 
-  /* set initial pad caps */
-  {
-    GstCaps *caps;
-    if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-      caps = gst_caps_from_string ("video/webm");
-    } else {
-      caps = gst_caps_from_string ("video/x-matroska");
-    }
-    gst_pad_set_caps (mux->srcpad, caps);
-    gst_caps_unref (caps);
+  if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+    ebml->caps = gst_caps_from_string ("video/webm");
+  } else {
+    ebml->caps = gst_caps_from_string ("video/x-matroska");
   }
   /* we start with a EBML header */
   doctype = mux->doctype;
@@ -2135,8 +2129,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     g_value_unset (&bufval);
     gst_structure_set_value (s, "streamheader", &streamheader);
     g_value_unset (&streamheader);
-    gst_pad_set_caps (mux->srcpad, caps);
-    gst_caps_unref (caps);
+    gst_caps_unref (ebml->caps);
+    ebml->caps = caps;
   }
 }
 
