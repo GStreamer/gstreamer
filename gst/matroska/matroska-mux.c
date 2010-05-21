@@ -2007,6 +2007,17 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
   GstBuffer *streamheader_buffer;
 
+  /* set initial pad caps */
+  {
+    GstCaps *caps;
+    if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+      caps = gst_caps_from_string ("video/webm");
+    } else {
+      caps = gst_caps_from_string ("video/x-matroska");
+    }
+    gst_pad_set_caps (mux->srcpad, caps);
+    gst_caps_unref (caps);
+  }
   /* we start with a EBML header */
   doctype = mux->doctype;
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
