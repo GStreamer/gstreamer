@@ -78,6 +78,7 @@ struct _GstVP8Enc
   int max_latency;
   int max_keyframe_distance;
   int speed;
+  int threads;
 
   /* state */
 
@@ -115,6 +116,7 @@ enum
 #define DEFAULT_MAX_LATENCY 10
 #define DEFAULT_MAX_KEYFRAME_DISTANCE 60
 #define DEFAULT_SPEED 0
+#define DEFAULT_THREADS 1
 
 enum
 {
@@ -125,7 +127,8 @@ enum
   PROP_ERROR_RESILIENT,
   PROP_MAX_LATENCY,
   PROP_MAX_KEYFRAME_DISTANCE,
-  PROP_SPEED
+  PROP_SPEED,
+  PROP_THREADS
 };
 
 #define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
@@ -287,6 +290,12 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           0, 2, DEFAULT_SPEED,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_THREADS,
+      g_param_spec_int ("threads", "Threads",
+          "Threads",
+          1, 64, DEFAULT_THREADS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
 
@@ -356,6 +365,9 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_SPEED:
       gst_vp8_enc->speed = g_value_get_int (value);
       break;
+    case PROP_THREADS:
+      gst_vp8_enc->threads = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -391,6 +403,9 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SPEED:
       g_value_set_int (value, gst_vp8_enc->speed);
+      break;
+    case PROP_THREADS:
+      g_value_set_int (value, gst_vp8_enc->threads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -671,7 +686,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     cfg.g_error_resilient = encoder->error_resilient;
     cfg.g_pass = VPX_RC_ONE_PASS;
     cfg.g_lag_in_frames = encoder->max_latency;
-
+    cfg.g_threads = encoder->threads;
     cfg.rc_end_usage = encoder->mode;
     if (encoder->bitrate) {
       cfg.rc_target_bitrate = encoder->bitrate / 1000;
