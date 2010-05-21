@@ -84,7 +84,8 @@ GstBuffer*    gst_ebml_stop_streamheader   (GstEbmlWrite *ebml);
  */
 void    gst_ebml_write_set_cache     (GstEbmlWrite *ebml,
                                       guint         size);
-void    gst_ebml_write_flush_cache   (GstEbmlWrite *ebml);
+void    gst_ebml_write_flush_cache   (GstEbmlWrite *ebml,
+                                      gboolean is_keyframe);
 
 /*
  * Seeking.

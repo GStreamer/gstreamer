@@ -212,7 +212,7 @@ gst_ebml_write_set_cache (GstEbmlWrite * ebml, guint size)
  * Flush the cache.
  */
 void
-gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
+gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
 {
   GstBuffer *buffer;
 
@@ -226,13 +226,16 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
       GstEvent *ev;
-
+      GST_WARNING ("new segment being sent");
       ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
     }
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
+    }
+    if (!is_keyframe) {
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buffer);
   } else {
@@ -403,6 +406,7 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
     }
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
   } else {
     gst_buffer_unref (buf);
@@ -446,13 +450,14 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
       return;
     } else {
       GST_LOG ("Seek outside cache range. Clearing...");
-      gst_ebml_write_flush_cache (ebml);
+      gst_ebml_write_flush_cache (ebml, FALSE);
     }
   }
 
   event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, pos, -1, 0);
   if (gst_pad_push_event (ebml->srcpad, event)) {
-    GST_DEBUG ("Seek'd to offset %" G_GUINT64_FORMAT, pos);
+    GST_DEBUG ("Seek'd to offset %" G_GUINT64_FORMAT " from %" G_GUINT64_FORMAT,
+        pos, ebml->pos);
   } else {
     GST_WARNING ("Seek to offset %" G_GUINT64_FORMAT " failed", pos);
   }
@@ -773,6 +778,7 @@ gst_ebml_replace_uint (GstEbmlWrite * ebml, guint64 pos, guint64 num)
   guint64 oldpos = ebml->pos;
   GstBuffer *buf = gst_buffer_new_and_alloc (8);
 
+  GST_DEBUG ("replace_uint");
   gst_ebml_write_seek (ebml, pos);
   GST_BUFFER_SIZE (buf) = 0;
   gst_ebml_write_set_uint (buf, num, 8);
@@ -810,5 +816,5 @@ gst_ebml_write_header (GstEbmlWrite * ebml, const gchar * doctype,
   gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEVERSION, version);
   gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEREADVERSION, version);
   gst_ebml_write_master_finish (ebml, pos);
-  gst_ebml_write_flush_cache (ebml);
+  gst_ebml_write_flush_cache (ebml, FALSE);
 }

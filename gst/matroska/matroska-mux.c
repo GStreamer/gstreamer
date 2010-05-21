@@ -2005,7 +2005,6 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
-  GstBuffer *streamheader_buffer;
 
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
     ebml->caps = gst_caps_from_string ("video/webm");
@@ -2016,7 +2015,6 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   doctype = mux->doctype;
   GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
       doctype, mux->doctype_version);
-  gst_ebml_start_streamheader (ebml);
   gst_ebml_write_header (ebml, doctype, mux->doctype_version);
 
   /* the rest of the header is cached */
@@ -2108,30 +2106,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_master_finish (ebml, master);
 
   /* lastly, flush the cache */
-  gst_ebml_write_flush_cache (ebml);
-  streamheader_buffer = gst_ebml_stop_streamheader (ebml);
-  /* lets set the pad caps, which is how the buffer caps is set currently :( */
-  {
-    GstCaps *caps;
-    GstStructure *s;
-    GValue streamheader = { 0 };
-    GValue bufval = { 0 };
-    if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-      caps = gst_caps_from_string ("video/webm");
-    } else {
-      caps = gst_caps_from_string ("video/x-matroska");
-    }
-    s = gst_caps_get_structure (caps, 0);
-    g_value_init (&streamheader, GST_TYPE_ARRAY);
-    g_value_init (&bufval, GST_TYPE_BUFFER);
-    gst_value_set_buffer (&bufval, streamheader_buffer);
-    gst_value_array_append_value (&streamheader, &bufval);
-    g_value_unset (&bufval);
-    gst_structure_set_value (s, "streamheader", &streamheader);
-    g_value_unset (&streamheader);
-    gst_caps_unref (ebml->caps);
-    ebml->caps = caps;
-  }
+  gst_ebml_write_flush_cache (ebml, FALSE);
 }
 
 static void
@@ -2240,7 +2215,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     }
 
     gst_ebml_write_master_finish (ebml, master);
-    gst_ebml_write_flush_cache (ebml);
+    gst_ebml_write_flush_cache (ebml, FALSE);
   }
 
   /* tags */
@@ -2271,6 +2246,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
    * - all entries are local to the segment (so pos - segment_master).
    * - so each entry is at 12 + 20 + num * 28. */
   if (!mux->is_live) {
+    GST_DEBUG_OBJECT (mux, "not live");
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 32,
         mux->info_pos - mux->segment_master);
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 60,
@@ -2348,6 +2324,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       gst_ebml_write_seek (ebml, my_pos);
     }
   }
+  GST_DEBUG_OBJECT (mux, "finishing segment");
   /* finish segment - this also writes element length */
   gst_ebml_write_master_finish (ebml, mux->segment_pos);
 }
@@ -2496,6 +2473,34 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   return ret;
 }
 
+static void
+gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
+{
+  GstCaps *caps;
+  GstStructure *s;
+  GValue streamheader = { 0 };
+  GValue bufval = { 0 };
+  GstBuffer *streamheader_buffer;
+  GstEbmlWrite *ebml = mux->ebml_write;
+
+  streamheader_buffer = gst_ebml_stop_streamheader (ebml);
+  if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+    caps = gst_caps_from_string ("video/webm");
+  } else {
+    caps = gst_caps_from_string ("video/x-matroska");
+  }
+  s = gst_caps_get_structure (caps, 0);
+  g_value_init (&streamheader, GST_TYPE_ARRAY);
+  g_value_init (&bufval, GST_TYPE_BUFFER);
+  gst_value_set_buffer (&bufval, streamheader_buffer);
+  gst_value_array_append_value (&streamheader, &bufval);
+  g_value_unset (&bufval);
+  gst_structure_set_value (s, "streamheader", &streamheader);
+  g_value_unset (&streamheader);
+  gst_caps_unref (ebml->caps);
+  ebml->caps = caps;
+}
+
 /**
  * gst_matroska_mux_write_data:
  * @mux: #GstMatroskaMux
@@ -2563,8 +2568,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     /* start a new cluster every two seconds or at keyframe */
     if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)
         || is_video_keyframe) {
-
-      gst_ebml_write_master_finish (ebml, mux->cluster);
+      if (!mux->is_live)
+        gst_ebml_write_master_finish (ebml, mux->cluster);
       mux->prev_cluster_size = ebml->pos - mux->cluster_pos;
       mux->cluster_pos = ebml->pos;
       gst_ebml_write_set_cache (ebml, 0x20);
@@ -2572,7 +2577,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
           gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
           GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
-      gst_ebml_write_flush_cache (ebml);
+      gst_ebml_write_flush_cache (ebml, TRUE);
       mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
           mux->prev_cluster_size);
@@ -2585,7 +2590,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
         GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
-    gst_ebml_write_flush_cache (ebml);
+    gst_ebml_write_flush_cache (ebml, TRUE);
     mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
   }
 
@@ -2662,12 +2667,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_SIMPLEBLOCK,
         GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));
     gst_ebml_write_buffer (ebml, hdr);
-    gst_ebml_write_flush_cache (ebml);
+    gst_ebml_write_flush_cache (ebml, FALSE);
     gst_ebml_write_buffer (ebml, buf);
 
     return gst_ebml_last_write_result (ebml);
   } else {
-    gst_ebml_write_set_cache (ebml, 0x40);
+    gst_ebml_write_set_cache (ebml, GST_BUFFER_SIZE (buf) * 2);
     /* write and call order slightly unnatural,
      * but avoids seek and minizes pushing */
     blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
@@ -2682,7 +2687,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
         GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));
     gst_ebml_write_buffer (ebml, hdr);
     gst_ebml_write_master_finish_full (ebml, blockgroup, GST_BUFFER_SIZE (buf));
-    gst_ebml_write_flush_cache (ebml);
+    gst_ebml_write_flush_cache (ebml, FALSE);
     gst_ebml_write_buffer (ebml, buf);
     return gst_ebml_last_write_result (ebml);
   }
@@ -2702,6 +2707,7 @@ static GstFlowReturn
 gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
+  GstEbmlWrite *ebml = mux->ebml_write;
   GstMatroskaPad *best;
   gboolean popped;
   GstFlowReturn ret;
@@ -2716,7 +2722,9 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
       return GST_FLOW_ERROR;
     }
     mux->state = GST_MATROSKA_MUX_STATE_HEADER;
+    gst_ebml_start_streamheader (ebml);
     gst_matroska_mux_start (mux);
+    gst_matroska_mux_stop_streamheader (mux);
     mux->state = GST_MATROSKA_MUX_STATE_DATA;
   }
 
