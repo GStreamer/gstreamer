@@ -105,7 +105,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideoflip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
@@ -122,13 +121,11 @@ rm -rf $RPM_BUILD_ROOT
 @USE_GDK_PIXBUF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvideobalance.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
 %{_libdir}/gstreamer-%{majorminor}/libgsticydemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttaglib.so
 %{_libdir}/gstreamer-%{majorminor}/libgstximagesrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiofx.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgamma.so
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmultifile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
@@ -139,6 +136,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstimagefreeze.so
+%{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
 
 # sys plugins
 @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
