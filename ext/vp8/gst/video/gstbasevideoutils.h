@@ -54,9 +54,9 @@ struct _GstVideoState
 
 struct _GstVideoFrame
 {
-  guint64 decode_timestamp;
-  guint64 presentation_timestamp;
-  guint64 presentation_duration;
+  GstClockTime decode_timestamp;
+  GstClockTime presentation_timestamp;
+  GstClockTime presentation_duration;
 
   gint system_frame_number;
   gint decode_frame_number;
