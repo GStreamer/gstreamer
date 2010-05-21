@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VP8_ENCODER
+
 #include <gst/gst.h>
 #include <gst/video/gstbasevideoencoder.h>
 #include <gst/video/gstbasevideoutils.h>
@@ -44,8 +46,6 @@
 #include <vpx/vp8cx.h>
 
 #include "gstvp8utils.h"
-
-#ifdef HAVE_VP8_ENCODER
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug
