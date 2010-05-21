@@ -255,12 +255,12 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
      *                      3 => SNR Scalable, 4 => Main, 5 => Simple
      * 4:2:2 and Multi-view have profile = 0, with the escape bit set to 1
      */
-    const gchar *profiles[] = { "HP", "Spatial", "SNR", "MP", "SP" };
+    const gchar *profiles[] = { "high", "spatial", "snr", "main", "simple" };
     /*
      * Level indication - 4 => High, 6 => High-1440, 8 => Main, 10 => Low,
      *                    except in the case of profile = 0
      */
-    const gchar *levels[] = { "HL", "H-14", "ML", "LL" };
+    const gchar *levels[] = { "high", "high-1440", "main", "low" };
 
     /* Store the entire sequence header + sequence header extension
        for output as codec_data */
@@ -296,7 +296,7 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
             level = levels[0];
           case 5:
             level = levels[2];
-            profile = "422P";
+            profile = "4:2:2";
             break;
           case 10:
             level = levels[0];
@@ -306,7 +306,7 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
             level = levels[2];
           case 14:
             level = levels[3];
-            profile = "MVP";
+            profile = "multiview";
             break;
           default:
             break;
