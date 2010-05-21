@@ -127,7 +127,8 @@ struct _GstBaseVideoDecoderClass
       int offset, int n);
   GstFlowReturn (*parse_data) (GstBaseVideoDecoder *decoder, gboolean at_eos);
   GstFlowReturn (*finish) (GstBaseVideoDecoder *coder);
-  GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
+  GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame,
+				 GstClockTimeDiff deadline);
   GstFlowReturn (*shape_output) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoDecoder *coder);
 

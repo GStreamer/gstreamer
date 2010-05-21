@@ -145,7 +145,7 @@ static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
-    GstVideoFrame * frame);
+    GstVideoFrame * frame, GstClockTimeDiff deadline);
 
 GType gst_vp8_dec_get_type (void);
 
@@ -416,7 +416,8 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
 }
 
 static GstFlowReturn
-gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
+gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
+    GstClockTimeDiff deadline)
 {
   GstVP8Dec *dec;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -518,13 +519,19 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
   if (img) {
-    ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
-
-    if (ret == GST_FLOW_OK) {
-      gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
-      gst_base_video_decoder_finish_frame (decoder, frame);
-    } else {
+    if (deadline < 0) {
+      GST_LOG_OBJECT (dec, "Skipping late frame (%f s past deadline)",
+          (double) -deadline / GST_SECOND);
       gst_base_video_decoder_skip_frame (decoder, frame);
+    } else {
+      ret = gst_base_video_decoder_alloc_src_frame (decoder, frame);
+
+      if (ret == GST_FLOW_OK) {
+        gst_vp8_dec_image_to_buffer (dec, img, frame->src_buffer);
+        gst_base_video_decoder_finish_frame (decoder, frame);
+      } else {
+        gst_base_video_decoder_skip_frame (decoder, frame);
+      }
     }
 
     vpx_img_free (img);

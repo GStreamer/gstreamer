@@ -904,9 +904,9 @@ gst_base_video_decoder_new_frame (GstBaseVideoDecoder * base_video_decoder)
   frame->decode_frame_number = frame->system_frame_number -
       base_video_decoder->reorder_depth;
 
-  frame->decode_timestamp = -1;
-  frame->presentation_timestamp = -1;
-  frame->presentation_duration = -1;
+  frame->decode_timestamp = GST_CLOCK_TIME_NONE;
+  frame->presentation_timestamp = GST_CLOCK_TIME_NONE;
+  frame->presentation_duration = GST_CLOCK_TIME_NONE;
   frame->n_fields = 2;
 
   return frame;
@@ -1010,8 +1010,8 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
-  GST_BUFFER_OFFSET (frame->src_buffer) = -1;
-  GST_BUFFER_OFFSET_END (frame->src_buffer) = -1;
+  GST_BUFFER_OFFSET (frame->src_buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (frame->src_buffer) = GST_BUFFER_OFFSET_NONE;
 
   GST_DEBUG ("pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
@@ -1270,6 +1270,8 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   GstVideoFrame *frame = base_video_decoder->current_frame;
   GstBaseVideoDecoderClass *base_video_decoder_class;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime running_time;
+  GstClockTimeDiff deadline;
 
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
@@ -1288,8 +1290,17 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->frames = g_list_append (base_video_decoder->frames,
       frame);
 
+  running_time = gst_segment_to_running_time (&base_video_decoder->segment,
+      GST_FORMAT_TIME, frame->presentation_timestamp);
+
+  if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->earliest_time))
+    deadline = GST_CLOCK_DIFF (base_video_decoder->earliest_time, running_time);
+  else
+    deadline = 0;
+
   /* do something with frame */
-  ret = base_video_decoder_class->handle_frame (base_video_decoder, frame);
+  ret = base_video_decoder_class->handle_frame (base_video_decoder, frame,
+      deadline);
   if (!GST_FLOW_IS_SUCCESS (ret)) {
     GST_DEBUG ("flow error!");
   }
