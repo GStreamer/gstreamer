@@ -1823,9 +1823,9 @@
 <TYPE>gint</TYPE>
 <RANGE>[1,2]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Matroska version</NICK>
-<BLURB>This parameter determines what matroska features can be used.</BLURB>
-<DEFAULT>1</DEFAULT>
+<NICK>DocType version</NICK>
+<BLURB>This parameter determines what Matroska features can be used.</BLURB>
+<DEFAULT>2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2166,6 +2166,16 @@
 <NICK>Buffer Array</NICK>
 <BLURB>Use Buffer Arrays.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpMP4VPay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Config Send Interval</NICK>
+<BLURB>Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20175,7 +20185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>Deinterlace Mode.</BLURB>
-<DEFAULT>Force deinterlacing</DEFAULT>
+<DEFAULT>Auto detection</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20454,7 +20464,7 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bandwidth</NICK>
-<BLURB>The bandwidth of the session.</BLURB>
+<BLURB>The bandwidth of the session in bytes per second.</BLURB>
 <DEFAULT>64000</DEFAULT>
 </ARG>
 
@@ -20504,8 +20514,8 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>RTCP Fraction</NICK>
-<BLURB>The fraction of the bandwidth used for RTCP.</BLURB>
-<DEFAULT>3000</DEFAULT>
+<BLURB>The RTCP bandwidth of the session in bytes per second.</BLURB>
+<DEFAULT>3200</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20516,6 +20526,26 @@
 <NICK>SDES</NICK>
 <BLURB>The SDES items of this session.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtcp-rr-bandwidth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP RR bandwidth</NICK>
+<BLURB>The RTCP bandwidth used for receivers in bytes per second (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::rtcp-rs-bandwidth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTCP RS bandwidth</NICK>
+<BLURB>The RTCP bandwidth used for senders in bytes per second (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20747,3 +20777,14 @@
 <BLURB>Linear volume of this stream, 1.0=100%.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstRtpTheoraPay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Config Send Interval</NICK>
+<BLURB>Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

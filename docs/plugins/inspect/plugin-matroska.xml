@@ -3,10 +3,10 @@
   <description>Matroska and WebM stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>0.10.22.1</version>
+  <version>0.10.22.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-matroska</details>
+          <details>video/x-matroska; video/webm</details>
         </caps>
         <caps>
           <name>subtitle_%02d</name>

@@ -1169,7 +1169,7 @@ GST_MATROSKA_MUX
 GST_MATROSKA_MUX_CLASS
 GST_IS_MATROSKA_MUX
 GST_IS_MATROSKA_MUX_CLASS
-gst_matroska_mux_plugin_init
+gst_matroska_mux_get_type
 </SECTION>
 
 <SECTION>
@@ -2272,3 +2272,16 @@ GST_TYPE_WARPTV
 gst_warptv_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-webmmux</FILE>
+<TITLE>webmmux</TITLE>
+GstWebMMux
+<SUBSECTION Standard>
+GST_TYPE_WEBM_MUX
+GST_WEBM_MUX
+GST_WEBM_MUX_CLASS
+GST_IS_WEBM_MUX
+GST_IS_WEBM_MUX_CLASS
+gst_webm_mux_get_type
+GstWebMMuxClass
+</SECTION>

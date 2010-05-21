@@ -164,6 +164,7 @@
     <xi:include href="xml/element-wavpackenc.xml" />
     <xi:include href="xml/element-wavpackparse.xml" />
     <xi:include href="xml/element-wavparse.xml" />
+    <xi:include href="xml/element-webmmux.xml" />
     <xi:include href="xml/element-ximagesrc.xml" />
     <xi:include href="xml/element-y4menc.xml" />
   </chapter>

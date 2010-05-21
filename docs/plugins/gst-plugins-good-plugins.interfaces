@@ -46,6 +46,7 @@ GstOssMixerElement GstImplementsInterface GstMixer
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
 GstAviMux GstTagSetter
 GstMatroskaMux GstTagSetter
+GstWebMMux GstTagSetter
 GstDeinterlace GstChildProxy
 GstFlvMux GstTagSetter
 GstVideoMixer GstChildProxy

@@ -175,6 +175,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/matroska/matroska-demux.h \
 	$(top_srcdir)/gst/matroska/matroska-mux.h \
+	$(top_srcdir)/gst/matroska/webm-mux.h \
 	$(top_srcdir)/gst/monoscope/gstmonoscope.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
