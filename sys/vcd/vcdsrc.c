@@ -494,19 +494,13 @@ static gboolean
 gst_vcdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstVCDSrc *src = GST_VCDSRC (handler);
-  gchar *protocol;
   gchar *location = NULL;
   gint tracknr;
 
   GST_DEBUG_OBJECT (src, "setting uri '%s'", uri);
 
-  protocol = gst_uri_get_protocol (uri);
-
-  if (protocol == NULL || strcmp (protocol, "vcd"))
+  if (!gst_uri_has_protocol (uri, "vcd"))
     goto wrong_protocol;
-
-  GST_DEBUG_OBJECT (src, "have protocol '%s'", protocol);
-  g_free (protocol);
 
   /* parse out the track in the location */
   if (!(location = gst_uri_get_location (uri)))
@@ -554,9 +548,7 @@ gst_vcdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   /* ERRORS */
 wrong_protocol:
   {
-    GST_ERROR_OBJECT (src, "wrong protocol %s specified",
-        GST_STR_NULL (protocol));
-    g_free (protocol);
+    GST_ERROR_OBJECT (src, "wrong protocol, uri = %s", uri);
     return FALSE;
   }
 no_location:
