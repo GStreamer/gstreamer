@@ -1577,7 +1577,7 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
  * Sets the given acceptcaps function for the pad.  The acceptcaps function
  * will be called to check if the pad can accept the given caps. Setting the
  * acceptcaps function to NULL restores the default behaviour of allowing
- * any caps that matches the caps from gst_pad_get_caps.
+ * any caps that matches the caps from gst_pad_get_caps().
  */
 void
 gst_pad_set_acceptcaps_function (GstPad * pad,
