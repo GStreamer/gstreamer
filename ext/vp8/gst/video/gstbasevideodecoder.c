@@ -276,6 +276,12 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
           event);
     }
       break;
+    case GST_EVENT_FLUSH_STOP:{
+      GST_OBJECT_LOCK (base_video_decoder);
+      base_video_decoder->earliest_time = GST_CLOCK_TIME_NONE;
+      base_video_decoder->proportion = 0.5;
+      GST_OBJECT_UNLOCK (base_video_decoder);
+    }
     default:
       /* FIXME this changes the order of events */
       ret =
@@ -733,6 +739,11 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
   }
   g_list_free (base_video_decoder->frames);
   base_video_decoder->frames = NULL;
+
+  GST_OBJECT_LOCK (base_video_decoder);
+  base_video_decoder->earliest_time = GST_CLOCK_TIME_NONE;
+  base_video_decoder->proportion = 0.5;
+  GST_OBJECT_UNLOCK (base_video_decoder);
 
   if (base_video_decoder_class->reset) {
     base_video_decoder_class->reset (base_video_decoder);
@@ -1296,7 +1307,7 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
   if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->earliest_time))
     deadline = GST_CLOCK_DIFF (base_video_decoder->earliest_time, running_time);
   else
-    deadline = 0;
+    deadline = G_MAXINT64;
 
   /* do something with frame */
   ret = base_video_decoder_class->handle_frame (base_video_decoder, frame,
