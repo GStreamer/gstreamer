@@ -68,6 +68,11 @@ struct _GstInvtelecine
   int phase;
 
   Field fifo[FIFO_SIZE];
+
+  int width;
+  int height;
+  GstVideoFormat format;
+  gboolean interlaced;
 };
 
 struct _GstInvtelecineClass
@@ -107,6 +112,7 @@ static void gst_invtelecine_set_property (GObject * object,
 static void gst_invtelecine_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+static gboolean gst_invtelecine_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_invtelecine_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -180,12 +186,50 @@ gst_invtelecine_init (GstInvtelecine * invtelecine)
       gst_pad_new_from_static_template (&gst_invtelecine_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (invtelecine), invtelecine->sinkpad);
   gst_pad_set_chain_function (invtelecine->sinkpad, gst_invtelecine_chain);
+  gst_pad_set_setcaps_function (invtelecine->sinkpad, gst_invtelecine_setcaps);
 
   invtelecine->srcpad =
       gst_pad_new_from_static_template (&gst_invtelecine_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (invtelecine), invtelecine->srcpad);
 
 }
+
+static gboolean
+gst_invtelecine_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstInvtelecine *invtelecine;
+  gboolean ret;
+  int width, height;
+  GstVideoFormat format;
+  gboolean interlaced = TRUE;
+  int fps_n, fps_d;
+
+  invtelecine = GST_INVTELECINE (gst_pad_get_parent (pad));
+
+  ret = gst_video_format_parse_caps (caps, &format, &width, &height);
+  gst_video_format_parse_caps_interlaced (caps, &interlaced);
+  ret &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+
+  if (ret) {
+    GstCaps *srccaps = gst_caps_copy (caps);
+
+    ret = gst_pad_set_caps (invtelecine->srcpad, srccaps);
+
+  }
+
+  if (ret) {
+    invtelecine->format = format;
+    invtelecine->width = width;
+    invtelecine->height = height;
+    invtelecine->interlaced = interlaced;
+  }
+
+  g_object_unref (invtelecine);
+
+  return ret;
+}
+
+
 
 #define MAX_FIELD_SCORE 100
 
@@ -220,18 +264,21 @@ gst_invtelecine_compare_fields (GstInvtelecine * invtelecine, int field1,
 
   sum = 0;
   field_index = invtelecine->fifo[field1].field_index;
-  for (j = field_index; j < 480; j += 2) {
-    if (j == 0 || j == 479)
+  for (j = field_index; j < invtelecine->height; j += 2) {
+    if (j == 0 || j == invtelecine->height - 1)
       continue;
 
-    data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) + 720 * j;
+    data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+        invtelecine->width * j;
     data2_1 =
-        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) + 720 * (j - 1);
+        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+        invtelecine->width * (j - 1);
     data2_2 =
-        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) + 720 * (j + 1);
+        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+        invtelecine->width * (j + 1);
 
     linesum = 0;
-    for (i = 1; i < 719; i++) {
+    for (i = 1; i < invtelecine->width - 1; i++) {
       have = data1[i - 1] + data1[i + 1];
       hdiff = abs (data1[i - 1] - data1[i + 1]);
       vave = data2_1[i] + data2_2[i];
@@ -242,7 +289,7 @@ gst_invtelecine_compare_fields (GstInvtelecine * invtelecine, int field1,
     sum += linesum;
   }
 
-  sum /= 720 * 240;
+  sum /= (invtelecine->width * invtelecine->height / 2);
 
   return MIN (sum, MAX_FIELD_SCORE);
 }
@@ -342,12 +389,12 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
         a[p] = get_score (invtelecine, p);
       }
       if (a[0] >= 8 && a[1] < 4) {
-        GST_WARNING ("locked field=%d (phase = %d, score = %d)",
+        GST_WARNING ("locked 3:2 field=%d (phase = %d, score = %d)",
             invtelecine->field, 0, a[0]);
         invtelecine->locked = TRUE;
         invtelecine->phase = 0;
       } else if (a[1] >= 8 && a[0] < 4) {
-        GST_WARNING ("locked field=%d (phase = %d, score = %d)",
+        GST_WARNING ("locked 3:2 field=%d (phase = %d, score = %d)",
             invtelecine->field, 1, a[1]);
         invtelecine->locked = TRUE;
         invtelecine->phase = 1;
@@ -358,11 +405,13 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
     if (invtelecine->locked) {
       num_fields = pulldown_2_3[invtelecine->phase];
 
+#if 0
       g_print ("frame %d %g %g %g\n",
           invtelecine->field,
           invtelecine->fifo[0].prev,
           invtelecine->fifo[1].prev,
           (num_fields == 3) ? invtelecine->fifo[2].prev : 0);
+#endif
 
     } else {
       num_fields = 2;
@@ -389,26 +438,31 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
 }
 
 static void
-copy_field (GstBuffer * d, GstBuffer * s, int field_index)
+copy_field (GstBuffer * d, GstBuffer * s, int field_index, int width,
+    int height)
 {
   int j;
   guint8 *dest;
   guint8 *src;
 
-  for (j = field_index; j < 480; j += 2) {
-    dest = GST_BUFFER_DATA (d) + j * 720;
-    src = GST_BUFFER_DATA (s) + j * 720;
-    memcpy (dest, src, 720);
+  for (j = field_index; j < height; j += 2) {
+    dest = GST_BUFFER_DATA (d) + j * width;
+    src = GST_BUFFER_DATA (s) + j * width;
+    memcpy (dest, src, width);
   }
-  for (j = field_index; j < 240; j += 2) {
-    dest = GST_BUFFER_DATA (d) + 720 * 480 + j * 360;
-    src = GST_BUFFER_DATA (s) + 720 * 480 + j * 360;
-    memcpy (dest, src, 360);
+  for (j = field_index; j < height / 2; j += 2) {
+    dest = GST_BUFFER_DATA (d) + width * height + j * width / 2;
+    src = GST_BUFFER_DATA (s) + width * height + j * width / 2;
+    memcpy (dest, src, width / 2);
   }
-  for (j = field_index; j < 240; j += 2) {
-    dest = GST_BUFFER_DATA (d) + 720 * 480 + 360 * 240 + j * 360;
-    src = GST_BUFFER_DATA (s) + 720 * 480 + 360 * 240 + j * 360;
-    memcpy (dest, src, 360);
+  for (j = field_index; j < height / 2; j += 2) {
+    dest =
+        GST_BUFFER_DATA (d) + width * height + width / 2 * height / 2 +
+        j * width / 2;
+    src =
+        GST_BUFFER_DATA (s) + width * height + width / 2 * height / 2 +
+        j * width / 2;
+    memcpy (dest, src, width / 2);
   }
 }
 
@@ -420,10 +474,14 @@ gst_invtelecine_output_fields (GstInvtelecine * invtelecine, int num_fields)
 
   field_index = invtelecine->fifo[0].field_index;
 
-  buffer = gst_buffer_new_and_alloc (720 * 480 + 360 * 240 + 360 * 240);
+  buffer =
+      gst_buffer_new_and_alloc (invtelecine->width * invtelecine->height * 3 /
+      2);
 
-  copy_field (buffer, invtelecine->fifo[0].buffer, field_index);
-  copy_field (buffer, invtelecine->fifo[1].buffer, field_index ^ 1);
+  copy_field (buffer, invtelecine->fifo[0].buffer, field_index,
+      invtelecine->width, invtelecine->height);
+  copy_field (buffer, invtelecine->fifo[1].buffer, field_index ^ 1,
+      invtelecine->width, invtelecine->height);
 
   gst_buffer_set_caps (buffer, GST_BUFFER_CAPS (invtelecine->fifo[0].buffer));
 
