@@ -3730,6 +3730,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *ps_exts[] = { "ps", NULL };
   static const gchar *svg_exts[] = { "svg", NULL };
   static const gchar *mxf_exts[] = { "mxf", NULL };
+  static const gchar *ivf_exts[] = { "ivf", NULL };
   static const gchar *msword_exts[] = { "doc", NULL };
   static const gchar *dsstore_exts[] = { "DS_Store", NULL };
   static const gchar *psd_exts[] = { "psd", NULL };
@@ -3973,6 +3974,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sap",
       GST_RANK_SECONDARY, sap_exts, "SAP\x0d\x0aAUTHOR\x20", 12,
       GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-ivf", GST_RANK_SECONDARY,
+      ivf_exts, "DKIF", 4, GST_TYPE_FIND_NEARLY_CERTAIN);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-kss", GST_RANK_SECONDARY,
       kss_exts, "KSSX\0", 5, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/pdf", GST_RANK_SECONDARY,
