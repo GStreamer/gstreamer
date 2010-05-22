@@ -279,7 +279,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_KEYFRAME_DISTANCE,
       g_param_spec_int ("max-keyframe-distance", "Maximum Key frame distance",
           "Maximum distance between key frames",
-          1, 9999, DEFAULT_MAX_KEYFRAME_DISTANCE,
+          0, 9999, DEFAULT_MAX_KEYFRAME_DISTANCE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_SPEED,
