@@ -356,7 +356,7 @@ gst_caps_make_writable (GstCaps * caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
   /* we are the only instance reffing this caps */
-  if (g_atomic_int_get (&caps->refcount) == 1)
+  if (IS_WRITABLE (caps))
     return caps;
 
   /* else copy */
