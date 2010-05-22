@@ -92,7 +92,7 @@ static GstStaticPadTemplate gst_invtelecine_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")
     )
     );
 
@@ -100,7 +100,7 @@ static GstStaticPadTemplate gst_invtelecine_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")
     )
     );
 
@@ -270,23 +270,52 @@ gst_invtelecine_compare_fields (GstInvtelecine * invtelecine, int field1,
     if (j == 0 || j == invtelecine->height - 1)
       continue;
 
-    data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
-        invtelecine->width * j;
-    data2_1 =
-        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
-        invtelecine->width * (j - 1);
-    data2_2 =
-        GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
-        invtelecine->width * (j + 1);
+    if (invtelecine->format == GST_VIDEO_FORMAT_I420 ||
+        invtelecine->format == GST_VIDEO_FORMAT_YV12) {
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * j;
+      data2_1 =
+          GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * (j - 1);
+      data2_2 =
+          GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * (j + 1);
 
-    linesum = 0;
-    for (i = 1; i < invtelecine->width - 1; i++) {
-      have = data1[i - 1] + data1[i + 1];
-      hdiff = abs (data1[i - 1] - data1[i + 1]);
-      vave = data2_1[i] + data2_2[i];
-      vdiff = abs (data2_1[i] - data2_2[i]);
-      den = MAX (1, MAX (hdiff, vdiff));
-      linesum += (have - vave) * (have - vave) / (den * den);
+      /* planar 4:2:0 */
+      linesum = 0;
+      for (i = 1; i < invtelecine->width - 1; i++) {
+        have = data1[i - 1] + data1[i + 1];
+        hdiff = abs (data1[i - 1] - data1[i + 1]);
+        vave = data2_1[i] + data2_2[i];
+        vdiff = abs (data2_1[i] - data2_2[i]);
+        den = MAX (1, MAX (hdiff, vdiff));
+        linesum += (have - vave) * (have - vave) / (den * den);
+      }
+    } else {
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * 2 * j;
+      data2_1 =
+          GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * 2 * (j - 1);
+      data2_2 =
+          GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * 2 * (j + 1);
+      if (invtelecine->format == GST_VIDEO_FORMAT_UYVY) {
+        data1++;
+        data2_1++;
+        data2_2++;
+      }
+
+      /* packed 4:2:2 */
+      linesum = 0;
+      for (i = 1; i < invtelecine->width - 1; i++) {
+        have = data1[(i - 1) * 2] + data1[(i + 1) * 2];
+        hdiff = abs (data1[(i - 1) * 2] - data1[(i + 1) * 2]);
+        vave = data2_1[i * 2] + data2_2[i * 2];
+        vdiff = abs (data2_1[i * 2] - data2_2[i * 2]);
+        den = MAX (1, MAX (hdiff, vdiff));
+        linesum += (have - vave) * (have - vave) / (den * den);
+      }
     }
     sum += linesum;
   }
@@ -669,31 +698,44 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
 }
 
 static void
-copy_field (GstBuffer * d, GstBuffer * s, int field_index, int width,
-    int height)
+copy_field (GstInvtelecine * invtelecine, GstBuffer * d, GstBuffer * s,
+    int field_index)
 {
   int j;
   guint8 *dest;
   guint8 *src;
+  int width = invtelecine->width;
+  int height = invtelecine->height;
 
-  for (j = field_index; j < height; j += 2) {
-    dest = GST_BUFFER_DATA (d) + j * width;
-    src = GST_BUFFER_DATA (s) + j * width;
-    memcpy (dest, src, width);
-  }
-  for (j = field_index; j < height / 2; j += 2) {
-    dest = GST_BUFFER_DATA (d) + width * height + j * width / 2;
-    src = GST_BUFFER_DATA (s) + width * height + j * width / 2;
-    memcpy (dest, src, width / 2);
-  }
-  for (j = field_index; j < height / 2; j += 2) {
-    dest =
-        GST_BUFFER_DATA (d) + width * height + width / 2 * height / 2 +
-        j * width / 2;
-    src =
-        GST_BUFFER_DATA (s) + width * height + width / 2 * height / 2 +
-        j * width / 2;
-    memcpy (dest, src, width / 2);
+  if (invtelecine->format == GST_VIDEO_FORMAT_I420 ||
+      invtelecine->format == GST_VIDEO_FORMAT_YV12) {
+    /* planar 4:2:0 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width;
+      src = GST_BUFFER_DATA (s) + j * width;
+      memcpy (dest, src, width);
+    }
+    for (j = field_index; j < height / 2; j += 2) {
+      dest = GST_BUFFER_DATA (d) + width * height + j * width / 2;
+      src = GST_BUFFER_DATA (s) + width * height + j * width / 2;
+      memcpy (dest, src, width / 2);
+    }
+    for (j = field_index; j < height / 2; j += 2) {
+      dest =
+          GST_BUFFER_DATA (d) + width * height + width / 2 * height / 2 +
+          j * width / 2;
+      src =
+          GST_BUFFER_DATA (s) + width * height + width / 2 * height / 2 +
+          j * width / 2;
+      memcpy (dest, src, width / 2);
+    }
+  } else {
+    /* packed 4:2:2 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width * 2;
+      src = GST_BUFFER_DATA (s) + j * width * 2;
+      memcpy (dest, src, width * 2);
+    }
   }
 }
 
@@ -705,14 +747,19 @@ gst_invtelecine_output_fields (GstInvtelecine * invtelecine, int num_fields)
 
   field_index = invtelecine->fifo[0].field_index;
 
-  buffer =
-      gst_buffer_new_and_alloc (invtelecine->width * invtelecine->height * 3 /
-      2);
+  if (invtelecine->format == GST_VIDEO_FORMAT_I420 ||
+      invtelecine->format == GST_VIDEO_FORMAT_YV12) {
+    buffer =
+        gst_buffer_new_and_alloc (invtelecine->width * invtelecine->height * 3 /
+        2);
+  } else {
+    buffer =
+        gst_buffer_new_and_alloc (invtelecine->width * invtelecine->height * 2);
+  }
 
-  copy_field (buffer, invtelecine->fifo[0].buffer, field_index,
-      invtelecine->width, invtelecine->height);
-  copy_field (buffer, invtelecine->fifo[1].buffer, field_index ^ 1,
-      invtelecine->width, invtelecine->height);
+  copy_field (invtelecine, buffer, invtelecine->fifo[0].buffer, field_index);
+  copy_field (invtelecine, buffer, invtelecine->fifo[1].buffer,
+      field_index ^ 1);
 
   gst_buffer_set_caps (buffer, GST_BUFFER_CAPS (invtelecine->fifo[0].buffer));
 
