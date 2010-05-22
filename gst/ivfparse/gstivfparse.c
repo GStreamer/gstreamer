@@ -215,6 +215,9 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
         ivf->rate_num = rate_num;
         ivf->rate_den = rate_den;
 
+        gst_pad_push_event (ivf->srcpad, gst_event_new_new_segment (FALSE, 1.0,
+                GST_FORMAT_TIME, 0, -1, 0));
+
         /* move along */
         ivf->state = GST_IVFPARSE_DATA;
       } else {
