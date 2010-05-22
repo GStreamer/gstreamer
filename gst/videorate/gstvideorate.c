@@ -345,6 +345,10 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
         videorate->from_rate_numerator = rate_numerator;
         videorate->from_rate_denominator = rate_denominator;
       }
+
+      if (gst_structure_has_field (structure, "interlaced"))
+        gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
+
       gst_pad_set_caps (otherpad, caps);
       gst_caps_unref (caps);
       ret = TRUE;
