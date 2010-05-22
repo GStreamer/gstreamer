@@ -424,6 +424,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
   vpx_codec_err_t status;
   vpx_codec_iter_t iter = NULL;
   vpx_image_t *img;
+  long decoder_deadline = 0;
 
   GST_DEBUG_OBJECT (decoder, "handle_frame");
 
@@ -508,9 +509,17 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
   }
 #endif
 
+  if (deadline < 0) {
+    decoder_deadline = 1;
+  } else if (deadline == G_MAXINT64) {
+    decoder_deadline = 0;
+  } else {
+    decoder_deadline = MAX (1, deadline / GST_MSECOND);
+  }
+
   status = vpx_codec_decode (&dec->decoder,
       GST_BUFFER_DATA (frame->sink_buffer),
-      GST_BUFFER_SIZE (frame->sink_buffer), NULL, 0);
+      GST_BUFFER_SIZE (frame->sink_buffer), NULL, decoder_deadline);
   if (status) {
     GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
         ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)));
