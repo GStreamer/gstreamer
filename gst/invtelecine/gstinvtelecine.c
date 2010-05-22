@@ -486,58 +486,6 @@ get_score_2 (GstInvtelecine * invtelecine, int format_index, int phase)
   return score;
 }
 
-#if 0
-static int
-get_score (GstInvtelecine * invtelecine, int phase)
-{
-  int i;
-  int score = 0;
-  int field_index = 0;
-
-  GST_DEBUG ("scoring for phase %d", phase);
-  for (i = 0; i < 15; i++) {
-    if (field_index == 0) {
-      if (invtelecine->fifo[i].prev > 50) {
-        /* Strong picture change signal */
-        score++;
-      } else if (i < 14 &&
-          pulldown_2_3[phase] >= 2 &&
-          (invtelecine->fifo[i].prev < invtelecine->fifo[i + 1].prev * 0.5)) {
-        score--;
-      } else if (i < 13 &&
-          pulldown_2_3[phase] >= 3 &&
-          (invtelecine->fifo[i].prev < invtelecine->fifo[i + 2].prev * 0.5)) {
-        score--;
-      } else {
-
-      }
-    } else {
-      if (invtelecine->fifo[i].prev > 50) {
-        /* A secondary field with visible combing */
-        return -10;
-      } else if (invtelecine->fifo[i].prev > 5) {
-        score--;
-      } else if (invtelecine->fifo[i].prev < 3) {
-        /* In the noise */
-        score++;
-      } else {
-      }
-    }
-    GST_DEBUG ("i=%d phase=%d fi=%d prev=%g score=%d", i, phase, field_index,
-        invtelecine->fifo[i].prev, score);
-    field_index++;
-    if (field_index == pulldown_2_3[phase]) {
-      field_index = 0;
-      phase++;
-      if (phase == 2)
-        phase = 0;
-    }
-  }
-
-  return score;
-}
-#endif
-
 int format_table[] = { 0, 1, 1, 2, 2, 2, 2, 2 };
 int phase_table[] = { 0, 0, 1, 0, 1, 2, 3, 4 };
 
@@ -631,51 +579,6 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
       GST_WARNING ("unlocked");
       num_fields = 1;
     }
-#if 0
-    if (invtelecine->locked) {
-      score = get_score (invtelecine, invtelecine->phase);
-      if (score < 4) {
-        GST_WARNING ("unlocked field=%d (phase = %d, score = %d)",
-            invtelecine->field, invtelecine->phase, score);
-        invtelecine->locked = FALSE;
-      }
-    }
-    if (!invtelecine->locked) {
-      int p;
-      int a[2];
-
-      for (p = 0; p < 2; p++) {
-        a[p] = get_score (invtelecine, p);
-      }
-      if (a[0] >= 8 && a[1] < 4) {
-        GST_WARNING ("locked 3:2 field=%d (phase = %d, score = %d)",
-            invtelecine->field, 0, a[0]);
-        invtelecine->locked = TRUE;
-        invtelecine->phase = 0;
-      } else if (a[1] >= 8 && a[0] < 4) {
-        GST_WARNING ("locked 3:2 field=%d (phase = %d, score = %d)",
-            invtelecine->field, 1, a[1]);
-        invtelecine->locked = TRUE;
-        invtelecine->phase = 1;
-      }
-    }
-    //g_print ("score %d %d\n", a[0], a[1]);
-
-    if (invtelecine->locked) {
-      num_fields = pulldown_2_3[invtelecine->phase];
-
-#if 0
-      g_print ("frame %d %g %g %g\n",
-          invtelecine->field,
-          invtelecine->fifo[0].prev,
-          invtelecine->fifo[1].prev,
-          (num_fields == 3) ? invtelecine->fifo[2].prev : 0);
-#endif
-
-    } else {
-      num_fields = 2;
-    }
-#endif
 
     gst_invtelecine_output_fields (invtelecine, num_fields);
 
