@@ -728,11 +728,12 @@ GST_START_TEST (test_intersect2)
 
 GST_END_TEST;
 
+
 static Suite *
 gst_caps_suite (void)
 {
   Suite *s = suite_create ("GstCaps");
-  TCase *tc_chain = tcase_create ("mutability");
+  TCase *tc_chain = tcase_create ("operations");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_from_string);
