@@ -8,13 +8,15 @@ these variants of lazy caps:
   - need user_data (the string/string-array)
   - need a free_func for the user_data
   - need a get_structure_func to fill structure slots as needed
+  - we can more easily make this iterator based too
 - operations (e.g. intersect) (see [1]).
   - need user_data (the iterator)
   - need a free_func for the user_data
   - need a get_structure_func to fill structure slots as needed
 
 We should add PERFORMANCE category logging to methods that cause lazy caps to be
-fully evaluated.
+fully evaluated. To get maximum speed benefit we need to inspect places that 
+loop over structures of a caps and turn them into while() loops where possible.
 
 We can use GST_CAPS_FLAGS_LAZY to indicate that caps are not fully constructed.
 Once caps are fully evaluated, we can remove the flag (and call the free_func).
