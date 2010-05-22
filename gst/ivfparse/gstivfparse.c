@@ -234,9 +234,11 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
             frame_size, frame_pts);
 
         if (gst_adapter_available (ivf->adapter) >= 12 + frame_size) {
+          GstBuffer *frame;
+
           gst_adapter_flush (ivf->adapter, 12);
 
-          GstBuffer *frame = gst_adapter_take_buffer (ivf->adapter, frame_size);
+          frame = gst_adapter_take_buffer (ivf->adapter, frame_size);
           gst_buffer_set_caps (frame, GST_PAD_CAPS (ivf->srcpad));
           GST_BUFFER_TIMESTAMP (frame) =
               gst_util_uint64_scale_int (GST_SECOND * frame_pts, ivf->rate_den,
@@ -270,20 +272,6 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
   return res;
 }
 
-/* typefinder for IVF + VP8 */
-static void
-ivf_typefind (GstTypeFind * tf, gpointer user_data)
-{
-  guint8 *data = gst_type_find_peek (tf, 0, 12);
-
-  if (data &&
-      GST_READ_UINT32_LE (data) == GST_MAKE_FOURCC ('D', 'K', 'I', 'F') &&
-      GST_READ_UINT32_LE (data + 8) == GST_MAKE_FOURCC ('V', 'P', '8', '0')) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-        gst_caps_new_simple ("video/x-ivf", NULL));
-  }
-}
-
 /* entry point to initialize the plug-in */
 static gboolean
 ivfparse_init (GstPlugin * ivfparse)
@@ -292,14 +280,8 @@ ivfparse_init (GstPlugin * ivfparse)
   GST_DEBUG_CATEGORY_INIT (gst_ivfparse_debug, "ivfparse", 0, "IVF parser");
 
   /* register parser element */
-  if (!gst_element_register (ivfparse, "ivfparse", GST_RANK_NONE,
+  if (!gst_element_register (ivfparse, "ivfparse", GST_RANK_PRIMARY,
           GST_TYPE_IVFPARSE))
-    return FALSE;
-
-  /* register typefinder function */
-  if (!gst_type_find_register (ivfparse, "", GST_RANK_PRIMARY,
-          ivf_typefind, NULL,
-          gst_caps_new_simple ("video/x-ivf", NULL), NULL, NULL))
     return FALSE;
 
   return TRUE;
