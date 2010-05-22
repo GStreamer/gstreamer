@@ -66,6 +66,7 @@ struct _GstInvtelecine
   int field;
 
   gboolean locked;
+  int last_lock;
   int phase;
 
   Field fifo[FIFO_SIZE];
@@ -355,8 +356,10 @@ gst_invtelecine_push_field (GstInvtelecine * invtelecine, GstBuffer * buffer,
       gst_invtelecine_compare_fields (invtelecine, i, i - 1);
   invtelecine->fifo[i].prev2 =
       gst_invtelecine_compare_same_fields (invtelecine, i, i - 2);
+#if 0
   g_print ("compare %g %g\n", invtelecine->fifo[i].prev,
       invtelecine->fifo[i].prev2);
+#endif
 
 }
 
@@ -365,17 +368,18 @@ int pulldown_2_3[] = { 2, 3 };
 typedef struct _PulldownFormat PulldownFormat;
 struct _PulldownFormat
 {
+  const char *name;
   int cycle_length;
   int n_fields[10];
 };
 
 static const PulldownFormat formats[] = {
   /* interlaced */
-  {1, {1}},
+  {"interlaced", 1, {1}},
   /* 30p */
-  {2, {2}},
+  {"2:1", 2, {2}},
   /* 24p */
-  {5, {2, 3,}},
+  {"3:2", 5, {2, 3,}},
 };
 
 static int
@@ -453,6 +457,7 @@ get_score_2 (GstInvtelecine * invtelecine, int format_index, int phase)
   return score;
 }
 
+#if 0
 static int
 get_score (GstInvtelecine * invtelecine, int phase)
 {
@@ -502,29 +507,102 @@ get_score (GstInvtelecine * invtelecine, int phase)
 
   return score;
 }
+#endif
+
+int format_table[] = { 0, 1, 1, 2, 2, 2, 2, 2 };
+int phase_table[] = { 0, 0, 1, 0, 1, 2, 3, 4 };
 
 static void
 gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
 {
-  int score;
+  //int score;
   int num_fields;
   int scores[8];
+  int i;
+  int max_i;
+  //int format;
+  int phase;
 
   GST_DEBUG ("process %d", invtelecine->num_fields);
   while (invtelecine->num_fields > 15) {
-    scores[0] = get_score_2 (invtelecine, 0, 0);
-    scores[1] = get_score_2 (invtelecine, 1, 0);
-    scores[2] = get_score_2 (invtelecine, 1, 1);
-    scores[3] = get_score_2 (invtelecine, 2, 0);
-    scores[4] = get_score_2 (invtelecine, 2, 1);
-    scores[5] = get_score_2 (invtelecine, 2, 2);
-    scores[6] = get_score_2 (invtelecine, 2, 3);
-    scores[7] = get_score_2 (invtelecine, 2, 4);
+    num_fields = 0;
 
+    for (i = 0; i < 8; i++) {
+      scores[i] = get_score_2 (invtelecine, format_table[i], phase_table[i]);
+    }
+
+#if 0
     g_print ("scores %d %d %d %d %d %d %d %d %d\n", invtelecine->field,
         scores[0], scores[1], scores[2], scores[3],
         scores[4], scores[5], scores[6], scores[7]);
+#endif
 
+    max_i = invtelecine->last_lock;
+    for (i = 0; i < 8; i++) {
+      int field_index;
+      int k;
+
+      phase = (invtelecine->field + phase_table[i]) %
+          formats[format_table[i]].cycle_length;
+
+      field_index = 0;
+      k = 0;
+      while (phase > 0) {
+        field_index++;
+        if (field_index >= formats[format_table[i]].n_fields[k]) {
+          field_index = 0;
+          k++;
+          if (formats[format_table[i]].n_fields[k] == 0) {
+            k = 0;
+          }
+        }
+        phase--;
+      }
+
+      if (field_index == 0) {
+        if (scores[i] > scores[max_i]) {
+          max_i = i;
+        }
+      }
+    }
+
+    if (max_i != invtelecine->last_lock) {
+
+      GST_WARNING ("new structure %s, phase %d",
+          formats[format_table[max_i]].name, phase_table[max_i]);
+
+      invtelecine->last_lock = max_i;
+    }
+
+    {
+      int field_index;
+      int k;
+
+      phase = (invtelecine->field + phase_table[max_i]) %
+          formats[format_table[max_i]].cycle_length;
+
+      field_index = 0;
+      k = 0;
+      while (phase > 0) {
+        field_index++;
+        if (field_index >= formats[format_table[max_i]].n_fields[k]) {
+          field_index = 0;
+          k++;
+          if (formats[format_table[max_i]].n_fields[k] == 0) {
+            k = 0;
+          }
+        }
+        phase--;
+      }
+
+      num_fields = formats[format_table[max_i]].n_fields[k];
+    }
+
+    if (num_fields == 0) {
+      GST_WARNING ("unlocked");
+      num_fields = 1;
+    }
+#if 0
     if (invtelecine->locked) {
       score = get_score (invtelecine, invtelecine->phase);
       if (score < 4) {
@@ -568,6 +646,7 @@ gst_invtelecine_process (GstInvtelecine * invtelecine, gboolean flush)
     } else {
       num_fields = 2;
     }
+#endif
 
     gst_invtelecine_output_fields (invtelecine, num_fields);
 
