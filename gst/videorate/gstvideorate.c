@@ -269,45 +269,6 @@ gst_video_rate_getcaps (GstPad * pad)
 }
 
 static gboolean
-_gst_structure_fixate_field_string (GstStructure * structure,
-    const char *field_name, const gchar * target)
-{
-  const GValue *value;
-
-  value = gst_structure_get_value (structure, field_name);
-
-  if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
-    /* already fixed */
-    return FALSE;
-  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
-    const GValue *list_value;
-    int i, n;
-    const gchar *best = NULL;
-    int best_index = -1;
-
-    n = gst_value_list_get_size (value);
-    for (i = 0; i < n; i++) {
-      list_value = gst_value_list_get_value (value, i);
-      if (G_VALUE_TYPE (list_value) == G_TYPE_STRING) {
-        const gchar *x = g_value_get_string (list_value);
-
-        if (best_index == -1 || g_str_equal (x, target)) {
-          best_index = i;
-          best = x;
-        }
-      }
-    }
-    if (best_index != -1) {
-      gst_structure_set (structure, field_name, G_TYPE_STRING, best, NULL);
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
 gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVideoRate *videorate;
@@ -388,9 +349,9 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
       if (gst_structure_has_field (structure, "interlaced"))
         gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
       if (gst_structure_has_field (structure, "color-matrix"))
-        _gst_structure_fixate_field_string (structure, "color-matrix", "sdtv");
+        gst_structure_fixate_field_string (structure, "color-matrix", "sdtv");
       if (gst_structure_has_field (structure, "chroma-site"))
-        _gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
+        gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
 
       gst_pad_set_caps (otherpad, caps);
       gst_caps_unref (caps);
