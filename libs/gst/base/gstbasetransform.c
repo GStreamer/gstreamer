@@ -1389,6 +1389,9 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       /* new format configure, and use the new output buffer */
       gst_pad_set_caps (trans->srcpad, newcaps);
       discard = FALSE;
+      /* clear previous cached sink-pad caps, so buffer_alloc knows that
+       * it needs to revisit the decision about whether to proxy or not: */
+      gst_caps_replace (&priv->sink_alloc, NULL);
       /* if we got a buffer of the wrong size, discard it now and make sure we
        * allocate a propertly sized buffer later. */
       if (newsize != expsize) {
@@ -1829,8 +1832,11 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         GST_OBJECT_UNLOCK (pad);
       } else {
         GST_DEBUG_OBJECT (trans, "peer did not accept new caps");
-        /* peer does not accept the caps, free the buffer we received and
-         * create a buffer of the requested format by the default handler. */
+        /* peer does not accept the caps, disable proxy_alloc, free the
+         * buffer we received and create a buffer of the requested format
+         * by the default handler. */
+        GST_DEBUG_OBJECT (trans, "disabling proxy");
+        priv->proxy_alloc = FALSE;
         gst_buffer_unref (*buf);
         *buf = NULL;
       }
