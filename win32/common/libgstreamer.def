@@ -884,6 +884,7 @@ EXPORTS
 	gst_structure_fixate_field_nearest_double
 	gst_structure_fixate_field_nearest_fraction
 	gst_structure_fixate_field_nearest_int
+	gst_structure_fixate_field_string
 	gst_structure_foreach
 	gst_structure_free
 	gst_structure_from_string

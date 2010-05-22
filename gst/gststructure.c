@@ -2345,6 +2345,61 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
 }
 
 /**
+ * gst_structure_fixate_field_string:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given @field_name field to the given
+ * @target string if that field is not fixed yet.
+ *
+ * Returns: TRUE if the structure could be fixated
+ *
+ * Since: 0.10.30
+ */
+gboolean
+gst_structure_fixate_field_string (GstStructure * structure,
+    const gchar * field_name, const gchar * target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == G_TYPE_STRING) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    const gchar *best = NULL;
+    int best_index = -1;
+
+    n = gst_value_list_get_size (value);
+    for (i = 0; i < n; i++) {
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == G_TYPE_STRING) {
+        const gchar *x = g_value_get_string (list_value);
+
+        if (best_index == -1 || g_str_equal (x, target)) {
+          best_index = i;
+          best = x;
+        }
+      }
+    }
+    if (best_index != -1) {
+      gst_structure_set (structure, field_name, G_TYPE_STRING, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
  * gst_structure_fixate_field_nearest_fraction:
  * @structure: a #GstStructure
  * @field_name: a field in @structure
