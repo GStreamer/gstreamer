@@ -353,12 +353,28 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
       gdouble proportion;
       GstClockTimeDiff diff;
       GstClockTime timestamp;
+      GstClockTime duration;
 
       gst_event_parse_qos (event, &proportion, &diff, &timestamp);
 
       GST_OBJECT_LOCK (base_video_decoder);
       base_video_decoder->proportion = proportion;
-      base_video_decoder->earliest_time = timestamp + diff;
+      if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
+        if (G_UNLIKELY (diff > 0)) {
+          if (base_video_decoder->state.fps_n > 0)
+            duration =
+                gst_util_uint64_scale (GST_SECOND,
+                base_video_decoder->state.fps_d,
+                base_video_decoder->state.fps_n);
+          else
+            duration = 0;
+          base_video_decoder->earliest_time = timestamp + 2 * diff + duration;
+        } else {
+          base_video_decoder->earliest_time = timestamp + diff;
+        }
+      } else {
+        base_video_decoder->earliest_time = GST_CLOCK_TIME_NONE;
+      }
       GST_OBJECT_UNLOCK (base_video_decoder);
 
       GST_DEBUG_OBJECT (base_video_decoder,
