@@ -300,6 +300,13 @@ gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps)
   if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
     gst_structure_fixate_field_nearest_fraction (structure,
         "pixel-aspect-ratio", 1, 1);
+  if (gst_structure_has_field (structure, "color-matrix"))
+    gst_structure_fixate_field_string (structure, "color-matrix", "sdtv");
+  if (gst_structure_has_field (structure, "chroma-site"))
+    gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
+
+  if (gst_structure_has_field (structure, "interlaced"))
+    gst_structure_fixate_field_boolean (structure, "interlaced", FALSE);
 }
 
 static void
