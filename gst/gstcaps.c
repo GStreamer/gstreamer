@@ -107,7 +107,12 @@
  * length check */
 #define gst_caps_get_structure_unchecked(caps, index) \
      ((GstStructure *)g_ptr_array_index ((caps)->structs, (index)))
-
+/* quick way to append a structure without checking the args */
+#define gst_caps_append_structure_unchecked(caps, structure) G_STMT_START{\
+  GstStructure *s=structure;                                      \
+  gst_structure_set_parent_refcount (s, &caps->refcount);         \
+  g_ptr_array_add (caps->structs, s);                             \
+}G_STMT_END
 
 /* lock to protect multiple invocations of static caps to caps conversion */
 G_LOCK_DEFINE_STATIC (static_caps_lock);
@@ -212,7 +217,7 @@ gst_caps_new_simple (const char *media_type, const char *fieldname, ...)
   structure = gst_structure_new_valist (media_type, fieldname, var_args);
   va_end (var_args);
 
-  gst_caps_append_structure (caps, structure);
+  gst_caps_append_structure_unchecked (caps, structure);
 
   return caps;
 }
@@ -260,7 +265,7 @@ gst_caps_new_full_valist (GstStructure * structure, va_list var_args)
   caps = gst_caps_new_empty ();
 
   while (structure) {
-    gst_caps_append_structure (caps, structure);
+    gst_caps_append_structure_unchecked (caps, structure);
     structure = va_arg (var_args, GstStructure *);
   }
 
@@ -297,7 +302,8 @@ gst_caps_copy (const GstCaps * caps)
 
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure_unchecked (caps, i);
-    gst_caps_append_structure (newcaps, gst_structure_copy (structure));
+    gst_caps_append_structure_unchecked (newcaps,
+        gst_structure_copy (structure));
   }
 
   return newcaps;
@@ -632,7 +638,7 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
   } else {
     for (i = caps2->structs->len; i; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, 0);
-      gst_caps_append_structure (caps1, structure);
+      gst_caps_append_structure_unchecked (caps1, structure);
     }
   }
   gst_caps_unref (caps2);       /* guaranteed to free it */
@@ -714,8 +720,7 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
     STRUCTURE_POISON (structure);
 #endif
 #endif
-    gst_structure_set_parent_refcount (structure, &caps->refcount);
-    g_ptr_array_add (caps->structs, structure);
+    gst_caps_append_structure_unchecked (caps, structure);
   }
 }
 
@@ -853,7 +858,8 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
 
   if (G_LIKELY (caps->structs->len > nth)) {
     structure = gst_caps_get_structure_unchecked (caps, nth);
-    gst_caps_append_structure (newcaps, gst_structure_copy (structure));
+    gst_caps_append_structure_unchecked (newcaps,
+        gst_structure_copy (structure));
   }
 
   return newcaps;
@@ -1575,14 +1581,15 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
           GSList *walk;
 
           for (walk = list; walk; walk = g_slist_next (walk)) {
-            gst_caps_append_structure (dest, (GstStructure *) walk->data);
+            gst_caps_append_structure_unchecked (dest,
+                (GstStructure *) walk->data);
           }
           g_slist_free (list);
         } else {
-          gst_caps_append_structure (dest, gst_structure_copy (min));
+          gst_caps_append_structure_unchecked (dest, gst_structure_copy (min));
         }
       } else {
-        gst_caps_append_structure (dest, gst_structure_copy (min));
+        gst_caps_append_structure_unchecked (dest, gst_structure_copy (min));
       }
     }
     if (CAPS_IS_EMPTY_SIMPLE (dest)) {
@@ -1698,7 +1705,7 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
       GstStructure *structure = gst_structure_copy (nf->structure);
 
       gst_structure_id_set_value (structure, field_id, v);
-      gst_caps_append_structure (nf->caps, structure);
+      gst_caps_append_structure_unchecked (nf->caps, structure);
     }
 
     gst_value_init_and_copy (&val, gst_value_list_get_value (value, 0));
@@ -2089,7 +2096,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   if (structure == NULL) {
     return FALSE;
   }
-  gst_caps_append_structure (caps, structure);
+  gst_caps_append_structure_unchecked (caps, structure);
 
   do {
 
@@ -2102,7 +2109,7 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
     if (structure == NULL) {
       return FALSE;
     }
-    gst_caps_append_structure (caps, structure);
+    gst_caps_append_structure_unchecked (caps, structure);
 
   } while (TRUE);
 
