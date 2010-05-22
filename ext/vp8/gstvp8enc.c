@@ -178,9 +178,7 @@ static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-yuv,format=(fourcc)I420,"
-        "width=[1,max],height=[1,max],framerate=(fraction)[0,max],"
-        "interlaced=(boolean){TRUE,FALSE}")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
 static GstStaticPadTemplate gst_vp8_enc_src_template =
