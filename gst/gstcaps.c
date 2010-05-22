@@ -1006,7 +1006,7 @@ gst_caps_is_any (const GstCaps * caps)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
-  return (caps->flags & GST_CAPS_FLAGS_ANY);
+  return (CAPS_IS_ANY (caps));
 }
 
 /**
@@ -1022,10 +1022,10 @@ gst_caps_is_empty (const GstCaps * caps)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
-  if (caps->flags & GST_CAPS_FLAGS_ANY)
+  if (CAPS_IS_ANY (caps))
     return FALSE;
 
-  return (caps->structs == NULL) || (caps->structs->len == 0);
+  return CAPS_IS_EMPTY_SIMPLE (caps);
 }
 
 static gboolean
