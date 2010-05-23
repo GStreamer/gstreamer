@@ -2576,7 +2576,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
       mux->cluster =
           gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-          GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
+          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
+              mux->time_scale));
+      GST_WARNING_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
+          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
+              mux->time_scale));
       gst_ebml_write_flush_cache (ebml, TRUE);
       mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_PREVSIZE,
@@ -2588,8 +2592,10 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     mux->cluster_pos = ebml->pos;
     gst_ebml_write_set_cache (ebml, 0x20);
     mux->cluster = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_CLUSTER);
+    GST_WARNING_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
+        gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1, mux->time_scale));
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
-        GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
+        gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1, mux->time_scale));
     gst_ebml_write_flush_cache (ebml, TRUE);
     mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
   }
@@ -2643,6 +2649,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
       write_duration = TRUE;
     }
   }
+  GST_WARNING_OBJECT (mux, "block duration set as %" G_GUINT64_FORMAT,
+      block_duration);
 
   /* write the block, for doctype v2 use SimpleBlock if possible
    * one slice (*breath*).
@@ -2650,12 +2658,16 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   relative_timestamp64 = GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time;
   if (relative_timestamp64 >= 0) {
     /* round the timestamp */
-    relative_timestamp64 += mux->time_scale / 2;
+    relative_timestamp64 += gst_util_uint64_scale (mux->time_scale, 1, 2);
   } else {
     /* round the timestamp */
-    relative_timestamp64 -= mux->time_scale / 2;
+    relative_timestamp64 -= gst_util_uint64_scale (mux->time_scale, 1, 2);
   }
-  relative_timestamp = relative_timestamp64 / (gint64) mux->time_scale;
+  relative_timestamp = gst_util_uint64_scale (relative_timestamp64, 1,
+      mux->time_scale);
+  GST_WARNING_OBJECT (mux,
+      "incoming timestamp %" G_GUINT64_FORMAT " relative timestamp output %"
+      G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (buf), relative_timestamp);
   if (mux->doctype_version > 1 && !write_duration) {
     int flags =
         GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
@@ -2680,8 +2692,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
         gst_matroska_mux_create_buffer_header (collect_pad->track,
         relative_timestamp, 0);
     if (write_duration) {
+      GST_WARNING_OBJECT (mux, "duration output as %" G_GUINT64_FORMAT,
+          gst_util_uint64_scale (block_duration, 1, mux->time_scale));
+
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION,
-          block_duration / mux->time_scale);
+          gst_util_uint64_scale (block_duration, 1, mux->time_scale));
     }
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
         GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));

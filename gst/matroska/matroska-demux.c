@@ -4655,11 +4655,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
     if (block_duration) {
       if (stream->timecodescale == 1.0)
-        duration = block_duration * demux->time_scale;
+        duration = gst_util_uint64_scale (block_duration, demux->time_scale, 1);
       else
         duration =
             gst_util_gdouble_to_guint64 (gst_util_guint64_to_gdouble
-            (block_duration * demux->time_scale) * stream->timecodescale);
+            (gst_util_uint64_scale (block_duration, demux->time_scale,
+                    1)) * stream->timecodescale);
     } else if (stream->default_duration) {
       duration = stream->default_duration * laces;
     }
