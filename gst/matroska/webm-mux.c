@@ -25,11 +25,16 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * FIXME: add example pipeline
- * ]| This pipeline muxes this and that into a WebM file.
+ * gst-launch-0.10 webmmux name=mux ! filesink location=newfile.webm         \
+ *   uridecodebin uri=file:///path/to/somefile.ogv name=demux                \
+ *   demux. ! ffmpegcolorspace ! videorate ! vp8enc ! queue ! mux.video_0    \
+ *   demux. ! progressreport ! audioconvert ! audiorate ! vorbisenc ! queue ! mux.audio_0
+ * ]| This pipeline re-encodes a video file of any format into a WebM file.
  * |[
- * FIXME: add example pipeline
- * ]| This pipeline muxes something else into a WebM file.
+ * gst-launch-0.10 webmmux name=mux ! filesink location=test.webm            \
+ *   videotestsrc num-buffers=250 ! video/x-raw-yuv,framerate=25/1 ! ffmpegcolorspace ! vp8enc ! queue ! mux.video_0 \
+ *   audiotestsrc samplesperbuffer=44100 num-buffers=10 ! audio/x-raw-float,rate=44100 ! vorbisenc ! queue ! mux.audio_0
+ * ]| This pipeline muxes a test video and a sine wave into a WebM file.
  * </refsect2>
  */
 
