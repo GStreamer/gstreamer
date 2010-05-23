@@ -606,7 +606,7 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
   GstBaseVideoEncoder *encoder = (GstBaseVideoEncoder *) enc;
   guint8 *data = GST_BUFFER_DATA (buffer);
 
-  image->fmt = IMG_FMT_I420;
+  image->fmt = VPX_IMG_FMT_I420;
   image->bps = 12;
   image->x_chroma_shift = image->y_chroma_shift = 1;
   image->img_data = data;
