@@ -601,6 +601,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
           lang_code = g_strndup (language_n, 3);
           gst_structure_set (stream_info, "lang-code", G_TYPE_STRING,
               lang_code, NULL);
+          g_free (lang_code);
         }
 
         gst_mpeg_descriptor_free (desc);
