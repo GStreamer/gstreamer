@@ -56,6 +56,7 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   video_context->asr_mode = 0;
   video_context->fourcc = 0;
   video_context->default_fps = 0.0;
+  video_context->earliest_time = GST_CLOCK_TIME_NONE;
   return TRUE;
 }
 

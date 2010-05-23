@@ -2197,6 +2197,13 @@ gst_matroska_demux_reset_streams (GstMatroskaDemux * demux, GstClockTime time,
     context->from_time = GST_CLOCK_TIME_NONE;
     if (full)
       context->last_flow = GST_FLOW_OK;
+    if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+      GstMatroskaTrackVideoContext *videocontext =
+          (GstMatroskaTrackVideoContext *) context;
+      GST_OBJECT_LOCK (demux);
+      videocontext->earliest_time = GST_CLOCK_TIME_NONE;
+      GST_OBJECT_UNLOCK (demux);
+    }
   }
 }
 
@@ -2496,9 +2503,29 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
       gst_event_unref (event);
       break;
 
+    case GST_EVENT_QOS:
+    {
+      GstMatroskaTrackContext *context = gst_pad_get_element_private (pad);
+      if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+        GstMatroskaTrackVideoContext *videocontext =
+            (GstMatroskaTrackVideoContext *) context;
+        gdouble proportion;
+        GstClockTimeDiff diff;
+        GstClockTime timestamp;
+
+        gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+        GST_OBJECT_LOCK (demux);
+        videocontext->earliest_time = timestamp + diff;
+        GST_OBJECT_UNLOCK (demux);
+      }
+      res = TRUE;
+      gst_event_unref (event);
+      break;
+    }
+
       /* events we don't need to handle */
     case GST_EVENT_NAVIGATION:
-    case GST_EVENT_QOS:
       gst_event_unref (event);
       res = FALSE;
       break;
@@ -4633,6 +4660,42 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       if (G_UNLIKELY (lace_size[n] > size)) {
         GST_WARNING_OBJECT (demux, "Invalid lace size");
         break;
+      }
+
+      /* QoS for video track with an index. the assumption is that
+         index entries point to keyframes, but if that is not true we
+         will instad skip until the next keyframe. */
+      if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
+          stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
+          stream->index_table) {
+        GstMatroskaTrackVideoContext *videocontext =
+            (GstMatroskaTrackVideoContext *) stream;
+        GstClockTime running_time;
+        GstClockTime earliest_time;
+        running_time = gst_segment_to_running_time (&demux->segment,
+            GST_FORMAT_TIME, lace_time);
+        GST_OBJECT_LOCK (demux);
+        earliest_time = videocontext->earliest_time;
+        GST_OBJECT_UNLOCK (demux);
+        if (GST_CLOCK_TIME_IS_VALID (running_time) &&
+            GST_CLOCK_TIME_IS_VALID (earliest_time) &&
+            running_time <= earliest_time) {
+          /* find index entry (keyframe) <= earliest_time */
+          GstMatroskaIndex *entry =
+              gst_util_array_binary_search (stream->index_table->data,
+              stream->index_table->len, sizeof (GstMatroskaIndex),
+              (GCompareDataFunc) gst_matroska_index_seek_find,
+              GST_SEARCH_MODE_BEFORE, &earliest_time, NULL);
+          /* if that entry (keyframe) is after the current the current
+             buffer, we can skip pushing (and thus decoding) all
+             buffers until that keyframe. */
+          if (entry && GST_CLOCK_TIME_IS_VALID (entry->time) &&
+              entry->time > lace_time) {
+            GST_LOG_OBJECT (demux, "Skipping lace before late keyframe");
+            stream->set_discont = TRUE;
+            goto next_lace;
+          }
+        }
       }
 
       sub = gst_buffer_create_sub (buf,
