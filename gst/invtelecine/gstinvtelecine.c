@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 GST_DEBUG_CATEGORY (gst_invtelecine_debug);
 #define GST_CAT_DEFAULT gst_invtelecine_debug
@@ -51,7 +52,10 @@ struct _Field
   GstBuffer *buffer;
   int field_index;
   double prev;
+  double prev1;
   double prev2;
+  double prev3;
+
 };
 
 struct _GstInvtelecine
@@ -61,6 +65,10 @@ struct _GstInvtelecine
   GstPad *srcpad;
   GstPad *sinkpad;
 
+  /* properties */
+  gboolean verify_field_flags;
+
+  /* state */
   int next_field;
   int num_fields;
   int field;
@@ -75,6 +83,8 @@ struct _GstInvtelecine
   int height;
   GstVideoFormat format;
   gboolean interlaced;
+
+  double bad_flag_metric;
 };
 
 struct _GstInvtelecineClass
@@ -85,7 +95,8 @@ struct _GstInvtelecineClass
 
 enum
 {
-  ARG_0
+  ARG_0,
+  PROP_VERIFY_FIELD_FLAGS
 };
 
 static GstStaticPadTemplate gst_invtelecine_src_template =
@@ -178,6 +189,13 @@ gst_invtelecine_class_init (GstInvtelecineClass * klass)
   object_class->get_property = gst_invtelecine_get_property;
 
   element_class->change_state = gst_invtelecine_change_state;
+
+  g_object_class_install_property (object_class, PROP_VERIFY_FIELD_FLAGS,
+      g_param_spec_boolean ("verify-field-flags", "verify field flags",
+          "Verify that field dominance (top/bottom field first) buffer "
+          "flags are correct", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -194,6 +212,8 @@ gst_invtelecine_init (GstInvtelecine * invtelecine)
       gst_pad_new_from_static_template (&gst_invtelecine_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (invtelecine), invtelecine->srcpad);
 
+  invtelecine->bad_flag_metric = 1.0;
+  invtelecine->verify_field_flags = FALSE;
 }
 
 static gboolean
@@ -326,14 +346,15 @@ gst_invtelecine_compare_fields (GstInvtelecine * invtelecine, int field1,
 }
 
 static double
-gst_invtelecine_compare_same_fields (GstInvtelecine * invtelecine, int field1,
+gst_invtelecine_compare_fields_mse (GstInvtelecine * invtelecine, int field1,
     int field2)
 {
   int i;
   int j;
   guint8 *data1;
   guint8 *data2;
-  int field_index;
+  int field_index1;
+  int field_index2;
   int diff;
   double sum;
   double linesum;
@@ -350,22 +371,135 @@ gst_invtelecine_compare_same_fields (GstInvtelecine * invtelecine, int field1,
   }
 
   sum = 0;
-  field_index = invtelecine->fifo[field1].field_index;
-  for (j = field_index; j < 480; j += 2) {
-    data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) + 720 * j;
-    data2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) + 720 * j;
+  field_index1 = invtelecine->fifo[field1].field_index;
+  field_index2 = invtelecine->fifo[field2].field_index;
+  if (invtelecine->format == GST_VIDEO_FORMAT_I420 ||
+      invtelecine->format == GST_VIDEO_FORMAT_YV12) {
+    for (j = 0; j < invtelecine->height; j += 2) {
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * (j + field_index1);
+      data2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * (j + field_index2);
 
-    linesum = 0;
-    for (i = 0; i < 720; i++) {
-      diff = (data1[i] - data2[i]);
-      linesum += diff * diff;
+      linesum = 0;
+      for (i = 0; i < invtelecine->width; i++) {
+        diff = (data1[i] - data2[i]);
+        linesum += diff * diff;
+      }
+      sum += linesum;
     }
-    sum += linesum;
+  } else {
+    for (j = 0; j < invtelecine->height; j += 2) {
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * 2 * (j + field_index1);
+      data2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * 2 * (j + field_index2);
+
+      if (invtelecine->format == GST_VIDEO_FORMAT_UYVY) {
+        data1++;
+        data2++;
+      }
+
+      linesum = 0;
+      for (i = 0; i < invtelecine->width; i++) {
+        diff = (data1[i * 2] - data2[i * 2]);
+        linesum += diff * diff;
+      }
+      sum += linesum;
+    }
   }
 
-  sum /= 720 * 240;
+  sum /= invtelecine->width * invtelecine->height / 2;
 
-  return MIN (sum, MAX_FIELD_SCORE);
+  //return MIN (sum, MAX_FIELD_SCORE);
+  return sum;
+}
+
+static double
+gst_invtelecine_compare_fields_mse_ave (GstInvtelecine * invtelecine,
+    int field1, int field2)
+{
+  int i;
+  int j;
+  guint8 *data1;
+  guint8 *data2_1;
+  guint8 *data2_2;
+  int field_index1;
+  int field_index2;
+  double diff;
+  double sum;
+  double linesum;
+
+#define MAX_FIELD_SCORE_2 1e9
+  if (field1 < 0 || field2 < 0)
+    return MAX_FIELD_SCORE_2;
+  if (invtelecine->fifo[field1].buffer == NULL ||
+      invtelecine->fifo[field2].buffer == NULL)
+    return MAX_FIELD_SCORE_2;
+  if (invtelecine->fifo[field1].buffer == invtelecine->fifo[field2].buffer &&
+      invtelecine->fifo[field1].field_index ==
+      invtelecine->fifo[field2].field_index) {
+    return 0;
+  }
+
+  sum = 0;
+  field_index1 = invtelecine->fifo[field1].field_index;
+  field_index2 = invtelecine->fifo[field2].field_index;
+  if (invtelecine->format == GST_VIDEO_FORMAT_I420 ||
+      invtelecine->format == GST_VIDEO_FORMAT_YV12) {
+    for (j = 0; j < invtelecine->height; j += 2) {
+      if (j + field_index1 == 0 || j + field_index1 == invtelecine->height - 1)
+        continue;
+
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * (j + field_index1);
+      data2_1 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * (j + field_index1 - 1);
+      data2_2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * (j + field_index1 + 1);
+
+      linesum = 0;
+      for (i = 0; i < invtelecine->width; i++) {
+        diff = (data1[i] - (data2_1[i] + data2_2[i]) / 2);
+        diff *= diff;
+        linesum += diff * diff;
+      }
+      sum += linesum;
+    }
+  } else {
+    for (j = 0; j < invtelecine->height; j += 2) {
+      if (j + field_index1 == 0 || j + field_index1 == invtelecine->height - 1)
+        continue;
+
+      data1 = GST_BUFFER_DATA (invtelecine->fifo[field1].buffer) +
+          invtelecine->width * 2 * (j + field_index1);
+      data2_1 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * 2 * (j + field_index1 - 1);
+      data2_2 = GST_BUFFER_DATA (invtelecine->fifo[field2].buffer) +
+          invtelecine->width * 2 * (j + field_index1 + 1);
+
+      if (invtelecine->format == GST_VIDEO_FORMAT_UYVY) {
+        data1++;
+        data2_1++;
+        data2_2++;
+      }
+
+      linesum = 0;
+      for (i = 0; i < invtelecine->width; i++) {
+        diff = (data1[i] - (data2_1[i] + data2_2[i]) / 2);
+        diff *= diff;
+        linesum += diff * diff;
+      }
+      sum += linesum;
+    }
+  }
+
+  sum /= invtelecine->width * (invtelecine->height / 2 - 1);
+
+  g_assert (sum > 0);
+
+  //return MIN (sum, MAX_FIELD_SCORE);
+  return sqrt (sum);
 }
 
 static void
@@ -384,11 +518,30 @@ gst_invtelecine_push_field (GstInvtelecine * invtelecine, GstBuffer * buffer,
   invtelecine->fifo[i].prev =
       gst_invtelecine_compare_fields (invtelecine, i, i - 1);
   invtelecine->fifo[i].prev2 =
-      gst_invtelecine_compare_same_fields (invtelecine, i, i - 2);
+      gst_invtelecine_compare_fields_mse (invtelecine, i, i - 2);
+
+  if (invtelecine->verify_field_flags) {
+    invtelecine->fifo[i].prev3 =
+        gst_invtelecine_compare_fields_mse_ave (invtelecine, i, i - 3);
+    invtelecine->fifo[i].prev1 =
+        gst_invtelecine_compare_fields_mse_ave (invtelecine, i, i - 1);
+
+#define ALPHA 0.2
+    if (invtelecine->fifo[i].prev3 != 0) {
+      invtelecine->bad_flag_metric *= (1 - ALPHA);
+      invtelecine->bad_flag_metric +=
+          ALPHA * (invtelecine->fifo[i].prev1 / invtelecine->fifo[i].prev3);
+    }
 #if 0
-  g_print ("compare %g %g\n", invtelecine->fifo[i].prev,
-      invtelecine->fifo[i].prev2);
+    g_print ("42 %g %g %g\n", invtelecine->bad_flag_metric,
+        invtelecine->fifo[i].prev1, invtelecine->fifo[i].prev3);
 #endif
+
+    if (invtelecine->bad_flag_metric > 1.2) {
+      GST_WARNING ("bad field flags?  metric %g > 1.2",
+          invtelecine->bad_flag_metric);
+    }
+  }
 
 }
 
@@ -696,6 +849,10 @@ gst_invtelecine_chain (GstPad * pad, GstBuffer * buffer)
       (guint) (GST_BUFFER_TIMESTAMP (buffer) % GST_SECOND));
 
   field_index = (GST_BUFFER_FLAGS (buffer) & GST_VIDEO_BUFFER_TFF) ? 0 : 1;
+//#define BAD
+#ifdef BAD
+  field_index ^= 1;
+#endif
 
   GST_DEBUG ("duration %" GST_TIME_FORMAT " flags %04x %s %s %s",
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
@@ -706,13 +863,14 @@ gst_invtelecine_chain (GstPad * pad, GstBuffer * buffer)
       "");
 
   if (GST_BUFFER_FLAGS (buffer) & GST_BUFFER_FLAG_DISCONT) {
-    GST_DEBUG ("discont");
+    GST_ERROR ("discont");
 
     invtelecine->next_field = field_index;
+    invtelecine->bad_flag_metric = 1.0;
   }
 
   if (invtelecine->next_field != field_index) {
-    GST_DEBUG ("wrong field first, expecting %d got %d",
+    GST_WARNING ("wrong field first, expecting %d got %d",
         invtelecine->next_field, field_index);
     invtelecine->next_field = field_index;
   }
@@ -743,9 +901,12 @@ static void
 gst_invtelecine_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  //GstInvtelecine *invtelecine = GST_INVTELECINE (object);
+  GstInvtelecine *invtelecine = GST_INVTELECINE (object);
 
   switch (prop_id) {
+    case PROP_VERIFY_FIELD_FLAGS:
+      invtelecine->verify_field_flags = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -756,9 +917,12 @@ static void
 gst_invtelecine_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  //GstInvtelecine *invtelecine = GST_INVTELECINE (object);
+  GstInvtelecine *invtelecine = GST_INVTELECINE (object);
 
   switch (prop_id) {
+    case PROP_VERIFY_FIELD_FLAGS:
+      g_value_set_boolean (value, invtelecine->verify_field_flags);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
