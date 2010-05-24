@@ -89,12 +89,12 @@ struct _GstQTDemux {
   GstBuffer *mdatbuffer;
   guint64 mdatleft;
 
-  /* offset of the media data (i.e.: Size of header) */
   guint64 offset;
   /* offset of the mdat atom */
   guint64 mdatoffset;
   guint64 first_mdat;
   gboolean got_moov;
+  guint header_size;
 
   GstTagList *tag_list;
 
