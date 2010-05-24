@@ -213,6 +213,8 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstOpencvBaseTransform *transform = GST_OPENCV_BASE_TRANSFORM (trans);
+  GstOpencvBaseTransformClass *klass =
+      GST_OPENCV_BASE_TRANSFORM_GET_CLASS (transform);
   gint in_width, in_height;
   gint in_depth, in_channels;
   gint out_width, out_height;
@@ -234,6 +236,12 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
         out_err->message);
     g_error_free (out_err);
     return FALSE;
+  }
+
+  if (klass->cv_set_caps) {
+    if (!klass->cv_set_caps(transform, in_width, in_height, in_depth,
+        in_channels, out_width, out_height, out_depth, out_channels))
+      return FALSE;
   }
 
   if (transform->cvImage) {

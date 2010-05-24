@@ -41,65 +41,48 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_OPENCV_BASE_TRANSFORM_H__
-#define __GST_OPENCV_BASE_TRANSFORM_H__
+#ifndef __GST_CV_LAPLACE_H__
+#define __GST_CV_LAPLACE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <cv.h>
+#include <gstopencvbasetrans.h>
 
 G_BEGIN_DECLS
+
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_OPENCV_BASE_TRANSFORM \
-  (gst_opencv_base_transform_get_type())
-#define GST_OPENCV_BASE_TRANSFORM(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransform))
-#define GST_OPENCV_BASE_TRANSFORM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransformClass))
-#define GST_IS_OPENCV_BASE_TRANSFORM(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENCV_BASE_TRANSFORM))
-#define GST_IS_OPENCV_BASE_TRANSFORM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENCV_BASE_TRANSFORM))
-#define GST_OPENCV_BASE_TRANSFORM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransformClass))
+#define GST_TYPE_CV_LAPLACE \
+  (gst_cv_laplace_get_type())
+#define GST_CV_LAPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CV_LAPLACE,GstCvLaplace))
+#define GST_CV_LAPLACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CV_LAPLACE,GstCvLaplaceClass))
+#define GST_IS_CV_LAPLACE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CV_LAPLACE))
+#define GST_IS_CV_LAPLACE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CV_LAPLACE))
 
-typedef struct _GstOpencvBaseTransform GstOpencvBaseTransform;
-typedef struct _GstOpencvBaseTransformClass GstOpencvBaseTransformClass;
+typedef struct _GstCvLaplace      GstCvLaplace;
+typedef struct _GstCvLaplaceClass GstCvLaplaceClass;
 
-typedef GstFlowReturn (*GstOpencvBaseTransformTransformIPFunc)
-    (GstOpencvBaseTransform * transform, GstBuffer * buffer, IplImage * img);
-typedef GstFlowReturn (*GstOpencvBaseTransformTransformFunc)
-    (GstOpencvBaseTransform * transform, GstBuffer * buffer, IplImage * img,
-    GstBuffer * outbuf, IplImage * outimg);
-
-typedef gboolean (*GstOpencvBaseTransformSetCaps)
-    (GstOpencvBaseTransform * transform, gint in_width, gint in_height,
-    gint in_depth, gint in_channels, gint out_width, gint out_height,
-    gint out_depth, gint out_channels);
-
-struct _GstOpencvBaseTransform
+struct _GstCvLaplace
 {
-  GstBaseTransform trans;
+  GstOpencvBaseTransform element;
 
-  gboolean in_place;
+  gint aperture_size;
 
-  IplImage *cvImage;
-  IplImage *out_cvImage;
+  IplImage *intermediary_img;
 };
 
-struct _GstOpencvBaseTransformClass
+struct _GstCvLaplaceClass 
 {
-  GstBaseTransformClass parent_class;
-
-  GstOpencvBaseTransformTransformFunc cv_trans_func;
-  GstOpencvBaseTransformTransformIPFunc cv_trans_ip_func;
-
-  GstOpencvBaseTransformSetCaps cv_set_caps;
+  GstOpencvBaseTransformClass parent_class;
 };
 
-GType gst_opencv_base_transform_get_type (void);
+GType gst_cv_laplace_get_type (void);
 
-void gst_opencv_base_transform_set_in_place (GstOpencvBaseTransform * transform,
-    gboolean ip);
+gboolean gst_cv_laplace_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-#endif /* __GST_OPENCV_BASE_TRANSFORM_H__ */
+
+#endif /* __GST_CV_LAPLACE_H__ */

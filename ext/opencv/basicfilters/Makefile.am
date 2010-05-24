@@ -5,6 +5,7 @@ libgstbasicfilters_la_SOURCES = gstcvsmooth.c \
     gstcvdilateerode.c \
     gstcvdilate.c \
     gstcvequalizehist.c \
+    gstcvlaplace.c \
     gstcverode.c \
     gstcvsobel.c
 
@@ -20,4 +21,5 @@ noinst_HEADERS = gstcvsmooth.h \
                  gstcvdilate.h \
                  gstcvequalizehist.h \
                  gstcverode.h \
-                 gstcvsobel.c
+                 gstcvlaplace.h \
+                 gstcvsobel.h

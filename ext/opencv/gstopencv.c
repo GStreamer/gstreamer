@@ -26,6 +26,7 @@
 #include "gstcvdilate.h"
 #include "gstcvequalizehist.h"
 #include "gstcverode.h"
+#include "gstcvlaplace.h"
 #include "gstcvsmooth.h"
 #include "gstcvsobel.h"
 #include "gstedgedetect.h"
@@ -45,6 +46,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_cv_erode_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_cv_laplace_plugin_init (plugin))
     return FALSE;
 
   if (!gst_cv_smooth_plugin_init (plugin))
