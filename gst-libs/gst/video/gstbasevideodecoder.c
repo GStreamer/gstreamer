@@ -1034,6 +1034,10 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
       GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
     }
   }
+  if (base_video_decoder->discont) {
+    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
+    base_video_decoder->discont = FALSE;
+  }
 
   GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
