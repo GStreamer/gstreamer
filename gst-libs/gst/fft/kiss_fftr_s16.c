@@ -41,7 +41,7 @@ kiss_fftr_s16_alloc (int nfft, int inverse_fft, void *mem, size_t * lenmem)
   kiss_fft_s16_alloc (nfft, inverse_fft, NULL, &subsize);
   memneeded = ALIGN_STRUCT (sizeof (struct kiss_fftr_s16_state))
       + ALIGN_STRUCT (subsize)
-      + sizeof (kiss_fft_s16_cpx) * (nfft * 2);
+      + sizeof (kiss_fft_s16_cpx) * (nfft * 3 / 2);
 
   if (lenmem == NULL) {
     st = (kiss_fftr_s16_cfg) KISS_FFT_S16_MALLOC (memneeded);
@@ -59,8 +59,9 @@ kiss_fftr_s16_alloc (int nfft, int inverse_fft, void *mem, size_t * lenmem)
   st->super_twiddles = st->tmpbuf + nfft;
   kiss_fft_s16_alloc (nfft, inverse_fft, st->substate, &subsize);
 
-  for (i = 0; i < nfft; ++i) {
-    double phase = -3.14159265358979323846264338327 * ((double) i / nfft + .5);
+  for (i = 0; i < nfft / 2; ++i) {
+    double phase =
+        -3.14159265358979323846264338327 * ((double) (i + 1) / nfft + .5);
 
     if (inverse_fft)
       phase *= -1;
@@ -118,7 +119,7 @@ kiss_fftr_s16 (kiss_fftr_s16_cfg st, const kiss_fft_s16_scalar * timedata,
 
     C_ADD (f1k, fpk, fpnk);
     C_SUB (f2k, fpk, fpnk);
-    C_MUL (tw, f2k, st->super_twiddles[k]);
+    C_MUL (tw, f2k, st->super_twiddles[k - 1]);
 
     freqdata[k].r = HALF_OF (f1k.r + tw.r);
     freqdata[k].i = HALF_OF (f1k.i + tw.i);
@@ -156,7 +157,7 @@ kiss_fftri_s16 (kiss_fftr_s16_cfg st, const kiss_fft_s16_cpx * freqdata,
 
     C_ADD (fek, fk, fnkc);
     C_SUB (tmp, fk, fnkc);
-    C_MUL (fok, tmp, st->super_twiddles[k]);
+    C_MUL (fok, tmp, st->super_twiddles[k - 1]);
     C_ADD (st->tmpbuf[k], fek, fok);
     C_SUB (st->tmpbuf[ncfft - k], fek, fok);
 #ifdef USE_SIMD

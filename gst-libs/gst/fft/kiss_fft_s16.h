@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <memory.h>
+#include <string.h>
 #include <glib.h>
 
 #ifdef __cplusplus
@@ -94,6 +94,10 @@ void kiss_fft_s16_cleanup(void);
  * Returns the smallest integer k, such that k>=n and k has only "fast" factors (2,3,5)
  */
 int kiss_fft_s16_next_fast_size(int n);
+
+/* for real ffts, we need an even size */
+#define kiss_fftr_next_fast_size_real(n) \
+        (kiss_fft_next_fast_size( ((n)+1)>>1)<<1)
 
 #ifdef __cplusplus
 } 
