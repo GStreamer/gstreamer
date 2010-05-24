@@ -48,7 +48,7 @@ G_BEGIN_DECLS
         GESTrackTransitionClass)
 
 struct _GESTrackTransition {
-    GESTrakObject parent;
+    GESTrackObject parent;
 };
 
 struct _GESTrackTransitionClass {
@@ -57,7 +57,7 @@ struct _GESTrackTransitionClass {
 
 GType ges_track_transition_get_type (void);
 
-GESTrackTransition *ges_track_transition_new (void);
+GESTrackTransition* ges_track_transition_new (void);
 
 G_END_DECLS
 
