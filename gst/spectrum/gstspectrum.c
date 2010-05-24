@@ -110,14 +110,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
 #define ALLOWED_CAPS \
     "audio/x-raw-int, "                                               \
     " width = (int) 16, "                                             \
-    " depth = (int) 16, "                                             \
+    " depth = (int) [ 1, 16 ], "                                      \
     " signed = (boolean) true, "                                      \
     " endianness = (int) BYTE_ORDER, "                                \
     " rate = (int) [ 1, MAX ], "                                      \
     " channels = (int) [ 1, MAX ]; "                                  \
     "audio/x-raw-int, "                                               \
     " width = (int) 32, "                                             \
-    " depth = (int) 32, "                                             \
+    " depth = (int) [ 1, 32 ], "                                      \
     " signed = (boolean) true, "                                      \
     " endianness = (int) BYTE_ORDER, "                                \
     " rate = (int) [ 1, MAX ], "                                      \
@@ -483,6 +483,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   guint i;
   guint rate = GST_AUDIO_FILTER (spectrum)->format.rate;
   guint channels = GST_AUDIO_FILTER (spectrum)->format.channels;
+  gfloat max_value =
+      (1UL << (GST_AUDIO_FILTER (spectrum)->format.depth - 1)) - 1;
   guint width = GST_AUDIO_FILTER (spectrum)->format.width / 8;
   gboolean fp = (GST_AUDIO_FILTER (spectrum)->format.type == GST_BUFTYPE_FLOAT);
   guint bands = spectrum->bands;
@@ -551,11 +553,16 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     } else if (!fp && width == 4) {
       gint32 *in = (gint32 *) data;
       for (i = 0; i < channels; i++)
-        spectrum->input[spectrum->input_pos] += ((gfloat) in[i]) / G_MAXINT32;
+        /* max_value will be 0 when depth is 1, interpret -1 and 0
+         * as -1 and +1 if that's the case.
+         */
+        spectrum->input[spectrum->input_pos] +=
+            max_value ? in[i] / max_value : in[i] * 2 + 1;
     } else if (!fp && width == 2) {
       gint16 *in = (gint16 *) data;
       for (i = 0; i < channels; i++)
-        spectrum->input[spectrum->input_pos] += ((gfloat) in[i]) / G_MAXINT16;
+        spectrum->input[spectrum->input_pos] +=
+            max_value ? in[i] / max_value : in[i] * 2 + 1;
     } else {
       g_assert_not_reached ();
     }
