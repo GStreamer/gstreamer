@@ -412,6 +412,11 @@ mpeg_packetiser_get_block (MPEGPacketiser * p, GstBuffer ** buf)
     p->adapter_offset += block->length;
 
     GST_BUFFER_TIMESTAMP (*buf) = block->ts;
+  } else {
+    GST_DEBUG ("we have a block but do not meet all conditions buf: %p "
+        "block length: %d adapter offset %" G_GUINT64_FORMAT " block offset "
+        "%" G_GUINT64_FORMAT, buf, block->length, p->adapter_offset,
+        block->offset);
   }
   return block;
 }

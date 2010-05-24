@@ -493,7 +493,7 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
         cur->length, picture_start_code_name (cur->first_pack_type),
         cur->flags);
 
-    if (cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) {
+    if ((cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) && buf != NULL) {
       /* Found a sequence header */
       if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf)) {
         GST_DEBUG_OBJECT (mpegvideoparse,
