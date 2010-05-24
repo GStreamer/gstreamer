@@ -2416,13 +2416,16 @@ void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadFixateCapsFunction fixatefunc;
-  guint len;
+  GstStructure *s;
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
   g_return_if_fail (!gst_caps_is_empty (caps));
+  /* FIXME-0.11: do not allow fixating any-caps
+   * g_return_if_fail (!gst_caps_is_any (caps));
+   */
 
-  if (gst_caps_is_fixed (caps))
+  if (gst_caps_is_fixed (caps) || gst_caps_is_any (caps))
     return;
 
   fixatefunc = GST_PAD_FIXATECAPSFUNC (pad);
@@ -2431,16 +2434,9 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   }
 
   /* default fixation */
-  len = gst_caps_get_size (caps);
-  if (len > 0) {
-    GstStructure *s = gst_caps_get_structure (caps, 0);
-
-    gst_structure_foreach (s, gst_pad_default_fixate, s);
-  }
-
-  if (len > 1) {
-    gst_caps_truncate (caps);
-  }
+  gst_caps_truncate (caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_foreach (s, gst_pad_default_fixate, s);
 }
 
 /* Default accept caps implementation just checks against
