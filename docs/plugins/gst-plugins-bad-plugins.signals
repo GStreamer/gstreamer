@@ -1,39 +1,4 @@
 <SIGNAL>
-<NAME>GstAppSink::eos</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSink *gstappsink
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSink::new-buffer</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSink *gstappsink
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSink::new-preroll</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSink *gstappsink
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSink::pull-buffer</NAME>
-<RETURNS>GstBuffer*</RETURNS>
-<FLAGS>la</FLAGS>
-GstAppSink *gstappsink
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSink::pull-preroll</NAME>
-<RETURNS>GstBuffer*</RETURNS>
-<FLAGS>la</FLAGS>
-GstAppSink *gstappsink
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstSwitch::block</NAME>
 <RETURNS>gint64</RETURNS>
 <FLAGS>l</FLAGS>
@@ -73,44 +38,6 @@ GstInputSelector *gstinputselector
 GstPad *arg1
 gint64  arg2
 gint64  arg3
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSrc::end-of-stream</NAME>
-<RETURNS>GstFlowReturn</RETURNS>
-<FLAGS>la</FLAGS>
-GstAppSrc *gstappsrc
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSrc::enough-data</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSrc *gstappsrc
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSrc::need-data</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSrc *gstappsrc
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSrc::push-buffer</NAME>
-<RETURNS>GstFlowReturn</RETURNS>
-<FLAGS>la</FLAGS>
-GstAppSrc *gstappsrc
-GstBuffer *arg1
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstAppSrc::seek-data</NAME>
-<RETURNS>gboolean</RETURNS>
-<FLAGS>l</FLAGS>
-GstAppSrc *gstappsrc
-guint64  arg1
 </SIGNAL>
 
 <SIGNAL>
