@@ -25,6 +25,11 @@
 
 G_BEGIN_DECLS
 
+/* Some compatibility defines for older libvpx versions */
+#ifndef VPX_IMG_FMT_I420
+#define VPX_IMG_FMT_I420 IMG_FMT_I420
+#endif
+
 const char * gst_vpx_error_name (vpx_codec_err_t status);
 
 G_END_DECLS
