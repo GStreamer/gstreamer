@@ -625,8 +625,11 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
         g_free (lang);
       }
 
+      /* FIXME: remove locking again after GstTagSetter has been fixed */
+      GST_OBJECT_LOCK (mux);
       gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+      GST_OBJECT_UNLOCK (mux);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -2205,7 +2208,10 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   }
 
   /* tags */
+  /* FIXME: remove locking again after GstTagSetter has been fixed */
+  GST_OBJECT_LOCK (mux);
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+  GST_OBJECT_UNLOCK (mux);
 
   if (tags != NULL && !gst_tag_list_is_empty (tags)) {
     guint64 master_tags, master_tag;

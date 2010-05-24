@@ -256,10 +256,15 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:{
       GstTagList *list;
       GstTagSetter *setter = GST_TAG_SETTER (mux);
-      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
+      GstTagMergeMode mode;
 
       gst_event_parse_tag (event, &list);
+
+      /* FIXME: remove locking again after GstTagSetter has been fixed */
+      GST_OBJECT_LOCK (mux);
+      mode = gst_tag_setter_get_tag_merge_mode (setter);
       gst_tag_setter_merge_tags (setter, list, mode);
+      GST_OBJECT_UNLOCK (mux);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -634,7 +639,10 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
   guint8 *data;
   gint i, n_tags, tags_written = 0;
 
+  /* FIXME: remove locking again after GstTagSetter has been fixed */
+  GST_OBJECT_LOCK (mux);
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
+  GST_OBJECT_UNLOCK (mux);
 
   GST_DEBUG_OBJECT (mux, "tags = %" GST_PTR_FORMAT, tags);
 

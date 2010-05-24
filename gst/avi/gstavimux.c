@@ -1166,7 +1166,10 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   else {
     /* need to make snapshot of current state of tags to ensure the same set
      * is used next time around during header rewrite at the end */
+    /* FIXME: remove locking again after GstTagSetter has been fixed */
+    GST_OBJECT_LOCK (avimux);
     tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
+    GST_OBJECT_UNLOCK (avimux);
     if (tags)
       tags = avimux->tags_snap = gst_tag_list_copy (tags);
   }
@@ -1919,10 +1922,15 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:{
       GstTagList *list;
       GstTagSetter *setter = GST_TAG_SETTER (avimux);
-      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
+      GstTagMergeMode mode;
 
       gst_event_parse_tag (event, &list);
+
+      /* FIXME: remove locking again after GstTagSetter has been fixed */
+      GST_OBJECT_LOCK (avimux);
+      mode = gst_tag_setter_get_tag_merge_mode (setter);
       gst_tag_setter_merge_tags (setter, list, mode);
+      GST_OBJECT_UNLOCK (avimux);
       break;
     }
     default:
