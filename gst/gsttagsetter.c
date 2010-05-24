@@ -143,12 +143,20 @@ gst_tag_setter_get_data (GstTagSetter * setter)
 
   data = g_object_get_qdata (G_OBJECT (setter), gst_tag_key);
   if (!data) {
-    data = g_slice_new (GstTagData);
-    g_static_mutex_init (&data->lock);
-    data->list = NULL;
-    data->mode = GST_TAG_MERGE_KEEP;
-    g_object_set_qdata_full (G_OBJECT (setter), gst_tag_key, data,
-        gst_tag_data_free);
+    static GStaticMutex create_mutex = G_STATIC_MUTEX_INIT;
+
+    /* make sure no other thread is creating a GstTagData at the same time */
+    g_static_mutex_lock (&create_mutex);
+    data = g_object_get_qdata (G_OBJECT (setter), gst_tag_key);
+    if (!data) {
+      data = g_slice_new (GstTagData);
+      g_static_mutex_init (&data->lock);
+      data->list = NULL;
+      data->mode = GST_TAG_MERGE_KEEP;
+      g_object_set_qdata_full (G_OBJECT (setter), gst_tag_key, data,
+          gst_tag_data_free);
+    }
+    g_static_mutex_unlock (&create_mutex);
   }
 
   return data;
