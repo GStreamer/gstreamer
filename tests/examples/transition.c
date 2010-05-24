@@ -65,7 +65,7 @@ main (int argc, char **argv)
   GOptionEntry options[] = {
     {"type", 't', 0, G_OPTION_ARG_INT, &type,
         "type of transition to create (smpte numeric)", "<smpte" "transition>"},
-    {"duration", 'd', 0, G_OPTION_ARG_INT, &transition_duration,
+    {"duration", 'd', 0.0, G_OPTION_ARG_DOUBLE, &transition_duration,
         "duration of transition", "seconds"},
     {NULL}
   };
@@ -82,7 +82,7 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  if (argc < 2) {
+  if (argc < 4) {
     g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     exit (0);
   }
@@ -127,6 +127,17 @@ main (int argc, char **argv)
 
   ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (srca));
   ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (srcb));
+
+  GESTimelineTransition *tr;
+
+  guint64 tdur = (guint64) transition_duration * GST_SECOND;
+  if (tdur != 0) {
+    g_print ("creating transition of %f duration (%ld ns)",
+        transition_duration, tdur);
+    tr = ges_timeline_transition_new ();
+    ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
+    g_object_set (tr, "start", aduration - tdur, "duration", tdur, NULL);
+  }
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds (((aduration + bduration) / GST_SECOND) + 1,
