@@ -33,7 +33,7 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransition))
 
-#define GES_TRACK_SOURCE_CLASS(klass) \
+#define GES_TRACK_TRANSITION_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransitionClass))
 
