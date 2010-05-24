@@ -1,4 +1,4 @@
-/**
+/*
  * Weave frames, top-field-first.
  * Copyright (C) 2003 Billy Biggs <vektor@dumbterm.net>.
  * Copyright (C) 2008,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>

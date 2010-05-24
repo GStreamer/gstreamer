@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2004 Billy Biggs <vektor@dumbterm.net>
  * Copyright (C) 2008,2010 Sebastian Dröge <slomo@collabora.co.uk>
  *

@@ -57,7 +57,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodVFIRClass;
  * filter taps here are: [-1 4 2 4 -1].
  */
 
-/**
+ /*
   * C implementation.
   */
 static inline void

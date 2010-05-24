@@ -142,7 +142,7 @@ struct _GstDeinterlaceScanlineData {
  gboolean bottom_field;
 };
 
-/**
+/*
  * For interpolate_scanline the input is:
  *
  * |   t-3       t-2       t-1       t

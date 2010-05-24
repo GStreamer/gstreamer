@@ -1,4 +1,4 @@
-/**
+/*
  * Linear blend deinterlacing plugin.  The idea for this algorithm came
  * from the linear blend deinterlacer which originated in the mplayer
  * sources.

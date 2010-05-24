@@ -1,4 +1,4 @@
-/**
+/*
  * Double lines
  * Copyright (C) 2008,2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
