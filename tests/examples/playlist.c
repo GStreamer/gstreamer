@@ -22,6 +22,7 @@
 #endif
 
 #include <stdlib.h>
+#include <string.h>
 #include <glib.h>
 #include <ges/ges.h>
 #include <gst/profile/gstprofile.h>
@@ -29,6 +30,87 @@
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
 GESTimelinePipeline *pipeline = NULL;
+
+/* create a table of a subset of the test patterns available from videotestsrc
+ */
+
+typedef struct _pattern
+{
+  char *name;
+  int value;
+} pattern;
+
+pattern patterns[] = {
+  {"smpte", 0},
+  {"snow", 1},
+  {"black", 2},
+  {"white", 3},
+  {"red", 4},
+  {"green", 5},
+  {"blue", 6},
+};
+
+#define N_PATTERNS 7
+#define INVALID_PATTERN -1
+
+/* and a function to get the pattern for the source */
+
+int
+pattern_for_name (char *name)
+{
+  size_t length = strlen (name);
+
+  if (g_str_has_prefix (name, "<pattern:") && (name[length - 1] == '>')) {
+    int i;
+
+    /* FIXME: just use a regex for god's sake... */
+    size_t substrlen = length - 10;
+    char *tmp = strdup (name + 9);
+
+    tmp[substrlen] = '\0';
+
+    for (i = 0; i < N_PATTERNS; i++) {
+      pattern *p = &patterns[i];
+
+      if (!g_strcmp0 (p->name, tmp)) {
+        return patterns[i].value;
+      }
+    }
+
+    free (tmp);
+  }
+
+  return INVALID_PATTERN;
+}
+
+gboolean
+pattern_source_fill_func (GESTimelineObject * object,
+    GESTrackObject * trobject, GstElement * gnlobj, gpointer user_data)
+{
+  guint pattern = GPOINTER_TO_UINT (user_data);
+  GESTrack *track = trobject->track;
+  GstElement *testsrc;
+
+  g_assert (track);
+
+  if ((track->type) == GES_TRACK_TYPE_VIDEO) {
+    testsrc = gst_element_factory_make ("videotestsrc", NULL);
+    g_object_set (testsrc, "pattern", pattern, NULL);
+  } else if ((track->type) == GES_TRACK_TYPE_AUDIO) {
+    testsrc = gst_element_factory_make ("audiotestsrc", NULL);
+    g_object_set (testsrc, "freq", 440.0, NULL);
+  } else
+    return FALSE;
+
+  return gst_bin_add (GST_BIN (gnlobj), testsrc);
+}
+
+GESCustomTimelineSource *
+pattern_source_new (guint pattern)
+{
+  return ges_custom_timeline_source_new (pattern_source_fill_func,
+      GUINT_TO_POINTER (pattern));
+}
 
 static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
@@ -39,12 +121,13 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
 
   profile = gst_encoding_profile_new ("ges-test4",
       gst_caps_from_string (container), NULL, FALSE);
-  stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
+  stream =
+      gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
       gst_caps_from_string (audio), NULL, NULL, 0);
   gst_encoding_profile_add_stream (profile, stream);
   stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_VIDEO,
-      gst_caps_from_string (video), NULL,
-      gst_caps_from_string (video_restriction), 0);
+      gst_caps_from_string (video),
+      NULL, gst_caps_from_string (video_restriction), 0);
   gst_encoding_profile_add_stream (profile, stream);
   return profile;
 }
@@ -77,17 +160,27 @@ create_timeline (int nbargs, gchar ** argv)
 
   for (i = 0; i < nbargs / 3; i++) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
-    GESTimelineFileSource *src = ges_timeline_filesource_new (uri);
+    GESTimelineSource *src;
     guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
     guint64 duration = atoi (argv[i * 3 + 2]) * GST_SECOND;
 
     g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT
         "\n", uri, GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
 
-    g_assert (src);
-    g_free (uri);
+    int pattern;
+    if ((pattern = pattern_for_name (argv[i * 3])) != INVALID_PATTERN) {
+      src = GES_TIMELINE_SOURCE (pattern_source_new (pattern));
+      g_assert (src);
+    } else {
+      gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
+      src = GES_TIMELINE_SOURCE (ges_timeline_filesource_new (uri));
+      g_assert (src);
+      g_free (uri);
 
-    g_object_set (src, "in-point", inpoint, "duration", duration, NULL);
+    }
+    g_object_set (src,
+        "in-point", (long) (atof (argv[i * 3 + 1]) * GST_SECOND),
+        "duration", (long) (atof (argv[i * 3 + 2]) * GST_SECOND), NULL);
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
