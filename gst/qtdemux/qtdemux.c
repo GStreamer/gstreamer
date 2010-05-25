@@ -817,7 +817,8 @@ gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
   guint32 index = 0;
 
   /* convert media_time to mov format */
-  media_time = gst_util_uint64_scale (media_time, str->timescale, GST_SECOND);
+  media_time =
+      gst_util_uint64_scale_ceil (media_time, str->timescale, GST_SECOND);
 
   if (media_time == result->timestamp)
     return index;
