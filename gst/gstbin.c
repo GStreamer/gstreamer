@@ -3002,6 +3002,17 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GST_MESSAGE_TYPE_NAME (message));
 
   switch (type) {
+    case GST_MESSAGE_ERROR:
+    {
+      GST_OBJECT_LOCK (bin);
+      /* flag error */
+      GST_DEBUG_OBJECT (bin, "got ERROR message, unlocking state change");
+      GST_STATE_RETURN (bin) = GST_STATE_CHANGE_FAILURE;
+      GST_STATE_BROADCAST (bin);
+      GST_OBJECT_UNLOCK (bin);
+
+      goto forward;
+    }
     case GST_MESSAGE_EOS:
     {
       gboolean eos;

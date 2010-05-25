@@ -444,6 +444,51 @@ GST_START_TEST (test_watch_for_state_change)
 
 GST_END_TEST;
 
+GST_START_TEST (test_state_change_error_message)
+{
+  GstElement *src, *sink, *bin;
+  GstBus *bus;
+  GstStateChangeReturn ret;
+
+  bin = gst_element_factory_make ("bin", NULL);
+  fail_unless (bin != NULL, "Could not create bin");
+
+  bus = g_object_new (gst_bus_get_type (), NULL);
+  gst_element_set_bus (GST_ELEMENT_CAST (bin), bus);
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink == NULL, "Could not create fakesink");
+
+  /* add but don't link elements */
+  gst_bin_add (GST_BIN (bin), sink);
+  gst_bin_add (GST_BIN (bin), src);
+
+  /* change state, this should succeed */
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* now wait, the streaming thread will error because the source is not
+   * linked. */
+  ret = gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (ret == GST_STATE_CHANGE_FAILURE);
+
+  gst_bus_set_flushing (bus, TRUE);
+
+  /* setting bin to NULL flushes the bus automatically */
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+  /* clean up */
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+
 /* adding an element with linked pads to a bin unlinks the
  * pads */
 GST_START_TEST (test_add_linked)
@@ -1042,6 +1087,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_message_state_changed_child);
   tcase_add_test (tc_chain, test_message_state_changed_children);
   tcase_add_test (tc_chain, test_watch_for_state_change);
+  tcase_add_test (tc_chain, test_state_change_error_message);
   tcase_add_test (tc_chain, test_add_linked);
   tcase_add_test (tc_chain, test_add_self);
   tcase_add_test (tc_chain, test_iterate_sorted);
