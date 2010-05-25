@@ -37,9 +37,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\","
-        /* only support inline delivery */
-        "delivery-method = (string) \"inline\""
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\""
         /* All required parameters 
          *
          * "sampling = (string) { "YCbCr-4:2:0", "YCbCr-4:2:2", "YCbCr-4:4:4" } "
@@ -305,16 +303,12 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstStructure *structure;
   GstRtpTheoraDepay *rtptheoradepay;
   GstCaps *srccaps;
-  const gchar *delivery_method;
   const gchar *configuration;
   gboolean res;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
-
-  /* see how the configuration parameters will be transmitted */
-  delivery_method = gst_structure_get_string (structure, "delivery-method");
 
   /* read and parse configuration string */
   configuration = gst_structure_get_string (structure, "configuration");
@@ -337,15 +331,7 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
     if (!gst_rtp_theora_depay_parse_configuration (rtptheoradepay, confbuf))
       goto invalid_configuration;
-  } else if (!delivery_method ||
-      !g_ascii_strcasecmp (delivery_method, "in_band")) {
-    /* headers will (also) be transmitted in the RTP packets */
-    GST_DEBUG_OBJECT (rtptheoradepay, "expecting in_band configuration");
-  } else if (g_str_has_prefix (delivery_method, "out_band/")) {
-    /* some other method of header delivery. */
-    goto unsupported_delivery_method;
-  } else
-    goto unsupported_delivery_method;
+  }
 
   /* set caps on pad and on header */
   srccaps = gst_caps_new_simple ("video/x-theora", NULL);
@@ -358,12 +344,6 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   return res;
 
   /* ERRORS */
-unsupported_delivery_method:
-  {
-    GST_ERROR_OBJECT (rtptheoradepay,
-        "unsupported delivery-method \"%s\" specified", delivery_method);
-    return FALSE;
-  }
 no_configuration:
   {
     GST_ERROR_OBJECT (rtptheoradepay, "no configuration specified");

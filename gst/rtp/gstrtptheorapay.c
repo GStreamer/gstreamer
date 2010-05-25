@@ -44,19 +44,18 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\", "
-        "delivery-method = (string) \"inline\""
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"THEORA\""
         /* All required parameters
          *
          * "sampling = (string) { "YCbCr-4:2:0", "YCbCr-4:2:2", "YCbCr-4:4:4" } "
          * "width = (string) [1, 1048561] (multiples of 16) "
          * "height = (string) [1, 1048561] (multiples of 16) "
-         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } "
          * "configuration = (string) ANY"
          */
         /* All optional parameters
          *
          * "configuration-uri ="
+         * "delivery-method = (string) { inline, in_band, out_band/<specific_name> } "
          */
     )
     );
@@ -435,7 +434,6 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
       "width", G_TYPE_STRING, wstr,
       "height", G_TYPE_STRING, hstr,
       "configuration", G_TYPE_STRING, configuration,
-      "delivery-method", G_TYPE_STRING, "inline",
       /* don't set the other defaults 
        */
       NULL);
