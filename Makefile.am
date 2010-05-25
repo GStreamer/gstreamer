@@ -21,3 +21,11 @@ check-valgrind:
 
 check-torture:
 	@true
+
+CRUFT_FILES = \
+	$(top_builddir)/common/shave \
+	$(top_builddir)/common/shave-libtool
+
+include $(top_srcdir)/common/cruft.mak
+
+all-local: check-cruft
