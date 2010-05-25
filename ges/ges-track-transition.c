@@ -25,6 +25,51 @@
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
 static void
+ges_track_transition_update_controller (GESTrackTransition * self,
+    GstElement * gnlobj)
+{
+  GST_LOG ("updating controller");
+
+  if (!gnlobj)
+    return;
+
+  if (!(self->controller))
+    return;
+
+  GST_LOG ("getting properties");
+  guint64 duration;
+  g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
+
+  GST_INFO ("duration: %d\n", duration);
+
+  GValue start_value = { 0, };
+  GValue end_value = { 0, };
+  g_value_init (&start_value, G_TYPE_DOUBLE);
+  g_value_init (&end_value, G_TYPE_DOUBLE);
+  g_value_set_double (&start_value, 0.0);
+  g_value_set_double (&end_value, 1.0);
+
+  GST_LOG ("setting values on controller");
+
+  g_assert (GST_IS_CONTROLLER (self->controller));
+  g_assert (GST_IS_CONTROL_SOURCE (self->control_source));
+
+  gst_interpolation_control_source_unset_all (self->control_source);
+  gst_interpolation_control_source_set (self->control_source, 0, &start_value);
+  gst_interpolation_control_source_set (self->control_source,
+      duration, &end_value);
+
+  GST_LOG ("done updating controller");
+}
+
+static void
+gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackTransition * self)
+{
+  ges_track_transition_update_controller (self, gnlobject);
+}
+
+static void
 ges_track_transition_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -85,6 +130,8 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
   object->gnlobject = gst_element_factory_make ("gnloperation",
       "transition-operation");
   g_object_set (object->gnlobject, "priority", 0, NULL);
+  g_signal_connect (G_OBJECT (object->gnlobject), "notify::duration",
+      G_CALLBACK (gnlobject_duration_cb), object);
 
   if ((object->track->type) == GES_TRACK_TYPE_VIDEO) {
     GstElement *topbin = gst_bin_new ("transition-bin");
@@ -117,16 +164,23 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 
     /* set up interpolation */
 
+    g_object_set (G_OBJECT (b_pad), "alpha", (gfloat) 0.0, NULL);
+
     GstController *controller;
     controller = gst_object_control_properties (G_OBJECT (b_pad), "alpha",
         NULL);
-    GstControlSource *control_source;
-    control_source =
-        GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
-    gst_controller_set_control_source (controller, "alpha", control_source);
+    GstInterpolationControlSource *control_source;
+    control_source = gst_interpolation_control_source_new ();
+    gst_controller_set_control_source (controller,
+        "alpha", GST_CONTROL_SOURCE (control_source));
+    gst_interpolation_control_source_set_interpolation_mode (control_source,
+        GST_INTERPOLATE_LINEAR);
 
     self->controller = controller;
     self->control_source = control_source;
+
+    GST_LOG ("controller created, updating");
+    ges_track_transition_update_controller (self, object->gnlobject);
 
     return TRUE;
   }
