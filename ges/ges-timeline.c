@@ -271,8 +271,15 @@ static void
 do_async_start (GESTimeline * timeline)
 {
   GstMessage *message;
+  GList *tmp;
 
   timeline->async_pending = TRUE;
+
+  /* Freeze state of tracks */
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    TrackPrivate *priv = (TrackPrivate *) tmp->data;
+    gst_element_set_locked_state ((GstElement *) priv->track, TRUE);
+  }
 
   message = gst_message_new_async_start (GST_OBJECT_CAST (timeline), FALSE);
   parent_class->handle_message (GST_BIN_CAST (timeline), message);
@@ -284,6 +291,14 @@ do_async_done (GESTimeline * timeline)
   GstMessage *message;
 
   if (timeline->async_pending) {
+    GList *tmp;
+    /* Unfreeze state of tracks */
+    for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+      TrackPrivate *priv = (TrackPrivate *) tmp->data;
+      gst_element_set_locked_state ((GstElement *) priv->track, FALSE);
+      gst_element_sync_state_with_parent ((GstElement *) priv->track);
+    }
+
     GST_DEBUG_OBJECT (timeline, "Emitting async-done");
     message = gst_message_new_async_done (GST_OBJECT_CAST (timeline));
     parent_class->handle_message (GST_BIN_CAST (timeline), message);
