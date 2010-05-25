@@ -80,6 +80,8 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
 static gboolean
 ges_track_transition_create_gnl_object (GESTrackObject * object)
 {
+  GESTrackTransition *self = GES_TRACK_TRANSITION (object);
+
   object->gnlobject = gst_element_factory_make ("gnloperation",
       "transition-operation");
   g_object_set (object->gnlobject, "priority", 0, NULL);
@@ -113,8 +115,18 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 
     gst_bin_add (GST_BIN (object->gnlobject), topbin);
 
-    //g_object_set(a_pad, "alpha", 0.5, NULL);
-    g_object_set (b_pad, "alpha", 0.5, NULL);
+    /* set up interpolation */
+
+    GstController *controller;
+    controller = gst_object_control_properties (G_OBJECT (b_pad), "alpha",
+        NULL);
+    GstControlSource *control_source;
+    control_source =
+        GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
+    gst_controller_set_control_source (controller, "alpha", control_source);
+
+    self->controller = controller;
+    self->control_source = control_source;
 
     return TRUE;
   }
