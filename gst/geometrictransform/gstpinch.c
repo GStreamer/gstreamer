@@ -1,0 +1,263 @@
+/*
+ * GStreamer
+ * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
+ * which case the following provisions apply instead of the ones
+ * mentioned above:
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/*
+ * Thanks to Jerry Huxtable <http://www.jhlabs.com> work on its java
+ * image editor and filters. The algorithms here were extracted from
+ * his code.
+ */
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <gst/gst.h>
+#include <math.h>
+
+#include "gstpinch.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_pinch_debug);
+#define GST_CAT_DEFAULT gst_pinch_debug
+
+enum
+{
+  PROP_0,
+  PROP_X_CENTER,
+  PROP_Y_CENTER,
+  PROP_RADIUS,
+  PROP_INTENSITY
+};
+
+#define DEFAULT_X_CENTER 0.5
+#define DEFAULT_Y_CENTER 0.5
+#define DEFAULT_RADIUS 100
+#define DEFAULT_INTENSITY 0.5
+
+GST_BOILERPLATE (GstPinch, gst_pinch, GstGeometricTransform,
+    GST_TYPE_GEOMETRIC_TRANSFORM);
+
+static void
+gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstPinch *pinch;
+
+  pinch = GST_PINCH (object);
+
+  switch (prop_id) {
+    case PROP_X_CENTER:
+      pinch->x_center = g_value_get_double (value);
+      break;
+    case PROP_Y_CENTER:
+      pinch->y_center = g_value_get_double (value);
+      break;
+    case PROP_RADIUS:
+      pinch->radius = g_value_get_double (value);
+      break;
+    case PROP_INTENSITY:
+      pinch->intensity = g_value_get_double (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_pinch_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstPinch *pinch;
+
+  pinch = GST_PINCH (object);
+
+  switch (prop_id) {
+    case PROP_X_CENTER:
+      g_value_set_double (value, pinch->x_center);
+      break;
+    case PROP_Y_CENTER:
+      g_value_set_double (value, pinch->y_center);
+      break;
+    case PROP_RADIUS:
+      g_value_set_double (value, pinch->radius);
+      break;
+    case PROP_INTENSITY:
+      g_value_set_double (value, pinch->intensity);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+/* Clean up */
+static void
+gst_pinch_finalize (GObject * obj)
+{
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+/* GObject vmethod implementations */
+
+static void
+gst_pinch_base_init (gpointer gclass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+
+  gst_element_class_set_details_simple (element_class,
+      "pinch",
+      "Transform/Effect/Video",
+      "Applies 'pinch' geometric transform to the image",
+      "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+}
+
+/* FIXME optimize a little using cast macro and pre calculating some
+ * values so we don't need them every mapping */
+static gboolean
+dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * ox,
+    gdouble * oy)
+{
+  GstPinch *pinch = GST_PINCH (gt);
+  gdouble r2;
+  gdouble distance;
+  gdouble x_center;
+  gdouble y_center;
+  gdouble dx, dy;
+
+  /* get the center in pixels instead of % */
+  x_center = pinch->x_center * gt->width;
+  y_center = pinch->y_center * gt->height;
+
+  dx = x - x_center;
+  dy = y - y_center;
+  distance = dx * dx + dy * dy;
+
+  r2 = pinch->radius * pinch->radius;
+
+  GST_LOG_OBJECT (pinch, "Center %0.5lf (%0.2lf) %0.5lf (%0.2lf)",
+      x_center, pinch->x_center, y_center, pinch->y_center);
+  GST_LOG_OBJECT (pinch, "Input %d %d, distance=%lf, radius2=%lf, dx=%lf"
+      ", dy=%lf", x, y, distance, r2, dx, dy);
+
+  if (distance > r2 || distance == 0) {
+    *ox = x;
+    *oy = y;
+  } else {
+    gdouble d = sqrt (distance / r2);
+    gdouble t = pow (sin (G_PI * 0.5 * d), -pinch->intensity);
+
+    dx *= t;
+    dy *= t;
+
+    GST_LOG_OBJECT (pinch, "D=%lf, t=%lf, dx=%lf" ", dy=%lf", d, t, dx, dy);
+
+    *ox = x_center + dx;
+    *oy = y_center + dy;
+
+    *ox = CLAMP (*ox, 0, gt->width - 1);
+    *oy = CLAMP (*oy, 0, gt->height - 1);
+  }
+
+  GST_DEBUG_OBJECT (pinch, "Mapped %d %d into %lf %lf", x, y, *ox, *oy);
+
+  return TRUE;
+}
+
+static void
+gst_pinch_class_init (GstPinchClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstGeometricTransformClass *gstgt_class;
+
+  gobject_class = (GObjectClass *) klass;
+  gstgt_class = (GstGeometricTransformClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pinch_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pinch_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pinch_get_property);
+
+
+  /* FIXME I don't like the idea of x-center and y-center being in % and
+   * radius and intensity in absolute values, I think no one likes it. */
+  g_object_class_install_property (gobject_class, PROP_X_CENTER,
+      g_param_spec_double ("x-center", "x center",
+          "X axis center of the pinch effect",
+          0.0, 1.0, DEFAULT_X_CENTER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_Y_CENTER,
+      g_param_spec_double ("y-center", "y center",
+          "Y axis center of the pinch effect",
+          0.0, 1.0, DEFAULT_Y_CENTER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_RADIUS,
+      g_param_spec_double ("radius", "radius", "radius of the pinch effect",
+          0.0, G_MAXDOUBLE, DEFAULT_RADIUS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_INTENSITY,
+      g_param_spec_double ("intensity", "intensity",
+          "intensity of the pinch effect",
+          0.0, G_MAXDOUBLE, DEFAULT_INTENSITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gstgt_class->map_func = dummy_map;
+}
+
+static void
+gst_pinch_init (GstPinch * filter, GstPinchClass * gclass)
+{
+  filter->x_center = DEFAULT_X_CENTER;
+  filter->y_center = DEFAULT_Y_CENTER;
+  filter->intensity = DEFAULT_INTENSITY;
+  filter->radius = DEFAULT_RADIUS;
+}
+
+gboolean
+gst_pinch_plugin_init (GstPlugin * plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_pinch_debug, "pinch", 0, "pinch");
+
+  return gst_element_register (plugin, "pinch", GST_RANK_NONE, GST_TYPE_PINCH);
+}
