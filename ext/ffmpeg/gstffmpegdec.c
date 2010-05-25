@@ -2944,10 +2944,14 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_COOK:
         rank = GST_RANK_PRIMARY;
         break;
+        /* DVVIDEO: we have a good dv decoder, fast on both ppc as well as x86.
+         * They say libdv's quality is better though. leave as secondary.
+         * note: if you change this, see the code in gstdv.c in good/ext/dv.
+         *
+         * SIPR: decoder should have a higher rank than realaudiodec.
+         */
       case CODEC_ID_DVVIDEO:
-        /* we have a good dv decoder, fast on both ppc as well as x86. they say
-           libdv's quality is better though. leave as secondary.
-           note: if you change this, see the code in gstdv.c in good/ext/dv. */
+      case CODEC_ID_SIPR:
         rank = GST_RANK_SECONDARY;
         break;
       default:
