@@ -54,8 +54,10 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
   GESTimelineObject *ret =
       GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
 
-  g_object_set (ret, "start", start, "duration", duration,
-      "priority", priority, "in-point", 0, NULL);
+  g_object_set (ret,
+      "start", (guint64) start,
+      "duration", (guint64) duration,
+      "priority", (guint32) priority, "in-point", (guint64) 0, NULL);
 
   g_free (uri);
 
@@ -137,7 +139,7 @@ main (int argc, char **argv)
   ges_timeline_add_track (timeline, trackv);
 
   layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
-  g_object_set (layer1, "priority", 0, NULL);
+  g_object_set (layer1, "priority", (gint32) 0, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1))
     return -1;
@@ -158,7 +160,9 @@ main (int argc, char **argv)
     g_print ("creating transition at %ld of %f duration (%ld ns)\n",
         tstart, transition_duration, tdur);
     tr = ges_timeline_transition_new ();
-    g_object_set (tr, "start", tstart, "duration", tdur, "in-point", 0, NULL);
+    g_object_set (tr,
+        "start", (guint64) tstart,
+        "duration", (guint64) tdur, "in-point", (guint64) 0, NULL);
     ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
     g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
   }
