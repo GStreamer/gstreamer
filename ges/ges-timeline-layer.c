@@ -224,7 +224,13 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   ges_timeline_object_set_layer (object, layer);
 
   /* Set the priority. */
-  ges_timeline_object_set_priority (object, layer->min_gnl_priority);
+  if (GES_TIMELINE_OBJECT_PRIORITY (object) > (layer->max_gnl_priority)) {
+    ges_timeline_object_set_priority (object, layer->max_gnl_priority);
+  }
+
+  else if (GES_TIMELINE_OBJECT_PRIORITY (object) < (layer->min_gnl_priority)) {
+    ges_timeline_object_set_priority (object, layer->min_gnl_priority);
+  }
 
   /* emit 'object-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);

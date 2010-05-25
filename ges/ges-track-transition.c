@@ -56,12 +56,64 @@ ges_track_transition_finalize (GObject * object)
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
+GstPad *
+link_element_to_mixer (GstElement * element, GstElement * mixer)
+{
+  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  GstPad *srcpad = gst_element_get_static_pad (element, "src");
+
+  g_assert (sinkpad);
+  g_assert (srcpad);
+
+  gst_pad_link (srcpad, sinkpad);
+
+  return sinkpad;
+}
+
 static gboolean
 ges_track_transition_create_gnl_object (GESTrackObject * object)
 {
-  object->gnlobject = gst_element_factory_make ("gnloperation", NULL);
+  object->gnlobject = gst_element_factory_make ("gnloperation",
+      "transition-operation");
+  g_object_set (object->gnlobject, "priority", 0, NULL);
 
-  return TRUE;
+  if ((object->track->type) == GES_TRACK_TYPE_VIDEO) {
+    GstElement *topbin = gst_bin_new ("transition-bin");
+    GstElement *iconva = gst_element_factory_make ("ffmpegcolorspace",
+        "tr-csp-a");
+    GstElement *iconvb = gst_element_factory_make ("ffmpegcolorspace",
+        "tr-csp-b");
+    GstElement *oconv = gst_element_factory_make ("ffmpegcolorspace",
+        "tr-csp-output");
+    GstElement *mixer = gst_element_factory_make ("videomixer", NULL);
+
+    gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, mixer, oconv, NULL);
+    GstPad *a_pad = link_element_to_mixer (iconva, mixer);
+    GstPad *b_pad = link_element_to_mixer (iconvb, mixer);
+    gst_element_link (mixer, oconv);
+
+    GstPad *sinka_target = gst_element_get_static_pad (iconva, "sink");
+    GstPad *sinkb_target = gst_element_get_static_pad (iconvb, "sink");
+    GstPad *src_target = gst_element_get_static_pad (oconv, "src");
+
+    GstPad *sinka = gst_ghost_pad_new ("sinka", sinka_target);
+    GstPad *sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
+    GstPad *src = gst_ghost_pad_new ("src", src_target);
+
+    gst_element_add_pad (topbin, src);
+    gst_element_add_pad (topbin, sinka);
+    gst_element_add_pad (topbin, sinkb);
+
+    gst_bin_add (GST_BIN (object->gnlobject), topbin);
+
+    //g_object_set(a_pad, "alpha", 0.5, NULL);
+    g_object_set (b_pad, "alpha", 0.5, NULL);
+
+    return TRUE;
+  }
+
+  return FALSE;
+
 }
 
 static void

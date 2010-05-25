@@ -46,6 +46,41 @@ notify_max_duration_cb (GObject * object)
   g_print ("got here\n");
 }
 
+GESTimelineObject *
+make_source (char *path, guint64 start, guint64 duration, gint priority)
+{
+  char *uri = g_strdup_printf ("file://%s", path);
+
+  GESTimelineObject *ret =
+      GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+
+  g_object_set (ret, "start", start, "duration", duration,
+      "priority", priority, "in-point", 0, NULL);
+
+  g_free (uri);
+
+  return ret;
+}
+
+gboolean
+print_transition_data (GESTimelineObject * tr)
+{
+  if (!tr)
+    return FALSE;
+
+  GESTrackObject *trackobj = GES_TRACK_OBJECT (tr->trackobjects->data);
+  GstElement *gnlobj = trackobj->gnlobject;
+  guint64 start, duration;
+  gint priority;
+  char *name;
+
+  g_object_get (gnlobj, "start", &start, "duration", &duration,
+      "priority", &priority, "name", &name, NULL);
+  g_print ("gnlobject for %s: %ld %ld %d\n", name, start, duration, priority);
+
+  return FALSE;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -55,8 +90,7 @@ main (int argc, char **argv)
   GESTimeline *timeline;
   GESTrack *trackv;
   GESTimelineLayer *layer1;
-  GESTimelineFileSource *srca, *srcb;
-  GESCustomTimelineSource *src;
+  GESTimelineObject *srca, *srcb;
   GMainLoop *mainloop;
   gint type;
   gchar *uri = NULL;
@@ -87,6 +121,8 @@ main (int argc, char **argv)
     exit (0);
   }
 
+  guint64 tdur = (guint64) transition_duration * GST_SECOND;
+
   g_option_context_free (ctx);
 
   ges_init ();
@@ -101,42 +137,30 @@ main (int argc, char **argv)
   ges_timeline_add_track (timeline, trackv);
 
   layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
-  g_object_set (layer1, "priority", 1, NULL);
+  g_object_set (layer1, "priority", 0, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1))
     return -1;
 
-  uri = g_strdup_printf ("file://%s", argv[1]);
-  srca = ges_timeline_filesource_new (uri);
-
   guint64 aduration = (guint64) (atof (argv[2]) * GST_SECOND);
-  g_object_set (srca, "start", 0, "duration", aduration, NULL);
-  g_signal_connect (srca, "notify::max_duration",
-      G_CALLBACK (notify_max_duration_cb), NULL);
-
-  g_free (uri);
-
-  uri = g_strdup_printf ("file://%s", argv[3]);
-  srcb = ges_timeline_filesource_new (uri);
   guint64 bduration = (guint64) (atof (argv[4]) * GST_SECOND);
-  g_object_set (srcb, "start", aduration, "duration", bduration, NULL);
-  g_signal_connect (srcb, "notify::max_duration",
-      G_CALLBACK (notify_max_duration_cb), NULL);
+  guint64 tstart = aduration - tdur;
+  srca = make_source (argv[1], 0, aduration, 1);
+  srcb = make_source (argv[3], tstart, bduration, 2);
+  ges_timeline_layer_add_object (layer1, srca);
+  ges_timeline_layer_add_object (layer1, srcb);
+  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
+  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
 
-  g_free (uri);
+  GESTimelineTransition *tr = NULL;
 
-  ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (srca));
-  ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (srcb));
-
-  GESTimelineTransition *tr;
-
-  guint64 tdur = (guint64) transition_duration * GST_SECOND;
   if (tdur != 0) {
-    g_print ("creating transition of %f duration (%ld ns)",
-        transition_duration, tdur);
+    g_print ("creating transition at %ld of %f duration (%ld ns)\n",
+        tstart, transition_duration, tdur);
     tr = ges_timeline_transition_new ();
+    g_object_set (tr, "start", tstart, "duration", tdur, "in-point", 0, NULL);
     ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
-    g_object_set (tr, "start", aduration - tdur, "duration", tdur, NULL);
+    g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
   }
 
   mainloop = g_main_loop_new (NULL, FALSE);

@@ -25,9 +25,13 @@
 
 #include "ges-internal.h"
 #include "ges-timeline-transition.h"
+#include "ges-track-transition.h"
 
 G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
     GES_TYPE_TIMELINE_OBJECT);
+
+static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
+    *, GESTrack *);
 
 static void
 ges_timeline_transition_get_property (GObject * object,
@@ -65,16 +69,34 @@ static void
 ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_timeline_transition_get_property;
   object_class->set_property = ges_timeline_transition_set_property;
   object_class->dispose = ges_timeline_transition_dispose;
   object_class->finalize = ges_timeline_transition_finalize;
+
+  timobj_class->create_track_object = ges_tl_transition_create_track_object;
+  timobj_class->need_fill_track = FALSE;
 }
 
 static void
 ges_timeline_transition_init (GESTimelineTransition * self)
 {
+}
+
+static GESTrackObject *
+ges_tl_transition_create_track_object (GESTimelineObject * obj,
+    GESTrack * track)
+{
+  GESTimelineTransition *transition = (GESTimelineTransition *) obj;
+  GESTrackObject *res;
+
+  GST_DEBUG ("Creating a GESTrackTransition");
+
+  res = GES_TRACK_OBJECT (ges_track_transition_new ());
+
+  return res;
 }
 
 GESTimelineTransition *
