@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <gst/controller/gstcontroller.h>
-#include <gst/controller/gstcontrolsource.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-object.h>
 
@@ -52,7 +52,7 @@ G_BEGIN_DECLS
 {
   GESTrackObject parent;
   GstController *controller;
-  GstControlSource *control_source;
+  GstInterpolationControlSource *control_source;
 };
 
 struct _GESTrackTransitionClass {
