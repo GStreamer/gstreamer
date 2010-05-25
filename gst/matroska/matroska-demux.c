@@ -2200,9 +2200,8 @@ gst_matroska_demux_reset_streams (GstMatroskaDemux * demux, GstClockTime time,
     if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
       GstMatroskaTrackVideoContext *videocontext =
           (GstMatroskaTrackVideoContext *) context;
-      GST_OBJECT_LOCK (demux);
+      /* demux object lock held by caller */
       videocontext->earliest_time = GST_CLOCK_TIME_NONE;
-      GST_OBJECT_UNLOCK (demux);
     }
   }
 }
@@ -5831,7 +5830,9 @@ gst_matroska_demux_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (GST_BUFFER_IS_DISCONT (buffer))) {
     GST_DEBUG_OBJECT (demux, "got DISCONT");
     gst_adapter_clear (demux->adapter);
+    GST_OBJECT_LOCK (demux);
     gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, FALSE);
+    GST_OBJECT_UNLOCK (demux);
   }
 
   gst_adapter_push (demux->adapter, buffer);
@@ -6128,7 +6129,9 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
     {
       gst_adapter_clear (demux->adapter);
+      GST_OBJECT_LOCK (demux);
       gst_matroska_demux_reset_streams (demux, GST_CLOCK_TIME_NONE, TRUE);
+      GST_OBJECT_UNLOCK (demux);
       demux->segment.last_stop = GST_CLOCK_TIME_NONE;
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
