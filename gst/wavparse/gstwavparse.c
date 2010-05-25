@@ -1844,6 +1844,18 @@ iterate_adapter:
     if ((res = gst_pad_pull_range (wav->sinkpad, wav->offset,
                 desired, &buf)) != GST_FLOW_OK)
       goto pull_error;
+
+    /* we may get a short buffer at the end of the file */
+    if (GST_BUFFER_SIZE (buf) < desired) {
+      GST_LOG_OBJECT (wav, "Got only %u bytes of data", GST_BUFFER_SIZE (buf));
+      if (GST_BUFFER_SIZE (buf) >= wav->blockalign) {
+        buf = gst_buffer_make_metadata_writable (buf);
+        GST_BUFFER_SIZE (buf) -= (GST_BUFFER_SIZE (buf) % wav->blockalign);
+      } else {
+        gst_buffer_unref (buf);
+        goto found_eos;
+      }
+    }
   }
 
   /* first chunk of data? create the source pad. We do this only here so
