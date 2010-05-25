@@ -116,6 +116,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_spectrum_debug);
     " rate = (int) [ 1, MAX ], "                                      \
     " channels = (int) [ 1, MAX ]; "                                  \
     "audio/x-raw-int, "                                               \
+    " width = (int) 24, "                                             \
+    " depth = (int) [ 1, 24 ], "                                      \
+    " signed = (boolean) true, "                                      \
+    " endianness = (int) BYTE_ORDER, "                                \
+    " rate = (int) [ 1, MAX ], "                                      \
+    " channels = (int) [ 1, MAX ]; "                                  \
+    "audio/x-raw-int, "                                               \
     " width = (int) 32, "                                             \
     " depth = (int) [ 1, 32 ], "                                      \
     " signed = (boolean) true, "                                      \
@@ -558,6 +565,18 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
          */
         spectrum->input[spectrum->input_pos] +=
             max_value ? in[i] / max_value : in[i] * 2 + 1;
+    } else if (!fp && width == 3) {
+      for (i = 0; i < channels; i++) {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+        gint32 value = GST_READ_UINT24_BE (data);
+#else
+        gint32 value = GST_READ_UINT24_LE (data);
+#endif
+        if (value & 0x00800000)
+          value |= 0xff000000;
+        spectrum->input[spectrum->input_pos] +=
+            max_value ? value / max_value : value * 2 + 1;
+      }
     } else if (!fp && width == 2) {
       gint16 *in = (gint16 *) data;
       for (i = 0; i < channels; i++)
