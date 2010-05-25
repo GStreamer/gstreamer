@@ -78,7 +78,9 @@ print_transition_data (GESTimelineObject * tr)
 
   g_object_get (gnlobj, "start", &start, "duration", &duration,
       "priority", &priority, "name", &name, NULL);
-  g_print ("gnlobject for %s: %ld %ld %d\n", name, start, duration, priority);
+  g_print ("gnlobject for %s: %f %f %d\n", name,
+      ((gfloat) start) / GST_SECOND,
+      ((gfloat) duration) / GST_SECOND, priority);
 
   return FALSE;
 }
