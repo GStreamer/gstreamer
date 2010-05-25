@@ -12,7 +12,7 @@ EXTRA_DIST = \
 	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap \
 	$(win32)
 
-ACLOCAL_AMFLAGS = -I common/m4
+ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 include $(top_srcdir)/common/release.mak
 
@@ -24,7 +24,12 @@ check-torture:
 
 CRUFT_FILES = \
 	$(top_builddir)/common/shave \
-	$(top_builddir)/common/shave-libtool
+	$(top_builddir)/common/shave-libtool \
+	$(top_builddir)/common/m4/libtool.m4 \
+	$(top_builddir)/common/m4/ltoptions.m4 \
+	$(top_builddir)/common/m4/ltsugar.m4 \
+	$(top_builddir)/common/m4/ltversion.m4 \
+	$(top_builddir)/common/m4/lt~obsolete.m4
 
 include $(top_srcdir)/common/cruft.mak
 
