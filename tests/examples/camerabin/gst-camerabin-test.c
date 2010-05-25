@@ -522,8 +522,8 @@ set_metadata (GstElement * camera)
       GST_TAG_GEO_LOCATION_LONGITUDE, 1.0,
       GST_TAG_GEO_LOCATION_LATITUDE, 2.0,
       GST_TAG_GEO_LOCATION_ELEVATION, 3.0,
-      "device-make", "gst-camerabin-test make",
-      "device-model", "gst-camerabin-test model", NULL);
+      GST_TAG_DEVICE_MANUFACTURER, "gst-camerabin-test manufacturer",
+      GST_TAG_DEVICE_MODEL, "gst-camerabin-test model", NULL);
 
   g_free (desc_str);
   g_date_free (date);
