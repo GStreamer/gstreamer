@@ -47,6 +47,13 @@ ges_track_transition_set_property (GObject * object, guint property_id,
 static void
 ges_track_transition_dispose (GObject * object)
 {
+  GESTrackTransition *self = GES_TRACK_TRANSITION (object);
+  if (self->controller) {
+    g_object_unref (self->controller);
+    self->controller = NULL;
+    self->control_source = NULL;
+  }
+
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
@@ -133,6 +140,8 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
 static void
 ges_track_transition_init (GESTrackTransition * self)
 {
+  self->controller = NULL;
+  self->control_source = NULL;
 }
 
 GESTrackTransition *

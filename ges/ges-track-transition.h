@@ -22,6 +22,8 @@
 #define _GES_TRACK_TRANSITION
 
 #include <glib-object.h>
+#include <gst/controller/gstcontroller.h>
+#include <gst/controller/gstcontrolsource.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-object.h>
 
@@ -46,9 +48,11 @@ G_BEGIN_DECLS
 #define GES_TRACK_TRANSITION_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransitionClass)
-
-struct _GESTrackTransition {
-    GESTrackObject parent;
+    struct _GESTrackTransition
+{
+  GESTrackObject parent;
+  GstController *controller;
+  GstControlSource *control_source;
 };
 
 struct _GESTrackTransitionClass {
