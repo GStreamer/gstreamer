@@ -1,18 +1,22 @@
 # Danish translation of gst-plugins-good.
-# Copyright (C) 2009 gst.
+# Copyright (C) 2010 gst.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010.
+#
+# gain -> forhøjelse
+# boost -> øgning?
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.16.2\n"
+"Project-Id-Version: gst-plugins-good-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
-"PO-Revision-Date: 2009-11-25 23:54+0200\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
+"PO-Revision-Date: 2010-05-25 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
+"Language: da\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -186,14 +190,14 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åbne lydenhed til optagelse."
 
 msgid "Could not open audio device for mixer control handling."
-msgstr "Kunne ikke åbne lydenhed til mikserpulthåndtering."
+msgstr "Kunne ikke åbne lydenhed til håndtering af mikserkontrol."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Kunne ikke åbne lydenhed til mikserpulthåndtering. Denne version af Open "
-"Sound System er ikke understøttet af dette element."
+"Kunne ikke åbne lydenhed til håndterin gaf mikserkontrol. Denne version af "
+"Open Sound System er ikke understøttet af dette element."
 
 msgid "Master"
 msgstr "Master"
@@ -201,17 +205,16 @@ msgstr "Master"
 msgid "Front"
 msgstr "Front"
 
-# bagende eller eller "Bag" hvis det er den bagerste lydkanal 
-# vi snakker om
 msgid "Rear"
-msgstr "Bag"
+msgstr "Bagende"
 
 msgid "Headphones"
-msgstr "Høretelefoner"
+msgstr "Hovedtelefoner"
 
 msgid "Center"
-msgstr "Center"
+msgstr "Centrum"
 
+# Low-frequency effect
 msgid "LFE"
 msgstr "LFE"
 
@@ -237,11 +240,10 @@ msgid "3D Depth"
 msgstr "3D-dybde"
 
 msgid "3D Center"
-msgstr "3D-center"
+msgstr "3D-centrum"
 
-# (ændret fra 3D-forbedring)
 msgid "3D Enhance"
-msgstr "3D-fremhævelse"
+msgstr "3D-forstærkning"
 
 msgid "Telephone"
 msgstr "Telefon"
@@ -268,22 +270,22 @@ msgid "AUX In"
 msgstr "AUX ind"
 
 msgid "Record Gain"
-msgstr "Optagelsesforøgelse"
+msgstr "Optag - forhøjelse"
 
 msgid "Output Gain"
-msgstr "Uddataforøgelse"
+msgstr "Uddata - forhøjelse"
 
 msgid "Microphone Boost"
-msgstr "Mikrofonløft"
+msgstr "Mikrofonøgning"
 
 msgid "Loopback"
-msgstr "Sløjfe"
+msgstr "Loopback"
 
 msgid "Diagnostic"
-msgstr "Diagnosticering"
+msgstr "Diagnostik"
 
 msgid "Bass Boost"
-msgstr "Basløft"
+msgstr "Bas-øgning"
 
 msgid "Playback Ports"
 msgstr "Afspilningsporte"
@@ -292,14 +294,13 @@ msgid "Input"
 msgstr "Inddata"
 
 msgid "Record Source"
-msgstr "Optagelseskilde"
+msgstr "Optag kilde"
 
-# overvåg eller skærm ?, mangler lidt info her.
 msgid "Monitor Source"
-msgstr "Overvåg kilde"
+msgstr "Skærmkilde"
 
 msgid "Keyboard Beep"
-msgstr "Tastaturbip"
+msgstr "Tastaturbeep"
 
 msgid "Simulate Stereo"
 msgstr "Simuler stereo"
@@ -311,7 +312,7 @@ msgid "Surround Sound"
 msgstr "Surroundlyd"
 
 msgid "Microphone Gain"
-msgstr "Mikrofonforøgelse"
+msgstr "Mikrofonforhøjelse"
 
 msgid "Speaker Source"
 msgstr "Højtalerkilde"
@@ -319,23 +320,20 @@ msgstr "Højtalerkilde"
 msgid "Microphone Source"
 msgstr "Mikrofonkilde"
 
-# ikke nem den her
-# Tror det er en fysisk enhed, måske indgang
 msgid "Jack"
-msgstr "Indgang"
+msgstr "Jack"
 
 msgid "Center / LFE"
 msgstr "Center / LFE"
 
-# rød ordbog 4. (lyd) miksning.
 msgid "Stereo Mix"
-msgstr "Stereomiksning"
+msgstr "Stereomiks"
 
 msgid "Mono Mix"
-msgstr "Monomiksning"
+msgstr "Monomiks"
 
 msgid "Input Mix"
-msgstr "Inddatamiksning"
+msgstr "Inddatamiks"
 
 msgid "SPDIF In"
 msgstr "SPDIF ind"
@@ -350,10 +348,10 @@ msgid "Microphone 2"
 msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr "Digitalt ud"
+msgstr "Digital ud"
 
 msgid "Digital In"
-msgstr "Digitalt ind"
+msgstr "Digital ind"
 
 msgid "HDMI"
 msgstr "HDMI"
@@ -371,32 +369,31 @@ msgid "None"
 msgstr "Ingen"
 
 msgid "On"
-msgstr "Tændt"
+msgstr "Tænd"
 
 msgid "Off"
-msgstr "Slukket"
+msgstr "Sluk"
 
-# slukket, dæmpet, stum
 msgid "Mute"
-msgstr "Dæmpet"
+msgstr "Slukket"
 
 msgid "Fast"
 msgstr "Hurtig"
 
 msgid "Very Low"
-msgstr "Meget lavt"
+msgstr "Meget lav"
 
 msgid "Low"
 msgstr "Lav"
 
 msgid "Medium"
-msgstr "Medium"
+msgstr "Mellem"
 
 msgid "High"
-msgstr "Højt"
+msgstr "Høj"
 
 msgid "Very High"
-msgstr "Meget højt"
+msgstr "Meget høj"
 
 msgid "Production"
 msgstr "Produktion"
@@ -405,16 +402,16 @@ msgid "Front Panel Microphone"
 msgstr "Frontpanelmikrofon"
 
 msgid "Front Panel Line In"
-msgstr "Frontpanel linje ind"
+msgstr "Frontpanels linje ind"
 
 msgid "Front Panel Headphones"
-msgstr "Frontpanel høretelefoner"
+msgstr "Frontpanels hovedtelefoner"
 
 msgid "Front Panel Line Out"
-msgstr "Frontpanel linje ud"
+msgstr "Frontpanels linje ud"
 
 msgid "Green Connector"
-msgstr "Grøn forbindelse"
+msgstr "Grøn forbindelse "
 
 msgid "Pink Connector"
 msgstr "Lyserød forbindelse"
@@ -470,23 +467,22 @@ msgstr "Gul frontpanelforbindelse"
 msgid "Spread Output"
 msgstr "Spred uddata"
 
-# har ingen anelse om hvad det her er?
 msgid "Downmix"
 msgstr "Downmix"
 
 msgid "Virtual Mixer Input"
-msgstr "Virtuelle mikserinddata"
+msgstr "Virtuel mikserinddata"
 
 msgid "Virtual Mixer Output"
-msgstr "Virtuelle mikseruddata"
+msgstr "Virtuel mikseruddata"
 
 msgid "Virtual Mixer Channels"
-msgstr "Virtuelle mikserkanaler"
+msgstr "Virtuel mikserkanaler"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "%s funktion"
+msgstr "%s %d funktion"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -497,7 +493,7 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Kunne ikke åbne lydenhed for afspilning. Denne version af Open Sound System "
+"Kunne ikke åbne lydenhed til afspilning. Denne version af Open Sound System "
 "er ikke understøttet af dette element."
 
 msgid "Playback is not supported by this audio device."
@@ -510,7 +506,7 @@ msgid "Recording is not supported by this audio device."
 msgstr "Optagelse er ikke understøttet af denne lydenhed."
 
 msgid "Error recording from audio device."
-msgstr "Fejl under optagelse fra lydenhed."
+msgstr "Fejl ved optagelse fra lydenhed."
 
 msgid "Gain"
 msgstr "Forhøjelse"
@@ -643,70 +639,9 @@ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
 
-#~ msgid "Could not map memory in device '%s'."
-#~ msgstr "Kunne ikke afbilde hukommelse i enhed '%s'."
-
-#~ msgid "Could not get properties of data comming from device '%s'"
-#~ msgstr "Kunne ikke få egenskaberne for de data der kommer fra enhed '%s'"
-
-#~ msgid "Failed setting the video format for device '%s'"
-#~ msgstr "Kunne ikke indstille videoformat for enhed '%s'"
-
-#~ msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
-#~ msgstr "Den nærmeste framerate fra %u/%u er %u/%u, på enhed '%s'"
-
-#~ msgid ""
-#~ "The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""
-#~ "Den nærmeste størrelse fra %dx%d er %dx%d, for videoformat %s for enhed '%"
-#~ "s'"
-
-#~ msgid "Failed querying in which video format device '%s' is working with"
-#~ msgstr "Kunne ikke liste i hvilke formater, enhed '%s' kan arbejde med"
-
-#~ msgid "Could not exchange data with device '%s'."
-#~ msgstr "Kunne ikke udveksle data med enheden '%s'."
-
-#~ msgid "Error reading from device '%s'"
-#~ msgstr "Fejl ved læsning fra enhed '%s'"
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Kunne ikke stoppe strømningsoptagelse fra enhed '%s'."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Kunne ikke starte strømningsoptagelse fra enhed '%s'."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Kunne ikke hente tilstrækkeligt med buffere fra enhed '%s'."
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Kunne ikke hente buffere fra enhed '%s'."
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Enhed '%s' kan ikke optage i det angivet format"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Enhed '%s' kan ikke optage ved %dx%d"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Enhed '%s' understøtter ikke videooptagelse"
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Intet ledigt mellemlager fundet i puljen ved indeks %d."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "ikke tilstrækkeligt med hukommelse til at indrangere en "
-#~ "brugerviserbuffer. enhed %s."
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke "
-#~ "tilstrækkeligt hukommelse."
+#~ "Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
@@ -717,6 +652,64 @@ msgstr "Kan ikke fungere uden et ur"
 #~ "der er ikke blevet tildelt buffere endnu, eller userptr eller længde er "
 #~ "defekt. enhed %s"
 
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
 #~ msgstr ""
-#~ "Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
+#~ "Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke "
+#~ "tilstrækkeligt hukommelse."
+
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "ikke tilstrækkeligt med hukommelse til at indrangere en "
+#~ "brugerviserbuffer. enhed %s."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Intet ledigt mellemlager fundet i puljen ved indeks %d."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Enhed '%s' understøtter ikke videooptagelse"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Enhed '%s' kan ikke optage ved %dx%d"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Enhed '%s' kan ikke optage i det angivet format"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Kunne ikke hente buffere fra enhed '%s'."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Kunne ikke hente tilstrækkeligt med buffere fra enhed '%s'."
+
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Kunne ikke starte strømningsoptagelse fra enhed '%s'."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Kunne ikke stoppe strømningsoptagelse fra enhed '%s'."
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
+
+#~ msgid "Could not exchange data with device '%s'."
+#~ msgstr "Kunne ikke udveksle data med enheden '%s'."
+
+#~ msgid "Failed querying in which video format device '%s' is working with"
+#~ msgstr "Kunne ikke liste i hvilke formater, enhed '%s' kan arbejde med"
+
+#~ msgid ""
+#~ "The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
+#~ msgstr ""
+#~ "Den nærmeste størrelse fra %dx%d er %dx%d, for videoformat %s for enhed "
+#~ "'%s'"
+
+#~ msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
+#~ msgstr "Den nærmeste framerate fra %u/%u er %u/%u, på enhed '%s'"
+
+#~ msgid "Failed setting the video format for device '%s'"
+#~ msgstr "Kunne ikke indstille videoformat for enhed '%s'"
+
+#~ msgid "Could not get properties of data comming from device '%s'"
+#~ msgstr "Kunne ikke få egenskaberne for de data der kommer fra enhed '%s'"
+
+#~ msgid "Could not map memory in device '%s'."
+#~ msgstr "Kunne ikke afbilde hukommelse i enhed '%s'."

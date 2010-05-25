@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
 "PO-Revision-Date: 2010-01-29 14:49+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -566,8 +567,8 @@ msgstr "Неуспех при задаване на нормата на устр
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
-"Неуспех при получаването на текущата настройка на честотата за устройство „%"
-"s“."
+"Неуспех при получаването на текущата настройка на честотата за устройство "
+"„%s“."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."

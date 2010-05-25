@@ -7,17 +7,18 @@
 # Line-out = Line-Ausgang
 # Pipeline = Weiterleitung
 # Stream = Strom
+# mixer  =
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2010.
 #
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
-"PO-Revision-Date: 2009-11-13 23:01+0100\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
+"PO-Revision-Date: 2010-05-23 23:02+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -192,23 +193,23 @@ msgid "Could not open audio device for recording."
 msgstr "Das Audio-Gerät konnte nicht zur Aufnahme geöffnet werden. "
 
 msgid "Could not open audio device for mixer control handling."
-msgstr "Audio-Gerät konnte nicht zum Regeln geöffnet werden."
+msgstr "Das Audio-Gerät konnte nicht für das Mischpult geöffnet werden."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Audio-Gerät konnte nicht zum Regeln geöffnet werden. Diese Version des Open "
-"Sound System (OSS) wird nicht von diesem Element unterstützt."
+"Das Audio-Gerät konnte nicht für das Mischpult geöffnet werden. Diese "
+"Version des Open Sound System (OSS) wird nicht unterstützt."
 
 msgid "Master"
 msgstr "Hauptregler"
 
 msgid "Front"
-msgstr "Vorne"
+msgstr "Front"
 
 msgid "Rear"
-msgstr "Hinten"
+msgstr "AufnahmeRückseite"
 
 msgid "Headphones"
 msgstr "Kopfhörer"
@@ -244,7 +245,7 @@ msgid "3D Center"
 msgstr "3D-Mitte"
 
 msgid "3D Enhance"
-msgstr "3D-Erweiterung"
+msgstr "Erweitertes 3D"
 
 msgid "Telephone"
 msgstr "Telefon"
@@ -275,10 +276,10 @@ msgid "Record Gain"
 msgstr "Aufnahmepegel"
 
 msgid "Output Gain"
-msgstr "Ausgabepegel"
+msgstr "Ausgangspegel"
 
 msgid "Microphone Boost"
-msgstr "Mikrofon-Boost"
+msgstr "Mikrofonverstärkung"
 
 msgid "Loopback"
 msgstr "Schleife"
@@ -287,7 +288,7 @@ msgid "Diagnostic"
 msgstr "Zur Diagnose"
 
 msgid "Bass Boost"
-msgstr "Bass-Boost"
+msgstr "Bassverstärkung"
 
 msgid "Playback Ports"
 msgstr "Wiedergabe-Ports"
@@ -299,10 +300,10 @@ msgid "Record Source"
 msgstr "Aufnahmequelle"
 
 msgid "Monitor Source"
-msgstr "Beobachtungsquelle"
+msgstr "Überwachungsquelle"
 
 msgid "Keyboard Beep"
-msgstr "Tastaturpiepsen"
+msgstr "Tastatur-Piepsen"
 
 msgid "Simulate Stereo"
 msgstr "Stereo simulieren"
@@ -311,7 +312,7 @@ msgid "Stereo"
 msgstr "Stereo"
 
 msgid "Surround Sound"
-msgstr "Surround-Ton"
+msgstr "Surround-Audio"
 
 msgid "Microphone Gain"
 msgstr "Mikrofonpegel"
@@ -329,13 +330,13 @@ msgid "Center / LFE"
 msgstr "Mitte / LFE"
 
 msgid "Stereo Mix"
-msgstr "Stereo-Mischer"
+msgstr "Stereo-Mischpult"
 
 msgid "Mono Mix"
-msgstr "Mono-Mischer"
+msgstr "Mono-Mischpult"
 
 msgid "Input Mix"
-msgstr "Aufnahme-Mischer"
+msgstr "Eingangs-Mischpult"
 
 msgid "SPDIF In"
 msgstr "SPDIF-Eingang"
@@ -350,10 +351,10 @@ msgid "Microphone 2"
 msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr "Digitaler Ausgang"
+msgstr "Digital-Ausgang"
 
 msgid "Digital In"
-msgstr "Digitaler Eingang"
+msgstr "Digital-Eingang"
 
 msgid "HDMI"
 msgstr "HDMI"
@@ -365,16 +366,16 @@ msgid "Handset"
 msgstr "Hörer"
 
 msgid "Other"
-msgstr "Andere"
+msgstr "Anderes"
 
 msgid "None"
-msgstr "Keine"
+msgstr "Kein"
 
 msgid "On"
-msgstr "Ein"
+msgstr "Aktiviert"
 
 msgid "Off"
-msgstr "Aus"
+msgstr "Deaktiviert"
 
 msgid "Mute"
 msgstr "Stumm"
@@ -383,13 +384,13 @@ msgid "Fast"
 msgstr "Schnell"
 
 msgid "Very Low"
-msgstr "Sehr tief"
+msgstr "Sehr niedrig"
 
 msgid "Low"
-msgstr "Tief"
+msgstr "Niedrig"
 
 msgid "Medium"
-msgstr "Mittel"
+msgstr "Medium"
 
 msgid "High"
 msgstr "Hoch"
@@ -401,16 +402,16 @@ msgid "Production"
 msgstr "Produktion"
 
 msgid "Front Panel Microphone"
-msgstr "Mikrofon an der Front"
+msgstr "Mikrofon am Vordereingang"
 
 msgid "Front Panel Line In"
-msgstr "Line-Eingang an der Front"
+msgstr "Line-Eingang am Vordereingang"
 
 msgid "Front Panel Headphones"
-msgstr "Kopfhörer an der Front"
+msgstr "Kopfhörer am Vordereingang"
 
 msgid "Front Panel Line Out"
-msgstr "Line-Ausgang an der Front"
+msgstr "Line-Ausgang am Vordereingang"
 
 msgid "Green Connector"
 msgstr "Grüner Stecker"
@@ -440,52 +441,51 @@ msgid "Yellow Connector"
 msgstr "Gelber Stecker"
 
 msgid "Green Front Panel Connector"
-msgstr "Grüner Frontstecker"
+msgstr "Grüner Stecker am Vordereingang"
 
 msgid "Pink Front Panel Connector"
-msgstr "Rosa Frontstecker"
+msgstr "Rosa Stecker am Vordereingang"
 
 msgid "Blue Front Panel Connector"
-msgstr "Blauer Frontstecker"
+msgstr "Blauer Stecker am Vordereingang"
 
 msgid "White Front Panel Connector"
-msgstr "Weißer Frontstecker"
+msgstr "Weißer Stecker am Vordereingang"
 
 msgid "Black Front Panel Connector"
-msgstr "Schwarzer Frontstecker"
+msgstr "Schwarzer Stecker am Vordereingang"
 
 msgid "Gray Front Panel Connector"
-msgstr "Grauer Frontstecker"
+msgstr "Grauer Stecker am Vordereingang"
 
 msgid "Orange Front Panel Connector"
-msgstr "Oranger Frontstecker"
+msgstr "Oranger Stecker am Vordereingang"
 
 msgid "Red Front Panel Connector"
-msgstr "Roter Frontstecker"
+msgstr "Roter Stecker am Vordereingang"
 
 msgid "Yellow Front Panel Connector"
-msgstr "Gelber Frontstecker"
+msgstr "Gelber Stecker am Vordereingang"
 
 msgid "Spread Output"
-msgstr "Verteilter Ausgang"
+msgstr "Ausgabe verstreuen"
 
-# Als Downmix wird im Bereich der Tontechnik ein manuelles oder automatisches Verfahren bezeichnet, bei dem der Ton eines Mehrkanal-Tonformats zu einer Fassung mit weniger unabhängigen Kanälen zusammengefasst wird. In den meisten Fällen ist dies eine Stereo-Fassung.
 msgid "Downmix"
-msgstr "Downmix"
+msgstr "Heruntermischen"
 
 msgid "Virtual Mixer Input"
-msgstr "Eingang des virtuellen Mischers"
+msgstr "Eingang des virtuellen Mischpults"
 
 msgid "Virtual Mixer Output"
-msgstr "Ausgang des virtuellen Mischers"
+msgstr "Ausgang des virtuellen Mischpults"
 
 msgid "Virtual Mixer Channels"
-msgstr "Kanäle des virtuellen Mischers"
+msgstr "Kanäle des virtuellen Mischpults"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "%s-Funktion"
+msgstr "%s %d Function"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -500,16 +500,16 @@ msgstr ""
 "des Open Sound System (OSS) wird nicht von diesem Element unterstützt."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Die Wiedergabe wird nicht von diesem Audio-Gerät unterstützt."
+msgstr "Wiedergabe wird von diesem Audio-Gerät nicht unterstützt."
 
 msgid "Audio playback error."
 msgstr "Fehler bei Audio-Wiedergabe."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Die Aufnahme wird nicht von diesem Audio-Gerät unterstützt."
+msgstr "Aufnahme wird von diesem Audio-Gerät nicht unterstützt."
 
 msgid "Error recording from audio device."
-msgstr "Fehler bei der Aufnahme vom Audio-Gerät."
+msgstr "Fehler beim Aufnehmen vom Audio-Gerät."
 
 msgid "Gain"
 msgstr "Pegel"
@@ -605,8 +605,8 @@ msgstr ""
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht ist "
-"es ein Radiogerät."
+"Auslesen der aktuellen Eingabe auf dem Gerät »%s« schlug fehl. Vielleicht "
+"ist es ein Radiogerät."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
@@ -650,52 +650,97 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
 
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "Beschreibung der vorgegebenen GStreamer-Audioquelle"
-
-#~ msgid "description for default GStreamer audiosink"
-#~ msgstr "Beschreibung des vorgegebenen GStreamer-Audioziels"
-
-#~ msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgstr "Beschreibung der GStreamer-Audioquelle für Musik und Videos"
-
-#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "Beschreibung der GStreamer-Audioquelle für Audio/Video-Konferenzen"
-
-#~ msgid "default GStreamer visualization plugin"
-#~ msgstr "Vorgegebenes GStreamer-Visualisierungs-Plugin"
-
-#~ msgid "default GStreamer videosink"
-#~ msgstr "Vorgegebenes GStreamer-Videoziel"
-
-#~ msgid "default GStreamer video source"
-#~ msgstr "Vorgegebene GStreamer-Videoquelle"
-
-#~ msgid "default GStreamer audiosink"
-#~ msgstr "Vorgegebenes GStreamer-Audioziel"
-
-#~ msgid "default GStreamer audio source"
-#~ msgstr "Vorgegebene GStreamer-Audioquelle"
-
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
-#~ "partial pipeline instead of just one element."
+#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
 #~ msgstr ""
-#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
-#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind v4lsrc und "
-#~ "videotestsrc. Die Videoquelle kann eine teilweise Weiterleitung anstelle "
-#~ "eines Elementes sein."
+#~ "Aufzählen möglicher Videoformate, mit denen Gerät »%s« arbeiten kann, "
+#~ "schlug fehl"
 
 #~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
+#~ "The buffer type is not supported, or the index is out of bounds, or no "
+#~ "buffers have been allocated yet, or the userptr or length are invalid. "
+#~ "device %s"
+#~ msgstr ""
+#~ "Der Puffertyp wird nicht unterstützt, der Index ist außerhalb seiner "
+#~ "Grenzwerte, es sind bisher noch keine Puffer angefordert worden oder "
+#~ "»userptr« oder die Länge sind ungültig. Gerät »%s«"
+
+#~ msgid ""
+#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ msgstr ""
+#~ "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl. Nicht "
+#~ "genug Arbeitsspeicher."
+
+# Was ist ein Zeigerpuffer?
+#, fuzzy
+#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+#~ msgstr ""
+#~ "Ungenügend Arbeitsspeicher, um einen Zeigerpuffer eines Benutzers "
+#~ "einzureihen. Gerät »%s«."
+
+#~ msgid "No free buffers found in the pool at index %d."
+#~ msgstr "Es wurden keine freien Puffer im Vorrat bei Index %d gefunden."
+
+#~ msgid "Device '%s' does not support video capture"
+#~ msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
+
+#~ msgid "Device '%s' cannot capture at %dx%d"
+#~ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
+
+#~ msgid "Device '%s' cannot capture in the specified format"
+#~ msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
+
+#~ msgid "Could not get buffers from device '%s'."
+#~ msgstr "Die Puffer konnten nicht von Gerät »%s« ausgelesen werden."
+
+#~ msgid "Could not get enough buffers from device '%s'."
+#~ msgstr "Es konnten nicht genug Puffer von Gerät »%s« ausgelesen werden."
+
+# »Stromaufnahme« klingt nach Energieverbrauch.
+#~ msgid "Error starting streaming capture from device '%s'."
+#~ msgstr "Fehler beim Start der Aufzeichnung des Stroms von Gerät »%s«."
+
+#~ msgid "Error stopping streaming capture from device '%s'."
+#~ msgstr "Fehler beim Stoppen der Aufzeichnung des Stroms von Gerät »%s«."
+
+#~ msgid "Describes the selected input element."
+#~ msgstr "Beschreibt das ausgewählte Eingabeelement."
+
+#~ msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgstr ""
+#~ "Beschreibt das ausgewählte Ausgabeelement für Audio/Video-Konferenzen."
+
+#~ msgid "Describes the selected output element for Music and Movies."
+#~ msgstr "Beschreibt das ausgewählte Ausgabeelement für Musik und Videos."
+
+#~ msgid "Describes the selected output element."
+#~ msgstr "Beschreibt das ausgewählte Ausgabeelement."
+
+# »sink« hatte ich z.B. in Conduit auch mit Ziel übersetzt.
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Gstreamer-Audioziel für Audio/Video-Konferenzen."
+
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "Gstreamer-Audioziel für Musik und Videos"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
 #~ "a partial pipeline instead of just one element."
 #~ msgstr ""
 #~ "GStreamer kann Klänge mittels einer beliebigen Anzahl von "
-#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind osssrc, esdsrc "
-#~ "und alsasrc. Die Audioquelle kann eine teilweise Weiterleitung anstelle "
+#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind osssink, esdsink "
+#~ "und alsasink. Das Audioziel kann eine teilweise Weiterleitung anstelle "
 #~ "eines Elementes sein."
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
+#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind xvimagesink, "
+#~ "ximagesink, sdlvideosink und aasink. Das Videoziel kann eine teilweise "
+#~ "Weiterleitung anstelle eines Elementes sein."
 
 #~ msgid ""
 #~ "GStreamer can put visualization plugins in a pipeline to transform audio "
@@ -709,93 +754,48 @@ msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
 #~ "kann eine teilweise Weiterleitung anstelle eines Elementes sein."
 
 #~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
-#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind xvimagesink, "
-#~ "ximagesink, sdlvideosink und aasink. Das Videoziel kann eine teilweise "
-#~ "Weiterleitung anstelle eines Elementes sein."
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
 #~ "a partial pipeline instead of just one element."
 #~ msgstr ""
 #~ "GStreamer kann Klänge mittels einer beliebigen Anzahl von "
-#~ "Ausgabeelementen wiedergeben. Einige mögliche Werte sind osssink, esdsink "
-#~ "und alsasink. Das Audioziel kann eine teilweise Weiterleitung anstelle "
+#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind osssrc, esdsrc "
+#~ "und alsasrc. Die Audioquelle kann eine teilweise Weiterleitung anstelle "
 #~ "eines Elementes sein."
 
-#~ msgid "GStreamer audiosink for Music and Movies"
-#~ msgstr "Gstreamer-Audioziel für Musik und Videos"
-
-# »sink« hatte ich z.B. in Conduit auch mit Ziel übersetzt.
-#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "Gstreamer-Audioziel für Audio/Video-Konferenzen."
-
-#~ msgid "Describes the selected output element."
-#~ msgstr "Beschreibt das ausgewählte Ausgabeelement."
-
-#~ msgid "Describes the selected output element for Music and Movies."
-#~ msgstr "Beschreibt das ausgewählte Ausgabeelement für Musik und Videos."
-
-#~ msgid "Describes the selected output element for Audio/Video Conferencing."
-#~ msgstr ""
-#~ "Beschreibt das ausgewählte Ausgabeelement für Audio/Video-Konferenzen."
-
-#~ msgid "Describes the selected input element."
-#~ msgstr "Beschreibt das ausgewählte Eingabeelement."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Fehler beim Stoppen der Aufzeichnung des Stroms von Gerät »%s«."
-
-# »Stromaufnahme« klingt nach Energieverbrauch.
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Fehler beim Start der Aufzeichnung des Stroms von Gerät »%s«."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Es konnten nicht genug Puffer von Gerät »%s« ausgelesen werden."
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Die Puffer konnten nicht von Gerät »%s« ausgelesen werden."
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Das angegebene Format kann nicht vom Gerät »%s« ausgelesen werden"
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Es wurden keine freien Puffer im Vorrat bei Index %d gefunden."
-
-# Was ist ein Zeigerpuffer?
-#, fuzzy
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "Ungenügend Arbeitsspeicher, um einen Zeigerpuffer eines Benutzers "
-#~ "einzureihen. Gerät »%s«."
-
 #~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
 #~ msgstr ""
-#~ "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl. Nicht genug "
-#~ "Arbeitsspeicher."
+#~ "GStreamer kann Videos mittels einer beliebigen Anzahl von "
+#~ "Eingabeelementen aufzeichnen. Einige mögliche Werte sind v4lsrc und "
+#~ "videotestsrc. Die Videoquelle kann eine teilweise Weiterleitung anstelle "
+#~ "eines Elementes sein."
 
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Der Puffertyp wird nicht unterstützt, der Index ist außerhalb seiner "
-#~ "Grenzwerte, es sind bisher noch keine Puffer angefordert worden oder "
-#~ "»userptr« oder die Länge sind ungültig. Gerät »%s«"
+#~ msgid "default GStreamer audio source"
+#~ msgstr "Vorgegebene GStreamer-Audioquelle"
 
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Aufzählen möglicher Videoformate, mit denen Gerät »%s« arbeiten kann, "
-#~ "schlug fehl"
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "Vorgegebenes GStreamer-Audioziel"
+
+#~ msgid "default GStreamer video source"
+#~ msgstr "Vorgegebene GStreamer-Videoquelle"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "Vorgegebenes GStreamer-Videoziel"
+
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "Vorgegebenes GStreamer-Visualisierungs-Plugin"
+
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Beschreibung der GStreamer-Audioquelle für Audio/Video-Konferenzen"
+
+#~ msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgstr "Beschreibung der GStreamer-Audioquelle für Musik und Videos"
+
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "Beschreibung des vorgegebenen GStreamer-Audioziels"
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "Beschreibung der vorgegebenen GStreamer-Audioquelle"

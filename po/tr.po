@@ -5,10 +5,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
 "PO-Revision-Date: 2009-11-12 00:27+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
+"Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -171,39 +172,40 @@ msgstr "Kayıt için aygıtı açamıyor. Aygıtı açmak için yetkiniz yok."
 msgid "Could not open audio device for recording."
 msgstr "Aygıtı kayıt için açamıyor."
 
+#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Karıştırıcı işlemi için ses aygıtı açılamıyor."
+msgstr "Aygıtı kayıt için açamıyor."
 
+#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
-msgstr ""
-"Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses "
-"Sistemi'nin bu sürümü desteklenmiyor."
+msgstr "Kayıt için aygıtı açamıyor. Aygıtı açmak için yetkiniz yok."
 
 msgid "Master"
-msgstr "Ana"
+msgstr ""
 
 msgid "Front"
-msgstr "Ön"
+msgstr ""
 
 msgid "Rear"
-msgstr "Arka"
+msgstr ""
 
+#, fuzzy
 msgid "Headphones"
-msgstr "Kulaklıklar"
+msgstr "Kulaklık"
 
 msgid "Center"
-msgstr "Merkez"
+msgstr ""
 
 msgid "LFE"
-msgstr "LFE"
+msgstr ""
 
 msgid "Surround"
-msgstr "Surround"
+msgstr ""
 
 msgid "Side"
-msgstr "Yan"
+msgstr ""
 
 msgid "Built-in Speaker"
 msgstr "Varsayılan Hoparlör"
@@ -214,280 +216,299 @@ msgstr "AUX 1 Çıkış"
 msgid "AUX 2 Out"
 msgstr "AUX 2 Çıkış"
 
+#, fuzzy
 msgid "AUX Out"
-msgstr "AUX Çıkış"
+msgstr "AUX 1 Çıkış"
 
 msgid "3D Depth"
-msgstr "3D Derinlik"
+msgstr ""
 
 msgid "3D Center"
-msgstr "3D Merkez"
+msgstr ""
 
 msgid "3D Enhance"
-msgstr "3D Genişlik"
+msgstr ""
 
+#, fuzzy
 msgid "Telephone"
-msgstr "Telefon"
+msgstr "Kulaklık"
 
 msgid "Line Out"
 msgstr "Hat Çıkışı"
 
+#, fuzzy
 msgid "Line In"
 msgstr "Hat girişi"
 
 msgid "Internal CD"
-msgstr "Dahili CD"
+msgstr ""
 
+#, fuzzy
 msgid "Video In"
-msgstr "Vidyo Girişi"
+msgstr "Vidyo"
 
+#, fuzzy
 msgid "AUX 1 In"
-msgstr "AUX 1 Giriş"
+msgstr "AUX 1 Çıkış"
 
+#, fuzzy
 msgid "AUX 2 In"
-msgstr "AUX 2 Giriş"
+msgstr "AUX 2 Çıkış"
 
 msgid "AUX In"
-msgstr "AUX Giriş"
+msgstr ""
 
+#, fuzzy
 msgid "Record Gain"
-msgstr "Kayıt Kazancı"
+msgstr "Kayıt"
 
 msgid "Output Gain"
-msgstr "Çıkış Kazancı"
+msgstr ""
 
+#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon güçlendirme"
+msgstr "Mikrofon"
 
 msgid "Loopback"
-msgstr "Döngü"
+msgstr ""
 
 msgid "Diagnostic"
-msgstr "Yapılandırma"
+msgstr ""
 
 msgid "Bass Boost"
-msgstr "Bass Boost"
+msgstr ""
 
 msgid "Playback Ports"
-msgstr "Çalma Portları"
+msgstr ""
 
 msgid "Input"
-msgstr "Giriş"
+msgstr ""
 
+#, fuzzy
 msgid "Record Source"
-msgstr "Kayıt Kaynağı"
+msgstr "Kayıt"
 
+#, fuzzy
 msgid "Monitor Source"
-msgstr "Hoparlör Kaynağı"
+msgstr "Hoparlör"
 
 msgid "Keyboard Beep"
-msgstr "Klavye Biplemesi"
+msgstr ""
 
 msgid "Simulate Stereo"
-msgstr "Stereo Benzeşimi"
+msgstr ""
 
 msgid "Stereo"
-msgstr "Stereo"
+msgstr ""
 
 msgid "Surround Sound"
-msgstr "Surround Ses"
+msgstr ""
 
+#, fuzzy
 msgid "Microphone Gain"
-msgstr "Mikrofon Kazancı"
+msgstr "Mikrofon"
 
+#, fuzzy
 msgid "Speaker Source"
-msgstr "Hoparlör Kaynağı"
+msgstr "Hoparlör"
 
+#, fuzzy
 msgid "Microphone Source"
-msgstr "Mikrofon Kaynağı"
+msgstr "Mikrofon"
 
 msgid "Jack"
-msgstr "Jack"
+msgstr ""
 
 msgid "Center / LFE"
-msgstr "Merkez / LFE"
+msgstr ""
 
 msgid "Stereo Mix"
-msgstr "Stereo Karışım"
+msgstr ""
 
 msgid "Mono Mix"
-msgstr "Mono Karışım"
+msgstr ""
 
 msgid "Input Mix"
-msgstr "Giriş Karışımı"
+msgstr ""
 
+#, fuzzy
 msgid "SPDIF In"
-msgstr "SPDIF Girişi"
+msgstr "SPDIF Çıkış"
 
 msgid "SPDIF Out"
 msgstr "SPDIF Çıkış"
 
+#, fuzzy
 msgid "Microphone 1"
-msgstr "Mikrofon 1"
+msgstr "Mikrofon"
 
+#, fuzzy
 msgid "Microphone 2"
-msgstr "Mikrofon 2"
+msgstr "Mikrofon"
 
+#, fuzzy
 msgid "Digital Out"
-msgstr "Sayısal Çıkış"
+msgstr "Sayısal-1"
 
+#, fuzzy
 msgid "Digital In"
-msgstr "Sayısal Giriş"
+msgstr "Sayısal-1"
 
 msgid "HDMI"
-msgstr "HDMI"
+msgstr ""
 
 msgid "Modem"
-msgstr "Modem"
+msgstr ""
 
 msgid "Handset"
-msgstr "Elde taşıma"
+msgstr ""
 
 msgid "Other"
-msgstr "Diğer"
+msgstr ""
 
 msgid "None"
-msgstr "Yok"
+msgstr ""
 
 msgid "On"
-msgstr "Açık"
+msgstr ""
 
 msgid "Off"
-msgstr "Kapalı"
+msgstr ""
 
 msgid "Mute"
-msgstr "Kapat"
+msgstr ""
 
 msgid "Fast"
-msgstr "Hızlı"
+msgstr ""
 
 msgid "Very Low"
-msgstr "Çok düşük"
+msgstr ""
 
 msgid "Low"
-msgstr "Düşük"
+msgstr ""
 
 msgid "Medium"
-msgstr "Orta"
+msgstr ""
 
 msgid "High"
-msgstr "Yüksek"
+msgstr ""
 
 msgid "Very High"
-msgstr "Çok Yüksek"
+msgstr ""
 
 msgid "Production"
-msgstr "Yapım"
+msgstr ""
 
+#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Ön panel Mikrofonu"
+msgstr "Mikrofon"
 
 msgid "Front Panel Line In"
-msgstr "Ön Panel Hat Girişi"
+msgstr ""
 
 msgid "Front Panel Headphones"
-msgstr "Ön Panel Kulaklıkları"
+msgstr ""
 
 msgid "Front Panel Line Out"
-msgstr "Ön Panel Hat Çıkışı"
+msgstr ""
 
 msgid "Green Connector"
-msgstr "Yeşil Konnektör"
+msgstr ""
 
 msgid "Pink Connector"
-msgstr "Pembe Konnektör"
+msgstr ""
 
 msgid "Blue Connector"
-msgstr "Mavi Konnektör"
+msgstr ""
 
 msgid "White Connector"
-msgstr "Beyaz Konnektör"
+msgstr ""
 
 msgid "Black Connector"
-msgstr "Siyah Konnektör"
+msgstr ""
 
 msgid "Gray Connector"
-msgstr "Gri Konnektör"
+msgstr ""
 
 msgid "Orange Connector"
-msgstr "Portakal rengi Konnektör"
+msgstr ""
 
 msgid "Red Connector"
-msgstr "Kırmızı Konnektör"
+msgstr ""
 
 msgid "Yellow Connector"
-msgstr "Sarı Konnektör"
+msgstr ""
 
 msgid "Green Front Panel Connector"
-msgstr "Yeşil Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Pink Front Panel Connector"
-msgstr "Pembe Ön Panel Könnektörü"
+msgstr ""
 
 msgid "Blue Front Panel Connector"
-msgstr "Mavi Ön Panel Konnektörü"
+msgstr ""
 
 msgid "White Front Panel Connector"
-msgstr "Beyaz Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Black Front Panel Connector"
-msgstr "Siyah Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Gray Front Panel Connector"
-msgstr "Gri Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Orange Front Panel Connector"
-msgstr "Portakal rengi Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Red Front Panel Connector"
-msgstr "Kırmızı Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Yellow Front Panel Connector"
-msgstr "Sarı Ön Panel Konnektörü"
+msgstr ""
 
 msgid "Spread Output"
-msgstr "Çıkışı Yay"
+msgstr ""
 
 msgid "Downmix"
-msgstr "Sonuç Karışımı"
+msgstr ""
 
 msgid "Virtual Mixer Input"
-msgstr "Sanal Karıştırıcı Girişi"
+msgstr ""
 
 msgid "Virtual Mixer Output"
-msgstr "Sanal Karıştırıcı Çıkışı"
+msgstr ""
 
 msgid "Virtual Mixer Channels"
-msgstr "Sanal Karıştırıcı Kanalları"
+msgstr ""
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "%s İşlev"
+msgstr ""
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr "%s İşlev"
+msgstr ""
 
+#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
-msgstr ""
-"Çalmak için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü bu öğe "
-"tarafından desteklenmiyor."
+msgstr "Çalmak için ses aygıtı açılamıyor. Aygıtı açma izniniz bulunmuyor."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Bu ses aygıtı çalma işlevini desteklemiyor."
+msgstr ""
 
 msgid "Audio playback error."
-msgstr "Ses çalma hatası."
+msgstr ""
 
 msgid "Recording is not supported by this audio device."
-msgstr "Bu ses aygıtı kayıt işlevini desteklemiyor."
+msgstr ""
 
+#, fuzzy
 msgid "Error recording from audio device."
-msgstr "Ses aygıtı ile kayıtta hata."
+msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
 
 msgid "Gain"
 msgstr "Kazanç"

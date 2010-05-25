@@ -1,15 +1,16 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
-"PO-Revision-Date: 2009-11-11 22:18+0100\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
+"PO-Revision-Date: 2010-05-20 08:18+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -185,7 +186,7 @@ msgid ""
 "Open Sound System is not supported by this element."
 msgstr ""
 "Nie udało się otworzyć urządzenia dźwiękowego do sterowania mikserem. Ta "
-"wersja Open Sound System nie jest obsługiwana przez ten moduł."
+"wersja Open Sound System nie jest obsługiwana przez ten element."
 
 msgid "Master"
 msgstr "Główna"
@@ -206,10 +207,10 @@ msgid "LFE"
 msgstr "LFE"
 
 msgid "Surround"
-msgstr "Otoczenie"
+msgstr "Surround"
 
 msgid "Side"
-msgstr "Bok"
+msgstr "Boki"
 
 msgid "Built-in Speaker"
 msgstr "Wbudowany głośniczek"
@@ -224,13 +225,13 @@ msgid "AUX Out"
 msgstr "Wyjście AUX"
 
 msgid "3D Depth"
-msgstr "Głębokość 3D"
+msgstr "Głębia 3D"
 
 msgid "3D Center"
 msgstr "Środek 3D"
 
 msgid "3D Enhance"
-msgstr "Uwydatnienie 3D"
+msgstr "Rozszerzenie 3D"
 
 msgid "Telephone"
 msgstr "Telefon"
@@ -242,10 +243,10 @@ msgid "Line In"
 msgstr "Wejście linii"
 
 msgid "Internal CD"
-msgstr "Wewnętrzne CD"
+msgstr "Wewnętrzny CD"
 
 msgid "Video In"
-msgstr "Wejście wideo"
+msgstr "Wejście video"
 
 msgid "AUX 1 In"
 msgstr "Wejście AUX 1"
@@ -275,7 +276,7 @@ msgid "Bass Boost"
 msgstr "Podbicie basów"
 
 msgid "Playback Ports"
-msgstr "Porty playbacku"
+msgstr "Porty odtwarzania"
 
 msgid "Input"
 msgstr "Wejście"
@@ -287,7 +288,7 @@ msgid "Monitor Source"
 msgstr "Źródło monitora"
 
 msgid "Keyboard Beep"
-msgstr "Pisk klawiatury"
+msgstr "Piszczenie klawiatury"
 
 msgid "Simulate Stereo"
 msgstr "Symulacja stereo"
@@ -308,7 +309,7 @@ msgid "Microphone Source"
 msgstr "Źródło mikrofonu"
 
 msgid "Jack"
-msgstr "Gniazdo"
+msgstr "Gniazdo jack"
 
 msgid "Center / LFE"
 msgstr "Środek / LFE"
@@ -365,111 +366,111 @@ msgid "Mute"
 msgstr "Wyciszenie"
 
 msgid "Fast"
-msgstr "Szybka"
+msgstr "Szybko"
 
 msgid "Very Low"
-msgstr "Bardzo niska"
+msgstr "Bardzo małe"
 
 msgid "Low"
-msgstr "Niska"
+msgstr "Małe"
 
 msgid "Medium"
-msgstr "Średnia"
+msgstr "Średnie"
 
 msgid "High"
-msgstr "Wysoka"
+msgstr "Duże"
 
 msgid "Very High"
-msgstr "Bardzo wysoka"
+msgstr "Bardzo duże"
 
 msgid "Production"
-msgstr "Produkcyjna"
+msgstr "Produkcja"
 
 msgid "Front Panel Microphone"
-msgstr "Mikrofon na przednim panelu"
+msgstr "Mikrofon na panelu przednim"
 
 msgid "Front Panel Line In"
-msgstr "Wejście linii na przednim panelu"
+msgstr "Wejście linii na panelu przednim"
 
 msgid "Front Panel Headphones"
-msgstr "Słuchawki na przednim panelu"
+msgstr "Słuchawki na panelu przednim"
 
 msgid "Front Panel Line Out"
-msgstr "Wyjście linii na przednim panelu"
+msgstr "Wyjśćie linii na panelu przednim"
 
 msgid "Green Connector"
-msgstr "Zielone gniazdo"
+msgstr "Złącze zielone"
 
 msgid "Pink Connector"
-msgstr "Różowe gniazdo"
+msgstr "Złącze różowe"
 
 msgid "Blue Connector"
-msgstr "Niebieskie gniazdo"
+msgstr "Złącze niebieskie"
 
 msgid "White Connector"
-msgstr "Białe gniazdo"
+msgstr "Złącze białe"
 
 msgid "Black Connector"
-msgstr "Czarne gniazdo"
+msgstr "Złącze czarne"
 
 msgid "Gray Connector"
-msgstr "Szare gniazdo"
+msgstr "Złącze szare"
 
 msgid "Orange Connector"
-msgstr "Pomarańczowe gniazdo"
+msgstr "Złącze pomarańczowe"
 
 msgid "Red Connector"
-msgstr "Czerwone gniazdo"
+msgstr "Złącze czerwone"
 
 msgid "Yellow Connector"
-msgstr "Żółte gniazdo"
+msgstr "Złącze żółte"
 
 msgid "Green Front Panel Connector"
-msgstr "Zielone gniazdo na przednim panelu"
+msgstr "Złącze zielone na panelu przednim"
 
 msgid "Pink Front Panel Connector"
-msgstr "Różowe gniazdo na przednim panelu"
+msgstr "Złącze różowe na panelu przednim"
 
 msgid "Blue Front Panel Connector"
-msgstr "Niebieskie gniazdo na przednim panelu"
+msgstr "Złącze niebieskie na panelu przednim"
 
 msgid "White Front Panel Connector"
-msgstr "Białe gniazdo na przednim panelu"
+msgstr "Złącze białe na panelu przednim"
 
 msgid "Black Front Panel Connector"
-msgstr "Czarne gniazdo na przednim panelu"
+msgstr "Złącze czarne na panelu przednim"
 
 msgid "Gray Front Panel Connector"
-msgstr "Szare gniazdo na przednim panelu"
+msgstr "Złącze szare na panelu przednim"
 
 msgid "Orange Front Panel Connector"
-msgstr "Pomarańczowe gniazdo na przednim panelu"
+msgstr "Złącze pomarańczowe na panelu przednim"
 
 msgid "Red Front Panel Connector"
-msgstr "Czerwone gniazdo na przednim panelu"
+msgstr "Złącze czerwone na panelu przednim"
 
 msgid "Yellow Front Panel Connector"
-msgstr "Żółte gniazdo na przednim panelu"
+msgstr "Złącze żółte na panelu przednim"
 
 msgid "Spread Output"
-msgstr "Wyjście przestrzenne"
+msgstr "Rozprowadzenie wyjścia"
 
 msgid "Downmix"
 msgstr "Miksowanie w dół"
 
 msgid "Virtual Mixer Input"
-msgstr "Wejście wirtualnego miksera"
+msgstr "Wejście miksera wirtualnego"
 
 msgid "Virtual Mixer Output"
-msgstr "Wyjście wirtualnego miksera"
+msgstr "Wyjście miksera wirtualnego"
 
 msgid "Virtual Mixer Channels"
-msgstr "Kanały wirtualnego miksera"
+msgstr "Kanały miksera wirtualnego"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "Funkcja %s"
+msgstr "Funkcja %s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -481,16 +482,16 @@ msgid ""
 "System is not supported by this element."
 msgstr ""
 "Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania. Ta wersja Open "
-"Sound System nie jest obsługiwana przez ten moduł."
+"Sound System nie jest obsługiwana przez ten element."
 
 msgid "Playback is not supported by this audio device."
-msgstr "To urządzenie dźwiękowe nie obsługuje odtwarzania."
+msgstr "Odtwarzanie nie jest obsługiwane przez to urządzenie dźwiękowe."
 
 msgid "Audio playback error."
-msgstr "Błąd odtwarzania dźwięku"
+msgstr "Błąd odtwarzania dźwięku."
 
 msgid "Recording is not supported by this audio device."
-msgstr "To urządzenie dźwiękowe nie obsługuje nagrywania."
+msgstr "Nagrywanie nie jest obsługiwane przez to urządzenie dźwiękowe."
 
 msgid "Error recording from audio device."
 msgstr "Błąd nagrywania z urządzenia dźwiękowego."

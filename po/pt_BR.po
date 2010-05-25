@@ -11,10 +11,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 16:06+0100\n"
+"POT-Creation-Date: 2010-05-26 00:21+0100\n"
 "PO-Revision-Date: 2009-11-29 19:29-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -576,8 +577,8 @@ msgstr "Falha ao obter a freqüência do sintonizador para o dispositivo \"%s\".
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Falha ao definir a freqüência do sintonizador para o dispositivo \"%s\" à %"
-"lu Hz."
+"Falha ao definir a freqüência do sintonizador para o dispositivo \"%s\" à "
+"%lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
