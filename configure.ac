@@ -267,7 +267,7 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   sleep 15
 else
 
-  source "$srcdir/ffmpegrev"
+  . "$srcdir/ffmpegrev"
   
   AC_MSG_NOTICE([Using ffmpeg revision $FFMPEG_REVISION])
   
