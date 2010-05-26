@@ -155,14 +155,14 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   GESTimelinePipeline *pipeline;
   GMainLoop *mainloop;
-  gint type;
+  gchar *type = "crossfade";
   gchar *uri = NULL;
   gdouble tdur;
 
   GOptionEntry options[] = {
-    {"type", 't', 0, G_OPTION_ARG_INT, &type,
-        "type of transition to create (smpte numeric)", "<smpte" "transition>"},
-    {"duration", 'd', 0.0, G_OPTION_ARG_DOUBLE, &tdur,
+    {"type", 't', 0, G_OPTION_ARG_STRING, &type,
+        "type of transition to create", "<smpte-transition>"},
+    {"duration", 'd', 0, G_OPTION_ARG_DOUBLE, &tdur,
         "duration of transition", "seconds"},
     {NULL}
   };
@@ -187,6 +187,18 @@ main (int argc, char **argv)
   g_option_context_free (ctx);
 
   ges_init ();
+
+  /* get list of available transitions */
+  GstElement *element = gst_element_factory_make ("smpte", NULL);
+  GstElementClass *element_class = GST_ELEMENT_GET_CLASS (element);
+
+  GParamSpec *pspec =
+      g_object_class_find_property (G_OBJECT_CLASS (element_class), "type");
+
+  GEnumClass *smpte_enum_class =
+      G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+
+  GEnumValue *ttype = get_transition_type (type, smpte_enum_class);
 
   gdouble adur = (gdouble) atof (argv[2]);
   gdouble bdur = (gdouble) atof (argv[4]);
