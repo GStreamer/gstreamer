@@ -99,7 +99,8 @@ get_transition_type (char *nick, GEnumClass * smpte_enum_class)
 
 
 GESTimelinePipeline *
-make_timeline (double tdur, char *patha, float adur, char *pathb, float bdur)
+make_timeline (GEnumValue * ttype, double tdur, char *patha, float adur,
+    char *pathb, float bdur)
 {
   GESTimeline *timeline;
   GESTrack *trackv;
@@ -203,7 +204,7 @@ main (int argc, char **argv)
   gdouble adur = (gdouble) atof (argv[2]);
   gdouble bdur = (gdouble) atof (argv[4]);
 
-  pipeline = make_timeline (tdur, argv[1], adur, argv[3], bdur);
+  pipeline = make_timeline (ttype, tdur, argv[1], adur, argv[3], bdur);
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds ((adur + bdur) + 1, (GSourceFunc) g_main_loop_quit,
