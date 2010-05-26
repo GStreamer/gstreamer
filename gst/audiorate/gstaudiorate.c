@@ -552,10 +552,11 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (audiorate,
       "in_time:%" GST_TIME_FORMAT ", in_duration:%" GST_TIME_FORMAT
       ", in_size:%u, in_offset:%" G_GUINT64_FORMAT ", in_offset_end:%"
-      G_GUINT64_FORMAT ", ->next_offset:%" G_GUINT64_FORMAT,
-      GST_TIME_ARGS (in_time),
+      G_GUINT64_FORMAT ", ->next_offset:%" G_GUINT64_FORMAT ", ->next_ts:%"
+      GST_TIME_FORMAT, GST_TIME_ARGS (in_time),
       GST_TIME_ARGS (GST_FRAMES_TO_CLOCK_TIME (in_samples, audiorate->rate)),
-      in_size, in_offset, in_offset_end, audiorate->next_offset);
+      in_size, in_offset, in_offset_end, audiorate->next_offset,
+      GST_TIME_ARGS (audiorate->next_ts));
 
   diff = in_time - audiorate->next_ts;
   if (diff <= (GstClockTimeDiff) audiorate->tolerance &&
@@ -565,6 +566,9 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
      * it to next ts and offset and sending */
     GST_LOG_OBJECT (audiorate, "within tolerance %" GST_TIME_FORMAT,
         GST_TIME_ARGS (audiorate->tolerance));
+    /* The outgoing buffer's offset will be set to ->next_offset, we also
+     * need to adjust the offset_end value accordingly */
+    in_offset_end = audiorate->next_offset + in_samples;
     goto send;
   }
 
