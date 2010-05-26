@@ -58,26 +58,12 @@ pattern patterns[] = {
 int
 pattern_for_name (char *name)
 {
-  size_t length = strlen (name);
+  int i;
 
-  if (g_str_has_prefix (name, "<pattern:") && (name[length - 1] == '>')) {
-    int i;
-
-    /* FIXME: just use a regex for god's sake... */
-    size_t substrlen = length - 10;
-    char *tmp = strdup (name + 9);
-
-    tmp[substrlen] = '\0';
-
-    for (i = 0; i < N_PATTERNS; i++) {
-      pattern *p = &patterns[i];
-
-      if (!g_strcmp0 (p->name, tmp)) {
-        return patterns[i].value;
-      }
+  for (i = 0; i < N_PATTERNS; i++) {
+    if (!g_strcmp0 (patterns[i].name, name)) {
+      return patterns[i].value;
     }
-
-    free (tmp);
   }
 
   return INVALID_PATTERN;
@@ -161,26 +147,42 @@ create_timeline (int nbargs, gchar ** argv)
   for (i = 0; i < nbargs / 3; i++) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
     GESTimelineSource *src;
-    guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
-    guint64 duration = atoi (argv[i * 3 + 2]) * GST_SECOND;
 
-    g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT
-        "\n", uri, GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
 
     int pattern;
-    if ((pattern = pattern_for_name (argv[i * 3])) != INVALID_PATTERN) {
+    char *source = argv[i * 3];
+    char *arg0 = argv[(i * 3) + 1];
+    guint64 duration = (guint64) (atof (argv[(i * 3) + 2]) * GST_SECOND);
+
+    if (!g_strcmp0 ("+pattern", source)) {
+      pattern = pattern_for_name (arg0);
+      if (pattern == INVALID_PATTERN)
+        g_error ("%d invalid pattern!", pattern);
+
       src = GES_TIMELINE_SOURCE (pattern_source_new (pattern));
-      g_assert (src);
-    } else {
-      gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
+      g_object_set (G_OBJECT (src), "duration", duration, NULL);
+
+      g_print ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
+          arg0, GST_TIME_ARGS (duration));
+    }
+
+    else {
+      gchar *uri = g_strdup_printf ("file://%s", source);
+      guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
       src = GES_TIMELINE_SOURCE (ges_timeline_filesource_new (uri));
-      g_assert (src);
+      g_object_set (src,
+          "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
+
+      g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%"
+          GST_TIME_FORMAT "\n", uri, GST_TIME_ARGS (inpoint),
+          GST_TIME_ARGS (duration));
+
       g_free (uri);
 
     }
-    g_object_set (src,
-        "in-point", (long) (atof (argv[i * 3 + 1]) * GST_SECOND),
-        "duration", (long) (atof (argv[i * 3 + 2]) * GST_SECOND), NULL);
+
+    g_assert (src);
+
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
