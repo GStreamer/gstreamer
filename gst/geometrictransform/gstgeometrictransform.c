@@ -28,17 +28,17 @@ GST_DEBUG_CATEGORY_STATIC (geometric_transform_debug);
 #define GST_CAT_DEFAULT geometric_transform_debug
 
 static GstStaticPadTemplate gst_geometric_transform_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-gray")
     );
 
 static GstStaticPadTemplate gst_geometric_transform_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-gray")
     );
 
 static GstVideoFilterClass *parent_class = NULL;
