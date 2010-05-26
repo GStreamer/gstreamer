@@ -70,6 +70,8 @@ struct _GstAlpha
   /* <private> */
 
   /* caps */
+  GStaticMutex lock;
+
   GstVideoFormat in_format, out_format;
   gint width, height;
   gboolean in_sdtv, out_sdtv;
@@ -87,6 +89,8 @@ struct _GstAlpha
   gfloat noise_level;
   guint black_sensitivity;
   guint white_sensitivity;
+
+  gboolean prefer_passthrough;
 
   /* processing function */
   void (*process) (const guint8 *src, guint8 *dest, gint width, gint height, GstAlpha *alpha);

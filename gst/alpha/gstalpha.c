@@ -106,6 +106,7 @@ enum
 #define DEFAULT_NOISE_LEVEL 2.0
 #define DEFAULT_BLACK_SENSITIVITY 100
 #define DEFAULT_WHITE_SENSITIVITY 100
+#define DEFAULT_PREFER_PASSTHROUGH FALSE
 
 enum
 {
@@ -119,6 +120,7 @@ enum
   PROP_NOISE_LEVEL,
   PROP_BLACK_SENSITIVITY,
   PROP_WHITE_SENSITIVITY,
+  PROP_PREFER_PASSTHROUGH,
   PROP_LAST
 };
 
@@ -128,7 +130,14 @@ static GstStaticPadTemplate gst_alpha_src_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA)
+        GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA
+        ";" GST_VIDEO_CAPS_YUV ("Y444")
+        ";" GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR
+        ";" GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR
+        ";" GST_VIDEO_CAPS_YUV ("Y42B") ";" GST_VIDEO_CAPS_YUV ("YUY2")
+        ";" GST_VIDEO_CAPS_YUV ("YVYU") ";" GST_VIDEO_CAPS_YUV ("UYVY")
+        ";" GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("YV12")
+        ";" GST_VIDEO_CAPS_YUV ("Y41B"))
     );
 
 static GstStaticPadTemplate gst_alpha_sink_template =
@@ -147,6 +156,22 @@ static GstStaticPadTemplate gst_alpha_sink_template =
     )
     );
 
+static GstStaticCaps gst_alpha_alpha_caps =
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")
+    ";" GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_ABGR ";"
+    GST_VIDEO_CAPS_RGBA);
+
+#define GST_ALPHA_LOCK(alpha) G_STMT_START { \
+  GST_LOG_OBJECT (alpha, "Locking alpha from thread %p", g_thread_self ()); \
+  g_static_mutex_lock (&alpha->lock); \
+  GST_LOG_OBJECT (alpha, "Locked alpha from thread %p", g_thread_self ()); \
+} G_STMT_END
+
+#define GST_ALPHA_UNLOCK(alpha) G_STMT_START { \
+  GST_LOG_OBJECT (alpha, "Unlocking alpha from thread %p", g_thread_self ()); \
+  g_static_mutex_unlock (&alpha->lock); \
+} G_STMT_END
+
 static gboolean gst_alpha_start (GstBaseTransform * trans);
 static gboolean gst_alpha_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
@@ -156,6 +181,8 @@ static gboolean gst_alpha_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_alpha_transform (GstBaseTransform * btrans,
     GstBuffer * in, GstBuffer * out);
+static void gst_alpha_before_transform (GstBaseTransform * btrans,
+    GstBuffer * buf);
 
 static void gst_alpha_init_params (GstAlpha * alpha);
 static gboolean gst_alpha_set_process_function (GstAlpha * alpha);
@@ -164,6 +191,7 @@ static void gst_alpha_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_alpha_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_alpha_finalize (GObject * object);
 
 GST_BOILERPLATE (GstAlpha, gst_alpha, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
@@ -215,6 +243,7 @@ gst_alpha_class_init (GstAlphaClass * klass)
 
   gobject_class->set_property = gst_alpha_set_property;
   gobject_class->get_property = gst_alpha_get_property;
+  gobject_class->finalize = gst_alpha_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_METHOD,
       g_param_spec_enum ("method", "Method",
@@ -254,10 +283,17 @@ gst_alpha_class_init (GstAlphaClass * klass)
           "Sensitivity", "Sensitivity to bright colors", 0, 128,
           DEFAULT_WHITE_SENSITIVITY,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
-
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_PREFER_PASSTHROUGH, g_param_spec_boolean ("prefer-passthrough",
+          "Prefer Passthrough",
+          "Don't do any processing for alpha=1.0 if possible",
+          DEFAULT_PREFER_PASSTHROUGH,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   btrans_class->start = GST_DEBUG_FUNCPTR (gst_alpha_start);
   btrans_class->transform = GST_DEBUG_FUNCPTR (gst_alpha_transform);
+  btrans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_alpha_before_transform);
   btrans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_alpha_get_unit_size);
   btrans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_alpha_transform_caps);
   btrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_alpha_set_caps);
@@ -275,19 +311,37 @@ gst_alpha_init (GstAlpha * alpha, GstAlphaClass * klass)
   alpha->noise_level = DEFAULT_NOISE_LEVEL;
   alpha->black_sensitivity = DEFAULT_BLACK_SENSITIVITY;
   alpha->white_sensitivity = DEFAULT_WHITE_SENSITIVITY;
+
+  g_static_mutex_init (&alpha->lock);
 }
 
-/* do we need this function? */
+static void
+gst_alpha_finalize (GObject * object)
+{
+  GstAlpha *alpha = GST_ALPHA (object);
+
+  g_static_mutex_free (&alpha->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static void
 gst_alpha_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstAlpha *alpha = GST_ALPHA (object);
+  gboolean reconfigure = FALSE;
 
-  GST_OBJECT_LOCK (alpha);
+  GST_ALPHA_LOCK (alpha);
   switch (prop_id) {
-    case PROP_METHOD:
-      alpha->method = g_value_get_enum (value);
+    case PROP_METHOD:{
+      gint method = g_value_get_enum (value);
+
+      reconfigure = (method != alpha->method) && (method == ALPHA_METHOD_SET
+          || alpha->method == ALPHA_METHOD_SET) && (alpha->alpha == 1.0)
+          && (alpha->prefer_passthrough);
+      alpha->method = method;
+
       switch (alpha->method) {
         case ALPHA_METHOD_GREEN:
           alpha->target_r = 0;
@@ -305,9 +359,15 @@ gst_alpha_set_property (GObject * object, guint prop_id,
       gst_alpha_set_process_function (alpha);
       gst_alpha_init_params (alpha);
       break;
-    case PROP_ALPHA:
-      alpha->alpha = g_value_get_double (value);
+    }
+    case PROP_ALPHA:{
+      gdouble a = g_value_get_double (value);
+
+      reconfigure = (a != alpha->alpha) && (a == 1.0 || alpha->alpha == 1.0)
+          && (alpha->method == ALPHA_METHOD_SET) && (alpha->prefer_passthrough);
+      alpha->alpha = a;
       break;
+    }
     case PROP_TARGET_R:
       alpha->target_r = g_value_get_uint (value);
       gst_alpha_init_params (alpha);
@@ -334,11 +394,23 @@ gst_alpha_set_property (GObject * object, guint prop_id,
     case PROP_WHITE_SENSITIVITY:
       alpha->white_sensitivity = g_value_get_uint (value);
       break;
+    case PROP_PREFER_PASSTHROUGH:{
+      gboolean prefer_passthrough = g_value_get_boolean (value);
+
+      reconfigure = ((!!prefer_passthrough) != (!!alpha->prefer_passthrough))
+          && (alpha->method == ALPHA_METHOD_SET) && (alpha->alpha == 1.0);
+      alpha->prefer_passthrough = prefer_passthrough;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (alpha);
+
+  if (reconfigure)
+    gst_base_transform_reconfigure (GST_BASE_TRANSFORM_CAST (alpha));
+
+  GST_ALPHA_UNLOCK (alpha);
 }
 
 static void
@@ -375,6 +447,9 @@ gst_alpha_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_WHITE_SENSITIVITY:
       g_value_set_uint (value, alpha->white_sensitivity);
       break;
+    case PROP_PREFER_PASSTHROUGH:
+      g_value_set_boolean (value, alpha->prefer_passthrough);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -403,12 +478,14 @@ static GstCaps *
 gst_alpha_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstCaps *ret;
+  GstAlpha *alpha = GST_ALPHA (btrans);
+  GstCaps *ret, *tmp, *tmp2;
   GstStructure *structure;
   gint i;
 
-  ret = gst_caps_new_empty ();
+  tmp = gst_caps_new_empty ();
 
+  GST_ALPHA_LOCK (alpha);
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_structure_copy (gst_caps_get_structure (caps, i));
 
@@ -424,12 +501,37 @@ gst_alpha_transform_caps (GstBaseTransform * btrans,
     gst_structure_remove_field (structure, "chroma-site");
 
     gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_caps_append_structure (ret, gst_structure_copy (structure));
+    gst_caps_append_structure (tmp, gst_structure_copy (structure));
     gst_structure_set_name (structure, "video/x-raw-rgb");
-    gst_caps_append_structure (ret, structure);
+    gst_caps_append_structure (tmp, structure);
   }
 
-  gst_caps_do_simplify (ret);
+  if (direction == GST_PAD_SINK) {
+    tmp2 = gst_static_caps_get (&gst_alpha_alpha_caps);
+    ret = gst_caps_intersect (tmp, tmp2);
+    gst_caps_unref (tmp);
+    gst_caps_unref (tmp2);
+    tmp = ret;
+    ret = NULL;
+
+    if (alpha->prefer_passthrough && alpha->method == ALPHA_METHOD_SET
+        && alpha->alpha == 1.0) {
+      ret = gst_caps_copy (caps);
+      gst_caps_append (ret, tmp);
+      tmp = NULL;
+    } else {
+      ret = tmp;
+      tmp = NULL;
+    }
+  } else {
+    ret = tmp;
+    tmp = NULL;
+  }
+
+  GST_DEBUG_OBJECT (alpha,
+      "Transformed %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, caps, ret);
+
+  GST_ALPHA_UNLOCK (alpha);
 
   return ret;
 }
@@ -440,19 +542,18 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
 {
   GstAlpha *alpha = GST_ALPHA (btrans);
   const gchar *matrix;
+  gboolean passthrough;
 
-  GST_OBJECT_LOCK (alpha);
+  GST_ALPHA_LOCK (alpha);
 
   if (!gst_video_format_parse_caps (incaps, &alpha->in_format,
           &alpha->width, &alpha->height) ||
       !gst_video_format_parse_caps (outcaps, &alpha->out_format,
           &alpha->width, &alpha->height)) {
-    GST_OBJECT_UNLOCK (alpha);
-    return FALSE;
-  }
-
-  if (!gst_alpha_set_process_function (alpha)) {
-    GST_OBJECT_UNLOCK (alpha);
+    GST_WARNING_OBJECT (alpha,
+        "Failed to parse caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT, incaps,
+        outcaps);
+    GST_ALPHA_UNLOCK (alpha);
     return FALSE;
   }
 
@@ -462,8 +563,25 @@ gst_alpha_set_caps (GstBaseTransform * btrans,
   matrix = gst_video_parse_caps_color_matrix (outcaps);
   alpha->out_sdtv = matrix ? g_str_equal (matrix, "sdtv") : TRUE;
 
+  passthrough = alpha->prefer_passthrough &&
+      alpha->in_format == alpha->out_format && alpha->in_sdtv == alpha->out_sdtv
+      && alpha->method == ALPHA_METHOD_SET && alpha->alpha == 1.0;
+
+  GST_DEBUG_OBJECT (alpha,
+      "Setting caps %" GST_PTR_FORMAT " -> %" GST_PTR_FORMAT
+      " (passthrough: %d)", incaps, outcaps, passthrough);
+  gst_base_transform_set_passthrough (btrans, passthrough);
+
+  if (!gst_alpha_set_process_function (alpha) && !passthrough) {
+    GST_WARNING_OBJECT (alpha,
+        "No processing function for this caps and no passthrough mode");
+    GST_ALPHA_UNLOCK (alpha);
+    return FALSE;
+  }
+
   gst_alpha_init_params (alpha);
-  GST_OBJECT_UNLOCK (alpha);
+
+  GST_ALPHA_UNLOCK (alpha);
 
   return TRUE;
 }
@@ -2206,6 +2324,7 @@ gst_alpha_chroma_key_packed_422_argb (const guint8 * src, guint8 * dest,
   }
 }
 
+/* Protected with the alpha lock */
 static void
 gst_alpha_init_params (GstAlpha * alpha)
 {
@@ -2273,6 +2392,7 @@ gst_alpha_init_params (GstAlpha * alpha)
   alpha->noise_level2 = alpha->noise_level * alpha->noise_level;
 }
 
+/* Protected with the alpha lock */
 static gboolean
 gst_alpha_set_process_function (GstAlpha * alpha)
 {
@@ -2452,9 +2572,24 @@ gst_alpha_start (GstBaseTransform * btrans)
 {
   GstAlpha *alpha = GST_ALPHA (btrans);
 
+  GST_ALPHA_LOCK (alpha);
   gst_alpha_init_params (alpha);
+  GST_ALPHA_UNLOCK (alpha);
 
   return TRUE;
+}
+
+static void
+gst_alpha_before_transform (GstBaseTransform * btrans, GstBuffer * buf)
+{
+  GstAlpha *alpha = GST_ALPHA (btrans);
+  GstClockTime timestamp;
+
+  timestamp = gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buf));
+  GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (alpha), timestamp);
 }
 
 static GstFlowReturn
@@ -2462,29 +2597,22 @@ gst_alpha_transform (GstBaseTransform * btrans, GstBuffer * in, GstBuffer * out)
 {
   GstAlpha *alpha = GST_ALPHA (btrans);
   gint width, height;
-  GstClockTime timestamp;
+
+  GST_ALPHA_LOCK (alpha);
+
+  if (G_UNLIKELY (!alpha->process)) {
+    GST_ERROR_OBJECT (alpha, "Not negotiated yet");
+    GST_ALPHA_UNLOCK (alpha);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   width = alpha->width;
   height = alpha->height;
 
-  GST_BUFFER_TIMESTAMP (out) = GST_BUFFER_TIMESTAMP (in);
-  GST_BUFFER_DURATION (out) = GST_BUFFER_DURATION (in);
-  timestamp = gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (in));
-  GST_LOG ("Got stream time of %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (alpha), timestamp);
-
-  GST_OBJECT_LOCK (alpha);
-  if (G_UNLIKELY (!alpha->process)) {
-    GST_ERROR_OBJECT (alpha, "Not negotiated yet");
-    GST_OBJECT_UNLOCK (alpha);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
   alpha->process (GST_BUFFER_DATA (in),
       GST_BUFFER_DATA (out), width, height, alpha);
-  GST_OBJECT_UNLOCK (alpha);
+
+  GST_ALPHA_UNLOCK (alpha);
 
   return GST_FLOW_OK;
 }
