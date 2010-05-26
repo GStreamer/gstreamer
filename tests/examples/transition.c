@@ -138,7 +138,7 @@ make_timeline (GEnumValue * ttype, double tdur, char *patha, float adur,
   if (tduration != 0) {
     g_print ("creating transition at %ld of %f duration (%ld ns)\n",
         tstart, tdur, tduration);
-    tr = ges_timeline_transition_new ();
+    tr = ges_timeline_transition_new (ttype);
     g_object_set (tr,
         "start", (guint64) tstart,
         "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
