@@ -25,27 +25,6 @@ typedef struct
   char *name;
 } transition_type;
 
-transition_type transitions[] = {
-  {-1, "fade"},
-  {0, "wipe_ltr"},
-  {1, "wipe_ttb"},
-};
-
-#define N_TRANSITIONS 3
-#define INVALID_TRANSITION -2
-
-int
-transition_for_name (char *name)
-{
-  return -1;
-}
-
-void
-notify_max_duration_cb (GObject * object)
-{
-  g_print ("got here\n");
-}
-
 GESTimelineObject *
 make_source (char *path, guint64 start, guint64 duration, gint priority)
 {
