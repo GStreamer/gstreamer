@@ -41,8 +41,22 @@ G_BEGIN_DECLS
 typedef struct _GstGeometricTransform GstGeometricTransform;
 typedef struct _GstGeometricTransformClass GstGeometricTransformClass;
 
+/**
+ * GstGeometricTransformMapFunc:
+ *
+ * Given the output pixel position, this function calculates the input pixel
+ * position. The element using this function will then copy the input pixel
+ * data to the output pixel.
+ *
+ * @gt: The #GstGeometricTransform
+ * @x: The output pixel x coordinate
+ * @y: The output pixel y coordinate
+ * @_input_x: The input pixel x coordinate
+ * @_input_y: The input pixel y coordinate
+ * Returns: True on success, false otherwise
+ */
 typedef gboolean (*GstGeometricTransformMapFunc) (GstGeometricTransform * gt,
-    gint x, gint y, gdouble * _out_x, gdouble *_out_y);
+    gint x, gint y, gdouble * _input_x, gdouble *_input_y);
 
 /**
  * GstGeometricTransform:
@@ -54,6 +68,8 @@ struct _GstGeometricTransform {
 
   gint width, height;
   GstVideoFormat format;
+  gint pixel_stride;
+  gint row_stride;
 };
 
 struct _GstGeometricTransformClass {

@@ -155,8 +155,8 @@ gst_pinch_base_init (gpointer gclass)
 /* FIXME optimize a little using cast macro and pre calculating some
  * values so we don't need them every mapping */
 static gboolean
-dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * ox,
-    gdouble * oy)
+dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
+    gdouble * in_y)
 {
   GstPinch *pinch = GST_PINCH (gt);
   gdouble r2;
@@ -181,8 +181,8 @@ dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * ox,
       ", dy=%lf", x, y, distance, r2, dx, dy);
 
   if (distance > r2 || distance == 0) {
-    *ox = x;
-    *oy = y;
+    *in_x = x;
+    *in_y = y;
   } else {
     gdouble d = sqrt (distance / r2);
     gdouble t = pow (sin (G_PI * 0.5 * d), -pinch->intensity);
@@ -192,14 +192,15 @@ dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * ox,
 
     GST_LOG_OBJECT (pinch, "D=%lf, t=%lf, dx=%lf" ", dy=%lf", d, t, dx, dy);
 
-    *ox = x_center + dx;
-    *oy = y_center + dy;
+    *in_x = x_center + dx;
+    *in_y = y_center + dy;
 
-    *ox = CLAMP (*ox, 0, gt->width - 1);
-    *oy = CLAMP (*oy, 0, gt->height - 1);
+    *in_x = CLAMP (*in_x, 0, gt->width - 1);
+    *in_y = CLAMP (*in_y, 0, gt->height - 1);
   }
 
-  GST_DEBUG_OBJECT (pinch, "Mapped %d %d into %lf %lf", x, y, *ox, *oy);
+  GST_DEBUG_OBJECT (pinch, "Inversely mapped %d %d into %lf %lf",
+      x, y, *in_x, *in_y);
 
   return TRUE;
 }

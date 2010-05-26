@@ -47,12 +47,18 @@ static gboolean
 gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstGeometricTransform *vf;
+  GstGeometricTransform *gt;
+  gboolean ret;
 
-  vf = GST_GEOMETRIC_TRANSFORM (btrans);
+  gt = GST_GEOMETRIC_TRANSFORM (btrans);
 
-  return gst_video_format_parse_caps (incaps, &vf->format, &vf->width,
-      &vf->height);
+  ret = gst_video_format_parse_caps (incaps, &gt->format, &gt->width,
+      &gt->height);
+  if (ret) {
+    gt->row_stride = gst_video_format_get_row_stride (gt->format, 0, gt->width);
+    gt->pixel_stride = gst_video_format_get_pixel_stride (gt->format, 0);
+  }
+  return ret;
 }
 
 static void
@@ -64,12 +70,11 @@ gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
   gint in_offset;
   gint out_offset;
 
-  /* NOP */
-  out_offset = (y * gt->width + x) * 3;
-  in_offset = (trunc_y * gt->width + trunc_x) * 3;
+  out_offset = y * gt->row_stride + x * gt->pixel_stride;
+  in_offset = trunc_y * gt->row_stride + trunc_x * gt->pixel_stride;
 
   memcpy (GST_BUFFER_DATA (outbuf) + out_offset,
-      GST_BUFFER_DATA (inbuf) + in_offset, 3);
+      GST_BUFFER_DATA (inbuf) + in_offset, gt->pixel_stride);
 }
 
 static GstFlowReturn
