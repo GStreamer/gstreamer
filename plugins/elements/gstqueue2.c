@@ -1102,7 +1102,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
     if (queue->is_eos)
       return TRUE;
 
-    if (offset + length < range->writing_pos)
+    if (offset + length <= range->writing_pos)
       return TRUE;
     else
       GST_DEBUG_OBJECT (queue,
@@ -1837,8 +1837,8 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
     {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush start event");
-      if (!(QUEUE_IS_USING_RING_BUFFER (queue)
-              || QUEUE_IS_USING_TEMP_FILE (queue))) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue)
+          || !QUEUE_IS_USING_TEMP_FILE (queue)) {
         /* forward event */
         gst_pad_push_event (queue->srcpad, event);
 
@@ -1862,8 +1862,8 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
     {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush stop event");
 
-      if (!(QUEUE_IS_USING_RING_BUFFER (queue)
-              || QUEUE_IS_USING_TEMP_FILE (queue))) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue)
+          || !QUEUE_IS_USING_TEMP_FILE (queue)) {
         /* forward event */
         gst_pad_push_event (queue->srcpad, event);
 
@@ -1929,7 +1929,8 @@ gst_queue2_is_empty (GstQueue2 * queue)
   if (queue->is_eos)
     return FALSE;
 
-  if (QUEUE_IS_USING_RING_BUFFER (queue) || QUEUE_IS_USING_TEMP_FILE (queue)) {
+  if ((QUEUE_IS_USING_RING_BUFFER (queue) || QUEUE_IS_USING_TEMP_FILE (queue))
+      && queue->current) {
     return queue->current->writing_pos <= queue->current->max_reading_pos;
   } else {
     if (queue->queue->length == 0)
@@ -2244,8 +2245,8 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      if (!(QUEUE_IS_USING_RING_BUFFER (queue)
-              || QUEUE_IS_USING_TEMP_FILE (queue))) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue)
+          || !QUEUE_IS_USING_TEMP_FILE (queue)) {
         /* just forward upstream */
         res = gst_pad_push_event (queue->sinkpad, event);
       } else {
@@ -2262,8 +2263,8 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
       }
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (!(QUEUE_IS_USING_RING_BUFFER (queue)
-              || QUEUE_IS_USING_TEMP_FILE (queue))) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue)
+          || !QUEUE_IS_USING_TEMP_FILE (queue)) {
         /* just forward upstream */
         res = gst_pad_push_event (queue->sinkpad, event);
       } else {
@@ -2352,6 +2353,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
 
       GST_DEBUG_OBJECT (queue, "query buffering");
 
+      /* FIXME - is this condition correct? what should ring buffer do? */
       if (!(QUEUE_IS_USING_RING_BUFFER (queue)
               || QUEUE_IS_USING_TEMP_FILE (queue))) {
         /* no temp file, just forward to the peer */
