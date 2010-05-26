@@ -613,22 +613,22 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
   image->w = image->d_w = encoder->state.width;
   image->h = image->d_h = encoder->state.height;
 
-  image->stride[PLANE_Y] =
+  image->stride[VPX_PLANE_Y] =
       gst_video_format_get_row_stride (encoder->state.format, 0,
       encoder->state.width);
-  image->stride[PLANE_U] =
+  image->stride[VPX_PLANE_U] =
       gst_video_format_get_row_stride (encoder->state.format, 1,
       encoder->state.width);
-  image->stride[PLANE_V] =
+  image->stride[VPX_PLANE_V] =
       gst_video_format_get_row_stride (encoder->state.format, 2,
       encoder->state.width);
-  image->planes[PLANE_Y] =
+  image->planes[VPX_PLANE_Y] =
       data + gst_video_format_get_component_offset (encoder->state.format, 0,
       encoder->state.width, encoder->state.height);
-  image->planes[PLANE_U] =
+  image->planes[VPX_PLANE_U] =
       data + gst_video_format_get_component_offset (encoder->state.format, 1,
       encoder->state.width, encoder->state.height);
-  image->planes[PLANE_V] =
+  image->planes[VPX_PLANE_V] =
       data + gst_video_format_get_component_offset (encoder->state.format, 2,
       encoder->state.width, encoder->state.height);
 
