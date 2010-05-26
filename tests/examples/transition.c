@@ -64,25 +64,71 @@ print_transition_data (GESTimelineObject * tr)
   return FALSE;
 }
 
+GESTimelinePipeline *
+make_timeline (double tdur, char *patha, float adur, char *pathb, float bdur)
+{
+  GESTimeline *timeline;
+  GESTrack *trackv;
+  GESTimelineLayer *layer1;
+  GESTimelineObject *srca, *srcb;
+  GESTimelinePipeline *pipeline = ges_timeline_pipeline_new ();
+
+  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+
+  timeline = ges_timeline_new ();
+  ges_timeline_pipeline_add_timeline (pipeline, timeline);
+
+  trackv = ges_track_video_raw_new ();
+  ges_timeline_add_track (timeline, trackv);
+
+  layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
+  g_object_set (layer1, "priority", (gint32) 0, NULL);
+
+  if (!ges_timeline_add_layer (timeline, layer1))
+    exit (-1);
+
+  guint64 aduration = (guint64) (adur * GST_SECOND);
+  guint64 bduration = (guint64) (bdur * GST_SECOND);
+  guint64 tduration = (guint64) (tdur * GST_SECOND);
+  guint64 tstart = aduration - tduration;
+  srca = make_source (patha, 0, aduration, 1);
+  srcb = make_source (pathb, tstart, bduration, 2);
+  ges_timeline_layer_add_object (layer1, srca);
+  ges_timeline_layer_add_object (layer1, srcb);
+  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
+  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
+
+  GESTimelineTransition *tr = NULL;
+
+  if (tduration != 0) {
+    g_print ("creating transition at %ld of %f duration (%ld ns)\n",
+        tstart, tdur, tduration);
+    tr = ges_timeline_transition_new ();
+    g_object_set (tr,
+        "start", (guint64) tstart,
+        "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
+    ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
+    g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
+  }
+
+  return pipeline;
+}
+
 int
 main (int argc, char **argv)
 {
   GError *err = NULL;
   GOptionContext *ctx;
   GESTimelinePipeline *pipeline;
-  GESTimeline *timeline;
-  GESTrack *trackv;
-  GESTimelineLayer *layer1;
-  GESTimelineObject *srca, *srcb;
   GMainLoop *mainloop;
   gint type;
   gchar *uri = NULL;
-  gdouble transition_duration;
+  gdouble tdur;
 
   GOptionEntry options[] = {
     {"type", 't', 0, G_OPTION_ARG_INT, &type,
         "type of transition to create (smpte numeric)", "<smpte" "transition>"},
-    {"duration", 'd', 0.0, G_OPTION_ARG_DOUBLE, &transition_duration,
+    {"duration", 'd', 0.0, G_OPTION_ARG_DOUBLE, &tdur,
         "duration of transition", "seconds"},
     {NULL}
   };
@@ -104,53 +150,18 @@ main (int argc, char **argv)
     exit (0);
   }
 
-  guint64 tdur = (guint64) transition_duration * GST_SECOND;
-
   g_option_context_free (ctx);
 
   ges_init ();
 
-  pipeline = ges_timeline_pipeline_new ();
-  ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
+  gdouble adur = (gdouble) atof (argv[2]);
+  gdouble bdur = (gdouble) atof (argv[4]);
 
-  timeline = ges_timeline_new ();
-  ges_timeline_pipeline_add_timeline (pipeline, timeline);
-
-  trackv = ges_track_video_raw_new ();
-  ges_timeline_add_track (timeline, trackv);
-
-  layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
-  g_object_set (layer1, "priority", (gint32) 0, NULL);
-
-  if (!ges_timeline_add_layer (timeline, layer1))
-    return -1;
-
-  guint64 aduration = (guint64) (atof (argv[2]) * GST_SECOND);
-  guint64 bduration = (guint64) (atof (argv[4]) * GST_SECOND);
-  guint64 tstart = aduration - tdur;
-  srca = make_source (argv[1], 0, aduration, 1);
-  srcb = make_source (argv[3], tstart, bduration, 2);
-  ges_timeline_layer_add_object (layer1, srca);
-  ges_timeline_layer_add_object (layer1, srcb);
-  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srca);
-  g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
-
-  GESTimelineTransition *tr = NULL;
-
-  if (tdur != 0) {
-    g_print ("creating transition at %ld of %f duration (%ld ns)\n",
-        tstart, transition_duration, tdur);
-    tr = ges_timeline_transition_new ();
-    g_object_set (tr,
-        "start", (guint64) tstart,
-        "duration", (guint64) tdur, "in-point", (guint64) 0, NULL);
-    ges_timeline_layer_add_object (layer1, GES_TIMELINE_OBJECT (tr));
-    g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, tr);
-  }
+  pipeline = make_timeline (tdur, argv[1], adur, argv[3], bdur);
 
   mainloop = g_main_loop_new (NULL, FALSE);
-  g_timeout_add_seconds (((aduration + bduration) / GST_SECOND) + 1,
-      (GSourceFunc) g_main_loop_quit, mainloop);
+  g_timeout_add_seconds ((adur + bdur) + 1, (GSourceFunc) g_main_loop_quit,
+      mainloop);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   g_main_loop_run (mainloop);
 
