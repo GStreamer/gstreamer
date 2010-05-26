@@ -169,7 +169,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst-libs/gst/interfaces/photography.h
 
 # Images to copy into HTML directory.
-HTML_IMAGES = figures/*.png
+HTML_IMAGES = camerabin.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files =
@@ -192,4 +192,14 @@ DOC_OVERRIDES =
 
 include $(top_srcdir)/common/gtk-doc-plugins.mak
 
-SUBDIRS = figures
+SUBDIRS =
+
+FIGURES_SOURCEFILES = camerabin.dot
+FIGURES_IMAGES      = camerabin.png
+
+EXTRA_DIST += $(FIGURES_SOURCEFILES)
+
+.dot.png:
+	dot -Tpng $< -o$@
+
+update-figures: $(FIGURES_IMAGES)
