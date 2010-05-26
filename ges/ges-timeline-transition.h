@@ -45,6 +45,7 @@ G_BEGIN_DECLS
 
 struct _GESTimelineTransition {
   GESTimelineObject parent;
+  GEnumValue *vtype;
 };
 
 struct _GESTimelineTransitionClass {
@@ -53,7 +54,7 @@ struct _GESTimelineTransitionClass {
 
 GType ges_timeline_transition_get_type (void);
 
-GESTimelineTransition* ges_timeline_transition_new (void);
+GESTimelineTransition *ges_timeline_transition_new (GEnumValue * vtype);
 
 G_END_DECLS
 
