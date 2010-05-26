@@ -46,8 +46,8 @@ ges_track_transition_update_controller (GESTrackTransition * self,
   GValue end_value = { 0, };
   g_value_init (&start_value, G_TYPE_DOUBLE);
   g_value_init (&end_value, G_TYPE_DOUBLE);
-  g_value_set_double (&start_value, 0.0);
-  g_value_set_double (&end_value, 1.0);
+  g_value_set_double (&start_value, self->start_value);
+  g_value_set_double (&end_value, self->end_value);
 
   GST_LOG ("setting values on controller");
 
@@ -108,7 +108,7 @@ ges_track_transition_finalize (GObject * object)
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
-GstPad *
+GObject *
 link_element_to_mixer (GstElement * element, GstElement * mixer)
 {
   GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
@@ -119,7 +119,21 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
 
   gst_pad_link (srcpad, sinkpad);
 
-  return sinkpad;
+  return G_OBJECT (sinkpad);
+}
+
+GObject *
+link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
+    GstElement * mixer, GEnumValue * type)
+{
+  GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
+  g_object_set (G_OBJECT (smptealpha),
+      "type", (gint) type->value, "invert", (gboolean) TRUE, NULL);
+  gst_bin_add (bin, smptealpha);
+
+  gst_element_link_many (element, smptealpha, mixer, NULL);
+
+  return G_OBJECT (smptealpha);
 }
 
 static gboolean
@@ -141,11 +155,33 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
         "tr-csp-b");
     GstElement *oconv = gst_element_factory_make ("ffmpegcolorspace",
         "tr-csp-output");
-    GstElement *mixer = gst_element_factory_make ("videomixer", NULL);
 
-    gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, mixer, oconv, NULL);
-    GstPad *a_pad = link_element_to_mixer (iconva, mixer);
-    GstPad *b_pad = link_element_to_mixer (iconvb, mixer);
+    gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
+
+    GObject *target = NULL;
+    gchar *propname = NULL;
+    GstElement *mixer = NULL;
+
+    mixer = gst_element_factory_make ("videomixer", NULL);
+    g_object_set (G_OBJECT (mixer), "background", 1, NULL);
+    gst_bin_add (GST_BIN (topbin), mixer);
+
+    if (self->type) {
+      link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
+          self->type);
+      target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
+          mixer, self->type);
+      propname = "position";
+      self->start_value = 1.0;
+      self->end_value = 0.0;
+    } else {
+      link_element_to_mixer (iconva, mixer);
+      target = link_element_to_mixer (iconvb, mixer);
+      propname = "alpha";
+      self->start_value = 0.0;
+      self->end_value = 1.0;
+    }
+
     gst_element_link (mixer, oconv);
 
     GstPad *sinka_target = gst_element_get_static_pad (iconva, "sink");
@@ -164,15 +200,14 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 
     /* set up interpolation */
 
-    g_object_set (G_OBJECT (b_pad), "alpha", (gfloat) 0.0, NULL);
+    g_object_set (target, propname, (gfloat) 0.0, NULL);
 
     GstController *controller;
-    controller = gst_object_control_properties (G_OBJECT (b_pad), "alpha",
-        NULL);
+    controller = gst_object_control_properties (target, propname, NULL);
     GstInterpolationControlSource *control_source;
     control_source = gst_interpolation_control_source_new ();
     gst_controller_set_control_source (controller,
-        "alpha", GST_CONTROL_SOURCE (control_source));
+        propname, GST_CONTROL_SOURCE (control_source));
     gst_interpolation_control_source_set_interpolation_mode (control_source,
         GST_INTERPOLATE_LINEAR);
 
@@ -208,10 +243,16 @@ ges_track_transition_init (GESTrackTransition * self)
 {
   self->controller = NULL;
   self->control_source = NULL;
+  self->type = NULL;
+  self->start_value = 0.0;
+  self->end_value = 0.0;
 }
 
 GESTrackTransition *
-ges_track_transition_new (void)
+ges_track_transition_new (GEnumValue * type)
 {
-  return g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
+  GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
+  ret->type = type;
+
+  return ret;
 }

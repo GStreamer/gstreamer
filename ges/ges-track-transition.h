@@ -53,6 +53,9 @@ G_BEGIN_DECLS
   GESTrackObject parent;
   GstController *controller;
   GstInterpolationControlSource *control_source;
+  GEnumValue *type;
+  gdouble start_value;
+  gdouble end_value;
 };
 
 struct _GESTrackTransitionClass {
@@ -61,7 +64,7 @@ struct _GESTrackTransitionClass {
 
 GType ges_track_transition_get_type (void);
 
-GESTrackTransition* ges_track_transition_new (void);
+GESTrackTransition *ges_track_transition_new (GEnumValue * type);
 
 G_END_DECLS
 
