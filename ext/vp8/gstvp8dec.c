@@ -390,7 +390,8 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
   w = MIN (w, img->w);
 
   for (i = 0; i < h; i++)
-    memcpy (d + i * stride, img->planes[PLANE_Y] + i * img->stride[PLANE_Y], w);
+    memcpy (d + i * stride,
+        img->planes[VPX_PLANE_Y] + i * img->stride[VPX_PLANE_Y], w);
 
   d = GST_BUFFER_DATA (buffer) +
       gst_video_format_get_component_offset (decoder->state.format, 1,
@@ -405,14 +406,16 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
       decoder->state.width);
   w = MIN (w, img->w >> img->x_chroma_shift);
   for (i = 0; i < h; i++)
-    memcpy (d + i * stride, img->planes[PLANE_U] + i * img->stride[PLANE_U], w);
+    memcpy (d + i * stride,
+        img->planes[VPX_PLANE_U] + i * img->stride[VPX_PLANE_U], w);
 
   d = GST_BUFFER_DATA (buffer) +
       gst_video_format_get_component_offset (decoder->state.format, 2,
       decoder->state.width, decoder->state.height);
   /* Same stride, height, width as above */
   for (i = 0; i < h; i++)
-    memcpy (d + i * stride, img->planes[PLANE_V] + i * img->stride[PLANE_V], w);
+    memcpy (d + i * stride,
+        img->planes[VPX_PLANE_V] + i * img->stride[VPX_PLANE_V], w);
 }
 
 static GstFlowReturn

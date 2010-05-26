@@ -30,6 +30,18 @@ G_BEGIN_DECLS
 #define VPX_IMG_FMT_I420 IMG_FMT_I420
 #endif
 
+#ifndef VPX_PLANE_Y
+#define VPX_PLANE_Y PLANE_Y
+#endif
+
+#ifndef VPX_PLANE_U
+#define VPX_PLANE_U PLANE_U
+#endif
+
+#ifndef VPX_PLANE_V
+#define VPX_PLANE_V PLANE_V
+#endif
+
 const char * gst_vpx_error_name (vpx_codec_err_t status);
 
 G_END_DECLS
