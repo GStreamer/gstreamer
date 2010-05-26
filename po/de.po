@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-11 18:23+0100\n"
+"POT-Creation-Date: 2010-05-26 12:34+0100\n"
 "PO-Revision-Date: 2009-08-22 16:58+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -54,7 +55,8 @@ msgstr "Frontend-Gerät »%s« konnte nicht geöffnet werden."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
+msgstr ""
+"Einstellungen des Frontend-Geräts »%s« konnten nicht aufgerufen werden."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
