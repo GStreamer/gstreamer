@@ -2015,7 +2015,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     return time;
 
-  time += basesink->priv->latency;
+  time += basesink->priv->latency - basesink->priv->render_delay;
 
   /* apply offset, be carefull for underflows */
   ts_offset = basesink->priv->ts_offset;
