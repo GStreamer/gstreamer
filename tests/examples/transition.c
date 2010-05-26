@@ -64,6 +64,40 @@ print_transition_data (GESTimelineObject * tr)
   return FALSE;
 }
 
+void
+print_value_names (GEnumClass * enum_class)
+{
+  if (enum_class) {
+    int i;
+    for (i = 0; i < enum_class->n_values; i++) {
+      GEnumValue value = enum_class->values[i];
+      g_print ("%s (%d): %s\n", value.value_nick, value.value,
+          value.value_name);
+    }
+  }
+}
+
+GEnumValue *
+get_transition_type (char *nick, GEnumClass * smpte_enum_class)
+{
+  GEnumValue *value = g_enum_get_value_by_nick (smpte_enum_class, nick);
+
+  g_print ("%s\n", nick);
+
+  if (!strcmp ("crossfade", nick)) {
+    return NULL;
+  }
+
+  if (!value) {
+    g_print ("Error: Invalid transition type. Valid transitions are:\n");
+    print_value_names (smpte_enum_class);
+    exit (-1);
+  }
+
+  return value;
+}
+
+
 GESTimelinePipeline *
 make_timeline (double tdur, char *patha, float adur, char *pathb, float bdur)
 {
