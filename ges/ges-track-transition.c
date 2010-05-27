@@ -141,8 +141,12 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 {
   GESTrackTransition *self = GES_TRACK_TRANSITION (object);
 
-  object->gnlobject = gst_element_factory_make ("gnloperation",
-      "transition-operation");
+  static gint tnum = 0;
+
+  gchar *name = g_strdup_printf ("transition-operation%d", tnum++);
+  object->gnlobject = gst_element_factory_make ("gnloperation", name);
+  g_free (name);
+
   g_object_set (object->gnlobject, "priority", 0, NULL);
   g_signal_connect (G_OBJECT (object->gnlobject), "notify::duration",
       G_CALLBACK (gnlobject_duration_cb), object);
