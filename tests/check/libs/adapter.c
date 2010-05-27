@@ -205,6 +205,52 @@ GST_END_TEST;
  */
 GST_START_TEST (test_take3)
 {
+  GstAdapter *adapter;
+  GstBuffer *buffer, *buffer2;
+  guint avail;
+  guint8 *data, *data2;
+
+  adapter = gst_adapter_new ();
+  fail_unless (adapter != NULL);
+
+  buffer = gst_buffer_new_and_alloc (100);
+  fail_unless (buffer != NULL);
+  fail_unless (GST_BUFFER_DATA (buffer) != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer) == 100);
+
+  data = GST_BUFFER_DATA (buffer);
+
+  /* set up and push subbuffers */
+  buffer2 = gst_buffer_create_sub (buffer, 0, 25);
+  gst_adapter_push (adapter, buffer2);
+  buffer2 = gst_buffer_create_sub (buffer, 25, 25);
+  gst_adapter_push (adapter, buffer2);
+  buffer2 = gst_buffer_create_sub (buffer, 50, 25);
+  gst_adapter_push (adapter, buffer2);
+  buffer2 = gst_buffer_create_sub (buffer, 75, 25);
+  gst_adapter_push (adapter, buffer2);
+
+  gst_buffer_unref (buffer);
+
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+
+  /* take out buffer */
+  buffer2 = gst_adapter_take_buffer (adapter, 100);
+  fail_unless (buffer2 != NULL);
+  fail_unless (GST_BUFFER_DATA (buffer2) != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer2) == 100);
+  data2 = GST_BUFFER_DATA (buffer2);
+
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+
+  /* the data should be the same */
+  fail_unless (data == data2);
+
+  gst_buffer_unref (buffer2);
+
+  g_object_unref (adapter);
 }
 
 GST_END_TEST;
