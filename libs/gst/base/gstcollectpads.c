@@ -259,7 +259,7 @@ unref_data (GstCollectData * data)
  * The pad will be automatically activated in push mode when @pads is
  * started.
  *
- * This function calls gst_collect_pads_add_pad() passing a value of NULL
+ * This function calls gst_collect_pads_add_pad_full() passing a value of NULL
  * for destroy_notify.
  *
  * Returns: a new #GstCollectData to identify the new pad. Or NULL
