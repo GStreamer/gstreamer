@@ -594,6 +594,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.analyse.inter = encoder->analyse;
   encoder->x264param.analyse.b_transform_8x8 = encoder->dct8x8;
   encoder->x264param.analyse.b_weighted_bipred = encoder->weightb;
+  encoder->x264param.analyse.i_weighted_pred = 0;
   encoder->x264param.analyse.i_noise_reduction = encoder->noise_reduction;
   encoder->x264param.i_frame_reference = encoder->ref;
   encoder->x264param.i_bframe = encoder->bframes;
