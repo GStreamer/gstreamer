@@ -742,16 +742,18 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
 }
 
 /**
- * gst_adapter_masked_scan_uint32:
+ * gst_adapter_masked_scan_uint32_peek:
  * @adapter: a #GstAdapter
  * @mask: mask to apply to data before matching against @pattern
  * @pattern: pattern to match (after mask is applied)
  * @offset: offset into the adapter data from which to start scanning, returns
  *          the last scanned position.
  * @size: number of bytes to scan from offset
+ * @value: pointer to uint32 to return matching data
  *
  * Scan for pattern @pattern with applied mask @mask in the adapter data,
- * starting from offset @offset.
+ * starting from offset @offset.  If a match is found, the value that matched
+ * is returned through @value, otherwise @value is left untouched.
  *
  * The bytes in @pattern and @mask are interpreted left-to-right, regardless
  * of endianness.  All four bytes of the pattern must be present in the
@@ -762,31 +764,11 @@ gst_adapter_prev_timestamp (GstAdapter * adapter, guint64 * distance)
  *
  * Returns: offset of the first match, or -1 if no match was found.
  *
- * Example:
- * <programlisting>
- * // Assume the adapter contains 0x00 0x01 0x02 ... 0xfe 0xff
- *
- * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 0, 256);
- * // -> returns 0
- * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 1, 255);
- * // -> returns -1
- * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x01020304, 1, 255);
- * // -> returns 1
- * gst_adapter_masked_scan_uint32 (adapter, 0xffff, 0x0001, 0, 256);
- * // -> returns -1
- * gst_adapter_masked_scan_uint32 (adapter, 0xffff, 0x0203, 0, 256);
- * // -> returns 0
- * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 256);
- * // -> returns 2
- * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 4);
- * // -> returns -1
- * </programlisting>
- *
- * Since: 0.10.24
+ * Since: 0.10.30
  */
 guint
-gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
-    guint32 pattern, guint offset, guint size)
+gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
+    guint32 pattern, guint offset, guint size, guint32 * value)
 {
   GSList *g;
   guint skip, bsize, i;
@@ -829,8 +811,11 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
       if (G_UNLIKELY ((state & mask) == pattern)) {
         /* we have a match but we need to have skipped at
          * least 4 bytes to fill the state. */
-        if (G_LIKELY (skip + i >= 3))
+        if (G_LIKELY (skip + i >= 3)) {
+          if (G_LIKELY (value))
+            *value = state;
           return offset + skip + i - 3;
+        }
       }
     }
     size -= bsize;
@@ -847,4 +832,58 @@ gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
 
   /* nothing found */
   return -1;
+}
+
+/**
+ * gst_adapter_masked_scan_uint32:
+ * @adapter: a #GstAdapter
+ * @mask: mask to apply to data before matching against @pattern
+ * @pattern: pattern to match (after mask is applied)
+ * @offset: offset into the adapter data from which to start scanning, returns
+ *          the last scanned position.
+ * @size: number of bytes to scan from offset
+ *
+ * Scan for pattern @pattern with applied mask @mask in the adapter data,
+ * starting from offset @offset.
+ *
+ * The bytes in @pattern and @mask are interpreted left-to-right, regardless
+ * of endianness.  All four bytes of the pattern must be present in the
+ * adapter for it to match, even if the first or last bytes are masked out.
+ *
+ * It is an error to call this function without making sure that there is
+ * enough data (offset+size bytes) in the adapter.
+ *
+ * This function calls gst_adapter_masked_scan_uint32_peek() passing NULL
+ * for value.
+ *
+ * Returns: offset of the first match, or -1 if no match was found.
+ *
+ * Example:
+ * <programlisting>
+ * // Assume the adapter contains 0x00 0x01 0x02 ... 0xfe 0xff
+ *
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 0, 256);
+ * // -> returns 0
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x00010203, 1, 255);
+ * // -> returns -1
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x01020304, 1, 255);
+ * // -> returns 1
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffff, 0x0001, 0, 256);
+ * // -> returns -1
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffff, 0x0203, 0, 256);
+ * // -> returns 0
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 256);
+ * // -> returns 2
+ * gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0x02030000, 0, 4);
+ * // -> returns -1
+ * </programlisting>
+ *
+ * Since: 0.10.24
+ */
+guint
+gst_adapter_masked_scan_uint32 (GstAdapter * adapter, guint32 mask,
+    guint32 pattern, guint offset, guint size)
+{
+  return gst_adapter_masked_scan_uint32_peek (adapter, mask, pattern, offset,
+      size, NULL);
 }

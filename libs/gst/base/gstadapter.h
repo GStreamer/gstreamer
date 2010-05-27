@@ -98,6 +98,8 @@ GstClockTime            gst_adapter_prev_timestamp      (GstAdapter *adapter, gu
 guint                   gst_adapter_masked_scan_uint32  (GstAdapter * adapter, guint32 mask,
                                                          guint32 pattern, guint offset, guint size);
 
+guint                   gst_adapter_masked_scan_uint32_peek  (GstAdapter * adapter, guint32 mask,
+                                                         guint32 pattern, guint offset, guint size, guint32 * value);
 
 G_END_DECLS
 

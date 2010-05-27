@@ -6,6 +6,7 @@ EXPORTS
 	gst_adapter_flush
 	gst_adapter_get_type
 	gst_adapter_masked_scan_uint32
+	gst_adapter_masked_scan_uint32_peek
 	gst_adapter_new
 	gst_adapter_peek
 	gst_adapter_prev_timestamp
