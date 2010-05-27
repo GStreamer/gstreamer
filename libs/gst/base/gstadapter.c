@@ -321,6 +321,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
 {
   GstBuffer *cur, *head;
   GSList *g;
+  gboolean ret = FALSE;
 
   g = adapter->buflist;
   if (g == NULL)
@@ -336,7 +337,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
   while (g != NULL && GST_BUFFER_SIZE (head) < size) {
     cur = g->data;
     if (!gst_buffer_is_span_fast (head, cur))
-      return TRUE;
+      return ret;
 
     /* Merge the head buffer and the next in line */
     GST_LOG_OBJECT (adapter,
@@ -344,14 +345,17 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
         GST_BUFFER_SIZE (head), GST_BUFFER_SIZE (cur), size);
 
     head = gst_buffer_join (head, cur);
+    ret = TRUE;
 
     /* Delete the front list item, and store our new buffer in the 2nd list
      * item */
     adapter->buflist = g_slist_delete_link (adapter->buflist, adapter->buflist);
     g->data = head;
+
+    g = g_slist_next (g);
   }
 
-  return FALSE;
+  return ret;
 }
 
 /**
