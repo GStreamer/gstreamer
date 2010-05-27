@@ -84,7 +84,7 @@ pattern_source_fill_func (GESTimelineObject * object,
     g_object_set (testsrc, "pattern", pattern, NULL);
   } else if ((track->type) == GES_TRACK_TYPE_AUDIO) {
     testsrc = gst_element_factory_make ("audiotestsrc", NULL);
-    g_object_set (testsrc, "freq", 440.0, NULL);
+    g_object_set (testsrc, "volume", (gdouble) 0, NULL);
   } else
     return FALSE;
 
