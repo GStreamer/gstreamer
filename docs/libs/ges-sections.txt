@@ -243,6 +243,7 @@ GES_TYPE_TIMELINE_FILE_SOURCE
 GESTimelineTransition
 GESTimelineTransitionClass
 ges_timeline_transition_new
+ges_timeline_transition_new_for_nick
 <SUBSECTION Standard>
 GES_IS_TIMELINE_TRANSITION
 GES_IS_TIMELINE_TRANSITION_CLASS

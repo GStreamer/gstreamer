@@ -55,6 +55,7 @@ struct _GESTimelineTransitionClass {
 GType ges_timeline_transition_get_type (void);
 
 GESTimelineTransition *ges_timeline_transition_new (GEnumValue * vtype);
+GESTimelineTransition *ges_timeline_transition_new_for_nick (char *nick);
 
 G_END_DECLS
 

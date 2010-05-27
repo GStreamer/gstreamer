@@ -109,3 +109,39 @@ ges_timeline_transition_new (GEnumValue * vtype)
   ret->vtype = vtype;
   return ret;
 }
+
+static GEnumClass *smpte_enum_class = NULL;
+
+static
+_ensure_smpte_enum_class ()
+{
+  if (!smpte_enum_class) {
+    GstElement *element = gst_element_factory_make ("smpte", NULL);
+    GstElementClass *element_class = GST_ELEMENT_GET_CLASS (element);
+
+    GParamSpec *pspec =
+        g_object_class_find_property (G_OBJECT_CLASS (element_class), "type");
+
+    smpte_enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+  }
+
+}
+
+GESTimelineTransition *
+ges_timeline_transition_new_for_nick (char *nick)
+{
+
+  _ensure_smpte_enum_class ();
+
+  if (!strcmp ("crossfade", nick)) {
+    return ges_timeline_transition_new (NULL);
+  }
+
+  GEnumValue *value = g_enum_get_value_by_nick (smpte_enum_class, nick);
+
+  if (!value) {
+    return NULL;
+  }
+
+  return ges_timeline_transition_new (value);
+}
