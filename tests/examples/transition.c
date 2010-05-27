@@ -64,42 +64,8 @@ print_transition_data (GESTimelineObject * tr)
   return FALSE;
 }
 
-void
-print_value_names (GEnumClass * enum_class)
-{
-  if (enum_class) {
-    int i;
-    for (i = 0; i < enum_class->n_values; i++) {
-      GEnumValue value = enum_class->values[i];
-      g_print ("%s (%d): %s\n", value.value_nick, value.value,
-          value.value_name);
-    }
-  }
-}
-
-GEnumValue *
-get_transition_type (char *nick, GEnumClass * smpte_enum_class)
-{
-  GEnumValue *value = g_enum_get_value_by_nick (smpte_enum_class, nick);
-
-  g_print ("%s\n", nick);
-
-  if (!strcmp ("crossfade", nick)) {
-    return NULL;
-  }
-
-  if (!value) {
-    g_print ("Error: Invalid transition type. Valid transitions are:\n");
-    print_value_names (smpte_enum_class);
-    exit (-1);
-  }
-
-  return value;
-}
-
-
 GESTimelinePipeline *
-make_timeline (GEnumValue * ttype, double tdur, char *patha, float adur,
+make_timeline (char *nick, double tdur, char *patha, float adur,
     char *pathb, float bdur)
 {
   GESTimeline *timeline;
@@ -138,7 +104,9 @@ make_timeline (GEnumValue * ttype, double tdur, char *patha, float adur,
   if (tduration != 0) {
     g_print ("creating transition at %ld of %f duration (%ld ns)\n",
         tstart, tdur, tduration);
-    tr = ges_timeline_transition_new (ttype);
+    if (!(tr = ges_timeline_transition_new_for_nick (nick)))
+      g_error ("invalid transition type %s\n", nick);
+
     g_object_set (tr,
         "start", (guint64) tstart,
         "duration", (guint64) tduration, "in-point", (guint64) 0, NULL);
@@ -189,22 +157,11 @@ main (int argc, char **argv)
 
   ges_init ();
 
-  /* get list of available transitions */
-  GstElement *element = gst_element_factory_make ("smpte", NULL);
-  GstElementClass *element_class = GST_ELEMENT_GET_CLASS (element);
-
-  GParamSpec *pspec =
-      g_object_class_find_property (G_OBJECT_CLASS (element_class), "type");
-
-  GEnumClass *smpte_enum_class =
-      G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
-
-  GEnumValue *ttype = get_transition_type (type, smpte_enum_class);
 
   gdouble adur = (gdouble) atof (argv[2]);
   gdouble bdur = (gdouble) atof (argv[4]);
 
-  pipeline = make_timeline (ttype, tdur, argv[1], adur, argv[3], bdur);
+  pipeline = make_timeline (type, tdur, argv[1], adur, argv[3], bdur);
 
   mainloop = g_main_loop_new (NULL, FALSE);
   g_timeout_add_seconds ((adur + bdur) + 1, (GSourceFunc) g_main_loop_quit,
