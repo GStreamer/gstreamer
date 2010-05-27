@@ -72,6 +72,7 @@
 static guint _num_static_plugins;       /* 0    */
 static GstPluginDesc *_static_plugins;  /* NULL */
 static gboolean _gst_plugin_inited;
+static gchar **_plugin_loading_whitelist;       /* NULL */
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
@@ -329,9 +330,19 @@ gst_plugin_register_static_full (gint major_version, gint minor_version,
 void
 _gst_plugin_initialize (void)
 {
+  const gchar *whitelist;
   guint i;
 
   _gst_plugin_inited = TRUE;
+
+  whitelist = g_getenv ("GST_PLUGIN_LOADING_WHITELIST");
+  if (whitelist != NULL && *whitelist != '\0') {
+    _plugin_loading_whitelist = g_strsplit (whitelist,
+        G_SEARCHPATH_SEPARATOR_S, -1);
+    for (i = 0; _plugin_loading_whitelist[i] != NULL; ++i) {
+      GST_INFO ("plugins whitelist entry: %s", _plugin_loading_whitelist[i]);
+    }
+  }
 
   /* now register all static plugins */
   GST_INFO ("registering %u static plugins", _num_static_plugins);
@@ -349,6 +360,107 @@ _gst_plugin_initialize (void)
     _static_plugins = NULL;
     _num_static_plugins = 0;
   }
+}
+
+/* Whitelist entry format:
+ *
+ *   plugin1,plugin2@pathprefix or
+ *   plugin1,plugin2@* or just
+ *   plugin1,plugin2 or
+ *   source-package@pathprefix or
+ *   source-package@* or just
+ *   source-package
+ *
+ * ie. the bit before the path will be checked against both the plugin
+ * name and the plugin's source package name, to keep the format simple.
+ */
+static gboolean
+gst_plugin_desc_matches_whitelist_entry (GstPluginDesc * desc,
+    const gchar * filename, const gchar * pattern)
+{
+  const gchar *sep;
+  gboolean ret = FALSE;
+  gchar *name;
+
+  GST_LOG ("Whitelist pattern '%s', plugin: %s of %s@%s", pattern, desc->name,
+      desc->source, GST_STR_NULL (filename));
+
+  /* do we have a path prefix? */
+  sep = strchr (pattern, '@');
+  if (sep != NULL && strcmp (sep, "@*") != 0 && strcmp (sep, "@") != 0) {
+    /* paths are not canonicalised or treated with realpath() here. This
+     * should be good enough for our use case, since we just use the paths
+     * autotools uses, and those will be constructed from the same prefix. */
+    if (filename != NULL && !g_str_has_prefix (filename, sep + 1))
+      return FALSE;
+
+    GST_LOG ("%s matches path prefix %s", GST_STR_NULL (filename), sep + 1);
+  }
+
+  if (sep != NULL) {
+    name = g_strndup (pattern, (gsize) (sep - pattern));
+  } else {
+    name = g_strdup (pattern);
+  }
+
+  g_strstrip (name);
+  if (!g_ascii_isalnum (*name)) {
+    GST_WARNING ("Invalid whitelist pattern: %s", pattern);
+    goto done;
+  }
+
+  /* now check plugin names / source package name */
+  if (strchr (name, ',') == NULL) {
+    /* only a single name: either a plugin name or the source package name */
+    ret = (strcmp (desc->source, name) == 0 || strcmp (desc->name, name) == 0);
+  } else {
+    gchar **n, **names;
+
+    /* multiple names: assume these are plugin names */
+    names = g_strsplit (name, ",", -1);
+    for (n = names; n != NULL && *n != NULL; ++n) {
+      g_strstrip (*n);
+      if (strcmp (desc->name, *n) == 0) {
+        ret = TRUE;
+        break;
+      }
+    }
+    g_strfreev (names);
+  }
+
+  GST_LOG ("plugin / source package name match: %d", ret);
+
+done:
+
+  g_free (name);
+  return ret;
+}
+
+gboolean
+priv_gst_plugin_desc_is_whitelisted (GstPluginDesc * desc,
+    const gchar * filename)
+{
+  gchar **entry;
+
+  if (_plugin_loading_whitelist == NULL)
+    return TRUE;
+
+  for (entry = _plugin_loading_whitelist; *entry != NULL; ++entry) {
+    if (gst_plugin_desc_matches_whitelist_entry (desc, filename, *entry)) {
+      GST_LOG ("Plugin %s is in whitelist", filename);
+      return TRUE;
+    }
+  }
+
+  GST_LOG ("Plugin %s (package %s, file %s) not in whitelist", desc->name,
+      desc->source, filename);
+  return FALSE;
+}
+
+gboolean
+priv_gst_plugin_loading_have_whitelist (void)
+{
+  return (_plugin_loading_whitelist != NULL);
 }
 
 /* this function could be extended to check if the plugin license matches the
@@ -538,6 +650,7 @@ static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 GstPlugin *
 gst_plugin_load_file (const gchar * filename, GError ** error)
 {
+  GstPluginDesc *desc;
   GstPlugin *plugin;
   GModule *module;
   gboolean ret;
@@ -597,15 +710,6 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     goto return_error;
   }
 
-  if (new_plugin) {
-    plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
-    plugin->file_mtime = file_status.st_mtime;
-    plugin->file_size = file_status.st_size;
-    plugin->filename = g_strdup (filename);
-    plugin->basename = g_path_get_basename (filename);
-  }
-  plugin->module = module;
-
   ret = g_module_symbol (module, "gst_plugin_desc", &ptr);
   if (!ret) {
     GST_DEBUG ("Could not find plugin entry point in \"%s\"", filename);
@@ -616,7 +720,29 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     g_module_close (module);
     goto return_error;
   }
-  plugin->orig_desc = (GstPluginDesc *) ptr;
+
+  desc = (GstPluginDesc *) ptr;
+
+  if (priv_gst_plugin_loading_have_whitelist () &&
+      !priv_gst_plugin_desc_is_whitelisted (desc, filename)) {
+    GST_INFO ("Whitelist specified and plugin not in whitelist, not loading: "
+        "name=%s, package=%s, file=%s", desc->name, desc->source, filename);
+    g_set_error (error, GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE,
+        "Not loading plugin file \"%s\", not in whitelist", filename);
+    g_module_close (module);
+    goto return_error;
+  }
+
+  if (new_plugin) {
+    plugin = g_object_newv (GST_TYPE_PLUGIN, 0, NULL);
+    plugin->file_mtime = file_status.st_mtime;
+    plugin->file_size = file_status.st_size;
+    plugin->filename = g_strdup (filename);
+    plugin->basename = g_path_get_basename (filename);
+  }
+
+  plugin->module = module;
+  plugin->orig_desc = desc;
 
   if (new_plugin) {
     /* check plugin description: complain about bad values but accept them, to

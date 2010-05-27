@@ -73,6 +73,11 @@ struct _GstPluginPrivate {
   GstStructure *cache_data;
 };
 
+gboolean priv_gst_plugin_loading_have_whitelist (void);
+
+gboolean priv_gst_plugin_desc_is_whitelisted (GstPluginDesc * desc,
+                                              const gchar   * filename);
+
 gboolean _priv_plugin_deps_env_vars_changed (GstPlugin * plugin);
 gboolean _priv_plugin_deps_files_changed (GstPlugin * plugin);
 
