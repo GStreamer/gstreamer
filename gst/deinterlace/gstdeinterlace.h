@@ -137,6 +137,10 @@ struct _GstDeinterlace
   GstCaps *src_caps;
 
   GstCaps *request_caps;
+
+  gboolean reconfigure;
+  GstDeinterlaceMode new_mode;
+  GstDeinterlaceFields new_fields;
 };
 
 struct _GstDeinterlaceClass

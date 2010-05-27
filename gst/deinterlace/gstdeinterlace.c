@@ -618,6 +618,14 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->fps_n = self->fps_d = 0;
   self->passthrough = FALSE;
 
+  self->reconfigure = FALSE;
+  if (self->new_mode != -1)
+    self->mode = self->new_mode;
+  if (self->new_fields != -1)
+    self->fields = self->new_fields;
+  self->new_mode = -1;
+  self->new_fields = -1;
+
   gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
   if (self->sink_caps)
@@ -648,14 +656,17 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MODE:{
-      gint oldmode;
+      gint new_mode;
 
       GST_OBJECT_LOCK (self);
-      oldmode = self->mode;
-      self->mode = g_value_get_enum (value);
-      gst_deinterlace_update_passthrough (self);
-      if (self->mode != oldmode && GST_PAD_CAPS (self->srcpad))
-        gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
+      new_mode = g_value_get_enum (value);
+      if (self->mode != new_mode && GST_PAD_CAPS (self->srcpad)) {
+        self->reconfigure = TRUE;
+        self->new_mode = new_mode;
+      } else {
+        self->mode = new_mode;
+        gst_deinterlace_update_passthrough (self);
+      }
       GST_OBJECT_UNLOCK (self);
       break;
     }
@@ -663,13 +674,16 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
       gst_deinterlace_set_method (self, g_value_get_enum (value));
       break;
     case PROP_FIELDS:{
-      gint oldfields;
+      gint new_fields;
 
       GST_OBJECT_LOCK (self);
-      oldfields = self->fields;
-      self->fields = g_value_get_enum (value);
-      if (self->fields != oldfields && GST_PAD_CAPS (self->srcpad))
-        gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
+      new_fields = g_value_get_enum (value);
+      if (self->fields != new_fields && GST_PAD_CAPS (self->srcpad)) {
+        self->reconfigure = TRUE;
+        self->new_fields = new_fields;
+      } else {
+        self->fields = new_fields;
+      }
       GST_OBJECT_UNLOCK (self);
       break;
     }
@@ -927,6 +941,22 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
   gint fields_required = 0;
   gint cur_field_idx = 0;
   GstBuffer *outbuf;
+
+  GST_OBJECT_LOCK (self);
+  if (self->reconfigure) {
+    if (self->new_fields != -1)
+      self->fields = self->new_fields;
+    if (self->new_mode != -1)
+      self->mode = self->new_mode;
+    self->new_mode = self->new_fields = -1;
+
+    self->reconfigure = FALSE;
+    GST_OBJECT_UNLOCK (self);
+    if (GST_PAD_CAPS (self->srcpad))
+      gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
+  } else {
+    GST_OBJECT_UNLOCK (self);
+  }
 
   if (self->still_frame_mode || self->passthrough)
     return gst_pad_push (self->srcpad, buf);
