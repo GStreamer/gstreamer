@@ -125,6 +125,9 @@ struct _GstAdapterPrivate
 {
   GstClockTime timestamp;
   guint64 distance;
+
+  guint scan_offset;
+  GSList *scan_entry;
 };
 
 #define _do_init(thing) \
@@ -215,6 +218,8 @@ gst_adapter_clear (GstAdapter * adapter)
   adapter->assembled_len = 0;
   adapter->priv->timestamp = GST_CLOCK_TIME_NONE;
   adapter->priv->distance = 0;
+  adapter->priv->scan_offset = 0;
+  adapter->priv->scan_entry = NULL;
 }
 
 static inline void
@@ -241,7 +246,13 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   guint bsize, csize;
 
   /* first step, do skipping */
-  g = adapter->buflist;
+  /* we might well be copying where we were scanning */
+  if (adapter->priv->scan_entry && (adapter->priv->scan_offset <= skip)) {
+    g = adapter->priv->scan_entry;
+    skip -= adapter->priv->scan_offset;
+  } else {
+    g = adapter->buflist;
+  }
   buf = g->data;
   bsize = GST_BUFFER_SIZE (buf);
   while (G_UNLIKELY (skip >= bsize)) {
@@ -351,6 +362,10 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
      * item */
     adapter->buflist = g_slist_delete_link (adapter->buflist, adapter->buflist);
     g->data = head;
+
+    /* invalidate scan position */
+    adapter->priv->scan_offset = 0;
+    adapter->priv->scan_entry = NULL;
 
     g = g_slist_next (g);
   }
@@ -514,6 +529,9 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, guint flush)
   /* account for the remaining bytes */
   adapter->skip = flush;
   adapter->priv->distance += flush;
+  /* invalidate scan position */
+  priv->scan_offset = 0;
+  priv->scan_entry = NULL;
 }
 
 void
@@ -786,12 +804,22 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
   skip = offset + adapter->skip;
 
   /* first step, do skipping and position on the first buffer */
-  g = adapter->buflist;
+  /* optimistically assume scanning continues sequentially */
+  if (adapter->priv->scan_entry && (adapter->priv->scan_offset <= skip)) {
+    g = adapter->priv->scan_entry;
+    skip -= adapter->priv->scan_offset;
+  } else {
+    g = adapter->buflist;
+    adapter->priv->scan_offset = 0;
+    adapter->priv->scan_entry = NULL;
+  }
   buf = g->data;
   bsize = GST_BUFFER_SIZE (buf);
   while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     g = g_slist_next (g);
+    adapter->priv->scan_offset += bsize;
+    adapter->priv->scan_entry = g;
     buf = g->data;
     bsize = GST_BUFFER_SIZE (buf);
   }
@@ -825,6 +853,8 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     /* nothing found yet, go to next buffer */
     skip += bsize;
     g = g_slist_next (g);
+    adapter->priv->scan_offset += GST_BUFFER_SIZE (buf);
+    adapter->priv->scan_entry = g;
     buf = g->data;
     bsize = GST_BUFFER_SIZE (buf);
     bdata = GST_BUFFER_DATA (buf);
