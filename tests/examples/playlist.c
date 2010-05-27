@@ -146,7 +146,7 @@ create_timeline (int nbargs, gchar ** argv)
 
   for (i = 0; i < nbargs / 3; i++) {
     gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
-    GESTimelineSource *src;
+    GESTimelineObject *obj;
 
 
     int pattern;
@@ -159,20 +159,20 @@ create_timeline (int nbargs, gchar ** argv)
       if (pattern == INVALID_PATTERN)
         g_error ("%d invalid pattern!", pattern);
 
-      src = GES_TIMELINE_SOURCE (pattern_source_new (pattern));
-      g_object_set (G_OBJECT (src), "duration", duration, NULL);
+      obj = GES_TIMELINE_OBJECT (pattern_source_new (pattern));
+      g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
       g_print ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
           arg0, GST_TIME_ARGS (duration));
     }
 
     else if (!g_strcmp0 ("+transition", source)) {
-      src = GES_TIMELINE_SOURCE (ges_timeline_transition_new_for_nick (arg0));
+      obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new_for_nick (arg0));
 
-      if (!src)
+      if (!obj)
         g_error ("invalid transition type\n");
 
-      g_object_set (G_OBJECT (src), "duration", duration, NULL);
+      g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
       g_print ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n",
           arg0, GST_TIME_ARGS (duration));
@@ -182,8 +182,8 @@ create_timeline (int nbargs, gchar ** argv)
     else {
       gchar *uri = g_strdup_printf ("file://%s", source);
       guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
-      src = GES_TIMELINE_SOURCE (ges_timeline_filesource_new (uri));
-      g_object_set (src,
+      obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+      g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 
       g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%"
@@ -194,11 +194,11 @@ create_timeline (int nbargs, gchar ** argv)
 
     }
 
-    g_assert (src);
+    g_assert (obj);
 
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
-    ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
+    ges_timeline_layer_add_object (layer, obj);
   }
 
   /* In order to view our timeline, let's grab a convenience pipeline to put
