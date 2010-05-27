@@ -70,6 +70,8 @@ struct _GstGeometricTransform {
   GstVideoFormat format;
   gint pixel_stride;
   gint row_stride;
+
+  gdouble *map;
 };
 
 struct _GstGeometricTransformClass {

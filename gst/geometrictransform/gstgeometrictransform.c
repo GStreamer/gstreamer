@@ -44,29 +44,84 @@ static GstStaticPadTemplate gst_geometric_transform_sink_template =
 static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
+gst_geometric_transform_generate_map (GstGeometricTransform * gt)
+{
+  gint x, y;
+  gdouble in_x, in_y;
+  gboolean ret = TRUE;
+  GstGeometricTransformClass *klass;
+  gdouble *ptr;
+
+  /* cleanup old map */
+  g_free (gt->map);
+  gt->map = NULL;
+
+  klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
+
+  /* subclass must have defined the map_func */
+  g_return_val_if_fail (klass->map_func, FALSE);
+
+  /*
+   * (x,y) pairs of the inverse mapping
+   */
+  gt->map = g_malloc0 (sizeof (gdouble) * gt->width * gt->height * 2);
+  ptr = gt->map;
+
+  for (y = 0; y < gt->height; y++) {
+    for (x = 0; x < gt->width; x++) {
+      if (!klass->map_func (gt, x, y, &in_x, &in_y)) {
+        /* child should have warned */
+        ret = FALSE;
+        goto end;
+      }
+
+      ptr[0] = in_x;
+      ptr[1] = in_y;
+      ptr += 2;
+    }
+  }
+
+end:
+  if (!ret)
+    g_free (gt->map);
+  return ret;
+}
+
+static gboolean
 gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstGeometricTransform *gt;
   gboolean ret;
+  gint old_width;
+  gint old_height;
 
   gt = GST_GEOMETRIC_TRANSFORM (btrans);
+
+  old_width = gt->width;
+  old_height = gt->height;
 
   ret = gst_video_format_parse_caps (incaps, &gt->format, &gt->width,
       &gt->height);
   if (ret) {
     gt->row_stride = gst_video_format_get_row_stride (gt->format, 0, gt->width);
     gt->pixel_stride = gst_video_format_get_pixel_stride (gt->format, 0);
+
+    /* regenerate the map */
+    if (old_width == 0 || old_height == 0 || gt->width != old_width ||
+        gt->height != old_height) {
+      gst_geometric_transform_generate_map (gt);
+    }
   }
   return ret;
 }
 
 static void
 gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
-    GstBuffer * outbuf, gint x, gint y, gdouble out_x, gdouble out_y)
+    GstBuffer * outbuf, gint x, gint y, gdouble in_x, gdouble in_y)
 {
-  gint trunc_x = (gint) out_x;
-  gint trunc_y = (gint) out_y;
+  gint trunc_x = (gint) in_x;
+  gint trunc_y = (gint) in_y;
   gint in_offset;
   gint out_offset;
 
@@ -82,33 +137,23 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
     GstBuffer * outbuf)
 {
   GstGeometricTransform *gt;
-  GstGeometricTransformClass *klass;
   gint x, y;
-  gdouble out_x, out_y;
-  guint8 *data;
   GstFlowReturn ret = GST_FLOW_OK;
+  gdouble *ptr;
 
   gt = GST_GEOMETRIC_TRANSFORM (trans);
-  klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   /* subclass must have defined the map_func */
-  g_return_val_if_fail (klass->map_func, GST_FLOW_ERROR);
+  g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
 
-  data = GST_BUFFER_DATA (buf);
-  for (x = 0; x < gt->width; x++) {
-    for (y = 0; y < gt->height; y++) {
-      if (!klass->map_func (gt, x, y, &out_x, &out_y)) {
-        /* child should have warned */
-        ret = GST_FLOW_ERROR;
-        goto end;
-      }
-
+  ptr = gt->map;
+  for (y = 0; y < gt->height; y++) {
+    for (x = 0; x < gt->width; x++) {
       /* do the mapping */
-      gst_geometric_transform_do_map (gt, buf, outbuf, x, y, out_x, out_y);
+      gst_geometric_transform_do_map (gt, buf, outbuf, x, y, ptr[0], ptr[1]);
+      ptr += 2;
     }
   }
-
-end:
   return ret;
 }
 
