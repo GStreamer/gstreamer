@@ -166,6 +166,19 @@ create_timeline (int nbargs, gchar ** argv)
           arg0, GST_TIME_ARGS (duration));
     }
 
+    else if (!g_strcmp0 ("+transition", source)) {
+      src = GES_TIMELINE_SOURCE (ges_timeline_transition_new_for_nick (arg0));
+
+      if (!src)
+        g_error ("invalid transition type\n");
+
+      g_object_set (G_OBJECT (src), "duration", duration, NULL);
+
+      g_print ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n",
+          arg0, GST_TIME_ARGS (duration));
+
+    }
+
     else {
       gchar *uri = g_strdup_printf ("file://%s", source);
       guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
