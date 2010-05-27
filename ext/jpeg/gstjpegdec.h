@@ -25,6 +25,7 @@
 #include <setjmp.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/base/gstadapter.h>
 
 /* this is a hack hack hack to get around jpeglib header bugs... */
 #ifdef HAVE_STDLIB_H
@@ -69,7 +70,7 @@ struct _GstJpegDec {
   GstPad  *sinkpad;
   GstPad  *srcpad;
 
-  GstBuffer *tempbuf;
+  GstAdapter *adapter;
 
   /* TRUE if each input buffer contains a whole jpeg image */
   gboolean packetized;

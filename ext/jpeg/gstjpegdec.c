@@ -152,8 +152,7 @@ gst_jpeg_dec_finalize (GObject * object)
 
   jpeg_destroy_decompress (&dec->cinfo);
 
-  if (dec->tempbuf)
-    gst_buffer_unref (dec->tempbuf);
+  g_object_unref (dec->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -317,88 +316,33 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 
   /* init properties */
   dec->idct_method = JPEG_DEFAULT_IDCT_METHOD;
-}
 
-static inline gboolean
-is_jpeg_start_marker (const guint8 * data)
-{
-  return (data[0] == 0xff && data[1] == 0xd8);
-}
-
-static gboolean
-gst_jpeg_dec_find_jpeg_header (GstJpegDec * dec)
-{
-  const guint8 *data;
-  guint size;
-
-  data = GST_BUFFER_DATA (dec->tempbuf);
-  size = GST_BUFFER_SIZE (dec->tempbuf);
-
-  g_return_val_if_fail (size >= 2, FALSE);
-
-  while (!is_jpeg_start_marker (data) || data[2] != 0xff) {
-    const guint8 *marker;
-    GstBuffer *tmp;
-    guint off;
-
-    marker = memchr (data + 1, 0xff, size - 1 - 2);
-    if (marker == NULL) {
-      off = size - 1;           /* keep last byte */
-    } else {
-      off = marker - data;
-    }
-
-    tmp = gst_buffer_create_sub (dec->tempbuf, off, size - off);
-    gst_buffer_unref (dec->tempbuf);
-    dec->tempbuf = tmp;
-
-    data = GST_BUFFER_DATA (dec->tempbuf);
-    size = GST_BUFFER_SIZE (dec->tempbuf);
-
-    if (size < 2)
-      return FALSE;             /* wait for more data */
-  }
-
-  return TRUE;                  /* got header */
+  dec->adapter = gst_adapter_new ();
 }
 
 static gboolean
 gst_jpeg_dec_ensure_header (GstJpegDec * dec)
 {
-  g_return_val_if_fail (dec->tempbuf != NULL, FALSE);
+  gint av;
+  gint offset;
 
-check_header:
-
-  /* we need at least a start marker (0xff 0xd8)
-   *   and an end marker (0xff 0xd9) */
-  if (GST_BUFFER_SIZE (dec->tempbuf) <= 4) {
-    GST_DEBUG ("Not enough data");
-    return FALSE;               /* we need more data */
+  av = gst_adapter_available (dec->adapter);
+  /* we expect at least 4 bytes, first of which start marker */
+  offset = gst_adapter_masked_scan_uint32 (dec->adapter, 0xffffff00, 0xffd8ff00,
+      0, av);
+  if (G_UNLIKELY (offset < 0)) {
+    GST_DEBUG_OBJECT (dec, "No JPEG header in current buffer");
+    /* not found */
+    if (av > 4)
+      gst_adapter_flush (dec->adapter, av - 4);
+    return FALSE;
   }
 
-  if (!is_jpeg_start_marker (GST_BUFFER_DATA (dec->tempbuf))) {
-    GST_DEBUG ("Not a JPEG header, resyncing to header...");
-    if (!gst_jpeg_dec_find_jpeg_header (dec)) {
-      GST_DEBUG ("No JPEG header in current buffer");
-      return FALSE;             /* we need more data */
-    }
-    GST_DEBUG ("Found JPEG header");
-    goto check_header;          /* buffer might have changed */
-  }
+  GST_DEBUG_OBJECT (dec, "Found JPEG header");
+  gst_adapter_flush (dec->adapter, offset);
 
   return TRUE;
 }
-
-#if 0
-static gboolean
-gst_jpeg_dec_have_end_marker (GstJpegDec * dec)
-{
-  guint8 *data = GST_BUFFER_DATA (dec->tempbuf);
-  guint size = GST_BUFFER_SIZE (dec->tempbuf);
-
-  return (size > 2 && data && is_jpeg_end_marker (data + size - 2));
-}
-#endif
 
 static inline gboolean
 gst_jpeg_dec_parse_tag_has_entropy_segment (guint8 tag)
@@ -408,103 +352,107 @@ gst_jpeg_dec_parse_tag_has_entropy_segment (guint8 tag)
   return FALSE;
 }
 
-/* returns image length in bytes if parsed 
+/* returns image length in bytes if parsed
  * successfully, otherwise 0 */
 static guint
 gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
 {
-  guint8 *start, *data, *end;
   guint size;
   gboolean resync;
+  GstAdapter *adapter = dec->adapter;
+  gint offset, noffset;
 
-  size = GST_BUFFER_SIZE (dec->tempbuf);
-  start = GST_BUFFER_DATA (dec->tempbuf);
-  end = start + size;
-  data = start;
+  size = gst_adapter_available (adapter);
 
-  g_return_val_if_fail (is_jpeg_start_marker (data), 0);
+  /* we expect at least 4 bytes, first of which start marker */
+  if (gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0xffd80000, 0, 4))
+    return 0;
 
   GST_DEBUG ("Parsing jpeg image data (%u bytes)", size);
 
   GST_DEBUG ("Parse state: offset=%d, resync=%d, entropy len=%d",
       dec->parse_offset, dec->parse_resync, dec->parse_entropy_len);
 
-  /* resume from state offset (also skips start marker) */
-  data += (dec->parse_offset ? dec->parse_offset : 2);
+  /* offset is 2 less than actual offset;
+   * - adapter needs at least 4 bytes for scanning,
+   * - start and end marker ensure at least that much
+   */
+  /* resume from state offset */
+  offset = dec->parse_offset;
 
   while (1) {
     guint frame_len;
+    guint32 value;
 
-    /* do we need to resync? */
-    resync = (*data != 0xff);
-    if (resync) {
-      GST_DEBUG ("Lost sync at 0x%08" G_GINT64_MODIFIER "x, resyncing",
-          (gint64) (data - start));
-      /* at the very least we expect 0xff 0xNN, thus end-1 */
-      while (*data != 0xff && data < end - 1)
-        ++data;
-      if (G_UNLIKELY (*data != 0xff)) {
-        GST_DEBUG ("at end of input and no next marker found, need more data");
-        goto need_more_data;
-      }
+    noffset =
+        gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
+        offset, size - offset, &value);
+    /* lost sync if 0xff marker not where expected */
+    if ((resync = (noffset != offset))) {
+      GST_DEBUG ("Lost sync at 0x%08x, resyncing", offset + 2);
     }
     /* may have marker, but could have been resyncng */
     resync = resync || dec->parse_resync;
     /* Skip over extra 0xff */
-    while (*data == 0xff && data < end)
-      ++data;
+    while ((noffset > 0) && ((value & 0xff) == 0xff)) {
+      noffset++;
+      noffset =
+          gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
+          noffset, size - noffset, &value);
+    }
     /* enough bytes left for marker? (we need 0xNN after the 0xff) */
-    if (data >= end) {
+    if (noffset < 0) {
       GST_DEBUG ("at end of input and no EOI marker found, need more data");
-      goto need_more_data1;
+      goto need_more_data;
     }
 
-    if (*data == 0xd9) {
-      GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: EOI marker",
-          (gint64) (data - start));
+    /* now lock on the marker we found */
+    offset = noffset;
+    value = value & 0xff;
+    if (value == 0xd9) {
+      GST_DEBUG ("0x%08x: EOI marker", offset + 2);
       /* clear parse state */
       dec->parse_resync = FALSE;
       dec->parse_offset = 0;
-      return (data - start + 1);
+      return (offset + 4);
     }
 
-    if (*data >= 0xd0 && *data <= 0xd7)
+    if (value >= 0xd0 && value <= 0xd7)
       frame_len = 0;
-    else if (data >= end - 2)
-      goto need_more_data1;
-    else
-      frame_len = GST_READ_UINT16_BE (data + 1);
-    GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: tag %02x, frame_len=%u",
-        (gint64) (data - start - 1), *data, frame_len);
+    else {
+      /* peek tag and subsequent length */
+      if (offset + 2 + 4 > size)
+        goto need_more_data;
+      else
+        gst_adapter_masked_scan_uint32_peek (adapter, 0x0, 0x0, offset + 2, 4,
+            &frame_len);
+      frame_len = frame_len & 0xffff;
+    }
+    GST_DEBUG ("0x%08x: tag %02x, frame_len=%u", offset + 2, value, frame_len);
     /* the frame length includes the 2 bytes for the length; here we want at
-     * least 2 more bytes at the end for an end marker, thus end-2 */
-    if (data + 1 + frame_len >= end - 2) {
-      if (resync) {
-        GST_DEBUG ("not a valid sync (not enough data).");
-        /* Since *data != 0xff, the next iteration will go into resync again. */
-        continue;
-      }
-      /* theoretically we could have lost sync and not really need more
-       * data, but that's just tough luck and a broken image then */
-      GST_DEBUG ("at end of input and no EOI marker found, need more data");
-      goto need_more_data1;
+     * least 2 more bytes at the end for an end marker */
+    if (offset + 2 + 2 + frame_len + 2 > size) {
+      goto need_more_data;
     }
 
-    if (gst_jpeg_dec_parse_tag_has_entropy_segment (*data)) {
-      guint8 *d2 = data + 1 + frame_len;
+    if (gst_jpeg_dec_parse_tag_has_entropy_segment (value)) {
       guint eseglen = dec->parse_entropy_len;
 
-      GST_DEBUG ("0x%08" G_GINT64_MODIFIER "x: finding entropy segment length",
-          (gint64) (data - start - 1));
+      GST_DEBUG ("0x%08x: finding entropy segment length", offset + 2);
+      noffset = offset + 2 + frame_len + dec->parse_entropy_len;
       while (1) {
-        if (d2 + eseglen >= end - 1) {
+        noffset = gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00,
+            0x0000ff00, noffset, size - noffset, &value);
+        if (noffset < 0) {
           /* need more data */
-          dec->parse_entropy_len = eseglen;
-          goto need_more_data1;
+          dec->parse_entropy_len = size - offset - 4 - frame_len - 2;
+          goto need_more_data;
         }
-        if (d2[eseglen] == 0xff && d2[eseglen + 1] != 0x00)
+        if ((value & 0xff) != 0x00) {
+          eseglen = noffset - offset - frame_len - 2;
           break;
-        ++eseglen;
+        }
+        noffset++;
       }
       dec->parse_entropy_len = 0;
       frame_len += eseglen;
@@ -514,28 +462,24 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     if (resync) {
       /* check if we will still be in sync if we interpret
        * this as a sync point and skip this frame */
-      if (data[2 + frame_len] != 0xff) {
+      noffset = offset + frame_len + 2;
+      noffset = gst_adapter_masked_scan_uint32 (adapter, 0x0000ff00, 0x0000ff00,
+          noffset, 4);
+      if (noffset < 0) {
         /* ignore and continue resyncing until we hit the end
          * of our data or find a sync point that looks okay */
         continue;
       }
-      GST_DEBUG ("found sync at %p", data - size);
+      GST_DEBUG ("found sync at 0x%x", offset + 2);
     }
 
-    data += 1 + frame_len;
+    offset += frame_len + 2;
   }
 
   /* EXITS */
 need_more_data:
   {
-    dec->parse_offset = data - start;
-    dec->parse_resync = resync;
-    return 0;
-  }
-need_more_data1:
-  {
-    /* step back one to point at marker */
-    dec->parse_offset = (data - start) - 1;
+    dec->parse_offset = offset;
     dec->parse_resync = resync;
     return 0;
   }
@@ -1188,17 +1132,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (GST_BUFFER_IS_DISCONT (buf)) {
     GST_DEBUG_OBJECT (dec, "buffer has DISCONT flag set");
     dec->discont = TRUE;
-    if (!dec->packetized && dec->tempbuf != NULL) {
+    if (!dec->packetized && gst_adapter_available (dec->adapter)) {
       GST_WARNING_OBJECT (dec, "DISCONT buffer in non-packetized mode, bad");
-      gst_buffer_replace (&dec->tempbuf, NULL);
+      gst_adapter_clear (dec->adapter);
     }
   }
 
-  if (dec->tempbuf) {
-    dec->tempbuf = gst_buffer_join (dec->tempbuf, buf);
-  } else {
-    dec->tempbuf = buf;
-  }
+  gst_adapter_push (dec->adapter, buf);
   buf = NULL;
 
   /* If we are non-packetized and know the total incoming size in bytes,
@@ -1206,10 +1146,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
   if (!dec->packetized && (dec->segment.format == GST_FORMAT_BYTES) &&
       (dec->segment.stop != -1) &&
-      (GST_BUFFER_SIZE (dec->tempbuf) < dec->segment.stop)) {
+      (gst_adapter_available (dec->adapter) < dec->segment.stop)) {
     /* We assume that non-packetized input in bytes is *one* single jpeg image */
     GST_DEBUG ("Non-packetized mode. Got %d bytes, need %" G_GINT64_FORMAT,
-        GST_BUFFER_SIZE (dec->tempbuf), dec->segment.stop);
+        gst_adapter_available (dec->adapter), dec->segment.stop);
     goto need_more_data;
   }
 
@@ -1221,7 +1161,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * do some sanity checking instead of parsing all of 
    * the jpeg data */
   if (dec->packetized) {
-    img_len = GST_BUFFER_SIZE (dec->tempbuf);
+    img_len = gst_adapter_available (dec->adapter);
   } else {
     /* Parse jpeg image to handle jpeg input that
      * is not aligned to buffer boundaries */
@@ -1235,7 +1175,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (dec->packetized && !gst_jpeg_dec_do_qos (dec, timestamp))
     goto skip_decoding;
 
-  data = (guchar *) GST_BUFFER_DATA (dec->tempbuf);
+  data = (guint8 *) gst_adapter_peek (dec->adapter, img_len);
   GST_LOG_OBJECT (dec, "image size = %u", img_len);
 
   dec->jsrc.pub.next_input_byte = data;
@@ -1454,16 +1394,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
 skip_decoding:
 done:
-  if (GST_BUFFER_SIZE (dec->tempbuf) == img_len) {
-    gst_buffer_unref (dec->tempbuf);
-    dec->tempbuf = NULL;
-  } else {
-    GstBuffer *buf = gst_buffer_create_sub (dec->tempbuf, img_len,
-        GST_BUFFER_SIZE (dec->tempbuf) - img_len);
-
-    gst_buffer_unref (dec->tempbuf);
-    dec->tempbuf = buf;
-  }
+  gst_adapter_flush (dec->adapter, img_len);
 
 exit:
 
@@ -1598,6 +1529,10 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (dec, "Aborting decompress");
       jpeg_abort_decompress (&dec->cinfo);
       gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+      gst_adapter_clear (dec->adapter);
+      dec->parse_offset = 0;
+      dec->parse_entropy_len = 0;
+      dec->parse_resync = FALSE;
       gst_jpeg_dec_reset_qos (dec);
       break;
     case GST_EVENT_NEWSEGMENT:{
@@ -1700,10 +1635,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (dec->tempbuf) {
-        gst_buffer_unref (dec->tempbuf);
-        dec->tempbuf = NULL;
-      }
+      gst_adapter_clear (dec->adapter);
       gst_jpeg_dec_free_buffers (dec);
       break;
     default:
