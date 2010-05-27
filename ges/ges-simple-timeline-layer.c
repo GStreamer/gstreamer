@@ -29,6 +29,8 @@
 #include "ges-internal.h"
 #include "ges-simple-timeline-layer.h"
 #include "ges-timeline-object.h"
+#include "ges-timeline-source.h"
+#include "ges-timeline-transition.h"
 
 static void
 ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
@@ -100,17 +102,53 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 {
   GList *tmp;
   GstClockTime pos = 0;
+  gint priority = GES_TIMELINE_LAYER (self)->min_gnl_priority;
+  GESTimelineObject *prev_object = NULL;
 
   GST_DEBUG ("recalculating values");
 
   for (tmp = self->objects; tmp; tmp = tmp->next) {
     GESTimelineObject *obj = (GESTimelineObject *) tmp->data;
+    GST_DEBUG ("%p, %ld", obj, pos);
 
-    if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
+    if (GES_IS_TIMELINE_SOURCE (obj)) {
+      GST_DEBUG ("%p is a source\n", obj);
+      priority++;
+
+      if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
+        ges_timeline_object_set_start (obj, pos);
+      }
+
+      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) != priority)) {
+        ges_timeline_object_set_priority (obj, priority);
+      }
+
+      pos += GES_TIMELINE_OBJECT_DURATION (obj);
+    } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
+      GST_DEBUG ("%p is transition\n", obj);
+
+      if (GES_IS_TIMELINE_TRANSITION (prev_object)) {
+        GST_ERROR ("two transitions in sequence!");
+      }
+
+      if (GES_IS_TIMELINE_SOURCE (prev_object)) {
+        pos -= GES_TIMELINE_OBJECT_DURATION (obj);
+      }
+
+      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) != priority)) {
+        ges_timeline_object_set_priority (obj, priority - 1);
+      }
+
       ges_timeline_object_set_start (obj, pos);
     }
-    pos += GES_TIMELINE_OBJECT_DURATION (obj);
+
+    GST_DEBUG (", %ld\n", pos);
+
+    prev_object = obj;
+
   }
+
+  GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;
 }
 
 /**
