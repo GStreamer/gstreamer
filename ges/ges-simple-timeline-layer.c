@@ -110,6 +110,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   for (tmp = self->objects; tmp; tmp = tmp->next) {
     GESTimelineObject *obj = (GESTimelineObject *) tmp->data;
     GST_DEBUG ("%p, %ld", obj, pos);
+    guint64 dur = GES_TIMELINE_OBJECT_DURATION (obj);
 
     if (GES_IS_TIMELINE_SOURCE (obj)) {
       GST_DEBUG ("%p is a source\n", obj);
@@ -123,7 +124,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
         ges_timeline_object_set_priority (obj, priority);
       }
 
-      pos += GES_TIMELINE_OBJECT_DURATION (obj);
+      pos += dur;
     } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
       GST_DEBUG ("%p is transition\n", obj);
 
@@ -132,11 +133,21 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       }
 
       if (GES_IS_TIMELINE_SOURCE (prev_object)) {
-        pos -= GES_TIMELINE_OBJECT_DURATION (obj);
+        pos -= dur;
       }
 
       if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) != priority)) {
         ges_timeline_object_set_priority (obj, priority - 1);
+      }
+
+      if (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur) {
+        GST_ERROR ("transition duration exceeds that of previous neighbor!");
+      }
+
+      GList *l_next = g_list_next (tmp);
+
+      if (l_next && (GES_TIMELINE_OBJECT_DURATION (l_next->data) < dur)) {
+        GST_ERROR ("trandition duration exceeds that of next neighbor!");
       }
 
       ges_timeline_object_set_start (obj, pos);
