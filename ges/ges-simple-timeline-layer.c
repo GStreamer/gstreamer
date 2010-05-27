@@ -173,6 +173,23 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 
   GST_DEBUG ("layer:%p, object:%p, position:%d", layer, object, position);
 
+  GList *nth = g_list_nth (layer->objects, position);
+
+  if (GES_IS_TIMELINE_TRANSITION (object)) {
+    GList *lprev = g_list_previous (nth);
+
+    GESTimelineObject *prev = GES_TIMELINE_OBJECT (lprev ? lprev->data : NULL);
+    GESTimelineObject *next = GES_TIMELINE_OBJECT (nth ? nth->data : NULL);
+
+    if ((prev && GES_IS_TIMELINE_TRANSITION (prev)) ||
+        (next && GES_IS_TIMELINE_TRANSITION (next))) {
+      GST_ERROR ("Not adding transition: Only insert transitions between two"
+          " sources, or at the begining or end the layer\n");
+      return FALSE;
+    }
+  }
+
+
   layer->adding_object = TRUE;
 
   res = ges_timeline_layer_add_object ((GESTimelineLayer *) layer, object);
