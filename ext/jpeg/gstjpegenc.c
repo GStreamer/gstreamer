@@ -308,6 +308,7 @@ gst_jpegenc_reset (GstJpegEnc * enc)
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 4 * DCTSIZE; j++) {
       g_free (enc->row[i][j]);
+      enc->row[i][j] = NULL;
     }
   }
 
