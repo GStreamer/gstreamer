@@ -520,11 +520,12 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
         jpegenc->h_samp[i], jpegenc->v_samp[i]);
     jpegenc->cinfo.comp_info[i].h_samp_factor = jpegenc->h_samp[i];
     jpegenc->cinfo.comp_info[i].v_samp_factor = jpegenc->v_samp[i];
-    jpegenc->line[i] = g_realloc (jpegenc->line[i],
-        jpegenc->v_max_samp * DCTSIZE * sizeof (char *));
+    g_free (jpegenc->line[i]);
+    jpegenc->line[i] = g_new (guchar *, jpegenc->v_max_samp * DCTSIZE);
     if (!jpegenc->planar) {
       for (j = 0; j < jpegenc->v_max_samp * DCTSIZE; j++) {
-        jpegenc->row[i][j] = g_realloc (jpegenc->row[i][j], width);
+        g_free (jpegenc->row[i][j]);
+        jpegenc->row[i][j] = g_malloc (width);
         jpegenc->line[i][j] = jpegenc->row[i][j];
       }
     }
