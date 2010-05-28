@@ -48,14 +48,20 @@ G_BEGIN_DECLS
 #define GES_TRACK_TRANSITION_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransitionClass)
-    struct _GESTrackTransition
+
+struct _GESTrackTransition
 {
   GESTrackObject parent;
-  GstController *controller;
-  GstInterpolationControlSource *control_source;
-  GEnumValue *type;
-  gdouble start_value;
-  gdouble end_value;
+  GstController                 *vcontroller;
+
+  GstInterpolationControlSource *vcontrol_source;
+  GEnumValue                    *vtype;
+  gdouble                       vstart_value;
+  gdouble                       vend_value;
+
+  GstController                 *acontroller;
+  GstInterpolationControlSource *acontrol_source;
+
 };
 
 struct _GESTrackTransitionClass {

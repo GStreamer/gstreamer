@@ -25,7 +25,7 @@
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
 static void
-ges_track_transition_update_controller (GESTrackTransition * self,
+ges_track_transition_update_vcontroller (GESTrackTransition * self,
     GstElement * gnlobj)
 {
   GST_LOG ("updating controller");
@@ -33,7 +33,7 @@ ges_track_transition_update_controller (GESTrackTransition * self,
   if (!gnlobj)
     return;
 
-  if (!(self->controller))
+  if (!(self->vcontroller))
     return;
 
   GST_LOG ("getting properties");
@@ -46,17 +46,17 @@ ges_track_transition_update_controller (GESTrackTransition * self,
   GValue end_value = { 0, };
   g_value_init (&start_value, G_TYPE_DOUBLE);
   g_value_init (&end_value, G_TYPE_DOUBLE);
-  g_value_set_double (&start_value, self->start_value);
-  g_value_set_double (&end_value, self->end_value);
+  g_value_set_double (&start_value, self->vstart_value);
+  g_value_set_double (&end_value, self->vend_value);
 
   GST_LOG ("setting values on controller");
 
-  g_assert (GST_IS_CONTROLLER (self->controller));
-  g_assert (GST_IS_CONTROL_SOURCE (self->control_source));
+  g_assert (GST_IS_CONTROLLER (self->vcontroller));
+  g_assert (GST_IS_CONTROL_SOURCE (self->vcontrol_source));
 
-  gst_interpolation_control_source_unset_all (self->control_source);
-  gst_interpolation_control_source_set (self->control_source, 0, &start_value);
-  gst_interpolation_control_source_set (self->control_source,
+  gst_interpolation_control_source_unset_all (self->vcontrol_source);
+  gst_interpolation_control_source_set (self->vcontrol_source, 0, &start_value);
+  gst_interpolation_control_source_set (self->vcontrol_source,
       duration, &end_value);
 
   GST_LOG ("done updating controller");
@@ -66,7 +66,7 @@ static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackTransition * self)
 {
-  ges_track_transition_update_controller (self, gnlobject);
+  ges_track_transition_update_vcontroller (self, gnlobject);
 }
 
 static void
@@ -93,10 +93,11 @@ static void
 ges_track_transition_dispose (GObject * object)
 {
   GESTrackTransition *self = GES_TRACK_TRANSITION (object);
-  if (self->controller) {
-    g_object_unref (self->controller);
-    self->controller = NULL;
-    self->control_source = NULL;
+  if (self->vcontroller) {
+    g_object_unref (self->vcontroller);
+    self->vcontroller = NULL;
+    /* is this referenced by the controller ? */
+    self->vcontrol_source = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
@@ -108,7 +109,7 @@ ges_track_transition_finalize (GObject * object)
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
-GObject *
+static GObject *
 link_element_to_mixer (GstElement * element, GstElement * mixer)
 {
   GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
@@ -122,7 +123,7 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
   return G_OBJECT (sinkpad);
 }
 
-GObject *
+static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
     GstElement * mixer, GEnumValue * type)
 {
@@ -157,20 +158,20 @@ create_video_bin (GESTrackTransition * self)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (self->type) {
+  if (self->vtype) {
     link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
-        self->type);
+        self->vtype);
     target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
-        mixer, self->type);
+        mixer, self->vtype);
     propname = "position";
-    self->start_value = 1.0;
-    self->end_value = 0.0;
+    self->vstart_value = 1.0;
+    self->vend_value = 0.0;
   } else {
     link_element_to_mixer (iconva, mixer);
     target = link_element_to_mixer (iconvb, mixer);
     propname = "alpha";
-    self->start_value = 0.0;
-    self->end_value = 1.0;
+    self->vstart_value = 0.0;
+    self->vend_value = 1.0;
   }
 
   gst_element_link (mixer, oconv);
@@ -200,11 +201,11 @@ create_video_bin (GESTrackTransition * self)
   gst_interpolation_control_source_set_interpolation_mode (control_source,
       GST_INTERPOLATE_LINEAR);
 
-  self->controller = controller;
-  self->control_source = control_source;
+  self->vcontroller = controller;
+  self->vcontrol_source = control_source;
 
   GST_LOG ("controller created, updating");
-  ges_track_transition_update_controller (self,
+  ges_track_transition_update_vcontroller (self,
       ((GESTrackObject *) self)->gnlobject);
 
   return topbin;
@@ -251,18 +252,21 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
 static void
 ges_track_transition_init (GESTrackTransition * self)
 {
-  self->controller = NULL;
-  self->control_source = NULL;
-  self->type = NULL;
-  self->start_value = 0.0;
-  self->end_value = 0.0;
+  self->vcontroller = NULL;
+  self->vcontrol_source = NULL;
+  self->vtype = NULL;
+  self->vstart_value = 0.0;
+  self->vend_value = 0.0;
+
+  self->acontroller = NULL;
+  self->acontrol_source = NULL;
 }
 
 GESTrackTransition *
 ges_track_transition_new (GEnumValue * type)
 {
   GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
-  ret->type = type;
+  ret->vtype = type;
 
   return ret;
 }
