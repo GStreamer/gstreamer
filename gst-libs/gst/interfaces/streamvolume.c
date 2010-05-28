@@ -52,10 +52,6 @@
 #include "streamvolume.h"
 #include <math.h>
 
-#ifndef HAVE_CBRT
-#define cbrt(x) (pow(abs(x),1.0/3.0))
-#endif
-
 static void
 gst_stream_volume_class_init (GstStreamVolumeInterface * iface)
 {

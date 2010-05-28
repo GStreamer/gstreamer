@@ -216,10 +216,6 @@ dnl *** checks for functions ***
 AC_CHECK_FUNCS([localtime_r gmtime_r])
 
 dnl *** checks for math functions ***
-LIBS_SAVE=$LIBS
-LIBS="$LIBS $LIBM"
-AC_CHECK_FUNCS(cbrt)
-LIBS=$LIBS_SAVE
 
 dnl *** checks for types/defines ***
 
