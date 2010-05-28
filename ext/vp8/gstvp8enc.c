@@ -565,8 +565,8 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
         pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
-      pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
       GST_LOG_OBJECT (encoder, "non frame pkt: %d", pkt->kind);
+      pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
       continue;
     }
 
@@ -745,8 +745,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
         pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
-      pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
       GST_LOG_OBJECT (encoder, "non frame pkt: %d", pkt->kind);
+      pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
       continue;
     }
 
