@@ -42,7 +42,7 @@ AC_SUBST(PACKAGE_VERSION_MICRO)
 AC_SUBST(PACKAGE_VERSION_NANO)
 
 dnl Add parameters for aclocal
-AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
+AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
 dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
