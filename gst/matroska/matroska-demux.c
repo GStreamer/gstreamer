@@ -433,8 +433,6 @@ gst_matroska_demux_reset (GstElement * element)
     demux->seek_event = NULL;
   }
 
-  demux->from_offset = -1;
-  demux->to_offset = G_MAXINT64;
   demux->seek_index = NULL;
   demux->seek_entry = 0;
 
@@ -1201,6 +1199,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT |
       GST_MATROSKA_TRACK_LACING;
   context->last_flow = GST_FLOW_OK;
+  context->to_offset = G_MAXINT64;
   demux->num_streams++;
   g_assert (demux->src->len == demux->num_streams);
 
@@ -2281,6 +2280,8 @@ static gboolean
 gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
     GstMatroskaIndex * entry, gboolean reset)
 {
+  gint i;
+
   GST_OBJECT_LOCK (demux);
 
   /* seek (relative to matroska segment) */
@@ -2298,9 +2299,16 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
   demux->seek_first = TRUE;
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
 
-  if (reset) {
-    demux->from_offset = -1;
-    demux->to_offset = G_MAXINT64;
+  for (i = 0; i < demux->src->len; i++) {
+    GstMatroskaTrackContext *stream = g_ptr_array_index (demux->src, i);
+
+    if (reset) {
+      stream->to_offset = G_MAXINT64;
+    } else {
+      if (stream->from_offset != -1)
+        stream->to_offset = stream->from_offset;
+    }
+    stream->from_offset = -1;
   }
 
   GST_OBJECT_UNLOCK (demux);
@@ -2631,6 +2639,11 @@ gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
         GST_DEBUG_OBJECT (demux, "stream %d not finished yet", stream->index);
         done = FALSE;
       }
+    } else {
+      /* nothing pushed for this stream;
+       * likely seek entry did not start at keyframe, so all was skipped.
+       * So we need an earlier entry */
+      done = FALSE;
     }
   }
 
@@ -2641,8 +2654,7 @@ gst_matroska_demux_seek_to_previous_keyframe (GstMatroskaDemux * demux)
         --demux->seek_entry);
     if (!gst_matroska_demux_move_to_entry (demux, entry, FALSE))
       goto exit;
-    demux->to_offset = demux->from_offset;
-    demux->from_offset = -1;
+
     ret = GST_FLOW_OK;
   }
 
@@ -4725,7 +4737,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           gst_buffer_unref (sub);
           goto eos;
         }
-        if (offset >= demux->to_offset) {
+        if (offset >= stream->to_offset) {
           GST_DEBUG_OBJECT (demux, "Stream %d after playback section",
               stream->index);
           gst_buffer_unref (sub);
@@ -4824,6 +4836,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       if (stream->set_discont) {
+        GST_DEBUG_OBJECT (demux, "marking DISCONT");
         GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DISCONT);
         stream->set_discont = FALSE;
       }
@@ -4831,8 +4844,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       /* reverse playback book-keeping */
       if (!GST_CLOCK_TIME_IS_VALID (stream->from_time))
         stream->from_time = lace_time;
-      if (demux->from_offset == -1)
-        demux->from_offset = offset;
+      if (stream->from_offset == -1)
+        stream->from_offset = offset;
 
       GST_DEBUG_OBJECT (demux,
           "Pushing lace %d, data of size %d for stream %d, time=%"
@@ -4866,6 +4879,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       ret = gst_pad_push (stream->pad, sub);
+      if (demux->segment.rate < 0) {
+        if (lace_time > demux->segment.stop && ret == GST_FLOW_UNEXPECTED) {
+          /* In reverse playback we can get a GST_FLOW_UNEXPECTED when
+           * we are at the end of the segment, so we just need to jump
+           * back to the previous section. */
+          GST_DEBUG_OBJECT (demux, "downstream has reached end of segment");
+          ret = GST_FLOW_OK;
+        }
+      }
       /* combine flows */
       ret = gst_matroska_demux_combine_flows (demux, stream, ret);
 
@@ -5560,9 +5582,9 @@ gst_matroska_demux_loop (GstPad * pad)
 
 next:
   if (G_UNLIKELY (demux->offset == gst_matroska_demux_get_length (demux))) {
-    GST_LOG_OBJECT (demux, "Reached end of stream, sending EOS");
+    GST_LOG_OBJECT (demux, "Reached end of stream");
     ret = GST_FLOW_UNEXPECTED;
-    goto pause;
+    goto eos;
   }
 
   return;
@@ -5573,7 +5595,7 @@ eos:
     if (demux->segment.rate < 0.0) {
       ret = gst_matroska_demux_seek_to_previous_keyframe (demux);
       if (ret == GST_FLOW_OK)
-        goto next;
+        return;
     }
     /* fall-through */
   }

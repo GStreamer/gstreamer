@@ -476,6 +476,8 @@ struct _GstMatroskaTrackContext {
   GstFlowReturn last_flow;
   /* reverse playback */
   GstClockTime  from_time;
+  gint64                   from_offset;
+  gint64                   to_offset;
 
   GArray       *index_table;
 
