@@ -27,7 +27,7 @@
  * |[
  * gst-launch-0.10 webmmux name=mux ! filesink location=newfile.webm         \
  *   uridecodebin uri=file:///path/to/somefile.ogv name=demux                \
- *   demux. ! ffmpegcolorspace ! videorate ! vp8enc ! queue ! mux.video_0    \
+ *   demux. ! ffmpegcolorspace ! vp8enc ! queue ! mux.video_0    \
  *   demux. ! progressreport ! audioconvert ! audiorate ! vorbisenc ! queue ! mux.audio_0
  * ]| This pipeline re-encodes a video file of any format into a WebM file.
  * |[
