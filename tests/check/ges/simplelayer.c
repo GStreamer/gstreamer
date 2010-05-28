@@ -201,12 +201,12 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
       GST_SECOND);
   source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
-  g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
+  g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
   source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
-  g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
+  g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source4),
       GST_SECOND);
 
   /* create half-second transitions */
@@ -220,19 +220,19 @@ GST_START_TEST (test_gsl_with_transitions)
 
   tr2 = ges_timeline_transition_new (NULL);
   g_object_set (tr2, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr2), HALF_SECOND);
 
   tr3 = ges_timeline_transition_new (NULL);
   g_object_set (tr3, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr3), HALF_SECOND);
 
   tr4 = ges_timeline_transition_new (NULL);
   g_object_set (tr4, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr4), HALF_SECOND);
 
   tr5 = ges_timeline_transition_new (NULL);
   g_object_set (tr5, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr5), HALF_SECOND);
 
   /*   simple test scenario with several sources in layer */
   /* 0 [0     0.5     1       1.5     2       2.5     3]  */

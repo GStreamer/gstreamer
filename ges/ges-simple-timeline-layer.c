@@ -140,7 +140,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
         ges_timeline_object_set_priority (obj, priority - 1);
       }
 
-      if (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur) {
+      if (prev_object && (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur)) {
         GST_ERROR ("transition duration exceeds that of previous neighbor!");
       }
 
