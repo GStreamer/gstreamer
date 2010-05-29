@@ -2849,7 +2849,7 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
       GST_DEBUG_OBJECT (pad, "position query, replying %" GST_TIME_FORMAT,
           GST_TIME_ARGS (demux->segment.last_stop));
 
-      gst_query_set_duration (query, GST_FORMAT_TIME, demux->segment.last_stop);
+      gst_query_set_position (query, GST_FORMAT_TIME, demux->segment.last_stop);
 
       break;
     }
