@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Copyright (C) 2008-2009 Free Software Foundation, Inc.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2009.
+# Copyright (C) 2008-2010 Free Software Foundation, Inc.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2010.
 #
 # data flow -> fluxo de dados
 # streaming -> fluxo contínuo
@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-26 00:21+0100\n"
-"PO-Revision-Date: 2009-11-29 19:29-0300\n"
+"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"PO-Revision-Date: 2010-05-25 23:40-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "Language: pt_BR\n"
@@ -186,15 +186,16 @@ msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
 
 msgid "Could not open audio device for mixer control handling."
 msgstr ""
-"Não foi possível abrir o dispositivo de áudio para manuseio do controle de "
-"mixer."
+"Não foi possível abrir o dispositivo de áudio para manipulação do "
+"controlador do mixer."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Não foi possível abrir o dispositivo de áudio para manuseio do controle de "
-"mixer. Não há suporte a este elemento nesta versão do Open Sound System."
+"Não foi possível abrir o dispositivo de áudio para manipulação do "
+"controlador do mixer. Não há suporte a este elemento com esta versão do "
+"Sistema Aberto de Som (OSS)."
 
 msgid "Master"
 msgstr "Principal"
@@ -209,7 +210,7 @@ msgid "Headphones"
 msgstr "Fones de ouvido"
 
 msgid "Center"
-msgstr "Centro"
+msgstr "Central"
 
 msgid "LFE"
 msgstr "LFE"
@@ -236,7 +237,7 @@ msgid "3D Depth"
 msgstr "Profundidade 3D"
 
 msgid "3D Center"
-msgstr "Centro 3D"
+msgstr "3D central"
 
 msgid "3D Enhance"
 msgstr "Realce 3D"
@@ -281,7 +282,7 @@ msgid "Diagnostic"
 msgstr "Diagnóstico"
 
 msgid "Bass Boost"
-msgstr "Aumento dos graves"
+msgstr "Aumento de graves"
 
 msgid "Playback Ports"
 msgstr "Portas de reprodução"
@@ -311,7 +312,7 @@ msgid "Microphone Gain"
 msgstr "Ganho do microfone"
 
 msgid "Speaker Source"
-msgstr "Origem do auto-falante"
+msgstr "Origem do alto-falante"
 
 msgid "Microphone Source"
 msgstr "Origem do microfone"
@@ -320,7 +321,7 @@ msgid "Jack"
 msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr "Centro/LFE"
+msgstr "Central/LFE"
 
 msgid "Stereo Mix"
 msgstr "Mixagem estéreo"
@@ -461,10 +462,10 @@ msgid "Yellow Front Panel Connector"
 msgstr "Conector amarelo do painel frontal"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Saída comum"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Mesclar canais"
 
 msgid "Virtual Mixer Input"
 msgstr "Entrada do mixer virtual"
@@ -476,33 +477,33 @@ msgid "Virtual Mixer Channels"
 msgstr "Canais do mixer virtual"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "Função %s"
+msgstr "%s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr "Função %s"
+msgstr "%s"
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
 "Não foi possível abrir o dispositivo de áudio para reprodução. Não há "
-"suporte a este elemento nesta versão do Open Sound System."
+"suporte a este elemento nesta versão do Sistema Aberto de Som (OSS)."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Não há suporte a reprodução neste dispositivo de áudio."
+msgstr "Não há suporte a reprodução por este dispositivo de áudio."
 
 msgid "Audio playback error."
 msgstr "Erro de reprodução de áudio."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Não há suporte a gravação neste dispositivo de áudio."
+msgstr "Não há suporte a gravação por este dispositivo de áudio."
 
 msgid "Error recording from audio device."
-msgstr "Erro ao gravar deste dispositivo de áudio."
+msgstr "Erro ao gravar do dispositivo de áudio."
 
 msgid "Gain"
 msgstr "Ganho"
