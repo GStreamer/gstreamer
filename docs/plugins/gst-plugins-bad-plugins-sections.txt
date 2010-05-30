@@ -1180,6 +1180,8 @@ GstWhiteBalanceMode
 GstColourToneMode
 GstSceneMode
 GstFlashMode
+GstFlickerReductionMode
+GstFocusMode
 GstFocusStatus
 GstPhotoCaps
 GstPhotoShakeRisk
