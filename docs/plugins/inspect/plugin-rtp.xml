@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.22.2</version>
+  <version>0.10.23</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -1235,7 +1235,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA, delivery-method=(string)inline</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
         </caps>
       </pads>
     </element>
@@ -1256,7 +1256,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA, delivery-method=(string)inline</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
         </caps>
       </pads>
     </element>

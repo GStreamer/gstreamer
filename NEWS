@@ -1,4 +1,90 @@
-This is GStreamer Good Plug-ins 0.10.22, "Square One"
+This is GStreamer Good Plug-ins 0.10.23, "Stylish Kids in Riot"
+
+Changes since 0.10.22:
+
+      * alpha: add support for YUY2, YVYU, UYVY and YV12; YUV->RGB conversion fixes
+      * avimux, flvmux, matroskamux: don't crash if tags arrive on multiple input pads at the same time
+      * avimux, matroskamux: add support for On2 VP8
+      * capssetter: element moved from gst-plugins-bad
+      * deinterlace: add support for most YUV and RGB formats for some methods
+      * deinterlace: make automatic detection of interlacing the default
+      * gamma: add support for more YUV/RGB formats, make gamma property controllable
+      * jpegdec, jpegenc: support more colour spaces and pixel formats
+      * matroskademux: implement push mode seeking
+      * matroskademux: add support for WebM
+      * imagefreeze: plugin moved from gst-plugins-bad
+      * oss4: plugin moved from gst-plugins-bad
+      * osxvideosink: implement the xoverlay interface, allow switching views at runtime
+      * qcelpdepay: add a QCELP depayloader
+      * qtdemux: add support for VP8; push-mode seeking and ctts table parsing fixes
+      * rtph263depay: use Picture Start Code to detect packet loss and frame start
+      * rtph263pay: use found GOBs to apply Mode A payloading
+      * rtph264depay: DELTA_UNIT marking of output buffers
+      * rtph264pay: extract SPS and PPS from property provided parameter set
+      * rtph264pay: add config-interval property to re-send SPS/PPS in stream
+      * rtpmp4vpay: add config-interval property to re-insert config in stream
+      * rtptheoradepay: fix in-band configuration parsing
+      * rtptheorapay: add config-interval parameter to re-insert config in stream
+      * rtpvorbisdepay, rtptheoradepay: also accept in-line configuration
+      * rtsp: configure bandwidth properties in the session
+      * rtspsrc: fall back to SDP ports instead of server_port
+      * rtspsrc: use the SDP connection info in multicast
+      * rtspsrc: handle SEEKING queries
+      * smptealpha: add support for all 4 ARGB formats and YV12 (converted to AYUV)
+      * videobalance: add support for all RGB formats, Y41B, Y42B and Y444, YUY2, UYVY, AYUV and YVYU
+      * videobox: add support for Y444, Y42B, Y41B, YUY2, UYUV, and YVYU
+      * videobox: fix floating point to integer conversion for the alpha values
+      * videobox: handle ranges/lists of width or height when transforming caps
+      * videobox: translate navigation events to make sense again upstream
+      * videofilter: merge gamma, videobalance, and videoflip plugin into single plu
+      * videoflip: add support for all RGB formats and AYUV, Y41B, Y42B and Y444
+      * videoflip: also flip the pixel-aspect-ratio if width/height are exchanged
+      * videomixer: add support for Y444, Y42B, Y41B, YV12, YUY2, YVYU, UYVY
+      * webmmux: Add new webmmux element that only supports muxing of WebM
+      * y4menc: add 4:2:2, 4:1:1, and 4:4:4 output support
+
+Bugs fixed since 0.10.22:
+
+      * 619485 : matroskademux: skip buffers before a late keyframe (QoS)
+      * 576286 : [videomixer] Should accept/output non-alpha streams
+      * 618349 : osxvideosink: implement the XOverlay interface
+      * 574416 : rtp{theora,vorbis}depay should accept in-line configuration (too)
+      * 590662 : [pulse] Allocates and starts pulse main loops in instance_init
+      * 592270 : Cannot catch 'have-ns-view' on pipeline for playbin and playbin2
+      * 599585 : gstrtph263pay does not fragment frame with limited GOBs
+      * 600553 : [jpegdec] crashes on a fuzzed jpeg
+      * 606689 : Re-send codec data on GstForceKeyUnit
+      * 607452 : Failure to sync on rtpmp4vpay stream; sender;receiver mismatch
+      * 609405 : [qtdemux] Issues when seeking with file with lots of tracks and edit lists
+      * 609658 : [rtph264depay] doesn't mark output frames as keyframes correctly
+      * 610172 : inconsistent h263pay/h263depay behaviour
+      * 610902 : y4menc only supports 4:2:0
+      * 613786 : [PLUGIN-MOVE] Move imagefreeze to gst-plugins-good
+      * 614305 : [PLUGIN-MOVE] oss4 should be moved to good
+      * 614765 : racy stream status leave implementation
+      * 615798 : [smptealpha] Need ability to reverse transition direction
+      * 616516 : [qtdemux] h264 playback gets skippy after a seek
+      * 616700 : [rtspsrc] gst_query_new_seeking() fails on rtspsrc
+      * 617164 : [rtph264pay] SPS/PPS in provided sprop-parameter-sets never sent on timeout
+      * 617537 : rtspsrc always falls back to unicast instead of using the announced multicast
+      * 617733 : [wavparse] handle gst_pad_pull_range() returning less data than requested
+      * 617739 : [PLUGIN-MOVE] Move capssetter to gst-plugins-good
+      * 618305 : [flvmux] last timestamp is stored even if it's invalid
+      * 618351 : avimux crashes when fed from filesrc
+      * 618386 : rtptheoradepay: make delivery-method parameter optional
+      * 618419 : gstrtpbin-Description maybe exist error
+      * 618733 : [efence] Configure check is broken
+      * 618874 : [pulse] regression: broken mainloop locking
+      * 618940 : rtptheorapay/depay wrongly claims to do delivery-method=inline
+      * 619018 : Speex encoder latency should depend on rate
+      * 619103 : WebM demuxer
+      * 619105 : [qtdemux] misalignment between index and sample while looking for frame
+      * 619219 : [matroska] Move webm muxer into a separate element with restrictions
+      * 619835 : [videobox] Either makes video completely opaque or completely transparent
+      * 619943 : [jpegenc] Crash if playing - > setcaps - > ready - > setcaps
+      * 620002 : [flvdemux] Typo in position query handling makes all position queries fail
+      * 605231 : [deinterlace] Support AYUV, RGB colorspaces
+      * 619533 : [avimux, matroskamux, flvmux] crash when receiving tags on multiple pads at the same time
 
 Changes since 0.10.21:
 
