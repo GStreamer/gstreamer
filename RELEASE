@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.14 "Run Rabbit"
+Release notes for GStreamer Ugly Plug-ins 0.10.15 "Englishman in a Baseball Cap"
         
 
 The GStreamer team is proud to announce a new release
@@ -55,45 +55,19 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * amrwbdec: give decoder a rank so decodebin/playbin will use it
-      * asfdemux: fix flow aggregation
-      * asfdemux: try harder to put sane timestamps and durations on buffers
-      * asfdemux: accept fragments in a continued packet where the subsequent fragments declare a size of 0
-      * asfdemux: improve seek behaviour for audio-only files without an index
-      * asfdemux: careful to avoid crash on bogus data; avoid strlen() on NULL pointers
-      * asfdemux: add support for chained asfs (push mode)
-      * asfdemux: map WM/TrackNumber to GST_TAG_TRACK_NUMBER and prefer over WM/Track
-      * asfdemux: post bitrate tags
-      * mp3parse: seeking fixes: fix non-flushing seek, conserve stop time for non-accurate seek
-      * rtspreal: memory leak fixes; make config header construction valgrind clean
-      * rmdemux: fix AC-3 in RealAudio playback; post bitrate tags
-      * x264enc: fix up avcC header construction and playback by flash players
-      * x264enc: Make upstream GstForceKeyUnit thread-safe
-      * x264enc: make use of Access Unit delimiters configurable
-      * x264enc: adapt to slightly modified x264 API
-      * xingmux: fix unaligned memory access, makes things work better on ARM/SPARC
+      * amrnbenc: give element a rank (SECONDARY) so it's autoplugged
+      * rmdemux: descramble sipro audio before pushing out
+      * x264enc: fix up codec_data / avcC header construction some more
+      * x264enc: Put pixel-aspect-ratio from input into the src pad caps
 
 Bugs fixed in this release
      
-      * 606662 : h264: add stream-format to output caps
-      * 563276 : Internal GStreamer error: negotiation problem - after opening avi file
-      * 586464 : [xingmux] Unit test failures on sparc and arm/eabi
-      * 598761 : [mpegaudioparse] Reduce processing time by 2
-      * 599095 : x264enc: Adapt to slightly modified x264 API
-      * 599297 : [asfdemux] Doesn't populate video bitrate field
-      * 599299 : [rmdemux] Doesn't populate video bitrate field
-      * 599333 : Segfault with asfdemuxer
-      * 599676 : RealAudio file with AC-3 audio no longer plays
-      * 600037 : [asfdemux] ASF MPEG4 Part 2 file captured from Linksys WVC200 Camera corrupted/fails
-      * 601419 : x264enc crashes
-      * 602280 : [asfdemux] fix segmentation fault when utf8 tag name is null
-      * 602556 : x264enc and ffenc upstream GstForceKeyUnit handling are not thread-safe
-      * 603695 : Innaccurate seeking in MP3 files results in cut off playback
-      * 608564 : [ffdec_cook] memory leak
-      * 610432 : [asfdemux] handle negative payload timestamps
-      * 611473 : [regression] outgoing buffers with a duration of zero
-      * 608533 : [real] memory leak in real audio stream via rtsp
-      * 610089 : Flash players are unable to show x264 encoded streams
+      * 612995 : x264enc: pixel-aspect-ratio does not appear in src pad caps
+      * 613815 : A call in gst/realmedia/rmutils.c discards qualifiers from pointer target type
+      * 615410 : x264 orders NALs differently than x264enc expects
+      * 617078 : Wrong include paths in amr elements
+      * 619776 : [x264enc] is unable to do Baseline with recent x264
+      * 618098 : [rmdemux] Add descrambling for Sipro codec
 
 Download
 
@@ -122,18 +96,14 @@ Applications
   
 Contributors to this release
     
-      * Arnaud Patard
-      * Benjamin Gaignard
+      * Benjamin Otte
       * Edward Hervey
-      * Jan Schmidt
       * Mark Nauwelaerts
-      * Michael Smith
       * Olivier Crête
-      * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
       * Tim-Philipp Müller
-      * Vittorio Palmisano
       * Wim Taymans
+      * Руслан Ижбулатов
  

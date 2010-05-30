@@ -3,10 +3,10 @@
   <description>Decode DVD LPCM frames into standard PCM</description>
   <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
   <basename>libgstdvdlpcmdec.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins git</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,8 +14,7 @@
       <longname>DVD LPCM Audio decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>Decode DVD LPCM frames into standard PCM audio</description>
-      <author>Jan Schmidt &lt;jan@noraisin.net&gt;
-    Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <author>Jan Schmidt &lt;jan@noraisin.net&gt;, Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

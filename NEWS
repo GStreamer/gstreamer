@@ -1,4 +1,20 @@
-This is GStreamer Ugly Plug-ins 0.10.14 "Run Rabbit"
+This is GStreamer Ugly Plug-ins 0.10.15 "Englishman in a Baseball Cap"
+
+Changes since 0.10.14:
+
+      * amrnbenc: give element a rank (SECONDARY) so it's autoplugged
+      * rmdemux: descramble sipro audio before pushing out
+      * x264enc: fix up codec_data / avcC header construction some more
+      * x264enc: Put pixel-aspect-ratio from input into the src pad caps
+
+Bugs fixed since 0.10.14:
+
+      * 612995 : x264enc: pixel-aspect-ratio does not appear in src pad caps
+      * 613815 : A call in gst/realmedia/rmutils.c discards qualifiers from pointer target type
+      * 615410 : x264 orders NALs differently than x264enc expects
+      * 617078 : Wrong include paths in amr elements
+      * 619776 : [x264enc] is unable to do Baseline with recent x264
+      * 618098 : [rmdemux] Add descrambling for Sipro codec
 
 Changes since 0.10.13:
 

@@ -1,9 +1,545 @@
-=== release 0.10.14 ===
+=== release 0.10.15 ===
 
-2010-03-06  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-05-30  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.14, "Run Rabbit"
+	  releasing 0.10.15, "Englishman in a Baseball Cap"
+
+2010-05-30 12:10:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: make implicit GLib and liboil requirements explicit
+	  core/base 0.10.26 require GLib >= 2.18 and liboil >= 0.3.14
+
+2010-05-26 23:16:46 -0400  Olivier Crête <tester@tester.ca>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: disable I weighted pred
+	  If it is enabled, then it will be main profile instead of baseline.
+	  This ensures maximum compatibility of the output stream until the
+	  encoder configuration interface gets an overhaul with explicit
+	  output profile selection.
+	  Fixes #619776.
+
+2010-05-26 12:16:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.14.3 pre-release
+
+2010-05-26 11:52:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
+
+2010-05-26 11:55:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 357b0db to fd7ca04
+
+2010-05-14 20:06:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  0.10.14.2 pre-release
+
+2010-05-14 18:25:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4d67bd6 to 357b0db
+
+2010-05-14 16:02:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmutils.c:
+	* gst/realmedia/rmutils.h:
+	  rmdemux: add better sipr nibble swap routine
+
+2010-05-13 17:57:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: descramble SIPR before pushing out
+	  Collect and descramble the SIPR packets before pushing.
+	  Descramble ATRAC audio.
+	  Fixes #618098
+
+2010-05-13 17:57:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmutils.c:
+	* gst/realmedia/rmutils.h:
+	  rm: add function to descramble sipr
+
+2010-01-08 20:51:56 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Re-send the received upstream event as-is downstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=606689
+
+2010-05-07 15:33:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/amrnb/amrnb.c:
+	  amrnbenc: Set rank to GST_RANK_SECONDARY
+
+2010-04-30 19:53:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: use GLib's base64 functions if available
+	  Since gst_rtsp_base64_decode_ip() just got deprecated in -base git.
+
+2010-04-28 17:10:36 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrwbdec/amrwbdec.h:
+	  amr: Use correct includes (as pkg-config suggests)
+	  Fixes #617078
+
+2010-04-27 13:15:47 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/ac3parse/.gitignore:
+	* gst/ac3parse/Makefile.am:
+	* gst/ac3parse/README:
+	* gst/ac3parse/ac3parse.vcproj:
+	* gst/ac3parse/gstac3parse.c:
+	* gst/ac3parse/gstac3parse.h:
+	  ac3parse: remove unported 0.8 plugin
+	  New ac3parse lives in gst-plugin-bad. Remove this to avoid confusion.
+
+2010-04-27 12:25:37 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  docs: adding a mp3decoder as well is useful
+
+2010-04-27 11:39:51 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	  docs: massage section index
+
+2010-04-27 11:39:11 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/amrwbdec/amrwbdec.h:
+	  amrwbdec: move define to source to avoid hiding it from the docs
+
+2010-04-27 11:38:28 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/cdio/gstcdiocddasrc.c:
+	  docs: remove short_desc, it is taken from element details
+
+2010-04-27 11:37:52 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  docs: fix sections docs for synaesthesia
+
+2010-04-27 11:02:15 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  docs: add docs for mp3parse
+
+2010-04-20 17:23:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-plugins-ugly.doap:
+	  doap: update repository info from cvs->git and maintainers
+
+2010-04-23 14:41:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From fc85867 to 4d67bd6
+
+2010-04-13 16:59:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/x264enc.c:
+	  x264enc: adaptive NALU type checking
+	  In particular, be less picky about SEI NALU order, which makes test more
+	  robust with respect to changes in libx264.
+	  See also #615410.
+
+2010-04-16 21:10:58 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: adaptive x264 header NAL layout handling
+	  Fixes #615410.
+
+2010-04-15 16:31:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  asfdepay: we require a dynamic payload type
+	  Add an extra caps property that restricts the depayloader to only accept dynamic
+	  payload types.
+
+2010-04-15 07:20:20 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Drop -Wcast-align
+	  Commit message copied from core's commit from Benjamin Otte:
+	  246f5dba96a5b50bb74621af67b30942cca72af5
+	  Apparently gcc warns that GstMiniObject is not castable to
+	  GstEvent/Message/Buffer due to them containing 64bit variables, even
+	  though ARM hackers claim that those only need 4byte alignment. And as
+	  long as gcc behaves that way, this warning is not very useful.
+	  So we'll remove the warning until this problem is fixed.
+	  Fixes #615698
+
+2010-04-14 09:27:14 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: copy over all buffer flags when copying buffers.
+	  Avoids losing the tff/rff video buffer flags
+
+2010-03-14 12:16:21 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: Make a table static to avoid having to always allocate it.
+
+2010-04-13 16:31:25 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: fix up avcC header construction
+	  Fix off-by-one introduced by commit 35dd89951d8bb1c094da65480e4197efdfb4e93c
+	  for BUILD_X264 < 76.
+	  Also fixes #610089.
+
+2010-04-13 13:16:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: parameterize libx264 provided NAL layout in codec-data creation
+
+2010-04-12 12:43:05 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure: Remove -Wundef flag
+	  Same fix as for #615161
+
+2010-04-09 11:23:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From fdf023d to fc85867
+
+2010-04-09 09:55:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/gettext.h:
+	  i18n: #if ENABLE_NLS -> #ifdef ENABLE_NLS to fix compiler warning
+
+2010-03-30 00:36:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	* ext/Makefile.am:
+	* gst/Makefile.am:
+	  build: build plugins in parallel where possible, if make -jN is used
+
+2010-03-26 17:08:23 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Makefile.am:
+	  build: add cruft alert for common/shave*
+
+2010-03-25 19:40:33 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/MANIFEST:
+	  Fix make distcheck
+	  Remove removed file win32/common/config.h.in from MANIFEST.
+
+2010-03-24 19:35:03 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/synaesthesia/synaescope.c:
+	* gst/synaesthesia/synaescope.h:
+	  synaestesia: Fix old-style prototype
+
+2010-03-24 19:07:11 +0300  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/realmedia/rmutils.c:
+	  Fix pointer type.
+	  Fixes #613815
+
+2010-03-24 18:55:32 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 55cd514 to c1d07dd
+
+2010-03-24 11:27:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlame.h:
+	* ext/lame/gstlamemp3enc.h:
+	* ext/lame/plugin.c:
+	* ext/mad/gstmad.c:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegparse.c:
+	* gst/realmedia/asmrules.c:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/pnmsrc.h:
+	* gst/realmedia/rdtdepay.h:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rtspreal.c:
+	  build: Add all kinds of compiler warning flags and fix the resulting warnings
+
+2010-03-19 00:03:53 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/amrnb/Makefile.am:
+	* ext/amrwbdec/Makefile.am:
+	* ext/sidplay/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/mpegaudioparse/Makefile.am:
+	  build: fix up Makefile.am
+	  Mostly just add $(GST_BASE_CFLAGS) where they're missing and fix
+	  the order a bit here and there (see docs/random/moving-plugins).
+
+2010-03-19 00:02:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* win32/common/config.h.in:
+	  win32: remove win32-specific config.h.in copy that's not used any longer
+	  The win32 config.h is now generated from the top-level config.h.in.
+
+2010-03-18 15:53:14 +0100  Benjamin Otte <otte@redhat.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrwbdec/amrwbdec.c:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlame.c:
+	* ext/mad/gstmad.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* gst/ac3parse/gstac3parse.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstrtpasfdepay.c:
+	* gst/asfdemux/gstrtspwms.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/iec958/ac3iec.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstxingmux.c:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegparse.c:
+	* gst/mpegstream/gstrfc2250enc.c:
+	* gst/realmedia/pnmsrc.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtdepay.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rtspreal.c:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  gst_element_class_set_details => gst_element_class_set_details_simple
+
+2010-03-16 15:05:06 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Put pixel-aspect-ratio from input into the src pad caps
+	  Fixes bug #612995.
+
+2010-03-12 13:59:53 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e272f71 to 55cd514
+
+2010-03-11 11:21:19 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From df8a7c8 to e272f71
+
+2010-03-10 22:13:45 +0100  Benjamin Otte <otte@redhat.com>
+
+	* configure.ac:
+	  Update CXXFLAGS, too
+
+2010-03-10 21:01:20 +0100  Benjamin Otte <otte@redhat.com>
+
+	* configure.ac:
+	  Update for recent changes to common submodule
+	  This just replaces every "$ERROR_CFLAGS" usage with a usage of
+	  "$WARNING_CFLAGS $ERROR_CFLAGS" to get the same functionality as
+	  previously.
+	  Actually using that separation will happen later.
+
+2010-03-10 21:52:30 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9720a7d to df8a7c8
+
+2010-03-10 20:44:18 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 0b6e072 to 9720a7d
+
+2010-03-10 16:10:17 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7cc5eb4 to 0b6e072
+
+2010-03-10 01:10:52 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7aa65b5 to 7cc5eb4
+
+2010-03-09 21:40:26 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 44ecce7 to 7aa65b5
+
+2010-02-26 15:43:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use automake 1.11 silent rules instead of shave if available
+	  This makes sure that we use something that is still maintained and
+	  also brings back libtool 1.5 support.
+
+2010-03-09 17:42:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.10.14 ===
+
+2010-03-06 01:13:25 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.10.14
+
+2010-03-06 01:10:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2010-03-03 22:52:12 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

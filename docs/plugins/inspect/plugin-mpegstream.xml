@@ -3,10 +3,10 @@
   <description>MPEG system stream parser</description>
   <filename>../../gst/mpegstream/.libs/libgstmpegstream.so</filename>
   <basename>libgstmpegstream.so</basename>
-  <version>0.10.14.1</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins git</package>
+  <package>GStreamer Ugly Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -77,8 +77,7 @@
       <longname>MPEG Demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demultiplexes MPEG1 and MPEG2 System Streams</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
-    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -111,8 +110,7 @@
       <longname>MPEG System Parser</longname>
       <class>Codec/Parser</class>
       <description>Parses MPEG1 and MPEG2 System Streams</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
-    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
