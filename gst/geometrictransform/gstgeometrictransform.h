@@ -59,6 +59,15 @@ typedef gboolean (*GstGeometricTransformMapFunc) (GstGeometricTransform * gt,
     gint x, gint y, gdouble * _input_x, gdouble *_input_y);
 
 /**
+ * GstGeometricTransformPrepareFunc:
+ *
+ * Called right before starting to calculate the mapping so that
+ * instances might precalculate some values.
+ */
+typedef gboolean (*GstGeometricTransformPrepareFunc) (
+    GstGeometricTransform * gt);
+
+/**
  * GstGeometricTransform:
  *
  * Opaque datastructure.
@@ -78,6 +87,7 @@ struct _GstGeometricTransformClass {
   GstVideoFilterClass parent_class;
 
   GstGeometricTransformMapFunc map_func;
+  GstGeometricTransformPrepareFunc prepare_func;
 };
 
 GType gst_geometric_transform_get_type (void);

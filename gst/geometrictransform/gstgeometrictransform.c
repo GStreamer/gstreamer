@@ -61,6 +61,10 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   /* subclass must have defined the map_func */
   g_return_val_if_fail (klass->map_func, FALSE);
 
+  if (klass->prepare_func)
+    if (!klass->prepare_func (gt))
+      return FALSE;
+
   /*
    * (x,y) pairs of the inverse mapping
    */
@@ -143,7 +147,6 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
 
   gt = GST_GEOMETRIC_TRANSFORM (trans);
 
-  /* subclass must have defined the map_func */
   g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
 
   ptr = gt->map;
@@ -155,6 +158,16 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
     }
   }
   return ret;
+}
+
+static gboolean
+gst_geometric_transform_stop (GstBaseTransform * trans)
+{
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (trans);
+
+  g_free (gt->map);
+
+  return TRUE;
 }
 
 static void
@@ -177,6 +190,7 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_geometric_transform_stop);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_geometric_transform_set_caps);
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_geometric_transform_transform);
