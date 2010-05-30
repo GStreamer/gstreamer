@@ -54,6 +54,8 @@ G_BEGIN_DECLS
   (gst_pinch_get_type())
 #define GST_PINCH(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PINCH,GstPinch))
+#define GST_PINCH_CAST(obj) \
+  ((GstPinch *)(obj))
 #define GST_PINCH_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PINCH,GstPinchClass))
 #define GST_IS_PINCH(obj) \
@@ -72,6 +74,9 @@ struct _GstPinch
   gdouble y_center;
   gdouble radius;
   gdouble intensity;
+
+  gdouble precalc_x_center;
+  gdouble precalc_y_center;
 };
 
 struct _GstPinchClass 

@@ -83,7 +83,7 @@ gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstPinch *pinch;
 
-  pinch = GST_PINCH (object);
+  pinch = GST_PINCH_CAST (object);
 
   switch (prop_id) {
     case PROP_X_CENTER:
@@ -110,7 +110,7 @@ gst_pinch_get_property (GObject * object, guint prop_id,
 {
   GstPinch *pinch;
 
-  pinch = GST_PINCH (object);
+  pinch = GST_PINCH_CAST (object);
 
   switch (prop_id) {
     case PROP_X_CENTER:
@@ -152,31 +152,35 @@ gst_pinch_base_init (gpointer gclass)
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
-/* FIXME optimize a little using cast macro and pre calculating some
- * values so we don't need them every mapping */
 static gboolean
-dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
+pinch_precalc (GstGeometricTransform * gt)
+{
+  GstPinch *pinch = GST_PINCH_CAST (gt);
+
+  pinch->precalc_x_center = pinch->x_center * gt->width;
+  pinch->precalc_y_center = pinch->y_center * gt->height;
+
+  return TRUE;
+}
+
+static gboolean
+pinch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
 {
-  GstPinch *pinch = GST_PINCH (gt);
+  GstPinch *pinch = GST_PINCH_CAST (gt);
   gdouble r2;
   gdouble distance;
-  gdouble x_center;
-  gdouble y_center;
   gdouble dx, dy;
 
-  /* get the center in pixels instead of % */
-  x_center = pinch->x_center * gt->width;
-  y_center = pinch->y_center * gt->height;
-
-  dx = x - x_center;
-  dy = y - y_center;
+  dx = x - pinch->precalc_x_center;
+  dy = y - pinch->precalc_y_center;
   distance = dx * dx + dy * dy;
 
   r2 = pinch->radius * pinch->radius;
 
   GST_LOG_OBJECT (pinch, "Center %0.5lf (%0.2lf) %0.5lf (%0.2lf)",
-      x_center, pinch->x_center, y_center, pinch->y_center);
+      pinch->precalc_x_center, pinch->x_center, pinch->precalc_y_center,
+      pinch->y_center);
   GST_LOG_OBJECT (pinch, "Input %d %d, distance=%lf, radius2=%lf, dx=%lf"
       ", dy=%lf", x, y, distance, r2, dx, dy);
 
@@ -192,8 +196,8 @@ dummy_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
     GST_LOG_OBJECT (pinch, "D=%lf, t=%lf, dx=%lf" ", dy=%lf", d, t, dx, dy);
 
-    *in_x = x_center + dx;
-    *in_y = y_center + dy;
+    *in_x = pinch->precalc_x_center + dx;
+    *in_y = pinch->precalc_y_center + dy;
 
     *in_x = CLAMP (*in_x, 0, gt->width - 1);
     *in_y = CLAMP (*in_y, 0, gt->height - 1);
@@ -222,7 +226,8 @@ gst_pinch_class_init (GstPinchClass * klass)
 
 
   /* FIXME I don't like the idea of x-center and y-center being in % and
-   * radius and intensity in absolute values, I think no one likes it. */
+   * radius and intensity in absolute values, I think no one likes it, but
+   * I can't see a way to have nice default values without % */
   g_object_class_install_property (gobject_class, PROP_X_CENTER,
       g_param_spec_double ("x-center", "x center",
           "X axis center of the pinch effect",
@@ -243,7 +248,8 @@ gst_pinch_class_init (GstPinchClass * klass)
           0.0, G_MAXDOUBLE, DEFAULT_INTENSITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstgt_class->map_func = dummy_map;
+  gstgt_class->map_func = pinch_map;
+  gstgt_class->prepare_func = pinch_precalc;
 }
 
 static void
