@@ -151,12 +151,12 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.12])
+AG_GST_GLIB_CHECK([2.18])
 
 dnl liboil is required
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.14, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x$HAVE_LIBOIL" != "xyes"; then
-  AC_ERROR([liboil-0.3.8 or later is required])
+  AC_ERROR([liboil-0.3.14 or later is required])
 fi
 
 dnl checks for gstreamer
