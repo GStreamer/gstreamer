@@ -43,13 +43,26 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_TRANSITION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionClass))
 
+/**
+ * GESTimelineTransition:
+ * @vtype: a #GEnumValue indicating the type of video transition to apply.
+ *
+ */
 struct _GESTimelineTransition {
   GESTimelineObject parent;
+  /*< public >*/
   GEnumValue *vtype;
 };
 
+/**
+ * GESTimelineTransitionClass:
+ * @parent_class: parent class
+ *
+ */
+
 struct _GESTimelineTransitionClass {
   GESTimelineObjectClass parent_class;
+  /*< public >*/
 };
 
 GType ges_timeline_transition_get_type (void);

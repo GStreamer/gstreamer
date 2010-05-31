@@ -44,9 +44,26 @@ G_BEGIN_DECLS
 #define GES_TRACK_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_SOURCE, GESTrackSourceClass))
 
+/**
+ * GESTrackSource:
+ * @parent: parent
+ *
+ * Base class for single-media sources
+ *
+ */
+
 struct _GESTrackSource {
+  /* <public> */
   GESTrackObject parent;
 };
+
+/**
+ * GESTrackSourceClass:
+ * @parent_class: the parent class
+ *
+ * Base class for track objects which produce data but do not consuem it.
+ *
+ */
 
 struct _GESTrackSourceClass {
   GESTrackObjectClass parent_class;
@@ -59,4 +76,3 @@ GESTrackSource* ges_track_source_new (void);
 G_END_DECLS
 
 #endif /* _GES_TRACK_SOURCE */
-

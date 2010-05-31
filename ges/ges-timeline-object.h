@@ -115,7 +115,7 @@ typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
 
 /**
  * GESTimelineObject:
- * @layer: the #GESTImelineLayer where this object is being used.
+ * @layer: the #GESTimelineLayer where this object is being used.
  *
  * The GESTimelineObject subclass. Subclasses can access these fields.
  */

@@ -49,16 +49,37 @@ G_BEGIN_DECLS
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransitionClass)
 
+/**
+ * GESTrackTransition:
+ * @parent: parent
+ * @vtype: a #GEnumValue representing the type of transition to apply.
+ *
+ * Track level representation of a transition. Has a concrete implementation
+ * for both audio and video streams.
+ *
+ */
+
 struct _GESTrackTransition
 {
   GESTrackObject parent;
-  GstController                 *vcontroller;
 
-  GstInterpolationControlSource *vcontrol_source;
+  /*< public >*/
+  /* given to to smpte alpha element */
   GEnumValue                    *vtype;
+
+  /*< private >*/
+  
+  /* these enable video interpolation */
+  GstController                 *vcontroller;
+  GstInterpolationControlSource *vcontrol_source;
+  
+  /* these will be different depending on whether smptealpha or alpha element
+   * is used */
   gdouble                       vstart_value;
   gdouble                       vend_value;
 
+  /* these enable volume interpolation. Unlike video, both inputs are adjusted
+   * simultaneously */
   GstController                 *a_acontroller;
   GstInterpolationControlSource *a_acontrol_source;
 
@@ -66,8 +87,14 @@ struct _GESTrackTransition
   GstInterpolationControlSource *a_bcontrol_source;
 };
 
+/**
+ * GESTrackTransitionClass
+ * @parent_class: parent class
+ */
+
 struct _GESTrackTransitionClass {
     GESTrackObjectClass parent_class;
+    /* <public> */
 };
 
 GType ges_track_transition_get_type (void);

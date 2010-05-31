@@ -47,7 +47,7 @@ G_BEGIN_DECLS
 
 /**
  * GESTimeline:
- * @tracks: a list of #GESTrack
+ *
  */
 struct _GESTimeline {
   GstBin parent;
@@ -64,8 +64,15 @@ struct _GESTimeline {
   gboolean async_pending;
 };
 
+/**
+ * GESTimelineClass:
+ * @parent_class: parent class
+ */
+
 struct _GESTimelineClass {
   GstBinClass parent_class;
+
+  /*< private >*/
 
   void (*track_added)	(GESTimeline *timeline, GESTrack * track);
   void (*track_removed)	(GESTimeline *timeline, GESTrack * track);

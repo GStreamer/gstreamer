@@ -120,6 +120,7 @@ struct _GESTrackObject {
 
 /**
  * GESTrackObjectClass:
+ * @parent_class: parent class
  * @create_gnl_object: method to create the GNonLin container object.
  *
  * Subclasses can override the @create_gnl_object method to override what type

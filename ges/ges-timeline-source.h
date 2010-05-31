@@ -44,12 +44,24 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_SOURCE, GESTimelineSourceClass))
 
+/**
+ * GESTimelineSource:
+ *
+ */
+
 struct _GESTimelineSource {
   GESTimelineObject parent;
+  /*< public >*/
 };
+
+/**
+ * GESTimelineSourceClass:
+ * @parent_class: parent class
+ */
 
 struct _GESTimelineSourceClass {
   GESTimelineObjectClass parent_class;
+  /*< public >*/
 };
 
 GType ges_timeline_source_get_type (void);

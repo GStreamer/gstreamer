@@ -20,7 +20,10 @@
 
 /**
  * SECTION:ges-timeline-filesource
- * @short_description: 
+ * @short_description: An object for manipulating media files in a GESTimeline
+ * 
+ * Represents all the output treams from a particular uri. It is assumed that
+ * the URI points to a file of some type.
  */
 
 #include "ges-internal.h"

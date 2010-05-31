@@ -64,13 +64,24 @@ typedef gboolean (*FillTrackObjectUserFunc) (GESTimelineObject * object,
 					     GstElement * gnlobj,
 					     gpointer user_data);
 
+/**
+ * GESCustomTimelineSource:
+ *
+ */
 
 struct _GESCustomTimelineSource {
   GESTimelineSource parent;
 
+  /*< private >*/
   FillTrackObjectUserFunc filltrackobjectfunc;
   gpointer user_data;
 };
+
+/**
+ * GESCustomTimelineSourceClass:
+ * @parent_class: parent class
+ *
+ */
 
 struct _GESCustomTimelineSourceClass {
   GESTimelineSourceClass parent_class;

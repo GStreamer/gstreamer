@@ -23,7 +23,14 @@
  * @short_description: High-level #GESTimelineLayer
  *
  * #GESSimpleTimelineLayer allows using #GESTimelineObject(s) with a list-like
- * API.
+ * API. Clients can add any type of GESTimelineObject to a
+ * GESSimpleTimelineLayer, and the layer will automatically compute the
+ * appropriate start times. 
+ 
+ * Users should be aware that GESTimelineTransition objects are considered to
+ * have a negative duration for the purposes of positioning GESTimelineSource
+ * objects (i.e., adding a GESTimelineTransition creates an overlap between
+ * the two adjacent sources 
  */
 
 #include "ges-internal.h"
@@ -171,6 +178,11 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
  * Adds the object at the given position in the layer. The position is where
  * the object will be inserted. To put the object before all objects, use
  * position 0. To put after all objects, use position -1.
+ * 
+ * When adding transitions, it is important that the adjacent objects
+ * (objects at position, and position + 1) be (1) A derivative of
+ * GESTimelineSource or other non-transition, and (2) have a duration at least
+ * as long as the duration of the transition.
  *
  * The layer will steal a reference to the provided object.
  *

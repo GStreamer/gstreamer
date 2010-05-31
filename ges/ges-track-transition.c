@@ -18,6 +18,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/** 
+ * SECTION:ges-track-transition
+ * @short_description: Concrete, track-level implemenation of audio and video
+ * transitinos.
+ */
+
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-transition.h"

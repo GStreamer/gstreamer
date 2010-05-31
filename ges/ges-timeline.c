@@ -27,7 +27,7 @@
  * Contains a list of #GESTimelineLayer which users should use to arrange the
  * various timeline objects through time.
  *
- * The output type is determined by the #GESTimelineTrack that are set on
+ * The output type is determined by the #GESTrack that are set on
  * the #GESTimeline.
  */
 

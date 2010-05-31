@@ -22,7 +22,7 @@
  * SECTION:ges-timeline-object
  * @short_description: Base Class for objects in a #GESTimelineLayer
  *
- * Responsible for creating the #GESTrackObject(s) for given #GESTimelineTrack(s)
+ * Responsible for creating the #GESTrackObject(s) for given #GESTrack(s)
  *
  * Keeps a reference to the #GESTrackObject(s) it created and sets/updates their properties.
  */

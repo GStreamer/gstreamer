@@ -7,6 +7,12 @@ ges_init
 </SECTION>
 
 <SECTION>
+<FILE>ges-utils</FILE>
+<TITLE>Utilities</TITLE>
+
+</SECTION>
+
+<SECTION>
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack

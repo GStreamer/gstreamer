@@ -72,6 +72,12 @@ typedef enum {
   GES_TRACK_TYPE_CUSTOM  = 1 << 4,
 } GESTrackType;
 
+/**
+ * GESTrack:
+ * @type: a #GESTrackType indicting the basic type of the track.
+ *
+ */
+
 struct _GESTrack {
   GstBin parent;
 
@@ -86,6 +92,11 @@ struct _GESTrack {
   GstElement * composition;	/* The composition associated with this track */
   GstPad * srcpad;		/* The source GhostPad */
 };
+
+/**
+ * GESTrackClass:
+ * @parent_class: parent class
+ */
 
 struct _GESTrackClass {
   GstBinClass parent_class;

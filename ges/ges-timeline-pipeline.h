@@ -62,6 +62,11 @@ typedef enum {
   TIMELINE_MODE_SMART_RENDER	= 1 << 3
 } GESPipelineFlags;
 
+/**
+ * GESTimelinePipeline:
+ *
+ */
+
 struct _GESTimelinePipeline {
   GstPipeline parent;
 
@@ -79,8 +84,15 @@ struct _GESTimelinePipeline {
   GstEncodingProfile *profile;
 };
 
+/**
+ * GESTimelinePipelineClass:
+ * @parent_class: parent class
+ *
+ */
+
 struct _GESTimelinePipelineClass {
   GstPipelineClass parent_class;
+  /* <public> */
 };
 
 GType ges_timeline_pipeline_get_type (void);

@@ -43,22 +43,33 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerClass))
 
+/**
+ * GESTimelineLayer:
+ * @timeline: the #GESTimeline where this layer is being used.
+ */
 struct _GESTimelineLayer {
-  GObject parent;
+  GObject parent; 
+
+  /*< public >*/
 
   GESTimeline *timeline;	/* The timeline where this layer is being used
 				 */
 
+  /*< private >*/
   GSList * objects_start;	/* The TimelineObjects sorted by start and
 				 * priority */
 
   guint32 priority;		/* The priority of the layer within the 
 				 * containing timeline */
 
-  /*< private >*/
   guint32 min_gnl_priority, max_gnl_priority;
 };
 
+/**
+ * GESTimelineLayerClass:
+ * @parent_class: parent class
+ *
+ */
 struct _GESTimelineLayerClass {
   GObjectClass parent_class;
 

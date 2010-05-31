@@ -22,7 +22,10 @@
  * SECTION:ges-timeline-layer
  * @short_description: Non-overlaping sequence of #GESTimelineObject
  *
- * Responsible for the ordering of the various contained TimelineObject(s)
+ * Responsible for the ordering of the various contained TimelineObject(s). A
+ * timeline layer has a "priority" property, which is used to manage the
+ * priorities of individual TimelineObjects. Two layers should not have the
+ * same priority within a given timeline.
  */
 
 #include "ges-internal.h"
@@ -110,7 +113,9 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
    * GESTimelineLayer:priority
    *
    * The priority of the layer in the #GESTimeline. 0 is the highest
-   * priority.
+   * priority. Conceptually, a #GESTimeline is a stack of GESTimelineLayers,
+   * and the priority of the layer represents its position in the stack. Two
+   * layers should not have the same priority within a given GESTimeline.
    */
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",

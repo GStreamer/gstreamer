@@ -45,6 +45,10 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_FILE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_FILE_SOURCE, GESTimelineFileSourceClass))
 
+/**
+ * GESTimelineSource:
+ * 
+ */
 
 struct _GESTimelineFileSource {
   GESTimelineSource parent;
@@ -61,8 +65,15 @@ struct _GESTimelineFileSource {
   GESTrackType supportedformats;
 };
 
+/**
+ * GESTimelineFileSourceClass:
+ * @parent_class: parent class
+ */
+
 struct _GESTimelineFileSourceClass {
   GESTimelineSourceClass parent_class;
+
+  /*< public >*/
 };
 
 GType ges_tl_filesource_get_type (void);
