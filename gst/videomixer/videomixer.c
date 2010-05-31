@@ -374,6 +374,67 @@ beach:
   return ret;
 }
 
+static GstCaps *
+gst_videomixer_pad_sink_getcaps (GstPad * pad)
+{
+  GstVideoMixer *mix;
+  GstVideoMixerPad *mixpad;
+  GstCaps *res = NULL;
+  int ncaps, i;
+  GstStructure *st;
+
+  mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
+  mixpad = GST_VIDEO_MIXER_PAD (pad);
+
+  if (!mixpad)
+    goto beach;
+
+  res = gst_pad_peer_get_caps (mix->srcpad);
+  if (G_UNLIKELY (res == NULL)) {
+    /* If no peer, then return template */
+    res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    goto beach;
+  }
+
+  ncaps = gst_caps_get_size (res);
+
+  /* This Upstream can only produce:
+   * * The formats that downstream can do (intersected above)
+   * * The PAR that downstream can do
+   * * Width within the maximum of what downstream can do
+   * * Height within the maximum of what downstream can do
+   * * a framerate at least greater than what downstream can do */
+
+  GST_VIDEO_MIXER_STATE_LOCK (mix);
+  if (mix->out_width) {
+    /* If we already have some configured with/height/framerate/par,
+     * then limit the returned caps */
+    for (i = 0; i < ncaps; i++) {
+      st = gst_caps_get_structure (res, i);
+      gst_structure_set (st,
+          "width", GST_TYPE_INT_RANGE, mix->in_width, G_MAXINT32,
+          "height", GST_TYPE_INT_RANGE, mix->in_height, G_MAXINT32,
+          "framerate", GST_TYPE_FRACTION_RANGE, mix->fps_n, mix->fps_d,
+          G_MAXINT32, 1, "pixel-aspect-ratio", GST_TYPE_FRACTION, mix->par_n,
+          mix->par_d, NULL);
+    }
+  } else {
+    GstCaps *tmp;
+    /* If we don't have configured values, just intersect with our
+     * pad template */
+    tmp = res;
+    res = gst_caps_intersect (res, gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (tmp);
+  }
+  GST_VIDEO_MIXER_STATE_UNLOCK (mix);
+
+
+beach:
+  GST_DEBUG_OBJECT (pad, "Returning %" GST_PTR_FORMAT, res);
+
+  return res;
+}
+
 /*
 * We accept the caps if it has the same format as other sink pads in 
 * the element.
@@ -429,6 +490,8 @@ gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
       gst_videomixer_pad_sink_setcaps);
   gst_pad_set_acceptcaps_function (GST_PAD (mixerpad),
       GST_DEBUG_FUNCPTR (gst_videomixer_pad_sink_acceptcaps));
+  gst_pad_set_getcaps_function (GST_PAD (mixerpad),
+      gst_videomixer_pad_sink_getcaps);
 
   mixerpad->zorder = DEFAULT_PAD_ZORDER;
   mixerpad->xpos = DEFAULT_PAD_XPOS;
