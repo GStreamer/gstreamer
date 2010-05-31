@@ -4669,22 +4669,25 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           stream->index_table) {
         GstMatroskaTrackVideoContext *videocontext =
             (GstMatroskaTrackVideoContext *) stream;
-        GstClockTime running_time;
         GstClockTime earliest_time;
-        running_time = gst_segment_to_running_time (&demux->segment,
-            GST_FORMAT_TIME, lace_time);
+        GstClockTime earliest_stream_time;
+
         GST_OBJECT_LOCK (demux);
         earliest_time = videocontext->earliest_time;
         GST_OBJECT_UNLOCK (demux);
-        if (GST_CLOCK_TIME_IS_VALID (running_time) &&
-            GST_CLOCK_TIME_IS_VALID (earliest_time) &&
-            running_time <= earliest_time) {
-          /* find index entry (keyframe) <= earliest_time */
+        earliest_stream_time = gst_segment_to_position (&demux->segment,
+            GST_FORMAT_TIME, earliest_time);
+
+        if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
+            GST_CLOCK_TIME_IS_VALID (earliest_stream_time) &&
+            lace_time <= earliest_stream_time) {
+          /* find index entry (keyframe) <= earliest_stream_time */
           GstMatroskaIndex *entry =
               gst_util_array_binary_search (stream->index_table->data,
               stream->index_table->len, sizeof (GstMatroskaIndex),
               (GCompareDataFunc) gst_matroska_index_seek_find,
-              GST_SEARCH_MODE_BEFORE, &earliest_time, NULL);
+              GST_SEARCH_MODE_BEFORE, &earliest_stream_time, NULL);
+
           /* if that entry (keyframe) is after the current the current
              buffer, we can skip pushing (and thus decoding) all
              buffers until that keyframe. */
