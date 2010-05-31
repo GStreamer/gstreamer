@@ -193,6 +193,25 @@ DOC_OVERRIDES =
 
 include $(top_srcdir)/common/gtk-doc-plugins.mak
 
+# some additional clean rules from gtk-doc.mak
+distclean-local:
+	rm -f $(REPORT_FILES) \
+                $(DOC_MODULE)-decl-list.txt $(DOC_MODULE)-decl.txt
+	rm -rf tmpl/*.sgml.bak
+	rm -f $(DOC_MODULE).hierarchy
+	rm -f *.stamp || true
+	if test x"$(srcdir)" != x. ; then \
+	    rm -f $(DOC_MODULE)-docs.sgml ; \
+	    rm -f $(DOC_MODULE).types ; \
+	    rm -f $(DOC_MODULE).interfaces ; \
+            rm -f $(DOC_MODULE)-overrides.txt ; \
+	    rm -f $(DOC_MODULE).prerequisites ; \
+	    rm -f $(DOC_MODULE)-sections.txt ; \
+	    rm -rf tmpl/*.sgml ; \
+	fi
+	rm -rf *.o
+
+
 SUBDIRS =
 
 FIGURES_SOURCEFILES = camerabin.dot
