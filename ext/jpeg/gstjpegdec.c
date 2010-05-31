@@ -201,20 +201,23 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
 static boolean
 gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
 {
-/*
-  struct GstJpegDecSourceMgr *src_mgr;
   GstJpegDec *dec;
+  guint av;
 
-  src_mgr = (struct GstJpegDecSourceMgr*) &cinfo->src;
-  dec = GST_JPEG_DEC (src_mgr->dec);
-*/
-  GST_DEBUG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "fill_input_buffer");
-/*
-  g_return_val_if_fail (dec != NULL, TRUE);
+  dec = CINFO_GET_JPEGDEC (cinfo);
+  g_return_val_if_fail (dec != NULL, FALSE);
 
-  src_mgr->pub.next_input_byte = GST_BUFFER_DATA (dec->tempbuf);
-  src_mgr->pub.bytes_in_buffer = GST_BUFFER_SIZE (dec->tempbuf);
-*/
+  av = gst_adapter_available_fast (dec->adapter);
+  GST_DEBUG_OBJECT (dec, "fill_input_buffer: fast av=%u, remaining=%u", av,
+      dec->rem_img_len);
+
+  if (dec->rem_img_len < av)
+    av = dec->rem_img_len;
+  dec->rem_img_len -= av;
+
+  cinfo->src->next_input_byte = gst_adapter_take (dec->adapter, av);
+  cinfo->src->bytes_in_buffer = av;
+
   return TRUE;
 }
 
@@ -1113,7 +1116,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstJpegDec *dec;
   GstBuffer *outbuf = NULL;
-  guchar *data, *outdata;
+#ifndef GST_DISABLE_GST_DEBUG
+  guchar *data;
+#endif
+  guchar *outdata;
   guchar *base[3], *last[3];
   guint img_len, outsize;
   gint width, height;
@@ -1175,11 +1181,16 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   if (dec->packetized && !gst_jpeg_dec_do_qos (dec, timestamp))
     goto skip_decoding;
 
-  data = (guint8 *) gst_adapter_peek (dec->adapter, img_len);
   GST_LOG_OBJECT (dec, "image size = %u", img_len);
 
-  dec->jsrc.pub.next_input_byte = data;
-  dec->jsrc.pub.bytes_in_buffer = img_len;
+#ifndef GST_DISABLE_GST_DEBUG
+  data = (guint8 *) gst_adapter_peek (dec->adapter, 4);
+  GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
+      data[2], data[3]);
+#endif
+
+  dec->rem_img_len = img_len;
+  gst_jpeg_dec_fill_input_buffer (&dec->cinfo);
 
   if (setjmp (dec->jerr.setjmp_buffer)) {
     code = dec->jerr.pub.msg_code;
@@ -1190,9 +1201,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     }
     goto decode_error;
   }
-
-  GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
-      data[2], data[3]);
 
   /* read header */
   hdr_ok = jpeg_read_header (&dec->cinfo, TRUE);
@@ -1394,7 +1402,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
 skip_decoding:
 done:
-  gst_adapter_flush (dec->adapter, img_len);
+  gst_adapter_flush (dec->adapter, dec->rem_img_len);
 
 exit:
 
