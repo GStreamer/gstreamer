@@ -6136,6 +6136,63 @@ less_than (gconstpointer a, gconstpointer b)
   return *av - *bv;
 }
 
+#define AMR_NB_ALL_MODES        0x81ff
+#define AMR_WB_ALL_MODES        0x83ff
+static guint
+qtdemux_parse_amr_bitrate (GstBuffer * buf, gboolean wb)
+{
+  /* The 'damr' atom is of the form:
+   *
+   * | vendor | decoder_ver | mode_set | mode_change_period | frames/sample |
+   *    32 b       8 b          16 b           8 b                 8 b
+   *
+   * The highest set bit of the first 7 (AMR-NB) or 8 (AMR-WB) bits of mode_set
+   * represents the highest mode used in the stream (and thus the maximum
+   * bitrate), with a couple of special cases as seen below.
+   */
+
+  /* Map of frame type ID -> bitrate */
+  static const guint nb_bitrates[] = {
+    4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200
+  };
+  static const guint wb_bitrates[] = {
+    6600, 8850, 12650, 14250, 15850, 18250, 19850, 23050, 23850
+  };
+  const guint8 *data = GST_BUFFER_DATA (buf);
+  guint size = QT_UINT32 (data), max_mode;
+  guint16 mode_set;
+
+  if (GST_BUFFER_SIZE (buf) != 0x11) {
+    GST_DEBUG ("Atom should have size 0x11, not %u", size);
+    goto bad_data;
+  }
+
+  if (QT_FOURCC (data + 4) != GST_MAKE_FOURCC ('d', 'a', 'm', 'r')) {
+    GST_DEBUG ("Unknown atom in %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (QT_UINT32 (data + 4)));
+    goto bad_data;
+  }
+
+  mode_set = QT_UINT16 (data + 13);
+
+  if (mode_set == (wb ? AMR_WB_ALL_MODES : AMR_NB_ALL_MODES))
+    max_mode = 7 + (wb ? 1 : 0);
+  else
+    /* AMR-NB modes fo from 0-7, and AMR-WB modes go from 0-8 */
+    max_mode = g_bit_nth_msf ((gulong) mode_set & (wb ? 0x1ff : 0xff), -1);
+
+  if (max_mode == -1) {
+    GST_DEBUG ("No mode indication was found (mode set) = %x",
+        (guint) mode_set);
+    goto bad_data;
+  }
+
+  return wb ? wb_bitrates[max_mode] : nb_bitrates[max_mode];
+
+bad_data:
+  return 0;
+}
+
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
  * about the trak.
@@ -6759,6 +6816,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   } else if (stream->subtype == FOURCC_soun) {
     int version, samplesize;
     guint16 compression_id;
+    gboolean amrwb = FALSE;
 
     offset = 32;
     if (len < 36)
@@ -7126,14 +7184,28 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               "samplesize", G_TYPE_INT, samplesize, NULL);
           break;
         }
+        case FOURCC_sawb:
+          /* Fallthrough! */
+          amrwb = TRUE;
         case FOURCC_samr:
         {
           gint len = QT_UINT32 (stsd_data);
 
           if (len > 0x34) {
             GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
+            guint bitrate;
 
             memcpy (GST_BUFFER_DATA (buf), stsd_data + 0x34, len - 0x34);
+
+            /* If we have enough data, let's try to get the 'damr' atom. See
+             * the 3GPP container spec (26.244) for more details. */
+            if ((len - 0x34) > 8 &&
+                (bitrate = qtdemux_parse_amr_bitrate (buf, amrwb))) {
+              if (!list)
+                list = gst_tag_list_new ();
+              gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+                  GST_TAG_MAXIMUM_BITRATE, bitrate, NULL);
+            }
 
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
