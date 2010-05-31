@@ -1090,6 +1090,39 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "image/pbm", NULL);
       break;
 
+    case CODEC_ID_PAM:
+      caps =
+          gst_ff_vid_caps_new (context, codec_id, "image/x-portable-anymap",
+          NULL);
+      break;
+
+    case CODEC_ID_PGM:
+      caps =
+          gst_ff_vid_caps_new (context, codec_id, "image/x-portable-graymap",
+          NULL);
+      break;
+
+    case CODEC_ID_PCX:
+      caps = gst_ff_vid_caps_new (context, codec_id, "image/x-pcx", NULL);
+      break;
+
+    case CODEC_ID_SGI:
+      caps = gst_ff_vid_caps_new (context, codec_id, "image/x-sgi", NULL);
+      break;
+
+    case CODEC_ID_TARGA:
+      caps = gst_ff_vid_caps_new (context, codec_id, "image/x-tga", NULL);
+      break;
+
+    case CODEC_ID_TIFF:
+      caps = gst_ff_vid_caps_new (context, codec_id, "image/tiff", NULL);
+      break;
+
+    case CODEC_ID_SUNRAST:
+      caps =
+          gst_ff_vid_caps_new (context, codec_id, "image/x-sun-raster", NULL);
+      break;
+
     case CODEC_ID_SMC:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-smc", NULL);
       break;
@@ -1148,9 +1181,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_VIXL:
     case CODEC_ID_QPEG:
     case CODEC_ID_XVID:
-    case CODEC_ID_PGM:
     case CODEC_ID_PGMYUV:
-    case CODEC_ID_PAM:
     case CODEC_ID_FFVHUFF:
     case CODEC_ID_WNV1:
     case CODEC_ID_MP3ADU:
