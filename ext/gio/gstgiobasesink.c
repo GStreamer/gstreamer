@@ -298,8 +298,13 @@ gst_gio_base_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
     GstFlowReturn ret;
 
     if (!gst_gio_error (sink, "g_output_stream_write", &err, &ret)) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-          ("Could not write to stream: %s", err->message));
+      if (GST_GIO_ERROR_MATCHES (err, NO_SPACE)) {
+        GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
+            ("Could not write to stream: %s", err->message));
+      } else {
+        GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
+            ("Could not write to stream: %s", err->message));
+      }
       g_clear_error (&err);
     }
 
