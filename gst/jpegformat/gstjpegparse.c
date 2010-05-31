@@ -83,6 +83,7 @@ struct _GstJpegParsePrivate
   GstAdapter *adapter;
   guint last_offset;
   guint last_entropy_len;
+  gboolean last_resync;
 
   /* negotiated state */
   gint caps_width, caps_height;
@@ -285,162 +286,138 @@ gst_jpeg_parse_parse_tag_has_entropy_segment (guint8 tag)
   return FALSE;
 }
 
-/*
- * gst_jpeg_parse_match_next_marker:
- * @data: data to scan (must start with 0xff)
- * @size: amount of bytes in @data (must be >=2)
- *
- * Find the next marker, based on the marker at @data.
- * 
- * Returns: the offset of the next valid marker or -1 if buffer doesn't have
- * enough data.
- */
-static guint
-gst_jpeg_parse_match_next_marker (GstJpegParse * parse, const guint8 * data,
-    guint size)
-{
-  guint marker_len;
-  guint8 tag;
-
-  g_return_val_if_fail (data[0] == 0xff, -1);
-  g_return_val_if_fail (size >= 2, -1);
-  tag = data[1];
-
-  if (tag >= RST0 && tag <= EOI)
-    marker_len = 2;
-  else if (G_UNLIKELY (size < 4))
-    goto need_more_data;
-  else
-    marker_len = GST_READ_UINT16_BE (data + 2) + 2;
-
-  /* we log this in gst_jpeg_parse_find_end_marker() already
-     GST_LOG ("Have marker %x with length %u", data[1], marker_len);
-   */
-
-  /* Need marker_len for this marker, plus two for the next marker. */
-  if (G_UNLIKELY (marker_len + 2 >= size))
-    goto need_more_data;
-
-  if (G_UNLIKELY (gst_jpeg_parse_parse_tag_has_entropy_segment (tag))) {
-    if (parse->priv->last_entropy_len) {
-      marker_len = parse->priv->last_entropy_len;
-      GST_LOG_OBJECT (parse, "resuming entropy segment scan at len %u",
-          marker_len);
-    }
-    while (!(data[marker_len] == 0xff && data[marker_len + 1] != 0x00)) {
-      ++marker_len;
-      if (G_UNLIKELY (marker_len + 2 > size)) {
-        parse->priv->last_entropy_len = marker_len;
-        goto need_more_data;
-      }
-    }
-    parse->priv->last_entropy_len = 0;
-  }
-  return marker_len;
-
-need_more_data:
-  GST_LOG ("need more data");
-  return -1;
-}
-
-/*
- * gst_jpeg_parse_find_end_marker:
- * @data: data to scan (must start with 0xff)
- * @size: amount of bytes in @data
- *
- * Find next position beyond end maker.
- *
- * Returns: the position, -1 if insufficient data and -2 if marker lengths are
- * inconsistent. 
- */
-static guint
-gst_jpeg_parse_find_end_marker (GstJpegParse * parse, const guint8 * data,
-    guint size)
-{
-  guint offset = parse->priv->last_offset;
-
-  while (1) {
-    guint marker_len;
-    guint8 tag;
-
-    if (offset + 1 >= size)
-      return -1;
-
-    /* all jpeg marker start with 0xff */
-    if (data[offset] != 0xff)
-      return -2;
-
-    /* Skip over extra 0xff */
-    while (G_UNLIKELY ((tag = data[offset + 1]) == 0xff)) {
-      ++offset;
-      if (G_UNLIKELY (offset + 1 >= size))
-        return -1;
-    }
-    /* Check for EOI */
-    if (G_UNLIKELY (tag == EOI)) {
-      GST_DEBUG_OBJECT (parse, "EOI at %u", offset);
-      parse->priv->last_offset = offset;
-      return offset;
-    }
-    /* Skip over this marker. */
-    marker_len = gst_jpeg_parse_match_next_marker (parse, data + offset,
-        size - offset);
-    if (G_UNLIKELY (marker_len == -1)) {
-      return -1;
-    } else {
-      GST_LOG_OBJECT (parse, "At offset %u: marker %02x, length %u", offset,
-          tag, marker_len);
-      /* remember last found marker, so that we don't rescan from begin */
-      parse->priv->last_offset = offset;
-      offset += marker_len;
-    }
-  }
-}
-
-/* scan until EOI, by interpreting marker + length */
+/* returns image length in bytes if parsed
+ * successfully, otherwise 0 if not enough data */
 static guint
 gst_jpeg_parse_get_image_length (GstJpegParse * parse)
 {
-  const guint8 *data;
-  guint size, offset;
+  guint size;
+  gboolean resync;
+  GstAdapter *adapter = parse->priv->adapter;
+  gint offset, noffset;
 
-  size = gst_adapter_available (parse->priv->adapter);
-  if (size < 4) {
-    GST_DEBUG_OBJECT (parse, "Insufficient data for end marker.");
+  size = gst_adapter_available (adapter);
+
+  /* we expect at least 4 bytes, first of which start marker */
+  if (gst_adapter_masked_scan_uint32 (adapter, 0xffff0000, 0xffd80000, 0, 4))
     return 0;
-  }
-  data = gst_adapter_peek (parse->priv->adapter, size);
 
-  g_return_val_if_fail (data[0] == 0xff && data[1] == SOI, 0);
+  GST_DEBUG ("Parsing jpeg image data (%u bytes)", size);
 
-  offset = gst_jpeg_parse_find_end_marker (parse, data, size);
+  GST_DEBUG ("Parse state: offset=%d, resync=%d, entropy len=%d",
+      parse->priv->last_offset, parse->priv->last_resync,
+      parse->priv->last_entropy_len);
 
-  if (offset == -1) {
-    GST_LOG_OBJECT (parse, "Insufficient data.");
-    return 0;
-  } else if (G_UNLIKELY (offset == -2)) {
-    guint start = parse->priv->last_offset;
-    GST_DEBUG_OBJECT (parse, "Lost sync, resyncing.");
-    /* FIXME does this make sense at all?  This can only happen for broken
-     * images, and the most likely breakage is that it's truncated.  In that
-     * case, however, we should be looking for a new start marker... */
-    while (offset == -2 || offset == -1) {
-      start++;
-      /* scan for 0xff */
-      while (start + 1 < size && data[start] != 0xff)
-        start++;
-      if (G_UNLIKELY (start + 1 >= size)) {
-        GST_DEBUG_OBJECT (parse, "Insufficient data while resyncing.");
-        return 0;
-      }
-      GST_LOG_OBJECT (parse, "Resyncing from offset %u (size %u).",
-          start, size);
-      parse->priv->last_offset = start;
-      offset = gst_jpeg_parse_find_end_marker (parse, data, size);
+  /* offset is 2 less than actual offset;
+   * - adapter needs at least 4 bytes for scanning,
+   * - start and end marker ensure at least that much
+   */
+  /* resume from state offset */
+  offset = parse->priv->last_offset;
+
+  while (1) {
+    guint frame_len;
+    guint32 value;
+
+    noffset =
+        gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
+        offset, size - offset, &value);
+    /* lost sync if 0xff marker not where expected */
+    if ((resync = (noffset != offset))) {
+      GST_DEBUG ("Lost sync at 0x%08x, resyncing", offset + 2);
     }
+    /* may have marker, but could have been resyncng */
+    resync = resync || parse->priv->last_resync;
+    /* Skip over extra 0xff */
+    while ((noffset > 0) && ((value & 0xff) == 0xff)) {
+      noffset++;
+      noffset =
+          gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
+          noffset, size - noffset, &value);
+    }
+    /* enough bytes left for marker? (we need 0xNN after the 0xff) */
+    if (noffset < 0) {
+      GST_DEBUG ("at end of input and no EOI marker found, need more data");
+      goto need_more_data;
+    }
+
+    /* now lock on the marker we found */
+    offset = noffset;
+    value = value & 0xff;
+    if (value == 0xd9) {
+      GST_DEBUG ("0x%08x: EOI marker", offset + 2);
+      /* clear parse state */
+      parse->priv->last_resync = FALSE;
+      parse->priv->last_offset = 0;
+      return (offset + 4);
+    }
+
+    if (value >= 0xd0 && value <= 0xd7)
+      frame_len = 0;
+    else {
+      /* peek tag and subsequent length */
+      if (offset + 2 + 4 > size)
+        goto need_more_data;
+      else
+        gst_adapter_masked_scan_uint32_peek (adapter, 0x0, 0x0, offset + 2, 4,
+            &frame_len);
+      frame_len = frame_len & 0xffff;
+    }
+    GST_DEBUG ("0x%08x: tag %02x, frame_len=%u", offset + 2, value, frame_len);
+    /* the frame length includes the 2 bytes for the length; here we want at
+     * least 2 more bytes at the end for an end marker */
+    if (offset + 2 + 2 + frame_len + 2 > size) {
+      goto need_more_data;
+    }
+
+    if (gst_jpeg_parse_parse_tag_has_entropy_segment (value)) {
+      guint eseglen = parse->priv->last_entropy_len;
+
+      GST_DEBUG ("0x%08x: finding entropy segment length", offset + 2);
+      noffset = offset + 2 + frame_len + eseglen;
+      while (1) {
+        noffset = gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00,
+            0x0000ff00, noffset, size - noffset, &value);
+        if (noffset < 0) {
+          /* need more data */
+          parse->priv->last_entropy_len = size - offset - 4 - frame_len - 2;
+          goto need_more_data;
+        }
+        if ((value & 0xff) != 0x00) {
+          eseglen = noffset - offset - frame_len - 2;
+          break;
+        }
+        noffset++;
+      }
+      parse->priv->last_entropy_len = 0;
+      frame_len += eseglen;
+      GST_DEBUG ("entropy segment length=%u => frame_len=%u", eseglen,
+          frame_len);
+    }
+    if (resync) {
+      /* check if we will still be in sync if we interpret
+       * this as a sync point and skip this frame */
+      noffset = offset + frame_len + 2;
+      noffset = gst_adapter_masked_scan_uint32 (adapter, 0x0000ff00, 0x0000ff00,
+          noffset, 4);
+      if (noffset < 0) {
+        /* ignore and continue resyncing until we hit the end
+         * of our data or find a sync point that looks okay */
+        continue;
+      }
+      GST_DEBUG ("found sync at 0x%x", offset + 2);
+    }
+
+    offset += frame_len + 2;
   }
-  /* position of EOI + the length of the marker */
-  return offset + 2;
+
+  /* EXITS */
+need_more_data:
+  {
+    parse->priv->last_offset = offset;
+    parse->priv->last_resync = resync;
+    return 0;
+  }
 }
 
 static gboolean
@@ -774,7 +751,7 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
   gboolean header_ok;
 
   /* reset the offset (only when we flushed) */
-  parse->priv->last_offset = 2;
+  parse->priv->last_offset = 0;
   parse->priv->last_entropy_len = 0;
 
   outbuf = gst_adapter_take_buffer (parse->priv->adapter, len);
@@ -924,8 +901,9 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
 
       parse->priv->next_ts = GST_CLOCK_TIME_NONE;
 
-      parse->priv->last_offset = 2;
+      parse->priv->last_offset = 0;
       parse->priv->last_entropy_len = 0;
+      parse->priv->last_resync = FALSE;
     default:
       break;
   }
