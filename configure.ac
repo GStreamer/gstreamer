@@ -322,7 +322,7 @@ else
   embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffserver --disable-ffplay\
         --enable-postproc --enable-gpl --enable-static --enable-shared \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
-	 --disable-network --disable-hwaccels"
+	 --disable-network --disable-hwaccels --disable-filters"
 
   # if we are cross-compiling, tell ffmpeg so
   if test "x$cross_compiling" = xyes; then
