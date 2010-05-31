@@ -348,7 +348,7 @@ else
   esac
 
   dnl checks for extra enable/disable flags
-  FFMPEG_OPTS="`$srcdir/gst-libs/ext/ffmpeg/configure --help`"
+  FFMPEG_OPTS="(cd $srcdir/gst-libs/ext/ffmpeg && ./configure --help)"
   # Let's check if we can disable the building of the ffmpeg binary
   can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg'`
   if test "$can_disable" != ""; then
