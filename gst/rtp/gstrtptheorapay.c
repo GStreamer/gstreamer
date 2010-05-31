@@ -434,6 +434,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
       "width", G_TYPE_STRING, wstr,
       "height", G_TYPE_STRING, hstr,
       "configuration", G_TYPE_STRING, configuration,
+      "delivery-method", G_TYPE_STRING, "inline",
       /* don't set the other defaults 
        */
       NULL);
