@@ -59,9 +59,11 @@ struct _GESTrackTransition
   gdouble                       vstart_value;
   gdouble                       vend_value;
 
-  GstController                 *acontroller;
-  GstInterpolationControlSource *acontrol_source;
+  GstController                 *a_acontroller;
+  GstInterpolationControlSource *a_acontrol_source;
 
+  GstController                 *a_bcontroller;
+  GstInterpolationControlSource *a_bcontrol_source;
 };
 
 struct _GESTrackTransitionClass {

@@ -96,8 +96,20 @@ ges_track_transition_dispose (GObject * object)
   if (self->vcontroller) {
     g_object_unref (self->vcontroller);
     self->vcontroller = NULL;
-    /* is this referenced by the controller ? */
+    /* is this referenec owned by someone other than us? */
     self->vcontrol_source = NULL;
+  }
+
+  if (self->a_acontroller) {
+    g_object_unref (self->a_acontroller);
+    self->a_acontroller = NULL;
+    self->a_acontrol_source = NULL;
+  }
+
+  if (self->a_bcontroller) {
+    g_object_unref (self->a_acontroller);
+    self->a_bcontroller = NULL;
+    self->a_bcontrol_source = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
@@ -106,7 +118,7 @@ ges_track_transition_dispose (GObject * object)
 static void
 ges_track_transition_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_transition_parent_class)->finalize (object);
 }
 
 static GObject *
@@ -258,8 +270,11 @@ ges_track_transition_init (GESTrackTransition * self)
   self->vstart_value = 0.0;
   self->vend_value = 0.0;
 
-  self->acontroller = NULL;
-  self->acontrol_source = NULL;
+  self->a_acontroller = NULL;
+  self->a_acontrol_source = NULL;
+
+  self->a_bcontroller = NULL;
+  self->a_bcontrol_source = NULL;
 }
 
 GESTrackTransition *
