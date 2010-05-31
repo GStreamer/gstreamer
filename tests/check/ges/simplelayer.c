@@ -184,10 +184,12 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_timeline_add_layer (timeline, layer));
   ges_timeline_layer_set_priority (layer, 0);
 
-  /* FIXME: only testing video, since this is the only thing implemented */
-
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, GST_CAPS_ANY);
   fail_unless (ges_timeline_add_track (timeline, track));
+
+  track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
+  fail_unless (ges_timeline_add_track (timeline, track));
+
 
 #define ELEMENT "videotestsrc"
 

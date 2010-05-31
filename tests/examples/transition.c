@@ -69,7 +69,7 @@ make_timeline (char *nick, double tdur, char *patha, float adur,
     char *pathb, float bdur)
 {
   GESTimeline *timeline;
-  GESTrack *trackv;
+  GESTrack *trackv, *tracka;
   GESTimelineLayer *layer1;
   GESTimelineObject *srca, *srcb;
   GESTimelinePipeline *pipeline = ges_timeline_pipeline_new ();
@@ -81,6 +81,9 @@ make_timeline (char *nick, double tdur, char *patha, float adur,
 
   trackv = ges_track_video_raw_new ();
   ges_timeline_add_track (timeline, trackv);
+
+  tracka = ges_track_audio_raw_new ();
+  ges_timeline_add_track (timeline, tracka);
 
   layer1 = GES_TIMELINE_LAYER (ges_timeline_layer_new ());
   g_object_set (layer1, "priority", (gint32) 0, NULL);
