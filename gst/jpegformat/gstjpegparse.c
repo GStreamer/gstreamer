@@ -852,6 +852,13 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (parse, "event : %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_offset = 0;
+      parse->priv->last_entropy_len = 0;
+      parse->priv->last_resync = FALSE;
+      gst_adapter_clear (parse->priv->adapter);
+      break;
     case GST_EVENT_EOS:{
       /* Push the remaining data, even though it's incomplete */
       guint available = gst_adapter_available (parse->priv->adapter);
