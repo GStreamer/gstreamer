@@ -1,0 +1,55 @@
+<plugin>
+  <name>segmentclip</name>
+  <description>Segment clip elements</description>
+  <filename>../../gst/segmentclip/.libs/libgstsegmentclip.so</filename>
+  <basename>libgstsegmentclip.so</basename>
+  <version>0.10.19</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>audiosegmentclip</name>
+      <longname>Audio buffer segment clipper</longname>
+      <class>Filter/Audio</class>
+      <description>Clips audio buffers to the configured segment</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>videosegmentclip</name>
+      <longname>Video buffer segment clipper</longname>
+      <class>Filter/Video</class>
+      <description>Clips video buffers to the configured segment</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-grey, framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-grey, framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

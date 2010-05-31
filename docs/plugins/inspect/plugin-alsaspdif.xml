@@ -3,10 +3,10 @@
   <description>Alsa plugin for S/PDIF output</description>
   <filename>../../ext/alsaspdif/.libs/libgstalsaspdif.so</filename>
   <basename>libgstalsaspdif.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,8 +14,7 @@
       <longname>S/PDIF ALSA audiosink</longname>
       <class>Sink/Audio</class>
       <description>Feeds audio to S/PDIF interfaces through the ALSA sound driver</description>
-      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;
-    Michael Smith &lt;msmith@fluendo.com&gt;</author>
+      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;, Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

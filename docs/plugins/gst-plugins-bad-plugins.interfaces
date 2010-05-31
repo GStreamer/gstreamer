@@ -27,6 +27,7 @@ GstSchroEnc GstPreset
 GstDiracEnc GstPreset
 GstKateEnc GstTagSetter
 GstKateTag GstTagSetter
+GstVP8Enc GstTagSetter GstPreset
 GstJifMux GstTagSetter
 GstId3BaseMux GstTagSetter
 GstId3Mux GstTagSetter

@@ -3,10 +3,10 @@
   <description>MPEG demuxers</description>
   <filename>../../gst/mpegdemux/.libs/libgstmpegdemux.so</filename>
   <basename>libgstmpegdemux.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -92,8 +92,7 @@
       <longname>MPEG transport stream parser</longname>
       <class>Codec/Parser</class>
       <description>Parses MPEG2 transport streams</description>
-      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;
-    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;, Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>program_%d</name>

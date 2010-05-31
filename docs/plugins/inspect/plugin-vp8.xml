@@ -1,0 +1,55 @@
+<plugin>
+  <name>vp8</name>
+  <description>VP8 plugin</description>
+  <filename>../../ext/vp8/.libs/libgstvp8.so</filename>
+  <basename>libgstvp8.so</basename>
+  <version>0.10.19</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>vp8dec</name>
+      <longname>On2 VP8 Decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decode VP8 video streams</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-vp8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vp8enc</name>
+      <longname>On2 VP8 Encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Encode VP8 video streams</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vp8</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

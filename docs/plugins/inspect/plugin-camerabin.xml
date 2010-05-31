@@ -3,10 +3,10 @@
   <description>High level api for DC (Digital Camera) application</description>
   <filename>../../gst/camerabin/.libs/libgstcamerabin.so</filename>
   <basename>libgstcamerabin.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,8 +14,7 @@
       <longname>Camera Bin</longname>
       <class>Generic/Bin/Camera</class>
       <description>Handle lot of features present in DSC</description>
-      <author>Nokia Corporation &lt;multimedia@maemo.org&gt;
-    Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+      <author>Nokia Corporation &lt;multimedia@maemo.org&gt;, Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
     
       </pads>

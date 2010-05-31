@@ -1700,8 +1700,8 @@
 
 <ARG>
 <NAME>GstDvbSrc::frequency</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>frequency</NICK>
 <BLURB>Frequency.</BLURB>
@@ -1730,8 +1730,8 @@
 
 <ARG>
 <NAME>GstDvbSrc::symbol-rate</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
 <BLURB>Symbol Rate (DVB-S, DVB-C).</BLURB>
@@ -17840,8 +17840,8 @@
 
 <ARG>
 <NAME>DvbBaseBin::frequency</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>frequency</NICK>
 <BLURB>Frequency.</BLURB>
@@ -17930,8 +17930,8 @@
 
 <ARG>
 <NAME>DvbBaseBin::symbol-rate</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>symbol rate</NICK>
 <BLURB>Symbol Rate (DVB-S, DVB-C).</BLURB>
@@ -22934,6 +22934,86 @@
 </ARG>
 
 <ARG>
+<NAME>GstCameraBin::block-after-capture</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block viewfinder after capture</NICK>
+<BLURB>Block viewfinder after capturing an image or video.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-capture-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The height used for image capture</NICK>
+<BLURB>The height used for image capture.</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::image-capture-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The width used for image capture</NICK>
+<BLURB>The width used for image capture.</BLURB>
+<DEFAULT>800</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-capture-framerate</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The framerate used for video capture</NICK>
+<BLURB>The framerate used for video capture.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-capture-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The height used for video capture</NICK>
+<BLURB>The height used for video capture.</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-capture-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The width used for video capture</NICK>
+<BLURB>The width used for video capture.</BLURB>
+<DEFAULT>800</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::video-source-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>video source filter element</NICK>
+<BLURB>Optional video filter GStreamer element, filters all frames fromthe video source.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCameraBin::viewfinder-filter</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>viewfinder filter element</NICK>
+<BLURB>viewfinder filter GStreamer element.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDTMFSrc::interval</NAME>
 <TYPE>guint</TYPE>
 <RANGE>[10,50]</RANGE>
@@ -26200,7 +26280,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>1.20954e-312</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26240,7 +26320,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.20954e-312</DEFAULT>
+<DEFAULT>4.77831e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26250,7 +26330,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>1.23076e-312</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26280,7 +26360,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>4.54199e-317</DEFAULT>
+<DEFAULT>8.0843e+44</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26290,7 +26370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>6.2478e-317</DEFAULT>
+<DEFAULT>9.3207e+68</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26300,7 +26380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-5.83169e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26330,7 +26410,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.76852e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26350,7 +26430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.28823e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26870,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>6.12021e-317</DEFAULT>
+<DEFAULT>6.09249e+247</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27060,7 +27140,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.49232e+247</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27069,7 +27149,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Is Live</NICK>
-<BLURB>If this stream should be threated as a live, meaning that it doesn't need indexes nor late update of headers.</BLURB>
+<BLURB>Whether this stream should be treated as a live stream, meaning that it doesn't need an index or header updates when done.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -27490,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
 <BLURB>bitrate.</BLURB>
-<DEFAULT>13824000</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27590,7 +27670,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>enable_multiquant</NICK>
 <BLURB>enable_multiquant.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27676,11 +27756,11 @@
 <ARG>
 <NAME>GstSchroEnc::horiz-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>horiz_slices</NICK>
 <BLURB>horiz_slices.</BLURB>
-<DEFAULT>8</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27690,7 +27770,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>inter_wavelet</NICK>
 <BLURB>inter_wavelet.</BLURB>
-<DEFAULT>le_gall_5_3</DEFAULT>
+<DEFAULT>desl_dubuc_9_7</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27780,7 +27860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_chroma_lambda_scale</NICK>
 <BLURB>magic_chroma_lambda_scale.</BLURB>
-<DEFAULT>0.01</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27880,7 +27960,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>magic_scene_change_threshold</NICK>
 <BLURB>magic_scene_change_threshold.</BLURB>
-<DEFAULT>0.2</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28050,17 +28130,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>transform_depth</NICK>
 <BLURB>transform_depth.</BLURB>
-<DEFAULT>4</DEFAULT>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstSchroEnc::vert-slices</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>vert_slices</NICK>
 <BLURB>vert_slices.</BLURB>
-<DEFAULT>6</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28081,6 +28161,146 @@
 <NICK>magic_scan_distance</NICK>
 <BLURB>magic_scan_distance.</BLURB>
 <DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::downsample-levels</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[2,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>downsample_levels</NICK>
+<BLURB>downsample_levels.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-chroma-me</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_chroma_me</NICK>
+<BLURB>enable_chroma_me.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-deep-estimation</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_deep_estimation</NICK>
+<BLURB>enable_deep_estimation.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-rdo-cbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_rdo_cbr</NICK>
+<BLURB>enable_rdo_cbr.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::enable-scene-change-detection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>enable_scene_change_detection</NICK>
+<BLURB>enable_scene_change_detection.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::force-profile</NAME>
+<TYPE>SchroEncoderSettingEnum_force_profile</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>force_profile</NICK>
+<BLURB>force_profile.</BLURB>
+<DEFAULT>auto</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-B-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_B_lambda_scale</NICK>
+<BLURB>magic_B_lambda_scale.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-I-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_I_lambda_scale</NICK>
+<BLURB>magic_I_lambda_scale.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-P-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_P_lambda_scale</NICK>
+<BLURB>magic_P_lambda_scale.</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-diagonal-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_diagonal_lambda_scale</NICK>
+<BLURB>magic_diagonal_lambda_scale.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-inter-cpd-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_inter_cpd_scale</NICK>
+<BLURB>magic_inter_cpd_scale.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-me-bailout-limit</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_me_bailout_limit</NICK>
+<BLURB>magic_me_bailout_limit.</BLURB>
+<DEFAULT>0.33</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::magic-me-lambda-scale</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>magic_me_lambda_scale</NICK>
+<BLURB>magic_me_lambda_scale.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSchroEnc::max-refs</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max_refs</NICK>
+<BLURB>max_refs.</BLURB>
+<DEFAULT>3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33040,7 +33260,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Show histogram</NICK>
 <BLURB>Show histogram.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33230,7 +33450,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Source image on left side</NICK>
 <BLURB>Source image on left side.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33240,7 +33460,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Split preview</NICK>
 <BLURB>Split privew.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -33500,7 +33720,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Show curves</NICK>
 <BLURB>Draw curve graph on output image.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45111,5 +45331,255 @@
 <NICK>Threshold</NICK>
 <BLURB>Threshold.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacParse::check-frame-checksums</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check Frame Checksums</NICK>
+<BLURB>Check the overall checksums of every frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Dec::deblocking-level</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 16</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Deblocking Level</NICK>
+<BLURB>Deblocking level.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Dec::noise-level</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 16</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Level</NICK>
+<BLURB>Noise level.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Dec::post-processing</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Processing</NICK>
+<BLURB>Enable post processing.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Dec::post-processing-flags</NAME>
+<TYPE>GstVP8DecPostProcessingFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post Processing Flags</NICK>
+<BLURB>Flags to control post processing.</BLURB>
+<DEFAULT>Deblock|Demacroblock</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bit rate</NICK>
+<BLURB>Bit rate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::error-resilient</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Error Resilient</NICK>
+<BLURB>Encode streams that are error resilient.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::max-keyframe-distance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,9999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key frame distance</NICK>
+<BLURB>Maximum distance between key frames.</BLURB>
+<DEFAULT>60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::max-latency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,25]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max latency</NICK>
+<BLURB>Number of frames in encoder queue.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::mode</NAME>
+<TYPE>GstVP8EncMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Mode.</BLURB>
+<DEFAULT>Variable Bit Rate (VBR) mode</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::quality</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Speed</NICK>
+<BLURB>Speed.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::threads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threads</NICK>
+<BLURB>Threads.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::aperture</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aperture property</NICK>
+<BLURB>Aperture defines the size of lens opening  (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::capabilities</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Photo capabilities bitmask</NICK>
+<BLURB>Tells the photo capabilities of the device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::colour-tone-mode</NAME>
+<TYPE>GstColourToneMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Colour tone mode property</NICK>
+<BLURB>Colour tone setting changes colour shading in the photo.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::ev-compensation</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-2.5,2.5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>EV compensation property</NICK>
+<BLURB>EV compensation affects the brightness of the image.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::exposure</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Exposure time in milliseconds</NICK>
+<BLURB>Exposure time defines how long the shutter will stay open (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::flash-mode</NAME>
+<TYPE>GstFlashMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flash mode property</NICK>
+<BLURB>Flash mode defines how the flash light should be used.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_FLASH_MODE_AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::flicker-mode</NAME>
+<TYPE>GstFlickerReductionMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flicker reduction mode property</NICK>
+<BLURB>Flicker reduction mode defines a line frequency for flickering prevention.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::focus-mode</NAME>
+<TYPE>GstFocusMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Focus mode property</NICK>
+<BLURB>Focus mode defines the range of focal lengths to use in autofocus search.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_FOCUS_MODE_AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::image-capture-supported-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Image capture supported caps</NICK>
+<BLURB>Caps describing supported image capture formats.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::iso-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6400</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ISO speed property</NICK>
+<BLURB>ISO speed defines the light sensitivity (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::scene-mode</NAME>
+<TYPE>GstSceneMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scene mode property</NICK>
+<BLURB>Scene mode works as a preset for different photo shooting mode settings.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_SCENE_MODE_AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::white-balance-mode</NAME>
+<TYPE>GstWhiteBalanceMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White balance mode property</NICK>
+<BLURB>White balance affects the color temperature of the photo.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_WB_MODE_AUTO</DEFAULT>
 </ARG>
 

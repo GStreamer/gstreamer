@@ -3,10 +3,10 @@
   <description>lib MythTV src</description>
   <filename>../../ext/mythtv/.libs/libgstmythtvsrc.so</filename>
   <basename>libgstmythtvsrc.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>MythTV client source</longname>
       <class>Source/Network</class>
       <description>Control and receive data as a client over the network via raw socket connections using the MythTV protocol</description>
-      <author>Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;,Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
+      <author>Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;, Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
       <pads>
         <caps>
           <name>src</name>

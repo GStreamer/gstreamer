@@ -3,17 +3,17 @@
   <description>Inverse Telecine</description>
   <filename>../../gst/invtelecine/.libs/libgstinvtelecine.so</filename>
   <basename>libgstinvtelecine.so</basename>
-  <version>0.10.18.1</version>
+  <version>0.10.19</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>invtelecine</name>
-      <longname>H.264 Decoder</longname>
-      <class>Codec/Decoder/Video</class>
-      <description>Decode H.264/MPEG-4 AVC video streams</description>
+      <longname>Inverse Telecine filter</longname>
+      <class>Filter/Video</class>
+      <description>Detects and reconstructs progressive content from telecine video</description>
       <author>Entropy Wave &lt;ds@entropywave.com&gt;</author>
       <pads>
         <caps>

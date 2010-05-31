@@ -36,6 +36,17 @@ real live maintainer, or some actual wide use.
 
  <release>
   <Version>
+   <revision>0.10.19</revision>
+   <branch>0.10</branch>
+   <name>The World Kicked Back</name>
+   <created>2010-05-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.19.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.19.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.18</revision>
    <branch>0.10</branch>
    <name>Diminishing Returns</name>
