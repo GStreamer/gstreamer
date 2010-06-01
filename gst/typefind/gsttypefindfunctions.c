@@ -34,11 +34,7 @@
 #define USE_GIO
 #endif
 
-#include <gst/gsttypefind.h>
-#include <gst/gstelement.h>
-#include <gst/gstversion.h>
-#include <gst/gstinfo.h>
-#include <gst/gstutils.h>
+#include <gst/gst.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -2359,15 +2355,31 @@ m4a_type_find (GstTypeFind * tf, gpointer unused)
 /*** application/x-3gp ***/
 
 /* The Q is there because variables can't start with a number. */
-
-
 static GstStaticCaps q3gp_caps = GST_STATIC_CAPS ("application/x-3gp");
-
 #define Q3GP_CAPS (gst_static_caps_get(&q3gp_caps))
+
+static const gchar *
+q3gp_type_find_get_profile (const guint8 * data)
+{
+  switch (GST_MAKE_FOURCC (data[0], data[1], data[2], 0)) {
+    case GST_MAKE_FOURCC ('3', 'g', 'g', 0):
+      return "general";
+    case GST_MAKE_FOURCC ('3', 'g', 'p', 0):
+      return "basic";
+    case GST_MAKE_FOURCC ('3', 'g', 's', 0):
+      return "streaming-server";
+    case GST_MAKE_FOURCC ('3', 'g', 'r', 0):
+      return "progressive-download";
+    default:
+      break;
+  }
+  return NULL;
+}
+
 static void
 q3gp_type_find (GstTypeFind * tf, gpointer unused)
 {
-
+  const gchar *profile;
   guint32 ftyp_size = 0;
   gint offset = 0;
   guint8 *data = NULL;
@@ -2383,10 +2395,9 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
 
   /* check major brand */
   data += 4;
-  if (memcmp (data, "3gp", 3) == 0 ||
-      memcmp (data, "3gr", 3) == 0 ||
-      memcmp (data, "3gs", 3) == 0 || memcmp (data, "3gg", 3) == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, Q3GP_CAPS);
+  if ((profile = q3gp_type_find_get_profile (data))) {
+    gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+        "application/x-3gp", "profile", G_TYPE_STRING, profile, NULL);
     return;
   }
 
@@ -2398,11 +2409,10 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
     if ((data = gst_type_find_peek (tf, offset, 3)) == NULL) {
       break;
     }
-    if (memcmp (data, "3gp", 3) == 0 ||
-        memcmp (data, "3gr", 3) == 0 ||
-        memcmp (data, "3gs", 3) == 0 || memcmp (data, "3gg", 3) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, Q3GP_CAPS);
-      break;
+    if ((profile = q3gp_type_find_get_profile (data))) {
+      gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+          "application/x-3gp", "profile", G_TYPE_STRING, profile, NULL);
+      return;
     }
   }
 
