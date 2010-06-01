@@ -7,7 +7,7 @@
 #include <cog/cog.h>
 #include <cog/cogframe.h>
 #include <cog/cogvirtframe.h>
-#include "cogorc.h"
+#include "gstcogorc.h"
 #include <gst/gst.h>
 
 #include <stdlib.h>

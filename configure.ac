@@ -227,6 +227,32 @@ if test "x$HAVE_X11" = "xyes"; then
   AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
 fi
 
+dnl Orc
+AC_ARG_ENABLE(orc,
+AC_HELP_STRING([--enable-orc],[use Orc if installed]),
+[case "${enableval}" in
+  yes) enable_orc=yes ;;
+  no)  enable_orc=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-orc) ;;
+esac
+],
+[enable_orc=yes]) dnl Default value
+
+if test "x$enable_orc" = "xyes" ; then
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= 0.4.0, HAVE_ORC=yes, HAVE_ORC=no)
+  if test "x$HAVE_ORC" != "xyes"; then
+    AC_ERROR([orc-0.4.0 or later is required])
+  fi
+  AC_DEFINE(HAVE_ORC, 1, [Use Orc])
+
+  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
+  AC_SUBST(ORCC)
+else
+  AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
+  HAVE_ORC=no
+fi
+AM_CONDITIONAL(HAVE_ORC, test "x$HAVE_ORC" = "xyes")
+
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
@@ -594,11 +620,7 @@ AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
-  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
-  if test "x$ORCC" = x ; then
-    ORCC=orcc
-  fi
-  AC_SUBST(ORCC)
+  dnl ORCC was set up by Orc check above
 ])
 
 dnl *** dc1394  ***

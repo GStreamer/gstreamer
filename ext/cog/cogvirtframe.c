@@ -12,7 +12,7 @@
 #include <orc/orc.h>
 #include <gst/gst.h>
 
-#include "cogorc.h"
+#include "gstcogorc.h"
 
 extern gint8 cog_resample_table_4tap[256][4];
 
