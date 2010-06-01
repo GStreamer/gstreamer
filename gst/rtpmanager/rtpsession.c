@@ -56,6 +56,7 @@ enum
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
 #define DEFAULT_SOURCES              NULL
+#define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 
 enum
 {
@@ -72,6 +73,7 @@ enum
   PROP_NUM_ACTIVE_SOURCES,
   PROP_SOURCES,
   PROP_FAVOR_NEW,
+  PROP_RTCP_MIN_INTERVAL,
   PROP_LAST
 };
 
@@ -360,6 +362,11 @@ rtp_session_class_init (RTPSessionClass * klass)
           "Resolve SSRC conflict in favor of new sources", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_MIN_INTERVAL,
+      g_param_spec_uint64 ("rtcp-min-interval", "Minimum RTCP interval",
+          "Minimum interval between Regular RTCP packet (in ns)",
+          0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
@@ -505,6 +512,10 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_FAVOR_NEW:
       sess->favor_new = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_MIN_INTERVAL:
+      rtp_stats_set_min_interval (&sess->stats,
+          (gdouble) g_value_get_uint64 (value) / GST_SECOND);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -555,6 +566,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FAVOR_NEW:
       g_value_set_boolean (value, sess->favor_new);
+      break;
+    case PROP_RTCP_MIN_INTERVAL:
+      g_value_set_uint64 (value, sess->stats.min_interval * GST_SECOND);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

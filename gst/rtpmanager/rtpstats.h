@@ -195,4 +195,7 @@ GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gbo
 GstClockTime   rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, GstClockTime interval);
 GstClockTime   rtp_stats_calculate_bye_interval     (RTPSessionStats *stats);
 gint64         rtp_stats_get_packets_lost           (const RTPSourceStats *stats);
+
+void           rtp_stats_set_min_interval           (RTPSessionStats *stats,
+                                                     gdouble min_interval);
 #endif /* __RTP_STATS_H__ */

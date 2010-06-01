@@ -286,3 +286,9 @@ rtp_stats_get_packets_lost (const RTPSourceStats * stats)
 
   return lost;
 }
+
+void
+rtp_stats_set_min_interval (RTPSessionStats * stats, gdouble min_interval)
+{
+  stats->min_interval = min_interval;
+}

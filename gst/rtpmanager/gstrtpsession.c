@@ -199,6 +199,7 @@ enum
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
+#define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
 
 enum
 {
@@ -213,6 +214,7 @@ enum
   PROP_NUM_ACTIVE_SOURCES,
   PROP_INTERNAL_SESSION,
   PROP_USE_PIPELINE_CLOCK,
+  PROP_RTCP_MIN_INTERVAL,
   PROP_LAST
 };
 
@@ -588,6 +590,12 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_USE_PIPELINE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_MIN_INTERVAL,
+      g_param_spec_uint64 ("rtcp-min-interval", "Minimum RTCP interval",
+          "Minimum interval between Regular RTCP packet (in ns)",
+          0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -693,6 +701,10 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_USE_PIPELINE_CLOCK:
       priv->use_pipeline_clock = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_MIN_INTERVAL:
+      g_object_set_property (G_OBJECT (priv->session), "rtcp-min-interval",
+          value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -744,6 +756,10 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_USE_PIPELINE_CLOCK:
       g_value_set_boolean (value, priv->use_pipeline_clock);
+      break;
+    case PROP_RTCP_MIN_INTERVAL:
+      g_object_get_property (G_OBJECT (priv->session), "rtcp-min-interval",
+          value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
