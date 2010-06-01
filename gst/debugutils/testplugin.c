@@ -124,7 +124,6 @@ gst_test_class_init (GstTestClass * klass)
     g_object_class_install_property (object_class, 2 * i + 2, spec);
   }
 
-  basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_test_render_buffer);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_test_render_buffer);
   basesink_class->event = GST_DEBUG_FUNCPTR (gst_test_sink_event);
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_test_start);
