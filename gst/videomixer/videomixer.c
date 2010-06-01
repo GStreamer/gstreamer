@@ -380,6 +380,7 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
   GstVideoMixer *mix;
   GstVideoMixerPad *mixpad;
   GstCaps *res = NULL;
+  GstCaps *tmp;
   int ncaps, i;
   GstStructure *st;
 
@@ -389,12 +390,17 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
   if (!mixpad)
     goto beach;
 
-  res = gst_pad_peer_get_caps (mix->srcpad);
-  if (G_UNLIKELY (res == NULL)) {
+  tmp = gst_pad_peer_get_caps (mix->srcpad);
+  if (G_UNLIKELY (tmp == NULL)) {
     /* If no peer, then return template */
     res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
     goto beach;
   }
+
+  /* Intersect with template caps, downstream might be returning formats
+   * or width/height/framerate/par combinations we don't handle */
+  res = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
+  gst_caps_unref (tmp);
 
   ncaps = gst_caps_get_size (res);
 
@@ -418,13 +424,6 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
           G_MAXINT32, 1, "pixel-aspect-ratio", GST_TYPE_FRACTION, mix->par_n,
           mix->par_d, NULL);
     }
-  } else {
-    GstCaps *tmp;
-    /* If we don't have configured values, just intersect with our
-     * pad template */
-    tmp = res;
-    res = gst_caps_intersect (res, gst_pad_get_pad_template_caps (pad));
-    gst_caps_unref (tmp);
   }
   GST_VIDEO_MIXER_STATE_UNLOCK (mix);
 
