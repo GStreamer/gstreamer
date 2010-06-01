@@ -1707,6 +1707,7 @@ gst/pnm/Makefile
 gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
+gst/rtmp/Makefile
 gst/rtpmux/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
