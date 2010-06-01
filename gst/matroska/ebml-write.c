@@ -226,7 +226,6 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
       GstEvent *ev;
-      GST_WARNING ("new segment being sent");
       ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
