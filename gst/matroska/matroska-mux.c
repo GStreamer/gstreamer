@@ -328,7 +328,6 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   templ =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   mux->srcpad = gst_pad_new_from_template (templ, "src");
-  g_object_unref (templ);
 
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
