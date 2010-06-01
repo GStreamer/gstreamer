@@ -49,7 +49,7 @@ G_BEGIN_DECLS
  *
  */
 struct _GESTrackFileSource {
-  GESTrackObject parent;
+  GESTrackSource parent;
 
   /*< public >*/
   gchar *uri;
@@ -61,7 +61,7 @@ struct _GESTrackFileSource {
  */
 
 struct _GESTrackFileSourceClass {
-  GESTrackObjectClass parent_class;
+  GESTrackSourceClass parent_class;
 
   /* <public> */
 };
