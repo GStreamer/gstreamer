@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 #define GES_TRACK_FILESOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourceClass))
 /** 
- * GESTrackFileSource
+ * GESTrackFileSource:
  * @uri: #gchar *, the URI of the media file to play
  *
  */
@@ -56,7 +56,7 @@ struct _GESTrackFileSource {
 };
 
 /**
- * GESTrackFileSourceClass
+ * GESTrackFileSourceClass:
  * @parent_class: parent class
  */
 
