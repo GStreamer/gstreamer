@@ -1,4 +1,144 @@
 <ARG>
+<NAME>GstPNMSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PNM Location</NICK>
+<BLURB>Location of the PNM url to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRDTManager::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::byte-offset</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Byte Offset</NICK>
+<BLURB>Emit reached-offset signal when the byte offset is reached.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::max-scr-gap</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max SCR gap</NICK>
+<BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
+<DEFAULT>120000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::time-offset</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Time Offset</NICK>
+<BLURB>Time offset in the stream.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGAudioParse::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Bit Rate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGAudioParse::skip</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>skip</NICK>
+<BLURB>skip.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>AC3IEC::raw-audio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>raw-audio</NICK>
+<BLURB>If true, source pad caps are set to raw audio.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCdioCddaSrc::read-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read speed</NICK>
+<BLURB>Read from device at the specified speed (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAmrnbEnc::band-mode</NAME>
+<TYPE>GstAmrnbEncBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Band Mode</NICK>
+<BLURB>Encoding Band Mode (Kbps).</BLURB>
+<DEFAULT>MR122</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAmrnbDec::variant</NAME>
+<TYPE>GstAmrnbVariant</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Variant</NICK>
+<BLURB>The decoder variant.</BLURB>
+<DEFAULT>IF1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA52Dec::drc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dynamic Range Compression</NICK>
+<BLURB>Use Dynamic Range Compression.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA52Dec::lfe</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>LFE</NICK>
+<BLURB>LFE.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstA52Dec::mode</NAME>
+<TYPE>GstA52DecMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Decoder Mode</NICK>
+<BLURB>Decoding Mode (default 3f2r).</BLURB>
+<DEFAULT>3 Front, 2 Rear</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstLame::allow-diff-short</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -329,83 +469,63 @@
 </ARG>
 
 <ARG>
-<NAME>GstMad::half</NAME>
+<NAME>GstLameMP3Enc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,320]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate (kb/s)</NICK>
+<BLURB>Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
+<DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::cbr</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Half</NICK>
-<BLURB>Generate PCM at 1/2 sample rate.</BLURB>
+<NICK>CBR</NICK>
+<BLURB>Enforce constant bitrate encoding (Only valid if target is bitrate).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstMad::ignore-crc</NAME>
+<NAME>GstLameMP3Enc::encoding-engine-quality</NAME>
+<TYPE>GstLameMP3EncEncodingEngineQuality</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding Engine Quality</NICK>
+<BLURB>Quality/speed of the encoding engine, this does not affect the bitrate!.</BLURB>
+<DEFAULT>Standard</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLameMP3Enc::mono</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Ignore CRC</NICK>
-<BLURB>Ignore CRC errors.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstID3Demux::prefer-v1</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>prefer version 1 tag</NICK>
-<BLURB>Prefer tags from tag at end of file.</BLURB>
+<NICK>Mono</NICK>
+<BLURB>Enforce mono encoding.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstID3Mux::v1-tag</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>add version 1 tag</NICK>
-<BLURB>Add version 1 tag at end of file.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<NAME>GstLameMP3Enc::quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,9.999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>VBR Quality from 0 to 10, 0 being the best (Only valid if target is quality).</BLURB>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstID3Mux::v2-tag</NAME>
-<TYPE>gboolean</TYPE>
+<NAME>GstLameMP3Enc::target</NAME>
+<TYPE>GstLameMP3EncTarget</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>add version 2 tag</NICK>
-<BLURB>Add version 2 tag at start of file.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstID3Tag::prefer-v1</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>prefer version 1 tag</NICK>
-<BLURB>Prefer tags from tag at end of file.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstID3Tag::v1-tag</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>add version 1 tag</NICK>
-<BLURB>Add version 1 tag at end of file.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstID3Tag::v2-tag</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>add version 2 tag</NICK>
-<BLURB>Add version 2 tag at start of file.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<FLAGS>rw</FLAGS>
+<NICK>Target</NICK>
+<BLURB>Optimize for quality or bitrate.</BLURB>
+<DEFAULT>Quality</DEFAULT>
 </ARG>
 
 <ARG>
@@ -496,206 +616,6 @@
 <NICK>tune</NICK>
 <BLURB>tune.</BLURB>
 <DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGAudioParse::bitrate</NAME>
-<TYPE>gint</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Bitrate</NICK>
-<BLURB>Bit Rate.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGAudioParse::skip</NAME>
-<TYPE>gint</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>skip</NICK>
-<BLURB>skip.</BLURB>
-<DEFAULT>0</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstA52Dec::drc</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Dynamic Range Compression</NICK>
-<BLURB>Use Dynamic Range Compression.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstA52Dec::lfe</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>LFE</NICK>
-<BLURB>LFE.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstA52Dec::mode</NAME>
-<TYPE>GstA52DecMode</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Decoder Mode</NICK>
-<BLURB>Decoding Mode (default 3f2r).</BLURB>
-<DEFAULT>3 Front, 2 Rear</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::adjust</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>adjust</NICK>
-<BLURB>Adjust timestamps to smooth discontinuities.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::byte-offset</NAME>
-<TYPE>guint64</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Byte Offset</NICK>
-<BLURB>Emit reached-offset signal when the byte offset is reached.</BLURB>
-<DEFAULT>18446744073709551615</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::max-discont</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Max Discont</NICK>
-<BLURB>The maximum allowed SCR discontinuity.</BLURB>
-<DEFAULT>120000</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::sync</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Sync</NICK>
-<BLURB>Synchronize on the stream SCR.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::time-offset</NAME>
-<TYPE>guint64</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>Time Offset</NICK>
-<BLURB>Time offset in the stream.</BLURB>
-<DEFAULT>18446744073709551615</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstMPEGParse::max-scr-gap</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Max SCR gap</NICK>
-<BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
-<DEFAULT>120000</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>AC3IEC::raw-audio</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>raw-audio</NICK>
-<BLURB>If true, source pad caps are set to raw audio.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDvdReadSrc::angle</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[1,999]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>angle</NICK>
-<BLURB>angle.</BLURB>
-<DEFAULT>1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDvdReadSrc::chapter</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[1,999]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>chapter</NICK>
-<BLURB>chapter.</BLURB>
-<DEFAULT>1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDvdReadSrc::device</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>DVD device location.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDvdReadSrc::title</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[1,999]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>title</NICK>
-<BLURB>title.</BLURB>
-<DEFAULT>1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstRDTManager::latency</NAME>
-<TYPE>guint</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Buffer latency in ms</NICK>
-<BLURB>Amount of ms to buffer.</BLURB>
-<DEFAULT>200</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstAmrnbEnc::band-mode</NAME>
-<TYPE>GstAmrnbEncBandMode</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>Band Mode</NICK>
-<BLURB>Encoding Band Mode (Kbps).</BLURB>
-<DEFAULT>MR122</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCdioCddaSrc::read-speed</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,100]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Read speed</NICK>
-<BLURB>Read from device at the specified speed (-1 = default).</BLURB>
-<DEFAULT>-1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstPNMSrc::location</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>PNM Location</NICK>
-<BLURB>Location of the PNM url to read.</BLURB>
-<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -849,96 +769,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstLameMP3Enc::bitrate</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[8,320]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Bitrate (kb/s)</NICK>
-<BLURB>Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256 or 320).</BLURB>
-<DEFAULT>128</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::cbr</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>CBR</NICK>
-<BLURB>Enforce constant bitrate encoding (Only valid if target is bitrate).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::encoding-engine-quality</NAME>
-<TYPE>GstLameMP3EncEncodingEngineQuality</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Encoding Engine Quality</NICK>
-<BLURB>Quality/speed of the encoding engine, this does not affect the bitrate!.</BLURB>
-<DEFAULT>Standard</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::fast-vbr</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Fast VBR</NICK>
-<BLURB>Use fast VBR encoding.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::mono</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Mono</NICK>
-<BLURB>Enforce mono encoding.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::target</NAME>
-<TYPE>GstLameMP3EncTarget</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Target</NICK>
-<BLURB>Optimize for quality or bitrate.</BLURB>
-<DEFAULT>Quality</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::vbr-quality</NAME>
-<TYPE>gfloat</TYPE>
-<RANGE>[0,9.999]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>VBR Quality</NICK>
-<BLURB>VBR Quality from 0 to 10, 0 being the best.</BLURB>
-<DEFAULT>4</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstLameMP3Enc::quality</NAME>
-<TYPE>gfloat</TYPE>
-<RANGE>[0,9.999]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Quality</NICK>
-<BLURB>VBR Quality from 0 to 10, 0 being the best (Only valid if target is quality).</BLURB>
-<DEFAULT>4</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstAmrnbDec::variant</NAME>
-<TYPE>GstAmrnbVariant</TYPE>
-<RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>Variant</NICK>
-<BLURB>The decoder variant.</BLURB>
-<DEFAULT>IF1</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstX264Enc::analyse</NAME>
 <TYPE>GstX264EncAnalyse</TYPE>
 <RANGE></RANGE>
@@ -946,6 +776,16 @@
 <NICK>Analyse</NICK>
 <BLURB>Partitions to consider.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::aud</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AUD</NICK>
+<BLURB>Use AU (Access Unit) delimiter.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1219,12 +1059,62 @@
 </ARG>
 
 <ARG>
-<NAME>GstX264Enc::aud</NAME>
+<NAME>GstMad::half</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>AUD</NICK>
-<BLURB>Use AU (Access Unit) delimiter.</BLURB>
+<NICK>Half</NICK>
+<BLURB>Generate PCM at 1/2 sample rate.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMad::ignore-crc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ignore CRC</NICK>
+<BLURB>Ignore CRC errors.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::angle</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>angle</NICK>
+<BLURB>angle.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::chapter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>chapter</NICK>
+<BLURB>chapter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>DVD device location.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::title</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>title</NICK>
+<BLURB>title.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
