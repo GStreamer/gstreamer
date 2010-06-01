@@ -82,6 +82,35 @@ static void gst_check_log_critical_func
     _gst_check_raised_warning = TRUE;
 }
 
+static gint
+sort_plugins (GstPlugin * a, GstPlugin * b)
+{
+  int ret;
+
+  ret = strcmp (gst_plugin_get_source (a), gst_plugin_get_source (b));
+  if (ret == 0)
+    ret = strcmp (gst_plugin_get_name (a), gst_plugin_get_name (b));
+  return ret;
+}
+
+static void
+print_plugins (void)
+{
+  GList *plugins, *l;
+
+  plugins = gst_default_registry_get_plugin_list ();
+  plugins = g_list_sort (plugins, (GCompareFunc) sort_plugins);
+  for (l = plugins; l != NULL; l = l->next) {
+    GstPlugin *plugin = GST_PLUGIN (l->data);
+
+    if (strcmp (gst_plugin_get_source (plugin), "BLACKLIST") != 0) {
+      GST_LOG ("%20s@%s", gst_plugin_get_name (plugin),
+          GST_STR_NULL (gst_plugin_get_filename (plugin)));
+    }
+  }
+  gst_plugin_list_free (plugins);
+}
+
 /* initialize GStreamer testing */
 void
 gst_check_init (int *argc, char **argv[])
@@ -103,6 +132,8 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
   g_log_set_handler ("Gst-Phonon", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
+
+  print_plugins ();
 
   check_cond = g_cond_new ();
   check_mutex = g_mutex_new ();
