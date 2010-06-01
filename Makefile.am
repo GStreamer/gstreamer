@@ -56,6 +56,19 @@ check-torture:
 endif
 
 win32-update:
+	for f in gst/udp/gstudp-marshal.c \
+		 gst/udp/gstudp-marshal.h \
+		 gst/udp/gstudp-enumtypes.c \
+		 gst/udp/gstudp-enumtypes.h \
+		 gst/rtpmanager/gstrtpbin-marshal.c \
+		 gst/rtpmanager/gstrtpbin-marshal.h ; do \
+		cp $(top_builddir)/$$f win32/common; done
+	$(top_srcdir)/common/gst-indent win32/common/gstudp-marshal.c
+	$(top_srcdir)/common/gst-indent win32/common/gstudp-marshal.c
+	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
+	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
+	$(top_srcdir)/common/gst-indent gst/rtpmanager/gstrtpbin-marshal.c
+	$(top_srcdir)/common/gst-indent gst/rtpmanager/gstrtpbin-marshal.c
 	cp $(top_builddir)/win32/common/config.h-new \
 	    $(top_srcdir)/win32/common/config.h
 
