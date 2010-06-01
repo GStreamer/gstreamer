@@ -803,6 +803,10 @@ AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
   if test x$HAVE_PULSE_0_9_15 = xyes; then
     AC_DEFINE(HAVE_PULSE_0_9_15, 1, [defined if pulseaudio >= 0.9.15 is available])
   fi
+  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_16, libpulse >= 0.9.16)
+  if test x$HAVE_PULSE_0_9_16 = xyes; then
+    AC_DEFINE(HAVE_PULSE_0_9_16, 1, [defined if pulseaudio >= 0.9.16 is available])
+  fi
   AG_GST_PKG_CHECK_MODULES(PULSE_0_9_20, libpulse >= 0.9.20)
   if test x$HAVE_PULSE_0_9_20 = xyes; then
     AC_DEFINE(HAVE_PULSE_0_9_20, 1, [defined if pulseaudio >= 0.9.20 is available])
