@@ -778,7 +778,6 @@ gst_ebml_replace_uint (GstEbmlWrite * ebml, guint64 pos, guint64 num)
   guint64 oldpos = ebml->pos;
   GstBuffer *buf = gst_buffer_new_and_alloc (8);
 
-  GST_DEBUG ("replace_uint");
   gst_ebml_write_seek (ebml, pos);
   GST_BUFFER_SIZE (buf) = 0;
   gst_ebml_write_set_uint (buf, num, 8);
