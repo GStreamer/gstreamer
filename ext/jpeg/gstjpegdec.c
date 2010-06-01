@@ -1686,8 +1686,8 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->next_ts = 0;
       dec->discont = TRUE;
       dec->parse_offset = 0;
+      dec->parse_entropy_len = 0;
       dec->parse_resync = FALSE;
-      dec->parse_entropy_len = FALSE;
       gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
       gst_jpeg_dec_reset_qos (dec);
     default:
