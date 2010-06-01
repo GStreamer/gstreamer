@@ -121,9 +121,9 @@ gst_pulse_client_name (void)
   const char *c;
 
   if ((c = g_get_application_name ()))
-    return g_strdup_printf ("%s", c);
+    return g_strdup (c);
   else if (pa_get_binary_name (buf, sizeof (buf)))
-    return g_strdup_printf ("%s", buf);
+    return g_strdup (buf);
   else
     return g_strdup ("GStreamer");
 }
