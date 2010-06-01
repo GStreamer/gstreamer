@@ -384,7 +384,7 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
           ok = FALSE;
         }
       } else if ((depth == 15 || depth == 16) && bpp == 16 &&
-          endianness == G_BIG_ENDIAN) {
+          endianness == G_BYTE_ORDER) {
         *format = gst_video_format_from_rgb16_masks (red_mask, green_mask,
             blue_mask);
         if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -513,9 +513,9 @@ gst_video_parse_caps_pixel_aspect_ratio (GstCaps * caps, int *par_n, int *par_d)
  * Returns: a new #GstCaps object, or NULL if there was an error
  */
 GstCaps *
-gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
-    int height, int framerate_n, int framerate_d, int par_n, int par_d,
-    gboolean interlaced)
+gst_video_format_new_caps_interlaced (GstVideoFormat format,
+    int width, int height, int framerate_n, int framerate_d, int par_n,
+    int par_d, gboolean interlaced)
 {
   GstCaps *res;
 
@@ -545,8 +545,8 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
  * Returns: a new #GstCaps object, or NULL if there was an error
  */
 GstCaps *
-gst_video_format_new_caps (GstVideoFormat format, int width, int height,
-    int framerate_n, int framerate_d, int par_n, int par_d)
+gst_video_format_new_caps (GstVideoFormat format, int width,
+    int height, int framerate_n, int framerate_d, int par_n, int par_d)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
   g_return_val_if_fail (width > 0 && height > 0, NULL);
@@ -615,14 +615,14 @@ gst_video_format_new_caps (GstVideoFormat format, int width, int height,
         mask = 0xff0000;
       }
       red_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 0, width,
-              height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 0,
+              width, height));
       green_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 1, width,
-              height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 1,
+              width, height));
       blue_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 2, width,
-              height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 2,
+              width, height));
     } else if (bpp == 16) {
       switch (format) {
         case GST_VIDEO_FORMAT_RGB16:
@@ -666,8 +666,8 @@ gst_video_format_new_caps (GstVideoFormat format, int width, int height,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
     if (have_alpha) {
       alpha_mask =
-          mask >> (8 * gst_video_format_get_component_offset (format, 3, width,
-              height));
+          mask >> (8 * gst_video_format_get_component_offset (format, 3,
+              width, height));
       gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, alpha_mask, NULL);
     }
     return caps;
@@ -869,8 +869,8 @@ gst_video_format_from_rgb32_masks (int red_mask, int green_mask, int blue_mask)
 }
 
 static GstVideoFormat
-gst_video_format_from_rgba32_masks (int red_mask, int green_mask, int blue_mask,
-    int alpha_mask)
+gst_video_format_from_rgba32_masks (int red_mask, int green_mask,
+    int blue_mask, int alpha_mask)
 {
   if (red_mask == 0xff000000 && green_mask == 0x00ff0000 &&
       blue_mask == 0x0000ff00 && alpha_mask == 0x000000ff) {
@@ -1297,8 +1297,8 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
  * Returns: width of component @component
  */
 int
-gst_video_format_get_component_width (GstVideoFormat format, int component,
-    int width)
+gst_video_format_get_component_width (GstVideoFormat format,
+    int component, int width)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (component >= 0 && component <= 3, 0);
@@ -1369,8 +1369,8 @@ gst_video_format_get_component_width (GstVideoFormat format, int component,
  * Returns: height of component @component
  */
 int
-gst_video_format_get_component_height (GstVideoFormat format, int component,
-    int height)
+gst_video_format_get_component_height (GstVideoFormat format,
+    int component, int height)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (component >= 0 && component <= 3, 0);
@@ -1440,8 +1440,8 @@ gst_video_format_get_component_height (GstVideoFormat format, int component,
  * Returns: offset of component @component
  */
 int
-gst_video_format_get_component_offset (GstVideoFormat format, int component,
-    int width, int height)
+gst_video_format_get_component_offset (GstVideoFormat format,
+    int component, int width, int height)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, 0);
   g_return_val_if_fail (component >= 0 && component <= 3, 0);

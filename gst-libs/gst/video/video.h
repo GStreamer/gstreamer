@@ -96,7 +96,7 @@ typedef enum {
   GST_VIDEO_FORMAT_GRAY16_LE,
   GST_VIDEO_FORMAT_v308,
   GST_VIDEO_FORMAT_Y800,
-  GST_VIDEO_FORMAT_Y16
+  GST_VIDEO_FORMAT_Y16,
   GST_VIDEO_FORMAT_RGB16,
   GST_VIDEO_FORMAT_BGR16,
   GST_VIDEO_FORMAT_RGB15,
@@ -182,7 +182,7 @@ typedef enum {
     "video/x-raw-rgb, "                                                 \
     "bpp = (int) 16, "                                                  \
     "depth = (int) 16, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
+    "endianness = (int) BYTE_ORDER, "                                   \
     "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_16 ", "            \
     "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_16 ", "          \
     "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_16 ", "           \
@@ -194,7 +194,7 @@ typedef enum {
     "video/x-raw-rgb, "                                                 \
     "bpp = (int) 16, "                                                  \
     "depth = (int) 15, "                                                \
-    "endianness = (int) BIG_ENDIAN, "                                   \
+    "endianness = (int) BYTE_ORDER, "                                   \
     "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_15 ", "            \
     "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_15 ", "          \
     "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_15 ", "           \
