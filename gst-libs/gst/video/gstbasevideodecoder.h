@@ -20,11 +20,6 @@
 #ifndef _GST_BASE_VIDEO_DECODER_H_
 #define _GST_BASE_VIDEO_DECODER_H_
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "GstBaseVideoDecoder is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/video/gstbasevideocodec.h>
 
 G_BEGIN_DECLS
@@ -56,10 +51,9 @@ G_BEGIN_DECLS
 #define GST_BASE_VIDEO_DECODER_SRC_NAME     "src"
 
 /**
- * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
- *
- * Custom GstFlowReturn value indicating that more data is needed.
- */
+ *  * GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA:
+ *   *
+ *    */
 #define GST_BASE_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
 
@@ -81,6 +75,7 @@ struct _GstBaseVideoDecoder
   gboolean started;
 
   GstVideoState state;
+  GstSegment segment;
 
   gboolean sink_clipping;
 
@@ -102,33 +97,41 @@ struct _GstBaseVideoDecoder
   gdouble proportion;
   GstClockTime earliest_time;
 
-  GstBuffer *codec_data;
+  //GstBuffer *codec_data;
 
-  guint64 offset;
+  guint64 input_offset;
+  guint64 frame_offset;
   GstClockTime last_timestamp;
 
-  GstClockTime last_sink_timestamp;
-  GstClockTime last_sink_offset_end;
   guint64 base_picture_number;
 
   int field_index;
+
+  gboolean is_delta_unit;
+  gboolean packetized;
+
+  GList *timestamps;
 };
 
 struct _GstBaseVideoDecoderClass
 {
   GstBaseVideoCodecClass base_video_codec_class;
 
-  gboolean (*set_sink_caps) (GstBaseVideoDecoder *coder, GstCaps *caps);
+  gboolean (*set_format) (GstBaseVideoDecoder *coder, GstVideoFormat,
+      int width, int height, int fps_n, int fps_d,
+      int par_n, int par_d);
   gboolean (*start) (GstBaseVideoDecoder *coder);
   gboolean (*stop) (GstBaseVideoDecoder *coder);
   gboolean (*reset) (GstBaseVideoDecoder *coder);
   int (*scan_for_sync) (GstBaseVideoDecoder *decoder, gboolean at_eos,
       int offset, int n);
   GstFlowReturn (*parse_data) (GstBaseVideoDecoder *decoder, gboolean at_eos);
-  gboolean (*finish) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
-  GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
+  GstFlowReturn (*finish) (GstBaseVideoDecoder *coder);
+  GstFlowReturn (*handle_frame) (GstBaseVideoDecoder *coder, GstVideoFrame *frame,
+				 GstClockTimeDiff deadline);
   GstFlowReturn (*shape_output) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoDecoder *coder);
+
 };
 
 GType gst_base_video_decoder_get_type (void);
@@ -140,10 +143,13 @@ guint64 gst_base_video_decoder_get_timestamp_offset (GstBaseVideoDecoder *coder)
 
 GstVideoFrame *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
     int frame_number);
+GstVideoFrame *gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *coder);
 void gst_base_video_decoder_add_to_frame (GstBaseVideoDecoder *base_video_decoder,
     int n_bytes);
 GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_video_decoder,
     GstVideoFrame *frame);
+GstFlowReturn gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoFrame * frame);
 GstFlowReturn gst_base_video_decoder_end_of_stream (GstBaseVideoDecoder *base_video_decoder,
     GstBuffer *buffer);
 GstFlowReturn
@@ -156,6 +162,8 @@ void gst_base_video_decoder_set_sync_point (GstBaseVideoDecoder *base_video_deco
 
 void gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder *base_video_decoder);
 
+GstFlowReturn gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *base_video_decoder,
+    GstVideoFrame *frame);
 
 G_END_DECLS
 

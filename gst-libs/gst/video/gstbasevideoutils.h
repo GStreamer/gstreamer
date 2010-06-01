@@ -20,11 +20,6 @@
 #ifndef _GST_BASE_VIDEO_UTILS_H_
 #define _GST_BASE_VIDEO_UTILS_H_
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The base video utils API is unstable and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstadapter.h>
@@ -40,6 +35,8 @@ struct _GstVideoState
   int width, height;
   int fps_n, fps_d;
   int par_n, par_d;
+
+  gboolean have_interlaced;
   gboolean interlaced;
   gboolean top_field_first;
 
@@ -48,16 +45,18 @@ struct _GstVideoState
 
   int bytes_per_picture;
 
-  GstSegment segment;
+  //GstSegment segment;
 
   int picture_number;
+  GstBuffer *codec_data;
+
 };
 
 struct _GstVideoFrame
 {
-  guint64 decode_timestamp;
-  guint64 presentation_timestamp;
-  guint64 presentation_duration;
+  GstClockTime decode_timestamp;
+  GstClockTime presentation_timestamp;
+  GstClockTime presentation_duration;
 
   gint system_frame_number;
   gint decode_frame_number;
@@ -87,7 +86,11 @@ gboolean gst_base_video_state_from_caps (GstVideoState *state,
     GstCaps *caps);
 
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
-    int frame_number);
+    GstSegment *segment, int frame_number);
+
+int gst_adapter_masked_scan_uint32_compat (GstAdapter *adapter,
+    guint32 pattern, guint32 mask, guint offset, guint n);
+GstBuffer *gst_adapter_get_buffer (GstAdapter *adapter);
 
 G_END_DECLS
 

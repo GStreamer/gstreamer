@@ -29,6 +29,21 @@ GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
 #define GST_CAT_DEFAULT basevideo_debug
 
 
+#if 0
+guint64
+gst_base_video_convert_bytes_to_frames (GstVideoState * state, guint64 bytes)
+{
+  return gst_util_uint64_scale_int (bytes, 1, state->bytes_per_picture);
+}
+
+guint64
+gst_base_video_convert_frames_to_bytes (GstVideoState * state, guint64 frames)
+{
+  return frames * state->bytes_per_picture;
+}
+#endif
+
+
 gboolean
 gst_base_video_rawvideo_convert (GstVideoState * state,
     GstFormat src_format, gint64 src_value,
@@ -113,8 +128,7 @@ gst_base_video_state_from_caps (GstVideoState * state, GstCaps * caps)
   gst_video_format_parse_caps (caps, &state->format,
       &state->width, &state->height);
 
-  if (!gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d))
-    return FALSE;
+  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
 
   state->par_n = 1;
   state->par_d = 1;
@@ -136,15 +150,129 @@ gst_base_video_state_from_caps (GstVideoState * state, GstCaps * caps)
 }
 
 GstClockTime
-gst_video_state_get_timestamp (const GstVideoState * state, int frame_number)
+gst_video_state_get_timestamp (const GstVideoState * state,
+    GstSegment * segment, int frame_number)
 {
   if (frame_number < 0) {
-    return state->segment.start -
+    return segment->start -
         (gint64) gst_util_uint64_scale (-frame_number,
         state->fps_d * GST_SECOND, state->fps_n);
   } else {
-    return state->segment.start +
+    return segment->start +
         gst_util_uint64_scale (frame_number,
         state->fps_d * GST_SECOND, state->fps_n);
   }
+}
+
+/* gst adapter */
+
+static GSList *
+get_chunk (GstAdapter * adapter, int offset, int *skip)
+{
+  GSList *g;
+
+#if 1
+  if (skip)
+    *skip = 0;
+#endif
+
+  g_return_val_if_fail (offset >= 0, NULL);
+  g_return_val_if_fail (offset < adapter->size, NULL);
+
+  offset += adapter->skip;
+  g = adapter->buflist;
+  while (g) {
+    if (offset < GST_BUFFER_SIZE (GST_BUFFER_CAST (g->data))) {
+      if (skip)
+        *skip = offset;
+      return g;
+    }
+    offset -= GST_BUFFER_SIZE (GST_BUFFER_CAST (g->data));
+    g = g->next;
+  }
+
+  g_assert_not_reached ();
+}
+
+static int
+scan_fast (guint8 * data, guint32 pattern, guint32 mask, int n)
+{
+  int i;
+
+  pattern &= mask;
+  for (i = 0; i < n; i++) {
+    if ((GST_READ_UINT32_BE (data + i) & mask) == pattern) {
+      return i;
+    }
+  }
+  return n;
+}
+
+static gboolean
+scan_slow (GstAdapter * adapter, GSList * g, int skip, guint32 pattern,
+    guint32 mask)
+{
+  guint8 tmp[4];
+  int j;
+
+  pattern &= mask;
+  for (j = 0; j < 4; j++) {
+    tmp[j] = ((guint8 *) GST_BUFFER_DATA (GST_BUFFER_CAST (g->data)))[skip];
+    skip++;
+    if (skip >= GST_BUFFER_SIZE (GST_BUFFER_CAST (g->data))) {
+      g = g->next;
+      skip = 0;
+    }
+  }
+
+  return ((GST_READ_UINT32_BE (tmp) & mask) == pattern);
+}
+
+int
+gst_adapter_masked_scan_uint32_compat (GstAdapter * adapter, guint32 mask,
+    guint32 pattern, guint offset, guint n)
+{
+  GSList *g;
+  int j;
+  int k;
+  int skip;
+  int m;
+
+  g_return_val_if_fail (n >= 0, -1);
+  g_return_val_if_fail (offset >= 0, -1);
+  g_return_val_if_fail (offset + n + 4 <= adapter->size, -1);
+
+  g = get_chunk (adapter, offset, &skip);
+  j = 0;
+  while (j < n) {
+    m = MIN (GST_BUFFER_SIZE (GST_BUFFER_CAST (g->data)) - skip - 4, 0);
+    if (m > 0) {
+      k = scan_fast (GST_BUFFER_DATA (GST_BUFFER_CAST (g->data)) + skip,
+          pattern, mask, m);
+      if (k < m) {
+        return offset + j + k;
+      }
+      j += m;
+      skip += m;
+    } else {
+      if (scan_slow (adapter, g, skip, pattern, mask)) {
+        return offset + j;
+      }
+      j++;
+      skip++;
+    }
+    if (skip >= GST_BUFFER_SIZE (GST_BUFFER_CAST (g->data))) {
+      g = g->next;
+      skip = 0;
+    }
+  }
+
+  return -1;
+}
+
+GstBuffer *
+gst_adapter_get_buffer (GstAdapter * adapter)
+{
+  return gst_buffer_ref (GST_BUFFER_CAST (adapter->buflist->data));
+
 }
