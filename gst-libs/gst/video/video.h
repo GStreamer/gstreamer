@@ -57,8 +57,12 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_GRAY16_BE: 16-bit grayscale, most significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_GRAY16_LE: 16-bit grayscale, least significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_v308: packed 4:4:4 YUV (Since: 0.10.29)
- * @GST_VIDEO_FORMAT_Y800: same as GST_VIDEO_FORMAT_GRAY8 (Since: 0.10.29)
- * @GST_VIDEO_FORMAT_Y16: same as GST_VIDEO_FORMAT_GRAY16_LE (Since: 0.10.29)
+ * @GST_VIDEO_FORMAT_Y800: same as GST_VIDEO_FORMAT_GRAY8 (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_Y16: same as GST_VIDEO_FORMAT_GRAY16_LE (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_RGB16: rgb 5-6-5 bits per component (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_BGR16: reverse rgb 5-6-5 bits per component (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_RGB15: rgb 5-5-5 bits per component (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_BGR15: reverse rgb 5-5-5 bits per component (Since: 0.10.30)
  *
  * Enum value describing the most common video formats.
  */
@@ -93,6 +97,10 @@ typedef enum {
   GST_VIDEO_FORMAT_v308,
   GST_VIDEO_FORMAT_Y800,
   GST_VIDEO_FORMAT_Y16
+  GST_VIDEO_FORMAT_RGB16,
+  GST_VIDEO_FORMAT_BGR16,
+  GST_VIDEO_FORMAT_RGB15,
+  GST_VIDEO_FORMAT_BGR15
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
@@ -113,21 +121,21 @@ typedef enum {
 #define GST_VIDEO_BYTE2_MASK_24_INT  0x0000FF00
 #define GST_VIDEO_BYTE3_MASK_24_INT  0x000000FF
 
-#define GST_VIDEO_RED_MASK_16 "0xf800"
-#define GST_VIDEO_GREEN_MASK_16 "0x07e0"
-#define GST_VIDEO_BLUE_MASK_16 "0x001f"
+#define GST_VIDEO_COMP1_MASK_16 "0xf800"
+#define GST_VIDEO_COMP2_MASK_16 "0x07e0"
+#define GST_VIDEO_COMP3_MASK_16 "0x001f"
 
-#define GST_VIDEO_RED_MASK_15 "0x7c00"
-#define GST_VIDEO_GREEN_MASK_15 "0x03e0"
-#define GST_VIDEO_BLUE_MASK_15 "0x001f"
+#define GST_VIDEO_COMP1_MASK_15 "0x7c00"
+#define GST_VIDEO_COMP2_MASK_15 "0x03e0"
+#define GST_VIDEO_COMP3_MASK_15 "0x001f"
 
-#define GST_VIDEO_RED_MASK_16_INT 0xf800
-#define GST_VIDEO_GREEN_MASK_16_INT 0x07e0
-#define GST_VIDEO_BLUE_MASK_16_INT 0x001f
+#define GST_VIDEO_COMP1_MASK_16_INT 0xf800
+#define GST_VIDEO_COMP2_MASK_16_INT 0x07e0
+#define GST_VIDEO_COMP3_MASK_16_INT 0x001f
 
-#define GST_VIDEO_RED_MASK_15_INT 0x7c00
-#define GST_VIDEO_GREEN_MASK_15_INT 0x03e0
-#define GST_VIDEO_BLUE_MASK_15_INT 0x001f
+#define GST_VIDEO_COMP1_MASK_15_INT 0x7c00
+#define GST_VIDEO_COMP2_MASK_15_INT 0x03e0
+#define GST_VIDEO_COMP3_MASK_15_INT 0x001f
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
@@ -166,6 +174,30 @@ typedef enum {
     "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_24 ", "            \
     "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_24 ", "          \
     "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_24 ", "           \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
+
+#define __GST_VIDEO_CAPS_MAKE_16(R, G, B)                               \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 16, "                                                  \
+    "depth = (int) 16, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_16 ", "            \
+    "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_16 ", "          \
+    "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_16 ", "           \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
+
+#define __GST_VIDEO_CAPS_MAKE_15(R, G, B)                               \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 16, "                                                  \
+    "depth = (int) 15, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) " GST_VIDEO_COMP ## R ## _MASK_15 ", "            \
+    "green_mask = (int) " GST_VIDEO_COMP ## G ## _MASK_15 ", "          \
+    "blue_mask = (int) " GST_VIDEO_COMP ## B ## _MASK_15 ", "           \
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
@@ -222,29 +254,17 @@ typedef enum {
       
 /* 15/16 bit */
   
-#define GST_VIDEO_CAPS_RGB_16                                           \
-            "video/x-raw-rgb, "                                         \
-            "bpp = (int) 16, "                                          \
-            "depth = (int) 16, "                                        \
-            "endianness = (int) BYTE_ORDER, "                           \
-            "red_mask = (int) " GST_VIDEO_RED_MASK_16 ", "              \
-            "green_mask = (int) " GST_VIDEO_GREEN_MASK_16 ", "          \
-            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_16 ", "            \
-            "width = " GST_VIDEO_SIZE_RANGE ", "                        \
-            "height = " GST_VIDEO_SIZE_RANGE ", "                       \
-            "framerate = " GST_VIDEO_FPS_RANGE
+#define GST_VIDEO_CAPS_RGB_16 \
+    __GST_VIDEO_CAPS_MAKE_16 (1, 2, 3)
 
-#define GST_VIDEO_CAPS_RGB_15                                           \
-            "video/x-raw-rgb, "                                         \
-            "bpp = (int) 16, "                                          \
-            "depth = (int) 15, "                                        \
-            "endianness = (int) BYTE_ORDER, "                           \
-            "red_mask = (int) " GST_VIDEO_RED_MASK_15 ", "              \
-            "green_mask = (int) " GST_VIDEO_GREEN_MASK_15 ", "          \
-            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_15 ", "            \
-            "width = " GST_VIDEO_SIZE_RANGE ", "                        \
-            "height = " GST_VIDEO_SIZE_RANGE ", "                       \
-            "framerate = " GST_VIDEO_FPS_RANGE
+#define GST_VIDEO_CAPS_BGR_16 \
+    __GST_VIDEO_CAPS_MAKE_16 (3, 2, 1)
+
+#define GST_VIDEO_CAPS_RGB_15 \
+    __GST_VIDEO_CAPS_MAKE_15 (1, 2, 3)
+
+#define GST_VIDEO_CAPS_BGR_15 \
+    __GST_VIDEO_CAPS_MAKE_15 (3, 2, 1)
 
 /**
  * GST_VIDEO_CAPS_YUV:
