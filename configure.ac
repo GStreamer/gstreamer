@@ -291,6 +291,12 @@ PKG_CHECK_MODULES(QT, QtGui >= 4.6, [
   HAVE_QT_GV=no
   PKG_CHECK_MODULES(QT, QtGui >= 4.0, HAVE_QT=yes, HAVE_QT=no)
 ])
+if test "x$HAVE_QT" = "xyes"; then
+  AC_MSG_CHECKING([Qt moc])
+  QT4_MOC=`$PKG_CONFIG --variable=moc_location QtGui`
+  AC_MSG_RESULT($QT4_MOC)
+  AC_SUBST(QT4_MOC)
+fi
 AM_CONDITIONAL(HAVE_QT, test "x$HAVE_QT" = "xyes")
 AM_CONDITIONAL(HAVE_QT_GV, test "x$HAVE_QT_GV" = "xyes")
 
