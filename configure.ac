@@ -238,11 +238,9 @@ esac
 ],
 [enable_orc=yes]) dnl Default value
 
+ORC_REQ=0.4.4.1
 if test "x$enable_orc" = "xyes" ; then
-  PKG_CHECK_MODULES(ORC, orc-0.4 >= 0.4.4.1, HAVE_ORC=yes, HAVE_ORC=no)
-  if test "x$HAVE_ORC" != "xyes"; then
-    AC_ERROR([orc-0.4.0 or later is required])
-  fi
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, HAVE_ORC=yes, HAVE_ORC=no)
   AC_DEFINE(HAVE_ORC, 1, [Use Orc])
 
   ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
@@ -614,7 +612,7 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
 dnl *** Cog ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
 AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
-  PKG_CHECK_MODULES(COG, libpng >= 1.2 orc-0.4 >= 0.4.4.1, HAVE_COG="yes", [
+  PKG_CHECK_MODULES(COG, libpng >= 1.2 orc-0.4 >= $ORC_REQ, HAVE_COG="yes", [
     HAVE_COG="no"
     AC_MSG_RESULT(no)
   ])
