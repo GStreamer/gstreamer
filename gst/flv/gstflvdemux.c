@@ -2543,6 +2543,8 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
       demux->seek_event = gst_event_ref (event);
       demux->seek_time = seeksegment.last_stop;
       demux->state = FLV_STATE_SEEK;
+      /* do not know about succes yet, but we did care and handled it */
+      ret = TRUE;
       goto exit;
     }
     /* now index should be as reliable as it can be for current purpose */
