@@ -173,6 +173,10 @@ ges_track_transition_dispose (GObject * object)
     self->a_bcontrol_source = NULL;
   }
 
+  if (self->vsmpte) {
+    g_object_unref (self->vsmpte);
+  }
+
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
@@ -198,7 +202,7 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
 
 static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
-    GstElement * mixer, gint type)
+    GstElement * mixer, gint type, GstElement ** smpteref)
 {
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
   g_object_set (G_OBJECT (smptealpha),
@@ -206,6 +210,11 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
   gst_bin_add (bin, smptealpha);
 
   gst_element_link_many (element, smptealpha, mixer, NULL);
+
+  /* crack */
+  if (smpteref) {
+    *smpteref = smptealpha;
+  }
 
   return G_OBJECT (smptealpha);
 }
@@ -247,9 +256,10 @@ create_video_bin (GESTrackTransition * self)
 
   if (self->vtype) {
     link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
-        self->vtype);
+        self->vtype, NULL);
     target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
-        mixer, self->vtype);
+        mixer, self->vtype, &self->vsmpte);
+    g_object_ref (self->vsmpte);
     propname = "position";
     self->vstart_value = 1.0;
     self->vend_value = 0.0;
@@ -426,6 +436,7 @@ ges_track_transition_init (GESTrackTransition * self)
 {
   self->vcontroller = NULL;
   self->vcontrol_source = NULL;
+  self->vsmpte = NULL;
   self->vtype = 0;
   self->vstart_value = 0.0;
   self->vend_value = 0.0;
@@ -435,6 +446,18 @@ ges_track_transition_init (GESTrackTransition * self)
 
   self->a_bcontroller = NULL;
   self->a_bcontrol_source = NULL;
+}
+
+gboolean
+ges_track_transition_set_vtype (GESTrackTransition * self, gint vtype)
+{
+  if ((!vtype && (self->vtype)) || (vtype && !(self->vtype))) {
+    GST_WARNING
+        ("Changing between 'crossfade' and other types is not supported\n");
+  }
+  self->vtype = vtype;
+  if (self->vsmpte && (vtype != 0))
+    g_object_set (self->vsmpte, "type", (gint) vtype, NULL);
 }
 
 GESTrackTransition *

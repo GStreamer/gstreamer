@@ -72,6 +72,9 @@ struct _GESTrackTransition
   /* these enable video interpolation */
   GstController                 *vcontroller;
   GstInterpolationControlSource *vcontrol_source;
+
+  /* so we can support changing between wipes */
+  GstElement                    *vsmpte;
   
   /* these will be different depending on whether smptealpha or alpha element
    * is used */
