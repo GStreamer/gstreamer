@@ -3,7 +3,8 @@ plugin_LTLIBRARIES = libgstgeometrictransform.la
 libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstgeometrictransform.c \
                                       gstcirclegeometrictransform.c \
-                                      gstpinch.c
+                                      gstpinch.c \
+                                      gsttwirl.c
 
 libgstgeometrictransform_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 			    $(GST_PLUGINS_BASE_CFLAGS)
@@ -13,4 +14,5 @@ libgstgeometrictransform_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstgeometrictransform.h \
                  gstcirclegeometrictransform.h \
-                 gstpinch.h
+                 gstpinch.h \
+                 gsttwirl.h
