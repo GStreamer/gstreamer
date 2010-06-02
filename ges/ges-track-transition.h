@@ -65,7 +65,7 @@ struct _GESTrackTransition
 
   /*< public >*/
   /* given to to smpte alpha element */
-  GEnumValue                    *vtype;
+  gint                          vtype;
 
   /*< private >*/
   
@@ -99,7 +99,7 @@ struct _GESTrackTransitionClass {
 
 GType ges_track_transition_get_type (void);
 
-GESTrackTransition *ges_track_transition_new (GEnumValue * type);
+GESTrackTransition *ges_track_transition_new (GEnumValue *type);
 
 G_END_DECLS
 

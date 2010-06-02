@@ -198,11 +198,11 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
 
 static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
-    GstElement * mixer, GEnumValue * type)
+    GstElement * mixer, gint type)
 {
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
   g_object_set (G_OBJECT (smptealpha),
-      "type", (gint) type->value, "invert", (gboolean) TRUE, NULL);
+      "type", (gint) type, "invert", (gboolean) TRUE, NULL);
   gst_bin_add (bin, smptealpha);
 
   gst_element_link_many (element, smptealpha, mixer, NULL);
@@ -426,7 +426,7 @@ ges_track_transition_init (GESTrackTransition * self)
 {
   self->vcontroller = NULL;
   self->vcontrol_source = NULL;
-  self->vtype = NULL;
+  self->vtype = 0;
   self->vstart_value = 0.0;
   self->vend_value = 0.0;
 
@@ -441,7 +441,8 @@ GESTrackTransition *
 ges_track_transition_new (GEnumValue * type)
 {
   GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
-  ret->vtype = type;
+  if (type)
+    ret->vtype = type->value;
 
   return ret;
 }

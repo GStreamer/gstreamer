@@ -35,23 +35,23 @@ GST_START_TEST (test_transition_basic)
   ges_init ();
 
   track = ges_track_video_raw_new ();
-  fail_unless (track != NULL);
+  fail_unless (track != 0);
 
   tr1 = ges_timeline_transition_new (NULL);
-  fail_unless (tr1 != NULL);
-  fail_unless (tr1->vtype == NULL);
+  fail_unless (tr1 != 0);
+  fail_unless (tr1->vtype == 0);
 
   tr2 = ges_timeline_transition_new_for_nick ("bar-wipe-lr");
-  fail_unless (tr2 != NULL);
-  fail_unless (tr2->vtype && tr2->vtype->value == 1);
+  fail_unless (tr2 != 0);
+  fail_unless (tr2->vtype->value == 1);
 
   /* Make sure track object is created and vtype is set */
   trackobject =
       ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (tr2),
       track);
 
-  fail_unless (trackobject != NULL);
-  fail_unless (GES_TRACK_TRANSITION (trackobject)->vtype->value == 1);
+  fail_unless (trackobject != 0);
+  fail_unless (GES_TRACK_TRANSITION (trackobject)->vtype == 1);
 
   g_object_unref (trackobject);
   g_object_unref (track);
