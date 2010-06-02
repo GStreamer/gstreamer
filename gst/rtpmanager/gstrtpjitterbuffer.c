@@ -1090,7 +1090,7 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
        * we are flushing */
       ret = priv->srcresult == GST_FLOW_OK;
       if (ret && !priv->eos) {
-        GST_DEBUG_OBJECT (jitterbuffer, "queuing EOS");
+        GST_INFO_OBJECT (jitterbuffer, "queuing EOS");
         priv->eos = TRUE;
         JBUF_SIGNAL (priv);
       } else if (priv->eos) {
@@ -1485,7 +1485,7 @@ eos_reached (GstClock * clock, GstClockTime time, GstClockID id,
 
   JBUF_LOCK_CHECK (priv, flushing);
   if (priv->waiting) {
-    GST_DEBUG_OBJECT (jitterbuffer, "got the NPT timeout");
+    GST_INFO_OBJECT (jitterbuffer, "got the NPT timeout");
     priv->reached_npt_stop = TRUE;
     JBUF_SIGNAL (priv);
   }
@@ -1499,6 +1499,33 @@ flushing:
     JBUF_UNLOCK (priv);
     return FALSE;
   }
+}
+static GstClockTime
+compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
+{
+  guint64 ext_time, elapsed, estimated;
+  guint32 rtp_time;
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+  rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
+
+  GST_LOG_OBJECT (jitterbuffer, "rtp %" G_GUINT32_FORMAT ", ext %"
+      G_GUINT64_FORMAT, rtp_time, priv->ext_timestamp);
+
+  if (rtp_time < priv->ext_timestamp) {
+    ext_time = priv->ext_timestamp;
+  } else {
+    ext_time = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, rtp_time);
+  }
+
+  if (ext_time > priv->clock_base)
+    elapsed = ext_time - priv->clock_base;
+  else
+    elapsed = 0;
+
+  elapsed = gst_util_uint64_scale_int (elapsed, GST_SECOND, priv->clock_rate);
+  return elapsed;
 }
 
 /*
@@ -1535,8 +1562,37 @@ again:
     if (G_LIKELY (!priv->blocked)) {
       /* we're buffering but not EOS, wait. */
       if (!priv->eos && (!priv->active
-              || rtp_jitter_buffer_is_buffering (priv->jbuf)))
-        goto do_wait;
+              || rtp_jitter_buffer_is_buffering (priv->jbuf))) {
+        GstClockTime elapsed, delay, left;
+
+        if (priv->estimated_eos == -1)
+          goto do_wait;
+
+        outbuf = rtp_jitter_buffer_peek (priv->jbuf);
+        if (outbuf != NULL) {
+          elapsed = compute_elapsed (jitterbuffer, outbuf);
+          if (GST_BUFFER_DURATION_IS_VALID (outbuf))
+            elapsed += GST_BUFFER_DURATION (outbuf);
+        } else {
+          GST_INFO_OBJECT (jitterbuffer, "no buffer, using last_elapsed");
+          elapsed = priv->last_elapsed;
+        }
+
+        delay = rtp_jitter_buffer_get_delay (priv->jbuf);
+
+        if (priv->estimated_eos > elapsed)
+          left = priv->estimated_eos - elapsed;
+        else
+          left = 0;
+
+        GST_INFO_OBJECT (jitterbuffer, "buffering, elapsed %" GST_TIME_FORMAT
+            " estimated_eos %" GST_TIME_FORMAT " left %" GST_TIME_FORMAT
+            " delay %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (elapsed), GST_TIME_ARGS (priv->estimated_eos),
+            GST_TIME_ARGS (left), GST_TIME_ARGS (delay));
+        if (left > delay)
+          goto do_wait;
+      }
       /* if we have a packet, we can exit the loop and grab it */
       if (rtp_jitter_buffer_num_packets (priv->jbuf) > 0)
         break;
@@ -1551,7 +1607,7 @@ again:
         GST_OBJECT_LOCK (jitterbuffer);
         clock = GST_ELEMENT_CLOCK (jitterbuffer);
         if (clock) {
-          GST_DEBUG_OBJECT (jitterbuffer, "scheduling timeout");
+          GST_INFO_OBJECT (jitterbuffer, "scheduling timeout");
           id = gst_clock_new_single_shot_id (clock, sync_time);
           gst_clock_id_wait_async (id, (GstClockCallback) eos_reached,
               jitterbuffer);
@@ -1768,26 +1824,9 @@ push_buffer:
   /* update the elapsed time when we need to check against the npt stop time. */
   if (priv->npt_stop != -1 && priv->ext_timestamp != -1
       && priv->clock_base != -1 && priv->clock_rate > 0) {
-    guint64 ext_time, elapsed, estimated;
-    guint32 rtp_time;
+    guint64 elapsed, estimated;
 
-    rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
-
-    GST_LOG_OBJECT (jitterbuffer, "rtp %" G_GUINT32_FORMAT ", ext %"
-        G_GUINT64_FORMAT, rtp_time, priv->ext_timestamp);
-
-    if (rtp_time < priv->ext_timestamp) {
-      ext_time = priv->ext_timestamp;
-    } else {
-      ext_time = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, rtp_time);
-    }
-
-    if (ext_time > priv->clock_base)
-      elapsed = ext_time - priv->clock_base;
-    else
-      elapsed = 0;
-
-    elapsed = gst_util_uint64_scale_int (elapsed, GST_SECOND, priv->clock_rate);
+    elapsed = compute_elapsed (jitterbuffer, outbuf);
 
     if (elapsed > priv->last_elapsed) {
       guint64 left;
