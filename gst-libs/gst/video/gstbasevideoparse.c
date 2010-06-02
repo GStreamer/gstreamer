@@ -26,8 +26,8 @@
 #include <string.h>
 #include <math.h>
 
-GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
-#define GST_CAT_DEFAULT basevideo_debug
+GST_DEBUG_CATEGORY (basevideoparse_debug);
+#define GST_CAT_DEFAULT basevideoparse_debug
 
 
 
@@ -67,6 +67,9 @@ GST_BOILERPLATE (GstBaseVideoParse, gst_base_video_parse,
 static void
 gst_base_video_parse_base_init (gpointer g_class)
 {
+  GST_DEBUG_CATEGORY_INIT (basevideoparse_debug, "basevideoparse", 0,
+      "Base Video Parse");
+
 
 }
 

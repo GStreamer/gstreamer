@@ -24,8 +24,8 @@
 #include "gstbasevideoencoder.h"
 #include "gstbasevideoutils.h"
 
-GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
-#define GST_CAT_DEFAULT basevideo_debug
+GST_DEBUG_CATEGORY (basevideoencoder_debug);
+#define GST_CAT_DEFAULT basevideoencoder_debug
 
 static void gst_base_video_encoder_finalize (GObject * object);
 
@@ -50,6 +50,8 @@ GST_BOILERPLATE (GstBaseVideoEncoder, gst_base_video_encoder, GstBaseVideoCodec,
 static void
 gst_base_video_encoder_base_init (gpointer g_class)
 {
+  GST_DEBUG_CATEGORY_INIT (basevideoencoder_debug, "basevideoencoder", 0,
+      "Base Video Encoder");
 
 }
 

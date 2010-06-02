@@ -25,8 +25,8 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (basevideo_debug);
-#define GST_CAT_DEFAULT basevideo_debug
+GST_DEBUG_CATEGORY_EXTERN (basevideocodec_debug);
+#define GST_CAT_DEFAULT basevideocodec_debug
 
 
 #if 0

@@ -26,8 +26,8 @@
 #include <string.h>
 #include <math.h>
 
-GST_DEBUG_CATEGORY (basevideo_debug);
-#define GST_CAT_DEFAULT basevideo_debug
+GST_DEBUG_CATEGORY (basevideocodec_debug);
+#define GST_CAT_DEFAULT basevideocodec_debug
 
 /* GstBaseVideoCodec signals and args */
 enum
@@ -59,8 +59,8 @@ GST_BOILERPLATE (GstBaseVideoCodec, gst_base_video_codec, GstElement,
 static void
 gst_base_video_codec_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (basevideo_debug, "vp8basevideo", 0,
-      "Base Video Classes");
+  GST_DEBUG_CATEGORY_INIT (basevideocodec_debug, "basevideocodec", 0,
+      "Base Video Codec");
 
 }
 
