@@ -27,17 +27,55 @@
 #include "ges-timeline-transition.h"
 #include "ges-track-transition.h"
 
+#define GES_TYPE_TIMELINE_TRANSITION_VTYPE_TYPE \
+    (ges_type_timeline_transition_vtype_get_type())
+
+static GType ges_type_timeline_transition_vtype_get_type (void);
+
+enum
+{
+  VTYPE_CROSSFADE = 0,
+};
+
+enum
+{
+  PROP_VTYPE = 5,
+};
+
 G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
     GES_TYPE_TIMELINE_OBJECT);
 
 static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
     *, GESTrack *);
 
+void
+ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
+    gint value)
+{
+  GList *tmp;
+  GESTrackTransition *tr;
+  GESTrackObject *to;
+
+  for (tmp = g_list_first (self->trackobjects); tmp; tmp = g_list_next (tmp)) {
+    tr = GES_TRACK_TRANSITION (tmp->data);
+    to = (GESTrackObject *) tr;
+
+    if ((to->track) && (to->track->type == GES_TRACK_TYPE_VIDEO)) {
+      ges_track_transition_set_vtype (tr, value);
+    }
+  }
+}
+
 static void
 ges_timeline_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
+  GESTimelineTransition *self = GES_TIMELINE_TRANSITION (object);
+  gint value_int;
   switch (property_id) {
+    case PROP_VTYPE:
+      self->vtype = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -47,7 +85,14 @@ static void
 ges_timeline_transition_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTimelineObject *self = GES_TIMELINE_OBJECT (object);
+  GESTimelineTransition *trself = GES_TIMELINE_TRANSITION (object);
+
   switch (property_id) {
+    case PROP_VTYPE:
+      trself->vtype = g_value_get_enum (value);
+      ges_timeline_transition_update_vtype_internal (self, trself->vtype);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -75,6 +120,18 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
   object_class->set_property = ges_timeline_transition_set_property;
   object_class->dispose = ges_timeline_transition_dispose;
   object_class->finalize = ges_timeline_transition_finalize;
+
+  /**
+   * GESTimelineTransition: vtype
+   *
+   * The SMPTE wipe to use, or 0 for crossfade.
+   */
+  g_object_class_install_property (object_class, PROP_VTYPE,
+      g_param_spec_enum ("vtype", "VType",
+          "The SMPTE video wipe to use, or 0 for crossfade",
+          GES_TYPE_TIMELINE_TRANSITION_VTYPE_TYPE, VTYPE_CROSSFADE,
+          G_PARAM_READWRITE));
+
 
   timobj_class->create_track_object = ges_tl_transition_create_track_object;
   timobj_class->need_fill_track = FALSE;
@@ -106,15 +163,17 @@ ges_timeline_transition_new (gint vtype)
   GESTimelineTransition *ret = g_object_new
       (GES_TYPE_TIMELINE_TRANSITION, NULL);
 
-  ret->vtype = vtype;
+  g_object_set (ret, "vtype", (gint) vtype, NULL);
   return ret;
 }
 
 static GEnumClass *smpte_enum_class = NULL;
 
-static
+static void
 _ensure_smpte_enum_class ()
 {
+  /* is there a better way to do this? */
+
   if (!smpte_enum_class) {
     GstElement *element = gst_element_factory_make ("smpte", NULL);
     GstElementClass *element_class = GST_ELEMENT_GET_CLASS (element);
@@ -125,6 +184,45 @@ _ensure_smpte_enum_class ()
     smpte_enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
   }
 
+}
+
+/* how many types could GType type if GType could type types? */
+
+static GType
+ges_type_timeline_transition_vtype_get_type (void)
+{
+  _ensure_smpte_enum_class ();
+
+  static GType the_type = 0;
+
+  if (!the_type) {
+    GEnumValue *values, *src, *dst;
+    gint i, n;
+
+    n = smpte_enum_class->n_values;
+
+    /* plus one for sentinel, plus another for the crossfade GEnumValue */
+    values = g_new0 (GEnumValue, 2 + n);
+
+    values->value = 0;
+    values->value_name = "Cross-fade between two sources";
+    values->value_nick = "crossfade";
+
+    for (i = 0, dst = (values + 1), src = smpte_enum_class->values; i < n;
+        i++, dst++, src++) {
+      dst->value = src->value;
+      dst->value_nick = src->value_nick;
+      dst->value_name = src->value_name;
+    }
+
+    dst->value = 0;
+    dst->value_nick = NULL;
+    dst->value_name = NULL;
+
+    the_type = g_enum_register_static ("GESTimelineTransitionVType", values);
+  }
+
+  return the_type;
 }
 
 GESTimelineTransition *
