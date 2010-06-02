@@ -63,19 +63,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_pinch_debug);
 enum
 {
   PROP_0,
-  PROP_X_CENTER,
-  PROP_Y_CENTER,
-  PROP_RADIUS,
   PROP_INTENSITY
 };
 
-#define DEFAULT_X_CENTER 0.5
-#define DEFAULT_Y_CENTER 0.5
-#define DEFAULT_RADIUS 100
 #define DEFAULT_INTENSITY 0.5
 
-GST_BOILERPLATE (GstPinch, gst_pinch, GstGeometricTransform,
-    GST_TYPE_GEOMETRIC_TRANSFORM);
+GST_BOILERPLATE (GstPinch, gst_pinch, GstCircleGeometricTransform,
+    GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
 static void
 gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -86,15 +80,6 @@ gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
   pinch = GST_PINCH_CAST (object);
 
   switch (prop_id) {
-    case PROP_X_CENTER:
-      pinch->x_center = g_value_get_double (value);
-      break;
-    case PROP_Y_CENTER:
-      pinch->y_center = g_value_get_double (value);
-      break;
-    case PROP_RADIUS:
-      pinch->radius = g_value_get_double (value);
-      break;
     case PROP_INTENSITY:
       pinch->intensity = g_value_get_double (value);
       break;
@@ -113,15 +98,6 @@ gst_pinch_get_property (GObject * object, guint prop_id,
   pinch = GST_PINCH_CAST (object);
 
   switch (prop_id) {
-    case PROP_X_CENTER:
-      g_value_set_double (value, pinch->x_center);
-      break;
-    case PROP_Y_CENTER:
-      g_value_set_double (value, pinch->y_center);
-      break;
-    case PROP_RADIUS:
-      g_value_set_double (value, pinch->radius);
-      break;
     case PROP_INTENSITY:
       g_value_set_double (value, pinch->intensity);
       break;
@@ -153,42 +129,29 @@ gst_pinch_base_init (gpointer gclass)
 }
 
 static gboolean
-pinch_precalc (GstGeometricTransform * gt)
-{
-  GstPinch *pinch = GST_PINCH_CAST (gt);
-
-  pinch->precalc_x_center = pinch->x_center * gt->width;
-  pinch->precalc_y_center = pinch->y_center * gt->height;
-
-  return TRUE;
-}
-
-static gboolean
 pinch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
 {
+  GstCircleGeometricTransform *cgt = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (gt);
   GstPinch *pinch = GST_PINCH_CAST (gt);
-  gdouble r2;
   gdouble distance;
   gdouble dx, dy;
 
-  dx = x - pinch->precalc_x_center;
-  dy = y - pinch->precalc_y_center;
+  dx = x - cgt->precalc_x_center;
+  dy = y - cgt->precalc_y_center;
   distance = dx * dx + dy * dy;
 
-  r2 = pinch->radius * pinch->radius;
-
   GST_LOG_OBJECT (pinch, "Center %0.5lf (%0.2lf) %0.5lf (%0.2lf)",
-      pinch->precalc_x_center, pinch->x_center, pinch->precalc_y_center,
-      pinch->y_center);
+      cgt->precalc_x_center, cgt->x_center, cgt->precalc_y_center,
+      cgt->y_center);
   GST_LOG_OBJECT (pinch, "Input %d %d, distance=%lf, radius2=%lf, dx=%lf"
-      ", dy=%lf", x, y, distance, r2, dx, dy);
+      ", dy=%lf", x, y, distance, cgt->precalc_radius2, dx, dy);
 
-  if (distance > r2 || distance == 0) {
+  if (distance > cgt->precalc_radius2 || distance == 0) {
     *in_x = x;
     *in_y = y;
   } else {
-    gdouble d = sqrt (distance / r2);
+    gdouble d = sqrt (distance / cgt->precalc_radius2);
     gdouble t = pow (sin (G_PI * 0.5 * d), -pinch->intensity);
 
     dx *= t;
@@ -196,8 +159,8 @@ pinch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
     GST_LOG_OBJECT (pinch, "D=%lf, t=%lf, dx=%lf" ", dy=%lf", d, t, dx, dy);
 
-    *in_x = pinch->precalc_x_center + dx;
-    *in_y = pinch->precalc_y_center + dy;
+    *in_x = cgt->precalc_x_center + dx;
+    *in_y = cgt->precalc_y_center + dy;
 
     *in_x = CLAMP (*in_x, 0, gt->width - 1);
     *in_y = CLAMP (*in_y, 0, gt->height - 1);
@@ -225,23 +188,6 @@ gst_pinch_class_init (GstPinchClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pinch_get_property);
 
 
-  /* FIXME I don't like the idea of x-center and y-center being in % and
-   * radius and intensity in absolute values, I think no one likes it, but
-   * I can't see a way to have nice default values without % */
-  g_object_class_install_property (gobject_class, PROP_X_CENTER,
-      g_param_spec_double ("x-center", "x center",
-          "X axis center of the pinch effect",
-          0.0, 1.0, DEFAULT_X_CENTER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_Y_CENTER,
-      g_param_spec_double ("y-center", "y center",
-          "Y axis center of the pinch effect",
-          0.0, 1.0, DEFAULT_Y_CENTER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_RADIUS,
-      g_param_spec_double ("radius", "radius", "radius of the pinch effect",
-          0.0, G_MAXDOUBLE, DEFAULT_RADIUS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INTENSITY,
       g_param_spec_double ("intensity", "intensity",
           "intensity of the pinch effect",
@@ -249,16 +195,12 @@ gst_pinch_class_init (GstPinchClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = pinch_map;
-  gstgt_class->prepare_func = pinch_precalc;
 }
 
 static void
 gst_pinch_init (GstPinch * filter, GstPinchClass * gclass)
 {
-  filter->x_center = DEFAULT_X_CENTER;
-  filter->y_center = DEFAULT_Y_CENTER;
   filter->intensity = DEFAULT_INTENSITY;
-  filter->radius = DEFAULT_RADIUS;
 }
 
 gboolean

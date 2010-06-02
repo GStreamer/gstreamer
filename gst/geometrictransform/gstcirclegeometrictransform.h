@@ -41,47 +41,53 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_PINCH_H__
-#define __GST_PINCH_H__
+#ifndef __GST_CIRCLE_GEOMETRIC_TRANSFORM_H__
+#define __GST_CIRCLE_GEOMETRIC_TRANSFORM_H__
 
 #include <gst/gst.h>
-#include "gstcirclegeometrictransform.h"
+#include "gstgeometrictransform.h"
 
 G_BEGIN_DECLS
 
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_PINCH \
-  (gst_pinch_get_type())
-#define GST_PINCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PINCH,GstPinch))
-#define GST_PINCH_CAST(obj) \
-  ((GstPinch *)(obj))
-#define GST_PINCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PINCH,GstPinchClass))
-#define GST_IS_PINCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PINCH))
-#define GST_IS_PINCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PINCH))
+#define GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM \
+  (gst_circle_geometric_transform_get_type())
+#define GST_CIRCLE_GEOMETRIC_TRANSFORM(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM,GstCircleGeometricTransform))
+#define GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST(obj) \
+  ((GstCircleGeometricTransform *)(obj))
+#define GST_CIRCLE_GEOMETRIC_TRANSFORM_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM,GstCircleGeometricTransformClass))
+#define GST_IS_CIRCLE_GEOMETRIC_TRANSFORM(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM))
+#define GST_IS_CIRCLE_GEOMETRIC_TRANSFORM_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM))
 
-typedef struct _GstPinch      GstPinch;
-typedef struct _GstPinchClass GstPinchClass;
+typedef struct _GstCircleGeometricTransform      GstCircleGeometricTransform;
+typedef struct _GstCircleGeometricTransformClass GstCircleGeometricTransformClass;
 
-struct _GstPinch
+struct _GstCircleGeometricTransform
 {
-  GstCircleGeometricTransform element;
+  GstGeometricTransform element;
 
-  gdouble intensity;
+  gdouble x_center;
+  gdouble y_center;
+  gdouble radius;
+
+  gdouble precalc_x_center;
+  gdouble precalc_y_center;
+  gdouble precalc_radius2;
 };
 
-struct _GstPinchClass 
+struct _GstCircleGeometricTransformClass 
 {
-  GstCircleGeometricTransformClass parent_class;
+  GstGeometricTransformClass parent_class;
 };
 
-GType gst_pinch_get_type (void);
+GType gst_circle_geometric_transform_get_type (void);
 
-gboolean gst_pinch_plugin_init (GstPlugin * plugin);
+gboolean gst_circle_geometric_transform_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_PINCH_H__ */
+#endif /* __GST_CIRCLE_GEOMETRIC_TRANSFORM_H__ */
