@@ -233,7 +233,7 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
         guint32 frame_size = GST_READ_UINT32_LE (data);
         guint64 frame_pts = GST_READ_UINT64_LE (data + 4);
 
-        GST_LOG_OBJECT (ivf, "Read frame header: size %u, pts %u",
+        GST_LOG_OBJECT (ivf, "Read frame header: size %u, pts %" G_GUINT64_FORMAT,
             frame_size, frame_pts);
 
         if (gst_adapter_available (ivf->adapter) >= 12 + frame_size) {
