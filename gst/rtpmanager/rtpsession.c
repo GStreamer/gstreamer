@@ -2118,7 +2118,8 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   /* at least one member wants to send a BYE */
   g_free (sess->bye_reason);
   sess->bye_reason = g_strdup (reason);
-  sess->stats.avg_rtcp_packet_size = 100;
+  /* The avg packet size is kept scaled by 16 */
+  sess->stats.avg_rtcp_packet_size = 100 * 16;
   sess->stats.bye_members = 1;
   sess->first_rtcp = TRUE;
   sess->sent_bye = FALSE;
