@@ -26,6 +26,10 @@
 #include <ges/ges.h>
 #include <gst/profile/gstprofile.h>
 
+/* GLOBAL VARIABLE */
+static guint repeat = 0;
+GESTimelinePipeline *pipeline = NULL;
+
 static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
     gchar * container)
@@ -109,8 +113,17 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
-      g_print ("Done\n");
-      g_main_loop_quit (mainloop);
+      if (repeat > 0) {
+        g_print ("Looping again\n");
+        /* No need to change state before */
+        gst_element_seek_simple (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+            GST_SEEK_FLAG_FLUSH, 0);
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+        repeat -= 1;
+      } else {
+        g_print ("Done\n");
+        g_main_loop_quit (mainloop);
+      }
       break;
     default:
       break;
@@ -143,10 +156,11 @@ main (int argc, gchar ** argv)
         "Audio format", "<GstCaps>"},
     {"vrestriction", 'x', 0, G_OPTION_ARG_STRING, &video_restriction,
         "Video restriction", "<GstCaps>"},
+    {"repeat", 't', 0, G_OPTION_ARG_INT, &repeat,
+        "Number of time to repeat timeline", NULL},
     {NULL}
   };
   GOptionContext *ctx;
-  GESTimelinePipeline *pipeline;
   GMainLoop *mainloop;
   GstBus *bus;
 
