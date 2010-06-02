@@ -116,6 +116,7 @@ struct _GstBaseVideoDecoder
   gboolean packetized;
 
   GList *timestamps;
+  gboolean have_segment;
 };
 
 struct _GstBaseVideoDecoderClass

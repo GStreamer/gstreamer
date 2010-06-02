@@ -262,6 +262,7 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
 
       gst_segment_set_newsegment_full (segment,
           update, rate, applied_rate, format, start, stop, position);
+      base_video_decoder->have_segment = TRUE;
 
       GST_WARNING ("new segment: format %d rate %g start %" GST_TIME_FORMAT
           " stop %" GST_TIME_FORMAT
@@ -790,6 +791,29 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   klass = GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG_OBJECT (base_video_decoder, "chain");
+
+  if (!base_video_decoder->have_segment) {
+    GstEvent *event;
+    GstFlowReturn ret;
+
+    GST_WARNING
+        ("Received buffer without a new-segment. Assuming timestamps start from 0.");
+
+    gst_segment_set_newsegment_full (&base_video_decoder->segment,
+        FALSE, 1.0, 1.0, GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
+    base_video_decoder->have_segment = TRUE;
+
+    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
+        GST_CLOCK_TIME_NONE, 0);
+
+    ret =
+        gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder),
+        event);
+    if (!ret) {
+      GST_ERROR ("new segment event ret=%d", ret);
+      return GST_FLOW_ERROR;
+    }
+  }
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (base_video_decoder, "received DISCONT buffer");
