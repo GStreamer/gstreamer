@@ -86,7 +86,7 @@ GST_START_TEST (test_transition_properties)
 
   object = GES_TIMELINE_OBJECT (ges_timeline_transition_new (0));
 
-  track = ges_track_new (GES_TRACK_TYPE_VIDEO, GST_CAPS_ANY);
+  track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
 
   /* Set some properties */
@@ -130,11 +130,18 @@ GST_START_TEST (test_transition_properties)
 
   /* test changing vtype */
 
-  // g_object_set (object, "vtype", 0, NULL);
-  // g_object_set (object, "vtype", 1, NULL);
-  // g_object_set (object, "vtype", 8, NULL);
-  // g_object_set (object, "vtype", 0, NULL);
-
+  g_object_set (object, "vtype", 0, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 0);
+  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 0);
+  g_object_set (object, "vtype", 1, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 1);
+  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 1);
+  g_object_set (object, "vtype", 8, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 8);
+  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 8);
+  g_object_set (object, "vtype", 0, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 0);
+  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 0);
 
   ges_timeline_object_release_track_object (object, trackobject);
 
