@@ -95,7 +95,11 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG ("Creating a GESTrackTransition");
 
-  res = GES_TRACK_OBJECT (ges_track_transition_new (transition->vtype));
+  gint type = 0;
+  if (transition->vtype)
+    type = transition->vtype->value;
+
+  res = GES_TRACK_OBJECT (ges_track_transition_new (type));
 
   return res;
 }
