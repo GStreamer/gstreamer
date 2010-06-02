@@ -2323,6 +2323,9 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
           gst_audio_clock_new ("GstPulseSinkClock",
           (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
+      gst_element_post_message (element,
+          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+              GST_BASE_AUDIO_SINK (pulsesink)->provided_clock, TRUE));
       break;
     default:
       break;
@@ -2332,6 +2335,9 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_post_message (element,
+          gst_message_new_clock_provide (GST_OBJECT_CAST (element), NULL,
+              FALSE));
       if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
         gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
       GST_BASE_AUDIO_SINK (pulsesink)->provided_clock = NULL;
