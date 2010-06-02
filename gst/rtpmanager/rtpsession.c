@@ -2570,8 +2570,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   }
 
   if (data.rtcp) {
-    guint size;
-
     /* we keep track of the last report time in order to timeout inactive
      * receivers or senders */
     sess->last_rtcp_send_time = data.current_time;
@@ -2580,10 +2578,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     /* add SDES for this source when not already added */
     if (!data.has_sdes)
       session_sdes (sess, &data);
-
-    /* update average RTCP size before sending */
-    size = GST_BUFFER_SIZE (data.rtcp) + sess->header_len;
-    UPDATE_AVG (sess->stats.avg_rtcp_packet_size, size);
   }
 
   /* check for outdated collisions */
@@ -2620,10 +2614,12 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     gst_rtcp_buffer_end (data.rtcp);
 
     GST_DEBUG ("sending packet");
-    if (sess->callbacks.send_rtcp)
+    if (sess->callbacks.send_rtcp) {
+      UPDATE_AVG (sess->stats.avg_rtcp_packet_size,
+          GST_BUFFER_SIZE (data.rtcp));
       result = sess->callbacks.send_rtcp (sess, own, data.rtcp,
           sess->sent_bye, sess->send_rtcp_user_data);
-    else {
+    } else {
       GST_DEBUG ("freeing packet");
       gst_buffer_unref (data.rtcp);
     }
