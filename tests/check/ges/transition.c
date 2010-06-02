@@ -37,7 +37,7 @@ GST_START_TEST (test_transition_basic)
   track = ges_track_video_raw_new ();
   fail_unless (track != 0);
 
-  tr1 = ges_timeline_transition_new (NULL);
+  tr1 = ges_timeline_transition_new (0);
   fail_unless (tr1 != 0);
   fail_unless (tr1->vtype == 0);
 
@@ -84,7 +84,7 @@ GST_START_TEST (test_transition_properties)
 
   ges_init ();
 
-  object = GES_TIMELINE_OBJECT (ges_timeline_transition_new (NULL));
+  object = GES_TIMELINE_OBJECT (ges_timeline_transition_new (0));
 
   track = ges_track_new (GES_TRACK_TYPE_VIDEO, GST_CAPS_ANY);
   fail_unless (track != NULL);
