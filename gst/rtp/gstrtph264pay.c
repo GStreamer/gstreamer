@@ -485,8 +485,8 @@ next_start_code (guint8 * data, guint size)
    * sense because our search 'alphabet' is binary - 0 & 1 only.
    * This allow us to simplify the general BM algorithm to a very
    * simple form. */
-  /* assume 1 is in the 4th byte */
-  guint offset = 3;
+  /* assume 1 is in the 3th byte */
+  guint offset = 2;
 
   while (offset < size) {
     if (1 == data[offset]) {
@@ -494,23 +494,21 @@ next_start_code (guint8 * data, guint size)
 
       if (0 == data[--shift]) {
         if (0 == data[--shift]) {
-          if (0 == data[--shift]) {
-            return shift;
-          }
+          return shift;
         }
       }
-      /* The jump is always 4 because of the 1 previously matched.
+      /* The jump is always 3 because of the 1 previously matched.
        * All the 0's must be after this '1' matched at offset */
-      offset += 4;
+      offset += 3;
     } else if (0 == data[offset]) {
       /* maybe next byte is 1? */
       offset++;
     } else {
-      /* can jump 4 bytes forward */
-      offset += 4;
+      /* can jump 3 bytes forward */
+      offset += 3;
     }
     /* at each iteration, we rescan in a backward manner until
-     * we match 0.0.0.1 in reverse order. Since our search string
+     * we match 0.0.1 in reverse order. Since our search string
      * has only 2 'alpabets' (i.e. 0 & 1), we know that any
      * mismatch will force us to shift a fixed number of steps */
   }
@@ -985,8 +983,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     /* first pass to locate NALs and parse SPS/PPS */
     while (size > 4) {
       /* skip start code */
-      data += 4;
-      size -= 4;
+      data += 3;
+      size -= 3;
 
       if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_SINGLE_NAL) {
         /* we are told that there is only a single NAL in this packet so that we
@@ -1048,13 +1046,24 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     /* second pass to payload and push */
     data = nal_data;
     for (i = 0; i < nal_queue->len; i++) {
+      guint size;
+
       nal_len = g_array_index (nal_queue, guint, i);
       /* skip start code */
-      data += 4;
+      data += 3;
+
+      /* Trim the end unless we're the last NAL in the buffer.
+       * In case we're not at the end of the buffer we know the next block
+       * starts with 0x000001 so all the 0x00 bytes at the end of this one are
+       * trailing 0x0 that can be discarded */
+      size = nal_len;
+      if (i + 1 != nal_queue->len)
+        for ( ; size > 1 && data[size - 1] == 0x0; size--)
+          /* skip */;
 
       /* put the data in one or more RTP packets */
       ret =
-          gst_rtp_h264_pay_payload_nal (basepayload, data, nal_len, timestamp,
+          gst_rtp_h264_pay_payload_nal (basepayload, data, size, timestamp,
           buffer);
       if (ret != GST_FLOW_OK) {
         break;
