@@ -301,6 +301,9 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
     res = gst_pad_push (mimdec->srcpad, out_buf);
+
+    if (res != GST_FLOW_OK)
+      break;
   }
 
 out:
