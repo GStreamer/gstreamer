@@ -438,11 +438,10 @@ ges_track_transition_init (GESTrackTransition * self)
 }
 
 GESTrackTransition *
-ges_track_transition_new (GEnumValue * type)
+ges_track_transition_new (gint value)
 {
   GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
-  if (type)
-    ret->vtype = type->value;
+  ret->vtype = value;
 
   return ret;
 }
