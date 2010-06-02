@@ -332,6 +332,7 @@ gst_mim_dec_change_state (GstElement * element, GstStateChange transition)
 
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       mimdec->need_newsegment = TRUE;
+      gst_adapter_clear (mimdec->adapter);
       break;
     default:
       break;
@@ -392,7 +393,7 @@ gst_mim_dec_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
       mimdec->need_newsegment = TRUE;
-
+      gst_adapter_clear (mimdec->adapter);
       break;
     default:
       break;
