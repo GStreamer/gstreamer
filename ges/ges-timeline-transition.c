@@ -101,12 +101,12 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 }
 
 GESTimelineTransition *
-ges_timeline_transition_new (GEnumValue * vtype)
+ges_timeline_transition_new (gint vtype)
 {
   GESTimelineTransition *ret = g_object_new
       (GES_TYPE_TIMELINE_TRANSITION, NULL);
 
-  ret->vtype = vtype ? vtype->value : 0;
+  ret->vtype = vtype;
   return ret;
 }
 
@@ -134,7 +134,7 @@ ges_timeline_transition_new_for_nick (char *nick)
   _ensure_smpte_enum_class ();
 
   if (!strcmp ("crossfade", nick)) {
-    return ges_timeline_transition_new (NULL);
+    return ges_timeline_transition_new (0);
   }
 
   GEnumValue *value = g_enum_get_value_by_nick (smpte_enum_class, nick);
@@ -143,5 +143,5 @@ ges_timeline_transition_new_for_nick (char *nick)
     return NULL;
   }
 
-  return ges_timeline_transition_new (value);
+  return ges_timeline_transition_new (value->value);
 }
