@@ -1500,10 +1500,11 @@ flushing:
     return FALSE;
   }
 }
+
 static GstClockTime
 compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
 {
-  guint64 ext_time, elapsed, estimated;
+  guint64 ext_time, elapsed;
   guint32 rtp_time;
   GstRtpJitterBufferPrivate *priv;
 
