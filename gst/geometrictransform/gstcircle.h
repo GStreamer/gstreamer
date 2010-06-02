@@ -41,35 +41,49 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * Thanks to Jerry Huxtable <http://www.jhlabs.com> work on its java
- * image editor and filters. The algorithms here were extracted from
- * his code.
- */
+#ifndef __GST_CIRCLE_H__
+#define __GST_CIRCLE_H__
 
-#include "geometricmath.h"
+#include <gst/gst.h>
+#include "gstcirclegeometrictransform.h"
 
-/*
- * This differs from the % operator with respect to negative numbers
- */
-gdouble
-mod_float (gdouble a, gdouble b)
+G_BEGIN_DECLS
+
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_CIRCLE \
+  (gst_circle_get_type())
+#define GST_CIRCLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CIRCLE,GstCircle))
+#define GST_CIRCLE_CAST(obj) \
+  ((GstCircle *)(obj))
+#define GST_CIRCLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CIRCLE,GstCircleClass))
+#define GST_IS_CIRCLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CIRCLE))
+#define GST_IS_CIRCLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CIRCLE))
+
+typedef struct _GstCircle      GstCircle;
+typedef struct _GstCircleClass GstCircleClass;
+
+struct _GstCircle
 {
-  gint n = (gint) (a / b);
+  GstCircleGeometricTransform element;
 
-  a -= n * b;
-  if (a < 0)
-    return a + b;
-  return a;
-}
+  gdouble angle;
+  gdouble spread_angle;
+  gint height;
+};
 
-/**
- * Returns a repeating triangle shape in the range 0..1 with wavelength 1.0
- */
-gdouble
-geometric_math_triangle (gdouble x)
+struct _GstCircleClass 
 {
-  gdouble r = mod_float (x, 1.0);
+  GstCircleGeometricTransformClass parent_class;
+};
 
-  return 2.0 * (r < 0.5 ? r : 1 - r);
-}
+GType gst_circle_get_type (void);
+
+gboolean gst_circle_plugin_init (GstPlugin * plugin);
+
+G_END_DECLS
+
+#endif /* __GST_CIRCLE_H__ */

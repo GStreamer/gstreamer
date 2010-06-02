@@ -4,6 +4,7 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstgeometrictransform.c \
                                       gstcirclegeometrictransform.c \
                                       geometricmath.c \
+                                      gstcircle.c \
                                       gstkaleidoscope.c \
                                       gstpinch.c \
                                       gsttwirl.c
@@ -17,6 +18,7 @@ libgstgeometrictransform_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gstgeometrictransform.h \
                  gstcirclegeometrictransform.h \
                  geometricmath.h \
+                 gstcircle.h \
                  gstkaleidoscope.h \
                  gstpinch.h \
                  gsttwirl.h

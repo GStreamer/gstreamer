@@ -54,6 +54,7 @@
 
 G_BEGIN_DECLS
 
+gdouble mod_float (gdouble a, gdouble b);
 gdouble geometric_math_triangle (gdouble x);
 
 G_END_DECLS
