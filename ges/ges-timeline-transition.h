@@ -51,7 +51,7 @@ G_BEGIN_DECLS
 struct _GESTimelineTransition {
   GESTimelineObject parent;
   /*< public >*/
-  GEnumValue *vtype;
+  gint vtype;
 };
 
 /**

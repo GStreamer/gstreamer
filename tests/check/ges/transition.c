@@ -43,7 +43,7 @@ GST_START_TEST (test_transition_basic)
 
   tr2 = ges_timeline_transition_new_for_nick ("bar-wipe-lr");
   fail_unless (tr2 != 0);
-  fail_unless (tr2->vtype->value == 1);
+  fail_unless (tr2->vtype == 1);
 
   /* Make sure track object is created and vtype is set */
   trackobject =

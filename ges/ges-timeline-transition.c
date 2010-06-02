@@ -83,7 +83,7 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 static void
 ges_timeline_transition_init (GESTimelineTransition * self)
 {
-  self->vtype = NULL;
+  self->vtype = 0;
 }
 
 static GESTrackObject *
@@ -95,11 +95,7 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG ("Creating a GESTrackTransition");
 
-  gint type = 0;
-  if (transition->vtype)
-    type = transition->vtype->value;
-
-  res = GES_TRACK_OBJECT (ges_track_transition_new (type));
+  res = GES_TRACK_OBJECT (ges_track_transition_new (transition->vtype));
 
   return res;
 }
@@ -110,7 +106,7 @@ ges_timeline_transition_new (GEnumValue * vtype)
   GESTimelineTransition *ret = g_object_new
       (GES_TYPE_TIMELINE_TRANSITION, NULL);
 
-  ret->vtype = vtype;
+  ret->vtype = vtype ? vtype->value : 0;
   return ret;
 }
 
