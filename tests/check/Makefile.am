@@ -25,7 +25,7 @@ CLEANFILES = core.* test-registry.*
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
-clean-local: clean-local-check
+clean-local: clean-local-check clean-local-orc
 
 if USE_ASSRENDER
 check_assrender = elements/assrender
@@ -93,6 +93,12 @@ else
 check_mimic=
 endif
 
+if HAVE_ORC
+check_orc = orc/cog
+else
+check_orc =
+endif
+
 
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
@@ -136,6 +142,7 @@ check_PROGRAMS = \
 	$(check_metadata) \
 	$(check_mimic) \
 	elements/rtpmux \
+	$(check_orc) \
         pipelines/tagschecking
 
 noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
@@ -170,3 +177,14 @@ elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_C
 elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.10
 
 EXTRA_DIST = gst-plugins-bad.supp
+
+orc_cog_CFLAGS = $(ORC_CFLAGS)
+orc_cog_LDADD = $(ORC_LIBS) -lorc-test-0.4
+
+orc/cog.c: $(top_srcdir)/ext/cog/gstcogorc.orc
+	$(MKDIR_P) orc
+	$(ORCC) --test -o $@ $<
+
+clean-local-orc:
+	rm -rf orc
+
