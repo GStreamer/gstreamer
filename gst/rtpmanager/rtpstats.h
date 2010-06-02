@@ -128,7 +128,7 @@ typedef struct {
 } RTPSourceStats;
 
 #define RTP_STATS_BANDWIDTH           64000
-#define RTP_STATS_RTCP_BANDWIDTH      3200
+#define RTP_STATS_RTCP_FRACTION       0.05
 /*
  * Minimum average time between RTCP packets from this site (in
  * seconds).  This time prevents the reports from `clumping' when
@@ -186,7 +186,9 @@ typedef struct {
 
 void           rtp_stats_init_defaults              (RTPSessionStats *stats);
 
-void           rtp_stats_set_bandwidths             (RTPSessionStats *stats, guint rtp_bw, guint rtcp_bw,
+void           rtp_stats_set_bandwidths             (RTPSessionStats *stats,
+                                                     guint rtp_bw,
+                                                     gdouble rtcp_bw,
                                                      guint rs, guint rr);
 
 GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender, gboolean first);

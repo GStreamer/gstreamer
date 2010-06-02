@@ -46,8 +46,8 @@ rtp_stats_init_defaults (RTPSessionStats * stats)
  * defaults.
  */
 void
-rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw, guint rtcp_bw,
-    guint rs, guint rr)
+rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw,
+    gdouble rtcp_bw, guint rs, guint rr)
 {
   GST_DEBUG ("recalc bandwidths: RTP %u, RTCP %u, RS %u, RR %u", rtp_bw,
       rtcp_bw, rs, rr);
@@ -57,16 +57,25 @@ rtp_stats_set_bandwidths (RTPSessionStats * stats, guint rtp_bw, guint rtcp_bw,
   if (rs != -1 && rr != -1)
     rtcp_bw = rs + rr;
 
+  /* If rtcp_bw is between 0 and 1, it is a fraction of rtp_bw */
+  if (rtcp_bw > 0 && rtcp_bw < 1) {
+    if (rtp_bw > 0)
+      rtcp_bw = rtp_bw * rtcp_bw;
+    else
+      rtcp_bw = -1;
+  }
+
   /* RTCP is 5% of the RTP bandwidth */
-  if (rtp_bw == -1 && rtcp_bw != -1)
+  if (rtp_bw == -1 && rtcp_bw > 0)
     rtp_bw = rtcp_bw * 20;
-  else if (rtp_bw != -1 && rtcp_bw == -1)
+  else if (rtp_bw != -1 && rtcp_bw < 0)
     rtcp_bw = rtp_bw / 20;
-  else if (rtp_bw == -1 && rtcp_bw == -1) {
+  else if (rtp_bw == -1 && rtcp_bw < 0) {
     /* nothing given, take defaults */
     rtp_bw = RTP_STATS_BANDWIDTH;
-    rtcp_bw = RTP_STATS_RTCP_BANDWIDTH;
+    rtcp_bw = rtp_bw = RTP_STATS_RTCP_FRACTION;
   }
+
   stats->bandwidth = rtp_bw;
   stats->rtcp_bandwidth = rtcp_bw;
 

@@ -166,7 +166,7 @@ struct _RTPSession {
   /* bandwidths */
   gboolean     recalc_bandwidth;
   guint        bandwidth;
-  guint        rtcp_bandwidth;
+  gdouble      rtcp_bandwidth;
   guint        rtcp_rr_bandwidth;
   guint        rtcp_rs_bandwidth;
 

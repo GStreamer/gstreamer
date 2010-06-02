@@ -192,7 +192,7 @@ enum
 
 #define DEFAULT_NTP_NS_BASE          0
 #define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
-#define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_RTCP_FRACTION        (RTP_STATS_BANDWIDTH * RTP_STATS_RTCP_FRACTION)
 #define DEFAULT_RTCP_RR_BANDWIDTH    -1
 #define DEFAULT_RTCP_RS_BANDWIDTH    -1
 #define DEFAULT_SDES                 NULL
@@ -542,7 +542,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
-          "The RTCP bandwidth of the session in bytes per second",
+          "The RTCP bandwidth of the session in bytes per second (or as a real fraction of the RTP bandwidth if < 1)",
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
