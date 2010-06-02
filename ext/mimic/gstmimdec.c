@@ -277,6 +277,7 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
       res = GST_FLOW_ERROR;
       goto out;
     }
+    gst_adapter_flush (mimdec->adapter, payload_size);
 
     if (GST_CLOCK_TIME_IS_VALID (in_time))
       GST_BUFFER_TIMESTAMP (out_buf) = in_time;
@@ -300,8 +301,6 @@ gst_mim_dec_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
     res = gst_pad_push (mimdec->srcpad, out_buf);
-
-    gst_adapter_flush (mimdec->adapter, payload_size);
   }
 
 out:
