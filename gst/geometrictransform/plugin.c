@@ -21,12 +21,16 @@
 #include "config.h"
 #endif
 
+#include "gstkaleidoscope.h"
 #include "gstpinch.h"
 #include "gsttwirl.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_kaleidoscope_plugin_init (plugin))
+    return FALSE;
+
   if (!gst_pinch_plugin_init (plugin))
     return FALSE;
 
