@@ -537,7 +537,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
-          "The bandwidth of the session in bytes per second",
+          "The bandwidth of the session in bytes per second (0 for auto-discover)",
           0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,

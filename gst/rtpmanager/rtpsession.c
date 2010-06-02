@@ -250,7 +250,7 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
-          "The bandwidth of the session",
+          "The bandwidth of the session (0 for auto-discover)",
           0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -2063,14 +2063,38 @@ invalid_packet:
   }
 }
 
+static void
+add_bitrates (gpointer key, gpointer value, gpointer user_data)
+{
+  gdouble *bandwidth = user_data;
+  RTPSource *source = value;
+
+  *bandwidth += source->bitrate;
+}
+
 static GstClockTime
 calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     gboolean first)
 {
   GstClockTime result;
 
-  if (sess->recalc_bandwidth) {
+  if (sess->recalc_bandwidth || sess->bandwidth == 0) {
     /* recalculate bandwidth when it changed */
+    gdouble bandwidth;
+
+    if (sess->bandwidth > 0)
+      bandwidth = sess->bandwidth;
+    else {
+      /* If it is <= 0, then try to estimate the actual bandwidth */
+      bandwidth = sess->source->bitrate;
+
+      g_hash_table_foreach (sess->cnames, add_bitrates, &bandwidth);
+      bandwidth /= 8.0;
+    }
+
+    if (bandwidth == 0)
+      bandwidth = RTP_STATS_BANDWIDTH;
+
     rtp_stats_set_bandwidths (&sess->stats, sess->bandwidth,
         sess->rtcp_bandwidth, sess->rtcp_rs_bandwidth, sess->rtcp_rr_bandwidth);
     sess->recalc_bandwidth = FALSE;
