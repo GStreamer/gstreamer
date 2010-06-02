@@ -181,7 +181,8 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      GST_DEBUG ("new segment %lld %lld", start, position);
+      GST_DEBUG ("new segment %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (position));
 
       gst_segment_set_newsegment_full (&base_video_encoder->segment,
           update, rate, applied_rate, format, start, stop, position);

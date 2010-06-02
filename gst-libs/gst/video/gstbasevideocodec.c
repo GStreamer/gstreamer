@@ -263,7 +263,7 @@ gst_base_video_codec_src_query (GstPad * pad, GstQuery * query)
       time = gst_util_uint64_scale (base_codec->system_frame_number,
           base_codec->state.fps_n, base_codec->state.fps_d);
       time += base_codec->state.segment.time;
-      GST_DEBUG ("query position %lld", time);
+      GST_DEBUG ("query position %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
       res = gst_base_video_encoded_video_convert (&base_codec->state,
           GST_FORMAT_TIME, time, &format, &value);
       if (!res)
@@ -462,7 +462,8 @@ gst_base_video_codec_sink_event (GstPad * pad, GstEvent * event)
       if (rate <= 0.0)
         goto newseg_wrong_rate;
 
-      GST_DEBUG ("newsegment %lld %lld", start, time);
+      GST_DEBUG ("newsegment %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (time));
       gst_segment_set_newsegment (&base_video_codec->state.segment, update,
           rate, format, start, stop, time);
 

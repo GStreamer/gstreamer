@@ -661,8 +661,8 @@ gst_base_video_decoder_add_timestamp (GstBaseVideoDecoder * base_video_decoder,
 
   ts = g_malloc (sizeof (Timestamp));
 
-  GST_DEBUG ("adding timestamp %lld %" GST_TIME_FORMAT,
-      base_video_decoder->input_offset,
+  GST_DEBUG ("adding timestamp %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (base_video_decoder->input_offset),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   ts->offset = base_video_decoder->input_offset;
@@ -699,8 +699,8 @@ gst_base_video_decoder_get_timestamp_at_offset (GstBaseVideoDecoder *
     }
   }
 
-  GST_DEBUG ("got timestamp %lld %" GST_TIME_FORMAT,
-      offset, GST_TIME_ARGS (*timestamp));
+  GST_DEBUG ("got timestamp %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (offset), GST_TIME_ARGS (*timestamp));
 }
 
 static void
@@ -814,7 +814,8 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 #if 0
   if (base_video_decoder->timestamp_offset == GST_CLOCK_TIME_NONE &&
       GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
-    GST_DEBUG ("got new offset %lld", GST_BUFFER_TIMESTAMP (buf));
+    GST_DEBUG ("got new offset %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
     base_video_decoder->timestamp_offset = GST_BUFFER_TIMESTAMP (buf);
   }
 #endif
@@ -951,14 +952,15 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  GST_DEBUG ("finish frame sync=%d pts=%lld", frame->is_sync_point,
-      frame->presentation_timestamp);
+  GST_DEBUG ("finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
+      GST_TIME_ARGS (frame->presentation_timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
     if (frame->presentation_timestamp != base_video_decoder->timestamp_offset) {
-      GST_DEBUG ("sync timestamp %lld diff %lld",
-          frame->presentation_timestamp,
-          frame->presentation_timestamp - base_video_decoder->segment.start);
+      GST_DEBUG ("sync timestamp %" GST_TIME_FORMAT " diff %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->presentation_timestamp),
+          GST_TIME_ARGS (frame->presentation_timestamp -
+              base_video_decoder->segment.start));
       base_video_decoder->timestamp_offset = frame->presentation_timestamp;
       base_video_decoder->field_index = 0;
     } else {
@@ -999,8 +1001,9 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 
   if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->last_timestamp)) {
     if (frame->presentation_timestamp < base_video_decoder->last_timestamp) {
-      GST_WARNING ("decreasing timestamp (%lld < %lld)",
-          frame->presentation_timestamp, base_video_decoder->last_timestamp);
+      GST_WARNING ("decreasing timestamp (%" GST_TIME_FORMAT " < %"
+          GST_TIME_FORMAT ")", GST_TIME_ARGS (frame->presentation_timestamp),
+          GST_TIME_ARGS (base_video_decoder->last_timestamp));
     }
   }
   base_video_decoder->last_timestamp = frame->presentation_timestamp;
@@ -1107,14 +1110,15 @@ gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder_class =
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  GST_DEBUG ("finish frame sync=%d pts=%lld", frame->is_sync_point,
-      frame->presentation_timestamp);
+  GST_DEBUG ("finish frame sync=%d pts=%" GST_TIME_FORMAT, frame->is_sync_point,
+      GST_TIME_ARGS (frame->presentation_timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
     if (frame->presentation_timestamp != base_video_decoder->timestamp_offset) {
-      GST_DEBUG ("sync timestamp %lld diff %lld",
-          frame->presentation_timestamp,
-          frame->presentation_timestamp - base_video_decoder->segment.start);
+      GST_DEBUG ("sync timestamp %" GST_TIME_FORMAT " diff %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->presentation_timestamp),
+          GST_TIME_ARGS (frame->presentation_timestamp -
+              base_video_decoder->segment.start));
       base_video_decoder->timestamp_offset = frame->presentation_timestamp;
       base_video_decoder->field_index = 0;
     } else {
