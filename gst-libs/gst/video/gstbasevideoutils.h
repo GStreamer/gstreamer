@@ -87,9 +87,6 @@ gboolean gst_base_video_encoded_video_convert (GstVideoState *state,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 *dest_value);
 
-gboolean gst_base_video_state_from_caps (GstVideoState *state,
-    GstCaps *caps);
-
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
     GstSegment *segment, int frame_number);
 

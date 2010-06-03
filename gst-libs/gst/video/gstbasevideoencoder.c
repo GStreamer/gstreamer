@@ -97,6 +97,8 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
+  GstStructure *structure;
+  GstVideoState *state;
   gboolean ret;
 
   base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
@@ -105,7 +107,31 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG ("setcaps");
 
-  gst_base_video_state_from_caps (&base_video_encoder->state, caps);
+  state = &base_video_encoder->state;
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_video_format_parse_caps (caps, &state->format,
+      &state->width, &state->height);
+
+  state->fps_n = 0;
+  state->fps_d = 1;
+  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
+  if (state->fps_d == 0) {
+    state->fps_n = 0;
+    state->fps_d = 1;
+  }
+
+  state->par_n = 1;
+  state->par_d = 1;
+  gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
+
+  state->have_interlaced = gst_structure_get_boolean (structure,
+      "interlaced", &state->interlaced);
+
+  state->clean_width = state->width;
+  state->clean_height = state->height;
+  state->clean_offset_left = 0;
+  state->clean_offset_top = 0;
 
   ret = base_video_encoder_class->set_format (base_video_encoder,
       &base_video_encoder->state);

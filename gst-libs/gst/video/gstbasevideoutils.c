@@ -121,35 +121,6 @@ gst_base_video_encoded_video_convert (GstVideoState * state,
   return res;
 }
 
-gboolean
-gst_base_video_state_from_caps (GstVideoState * state, GstCaps * caps)
-{
-
-  gst_video_format_parse_caps (caps, &state->format,
-      &state->width, &state->height);
-
-  if (!gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d))
-    return FALSE;
-
-  state->par_n = 1;
-  state->par_d = 1;
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
-
-  {
-    GstStructure *structure = gst_caps_get_structure (caps, 0);
-    state->interlaced = FALSE;
-    gst_structure_get_boolean (structure, "interlaced", &state->interlaced);
-  }
-
-  state->clean_width = state->width;
-  state->clean_height = state->height;
-  state->clean_offset_left = 0;
-  state->clean_offset_top = 0;
-
-  /* FIXME need better error handling */
-  return TRUE;
-}
-
 GstClockTime
 gst_video_state_get_timestamp (const GstVideoState * state,
     GstSegment * segment, int frame_number)
@@ -164,4 +135,3 @@ gst_video_state_get_timestamp (const GstVideoState * state,
         state->fps_d * GST_SECOND, state->fps_n);
   }
 }
-
