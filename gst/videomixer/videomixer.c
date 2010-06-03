@@ -380,8 +380,7 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
   GstVideoMixer *mix;
   GstVideoMixerPad *mixpad;
   GstCaps *res = NULL;
-  GstCaps *tmp;
-  int ncaps, i;
+  GstCaps *mastercaps;
   GstStructure *st;
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
@@ -390,41 +389,36 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
   if (!mixpad)
     goto beach;
 
-  tmp = gst_pad_peer_get_caps (mix->srcpad);
-  if (G_UNLIKELY (tmp == NULL)) {
-    /* If no peer, then return template */
-    res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  /* Get downstream allowed caps */
+  res = gst_pad_get_allowed_caps (mix->srcpad);
+
+  GST_VIDEO_MIXER_STATE_LOCK (mix);
+
+  /* Return as-is if not other sinkpad set as master */
+  if (mix->master == NULL) {
+    GST_VIDEO_MIXER_STATE_UNLOCK (mix);
     goto beach;
   }
 
-  /* Intersect with template caps, downstream might be returning formats
-   * or width/height/framerate/par combinations we don't handle */
-  res = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
-  gst_caps_unref (tmp);
+  mastercaps = gst_pad_get_fixed_caps_func (GST_PAD (mix->master));
 
-  ncaps = gst_caps_get_size (res);
-
-  /* This Upstream can only produce:
-   * * The formats that downstream can do (intersected above)
-   * * The PAR that downstream can do
-   * * Width within the maximum of what downstream can do
-   * * Height within the maximum of what downstream can do
-   * * a framerate at least greater than what downstream can do */
-
-  GST_VIDEO_MIXER_STATE_LOCK (mix);
-  if (mix->out_width) {
-    /* If we already have some configured with/height/framerate/par,
-     * then limit the returned caps */
-    for (i = 0; i < ncaps; i++) {
-      st = gst_caps_get_structure (res, i);
-      gst_structure_set (st,
-          "width", GST_TYPE_INT_RANGE, mix->in_width, G_MAXINT32,
-          "height", GST_TYPE_INT_RANGE, mix->in_height, G_MAXINT32,
-          "framerate", GST_TYPE_FRACTION_RANGE, mix->fps_n, mix->fps_d,
-          G_MAXINT32, 1, "pixel-aspect-ratio", GST_TYPE_FRACTION, mix->par_n,
-          mix->par_d, NULL);
-    }
+  /* If master pad caps aren't negotiated yet, return downstream
+   * allowed caps */
+  if (!GST_CAPS_IS_SIMPLE (mastercaps)) {
+    GST_VIDEO_MIXER_STATE_UNLOCK (mix);
+    gst_caps_unref (mastercaps);
+    goto beach;
   }
+
+  gst_caps_unref (res);
+  res = gst_caps_make_writable (mastercaps);
+  st = gst_caps_get_structure (res, 0);
+  gst_structure_set (st, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  if (!gst_structure_has_field (st, "pixel-aspect-ratio"))
+    gst_structure_set (st, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
+
   GST_VIDEO_MIXER_STATE_UNLOCK (mix);
 
 
