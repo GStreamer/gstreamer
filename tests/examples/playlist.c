@@ -238,6 +238,44 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
   }
 }
 
+void
+print_transition_list (void)
+{
+  GEnumClass *smpte_class;
+  GESTimelineTransition *tr;
+  GESTimelineTransitionClass *klass;
+  GParamSpec *pspec;
+  int i;
+
+  tr = ges_timeline_transition_new (VTYPE_CROSSFADE);
+  klass = GES_TIMELINE_TRANSITION_GET_CLASS (tr);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype");
+
+  smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+
+  g_print ("%p %d\n", smpte_class, smpte_class->n_values);
+
+  GEnumValue *v;
+
+  for (v = smpte_class->values; v->value != 0; v++) {
+    g_print ("%s\n", v->value_nick);
+  }
+
+  g_type_class_unref (smpte_class);
+  g_object_unref (tr);
+}
+
+void
+print_pattern_list (void)
+{
+  int i;
+
+  for (i = 0; i < N_PATTERNS; i++) {
+    g_print ("%s\n", patterns[i].name);
+  }
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -249,6 +287,8 @@ main (int argc, gchar ** argv)
   gchar *video_restriction = "ANY";
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
+  static gboolean list_transitions = FALSE;
+  static gboolean list_patterns = FALSE;
   GOptionEntry options[] = {
     {"render", 'r', 0, G_OPTION_ARG_NONE, &render,
         "Render to outputuri", NULL},
@@ -264,8 +304,12 @@ main (int argc, gchar ** argv)
         "Audio format", "<GstCaps>"},
     {"vrestriction", 'x', 0, G_OPTION_ARG_STRING, &video_restriction,
         "Video restriction", "<GstCaps>"},
-    {"repeat", 't', 0, G_OPTION_ARG_INT, &repeat,
+    {"repeat", 'l', 0, G_OPTION_ARG_INT, &repeat,
         "Number of time to repeat timeline", NULL},
+    {"list-transitions", 't', 0, G_OPTION_ARG_NONE, &list_transitions,
+        "List valid transition types and exit", NULL},
+    {"list-patterns", 'p', 0, G_OPTION_ARG_NONE, &list_patterns,
+        "List patterns and exit", NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -278,9 +322,16 @@ main (int argc, gchar ** argv)
   ctx = g_option_context_new ("- plays/render a list of files");
   g_option_context_set_summary (ctx,
       "If not specified, this example will playback the files\n" "\n"
-      "The files should be layed out in triplets of:\n" " * filename\n"
+      "The files should be layed out in triplets of:\n"
+      " * filename\n"
       " * inpoint (in seconds)\n"
-      " * duration (in seconds) If 0, full file length");
+      " * duration (in seconds) If 0, full file length\n\n"
+      "Solid patterns and transitions can be specified as follows:\n"
+      " * +pattern | +transition\n"
+      " * <type>\n"
+      " * duration (in seconds, must be greater than 0)\n"
+      "To get a list of valid transitions, use --transitions.\n"
+      "To get a list of valid patterns, use --patterns.\n");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -288,6 +339,16 @@ main (int argc, gchar ** argv)
     g_print ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
     exit (1);
+  }
+
+  if (list_transitions) {
+    print_transition_list ();
+    exit (0);
+  }
+
+  if (list_patterns) {
+    print_pattern_list ();
+    exit (0);
   }
 
   if ((argc < 4) || (outputuri && (!render && !smartrender))) {
