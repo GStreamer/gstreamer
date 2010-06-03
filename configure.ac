@@ -332,7 +332,6 @@ AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(selector)
-AG_GST_CHECK_PLUGIN(shm)
 AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
@@ -494,6 +493,12 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
   AC_CHECK_TYPE([SampleReferenceRecord], HAVE_QUICKTIME="yes", HAVE_QUICKTIME="no",
       [#include <Quicktime/Quicktime.h>])
+])
+
+dnl check for shm_open (for shm plugin)
+translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
+AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
+  AC_CHECK_LIB(rt, shm_open, HAVE_SHM=yes, HAVE_SHM=no)
 ])
 
 dnl check for Video CD
@@ -1705,7 +1710,6 @@ gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/selector/Makefile
-gst/shm/Makefile
 gst/siren/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
@@ -1732,6 +1736,7 @@ sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
+sys/shm/Makefile
 sys/vcd/Makefile
 sys/vdpau/Makefile
 sys/wasapi/Makefile

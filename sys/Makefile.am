@@ -76,9 +76,15 @@ else
 VDPAU_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
+if USE_SHM
+SHM_DIR=shm
+else
+SHM_DIR=
+endif
+
+SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(SHM_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
 
 DIST_SUBDIRS = acmenc acmmp3dec directdraw directsound dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
-		osxvideo qtwrapper vcd vdpau wasapi wininet winks winscreencap
+		osxvideo qtwrapper shm vcd vdpau wasapi wininet winks winscreencap
 
 include $(top_srcdir)/common/parallel-subdirs.mak
