@@ -27,6 +27,7 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-transition.h"
+#include "ges-timeline-transition.h"
 
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
@@ -254,7 +255,7 @@ create_video_bin (GESTrackTransition * self)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (self->vtype) {
+  if (self->vtype != VTYPE_CROSSFADE) {
     link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
         self->vtype, NULL);
     target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
@@ -451,12 +452,14 @@ ges_track_transition_init (GESTrackTransition * self)
 gboolean
 ges_track_transition_set_vtype (GESTrackTransition * self, gint vtype)
 {
-  if ((!vtype && (self->vtype)) || (vtype && !(self->vtype))) {
+  if ((vtype == VTYPE_CROSSFADE) && (self->vtype != VTYPE_CROSSFADE) ||
+      (vtype != VTYPE_CROSSFADE) && (self->vtype = VTYPE_CROSSFADE)) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported\n");
   }
+
   self->vtype = vtype;
-  if (self->vsmpte && (vtype != 0))
+  if (self->vsmpte && (vtype != VTYPE_CROSSFADE))
     g_object_set (self->vsmpte, "type", (gint) vtype, NULL);
 }
 
