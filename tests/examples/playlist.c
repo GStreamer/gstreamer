@@ -26,6 +26,7 @@
 #include <glib.h>
 #include <ges/ges.h>
 #include <gst/profile/gstprofile.h>
+#include <regex.h>
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -98,6 +99,57 @@ pattern_source_new (guint pattern)
       GUINT_TO_POINTER (pattern));
 }
 
+gboolean
+check_path (char *path)
+{
+  FILE *fp = fopen (path, "r");
+  if (fp) {
+    fclose (fp);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+gboolean
+check_time (char *time)
+{
+  static regex_t re;
+  static gboolean compiled = FALSE;
+
+  if (!compiled) {
+    compiled = TRUE;
+    regcomp (&re, "^[0-9]+(.[0-9]+)?$", REG_EXTENDED | REG_NOSUB);
+  }
+
+  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+    return TRUE;
+  return FALSE;
+}
+
+guint64
+str_to_time (char *time)
+{
+  if (check_time (time)) {
+    return (guint64) (atof (time) * GST_SECOND);
+  }
+  g_error ("%s not a valid time", time);
+  return 0;
+}
+
+guint64
+str_to_duration (char *time)
+{
+  if (check_time (time)) {
+    double t = (double) atof (time);
+    if (t <= 0)
+      g_error ("durations must be greater than 0");
+    return (guint64) (t * GST_SECOND);
+  }
+  g_error ("%s not a valid time", time);
+  return 0;
+}
+
 static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
     gchar * container)
@@ -148,11 +200,11 @@ create_timeline (int nbargs, gchar ** argv)
     gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
     GESTimelineObject *obj;
 
-
     int pattern;
+
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
-    guint64 duration = (guint64) (atof (argv[(i * 3) + 2]) * GST_SECOND);
+    guint64 duration = str_to_duration (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
       pattern = pattern_for_name (arg0);
@@ -180,8 +232,11 @@ create_timeline (int nbargs, gchar ** argv)
     }
 
     else {
+      if (!check_path (source))
+        g_error ("'%s': could not open path!", source);
+
       gchar *uri = g_strdup_printf ("file://%s", source);
-      guint64 inpoint = atoi (argv[i * 3 + 1]) * GST_SECOND;
+      guint64 inpoint = str_to_time (argv[i * 3 + 1]);
       obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
