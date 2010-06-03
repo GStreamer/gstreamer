@@ -151,8 +151,8 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
   } else {
-    GST_LOG_OBJECT (mux, "Buffer %p on pad %s has an invalid timestamp,"
-        " letting through", GST_PAD_NAME (pad));
+    GST_LOG_OBJECT (pad, "Buffer %p has an invalid timestamp,"
+        " letting through", buffer);
   }
   GST_OBJECT_UNLOCK (mux);
 
