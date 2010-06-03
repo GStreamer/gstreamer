@@ -830,8 +830,8 @@ static const guchar levelcolormap[GST_LEVEL_COUNT] = {
   FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
   /* GST_LEVEL_FIXME */
   FOREGROUND_RED | FOREGROUND_GREEN,
-  /* placeholder for log level 7 */
-  0,
+  /* GST_LEVEL_TRACE */
+  FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
   /* placeholder for log level 8 */
   0,
   /* GST_LEVEL_MEMDUMP */
@@ -852,7 +852,7 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
   "\033[36m",                   /* GST_LEVEL_DEBUG */
   "\033[37m",                   /* GST_LEVEL_LOG */
   "\033[33;01m",                /* GST_LEVEL_FIXME */
-  "\033[37m",                   /* placeholder for log level 7 */
+  "\033[37m",                   /* GST_LEVEL_TRACE */
   "\033[37m",                   /* placeholder for log level 8 */
   "\033[37m"                    /* GST_LEVEL_MEMDUMP */
 };
@@ -992,6 +992,8 @@ gst_debug_level_get_name (GstDebugLevel level)
       return "LOG    ";
     case GST_LEVEL_FIXME:
       return "FIXME  ";
+    case GST_LEVEL_TRACE:
+      return "TRACE  ";
     case GST_LEVEL_MEMDUMP:
       return "MEMDUMP";
     default:

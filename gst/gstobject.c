@@ -261,7 +261,7 @@ gst_object_init (GstObject * object)
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
 
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_object_trace, object);
@@ -291,8 +291,7 @@ gst_object_ref (gpointer object)
   g_return_val_if_fail (object != NULL, NULL);
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
-      object,
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d", object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
 #endif
   g_object_ref (object);
@@ -318,8 +317,7 @@ gst_object_unref (gpointer object)
   g_return_if_fail (((GObject *) object)->ref_count > 0);
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
-      object,
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d", object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
 #endif
   g_object_unref (object);
@@ -349,7 +347,8 @@ gst_object_ref_sink (gpointer object)
 
   GST_OBJECT_LOCK (object);
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unsetting floating flag");
+    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object,
+        "unsetting floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_OBJECT_UNLOCK (object);
   } else {
@@ -380,11 +379,11 @@ gst_object_sink (gpointer object)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
 
   GST_OBJECT_LOCK (object);
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "clear floating flag");
+    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "clear floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_OBJECT_UNLOCK (object);
     gst_object_unref (object);
@@ -415,7 +414,7 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %p %s (%d) with %p %s (%d)",
+  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "replace %p %s (%d) with %p %s (%d)",
       *oldobj, *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
       *oldobj ? G_OBJECT (*oldobj)->ref_count : 0,
       newobj, newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
@@ -439,7 +438,7 @@ gst_object_dispose (GObject * object)
 {
   GstObject *parent;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   GST_OBJECT_LOCK (object);
   if ((parent = GST_OBJECT_PARENT (object)))
@@ -471,7 +470,7 @@ gst_object_finalize (GObject * object)
 {
   GstObject *gstobject = GST_OBJECT_CAST (object);
 
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "finalize");
+  GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "finalize");
 
   g_signal_handlers_destroy (object);
 
@@ -801,7 +800,8 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
    * in the floating case. */
   object->parent = parent;
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unsetting floating flag");
+    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object,
+        "unsetting floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_OBJECT_UNLOCK (object);
   } else {
@@ -871,7 +871,7 @@ gst_object_unparent (GstObject * object)
   parent = object->parent;
 
   if (G_LIKELY (parent != NULL)) {
-    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
+    GST_CAT_TRACE_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
     object->parent = NULL;
     GST_OBJECT_UNLOCK (object);
 
