@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-05-20 08:18+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -368,21 +368,27 @@ msgstr "Wyciszenie"
 msgid "Fast"
 msgstr "Szybko"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Bardzo małe"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Małe"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Średnie"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Duże"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Bardzo duże"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Produkcja"
 

@@ -789,12 +789,18 @@ static struct
   "off", N_("Off")}, {
   "mute", N_("Mute")}, {
   "fast", N_("Fast")}, {
+    /* TRANSLATORS: "Very Low" is a quality setting here */
   "very-low", N_("Very Low")}, {
+    /* TRANSLATORS: "Low" is a quality setting here */
   "low", N_("Low")}, {
+    /* TRANSLATORS: "Medium" is a quality setting here */
   "medium", N_("Medium")}, {
+    /* TRANSLATORS: "High" is a quality setting here */
   "high", N_("High")}, {
+    /* TRANSLATORS: "Very High" is a quality setting here */
   "very-high", N_("Very High")}, {
   "high+", N_("Very High")}, {
+    /* TRANSLATORS: "Production" is a quality setting here */
   "production", N_("Production")}, {
   "fp-mic", N_("Front Panel Microphone")}, {
   "fp-linein", N_("Front Panel Line In")}, {

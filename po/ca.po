@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2005-12-04 21:54+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -372,21 +372,27 @@ msgstr ""
 msgid "Fast"
 msgstr ""
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr ""
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr ""
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr ""
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr ""
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr ""
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr ""
 

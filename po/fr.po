@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2009-09-22 19:36+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -377,21 +377,27 @@ msgstr "Sourdine"
 msgid "Fast"
 msgstr "Rapide"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Très bas"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Bas"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Moyen"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Élevé"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Très élevé"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Production"
 

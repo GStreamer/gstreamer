@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-02-01 12:46+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -376,21 +376,27 @@ msgstr "Némítás"
 msgid "Fast"
 msgstr "Gyors"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Nagyon alacsony"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Alacsony"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Közepes"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Magas"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Nagyon magas"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Előállítás"
 

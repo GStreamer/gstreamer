@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-04-27 22:48+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -371,21 +371,27 @@ msgstr "Câm"
 msgid "Fast"
 msgstr "Nhanh"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Rất thấp"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Thấp"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Vừa"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Cao"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Rất cao"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Sản xuất"
 

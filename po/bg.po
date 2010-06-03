@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-01-29 14:49+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -369,21 +369,27 @@ msgstr "Заглушаване"
 msgid "Fast"
 msgstr "Бързо"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Много ниски"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Ниски"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Средни"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Високи"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Много високи"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Производство"
 

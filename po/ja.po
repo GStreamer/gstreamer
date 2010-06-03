@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2009-06-01 19:29+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -412,22 +412,28 @@ msgstr ""
 msgid "Fast"
 msgstr ""
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr ""
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "低音"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "中音"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "高音"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 #, fuzzy
 msgid "Very High"
 msgstr "高音"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "プロダクション"
 

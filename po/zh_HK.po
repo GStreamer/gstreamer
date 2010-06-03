@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.2 0.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2006-08-29 01:08+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (Hong Kong) <community@linuxhall.org>\n"
@@ -358,21 +358,27 @@ msgstr "静音"
 msgid "Fast"
 msgstr "快"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "很慢"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "慢"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "中等"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "高"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "很高"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "生产商"
 

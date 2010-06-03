@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -375,21 +375,27 @@ msgstr "Mututu"
 msgid "Fast"
 msgstr "Bizkorra"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Oso motela"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Motela"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Tartekoa"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Altua"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Oso altua"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Ekoizpena"
 

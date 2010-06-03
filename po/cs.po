@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-01-12 21:13+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -373,21 +373,27 @@ msgstr "Ztlumit"
 msgid "Fast"
 msgstr "Rychlé"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Velmi nízké"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Nízké"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Střední"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Vysoké"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Velmi vysoké"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Výroba"
 

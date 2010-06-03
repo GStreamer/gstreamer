@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-05-23 21:23+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -376,21 +376,27 @@ msgstr "Vaimennettu"
 msgid "Fast"
 msgstr "Nopea"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Erittäin matala"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Matala"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Medium"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Korkea"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Erittäin korkea"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Tuotanto"
 

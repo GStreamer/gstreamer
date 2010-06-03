@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-05-25 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -380,21 +380,27 @@ msgstr "Slukket"
 msgid "Fast"
 msgstr "Hurtig"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Meget lav"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Lav"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Mellem"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Høj"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Meget høj"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Produktion"
 

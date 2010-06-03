@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-05-23 23:02+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -383,21 +383,27 @@ msgstr "Stumm"
 msgid "Fast"
 msgstr "Schnell"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Sehr niedrig"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Niedrig"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Medium"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Hoch"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Sehr hoch"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Produktion"
 

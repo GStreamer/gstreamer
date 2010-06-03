@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2009-11-13 10:28+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -372,21 +372,27 @@ msgstr "Potichu"
 msgid "Fast"
 msgstr "Rýchla"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Veľmi nízka"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Nízka"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Stredná"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Vysoká"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Veľmi vysoká"
 
+#. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
 msgstr "Produkčná"
 

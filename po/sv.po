@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-05-30 12:24+0100\n"
+"POT-Creation-Date: 2010-06-03 17:51+0100\n"
 "PO-Revision-Date: 2010-05-25 09:09+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -385,21 +385,27 @@ msgstr "Tyst"
 msgid "Fast"
 msgstr "Snabb"
 
+#. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
 msgstr "Mycket låg"
 
+#. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
 msgstr "Låg"
 
+#. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
 msgstr "Medel"
 
+#. TRANSLATORS: "High" is a quality setting here
 msgid "High"
 msgstr "Hög"
 
+#. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
 msgstr "Mycket hög"
 
+#. TRANSLATORS: "Production" is a quality setting here
 #, fuzzy
 msgid "Production"
 msgstr "Plats"
