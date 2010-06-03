@@ -635,11 +635,6 @@ gst_base_video_parse_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
-  buffer = gst_adapter_get_buffer (base_video_parse->input_adapter);
-
-  //base_video_parse->buffer_timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  gst_buffer_unref (buffer);
-
   /* FIXME check klass->parse_data */
 
   do {
