@@ -561,7 +561,7 @@ gst_vp8_enc_finish (GstBaseVideoEncoder * base_video_encoder)
     GstVP8EncCoderHook *hook;
     gboolean invisible, keyframe;
 
-    GST_DEBUG_OBJECT (encoder, "packet %d type %d", pkt->data.frame.sz,
+    GST_DEBUG_OBJECT (encoder, "packet %u type %d", (guint) pkt->data.frame.sz,
         pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
@@ -741,7 +741,7 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     GstBuffer *buffer;
     gboolean invisible;
 
-    GST_DEBUG_OBJECT (encoder, "packet %d type %d", pkt->data.frame.sz,
+    GST_DEBUG_OBJECT (encoder, "packet %u type %d", (guint) pkt->data.frame.sz,
         pkt->kind);
 
     if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) {
