@@ -216,23 +216,23 @@ GST_START_TEST (test_gsl_with_transitions)
 #define HALF_SECOND ((guint64) (0.5 * GST_SECOND))
 #define SECOND(a) ((guint64) (a * GST_SECOND))
 
-  tr1 = ges_timeline_transition_new (0);
+  tr1 = ges_timeline_transition_new (VTYPE_CROSSFADE);
   g_object_set (tr1, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr1), HALF_SECOND);
 
-  tr2 = ges_timeline_transition_new (0);
+  tr2 = ges_timeline_transition_new (VTYPE_CROSSFADE);
   g_object_set (tr2, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr2), HALF_SECOND);
 
-  tr3 = ges_timeline_transition_new (0);
+  tr3 = ges_timeline_transition_new (VTYPE_CROSSFADE);
   g_object_set (tr3, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr3), HALF_SECOND);
 
-  tr4 = ges_timeline_transition_new (0);
+  tr4 = ges_timeline_transition_new (VTYPE_CROSSFADE);
   g_object_set (tr4, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr4), HALF_SECOND);
 
-  tr5 = ges_timeline_transition_new (0);
+  tr5 = ges_timeline_transition_new (VTYPE_CROSSFADE);
   g_object_set (tr5, "duration", HALF_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr5), HALF_SECOND);
 
