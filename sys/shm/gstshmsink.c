@@ -406,7 +406,7 @@ gst_shm_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-void
+static void
 gst_shm_sink_free_buffer (gpointer data)
 {
   ShmBlock *block = data;
