@@ -213,12 +213,13 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SHM_SIZE:
       GST_OBJECT_LOCK (object);
-      if (sp_writer_resize (self->pipe, g_value_get_uint (value)) < 0)
-        GST_DEBUG_OBJECT (self,
-            "Resize shared memory area from %u to %u bytes");
-      else
-        GST_WARNING_OBJECT (self,
-            "Could not resize shared memory area from %u to %u bytes");
+      if (sp_writer_resize (self->pipe, g_value_get_uint (value)) < 0) {
+        GST_DEBUG_OBJECT (self, "Resized shared memory area from %u to "
+            "%u bytes", self->size, g_value_get_uint (value));
+      } else {
+        GST_WARNING_OBJECT (self, "Could not resize shared memory area from %u "
+            "to %u bytes", self->size, g_value_get_uint (value));
+      }
       self->size = g_value_get_uint (value);
       GST_OBJECT_UNLOCK (object);
       break;
@@ -436,10 +437,10 @@ gst_shm_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
         GST_DEBUG_FUNCPTR (gst_shm_sink_free_buffer);
     GST_BUFFER_SIZE (buffer) = size;
     GST_LOG_OBJECT (self,
-        "Allocated buffer of %lu bytes from shared memory at %p", size, buf);
+        "Allocated buffer of %u bytes from shared memory at %p", size, buf);
   } else {
     buffer = gst_buffer_new_and_alloc (size);
-    GST_LOG_OBJECT (self, "Not enough shared memory for buffer of %lu bytes, "
+    GST_LOG_OBJECT (self, "Not enough shared memory for buffer of %u bytes, "
         "allocating using standard allocator", size);
   }
 

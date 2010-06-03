@@ -305,7 +305,7 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
   } while (buf == NULL);
 
-  GST_LOG_OBJECT (self, "Got buffer %p of size %d %d", buf, rv);
+  GST_LOG_OBJECT (self, "Got buffer %p of size %d", buf, rv);
 
   gsb = g_slice_new0 (struct GstShmBuffer);
   gsb->buf = buf;
