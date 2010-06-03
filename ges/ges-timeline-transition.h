@@ -72,4 +72,9 @@ GESTimelineTransition *ges_timeline_transition_new_for_nick (char *nick);
 
 G_END_DECLS
 
+enum
+{
+  VTYPE_CROSSFADE = 512,
+};
+
 #endif /* _GES_TIMELINE_TRANSITION */

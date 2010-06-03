@@ -34,11 +34,6 @@ static GType ges_type_timeline_transition_vtype_get_type (void);
 
 enum
 {
-  VTYPE_CROSSFADE = 0,
-};
-
-enum
-{
   PROP_VTYPE = 5,
 };
 
@@ -140,7 +135,7 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 static void
 ges_timeline_transition_init (GESTimelineTransition * self)
 {
-  self->vtype = 0;
+  self->vtype = VTYPE_CROSSFADE;
 }
 
 static GESTrackObject *
@@ -204,16 +199,18 @@ ges_type_timeline_transition_vtype_get_type (void)
     /* plus one for sentinel, plus another for the crossfade GEnumValue */
     values = g_new0 (GEnumValue, 2 + n);
 
-    values->value = 0;
-    values->value_name = "Cross-fade between two sources";
-    values->value_nick = "crossfade";
-
-    for (i = 0, dst = (values + 1), src = smpte_enum_class->values; i < n;
+    for (i = 0, dst = values, src = smpte_enum_class->values; i < n;
         i++, dst++, src++) {
       dst->value = src->value;
       dst->value_nick = src->value_nick;
       dst->value_name = src->value_name;
     }
+
+    dst->value = VTYPE_CROSSFADE;
+    dst->value_name = "Cross-fade between two sources";
+    dst->value_nick = "crossfade";
+
+    dst++;
 
     dst->value = 0;
     dst->value_nick = NULL;
@@ -232,7 +229,7 @@ ges_timeline_transition_new_for_nick (char *nick)
   _ensure_smpte_enum_class ();
 
   if (!strcmp ("crossfade", nick)) {
-    return ges_timeline_transition_new (0);
+    return ges_timeline_transition_new (VTYPE_CROSSFADE);
   }
 
   GEnumValue *value = g_enum_get_value_by_nick (smpte_enum_class, nick);
