@@ -272,6 +272,9 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
 
+  baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
+      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
+
   GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
   GST_BASE_SINK (baseaudiosink)->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
   baseaudiosink->priv->drift_tolerance = DEFAULT_DRIFT_TOLERANCE;
@@ -306,6 +309,10 @@ gst_base_audio_sink_dispose (GObject * object)
   GstBaseAudioSink *sink;
 
   sink = GST_BASE_AUDIO_SINK (object);
+
+  if (sink->provided_clock)
+    gst_object_unref (sink->provided_clock);
+  sink->provided_clock = NULL;
 
   if (sink->ringbuffer) {
     gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
@@ -1813,8 +1820,10 @@ gst_base_audio_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (sink->ringbuffer == NULL)
+      if (sink->ringbuffer == NULL) {
+        gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
+      }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
         goto open_failed;
       break;
@@ -1861,15 +1870,6 @@ gst_base_audio_sink_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      /* If the subclass doesn't provide a clock... */
-      if (!sink->provided_clock)
-        sink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
-            (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, sink);
-      gst_audio_clock_reset (GST_AUDIO_CLOCK (sink->provided_clock), 0);
-      gst_element_post_message (element,
-          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
-              sink->provided_clock, TRUE));
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* stop slaving ourselves to the master, if any */
       gst_clock_set_master (sink->provided_clock, NULL);
@@ -1886,17 +1886,9 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_activate (sink->ringbuffer, FALSE);
       gst_ring_buffer_release (sink->ringbuffer);
       gst_ring_buffer_close_device (sink->ringbuffer);
-
-      gst_element_post_message (element,
-          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
-              NULL, FALSE));
-
       GST_OBJECT_LOCK (sink);
       gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
       sink->ringbuffer = NULL;
-      if (sink->provided_clock)
-        gst_object_unref (sink->provided_clock);
-      sink->provided_clock = NULL;
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
