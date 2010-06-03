@@ -509,6 +509,7 @@ gst_invtelecine_push_field (GstInvtelecine * invtelecine, GstBuffer * buffer,
   int i;
 
   g_assert (invtelecine->num_fields < FIFO_SIZE - 1);
+  g_assert (invtelecine->num_fields >= 0);
 
   i = invtelecine->num_fields;
   invtelecine->num_fields++;
