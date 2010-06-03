@@ -62,12 +62,6 @@ struct GstShmClient
 GST_DEBUG_CATEGORY_STATIC (shmsink_debug);
 #define GST_CAT_DEFAULT shmsink_debug
 
-static const GstElementDetails gst_shm_sink_details =
-GST_ELEMENT_DETAILS ("Shared Memory Sink",
-    "Sink",
-    "Send data over shared memory to the matching source",
-    "Olivier Crete <olivier.crete@collabora.co.uk>");
-
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -103,9 +97,12 @@ gst_shm_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details (element_class, &gst_shm_sink_details);
+  gst_element_class_set_details_simple (element_class,
+      "Shared Memory Sink",
+      "Sink",
+      "Send data over shared memory to the matching source",
+      "Olivier Crete <olivier.crete@collabora.co.uk>");
 }
-
 
 static void
 gst_shm_sink_init (GstShmSink * self, GstShmSinkClass * g_class)
