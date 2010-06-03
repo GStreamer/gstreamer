@@ -77,8 +77,8 @@ static GstFlowReturn gst_shm_src_create (GstPushSrc * psrc,
 static gboolean gst_shm_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_shm_src_unlock_stop (GstBaseSrc * bsrc);
 
-static void gst_shm_pipe_inc (GstShmPipe *pipe);
-static void gst_shm_pipe_dec (GstShmPipe *pipe);
+static void gst_shm_pipe_inc (GstShmPipe * pipe);
+static void gst_shm_pipe_dec (GstShmPipe * pipe);
 
 // static guint gst_shm_src_signals[LAST_SIGNAL] = { 0 };
 
@@ -351,7 +351,7 @@ gst_shm_src_unlock_stop (GstBaseSrc * bsrc)
 }
 
 static void
-gst_shm_pipe_inc (GstShmPipe *pipe)
+gst_shm_pipe_inc (GstShmPipe * pipe)
 {
   g_return_if_fail (pipe);
   g_return_if_fail (pipe->src);
@@ -363,7 +363,7 @@ gst_shm_pipe_inc (GstShmPipe *pipe)
 }
 
 static void
-gst_shm_pipe_dec (GstShmPipe *pipe)
+gst_shm_pipe_dec (GstShmPipe * pipe)
 {
   g_return_if_fail (pipe);
   g_return_if_fail (pipe->src);
