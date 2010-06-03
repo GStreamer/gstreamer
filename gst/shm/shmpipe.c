@@ -371,11 +371,11 @@ sp_close (ShmPipe * self)
   spalloc_free (ShmPipe, self);
 }
 
-void
+int
 sp_writer_setperms_shm (ShmPipe * self, mode_t perms)
 {
   self->perms = perms;
-  fchmod (self->shm_area->shm_fd, perms);
+  return fchmod (self->shm_area->shm_fd, perms);
 }
 
 static int

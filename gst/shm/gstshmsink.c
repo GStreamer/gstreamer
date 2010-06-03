@@ -195,6 +195,7 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstShmSink *self = GST_SHM_SINK (object);
+  int ret = 0;
 
   switch (prop_id) {
     case PROP_SOCKET_PATH:
@@ -206,8 +207,12 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
     case PROP_PERMS:
       GST_OBJECT_LOCK (object);
       self->perms = g_value_get_uint (value);
-      sp_writer_setperms_shm (self->pipe, self->perms);
+      if (self->pipe)
+        ret = sp_writer_setperms_shm (self->pipe, self->perms);
       GST_OBJECT_UNLOCK (object);
+      if (ret < 0)
+        GST_WARNING_OBJECT (object, "Could not set permissions on pipe: %s",
+            strerror (ret));
       break;
     case PROP_SHM_SIZE:
       GST_OBJECT_LOCK (object);
@@ -245,8 +250,14 @@ gst_shm_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PERMS:
       self->perms = g_value_get_uint (value);
-      if (self->pipe)
-        sp_writer_setperms_shm (self->pipe, self->perms);
+      if (self->pipe) {
+        int ret;
+
+        ret = sp_writer_setperms_shm (self->pipe, self->perms);
+        if (ret < 0)
+          GST_WARNING_OBJECT (object, "Could not set permissions on pipe: %s",
+              strerror (ret));
+      }
       break;
     case PROP_SHM_SIZE:
       g_value_set_uint (value, self->size);
