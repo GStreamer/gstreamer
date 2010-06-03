@@ -161,9 +161,6 @@ pinch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
     *in_x = cgt->precalc_x_center + dx;
     *in_y = cgt->precalc_y_center + dy;
-
-    *in_x = CLAMP (*in_x, 0, gt->width - 1);
-    *in_y = CLAMP (*in_y, 0, gt->height - 1);
   }
 
   GST_DEBUG_OBJECT (pinch, "Inversely mapped %d %d into %lf %lf",

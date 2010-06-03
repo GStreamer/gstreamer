@@ -22,6 +22,7 @@
 #endif
 
 #include "gstgeometrictransform.h"
+#include "geometricmath.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (geometric_transform_debug);
@@ -42,6 +43,43 @@ static GstStaticPadTemplate gst_geometric_transform_sink_template =
     );
 
 static GstVideoFilterClass *parent_class = NULL;
+
+enum
+{
+  PROP_0,
+  PROP_OFF_EDGE_PIXELS
+};
+
+enum
+{
+  GST_GT_OFF_EDGES_PIXELS_IGNORE = 0,
+  GST_GT_OFF_EDGES_PIXELS_CLAMP,
+  GST_GT_OFF_EDGES_PIXELS_WRAP
+};
+
+#define GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE ( \
+    gst_geometric_transform_off_edges_pixels_method_get_type())
+static GType
+gst_geometric_transform_off_edges_pixels_method_get_type (void)
+{
+  static GType method_type = 0;
+
+  static const GEnumValue method_types[] = {
+    {GST_GT_OFF_EDGES_PIXELS_IGNORE, "Ignore", "ignore"},
+    {GST_GT_OFF_EDGES_PIXELS_CLAMP, "Clamp", "clamp"},
+    {GST_GT_OFF_EDGES_PIXELS_WRAP, "Wrap", "wrap"},
+    {0, NULL, NULL}
+  };
+
+  if (!method_type) {
+    method_type =
+        g_enum_register_static ("GstGeometricTransformOffEdgesPixelsMethod",
+        method_types);
+  }
+  return method_type;
+}
+
+#define DEFAULT_OFF_EDGE_PIXELS GST_GT_OFF_EDGES_PIXELS_IGNORE
 
 static gboolean
 gst_geometric_transform_generate_map (GstGeometricTransform * gt)
@@ -124,16 +162,43 @@ static void
 gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
     GstBuffer * outbuf, gint x, gint y, gdouble in_x, gdouble in_y)
 {
-  gint trunc_x = (gint) in_x;
-  gint trunc_y = (gint) in_y;
   gint in_offset;
   gint out_offset;
 
   out_offset = y * gt->row_stride + x * gt->pixel_stride;
-  in_offset = trunc_y * gt->row_stride + trunc_x * gt->pixel_stride;
 
-  memcpy (GST_BUFFER_DATA (outbuf) + out_offset,
-      GST_BUFFER_DATA (inbuf) + in_offset, gt->pixel_stride);
+  /* operate on out of edge pixels */
+  switch (gt->off_edge_pixels) {
+    case GST_GT_OFF_EDGES_PIXELS_CLAMP:
+      in_x = CLAMP (in_x, 0, gt->width - 1);
+      in_y = CLAMP (in_y, 0, gt->height - 1);
+      break;
+
+    case GST_GT_OFF_EDGES_PIXELS_WRAP:
+      in_x = mod_float (in_x, gt->width);
+      in_y = mod_float (in_y, gt->height);
+      if (in_x < 0)
+        in_x += gt->width;
+      if (in_y < 0)
+        in_y += gt->height;
+      break;
+
+    default:
+      break;
+  }
+
+  {
+    gint trunc_x = (gint) in_x;
+    gint trunc_y = (gint) in_y;
+    /* only set the values if the values are valid */
+    if (trunc_x >= 0 && trunc_x < gt->width && trunc_y >= 0 &&
+        trunc_y < gt->height) {
+      in_offset = trunc_y * gt->row_stride + trunc_x * gt->pixel_stride;
+
+      memcpy (GST_BUFFER_DATA (outbuf) + out_offset,
+          GST_BUFFER_DATA (inbuf) + in_offset, gt->pixel_stride);
+    }
+  }
 }
 
 static GstFlowReturn
@@ -160,6 +225,43 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
   return ret;
 }
 
+static void
+gst_geometric_transform_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGeometricTransform *gt;
+
+  gt = GST_GEOMETRIC_TRANSFORM (object);
+
+  switch (prop_id) {
+    case PROP_OFF_EDGE_PIXELS:
+      gt->off_edge_pixels = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_geometric_transform_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstGeometricTransform *gt;
+
+  gt = GST_GEOMETRIC_TRANSFORM (object);
+
+  switch (prop_id) {
+    case PROP_OFF_EDGE_PIXELS:
+      g_value_set_enum (value, gt->off_edge_pixels);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
 static gboolean
 gst_geometric_transform_stop (GstBaseTransform * trans)
 {
@@ -184,16 +286,29 @@ gst_geometric_transform_base_init (gpointer g_class)
 static void
 gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
 {
+  GObjectClass *obj_class;
   GstBaseTransformClass *trans_class;
 
+  obj_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  obj_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_geometric_transform_set_property);
+  obj_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_geometric_transform_get_property);
 
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_geometric_transform_stop);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_geometric_transform_set_caps);
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_geometric_transform_transform);
+
+  g_object_class_install_property (obj_class, PROP_OFF_EDGE_PIXELS,
+      g_param_spec_enum ("off-edge-pixels", "Off edge pixels",
+          "What to do with off edge pixels",
+          GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE, DEFAULT_OFF_EDGE_PIXELS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 }
 
 static void

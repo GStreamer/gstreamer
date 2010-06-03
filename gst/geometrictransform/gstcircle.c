@@ -167,8 +167,6 @@ circle_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   *in_y =
       gt->height * (1 - (distance - cgt->radius) / (circle->height + 0.0001));
 
-  *in_x = CLAMP (*in_x, 0, gt->width - 1);
-  *in_y = CLAMP (*in_y, 0, gt->height - 1);
   GST_DEBUG_OBJECT (circle, "Inversely mapped %d %d into %lf %lf",
       x, y, *in_x, *in_y);
 

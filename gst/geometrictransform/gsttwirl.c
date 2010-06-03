@@ -150,9 +150,6 @@ twirl_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
     *in_x = cgt->precalc_x_center + d * cos (a);
     *in_y = cgt->precalc_y_center + d * sin (a);
-
-    *in_x = CLAMP (*in_x, 0, gt->width - 1);
-    *in_y = CLAMP (*in_y, 0, gt->height - 1);
   }
 
   GST_DEBUG_OBJECT (twirl, "Inversely mapped %d %d into %lf %lf",

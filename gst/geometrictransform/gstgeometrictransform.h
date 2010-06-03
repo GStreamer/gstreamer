@@ -80,6 +80,9 @@ struct _GstGeometricTransform {
   gint pixel_stride;
   gint row_stride;
 
+  /* properties */
+  gint off_edge_pixels;
+
   gdouble *map;
 };
 
