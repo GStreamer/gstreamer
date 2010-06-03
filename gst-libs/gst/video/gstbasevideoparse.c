@@ -588,7 +588,6 @@ gst_base_video_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstBaseVideoParse *base_video_parse;
   GstBaseVideoParseClass *klass;
-  GstBuffer *buffer;
   GstFlowReturn ret;
 
   GST_DEBUG ("chain with %d bytes", GST_BUFFER_SIZE (buf));
