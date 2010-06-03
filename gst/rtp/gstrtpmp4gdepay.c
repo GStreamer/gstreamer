@@ -544,7 +544,13 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             if (rtpmp4gdepay->constantDuration != 0) {
               cd = rtpmp4gdepay->constantDuration;
               GST_DEBUG_OBJECT (depayload, "using constantDuration %d", cd);
+            } else if (rtpmp4gdepay->prev_AU_num > 0) {
+              /* use number of packets and of previous frame */
+              cd = diff / rtpmp4gdepay->prev_AU_num;
+              GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d", cd);
             } else {
+              /* assume this frame has the same number of packets as the
+               * previous one */
               cd = diff / num_AU_headers;
               GST_DEBUG_OBJECT (depayload, "guessing constantDuration %d", cd);
             }
@@ -592,6 +598,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
             }
           }
           rtpmp4gdepay->prev_rtptime = rtptime;
+          rtpmp4gdepay->prev_AU_num = num_AU_headers;
         } else {
           AU_index_delta =
               gst_bs_parse_read (&bs, rtpmp4gdepay->indexdeltalength);
@@ -709,6 +716,7 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
       rtpmp4gdepay->prev_AU_index = -1;
       rtpmp4gdepay->prev_rtptime = -1;
       rtpmp4gdepay->last_AU_index = -1;
+      rtpmp4gdepay->prev_AU_num = -1;
       break;
     default:
       break;

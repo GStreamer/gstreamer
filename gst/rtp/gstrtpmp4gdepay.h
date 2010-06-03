@@ -65,6 +65,7 @@ struct _GstRtpMP4GDepay
   guint last_AU_index;
   guint next_AU_index;
   guint32 prev_rtptime;
+  guint prev_AU_num;
 
   GQueue *packets;
   
