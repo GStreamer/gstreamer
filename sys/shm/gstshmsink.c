@@ -213,12 +213,13 @@ gst_shm_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SHM_SIZE:
       GST_OBJECT_LOCK (object);
-      if (sp_writer_resize (self->pipe, g_value_get_uint (value)) < 0) {
-        GST_DEBUG_OBJECT (self, "Resized shared memory area from %u to "
-            "%u bytes", self->size, g_value_get_uint (value));
-      } else {
-        GST_WARNING_OBJECT (self, "Could not resize shared memory area from %u "
-            "to %u bytes", self->size, g_value_get_uint (value));
+      if (self->pipe) {
+        if (sp_writer_resize (self->pipe, g_value_get_uint (value)) < 0)
+          GST_DEBUG_OBJECT (self, "Resized shared memory area from %u to "
+              "%u bytes", self->size, g_value_get_uint (value));
+        else
+          GST_WARNING_OBJECT (self, "Could not resize shared memory area from"
+              "%u to %u bytes", self->size, g_value_get_uint (value));
       }
       self->size = g_value_get_uint (value);
       GST_OBJECT_UNLOCK (object);
