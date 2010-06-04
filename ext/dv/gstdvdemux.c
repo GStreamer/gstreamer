@@ -26,6 +26,7 @@
 
 #include <gst/audio/audio.h>
 #include "gstdvdemux.h"
+#include "gstsmptetimecode.h"
 
 /**
  * SECTION:element-dvdemux
@@ -1357,6 +1358,48 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   return ret;
 }
 
+static int
+get_ssyb_offset (int dif, int ssyb)
+{
+  int offset;
+
+  offset = dif * 12000;         /* to dif */
+  offset += 80 * (1 + (ssyb / 6));      /* to subcode pack */
+  offset += 3;                  /* past header */
+  offset += 8 * (ssyb % 6);     /* to ssyb */
+
+  return offset;
+}
+
+static gboolean
+gst_dvdemux_get_timecode (GstDVDemux * dvdemux, GstBuffer * buffer,
+    GstSMPTETimeCode * timecode)
+{
+  guint8 *data = GST_BUFFER_DATA (buffer);
+  int offset;
+  int dif;
+  int n_difs = dvdemux->decoder->num_dif_seqs;
+
+  for (dif = 0; dif < n_difs; dif++) {
+    offset = get_ssyb_offset (dif, 3);
+    if (data[offset + 3] == 0x13) {
+      timecode->frames = ((data[offset + 4] >> 4) & 0x3) * 10 +
+          (data[offset + 4] & 0xf);
+      timecode->seconds = ((data[offset + 5] >> 4) & 0x3) * 10 +
+          (data[offset + 5] & 0xf);
+      timecode->minutes = ((data[offset + 6] >> 4) & 0x3) * 10 +
+          (data[offset + 6] & 0xf);
+      timecode->hours = ((data[offset + 7] >> 4) & 0x3) * 10 +
+          (data[offset + 7] & 0xf);
+      GST_DEBUG ("got timecode %" GST_SMPTE_TIME_CODE_FORMAT,
+          GST_SMPTE_TIME_CODE_ARGS (timecode));
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 static gboolean
 gst_dvdemux_is_new_media (GstDVDemux * dvdemux, GstBuffer * buffer)
 {
@@ -1390,6 +1433,8 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   GstFlowReturn aret, vret, ret;
   guint8 *data;
   guint64 duration;
+  GstSMPTETimeCode timecode;
+  int frame_number;
 
   if (G_UNLIKELY (dvdemux->need_segment)) {
     GstEvent *event;
@@ -1427,6 +1472,12 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
 
     dvdemux->need_segment = FALSE;
   }
+
+  gst_dvdemux_get_timecode (dvdemux, buffer, &timecode);
+  gst_smpte_time_code_get_frame_number (
+      (dvdemux->decoder->system == e_dv_system_625_50) ?
+      GST_SMPTE_TIME_CODE_SYSTEM_25 : GST_SMPTE_TIME_CODE_SYSTEM_30,
+      &frame_number, &timecode);
 
   next_ts = gst_util_uint64_scale_int (
       (dvdemux->frame_offset + 1) * GST_SECOND,

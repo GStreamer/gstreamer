@@ -50,6 +50,11 @@ struct _GstSMPTETimeCode {
 #define GST_SMPTE_TIME_CODE_SYSTEM_IS_VALID(x) \
   ((x) >= GST_SMPTE_TIME_CODE_SYSTEM_30 && (x) <= GST_SMPTE_TIME_CODE_SYSTEM_24)
 
+#define GST_SMPTE_TIME_CODE_FORMAT "02d:%02d:%02d:%02d"
+#define GST_SMPTE_TIME_CODE_ARGS(timecode) \
+  (timecode)->hours, (timecode)->minutes, \
+  (timecode)->seconds, (timecode)->frames
+
 gboolean gst_smpte_time_code_is_valid (GstSMPTETimeCodeSystem system,
     GstSMPTETimeCode *time_code);
 gboolean gst_smpte_time_code_from_frame_number (GstSMPTETimeCodeSystem system,

@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstdv.la
 
-libgstdv_la_SOURCES = gstdv.c gstdvdec.c gstdvdemux.c
+libgstdv_la_SOURCES = gstdv.c gstdvdec.c gstdvdemux.c gstsmptetimecode.c
 libgstdv_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBDV_CFLAGS)
 libgstdv_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) \
