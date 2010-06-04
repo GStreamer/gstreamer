@@ -1363,9 +1363,20 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (factories == NULL)
     goto expose_pad;
 
-  /* if the array is empty, we have an unknown type */
+  /* if the array is empty, we have a type for which we have no decoder */
   if (factories->n_values == 0) {
-    /* no compatible factories */
+    if (!dbin->expose_allstreams) {
+      GstCaps *raw = gst_static_caps_get (&default_raw_caps);
+
+      /* If the caps are raw, this just means we don't want to expose them */
+      if (gst_caps_can_intersect (raw, caps)) {
+        gst_caps_unref (raw);
+        goto discarded_type;
+      }
+      gst_caps_unref (raw);
+    }
+
+    /* if not we have a unhandled type with no compatible factories */
     g_value_array_free (factories);
     gst_object_unref (dpad);
     goto unknown_type;
