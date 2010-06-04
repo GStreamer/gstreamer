@@ -186,9 +186,10 @@ gst_rtp_celt_pay_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
       if (frame_size)
         gst_structure_set (s, "frame-size", G_TYPE_INT, frame_size, NULL);
 
-      if ((params = gst_structure_get_string (ps, "encoding-params")))
+      if ((params = gst_structure_get_string (ps, "encoding-params"))) {
         channels = atoi (params);
-      gst_structure_fixate_field_nearest_int (s, "channels", channels);
+        gst_structure_fixate_field_nearest_int (s, "channels", channels);
+      }
 
       GST_DEBUG_OBJECT (payload, "clock-rate=%d frame-size=%d channels=%d",
           clock_rate, frame_size, channels);
