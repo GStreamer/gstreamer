@@ -88,8 +88,9 @@ static GstStaticPadTemplate gst_rgb2bayer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-bayer,width=[1,MAX],height=[1,MAX],"
-        "framerate=(fraction)[0/1,MAX]")
+    GST_STATIC_CAPS ("video/x-raw-bayer,"
+        "format=(string){bggr,gbrg,grbg,rggb},"
+        "width=[1,MAX],height=[1,MAX]," "framerate=(fraction)[0/1,MAX]")
     );
 
 /* class initialization */
@@ -280,14 +281,28 @@ gst_rgb2bayer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 {
   GstRGB2Bayer *rgb2bayer = GST_RGB_2_BAYER (trans);
   GstStructure *structure;
+  const char *format;
 
   GST_DEBUG ("in caps %" GST_PTR_FORMAT " out caps %" GST_PTR_FORMAT, incaps,
       outcaps);
 
-  structure = gst_caps_get_structure (incaps, 0);
+  structure = gst_caps_get_structure (outcaps, 0);
 
   gst_structure_get_int (structure, "width", &rgb2bayer->width);
   gst_structure_get_int (structure, "height", &rgb2bayer->height);
+
+  format = gst_structure_get_string (structure, "format");
+  if (g_str_equal (format, "bggr")) {
+    rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_BGGR;
+  } else if (g_str_equal (format, "gbrg")) {
+    rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_GBRG;
+  } else if (g_str_equal (format, "grbg")) {
+    rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_GRBG;
+  } else if (g_str_equal (format, "rggb")) {
+    rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_RGGB;
+  } else {
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -332,9 +347,10 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     guint8 *src_line = src + width * 4 * j;
 
     for (i = 0; i < width; i++) {
-      if ((i & 1) == 0 && (j & 1) == 0) {
+      int is_blue = ((j & 1) << 1) | (i & 1);
+      if (is_blue == rgb2bayer->format) {
         dest_line[i] = src_line[i * 4 + 3];
-      } else if ((i & 1) == 1 && (j & 1) == 1) {
+      } else if ((is_blue ^ 3) == rgb2bayer->format) {
         dest_line[i] = src_line[i * 4 + 1];
       } else {
         dest_line[i] = src_line[i * 4 + 2];

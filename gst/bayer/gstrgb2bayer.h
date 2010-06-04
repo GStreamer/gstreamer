@@ -34,11 +34,19 @@ G_BEGIN_DECLS
 typedef struct _GstRGB2Bayer GstRGB2Bayer;
 typedef struct _GstRGB2BayerClass GstRGB2BayerClass;
 
+enum {
+  GST_RGB_2_BAYER_FORMAT_BGGR = 0,
+  GST_RGB_2_BAYER_FORMAT_GBRG,
+  GST_RGB_2_BAYER_FORMAT_GRBG,
+  GST_RGB_2_BAYER_FORMAT_RGGB
+};
+
 struct _GstRGB2Bayer
 {
   GstBaseTransform base_rgb2bayer;
 
   int width, height;
+  int format;
 };
 
 struct _GstRGB2BayerClass
