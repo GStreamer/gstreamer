@@ -2446,6 +2446,8 @@ gst_element_populate_std_props (GObjectClass * klass, const gchar * prop_name,
   static GQuark silent_id;
   static GQuark touch_id;
 
+  flags |= G_PARAM_STATIC_STRINGS;
+
   if (!fd_id) {
     fd_id = g_quark_from_static_string ("fd");
     blocksize_id = g_quark_from_static_string ("blocksize");
