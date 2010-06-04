@@ -125,7 +125,7 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
       g_param_spec_enum ("vtype", "VType",
           "The SMPTE video wipe to use, or 0 for crossfade",
           GES_TYPE_TIMELINE_TRANSITION_VTYPE_TYPE, VTYPE_CROSSFADE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
 
   timobj_class->create_track_object = ges_tl_transition_create_track_object;
@@ -440,8 +440,6 @@ static GEnumValue transition_types[] = {
   {0, NULL, NULL}
 };
 
-/* how many types could GType type if GType could type types? */
-
 static GType
 ges_type_timeline_transition_vtype_get_type (void)
 {
@@ -466,6 +464,7 @@ ges_timeline_transition_new (gint vtype)
 
   ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype", (gint) vtype,
       NULL);
+
   return ret;
 }
 
@@ -473,8 +472,18 @@ GESTimelineTransition *
 ges_timeline_transition_new_for_nick (gchar * nick)
 {
   GESTimelineTransition *ret;
-  ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, NULL);
-  g_object_set (ret, "vtype", (gchar *) nick, NULL);
+  GEnumValue *value;
+  int i;
 
-  return ret;
+  for (i = 0, value = &transition_types[i]; value->value;
+      value = &transition_types[i++]) {
+    if (!strcmp (nick, value->value_nick)) {
+      ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype",
+          (gint) value->value, NULL);
+      return ret;
+    }
+    value++;
+  }
+
+  return NULL;
 }
