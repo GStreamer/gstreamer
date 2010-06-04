@@ -1537,6 +1537,12 @@ AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
   AC_SUBST(VPX_LIBS)
 ])
 
+dnl *** rtmp ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_RTMP, true)
+AG_GST_CHECK_FEATURE(RTMP, [rtmp library], rtmp, [
+  AG_GST_PKG_CHECK_MODULES(RTMP, librtmp)
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1597,6 +1603,7 @@ AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_VP8, false)
+AM_CONDITIONAL(USE_RTMP, false)
 
 fi dnl of EXT plugins
 
@@ -1707,7 +1714,6 @@ gst/pnm/Makefile
 gst/qtmux/Makefile
 gst/rawparse/Makefile
 gst/real/Makefile
-gst/rtmp/Makefile
 gst/rtpmux/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
@@ -1792,6 +1798,7 @@ ext/neon/Makefile
 ext/ofa/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
+ext/rtmp/Makefile
 ext/schroedinger/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile

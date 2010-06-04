@@ -366,6 +366,13 @@ else
 ZBAR_DIR=
 endif
 
+if USE_RTMP
+RTMP_DIR = rtmp
+else
+RTMP_DIR =
+endif
+
+
 SUBDIRS=\
 	$(ALSASPDIF_DIR) \
 	$(ASSRENDER_DIR) \
@@ -426,7 +433,8 @@ SUBDIRS=\
 	$(VP8_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR) \
-	$(ZBAR_DIR)
+	$(ZBAR_DIR) \
+	$(RTMP_DIR)
 
 DIST_SUBDIRS = \
 	alsaspdif \
@@ -476,6 +484,7 @@ DIST_SUBDIRS = \
 	timidity \
 	vp8 \
 	xvid \
-	zbar
+	zbar \
+	rtmp
 
 include $(top_srcdir)/common/parallel-subdirs.mak
