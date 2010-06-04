@@ -777,7 +777,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     gst_value_init_and_copy (ffmpegdec->par, par);
   }
 
-  /* get the framerate from incomming caps. fps_n is set to -1 when
+  /* get the framerate from incoming caps. fps_n is set to -1 when
    * there is no valid framerate */
   fps = gst_structure_get_value (structure, "framerate");
   if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
