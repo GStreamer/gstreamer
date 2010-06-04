@@ -137,19 +137,6 @@ str_to_time (char *time)
   return 0;
 }
 
-guint64
-str_to_duration (char *time)
-{
-  if (check_time (time)) {
-    double t = (double) atof (time);
-    if (t <= 0)
-      g_error ("durations must be greater than 0");
-    return (guint64) (t * GST_SECOND);
-  }
-  g_error ("%s not a valid time", time);
-  return 0;
-}
-
 static GstEncodingProfile *
 make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
     gchar * container)
@@ -204,7 +191,7 @@ create_timeline (int nbargs, gchar ** argv)
 
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
-    guint64 duration = str_to_duration (argv[(i * 3) + 2]);
+    guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
       pattern = pattern_for_name (arg0);
@@ -223,6 +210,9 @@ create_timeline (int nbargs, gchar ** argv)
 
       if (!obj)
         g_error ("invalid transition type\n");
+
+      if (duration <= 0)
+        g_error ("durations must be greater than 0");
 
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
