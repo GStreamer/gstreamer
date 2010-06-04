@@ -176,8 +176,7 @@ gst_vdp_mpeg_dec_set_caps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (mpeg_dec, "Setting source caps to %" GST_PTR_FORMAT,
       src_caps);
 
-  res = gst_vdp_video_src_pad_set_caps
-      (GST_VDP_VIDEO_SRC_PAD (mpeg_dec->src), src_caps);
+  res = gst_pad_set_caps (mpeg_dec->src, src_caps);
   gst_caps_unref (src_caps);
   if (!res)
     goto done;

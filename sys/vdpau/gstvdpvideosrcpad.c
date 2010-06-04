@@ -204,18 +204,11 @@ wrong_caps:
   return GST_FLOW_ERROR;
 }
 
-gboolean
-gst_vdp_video_src_pad_set_caps (GstVdpVideoSrcPad * vdp_pad, GstCaps * caps)
+static gboolean
+gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
+  GstVdpVideoSrcPad *vdp_pad = GST_VDP_VIDEO_SRC_PAD (pad);
   const GstStructure *structure;
-
-  g_return_val_if_fail (GST_IS_VDP_VIDEO_SRC_PAD (vdp_pad), FALSE);
-
-  if (G_UNLIKELY (!caps))
-    return gst_pad_set_caps (GST_PAD (vdp_pad), caps);
-
-  if (G_UNLIKELY (!GST_IS_CAPS (caps) || !gst_caps_is_fixed (caps)))
-    return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
@@ -237,7 +230,7 @@ gst_vdp_video_src_pad_set_caps (GstVdpVideoSrcPad * vdp_pad, GstCaps * caps)
   } else
     return FALSE;
 
-  return gst_pad_set_caps (GST_PAD (vdp_pad), caps);
+  return TRUE;
 }
 
 GstVdpDevice *
@@ -346,6 +339,8 @@ gst_vdp_video_src_pad_init (GstVdpVideoSrcPad * vdp_pad)
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_video_src_pad_getcaps));
+  gst_pad_set_setcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_vdp_video_src_pad_setcaps));
   gst_pad_set_activatepush_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_video_src_pad_activate_push));
 }
