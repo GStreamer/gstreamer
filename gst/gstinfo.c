@@ -99,6 +99,8 @@
 #  include <printf.h>
 #endif
 #include <stdio.h>              /* fprintf */
+#include <glib/gstdio.h>
+#include <errno.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>           /* getpid on UNIX */
 #endif
@@ -264,6 +266,8 @@ static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 static gint __default_level;
 static gint __use_color;
 
+static FILE *log_file;
+
 /* FIXME: export this? */
 gboolean
 _priv_gst_in_valgrind (void)
@@ -307,6 +311,22 @@ void
 _gst_debug_init (void)
 {
   const gchar *env;
+
+  env = g_getenv ("GST_DEBUG_FILE");
+  if (env != NULL && *env != '\0') {
+    if (strcmp (env, "-") == 0) {
+      log_file = stdout;
+    } else {
+      log_file = g_fopen (env, "w");
+      if (log_file == NULL) {
+        g_printerr ("Could not open log file '%s' for writing: %s\n", env,
+            g_strerror (errno));
+        log_file = stderr;
+      }
+    }
+  } else {
+    log_file = stderr;
+  }
 
   g_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
   g_atomic_int_set (&__use_color, 1);
@@ -871,7 +891,9 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
  *
  * The default logging handler used by GStreamer. Logging functions get called
  * whenever a macro like GST_DEBUG or similar is used. This function outputs the
- * message and additional info using the glib error handler.
+ * message and additional info to stderr (or the log file specified via the
+ * GST_DEBUG_FILE environment variable).
+ *
  * You can add other handlers by using gst_debug_add_log_function().
  * And you can remove this handler by calling
  * gst_debug_remove_log_function(gst_debug_log_default);
@@ -916,7 +938,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     levelcolor = levelcolormap[level];
 
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
-    g_printerr ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+    g_fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
         pidcolor, pid, clear, g_thread_self (), levelcolor,
         gst_debug_level_get_name (level), clear, color,
         gst_debug_category_get_name (category), file, line, function, obj,
@@ -933,31 +955,31 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c));
     g_static_mutex_lock (&win_print_mutex);
     /* timestamp */
-    g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
+    g_fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     /* pid */
     SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
-    g_printerr (PID_FMT, pid);
+    g_fprintf (log_file, PID_FMT, pid);
     /* thread */
     SET_COLOR (clear);
-    g_printerr (" " PTR_FMT " ", g_thread_self ());
+    g_fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
     /* level */
     SET_COLOR (levelcolormap[level]);
-    g_printerr ("%s ", gst_debug_level_get_name (level));
+    g_fprintf (log_file, "%s ", gst_debug_level_get_name (level));
     /* category */
     SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
             (category)));
-    g_printerr (CAT_FMT, gst_debug_category_get_name (category),
+    g_fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
         file, line, function, obj);
     /* message */
     SET_COLOR (clear);
-    g_printerr (" %s\n", gst_debug_message_get (message));
+    g_fprintf (log_file, " %s\n", gst_debug_message_get (message));
     g_static_mutex_unlock (&win_print_mutex);
 #endif
   } else {
     /* no color, all platforms */
 #define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
-    g_printerr ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed), pid,
-        g_thread_self (), gst_debug_level_get_name (level),
+    g_fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+        pid, g_thread_self (), gst_debug_level_get_name (level),
         gst_debug_category_get_name (category), file, line, function, obj,
         gst_debug_message_get (message));
 #undef PRINT_FMT
