@@ -1,6 +1,6 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = ges tests common m4 docs
+SUBDIRS = ges tests tools common m4 docs
 
 DIST_SUBDIRS = $(SUBDIRS)
 

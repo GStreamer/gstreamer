@@ -272,6 +272,7 @@ ges/Makefile
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
+tools/Makefile
 docs/Makefile
 docs/version.entities
 docs/libs/Makefile
