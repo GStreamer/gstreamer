@@ -1,9 +1,10 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
- *                    2001 Bastien Nocera <hadess@hadess.net>
  *                    2002 Kristian Rietveld <kris@gtk.org>
  *                    2002,2003 Colin Walters <walters@gnu.org>
+ *                    2001,2010 Bastien Nocera <hadess@hadess.net>
+ *                    2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,7 @@
 #define __GST_RTMP_SRC_H__
 
 #include <gst/base/gstbasesrc.h>
+#include <gst/base/gstpushsrc.h>
 
 #include <librtmp/rtmp.h>
 #include <librtmp/log.h>
@@ -53,19 +55,19 @@ typedef struct _GstRTMPSrcClass GstRTMPSrcClass;
  */
 struct _GstRTMPSrc
 {
-  GstBaseSrc basesrc;
-
-  char *uri;
+  GstPushSrc parent;
+  
+  /* < private > */
+  gchar *uri;
 
   RTMP *rtmp;
 
-  gboolean seekable;
   gint64 curoffset;
 };
 
 struct _GstRTMPSrcClass
 {
-  GstBaseSrcClass  basesrc_class;
+  GstPushSrcClass  parent;
 };
 
 GType gst_rtmp_src_get_type (void);
