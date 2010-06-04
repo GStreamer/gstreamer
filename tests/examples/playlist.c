@@ -374,19 +374,17 @@ main (int argc, gchar ** argv)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  ctx = g_option_context_new ("- plays/render a list of files");
+  ctx = g_option_context_new ("- plays or render a timeline.");
   g_option_context_set_summary (ctx,
-      "If not specified, this example will playback the files\n" "\n"
-      "The files should be layed out in triplets of:\n"
+      "A timline is a sequence of files, patterns, and transitions.\n"
+      "Transitions can only go between patterns or files.\n\n"
+      "A file is a tripplet of:\n"
       " * filename\n"
       " * inpoint (in seconds)\n"
       " * duration (in seconds) If 0, full file length\n\n"
-      "Solid patterns and transitions can be specified as follows:\n"
-      " * +pattern | +transition\n"
-      " * <type>\n"
-      " * duration (in seconds, must be greater than 0)\n"
-      "To get a list of valid transitions, use --transitions.\n"
-      "To get a list of valid patterns, use --patterns.\n");
+      "Patterns and transitions are triplets of:\n"
+      " * \"+pattern\" | \"+transition\"\n"
+      " * <type>\n" " * duration (in seconds, must be greater than 0)\n");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -407,8 +405,6 @@ main (int argc, gchar ** argv)
   }
 
   if ((argc < 4) || (outputuri && (!render && !smartrender))) {
-    g_print ("outputuri:%s, render:%d, smartrender:%d, argc:%d\n",
-        outputuri, render, smartrender, argc);
     g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     exit (-1);
