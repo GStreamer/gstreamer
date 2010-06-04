@@ -111,6 +111,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GstClockTime pos = 0;
   gint priority = GES_TIMELINE_LAYER (self)->min_gnl_priority;
   GESTimelineObject *prev_object = NULL;
+  GESTimelineObject *prev_transition = NULL;
 
   GST_DEBUG ("recalculating values");
 
@@ -154,10 +155,24 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       GList *l_next = g_list_next (tmp);
 
       if (l_next && (GES_TIMELINE_OBJECT_DURATION (l_next->data) < dur)) {
-        GST_ERROR ("trandition duration exceeds that of next neighbor!");
+        GST_ERROR ("transition duration exceeds that of next neighbor!");
       }
 
       ges_timeline_object_set_start (obj, pos);
+
+      if (prev_transition) {
+        guint64 start, end;
+        end = (GES_TIMELINE_OBJECT_DURATION (prev_transition) +
+            GES_TIMELINE_OBJECT_START (prev_transition));
+
+        start = GES_TIMELINE_OBJECT_START (obj);
+
+        if (end > start)
+          GST_ERROR ("%d, %d: overlapping transitions!", start, end);
+      }
+
+      prev_transition = obj;
+
     }
 
     GST_DEBUG (", %ld\n", pos);
