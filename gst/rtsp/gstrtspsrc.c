@@ -5006,10 +5006,14 @@ restart:
   {
     const gchar *range;
 
-    range = gst_sdp_message_get_attribute_val (&sdp, "range");
-    if (range) {
+    for (i = 0;; i++) {
+      range = gst_sdp_message_get_attribute_val_n (&sdp, "range", i);
+      if (range == NULL)
+        break;
+
       /* keep track of the range and configure it in the segment */
-      gst_rtspsrc_parse_range (src, range, &src->segment);
+      if (gst_rtspsrc_parse_range (src, range, &src->segment))
+        break;
     }
   }
 
