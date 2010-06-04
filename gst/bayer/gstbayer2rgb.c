@@ -85,6 +85,15 @@
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+enum
+{
+  GST_BAYER_2_RGB_FORMAT_BGGR = 0,
+  GST_BAYER_2_RGB_FORMAT_GBRG,
+  GST_BAYER_2_RGB_FORMAT_GRBG,
+  GST_BAYER_2_RGB_FORMAT_RGGB
+};
+
+
 #define GST_TYPE_BAYER2RGB            (gst_bayer2rgb_get_type())
 #define GST_BAYER2RGB(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BAYER2RGB,GstBayer2RGB))
 #define GST_IS_BAYER2RGB(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BAYER2RGB))
@@ -108,6 +117,7 @@ struct _GstBayer2RGB
   int r_off;                    /* offset for red */
   int g_off;                    /* offset for green */
   int b_off;                    /* offset for blue */
+  int format;
 };
 
 struct _GstBayer2RGBClass
@@ -252,29 +262,43 @@ static gboolean
 gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstBayer2RGB *filter = GST_BAYER2RGB (base);
+  GstBayer2RGB *bayer2rgb = GST_BAYER2RGB (base);
   GstStructure *structure;
   int val, bpp;
+  const char *format;
 
   GST_DEBUG ("in caps %" GST_PTR_FORMAT " out caps %" GST_PTR_FORMAT, incaps,
       outcaps);
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-  filter->stride = GST_ROUND_UP_4 (filter->width);
+  gst_structure_get_int (structure, "width", &bayer2rgb->width);
+  gst_structure_get_int (structure, "height", &bayer2rgb->height);
+  bayer2rgb->stride = GST_ROUND_UP_4 (bayer2rgb->width);
+
+  format = gst_structure_get_string (structure, "format");
+  if (g_str_equal (format, "bggr")) {
+    bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_BGGR;
+  } else if (g_str_equal (format, "gbrg")) {
+    bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_GBRG;
+  } else if (g_str_equal (format, "grbg")) {
+    bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_GRBG;
+  } else if (g_str_equal (format, "rggb")) {
+    bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_RGGB;
+  } else {
+    return FALSE;
+  }
 
   /* To cater for different RGB formats, we need to set params for later */
   structure = gst_caps_get_structure (outcaps, 0);
   gst_structure_get_int (structure, "bpp", &bpp);
-  filter->pixsize = bpp / 8;
+  bayer2rgb->pixsize = bpp / 8;
   gst_structure_get_int (structure, "red_mask", &val);
-  filter->r_off = get_pix_offset (val, bpp);
+  bayer2rgb->r_off = get_pix_offset (val, bpp);
   gst_structure_get_int (structure, "green_mask", &val);
-  filter->g_off = get_pix_offset (val, bpp);
+  bayer2rgb->g_off = get_pix_offset (val, bpp);
   gst_structure_get_int (structure, "blue_mask", &val);
-  filter->b_off = get_pix_offset (val, bpp);
+  bayer2rgb->b_off = get_pix_offset (val, bpp);
 
   return TRUE;
 }
@@ -363,6 +387,25 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 #define	GREENB	1               /* Green element which is on a blue line */
 #define	BLUE	2               /* Pure blue element */
 #define	GREENR	3               /* Green element which is on a red line */
+
+static int
+get_pixel_type (GstBayer2RGB * filter, int x, int y)
+{
+  int type;
+
+  if (((x ^ filter->format) & 1)) {
+    if ((y ^ (filter->format >> 1)) & 1)
+      type = RED;
+    else
+      type = GREENB;
+  } else {
+    if ((y ^ (filter->format >> 1)) & 1)
+      type = GREENR;
+    else
+      type = BLUE;
+  }
+  return type;
+}
 
 /* Routine to generate the top and bottom edges (not including corners) */
 static void
@@ -463,23 +506,15 @@ vborder (uint8_t * input, uint8_t * output, int right_left,
 static void
 do_row0_col0 (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
 {
-  int type;
-
   /* Horizontal edges */
-  hborder (input, output, 0, GREENB, filter);
-  if (filter->height & 1)
-    type = GREENB;              /* odd # rows, "bottom" edge same as top */
-  else
-    type = RED;                 /* even #, bottom side different */
-  hborder (input, output, 1, type, filter);
+  hborder (input, output, 0, get_pixel_type (filter, 1, 0), filter);
+  hborder (input, output, 1, get_pixel_type (filter, 1, filter->height - 1),
+      filter);
 
   /* Vertical edges */
-  vborder (input, output, 0, GREENR, filter);
-  if (filter->width & 1)
-    type = GREENR;              /* odd # cols, "right" edge same as left */
-  else
-    type = RED;                 /* even #, right side different */
-  vborder (input, output, 1, type, filter);
+  vborder (input, output, 0, get_pixel_type (filter, 0, 1), filter);
+  vborder (input, output, 1, get_pixel_type (filter, filter->width - 1, 1),
+      filter);
 }
 
 static void
@@ -520,24 +555,17 @@ corner (uint8_t * input, uint8_t * output, int x, int y,
 static void
 do_corners (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
 {
-  int typ;
-
   /* Top left */
-  corner (input, output, 0, 0, 1, 1, BLUE, filter);
+  corner (input, output, 0, 0, 1, 1, get_pixel_type (filter, 0, 0), filter);
   /* Bottom left */
   corner (input, output, 0, filter->height - 1, 1, -1,
-      (filter->height & 1) ? BLUE : GREENR, filter);
+      get_pixel_type (filter, 0, filter->height - 1), filter);
   /* Top right */
   corner (input, output, filter->width - 1, 0, -1, 0,
-      (filter->width & 1) ? BLUE : GREENB, filter);
+      get_pixel_type (filter, filter->width - 1, 0), filter);
   /* Bottom right */
-  if (filter->width & 1)        /* if odd  # cols, B or GB */
-    typ = BLUE;
-  else
-    typ = GREENB;               /* if even # cols, B or GR */
-  typ |= (filter->height & 1);  /* if odd  # rows, GB or GR */
   corner (input, output, filter->width - 1, filter->height - 1, -1, -1,
-      typ, filter);
+      get_pixel_type (filter, filter->width - 1, filter->height - 1), filter);
 }
 
 static void
@@ -563,10 +591,7 @@ do_body (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
      * the pixel at position (1,1).  Assuming BG format, this should
      * be RED for odd-numbered rows and GREENB for even rows.
      */
-    if (h & 1)
-      type = RED;
-    else
-      type = GREENB;
+    type = get_pixel_type (filter, 1, h);
     /* Calculate the starting position for the row */
     op = h * filter->width * filter->pixsize;   /* output (converted) pos */
     ip = h * filter->stride;    /* input (bayer data) pos */
