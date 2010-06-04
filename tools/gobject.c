@@ -60,7 +60,7 @@ gst_replace_dispose (GObject * object)
 
   /* clean up as possible.  may be called multiple times */
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 void

@@ -32,119 +32,205 @@ static gboolean
 gst_replace_prepare_seek_segment (GstBaseSrc * src, GstEvent * seek,
     GstSegment * segment);
 % declare-class
-  GstBaseSrc *base_src_class = GST_BASE_SRC (klass);
+  GstBaseSrcClass *base_src_class = GST_BASE_SRC_CLASS (klass);
 % set-methods
-  base_src_class-> = GST_DEBUG_FUNCPTR (gst_replace_);
+  base_src_class->get_caps = GST_DEBUG_FUNCPTR (gst_replace_get_caps);
+  base_src_class->set_caps = GST_DEBUG_FUNCPTR (gst_replace_set_caps);
+  base_src_class->negotiate = GST_DEBUG_FUNCPTR (gst_replace_negotiate);
+  base_src_class->newsegment = GST_DEBUG_FUNCPTR (gst_replace_newsegment);
+  base_src_class->start = GST_DEBUG_FUNCPTR (gst_replace_start);
+  base_src_class->stop = GST_DEBUG_FUNCPTR (gst_replace_stop);
+  base_src_class->get_times = GST_DEBUG_FUNCPTR (gst_replace_get_times);
+  base_src_class->get_size = GST_DEBUG_FUNCPTR (gst_replace_get_size);
+  base_src_class->is_seekable = GST_DEBUG_FUNCPTR (gst_replace_is_seekable);
+  base_src_class->unlock = GST_DEBUG_FUNCPTR (gst_replace_unlock);
+  base_src_class->event = GST_DEBUG_FUNCPTR (gst_replace_event);
+  base_src_class->create = GST_DEBUG_FUNCPTR (gst_replace_create);
+  base_src_class->do_seek = GST_DEBUG_FUNCPTR (gst_replace_do_seek);
+  base_src_class->query = GST_DEBUG_FUNCPTR (gst_replace_query);
+  base_src_class->check_get_range = GST_DEBUG_FUNCPTR (gst_replace_check_get_range);
+  base_src_class->fixate = GST_DEBUG_FUNCPTR (gst_replace_fixate);
+  base_src_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_replace_unlock_stop);
+  base_src_class->prepare_seek_segment = GST_DEBUG_FUNCPTR (gst_replace_prepare_seek_segment);
+
 % methods
 
 static GstCaps *
 gst_replace_get_caps (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "get_caps");
+
+  return NULL;
 }
 
 static gboolean
 gst_replace_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "set_caps");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_negotiate (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "negotiate");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_newsegment (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "newsegment");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_start (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "start");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_stop (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "stop");
+
+  return TRUE;
 }
 
 static void
 gst_replace_get_times (GstBaseSrc * src, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "get_times");
 }
 
 static gboolean
 gst_replace_get_size (GstBaseSrc * src, guint64 * size)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "get_size");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_is_seekable (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "is_seekable");
+
+  return FALSE;
 }
 
 static gboolean
 gst_replace_unlock (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "unlock");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_event (GstBaseSrc * src, GstEvent * event)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "event");
+
+  return TRUE;
 }
 
 static GstFlowReturn
 gst_replace_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "create");
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
 gst_replace_do_seek (GstBaseSrc * src, GstSegment * segment)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "do_seek");
+
+  return FALSE;
 }
 
 static gboolean
 gst_replace_query (GstBaseSrc * src, GstQuery * query)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "query");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_check_get_range (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "get_range");
+
+  return FALSE;
 }
 
 static void
 gst_replace_fixate (GstBaseSrc * src, GstCaps * caps)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "fixate");
 }
 
 static gboolean
 gst_replace_unlock_stop (GstBaseSrc * src)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "stop");
+
+  return TRUE;
 }
 
 static gboolean
 gst_replace_prepare_seek_segment (GstBaseSrc * src, GstEvent * seek,
     GstSegment * segment)
 {
+  GstReplace *replace = GST_REPLACE (src);
 
+  GST_DEBUG_OBJECT (replace, "seek_segment");
+
+  return FALSE;
 }
 % end

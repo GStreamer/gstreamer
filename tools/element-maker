@@ -209,7 +209,7 @@ generate | sed \
   -e "s/GstReplace/$GstReplace/g" \
   -e "s/gst_replace/$gst_replace/g" \
   -e "s/gstreplace/$gstreplace/g" \
-  -e "s/replace/$replace/g" >myexample.c
+  -e "s/replace/$replace/g" >$gstreplace.c
 
 generate_header | sed \
   -e "s/GST_BASE_REPLACE/$GST_BASE_REPLACE/g" \
@@ -221,13 +221,13 @@ generate_header | sed \
   -e "s/GstReplace/$GstReplace/g" \
   -e "s/gst_replace/$gst_replace/g" \
   -e "s/gstreplace/$gstreplace/g" \
-  -e "s/replace/$replace/g" >myexample.h
+  -e "s/replace/$replace/g" >$gstreplace.h
 
-gst-indent myexample.c
+gst-indent $gstreplace.c
 
 echo pkg is $pkg
 
-gcc -Wall $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o myexample.o myexample.c
-gcc -shared -o myexample.so myexample.o $(pkg-config --libs gstreamer-0.10 $pkg)
+gcc -Wall $(pkg-config --cflags gstreamer-0.10 $pkg) -c -o $gstreplace.o $gstreplace.c
+gcc -shared -o $gstreplace.so $gstreplace.o $(pkg-config --libs gstreamer-0.10 $pkg)
 
 
