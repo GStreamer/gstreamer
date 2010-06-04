@@ -65,7 +65,12 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
+  PROP_SWF_URL,
+  PROP_PAGE_URL
 };
+
+static const AVal av_page_url = { (char *) "pageUrl", 7 };
+static const AVal av_swf_url = { (char *) "swfUrl", 6 };
 
 static void gst_rtmp_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -132,6 +137,14 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   /* properties */
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
+  g_object_class_install_property (gobject_class, PROP_SWF_URL,
+      g_param_spec_string ("swf-url", "SWF URL",
+          "URL of the corresponding SWF file",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAGE_URL,
+      g_param_spec_string ("page-url", "Page URL",
+          "URL of the originating page",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_src_stop);
@@ -191,6 +204,11 @@ gst_rtmp_src_uri_get_uri (GstURIHandler * handler)
   return src->uri;
 }
 
+#define STR2AVAL(av,str) G_STMT_START { \
+  av.av_val = str; \
+  av.av_len = strlen(av.av_val); \
+} G_STMT_END;
+
 static gboolean
 gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
@@ -210,6 +228,7 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   }
 
   if (uri != NULL) {
+    AVal val;
 
     new_location = g_strdup (uri);
 
@@ -222,9 +241,19 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       RTMP_Free (src->rtmp);
       src->rtmp = NULL;
       return FALSE;
-    } else {
-      src->uri = g_strdup (uri);
-      GST_DEBUG_OBJECT (src, "parsed uri '%s' properly", src->uri);
+    }
+    src->uri = g_strdup (uri);
+    GST_DEBUG_OBJECT (src, "parsed uri '%s' properly", src->uri);
+
+
+    if (src->page_url) {
+      STR2AVAL (val, src->page_url);
+      RTMP_SetOpt (src->rtmp, &av_page_url, &val);
+    }
+
+    if (src->swf_url) {
+      STR2AVAL (val, src->swf_url);
+      RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
     }
   }
 
@@ -256,6 +285,30 @@ gst_rtmp_src_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:{
       gst_rtmp_src_uri_set_uri (GST_URI_HANDLER (src),
           g_value_get_string (value));
+      break;
+    }
+    case PROP_SWF_URL:{
+      g_free (src->swf_url);
+      src->swf_url = g_value_dup_string (value);
+
+      if (src->rtmp && src->swf_url) {
+        AVal val;
+
+        STR2AVAL (val, src->swf_url);
+        RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
+      }
+      break;
+    }
+    case PROP_PAGE_URL:{
+      g_free (src->page_url);
+      src->page_url = g_value_dup_string (value);
+
+      if (src->rtmp && src->page_url) {
+        AVal val;
+
+        STR2AVAL (val, src->page_url);
+        RTMP_SetOpt (src->rtmp, &av_page_url, &val);
+      }
       break;
     }
     default:

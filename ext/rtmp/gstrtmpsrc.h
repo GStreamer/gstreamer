@@ -59,6 +59,8 @@ struct _GstRTMPSrc
   
   /* < private > */
   gchar *uri;
+  gchar *swf_url;
+  gchar *page_url;
 
   RTMP *rtmp;
 
