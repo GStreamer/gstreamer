@@ -391,6 +391,10 @@ gst_videomixer_pad_sink_getcaps (GstPad * pad)
 
   /* Get downstream allowed caps */
   res = gst_pad_get_allowed_caps (mix->srcpad);
+  if (G_UNLIKELY (res == NULL)) {
+    res = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    goto beach;
+  }
 
   GST_VIDEO_MIXER_STATE_LOCK (mix);
 
