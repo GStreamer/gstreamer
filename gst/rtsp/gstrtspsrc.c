@@ -4797,7 +4797,7 @@ cleanup_error:
   }
 }
 
-static void
+static gboolean
 gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     GstSegment * segment)
 {
@@ -4814,7 +4814,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     GST_DEBUG_OBJECT (src, "failed to parse range %s", range);
     src->range = NULL;
     gst_segment_init (segment, GST_FORMAT_TIME);
-    return;
+    return FALSE;
   }
 
   GST_DEBUG_OBJECT (src, "range: type %d, min %f - type %d,  max %f ",
@@ -4861,6 +4861,8 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
    * there that we want to keep. */
   if (seconds != -1)
     gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
+
+  return TRUE;
 }
 
 static gboolean
