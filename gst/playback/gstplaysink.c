@@ -175,6 +175,8 @@ struct _GstPlaySinkClass
   GstBinClass parent_class;
 
     gboolean (*reconfigure) (GstPlaySink * playsink);
+
+  GstBuffer *(*convert_frame) (GstPlaySink * playsink, GstCaps * caps);
 };
 
 static GstStaticPadTemplate audiorawtemplate =
@@ -326,6 +328,27 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
           reconfigure), NULL, NULL, gst_marshal_BOOLEAN__VOID, G_TYPE_BOOLEAN,
       0, G_TYPE_NONE);
+  /**
+   * GstPlaySink::convert-frame
+   * @playsink: a #GstPlaySink
+   * @caps: the target format of the frame
+   *
+   * Action signal to retrieve the currently playing video frame in the format
+   * specified by @caps.
+   * If @caps is %NULL, no conversion will be performed and this function is
+   * equivalent to the #GstPlaySink::frame property.
+   *
+   * Returns: a #GstBuffer of the current video frame converted to #caps.
+   * The caps on the buffer will describe the final layout of the buffer data.
+   * %NULL is returned when no current buffer can be retrieved or when the
+   * conversion failed.
+   *
+   * Since: 0.10.30
+   */
+  g_signal_new ("convert-frame", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstPlaySinkClass, convert_frame), NULL, NULL,
+      gst_play_marshal_BUFFER__BOXED, GST_TYPE_BUFFER, 1, GST_TYPE_CAPS);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&audiorawtemplate));
@@ -354,6 +377,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_play_sink_handle_message);
 
   klass->reconfigure = GST_DEBUG_FUNCPTR (gst_play_sink_reconfigure);
+  klass->convert_frame = GST_DEBUG_FUNCPTR (gst_play_sink_convert_frame);
 }
 
 static void
