@@ -266,7 +266,8 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
           update, rate, applied_rate, format, start, stop, position);
       base_video_decoder->have_segment = TRUE;
 
-      GST_WARNING ("new segment: format %d rate %g start %" GST_TIME_FORMAT
+      GST_DEBUG_OBJECT (base_video_decoder,
+          "new segment: format %d rate %g start %" GST_TIME_FORMAT
           " stop %" GST_TIME_FORMAT
           " position %" GST_TIME_FORMAT
           " update %d",
