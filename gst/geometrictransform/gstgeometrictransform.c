@@ -207,6 +207,8 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
 
   g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
 
+  memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+
   ptr = gt->map;
   for (y = 0; y < gt->height; y++) {
     for (x = 0; x < gt->width; x++) {
