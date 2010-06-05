@@ -233,7 +233,6 @@
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
 #include "gstinputselector.h"
-#include "gstscreenshot.h"
 #include "gstsubtitleoverlay.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
@@ -788,7 +787,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * GstPlayBin2:frame:
    * @playbin: a #GstPlayBin2
    *
-   * Get the currently rendered or prerolled frame in the sink.
+   * Get the currently rendered or prerolled frame in the video sink.
    * The #GstCaps on the buffer will describe the format of the buffer.
    */
   g_object_class_install_property (gobject_klass, PROP_FRAME,
@@ -1404,17 +1403,7 @@ gst_play_bin_get_text_tags (GstPlayBin * playbin, gint stream)
 static GstBuffer *
 gst_play_bin_convert_frame (GstPlayBin * playbin, GstCaps * caps)
 {
-  GstBuffer *result;
-
-  result = gst_play_sink_get_last_frame (playbin->playsink);
-  if (result != NULL && caps != NULL) {
-    GstBuffer *temp;
-
-    temp = gst_play_frame_conv_convert (result, caps);
-    gst_buffer_unref (result);
-    result = temp;
-  }
-  return result;
+  return gst_play_sink_convert_frame (playbin->playsink, caps);
 }
 
 /* Returns current stream number, or -1 if none has been selected yet */
@@ -1965,7 +1954,8 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, gst_play_sink_get_mute (playbin->playsink));
       break;
     case PROP_FRAME:
-      gst_value_take_buffer (value, gst_play_bin_convert_frame (playbin, NULL));
+      gst_value_take_buffer (value,
+          gst_play_sink_get_last_frame (playbin->playsink));
       break;
     case PROP_FONT_DESC:
       g_value_take_string (value,
@@ -2451,8 +2441,8 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
 
     if (format != GST_FORMAT_TIME)
       data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
-                type].group_start_accum))
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
+            group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
@@ -2984,8 +2974,8 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPad *text_sinkpad = NULL;
 
   text_sink =
-      (group->playbin->text_sink) ? gst_object_ref (group->
-      playbin->text_sink) : NULL;
+      (group->playbin->text_sink) ? gst_object_ref (group->playbin->
+      text_sink) : NULL;
   if (text_sink)
     text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
 

@@ -28,6 +28,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplaysink.h"
+#include "gstscreenshot.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 #define GST_CAT_DEFAULT gst_play_sink_debug
@@ -2454,6 +2455,35 @@ gst_play_sink_get_last_frame (GstPlaySink * playsink)
   }
   GST_PLAY_SINK_UNLOCK (playsink);
 
+  return result;
+}
+
+/**
+ * gst_play_sink_convert_frame:
+ * @playsink: a #GstPlaySink
+ * @caps: a #GstCaps
+ *
+ * Get the last displayed frame from @playsink. If caps is %NULL, the video will
+ * be in the native format of the sink element and the caps on the buffer
+ * describe the format of the frame. If @caps is not %NULL, the video
+ * frame will be converted to the format of the caps.
+ *
+ * Returns: a #GstBuffer with the frame data or %NULL when no video frame is
+ * available or when the conversion failed.
+ */
+GstBuffer *
+gst_play_sink_convert_frame (GstPlaySink * playsink, GstCaps * caps)
+{
+  GstBuffer *result;
+
+  result = gst_play_sink_get_last_frame (playsink);
+  if (result != NULL && caps != NULL) {
+    GstBuffer *temp;
+
+    temp = gst_play_frame_conv_convert (result, caps);
+    gst_buffer_unref (result);
+    result = temp;
+  }
   return result;
 }
 

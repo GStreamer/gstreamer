@@ -92,6 +92,7 @@ void             gst_play_sink_set_subtitle_encoding  (GstPlaySink *playsink, co
 gchar *          gst_play_sink_get_subtitle_encoding  (GstPlaySink *playsink);
 
 GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
+GstBuffer *      gst_play_sink_convert_frame  (GstPlaySink * playsink, GstCaps * caps);
 
 gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
