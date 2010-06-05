@@ -103,7 +103,40 @@ GST_START_TEST (test_broken_flac_in_ogg)
 
   gst_buffer_unref (buf);
   gst_caps_unref (caps);
+}
 
+GST_END_TEST;
+
+GST_START_TEST (test_jpeg_not_ac3)
+{
+  const gchar *type;
+  GstBuffer *buf;
+  GError *err = NULL;
+  GstCaps *caps = NULL;
+  gchar *path, *data = NULL;
+  gsize data_len;
+
+  path = g_build_filename (GST_TEST_FILES_PATH, "partialframe.mjpeg", NULL);
+  GST_LOG ("reading file '%s'", path);
+  if (!g_file_get_contents (path, &data, &data_len, &err)) {
+    g_error ("error loading test file: %s", err->message);
+  }
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (guint8 *) data;
+  GST_BUFFER_SIZE (buf) = data_len;
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  caps = gst_type_find_helper_for_buffer (NULL, buf, NULL);
+  fail_unless (caps != NULL);
+  GST_LOG ("Found type: %" GST_PTR_FORMAT, caps);
+
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "image/jpeg");
+
+  gst_buffer_unref (buf);
+  gst_caps_unref (caps);
+  g_free (data);
 }
 
 GST_END_TEST;
@@ -118,6 +151,7 @@ typefindfunctions_suite (void)
 
   tcase_add_test (tc_chain, test_quicktime_mpeg4video);
   tcase_add_test (tc_chain, test_broken_flac_in_ogg);
+  tcase_add_test (tc_chain, test_jpeg_not_ac3);
 
   return s;
 }

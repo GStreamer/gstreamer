@@ -1,6 +1,7 @@
 include $(top_srcdir)/common/check.mak
 
 CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
+TEST_FILES_DIRECTORY = $(top_srcdir)/tests/files
 
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
@@ -136,7 +137,8 @@ VALGRIND_TO_FIX = \
 # these tests don't even pass
 noinst_PROGRAMS = $(check_libvisual)
 
-AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
+AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
+	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\""
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
 
 # valgrind testing

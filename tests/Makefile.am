@@ -24,4 +24,5 @@ SUBDIRS = 			\
 DIST_SUBDIRS = 			\
 	check			\
 	examples		\
+	files			\
 	icles
