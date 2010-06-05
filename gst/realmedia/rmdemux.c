@@ -77,6 +77,7 @@ struct _GstRMDemuxStream
   guint16 version;
   guint32 extra_data_size;      /* codec_data_length  */
   guint8 *extra_data;           /* extras             */
+  guint32 bitrate;
 
   gboolean needs_descrambling;
   guint subpackets_needed;      /* subpackets needed for descrambling    */
@@ -1454,6 +1455,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
           "width", G_TYPE_INT, (int) stream->sample_width,
           "leaf_size", G_TYPE_INT, (int) stream->leaf_size,
           "packet_size", G_TYPE_INT, (int) stream->packet_size,
+          "bitrate", G_TYPE_INT, (int) stream->bitrate,
           "height", G_TYPE_INT, (int) stream->height, NULL);
     }
     rmdemux->n_audio_streams++;
@@ -1591,6 +1593,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   /* parse the bitrates */
   max_bitrate = RMDEMUX_GUINT32_GET (data + 2);
   avg_bitrate = RMDEMUX_GUINT32_GET (data + 6);
+  stream->bitrate = avg_bitrate;
   GST_LOG_OBJECT (rmdemux, "Stream max bitrate=%u", max_bitrate);
   GST_LOG_OBJECT (rmdemux, "Stream avg bitrate=%u", avg_bitrate);
   if (max_bitrate != 0) {
