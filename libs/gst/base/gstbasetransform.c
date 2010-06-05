@@ -880,8 +880,6 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
   /* third attempt at fixation, call the fixate vmethod and
    * ultimately call the pad fixate function. */
   if (!is_fixed) {
-    GstCaps *temp;
-
     GST_DEBUG_OBJECT (trans,
         "trying to fixate %" GST_PTR_FORMAT " on pad %s:%s",
         othercaps, GST_DEBUG_PAD_NAME (otherpad));
@@ -891,9 +889,7 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
 
     /* FIXME: when fixating using the vmethod, it might make sense to fixate
      * each of the caps; but Wim doesn't see a use case for that yet */
-    temp = gst_caps_copy_nth (othercaps, 0);
-    gst_caps_unref (othercaps);
-    othercaps = temp;
+    gst_caps_truncate (othercaps);
     peer_checked = FALSE;
 
     if (klass->fixate_caps) {
