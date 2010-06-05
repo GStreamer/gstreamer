@@ -400,7 +400,8 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
       g_param_spec_boolean ("emit-signals", "Emit signals",
-          "Emit new-preroll and new-buffer signals", DEFAULT_PROP_EMIT_SIGNALS,
+          "Emit need-data, enough-data and seek-data signals",
+          DEFAULT_PROP_EMIT_SIGNALS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
