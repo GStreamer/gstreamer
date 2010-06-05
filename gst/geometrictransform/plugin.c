@@ -22,6 +22,7 @@
 #endif
 
 #include "gstcircle.h"
+#include "gstdiffuse.h"
 #include "gstkaleidoscope.h"
 #include "gstpinch.h"
 #include "gstsphere.h"
@@ -32,6 +33,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_circle_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_diffuse_plugin_init (plugin))
     return FALSE;
 
   if (!gst_kaleidoscope_plugin_init (plugin))

@@ -5,6 +5,7 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstcirclegeometrictransform.c \
                                       geometricmath.c \
                                       gstcircle.c \
+                                      gstdiffuse.c \
                                       gstkaleidoscope.c \
                                       gstpinch.c \
                                       gstsphere.c \
@@ -21,6 +22,7 @@ noinst_HEADERS = gstgeometrictransform.h \
                  gstcirclegeometrictransform.h \
                  geometricmath.h \
                  gstcircle.h \
+                 gstdiffuse.h \
                  gstkaleidoscope.h \
                  gstpinch.h \
                  gstsphere.h \
