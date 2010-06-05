@@ -137,6 +137,7 @@ GST_START_TEST (test_jpeg_not_ac3)
   gst_buffer_unref (buf);
   gst_caps_unref (caps);
   g_free (data);
+  g_free (path);
 }
 
 GST_END_TEST;
