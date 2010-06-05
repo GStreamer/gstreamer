@@ -207,8 +207,8 @@ gst_kaleidoscope_class_init (GstKaleidoscopeClass * klass)
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIDES,
-      g_param_spec_int ("sides", "sides", "number of sides",
-          0, G_MAXINT, DEFAULT_SIDES,
+      g_param_spec_int ("sides", "sides", "Number of sides of the kaleidoscope",
+          2, G_MAXINT, DEFAULT_SIDES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = kaleidoscope_map;
@@ -217,6 +217,9 @@ gst_kaleidoscope_class_init (GstKaleidoscopeClass * klass)
 static void
 gst_kaleidoscope_init (GstKaleidoscope * filter, GstKaleidoscopeClass * gclass)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
+
+  gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->angle = DEFAULT_ANGLE;
   filter->angle2 = DEFAULT_ANGLE2;
   filter->sides = DEFAULT_SIDES;

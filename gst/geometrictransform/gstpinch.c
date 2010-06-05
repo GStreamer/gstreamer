@@ -188,7 +188,7 @@ gst_pinch_class_init (GstPinchClass * klass)
   g_object_class_install_property (gobject_class, PROP_INTENSITY,
       g_param_spec_double ("intensity", "intensity",
           "intensity of the pinch effect",
-          0.0, G_MAXDOUBLE, DEFAULT_INTENSITY,
+          -1.0, 1.0, DEFAULT_INTENSITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = pinch_map;
@@ -197,6 +197,9 @@ gst_pinch_class_init (GstPinchClass * klass)
 static void
 gst_pinch_init (GstPinch * filter, GstPinchClass * gclass)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
+
+  gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->intensity = DEFAULT_INTENSITY;
 }
 

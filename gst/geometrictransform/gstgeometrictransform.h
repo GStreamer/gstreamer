@@ -38,6 +38,13 @@ G_BEGIN_DECLS
 #define GST_GEOMETRIC_TRANSFORM_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GEOMETRIC_TRANSFORM,GstGeometricTransformClass))
 
+enum
+{
+  GST_GT_OFF_EDGES_PIXELS_IGNORE = 0,
+  GST_GT_OFF_EDGES_PIXELS_CLAMP,
+  GST_GT_OFF_EDGES_PIXELS_WRAP
+};
+
 typedef struct _GstGeometricTransform GstGeometricTransform;
 typedef struct _GstGeometricTransformClass GstGeometricTransformClass;
 

@@ -142,7 +142,7 @@ gst_circle_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "circle",
       "Transform/Effect/Video",
-      "Applies 'circle' geometric transform to the image",
+      "Warps the picture into an arc shaped form",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
@@ -190,17 +190,17 @@ gst_circle_class_init (GstCircleClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ANGLE,
       g_param_spec_double ("angle", "angle",
-          "angle",
+          "Angle at which the arc starts in radians",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SPREAD_ANGLE,
       g_param_spec_double ("spread-angle", "spread angle",
-          "spread angle",
+          "Length of the arc in radians",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_SPREAD_ANGLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height",
-          "height",
+          "Height of the arc",
           0, G_MAXINT, DEFAULT_HEIGHT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

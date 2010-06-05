@@ -66,7 +66,7 @@ enum
   PROP_ANGLE
 };
 
-#define DEFAULT_ANGLE 0
+#define DEFAULT_ANGLE (G_PI)
 
 GST_BOILERPLATE (GstTwirl, gst_twirl, GstCircleGeometricTransform,
     GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
@@ -124,7 +124,7 @@ gst_twirl_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "twirl",
       "Transform/Effect/Video",
-      "Applies 'twirl' geometric transform to the image",
+      "Twists the image from the center out",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
@@ -175,7 +175,8 @@ gst_twirl_class_init (GstTwirlClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ANGLE,
       g_param_spec_double ("angle", "angle",
-          "angle in radians of the twirl effect",
+          "This is the angle in radians by which pixels at the "
+          "nearest edge of the image will move",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -185,6 +186,9 @@ gst_twirl_class_init (GstTwirlClass * klass)
 static void
 gst_twirl_init (GstTwirl * filter, GstTwirlClass * gclass)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
+
+  gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->angle = DEFAULT_ANGLE;
 }
 

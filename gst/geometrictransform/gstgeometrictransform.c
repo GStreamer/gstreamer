@@ -50,13 +50,6 @@ enum
   PROP_OFF_EDGE_PIXELS
 };
 
-enum
-{
-  GST_GT_OFF_EDGES_PIXELS_IGNORE = 0,
-  GST_GT_OFF_EDGES_PIXELS_CLAMP,
-  GST_GT_OFF_EDGES_PIXELS_WRAP
-};
-
 #define GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE ( \
     gst_geometric_transform_off_edges_pixels_method_get_type())
 static GType
@@ -308,12 +301,15 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
       g_param_spec_enum ("off-edge-pixels", "Off edge pixels",
           "What to do with off edge pixels",
           GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE, DEFAULT_OFF_EDGE_PIXELS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_geometric_transform_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (instance);
+
+  gt->off_edge_pixels = DEFAULT_OFF_EDGE_PIXELS;
 }
 
 GType

@@ -208,6 +208,9 @@ gst_sphere_class_init (GstSphereClass * klass)
 static void
 gst_sphere_init (GstSphere * filter, GstSphereClass * gclass)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
+
+  gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->refraction = DEFAULT_REFRACTION;
 }
 

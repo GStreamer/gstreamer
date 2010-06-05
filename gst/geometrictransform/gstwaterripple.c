@@ -140,7 +140,7 @@ gst_water_ripple_base_init (gpointer gclass)
   gst_element_class_set_details_simple (element_class,
       "waterripple",
       "Transform/Effect/Video",
-      "Applies 'water_ripple' geometric transform to the image",
+      "Creates a water ripple effect on the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 }
 
@@ -216,6 +216,9 @@ gst_water_ripple_class_init (GstWaterRippleClass * klass)
 static void
 gst_water_ripple_init (GstWaterRipple * filter, GstWaterRippleClass * gclass)
 {
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
+
+  gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
   filter->amplitude = DEFAULT_AMPLITUDE;
   filter->phase = DEFAULT_PHASE;
   filter->wavelength = DEFAULT_WAVELENGTH;
