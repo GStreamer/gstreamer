@@ -1217,8 +1217,10 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
         guint frame_size;
 
         frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
+        GST_LOG ("possible frame sync at offset %" G_GUINT64_FORMAT ", size=%u",
+            c.offset, frame_size);
         if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
-          data_scan_ctx_advance (tf, &c, frame_size * 2);
+          data_scan_ctx_advance (tf, &c_next, frame_size * 2);
 
           if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
             guint fscod2 = (c_next.data[4] >> 6) & 0x03;
@@ -1227,6 +1229,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
             if (fscod == fscod2 && frmsizecod == frmsizecod2) {
               GstTypeFindProbability prob;
 
+              GST_LOG ("found second frame, looks good");
               if (c.offset == 0)
                 prob = GST_TYPE_FIND_MAXIMUM;
               else
@@ -1235,6 +1238,8 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
               gst_type_find_suggest (tf, prob, AC3_CAPS);
               return;
             }
+          } else {
+            GST_LOG ("no second frame found, false sync");
           }
         }
       }
