@@ -28,18 +28,17 @@
 
 #include "blend.h"
 
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
-
 #include <string.h>
 
 #include <gst/video/video.h>
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #define BLEND(D,S,alpha) (((D) * (256 - (alpha)) + (S) * (alpha)) >> 8)
 
 #ifdef HAVE_GCC_ASM
-#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
+#if defined(HAVE_ORC) && (defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64))
 #define BUILD_X86_ASM
 
 #define GENERIC
@@ -849,10 +848,12 @@ FillColorFunction gst_video_mixer_fill_color_uyvy;
 void
 gst_video_mixer_init_blend (void)
 {
+#ifdef BUILD_X86_ASM
   guint cpu_flags;
 
-  oil_init ();
-  cpu_flags = oil_cpu_get_flags ();
+  orc_init ();
+  cpu_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+#endif
 
   gst_video_mixer_blend_argb = blend_argb_c;
   gst_video_mixer_blend_bgra = blend_bgra_c;
@@ -897,7 +898,7 @@ gst_video_mixer_init_blend (void)
   gst_video_mixer_fill_color_uyvy = fill_color_uyvy_c;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+  if (cpu_flags & ORC_TARGET_MMX_MMX) {
     gst_video_mixer_blend_argb = blend_argb_mmx;
     gst_video_mixer_blend_bgra = blend_bgra_mmx;
     gst_video_mixer_blend_i420 = blend_i420_mmx;
