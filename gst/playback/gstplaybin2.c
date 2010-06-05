@@ -232,6 +232,7 @@
 #include "gstplayback.h"
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
+#include "gstscreenshot.h"
 #include "gstinputselector.h"
 #include "gstsubtitleoverlay.h"
 
@@ -566,38 +567,6 @@ static GstStaticCaps av_raw_caps = GST_STATIC_CAPS ("audio/x-raw-int; "
 if (id) {                                \
   g_signal_handler_disconnect (obj, id); \
   id = 0;                                \
-}
-
-static void
-gst_play_marshal_BUFFER__BOXED (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data)
-{
-  typedef GstBuffer *(*GMarshalFunc_OBJECT__BOXED) (gpointer data1,
-      gpointer arg_1, gpointer data2);
-  register GMarshalFunc_OBJECT__BOXED callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-  GstBuffer *v_return;
-
-  g_return_if_fail (return_value != NULL);
-  g_return_if_fail (n_param_values == 2);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_OBJECT__BOXED) (marshal_data ? marshal_data : cc->callback);
-
-  v_return = callback (data1, g_value_get_boxed (param_values + 1), data2);
-
-  gst_value_take_buffer (return_value, v_return);
 }
 
 static GType
@@ -2441,8 +2410,8 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
 
     if (format != GST_FORMAT_TIME)
       data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
-            group_start_accum))
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
+                type].group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
@@ -2974,8 +2943,8 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPad *text_sinkpad = NULL;
 
   text_sink =
-      (group->playbin->text_sink) ? gst_object_ref (group->playbin->
-      text_sink) : NULL;
+      (group->playbin->text_sink) ? gst_object_ref (group->
+      playbin->text_sink) : NULL;
   if (text_sink)
     text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
 

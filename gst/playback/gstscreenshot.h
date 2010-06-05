@@ -24,6 +24,12 @@
 
 G_BEGIN_DECLS
 
+void gst_play_marshal_BUFFER__BOXED (GClosure * closure,
+    GValue * return_value G_GNUC_UNUSED,
+    guint n_param_values,
+    const GValue * param_values,
+    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data);
+
 GstBuffer *     gst_play_frame_conv_convert  (GstBuffer *buf, GstCaps   *to);
 
 G_END_DECLS
