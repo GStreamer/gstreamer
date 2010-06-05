@@ -211,6 +211,7 @@ enum
   PROP_FONT_DESC,
   PROP_SUBTITLE_ENCODING,
   PROP_VIS_PLUGIN,
+  PROP_FRAME,
   PROP_LAST
 };
 
@@ -306,6 +307,19 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = default)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlaySink:frame:
+   * @playsink: a #GstPlaySink
+   *
+   * Get the currently rendered or prerolled frame in the video sink.
+   * The #GstCaps on the buffer will describe the format of the buffer.
+   *
+   * Since: 0.10.30
+   */
+  g_object_class_install_property (gobject_klass, PROP_FRAME,
+      gst_param_spec_mini_object ("frame", "Frame",
+          "The last frame (NULL = no video available)",
+          GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -2932,6 +2946,9 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIS_PLUGIN:
       g_value_take_object (value, gst_play_sink_get_vis_plugin (playsink));
+      break;
+    case PROP_FRAME:
+      gst_value_take_buffer (value, gst_play_sink_get_last_frame (playsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
