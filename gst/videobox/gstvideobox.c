@@ -59,9 +59,9 @@
 #endif
 
 #include "gstvideobox.h"
+#include "gstvideoboxorc.h"
 
 #include <math.h>
-#include <liboil/liboil.h>
 #include <string.h>
 
 #include <gst/controller/gstcontroller.h>
@@ -153,7 +153,7 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
         (yuv_hdtv_colors_Y[fill_type] << 16) |
         (yuv_hdtv_colors_U[fill_type] << 8) | yuv_hdtv_colors_V[fill_type]);
 
-  oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, width * height);
+  orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
 }
 
 static void
@@ -182,6 +182,7 @@ copy_ayuv_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
 
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
+        /* ORC FIXME */
         dest[j] = (src[j] * i_alpha) >> 8;
         y = src[j + 1];
         u = src[j + 2];
@@ -196,6 +197,7 @@ copy_ayuv_ayuv (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   } else {
     for (i = 0; i < h; i++) {
       for (j = 0; j < w; j += 4) {
+        /* ORC FIXME */
         dest[j] = (src[j] * i_alpha) >> 8;
         dest[j + 1] = src[j + 1];
         dest[j + 2] = src[j + 2];
@@ -659,9 +661,9 @@ fill_planar_yuv (GstVideoBoxFill fill_type, guint b_alpha,
   heightY = gst_video_format_get_component_height (format, 0, height);
   heightUV = gst_video_format_get_component_height (format, 1, height);
 
-  oil_splat_u8_ns (destY, &empty_pixel[0], strideY * heightY);
-  oil_splat_u8_ns (destU, &empty_pixel[1], strideUV * heightUV);
-  oil_splat_u8_ns (destV, &empty_pixel[2], strideUV * heightUV);
+  memset (destY, empty_pixel[0], strideY * heightY);
+  memset (destU, empty_pixel[1], strideUV * heightUV);
+  memset (destV, empty_pixel[2], strideUV * heightUV);
 }
 
 static void
@@ -736,9 +738,9 @@ copy_y444_y444 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
   } else {
     for (i = 0; i < h; i++) {
-      oil_copy_u8 (destY, srcY, w);
-      oil_copy_u8 (destU, srcU, w);
-      oil_copy_u8 (destV, srcV, w);
+      memcpy (destY, srcY, w);
+      memcpy (destU, srcU, w);
+      memcpy (destV, srcV, w);
 
       destY += dest_stride;
       destU += dest_stride;
@@ -1777,7 +1779,7 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
       (rgb_colors_G[fill_type] << (p[2] * 8)) |
       (rgb_colors_B[fill_type] << (p[3] * 8)));
 
-  oil_splat_u32_ns ((guint32 *) dest, &empty_pixel, width * height);
+  orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
 }
 
 static void
@@ -2150,7 +2152,7 @@ fill_gray (GstVideoBoxFill fill_type, guint b_alpha, GstVideoFormat format,
 
     dest_stride = GST_ROUND_UP_4 (width);
     for (i = 0; i < height; i++) {
-      oil_splat_u8_ns (dest, &val, width);
+      memset (dest, val, width);
       dest += dest_stride;
     }
   } else {
@@ -2195,7 +2197,7 @@ copy_packed_simple (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
   src = src + src_y * src_stride + src_x * pixel_stride;
 
   for (i = 0; i < h; i++) {
-    oil_copy_u8 (dest, src, row_size);
+    memcpy (dest, src, row_size);
     dest += dest_stride;
     src += src_stride;
   }
@@ -2332,7 +2334,7 @@ copy_yuy2_yuy2 (guint i_alpha, GstVideoFormat dest_format, guint8 * dest,
     }
   } else {
     for (i = 0; i < h; i++) {
-      oil_copy_u8 (dest, src, w * 2);
+      memcpy (dest, src, w * 2);
       dest += dest_stride;
       src += src_stride;
     }
@@ -3386,8 +3388,6 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  oil_init ();
-
   gst_controller_init (NULL, NULL);
 
   GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
