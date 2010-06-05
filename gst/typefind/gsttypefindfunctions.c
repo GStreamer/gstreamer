@@ -2673,6 +2673,7 @@ jpeg_type_find (GstTypeFind * tf, gpointer unused)
 
       gst_caps_set_simple (caps, "width", G_TYPE_INT, w,
           "height", G_TYPE_INT, h, NULL);
+      break;
     } else {
       GST_WARNING ("bad length or unexpected JPEG marker 0xff 0x%02x", marker);
       break;
