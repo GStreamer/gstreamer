@@ -87,6 +87,12 @@ struct _GstGeometricTransform {
   gint pixel_stride;
   gint row_stride;
 
+  /* Must be set on NULL state.
+   * Useful for subclasses that use don't want to use a fixed precalculated
+   * pixel mapping table. Like 'diffuse' that uses random values for each pic.
+   */
+  gboolean precalc_map;
+
   /* properties */
   gint off_edge_pixels;
 

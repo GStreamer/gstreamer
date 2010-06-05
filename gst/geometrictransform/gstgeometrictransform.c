@@ -92,10 +92,6 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
   /* subclass must have defined the map_func */
   g_return_val_if_fail (klass->map_func, FALSE);
 
-  if (klass->prepare_func)
-    if (!klass->prepare_func (gt))
-      return FALSE;
-
   /*
    * (x,y) pairs of the inverse mapping
    */
@@ -130,8 +126,10 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   gboolean ret;
   gint old_width;
   gint old_height;
+  GstGeometricTransformClass *klass;
 
   gt = GST_GEOMETRIC_TRANSFORM (btrans);
+  klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   old_width = gt->width;
   old_height = gt->height;
@@ -145,7 +143,11 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     /* regenerate the map */
     if (old_width == 0 || old_height == 0 || gt->width != old_width ||
         gt->height != old_height) {
-      gst_geometric_transform_generate_map (gt);
+      if (klass->prepare_func)
+        if (!klass->prepare_func (gt))
+          return FALSE;
+      if (gt->precalc_map)
+        gst_geometric_transform_generate_map (gt);
     }
   }
   return ret;
@@ -199,22 +201,38 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
     GstBuffer * outbuf)
 {
   GstGeometricTransform *gt;
+  GstGeometricTransformClass *klass;
   gint x, y;
   GstFlowReturn ret = GST_FLOW_OK;
   gdouble *ptr;
 
   gt = GST_GEOMETRIC_TRANSFORM (trans);
-
-  g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
+  klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
 
-  ptr = gt->map;
-  for (y = 0; y < gt->height; y++) {
-    for (x = 0; x < gt->width; x++) {
-      /* do the mapping */
-      gst_geometric_transform_do_map (gt, buf, outbuf, x, y, ptr[0], ptr[1]);
-      ptr += 2;
+  if (gt->precalc_map) {
+    g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
+    ptr = gt->map;
+    for (y = 0; y < gt->height; y++) {
+      for (x = 0; x < gt->width; x++) {
+        /* do the mapping */
+        gst_geometric_transform_do_map (gt, buf, outbuf, x, y, ptr[0], ptr[1]);
+        ptr += 2;
+      }
+    }
+  } else {
+    for (y = 0; y < gt->height; y++) {
+      for (x = 0; x < gt->width; x++) {
+        gdouble in_x, in_y;
+
+        if (klass->map_func (gt, x, y, &in_x, &in_y)) {
+          gst_geometric_transform_do_map (gt, buf, outbuf, x, y, in_x, in_y);
+        } else {
+          GST_WARNING_OBJECT (gt, "Failed to do mapping for %d %d", x, y);
+          return GST_FLOW_ERROR;
+        }
+      }
     }
   }
   return ret;
@@ -312,6 +330,7 @@ gst_geometric_transform_init (GTypeInstance * instance, gpointer g_class)
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (instance);
 
   gt->off_edge_pixels = DEFAULT_OFF_EDGE_PIXELS;
+  gt->precalc_map = TRUE;
 }
 
 GType
