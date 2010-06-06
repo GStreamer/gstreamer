@@ -2624,7 +2624,7 @@ jpeg_type_find (GstTypeFind * tf, gpointer unused)
     len = GST_READ_UINT16_BE (c.data);
 
     GST_LOG ("possible JPEG marker 0x%02x (@0x%04x), segment length %u",
-        marker, c.offset, len);
+        marker, (guint) c.offset, len);
 
     if (!data_scan_ctx_ensure_data (tf, &c, len))
       break;
