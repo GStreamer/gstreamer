@@ -340,9 +340,9 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   while (todo > 0) {
     read = RTMP_Read (src->rtmp, (char *) data, todo);
 
-    if (G_UNLIKELY (read == 0 && todo == size))
+    if (G_UNLIKELY (read == 0 && todo == size)) {
       goto eos;
-    else if (G_UNLIKELY (read == 0)) {
+    } else if (G_UNLIKELY (read == 0)) {
       GST_BUFFER_SIZE (buf) -= todo;
       todo = 0;
       break;
