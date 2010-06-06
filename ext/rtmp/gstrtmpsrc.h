@@ -66,6 +66,8 @@ struct _GstRTMPSrc
 
   gint64 cur_offset;
   GstClockTime last_timestamp;
+  gboolean seekable;
+  gboolean discont;
 };
 
 struct _GstRTMPSrcClass

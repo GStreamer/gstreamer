@@ -81,6 +81,9 @@ static void gst_rtmp_src_finalize (GObject * object);
 static gboolean gst_rtmp_src_stop (GstBaseSrc * src);
 static gboolean gst_rtmp_src_start (GstBaseSrc * src);
 static gboolean gst_rtmp_src_is_seekable (GstBaseSrc * src);
+static gboolean gst_rtmp_src_prepare_seek_segment (GstBaseSrc * src,
+    GstEvent * event, GstSegment * segment);
+static gboolean gst_rtmp_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static GstFlowReturn gst_rtmp_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buffer);
 static gboolean gst_rtmp_src_query (GstBaseSrc * src, GstQuery * query);
@@ -146,6 +149,9 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_src_stop);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_rtmp_src_is_seekable);
+  gstbasesrc_class->prepare_seek_segment =
+      GST_DEBUG_FUNCPTR (gst_rtmp_src_prepare_seek_segment);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_rtmp_src_do_seek);
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_rtmp_src_create);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_rtmp_src_query);
 }
@@ -155,6 +161,8 @@ gst_rtmp_src_init (GstRTMPSrc * rtmpsrc, GstRTMPSrcClass * klass)
 {
   rtmpsrc->cur_offset = 0;
   rtmpsrc->last_timestamp = 0;
+
+  gst_base_src_set_format (GST_BASE_SRC (rtmpsrc), GST_FORMAT_TIME);
 }
 
 static void
@@ -323,16 +331,20 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     return GST_FLOW_ERROR;
   }
 
+  todo = size;
   data = GST_BUFFER_DATA (buf);
-
   read = 0;
 
-  todo = size;
   while (todo > 0) {
     read = RTMP_Read (src->rtmp, (char *) data, todo);
 
-    if (G_UNLIKELY (read == 0))
+    if (G_UNLIKELY (read == 0 && todo == size))
       goto eos;
+    else if (G_UNLIKELY (read == 0)) {
+      GST_BUFFER_SIZE (buf) -= todo;
+      todo = 0;
+      break;
+    }
 
     if (G_UNLIKELY (read == -1))
       goto read_failed;
@@ -346,10 +358,21 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     GST_LOG ("  got size %" G_GUINT64_FORMAT, read);
   }
 
-  src->last_timestamp = src->rtmp->m_mediaStamp * GST_MSECOND;
+  if (src->discont) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    src->discont = FALSE;
+  }
+
+  src->last_timestamp =
+      MAX (src->last_timestamp, src->rtmp->m_mediaStamp * GST_MSECOND);
   GST_BUFFER_TIMESTAMP (buf) = src->last_timestamp;
   GST_BUFFER_OFFSET (buf) = src->cur_offset;
   src->cur_offset += size;
+
+  GST_LOG_OBJECT (src, "Created buffer of size %u at %" G_GINT64_FORMAT
+      " with timestamp %" GST_TIME_FORMAT, size, GST_BUFFER_OFFSET (buf),
+      GST_TIME_ARGS (src->last_timestamp));
+
 
   /* we're done, return the buffer */
   *buffer = buf;
@@ -359,8 +382,7 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 read_failed:
   {
     gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Failed to read data: %s", "FIXME"));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), ("Failed to read data"));
     return GST_FLOW_ERROR;
   }
 eos:
@@ -424,7 +446,91 @@ gst_rtmp_src_is_seekable (GstBaseSrc * basesrc)
 
   src = GST_RTMP_SRC (basesrc);
 
-  return FALSE;
+  return src->seekable;
+}
+
+static gboolean
+gst_rtmp_src_prepare_seek_segment (GstBaseSrc * basesrc, GstEvent * event,
+    GstSegment * segment)
+{
+  GstRTMPSrc *src;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  GstSeekFlags flags;
+  GstFormat format;
+  gdouble rate;
+
+  src = GST_RTMP_SRC (basesrc);
+
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  if (!src->seekable) {
+    GST_LOG_OBJECT (src, "Not a seekable stream");
+    return FALSE;
+  }
+
+  if (!src->rtmp) {
+    GST_LOG_OBJECT (src, "Not connected yet");
+    return FALSE;
+  }
+
+  if (format != GST_FORMAT_TIME) {
+    GST_LOG_OBJECT (src, "Seeking only supported in TIME format");
+    return FALSE;
+  }
+
+  if (stop_type != GST_SEEK_TYPE_NONE) {
+    GST_LOG_OBJECT (src, "Setting a stop position is not supported");
+    return FALSE;
+  }
+
+  gst_segment_init (segment, GST_FORMAT_TIME);
+  gst_segment_set_seek (segment, rate, format, flags, cur_type, cur, stop_type,
+      stop, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
+{
+  GstRTMPSrc *src;
+
+  src = GST_RTMP_SRC (basesrc);
+
+  if (segment->format != GST_FORMAT_TIME) {
+    GST_LOG_OBJECT (src, "Only time based seeks are supported");
+    return FALSE;
+  }
+
+  if (!src->seekable) {
+    GST_LOG_OBJECT (src, "Not a seekable stream");
+    return FALSE;
+  }
+
+  if (!src->rtmp) {
+    GST_LOG_OBJECT (src, "Not connected yet");
+    return FALSE;
+  }
+
+  src->discont = TRUE;
+  src->last_timestamp = 0;
+
+  /* Initial seek */
+  if (src->cur_offset == 0 && segment->start == 0)
+    return TRUE;
+
+  if (!RTMP_SendSeek (src->rtmp, segment->start / GST_MSECOND)) {
+    GST_ERROR_OBJECT (src, "Seeking failed");
+    src->seekable = FALSE;
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "Seek to %" GST_TIME_FORMAT " successfull",
+      GST_TIME_ARGS (segment->start));
+
+  return TRUE;
 }
 
 #define STR2AVAL(av,str) G_STMT_START { \
@@ -449,6 +555,9 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
   }
 
   src->cur_offset = 0;
+  src->last_timestamp = 0;
+  src->seekable = TRUE;
+  src->discont = TRUE;
 
   uri_copy = g_strdup (src->uri);
   src->rtmp = RTMP_Alloc ();
@@ -506,7 +615,8 @@ gst_rtmp_src_stop (GstBaseSrc * basesrc)
   }
 
   src->cur_offset = 0;
-  src->last_timestamp = GST_CLOCK_TIME_NONE;
+  src->last_timestamp = 0;
+  src->discont = TRUE;
 
   return TRUE;
 }
