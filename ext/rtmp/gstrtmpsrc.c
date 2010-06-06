@@ -69,9 +69,6 @@ enum
   PROP_PAGE_URL
 };
 
-static const AVal av_page_url = { (char *) "pageUrl", 7 };
-static const AVal av_swf_url = { (char *) "swfUrl", 6 };
-
 static void gst_rtmp_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
@@ -204,16 +201,10 @@ gst_rtmp_src_uri_get_uri (GstURIHandler * handler)
   return src->uri;
 }
 
-#define STR2AVAL(av,str) G_STMT_START { \
-  av.av_val = str; \
-  av.av_len = strlen(av.av_val); \
-} G_STMT_END;
-
 static gboolean
 gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstRTMPSrc *src = GST_RTMP_SRC (handler);
-  gchar *new_location;
 
   if (GST_STATE (src) >= GST_STATE_PAUSED)
     return FALSE;
@@ -221,40 +212,17 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   g_free (src->uri);
   src->uri = NULL;
 
-  if (src->rtmp) {
-    RTMP_Close (src->rtmp);
-    RTMP_Free (src->rtmp);
-    src->rtmp = NULL;
-  }
-
   if (uri != NULL) {
-    AVal val;
+    int protocol;
+    AVal host;
+    unsigned int port;
+    AVal playpath, app;
 
-    new_location = g_strdup (uri);
-
-    src->rtmp = RTMP_Alloc ();
-    RTMP_Init (src->rtmp);
-    if (!RTMP_SetupURL (src->rtmp, new_location)) {
-      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, NULL,
-          ("Failed to setup URL '%s'", src->uri));
-      g_free (new_location);
-      RTMP_Free (src->rtmp);
-      src->rtmp = NULL;
+    if (!RTMP_ParseURL (uri, &protocol, &host, &port, &playpath, &app)) {
+      GST_ERROR_OBJECT (src, "Failed to parse URI %s", uri);
       return FALSE;
     }
     src->uri = g_strdup (uri);
-    GST_DEBUG_OBJECT (src, "parsed uri '%s' properly", src->uri);
-
-
-    if (src->page_url) {
-      STR2AVAL (val, src->page_url);
-      RTMP_SetOpt (src->rtmp, &av_page_url, &val);
-    }
-
-    if (src->swf_url) {
-      STR2AVAL (val, src->swf_url);
-      RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
-    }
   }
 
   GST_DEBUG_OBJECT (src, "Changed URI to %s", GST_STR_NULL (uri));
@@ -288,27 +256,17 @@ gst_rtmp_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_SWF_URL:{
+      if (GST_STATE (src) >= GST_STATE_PAUSED)
+        break;
       g_free (src->swf_url);
       src->swf_url = g_value_dup_string (value);
-
-      if (src->rtmp && src->swf_url) {
-        AVal val;
-
-        STR2AVAL (val, src->swf_url);
-        RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
-      }
       break;
     }
     case PROP_PAGE_URL:{
+      if (GST_STATE (src) >= GST_STATE_PAUSED)
+        break;
       g_free (src->page_url);
       src->page_url = g_value_dup_string (value);
-
-      if (src->rtmp && src->page_url) {
-        AVal val;
-
-        STR2AVAL (val, src->page_url);
-        RTMP_SetOpt (src->rtmp, &av_page_url, &val);
-      }
       break;
     }
     default:
@@ -456,11 +414,19 @@ gst_rtmp_src_is_seekable (GstBaseSrc * basesrc)
   return FALSE;
 }
 
+#define STR2AVAL(av,str) G_STMT_START { \
+  av.av_val = str; \
+  av.av_len = strlen(av.av_val); \
+} G_STMT_END;
+
 /* open the file, do stuff necessary to go to PAUSED state */
 static gboolean
 gst_rtmp_src_start (GstBaseSrc * basesrc)
 {
   GstRTMPSrc *src;
+  gchar *uri_copy;
+  static const AVal av_page_url = { (char *) "pageUrl", 7 };
+  static const AVal av_swf_url = { (char *) "swfUrl", 6 };
 
   src = GST_RTMP_SRC (basesrc);
 
@@ -471,18 +437,47 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
 
   src->curoffset = 0;
 
+  uri_copy = g_strdup (src->uri);
+  src->rtmp = RTMP_Alloc ();
+  RTMP_Init (src->rtmp);
+  if (!RTMP_SetupURL (src->rtmp, uri_copy)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, NULL,
+        ("Failed to setup URL '%s'", src->uri));
+    g_free (uri_copy);
+    RTMP_Free (src->rtmp);
+    src->rtmp = NULL;
+    return FALSE;
+  }
+
+  if (src->page_url) {
+    AVal val;
+
+    STR2AVAL (val, src->page_url);
+    RTMP_SetOpt (src->rtmp, &av_page_url, &val);
+  }
+
+  if (src->swf_url) {
+    AVal val;
+
+    STR2AVAL (val, src->swf_url);
+    RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
+  }
+
   /* open if required */
   if (!RTMP_IsConnected (src->rtmp)) {
     if (!RTMP_Connect (src->rtmp, NULL)) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
-          ("Could not connect to RTMP stream \"%s\" for reading: %s (%d)",
-              src->uri, "FIXME", 0));
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+          ("Could not connect to RTMP stream \"%s\" for reading", src->uri));
+      RTMP_Free (src->rtmp);
+      src->rtmp = NULL;
       return FALSE;
     }
   }
 
   return TRUE;
 }
+
+#undef STR2AVAL
 
 static gboolean
 gst_rtmp_src_stop (GstBaseSrc * basesrc)
@@ -491,8 +486,11 @@ gst_rtmp_src_stop (GstBaseSrc * basesrc)
 
   src = GST_RTMP_SRC (basesrc);
 
-//FIXME you can't run RTMP_Close multiple times
-//  RTMP_Close (src->rtmp);
+  if (src->rtmp) {
+    RTMP_Close (src->rtmp);
+    RTMP_Free (src->rtmp);
+    src->rtmp = NULL;
+  }
 
   src->curoffset = 0;
 
