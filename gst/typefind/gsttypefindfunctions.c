@@ -2311,9 +2311,7 @@ m4a_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data = gst_type_find_peek (tf, 4, 8);
 
-  if (data &&
-      (memcmp (data, "ftypM4A ", 8) == 0 ||
-          memcmp (data, "ftypmp42", 8) == 0)) {
+  if (data && (memcmp (data, "ftypM4A ", 8) == 0)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4A_CAPS);
   }
 }
@@ -2411,6 +2409,7 @@ static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
 #define QT_CAPS gst_static_caps_get(&qt_caps)
 #define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
 
+/* FIXME 0.11: go through http://www.ftyps.com/ */
 static void
 qt_type_find (GstTypeFind * tf, gpointer unused)
 {
@@ -2428,7 +2427,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
 
-    if (STRNCMP (&data[4], "ftypisom", 8) == 0) {
+    if (STRNCMP (&data[4], "ftypisom", 8) == 0 ||
+        STRNCMP (&data[4], "ftypmp42", 8) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
       variant = "iso";
       break;
