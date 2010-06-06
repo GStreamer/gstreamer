@@ -659,7 +659,7 @@ gst_videomixer_class_init (GstVideoMixerClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_videomixer_finalize);
+  gobject_class->finalize = gst_videomixer_finalize;
 
   gobject_class->get_property = gst_videomixer_get_property;
   gobject_class->set_property = gst_videomixer_set_property;

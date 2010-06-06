@@ -91,13 +91,11 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   eklass = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->dispose =
-      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_audio_sink_dispose);
+  gobject_class->dispose = (GObjectFinalizeFunc) gst_auto_audio_sink_dispose;
+  gobject_class->set_property = gst_auto_audio_sink_set_property;
+  gobject_class->get_property = gst_auto_audio_sink_get_property;
+
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_sink_change_state);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_auto_audio_sink_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_auto_audio_sink_get_property);
 
   /**
    * GstAutoAudioSink:filter-caps

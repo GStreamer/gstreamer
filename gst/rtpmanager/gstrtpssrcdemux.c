@@ -252,8 +252,8 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstrtpssrcdemux_klass = (GstRtpSsrcDemuxClass *) klass;
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_dispose);
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_finalize);
+  gobject_klass->dispose = gst_rtp_ssrc_demux_dispose;
+  gobject_klass->finalize = gst_rtp_ssrc_demux_finalize;
 
   /**
    * GstRtpSsrcDemux::new-ssrc-pad:

@@ -3099,7 +3099,7 @@ gst_flv_demux_class_init (GstFlvDemuxClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_flv_demux_dispose);
+  gobject_class->dispose = gst_flv_demux_dispose;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_flv_demux_change_state);

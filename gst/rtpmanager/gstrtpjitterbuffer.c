@@ -296,7 +296,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstRtpJitterBufferPrivate));
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_finalize);
+  gobject_class->finalize = gst_rtp_jitter_buffer_finalize;
 
   gobject_class->set_property = gst_rtp_jitter_buffer_set_property;
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;

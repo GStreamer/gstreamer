@@ -212,7 +212,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
           clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0, G_TYPE_NONE);
 
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_finalize);
+  gobject_klass->finalize = gst_rtp_pt_demux_finalize;
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_change_state);

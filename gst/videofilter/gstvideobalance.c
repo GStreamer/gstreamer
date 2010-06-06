@@ -580,7 +580,7 @@ gst_video_balance_class_init (GstVideoBalanceClass * klass)
   GST_DEBUG_CATEGORY_INIT (videobalance_debug, "videobalance", 0,
       "videobalance");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_video_balance_finalize);
+  gobject_class->finalize = gst_video_balance_finalize;
   gobject_class->set_property = gst_video_balance_set_property;
   gobject_class->get_property = gst_video_balance_get_property;
 

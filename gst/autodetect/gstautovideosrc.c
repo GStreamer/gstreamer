@@ -91,13 +91,11 @@ gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gobject_class->dispose =
-      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_video_src_dispose);
+  gobject_class->dispose = (GObjectFinalizeFunc) gst_auto_video_src_dispose;
+  gobject_class->set_property = gst_auto_video_src_set_property;
+  gobject_class->get_property = gst_auto_video_src_get_property;
+
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_video_src_change_state);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_auto_video_src_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_auto_video_src_get_property);
 
   /**
    * GstAutoVideoSrc:filter-caps

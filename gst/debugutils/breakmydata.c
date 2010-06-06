@@ -129,10 +129,8 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_break_my_data_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_break_my_data_get_property);
+  gobject_class->set_property = gst_break_my_data_set_property;
+  gobject_class->get_property = gst_break_my_data_get_property;
 
   g_object_class_install_property (gobject_class, ARG_SEED,
       g_param_spec_uint ("seed", "seed",
