@@ -191,10 +191,10 @@ main (gint argc, gchar * argv[])
   }
 
   /* build pipeline */
-  bin = GST_BIN (gst_pipeline_new ("pipeline"));
-
   g_print ("building %s pipeline with depth = %d and children = %d\n",
       flavour_str, depth, children);
+  start = gst_util_get_timestamp ();
+  bin = GST_BIN (gst_pipeline_new ("pipeline"));
   sink = gst_element_factory_make ("fakesink", NULL);
   gst_bin_add (bin, sink);
   if (!create_node (bin, sink, &new_sink, children, flavour)) {
@@ -203,7 +203,9 @@ main (gint argc, gchar * argv[])
   if (!create_nodes (bin, new_sink, depth, children, flavour)) {
     goto Error;
   }
-  g_print ("built pipeline with %d elements\n", GST_BIN_NUMCHILDREN (bin));
+  end = gst_util_get_timestamp ();
+  g_print ("%" GST_TIME_FORMAT " built pipeline with %d elements\n",
+      GST_TIME_ARGS (end - start), GST_BIN_NUMCHILDREN (bin));
 
   /* meassure */
   g_print ("starting pipeline\n");
