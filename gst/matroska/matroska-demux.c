@@ -4617,6 +4617,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   if (ret == GST_FLOW_OK && readblock) {
     guint64 duration = 0;
     gint64 lace_time = 0;
+    gboolean delta_unit;
 
     stream = g_ptr_array_index (demux->src, stream_num);
 
@@ -4665,6 +4666,20 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       duration = stream->default_duration * laces;
     }
     /* else duration is diff between timecode of this and next block */
+
+    /* For SimpleBlock, look at the keyframe bit in flags. Otherwise,
+       a ReferenceBlock implies that this is not a keyframe. In either
+       case, it only makes sense for video streams. */
+    delta_unit = stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
+        ((is_simpleblock && !(flags & 0x80)) || referenceblock);
+
+    if (delta_unit && stream->set_discont) {
+      /* When doing seeks or such, we need to restart on key frames or
+       * decoders might choke. */
+      GST_DEBUG_OBJECT (demux, "skipping delta unit");
+      goto done;
+    }
+
     for (n = 0; n < laces; n++) {
       GstBuffer *sub;
 
@@ -4715,6 +4730,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
       GST_DEBUG_OBJECT (demux, "created subbuffer %p", sub);
+
+      if (delta_unit)
+        GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
+      else
+        GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
 
       if (stream->encodings != NULL && stream->encodings->len > 0)
         sub = gst_matroska_decode_buffer (stream, sub);
@@ -4813,30 +4833,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       stream->pos = lace_time;
 
       gst_matroska_demux_sync_streams (demux);
-
-      if (is_simpleblock) {
-        /* bit 0 of SimpleBlock Flags is "Keyframe, set when the Block
-           contains only keyframes" */
-        if (flags & 0x80 || stream->type != GST_MATROSKA_TRACK_TYPE_VIDEO)
-          GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
-        else
-          GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
-      } else {
-        if (referenceblock) {
-          GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
-        } else {
-          GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
-        }
-      }
-
-      if (GST_BUFFER_FLAG_IS_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT)
-          && stream->set_discont) {
-        /* When doing seeks or such, we need to restart on key frames or
-         * decoders might choke. */
-        GST_DEBUG_OBJECT (demux, "skipping delta unit");
-        gst_buffer_unref (sub);
-        goto done;
-      }
 
       if (stream->set_discont) {
         GST_DEBUG_OBJECT (demux, "marking DISCONT");
