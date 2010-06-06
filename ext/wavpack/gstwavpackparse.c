@@ -147,7 +147,7 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_wavpack_parse_finalize);
+  gobject_class->finalize = gst_wavpack_parse_finalize;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_change_state);
 }

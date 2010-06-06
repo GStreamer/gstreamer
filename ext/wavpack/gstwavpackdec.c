@@ -114,7 +114,7 @@ gst_wavpack_dec_class_init (GstWavpackDecClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wavpack_dec_change_state);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_wavpack_dec_finalize);
+  gobject_class->finalize = gst_wavpack_dec_finalize;
 }
 
 static void

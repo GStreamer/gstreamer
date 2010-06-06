@@ -137,9 +137,9 @@ gst_pulsemixer_class_init (GstPulseMixerClass * g_class)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pulsemixer_change_state);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsemixer_finalize);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsemixer_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsemixer_set_property);
+  gobject_class->finalize = gst_pulsemixer_finalize;
+  gobject_class->get_property = gst_pulsemixer_get_property;
+  gobject_class->set_property = gst_pulsemixer_set_property;
 
   g_object_class_install_property (gobject_class,
       PROP_SERVER,

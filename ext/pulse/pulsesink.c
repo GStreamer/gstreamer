@@ -187,7 +187,7 @@ gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_finalize);
+  gobject_class->finalize = gst_pulseringbuffer_finalize;
 
   gstringbuffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_pulseringbuffer_open_device);
@@ -1714,9 +1714,9 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   GstBaseAudioSinkClass *gstaudiosink_class = GST_BASE_AUDIO_SINK_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesink_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsesink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsesink_get_property);
+  gobject_class->finalize = gst_pulsesink_finalize;
+  gobject_class->set_property = gst_pulsesink_set_property;
+  gobject_class->get_property = gst_pulsesink_get_property;
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_pulsesink_event);
 

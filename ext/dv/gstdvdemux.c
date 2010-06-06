@@ -197,7 +197,7 @@ gst_dvdemux_class_init (GstDVDemuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dvdemux_finalize);
+  gobject_class->finalize = gst_dvdemux_finalize;
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvdemux_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_dvdemux_send_event);

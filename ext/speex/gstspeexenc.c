@@ -231,7 +231,7 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_speex_enc_finalize);
+  gobject_class->finalize = gst_speex_enc_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_speex_enc_change_state);

@@ -99,7 +99,7 @@ gst_tag_lib_mux_class_init (GstTagLibMuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tag_lib_mux_finalize);
+  gobject_class->finalize = gst_tag_lib_mux_finalize;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_tag_lib_mux_change_state);
 }

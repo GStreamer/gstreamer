@@ -246,10 +246,8 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_change_state);
 
   /* set property handlers */
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_wavpack_enc_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_wavpack_enc_get_property);
+  gobject_class->set_property = gst_wavpack_enc_set_property;
+  gobject_class->get_property = gst_wavpack_enc_get_property;
 
   /* install all properties */
   g_object_class_install_property (gobject_class, ARG_MODE,
