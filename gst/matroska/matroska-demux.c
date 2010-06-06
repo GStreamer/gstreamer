@@ -4815,7 +4815,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       gst_matroska_demux_sync_streams (demux);
 
       if (is_simpleblock) {
-        if (flags & 0x80)
+        /* bit 0 of SimpleBlock Flags is "Keyframe, set when the Block
+           contains only keyframes" */
+        if (flags & 0x80 || stream->type != GST_MATROSKA_TRACK_TYPE_VIDEO)
           GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
         else
           GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
