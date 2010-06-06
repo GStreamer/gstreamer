@@ -2411,6 +2411,13 @@ wrong_format:
 static gboolean
 gst_flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 {
+  /* First try upstream */
+  if (gst_pad_push_event (demux->sinkpad, gst_event_ref (event))) {
+    GST_DEBUG_OBJECT (demux, "Upstream successfully seeked");
+    gst_event_unref (event);
+    return TRUE;
+  }
+
   if (!demux->indexed) {
     guint64 seek_offset = 0;
     gboolean building_index;
@@ -2858,6 +2865,17 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
 
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+
+      /* First ask upstream */
+      if (gst_pad_peer_query (demux->sinkpad, query)) {
+        gboolean seekable;
+
+        gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+        if (seekable) {
+          res = TRUE;
+          break;
+        }
+      }
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       res = TRUE;
