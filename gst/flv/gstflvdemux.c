@@ -1621,6 +1621,11 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
     demux->offset = GST_BUFFER_OFFSET (buffer);
   }
 
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (demux, "Discontinuity");
+    gst_adapter_clear (demux->adapter);
+  }
+
   gst_adapter_push (demux->adapter, buffer);
 
   if (demux->seeking) {
