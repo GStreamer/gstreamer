@@ -1268,9 +1268,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
 #ifdef HAVE_PULSE_0_9_16
     if (offset != pbuf->m_lastoffset)
-      GST_LOG_OBJECT (psink,
-          "discontinuity, offset is %, last offset was %" G_GINT64_FORMAT,
-          offset, pbuf->m_lastoffset);
+      GST_LOG_OBJECT (psink, "discontinuity, offset is %" G_GINT64_FORMAT ", "
+          "last offset was %" G_GINT64_FORMAT, offset, pbuf->m_lastoffset);
 
     towrite = out_samples * bps;
     if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
@@ -1282,8 +1281,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       if ((pbuf->m_data != NULL) && (pbuf->m_towrite > 0)) {
 
         GST_LOG_OBJECT (psink,
-            "flushing %d samples at offset %" G_GINT64_FORMAT,
-            pbuf->m_towrite / bps, pbuf->m_offset);
+            "flushing %u samples at offset %" G_GINT64_FORMAT,
+            (guint) pbuf->m_towrite / bps, pbuf->m_offset);
 
         if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
                 pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
