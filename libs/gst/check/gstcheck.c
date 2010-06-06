@@ -606,7 +606,7 @@ _gst_check_run_test_func (const gchar * func_name)
   /* only run specified functions */
   funcs = g_strsplit (gst_checks, ",", -1);
   for (f = funcs; f != NULL && *f != NULL; ++f) {
-    if (strcmp (*f, func_name) == 0) {
+    if (g_pattern_match_simple (*f, func_name)) {
       res = TRUE;
       break;
     }
