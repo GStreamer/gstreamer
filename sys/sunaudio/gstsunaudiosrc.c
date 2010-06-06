@@ -131,11 +131,9 @@ gst_sunaudiosrc_class_init (GstSunAudioSrcClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_sunaudiosrc_dispose);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_sunaudiosrc_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_sunaudiosrc_set_property);
+  gobject_class->dispose = gst_sunaudiosrc_dispose;
+  gobject_class->get_property = gst_sunaudiosrc_get_property;
+  gobject_class->set_property = gst_sunaudiosrc_set_property;
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_sunaudiosrc_getcaps);
 

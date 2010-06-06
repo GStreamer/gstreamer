@@ -157,10 +157,8 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_osx_audio_src_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_osx_audio_src_get_property);
+  gobject_class->set_property = gst_osx_audio_src_set_property;
+  gobject_class->get_property = gst_osx_audio_src_get_property;
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_osx_audio_src_get_caps);
 

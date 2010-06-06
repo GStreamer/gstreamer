@@ -198,10 +198,10 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_sink_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_oss_sink_finalise);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_sink_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_sink_set_property);
+  gobject_class->dispose = gst_oss_sink_dispose;
+  gobject_class->finalize = gst_oss_sink_finalise;
+  gobject_class->get_property = gst_oss_sink_get_property;
+  gobject_class->set_property = gst_oss_sink_set_property;
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",

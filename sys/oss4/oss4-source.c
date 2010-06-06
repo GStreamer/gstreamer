@@ -116,6 +116,7 @@ gst_oss4_source_base_init (gpointer g_class)
       gst_oss4_audio_get_template_caps ());
   gst_element_class_add_pad_template (element_class, templ);
 }
+
 static void
 gst_oss4_source_class_init (GstOss4SourceClass * klass)
 {
@@ -131,13 +132,10 @@ gst_oss4_source_class_init (GstOss4SourceClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss4_source_dispose);
-  gobject_class->finalize =
-      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_oss4_source_finalize);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_oss4_source_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_oss4_source_set_property);
+  gobject_class->dispose = gst_oss4_source_dispose;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_oss4_source_finalize;
+  gobject_class->get_property = gst_oss4_source_get_property;
+  gobject_class->set_property = gst_oss4_source_set_property;
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss4_source_getcaps);
 

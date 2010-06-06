@@ -151,11 +151,10 @@ gst_oss_src_class_init (GstOssSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_src_dispose);
-  gobject_class->finalize =
-      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_oss_src_finalize);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_src_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_src_set_property);
+  gobject_class->dispose = gst_oss_src_dispose;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_oss_src_finalize;
+  gobject_class->get_property = gst_oss_src_get_property;
+  gobject_class->set_property = gst_oss_src_set_property;
 
   gstbasesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss_src_getcaps);
 

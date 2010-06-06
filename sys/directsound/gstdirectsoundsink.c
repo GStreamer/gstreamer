@@ -277,11 +277,9 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_sink_finalise);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_directsound_sink_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_directsound_sink_get_property);
+  gobject_class->finalize = gst_directsound_sink_finalise;
+  gobject_class->set_property = gst_directsound_sink_set_property;
+  gobject_class->get_property = gst_directsound_sink_get_property;
 
   gstbasesink_class->get_caps =
       GST_DEBUG_FUNCPTR (gst_directsound_sink_getcaps);

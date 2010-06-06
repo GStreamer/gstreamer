@@ -175,10 +175,8 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
   gobject_class->dispose = gst_sunaudiosink_dispose;
   gobject_class->finalize = gst_sunaudiosink_finalize;
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_sunaudiosink_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_sunaudiosink_get_property);
+  gobject_class->set_property = gst_sunaudiosink_set_property;
+  gobject_class->get_property = gst_sunaudiosink_get_property;
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_sunaudiosink_getcaps);
 

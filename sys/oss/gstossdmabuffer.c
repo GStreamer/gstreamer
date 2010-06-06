@@ -103,8 +103,8 @@ gst_ossdmabuffer_class_init (GstOssDMABufferClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ossdmabuffer_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ossdmabuffer_finalize);
+  gobject_class->dispose = gst_ossdmabuffer_dispose;
+  gobject_class->finalize = gst_ossdmabuffer_finalize;
 
   gstringbuffer_class->acquire = gst_ossdmabuffer_acquire;
   gstringbuffer_class->release = gst_ossdmabuffer_release;

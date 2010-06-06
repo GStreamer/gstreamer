@@ -105,8 +105,8 @@ gst_osx_ring_buffer_class_init (GstOsxRingBufferClass * klass)
 
   ring_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_osx_ring_buffer_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_osx_ring_buffer_finalize);
+  gobject_class->dispose = gst_osx_ring_buffer_dispose;
+  gobject_class->finalize = gst_osx_ring_buffer_finalize;
 
   gstringbuffer_class->open_device =
       GST_DEBUG_FUNCPTR (gst_osx_ring_buffer_open_device);
