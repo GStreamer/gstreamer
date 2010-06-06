@@ -64,7 +64,8 @@ struct _GstRTMPSrc
 
   RTMP *rtmp;
 
-  gint64 curoffset;
+  gint64 cur_offset;
+  GstClockTime last_timestamp;
 };
 
 struct _GstRTMPSrcClass

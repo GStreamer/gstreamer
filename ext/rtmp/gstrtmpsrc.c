@@ -153,7 +153,8 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
 static void
 gst_rtmp_src_init (GstRTMPSrc * rtmpsrc, GstRTMPSrcClass * klass)
 {
-  rtmpsrc->curoffset = 0;
+  rtmpsrc->cur_offset = 0;
+  rtmpsrc->last_timestamp = 0;
 }
 
 static void
@@ -314,7 +315,7 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   size = GST_BASE_SRC_CAST (pushsrc)->blocksize;
 
   GST_DEBUG ("reading from %" G_GUINT64_FORMAT
-      ", size %u", src->curoffset, size);
+      ", size %u", src->cur_offset, size);
 
   buf = gst_buffer_try_new_and_alloc (size);
   if (G_UNLIKELY (buf == NULL)) {
@@ -324,7 +325,6 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   data = GST_BUFFER_DATA (buf);
 
-  /* FIXME add FLV header first time around? */
   read = 0;
 
   todo = size;
@@ -345,8 +345,11 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     }
     GST_LOG ("  got size %" G_GUINT64_FORMAT, read);
   }
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
-  src->curoffset += size;
+
+  src->last_timestamp = src->rtmp->m_mediaStamp * GST_MSECOND;
+  GST_BUFFER_TIMESTAMP (buf) = src->last_timestamp;
+  GST_BUFFER_OFFSET (buf) = src->cur_offset;
+  src->cur_offset += size;
 
   /* we're done, return the buffer */
   *buffer = buf;
@@ -379,6 +382,16 @@ gst_rtmp_src_query (GstBaseSrc * basesrc, GstQuery * query)
       gst_query_set_uri (query, src->uri);
       ret = TRUE;
       break;
+    case GST_QUERY_POSITION:{
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_duration (query, format, src->last_timestamp);
+        ret = TRUE;
+      }
+      break;
+    }
     case GST_QUERY_DURATION:{
       GstFormat format;
       gdouble duration;
@@ -435,7 +448,7 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
     return FALSE;
   }
 
-  src->curoffset = 0;
+  src->cur_offset = 0;
 
   uri_copy = g_strdup (src->uri);
   src->rtmp = RTMP_Alloc ();
@@ -492,7 +505,8 @@ gst_rtmp_src_stop (GstBaseSrc * basesrc)
     src->rtmp = NULL;
   }
 
-  src->curoffset = 0;
+  src->cur_offset = 0;
+  src->last_timestamp = GST_CLOCK_TIME_NONE;
 
   return TRUE;
 }
