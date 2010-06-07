@@ -1042,6 +1042,9 @@ gst_camerabin_set_flags (GstCameraBin * camera, GstCameraBinFlags flags)
 static void
 gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
 {
+  if (name == NULL)
+    name = "";
+
   if (0 != strcmp (camera->filename->str, name)) {
     GST_DEBUG_OBJECT (camera, "changing filename from '%s' to '%s'",
         camera->filename->str, name);
