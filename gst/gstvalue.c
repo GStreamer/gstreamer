@@ -727,6 +727,15 @@ gst_value_deserialize_fourcc (GValue * dest, const char *s)
   if (strlen (s) == 4) {
     fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
     ret = TRUE;
+  } else if (strlen (s) == 3) {
+    fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], ' ');
+    ret = TRUE;
+  } else if (strlen (s) == 2) {
+    fourcc = GST_MAKE_FOURCC (s[0], s[1], ' ', ' ');
+    ret = TRUE;
+  } else if (strlen (s) == 1) {
+    fourcc = GST_MAKE_FOURCC (s[0], ' ', ' ', ' ');
+    ret = TRUE;
   } else if (g_ascii_isdigit (*s)) {
     fourcc = strtoul (s, &end, 0);
     if (*end == 0) {
