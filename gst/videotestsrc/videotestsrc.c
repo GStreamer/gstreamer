@@ -25,7 +25,7 @@
 
 #include "gstvideotestsrc.h"
 #include "videotestsrc.h"
-#include <liboil/liboil.h>
+#include "gstvideotestsrcorc.h"
 
 
 #include <string.h>
@@ -44,6 +44,16 @@ random_char (void)
   state *= 1103515245;
   state += 12345;
   return (state >> 16) & 0xff;
+}
+
+static void
+oil_splat_u8 (guint8 * dest, int stride, const guint8 * value, int n)
+{
+  int i;
+  for (i = 0; i < n; i++) {
+    *dest = *value;
+    dest += stride;
+  }
 }
 
 #if 0
@@ -84,7 +94,7 @@ paint_rect (unsigned char *dest, int stride, int x, int y, int w, int h,
   int i;
 
   for (i = 0; i < h; i++) {
-    oil_splat_u8_ns (d, &color, w);
+    gst_orc_splat_u8 (d, &color, w);
     d += stride;
   }
 }
@@ -1217,7 +1227,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct vts_color_struct_rgb rgb_color;
   struct vts_color_struct_yuv yuv_color;
   struct vts_color_struct_gray gray_color;
-  static uint8_t sine_array[256];
+  static guint8 sine_array[256];
   static int sine_array_inited = FALSE;
 
   static int t = 0;             /* time - increment phase vs time by 1 for each generated frame */
@@ -1375,7 +1385,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct vts_color_struct_rgb rgb_color;
   struct vts_color_struct_yuv yuv_color;
   struct vts_color_struct_gray gray_color;
-  static uint8_t sine_array[256];
+  static guint8 sine_array[256];
   static int sine_array_inited = FALSE;
 
   static int t = 0;             /* time - increment phase vs time by 1 for each generated frame */
@@ -1507,7 +1517,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
   struct vts_color_struct_rgb rgb_color;
   struct vts_color_struct_yuv yuv_color;
   struct vts_color_struct_gray gray_color;
-  static uint8_t sine_array[256];
+  static guint8 sine_array[256];
   static int sine_array_inited = FALSE;
   double freq[8];
 
@@ -1730,9 +1740,9 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 
   if (x + w == p->width && p->width % 2 != 0)
     w1++;
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset1 + x1, p->yuv_color->U, w1);
+  gst_orc_splat_u8 (p->vp + offset1 + x1, p->yuv_color->V, w1);
 }
 
 static void
@@ -1743,11 +1753,17 @@ paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
   int offset = y * p->ystride;
   int offsetuv = (y / 2) * p->ustride + (x & ~0x01);
   int uvlength = x2 - x1 + 1;
+  guint16 value;
 
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  value = (p->yuv_color->U << 0) | (p->yuv_color->V << 8);
+#else
+  value = (p->yuv_color->U << 8) | (p->yuv_color->V << 0);
+#endif
+
   if (uvlength) {
-    oil_splat_u8 (p->up + offsetuv, 2, &p->yuv_color->U, uvlength);
-    oil_splat_u8 (p->vp + offsetuv, 2, &p->yuv_color->V, uvlength);
+    gst_orc_splat_u16 (p->up + offsetuv, value, uvlength);
   }
 }
 
@@ -1850,11 +1866,14 @@ static void
 paint_hline_v308 (paintinfo * p, int x, int y, int w)
 {
   int offset;
+  int i;
 
   offset = (y * p->ystride) + (x * 3);
-  oil_splat_u8 (p->yp + offset, 3, &p->yuv_color->Y, w);
-  oil_splat_u8 (p->up + offset, 3, &p->yuv_color->U, w);
-  oil_splat_u8 (p->vp + offset, 3, &p->yuv_color->V, w);
+  for (i = 0; i < w; i++) {
+    p->yp[offset + 3 * i] = p->yuv_color->Y;
+    p->up[offset + 3 * i] = p->yuv_color->U;
+    p->vp[offset + 3 * i] = p->yuv_color->V;
+  }
 }
 
 static void
@@ -1862,12 +1881,18 @@ paint_hline_AYUV (paintinfo * p, int x, int y, int w)
 {
   int offset;
   guint8 alpha = 255;
+  guint32 value;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  value = (alpha << 0) | (p->yuv_color->Y << 8) |
+      (p->yuv_color->U << 16) | (p->yuv_color->V << 24);
+#else
+  value = (alpha << 24) | (p->yuv_color->Y << 16) |
+      (p->yuv_color->U << 8) | (p->yuv_color->V << 0);
+#endif
 
   offset = (y * p->ystride) + (x * 4);
-  oil_splat_u8 (p->yp + offset, 4, &p->yuv_color->Y, w);
-  oil_splat_u8 (p->up + offset, 4, &p->yuv_color->U, w);
-  oil_splat_u8 (p->vp + offset, 4, &p->yuv_color->V, w);
-  oil_splat_u8 (p->ap + offset, 4, &alpha, w);
+  gst_orc_splat_u32 (p->ap + offset, value, w);
 }
 
 #define TO_16(x) (((x)<<8) | (x))
@@ -1878,7 +1903,7 @@ paint_hline_v216 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
   int x2 = (x + w) / 2;
-  uint16_t Y, U, V;
+  guint16 Y, U, V;
   int i;
   int offset;
 
@@ -1898,8 +1923,8 @@ paint_hline_v216 (paintinfo * p, int x, int y, int w)
 static void
 paint_hline_v410 (paintinfo * p, int x, int y, int w)
 {
-  uint32_t a;
-  uint8_t *data;
+  guint32 a;
+  guint8 *data;
   int i;
 
   a = (TO_10 (p->yuv_color->U) << 22) |
@@ -1914,8 +1939,8 @@ paint_hline_v410 (paintinfo * p, int x, int y, int w)
 static void
 paint_hline_v210 (paintinfo * p, int x, int y, int w)
 {
-  uint32_t a0, a1, a2, a3;
-  uint8_t *data;
+  guint32 a0, a1, a2, a3;
+  guint8 *data;
   int i;
 
   /* FIXME this is kinda gross.  it only handles x values in
@@ -1997,9 +2022,9 @@ paint_hline_Y41B (paintinfo * p, int x, int y, int w)
 
   if (x + w == p->width && p->width % 4 != 0)
     w1++;
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset1 + x1, p->yuv_color->U, w1);
+  gst_orc_splat_u8 (p->vp + offset1 + x1, p->yuv_color->V, w1);
 }
 
 static void
@@ -2024,9 +2049,9 @@ paint_hline_Y42B (paintinfo * p, int x, int y, int w)
 
   if (x + w == p->width && p->width % 2 != 0)
     w1++;
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset1 + x1, p->yuv_color->U, w1);
+  gst_orc_splat_u8 (p->vp + offset1 + x1, p->yuv_color->V, w1);
 }
 
 static void
@@ -2044,9 +2069,9 @@ paint_hline_Y444 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
 
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset + x, &p->yuv_color->U, w);
-  oil_splat_u8_ns (p->vp + offset + x, &p->yuv_color->V, w);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset + x, p->yuv_color->U, w);
+  gst_orc_splat_u8 (p->vp + offset + x, p->yuv_color->V, w);
 }
 
 static void
@@ -2063,7 +2088,7 @@ paint_hline_Y800 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
 
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
 }
 
 #if 0
@@ -2107,9 +2132,9 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
   int offset = y * p->width;
   int offset1 = (y / 2) * p->width;
 
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, x2 - x1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, x2 - x1);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset1 + x1, p->yuv_color->U, x2 - x1);
+  gst_orc_splat_u8 (p->vp + offset1 + x1, p->yuv_color->V, x2 - x1);
 }
 #endif
 
@@ -2152,9 +2177,9 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 
   if (x + w == p->width && p->width % 4 != 0)
     w1++;
-  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
-  oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, w1);
-  oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, w1);
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+  gst_orc_splat_u8 (p->up + offset1 + x1, p->yuv_color->U, w1);
+  gst_orc_splat_u8 (p->vp + offset1 + x1, p->yuv_color->V, w1);
 }
 
 static void
@@ -2282,18 +2307,12 @@ static void
 paint_hline_RGB565 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
-  uint8_t a, b;
+  guint16 value;
 
-  a = (p->rgb_color->R & 0xf8) | (p->rgb_color->G >> 5);
-  b = ((p->rgb_color->G << 3) & 0xe0) | (p->rgb_color->B >> 3);
+  value = ((p->rgb_color->R & 0xf8) << 8) |
+      ((p->rgb_color->G & 0xfc) << 3) | ((p->rgb_color->B & 0xf8) >> 3);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  oil_splat_u8 (p->yp + offset + x * 2 + 0, 2, &b, w);
-  oil_splat_u8 (p->yp + offset + x * 2 + 1, 2, &a, w);
-#else
-  oil_splat_u8 (p->yp + offset + x * 2 + 0, 2, &a, w);
-  oil_splat_u8 (p->yp + offset + x * 2 + 1, 2, &b, w);
-#endif
+  gst_orc_splat_u16 (p->yp + offset + x * 2 + 0, value, w);
 }
 
 static void
@@ -2308,7 +2327,7 @@ static void
 paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
-  uint8_t a, b;
+  guint8 a, b;
 
   a = ((p->rgb_color->R >> 1) & 0x7c) | (p->rgb_color->G >> 6);
   b = ((p->rgb_color->G << 2) & 0xe0) | (p->rgb_color->B >> 3);
@@ -2335,7 +2354,7 @@ static void
 paint_hline_bayer (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
-  uint8_t *dest = p->yp + offset;
+  guint8 *dest = p->yp + offset;
   int i;
 
   if (y & 1) {
@@ -2371,7 +2390,7 @@ paint_hline_GRAY8 (paintinfo * p, int x, int y, int w)
   int offset = y * p->ystride;
   guint8 color = p->gray_color->G >> 8;
 
-  oil_splat_u8_ns (p->yp + offset + x, &color, w);
+  gst_orc_splat_u8 (p->yp + offset + x, color, w);
 }
 
 static void
@@ -2387,5 +2406,5 @@ paint_hline_GRAY16 (paintinfo * p, int x, int y, int w)
 {
   int offset = y * p->ystride;
 
-  oil_splat_u16_ns ((guint16 *) (p->yp + offset + 2 * x), &p->gray_color->G, w);
+  gst_orc_splat_u16 (p->yp + offset + 2 * x, p->gray_color->G, w);
 }
