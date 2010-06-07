@@ -137,14 +137,6 @@ gst_rtmp_src_class_init (GstRTMPSrcClass * klass)
   /* properties */
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", PROP_LOCATION, G_PARAM_READWRITE, NULL);
-  g_object_class_install_property (gobject_class, PROP_SWF_URL,
-      g_param_spec_string ("swf-url", "SWF URL",
-          "URL of the corresponding SWF file",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PAGE_URL,
-      g_param_spec_string ("page-url", "Page URL",
-          "URL of the originating page",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rtmp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rtmp_src_stop);
@@ -172,10 +164,6 @@ gst_rtmp_src_finalize (GObject * object)
 
   g_free (rtmpsrc->uri);
   rtmpsrc->uri = NULL;
-  g_free (rtmpsrc->swf_url);
-  rtmpsrc->swf_url = NULL;
-  g_free (rtmpsrc->page_url);
-  rtmpsrc->page_url = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -260,20 +248,6 @@ gst_rtmp_src_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:{
       gst_rtmp_src_uri_set_uri (GST_URI_HANDLER (src),
           g_value_get_string (value));
-      break;
-    }
-    case PROP_SWF_URL:{
-      if (GST_STATE (src) >= GST_STATE_PAUSED)
-        break;
-      g_free (src->swf_url);
-      src->swf_url = g_value_dup_string (value);
-      break;
-    }
-    case PROP_PAGE_URL:{
-      if (GST_STATE (src) >= GST_STATE_PAUSED)
-        break;
-      g_free (src->page_url);
-      src->page_url = g_value_dup_string (value);
       break;
     }
     default:
@@ -545,8 +519,6 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
 {
   GstRTMPSrc *src;
   gchar *uri_copy;
-  static const AVal av_page_url = { (char *) "pageUrl", 7 };
-  static const AVal av_swf_url = { (char *) "swfUrl", 6 };
 
   src = GST_RTMP_SRC (basesrc);
 
@@ -570,20 +542,6 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
     RTMP_Free (src->rtmp);
     src->rtmp = NULL;
     return FALSE;
-  }
-
-  if (src->page_url) {
-    AVal val;
-
-    STR2AVAL (val, src->page_url);
-    RTMP_SetOpt (src->rtmp, &av_page_url, &val);
-  }
-
-  if (src->swf_url) {
-    AVal val;
-
-    STR2AVAL (val, src->swf_url);
-    RTMP_SetOpt (src->rtmp, &av_swf_url, &val);
   }
 
   /* open if required */
