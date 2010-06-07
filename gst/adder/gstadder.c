@@ -46,7 +46,7 @@
 #include "gstadder.h"
 #include <gst/audio/audio.h>
 #include <string.h>             /* strcmp */
-/*#include <liboil/liboil.h>*/
+#include "gstadderorc.h"
 
 /* highest positive/lowest negative x-bit value we can use for clamping */
 #define MAX_INT_32  ((gint32) (0x7fffffff))
@@ -164,65 +164,16 @@ gst_adder_get_type (void)
   return adder_type;
 }
 
-/* clipping versions (for int)
- * FIXME: what about: oil_add_s16 (out, out, in, bytes / sizeof (type))
- */
-#define MAKE_FUNC(name,type,ttype,min,max)                      \
-static void name (type *out, type *in, gint bytes) {            \
-  gint i;                                                       \
-  ttype add;                                                    \
-  for (i = 0; i < bytes / sizeof (type); i++) {                 \
-    add = (ttype)out[i] + (ttype)in[i];                         \
-    out[i] = CLAMP (add, min, max);                             \
-  }                                                             \
-}
-
-/* unsigned versions (for int) */
-#define MAKE_FUNC_US(name,type,ttype,max)                       \
-static void name (type *out, type *in, gint bytes) {            \
-  gint i;                                                       \
-  ttype add;                                                    \
-  for (i = 0; i < bytes / sizeof (type); i++) {                 \
-    add = (ttype)out[i] + (ttype)in[i];                         \
-    out[i] = ((add <= max) ? add : max);                        \
-  }                                                             \
-}
-
 /* non-clipping versions (for float) */
 #define MAKE_FUNC_NC(name,type)                                 \
-static void name (type *out, type *in, gint bytes) {            \
+static void name (type *out, type *in, gint samples) {          \
   gint i;                                                       \
-  for (i = 0; i < bytes / sizeof (type); i++)                   \
+  for (i = 0; i < samples; i++)                                 \
     out[i] += in[i];                                            \
 }
 
-#if 0
-/* right now, the liboil function don't seems to be faster on x86
- * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float ! m.
- * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! m.
- */
-static void
-add_float32 (gfloat * out, gfloat * in, gint bytes)
-{
-  oil_add_f32 (out, out, in, bytes / sizeof (gfloat));
-}
-
-static void
-add_float64 (gdouble * out, gdouble * in, gint bytes)
-{
-  oil_add_f64 (out, out, in, bytes / sizeof (gdouble));
-}
-#endif
-
 /* *INDENT-OFF* */
-MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
-MAKE_FUNC (add_int16, gint16, gint32, MIN_INT_16, MAX_INT_16)
-MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
-MAKE_FUNC_US (add_uint32, guint32, guint64, MAX_UINT_32)
-MAKE_FUNC_US (add_uint16, guint16, guint32, MAX_UINT_16)
-MAKE_FUNC_US (add_uint8, guint8, guint16, MAX_UINT_8)
 MAKE_FUNC_NC (add_float64, gdouble)
-MAKE_FUNC_NC (add_float32, gfloat)
 /* *INDENT-ON* */
 
 /* we can only accept caps that we and downstream can handle.
@@ -334,14 +285,17 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
       case 8:
         adder->func = (adder->is_signed ?
             (GstAdderFunction) add_int8 : (GstAdderFunction) add_uint8);
+        adder->sample_size = 1;
         break;
       case 16:
         adder->func = (adder->is_signed ?
             (GstAdderFunction) add_int16 : (GstAdderFunction) add_uint16);
+        adder->sample_size = 2;
         break;
       case 32:
         adder->func = (adder->is_signed ?
             (GstAdderFunction) add_int32 : (GstAdderFunction) add_uint32);
+        adder->sample_size = 4;
         break;
       default:
         goto not_supported;
@@ -360,9 +314,11 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
     switch (adder->width) {
       case 32:
         adder->func = (GstAdderFunction) add_float32;
+        adder->sample_size = 4;
         break;
       case 64:
         adder->func = (GstAdderFunction) add_float64;
+        adder->sample_size = 8;
         break;
       default:
         goto not_supported;
@@ -1178,7 +1134,8 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
             collect_data, insize, indata);
 
         /* further buffers, need to add them */
-        adder->func ((gpointer) outdata, (gpointer) indata, insize);
+        adder->func ((gpointer) outdata, (gpointer) indata,
+            insize / adder->sample_size);
       } else {
         /* skip gap buffer */
         GST_LOG_OBJECT (adder, "channel %p: skipping GAP buffer", collect_data);
@@ -1347,8 +1304,6 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /*oil_init (); */
-
   if (!gst_element_register (plugin, "adder", GST_RANK_NONE, GST_TYPE_ADDER)) {
     return FALSE;
   }

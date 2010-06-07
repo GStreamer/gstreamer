@@ -66,6 +66,7 @@ struct _GstAdder {
   gint            channels;
   gint            width;
   gint            endianness;
+  int             sample_size;
 
   /* the next are valid only for format == GST_ADDER_FORMAT_INT */
   gint            depth;
