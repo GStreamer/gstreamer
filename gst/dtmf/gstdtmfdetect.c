@@ -74,7 +74,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) 16, "
         "depth = (int) 16, "
         "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (bool) true, rate = (int) [1, MAX], channels = (int) 1"));
+        "signed = (bool) true, rate = (int) 8000, channels = (int) 1"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -83,7 +83,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, "
         "depth = (int) 16, "
         "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-        "signed = (bool) true, rate = (int) [1, MAX], channels = (int) 1"));
+        "signed = (bool) true, rate = (int) 8000, channels = (int) 1"));
 
 /* signals and args */
 enum
@@ -155,10 +155,6 @@ gst_dtmf_detect_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstDtmfDetect *self = GST_DTMF_DETECT (trans);
-  GstStructure *s = gst_caps_get_structure (incaps, 0);
-
-  if (!gst_structure_get_int (s, "rate", &self->rate))
-    return FALSE;
 
   zap_dtmf_detect_init (&self->dtmf_state);
 

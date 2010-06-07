@@ -54,8 +54,6 @@ struct _GstDtmfDetect
 {
   GstBaseTransform parent;
 
-  gint rate;
-
   dtmf_detect_state_t dtmf_state;
 };
 
