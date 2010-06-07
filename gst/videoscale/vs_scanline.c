@@ -27,7 +27,7 @@
 
 #include "vs_scanline.h"
 
-#include <liboil/liboil.h>
+#include "gstvideoscaleorc.h"
 
 /* greyscale, i.e., single componenet */
 
@@ -92,7 +92,7 @@ vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_u8 (dest, src1, src2, &value, n);
+  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n);
 }
 
 void
@@ -213,6 +213,32 @@ vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int src_width,
 }
 
 #include <stdio.h>
+
+static void
+oil_resample_linear_argb (uint32_t * d, uint32_t * s, int n, uint32_t * in)
+{
+  uint8_t *src = (uint8_t *) s;
+  uint8_t *dest = (uint8_t *) d;
+  int acc = in[0];
+  int increment = in[1];
+  int i;
+  int j;
+  int x;
+
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = (acc & 0xffff) >> 8;
+    dest[4 * i + 0] = (src[4 * j + 0] * (256 - x) + src[4 * j + 4] * x) >> 8;
+    dest[4 * i + 1] = (src[4 * j + 1] * (256 - x) + src[4 * j + 5] * x) >> 8;
+    dest[4 * i + 2] = (src[4 * j + 2] * (256 - x) + src[4 * j + 6] * x) >> 8;
+    dest[4 * i + 3] = (src[4 * j + 3] * (256 - x) + src[4 * j + 7] * x) >> 8;
+
+    acc += increment;
+  }
+
+  in[0] = acc;
+}
+
 void
 vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
@@ -254,8 +280,7 @@ vs_scanline_merge_linear_RGBA (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_argb ((uint32_t *) dest, (uint32_t *) src1,
-      (uint32_t *) src2, &value, n);
+  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 4);
 }
 
 
@@ -336,7 +361,7 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_u8 (dest, src1, src2, &value, n * 3);
+  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 3);
 }
 
 
@@ -458,22 +483,10 @@ void
 vs_scanline_merge_linear_YUYV (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
-  int i;
   int quads = (n + 1) / 2;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < quads; i++) {
-    dest[i * 4 + 0] =
-        (src1[i * 4 + 0] * (65536 - x) + src2[i * 4 + 0] * x) >> 16;
-    dest[i * 4 + 1] =
-        (src1[i * 4 + 1] * (65536 - x) + src2[i * 4 + 1] * x) >> 16;
-
-    if (2 * i + 1 < n) {
-      dest[i * 4 + 2] =
-          (src1[i * 4 + 2] * (65536 - x) + src2[i * 4 + 2] * x) >> 16;
-      dest[i * 4 + 3] =
-          (src1[i * 4 + 3] * (65536 - x) + src2[i * 4 + 3] * x) >> 16;
-    }
-  }
+  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
 }
 
 
@@ -595,22 +608,10 @@ void
 vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
     uint8_t * src2, int n, int x)
 {
-  int i;
   int quads = (n + 1) / 2;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < quads; i++) {
-    dest[i * 4 + 0] =
-        (src1[i * 4 + 0] * (65536 - x) + src2[i * 4 + 0] * x) >> 16;
-    dest[i * 4 + 1] =
-        (src1[i * 4 + 1] * (65536 - x) + src2[i * 4 + 1] * x) >> 16;
-
-    if (2 * i + 1 < n) {
-      dest[i * 4 + 2] =
-          (src1[i * 4 + 2] * (65536 - x) + src2[i * 4 + 2] * x) >> 16;
-      dest[i * 4 + 3] =
-          (src1[i * 4 + 3] * (65536 - x) + src2[i * 4 + 3] * x) >> 16;
-    }
-  }
+  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
 }
 
 

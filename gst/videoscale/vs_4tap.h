@@ -30,7 +30,6 @@
 
 #include "vs_image.h"
 
-#include <liboil/liboil.h>
 
 void vs_4tap_init (void);
 void vs_scanline_resample_4tap_Y (uint8_t *dest, uint8_t *src,

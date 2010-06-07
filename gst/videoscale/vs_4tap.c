@@ -31,7 +31,6 @@
 
 #include "vs_4tap.h"
 
-#include <liboil/liboil.h>
 #include <math.h>
 
 #define SHIFT 10

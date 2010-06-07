@@ -57,7 +57,6 @@
 #include <math.h>
 
 #include <gst/video/video.h>
-#include <liboil/liboil.h>
 
 #include "gstvideoscale.h"
 #include "vs_image.h"
@@ -1380,8 +1379,6 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  oil_init ();
-
   if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE,
           GST_TYPE_VIDEO_SCALE))
     return FALSE;
