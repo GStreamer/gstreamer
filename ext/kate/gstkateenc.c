@@ -1272,8 +1272,8 @@ gst_kate_enc_sink_event (GstPad * pad, GstEvent * event)
               NULL, NULL);
           if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (timestamp)) {
             GST_WARNING_OBJECT (ke,
-                "No time in newsegment event %p, format %d, timestamp %" G_GINT64_FORMAT,
-                event, (int) format, timestamp);
+                "No time in newsegment event %p, format %d, timestamp %"
+                G_GINT64_FORMAT, event, (int) format, timestamp);
             /* to be safe, we'd need to generate a keepalive anyway, but we'd have to guess at the timestamp to use; a
                good guess would be the last known timestamp plus the keepalive time, but if we then get a packet with a
                timestamp less than this, it would fail to encode, which would be Bad. If we don't encode a keepalive, we

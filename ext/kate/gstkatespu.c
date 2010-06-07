@@ -241,8 +241,7 @@ gst_kate_spu_crop_bitmap (GstKateEnc * ke, kate_bitmap * kb, guint16 * dx,
   w = right - left + 1;
   h = bottom - top + 1;
   GST_LOG_OBJECT (ke, "cropped from %" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT
-      " to %" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT, kb->width, kb->height,
-      w, h);
+      " to %" G_GSIZE_FORMAT " %" G_GSIZE_FORMAT, kb->width, kb->height, w, h);
   *dx += left;
   *dy += top;
   n = 0;
@@ -716,7 +715,8 @@ gst_kate_spu_encode_spu (GstKateDec * kd, const kate_event * ev)
   /* Allocate space to build the SPU */
   bytes = g_malloc (MAX_SPU_SIZE);
   if (G_UNLIKELY (!bytes)) {
-    GST_WARNING_OBJECT (kd, "Failed to allocate %" G_GSIZE_FORMAT " byte buffer", nbytes);
+    GST_WARNING_OBJECT (kd,
+        "Failed to allocate %" G_GSIZE_FORMAT " byte buffer", nbytes);
     goto error;
   }
   nbytes = 4;
@@ -861,7 +861,8 @@ gst_kate_spu_encode_spu (GstKateDec * kd, const kate_event * ev)
   /* Create a buffer with those values */
   buffer = gst_buffer_new ();
   if (G_UNLIKELY (!buffer)) {
-    GST_WARNING_OBJECT (kd, "Failed to allocate %" G_GSIZE_FORMAT " byte buffer", nbytes);
+    GST_WARNING_OBJECT (kd,
+        "Failed to allocate %" G_GSIZE_FORMAT " byte buffer", nbytes);
     goto error;
   }
   GST_BUFFER_DATA (buffer) = bytes;
