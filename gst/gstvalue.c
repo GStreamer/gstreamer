@@ -502,7 +502,7 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
 }
 
 /* Do an unordered compare of the contents of a list */
-static int
+static gint
 gst_value_compare_list (const GValue * value1, const GValue * value2)
 {
   guint i, j;
@@ -557,7 +557,7 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
 }
 
 /* Perform an ordered comparison of the contents of an array */
-static int
+static gint
 gst_value_compare_array (const GValue * value1, const GValue * value2)
 {
   guint i;
@@ -718,11 +718,11 @@ gst_value_serialize_fourcc (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_fourcc (GValue * dest, const char *s)
+gst_value_deserialize_fourcc (GValue * dest, const gchar * s)
 {
   gboolean ret = FALSE;
   guint32 fourcc = 0;
-  char *end;
+  gchar *end;
   gint l = strlen (s);
 
   if (l == 4) {
@@ -978,7 +978,7 @@ static void
 gst_value_transform_double_range_string (const GValue * src_value,
     GValue * dest_value)
 {
-  char s1[G_ASCII_DTOSTR_BUF_SIZE], s2[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar s1[G_ASCII_DTOSTR_BUF_SIZE], s2[G_ASCII_DTOSTR_BUF_SIZE];
 
   dest_value->data[0].v_pointer = g_strdup_printf ("[%s,%s]",
       g_ascii_dtostr (s1, G_ASCII_DTOSTR_BUF_SIZE,
@@ -999,8 +999,8 @@ gst_value_compare_double_range (const GValue * value1, const GValue * value2)
 static gchar *
 gst_value_serialize_double_range (const GValue * value)
 {
-  char d1[G_ASCII_DTOSTR_BUF_SIZE];
-  char d2[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar d1[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar d2[G_ASCII_DTOSTR_BUF_SIZE];
 
   g_ascii_dtostr (d1, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_double);
   g_ascii_dtostr (d2, G_ASCII_DTOSTR_BUF_SIZE, value->data[1].v_double);
@@ -1086,8 +1086,8 @@ static gchar *
 gst_value_lcopy_fraction_range (const GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  int i;
-  int *dest_values[4];
+  gint i;
+  gint *dest_values[4];
   GValue *vals = (GValue *) value->data[0].v_pointer;
 
   if (G_UNLIKELY (n_collect_values != 4))
@@ -1215,7 +1215,7 @@ gst_value_get_fraction_range_max (const GValue * value)
   return NULL;
 }
 
-static char *
+static gchar *
 gst_value_serialize_fraction_range (const GValue * value)
 {
   GValue *vals = (GValue *) value->data[0].v_pointer;
@@ -1312,7 +1312,7 @@ gst_value_get_caps (const GValue * value)
   return (GstCaps *) g_value_get_boxed (value);
 }
 
-static char *
+static gchar *
 gst_value_serialize_caps (const GValue * value)
 {
   GstCaps *caps = g_value_get_boxed (value);
@@ -1373,7 +1373,7 @@ gst_value_get_structure (const GValue * value)
   return (GstStructure *) g_value_get_boxed (value);
 }
 
-static char *
+static gchar *
 gst_value_serialize_structure (const GValue * value)
 {
   GstStructure *structure = g_value_get_boxed (value);
@@ -1409,7 +1409,7 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
  * GstBuffer *
  *************/
 
-static int
+static gint
 gst_value_compare_buffer (const GValue * value1, const GValue * value2)
 {
   GstBuffer *buf1 = GST_BUFFER (gst_value_get_mini_object (value1));
@@ -1428,13 +1428,13 @@ gst_value_compare_buffer (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_buffer (const GValue * value)
 {
   guint8 *data;
-  int i;
-  int size;
-  char *string;
+  gint i;
+  gint size;
+  gchar *string;
   GstBuffer *buffer;
 
   buffer = gst_value_get_buffer (value);
@@ -1457,10 +1457,10 @@ static gboolean
 gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 {
   GstBuffer *buffer;
-  int len;
-  char ts[3];
+  gint len;
+  gchar ts[3];
   guint8 *data;
-  int i;
+  gint i;
 
   len = strlen (s);
   if (len & 1)
@@ -1500,7 +1500,7 @@ wrong_char:
  * boolean *
  ***********/
 
-static int
+static gint
 gst_value_compare_boolean (const GValue * value1, const GValue * value2)
 {
   if ((value1->data[0].v_int != 0) == (value2->data[0].v_int != 0))
@@ -1508,7 +1508,7 @@ gst_value_compare_boolean (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_boolean (const GValue * value)
 {
   if (value->data[0].v_int) {
@@ -1551,7 +1551,7 @@ gst_value_compare_ ## _type                                             \
   return GST_VALUE_EQUAL;                                               \
 }                                                                       \
                                                                         \
-static char *                                                           \
+static gchar *                                                          \
 gst_value_serialize_ ## _type (const GValue * value)                    \
 {                                                                       \
   GValue val = { 0, };                                                  \
@@ -1571,7 +1571,7 @@ gst_value_deserialize_int_helper (gint64 * to, const gchar * s,
     gint64 min, gint64 max, gint size)
 {
   gboolean ret = FALSE;
-  char *end;
+  gchar *end;
   gint64 mask = -1;
 
   errno = 0;
@@ -1648,7 +1648,7 @@ static gboolean                                                         \
 gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)         \
 {                                                                       \
   gint64 x;                                                             \
-  char *end;                                                            \
+  gchar *end;                                                           \
   gboolean ret = FALSE;                                                 \
                                                                         \
   errno = 0;                                                            \
@@ -1712,7 +1712,7 @@ CREATE_USERIALIZATION (ulong, ULONG);
 /**********
  * double *
  **********/
-static int
+static gint
 gst_value_compare_double (const GValue * value1, const GValue * value2)
 {
   if (value1->data[0].v_double > value2->data[0].v_double)
@@ -1724,10 +1724,10 @@ gst_value_compare_double (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_double (const GValue * value)
 {
-  char d[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar d[G_ASCII_DTOSTR_BUF_SIZE];
 
   g_ascii_dtostr (d, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_double);
   return g_strdup (d);
@@ -1736,9 +1736,9 @@ gst_value_serialize_double (const GValue * value)
 static gboolean
 gst_value_deserialize_double (GValue * dest, const gchar * s)
 {
-  double x;
+  gdouble x;
   gboolean ret = FALSE;
-  char *end;
+  gchar *end;
 
   x = g_ascii_strtod (s, &end);
   if (*end == 0) {
@@ -1786,9 +1786,9 @@ gst_value_serialize_float (const GValue * value)
 static gboolean
 gst_value_deserialize_float (GValue * dest, const gchar * s)
 {
-  double x;
+  gdouble x;
   gboolean ret = FALSE;
-  char *end;
+  gchar *end;
 
   x = g_ascii_strtod (s, &end);
   if (*end == 0) {
@@ -1822,7 +1822,7 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
     if (value1->data[0].v_pointer != value2->data[0].v_pointer)
       return GST_VALUE_UNORDERED;
   } else {
-    int x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
+    gint x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
 
     if (x < 0)
       return GST_VALUE_LESS_THAN;
@@ -1833,10 +1833,10 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
   return GST_VALUE_EQUAL;
 }
 
-static int
+static gint
 gst_string_measure_wrapping (const gchar * s)
 {
-  int len;
+  gint len;
   gboolean wrap = FALSE;
 
   if (G_UNLIKELY (s == NULL))
@@ -1866,7 +1866,7 @@ gst_string_measure_wrapping (const gchar * s)
 }
 
 static gchar *
-gst_string_wrap_inner (const gchar * s, int len)
+gst_string_wrap_inner (const gchar * s, gint len)
 {
   gchar *d, *e;
 
@@ -1897,7 +1897,7 @@ gst_string_wrap_inner (const gchar * s, int len)
 static gchar *
 gst_string_wrap (const gchar * s)
 {
-  int len = gst_string_measure_wrapping (s);
+  gint len = gst_string_measure_wrapping (s);
 
   if (G_LIKELY (len < 0))
     return g_strdup (s);
@@ -1910,7 +1910,7 @@ static gchar *
 gst_string_take_and_wrap (gchar * s)
 {
   gchar *out;
-  int len = gst_string_measure_wrapping (s);
+  gint len = gst_string_measure_wrapping (s);
 
   if (G_LIKELY (len < 0))
     return s;
@@ -2421,7 +2421,7 @@ static gboolean
 gst_value_intersect_fraction_fraction_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  int res1, res2;
+  gint res1, res2;
   GValue *vals;
   GstValueCompareFunc compare;
 
@@ -2450,7 +2450,7 @@ gst_value_intersect_fraction_range_fraction_range (GValue * dest,
 {
   GValue *min;
   GValue *max;
-  int res;
+  gint res;
   GValue *vals1, *vals2;
   GstValueCompareFunc compare;
 
@@ -2501,9 +2501,9 @@ static gboolean
 gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
-  int min = gst_value_get_int_range_min (subtrahend);
-  int max = gst_value_get_int_range_max (subtrahend);
-  int val = g_value_get_int (minuend);
+  gint min = gst_value_get_int_range_min (subtrahend);
+  gint max = gst_value_get_int_range_max (subtrahend);
+  gint val = g_value_get_int (minuend);
 
   /* subtracting a range from an int only works if the int is not in the
    * range */
@@ -2789,7 +2789,7 @@ gst_value_subtract_fraction_range_fraction_range (GValue * dest,
   const GValue *max2 = gst_value_get_fraction_range_max (minuend);
   const GValue *max1 = gst_value_get_fraction_range_min (subtrahend);
   const GValue *min2 = gst_value_get_fraction_range_max (subtrahend);
-  int cmp1, cmp2;
+  gint cmp1, cmp2;
   GValue v1 = { 0, };
   GValue v2 = { 0, };
   GValue *pv1, *pv2;            /* yeah, hungarian! */
@@ -3372,7 +3372,7 @@ gst_value_serialize (const GValue * value)
   guint i, len;
   GValue s_val = { 0 };
   GstValueTable *table, *best;
-  char *s;
+  gchar *s;
   GType type;
 
   g_return_val_if_fail (G_IS_VALUE (value), NULL);
@@ -3695,7 +3695,7 @@ static gboolean
 gst_value_deserialize_fraction (GValue * dest, const gchar * s)
 {
   gint num, den;
-  int num_chars;
+  gint num_chars;
 
   if (G_UNLIKELY (s == NULL))
     return FALSE;
@@ -3914,7 +3914,7 @@ gst_value_serialize_date (const GValue * val)
 }
 
 static gboolean
-gst_value_deserialize_date (GValue * dest, const char *s)
+gst_value_deserialize_date (GValue * dest, const gchar * s)
 {
   guint year, month, day;
 
