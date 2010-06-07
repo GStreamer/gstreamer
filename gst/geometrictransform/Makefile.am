@@ -7,6 +7,7 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstcircle.c \
                                       gstdiffuse.c \
                                       gstkaleidoscope.c \
+                                      gstmarble.c \
                                       gstpinch.c \
                                       gstsphere.c \
                                       gsttwirl.c \
@@ -24,6 +25,7 @@ noinst_HEADERS = gstgeometrictransform.h \
                  gstcircle.h \
                  gstdiffuse.h \
                  gstkaleidoscope.h \
+                 gstmarble.h \
                  gstpinch.h \
                  gstsphere.h \
                  gsttwirl.h \

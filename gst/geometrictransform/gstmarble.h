@@ -41,28 +41,55 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * Thanks to Jerry Huxtable <http://www.jhlabs.com> work on its java
- * image editor and filters. The algorithms here were extracted from
- * his code.
- */
-
-#ifndef __GEOMETRIC_MATH_H__
-#define __GEOMETRIC_MATH_H__
+#ifndef __GST_MARBLE_H__
+#define __GST_MARBLE_H__
 
 #include <gst/gst.h>
+#include "gstgeometrictransform.h"
+#include "geometricmath.h"
 
 G_BEGIN_DECLS
 
-typedef struct _Noise Noise;
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_MARBLE \
+  (gst_marble_get_type())
+#define GST_MARBLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MARBLE,GstMarble))
+#define GST_MARBLE_CAST(obj) \
+  ((GstMarble *)(obj))
+#define GST_MARBLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MARBLE,GstMarbleClass))
+#define GST_IS_MARBLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MARBLE))
+#define GST_IS_MARBLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MARBLE))
 
-Noise * noise_new (void);
-void noise_free (Noise * noise);
-gdouble noise_2 (Noise * noise, gdouble x, gdouble y);
+typedef struct _GstMarble      GstMarble;
+typedef struct _GstMarbleClass GstMarbleClass;
 
-gdouble mod_float (gdouble a, gdouble b);
-gdouble geometric_math_triangle (gdouble x);
+struct _GstMarble
+{
+  GstGeometricTransform element;
+
+  gdouble xscale;
+  gdouble yscale;
+  gdouble turbulence;
+  gdouble amount;
+
+  Noise *noise;
+  gdouble *sin_table;
+  gdouble *cos_table;
+};
+
+struct _GstMarbleClass
+{
+  GstGeometricTransformClass parent_class;
+};
+
+GType gst_marble_get_type (void);
+
+gboolean gst_marble_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GEOMETRIC_MATH_H__ */
+#endif /* __GST_MARBLE_H__ */
