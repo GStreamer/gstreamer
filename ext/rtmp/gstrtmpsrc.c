@@ -172,12 +172,10 @@ gst_rtmp_src_finalize (GObject * object)
 
   g_free (rtmpsrc->uri);
   rtmpsrc->uri = NULL;
-
-  if (rtmpsrc->rtmp) {
-    RTMP_Close (rtmpsrc->rtmp);
-    RTMP_Free (rtmpsrc->rtmp);
-    rtmpsrc->rtmp = NULL;
-  }
+  g_free (rtmpsrc->swf_url);
+  rtmpsrc->swf_url = NULL;
+  g_free (rtmpsrc->page_url);
+  rtmpsrc->page_url = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
