@@ -57,6 +57,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_GRAY16_BE: 16-bit grayscale, most significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_GRAY16_LE: 16-bit grayscale, least significant byte first (Since: 0.10.29)
  * @GST_VIDEO_FORMAT_v308: packed 4:4:4 YUV (Since: 0.10.29)
+ * @GST_VIDEO_FORMAT_Y800: same as GST_VIDEO_FORMAT_GRAY8 (Since: 0.10.29)
+ * @GST_VIDEO_FORMAT_Y16: same as GST_VIDEO_FORMAT_GRAY16_LE (Since: 0.10.29)
  *
  * Enum value describing the most common video formats.
  */
@@ -88,7 +90,9 @@ typedef enum {
   GST_VIDEO_FORMAT_GRAY8,
   GST_VIDEO_FORMAT_GRAY16_BE,
   GST_VIDEO_FORMAT_GRAY16_LE,
-  GST_VIDEO_FORMAT_v308
+  GST_VIDEO_FORMAT_v308,
+  GST_VIDEO_FORMAT_Y800,
+  GST_VIDEO_FORMAT_Y16
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
