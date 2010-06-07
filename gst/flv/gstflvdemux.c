@@ -2409,13 +2409,24 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 wrong_format:
   {
     GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
-    return gst_pad_push_event (demux->sinkpad, event);
+    gst_event_unref (event);
+    return FALSE;
   }
 }
 
 static gboolean
 gst_flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
 {
+  GstFormat format;
+
+  gst_event_parse_seek (event, NULL, &format, NULL, NULL, NULL, NULL, NULL);
+
+  if (format != GST_FORMAT_TIME) {
+    GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
+    gst_event_unref (event);
+    return FALSE;
+  }
+
   /* First try upstream */
   if (gst_pad_push_event (demux->sinkpad, gst_event_ref (event))) {
     GST_DEBUG_OBJECT (demux, "Upstream successfully seeked");
@@ -2871,8 +2882,10 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
 
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+
       /* First ask upstream */
-      if (gst_pad_peer_query (demux->sinkpad, query)) {
+      if (fmt == GST_FORMAT_TIME && gst_pad_peer_query (demux->sinkpad, query)) {
         gboolean seekable;
 
         gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
@@ -2881,8 +2894,6 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
           break;
         }
       }
-
-      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       res = TRUE;
       if (fmt != GST_FORMAT_TIME || !demux->index) {
         gst_query_set_seeking (query, fmt, FALSE, -1, -1);
