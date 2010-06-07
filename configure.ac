@@ -252,11 +252,32 @@ dnl *** checks for dependency libraries ***
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.20])
 
-dnl liboil is required
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.14, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x$HAVE_LIBOIL" != "xyes"; then
-  AC_ERROR([liboil-0.3.14 or later is required])
+dnl Orc
+AC_ARG_ENABLE(orc,
+AC_HELP_STRING([--enable-orc],[use Orc if installed]),
+[case "${enableval}" in
+  yes) enable_orc=yes ;;
+  no)  enable_orc=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-orc) ;;
+esac
+],
+[enable_orc=yes]) dnl Default value
+
+ORC_REQ=0.4.5
+if test "x$enable_orc" = "xyes" ; then
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, HAVE_ORC=yes, HAVE_ORC=no)
+  if test "x$HAVE_ORC" != "xyes"; then
+    AC_ERROR([orc-$ORC_REQ or later is required])
+  fi
+  AC_DEFINE(HAVE_ORC, 1, [Use Orc])
+
+  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
+  AC_SUBST(ORCC)
+else
+  AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
+  HAVE_ORC=no
 fi
+AM_CONDITIONAL(HAVE_ORC, test "x$HAVE_ORC" = "xyes")
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -367,7 +388,6 @@ case $ac_cv_audioresample_format in
     AC_DEFINE(AUDIORESAMPLE_FORMAT_AUTO,1,[The implementation that should be used for integer audio resampling witll be benchmarked at runtime])
     AC_SUBST(AUDIORESAMPLE_FORMAT_AUTO)
 esac
-AM_CONDITIONAL(AUDIORESAMPLE_NEEDS_LIBOIL, test "$ac_cv_audioresample_format" = "auto")
 
 dnl *** plug-ins to include ***
 
