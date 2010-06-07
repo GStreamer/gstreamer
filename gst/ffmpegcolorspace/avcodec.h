@@ -72,6 +72,8 @@ enum PixelFormat {
     PIX_FMT_YUV410P,   ///< Planar YUV 4:1:0 (1 Cr & Cb sample per 4x4 Y samples)
     PIX_FMT_YVU410P,   ///< Planar YVU 4:1:0 (1 Cr & Cb sample per 4x4 Y samples)
     PIX_FMT_YUV411P,   ///< Planar YUV 4:1:1 (1 Cr & Cb sample per 4x1 Y samples)
+    PIX_FMT_Y800,      ///< 8 bit Y plane (range [16-235])
+    PIX_FMT_Y16,       ///< 16 bit Y plane (little endian)
     PIX_FMT_RGB565,    ///< always stored in cpu endianness 
     PIX_FMT_RGB555,    ///< always stored in cpu endianness, most significant bit to 1 
     PIX_FMT_GRAY8,

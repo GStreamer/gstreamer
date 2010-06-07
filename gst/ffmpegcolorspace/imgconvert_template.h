@@ -416,6 +416,60 @@ static void glue (yuvj420p_to_, RGB_NAME) (AVPicture * dst,
   }
 }
 
+static void glue (y800_to_, RGB_NAME) (AVPicture * dst, const AVPicture * src,
+    int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  uint8_t *cm = cropTbl + MAX_NEG_CROP;
+  int r, dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - BPP * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      r = Y_CCIR_TO_JPEG (p[0]);
+      RGB_OUT (q, r, r, r);
+      q += BPP;
+      p++;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void glue (y16_to_, RGB_NAME) (AVPicture * dst,
+    const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  uint8_t *cm = cropTbl + MAX_NEG_CROP;
+  int r, dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - 2 * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - BPP * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      r = Y_CCIR_TO_JPEG (GST_READ_UINT16_LE (p) >> 8);
+      RGB_OUT (q, r, r, r);
+      q += BPP;
+      p += 2;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
 static void glue (RGB_NAME, _to_yuv420p) (AVPicture * dst,
     const AVPicture * src, int width, int height)
 {
@@ -749,6 +803,58 @@ static void glue (RGB_NAME, _to_gray) (AVPicture * dst, const AVPicture * src,
       RGB_IN (r, g, b, p);
       q[0] = RGB_TO_Y (r, g, b);
       q++;
+      p += BPP;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void glue (RGB_NAME, _to_y800) (AVPicture * dst, const AVPicture * src,
+    int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int r, g, b, dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - BPP * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      RGB_IN (r, g, b, p);
+      q[0] = RGB_TO_Y_CCIR (r, g, b);
+      q++;
+      p += BPP;
+    }
+    p += src_wrap;
+    q += dst_wrap;
+  }
+}
+
+static void glue (RGB_NAME, _to_y16) (AVPicture * dst,
+    const AVPicture * src, int width, int height)
+{
+  const unsigned char *p;
+  unsigned char *q;
+  int r, g, b, dst_wrap, src_wrap;
+  int x, y;
+
+  p = src->data[0];
+  src_wrap = src->linesize[0] - BPP * width;
+
+  q = dst->data[0];
+  dst_wrap = dst->linesize[0] - 2 * width;
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      RGB_IN (r, g, b, p);
+      GST_WRITE_UINT16_LE (q, RGB_TO_Y_CCIR (r, g, b) << 8);
+      q += 2;
       p += BPP;
     }
     p += src_wrap;
