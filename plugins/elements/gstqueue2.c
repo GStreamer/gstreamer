@@ -1051,7 +1051,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
     GST_INFO_OBJECT (queue, "not found in any range");
     /* we don't have the range, see how far away we are, FIXME, find a good
      * threshold based on the incomming rate. */
-    if (queue->current) {
+    if (!queue->is_eos && queue->current) {
       if (offset < queue->current->writing_pos + 200000) {
         update_cur_pos (queue, queue->current, offset + length);
         GST_INFO_OBJECT (queue, "wait for data");
