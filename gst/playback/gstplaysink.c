@@ -62,6 +62,7 @@ typedef struct
   gboolean sink_volume;         /* if the volume was provided by the sink */
   GstElement *mute;             /* element with the mute property */
   GstElement *sink;
+  GstElement *ts_offset;
 } GstPlayAudioChain;
 
 typedef struct
@@ -81,6 +82,7 @@ typedef struct
   GstElement *scale;
   GstElement *sink;
   gboolean async;
+  GstElement *ts_offset;
 } GstPlayVideoChain;
 
 typedef struct
@@ -168,6 +170,7 @@ struct _GstPlaySink
   gint count;
   gboolean volume_changed;      /* volume/mute changed while no audiochain */
   gboolean mute_changed;        /* ... has been created yet */
+  gint64 av_offset;
 };
 
 struct _GstPlaySinkClass
@@ -215,6 +218,7 @@ enum
   PROP_SUBTITLE_ENCODING,
   PROP_VIS_PLUGIN,
   PROP_FRAME,
+  PROP_AV_OFFSET,
   PROP_LAST
 };
 
@@ -246,6 +250,8 @@ static void notify_volume_cb (GObject * object, GParamSpec * pspec,
     GstPlaySink * playsink);
 static void notify_mute_cb (GObject * object, GParamSpec * pspec,
     GstPlaySink * playsink);
+
+static void update_av_offset (GstPlaySink * playsink);
 
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -312,7 +318,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstPlaySink:frame:
-   * @playsink: a #GstPlaySink
    *
    * Get the currently rendered or prerolled frame in the video sink.
    * The #GstCaps on the buffer will describe the format of the buffer.
@@ -323,6 +328,20 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
       gst_param_spec_mini_object ("frame", "Frame",
           "The last frame (NULL = no video available)",
           GST_TYPE_BUFFER, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlaySink:av-offset:
+   *
+   * Control the synchronisation offset between the audio and video streams.
+   * Positive values make the audio ahead of the video and negative values make
+   * the audio go behind the video.
+   *
+   * Since: 0.10.30
+   */
+  g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
+      g_param_spec_int64 ("av-offset", "AV Offset",
+          "The synchronisation offset between audio and video in nanoseconds",
+          G_MININT64, G_MAXINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
@@ -1168,6 +1187,11 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
     chain->async = TRUE;
   }
 
+  /* find ts-offset element */
+  chain->ts_offset =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
+      G_TYPE_INT64);
+
   /* create a bin to hold objects, as we create them we add them to this bin so
    * that when something goes wrong we only need to unref the bin */
   chain->chain.bin = gst_bin_new ("vbin");
@@ -1312,6 +1336,11 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   ret = gst_element_set_state (chain->sink, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return FALSE;
+
+  /* find ts-offset element */
+  chain->ts_offset =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
+      G_TYPE_INT64);
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
    * queue for the audio chain. */
@@ -1588,6 +1617,11 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     prev = NULL;
   }
 
+  /* find ts-offset element */
+  chain->ts_offset =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
+      G_TYPE_INT64);
+
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
   elem =
@@ -1790,6 +1824,11 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   ret = gst_element_set_state (chain->sink, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return FALSE;
+
+  /* find ts-offset element */
+  chain->ts_offset =
+      gst_play_sink_find_property_sinks (playsink, chain->sink, "ts-offset",
+      G_TYPE_INT64);
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
@@ -2318,7 +2357,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->text_pad && !playsink->textchain)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad), NULL);
   }
-
+  update_av_offset (playsink);
   do_async_done (playsink);
   GST_PLAY_SINK_UNLOCK (playsink);
 
@@ -2434,6 +2473,46 @@ gst_play_sink_get_subtitle_encoding (GstPlaySink * playsink)
   } else {
     result = g_strdup (playsink->subtitle_encoding);
   }
+  GST_PLAY_SINK_UNLOCK (playsink);
+
+  return result;
+}
+
+static void
+update_av_offset (GstPlaySink * playsink)
+{
+  gint64 av_offset;
+  GstPlayAudioChain *achain;
+  GstPlayVideoChain *vchain;
+
+  av_offset = playsink->av_offset;
+  achain = (GstPlayAudioChain *) playsink->audiochain;
+  vchain = (GstPlayVideoChain *) playsink->videochain;
+
+  if (achain && vchain && achain->ts_offset && vchain->ts_offset) {
+    g_object_set (achain->ts_offset, "ts-offset", MAX (0, -av_offset), NULL);
+    g_object_set (vchain->ts_offset, "ts-offset", MAX (0, av_offset), NULL);
+  } else {
+    GST_LOG_OBJECT (playsink, "no ts_offset elements");
+  }
+}
+
+void
+gst_play_sink_set_av_offset (GstPlaySink * playsink, gint64 av_offset)
+{
+  GST_PLAY_SINK_LOCK (playsink);
+  playsink->av_offset = av_offset;
+  update_av_offset (playsink);
+  GST_PLAY_SINK_UNLOCK (playsink);
+}
+
+gint64
+gst_play_sink_get_av_offset (GstPlaySink * playsink)
+{
+  gint64 result;
+
+  GST_PLAY_SINK_LOCK (playsink);
+  result = playsink->av_offset;
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return result;
@@ -2969,6 +3048,9 @@ gst_play_sink_set_property (GObject * object, guint prop_id,
     case PROP_VIS_PLUGIN:
       gst_play_sink_set_vis_plugin (playsink, g_value_get_object (value));
       break;
+    case PROP_AV_OFFSET:
+      gst_play_sink_set_av_offset (playsink, g_value_get_int64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
       break;
@@ -3003,6 +3085,9 @@ gst_play_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FRAME:
       gst_value_take_buffer (value, gst_play_sink_get_last_frame (playsink));
+      break;
+    case PROP_AV_OFFSET:
+      g_value_set_int64 (value, gst_play_sink_get_av_offset (playsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);

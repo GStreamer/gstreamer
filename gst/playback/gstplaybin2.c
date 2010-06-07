@@ -492,6 +492,7 @@ enum
   PROP_CONNECTION_SPEED,
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
+  PROP_AV_OFFSET,
   PROP_LAST
 };
 
@@ -785,6 +786,20 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
       g_param_spec_int64 ("buffer-duration", "Buffer duration (ns)",
           "Buffer duration when buffering network streams",
           -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstPlayBin2:av-offset:
+   *
+   * Control the synchronisation offset between the audio and video streams.
+   * Positive values make the audio ahead of the video and negative values make
+   * the audio go behind the video.
+   *
+   * Since: 0.10.30
+   */
+  g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
+      g_param_spec_int64 ("av-offset", "AV Offset",
+          "The synchronisation offset between audio and video in nanoseconds",
+          G_MININT64, G_MAXINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1777,6 +1792,10 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
     case PROP_BUFFER_DURATION:
       playbin->buffer_duration = g_value_get_int64 (value);
       break;
+    case PROP_AV_OFFSET:
+      gst_play_sink_set_av_offset (playbin->playsink,
+          g_value_get_int64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1944,6 +1963,10 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_LOCK (playbin);
       g_value_set_int64 (value, playbin->buffer_duration);
       GST_OBJECT_UNLOCK (playbin);
+      break;
+    case PROP_AV_OFFSET:
+      g_value_set_int64 (value,
+          gst_play_sink_get_av_offset (playbin->playsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2410,8 +2433,8 @@ _playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
 
     if (format != GST_FORMAT_TIME)
       data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->
-                type].group_start_accum))
+    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
+            group_start_accum))
       data->group->selector[data->type].group_start_accum = segment->accum;
   } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
@@ -2943,8 +2966,8 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPad *text_sinkpad = NULL;
 
   text_sink =
-      (group->playbin->text_sink) ? gst_object_ref (group->
-      playbin->text_sink) : NULL;
+      (group->playbin->text_sink) ? gst_object_ref (group->playbin->
+      text_sink) : NULL;
   if (text_sink)
     text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
 

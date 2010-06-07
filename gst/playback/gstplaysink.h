@@ -91,6 +91,9 @@ gchar *          gst_play_sink_get_font_desc  (GstPlaySink *playsink);
 void             gst_play_sink_set_subtitle_encoding  (GstPlaySink *playsink, const gchar * encoding);
 gchar *          gst_play_sink_get_subtitle_encoding  (GstPlaySink *playsink);
 
+void             gst_play_sink_set_av_offset  (GstPlaySink *playsink, gint64 av_offset);
+gint64           gst_play_sink_get_av_offset  (GstPlaySink *playsink);
+
 GstBuffer *      gst_play_sink_get_last_frame (GstPlaySink * playsink);
 GstBuffer *      gst_play_sink_convert_frame  (GstPlaySink * playsink, GstCaps * caps);
 
