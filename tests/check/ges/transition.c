@@ -53,7 +53,9 @@ GST_START_TEST (test_transition_basic)
   fail_unless (trackobject != NULL);
   fail_unless (GES_TRACK_TRANSITION (trackobject)->vtype == 1);
 
-  g_object_unref (trackobject);
+  fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
+          (tr2), trackobject) == TRUE);
+
   g_object_unref (track);
   g_object_unref (tr1);
   g_object_unref (tr2);
@@ -122,14 +124,7 @@ GST_START_TEST (test_transition_properties)
   /* And let's also check that it propagated correctly to GNonLin */
   gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
 
-  /* Test mute support */
-  // g_object_set (object, "mute", TRUE, NULL);
-  // gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, FALSE);
-  // g_object_set (object, "mute", FALSE, NULL);
-  // gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
-
   /* test changing vtype */
-
   g_object_set (object, "vtype", VTYPE_CROSSFADE, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, VTYPE_CROSSFADE);
   assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype,
