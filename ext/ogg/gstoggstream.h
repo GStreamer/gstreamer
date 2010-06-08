@@ -114,9 +114,9 @@ gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packe
 
 gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     guint32 * serialno, GstOggSkeleton *type);
-gboolean gst_ogg_map_add_fisbone (GstOggStream * pad, const guint8 * data, guint size,
+gboolean gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad, const guint8 * data, guint size,
     GstClockTime * p_start_time);
-gboolean gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size);
+gboolean gst_ogg_map_add_index (GstOggStream * pad, GstOggStream * skel_pad, const guint8 * data, guint size);
 gboolean gst_ogg_map_search_index (GstOggStream * pad, gboolean before, guint64 *timestamp, guint64 *offset);
 
 

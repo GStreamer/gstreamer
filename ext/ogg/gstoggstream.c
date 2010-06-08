@@ -957,7 +957,7 @@ gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
 }
 
 gboolean
-gst_ogg_map_add_fisbone (GstOggStream * pad,
+gst_ogg_map_add_fisbone (GstOggStream * pad, GstOggStream * skel_pad,
     const guint8 * data, guint size, GstClockTime * p_start_time)
 {
   GstClockTime start_time;
@@ -1020,7 +1020,8 @@ read_vlc (const guint8 ** data, guint * size, guint64 * result)
 }
 
 gboolean
-gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
+gst_ogg_map_add_index (GstOggStream * pad, GstOggStream * skel_pad,
+    const guint8 * data, guint size)
 {
   guint64 i, n_keypoints, isize;
   guint64 offset, timestamp;
@@ -1048,6 +1049,36 @@ gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
 
   data += 16;
   size -= 16;
+
+  if (skel_pad->skeleton_major == 4) {
+    guint64 firstsampletime_n, lastsampletime_n;
+    guint64 firstsampletime, lastsampletime;
+
+    firstsampletime_n = GST_READ_UINT64_LE (data);
+    lastsampletime_n = GST_READ_UINT64_LE (data + 8);
+
+    GST_INFO ("firstsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+        firstsampletime_n, pad->kp_denom);
+    GST_INFO ("lastsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
+        lastsampletime_n, pad->kp_denom);
+
+    firstsampletime = gst_util_uint64_scale (GST_SECOND,
+        firstsampletime_n, pad->kp_denom);
+
+    lastsampletime = gst_util_uint64_scale (GST_SECOND,
+        lastsampletime_n, pad->kp_denom);
+
+    if (lastsampletime > firstsampletime)
+      pad->total_time = lastsampletime - firstsampletime;
+    else
+      pad->total_time = -1;
+
+    GST_INFO ("skeleton index parsed total: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pad->total_time));
+
+    data += 16;
+    size -= 16;
+  }
 
   GST_INFO ("skeleton index has %" G_GUINT64_FORMAT " keypoints, denom: %"
       G_GINT64_FORMAT, n_keypoints, pad->kp_denom);
