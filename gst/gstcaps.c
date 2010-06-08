@@ -780,8 +780,7 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
       }
     }
     if (unique) {
-      gst_structure_set_parent_refcount (structure, &caps->refcount);
-      g_ptr_array_add (caps->structs, structure);
+      gst_caps_append_structure_unchecked (caps, structure);
     } else {
       gst_structure_free (structure);
     }
