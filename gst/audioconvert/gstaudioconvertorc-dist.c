@@ -99,7 +99,7 @@ orc_audio_convert_unpack_u8 (gint32 * d1, const guint8 * s1, int p1, int n)
   int8_t var4;
   const int8_t *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   int16_t var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -216,7 +216,7 @@ orc_audio_convert_unpack_s8 (gint32 * d1, const guint8 * s1, int p1, int n)
   orc_union32 *ptr0;
   int8_t var4;
   const int8_t *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   int16_t var32;
   orc_union32 var33;
 
@@ -325,7 +325,7 @@ orc_audio_convert_unpack_u16 (gint32 * d1, const guint8 * s1, int p1, int n)
   int16_t var4;
   const int16_t *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   orc_union32 var33;
 
@@ -434,7 +434,7 @@ orc_audio_convert_unpack_s16 (gint32 * d1, const guint8 * s1, int p1, int n)
   orc_union32 *ptr0;
   int16_t var4;
   const int16_t *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (orc_union32 *) d1;
@@ -536,7 +536,7 @@ orc_audio_convert_unpack_u16_swap (gint32 * d1, const guint8 * s1, int p1,
   int16_t var4;
   const int16_t *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   int16_t var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -656,7 +656,7 @@ orc_audio_convert_unpack_s16_swap (gint32 * d1, const guint8 * s1, int p1,
   orc_union32 *ptr0;
   int16_t var4;
   const int16_t *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   int16_t var32;
   orc_union32 var33;
 
@@ -767,7 +767,7 @@ orc_audio_convert_unpack_u32 (gint32 * d1, const guint8 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (orc_union32 *) d1;
@@ -869,7 +869,7 @@ orc_audio_convert_unpack_s32 (gint32 * d1, const guint8 * s1, int p1, int n)
   orc_union32 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
@@ -963,7 +963,7 @@ orc_audio_convert_unpack_u32_swap (gint32 * d1, const guint8 * s1, int p1,
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   orc_union32 var33;
 
@@ -1075,7 +1075,7 @@ orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1,
   orc_union32 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (orc_union32 *) d1;
@@ -1178,7 +1178,7 @@ orc_audio_convert_pack_u8 (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   int16_t var33;
   orc_union32 var34;
@@ -1295,7 +1295,7 @@ orc_audio_convert_pack_s8 (guint8 * d1, const gint32 * s1, int p1, int n)
   int8_t *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   int16_t var33;
 
@@ -1404,7 +1404,7 @@ orc_audio_convert_pack_u16 (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   orc_union32 var33;
 
@@ -1513,7 +1513,7 @@ orc_audio_convert_pack_s16 (guint8 * d1, const gint32 * s1, int p1, int n)
   int16_t *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (int16_t *) d1;
@@ -1614,7 +1614,7 @@ orc_audio_convert_pack_u16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   int16_t var33;
   orc_union32 var34;
@@ -1732,7 +1732,7 @@ orc_audio_convert_pack_s16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
   int16_t *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   int16_t var33;
 
@@ -1842,7 +1842,7 @@ orc_audio_convert_pack_u32 (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (orc_union32 *) d1;
@@ -1944,7 +1944,7 @@ orc_audio_convert_pack_s32 (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
@@ -2037,7 +2037,7 @@ orc_audio_convert_pack_u32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 var4;
   const orc_union32 *ptr4;
   const orc_union32 var16 = { 0x80000000 };
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
   orc_union32 var33;
 
@@ -2147,7 +2147,7 @@ orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
   orc_union32 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
   orc_union32 var32;
 
   ptr0 = (orc_union32 *) d1;

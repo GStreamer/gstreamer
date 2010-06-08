@@ -306,7 +306,7 @@ gst_orc_splat_u32 (guint8 * d1, int p1, int n)
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  const orc_union32 var24 = p1;
+  const orc_union32 var24 = { p1 };
 
   ptr0 = (orc_union32 *) d1;
 
