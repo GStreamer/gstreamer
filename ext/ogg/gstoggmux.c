@@ -878,6 +878,10 @@ gst_ogg_mux_get_headers (GstOggPadData * pad)
       } else {
         GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
       }
+
+      /* Start a new page for every CMML buffer */
+      if (gst_structure_has_name (structure, "text/x-cmml"))
+        pad->always_flush_page = TRUE;
     } else if (gst_structure_has_name (structure, "video/x-dirac")) {
       res = g_list_append (res, pad->buffer);
       pad->buffer = pad->next_buffer;
