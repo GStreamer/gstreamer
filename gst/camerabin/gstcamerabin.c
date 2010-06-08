@@ -3345,6 +3345,9 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
       gst_caps_replace (&camera->view_finder_caps,
           (GstCaps *) gst_value_get_caps (value));
       GST_OBJECT_UNLOCK (camera);
+      if (!camera->view_finder_caps)
+        camera->view_finder_caps =
+            gst_caps_from_string (CAMERABIN_DEFAULT_VF_CAPS);
       gst_camerabin_configure_format (camera, camera->view_finder_caps);
       break;
     case ARG_PREVIEW_CAPS:
