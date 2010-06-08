@@ -265,14 +265,15 @@ esac
 
 ORC_REQ=0.4.5
 if test "x$enable_orc" = "xyes" ; then
-  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, HAVE_ORC=yes, HAVE_ORC=no)
-  if test "x$HAVE_ORC" != "xyes"; then
-    AC_ERROR([orc-$ORC_REQ or later is required])
-  fi
-  AC_DEFINE(HAVE_ORC, 1, [Use Orc])
-
-  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
-  AC_SUBST(ORCC)
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, [
+    AC_DEFINE(HAVE_ORC, 1, [Use Orc])
+    ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
+    AC_SUBST(ORCC)
+    HAVE_ORC=yes
+  ], [
+    AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
+    HAVE_ORC=no
+  ])
 else
   AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
   HAVE_ORC=no

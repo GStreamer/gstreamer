@@ -50,10 +50,11 @@
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
+#ifndef DISABLE_ORC
 #include <orc/orc.h>
 #include <orc-test/orctest.h>
 #include <orc-test/orcprofile.h>
-
+#endif
 
 GST_DEBUG_CATEGORY (audio_resample_debug);
 #define GST_CAT_DEFAULT audio_resample_debug
@@ -1338,7 +1339,9 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
   }
 }
 
-#if defined AUDIORESAMPLE_FORMAT_AUTO
+/* FIXME: should have a benchmark fallback for the case where orc is disabled */
+#if defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC)
+
 #define BENCHMARK_SIZE 512
 
 static gboolean
@@ -1449,16 +1452,24 @@ error:
 
   return FALSE;
 }
-#endif
+#endif /* defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC) */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (audio_resample_debug, "audioresample", 0,
       "audio resampling element");
-#if defined AUDIORESAMPLE_FORMAT_AUTO
+
+#if defined(AUDIORESAMPLE_FORMAT_AUTO) && !defined(DISABLE_ORC)
   if (!_benchmark_integer_resampling ())
     return FALSE;
+#else
+  GST_WARNING ("Orc disabled, can't benchmark int vs. float resampler");
+  {
+    GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
+    GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
+    GST_CAT_WARNING (GST_CAT_PERFORMANCE, "orc disabled, no benchmarking done");
+  }
 #endif
 
   if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,

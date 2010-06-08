@@ -1,5 +1,12 @@
 plugin_LTLIBRARIES = libgstaudioresample.la
 
+# FIXME: we still link against orc if it's there, even if --disable-orc was used
+if HAVE_ORC
+ORC_TEST_LIBS = -lorc-test-0.4
+else
+ORC_TEST_LIBS = 
+endif
+
 libgstaudioresample_la_SOURCES = \
 	gstaudioresample.c \
 	speex_resampler_int.c \
@@ -16,7 +23,7 @@ libgstaudioresample_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(ORC_LIBS) -lorc-test-0.4 \
+	$(ORC_LIBS) $(ORC_TEST_LIBS) \
 	$(LIBM)
 
 libgstaudioresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
