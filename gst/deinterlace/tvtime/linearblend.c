@@ -36,6 +36,7 @@
 #ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
+#include "tvtime.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR_BLEND	(gst_deinterlace_method_linear_blend_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_LINEAR_BLEND(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_LINEAR_BLEND))
@@ -55,9 +56,7 @@ deinterlace_scanline_linear_blend_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * t0, const guint8 * b0, const guint8 * m1,
     gint size)
 {
-  while (size--) {
-    *out++ = (*t0++ + *b0++ + (*m1++ << 1)) >> 2;
-  }
+  deinterlace_line_linear_blend (out, t0, b0, m1, size);
 }
 
 static void

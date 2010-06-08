@@ -1,5 +1,8 @@
 plugin_LTLIBRARIES = libgstdeinterlace.la
 
+ORC_SOURCE=tvtime
+include $(top_srcdir)/common/orc.mak
+
 libgstdeinterlace_la_SOURCES = \
 	gstdeinterlace.c \
 	gstdeinterlacemethod.c \
@@ -13,6 +16,7 @@ libgstdeinterlace_la_SOURCES = \
 	tvtime/linear.c \
 	tvtime/linearblend.c \
 	tvtime/scalerbob.c
+nodist_libgstdeinterlace_la_SOURCES = $(ORC_NODIST_SOURCES)
 
 libgstdeinterlace_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ORC_CFLAGS)

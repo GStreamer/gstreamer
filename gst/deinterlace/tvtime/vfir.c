@@ -38,6 +38,7 @@
 #ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
+#include "tvtime.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_VFIR	(gst_deinterlace_method_vfir_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_VFIR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_VFIR))
@@ -67,22 +68,7 @@ static inline void
 deinterlace_c (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
     const guint8 * lum_m2, const guint8 * lum_m1, const guint8 * lum, gint size)
 {
-  gint sum;
-
-  for (; size >= 0; size--) {
-    sum = -lum_m4[0];
-    sum += lum_m3[0] << 2;
-    sum += lum_m2[0] << 1;
-    sum += lum_m1[0] << 2;
-    sum += -lum[0];
-    dst[0] = (sum + 4) >> 3;    // This needs to be clipped at 0 and 255: cm[(sum + 4) >> 3];
-    lum_m4++;
-    lum_m3++;
-    lum_m2++;
-    lum_m1++;
-    lum++;
-    dst++;
-  }
+  deinterlace_line_vfir (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
 
 static void

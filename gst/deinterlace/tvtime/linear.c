@@ -32,6 +32,7 @@
 #ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
+#include "tvtime.h"
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR	(gst_deinterlace_method_linear_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_LINEAR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_LINEAR))
@@ -50,10 +51,7 @@ static void
 deinterlace_scanline_linear_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * s1, const guint8 * s2, gint size)
 {
-  gint i;
-
-  for (i = 0; i < size; i++)
-    out[i] = (s1[i] + s2[i]) / 2;
+  deinterlace_line_linear (out, s1, s2, size);
 }
 
 static void
