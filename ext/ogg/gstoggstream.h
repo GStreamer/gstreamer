@@ -85,6 +85,7 @@ struct _GstOggStream
   gboolean is_ogm;
   gboolean is_ogm_text;
   /* fishead stuff */
+  guint16 skeleton_major, skeleton_minor;
   gint64 prestime;
   gint64 basetime;
   /* index */

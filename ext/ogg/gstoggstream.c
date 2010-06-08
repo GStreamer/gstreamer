@@ -830,7 +830,12 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
 
   data = packet->packet;
 
-  data += 8 + 2 + 2;            /* header + major/minor version */
+  data += 8;                    /* header */
+
+  pad->skeleton_major = GST_READ_UINT16_LE (data);
+  data += 2;
+  pad->skeleton_minor = GST_READ_UINT16_LE (data);
+  data += 2;
 
   prestime_n = (gint64) GST_READ_UINT64_LE (data);
   data += 8;
@@ -891,8 +896,9 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
     pad->total_time = -1;
   }
 
-  GST_INFO ("skeleton fishead parsed (basetime: %" GST_TIME_FORMAT
-      ", prestime: %" GST_TIME_FORMAT ")", GST_TIME_ARGS (pad->basetime),
+  GST_INFO ("skeleton fishead %u.%u parsed (basetime: %" GST_TIME_FORMAT
+      ", prestime: %" GST_TIME_FORMAT ")", pad->skeleton_major,
+      pad->skeleton_minor, GST_TIME_ARGS (pad->basetime),
       GST_TIME_ARGS (pad->prestime));
 
   pad->is_skeleton = TRUE;
