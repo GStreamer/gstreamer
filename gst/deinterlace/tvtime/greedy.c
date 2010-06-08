@@ -37,6 +37,7 @@
 #ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
+#include "tvtime.h"
 
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_L	(gst_deinterlace_method_greedy_l_get_type ())
@@ -124,6 +125,14 @@ deinterlace_greedy_scanline_c (GstDeinterlaceMethodGreedyL * self,
     b1 += 1;
     m2 += 1;
   }
+}
+
+static inline void
+deinterlace_greedy_scanline_orc (GstDeinterlaceMethodGreedyL * self,
+    const guint8 * m0, const guint8 * t1,
+    const guint8 * b1, const guint8 * m2, guint8 * output, gint width)
+{
+  deinterlace_line_greedy (output, m0, t1, b1, m2, self->max_comb, width);
 }
 
 #ifdef BUILD_X86_ASM
@@ -597,6 +606,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
   }
 #else
   klass->scanline = deinterlace_greedy_scanline_c;
+  klass->scanline = deinterlace_greedy_scanline_orc;
 #endif
 }
 
