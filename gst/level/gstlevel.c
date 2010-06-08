@@ -108,7 +108,6 @@
 #include <math.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
-/*#include <liboil/liboil.h>*/
 
 #include "gstlevel.h"
 
