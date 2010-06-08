@@ -328,7 +328,7 @@ gst_vdp_vpp_add_buffer (GstVdpVideoPostProcess * vpp, GstVdpVideoBuffer * buf)
     pic2.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_BOTTOM_FIELD;
   } else {
     pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_BOTTOM_FIELD;
-    pic1.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_TOP_FIELD;
+    pic2.structure = VDP_VIDEO_MIXER_PICTURE_STRUCTURE_TOP_FIELD;
   }
 
   pic1.timestamp = GST_BUFFER_TIMESTAMP (buf);
@@ -700,17 +700,18 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
 
     continue;
 
+  invalid_caps:
+    gst_buffer_unref (GST_BUFFER (outbuf));
+    GST_ELEMENT_ERROR (vpp, STREAM, FAILED, ("Invalid output caps"), (NULL));
+    ret = GST_FLOW_ERROR;
+    break;
+
   render_error:
     gst_buffer_unref (GST_BUFFER (outbuf));
     GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
         ("Could not postprocess frame"),
         ("Error returned from vdpau was: %s",
             device->vdp_get_error_string (status)));
-    ret = GST_FLOW_ERROR;
-
-  invalid_caps:
-    gst_buffer_unref (GST_BUFFER (outbuf));
-    GST_ELEMENT_ERROR (vpp, STREAM, FAILED, ("Invalid output caps"), (NULL));
     ret = GST_FLOW_ERROR;
     break;
 
