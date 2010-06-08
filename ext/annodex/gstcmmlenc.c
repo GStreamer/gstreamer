@@ -585,9 +585,6 @@ gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer)
 {
   GstFlowReturn res;
 
-  /* FIXME: hack to make oggmux flush every cmml tag in its own page */
-  GST_BUFFER_DURATION (buffer) = G_MAXINT64;
-
   res = gst_pad_push (enc->srcpad, buffer);
   if (GST_FLOW_IS_FATAL (res))
     GST_WARNING_OBJECT (enc, "push returned: %s", gst_flow_get_name (res));
