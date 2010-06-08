@@ -32,12 +32,6 @@ Notes:		The required version is updated frequently, so the version
 	listed in this file is often wrong.  If you are compiling from CVS,
 	the required version is often the latest GStreamer CVS.
 
-Package:	liboil
-Version:	>= 0.3.8
-Recommended:	0.3.latest
-URL:		http://liboil.freedesktop.org/
-DebianPackage:	liboil0.3-dev
-
 
 Optional libraries:
 ===================
@@ -45,6 +39,12 @@ Optional libraries:
 This file lists supporting libraries for which gst-plugins-base contains
 plugins, as well as their minimum version.  You can find the corresponding
 plugins in ext/(library)
+
+Package:	Orc
+Version:	>= 0.4.5
+Recommended:	0.4.latest
+URL:		http://code.entropywave.com/orc
+DebianPackage:	liborc-0.4-dev
 
 Package:	GTK+
 Version:	>= 2.0
