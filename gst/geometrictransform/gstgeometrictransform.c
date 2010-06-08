@@ -160,7 +160,7 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   gint old_height;
   GstGeometricTransformClass *klass;
 
-  gt = GST_GEOMETRIC_TRANSFORM (btrans);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (btrans);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   old_width = gt->width;
@@ -236,7 +236,7 @@ static void
 gst_geometric_transform_before_transform (GstBaseTransform * trans,
     GstBuffer * outbuf)
 {
-  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (trans);
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
   GstClockTime timestamp, stream_time;
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
@@ -259,7 +259,7 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
   GstFlowReturn ret = GST_FLOW_OK;
   gdouble *ptr;
 
-  gt = GST_GEOMETRIC_TRANSFORM (trans);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
   klass = GST_GEOMETRIC_TRANSFORM_GET_CLASS (gt);
 
   memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
@@ -309,7 +309,7 @@ gst_geometric_transform_set_property (GObject * object, guint prop_id,
 {
   GstGeometricTransform *gt;
 
-  gt = GST_GEOMETRIC_TRANSFORM (object);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
 
   switch (prop_id) {
     case PROP_OFF_EDGE_PIXELS:
@@ -329,7 +329,7 @@ gst_geometric_transform_get_property (GObject * object, guint prop_id,
 {
   GstGeometricTransform *gt;
 
-  gt = GST_GEOMETRIC_TRANSFORM (object);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
 
   switch (prop_id) {
     case PROP_OFF_EDGE_PIXELS:
@@ -345,7 +345,7 @@ gst_geometric_transform_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_geometric_transform_stop (GstBaseTransform * trans)
 {
-  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (trans);
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (trans);
 
   g_free (gt->map);
 
@@ -396,7 +396,7 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
 static void
 gst_geometric_transform_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (instance);
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM_CAST (instance);
 
   gt->off_edge_pixels = DEFAULT_OFF_EDGE_PIXELS;
   gt->precalc_map = TRUE;
