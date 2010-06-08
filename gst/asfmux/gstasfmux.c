@@ -88,7 +88,8 @@ enum
   PROP_PREROLL,
   PROP_MERGE_STREAM_TAGS,
   PROP_PADDING,
-  PROP_IS_LIVE
+  PROP_IS_LIVE,
+  PROP_STREAMABLE
 };
 
 /* Stores a tag list for the available/known tags
@@ -125,7 +126,7 @@ typedef GstAsfExtContDescData GstAsfMetadataObjData;
 #define DEFAULT_PREROLL 5000
 #define DEFAULT_MERGE_STREAM_TAGS TRUE
 #define DEFAULT_PADDING 0
-#define DEFAULT_IS_LIVE FALSE
+#define DEFAULT_STREAMABLE FALSE
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -302,10 +303,14 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
           0, G_MAXUINT64,
           DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
-      g_param_spec_boolean ("is-live", "Is Live",
-          "Whether this stream should be treated as a live stream, meaning "
-          "that it doesn't need an index or header updates when done.",
-          DEFAULT_IS_LIVE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_boolean ("is-live", "Is Live (deprecated)",
+          "Deprecated in 0.10.20, use 'streamable' instead",
+          DEFAULT_STREAMABLE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_STREAMABLE,
+      g_param_spec_boolean ("streamable", "Streamable",
+          "If set to true, the output should be as if it is to be streamed "
+          "and hence no indexes written or duration written.",
+          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_asf_mux_request_new_pad);
@@ -334,7 +339,7 @@ gst_asf_mux_init (GstAsfMux * asfmux)
   asfmux->prop_preroll = DEFAULT_PREROLL;
   asfmux->prop_merge_stream_tags = DEFAULT_MERGE_STREAM_TAGS;
   asfmux->prop_padding = DEFAULT_PADDING;
-  asfmux->prop_is_live = DEFAULT_IS_LIVE;
+  asfmux->prop_streamable = DEFAULT_STREAMABLE;
   gst_asf_mux_reset (asfmux);
 }
 
@@ -849,7 +854,7 @@ gst_asf_mux_write_extended_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
     GST_WRITE_UINT32_LE (*buf + 68, 0x0);
   } else {
     /* video has indexes, so it is seekable unless we are streaming */
-    if (asfmux->prop_is_live)
+    if (asfmux->prop_streamable)
       GST_WRITE_UINT32_LE (*buf + 68, 0x0);
     else
       GST_WRITE_UINT32_LE (*buf + 68, 0x2);
@@ -1355,8 +1360,8 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   asfmux->data_object_position = bufdata - GST_BUFFER_DATA (buf);
   gst_asf_mux_write_data_object (asfmux, &bufdata);
 
-  /* set streamheader in source pad if 'is-live' */
-  if (asfmux->prop_is_live) {
+  /* set streamheader in source pad if 'streamable' */
+  if (asfmux->prop_streamable) {
     g_value_init (&streamheader, GST_TYPE_ARRAY);
     gst_asf_mux_put_buffer_in_streamheader (&streamheader, buf);
 
@@ -1975,9 +1980,9 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
     }
     g_assert (asfmux->payloads == NULL);
     g_assert (asfmux->payload_data_size == 0);
-    /* in 'is-live' mode we don't need to push indexes
-     * or updating headers */
-    if (!asfmux->prop_is_live) {
+    /* in not on 'streamable' mode we need to push indexes
+     * and update headers */
+    if (!asfmux->prop_streamable) {
       ret = gst_asf_mux_stop_file (asfmux);
     }
     if (ret == GST_FLOW_OK) {
@@ -2311,7 +2316,11 @@ gst_asf_mux_get_property (GObject * object,
       g_value_set_uint64 (value, asfmux->prop_padding);
       break;
     case PROP_IS_LIVE:
-      g_value_set_boolean (value, asfmux->prop_is_live);
+      g_warning ("This property is deprecated, use 'streamable' instead");
+      g_value_set_boolean (value, asfmux->prop_streamable);
+      break;
+    case PROP_STREAMABLE:
+      g_value_set_boolean (value, asfmux->prop_streamable);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2340,7 +2349,11 @@ gst_asf_mux_set_property (GObject * object,
       asfmux->prop_padding = g_value_get_uint64 (value);
       break;
     case PROP_IS_LIVE:
-      asfmux->prop_is_live = g_value_get_boolean (value);
+      g_warning ("This property is deprecated, use 'streamable' instead");
+      asfmux->prop_streamable = g_value_get_boolean (value);
+      break;
+    case PROP_STREAMABLE:
+      asfmux->prop_streamable = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

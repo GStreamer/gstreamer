@@ -130,7 +130,7 @@ struct _GstAsfMux
   guint64 prop_preroll;
   gboolean prop_merge_stream_tags;
   guint64 prop_padding;
-  gboolean prop_is_live;
+  gboolean prop_streamable;
 
   /* same as properties, but those are stored here to be
    * used without modification while muxing a single file */
