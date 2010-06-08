@@ -82,26 +82,47 @@ gst_marble_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstMarble *marble;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   marble = GST_MARBLE_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_XSCALE:
-      marble->xscale = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != marble->xscale) {
+        marble->xscale = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_YSCALE:
-      marble->yscale = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != marble->yscale) {
+        marble->yscale = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_AMOUNT:
-      marble->amount = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != marble->amount) {
+        marble->amount = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_TURBULENCE:
-      marble->turbulence = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != marble->turbulence) {
+        marble->turbulence = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -222,22 +243,22 @@ gst_marble_class_init (GstMarbleClass * klass)
       g_param_spec_double ("x-scale", "x-scale",
           "X scale of the texture",
           0, G_MAXDOUBLE, DEFAULT_XSCALE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_YSCALE,
       g_param_spec_double ("y-scale", "y-scale",
           "Y scale of the texture",
           0, G_MAXDOUBLE, DEFAULT_YSCALE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AMOUNT,
       g_param_spec_double ("amount", "amount",
           "Amount of effect",
           0.0, 1.0, DEFAULT_AMOUNT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_YSCALE,
       g_param_spec_double ("turbulence", "turbulence",
           "Turbulence of the effect",
           0.0, 1.0, DEFAULT_TURBULENCE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->prepare_func = marble_prepare;
   gstgt_class->map_func = marble_map;

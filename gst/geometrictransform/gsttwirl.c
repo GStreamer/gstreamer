@@ -76,17 +76,26 @@ gst_twirl_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstTwirl *twirl;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   twirl = GST_TWIRL_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_ANGLE:
-      twirl->angle = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != twirl->angle) {
+        twirl->angle = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -178,7 +187,7 @@ gst_twirl_class_init (GstTwirlClass * klass)
           "This is the angle in radians by which pixels at the "
           "nearest edge of the image will move",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = twirl_map;
 }

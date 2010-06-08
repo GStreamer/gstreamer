@@ -23,6 +23,7 @@
 
 #include "gstgeometrictransform.h"
 #include "geometricmath.h"
+#include <gst/controller/gstcontroller.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (geometric_transform_debug);
@@ -102,6 +103,7 @@ gst_geometric_transform_off_edges_pixels_method_get_type (void)
 
 #define DEFAULT_OFF_EDGE_PIXELS GST_GT_OFF_EDGES_PIXELS_IGNORE
 
+/* must be called with the object lock */
 static gboolean
 gst_geometric_transform_generate_map (GstGeometricTransform * gt)
 {
@@ -143,6 +145,8 @@ gst_geometric_transform_generate_map (GstGeometricTransform * gt)
 end:
   if (!ret)
     g_free (gt->map);
+  else
+    gt->needs_remap = FALSE;
   return ret;
 }
 
@@ -169,14 +173,18 @@ gst_geometric_transform_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     gt->pixel_stride = gst_video_format_get_pixel_stride (gt->format, 0);
 
     /* regenerate the map */
+    GST_OBJECT_LOCK (gt);
     if (old_width == 0 || old_height == 0 || gt->width != old_width ||
         gt->height != old_height) {
       if (klass->prepare_func)
-        if (!klass->prepare_func (gt))
+        if (!klass->prepare_func (gt)) {
+          GST_OBJECT_UNLOCK (gt);
           return FALSE;
+        }
       if (gt->precalc_map)
         gst_geometric_transform_generate_map (gt);
     }
+    GST_OBJECT_UNLOCK (gt);
   }
   return ret;
 }
@@ -224,6 +232,23 @@ gst_geometric_transform_do_map (GstGeometricTransform * gt, GstBuffer * inbuf,
   }
 }
 
+static void
+gst_geometric_transform_before_transform (GstBaseTransform * trans,
+    GstBuffer * outbuf)
+{
+  GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (trans);
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (gt, "sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (gt), stream_time);
+}
+
 static GstFlowReturn
 gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
     GstBuffer * outbuf)
@@ -239,7 +264,16 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
 
   memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
 
+  GST_OBJECT_LOCK (gt);
   if (gt->precalc_map) {
+    if (gt->needs_remap) {
+      if (klass->prepare_func)
+        if (!klass->prepare_func (gt)) {
+          GST_OBJECT_UNLOCK (gt);
+          return FALSE;
+        }
+      gst_geometric_transform_generate_map (gt);
+    }
     g_return_val_if_fail (gt->map, GST_FLOW_ERROR);
     ptr = gt->map;
     for (y = 0; y < gt->height; y++) {
@@ -258,11 +292,14 @@ gst_geometric_transform_transform (GstBaseTransform * trans, GstBuffer * buf,
           gst_geometric_transform_do_map (gt, buf, outbuf, x, y, in_x, in_y);
         } else {
           GST_WARNING_OBJECT (gt, "Failed to do mapping for %d %d", x, y);
-          return GST_FLOW_ERROR;
+          ret = GST_FLOW_ERROR;
+          goto end;
         }
       }
     }
   }
+end:
+  GST_OBJECT_UNLOCK (gt);
   return ret;
 }
 
@@ -276,7 +313,9 @@ gst_geometric_transform_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_OFF_EDGE_PIXELS:
+      GST_OBJECT_LOCK (gt);
       gt->off_edge_pixels = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (gt);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -344,12 +383,14 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_geometric_transform_set_caps);
   trans_class->transform =
       GST_DEBUG_FUNCPTR (gst_geometric_transform_transform);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_geometric_transform_before_transform);
 
   g_object_class_install_property (obj_class, PROP_OFF_EDGE_PIXELS,
       g_param_spec_enum ("off-edge-pixels", "Off edge pixels",
           "What to do with off edge pixels",
           GST_GT_OFF_EDGES_PIXELS_METHOD_TYPE, DEFAULT_OFF_EDGE_PIXELS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -359,6 +400,7 @@ gst_geometric_transform_init (GTypeInstance * instance, gpointer g_class)
 
   gt->off_edge_pixels = DEFAULT_OFF_EDGE_PIXELS;
   gt->precalc_map = TRUE;
+  gt->needs_remap = TRUE;
 }
 
 GType
@@ -387,4 +429,13 @@ gst_geometric_transform_get_type (void)
         "Base class for geometric transform elements");
   }
   return geometric_transform_type;
+}
+
+/*
+ * Must be called with the object lock
+ */
+void
+gst_geometric_transform_set_need_remap (GstGeometricTransform * gt)
+{
+  gt->needs_remap = TRUE;
 }

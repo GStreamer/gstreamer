@@ -76,17 +76,26 @@ gst_diffuse_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstDiffuse *diffuse;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   diffuse = GST_DIFFUSE_CAST (object);
 
+  GST_OBJECT_LOCK (diffuse);
   switch (prop_id) {
     case PROP_SCALE:
-      diffuse->scale = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != diffuse->scale) {
+        diffuse->scale = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (diffuse);
 }
 
 static void
@@ -193,7 +202,7 @@ gst_diffuse_class_init (GstDiffuseClass * klass)
       g_param_spec_double ("scale", "scale",
           "Scale of the texture",
           1, G_MAXDOUBLE, DEFAULT_SCALE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->prepare_func = diffuse_prepare;
   gstgt_class->map_func = diffuse_map;

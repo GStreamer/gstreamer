@@ -82,23 +82,41 @@ gst_circle_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstCircle *circle;
+  GstGeometricTransform *gt;
+  gdouble v;
+  gint h;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   circle = GST_CIRCLE_CAST (object);
 
+  GST_OBJECT_LOCK (circle);
   switch (prop_id) {
     case PROP_ANGLE:
-      circle->angle = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != circle->angle) {
+        circle->angle = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_SPREAD_ANGLE:
-      circle->spread_angle = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != circle->spread_angle) {
+        circle->spread_angle = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_HEIGHT:
-      circle->height = g_value_get_int (value);
+      h = g_value_get_int (value);
+      if (h != circle->height) {
+        circle->height = h;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (circle);
 }
 
 static void
@@ -192,17 +210,17 @@ gst_circle_class_init (GstCircleClass * klass)
       g_param_spec_double ("angle", "angle",
           "Angle at which the arc starts in radians",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SPREAD_ANGLE,
       g_param_spec_double ("spread-angle", "spread angle",
           "Length of the arc in radians",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_SPREAD_ANGLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height",
           "Height of the arc",
           0, G_MAXINT, DEFAULT_HEIGHT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = circle_map;
 }

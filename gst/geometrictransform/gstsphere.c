@@ -76,17 +76,26 @@ gst_sphere_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstSphere *sphere;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   sphere = GST_SPHERE_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_REFRACTION:
-      sphere->refraction = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != sphere->refraction) {
+        sphere->refraction = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -200,7 +209,7 @@ gst_sphere_class_init (GstSphereClass * klass)
       g_param_spec_double ("refraction", "refraction",
           "refraction index",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_REFRACTION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = sphere_map;
 }

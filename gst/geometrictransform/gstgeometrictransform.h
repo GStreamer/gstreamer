@@ -29,6 +29,7 @@ G_BEGIN_DECLS
   (gst_geometric_transform_get_type())
 #define GST_GEOMETRIC_TRANSFORM(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GEOMETRIC_TRANSFORM,GstGeometricTransform))
+#define GST_GEOMETRIC_TRANSFORM_CAST(obj) ((GstGeometricTransform *)(obj))
 #define GST_GEOMETRIC_TRANSFORM_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GEOMETRIC_TRANSFORM,GstGeometricTransformClass))
 #define GST_IS_GEOMETRIC_TRANSFORM(obj) \
@@ -70,6 +71,8 @@ typedef gboolean (*GstGeometricTransformMapFunc) (GstGeometricTransform * gt,
  *
  * Called right before starting to calculate the mapping so that
  * instances might precalculate some values.
+ *
+ * Called with the object lock
  */
 typedef gboolean (*GstGeometricTransformPrepareFunc) (
     GstGeometricTransform * gt);
@@ -92,6 +95,7 @@ struct _GstGeometricTransform {
    * pixel mapping table. Like 'diffuse' that uses random values for each pic.
    */
   gboolean precalc_map;
+  gboolean needs_remap;
 
   /* properties */
   gint off_edge_pixels;
@@ -107,6 +111,8 @@ struct _GstGeometricTransformClass {
 };
 
 GType gst_geometric_transform_get_type (void);
+
+void gst_geometric_transform_set_need_remap (GstGeometricTransform * gt);
 
 G_END_DECLS
 

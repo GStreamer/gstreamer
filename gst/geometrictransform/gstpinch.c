@@ -76,17 +76,26 @@ gst_pinch_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstPinch *pinch;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   pinch = GST_PINCH_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_INTENSITY:
-      pinch->intensity = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != pinch->intensity) {
+        pinch->intensity = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -189,7 +198,7 @@ gst_pinch_class_init (GstPinchClass * klass)
       g_param_spec_double ("intensity", "intensity",
           "intensity of the pinch effect",
           -1.0, 1.0, DEFAULT_INTENSITY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = pinch_map;
 }

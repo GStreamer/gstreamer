@@ -80,23 +80,40 @@ gst_water_ripple_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstWaterRipple *water_ripple;
+  GstGeometricTransform *gt;
+  gdouble v;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   water_ripple = GST_WATER_RIPPLE_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_AMPLITUDE:
-      water_ripple->amplitude = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != water_ripple->amplitude) {
+        water_ripple->amplitude = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_PHASE:
-      water_ripple->phase = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != water_ripple->phase) {
+        water_ripple->phase = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_WAVELENGTH:
-      water_ripple->wavelength = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != water_ripple->wavelength) {
+        water_ripple->wavelength = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -200,15 +217,15 @@ gst_water_ripple_class_init (GstWaterRippleClass * klass)
   g_object_class_install_property (gobject_class, PROP_AMPLITUDE,
       g_param_spec_double ("amplitude", "amplitude", "amplitude",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_AMPLITUDE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PHASE,
       g_param_spec_double ("phase", "phase", "phase",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_PHASE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_WAVELENGTH,
       g_param_spec_double ("wavelength", "wavelength", "wavelength",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_WAVELENGTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = water_ripple_map;
 }

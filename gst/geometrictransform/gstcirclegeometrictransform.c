@@ -78,43 +78,60 @@ static void
 gst_circle_geometric_transform_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstCircleGeometricTransform *circle_geometric_transform;
+  GstCircleGeometricTransform *cgt;
+  GstGeometricTransform *gt;
+  gdouble v;
 
-  circle_geometric_transform = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (object);
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+  cgt = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (object);
 
+  GST_OBJECT_LOCK (cgt);
   switch (prop_id) {
     case PROP_X_CENTER:
-      circle_geometric_transform->x_center = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != cgt->x_center) {
+        cgt->x_center = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_Y_CENTER:
-      circle_geometric_transform->y_center = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != cgt->y_center) {
+        cgt->y_center = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_RADIUS:
-      circle_geometric_transform->radius = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != cgt->radius) {
+        cgt->radius = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (cgt);
 }
 
 static void
 gst_circle_geometric_transform_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstCircleGeometricTransform *circle_geometric_transform;
+  GstCircleGeometricTransform *cgt;
 
-  circle_geometric_transform = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (object);
+  cgt = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (object);
 
   switch (prop_id) {
     case PROP_X_CENTER:
-      g_value_set_double (value, circle_geometric_transform->x_center);
+      g_value_set_double (value, cgt->x_center);
       break;
     case PROP_Y_CENTER:
-      g_value_set_double (value, circle_geometric_transform->y_center);
+      g_value_set_double (value, cgt->y_center);
       break;
     case PROP_RADIUS:
-      g_value_set_double (value, circle_geometric_transform->radius);
+      g_value_set_double (value, cgt->radius);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -170,16 +187,17 @@ gst_circle_geometric_transform_class_init (GstCircleGeometricTransformClass *
       g_param_spec_double ("x-center", "x center",
           "X axis center of the circle_geometric_transform effect",
           0.0, 1.0, DEFAULT_X_CENTER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_Y_CENTER,
       g_param_spec_double ("y-center", "y center",
           "Y axis center of the circle_geometric_transform effect",
           0.0, 1.0, DEFAULT_Y_CENTER,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RADIUS,
       g_param_spec_double ("radius", "radius",
           "radius of the circle_geometric_transform effect", 0.0, G_MAXDOUBLE,
-          DEFAULT_RADIUS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_RADIUS,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->prepare_func = circle_geometric_transform_precalc;
 }

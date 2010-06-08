@@ -81,23 +81,41 @@ gst_kaleidoscope_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstKaleidoscope *kaleidoscope;
+  GstGeometricTransform *gt;
+  gdouble v;
+  gint s;
 
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
   kaleidoscope = GST_KALEIDOSCOPE_CAST (object);
 
+  GST_OBJECT_LOCK (gt);
   switch (prop_id) {
     case PROP_ANGLE:
-      kaleidoscope->angle = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != kaleidoscope->angle) {
+        kaleidoscope->angle = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_ANGLE2:
-      kaleidoscope->angle2 = g_value_get_double (value);
+      v = g_value_get_double (value);
+      if (v != kaleidoscope->angle2) {
+        kaleidoscope->angle2 = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     case PROP_SIDES:
-      kaleidoscope->sides = g_value_get_int (value);
+      s = g_value_get_int (value);
+      if (s != kaleidoscope->sides) {
+        kaleidoscope->sides = s;
+        gst_geometric_transform_set_need_remap (gt);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (gt);
 }
 
 static void
@@ -200,16 +218,16 @@ gst_kaleidoscope_class_init (GstKaleidoscopeClass * klass)
       g_param_spec_double ("angle", "angle",
           "primary angle in radians of the kaleidoscope effect",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ANGLE2,
       g_param_spec_double ("angle2", "angle2",
           "secondary angle in radians of the kaleidoscope effect",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIDES,
       g_param_spec_int ("sides", "sides", "Number of sides of the kaleidoscope",
           2, G_MAXINT, DEFAULT_SIDES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = kaleidoscope_map;
 }
