@@ -61,6 +61,7 @@ typedef gint64 (*GstOggMapGranuleposToKeyGranuleFunc) (GstOggStream * pad,
 
 #define SKELETON_FISBONE_MIN_SIZE  52
 #define SKELETON_FISHEAD_3_3_MIN_SIZE 112
+#define SKELETON_FISHEAD_4_0_MIN_SIZE 80
 
 struct _GstOggMap
 {
@@ -857,21 +858,27 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
   else
     pad->prestime = -1;
 
-  /* Ogg Skeleton 3.3 streams provide additional information in the header */
-  if (packet->bytes >= SKELETON_FISHEAD_3_3_MIN_SIZE) {
+  /* Ogg Skeleton 3.3+ streams provide additional information in the header */
+  if (packet->bytes >= SKELETON_FISHEAD_3_3_MIN_SIZE && pad->skeleton_major == 3
+      && pad->skeleton_minor > 0) {
     gint64 firstsampletime_n, firstsampletime_d;
     gint64 lastsampletime_n, lastsampletime_d;
     gint64 firstsampletime, lastsampletime;
+    guint64 segment_length, content_offset;
 
     firstsampletime_n = GST_READ_UINT64_LE (data + 64);
     firstsampletime_d = GST_READ_UINT64_LE (data + 72);
     lastsampletime_n = GST_READ_UINT64_LE (data + 80);
     lastsampletime_d = GST_READ_UINT64_LE (data + 88);
+    segment_length = GST_READ_UINT64_LE (data + 96);
+    content_offset = GST_READ_UINT64_LE (data + 104);
 
     GST_INFO ("firstsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
         firstsampletime_n, firstsampletime_d);
     GST_INFO ("lastsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
         lastsampletime_n, lastsampletime_d);
+    GST_INFO ("segment length %" G_GUINT64_FORMAT, segment_length);
+    GST_INFO ("content offset %" G_GUINT64_FORMAT, content_offset);
 
     if (firstsampletime_d > 0)
       firstsampletime = gst_util_uint64_scale (GST_SECOND,
@@ -892,6 +899,15 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
 
     GST_INFO ("skeleton fishead parsed total: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (pad->total_time));
+  } else if (packet->bytes >= SKELETON_FISHEAD_4_0_MIN_SIZE
+      && pad->skeleton_major == 4) {
+    guint64 segment_length, content_offset;
+
+    segment_length = GST_READ_UINT64_LE (data + 64);
+    content_offset = GST_READ_UINT64_LE (data + 72);
+
+    GST_INFO ("segment length %" G_GUINT64_FORMAT, segment_length);
+    GST_INFO ("content offset %" G_GUINT64_FORMAT, content_offset);
   } else {
     pad->total_time = -1;
   }
