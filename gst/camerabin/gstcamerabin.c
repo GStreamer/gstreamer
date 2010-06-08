@@ -3306,7 +3306,8 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         if (camera->app_vf_sink)
           gst_object_unref (camera->app_vf_sink);
         camera->app_vf_sink = g_value_get_object (value);
-        gst_object_ref (camera->app_vf_sink);
+        if (camera->app_vf_sink)
+          gst_object_ref (camera->app_vf_sink);
       }
       break;
     case ARG_VIDEO_SRC:
@@ -3318,7 +3319,8 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
         if (camera->app_vid_src)
           gst_object_unref (camera->app_vid_src);
         camera->app_vid_src = g_value_get_object (value);
-        gst_object_ref (camera->app_vid_src);
+        if (camera->app_vid_src)
+          gst_object_ref (camera->app_vid_src);
       }
       break;
     case ARG_AUDIO_SRC:
