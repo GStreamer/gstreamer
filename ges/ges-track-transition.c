@@ -158,19 +158,24 @@ ges_track_transition_dispose (GObject * object)
   if (self->vcontroller) {
     g_object_unref (self->vcontroller);
     self->vcontroller = NULL;
-    /* is this referenec owned by someone other than us? */
+    if (self->vcontrol_source)
+      gst_object_unref (self->vcontrol_source);
     self->vcontrol_source = NULL;
   }
 
   if (self->a_acontroller) {
     g_object_unref (self->a_acontroller);
     self->a_acontroller = NULL;
+    if (self->a_acontrol_source)
+      gst_object_unref (self->a_acontrol_source);
     self->a_acontrol_source = NULL;
   }
 
   if (self->a_bcontroller) {
     g_object_unref (self->a_acontroller);
     self->a_bcontroller = NULL;
+    if (self->a_bcontrol_source)
+      gst_object_unref (self->a_bcontrol_source);
     self->a_bcontrol_source = NULL;
   }
 
