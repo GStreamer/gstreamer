@@ -380,7 +380,31 @@ GST_START_TEST (test_gsl_with_transitions)
 
   /* FIXME: this needs to be checked manually in the console output */
 
-  ges_timeline_layer_remove_object (layer, GES_TIMELINE_OBJECT (source1));
+  GST_DEBUG ("Removing sources");
+
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (source1)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (source2)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (source3)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (source4)));
+
+  GST_DEBUG ("Removing transitions");
+
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (tr1)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (tr2)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (tr3)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (tr4)));
+  fail_unless (ges_timeline_layer_remove_object (layer,
+          GES_TIMELINE_OBJECT (tr5)));
+
+  GST_DEBUG ("done removing transition");
 
 }
 
