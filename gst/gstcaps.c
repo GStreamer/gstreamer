@@ -109,9 +109,9 @@
      ((GstStructure *)g_ptr_array_index ((caps)->structs, (index)))
 /* quick way to append a structure without checking the args */
 #define gst_caps_append_structure_unchecked(caps, structure) G_STMT_START{\
-  GstStructure *s=structure;                                      \
-  gst_structure_set_parent_refcount (s, &caps->refcount);         \
-  g_ptr_array_add (caps->structs, s);                             \
+  GstStructure *__s=structure;                                      \
+  gst_structure_set_parent_refcount (__s, &caps->refcount);         \
+  g_ptr_array_add (caps->structs, __s);                             \
 }G_STMT_END
 
 /* lock to protect multiple invocations of static caps to caps conversion */
