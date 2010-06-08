@@ -336,6 +336,7 @@ video_format_is_packed (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y800:
       return FALSE;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
@@ -404,7 +405,8 @@ GST_START_TEST (test_video_formats)
         fourcc_list[i].paint_setup (&paintinfo, NULL);
         fail_unless_equals_int (gst_video_format_get_row_stride (fmt, 0, w),
             paintinfo.ystride);
-        if (!gst_video_format_is_packed (fmt)) {
+        if (!gst_video_format_is_packed (fmt)
+            && !gst_video_format_is_gray (fmt)) {
           /* planar */
           fail_unless_equals_int (gst_video_format_get_row_stride (fmt, 1, w),
               paintinfo.ustride);
@@ -429,7 +431,8 @@ GST_START_TEST (test_video_formats)
 
         /* some gstvideo checks ... (FIXME: fails for Y41B and Y42B; not sure
          * if the check or the _get_component_size implementation is wrong) */
-        if (fmt != GST_VIDEO_FORMAT_Y41B && fmt != GST_VIDEO_FORMAT_Y42B) {
+        if (fmt != GST_VIDEO_FORMAT_Y41B && fmt != GST_VIDEO_FORMAT_Y42B
+            && fmt != GST_VIDEO_FORMAT_Y800) {
           guint cs0, cs1, cs2, cs3;
 
           cs0 = gst_video_format_get_component_width (fmt, 0, w) *
