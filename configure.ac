@@ -816,8 +816,8 @@ AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
 dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
 AG_GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
-  dnl first test for libraw1394 >= 1.2.1
-  AG_GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 1.2.1)
+  dnl first test for libraw1394 >= 2.0.0
+  AG_GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 2.0.0)
   AG_GST_PKG_CHECK_MODULES(LIBIEC61883, libiec61883 >= 1.0.0)
   dnl now see how far we got
   if test x$HAVE_RAW1394 = xyes && \
