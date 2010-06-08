@@ -1084,13 +1084,25 @@ gst_ogg_map_add_index (GstOggStream * pad, const guint8 * data, guint size)
   return TRUE;
 }
 
+static gint
+gst_ogg_index_compare (const GstOggIndex * index, const guint64 * ts,
+    gpointer user_data)
+{
+  if (index->timestamp < *ts)
+    return -1;
+  else if (index->timestamp > *ts)
+    return 1;
+  else
+    return 0;
+}
+
 gboolean
 gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
     guint64 * timestamp, guint64 * offset)
 {
   guint64 n_index;
-  guint i, best;
   guint64 ts;
+  GstOggIndex *best;
 
   n_index = pad->n_index;
   if (n_index == 0 || pad->index == NULL)
@@ -1099,25 +1111,21 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
   ts = gst_util_uint64_scale (*timestamp, pad->kp_denom, GST_SECOND);
   GST_INFO ("timestamp %" G_GUINT64_FORMAT, ts);
 
-  best = -1;
-  /* FIXME, do binary search */
-  for (i = 0; i < n_index; i++) {
-    if (pad->index[i].timestamp <= ts)
-      best = i;
-    else if (pad->index[i].timestamp > ts)
-      break;
-  }
-  if (best == -1)
+  best =
+      gst_util_array_binary_search (pad->index, n_index, sizeof (GstOggIndex),
+      (GCompareDataFunc) gst_ogg_index_compare, GST_SEARCH_MODE_BEFORE, &ts,
+      NULL);
+
+  if (best == NULL)
     return FALSE;
 
-  GST_INFO ("found at index %u", best);
+  GST_INFO ("found at index %u", (best - pad->index));
 
   if (offset)
-    *offset = pad->index[best].offset;
+    *offset = best->offset;
   if (timestamp)
     *timestamp =
-        gst_util_uint64_scale (pad->index[best].timestamp, GST_SECOND,
-        pad->kp_denom);
+        gst_util_uint64_scale (best->timestamp, GST_SECOND, pad->kp_denom);
 
   return TRUE;
 }
