@@ -98,10 +98,6 @@
 #define TSMUX_DEFAULT_NETWORK_ID 0x0001
 #define TSMUX_DEFAULT_TS_ID 0x0001
 
-#define TSMUX_START_PROGRAM_ID 0x0001
-#define TSMUX_START_PMT_PID 0x0010
-#define TSMUX_START_ES_PID 0x0040
-
 /* HACK: We use a fixed buffering offset for the PCR at the moment - 
  * this is the amount 'in advance' of the stream that the PCR sits.
  * 1/8 second atm */

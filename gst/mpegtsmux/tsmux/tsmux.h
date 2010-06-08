@@ -92,6 +92,10 @@ G_BEGIN_DECLS
 
 #define TSMUX_PID_AUTO ((guint16)-1)
 
+#define TSMUX_START_PROGRAM_ID 0x0001
+#define TSMUX_START_PMT_PID 0x0010
+#define TSMUX_START_ES_PID 0x0040
+
 typedef struct TsMuxSection TsMuxSection;
 typedef struct TsMux TsMux;
 

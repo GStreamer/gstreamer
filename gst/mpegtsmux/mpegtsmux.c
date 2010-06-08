@@ -927,7 +927,9 @@ new_packet_cb (guint8 * data, guint len, void *user_data, gint64 new_pcr)
 
     if (!mux->streamheader_sent) {
       guint pid = ((data[1] & 0x1f) << 8) | data[2];
-      if (pid == 0x00 || pid == 0x02) { /* if it's a PAT or a PMT */
+      /* if it's a PAT or a PMT */
+      if (pid == 0x00 ||
+          (pid >= TSMUX_START_PMT_PID && pid < TSMUX_START_ES_PID)) {
         mux->streamheader =
             g_list_append (mux->streamheader, gst_buffer_copy (buf));
       } else if (mux->streamheader) {
