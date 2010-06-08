@@ -44,3 +44,6 @@ Makefile
 *.typelib
 
 gst-libs/gst/tag/mklangtables
+
+tmp-orc.c
+gst*orc.h
