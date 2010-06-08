@@ -28,7 +28,7 @@
  * - use labels like : element [ label="{element | <src> src | <sink> sink}"]
  * - point to record-connectors : element1:src -> element2:sink
  * - we use head/tail labels for pad-caps right now
- *   - this does not work well, as dot seems to not llok at their sizen when
+ *   - this does not work well, as dot seems to not look at their sizen when
  *     doing the layout
  *   - we could add the caps to the pad itself, then we should use one line per
  *     caps (simple caps = one line)
