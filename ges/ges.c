@@ -19,6 +19,7 @@
  */
 
 #include <ges/ges.h>
+#include <gst/controller/gstcontroller.h>
 #include "ges-internal.h"
 
 GST_DEBUG_CATEGORY (ges_debug);
@@ -41,6 +42,7 @@ ges_init (void)
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
+  gst_controller_init (NULL, NULL);
 
   GST_DEBUG ("GStreamer Editing Services initialized");
 }
