@@ -42,28 +42,28 @@ static void
 deinterlace_scanline_scaler_bob_packed (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->t0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->t0, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_scaler_bob_planar_y (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->t0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->t0, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_scaler_bob_planar_u (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->t0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->t0, self->parent.row_stride[1]);
 }
 
 static void
 deinterlace_scanline_scaler_bob_planar_v (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->t0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->t0, self->parent.row_stride[2]);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodScalerBob, gst_deinterlace_method_scaler_bob,

@@ -33,6 +33,9 @@
 
 #include "gstdeinterlacemethod.h"
 #include <string.h>
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR_BLEND	(gst_deinterlace_method_linear_blend_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_LINEAR_BLEND(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_LINEAR_BLEND))
@@ -314,7 +317,8 @@ static void
   GstDeinterlaceSimpleMethodClass *dism_class =
       (GstDeinterlaceSimpleMethodClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags = oil_cpu_get_flags ();
+  guint cpu_flags =
+      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
 #endif
 
   dim_class->fields_required = 2;
@@ -369,7 +373,7 @@ static void
       deinterlace_scanline_linear_blend2_planar_v_c;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+  if (cpu_flags & ORC_TARGET_MMX_MMX) {
     dism_class->interpolate_scanline_yuy2 =
         deinterlace_scanline_linear_blend_packed_mmx;
     dism_class->interpolate_scanline_yvyu =

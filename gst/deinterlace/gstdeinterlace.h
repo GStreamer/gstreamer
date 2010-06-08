@@ -25,10 +25,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
-
 #include "gstdeinterlacemethod.h"
 
 G_BEGIN_DECLS

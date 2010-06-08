@@ -15,9 +15,9 @@ libgstdeinterlace_la_SOURCES = \
 	tvtime/scalerbob.c
 
 libgstdeinterlace_la_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBOIL_CFLAGS)
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ORC_CFLAGS)
 libgstdeinterlace_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
 libgstdeinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdeinterlace_la_LIBTOOLFLAGS = --tag=disable-static
 

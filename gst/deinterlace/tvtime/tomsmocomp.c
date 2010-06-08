@@ -31,6 +31,9 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
 #include "gstdeinterlacemethod.h"
 #include "plugins.h"
 
@@ -59,7 +62,7 @@ Fieldcopy (guint8 * dest, const guint8 * src, gint count,
   gint i;
 
   for (i = 0; i < rows; i++) {
-    oil_memcpy (dest, src, count);
+    memcpy (dest, src, count);
     src += src_pitch;
     dest += dst_pitch;
   }
@@ -161,7 +164,8 @@ static void
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags = oil_cpu_get_flags ();
+  guint cpu_flags =
+      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
 #endif
 
   gobject_class->set_property = gst_deinterlace_method_tomsmocomp_set_property;
@@ -185,13 +189,13 @@ static void
   dim_class->latency = 1;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_MMXEXT;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_MMXEXT;
-  } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
+  } else if (cpu_flags & ORC_TARGET_MMX_3DNOW) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_3DNOW;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_3DNOW;
-  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
     dim_class->deinterlace_frame_yuy2 = tomsmocompDScaler_MMX;
     dim_class->deinterlace_frame_yvyu = tomsmocompDScaler_MMX;
   } else {

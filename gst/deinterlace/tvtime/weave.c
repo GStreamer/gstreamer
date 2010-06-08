@@ -48,56 +48,56 @@ static void
 deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_weave_planar_y (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_weave_planar_u (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[1]);
 }
 
 static void
 deinterlace_scanline_weave_planar_v (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[2]);
 }
 
 static void
 copy_scanline_packed (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 static void
 copy_scanline_planar_y (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 static void
 copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
 }
 
 static void
 copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodWeave, gst_deinterlace_method_weave,

@@ -48,28 +48,28 @@ static void
 deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_weave_planar_y (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 deinterlace_scanline_weave_planar_u (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[1]);
 }
 
 static void
 deinterlace_scanline_weave_planar_v (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[2]);
 }
 
 static void
@@ -78,9 +78,9 @@ copy_scanline_packed (GstDeinterlaceSimpleMethod * self, guint8 * out,
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
+    memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
   } else {
-    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
+    memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
   }
 }
 
@@ -90,9 +90,9 @@ copy_scanline_planar_y (GstDeinterlaceSimpleMethod * self, guint8 * out,
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
+    memcpy (out, scanlines->bb2, self->parent.row_stride[0]);
   } else {
-    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
+    memcpy (out, scanlines->bb0, self->parent.row_stride[0]);
   }
 }
 
@@ -102,9 +102,9 @@ copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self, guint8 * out,
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[1]);
+    memcpy (out, scanlines->bb2, self->parent.row_stride[1]);
   } else {
-    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[1]);
+    memcpy (out, scanlines->bb0, self->parent.row_stride[1]);
   }
 }
 
@@ -114,9 +114,9 @@ copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self, guint8 * out,
 {
   /* FIXME: original code used m2 and m0 but this looks really bad */
   if (scanlines->bottom_field) {
-    oil_memcpy (out, scanlines->bb2, self->parent.row_stride[2]);
+    memcpy (out, scanlines->bb2, self->parent.row_stride[2]);
   } else {
-    oil_memcpy (out, scanlines->bb0, self->parent.row_stride[2]);
+    memcpy (out, scanlines->bb0, self->parent.row_stride[2]);
   }
 }
 

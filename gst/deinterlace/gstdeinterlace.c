@@ -1759,8 +1759,6 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (deinterlace_debug, "deinterlace", 0, "Deinterlacer");
 
-  oil_init ();
-
   if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
           GST_TYPE_DEINTERLACE)) {
     return FALSE;

@@ -21,14 +21,10 @@
 #ifndef __GST_DEINTERLACE_METHOD_H__
 #define __GST_DEINTERLACE_METHOD_H__
 
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
-
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#ifdef HAVE_GCC_ASM
+#if defined(HAVE_GCC_ASM) && defined(HAVE_ORC)
 #if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
 #define BUILD_X86_ASM
 #endif

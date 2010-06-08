@@ -37,6 +37,9 @@
 #include <gst/gst.h>
 #include "plugins.h"
 #include "gstdeinterlacemethod.h"
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #define GST_TYPE_DEINTERLACE_METHOD_GREEDY_H	(gst_deinterlace_method_greedy_h_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_GREEDY_H(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_GREEDY_H))
@@ -769,7 +772,7 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
       L2P += RowStride;
 
     // copy first even line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
   } else {
     InfoIsOdd = 0;
@@ -787,17 +790,17 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
       L2P += RowStride;
 
     // copy first even line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
     // then first odd line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
   }
 
   for (Line = 0; Line < (FieldHeight - 1); ++Line) {
     scanline (self, L1, L2, L3, L2P, Dest, RowStride);
     Dest += RowStride;
-    oil_memcpy (Dest, L3, RowStride);
+    memcpy (Dest, L3, RowStride);
     Dest += RowStride;
 
     L1 += Pitch;
@@ -807,7 +810,7 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
   }
 
   if (InfoIsOdd) {
-    oil_memcpy (Dest, L2, RowStride);
+    memcpy (Dest, L2, RowStride);
   }
 }
 
@@ -824,21 +827,21 @@ deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
 
   if (InfoIsOdd) {
     // copy first even line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
   } else {
     // copy first even line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
     // then first odd line
-    oil_memcpy (Dest, L1, RowStride);
+    memcpy (Dest, L1, RowStride);
     Dest += RowStride;
   }
 
   for (Line = 0; Line < (FieldHeight - 1); ++Line) {
     scanline (self, L1, L2, L3, L2P, Dest, RowStride);
     Dest += RowStride;
-    oil_memcpy (Dest, L3, RowStride);
+    memcpy (Dest, L3, RowStride);
     Dest += RowStride;
 
     L1 += Pitch;
@@ -848,7 +851,7 @@ deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
   }
 
   if (InfoIsOdd) {
-    oil_memcpy (Dest, L2, RowStride);
+    memcpy (Dest, L2, RowStride);
   }
 }
 
@@ -966,7 +969,8 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags = oil_cpu_get_flags ();
+  guint cpu_flags =
+      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
 #endif
 
   gobject_class->set_property = gst_deinterlace_method_greedy_h_set_property;
@@ -1008,13 +1012,13 @@ gst_deinterlace_method_greedy_h_class_init (GstDeinterlaceMethodGreedyHClass *
   dim_class->deinterlace_frame_y41b = deinterlace_frame_di_greedyh_planar;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
     klass->scanline_yuy2 = greedyh_scanline_MMXEXT_yuy2;
     klass->scanline_uyvy = greedyh_scanline_MMXEXT_uyvy;
-  } else if (cpu_flags & OIL_IMPL_FLAG_3DNOW) {
+  } else if (cpu_flags & ORC_TARGET_MMX_3DNOW) {
     klass->scanline_yuy2 = greedyh_scanline_3DNOW_yuy2;
     klass->scanline_uyvy = greedyh_scanline_3DNOW_uyvy;
-  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
     klass->scanline_yuy2 = greedyh_scanline_MMX_yuy2;
     klass->scanline_uyvy = greedyh_scanline_MMX_uyvy;
   } else {

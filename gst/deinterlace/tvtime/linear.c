@@ -29,6 +29,9 @@
 
 #include "gstdeinterlacemethod.h"
 #include <string.h>
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #define GST_TYPE_DEINTERLACE_METHOD_LINEAR	(gst_deinterlace_method_linear_get_type ())
 #define GST_IS_DEINTERLACE_METHOD_LINEAR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DEINTERLACE_METHOD_LINEAR))
@@ -282,7 +285,8 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
   GstDeinterlaceSimpleMethodClass *dism_class =
       (GstDeinterlaceSimpleMethodClass *) klass;
 #ifdef BUILD_X86_ASM
-  guint cpu_flags = oil_cpu_get_flags ();
+  guint cpu_flags =
+      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
 #endif
 
   dim_class->fields_required = 1;
@@ -308,7 +312,7 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
       deinterlace_scanline_linear_planar_v_c;
 
 #ifdef BUILD_X86_ASM
-  if (cpu_flags & OIL_IMPL_FLAG_MMXEXT) {
+  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
     dism_class->interpolate_scanline_ayuv =
         deinterlace_scanline_linear_packed_mmxext;
     dism_class->interpolate_scanline_yuy2 =
@@ -335,7 +339,7 @@ gst_deinterlace_method_linear_class_init (GstDeinterlaceMethodLinearClass *
         deinterlace_scanline_linear_planar_u_mmxext;
     dism_class->interpolate_scanline_planar_v =
         deinterlace_scanline_linear_planar_v_mmxext;
-  } else if (cpu_flags & OIL_IMPL_FLAG_MMX) {
+  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
     dism_class->interpolate_scanline_ayuv =
         deinterlace_scanline_linear_packed_mmx;
     dism_class->interpolate_scanline_yuy2 =

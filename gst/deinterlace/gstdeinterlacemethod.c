@@ -24,9 +24,6 @@
 
 #include <string.h>
 
-#include <liboil/liboil.h>
-#include <liboil/liboilfunction.h>
-
 #include "gstdeinterlacemethod.h"
 
 G_DEFINE_ABSTRACT_TYPE (GstDeinterlaceMethod, gst_deinterlace_method,
@@ -292,14 +289,14 @@ static void
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_packed (GstDeinterlaceSimpleMethod *
     self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 static void
@@ -348,11 +345,11 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
     /* double the first scanline of the bottom field */
-    oil_memcpy (out, field0, row_stride);
+    memcpy (out, field0, row_stride);
     out += row_stride;
   }
 
-  oil_memcpy (out, field0, row_stride);
+  memcpy (out, field0, row_stride);
   out += row_stride;
 
   for (line = 2; line <= field_height; line++) {
@@ -435,7 +432,7 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 
   if (cur_field_flags == PICTURE_INTERLACED_TOP) {
     /* double the last scanline of the top field */
-    oil_memcpy (out, field0, row_stride);
+    memcpy (out, field0, row_stride);
   }
 }
 
@@ -444,14 +441,14 @@ static void
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_y (GstDeinterlaceSimpleMethod
     * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
 }
 
 static void
@@ -459,14 +456,14 @@ static void
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[1]);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_u (GstDeinterlaceSimpleMethod
     * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
 }
 
 static void
@@ -474,14 +471,14 @@ static void
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
     const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m1, self->parent.row_stride[2]);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_v (GstDeinterlaceSimpleMethod
     * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
 {
-  oil_memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
 }
 
 static void
@@ -503,11 +500,11 @@ static void
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
     /* double the first scanline of the bottom field */
-    oil_memcpy (out, field0, row_stride);
+    memcpy (out, field0, row_stride);
     out += row_stride;
   }
 
-  oil_memcpy (out, field0, row_stride);
+  memcpy (out, field0, row_stride);
   out += row_stride;
 
   for (line = 2; line <= field_height; line++) {
@@ -590,7 +587,7 @@ static void
 
   if (cur_field_flags == PICTURE_INTERLACED_TOP) {
     /* double the last scanline of the top field */
-    oil_memcpy (out, field0, row_stride);
+    memcpy (out, field0, row_stride);
   }
 }
 
