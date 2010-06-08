@@ -53,6 +53,13 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
+Package:        Orc
+Version:        >= 0.4.5
+Recommended:    0.4.latest
+URL:            http://code.entropywave.com/orc
+DebianPackage:  liborc-0.4-dev
+Notes:		Used by many plugins for accelerating processing
+
 Package:	GTK+
 Version:	>= 2.0
 Recommended:	>= 2.2

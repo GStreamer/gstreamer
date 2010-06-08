@@ -210,7 +210,35 @@ dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x$HAVE_LIBOIL" != "xyes"; then
   AC_ERROR([liboil-0.3.8 or later is required])
+
+dnl Orc
+AC_ARG_ENABLE(orc,
+AC_HELP_STRING([--enable-orc],[use Orc if installed]),
+[case "${enableval}" in
+  yes) enable_orc=yes ;;
+  no)  enable_orc=no ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-orc) ;;
+esac
+],
+[enable_orc=yes]) dnl Default value
+
+ORC_REQ=0.4.5
+if test "x$enable_orc" = "xyes" ; then
+  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, [
+    AC_DEFINE(HAVE_ORC, 1, [Use Orc])
+    ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
+    AC_SUBST(ORCC)
+    HAVE_ORC=yes
+  ], [
+    AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
+    HAVE_ORC=no
+  ])
+else
+  AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
+  HAVE_ORC=no
 fi
+AM_CONDITIONAL(HAVE_ORC, test "x$HAVE_ORC" = "xyes")
+
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
