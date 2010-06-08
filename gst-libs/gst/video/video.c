@@ -963,6 +963,8 @@ gst_video_format_is_gray (GstVideoFormat format)
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
+    case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_Y16:
       return TRUE;
     default:
       return FALSE;
