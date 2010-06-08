@@ -149,9 +149,6 @@ struct _GstCameraBin
   gint pre_night_fps_n;
   gint pre_night_fps_d;
 
-  /* Cache the photography interface settings */
-  GstPhotoSettings photo_settings;
-
   /* Buffer probe id for captured image handling */
   gulong image_captured_id;
 

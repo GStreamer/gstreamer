@@ -474,14 +474,6 @@ camerabin_setup_src_elements (GstCameraBin * camera)
 
   gst_camerabin_monitor_video_source_properties (camera);
 
-  /* Update photography interface settings */
-  if (GST_IS_ELEMENT (camera->src_vid_src) &&
-      gst_element_implements_interface (camera->src_vid_src,
-          GST_TYPE_PHOTOGRAPHY)) {
-    gst_photography_set_config (GST_PHOTOGRAPHY (camera->src_vid_src),
-        &camera->photo_settings);
-  }
-
   if (camera->width > 0 && camera->height > 0) {
     gst_structure_set (st,
         "width", G_TYPE_INT, camera->width,
@@ -3129,8 +3121,6 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->app_video_filter = NULL;
 
   camera->active_bin = NULL;
-
-  memset (&camera->photo_settings, 0, sizeof (GstPhotoSettings));
 }
 
 static void
