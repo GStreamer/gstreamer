@@ -31,6 +31,10 @@
 #include "ges.h"
 #include "ges-internal.h"
 
+gboolean
+ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
+    GESTrackObject * trackobj, GstElement * gnlobj);
+
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
 
