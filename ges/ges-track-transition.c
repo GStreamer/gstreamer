@@ -181,6 +181,7 @@ ges_track_transition_dispose (GObject * object)
 
   if (self->vsmpte) {
     g_object_unref (self->vsmpte);
+    self->vsmpte = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
