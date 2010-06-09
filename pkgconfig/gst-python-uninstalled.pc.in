@@ -1,14 +1,8 @@
 # the standard variables don't make sense for an uninstalled copy
 #prefix=
 #exec_prefix=
-#includedir=${pcfiledir}/..
 #datadir=${pcfiledir}/..
 pyexecdir=${pcfiledir}/..
-
-# you can use the --variable=pygtkincludedir argument to
-# pkg-config to get this value.  You might want to use this to
-# install additional headers.
-#gstpythonincludedir=${includedir}/gst-python-@GST_MAJORMINOR@
 
 # same here.  Useful when calling the code generator in addon packages.
 #defsdir=${datadir}/gst-python/@GST_MAJORMINOR@/defs
@@ -17,4 +11,3 @@ Name: gst-python uninstalled
 Description: Python bindings for GStreamer, not installed
 Requires: pygobject-2.0, gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-#Cflags: -I${gstpythonincludedir}

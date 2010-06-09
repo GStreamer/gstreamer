@@ -1,13 +1,7 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-includedir=@includedir@
 datadir=@datadir@
 pyexecdir=@pyexecdir@
-
-# you can use the --variable=pygtkincludedir argument to
-# pkg-config to get this value.  You might want to use this to
-# install additional headers.
-gstpythonincludedir=${includedir}/gst-python-@GST_MAJORMINOR@
 
 # same here.  Useful when calling the code generator in addon packages.
 defsdir=${datadir}/gst-python/@GST_MAJORMINOR@/defs
@@ -16,4 +10,3 @@ Name: gst-python
 Description: Python bindings for GStreamer
 Requires: pygobject-2.0, gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-Cflags: -I${gstpythonincludedir}
