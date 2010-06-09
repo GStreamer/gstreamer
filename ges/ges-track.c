@@ -221,7 +221,7 @@ ges_track_new (GESTrackType type, GstCaps * caps)
  * Returns: A new #GESTrack.
  */
 GESTrack *
-ges_track_video_raw_new ()
+ges_track_video_raw_new (void)
 {
   GESTrack *track;
   GstCaps *caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
@@ -240,7 +240,7 @@ ges_track_video_raw_new ()
  * Returns: A new #GESTrack.
  */
 GESTrack *
-ges_track_audio_raw_new ()
+ges_track_audio_raw_new (void)
 {
   GESTrack *track;
   GstCaps *caps = gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
