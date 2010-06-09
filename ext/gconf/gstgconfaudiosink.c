@@ -108,7 +108,8 @@ gst_gconf_audio_sink_class_init (GstGConfAudioSinkClass * klass)
 
   g_object_class_install_property (oklass, PROP_PROFILE,
       g_param_spec_enum ("profile", "Profile", "Profile",
-          GST_TYPE_GCONF_PROFILE, GCONF_PROFILE_SOUNDS, G_PARAM_READWRITE));
+          GST_TYPE_GCONF_PROFILE, GCONF_PROFILE_SOUNDS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
