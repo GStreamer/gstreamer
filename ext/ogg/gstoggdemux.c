@@ -276,8 +276,39 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
       if (format == GST_FORMAT_TIME) {
-        gst_query_set_seeking (query, GST_FORMAT_TIME, ogg->pullmode,
-            0, ogg->total_time);
+        gboolean seekable = FALSE;
+        gint64 stop = -1;
+
+        if (ogg->pullmode) {
+          seekable = TRUE;
+          stop = ogg->total_time;
+        } else if (ogg->current_chain->streams->len) {
+          gint i;
+
+          seekable = FALSE;
+          for (i = 0; i < ogg->current_chain->streams->len; i++) {
+            GstOggPad *pad =
+                g_array_index (ogg->current_chain->streams, GstOggPad *, i);
+
+            seekable |= (pad->map.index != NULL && pad->map.n_index != 0);
+
+            if (pad->map.index != NULL && pad->map.n_index != 0) {
+              GstOggIndex *idx;
+              GstClockTime idx_time;
+
+              idx = &pad->map.index[pad->map.n_index - 1];
+              idx_time =
+                  gst_util_uint64_scale (idx->timestamp, GST_SECOND,
+                  pad->map.kp_denom);
+              if (stop == -1)
+                stop = idx_time;
+              else
+                stop = MAX (idx_time, stop);
+            }
+          }
+        }
+
+        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, stop);
       } else {
         res = FALSE;
       }
