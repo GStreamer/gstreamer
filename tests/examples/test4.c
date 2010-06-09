@@ -20,6 +20,8 @@
 #include <ges/ges.h>
 #include <gst/profile/gstprofile.h>
 
+GstEncodingProfile *make_ogg_vorbis_profile (void);
+
 /* This example will take a series of files and create a audio-only timeline
  * containing the first second of each file and render it to the output uri 
  * using ogg/vorbis */
@@ -33,7 +35,7 @@ make_ogg_vorbis_profile (void)
   GstEncodingProfile *profile;
   GstStreamEncodingProfile *audiostream;
 
-  profile = gst_encoding_profile_new ("ges-test4",
+  profile = gst_encoding_profile_new ((gchar *) "ges-test4",
       gst_caps_new_simple ("application/ogg", NULL), NULL, FALSE);
   audiostream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
       gst_caps_new_simple ("audio/x-vorbis", NULL), NULL, NULL, 1);
