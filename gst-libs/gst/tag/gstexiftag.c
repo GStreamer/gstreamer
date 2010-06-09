@@ -201,6 +201,12 @@ gst_exif_reader_init (GstExifReader * reader, gint byte_order,
   reader->buffer = buf;
   reader->base_offset = base_offset;
   reader->byte_order = byte_order;
+  if (reader->byte_order != G_LITTLE_ENDIAN &&
+      reader->byte_order != G_BIG_ENDIAN) {
+    GST_WARNING ("Unexpected byte order %d, using system default: %d",
+        reader->byte_order, G_BYTE_ORDER);
+    reader->byte_order = G_BYTE_ORDER;
+  }
 }
 
 /* GstExifWriter functions */
@@ -213,6 +219,12 @@ gst_exif_writer_init (GstExifWriter * writer, gint byte_order)
 
   writer->byte_order = byte_order;
   writer->tags_total = 0;
+  if (writer->byte_order != G_LITTLE_ENDIAN &&
+      writer->byte_order != G_BIG_ENDIAN) {
+    GST_WARNING ("Unexpected byte order %d, using system default: %d",
+        writer->byte_order, G_BYTE_ORDER);
+    writer->byte_order = G_BYTE_ORDER;
+  }
 }
 
 static GstBuffer *
@@ -474,16 +486,13 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
         break;
       if (!gst_byte_reader_get_uint32_le (reader, &count))
         break;
-    } else if (writer->byte_order == G_BIG_ENDIAN) {
+    } else {
       if (!gst_byte_reader_get_uint16_be (reader, &tag_id))
         break;
       if (!gst_byte_reader_get_uint16_be (reader, &type))
         break;
       if (!gst_byte_reader_get_uint32_be (reader, &count))
         break;
-    } else {
-      GST_WARNING ("Unexpected endianness");
-      break;
     }
 
     switch (type) {
@@ -515,13 +524,11 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
           gst_byte_writer_put_uint32_le (&writer->tagwriter,
               cur_offset + offset + base_offset);
         }
-      } else if (writer->byte_order == G_BIG_ENDIAN) {
+      } else {
         if (gst_byte_reader_peek_uint32_be (reader, &cur_offset)) {
           gst_byte_writer_put_uint32_be (&writer->tagwriter,
               cur_offset + offset + base_offset);
         }
-      } else {
-        GST_WARNING ("Unexpected endianness");
       }
       GST_DEBUG ("Rewriting tag offset from %u to (%u + %u + %u) %u",
           cur_offset, cur_offset, offset, base_offset,
