@@ -1047,48 +1047,30 @@ gst_ogg_map_add_index (GstOggStream * pad, GstOggStream * skel_pad,
   data += 8;
   size -= 8;
 
-  if (skel_pad->skeleton_major == 3) {
-    pad->kp_denom = GST_READ_UINT64_LE (data);
-    if (pad->kp_denom == 0)
-      pad->kp_denom = 1;
+  pad->kp_denom = GST_READ_UINT64_LE (data);
+  if (pad->kp_denom == 0)
+    pad->kp_denom = 1;
 
-    data += 8;
-    size -= 8;
-  } else if (skel_pad->skeleton_major == 4) {
-    gint64 firstsampletime_n, firstsampletime_d;
-    gint64 lastsampletime_n, lastsampletime_d;
+  data += 8;
+  size -= 8;
+
+  if (skel_pad->skeleton_major == 4) {
+    gint64 firstsampletime_n;
+    gint64 lastsampletime_n;
     gint64 firstsampletime, lastsampletime;
 
     firstsampletime_n = GST_READ_UINT64_LE (data + 0);
-    firstsampletime_d = GST_READ_UINT64_LE (data + 8);
-    lastsampletime_n = GST_READ_UINT64_LE (data + 16);
-    lastsampletime_d = GST_READ_UINT64_LE (data + 24);
-
-    /* FIXME: What's in this gap? Also http://github.com/cpearce/OggIndex
-     * and http://wiki.xiph.org/Ogg_Skeleton_4 disagree on the content
-     * and format of the index pages. This implements the former because
-     * files using this actually exist... */
-
-    pad->kp_denom = GST_READ_UINT64_LE (data + 36);
-    if (pad->kp_denom == 0)
-      pad->kp_denom = 1;
+    lastsampletime_n = GST_READ_UINT64_LE (data + 8);
 
     GST_INFO ("firstsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-        firstsampletime_n, firstsampletime_d);
+        firstsampletime_n, pad->kp_denom);
     GST_INFO ("lastsampletime %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT,
-        lastsampletime_n, lastsampletime_d);
+        lastsampletime_n, pad->kp_denom);
 
-    if (firstsampletime_d > 0)
-      firstsampletime = gst_util_uint64_scale (GST_SECOND,
-          firstsampletime_n, firstsampletime_d);
-    else
-      firstsampletime = 0;
-
-    if (lastsampletime_d > 0)
-      lastsampletime = gst_util_uint64_scale (GST_SECOND,
-          lastsampletime_n, lastsampletime_d);
-    else
-      lastsampletime = 0;
+    firstsampletime = gst_util_uint64_scale (GST_SECOND,
+        firstsampletime_n, pad->kp_denom);
+    lastsampletime = gst_util_uint64_scale (GST_SECOND,
+        lastsampletime_n, pad->kp_denom);
 
     if (lastsampletime > firstsampletime)
       pad->total_time = lastsampletime - firstsampletime;
@@ -1098,8 +1080,8 @@ gst_ogg_map_add_index (GstOggStream * pad, GstOggStream * skel_pad,
     GST_INFO ("skeleton index parsed total: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (pad->total_time));
 
-    data += 44;
-    size -= 44;
+    data += 16;
+    size -= 16;
   }
 
   GST_INFO ("skeleton index has %" G_GUINT64_FORMAT " keypoints, denom: %"
