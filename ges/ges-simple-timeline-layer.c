@@ -109,9 +109,12 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 {
   GList *tmp;
   GstClockTime pos = 0;
-  gint priority = GES_TIMELINE_LAYER (self)->min_gnl_priority;
+  gint priority = 0;
+  gint transition_priority = 0;
   GESTimelineObject *prev_object = NULL;
   GESTimelineObject *prev_transition = NULL;
+
+  priority = GES_TIMELINE_LAYER (self)->min_gnl_priority;
 
   GST_DEBUG ("recalculating values");
 
@@ -123,10 +126,10 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     obj = (GESTimelineObject *) tmp->data;
     dur = GES_TIMELINE_OBJECT_DURATION (obj);
 
-    GST_DEBUG ("%p, %ld", obj, pos);
+    GST_DEBUG ("obj: %p, %ld", obj, pos);
 
     if (GES_IS_TIMELINE_SOURCE (obj)) {
-      GST_DEBUG ("%p is a source\n", obj);
+
       priority++;
 
       if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
@@ -138,53 +141,62 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       }
 
       pos += dur;
+
+      g_assert (priority != -1);
+
     } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
-      GST_DEBUG ("%p is transition\n", obj);
+      GST_LOG ("%p is transition\n", obj);
+
+      pos -= dur;
+      transition_priority = MAX (0, priority - 1);
+
+      g_assert (transition_priority != -1);
+
+      if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos))
+        ges_timeline_object_set_start (obj, pos);
+
+      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) !=
+              transition_priority)) {
+        ges_timeline_object_set_priority (obj, transition_priority);
+      }
+
+      /* sanity checks */
+      l_next = g_list_next (tmp);
 
       if (GES_IS_TIMELINE_TRANSITION (prev_object)) {
         GST_ERROR ("two transitions in sequence!");
-      }
-
-      if (GES_IS_TIMELINE_SOURCE (prev_object)) {
-        pos -= dur;
-      }
-
-      if (G_UNLIKELY (GES_TIMELINE_OBJECT_PRIORITY (obj) != priority)) {
-        ges_timeline_object_set_priority (obj, priority - 1);
       }
 
       if (prev_object && (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur)) {
         GST_ERROR ("transition duration exceeds that of previous neighbor!");
       }
 
-      l_next = g_list_next (tmp);
-
       if (l_next && (GES_TIMELINE_OBJECT_DURATION (l_next->data) < dur)) {
         GST_ERROR ("transition duration exceeds that of next neighbor!");
       }
-
-      ges_timeline_object_set_start (obj, pos);
 
       if (prev_transition) {
         guint64 start, end;
         end = (GES_TIMELINE_OBJECT_DURATION (prev_transition) +
             GES_TIMELINE_OBJECT_START (prev_transition));
 
-        start = GES_TIMELINE_OBJECT_START (obj);
+        start = pos;
 
         if (end > start)
           GST_ERROR ("%d, %d: overlapping transitions!", start, end);
       }
-
       prev_transition = obj;
-
     }
 
-    GST_DEBUG (", %ld\n", pos);
+    GST_LOG ("obj: %p, start: " GST_TIME_FORMAT " pri: %ld",
+        obj, GST_TIME_ARGS (pos), priority);
 
     prev_object = obj;
 
   }
+
+  GST_DEBUG ("Finished recalculating: final start pos is: " GST_TIME_FORMAT,
+      GST_TIME_ARGS (pos));
 
   GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;
 }
