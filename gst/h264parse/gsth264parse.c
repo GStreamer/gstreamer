@@ -1383,6 +1383,11 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
         goto avcc_too_small;
       gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
       gst_nal_decode_sps (h264parse, &bs);
+      /* store for later use, e.g. insertion */
+      if (h264parse->sps) {
+        h264parse->sps_nals[h264parse->sps->sps_id] =
+            gst_h264_parse_make_nal (h264parse, data + 2, len);
+      }
       if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE)
         nlist = g_slist_append (nlist,
             gst_h264_parse_make_nal (h264parse, data + 2, len));
@@ -1398,6 +1403,11 @@ gst_h264_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
         goto avcc_too_small;
       gst_nal_bs_init (&bs, data + 2 + 1, len - 1);
       gst_nal_decode_pps (h264parse, &bs);
+      /* store for later use, e.g. insertion */
+      if (h264parse->pps) {
+        h264parse->pps_nals[h264parse->pps->pps_id] =
+            gst_h264_parse_make_nal (h264parse, data + 2, len);
+      }
       if (h264parse->format == GST_H264_PARSE_FORMAT_BYTE)
         nlist = g_slist_append (nlist,
             gst_h264_parse_make_nal (h264parse, data + 2, len));
