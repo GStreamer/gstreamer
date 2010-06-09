@@ -133,6 +133,8 @@ gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink)
     gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
+    /* Don't lose the SINK flag */
+    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
   }
 }
 
