@@ -89,6 +89,8 @@ gst_switch_sink_init (GstSwitchSink * sink, GstSwitchSinkClass * g_class)
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
 
   gst_switch_sink_reset (sink);
+
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static void
@@ -194,6 +196,8 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
     gst_element_set_state (old_kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), old_kid);
     gst_object_unref (old_kid);
+    /* Don't lose the SINK flag */
+    GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
   }
 
   /* re-attach ghostpad */
