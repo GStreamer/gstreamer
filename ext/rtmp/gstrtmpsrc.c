@@ -307,8 +307,6 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   data = GST_BUFFER_DATA (buf);
   read = 0;
 
-  src->last_timestamp =
-      MAX (src->last_timestamp, src->rtmp->m_mediaStamp * GST_MSECOND);
   while (todo > 0) {
     read = RTMP_Read (src->rtmp, (char *) data, todo);
 
@@ -340,9 +338,12 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GST_BUFFER_TIMESTAMP (buf) = src->last_timestamp;
   GST_BUFFER_OFFSET (buf) = src->cur_offset;
 
-  src->last_timestamp =
-      MAX (src->last_timestamp, src->rtmp->m_mediaStamp * GST_MSECOND);
   src->cur_offset += size;
+  if (src->last_timestamp == GST_CLOCK_TIME_NONE)
+    src->last_timestamp = src->rtmp->m_mediaStamp * GST_MSECOND;
+  else
+    src->last_timestamp =
+        MAX (src->last_timestamp, src->rtmp->m_mediaStamp * GST_MSECOND);
 
   GST_LOG_OBJECT (src, "Created buffer of size %u at %" G_GINT64_FORMAT
       " with timestamp %" GST_TIME_FORMAT, size, GST_BUFFER_OFFSET (buf),
@@ -490,12 +491,12 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   }
 
   src->discont = TRUE;
-  src->last_timestamp = 0;
 
   /* Initial seek */
   if (src->cur_offset == 0 && segment->start == 0)
     return TRUE;
 
+  src->last_timestamp = GST_CLOCK_TIME_NONE;
   if (!RTMP_SendSeek (src->rtmp, segment->start / GST_MSECOND)) {
     GST_ERROR_OBJECT (src, "Seeking failed");
     src->seekable = FALSE;
