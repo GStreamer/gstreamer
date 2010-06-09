@@ -21,6 +21,9 @@
 #include <gst/profile/gstprofile.h>
 #include <gst/discoverer/gstdiscoverer.h>
 
+GstDiscovererInformation *get_info_for_file (GstDiscoverer * disco,
+    gchar * filename);
+
 GstDiscovererInformation *
 get_info_for_file (GstDiscoverer * disco, gchar * filename)
 {
@@ -57,7 +60,7 @@ make_profile_from_info (GstDiscovererInformation * info)
         GST_STREAM_CONTAINER_INFORMATION (info->stream_info);
     GList *tmp;
 
-    profile = gst_encoding_profile_new ("concatenate",
+    profile = gst_encoding_profile_new ((gchar *) "concatenate",
         gst_caps_copy (info->stream_info->caps), NULL, FALSE);
     /* For each on the formats add stream profiles */
     for (tmp = container->streams; tmp; tmp = tmp->next) {
@@ -103,7 +106,7 @@ main (int argc, gchar ** argv)
   GESTimelineLayer *layer;
   GList *sources = NULL;
   GMainLoop *mainloop;
-  GstEncodingProfile *profile;
+  GstEncodingProfile *profile = NULL;
   gchar *output_uri;
   guint i;
   gboolean gotprofile = FALSE;
@@ -138,7 +141,7 @@ main (int argc, gchar ** argv)
     }
 
     src = ges_timeline_filesource_new (info->uri);
-    g_object_set (src, "duration", info->duration, NULL);
+    g_object_set (src, (gchar *) "duration", info->duration, NULL);
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
