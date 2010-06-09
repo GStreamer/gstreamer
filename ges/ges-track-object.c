@@ -63,6 +63,21 @@ enum
 static gboolean
 ges_track_object_create_gnl_object_func (GESTrackObject * object);
 
+void gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
+void gnlobject_media_start_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
+void gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
+void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
+void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
+    G_GNUC_UNUSED, GESTrackObject * obj);
+
 static void
 ges_track_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
