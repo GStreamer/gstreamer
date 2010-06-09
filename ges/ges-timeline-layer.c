@@ -85,11 +85,13 @@ ges_timeline_layer_dispose (GObject * object)
 {
   GESTimelineLayer *layer = GES_TIMELINE_LAYER (object);
 
-  if (layer->objects_start) {
-    g_slist_foreach (layer->objects_start, (GFunc) g_object_unref, NULL);
-    g_slist_free (layer->objects_start);
-    layer->objects_start = NULL;
+  GST_DEBUG ("Disposing layer");
+
+  while (layer->objects_start) {
+    GESTimelineObject *obj = (GESTimelineObject *) layer->objects_start->data;
+    ges_timeline_layer_remove_object (layer, obj);
   }
+
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
 }
 
