@@ -244,12 +244,12 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tr5), HALF_SECOND);
 
   /*   simple test scenario with several sources in layer */
-  /* 0 [0     0.5     1       1.5     2       2.5     3]  */
-  /* 1        [1-tr1--]                                   */
-  /* 2 [0--source1----][3-tr2--]                          */
-  /* 3        [2---source2-----]                          */
-  /* 4                 [4---source3---]                   */
-  /* 5                                [5---source4-----]  */
+  /*   [0     0.5     1       1.5     2       2.5     3]  */
+  /* 0        [1-tr1--]                                   */
+  /* 1 [0--source1----][3-tr2--]                          */
+  /* 2        [2---source2-----]                          */
+  /* 3                 [4---source3---]                   */
+  /* 4                                [5---source4-----]  */
 
   gstl = GES_SIMPLE_TIMELINE_LAYER (layer);
 
