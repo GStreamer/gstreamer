@@ -61,12 +61,14 @@ static gboolean plugin_loader_free (GstPluginLoader * loader);
 static gboolean plugin_loader_load (GstPluginLoader * loader,
     const gchar * filename, off_t file_size, time_t file_mtime);
 
+/* functions used in GstRegistry scanning */
 const GstPluginLoaderFuncs _priv_gst_plugin_loader_funcs = {
   plugin_loader_new, plugin_loader_free, plugin_loader_load
 };
 
 typedef struct _PendingPluginEntry
 {
+  /* sequence number */
   guint32 tag;
   gchar *filename;
   off_t file_size;
@@ -92,6 +94,7 @@ struct _GstPluginLoader
   guint tx_buf_write;
   guint tx_buf_read;
 
+  /* next sequence number (for PendingPluginEntry) */
   guint32 next_tag;
 
   guint8 *rx_buf;
