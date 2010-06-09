@@ -48,6 +48,8 @@ arbitrary_fill_track_func (GESTimelineObject * object,
   /* interpret user_data as name of element to create */
 
   src = gst_element_factory_make (user_data, NULL);
+
+  return TRUE;
 }
 
 GST_START_TEST (test_gsl_add)
@@ -175,6 +177,7 @@ GST_START_TEST (test_gsl_with_transitions)
   GESTrack *track;
   GESCustomTimelineSource *source1, *source2, *source3, *source4;
   GESTimelineTransition *tr1, *tr2, *tr3, *tr4, *tr5;
+  GESSimpleTimelineLayer *gstl;
 
   ges_init ();
 
@@ -194,19 +197,23 @@ GST_START_TEST (test_gsl_with_transitions)
 #define ELEMENT "videotestsrc"
 
   /* Create four 1s sources */
-  source1 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
+  source1 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+      (gpointer) ELEMENT);
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
       GST_SECOND);
-  source2 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
+  source2 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+      (gpointer) ELEMENT);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
       GST_SECOND);
-  source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
+  source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+      (gpointer) ELEMENT);
   g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
-  source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func, ELEMENT);
+  source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
+      (gpointer) ELEMENT);
   g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source4),
       GST_SECOND);
@@ -244,7 +251,7 @@ GST_START_TEST (test_gsl_with_transitions)
   /* 4                 [4---source3---]                   */
   /* 5                                [5---source4-----]  */
 
-  GESSimpleTimelineLayer *gstl = GES_SIMPLE_TIMELINE_LAYER (layer);
+  gstl = GES_SIMPLE_TIMELINE_LAYER (layer);
 
   /* add objects in sequence */
 
