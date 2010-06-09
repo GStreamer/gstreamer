@@ -1345,15 +1345,16 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       }
     }
 
-    avail = out_samples;
+    if (pbuf->m_writable < towrite)
+      towrite = pbuf->m_writable;
+    avail = towrite / bps;
+
     GST_LOG_OBJECT (psink, "writing %u samples at offset %" G_GUINT64_FORMAT,
         (guint) avail, offset);
 
     if (G_LIKELY (inr == outr && !reverse)) {
-
       /* no rate conversion, simply write out the samples */
       /* copy the data into internal buffer */
-      assert (pbuf->m_writable >= towrite);
 
       memcpy ((guint8 *) pbuf->m_data + pbuf->m_towrite, data, towrite);
       pbuf->m_towrite += towrite;
