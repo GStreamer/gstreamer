@@ -366,6 +366,7 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink)
   GstPadTemplate *pad_template;
   GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (bsink);
   GstCaps *caps;
+  gchar *caps_string = NULL;
 
   if (dsoundsink->pDS == NULL) {
     GST_DEBUG_OBJECT (dsoundsink, "device not open, using template caps");
@@ -373,8 +374,9 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink)
   }
 
   if (dsoundsink->cached_caps) {
-    GST_DEBUG_OBJECT (dsoundsink, "Returning cached caps: %s",
-        gst_caps_to_string (dsoundsink->cached_caps));
+    caps_string = gst_caps_to_string (dsoundsink->cached_caps);
+    GST_DEBUG_OBJECT (dsoundsink, "Returning cached caps: %s", caps_string);
+    g_free (caps_string);
     return gst_caps_ref (dsoundsink->cached_caps);
   }
 
@@ -388,7 +390,11 @@ gst_directsound_sink_getcaps (GstBaseSink * bsink)
     dsoundsink->cached_caps = gst_caps_ref (caps);
   }
 
-  GST_DEBUG_OBJECT (dsoundsink, "returning caps %s", gst_caps_to_string (caps));
+  if (caps) {
+    gchar *caps_string = gst_caps_to_string (caps);
+    GST_DEBUG_OBJECT (dsoundsink, "returning caps %s", caps_string);
+    g_free (caps_string);
+  }
 
   return caps;
 }
@@ -446,10 +452,13 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     dsoundsink->buffer_size =
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
         GST_MSECOND);
+    /* Make sure we make those numbers multiple of our sample size in bytes */
+    dsoundsink->buffer_size += dsoundsink->buffer_size % spec->bytes_per_sample;
 
     spec->segsize =
         gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
         GST_MSECOND);
+    spec->segsize += spec->segsize % spec->bytes_per_sample;
     spec->segtotal = dsoundsink->buffer_size / spec->segsize;
   } else {
     wfx.cbSize = 0;
