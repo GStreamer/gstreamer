@@ -1272,8 +1272,14 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           "last offset was %" G_GINT64_FORMAT, offset, pbuf->m_lastoffset);
 
     towrite = out_samples * bps;
-    if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
 
+    /* Only ever write segsize bytes at once. This will
+     * also limit the PA shm buffer to segsize
+     */
+    if (towrite > buf->spec.segsize)
+      towrite = buf->spec.segsize;
+
+    if ((pbuf->m_writable < towrite) || (offset != pbuf->m_lastoffset)) {
       /* if no room left or discontinuity in offset,
          we need to flush data and get a new buffer */
 
@@ -1319,26 +1325,19 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           goto was_paused;
       }
 
+      GST_LOG_OBJECT (psink, "requesting %u bytes of shared memory",
+          pbuf->m_writable);
       if (pa_stream_begin_write (pbuf->stream, &pbuf->m_data,
               &pbuf->m_writable) < 0) {
         GST_LOG_OBJECT (psink, "pa_stream_begin_write() failed");
         goto writable_size_failed;
       }
+      GST_LOG_OBJECT (psink, "got %u bytes of shared memory", pbuf->m_writable);
 
       /* make sure we only buffer up latency-time samples */
       if (pbuf->m_writable > buf->spec.segsize) {
-        if (buf->spec.segsize < towrite) {
-          /* leave room for one frame */
-          pbuf->m_writable = towrite;
-        } else {
-          /* limit buffering to latency-time value
-           * note the amount of data passed to PA isn't going to be exactly
-           * latency-time, if there isn't enough room for towrite we flush and
-           * ask for a new buffer. Worst case the buffer passed will be
-           * segsize-towrite+1 bytes */
-
-          pbuf->m_writable = buf->spec.segsize;
-        }
+        /* limit buffering to latency-time value */
+        pbuf->m_writable = buf->spec.segsize;
 
         GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
             pbuf->m_writable);
