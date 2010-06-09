@@ -1325,6 +1325,15 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
           goto was_paused;
       }
 
+      /* make sure we only buffer up latency-time samples */
+      if (pbuf->m_writable > buf->spec.segsize) {
+        /* limit buffering to latency-time value */
+        pbuf->m_writable = buf->spec.segsize;
+
+        GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
+            pbuf->m_writable);
+      }
+
       GST_LOG_OBJECT (psink, "requesting %u bytes of shared memory",
           pbuf->m_writable);
       if (pa_stream_begin_write (pbuf->stream, &pbuf->m_data,
@@ -1334,13 +1343,10 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       }
       GST_LOG_OBJECT (psink, "got %u bytes of shared memory", pbuf->m_writable);
 
-      /* make sure we only buffer up latency-time samples */
+      /* Just to make sure that we didn't get more than requested */
       if (pbuf->m_writable > buf->spec.segsize) {
         /* limit buffering to latency-time value */
         pbuf->m_writable = buf->spec.segsize;
-
-        GST_LOG_OBJECT (psink, "Limiting buffering to %" G_GSIZE_FORMAT,
-            pbuf->m_writable);
       }
     }
 
