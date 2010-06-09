@@ -768,6 +768,13 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           case GST_OGG_SKELETON_INDEX:
             gst_ogg_map_add_index (&skel_pad->map, &pad->map, packet->packet,
                 packet->bytes);
+
+            /* use total time to update the total ogg time */
+            if (ogg->total_time == -1) {
+              ogg->total_time = skel_pad->map.total_time;
+            } else if (skel_pad->map.total_time > 0) {
+              ogg->total_time = MAX (ogg->total_time, skel_pad->map.total_time);
+            }
             break;
           default:
             break;
