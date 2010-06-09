@@ -73,7 +73,7 @@ typedef struct _GstFlvMux {
   GstFlvMuxState state;
   gboolean have_audio;
   gboolean have_video;
-  gboolean indexed;
+  gboolean streamable;
 
   GstTagList *tags;
   GList *index;
