@@ -37,7 +37,7 @@ GESTimelinePipeline *pipeline = NULL;
 
 typedef struct _pattern
 {
-  char *name;
+  const char *name;
   int value;
 } pattern;
 
@@ -50,6 +50,23 @@ pattern patterns[] = {
   {"green", 5},
   {"blue", 6},
 };
+
+int pattern_for_name (char *name);
+
+gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
+    * trobject, GstElement * gnlobj, gpointer user_data);
+
+void print_transition_list (void);
+
+gboolean check_path (char *path);
+
+GESCustomTimelineSource *pattern_source_new (guint pattern);
+
+gboolean check_time (char *time);
+
+guint64 str_to_time (char *time);
+
+void print_pattern_list (void);
 
 #define N_PATTERNS 7
 #define INVALID_PATTERN -1
@@ -144,7 +161,7 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
   GstEncodingProfile *profile;
   GstStreamEncodingProfile *stream;
 
-  profile = gst_encoding_profile_new ("ges-test4",
+  profile = gst_encoding_profile_new ((gchar *) "ges-test4",
       gst_caps_from_string (container), NULL, FALSE);
   stream =
       gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
@@ -184,7 +201,6 @@ create_timeline (int nbargs, gchar ** argv)
    * ready to start using it... by solely working with the layer !*/
 
   for (i = 0; i < nbargs / 3; i++) {
-    gchar *uri = g_strdup_printf ("file://%s", argv[i * 3]);
     GESTimelineObject *obj;
 
     int pattern;
@@ -222,11 +238,15 @@ create_timeline (int nbargs, gchar ** argv)
     }
 
     else {
+      gchar *uri;
+      guint64 inpoint;
+
       if (!check_path (source))
         g_error ("'%s': could not open path!", source);
 
-      gchar *uri = g_strdup_printf ("file://%s", source);
-      guint64 inpoint = str_to_time (argv[i * 3 + 1]);
+      uri = g_strdup_printf ("file://%s", source);
+      inpoint = str_to_time (argv[i * 3 + 1]);
+
       obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
@@ -290,7 +310,7 @@ print_transition_list (void)
   GESTimelineTransition *tr;
   GESTimelineTransitionClass *klass;
   GParamSpec *pspec;
-  int i;
+  GEnumValue *v;
 
   tr = ges_timeline_transition_new (VTYPE_CROSSFADE);
   klass = GES_TIMELINE_TRANSITION_GET_CLASS (tr);
@@ -300,8 +320,6 @@ print_transition_list (void)
   smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
 
   g_print ("%p %d\n", smpte_class, smpte_class->n_values);
-
-  GEnumValue *v;
 
   for (v = smpte_class->values; v->value != 0; v++) {
     g_print ("%s\n", v->value_nick);
@@ -326,10 +344,10 @@ main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   gchar *outputuri = NULL;
-  gchar *container = "application/ogg";
-  gchar *audio = "audio/x-vorbis";
-  gchar *video = "video/x-theora";
-  gchar *video_restriction = "ANY";
+  gchar *container = (gchar *) "application/ogg";
+  gchar *audio = (gchar *) "audio/x-vorbis";
+  gchar *video = (gchar *) "video/x-theora";
+  gchar *video_restriction = (gchar *) "ANY";
   static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
