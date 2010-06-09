@@ -50,6 +50,8 @@ enum
 
 static guint ges_timeline_layer_signals[LAST_SIGNAL] = { 0 };
 
+static gboolean ges_timeline_layer_resync_priorities (GESTimelineLayer * layer);
+
 static void
 ges_timeline_layer_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
