@@ -35,6 +35,10 @@ static void
 ges_track_transition_update_vcontroller (GESTrackTransition * self,
     GstElement * gnlobj)
 {
+  GValue start_value = { 0, };
+  GValue end_value = { 0, };
+  guint64 duration;
+
   GST_LOG ("updating controller");
 
   if (!gnlobj)
@@ -44,13 +48,9 @@ ges_track_transition_update_vcontroller (GESTrackTransition * self,
     return;
 
   GST_LOG ("getting properties");
-  guint64 duration;
   g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
 
   GST_INFO ("duration: %d\n", duration);
-
-  GValue start_value = { 0, };
-  GValue end_value = { 0, };
   g_value_init (&start_value, G_TYPE_DOUBLE);
   g_value_init (&end_value, G_TYPE_DOUBLE);
   g_value_set_double (&start_value, self->vstart_value);
@@ -73,6 +73,10 @@ static void
 ges_track_transition_update_acontroller (GESTrackTransition * self,
     GstElement * gnlobj)
 {
+  guint64 duration;
+  GValue zero = { 0, };
+  GValue one = { 0, };
+
   GST_LOG ("updating controller: gnlobj (%p) acontroller(%p) bcontroller(%p)",
       gnlobj, self->a_acontroller, self->a_bcontroller);
 
@@ -83,13 +87,9 @@ ges_track_transition_update_acontroller (GESTrackTransition * self,
     return;
 
   GST_LOG ("getting properties");
-  guint64 duration;
   g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
 
   GST_INFO ("duration: %lud\n", duration);
-
-  GValue zero = { 0, };
-  GValue one = { 0, };
   g_value_init (&zero, G_TYPE_DOUBLE);
   g_value_init (&one, G_TYPE_DOUBLE);
   g_value_set_double (&zero, 0.0);
@@ -244,22 +244,22 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 static GstElement *
 create_video_bin (GESTrackTransition * self)
 {
+  GstElement *topbin, *iconva, *iconvb, *oconv;
+  GObject *target = NULL;
+  const gchar *propname = NULL;
+  GstElement *mixer = NULL;
+  GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
+  GstController *controller;
+  GstInterpolationControlSource *control_source;
+
   GST_LOG ("creating a video bin");
 
-  GstElement *topbin = gst_bin_new ("transition-bin");
-  GstElement *iconva = gst_element_factory_make ("ffmpegcolorspace",
-      "tr-csp-a");
-  GstElement *iconvb = gst_element_factory_make ("ffmpegcolorspace",
-      "tr-csp-b");
-  GstElement *oconv = gst_element_factory_make ("ffmpegcolorspace",
-      "tr-csp-output");
+  topbin = gst_bin_new ("transition-bin");
+  iconva = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-a");
+  iconvb = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-b");
+  oconv = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-output");
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
-
-  GObject *target = NULL;
-  gchar *propname = NULL;
-  GstElement *mixer = NULL;
-
   mixer = gst_element_factory_make ("videomixer", NULL);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
@@ -283,13 +283,13 @@ create_video_bin (GESTrackTransition * self)
 
   gst_element_link (mixer, oconv);
 
-  GstPad *sinka_target = gst_element_get_static_pad (iconva, "sink");
-  GstPad *sinkb_target = gst_element_get_static_pad (iconvb, "sink");
-  GstPad *src_target = gst_element_get_static_pad (oconv, "src");
+  sinka_target = gst_element_get_static_pad (iconva, "sink");
+  sinkb_target = gst_element_get_static_pad (iconvb, "sink");
+  src_target = gst_element_get_static_pad (oconv, "src");
 
-  GstPad *sinka = gst_ghost_pad_new ("sinka", sinka_target);
-  GstPad *sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
-  GstPad *src = gst_ghost_pad_new ("src", src_target);
+  sinka = gst_ghost_pad_new ("sinka", sinka_target);
+  sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
+  src = gst_ghost_pad_new ("src", src_target);
 
   gst_element_add_pad (topbin, src);
   gst_element_add_pad (topbin, sinka);
@@ -299,9 +299,8 @@ create_video_bin (GESTrackTransition * self)
 
   g_object_set (target, propname, (gfloat) 0.0, NULL);
 
-  GstController *controller;
   controller = gst_object_control_properties (target, propname, NULL);
-  GstInterpolationControlSource *control_source;
+
   control_source = gst_interpolation_control_source_new ();
   gst_controller_set_control_source (controller,
       propname, GST_CONTROL_SOURCE (control_source));
@@ -321,21 +320,23 @@ create_video_bin (GESTrackTransition * self)
 static GstElement *
 create_audio_bin (GESTrackTransition * self)
 {
+  GstElement *topbin, *iconva, *iconvb, *oconv;
+  GObject *atarget, *btarget = NULL;
+  const gchar *propname = "volume";
+  GstElement *mixer = NULL;
+  GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
+  GstController *acontroller, *bcontroller;
+  GstInterpolationControlSource *acontrol_source, *bcontrol_source;
+
+
   GST_LOG ("creating an audio bin");
 
-  GstElement *topbin = gst_bin_new ("transition-bin");
-  GstElement *iconva = gst_element_factory_make ("audioconvert",
-      "tr-aconv-a");
-  GstElement *iconvb = gst_element_factory_make ("audioconvert",
-      "tr-aconv-b");
-  GstElement *oconv = gst_element_factory_make ("audioconvert",
-      "tr-aconv-output");
+  topbin = gst_bin_new ("transition-bin");
+  iconva = gst_element_factory_make ("audioconvert", "tr-aconv-a");
+  iconvb = gst_element_factory_make ("audioconvert", "tr-aconv-b");
+  oconv = gst_element_factory_make ("audioconvert", "tr-aconv-output");
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
-
-  GObject *atarget, *btarget = NULL;
-  gchar *propname = "volume";
-  GstElement *mixer = NULL;
 
   mixer = gst_element_factory_make ("adder", NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
@@ -347,13 +348,13 @@ create_audio_bin (GESTrackTransition * self)
 
   gst_element_link (mixer, oconv);
 
-  GstPad *sinka_target = gst_element_get_static_pad (iconva, "sink");
-  GstPad *sinkb_target = gst_element_get_static_pad (iconvb, "sink");
-  GstPad *src_target = gst_element_get_static_pad (oconv, "src");
+  sinka_target = gst_element_get_static_pad (iconva, "sink");
+  sinkb_target = gst_element_get_static_pad (iconvb, "sink");
+  src_target = gst_element_get_static_pad (oconv, "src");
 
-  GstPad *sinka = gst_ghost_pad_new ("sinka", sinka_target);
-  GstPad *sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
-  GstPad *src = gst_ghost_pad_new ("src", src_target);
+  sinka = gst_ghost_pad_new ("sinka", sinka_target);
+  sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
+  src = gst_ghost_pad_new ("src", src_target);
 
   gst_element_add_pad (topbin, src);
   gst_element_add_pad (topbin, sinka);
@@ -364,14 +365,10 @@ create_audio_bin (GESTrackTransition * self)
   //g_object_set(atarget, propname, (gdouble) 0, NULL);
   //g_object_set(btarget, propname, (gdouble) 0, NULL);
 
-  GstController *acontroller, *bcontroller;
-
   acontroller = gst_object_control_properties (atarget, propname, NULL);
   bcontroller = gst_object_control_properties (btarget, propname, NULL);
 
   g_assert (acontroller && bcontroller);
-
-  GstInterpolationControlSource *acontrol_source, *bcontrol_source;
 
   acontrol_source = gst_interpolation_control_source_new ();
   gst_controller_set_control_source (acontroller,
@@ -458,11 +455,11 @@ ges_track_transition_init (GESTrackTransition * self)
   self->a_bcontrol_source = NULL;
 }
 
-gboolean
+void
 ges_track_transition_set_vtype (GESTrackTransition * self, gint vtype)
 {
-  if ((vtype == VTYPE_CROSSFADE) && (self->vtype != VTYPE_CROSSFADE) ||
-      (vtype != VTYPE_CROSSFADE) && (self->vtype = VTYPE_CROSSFADE)) {
+  if (((vtype == VTYPE_CROSSFADE) && (self->vtype != VTYPE_CROSSFADE)) ||
+      ((vtype != VTYPE_CROSSFADE) && (self->vtype = VTYPE_CROSSFADE))) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported\n");
   }
