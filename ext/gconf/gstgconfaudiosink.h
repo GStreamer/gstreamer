@@ -45,7 +45,7 @@ typedef struct _GstGConfAudioSink {
   /* explicit pointers to stuff used */
   GConfClient *client;
   GstGConfProfile profile;
-  guint connection;
+  guint notify_id;
 
   /* Current gconf string */
   gchar *gconf_str;

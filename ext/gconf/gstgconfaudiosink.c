@@ -216,11 +216,11 @@ gst_gconf_switch_profile (GstGConfAudioSink * sink, GstGConfProfile profile)
   if (sink->client == NULL)
     return;
 
-  if (sink->connection) {
+  if (sink->notify_id) {
     GST_DEBUG_OBJECT (sink, "Unsubscribing old key %s for profile %d",
         gst_gconf_get_key_for_sink_profile (sink->profile), sink->profile);
-    gconf_client_notify_remove (sink->client, sink->connection);
-    sink->connection = 0;
+    gconf_client_notify_remove (sink->client, sink->notify_id);
+    sink->notify_id = 0;
   }
 
   sink->profile = profile;
@@ -229,7 +229,7 @@ gst_gconf_switch_profile (GstGConfAudioSink * sink, GstGConfProfile profile)
 
     GST_DEBUG_OBJECT (sink, "Subscribing to key %s for profile %d",
         key, profile);
-    sink->connection = gconf_client_notify_add (sink->client, key,
+    sink->notify_id = gconf_client_notify_add (sink->client, key,
         cb_change_child, sink, NULL, NULL);
   }
 }
