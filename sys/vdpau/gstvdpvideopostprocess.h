@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpdevice.h"
-#include "gstvdpvideobuffer.h"
+#include "gstvdp/gstvdpdevice.h"
+#include "gstvdp/gstvdpvideobuffer.h"
 
 G_BEGIN_DECLS
 

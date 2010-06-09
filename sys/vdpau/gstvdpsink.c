@@ -29,7 +29,7 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
-#include "gstvdpoutputbuffer.h"
+#include "gstvdp/gstvdpoutputbuffer.h"
 
 /* Object header */
 #include "gstvdpsink.h"

@@ -1728,6 +1728,8 @@ sys/qtwrapper/Makefile
 sys/shm/Makefile
 sys/vcd/Makefile
 sys/vdpau/Makefile
+sys/vdpau/gstvdp/Makefile
+sys/vdpau/basevideodecoder/Makefile
 sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile

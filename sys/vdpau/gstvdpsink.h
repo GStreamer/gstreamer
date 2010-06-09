@@ -29,7 +29,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "gstvdpdevice.h"
+#include "gstvdp/gstvdpdevice.h"
 
 G_BEGIN_DECLS
 
