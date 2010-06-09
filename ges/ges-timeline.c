@@ -103,6 +103,17 @@ ges_timeline_dispose (GObject * object)
     g_object_unref (timeline->discoverer);
     timeline->discoverer = NULL;
   }
+
+  while (timeline->tracks) {
+    TrackPrivate *priv = (TrackPrivate *) timeline->tracks->data;
+    ges_timeline_remove_track (timeline, priv->track);
+  }
+
+  while (timeline->layers) {
+    GESTimelineLayer *layer = (GESTimelineLayer *) timeline->layers->data;
+    ges_timeline_remove_layer (timeline, layer);
+  }
+
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
 
