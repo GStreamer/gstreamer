@@ -63,13 +63,13 @@ enum
   ARG_WRITING_APP,
   ARG_DOCTYPE_VERSION,
   ARG_MIN_INDEX_INTERVAL,
-  ARG_INDEXED
+  ARG_STREAMABLE
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
 #define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
 #define  DEFAULT_MIN_INDEX_INTERVAL      0
-#define  DEFAULT_INDEXED                 TRUE
+#define  DEFAULT_STREAMABLE              FALSE
 
 /* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
 #define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
@@ -305,11 +305,11 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
           "entries", "An index entry is created every so many nanoseconds.",
           0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_INDEXED,
-      g_param_spec_boolean ("indexed", "Determines whether output should be "
-          "indexed", "If set to false, the output should be as if it is to "
-          "be streamed and hence no indexes written or duration written.",
-          DEFAULT_INDEXED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_STREAMABLE,
+      g_param_spec_boolean ("streamable", "Determines whether output should "
+          "be streamable", "If set to true, the output should be as if it is "
+          "to be streamed and hence no indexes written or duration written.",
+          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -351,7 +351,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   mux->doctype_version = DEFAULT_DOCTYPE_VERSION;
   mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
   mux->min_index_interval = DEFAULT_MIN_INDEX_INTERVAL;
-  mux->indexed = DEFAULT_INDEXED;
+  mux->streamable = DEFAULT_STREAMABLE;
 
   /* initialize internal variables */
   mux->index = NULL;
@@ -2026,7 +2026,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
       gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENT);
   mux->segment_master = ebml->pos;
 
-  if (mux->indexed) {
+  if (!mux->streamable) {
     /* seekhead (table of contents) - we set the positions later */
     mux->seekhead_pos = ebml->pos;
     master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEEKHEAD);
@@ -2050,7 +2050,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
-  if (mux->indexed) {
+  if (!mux->streamable) {
     for (collected = mux->collect->data; collected;
         collected = g_slist_next (collected)) {
       GstMatroskaPad *collect_pad;
@@ -2191,7 +2191,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   }
 
   /* cues */
-  if (mux->index != NULL && mux->indexed) {
+  if (mux->index != NULL && !mux->streamable) {
     guint n;
     guint64 master, pointentry_master, trackpos_master;
 
@@ -2222,7 +2222,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   /* tags */
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
-  if (tags != NULL && !gst_tag_list_is_empty (tags) && mux->indexed) {
+  if (tags != NULL && !gst_tag_list_is_empty (tags) && !mux->streamable) {
     guint64 master_tags, master_tag;
 
     GST_DEBUG ("Writing tags");
@@ -2246,8 +2246,8 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
    *     length pointer starts at 20.
    * - all entries are local to the segment (so pos - segment_master).
    * - so each entry is at 12 + 20 + num * 28. */
-  if (mux->indexed) {
-    GST_DEBUG_OBJECT (mux, "not live");
+  if (!mux->streamable) {
+    GST_DEBUG_OBJECT (mux, "not streamable");
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 32,
         mux->info_pos - mux->segment_master);
     gst_ebml_replace_uint (ebml, mux->seekhead_pos + 60,
@@ -2569,7 +2569,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     /* start a new cluster every two seconds or at keyframe */
     if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)
         || is_video_keyframe) {
-      if (mux->indexed)
+      if (!mux->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
       mux->prev_cluster_size = ebml->pos - mux->cluster_pos;
       mux->cluster_pos = ebml->pos;
@@ -2849,8 +2849,8 @@ gst_matroska_mux_set_property (GObject * object,
     case ARG_MIN_INDEX_INTERVAL:
       mux->min_index_interval = g_value_get_int64 (value);
       break;
-    case ARG_INDEXED:
-      mux->indexed = g_value_get_boolean (value);
+    case ARG_STREAMABLE:
+      mux->streamable = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2877,8 +2877,8 @@ gst_matroska_mux_get_property (GObject * object,
     case ARG_MIN_INDEX_INTERVAL:
       g_value_set_int64 (value, mux->min_index_interval);
       break;
-    case ARG_INDEXED:
-      g_value_set_boolean (value, mux->indexed);
+    case ARG_STREAMABLE:
+      g_value_set_boolean (value, mux->streamable);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -98,7 +98,7 @@ typedef struct _GstMatroskaMux {
   GstMatroskaIndex *index;
   guint          num_indexes;
   GstClockTimeDiff min_index_interval;
-  gboolean       indexed;
+  gboolean       streamable;
  
   /* timescale in the file */
   guint64        time_scale;
