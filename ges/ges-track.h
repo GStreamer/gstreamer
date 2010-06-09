@@ -112,8 +112,8 @@ void ges_track_set_caps (GESTrack * track, const GstCaps * caps);
 gboolean ges_track_add_object (GESTrack * track, GESTrackObject * object);
 gboolean ges_track_remove_object (GESTrack * track, GESTrackObject * object);
 
-GESTrack *ges_track_video_raw_new ();
-GESTrack *ges_track_audio_raw_new ();
+GESTrack *ges_track_video_raw_new (void);
+GESTrack *ges_track_audio_raw_new (void);
 
 G_END_DECLS
 
