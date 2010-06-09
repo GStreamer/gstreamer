@@ -23,6 +23,8 @@
 #include <gst/gst.h>
 #include <gconf/gconf-client.h>
 
+#include "gstswitchsink.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_GCONF_VIDEO_SINK \
@@ -39,12 +41,10 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GCONF_VIDEO_SINK))
 
 typedef struct _GstGConfVideoSink {
-  GstBin parent;
+  GstSwitchSink parent;
 
   /* explicit pointers to stuff used */
   GConfClient *client;
-  GstElement *kid;
-  GstPad *pad;
 
   /* gconf notify id */
   guint notify_id;
@@ -54,7 +54,7 @@ typedef struct _GstGConfVideoSink {
 } GstGConfVideoSink;
 
 typedef struct _GstGConfVideoSinkClass {
-  GstBinClass parent_class;
+  GstSwitchSinkClass parent_class;
 } GstGConfVideoSinkClass;
 
 GType   gst_gconf_video_sink_get_type   (void);

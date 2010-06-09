@@ -47,20 +47,14 @@ static GstStateChangeReturn
 gst_gconf_video_sink_change_state (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstGConfVideoSink, gst_gconf_video_sink, GstBin, GST_TYPE_BIN);
+GST_BOILERPLATE (GstGConfVideoSink, gst_gconf_video_sink, GstSwitchSink,
+    GST_TYPE_SWITCH_SINK);
 
 static void
 gst_gconf_video_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS_ANY);
-
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details_simple (eklass, "GConf video sink",
       "Sink/Video",
       "Video sink embedding the GConf-settings for video output",
@@ -82,40 +76,19 @@ gst_gconf_video_sink_class_init (GstGConfVideoSinkClass * klass)
  * Hack to make negotiation work.
  */
 
-static gboolean
+static void
 gst_gconf_video_sink_reset (GstGConfVideoSink * sink)
 {
-  GstPad *targetpad;
-
-  /* fakesink */
-  if (sink->kid) {
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-  }
-  sink->kid = gst_element_factory_make ("fakesink", "testsink");
-  if (!sink->kid) {
-    GST_ERROR_OBJECT (sink, "Failed to create fakesink");
-    return FALSE;
-  }
-  gst_bin_add (GST_BIN (sink), sink->kid);
-
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
-  gst_object_unref (targetpad);
+  gst_switch_sink_set_child (GST_SWITCH_SINK (sink), NULL);
 
   g_free (sink->gconf_str);
   sink->gconf_str = NULL;
-
-  return TRUE;
 }
 
 static void
 gst_gconf_video_sink_init (GstGConfVideoSink * sink,
     GstGConfVideoSinkClass * g_class)
 {
-  sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
-
   gst_gconf_video_sink_reset (sink);
 
   sink->client = gconf_client_get_default ();
@@ -138,8 +111,6 @@ gst_gconf_video_sink_dispose (GObject * object)
     g_object_unref (G_OBJECT (sink->client));
     sink->client = NULL;
   }
-  g_free (sink->gconf_str);
-  sink->gconf_str = NULL;
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -153,74 +124,57 @@ gst_gconf_video_sink_finalize (GstGConfVideoSink * sink)
 }
 
 static gboolean
-do_toggle_element (GstGConfVideoSink * sink)
+do_change_child (GstGConfVideoSink * sink)
 {
-  GstPad *targetpad;
   gchar *new_gconf_str;
-  GstState cur, next;
+  GstElement *new_kid;
 
   new_gconf_str = gst_gconf_get_string (GST_GCONF_VIDEOSINK_KEY);
+
+  GST_LOG_OBJECT (sink, "old gconf string: %s", GST_STR_NULL (sink->gconf_str));
+  GST_LOG_OBJECT (sink, "new gconf string: %s", GST_STR_NULL (new_gconf_str));
+
   if (new_gconf_str != NULL && sink->gconf_str != NULL &&
       (strlen (new_gconf_str) == 0 ||
           strcmp (sink->gconf_str, new_gconf_str) == 0)) {
     g_free (new_gconf_str);
-    GST_DEBUG_OBJECT (sink, "GConf key was updated, but it didn't change");
-    return TRUE;
-  }
-
-  /* Sometime, it would be lovely to allow sink changes even when
-   * already running, but this involves sending an appropriate new-segment
-   * and possibly prerolling etc */
-  GST_OBJECT_LOCK (sink);
-  cur = GST_STATE (sink);
-  next = GST_STATE_PENDING (sink);
-  GST_OBJECT_UNLOCK (sink);
-
-  if (cur > GST_STATE_READY || next == GST_STATE_PAUSED) {
     GST_DEBUG_OBJECT (sink,
-        "Auto-sink is already running. Ignoring GConf change");
-    g_free (new_gconf_str);
+        "GConf key was updated, but it didn't change. Ignoring");
     return TRUE;
   }
 
   GST_DEBUG_OBJECT (sink, "GConf key changed: '%s' to '%s'",
       GST_STR_NULL (sink->gconf_str), GST_STR_NULL (new_gconf_str));
 
-  g_free (sink->gconf_str);
-  sink->gconf_str = new_gconf_str;
-
-  /* kill old element */
-  if (sink->kid) {
-    GST_DEBUG_OBJECT (sink, "Removing old kid");
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-    sink->kid = NULL;
-  }
-
   GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(sink->kid = gst_gconf_get_default_video_sink ())) {
+  if (!(new_kid = gst_gconf_get_default_video_sink ())) {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Failed to render video sink from GConf"));
     return FALSE;
   }
-  gst_element_set_state (sink->kid, GST_STATE (sink));
-  gst_bin_add (GST_BIN (sink), sink->kid);
 
-  /* re-attach ghostpad */
-  GST_DEBUG_OBJECT (sink, "Creating new ghostpad");
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
-  gst_object_unref (targetpad);
+  if (!gst_switch_sink_set_child (GST_SWITCH_SINK (sink), new_kid)) {
+    GST_WARNING_OBJECT (sink, "Failed to update child element");
+    goto fail;
+  }
+
+  g_free (sink->gconf_str);
+  sink->gconf_str = new_gconf_str;
+
   GST_DEBUG_OBJECT (sink, "done changing gconf video sink");
 
   return TRUE;
+
+fail:
+  g_free (new_gconf_str);
+  return FALSE;
 }
 
 static void
 cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data)
 {
-  do_toggle_element (GST_GCONF_VIDEO_SINK (data));
+  do_change_child (GST_GCONF_VIDEO_SINK (data));
 }
 
 static GstStateChangeReturn
@@ -232,8 +186,10 @@ gst_gconf_video_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!do_toggle_element (sink))
+      if (!do_change_child (sink)) {
+        gst_gconf_video_sink_reset (sink);
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     default:
       break;
@@ -244,8 +200,7 @@ gst_gconf_video_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (!gst_gconf_video_sink_reset (sink))
-        ret = GST_STATE_CHANGE_FAILURE;
+      gst_gconf_video_sink_reset (sink);
       break;
     default:
       break;
