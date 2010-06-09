@@ -172,7 +172,7 @@ ges_track_transition_dispose (GObject * object)
   }
 
   if (self->a_bcontroller) {
-    g_object_unref (self->a_acontroller);
+    g_object_unref (self->a_bcontroller);
     self->a_bcontroller = NULL;
     if (self->a_bcontrol_source)
       gst_object_unref (self->a_bcontrol_source);
