@@ -74,7 +74,7 @@ ges_track_transition_update_acontroller (GESTrackTransition * self,
     GstElement * gnlobj)
 {
   GST_LOG ("updating controller: gnlobj (%p) acontroller(%p) bcontroller(%p)",
-      self->a_acontroller, self->a_bcontroller);
+      gnlobj, self->a_acontroller, self->a_bcontroller);
 
   if (!gnlobj)
     return;
@@ -155,6 +155,9 @@ static void
 ges_track_transition_dispose (GObject * object)
 {
   GESTrackTransition *self = GES_TRACK_TRANSITION (object);
+
+  GST_DEBUG ("disposing");
+
   if (self->vcontroller) {
     g_object_unref (self->vcontroller);
     self->vcontroller = NULL;
