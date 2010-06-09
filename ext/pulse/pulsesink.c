@@ -1392,6 +1392,19 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       avail = towrite / bps;
     }
 
+    /* flush the buffer if it's full */
+    if ((pbuf->m_data != NULL) && (pbuf->m_towrite > 0)
+        && (pbuf->m_writable == 0)) {
+      GST_LOG_OBJECT (psink, "flushing %u samples at offset %" G_GINT64_FORMAT,
+          (guint) pbuf->m_towrite / bps, pbuf->m_offset);
+
+      if (pa_stream_write (pbuf->stream, (uint8_t *) pbuf->m_data,
+              pbuf->m_towrite, NULL, pbuf->m_offset, PA_SEEK_ABSOLUTE) < 0) {
+        goto write_failed;
+      }
+      pbuf->m_towrite = 0;
+      pbuf->m_offset = offset + towrite;        /* keep track of current offset */
+    }
 #else
 
     for (;;) {
