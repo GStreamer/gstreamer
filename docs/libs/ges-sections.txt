@@ -108,6 +108,7 @@ GES_TRACK_TRANSITION_GET_CLASS
 GES_TYPE_TRACK_TRANSITION
 ges_track_transition_get_type
 ges_track_transition_new
+ges_track_transition_set_vtype
 </SECTION>
 
 

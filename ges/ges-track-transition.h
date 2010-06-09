@@ -103,6 +103,7 @@ struct _GESTrackTransitionClass {
 GType ges_track_transition_get_type (void);
 
 GESTrackTransition *ges_track_transition_new (gint value);
+void ges_track_transition_set_vtype(GESTrackTransition *tr, gint vtype);
 
 G_END_DECLS
 
