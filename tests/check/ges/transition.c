@@ -41,7 +41,7 @@ GST_START_TEST (test_transition_basic)
   fail_unless (tr1 != 0);
   fail_unless (tr1->vtype == VTYPE_CROSSFADE);
 
-  tr2 = ges_timeline_transition_new_for_nick ("bar-wipe-lr");
+  tr2 = ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
   fail_unless (tr2 != 0);
   fail_unless (tr2->vtype == 1);
 
