@@ -497,6 +497,8 @@ gst_volume_init (GstVolume * self, GstVolumeClass * g_class)
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (self), TRUE);
 }
 
+#define USE_ORC
+
 static void
 volume_process_double (GstVolume * self, gpointer bytes, guint n_bytes)
 {
@@ -708,8 +710,12 @@ volume_process_int16 (GstVolume * self, gpointer bytes, guint n_bytes)
   gint16 *data = (gint16 *) bytes;
   guint num_samples = n_bytes / sizeof (gint16);
 
+#ifndef USE_ORC
   guint i;
   gint val;
+
+  /* hard coded in volume.orc */
+  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 13);
 
   for (i = 0; i < num_samples; i++) {
     /* we use bitshifting instead of dividing by UNITY_INT for speed */
@@ -718,12 +724,9 @@ volume_process_int16 (GstVolume * self, gpointer bytes, guint n_bytes)
         (gint16) ((self->current_vol_i16 *
             val) >> VOLUME_UNITY_INT16_BIT_SHIFT);
   }
-#if 0
+#else
   /* FIXME */
-  /* hard coded in volume.orc */
-  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 13);
-
-  orc_process_int16 (data, this->current_vol_i16, num_samples);
+  orc_process_int16 (data, self->current_vol_i16, num_samples);
 #endif
 }
 
@@ -732,6 +735,8 @@ volume_process_int16_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gint16 *data = (gint16 *) bytes;
   guint num_samples = n_bytes / sizeof (gint16);
+
+#ifndef USE_ORC
   int i;
 
   /* hard coded in volume.orc */
@@ -748,9 +753,9 @@ volume_process_int16_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
             val) >> VOLUME_UNITY_INT16_BIT_SHIFT, VOLUME_MIN_INT16,
         VOLUME_MAX_INT16);
   }
-#if 0
+#else
   /* FIXME */
-  orc_process_int16_clamp (data, this->current_vol_i16, num_samples);
+  orc_process_int16_clamp (data, self->current_vol_i16, num_samples);
 #endif
 }
 
@@ -777,6 +782,8 @@ volume_process_int8 (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gint8 *data = (gint8 *) bytes;
   guint num_samples = n_bytes / sizeof (gint8);
+
+#ifndef USE_ORC
   int i;
 
   for (i = 0; i < num_samples; i++) {
@@ -785,12 +792,12 @@ volume_process_int8 (GstVolume * self, gpointer bytes, guint n_bytes)
     *data++ =
         (gint8) ((self->current_vol_i8 * val) >> VOLUME_UNITY_INT8_BIT_SHIFT);
   }
-#if 0
+#else
   /* FIXME */
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 5);
 
-  orc_process_int8 (data, this->current_vol_i8, num_samples);
+  orc_process_int8 (data, self->current_vol_i8, num_samples);
 #endif
 }
 
@@ -799,6 +806,8 @@ volume_process_int8_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gint8 *data = (gint8 *) bytes;
   guint num_samples = n_bytes / sizeof (gint8);
+
+#ifndef USE_ORC
   int i;
 
   /* hard coded in volume.orc */
@@ -812,9 +821,9 @@ volume_process_int8_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
             val) >> VOLUME_UNITY_INT8_BIT_SHIFT, VOLUME_MIN_INT8,
         VOLUME_MAX_INT8);
   }
-#if 0
+#else
   /* FIXME */
-  orc_process_int8_clamp (data, this->current_vol_i8, num_samples);
+  orc_process_int8_clamp (data, self->current_vol_i8, num_samples);
 #endif
 }
 
