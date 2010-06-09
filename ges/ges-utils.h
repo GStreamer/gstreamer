@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-GESTimeline * ges_timeline_new_audio_video ();
+GESTimeline * ges_timeline_new_audio_video (void);
 
 G_END_DECLS
 
