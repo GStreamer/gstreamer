@@ -546,6 +546,7 @@ gst_matroska_mux_reset (GstElement * element)
 
   /* reset timers */
   mux->time_scale = GST_MSECOND;
+  mux->max_cluster_duration = G_MAXINT16 * mux->time_scale;
   mux->duration = 0;
 
   /* reset cluster */
@@ -2566,8 +2567,10 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   }
 
   if (mux->cluster) {
-    /* start a new cluster every two seconds or at keyframe */
-    if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)
+    /* start a new cluster at every keyframe or when we may be reaching the
+     * limit of the relative timestamp */
+    if (mux->cluster_time +
+        mux->max_cluster_duration < GST_BUFFER_TIMESTAMP (buf)
         || is_video_keyframe) {
       if (!mux->streamable)
         gst_ebml_write_master_finish (ebml, mux->cluster);
