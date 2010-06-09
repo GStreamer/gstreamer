@@ -45,6 +45,10 @@ static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
 
 void
 ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
+    gint value);
+
+void
+ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
     gint value)
 {
   GList *tmp;
@@ -66,7 +70,6 @@ ges_timeline_transition_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   GESTimelineTransition *self = GES_TIMELINE_TRANSITION (object);
-  gint value_int;
   switch (property_id) {
     case PROP_VTYPE:
       self->vtype = g_value_get_enum (value);
