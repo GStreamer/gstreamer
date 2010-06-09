@@ -36,7 +36,7 @@
  * but the "default registry" is the only object that has any meaning to the
  * core.
  *
- * The registry.xml file is actually a cache of plugin information. This is
+ * The registry file is actually a cache of plugin information. This is
  * unlike versions prior to 0.10, where the registry file was the primary source
  * of plugin information, and was created by the gst-register command.
  *
@@ -45,13 +45,33 @@
  * or wants to search for a feature that satisfies given criteria, the primary
  * means of doing so is to load every plugin and look at the resulting
  * information that is gathered in the default registry. Clearly, this is a time
- * consuming process, so we cache information in the registry.xml file.
+ * consuming process, so we cache information in the registry file. The format
+ * and location of the cache file is internal to gstreamer. 
  *
- * On startup, plugins are searched for in the plugin search path. This path can
- * be set directly using the GST_PLUGIN_PATH environment variable. The registry
- * file is loaded from ~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.xml or the
- * file listed in the GST_REGISTRY env var. The only reason to change the
- * registry location is for testing.
+ * On startup, plugins are searched for in the plugin search path. The following
+ * locations are checked in this order:
+ * <itemizedlist>
+ *   <listitem>
+ *     <para>location from --gst-plugin-path commandline option.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>the GST_PLUGIN_PATH environment variable.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>the GST_PLUGIN_SYSTEM_PATH environment variable.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>default locations (if GST_PLUGIN_SYSTEM_PATH is not set). Those
+ *       default locations are:
+ *       <filename>~/.gstreamer-$GST_MAJORMINOR/plugins/</filename>
+ *       and <filename>$prefix/libs/gstreamer-$GST_MAJORMINOR/</filename>.
+ *     </para>
+ *   </listitem>
+ * </itemizedlist>
+ * The registry cache file is loaded from
+ * <filename>~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.bin</filename> or the
+ * file listed in the GST_REGISTRY env var. One reason to change the registry
+ * location is for testing.
  *
  * For each plugin that is found in the plugin search path, there could be 3
  * possibilities for cached information:
