@@ -35,7 +35,7 @@ GST_START_TEST (test_filesource_basic)
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
   fail_unless (track != NULL);
 
-  source = ges_timeline_filesource_new (TEST_URI);
+  source = ges_timeline_filesource_new ((gchar *) TEST_URI);
   fail_unless (source != NULL);
 
   /* Make sure the object was properly set */
@@ -96,7 +96,8 @@ GST_START_TEST (test_filesource_properties)
   fail_unless (track != NULL);
 
   object = (GESTimelineObject *)
-      ges_timeline_filesource_new ("crack:///there/is/no/way/this/exists");
+      ges_timeline_filesource_new ((gchar *)
+      "crack:///there/is/no/way/this/exists");
   fail_unless (object != NULL);
 
   /* Set some properties */
