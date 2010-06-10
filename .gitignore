@@ -38,3 +38,6 @@ Makefile
 /m4
 
 ext/dv/smpte_test
+
+tmp-orc.c
+*orc.h
