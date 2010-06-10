@@ -48,6 +48,7 @@ arbitrary_fill_track_func (GESTimelineObject * object,
   /* interpret user_data as name of element to create */
 
   src = gst_element_factory_make (user_data, NULL);
+  gst_bin_add (GST_BIN (gnlobj), src);
 
   return TRUE;
 }
