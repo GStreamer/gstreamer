@@ -126,6 +126,7 @@ main (int argc, char *argv[])
 {
   App *app = &s_app;
   GstBus *bus;
+  GstCaps *subcaps;
 
   gst_init (&argc, &argv);
 
@@ -146,6 +147,9 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (app->textsink), "ts-offset", 0 * GST_SECOND, NULL);
   g_signal_connect (app->textsink, "new-buffer", G_CALLBACK (have_subtitle),
       app);
+  subcaps = gst_caps_from_string ("text/x-pango-markup; text/plain");
+  g_object_set (G_OBJECT (app->textsink), "caps", subcaps, NULL);
+  gst_caps_unref (subcaps);
 
   g_object_set (G_OBJECT (app->playbin), "text-sink", app->textsink, NULL);
 
