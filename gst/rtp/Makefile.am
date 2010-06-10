@@ -16,6 +16,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpilbcpay.c \
 	gstrtpmpadepay.c \
 	gstrtpmpapay.c \
+	gstrtpmparobustdepay.c \
 	gstrtpmpvdepay.c \
 	gstrtpmpvpay.c \
 	gstrtppcmadepay.c \
@@ -114,6 +115,7 @@ noinst_HEADERS =			\
 		 gstrtpgsmdepay.h 	\
 		 gstrtpgsmpay.h 	\
 		 gstrtpmpadepay.h 	\
+		 gstrtpmparobustdepay.h 	\
 		 gstrtpmpapay.h 	\
 		 gstrtpmpvdepay.h \
 		 gstrtpmpvpay.h \

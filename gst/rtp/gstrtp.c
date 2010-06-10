@@ -47,6 +47,7 @@
 #include "gstrtpamrdepay.h"
 #include "gstrtpmpapay.h"
 #include "gstrtpmpadepay.h"
+#include "gstrtpmparobustdepay.h"
 #include "gstrtpmpvdepay.h"
 #include "gstrtpmpvpay.h"
 #include "gstrtph263pdepay.h"
@@ -164,6 +165,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_mpa_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_mpa_robust_depay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_mpv_depay_plugin_init (plugin))
