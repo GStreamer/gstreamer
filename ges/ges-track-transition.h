@@ -75,6 +75,9 @@ struct _GESTrackTransition
 
   /* so we can support changing between wipes */
   GstElement                    *vsmpte;
+  GstElement                    *vmixer;
+  GstPad                        *sinka;
+  GstPad                        *sinkb;
   
   /* these will be different depending on whether smptealpha or alpha element
    * is used */

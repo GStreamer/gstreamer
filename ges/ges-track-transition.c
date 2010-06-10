@@ -157,6 +157,8 @@ ges_track_transition_dispose (GObject * object)
   GESTrackTransition *self = GES_TRACK_TRANSITION (object);
 
   GST_DEBUG ("disposing");
+  GST_LOG ("mixer: %p smpte: %p sinka: %p sinkb: %p",
+      self->vmixer, self->vsmpte, self->sinka, self->sinkb);
 
   if (self->vcontroller) {
     g_object_unref (self->vcontroller);
@@ -182,6 +184,14 @@ ges_track_transition_dispose (GObject * object)
     self->a_bcontrol_source = NULL;
   }
 
+  if (self->sinka) {
+    GST_DEBUG ("releasing request pads for vmixer");
+    gst_element_release_request_pad (self->vmixer, self->sinka);
+    gst_element_release_request_pad (self->vmixer, self->sinkb);
+    self->vmixer = NULL;
+    self->sinka = NULL;
+    self->sinkb = NULL;
+  }
 
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
@@ -269,8 +279,10 @@ create_video_bin (GESTrackTransition * self)
     self->vstart_value = 1.0;
     self->vend_value = 0.0;
   } else {
-    link_element_to_mixer (iconva, mixer);
-    target = link_element_to_mixer (iconvb, mixer);
+    self->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
+    self->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
+    target = (GObject *) self->sinkb;
+    self->vmixer = mixer;
     propname = "alpha";
     self->vstart_value = 0.0;
     self->vend_value = 1.0;
@@ -439,6 +451,9 @@ ges_track_transition_init (GESTrackTransition * self)
   self->vcontroller = NULL;
   self->vcontrol_source = NULL;
   self->vsmpte = NULL;
+  self->vmixer = NULL;
+  self->sinka = NULL;
+  self->sinkb = NULL;
   self->vtype = 0;
   self->vstart_value = 0.0;
   self->vend_value = 0.0;
