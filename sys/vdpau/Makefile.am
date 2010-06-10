@@ -11,6 +11,7 @@ libgstvdpau_la_SOURCES = \
 	mpeg/gstvdpmpegdec.c \
 	h264/gstnalreader.c \
 	h264/gsth264parser.c \
+	h264/gstvdph264frame.c \
 	h264/gstvdph264dec.c
 
 libgstvdpau_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) $(VDPAU_CFLAGS)
@@ -32,4 +33,5 @@ noinst_HEADERS = \
 	mpeg/gstvdpmpegdec.h \
 	h264/gstnalreader.h \
 	h264/gsth264parser.h \
+	h264/gstvdph264frame.h \
 	h264/gstvdph264dec.h

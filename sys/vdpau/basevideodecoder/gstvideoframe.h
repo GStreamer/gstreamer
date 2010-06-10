@@ -23,9 +23,10 @@
 
 #include <gst/gst.h>
 
-#define GST_TYPE_VIDEO_FRAME (gst_video_frame_get_type())
-#define GST_IS_VIDEO_FRAME(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_FRAME))
-#define GST_VIDEO_FRAME(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_FRAME, GstVideoFrame))
+#define GST_TYPE_VIDEO_FRAME      (gst_video_frame_get_type())
+#define GST_IS_VIDEO_FRAME(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VIDEO_FRAME))
+#define GST_VIDEO_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VIDEO_FRAME, GstVideoFrame))
+#define GST_VIDEO_FRAME_CAST(obj) ((GstVideoFrame *)obj)
 
 /**
  * GstVideoFrameFlag:
