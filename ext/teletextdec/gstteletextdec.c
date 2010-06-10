@@ -678,8 +678,10 @@ gst_teletextdec_chain (GstPad * pad, GstBuffer * buf)
   g_mutex_lock (teletext->queue_lock);
   if (!g_queue_is_empty (teletext->queue)) {
     ret = gst_teletextdec_push_page (teletext);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      g_mutex_unlock (teletext->queue_lock);
       goto error;
+    }
   }
   g_mutex_unlock (teletext->queue_lock);
 
