@@ -1258,6 +1258,97 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-dts ***/
+static GstStaticCaps dts_caps = GST_STATIC_CAPS ("audio/x-dts");
+#define DTS_CAPS (gst_static_caps_get (&dts_caps))
+
+static void
+dts_type_find (GstTypeFind * tf, gpointer unused)
+{
+  static const int sample_rates[16] = { 0, 8000, 16000, 32000, 0, 0, 11025,
+    22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000
+  };
+  static const guint8 channels_table[16] = { 1, 2, 2, 2, 2, 3, 3, 4, 4, 5,
+    6, 6, 6, 7, 8, 8
+  };
+  GstTypeFindProbability prob;
+  const guint8 *data;
+  guint16 hdr[8];
+  guint32 marker;
+  guint sample_rate, num_blocks, frame_size, chans, lfe, i;
+
+  data = gst_type_find_peek (tf, 0, sizeof (hdr));
+
+  if (data == NULL)
+    return;
+
+  marker = GST_READ_UINT32_BE (data);
+
+  /* raw big endian or 14-bit big endian */
+  if (marker == 0x7FFE8001 || marker == 0x1FFFE800) {
+    for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
+      hdr[i] = GST_READ_UINT16_BE (data + (i * sizeof (guint16)));
+  } else
+    /* raw little endian or 14-bit little endian */
+  if (marker == 0xFE7F0180 || marker == 0xFF1F00E8) {
+    for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
+      hdr[i] = GST_READ_UINT16_LE (data + (i * sizeof (guint16)));
+  } else {
+    return;
+  }
+
+  GST_LOG ("dts sync marker 0x%08x at offset 0", marker);
+  prob = GST_TYPE_FIND_LIKELY;
+
+  /* 14-bit mode */
+  if (marker == 0x1FFFE800 || marker == 0xFF1F00E8) {
+    if ((hdr[2] & 0xFFF0) != 0x07F0)
+      return;
+    /* discard top 2 bits (2 void), shift in 2 */
+    hdr[0] = (hdr[0] << 2) | ((hdr[1] >> 12) & 0x0003);
+    /* discard top 4 bits (2 void, 2 shifted into hdr[0]), shift in 4 etc. */
+    hdr[1] = (hdr[1] << 4) | ((hdr[2] >> 10) & 0x000F);
+    hdr[2] = (hdr[2] << 6) | ((hdr[3] >> 8) & 0x003F);
+    hdr[3] = (hdr[3] << 8) | ((hdr[4] >> 6) & 0x00FF);
+    hdr[4] = (hdr[4] << 10) | ((hdr[5] >> 4) & 0x03FF);
+    hdr[5] = (hdr[5] << 12) | ((hdr[6] >> 2) & 0x0FFF);
+    hdr[6] = (hdr[6] << 14) | ((hdr[7] >> 0) & 0x3FFF);
+    g_assert (hdr[0] == 0x7FFE && hdr[1] == 0x8001);
+    prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+  }
+
+  GST_LOG ("frame header: %04x%04x%04x%04x", hdr[2], hdr[3], hdr[4], hdr[5]);
+
+  num_blocks = (hdr[2] >> 2) & 0x7F;
+  frame_size = (((hdr[2] & 0x03) << 12) | (hdr[3] >> 4)) + 1;
+  chans = ((hdr[3] & 0x0F) << 2) | (hdr[4] >> 14);
+  sample_rate = sample_rates[(hdr[4] >> 10) & 0x0F];
+  lfe = (hdr[5] >> 9) & 0x03;
+
+  if (num_blocks < 5 || frame_size < 96 || sample_rate == 0)
+    return;
+
+  /* check for second frame sync */
+  if (marker == 0x1FFFE800 || marker == 0xFF1F00E8)
+    frame_size = (frame_size * 16) / 14;
+
+  if ((data = gst_type_find_peek (tf, frame_size, 4))) {
+    GST_LOG ("frame size: %u 0x%04x", frame_size, frame_size);
+    GST_MEMDUMP ("second frame sync", data, 4);
+    if (GST_READ_UINT32_BE (data) == marker)
+      prob = GST_TYPE_FIND_MAXIMUM;
+  }
+
+  if (chans < G_N_ELEMENTS (channels_table)) {
+    gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
+        "rate", G_TYPE_INT, sample_rate,
+        "channels", G_TYPE_INT, channels_table[chans] + ((lfe) ? 1 : 0), NULL);
+  } else {
+    gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
+        "rate", G_TYPE_INT, sample_rate, NULL);
+  }
+}
+
 /*** gsm ***/
 
 /* can only be detected by using the extension, in which case we use the default
@@ -3749,6 +3840,7 @@ plugin_init (GstPlugin * plugin)
   };
   static const gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
   static const gchar *ac3_exts[] = { "ac3", NULL };
+  static const gchar *dts_exts[] = { "dts", NULL };
   static const gchar *gsm_exts[] = { "gsm", NULL };
   static const gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
   static const gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
@@ -3885,6 +3977,8 @@ plugin_init (GstPlugin * plugin)
       mp3_exts, MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
       ac3_exts, AC3_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-dts", GST_RANK_SECONDARY, dts_type_find,
+      dts_exts, DTS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-gsm", GST_RANK_PRIMARY, NULL, gsm_exts,
       GSM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-sys", GST_RANK_PRIMARY,
