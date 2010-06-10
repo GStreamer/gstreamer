@@ -110,7 +110,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA "; text/plain ; text/html")
+    GST_STATIC_CAPS
+    (GST_VIDEO_CAPS_RGBA "; text/plain ; text/html ; text/x-pango-markup")
     );
 
 /* debug category for filtering log messages */
@@ -146,6 +147,9 @@ static GstFlowReturn gst_teletextdec_export_html_page (GstTeletextDec *
     teletext, vbi_page * page, GstBuffer ** buf);
 static GstFlowReturn gst_teletextdec_export_rgba_page (GstTeletextDec *
     teletext, vbi_page * page, GstBuffer ** buf);
+static GstFlowReturn gst_teletextdec_export_pango_page (GstTeletextDec *
+    teletext, vbi_page * page, GstBuffer ** buf);
+
 
 static gboolean gst_teletextdec_push_preroll_buffer (GstTeletextDec * teletext);
 static void gst_teletextdec_process_telx_buffer (GstTeletextDec * teletext,
@@ -520,6 +524,9 @@ gst_teletextdec_src_set_caps (GstPad * pad, GstCaps * caps)
   } else if (g_strcmp0 (mimetype, "text/plain") == 0) {
     teletext->output_format = GST_TELETEXTDEC_OUTPUT_FORMAT_TEXT;
     GST_DEBUG_OBJECT (teletext, "Selected text output format");
+  } else if (g_strcmp0 (mimetype, "text/x-pango-markup") == 0) {
+    teletext->output_format = GST_TELETEXTDEC_OUTPUT_FORMAT_PANGO;
+    GST_DEBUG_OBJECT (teletext, "Selected pango markup output format");
   } else
     goto refuse_caps;
 
@@ -732,6 +739,9 @@ gst_teletextdec_push_page (GstTeletextDec * teletext)
     case GST_TELETEXTDEC_OUTPUT_FORMAT_RGBA:
       ret = gst_teletextdec_export_rgba_page (teletext, &page, &buf);
       break;
+    case GST_TELETEXTDEC_OUTPUT_FORMAT_PANGO:
+      ret = gst_teletextdec_export_pango_page (teletext, &page, &buf);
+      break;
     default:
       g_assert_not_reached ();
       break;
@@ -775,37 +785,29 @@ push_failed:
   }
 }
 
-static gint
-gst_teletextdec_parse_subtitles_page (GstTeletextDec * teletext,
-    vbi_page * page, gchar ** text)
+static gchar **
+gst_teletextdec_vbi_page_to_text_lines (GstTeletextDec * teletext,
+    guint start, guint stop, vbi_page * page)
 {
-  const gint line_length = page->columns;
-  gchar *line;
-  GString *subs;
-  gint length, i;
+  const guint lines_count = stop - start + 1;
+  const guint line_length = page->columns;
+  gchar **lines;
+  gint i;
 
-  subs = g_string_new ("");
-  line = g_malloc (line_length + 1);
-  /* Print lines 2 to 23 */
-  for (i = 1; i < 23; i++) {
-    vbi_print_page_region (page, line, line_length + 1, "UTF-8", TRUE, 0,
-        0, i, page->columns, 1);
+  /* allocate a new NULL-terminated array of strings */
+  lines = (gchar **) g_malloc (sizeof (gchar *) * (lines_count + 1));
+  lines[lines_count] = g_strdup ('\0');
+
+  /* export each line in the range of the teletext page in text format */
+  for (i = start; i <= stop; i++) {
+    lines[i - start] = (gchar *) g_malloc (sizeof (gchar) * (line_length + 1));
+    vbi_print_page_region (page, lines[i - start], line_length + 1, "UTF-8",
+        TRUE, 0, 0, i, line_length, 1);
     /* Add the null character */
-    line[line_length] = '\0';
-    /* Strip blank lines */
-    g_strstrip (line);
-    if (g_strcmp0 (line, "")) {
-      g_string_append_printf (subs, teletext->subtitles_template, line);
-    }
+    lines[i - start][line_length] = '\0';
   }
-  if (!g_strcmp0 (subs->str, ""))
-    g_string_append (subs, "\n");
 
-  *text = subs->str;
-  length = subs->len + 1;
-  g_string_free (subs, FALSE);
-  g_free (line);
-  return length;
+  return lines;
 }
 
 static GstFlowReturn
@@ -818,7 +820,27 @@ gst_teletextdec_export_text_page (GstTeletextDec * teletext, vbi_page * page,
   guint size;
 
   if (teletext->subtitles_mode) {
-    size = gst_teletextdec_parse_subtitles_page (teletext, page, &text);
+    gchar **lines;
+    GString *subs;
+    guint i;
+
+    lines = gst_teletextdec_vbi_page_to_text_lines (teletext, 1, 23, page);
+    subs = g_string_new ("");
+    /* Strip white spaces and squash blank lines */
+    for (i = 0; i < 23; i++) {
+      g_strstrip (lines[i]);
+      if (g_strcmp0 (lines[i], ""))
+        g_string_append_printf (subs, teletext->subtitles_template, lines[i]);
+    }
+    /* if the page is blank and doesn't contain any line of text, just add a
+     * line break */
+    if (!g_strcmp0 (subs->str, ""))
+      g_string_append (subs, "\n");
+
+    text = subs->str;
+    size = subs->len + 1;
+    g_string_free (subs, FALSE);
+    g_strfreev (lines);
   } else {
     size = page->columns * page->rows;
     text = g_malloc (size);
@@ -913,6 +935,30 @@ gst_teletextdec_export_rgba_page (GstTeletextDec * teletext, vbi_page * page,
 
   gst_caps_unref (out_caps);
   return ret;
+}
+
+static GstFlowReturn
+gst_teletextdec_export_pango_page (GstTeletextDec * teletext, vbi_page * page,
+    GstBuffer ** buf)
+{
+  vbi_char *acp;
+  gint colors[page->rows];
+  int i, j;
+
+  /* Parse all the lines and approximate it's foreground color from the first
+   * non null character */
+  for (acp = page->text, i = 0; i < page->rows; acp += page->columns, i++) {
+    for (j = 0; j < page->columns; j++) {
+      if (acp[j].unicode != 20) {
+        color[i] = acp[j].foreground;
+        continue;
+      }
+    }
+  }
+
+
+  *buf = gst_buffer_new ();
+  return GST_FLOW_OK;
 }
 
 static gboolean
