@@ -2953,6 +2953,9 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   return result;
 }
 
+static GstStaticCaps sub_plaintext_caps =
+    GST_STATIC_CAPS ("text/x-pango-markup; text/plain");
+
 /* autoplug-continue decides, if a pad has raw caps that can be exposed
  * directly or if further decoding is necessary. We use this to expose
  * supported subtitles directly */
@@ -2960,7 +2963,7 @@ static gboolean
 autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstSourceGroup * group)
 {
-  GstCaps *subcaps;
+  GstCaps *subcaps = NULL;
   gboolean ret = FALSE;
   GstElement *text_sink;
   GstPad *text_sinkpad = NULL;
@@ -2974,6 +2977,15 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   if (text_sinkpad) {
     subcaps = gst_pad_get_caps_reffed (text_sinkpad);
     gst_object_unref (text_sinkpad);
+
+    /* If the textsink claims to support ANY subcaps,
+     * go the save way and only use the plaintext caps */
+    if (gst_caps_is_any (subcaps)) {
+      GST_WARNING_OBJECT (group->playbin, "Text sink '%s' accepts ANY caps",
+          GST_OBJECT_NAME (text_sink));
+      gst_caps_unref (subcaps);
+      subcaps = gst_static_caps_get (&sub_plaintext_caps);
+    }
   } else {
     subcaps = gst_subtitle_overlay_create_factory_caps ();
   }
