@@ -108,7 +108,7 @@ NAME_BLEND (guint8 * dest, const guint8 * src, gint src_height, gint src_width,
         "3:                            \n\t"
         :"=r" (src), "=r" (dest)
         :"0" (src), "1" (dest), "m" (s_alpha), "m" (src_width)
-	:"%eax", "%ecx", "memory",
+        :"%eax", "%ecx", "memory",
          "st", "st(1)", "st(2)", "st(3)", "st(4)", "st(5)", "st(6)", "st(7)"
 #ifdef __MMX__
         , "mm0", "mm1", "mm2", "mm4", "mm3", "mm5", "mm6", "mm7"
@@ -277,19 +277,19 @@ _blend_u8_mmx (guint8 * dest, const guint8 * src,
         " punpcklwd  %%mm6 ,   %%mm6   \n\t"   /* mm6 = 00 00 00 00 00 aa 00 aa, alpha scale factor */
         " punpckldq  %%mm6 ,   %%mm6   \n\t"   /* mm6 = 00 aa 00 aa 00 aa 00 aa */
 
-	" pxor       %%mm7 ,   %%mm7   \n\t"   /* mm7 = 00 00 00 00 00 00 00 00 */
+        " pxor       %%mm7 ,   %%mm7   \n\t"   /* mm7 = 00 00 00 00 00 00 00 00 */
 
         " movl          %5 ,   %%ecx   \n\t"   /* ecx = src_width */
 
-	"1:                           \n\t"
-	" test          $7 ,   %%ecx  \n\t"
-	" je                      2f  \n\t"
+        "1:                           \n\t"
+        " test          $7 ,   %%ecx  \n\t"
+        " je                      2f  \n\t"
         
         /* do first 4 "odd" bytes */
         " movd        (%2) ,   %%mm2   \n\t"   /* mm2 = src,  00 00 00 00 sv su sy sa */
         " movd        (%3) ,   %%mm1   \n\t"   /* mm1 = dest, 00 00 00 00 dv du dy da */
-	" punpcklbw  %%mm7 ,   %%mm2   \n\t"
-	" punpcklbw  %%mm7 ,   %%mm1   \n\t"
+        " punpcklbw  %%mm7 ,   %%mm2   \n\t"
+        " punpcklbw  %%mm7 ,   %%mm1   \n\t"
         " psubw      %%mm1 ,   %%mm2   \n\t"   /* mm2 = mm2 - mm1 */
         " pmullw     %%mm6 ,   %%mm2   \n\t"   /* mm2 = a * mm2 */
         " psllw         $8 ,   %%mm1   \n\t"   /* scale up */
@@ -311,10 +311,10 @@ _blend_u8_mmx (guint8 * dest, const guint8 * src,
         " movq        (%3) ,   %%mm1   \n\t"   /* mm1 = dest, dv1 du1 dy1 da1  dv0 du0 dy0 da0 */
         " movq       %%mm2 ,   %%mm4   \n\t"
         " movq       %%mm1 ,   %%mm3   \n\t"
-	" punpcklbw  %%mm7 ,   %%mm2   \n\t"
-	" punpckhbw  %%mm7 ,   %%mm4   \n\t"
-	" punpcklbw  %%mm7 ,   %%mm1   \n\t"
-	" punpckhbw  %%mm7 ,   %%mm3   \n\t"
+        " punpcklbw  %%mm7 ,   %%mm2   \n\t"
+        " punpckhbw  %%mm7 ,   %%mm4   \n\t"
+        " punpcklbw  %%mm7 ,   %%mm1   \n\t"
+        " punpckhbw  %%mm7 ,   %%mm3   \n\t"
         " psubw      %%mm1 ,   %%mm2   \n\t"   /* mm2 = mm2 - mm1 */
         " psubw      %%mm3 ,   %%mm4   \n\t"   /* mm4 = mm4 - mm3 */
         " pmullw     %%mm6 ,   %%mm2   \n\t"   /* mm2 = a * mm2 */
