@@ -228,28 +228,7 @@ if test "x$HAVE_X11" = "xyes"; then
 fi
 
 dnl Orc
-AC_ARG_ENABLE(orc,
-AC_HELP_STRING([--enable-orc],[use Orc if installed]),
-[case "${enableval}" in
-  yes) enable_orc=yes ;;
-  no)  enable_orc=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-orc) ;;
-esac
-],
-[enable_orc=yes]) dnl Default value
-
-ORC_REQ=0.4.4.1
-if test "x$enable_orc" = "xyes" ; then
-  PKG_CHECK_MODULES(ORC, orc-0.4 >= $ORC_REQ, HAVE_ORC=yes, HAVE_ORC=no)
-  AC_DEFINE(HAVE_ORC, 1, [Use Orc])
-
-  ORCC=`$PKG_CONFIG --variable=orcc orc-0.4`
-  AC_SUBST(ORCC)
-else
-  AC_DEFINE(DISABLE_ORC, 1, [Disable Orc])
-  HAVE_ORC=no
-fi
-AM_CONDITIONAL(HAVE_ORC, test "x$HAVE_ORC" = "xyes")
+ORC_CHECK([0.4.5])
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
@@ -1825,3 +1804,5 @@ win32/common/config.h
 AC_OUTPUT
 
 AG_GST_OUTPUT_PLUGINS
+ORC_OUTPUT
+
