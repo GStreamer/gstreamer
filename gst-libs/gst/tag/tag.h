@@ -225,7 +225,7 @@ GstBuffer *             gst_tag_list_to_xmp_buffer    (const GstTagList * list,
                                                        gboolean           read_only);
 
 /* functions related to exif */
-GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * list,
+GstBuffer *             gst_tag_list_to_exif_buffer (const GstTagList * taglist,
                                                      gint byte_order,
                                                      guint32 base_offset);
 
