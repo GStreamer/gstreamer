@@ -65,5 +65,9 @@ typedef struct _GESTrackFileSourceClass GESTrackFileSourceClass;
 typedef struct _GESTrackTransition GESTrackTransition;
 typedef struct _GESTrackTransitionClass GESTrackTransitionClass;
 
+typedef struct _GESTrackBackgroundSource GESTrackBackgroundSource;
+typedef struct _GESTrackBackgroundSourceClass
+  GESTrackBackgroundSourceClass;
+
 
 #endif /* __GES_TYPES_H__ */
