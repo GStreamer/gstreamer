@@ -42,7 +42,7 @@
 struct _GstV4l2Xv
 {
   Display *dpy;
-  gint port, idle_id;
+  gint port, idle_id, event_id;
   GMutex *mutex;
 };
 
@@ -103,10 +103,14 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   }
   min = s.st_rdev & 0xff;
   for (i = 0; i < anum; i++) {
+    GST_DEBUG_OBJECT (v4l2object->element, "found adapter: %s", ai[i].name);
     if (!strcmp (ai[i].name, "video4linux2") ||
         !strcmp (ai[i].name, "video4linux")) {
       if (first_id == 0)
         first_id = ai[i].base_id;
+
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "first_id=%d, base_id=%lu, min=%d", first_id, ai[i].base_id, min);
 
       /* hmm... */
       if (first_id != 0 && ai[i].base_id == first_id + min)
@@ -127,6 +131,7 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   v4l2xv->port = id;
   v4l2xv->mutex = g_mutex_new ();
   v4l2xv->idle_id = 0;
+  v4l2xv->event_id = 0;
   v4l2object->xv = v4l2xv;
 
   if (v4l2object->xwindow_id) {
@@ -150,6 +155,8 @@ gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
   g_mutex_free (v4l2xv->mutex);
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
+  if (v4l2xv->event_id)
+    g_source_remove (v4l2xv->event_id);
   g_free (v4l2xv);
   v4l2object->xv = NULL;
 }
@@ -168,20 +175,29 @@ gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
   gst_v4l2_xoverlay_close (v4l2object);
 }
 
+static void
+update_geometry (GstV4l2Object * v4l2object)
+{
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
+  XWindowAttributes attr;
+  XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
+  XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
+      DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
+      0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
+}
+
 static gboolean
 idle_refresh (gpointer data)
 {
   GstV4l2Object *v4l2object = GST_V4L2_OBJECT (data);
   GstV4l2Xv *v4l2xv = v4l2object->xv;
-  XWindowAttributes attr;
+
+  GST_LOG_OBJECT (v4l2object->element, "idle refresh");
 
   if (v4l2xv) {
     g_mutex_lock (v4l2xv->mutex);
 
-    XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
-    XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
-        DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
-        0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
+    update_geometry (v4l2object);
 
     v4l2xv->idle_id = 0;
     g_mutex_unlock (v4l2xv->mutex);
@@ -191,11 +207,42 @@ idle_refresh (gpointer data)
   return FALSE;
 }
 
+
+static gboolean
+event_refresh (gpointer data)
+{
+  GstV4l2Object *v4l2object = GST_V4L2_OBJECT (data);
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
+
+  GST_LOG_OBJECT (v4l2object->element, "event refresh");
+
+  if (v4l2xv) {
+    XEvent e;
+
+    g_mutex_lock (v4l2xv->mutex);
+
+    /* Handle ConfigureNotify */
+    while (XCheckWindowEvent (v4l2xv->dpy, v4l2object->xwindow_id,
+            StructureNotifyMask, &e)) {
+      switch (e.type) {
+        case ConfigureNotify:
+          update_geometry (v4l2object);
+          break;
+        default:
+          break;
+      }
+    }
+    g_mutex_unlock (v4l2xv->mutex);
+  }
+
+  /* repeat */
+  return TRUE;
+}
+
 void
 gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
 {
   GstV4l2Xv *v4l2xv;
-  XWindowAttributes attr;
   XID xwindow_id = id;
   gboolean change = (v4l2object->xwindow_id != xwindow_id);
 
@@ -238,13 +285,76 @@ gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
     XvSelectVideoNotify (v4l2xv->dpy, v4l2object->xwindow_id, 1);
   }
 
-  XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
-  XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
-      DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
-      0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
+  update_geometry (v4l2object);
 
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
   v4l2xv->idle_id = g_idle_add (idle_refresh, v4l2object);
   g_mutex_unlock (v4l2xv->mutex);
+}
+
+/**
+ * gst_v4l2_xoverlay_prepare_xwindow_id:
+ * @param v4l2object
+ * @param required TRUE if display is required (ie. TRUE for v4l2sink, but
+ *   FALSE for any other element with optional overlay capabilities)
+ */
+void
+gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
+    gboolean required)
+{
+  if (!GST_V4L2_IS_OVERLAY (v4l2object))
+    return;
+
+  gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (v4l2object->element));
+
+  if (required && !v4l2object->xwindow_id) {
+    GstV4l2Xv *v4l2xv;
+    Window win;
+    int width, height;
+
+    if (!v4l2object->xv && GST_V4L2_IS_OPEN (v4l2object))
+      gst_v4l2_xoverlay_open (v4l2object);
+
+    v4l2xv = v4l2object->xv;
+
+    /* if xoverlay is not supported, just bail */
+    if (!v4l2xv)
+      return;
+
+    /* xoverlay is supported, but we don't have a window.. so create one */
+    GST_DEBUG_OBJECT (v4l2object->element, "creating window");
+
+    g_mutex_lock (v4l2xv->mutex);
+
+    width = XDisplayWidth (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy));
+    height = XDisplayHeight (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy));
+    GST_DEBUG_OBJECT (v4l2object->element, "dpy=%p", v4l2xv->dpy);
+
+    win = XCreateSimpleWindow (v4l2xv->dpy,
+        DefaultRootWindow (v4l2xv->dpy),
+        0, 0, width, height, 0, 0,
+        XBlackPixel (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)));
+
+    GST_DEBUG_OBJECT (v4l2object->element, "win=%lu", win);
+
+    /* @todo add mouse events for all windows, and button events for self
+     * created windows, and hook up to navigation interface.. note that at
+     * least some of the events we want to handle regardless of whether it
+     * is a self created window or not.. such as mouse/button events in
+     * order to implement navigation interface?
+     */
+    XSelectInput (v4l2xv->dpy, win, ExposureMask | StructureNotifyMask);
+    v4l2xv->event_id = g_timeout_add (45, event_refresh, v4l2object);
+
+    XMapRaised (v4l2xv->dpy, win);
+
+    XSync (v4l2xv->dpy, FALSE);
+
+    g_mutex_unlock (v4l2xv->mutex);
+
+    GST_DEBUG_OBJECT (v4l2object->element, "got window");
+
+    gst_v4l2_xoverlay_set_window_handle (v4l2object, win);
+  }
 }

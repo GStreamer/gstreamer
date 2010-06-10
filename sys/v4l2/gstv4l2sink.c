@@ -739,9 +739,7 @@ gst_v4l2sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       gst_v4l2sink_sync_crop_fields (v4l2sink);
 
 #ifdef HAVE_XVIDEO
-      if (GST_V4L2_IS_OVERLAY (v4l2sink->v4l2object)) {
-        gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (v4l2sink));
-      }
+      gst_v4l2_xoverlay_prepare_xwindow_id (v4l2sink->v4l2object, TRUE);
 #endif
 
       v4l2sink->state = STATE_PENDING_STREAMON;
