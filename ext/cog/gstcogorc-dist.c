@@ -6,71 +6,118 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
 
-void cogorc_downsample_horiz_cosite_1tap (uint8_t * d1, const uint16_t * s1,
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
+
+void cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1,
     int n);
-void cogorc_downsample_horiz_cosite_3tap (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n);
-void cogorc_downsample_420_jpeg (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n);
-void cogorc_downsample_vert_halfsite_2tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n);
-void cogorc_downsample_vert_cosite_3tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, int n);
-void cogorc_downsample_vert_halfsite_4tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, const uint8_t * s4, int n);
-void cogorc_upsample_horiz_cosite_1tap (uint8_t * d1, const uint8_t * s1,
+void cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n);
+void cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n);
+void cogorc_downsample_vert_halfsite_2tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n);
+void cogorc_downsample_vert_cosite_3tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, int n);
+void cogorc_downsample_vert_halfsite_4tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int n);
+void cogorc_upsample_horiz_cosite_1tap (guint8 * d1, const orc_uint8 * s1,
     int n);
-void cogorc_upsample_horiz_cosite (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n);
-void cogorc_upsample_vert_avgub (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n);
-void orc_unpack_yuyv_y (uint8_t * d1, const uint16_t * s1, int n);
-void orc_unpack_yuyv_u (uint8_t * d1, const uint32_t * s1, int n);
-void orc_unpack_yuyv_v (uint8_t * d1, const uint32_t * s1, int n);
-void orc_pack_yuyv (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n);
-void orc_unpack_uyvy_y (uint8_t * d1, const uint16_t * s1, int n);
-void orc_unpack_uyvy_u (uint8_t * d1, const uint32_t * s1, int n);
-void orc_unpack_uyvy_v (uint8_t * d1, const uint32_t * s1, int n);
-void orc_pack_uyvy (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n);
-void orc_addc_convert_u8_s16 (uint8_t * d1, const int16_t * s1, int n);
-void orc_subc_convert_s16_u8 (int16_t * d1, const uint8_t * s1, int n);
-void orc_splat_u8_ns (uint8_t * d1, int p1, int n);
-void orc_splat_s16_ns (int16_t * d1, int p1, int n);
-void orc_matrix2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    int p1, int p2, int p3, int n);
-void orc_matrix2_11_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+void cogorc_upsample_horiz_cosite (guint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n);
+void cogorc_upsample_vert_avgub (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n);
+void orc_unpack_yuyv_y (orc_uint8 * d1, const orc_uint16 * s1, int n);
+void orc_unpack_yuyv_u (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void orc_unpack_yuyv_v (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void orc_pack_yuyv (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n);
+void orc_unpack_uyvy_y (orc_uint8 * d1, const orc_uint16 * s1, int n);
+void orc_unpack_uyvy_u (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void orc_unpack_uyvy_v (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void orc_pack_uyvy (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n);
+void orc_addc_convert_u8_s16 (orc_uint8 * d1, const gint16 * s1, int n);
+void orc_subc_convert_s16_u8 (gint16 * d1, const orc_uint8 * s1, int n);
+void orc_splat_u8_ns (orc_uint8 * d1, int p1, int n);
+void orc_splat_s16_ns (gint16 * d1, int p1, int n);
+void orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
+    int p2, int p3, int n);
+void orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
     int p1, int p2, int n);
-void orc_matrix2_12_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+void orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
     int p1, int p2, int n);
-void orc_matrix3_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int n);
-void orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int n);
-void orc_matrix3_100_offset_u8 (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, int p1, int p2, int p3, int p4,
+void orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int n);
+void orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int n);
+void orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1,
+    const guint8 * s2, const guint8 * s3, int p1, int p2, int p3, int p4,
     int p5, int n);
-void orc_matrix3_000_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int p5, int n);
-void orc_pack_123x (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n);
-void orc_pack_x123 (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n);
-void cogorc_combine2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    int p1, int p2, int n);
-void cogorc_combine4_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, const uint8_t * s4, int p1, int p2, int p3, int p4,
-    int n);
-void cogorc_unpack_axyz_0 (uint8_t * d1, const uint32_t * s1, int n);
-void cogorc_unpack_axyz_1 (uint8_t * d1, const uint32_t * s1, int n);
-void cogorc_unpack_axyz_2 (uint8_t * d1, const uint32_t * s1, int n);
-void cogorc_unpack_axyz_3 (uint8_t * d1, const uint32_t * s1, int n);
+void orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int p5, int n);
+void orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n);
+void orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n);
+void cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int p1, int p2, int n);
+void cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int p1,
+    int p2, int p3, int p4, int n);
+void cogorc_unpack_axyz_0 (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void cogorc_unpack_axyz_1 (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void cogorc_unpack_axyz_2 (orc_uint8 * d1, const orc_uint32 * s1, int n);
+void cogorc_unpack_axyz_3 (orc_uint8 * d1, const orc_uint32 * s1, int n);
 
 
 /* begin Orc C target preamble */
@@ -99,17 +146,6 @@ void cogorc_unpack_axyz_3 (uint8_t * d1, const uint32_t * s1, int n);
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -117,22 +153,23 @@ typedef union
 /* cogorc_downsample_horiz_cosite_1tap */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_horiz_cosite_1tap (uint8_t * d1, const uint16_t * s1, int n)
+cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1,
+    int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0wb */
-    var0 = (uint16_t) var4 & 0xff;
+    var0 = (orc_uint16) var4 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -145,19 +182,19 @@ _backup_cogorc_downsample_horiz_cosite_1tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0wb */
-    var0 = (uint16_t) var4 & 0xff;
+    var0 = (orc_uint16) var4 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -165,7 +202,8 @@ _backup_cogorc_downsample_horiz_cosite_1tap (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_horiz_cosite_1tap (uint8_t * d1, const uint16_t * s1, int n)
+cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -206,35 +244,35 @@ cogorc_downsample_horiz_cosite_1tap (uint8_t * d1, const uint16_t * s1, int n)
 /* cogorc_downsample_horiz_cosite_3tap */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_horiz_cosite_3tap (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n)
+cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int16_t var5;
-  const int16_t *ptr5;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  const int16_t var18 = 2;
-  int8_t var32;
-  int8_t var33;
-  int8_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  const orc_int16 var18 = 2;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int8 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
-  ptr5 = (int16_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
+  ptr5 = (orc_int16 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -244,17 +282,17 @@ cogorc_downsample_horiz_cosite_3tap (uint8_t * d1, const uint16_t * s1,
     /* 0: copyw */
     var35 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var35 & 0xff;
+    var32 = (orc_uint16) var35 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var35 >> 8) & 0xff;
+    var33 = ((orc_uint16) var35 >> 8) & 0xff;
     /* 3: select0wb */
-    var34 = (uint16_t) var5 & 0xff;
+    var34 = (orc_uint16) var5 & 0xff;
     /* 4: convubw */
-    var38 = (uint8_t) var32;
+    var38 = (orc_uint8) var32;
     /* 5: convubw */
-    var36 = (uint8_t) var33;
+    var36 = (orc_uint8) var33;
     /* 6: convubw */
-    var37 = (uint8_t) var34;
+    var37 = (orc_uint8) var34;
     /* 7: mullw */
     var39 = (var36 * var16) & 0xffff;
     /* 8: addw */
@@ -279,31 +317,31 @@ _backup_cogorc_downsample_horiz_cosite_3tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int16_t var5;
-  const int16_t *ptr5;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  const int16_t var18 = 2;
-  int8_t var32;
-  int8_t var33;
-  int8_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  const orc_int16 var18 = 2;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int8 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
-  ptr5 = (int16_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr5 = (orc_int16 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -313,17 +351,17 @@ _backup_cogorc_downsample_horiz_cosite_3tap (OrcExecutor * ex)
     /* 0: copyw */
     var35 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var35 & 0xff;
+    var32 = (orc_uint16) var35 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var35 >> 8) & 0xff;
+    var33 = ((orc_uint16) var35 >> 8) & 0xff;
     /* 3: select0wb */
-    var34 = (uint16_t) var5 & 0xff;
+    var34 = (orc_uint16) var5 & 0xff;
     /* 4: convubw */
-    var38 = (uint8_t) var32;
+    var38 = (orc_uint8) var32;
     /* 5: convubw */
-    var36 = (uint8_t) var33;
+    var36 = (orc_uint8) var33;
     /* 6: convubw */
-    var37 = (uint8_t) var34;
+    var37 = (orc_uint8) var34;
     /* 7: mullw */
     var39 = (var36 * var16) & 0xffff;
     /* 8: addw */
@@ -343,8 +381,8 @@ _backup_cogorc_downsample_horiz_cosite_3tap (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_horiz_cosite_3tap (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n)
+cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -408,28 +446,28 @@ cogorc_downsample_horiz_cosite_3tap (uint8_t * d1, const uint16_t * s1,
 /* cogorc_downsample_420_jpeg */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_420_jpeg (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n)
+cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int16_t var5;
-  const int16_t *ptr5;
-  int16_t var32;
-  int8_t var33;
-  int8_t var34;
-  int8_t var35;
-  int8_t var36;
-  int8_t var37;
-  int16_t var38;
-  int8_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  orc_int16 var32;
+  orc_int8 var33;
+  orc_int8 var34;
+  orc_int8 var35;
+  orc_int8 var36;
+  orc_int8 var37;
+  orc_int16 var38;
+  orc_int8 var39;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
-  ptr5 = (int16_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
+  ptr5 = (orc_int16 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -439,21 +477,21 @@ cogorc_downsample_420_jpeg (uint8_t * d1, const uint16_t * s1,
     /* 0: copyw */
     var32 = var4;
     /* 1: select0wb */
-    var33 = (uint16_t) var32 & 0xff;
+    var33 = (orc_uint16) var32 & 0xff;
     /* 2: select1wb */
-    var34 = ((uint16_t) var32 >> 8) & 0xff;
+    var34 = ((orc_uint16) var32 >> 8) & 0xff;
     /* 3: avgub */
-    var37 = ((uint8_t) var33 + (uint8_t) var34 + 1) >> 1;
+    var37 = ((orc_uint8) var33 + (orc_uint8) var34 + 1) >> 1;
     /* 4: copyw */
     var38 = var5;
     /* 5: select0wb */
-    var35 = (uint16_t) var38 & 0xff;
+    var35 = (orc_uint16) var38 & 0xff;
     /* 6: select1wb */
-    var36 = ((uint16_t) var38 >> 8) & 0xff;
+    var36 = ((orc_uint16) var38 >> 8) & 0xff;
     /* 7: avgub */
-    var39 = ((uint8_t) var35 + (uint8_t) var36 + 1) >> 1;
+    var39 = ((orc_uint8) var35 + (orc_uint8) var36 + 1) >> 1;
     /* 8: avgub */
-    var0 = ((uint8_t) var37 + (uint8_t) var39 + 1) >> 1;
+    var0 = ((orc_uint8) var37 + (orc_uint8) var39 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -466,24 +504,24 @@ _backup_cogorc_downsample_420_jpeg (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int16_t var5;
-  const int16_t *ptr5;
-  int16_t var32;
-  int8_t var33;
-  int8_t var34;
-  int8_t var35;
-  int8_t var36;
-  int8_t var37;
-  int16_t var38;
-  int8_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  orc_int16 var32;
+  orc_int8 var33;
+  orc_int8 var34;
+  orc_int8 var35;
+  orc_int8 var36;
+  orc_int8 var37;
+  orc_int16 var38;
+  orc_int8 var39;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
-  ptr5 = (int16_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr5 = (orc_int16 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -493,21 +531,21 @@ _backup_cogorc_downsample_420_jpeg (OrcExecutor * ex)
     /* 0: copyw */
     var32 = var4;
     /* 1: select0wb */
-    var33 = (uint16_t) var32 & 0xff;
+    var33 = (orc_uint16) var32 & 0xff;
     /* 2: select1wb */
-    var34 = ((uint16_t) var32 >> 8) & 0xff;
+    var34 = ((orc_uint16) var32 >> 8) & 0xff;
     /* 3: avgub */
-    var37 = ((uint8_t) var33 + (uint8_t) var34 + 1) >> 1;
+    var37 = ((orc_uint8) var33 + (orc_uint8) var34 + 1) >> 1;
     /* 4: copyw */
     var38 = var5;
     /* 5: select0wb */
-    var35 = (uint16_t) var38 & 0xff;
+    var35 = (orc_uint16) var38 & 0xff;
     /* 6: select1wb */
-    var36 = ((uint16_t) var38 >> 8) & 0xff;
+    var36 = ((orc_uint16) var38 >> 8) & 0xff;
     /* 7: avgub */
-    var39 = ((uint8_t) var35 + (uint8_t) var36 + 1) >> 1;
+    var39 = ((orc_uint8) var35 + (orc_uint8) var36 + 1) >> 1;
     /* 8: avgub */
-    var0 = ((uint8_t) var37 + (uint8_t) var39 + 1) >> 1;
+    var0 = ((orc_uint8) var37 + (orc_uint8) var39 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -515,8 +553,8 @@ _backup_cogorc_downsample_420_jpeg (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_420_jpeg (uint8_t * d1, const uint16_t * s1,
-    const uint16_t * s2, int n)
+cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -571,20 +609,20 @@ cogorc_downsample_420_jpeg (uint8_t * d1, const uint16_t * s1,
 /* cogorc_downsample_vert_halfsite_2tap */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_vert_halfsite_2tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_downsample_vert_halfsite_2tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -592,7 +630,7 @@ cogorc_downsample_vert_halfsite_2tap (uint8_t * d1, const uint8_t * s1,
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -605,16 +643,16 @@ _backup_cogorc_downsample_vert_halfsite_2tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -622,7 +660,7 @@ _backup_cogorc_downsample_vert_halfsite_2tap (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -630,8 +668,8 @@ _backup_cogorc_downsample_vert_halfsite_2tap (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_vert_halfsite_2tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_downsample_vert_halfsite_2tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -674,34 +712,34 @@ cogorc_downsample_vert_halfsite_2tap (uint8_t * d1, const uint8_t * s1,
 /* cogorc_downsample_vert_cosite_3tap */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_vert_cosite_3tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, int n)
+cogorc_downsample_vert_cosite_3tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  const int16_t var18 = 2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  const orc_int16 var18 = 2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -711,11 +749,11 @@ cogorc_downsample_vert_cosite_3tap (uint8_t * d1, const uint8_t * s1,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: mullw */
     var35 = (var33 * var16) & 0xffff;
     /* 4: addw */
@@ -740,30 +778,30 @@ _backup_cogorc_downsample_vert_cosite_3tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  const int16_t var18 = 2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  const orc_int16 var18 = 2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -773,11 +811,11 @@ _backup_cogorc_downsample_vert_cosite_3tap (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: mullw */
     var35 = (var33 * var16) & 0xffff;
     /* 4: addw */
@@ -797,8 +835,8 @@ _backup_cogorc_downsample_vert_cosite_3tap (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_vert_cosite_3tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, int n)
+cogorc_downsample_vert_cosite_3tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -857,41 +895,41 @@ cogorc_downsample_vert_cosite_3tap (uint8_t * d1, const uint8_t * s1,
 /* cogorc_downsample_vert_halfsite_4tap */
 #ifdef DISABLE_ORC
 void
-cogorc_downsample_vert_halfsite_4tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, const uint8_t * s4, int n)
+cogorc_downsample_vert_halfsite_4tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  const int16_t var16 = 26;
-  const int16_t var17 = 6;
-  const int16_t var18 = 32;
-  const int16_t var19 = 6;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  const orc_int16 var16 = 26;
+  const orc_int16 var17 = 6;
+  const orc_int16 var18 = 32;
+  const orc_int16 var19 = 6;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
-  ptr7 = (int8_t *) s4;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
+  ptr7 = (orc_int8 *) s4;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -903,13 +941,13 @@ cogorc_downsample_vert_halfsite_4tap (uint8_t * d1, const uint8_t * s1,
     var7 = *ptr7;
     ptr7++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: convubw */
-    var35 = (uint8_t) var7;
+    var35 = (orc_uint8) var7;
     /* 4: addw */
     var36 = var33 + var34;
     /* 5: mullw */
@@ -938,37 +976,37 @@ _backup_cogorc_downsample_vert_halfsite_4tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  const int16_t var16 = 26;
-  const int16_t var17 = 6;
-  const int16_t var18 = 32;
-  const int16_t var19 = 6;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  const orc_int16 var16 = 26;
+  const orc_int16 var17 = 6;
+  const orc_int16 var18 = 32;
+  const orc_int16 var19 = 6;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
-  ptr7 = (int8_t *) ex->arrays[7];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
+  ptr7 = (orc_int8 *) ex->arrays[7];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -980,13 +1018,13 @@ _backup_cogorc_downsample_vert_halfsite_4tap (OrcExecutor * ex)
     var7 = *ptr7;
     ptr7++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: convubw */
-    var35 = (uint8_t) var7;
+    var35 = (orc_uint8) var7;
     /* 4: addw */
     var36 = var33 + var34;
     /* 5: mullw */
@@ -1010,8 +1048,8 @@ _backup_cogorc_downsample_vert_halfsite_4tap (OrcExecutor * ex)
 }
 
 void
-cogorc_downsample_vert_halfsite_4tap (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, const uint8_t * s3, const uint8_t * s4, int n)
+cogorc_downsample_vert_halfsite_4tap (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1077,17 +1115,17 @@ cogorc_downsample_vert_halfsite_4tap (uint8_t * d1, const uint8_t * s1,
 /* cogorc_upsample_horiz_cosite_1tap */
 #ifdef DISABLE_ORC
 void
-cogorc_upsample_horiz_cosite_1tap (uint8_t * d1, const uint8_t * s1, int n)
+cogorc_upsample_horiz_cosite_1tap (guint8 * d1, const orc_uint8 * s1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var32;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var32;
 
-  ptr0 = (int16_t *) d1;
-  ptr4 = (int8_t *) s1;
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1095,7 +1133,7 @@ cogorc_upsample_horiz_cosite_1tap (uint8_t * d1, const uint8_t * s1, int n)
     /* 0: copyb */
     var32 = var4;
     /* 1: mergebw */
-    var0 = ((uint8_t) var32) | ((uint8_t) var32 << 8);
+    var0 = ((orc_uint8) var32) | ((orc_uint8) var32 << 8);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1108,14 +1146,14 @@ _backup_cogorc_upsample_horiz_cosite_1tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var32;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var32;
 
-  ptr0 = (int16_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1123,7 +1161,7 @@ _backup_cogorc_upsample_horiz_cosite_1tap (OrcExecutor * ex)
     /* 0: copyb */
     var32 = var4;
     /* 1: mergebw */
-    var0 = ((uint8_t) var32) | ((uint8_t) var32 << 8);
+    var0 = ((orc_uint8) var32) | ((orc_uint8) var32 << 8);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1131,7 +1169,7 @@ _backup_cogorc_upsample_horiz_cosite_1tap (OrcExecutor * ex)
 }
 
 void
-cogorc_upsample_horiz_cosite_1tap (uint8_t * d1, const uint8_t * s1, int n)
+cogorc_upsample_horiz_cosite_1tap (guint8 * d1, const orc_uint8 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1174,22 +1212,22 @@ cogorc_upsample_horiz_cosite_1tap (uint8_t * d1, const uint8_t * s1, int n)
 /* cogorc_upsample_horiz_cosite */
 #ifdef DISABLE_ORC
 void
-cogorc_upsample_horiz_cosite (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_upsample_horiz_cosite (guint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var32;
-  int8_t var33;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var32;
+  orc_int8 var33;
 
-  ptr0 = (int16_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1199,9 +1237,9 @@ cogorc_upsample_horiz_cosite (uint8_t * d1, const uint8_t * s1,
     /* 0: copyb */
     var32 = var4;
     /* 1: avgub */
-    var33 = ((uint8_t) var32 + (uint8_t) var5 + 1) >> 1;
+    var33 = ((orc_uint8) var32 + (orc_uint8) var5 + 1) >> 1;
     /* 2: mergebw */
-    var0 = ((uint8_t) var32) | ((uint8_t) var33 << 8);
+    var0 = ((orc_uint8) var32) | ((orc_uint8) var33 << 8);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1214,18 +1252,18 @@ _backup_cogorc_upsample_horiz_cosite (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var32;
-  int8_t var33;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var32;
+  orc_int8 var33;
 
-  ptr0 = (int16_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1235,9 +1273,9 @@ _backup_cogorc_upsample_horiz_cosite (OrcExecutor * ex)
     /* 0: copyb */
     var32 = var4;
     /* 1: avgub */
-    var33 = ((uint8_t) var32 + (uint8_t) var5 + 1) >> 1;
+    var33 = ((orc_uint8) var32 + (orc_uint8) var5 + 1) >> 1;
     /* 2: mergebw */
-    var0 = ((uint8_t) var32) | ((uint8_t) var33 << 8);
+    var0 = ((orc_uint8) var32) | ((orc_uint8) var33 << 8);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1245,8 +1283,8 @@ _backup_cogorc_upsample_horiz_cosite (OrcExecutor * ex)
 }
 
 void
-cogorc_upsample_horiz_cosite (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_upsample_horiz_cosite (guint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1292,20 +1330,20 @@ cogorc_upsample_horiz_cosite (uint8_t * d1, const uint8_t * s1,
 /* cogorc_upsample_vert_avgub */
 #ifdef DISABLE_ORC
 void
-cogorc_upsample_vert_avgub (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_upsample_vert_avgub (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1313,7 +1351,7 @@ cogorc_upsample_vert_avgub (uint8_t * d1, const uint8_t * s1,
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1326,16 +1364,16 @@ _backup_cogorc_upsample_vert_avgub (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1343,7 +1381,7 @@ _backup_cogorc_upsample_vert_avgub (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1351,8 +1389,8 @@ _backup_cogorc_upsample_vert_avgub (OrcExecutor * ex)
 }
 
 void
-cogorc_upsample_vert_avgub (uint8_t * d1, const uint8_t * s1,
-    const uint8_t * s2, int n)
+cogorc_upsample_vert_avgub (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1394,22 +1432,22 @@ cogorc_upsample_vert_avgub (uint8_t * d1, const uint8_t * s1,
 /* orc_unpack_yuyv_y */
 #ifdef DISABLE_ORC
 void
-orc_unpack_yuyv_y (uint8_t * d1, const uint16_t * s1, int n)
+orc_unpack_yuyv_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0wb */
-    var0 = (uint16_t) var4 & 0xff;
+    var0 = (orc_uint16) var4 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1422,19 +1460,19 @@ _backup_orc_unpack_yuyv_y (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0wb */
-    var0 = (uint16_t) var4 & 0xff;
+    var0 = (orc_uint16) var4 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1442,7 +1480,7 @@ _backup_orc_unpack_yuyv_y (OrcExecutor * ex)
 }
 
 void
-orc_unpack_yuyv_y (uint8_t * d1, const uint16_t * s1, int n)
+orc_unpack_yuyv_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1482,25 +1520,25 @@ orc_unpack_yuyv_y (uint8_t * d1, const uint16_t * s1, int n)
 /* orc_unpack_yuyv_u */
 #ifdef DISABLE_ORC
 void
-orc_unpack_yuyv_u (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_yuyv_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1513,22 +1551,22 @@ _backup_orc_unpack_yuyv_u (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1536,7 +1574,7 @@ _backup_orc_unpack_yuyv_u (OrcExecutor * ex)
 }
 
 void
-orc_unpack_yuyv_u (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_yuyv_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1578,25 +1616,25 @@ orc_unpack_yuyv_u (uint8_t * d1, const uint32_t * s1, int n)
 /* orc_unpack_yuyv_v */
 #ifdef DISABLE_ORC
 void
-orc_unpack_yuyv_v (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_yuyv_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1609,22 +1647,22 @@ _backup_orc_unpack_yuyv_v (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1632,7 +1670,7 @@ _backup_orc_unpack_yuyv_v (OrcExecutor * ex)
 }
 
 void
-orc_unpack_yuyv_v (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_yuyv_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1674,28 +1712,28 @@ orc_unpack_yuyv_v (uint8_t * d1, const uint32_t * s1, int n)
 /* orc_pack_yuyv */
 #ifdef DISABLE_ORC
 void
-orc_pack_yuyv (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n)
+orc_pack_yuyv (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n)
 {
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var32;
-  int8_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (int16_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr4 = (orc_int16 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1707,15 +1745,15 @@ orc_pack_yuyv (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
     /* 0: copyw */
     var36 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var36 & 0xff;
+    var32 = (orc_uint16) var36 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var36 >> 8) & 0xff;
+    var33 = ((orc_uint16) var36 >> 8) & 0xff;
     /* 3: mergebw */
-    var34 = ((uint8_t) var32) | ((uint8_t) var5 << 8);
+    var34 = ((orc_uint8) var32) | ((orc_uint8) var5 << 8);
     /* 4: mergebw */
-    var35 = ((uint8_t) var33) | ((uint8_t) var6 << 8);
+    var35 = ((orc_uint8) var33) | ((orc_uint8) var6 << 8);
     /* 5: mergewl */
-    var0.i = ((uint16_t) var34) | ((uint16_t) var35 << 16);
+    var0.i = ((orc_uint16) var34) | ((orc_uint16) var35 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1730,22 +1768,22 @@ _backup_orc_pack_yuyv (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var32;
-  int8_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -1757,15 +1795,15 @@ _backup_orc_pack_yuyv (OrcExecutor * ex)
     /* 0: copyw */
     var36 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var36 & 0xff;
+    var32 = (orc_uint16) var36 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var36 >> 8) & 0xff;
+    var33 = ((orc_uint16) var36 >> 8) & 0xff;
     /* 3: mergebw */
-    var34 = ((uint8_t) var32) | ((uint8_t) var5 << 8);
+    var34 = ((orc_uint8) var32) | ((orc_uint8) var5 << 8);
     /* 4: mergebw */
-    var35 = ((uint8_t) var33) | ((uint8_t) var6 << 8);
+    var35 = ((orc_uint8) var33) | ((orc_uint8) var6 << 8);
     /* 5: mergewl */
-    var0.i = ((uint16_t) var34) | ((uint16_t) var35 << 16);
+    var0.i = ((orc_uint16) var34) | ((orc_uint16) var35 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -1773,8 +1811,8 @@ _backup_orc_pack_yuyv (OrcExecutor * ex)
 }
 
 void
-orc_pack_yuyv (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n)
+orc_pack_yuyv (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1828,22 +1866,22 @@ orc_pack_yuyv (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_unpack_uyvy_y */
 #ifdef DISABLE_ORC
 void
-orc_unpack_uyvy_y (uint8_t * d1, const uint16_t * s1, int n)
+orc_unpack_uyvy_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1wb */
-    var0 = ((uint16_t) var4 >> 8) & 0xff;
+    var0 = ((orc_uint16) var4 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1856,19 +1894,19 @@ _backup_orc_unpack_uyvy_y (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1wb */
-    var0 = ((uint16_t) var4 >> 8) & 0xff;
+    var0 = ((orc_uint16) var4 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1876,7 +1914,7 @@ _backup_orc_unpack_uyvy_y (OrcExecutor * ex)
 }
 
 void
-orc_unpack_uyvy_y (uint8_t * d1, const uint16_t * s1, int n)
+orc_unpack_uyvy_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -1916,25 +1954,25 @@ orc_unpack_uyvy_y (uint8_t * d1, const uint16_t * s1, int n)
 /* orc_unpack_uyvy_u */
 #ifdef DISABLE_ORC
 void
-orc_unpack_uyvy_u (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_uyvy_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1947,22 +1985,22 @@ _backup_orc_unpack_uyvy_u (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -1970,7 +2008,7 @@ _backup_orc_unpack_uyvy_u (OrcExecutor * ex)
 }
 
 void
-orc_unpack_uyvy_u (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_uyvy_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2012,25 +2050,25 @@ orc_unpack_uyvy_u (uint8_t * d1, const uint32_t * s1, int n)
 /* orc_unpack_uyvy_v */
 #ifdef DISABLE_ORC
 void
-orc_unpack_uyvy_v (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_uyvy_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -2043,22 +2081,22 @@ _backup_orc_unpack_uyvy_v (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -2066,7 +2104,7 @@ _backup_orc_unpack_uyvy_v (OrcExecutor * ex)
 }
 
 void
-orc_unpack_uyvy_v (uint8_t * d1, const uint32_t * s1, int n)
+orc_unpack_uyvy_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2108,28 +2146,28 @@ orc_unpack_uyvy_v (uint8_t * d1, const uint32_t * s1, int n)
 /* orc_pack_uyvy */
 #ifdef DISABLE_ORC
 void
-orc_pack_uyvy (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n)
+orc_pack_uyvy (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n)
 {
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var32;
-  int8_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (int16_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr4 = (orc_int16 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2141,15 +2179,15 @@ orc_pack_uyvy (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
     /* 0: copyw */
     var36 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var36 & 0xff;
+    var32 = (orc_uint16) var36 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var36 >> 8) & 0xff;
+    var33 = ((orc_uint16) var36 >> 8) & 0xff;
     /* 3: mergebw */
-    var34 = ((uint8_t) var5) | ((uint8_t) var32 << 8);
+    var34 = ((orc_uint8) var5) | ((orc_uint8) var32 << 8);
     /* 4: mergebw */
-    var35 = ((uint8_t) var6) | ((uint8_t) var33 << 8);
+    var35 = ((orc_uint8) var6) | ((orc_uint8) var33 << 8);
     /* 5: mergewl */
-    var0.i = ((uint16_t) var34) | ((uint16_t) var35 << 16);
+    var0.i = ((orc_uint16) var34) | ((orc_uint16) var35 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -2164,22 +2202,22 @@ _backup_orc_pack_uyvy (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var32;
-  int8_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var32;
+  orc_int8 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2191,15 +2229,15 @@ _backup_orc_pack_uyvy (OrcExecutor * ex)
     /* 0: copyw */
     var36 = var4;
     /* 1: select0wb */
-    var32 = (uint16_t) var36 & 0xff;
+    var32 = (orc_uint16) var36 & 0xff;
     /* 2: select1wb */
-    var33 = ((uint16_t) var36 >> 8) & 0xff;
+    var33 = ((orc_uint16) var36 >> 8) & 0xff;
     /* 3: mergebw */
-    var34 = ((uint8_t) var5) | ((uint8_t) var32 << 8);
+    var34 = ((orc_uint8) var5) | ((orc_uint8) var32 << 8);
     /* 4: mergebw */
-    var35 = ((uint8_t) var6) | ((uint8_t) var33 << 8);
+    var35 = ((orc_uint8) var6) | ((orc_uint8) var33 << 8);
     /* 5: mergewl */
-    var0.i = ((uint16_t) var34) | ((uint16_t) var35 << 16);
+    var0.i = ((orc_uint16) var34) | ((orc_uint16) var35 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -2207,8 +2245,8 @@ _backup_orc_pack_uyvy (OrcExecutor * ex)
 }
 
 void
-orc_pack_uyvy (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int n)
+orc_pack_uyvy (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2262,18 +2300,18 @@ orc_pack_uyvy (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_addc_convert_u8_s16 */
 #ifdef DISABLE_ORC
 void
-orc_addc_convert_u8_s16 (uint8_t * d1, const int16_t * s1, int n)
+orc_addc_convert_u8_s16 (orc_uint8 * d1, const gint16 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  const int16_t var16 = 128;
-  int16_t var32;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  const orc_int16 var16 = 128;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2294,15 +2332,15 @@ _backup_orc_addc_convert_u8_s16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
-  const int16_t var16 = 128;
-  int16_t var32;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  const orc_int16 var16 = 128;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2318,7 +2356,7 @@ _backup_orc_addc_convert_u8_s16 (OrcExecutor * ex)
 }
 
 void
-orc_addc_convert_u8_s16 (uint8_t * d1, const int16_t * s1, int n)
+orc_addc_convert_u8_s16 (orc_uint8 * d1, const gint16 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2361,24 +2399,24 @@ orc_addc_convert_u8_s16 (uint8_t * d1, const int16_t * s1, int n)
 /* orc_subc_convert_s16_u8 */
 #ifdef DISABLE_ORC
 void
-orc_subc_convert_s16_u8 (int16_t * d1, const uint8_t * s1, int n)
+orc_subc_convert_s16_u8 (gint16 * d1, const orc_uint8 * s1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  const int16_t var16 = 128;
-  int16_t var32;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  const orc_int16 var16 = 128;
+  orc_int16 var32;
 
-  ptr0 = (int16_t *) d1;
-  ptr4 = (int8_t *) s1;
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var0 = var32 - var16;
     *ptr0 = var0;
@@ -2393,21 +2431,21 @@ _backup_orc_subc_convert_s16_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  const int16_t var16 = 128;
-  int16_t var32;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  const orc_int16 var16 = 128;
+  orc_int16 var32;
 
-  ptr0 = (int16_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var0 = var32 - var16;
     *ptr0 = var0;
@@ -2417,7 +2455,7 @@ _backup_orc_subc_convert_s16_u8 (OrcExecutor * ex)
 }
 
 void
-orc_subc_convert_s16_u8 (int16_t * d1, const uint8_t * s1, int n)
+orc_subc_convert_s16_u8 (gint16 * d1, const orc_uint8 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2460,14 +2498,14 @@ orc_subc_convert_s16_u8 (int16_t * d1, const uint8_t * s1, int n)
 /* orc_splat_u8_ns */
 #ifdef DISABLE_ORC
 void
-orc_splat_u8_ns (uint8_t * d1, int p1, int n)
+orc_splat_u8_ns (orc_uint8 * d1, int p1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  const int8_t var24 = p1;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int8 var24 = p1;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyb */
@@ -2484,11 +2522,11 @@ _backup_orc_splat_u8_ns (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  const int8_t var24 = ex->params[24];
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int8 var24 = ex->params[24];
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyb */
@@ -2500,7 +2538,7 @@ _backup_orc_splat_u8_ns (OrcExecutor * ex)
 }
 
 void
-orc_splat_u8_ns (uint8_t * d1, int p1, int n)
+orc_splat_u8_ns (orc_uint8 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2540,14 +2578,14 @@ orc_splat_u8_ns (uint8_t * d1, int p1, int n)
 /* orc_splat_s16_ns */
 #ifdef DISABLE_ORC
 void
-orc_splat_s16_ns (int16_t * d1, int p1, int n)
+orc_splat_s16_ns (gint16 * d1, int p1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = p1;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var24 = p1;
 
-  ptr0 = (int16_t *) d1;
+  ptr0 = (orc_int16 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -2564,11 +2602,11 @@ _backup_orc_splat_s16_ns (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = ex->params[24];
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var24 = ex->params[24];
 
-  ptr0 = (int16_t *) ex->arrays[0];
+  ptr0 = (orc_int16 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -2580,7 +2618,7 @@ _backup_orc_splat_s16_ns (OrcExecutor * ex)
 }
 
 void
-orc_splat_s16_ns (int16_t * d1, int p1, int n)
+orc_splat_s16_ns (gint16 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -2620,31 +2658,31 @@ orc_splat_s16_ns (int16_t * d1, int p1, int n)
 /* orc_matrix2_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int p3, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 6;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 6;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2652,11 +2690,11 @@ orc_matrix2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
@@ -2679,27 +2717,27 @@ _backup_orc_matrix2_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 6;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 6;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2707,11 +2745,11 @@ _backup_orc_matrix2_u8 (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
@@ -2729,7 +2767,7 @@ _backup_orc_matrix2_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int p3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2788,37 +2826,37 @@ orc_matrix2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
 /* orc_matrix2_11_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix2_11_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 8;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 8;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2826,13 +2864,13 @@ orc_matrix2_11_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var36 = var32 - var16;
     /* 2: mullw */
     var34 = (var36 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var37 = var33 - var17;
     /* 5: mullw */
@@ -2861,33 +2899,33 @@ _backup_orc_matrix2_11_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 8;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 8;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -2895,13 +2933,13 @@ _backup_orc_matrix2_11_u8 (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var36 = var32 - var16;
     /* 2: mullw */
     var34 = (var36 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var37 = var33 - var17;
     /* 5: mullw */
@@ -2925,7 +2963,7 @@ _backup_orc_matrix2_11_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix2_11_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2991,38 +3029,38 @@ orc_matrix2_11_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
 /* orc_matrix2_12_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix2_12_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 8;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 8;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3030,13 +3068,13 @@ orc_matrix2_12_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var36 = var32 - var16;
     /* 2: mullw */
     var34 = (var36 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var37 = var33 - var17;
     /* 5: mullw */
@@ -3067,34 +3105,34 @@ _backup_orc_matrix2_12_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 8;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 8;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3102,13 +3140,13 @@ _backup_orc_matrix2_12_u8 (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var36 = var32 - var16;
     /* 2: mullw */
     var34 = (var36 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var37 = var33 - var17;
     /* 5: mullw */
@@ -3134,7 +3172,7 @@ _backup_orc_matrix2_12_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix2_12_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
+orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
     int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3201,38 +3239,38 @@ orc_matrix2_12_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2, int p1,
 /* orc_matrix3_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix3_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int n)
+orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 6;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  const int16_t var27 = p4;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 6;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  const orc_int16 var27 = p4;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3242,17 +3280,17 @@ orc_matrix3_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -3275,34 +3313,34 @@ _backup_orc_matrix3_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 6;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  const int16_t var27 = ex->params[27];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 6;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  const orc_int16 var27 = ex->params[27];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3312,17 +3350,17 @@ _backup_orc_matrix3_u8 (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -3340,8 +3378,8 @@ _backup_orc_matrix3_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix3_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int n)
+orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -3406,45 +3444,45 @@ orc_matrix3_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_matrix3_100_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int n)
+orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 128;
-  const int16_t var20 = 8;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
-  int16_t var45;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 128;
+  const orc_int16 var20 = 8;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
+  orc_int16 var45;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3454,13 +3492,13 @@ orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var35 = var32 - var16;
     /* 2: mullw */
     var34 = (var35 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var36 = var33 - var17;
     /* 5: mullw */
@@ -3468,7 +3506,7 @@ orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     /* 6: addw */
     var38 = var34 + var37;
     /* 7: convubw */
-    var39 = (uint8_t) var6;
+    var39 = (orc_uint8) var6;
     /* 8: subw */
     var40 = var39 - var18;
     /* 9: mullw */
@@ -3495,41 +3533,41 @@ _backup_orc_matrix3_100_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 16;
-  const int16_t var17 = 128;
-  const int16_t var18 = 128;
-  const int16_t var19 = 128;
-  const int16_t var20 = 8;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
-  int16_t var45;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 16;
+  const orc_int16 var17 = 128;
+  const orc_int16 var18 = 128;
+  const orc_int16 var19 = 128;
+  const orc_int16 var20 = 8;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
+  orc_int16 var45;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3539,13 +3577,13 @@ _backup_orc_matrix3_100_u8 (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: subw */
     var35 = var32 - var16;
     /* 2: mullw */
     var34 = (var35 * var24) & 0xffff;
     /* 3: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 4: subw */
     var36 = var33 - var17;
     /* 5: mullw */
@@ -3553,7 +3591,7 @@ _backup_orc_matrix3_100_u8 (OrcExecutor * ex)
     /* 6: addw */
     var38 = var34 + var37;
     /* 7: convubw */
-    var39 = (uint8_t) var6;
+    var39 = (orc_uint8) var6;
     /* 8: subw */
     var40 = var39 - var18;
     /* 9: mullw */
@@ -3575,8 +3613,8 @@ _backup_orc_matrix3_100_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int n)
+orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -3648,39 +3686,39 @@ orc_matrix3_100_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_matrix3_100_offset_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix3_100_offset_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int p5, int n)
+orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int p5, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  const int16_t var27 = p4;
-  const int16_t var28 = p5;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  const orc_int16 var27 = p4;
+  const orc_int16 var28 = p5;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3690,17 +3728,17 @@ orc_matrix3_100_offset_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var34 = (uint8_t) var4;
+    var34 = (orc_uint8) var4;
     /* 1: mullw */
     var32 = (var34 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var32 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -3725,35 +3763,35 @@ _backup_orc_matrix3_100_offset_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  const int16_t var27 = ex->params[27];
-  const int16_t var28 = ex->params[28];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  const orc_int16 var27 = ex->params[27];
+  const orc_int16 var28 = ex->params[28];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3763,17 +3801,17 @@ _backup_orc_matrix3_100_offset_u8 (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var34 = (uint8_t) var4;
+    var34 = (orc_uint8) var4;
     /* 1: mullw */
     var32 = (var34 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var32 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -3793,8 +3831,8 @@ _backup_orc_matrix3_100_offset_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix3_100_offset_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int p5, int n)
+orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int p5, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -3862,38 +3900,38 @@ orc_matrix3_100_offset_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_matrix3_000_u8 */
 #ifdef DISABLE_ORC
 void
-orc_matrix3_000_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int p5, int n)
+orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int p5, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  const int16_t var27 = p4;
-  const int16_t var28 = p5;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  const orc_int16 var27 = p4;
+  const orc_int16 var28 = p5;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3903,17 +3941,17 @@ orc_matrix3_000_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -3936,34 +3974,34 @@ _backup_orc_matrix3_000_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  const int16_t var27 = ex->params[27];
-  const int16_t var28 = ex->params[28];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  const orc_int16 var27 = ex->params[27];
+  const orc_int16 var28 = ex->params[28];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -3973,17 +4011,17 @@ _backup_orc_matrix3_000_u8 (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
@@ -4001,8 +4039,8 @@ _backup_orc_matrix3_000_u8 (OrcExecutor * ex)
 }
 
 void
-orc_matrix3_000_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int p2, int p3, int p4, int p5, int n)
+orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
+    const guint8 * s3, int p1, int p2, int p3, int p4, int p5, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -4068,26 +4106,26 @@ orc_matrix3_000_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_pack_123x */
 #ifdef DISABLE_ORC
 void
-orc_pack_123x (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n)
+orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n)
 {
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int8_t var24 = p1;
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int8 var24 = p1;
+  orc_int16 var32;
+  orc_int16 var33;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4097,11 +4135,11 @@ orc_pack_123x (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: mergebw */
-    var32 = ((uint8_t) var4) | ((uint8_t) var5 << 8);
+    var32 = ((orc_uint8) var4) | ((orc_uint8) var5 << 8);
     /* 1: mergebw */
-    var33 = ((uint8_t) var6) | ((uint8_t) var24 << 8);
+    var33 = ((orc_uint8) var6) | ((orc_uint8) var24 << 8);
     /* 2: mergewl */
-    var0.i = ((uint16_t) var32) | ((uint16_t) var33 << 16);
+    var0.i = ((orc_uint16) var32) | ((orc_uint16) var33 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4116,20 +4154,20 @@ _backup_orc_pack_123x (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int8_t var24 = ex->params[24];
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int8 var24 = ex->params[24];
+  orc_int16 var32;
+  orc_int16 var33;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4139,11 +4177,11 @@ _backup_orc_pack_123x (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: mergebw */
-    var32 = ((uint8_t) var4) | ((uint8_t) var5 << 8);
+    var32 = ((orc_uint8) var4) | ((orc_uint8) var5 << 8);
     /* 1: mergebw */
-    var33 = ((uint8_t) var6) | ((uint8_t) var24 << 8);
+    var33 = ((orc_uint8) var6) | ((orc_uint8) var24 << 8);
     /* 2: mergewl */
-    var0.i = ((uint16_t) var32) | ((uint16_t) var33 << 16);
+    var0.i = ((orc_uint16) var32) | ((orc_uint16) var33 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4151,8 +4189,8 @@ _backup_orc_pack_123x (OrcExecutor * ex)
 }
 
 void
-orc_pack_123x (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n)
+orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -4202,26 +4240,26 @@ orc_pack_123x (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* orc_pack_x123 */
 #ifdef DISABLE_ORC
 void
-orc_pack_x123 (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n)
+orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n)
 {
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int8_t var24 = p1;
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int8 var24 = p1;
+  orc_int16 var32;
+  orc_int16 var33;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4231,11 +4269,11 @@ orc_pack_x123 (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
     var6 = *ptr6;
     ptr6++;
     /* 0: mergebw */
-    var32 = ((uint8_t) var24) | ((uint8_t) var4 << 8);
+    var32 = ((orc_uint8) var24) | ((orc_uint8) var4 << 8);
     /* 1: mergebw */
-    var33 = ((uint8_t) var5) | ((uint8_t) var6 << 8);
+    var33 = ((orc_uint8) var5) | ((orc_uint8) var6 << 8);
     /* 2: mergewl */
-    var0.i = ((uint16_t) var32) | ((uint16_t) var33 << 16);
+    var0.i = ((orc_uint16) var32) | ((orc_uint16) var33 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4250,20 +4288,20 @@ _backup_orc_pack_x123 (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int8_t var24 = ex->params[24];
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int8 var24 = ex->params[24];
+  orc_int16 var32;
+  orc_int16 var33;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4273,11 +4311,11 @@ _backup_orc_pack_x123 (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: mergebw */
-    var32 = ((uint8_t) var24) | ((uint8_t) var4 << 8);
+    var32 = ((orc_uint8) var24) | ((orc_uint8) var4 << 8);
     /* 1: mergebw */
-    var33 = ((uint8_t) var5) | ((uint8_t) var6 << 8);
+    var33 = ((orc_uint8) var5) | ((orc_uint8) var6 << 8);
     /* 2: mergewl */
-    var0.i = ((uint16_t) var32) | ((uint16_t) var33 << 16);
+    var0.i = ((orc_uint16) var32) | ((orc_uint16) var33 << 16);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4285,8 +4323,8 @@ _backup_orc_pack_x123 (OrcExecutor * ex)
 }
 
 void
-orc_pack_x123 (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, int p1, int n)
+orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -4336,29 +4374,29 @@ orc_pack_x123 (uint32_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* cogorc_combine2_u8 */
 #ifdef DISABLE_ORC
 void
-cogorc_combine2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
     int p1, int p2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 8;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 8;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4366,19 +4404,19 @@ cogorc_combine2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: shruw */
-    var37 = ((uint16_t) var36) >> var16;
+    var37 = ((orc_uint16) var36) >> var16;
     /* 6: convuuswb */
-    var0 = ORC_CLAMP_UB ((uint16_t) var37);
+    var0 = ORC_CLAMP_UB ((orc_uint16) var37);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4391,25 +4429,25 @@ _backup_cogorc_combine2_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 8;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 8;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4417,19 +4455,19 @@ _backup_cogorc_combine2_u8 (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: shruw */
-    var37 = ((uint16_t) var36) >> var16;
+    var37 = ((orc_uint16) var36) >> var16;
     /* 6: convuuswb */
-    var0 = ORC_CLAMP_UB ((uint16_t) var37);
+    var0 = ORC_CLAMP_UB ((orc_uint16) var37);
     *ptr0 = var0;
     ptr0++;
   }
@@ -4437,7 +4475,7 @@ _backup_cogorc_combine2_u8 (OrcExecutor * ex)
 }
 
 void
-cogorc_combine2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
     int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -4493,46 +4531,46 @@ cogorc_combine2_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* cogorc_combine4_u8 */
 #ifdef DISABLE_ORC
 void
-cogorc_combine4_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, const uint8_t * s4, int p1, int p2, int p3, int p4,
+cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, const orc_uint8 * s4, int p1, int p2, int p3, int p4,
     int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  const int16_t var16 = 32;
-  const int16_t var17 = 6;
-  const int16_t var24 = p1;
-  const int16_t var25 = p2;
-  const int16_t var26 = p3;
-  const int16_t var27 = p4;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  const orc_int16 var16 = 32;
+  const orc_int16 var17 = 6;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  const orc_int16 var26 = p3;
+  const orc_int16 var27 = p4;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
-  ptr7 = (int8_t *) s4;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
+  ptr7 = (orc_int8 *) s4;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4544,23 +4582,23 @@ cogorc_combine4_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var7 = *ptr7;
     ptr7++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
     var39 = var36 + var38;
     /* 8: convubw */
-    var40 = (uint8_t) var7;
+    var40 = (orc_uint8) var7;
     /* 9: mullw */
     var41 = (var40 * var27) & 0xffff;
     /* 10: addw */
@@ -4583,41 +4621,41 @@ _backup_cogorc_combine4_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  const int16_t var16 = 32;
-  const int16_t var17 = 6;
-  const int16_t var24 = ex->params[24];
-  const int16_t var25 = ex->params[25];
-  const int16_t var26 = ex->params[26];
-  const int16_t var27 = ex->params[27];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  const orc_int16 var16 = 32;
+  const orc_int16 var17 = 6;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  const orc_int16 var26 = ex->params[26];
+  const orc_int16 var27 = ex->params[27];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
-  ptr7 = (int8_t *) ex->arrays[7];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
+  ptr7 = (orc_int8 *) ex->arrays[7];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -4629,23 +4667,23 @@ _backup_cogorc_combine4_u8 (OrcExecutor * ex)
     var7 = *ptr7;
     ptr7++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: mullw */
     var34 = (var32 * var24) & 0xffff;
     /* 2: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 3: mullw */
     var35 = (var33 * var25) & 0xffff;
     /* 4: addw */
     var36 = var34 + var35;
     /* 5: convubw */
-    var37 = (uint8_t) var6;
+    var37 = (orc_uint8) var6;
     /* 6: mullw */
     var38 = (var37 * var26) & 0xffff;
     /* 7: addw */
     var39 = var36 + var38;
     /* 8: convubw */
-    var40 = (uint8_t) var7;
+    var40 = (orc_uint8) var7;
     /* 9: mullw */
     var41 = (var40 * var27) & 0xffff;
     /* 10: addw */
@@ -4663,8 +4701,8 @@ _backup_cogorc_combine4_u8 (OrcExecutor * ex)
 }
 
 void
-cogorc_combine4_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    const uint8_t * s3, const uint8_t * s4, int p1, int p2, int p3, int p4,
+cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
+    const orc_uint8 * s3, const orc_uint8 * s4, int p1, int p2, int p3, int p4,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -4736,25 +4774,25 @@ cogorc_combine4_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 /* cogorc_unpack_axyz_0 */
 #ifdef DISABLE_ORC
 void
-cogorc_unpack_axyz_0 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_0 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4767,22 +4805,22 @@ _backup_cogorc_unpack_axyz_0 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4790,7 +4828,7 @@ _backup_cogorc_unpack_axyz_0 (OrcExecutor * ex)
 }
 
 void
-cogorc_unpack_axyz_0 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_0 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -4832,25 +4870,25 @@ cogorc_unpack_axyz_0 (uint8_t * d1, const uint32_t * s1, int n)
 /* cogorc_unpack_axyz_1 */
 #ifdef DISABLE_ORC
 void
-cogorc_unpack_axyz_1 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_1 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4863,22 +4901,22 @@ _backup_cogorc_unpack_axyz_1 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select0lw */
-    var32 = (uint32_t) var4.i & 0xffff;
+    var32 = (orc_uint32) var4.i & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4886,7 +4924,7 @@ _backup_cogorc_unpack_axyz_1 (OrcExecutor * ex)
 }
 
 void
-cogorc_unpack_axyz_1 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_1 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -4928,25 +4966,25 @@ cogorc_unpack_axyz_1 (uint8_t * d1, const uint32_t * s1, int n)
 /* cogorc_unpack_axyz_2 */
 #ifdef DISABLE_ORC
 void
-cogorc_unpack_axyz_2 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_2 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4959,22 +4997,22 @@ _backup_cogorc_unpack_axyz_2 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select0wb */
-    var0 = (uint16_t) var32 & 0xff;
+    var0 = (orc_uint16) var32 & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -4982,7 +5020,7 @@ _backup_cogorc_unpack_axyz_2 (OrcExecutor * ex)
 }
 
 void
-cogorc_unpack_axyz_2 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_2 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
@@ -5024,25 +5062,25 @@ cogorc_unpack_axyz_2 (uint8_t * d1, const uint32_t * s1, int n)
 /* cogorc_unpack_axyz_3 */
 #ifdef DISABLE_ORC
 void
-cogorc_unpack_axyz_3 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_3 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -5055,22 +5093,22 @@ _backup_cogorc_unpack_axyz_3 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
+  orc_int8 var0;
+  orc_int8 *ptr0;
   orc_union32 var4;
   const orc_union32 *ptr4;
-  int16_t var32;
+  orc_int16 var32;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
     ptr4++;
     /* 0: select1lw */
-    var32 = ((uint32_t) var4.i >> 16) & 0xffff;
+    var32 = ((orc_uint32) var4.i >> 16) & 0xffff;
     /* 1: select1wb */
-    var0 = ((uint16_t) var32 >> 8) & 0xff;
+    var0 = ((orc_uint16) var32 >> 8) & 0xff;
     *ptr0 = var0;
     ptr0++;
   }
@@ -5078,7 +5116,7 @@ _backup_cogorc_unpack_axyz_3 (OrcExecutor * ex)
 }
 
 void
-cogorc_unpack_axyz_3 (uint8_t * d1, const uint32_t * s1, int n)
+cogorc_unpack_axyz_3 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static int p_inited = 0;
