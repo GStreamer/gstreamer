@@ -692,7 +692,7 @@ error:
       GST_ELEMENT_ERROR (teletext, STREAM, FAILED,
           ("Internal data stream error."),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
-      gst_pad_push_event (teletext->srcpad, gst_event_new_eos ());
+      return GST_FLOW_ERROR;
     }
     return ret;
   }
