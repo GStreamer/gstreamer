@@ -20,7 +20,8 @@ check_PROGRAMS = \
 	ges/layer	\
 	ges/simplelayer	\
 	ges/transition	\
-	ges/timelineobject
+	ges/timelineobject	\
+	ges/backgroundsource
 
 noinst_HEADERS = 
 
