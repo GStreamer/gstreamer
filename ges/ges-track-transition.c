@@ -182,10 +182,6 @@ ges_track_transition_dispose (GObject * object)
     self->a_bcontrol_source = NULL;
   }
 
-  if (self->vsmpte) {
-    g_object_unref (self->vsmpte);
-    self->vsmpte = NULL;
-  }
 
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
@@ -269,7 +265,6 @@ create_video_bin (GESTrackTransition * self)
         self->vtype, NULL);
     target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
         mixer, self->vtype, &self->vsmpte);
-    g_object_ref (self->vsmpte);
     propname = "position";
     self->vstart_value = 1.0;
     self->vend_value = 0.0;
