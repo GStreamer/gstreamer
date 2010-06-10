@@ -27,6 +27,7 @@
 #endif
 
 #include "blend.h"
+#include "blendorc.h"
 
 #include <string.h>
 
@@ -40,34 +41,10 @@
 #ifdef HAVE_GCC_ASM
 #if defined(HAVE_ORC) && (defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64))
 #define BUILD_X86_ASM
-
-#define GENERIC
-#include "blend_mmx.h"
-#undef GENERIC
 #endif
 #endif
 
 /* Below are the implementations of everything */
-
-inline static void
-_blend_u8_c (guint8 * dest, const guint8 * src,
-    gint src_stride, gint dest_stride, gint src_width, gint src_height,
-    gint dest_width, gint b_alpha)
-{
-  gint i, j;
-  gint src_add = src_stride - src_width;
-  gint dest_add = dest_stride - dest_width;
-
-  for (i = 0; i < src_height; i++) {
-    for (j = 0; j < src_width; j++) {
-      *dest = BLEND (*dest, *src, b_alpha);
-      dest++;
-      src++;
-    }
-    src += src_add;
-    dest += dest_add;
-  }
-}
 
 /* A32 is for AYUV, ARGB and BGRA */
 #define BLEND_A32(name, LOOP) \
@@ -181,11 +158,12 @@ A32_CHECKER_C (ayuv, FALSE, 0, 1, 2, 3);
 #define YUV_TO_G(Y,U,V) (CLAMP (1.164 * (Y - 16) - 0.813 * (V - 128) - 0.391 * (U - 128), 0, 255))
 #define YUV_TO_B(Y,U,V) (CLAMP (1.164 * (Y - 16) + 2.018 * (U - 128), 0, 255))
 
-#define A32_COLOR(name, RGB, LOOP) \
+#define A32_COLOR(name, RGB, A, C1, C2, C3) \
 static void \
 fill_color_##name (guint8 * dest, gint width, gint height, gint Y, gint U, gint V) \
 { \
   gint c1, c2, c3; \
+  guint32 val; \
   \
   if (RGB) { \
     c1 = YUV_TO_R (Y, U, V); \
@@ -196,41 +174,23 @@ fill_color_##name (guint8 * dest, gint width, gint height, gint Y, gint U, gint 
     c2 = U; \
     c3 = V; \
   } \
-  LOOP (dest, height, width, c1, c2, c3); \
-}
-
-#define A32_COLOR_LOOP_C(name, A, C1, C2, C3) \
-static inline void \
-_fill_color_loop_##name##_c (guint8 *dest, gint height, gint width, gint c1, gint c2, gint c3) { \
-  gint i, j; \
+  val = GUINT32_FROM_BE ((0xff << A) | (c1 << C1) | (c2 << C2) | (c3 << C3)); \
   \
-  for (i = 0; i < height; i++) { \
-    for (j = 0; j < width; j++) { \
-      dest[A] = 0xff; \
-      dest[C1] = c1; \
-      dest[C2] = c2; \
-      dest[C3] = c3; \
-      dest += 4; \
-    } \
-  } \
+  orc_splat_u32 ((guint32 *) dest, val, height * width); \
 }
 
-A32_COLOR_LOOP_C (ac1c2c3, 0, 1, 2, 3);
-A32_COLOR_LOOP_C (c3c2c1a, 3, 2, 1, 0);
-A32_COLOR_LOOP_C (ac3c2c1, 0, 3, 2, 1);
-A32_COLOR_LOOP_C (c1c2c3a, 1, 2, 3, 0);
-A32_COLOR (argb_c, TRUE, _fill_color_loop_ac1c2c3_c);
-A32_COLOR (bgra_c, TRUE, _fill_color_loop_c3c2c1a_c);
-A32_COLOR (abgr_c, TRUE, _fill_color_loop_ac3c2c1_c);
-A32_COLOR (rgba_c, TRUE, _fill_color_loop_c1c2c3a_c);
-A32_COLOR (ayuv_c, FALSE, _fill_color_loop_ac1c2c3_c);
+A32_COLOR (argb, TRUE, 24, 16, 8, 0);
+A32_COLOR (bgra, TRUE, 0, 8, 16, 24);
+A32_COLOR (abgr, TRUE, 24, 0, 8, 16);
+A32_COLOR (rgba, TRUE, 0, 24, 16, 8);
+A32_COLOR (ayuv, FALSE, 24, 16, 8, 0);
 
 /* Y444, Y42B, I420, YV12, Y41B */
-#define PLANAR_YUV_BLEND(name,format_name,format_enum,x_round,y_round,MEMCPY,BLENDLOOP) \
+#define PLANAR_YUV_BLEND(format_name,format_enum,x_round,y_round,MEMCPY,BLENDLOOP) \
 inline static void \
-_blend_##format_name##_##name (const guint8 * src, guint8 * dest, \
+_blend_##format_name (const guint8 * src, guint8 * dest, \
     gint src_stride, gint dest_stride, gint src_width, gint src_height, \
-    gint dest_width, gdouble src_alpha) \
+    gdouble src_alpha) \
 { \
   gint i; \
   gint b_alpha; \
@@ -254,11 +214,11 @@ _blend_##format_name##_##name (const guint8 * src, guint8 * dest, \
   \
   b_alpha = CLAMP ((gint) (src_alpha * 256), 0, 256); \
   \
-  BLENDLOOP(dest, src, src_stride, dest_stride, src_width, src_height, dest_width, b_alpha); \
+  BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width, src_height); \
 } \
 \
 static void \
-blend_##format_name##_##name (const guint8 * src, gint xpos, gint ypos, \
+blend_##format_name (const guint8 * src, gint xpos, gint ypos, \
     gint src_width, gint src_height, gdouble src_alpha, \
     guint8 * dest, gint dest_width, gint dest_height) \
 { \
@@ -317,11 +277,11 @@ blend_##format_name##_##name (const guint8 * src, gint xpos, gint ypos, \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 0, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 0, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 0, yoffset); \
-  _blend_##format_name##_##name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      dest_comp_width, src_alpha); \
+      src_alpha); \
   \
   b_src = src + gst_video_format_get_component_offset (format_enum, 1, src_width, src_height); \
   b_dest = dest + gst_video_format_get_component_offset (format_enum, 1, dest_width, dest_height); \
@@ -335,11 +295,11 @@ blend_##format_name##_##name (const guint8 * src, gint xpos, gint ypos, \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 1, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 1, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 1, yoffset); \
-  _blend_##format_name##_##name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      dest_comp_width, src_alpha); \
+      src_alpha); \
   \
   b_src = src + gst_video_format_get_component_offset (format_enum, 2, src_width, src_height); \
   b_dest = dest + gst_video_format_get_component_offset (format_enum, 2, dest_width, dest_height); \
@@ -353,16 +313,16 @@ blend_##format_name##_##name (const guint8 * src, gint xpos, gint ypos, \
   comp_ypos = (ypos == 0) ? 0 : gst_video_format_get_component_height (format_enum, 2, ypos); \
   comp_xoffset = (xoffset == 0) ? 0 : gst_video_format_get_component_width (format_enum, 2, xoffset); \
   comp_yoffset = (yoffset == 0) ? 0 : gst_video_format_get_component_height (format_enum, 2, yoffset); \
-  _blend_##format_name##_##name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
+  _blend_##format_name (b_src + comp_xoffset + comp_yoffset * src_comp_rowstride, \
       b_dest + comp_xpos + comp_ypos * dest_comp_rowstride, \
       src_comp_rowstride, \
       dest_comp_rowstride, src_comp_width, src_comp_height, \
-      dest_comp_width, src_alpha); \
+      src_alpha); \
 }
 
-#define PLANAR_YUV_FILL_CHECKER(name, format_name, format_enum, MEMSET) \
+#define PLANAR_YUV_FILL_CHECKER(format_name, format_enum, MEMSET) \
 static void \
-fill_checker_##format_name##_##name (guint8 * dest, gint width, gint height) \
+fill_checker_##format_name (guint8 * dest, gint width, gint height) \
 { \
   gint i, j; \
   static const int tab[] = { 80, 160, 80, 160 }; \
@@ -403,9 +363,9 @@ fill_checker_##format_name##_##name (guint8 * dest, gint width, gint height) \
   } \
 }
 
-#define PLANAR_YUV_FILL_COLOR(name,format_name,format_enum,MEMSET) \
+#define PLANAR_YUV_FILL_COLOR(format_name,format_enum,MEMSET) \
 static void \
-fill_color_##format_name##_##name (guint8 * dest, gint width, gint height, \
+fill_color_##format_name (guint8 * dest, gint width, gint height, \
     gint colY, gint colU, gint colV) \
 { \
   guint8 *p; \
@@ -446,23 +406,23 @@ fill_color_##format_name##_##name (guint8 * dest, gint width, gint height, \
 
 #define GST_ROUND_UP_1(x) (x)
 
-PLANAR_YUV_BLEND (c, i420, GST_VIDEO_FORMAT_I420, GST_ROUND_UP_2,
-    GST_ROUND_UP_2, memcpy, _blend_u8_c);
-PLANAR_YUV_FILL_CHECKER (c, i420, GST_VIDEO_FORMAT_I420, memset);
-PLANAR_YUV_FILL_COLOR (c, i420, GST_VIDEO_FORMAT_I420, memset);
-PLANAR_YUV_FILL_COLOR (c, yv12, GST_VIDEO_FORMAT_YV12, memset);
-PLANAR_YUV_BLEND (c, y444, GST_VIDEO_FORMAT_Y444, GST_ROUND_UP_1,
-    GST_ROUND_UP_1, memcpy, _blend_u8_c);
-PLANAR_YUV_FILL_CHECKER (c, y444, GST_VIDEO_FORMAT_Y444, memset);
-PLANAR_YUV_FILL_COLOR (c, y444, GST_VIDEO_FORMAT_Y444, memset);
-PLANAR_YUV_BLEND (c, y42b, GST_VIDEO_FORMAT_Y42B, GST_ROUND_UP_2,
-    GST_ROUND_UP_1, memcpy, _blend_u8_c);
-PLANAR_YUV_FILL_CHECKER (c, y42b, GST_VIDEO_FORMAT_Y42B, memset);
-PLANAR_YUV_FILL_COLOR (c, y42b, GST_VIDEO_FORMAT_Y42B, memset);
-PLANAR_YUV_BLEND (c, y41b, GST_VIDEO_FORMAT_Y41B, GST_ROUND_UP_4,
-    GST_ROUND_UP_1, memcpy, _blend_u8_c);
-PLANAR_YUV_FILL_CHECKER (c, y41b, GST_VIDEO_FORMAT_Y41B, memset);
-PLANAR_YUV_FILL_COLOR (c, y41b, GST_VIDEO_FORMAT_Y41B, memset);
+PLANAR_YUV_BLEND (i420, GST_VIDEO_FORMAT_I420, GST_ROUND_UP_2,
+    GST_ROUND_UP_2, memcpy, orc_blend_u8);
+PLANAR_YUV_FILL_CHECKER (i420, GST_VIDEO_FORMAT_I420, memset);
+PLANAR_YUV_FILL_COLOR (i420, GST_VIDEO_FORMAT_I420, memset);
+PLANAR_YUV_FILL_COLOR (yv12, GST_VIDEO_FORMAT_YV12, memset);
+PLANAR_YUV_BLEND (y444, GST_VIDEO_FORMAT_Y444, GST_ROUND_UP_1,
+    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+PLANAR_YUV_FILL_CHECKER (y444, GST_VIDEO_FORMAT_Y444, memset);
+PLANAR_YUV_FILL_COLOR (y444, GST_VIDEO_FORMAT_Y444, memset);
+PLANAR_YUV_BLEND (y42b, GST_VIDEO_FORMAT_Y42B, GST_ROUND_UP_2,
+    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+PLANAR_YUV_FILL_CHECKER (y42b, GST_VIDEO_FORMAT_Y42B, memset);
+PLANAR_YUV_FILL_COLOR (y42b, GST_VIDEO_FORMAT_Y42B, memset);
+PLANAR_YUV_BLEND (y41b, GST_VIDEO_FORMAT_Y41B, GST_ROUND_UP_4,
+    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+PLANAR_YUV_FILL_CHECKER (y41b, GST_VIDEO_FORMAT_Y41B, memset);
+PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 
 /* RGB, BGR, xRGB, xBGR, RGBx, BGRx */
 
@@ -518,7 +478,7 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
     return; \
   } \
   \
-  BLENDLOOP(dest, src, src_stride, dest_stride, bpp * src_width, src_height, bpp * dest_width, b_alpha); \
+  BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, src_width * bpp, src_height); \
 }
 
 #define RGB_FILL_CHECKER_C(name, bpp, r, g, b) \
@@ -559,7 +519,7 @@ fill_color_##name (guint8 * dest, gint width, gint height, \
   } \
 }
 
-#define MEMSET_RGB_C(name, bpp, r, g, b) \
+#define MEMSET_RGB_C(name, r, g, b) \
 static inline void \
 _memset_##name##_c (guint8* dest, gint red, gint green, gint blue, gint width) { \
   gint j; \
@@ -568,31 +528,42 @@ _memset_##name##_c (guint8* dest, gint red, gint green, gint blue, gint width) {
     dest[r] = red; \
     dest[g] = green; \
     dest[b] = blue; \
-    dest += bpp; \
+    dest += 3; \
   } \
 }
 
-RGB_BLEND (rgb_c, 3, memcpy, _blend_u8_c);
+#define MEMSET_XRGB(name, r, g, b) \
+static inline void \
+_memset_##name (guint8* dest, gint red, gint green, gint blue, gint width) { \
+  guint32 val; \
+  \
+  val = GUINT32_FROM_BE ((red << r) | (green << g) | (blue << b)); \
+  orc_splat_u32 ((guint32 *) dest, val, width); \
+}
+
+#define _orc_memcpy_u32(dest,src,len) orc_memcpy_u32((guint32 *) dest, (const guint32 *) src, len/4)
+
+RGB_BLEND (rgb, 3, memcpy, orc_blend_u8);
 RGB_FILL_CHECKER_C (rgb, 3, 0, 1, 2);
-MEMSET_RGB_C (rgb, 3, 0, 1, 2);
+MEMSET_RGB_C (rgb, 0, 1, 2);
 RGB_FILL_COLOR (rgb_c, 3, _memset_rgb_c);
 
-MEMSET_RGB_C (bgr, 3, 2, 1, 0);
+MEMSET_RGB_C (bgr, 2, 1, 0);
 RGB_FILL_COLOR (bgr_c, 3, _memset_bgr_c);
 
-RGB_BLEND (xrgb_c, 4, memcpy, _blend_u8_c);
+RGB_BLEND (xrgb, 4, _orc_memcpy_u32, orc_blend_u8);
 RGB_FILL_CHECKER_C (xrgb, 4, 1, 2, 3);
-MEMSET_RGB_C (xrgb, 4, 1, 2, 3);
-RGB_FILL_COLOR (xrgb_c, 4, _memset_xrgb_c);
+MEMSET_XRGB (xrgb, 24, 16, 0);
+RGB_FILL_COLOR (xrgb, 4, _memset_xrgb);
 
-MEMSET_RGB_C (xbgr, 4, 3, 2, 1);
-RGB_FILL_COLOR (xbgr_c, 4, _memset_xbgr_c);
+MEMSET_XRGB (xbgr, 0, 16, 24);
+RGB_FILL_COLOR (xbgr, 4, _memset_xbgr);
 
-MEMSET_RGB_C (rgbx, 4, 0, 1, 2);
-RGB_FILL_COLOR (rgbx_c, 4, _memset_rgbx_c);
+MEMSET_XRGB (rgbx, 24, 16, 8);
+RGB_FILL_COLOR (rgbx, 4, _memset_rgbx);
 
-MEMSET_RGB_C (bgrx, 4, 2, 1, 0);
-RGB_FILL_COLOR (bgrx_c, 4, _memset_bgrx_c);
+MEMSET_XRGB (bgrx, 8, 16, 24);
+RGB_FILL_COLOR (bgrx, 4, _memset_bgrx);
 
 /* YUY2, YVYU, UYVY */
 
@@ -651,7 +622,7 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
     return; \
   } \
   \
-  BLENDLOOP(dest, src, src_stride, dest_stride, 2 * src_width, src_height, 2 * dest_width, b_alpha); \
+  BLENDLOOP(dest, dest_stride, src, src_stride, b_alpha, 2 * src_width, src_height); \
 }
 
 #define PACKED_422_FILL_CHECKER_C(name, Y1, U, Y2, V) \
@@ -683,42 +654,31 @@ static void \
 fill_color_##name (guint8 * dest, gint width, gint height, \
     gint colY, gint colU, gint colV) \
 { \
-  gint i, j; \
-  gint dest_add; \
+  gint i; \
+  gint dest_stride; \
+  guint32 val; \
   \
   width = GST_ROUND_UP_2 (width); \
-  dest_add = GST_ROUND_UP_4 (width * 2) - width * 2; \
+  dest_stride = GST_ROUND_UP_4 (width * 2); \
   width /= 2; \
   \
+  val = GUINT32_FROM_BE ((colY << Y1) | (colY << Y2) | (colU << U) | (colV << V)); \
+  \
   for (i = 0; i < height; i++) { \
-    for (j = 0; j < width; j++) { \
-      dest[Y1] = colY; \
-      dest[Y2] = colY; \
-      dest[U] = colU; \
-      dest[V] = colV; \
-      dest += 4; \
-    } \
-    dest += dest_add; \
+    orc_splat_u32 ((guint32 *) dest, val, width); \
+    dest += dest_stride; \
   } \
 }
 
-PACKED_422_BLEND (yuy2_c, memcpy, _blend_u8_c);
+PACKED_422_BLEND (yuy2, memcpy, orc_blend_u8);
 PACKED_422_FILL_CHECKER_C (yuy2, 0, 1, 2, 3);
 PACKED_422_FILL_CHECKER_C (uyvy, 1, 0, 3, 2);
-PACKED_422_FILL_COLOR (yuy2_c, 0, 1, 2, 3);
-PACKED_422_FILL_COLOR (yvyu_c, 0, 3, 2, 1);
-PACKED_422_FILL_COLOR (uyvy_c, 1, 0, 3, 2);
+PACKED_422_FILL_COLOR (yuy2, 24, 16, 8, 0);
+PACKED_422_FILL_COLOR (yvyu, 24, 0, 8, 16);
+PACKED_422_FILL_COLOR (uyvy, 16, 24, 0, 8);
 
 /* MMX Implementations */
 #ifdef BUILD_X86_ASM
-
-#define MEMSET_xRGB_MMX(name, r, g, b) \
-static inline void \
-_memset_##name##_mmx (guint8* dest, gint red, gint green, gint blue, gint width) { \
-  guint32 val = (red << r) | (green << g) | (blue << b); \
-  \
-  _memset_u32_mmx ((guint32 *) dest, val, width); \
-}
 
 #define A32
 #define NAME_BLEND _blend_loop_argb_mmx
@@ -736,60 +696,6 @@ _memset_##name##_mmx (guint8* dest, gint red, gint green, gint blue, gint width)
 
 BLEND_A32 (argb_mmx, _blend_loop_argb_mmx);
 BLEND_A32 (bgra_mmx, _blend_loop_bgra_mmx);
-
-#define A32_COLOR_LOOP_MMX(name, A, C1, C2, C3) \
-static inline void \
-_fill_color_loop_##name##_mmx (guint8 *dest, gint height, gint width, gint c1, gint c2, gint c3) { \
-  guint32 val = (0xff << A) | (c1 << C1) | (c2 << C2) | (c3 << C3); \
-  \
-  _memset_u32_mmx ((guint32 *) dest, val, height*width); \
-}
-
-A32_COLOR_LOOP_MMX (argb, 0, 8, 16, 24);
-A32_COLOR_LOOP_MMX (abgr, 0, 24, 16, 8);
-A32_COLOR_LOOP_MMX (rgba, 24, 0, 8, 16);
-A32_COLOR_LOOP_MMX (bgra, 24, 16, 8, 0);
-
-A32_COLOR (argb_mmx, TRUE, _fill_color_loop_argb_mmx);
-A32_COLOR (bgra_mmx, TRUE, _fill_color_loop_bgra_mmx);
-A32_COLOR (abgr_mmx, TRUE, _fill_color_loop_abgr_mmx);
-A32_COLOR (rgba_mmx, TRUE, _fill_color_loop_rgba_mmx);
-A32_COLOR (ayuv_mmx, FALSE, _fill_color_loop_argb_mmx);
-
-PLANAR_YUV_BLEND (mmx, i420, GST_VIDEO_FORMAT_I420, GST_ROUND_UP_2,
-    GST_ROUND_UP_2, _memcpy_u8_mmx, _blend_u8_mmx);
-PLANAR_YUV_FILL_CHECKER (mmx, i420, GST_VIDEO_FORMAT_I420, _memset_u8_mmx);
-PLANAR_YUV_FILL_COLOR (mmx, i420, GST_VIDEO_FORMAT_I420, _memset_u8_mmx);
-PLANAR_YUV_FILL_COLOR (mmx, yv12, GST_VIDEO_FORMAT_YV12, _memset_u8_mmx);
-PLANAR_YUV_BLEND (mmx, y444, GST_VIDEO_FORMAT_Y444, GST_ROUND_UP_1,
-    GST_ROUND_UP_1, _memcpy_u8_mmx, _blend_u8_mmx);
-PLANAR_YUV_FILL_CHECKER (mmx, y444, GST_VIDEO_FORMAT_Y444, _memset_u8_mmx);
-PLANAR_YUV_FILL_COLOR (mmx, y444, GST_VIDEO_FORMAT_Y444, _memset_u8_mmx);
-PLANAR_YUV_BLEND (mmx, y42b, GST_VIDEO_FORMAT_Y42B, GST_ROUND_UP_2,
-    GST_ROUND_UP_1, _memcpy_u8_mmx, _blend_u8_mmx);
-PLANAR_YUV_FILL_CHECKER (mmx, y42b, GST_VIDEO_FORMAT_Y42B, _memset_u8_mmx);
-PLANAR_YUV_FILL_COLOR (mmx, y42b, GST_VIDEO_FORMAT_Y42B, _memset_u8_mmx);
-PLANAR_YUV_BLEND (mmx, y41b, GST_VIDEO_FORMAT_Y41B, GST_ROUND_UP_4,
-    GST_ROUND_UP_1, _memcpy_u8_mmx, _blend_u8_mmx);
-PLANAR_YUV_FILL_CHECKER (mmx, y41b, GST_VIDEO_FORMAT_Y41B, _memset_u8_mmx);
-PLANAR_YUV_FILL_COLOR (mmx, y41b, GST_VIDEO_FORMAT_Y41B, _memset_u8_mmx);
-
-RGB_BLEND (rgb_mmx, 3, _memcpy_u8_mmx, _blend_u8_mmx);
-
-RGB_BLEND (xrgb_mmx, 4, _memcpy_u8_mmx, _blend_u8_mmx);
-MEMSET_xRGB_MMX (xrgb, 16, 8, 0);
-RGB_FILL_COLOR (xrgb_mmx, 4, _memset_xrgb_mmx);
-
-MEMSET_xRGB_MMX (xbgr, 0, 8, 16);
-RGB_FILL_COLOR (xbgr_mmx, 4, _memset_xbgr_mmx);
-
-MEMSET_xRGB_MMX (rgbx, 24, 16, 8);
-RGB_FILL_COLOR (rgbx_mmx, 4, _memset_rgbx_mmx);
-
-MEMSET_xRGB_MMX (bgrx, 8, 16, 24);
-RGB_FILL_COLOR (bgrx_mmx, 4, _memset_bgrx_mmx);
-
-PACKED_422_BLEND (yuy2_mmx, _memcpy_u8_mmx, _blend_u8_mmx);
 #endif
 
 /* Init function */
@@ -857,77 +763,50 @@ gst_video_mixer_init_blend (void)
 
   gst_video_mixer_blend_argb = blend_argb_c;
   gst_video_mixer_blend_bgra = blend_bgra_c;
-  gst_video_mixer_blend_i420 = blend_i420_c;
-  gst_video_mixer_blend_y444 = blend_y444_c;
-  gst_video_mixer_blend_y42b = blend_y42b_c;
-  gst_video_mixer_blend_y41b = blend_y41b_c;
-  gst_video_mixer_blend_rgb = blend_rgb_c;
-  gst_video_mixer_blend_xrgb = blend_xrgb_c;
-  gst_video_mixer_blend_yuy2 = blend_yuy2_c;
+  gst_video_mixer_blend_i420 = blend_i420;
+  gst_video_mixer_blend_y444 = blend_y444;
+  gst_video_mixer_blend_y42b = blend_y42b;
+  gst_video_mixer_blend_y41b = blend_y41b;
+  gst_video_mixer_blend_rgb = blend_rgb;
+  gst_video_mixer_blend_xrgb = blend_xrgb;
+  gst_video_mixer_blend_yuy2 = blend_yuy2;
 
   gst_video_mixer_fill_checker_argb = fill_checker_argb_c;
   gst_video_mixer_fill_checker_bgra = fill_checker_bgra_c;
   gst_video_mixer_fill_checker_ayuv = fill_checker_ayuv_c;
-  gst_video_mixer_fill_checker_i420 = fill_checker_i420_c;
-  gst_video_mixer_fill_checker_y444 = fill_checker_y444_c;
-  gst_video_mixer_fill_checker_y42b = fill_checker_y42b_c;
-  gst_video_mixer_fill_checker_y41b = fill_checker_y41b_c;
+  gst_video_mixer_fill_checker_i420 = fill_checker_i420;
+  gst_video_mixer_fill_checker_y444 = fill_checker_y444;
+  gst_video_mixer_fill_checker_y42b = fill_checker_y42b;
+  gst_video_mixer_fill_checker_y41b = fill_checker_y41b;
   gst_video_mixer_fill_checker_rgb = fill_checker_rgb_c;
   gst_video_mixer_fill_checker_xrgb = fill_checker_xrgb_c;
   gst_video_mixer_fill_checker_yuy2 = fill_checker_yuy2_c;
   gst_video_mixer_fill_checker_uyvy = fill_checker_uyvy_c;
 
-  gst_video_mixer_fill_color_argb = fill_color_argb_c;
-  gst_video_mixer_fill_color_bgra = fill_color_bgra_c;
-  gst_video_mixer_fill_color_abgr = fill_color_abgr_c;
-  gst_video_mixer_fill_color_rgba = fill_color_rgba_c;
-  gst_video_mixer_fill_color_ayuv = fill_color_ayuv_c;
-  gst_video_mixer_fill_color_i420 = fill_color_i420_c;
-  gst_video_mixer_fill_color_yv12 = fill_color_yv12_c;
-  gst_video_mixer_fill_color_y444 = fill_color_y444_c;
-  gst_video_mixer_fill_color_y42b = fill_color_y42b_c;
-  gst_video_mixer_fill_color_y41b = fill_color_y41b_c;
+  gst_video_mixer_fill_color_argb = fill_color_argb;
+  gst_video_mixer_fill_color_bgra = fill_color_bgra;
+  gst_video_mixer_fill_color_abgr = fill_color_abgr;
+  gst_video_mixer_fill_color_rgba = fill_color_rgba;
+  gst_video_mixer_fill_color_ayuv = fill_color_ayuv;
+  gst_video_mixer_fill_color_i420 = fill_color_i420;
+  gst_video_mixer_fill_color_yv12 = fill_color_yv12;
+  gst_video_mixer_fill_color_y444 = fill_color_y444;
+  gst_video_mixer_fill_color_y42b = fill_color_y42b;
+  gst_video_mixer_fill_color_y41b = fill_color_y41b;
   gst_video_mixer_fill_color_rgb = fill_color_rgb_c;
   gst_video_mixer_fill_color_bgr = fill_color_bgr_c;
-  gst_video_mixer_fill_color_xrgb = fill_color_xrgb_c;
-  gst_video_mixer_fill_color_xbgr = fill_color_xbgr_c;
-  gst_video_mixer_fill_color_rgbx = fill_color_rgbx_c;
-  gst_video_mixer_fill_color_bgrx = fill_color_bgrx_c;
-  gst_video_mixer_fill_color_yuy2 = fill_color_yuy2_c;
-  gst_video_mixer_fill_color_yvyu = fill_color_yvyu_c;
-  gst_video_mixer_fill_color_uyvy = fill_color_uyvy_c;
+  gst_video_mixer_fill_color_xrgb = fill_color_xrgb;
+  gst_video_mixer_fill_color_xbgr = fill_color_xbgr;
+  gst_video_mixer_fill_color_rgbx = fill_color_rgbx;
+  gst_video_mixer_fill_color_bgrx = fill_color_bgrx;
+  gst_video_mixer_fill_color_yuy2 = fill_color_yuy2;
+  gst_video_mixer_fill_color_yvyu = fill_color_yvyu;
+  gst_video_mixer_fill_color_uyvy = fill_color_uyvy;
 
 #ifdef BUILD_X86_ASM
   if (cpu_flags & ORC_TARGET_MMX_MMX) {
     gst_video_mixer_blend_argb = blend_argb_mmx;
     gst_video_mixer_blend_bgra = blend_bgra_mmx;
-    gst_video_mixer_blend_i420 = blend_i420_mmx;
-    gst_video_mixer_blend_y444 = blend_y444_mmx;
-    gst_video_mixer_blend_y42b = blend_y42b_mmx;
-    gst_video_mixer_blend_y41b = blend_y41b_mmx;
-    gst_video_mixer_blend_rgb = blend_rgb_mmx;
-    gst_video_mixer_blend_xrgb = blend_xrgb_mmx;
-    gst_video_mixer_blend_yuy2 = blend_yuy2_mmx;
-
-    gst_video_mixer_fill_checker_i420 = fill_checker_i420_mmx;
-    gst_video_mixer_fill_checker_y444 = fill_checker_y444_mmx;
-    gst_video_mixer_fill_checker_y42b = fill_checker_y42b_mmx;
-    gst_video_mixer_fill_checker_y41b = fill_checker_y41b_mmx;
-
-    gst_video_mixer_fill_color_argb = fill_color_argb_mmx;
-    gst_video_mixer_fill_color_bgra = fill_color_bgra_mmx;
-    gst_video_mixer_fill_color_abgr = fill_color_abgr_mmx;
-    gst_video_mixer_fill_color_rgba = fill_color_rgba_mmx;
-    gst_video_mixer_fill_color_ayuv = fill_color_ayuv_mmx;
-    gst_video_mixer_fill_color_i420 = fill_color_i420_mmx;
-    gst_video_mixer_fill_color_yv12 = fill_color_yv12_mmx;
-    gst_video_mixer_fill_color_y444 = fill_color_y444_mmx;
-    gst_video_mixer_fill_color_y42b = fill_color_y42b_mmx;
-    gst_video_mixer_fill_color_y41b = fill_color_y41b_mmx;
-    gst_video_mixer_fill_color_xrgb = fill_color_xrgb_mmx;
-    gst_video_mixer_fill_color_xbgr = fill_color_xbgr_mmx;
-    gst_video_mixer_fill_color_rgbx = fill_color_rgbx_mmx;
-    gst_video_mixer_fill_color_bgrx = fill_color_bgrx_mmx;
   }
 #endif
 }
