@@ -33,6 +33,7 @@
 #include <ges/ges-timeline-pipeline.h>
 #include <ges/ges-timeline-source.h>
 #include <ges/ges-timeline-transition.h>
+#include <ges/ges-timeline-background-source.h>
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>
 #include <ges/ges-track-source.h>
