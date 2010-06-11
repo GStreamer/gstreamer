@@ -584,38 +584,43 @@ AG_GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
 ])
 
 dnl *** CDParanoia ***
+dnl Note: upstream has a pkg-config file only in post-10.2 SVN so far
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
 AG_GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
-                      cdda_open, -lm, 
-                      cdda_interface.h, 
-                      CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
-                      HEADER_DIR="no"
-                      FOUND_CDPARANOIA="yes")
-  if test "x$FOUND_CDPARANOIA" != "xyes";
-  then
+  PKG_CHECK_MODULES(CDPARANOIA, cdparanoia-3 >= 10.2, [
+    HAVE_CDPARANOIA="yes"
+  ], [
     AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
                         cdda_open, -lm, 
-                        cdda/cdda_interface.h, 
+                        cdda_interface.h, 
                         CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
-                        HEADER_DIR="yes"
+                        HEADER_DIR="no"
                         FOUND_CDPARANOIA="yes")
-  fi
-  if test "x$HEADER_DIR" = "xyes";
-  then
-    AC_DEFINE_UNQUOTED(CDPARANOIA_HEADERS_IN_DIR, ,
-                       defined if cdda headers are in a cdda/ directory)
-  fi
-  if test "x$FOUND_CDPARANOIA" = "xyes";
-  then
-    AC_CHECK_LIB(cdda_paranoia,
-                 paranoia_cachemodel_size,
-                 : ,
-                 HAVE_CDPARANOIA=no,
-		 [-lcdda_interface])
-  fi
+    if test "x$FOUND_CDPARANOIA" != "xyes";
+    then
+      AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+                          cdda_open, -lm, 
+                          cdda/cdda_interface.h, 
+                          CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
+                          HEADER_DIR="yes"
+                          FOUND_CDPARANOIA="yes")
+    fi
+    if test "x$HEADER_DIR" = "xyes";
+    then
+      AC_DEFINE_UNQUOTED(CDPARANOIA_HEADERS_IN_DIR, ,
+                         defined if cdda headers are in a cdda/ directory)
+    fi
+    if test "x$FOUND_CDPARANOIA" = "xyes";
+    then
+      AC_CHECK_LIB(cdda_paranoia,
+                   paranoia_cachemodel_size,
+                   : ,
+                   HAVE_CDPARANOIA=no,
+  		 [-lcdda_interface])
+    fi
 
-  AC_SUBST(CDPARANOIA_LIBS)
+    AC_SUBST(CDPARANOIA_LIBS)
+  ])
 ])
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
