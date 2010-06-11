@@ -110,6 +110,36 @@ GST_START_TEST (test_background_source_properties)
 
 GST_END_TEST;
 
+GST_START_TEST (test_background_source_in_layer)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *a, *v;
+  GESTimelineBackgroundSource *source;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  a = ges_track_audio_raw_new ();
+  v = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, a);
+  ges_timeline_add_track (timeline, v);
+  ges_timeline_add_layer (timeline, layer);
+
+  source = ges_timeline_background_source_new ();
+  g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
+      (GESTimelineObject *) source, 0);
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+  g_object_unref (timeline);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -120,6 +150,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_background_source_basic);
   tcase_add_test (tc_chain, test_background_source_properties);
+  tcase_add_test (tc_chain, test_background_source_in_layer);
 
   return s;
 }
