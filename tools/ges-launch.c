@@ -342,11 +342,26 @@ print_transition_list (void)
 void
 print_pattern_list (void)
 {
-  int i;
+  GEnumClass *enum_class;
+  GESTimelineBackgroundSource *tr;
+  GESTimelineBackgroundSourceClass *klass;
+  GParamSpec *pspec;
+  GEnumValue *v;
 
-  for (i = 0; i < N_PATTERNS; i++) {
-    g_print ("%s\n", patterns[i].name);
+  tr = ges_timeline_background_source_new ();
+  klass = GES_TIMELINE_BACKGROUND_SOURCE_GET_CLASS (tr);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern");
+
+  enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+
+  for (v = enum_class->values; v->value_nick != NULL; v++) {
+    g_print ("%s\n", v->value_nick);
   }
+
+  g_type_class_unref (enum_class);
+  g_object_unref (tr);
+
 }
 
 int
