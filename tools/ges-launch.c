@@ -61,7 +61,7 @@ void print_transition_list (void);
 
 gboolean check_path (char *path);
 
-GESCustomTimelineSource *pattern_source_new (guint pattern);
+GESTimelineObject *pattern_source_new (guint pattern);
 
 gboolean check_time (char *time);
 
@@ -110,11 +110,13 @@ pattern_source_fill_func (GESTimelineObject * object,
   return gst_bin_add (GST_BIN (gnlobj), testsrc);
 }
 
-GESCustomTimelineSource *
+GESTimelineObject *
 pattern_source_new (guint pattern)
 {
-  return ges_custom_timeline_source_new (pattern_source_fill_func,
-      GUINT_TO_POINTER (pattern));
+  GESTimelineObject *ret;
+  ret = GES_TIMELINE_OBJECT (ges_timeline_background_source_new ());
+  g_object_set (ret, "vpattern", pattern, NULL);
+  return ret;
 }
 
 gboolean
@@ -224,7 +226,7 @@ create_timeline (int nbargs, gchar ** argv)
       if (pattern == INVALID_PATTERN)
         g_error ("%d invalid pattern!", pattern);
 
-      obj = GES_TIMELINE_OBJECT (pattern_source_new (pattern));
+      obj = pattern_source_new (pattern);
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
       g_print ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
