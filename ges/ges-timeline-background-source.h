@@ -55,8 +55,7 @@ struct _GESTimelineBackgroundSource {
   gboolean mute;
 
   /*< private >*/
-  GstElement *vsrc;
-  GstElement *asrc;
+  gint vpattern;
 };
 
 /**
