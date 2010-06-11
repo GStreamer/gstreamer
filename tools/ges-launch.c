@@ -331,8 +331,6 @@ print_transition_list (void)
 
   smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
 
-  g_print ("%p %d\n", smpte_class, smpte_class->n_values);
-
   for (v = smpte_class->values; v->value != 0; v++) {
     g_print ("%s\n", v->value_nick);
   }
