@@ -184,7 +184,6 @@ ges_tl_bg_src_class_init (GESTimelineBackgroundSourceClass * klass)
 static void
 ges_tl_bg_src_init (GESTimelineBackgroundSource * self)
 {
-  self->vpattern = 0;
   GES_TIMELINE_OBJECT (self)->duration = 0;
 }
 
