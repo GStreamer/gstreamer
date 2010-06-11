@@ -231,6 +231,8 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_background_source_new ();
+    ges_track_video_background_source_set_pattern (
+        (GESTrackVideoBackgroundSource *) res, tfs->vpattern);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
