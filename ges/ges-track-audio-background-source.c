@@ -105,7 +105,10 @@ ges_track_abg_src_set_property (GObject * object,
 static GstElement *
 ges_track_abg_src_create_element (GESTrackBackgroundSource * self)
 {
-  return gst_element_factory_make ("audiotestsrc", NULL);
+  GstElement *ret;
+  ret = gst_element_factory_make ("audiotestsrc", NULL);
+  g_object_set (ret, "volume", (gdouble) 0, NULL);
+  return ret;
 }
 
 GESTrackAudioBackgroundSource *
