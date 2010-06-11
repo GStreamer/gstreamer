@@ -60,6 +60,8 @@ static gboolean gst_video_max_rate_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn gst_video_max_rate_transform_ip (GstBaseTransform * trans,
     GstBuffer * buf);
+static void gst_video_max_rate_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
 GST_BOILERPLATE (GstVideoMaxRate, gst_video_max_rate, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
@@ -104,6 +106,7 @@ gst_video_max_rate_class_init (GstVideoMaxRateClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_max_rate_transform_ip);
   base_class->event = GST_DEBUG_FUNCPTR (gst_video_max_rate_sink_event);
   base_class->start = GST_DEBUG_FUNCPTR (gst_video_max_rate_start);
+  base_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_max_rate_fixate_caps);
 
   g_object_class_install_property (gobject_class, PROP_AVERAGE_PERIOD,
       g_param_spec_uint64 ("average-period", "Period over which to average",
@@ -213,6 +216,21 @@ gst_video_max_rate_transform_caps (GstBaseTransform * trans,
   gst_caps_merge_structure (ret, s);
 
   return ret;
+}
+
+static void
+gst_video_max_rate_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *s;
+  gint nom, denom;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (G_UNLIKELY (!gst_structure_get_fraction (s, "framerate", &nom, &denom)))
+    return;
+
+  s = gst_caps_get_structure (othercaps, 0);
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", nom, denom);
 }
 
 gboolean
