@@ -1858,6 +1858,16 @@ iterate_adapter:
     }
   }
 
+  obtained = GST_BUFFER_SIZE (buf);
+
+  /* our positions in bytes */
+  pos = wav->offset - wav->datastart;
+  nextpos = pos + obtained;
+
+  /* update offsets, does not overflow. */
+  GST_BUFFER_OFFSET (buf) = pos / wav->bytes_per_sample;
+  GST_BUFFER_OFFSET_END (buf) = nextpos / wav->bytes_per_sample;
+
   /* first chunk of data? create the source pad. We do this only here so
    * we can detect broken .wav files with dts disguised as raw PCM (sigh) */
   if (G_UNLIKELY (wav->first)) {
@@ -1875,16 +1885,6 @@ iterate_adapter:
       wav->start_segment = NULL;
     }
   }
-
-  obtained = GST_BUFFER_SIZE (buf);
-
-  /* our positions in bytes */
-  pos = wav->offset - wav->datastart;
-  nextpos = pos + obtained;
-
-  /* update offsets, does not overflow. */
-  GST_BUFFER_OFFSET (buf) = pos / wav->bytes_per_sample;
-  GST_BUFFER_OFFSET_END (buf) = nextpos / wav->bytes_per_sample;
 
   if (wav->bps > 0) {
     /* and timestamps if we have a bitrate, be careful for overflows */
