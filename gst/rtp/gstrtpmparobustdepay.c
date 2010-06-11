@@ -758,8 +758,7 @@ gst_rtp_mpa_robust_change_state (GstElement * element,
 
       gst_adapter_clear (rtpmpadepay->adapter);
       for (i = 0; i < G_N_ELEMENTS (rtpmpadepay->deinter); i++) {
-        gst_buffer_unref (rtpmpadepay->deinter[i]);
-        rtpmpadepay->deinter[i] = NULL;
+        gst_buffer_replace (&rtpmpadepay->deinter[i], NULL);
       }
       rtpmpadepay->cur_adu_frame = NULL;
       g_queue_foreach (rtpmpadepay->adu_frames,
