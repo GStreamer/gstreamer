@@ -68,6 +68,7 @@ ges_track_vbg_src_class_init (GESTrackVideoBackgroundSourceClass * klass)
 static void
 ges_track_vbg_src_init (GESTrackVideoBackgroundSource * self)
 {
+  self->pattern = GES_TRACK_VIDEO_BG_SRC_BLACK;
 }
 
 static void
@@ -105,7 +106,14 @@ ges_track_vbg_src_set_property (GObject * object,
 static GstElement *
 ges_track_vbg_src_create_element (GESTrackBackgroundSource * self)
 {
-  return gst_element_factory_make ("videotestsrc", NULL);
+  GstElement *ret;
+  gint pattern;
+
+  pattern = ((GESTrackVideoBackgroundSource *) self)->pattern;
+
+  ret = gst_element_factory_make ("videotestsrc", NULL);
+  g_object_set (ret, "pattern", (gint) pattern, NULL);
+  return ret;
 }
 
 void
@@ -114,6 +122,7 @@ ges_track_video_background_source_set_pattern (GESTrackVideoBackgroundSource
 {
   GstElement *element;
   element = GES_TRACK_BACKGROUND_SOURCE (self)->element;
+  self->pattern = pattern;
   if (element)
     g_object_set (element, "pattern", (gint) pattern, NULL);
 }

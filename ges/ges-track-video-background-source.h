@@ -72,7 +72,8 @@ typedef enum {
 struct _GESTrackVideoBackgroundSource {
   GESTrackBackgroundSource parent;
 
-  /*< public >*/
+  /*< private >*/
+  GESTrackVideoBgSrcPattern pattern;
 };
 
 /**
