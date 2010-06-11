@@ -469,12 +469,12 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
   offset = gst_byte_writer_get_size (&writer->tagwriter);
   while (gst_byte_writer_get_pos (&writer->tagwriter) <
       gst_byte_writer_get_size (&writer->tagwriter)) {
-    guint16 type;
+    guint16 type = 0;
     guint32 cur_offset = 0;
     GstByteReader *reader;
     gint byte_size = 0;
     guint32 count = 0;
-    guint16 tag_id;
+    guint16 tag_id = 0;
 
     reader = (GstByteReader *) & writer->tagwriter;
 
@@ -577,8 +577,8 @@ parse_exif_rational_tag (GstExifReader * exif_reader,
 {
   GstByteReader data_reader;
   guint32 real_offset;
-  guint32 frac_n;
-  guint32 frac_d;
+  guint32 frac_n = 0;
+  guint32 frac_d = 1;
   gdouble value;
 
   if (count > 1) {
@@ -953,8 +953,8 @@ GstTagList *
 gst_tag_list_from_exif_buffer_with_tiff_header (const GstBuffer * buffer)
 {
   GstByteReader reader;
-  guint16 fortytwo;
-  guint16 endianness;
+  guint16 fortytwo = 42;
+  guint16 endianness = 0;
   guint32 offset;
   GstTagList *taglist = NULL;
   GstBuffer *subbuffer;
@@ -1070,12 +1070,12 @@ deserialize_geo_coordinate (GstExifReader * exif_reader,
   GstExifTagData next_tagdata;
   gint ret = 0;
   /* for the conversion */
-  guint32 degrees_n;
-  guint32 degrees_d;
-  guint32 minutes_n;
-  guint32 minutes_d;
-  guint32 seconds_n;
-  guint32 seconds_d;
+  guint32 degrees_n = 0;
+  guint32 degrees_d = 1;
+  guint32 minutes_n = 0;
+  guint32 minutes_d = 1;
+  guint32 seconds_n = 0;
+  guint32 seconds_d = 1;
   gdouble degrees;
   gdouble minutes;
   gdouble seconds;
