@@ -83,7 +83,6 @@ struct _GstKsVideoDevicePrivate
   guint fps_n;
   guint fps_d;
   guint8 *rgb_swap_buf;
-  gboolean is_mjpeg;
 
   HANDLE pin_handle;
 
@@ -797,8 +796,6 @@ gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps)
   else
     priv->rgb_swap_buf = NULL;
 
-  priv->is_mjpeg = gst_structure_has_name (s, "image/jpeg");
-
   priv->pin_handle = pin_handle;
 
   priv->cur_fixed_caps = gst_caps_copy (caps);
@@ -994,54 +991,6 @@ error_ioctl:
   }
 }
 
-static void
-gst_ks_video_device_correct_or_drop_frame (GstKsVideoDevice * self,
-    GstBuffer ** frame_buf)
-{
-  GstKsVideoDevicePrivate *priv = GST_KS_VIDEO_DEVICE_GET_PRIVATE (self);
-  gboolean valid = FALSE;
-  guint padding = 0;
-  guint8 *data;
-  guint data_size;
-
-  if (!priv->is_mjpeg)
-    return;
-
-  /*
-   * Workaround for cameras/drivers that intermittently provide us
-   * with incomplete or corrupted MJPEG frames.
-   *
-   * Happens with for instance Microsoft LifeCam VX-7000.
-   */
-
-  data = GST_BUFFER_DATA (*frame_buf);
-  data_size = GST_BUFFER_SIZE (*frame_buf);
-
-  if (data_size > MJPEG_MAX_PADDING) {
-    /* JFIF SOI marker */
-    if (data[0] == 0xff && data[1] == 0xd8) {
-      guint8 *p = data + data_size - 2;
-
-      /* JFIF EOI marker (but skip any padding) */
-      while (padding < MJPEG_MAX_PADDING - 1 - 2 && !valid) {
-        if (p[0] == 0xff && p[1] == 0xd9) {
-          valid = TRUE;
-        } else {
-          padding++;
-          p--;
-        }
-      }
-    }
-  }
-
-  if (valid) {
-    GST_BUFFER_SIZE (*frame_buf) -= padding;
-  } else {
-    gst_buffer_unref (*frame_buf);
-    *frame_buf = NULL;
-  }
-}
-
 GstFlowReturn
 gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf,
     GstClockTime * presentation_time, gulong * error_code, gchar ** error_str)
@@ -1152,9 +1101,6 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf,
             priv->last_timestamp = timestamp;
           }
         }
-
-        if (*buf != NULL)
-          gst_ks_video_device_correct_or_drop_frame (self, buf);
       } else if (GetLastError () != ERROR_OPERATION_ABORTED) {
         goto error_get_result;
       }
