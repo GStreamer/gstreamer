@@ -74,9 +74,6 @@ static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
     GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
-static gboolean gst_capsfilter_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize);
 
 static void
 gst_capsfilter_base_init (gpointer g_class)
@@ -118,8 +115,6 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_capsfilter_transform_ip);
   trans_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_capsfilter_prepare_buf);
-  trans_class->transform_size =
-      GST_DEBUG_FUNCPTR (gst_capsfilter_transform_size);
 }
 
 static void
@@ -267,17 +262,6 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
 
   return ret;
 }
-
-static gboolean
-gst_capsfilter_transform_size (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, guint size,
-    GstCaps * othercaps, guint * othersize)
-{
-  /* return the same size */
-  *othersize = size;
-  return TRUE;
-}
-
 
 static GstFlowReturn
 gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
