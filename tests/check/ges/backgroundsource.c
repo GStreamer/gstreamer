@@ -103,6 +103,7 @@ GST_START_TEST (test_background_source_properties)
   gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
 
   ges_timeline_object_release_track_object (object, trackobject);
+  g_object_unref (object);
 }
 
 GST_END_TEST;
@@ -147,7 +148,13 @@ GST_START_TEST (test_background_source_in_layer)
   ptrn = ((GESTrackVideoBackgroundSource *) trobj)->pattern;
   assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
 
+  GST_DEBUG ("removing the source");
+
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+
+  GST_DEBUG ("removing the layer");
+
+  g_object_unref (trobj);
   g_object_unref (timeline);
 }
 
