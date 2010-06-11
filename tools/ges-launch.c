@@ -36,24 +36,6 @@ GESTimelinePipeline *pipeline = NULL;
 /* create a table of a subset of the test patterns available from videotestsrc
  */
 
-typedef struct _pattern
-{
-  const char *name;
-  int value;
-} pattern;
-
-pattern patterns[] = {
-  {"smpte", 0},
-  {"snow", 1},
-  {"black", 2},
-  {"white", 3},
-  {"red", 4},
-  {"green", 5},
-  {"blue", 6},
-};
-
-int pattern_for_name (char *name);
-
 gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
     * trobject, GstElement * gnlobj, gpointer user_data);
 
@@ -69,24 +51,7 @@ guint64 str_to_time (char *time);
 
 void print_pattern_list (void);
 
-#define N_PATTERNS 7
-#define INVALID_PATTERN -1
-
 /* and a function to get the pattern for the source */
-
-int
-pattern_for_name (char *name)
-{
-  int i;
-
-  for (i = 0; i < N_PATTERNS; i++) {
-    if (!g_strcmp0 (patterns[i].name, name)) {
-      return patterns[i].value;
-    }
-  }
-
-  return INVALID_PATTERN;
-}
 
 gboolean
 pattern_source_fill_func (GESTimelineObject * object,
@@ -215,18 +180,16 @@ create_timeline (int nbargs, gchar ** argv)
   for (i = 0; i < nbargs / 3; i++) {
     GESTimelineObject *obj;
 
-    int pattern;
-
     char *source = argv[i * 3];
     char *arg0 = argv[(i * 3) + 1];
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
-      pattern = pattern_for_name (arg0);
-      if (pattern == INVALID_PATTERN)
-        g_error ("%d invalid pattern!", pattern);
+      obj = GES_TIMELINE_OBJECT (ges_timeline_background_source_new_for_nick
+          (arg0));
+      if (!obj)
+        g_error ("%s invalid pattern!", arg0);
 
-      obj = pattern_source_new (pattern);
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
       g_print ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
