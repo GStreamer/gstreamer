@@ -36,6 +36,49 @@
 G_DEFINE_TYPE (GESTimelineBackgroundSource, ges_tl_bg_src,
     GES_TYPE_TIMELINE_SOURCE);
 
+#define GES_TIMELINE_BACKGROUND_SOURCE_VPATTERN_TYPE\
+  ges_timeline_background_source_vpattern_get_type()
+
+GType ges_timeline_background_source_vpattern_get_type (void);
+
+GType
+ges_timeline_background_source_vpattern_get_type (void)
+{
+  /* table more-or-less copied from gstvideotestsrc.c */
+  const static GEnumValue values[] = {
+    {GES_TRACK_VIDEO_BG_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
+    {GES_TRACK_VIDEO_BG_SRC_SNOW, "Random (television snow)", "snow"},
+    {GES_TRACK_VIDEO_BG_SRC_BLACK, "100% Black", "black"},
+    {GES_TRACK_VIDEO_BG_SRC_WHITE, "100% White", "white"},
+    {GES_TRACK_VIDEO_BG_SRC_RED, "Red", "red"},
+    {GES_TRACK_VIDEO_BG_SRC_GREEN, "Green", "green"},
+    {GES_TRACK_VIDEO_BG_SRC_BLUE, "Blue", "blue"},
+    {GES_TRACK_VIDEO_BG_SRC_CHECKERS1, "Checkers 1px", "checkers-1"},
+    {GES_TRACK_VIDEO_BG_SRC_CHECKERS2, "Checkers 2px", "checkers-2"},
+    {GES_TRACK_VIDEO_BG_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
+    {GES_TRACK_VIDEO_BG_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
+    {GES_TRACK_VIDEO_BG_SRC_CIRCULAR, "Circular", "circular"},
+    {GES_TRACK_VIDEO_BG_SRC_BLINK, "Blink", "blink"},
+    {GES_TRACK_VIDEO_BG_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
+    {GES_TRACK_VIDEO_BG_SRC_ZONE_PLATE, "Zone plate", "zone-plate"},
+    {GES_TRACK_VIDEO_BG_SRC_GAMUT, "Gamut checkers", "gamut"},
+    {GES_TRACK_VIDEO_BG_SRC_CHROMA_ZONE_PLATE, "Chroma zone plate",
+        "chroma-zone-plate"},
+    {0, NULL, NULL}
+  };
+
+  static gsize once = 0;
+  static GType theType = 0;
+
+  if (g_once_init_enter (&once)) {
+    theType = g_enum_register_static ("GESTimelineBackgroundSourceVPattern",
+        values);
+    g_once_init_leave (&once, 1);
+  };
+
+  return theType;
+}
+
 enum
 {
   PROP_0,
