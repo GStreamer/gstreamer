@@ -73,5 +73,9 @@ typedef struct _GESTrackVideoBackgroundSource GESTrackVideoBackgroundSource;
 typedef struct _GESTrackVideoBackgroundSourceClass
   GESTrackVideoBackgroundSourceClass;
 
+typedef struct _GESTrackAudioBackgroundSource GESTrackAudioBackgroundSource;
+typedef struct _GESTrackAudioBackgroundSourceClass
+  GESTrackAudioBackgroundSourceClass;
+
 
 #endif /* __GES_TYPES_H__ */
