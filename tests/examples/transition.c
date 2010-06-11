@@ -118,8 +118,9 @@ make_timeline (char *nick, double tdur, char *patha, float adur,
   g_timeout_add_seconds (1, (GSourceFunc) print_transition_data, srcb);
 
   if (tduration != 0) {
-    g_print ("creating transition at %ld of %f duration (%ld ns)\n",
-        tstart, tdur, tduration);
+    g_print ("creating transition at %" GST_TIME_FORMAT " of %f duration (%"
+        GST_TIME_FORMAT ")\n", GST_TIME_ARGS (tstart), tdur,
+        GST_TIME_ARGS (tduration));
     if (!(tr = ges_timeline_transition_new_for_nick (nick)))
       g_error ("invalid transition type %s\n", nick);
 
