@@ -1261,9 +1261,12 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
 /*** audio/x-dts ***/
 static GstStaticCaps dts_caps = GST_STATIC_CAPS ("audio/x-dts");
 #define DTS_CAPS (gst_static_caps_get (&dts_caps))
+#define DTS_MIN_FRAMESIZE 96
+#define DTS_MAX_FRAMESIZE 18725 /* 16384*16/14 */
 
-static void
-dts_type_find (GstTypeFind * tf, gpointer unused)
+static gboolean
+dts_parse_frame_header (DataScanCtx * c, guint * frame_size,
+    guint * sample_rate, guint * channels)
 {
   static const int sample_rates[16] = { 0, 8000, 16000, 32000, 0, 0, 11025,
     22050, 44100, 0, 0, 12000, 24000, 48000, 96000, 192000
@@ -1271,39 +1274,31 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
   static const guint8 channels_table[16] = { 1, 2, 2, 2, 2, 3, 3, 4, 4, 5,
     6, 6, 6, 7, 8, 8
   };
-  GstTypeFindProbability prob;
-  const guint8 *data;
   guint16 hdr[8];
   guint32 marker;
-  guint sample_rate, num_blocks, frame_size, chans, lfe, i;
+  guint num_blocks, chans, lfe, i;
 
-  data = gst_type_find_peek (tf, 0, sizeof (hdr));
-
-  if (data == NULL)
-    return;
-
-  marker = GST_READ_UINT32_BE (data);
+  marker = GST_READ_UINT32_BE (c->data);
 
   /* raw big endian or 14-bit big endian */
   if (marker == 0x7FFE8001 || marker == 0x1FFFE800) {
     for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
-      hdr[i] = GST_READ_UINT16_BE (data + (i * sizeof (guint16)));
+      hdr[i] = GST_READ_UINT16_BE (c->data + (i * sizeof (guint16)));
   } else
     /* raw little endian or 14-bit little endian */
   if (marker == 0xFE7F0180 || marker == 0xFF1F00E8) {
     for (i = 0; i < G_N_ELEMENTS (hdr); ++i)
-      hdr[i] = GST_READ_UINT16_LE (data + (i * sizeof (guint16)));
+      hdr[i] = GST_READ_UINT16_LE (c->data + (i * sizeof (guint16)));
   } else {
-    return;
+    return FALSE;
   }
 
-  GST_LOG ("dts sync marker 0x%08x at offset 0", marker);
-  prob = GST_TYPE_FIND_LIKELY;
+  GST_LOG ("dts sync marker 0x%08x at offset %u", marker, (guint) c->offset);
 
   /* 14-bit mode */
   if (marker == 0x1FFFE800 || marker == 0xFF1F00E8) {
     if ((hdr[2] & 0xFFF0) != 0x07F0)
-      return;
+      return FALSE;
     /* discard top 2 bits (2 void), shift in 2 */
     hdr[0] = (hdr[0] << 2) | ((hdr[1] >> 12) & 0x0003);
     /* discard top 4 bits (2 void, 2 shifted into hdr[0]), shift in 4 etc. */
@@ -1314,38 +1309,72 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
     hdr[5] = (hdr[5] << 12) | ((hdr[6] >> 2) & 0x0FFF);
     hdr[6] = (hdr[6] << 14) | ((hdr[7] >> 0) & 0x3FFF);
     g_assert (hdr[0] == 0x7FFE && hdr[1] == 0x8001);
-    prob = GST_TYPE_FIND_NEARLY_CERTAIN;
   }
 
   GST_LOG ("frame header: %04x%04x%04x%04x", hdr[2], hdr[3], hdr[4], hdr[5]);
 
   num_blocks = (hdr[2] >> 2) & 0x7F;
-  frame_size = (((hdr[2] & 0x03) << 12) | (hdr[3] >> 4)) + 1;
+  *frame_size = (((hdr[2] & 0x03) << 12) | (hdr[3] >> 4)) + 1;
   chans = ((hdr[3] & 0x0F) << 2) | (hdr[4] >> 14);
-  sample_rate = sample_rates[(hdr[4] >> 10) & 0x0F];
+  *sample_rate = sample_rates[(hdr[4] >> 10) & 0x0F];
   lfe = (hdr[5] >> 9) & 0x03;
 
-  if (num_blocks < 5 || frame_size < 96 || sample_rate == 0)
-    return;
+  if (num_blocks < 5 || *frame_size < 96 || *sample_rate == 0)
+    return FALSE;
 
-  /* check for second frame sync */
   if (marker == 0x1FFFE800 || marker == 0xFF1F00E8)
-    frame_size = (frame_size * 16) / 14;
+    *frame_size = (*frame_size * 16) / 14;      /* FIXME: round up? */
 
-  if ((data = gst_type_find_peek (tf, frame_size, 4))) {
-    GST_LOG ("frame size: %u 0x%04x", frame_size, frame_size);
-    GST_MEMDUMP ("second frame sync", data, 4);
-    if (GST_READ_UINT32_BE (data) == marker)
-      prob = GST_TYPE_FIND_MAXIMUM;
-  }
+  if (chans < G_N_ELEMENTS (channels_table))
+    *channels = channels_table[chans] + ((lfe) ? 1 : 0);
+  else
+    *channels = 0;
 
-  if (chans < G_N_ELEMENTS (channels_table)) {
-    gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
-        "rate", G_TYPE_INT, sample_rate,
-        "channels", G_TYPE_INT, channels_table[chans] + ((lfe) ? 1 : 0), NULL);
-  } else {
-    gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
-        "rate", G_TYPE_INT, sample_rate, NULL);
+  return TRUE;
+}
+
+static void
+dts_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+
+  /* Search for an dts frame; not neccesarily right at the start, but give it
+   * a lower probability if not found right at the start. Check that the
+   * frame is followed by a second frame at the expected offset. */
+  while (c.offset <= DTS_MAX_FRAMESIZE) {
+    guint frame_size, rate, chans;
+
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, DTS_MIN_FRAMESIZE)))
+      return;
+
+    if (G_UNLIKELY (dts_parse_frame_header (&c, &frame_size, &rate, &chans))) {
+      GstTypeFindProbability prob;
+      DataScanCtx next_c;
+
+      prob = (c.offset == 0) ? GST_TYPE_FIND_LIKELY : GST_TYPE_FIND_POSSIBLE;
+
+      /* check for second frame sync */
+      next_c = c;
+      data_scan_ctx_advance (tf, &next_c, frame_size);
+      if (data_scan_ctx_ensure_data (tf, &next_c, 4)) {
+        GST_LOG ("frame size: %u 0x%04x", frame_size, frame_size);
+        GST_MEMDUMP ("second frame sync", next_c.data, 4);
+        if (GST_READ_UINT32_BE (c.data) == GST_READ_UINT32_BE (next_c.data))
+          prob = GST_TYPE_FIND_MAXIMUM;
+      }
+
+      if (chans > 0) {
+        gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
+            "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, chans, NULL);
+      } else {
+        gst_type_find_suggest_simple (tf, prob, "audio/x-dts",
+            "rate", G_TYPE_INT, rate, NULL);
+      }
+
+      return;
+    }
+
+    data_scan_ctx_advance (tf, &c, 1);
   }
 }
 
