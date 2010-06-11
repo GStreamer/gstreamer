@@ -655,13 +655,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_ATRAC1:
       caps =
-          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac3",
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac1",
           NULL);
       break;
 
     case CODEC_ID_ATRAC3:
       caps =
-          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac1",
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac3",
           NULL);
       break;
 
