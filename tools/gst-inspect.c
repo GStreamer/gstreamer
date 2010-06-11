@@ -172,32 +172,44 @@ print_event_masks (const GstEventMask * masks)
 #endif
 
 static const char *
-get_rank_name (gint rank)
+get_rank_name (char *s, gint rank)
 {
-  switch (rank) {
-    case GST_RANK_NONE:
-      return "none";
-    case GST_RANK_MARGINAL:
-      return "marginal";
-    case GST_RANK_SECONDARY:
-      return "secondary";
-    case GST_RANK_PRIMARY:
-      return "primary";
-    default:
-      return "unknown";
+  static const int ranks[4] = {
+    GST_RANK_NONE, GST_RANK_MARGINAL, GST_RANK_SECONDARY, GST_RANK_PRIMARY
+  };
+  static const char *rank_names[4] = { "none", "marginal", "secondary",
+    "primary"
+  };
+  int i;
+  int best_i;
+
+  best_i = 0;
+  for (i = 0; i < 4; i++) {
+    if (rank == ranks[i])
+      return rank_names[i];
+    if (abs (rank - ranks[i]) < abs (rank - ranks[best_i])) {
+      best_i = i;
+    }
   }
+
+  sprintf (s, "%s %c %d", rank_names[best_i],
+      (rank - ranks[best_i] > 0) ? '+' : '-', abs (ranks[best_i] - rank));
+
+  return s;
 }
 
 static void
 print_factory_details_info (GstElementFactory * factory)
 {
+  char s[20];
+
   n_print ("Factory Details:\n");
   n_print ("  Long name:\t%s\n", factory->details.longname);
   n_print ("  Class:\t%s\n", factory->details.klass);
   n_print ("  Description:\t%s\n", factory->details.description);
   n_print ("  Author(s):\t%s\n", factory->details.author);
   n_print ("  Rank:\t\t%s (%d)\n",
-      get_rank_name (GST_PLUGIN_FEATURE (factory)->rank),
+      get_rank_name (s, GST_PLUGIN_FEATURE (factory)->rank),
       GST_PLUGIN_FEATURE (factory)->rank);
   n_print ("\n");
 }
