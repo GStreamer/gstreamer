@@ -683,10 +683,16 @@ gst_value_transform_fourcc_string (const GValue * src_value,
 {
   guint32 fourcc = src_value->data[0].v_int;
 
-  if (g_ascii_isprint ((fourcc >> 0) & 0xff) &&
-      g_ascii_isprint ((fourcc >> 8) & 0xff) &&
-      g_ascii_isprint ((fourcc >> 16) & 0xff) &&
-      g_ascii_isprint ((fourcc >> 24) & 0xff)) {
+  gchar fourcc_char[4] = {
+    (fourcc >> 0) & 0xff,
+    (fourcc >> 8) & 0xff,
+    (fourcc >> 16) & 0xff,
+    (fourcc >> 24) & 0xff
+  };
+  if ((g_ascii_isalnum (fourcc_char[0]) || fourcc_char[0] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[1]) || fourcc_char[1] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[2]) || fourcc_char[2] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[3]) || fourcc_char[3] == ' ')) {
     dest_value->data[0].v_pointer =
         g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   } else {
@@ -707,10 +713,16 @@ gst_value_serialize_fourcc (const GValue * value)
 {
   guint32 fourcc = value->data[0].v_int;
 
-  if (g_ascii_isalnum ((fourcc >> 0) & 0xff) &&
-      g_ascii_isalnum ((fourcc >> 8) & 0xff) &&
-      g_ascii_isalnum ((fourcc >> 16) & 0xff) &&
-      g_ascii_isalnum ((fourcc >> 24) & 0xff)) {
+  gchar fourcc_char[4] = {
+    (fourcc >> 0) & 0xff,
+    (fourcc >> 8) & 0xff,
+    (fourcc >> 16) & 0xff,
+    (fourcc >> 24) & 0xff
+  };
+  if ((g_ascii_isalnum (fourcc_char[0]) || fourcc_char[0] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[1]) || fourcc_char[1] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[2]) || fourcc_char[2] == ' ') &&
+      (g_ascii_isalnum (fourcc_char[3]) || fourcc_char[3] == ' ')) {
     return g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   } else {
     return g_strdup_printf ("0x%08x", fourcc);

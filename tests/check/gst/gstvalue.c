@@ -24,6 +24,48 @@
 #include <gst/check/gstcheck.h>
 
 
+GST_START_TEST (test_serialize_fourcc)
+{
+  int i;
+
+  guint32 fourccs[] = {
+    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
+    GST_MAKE_FOURCC ('Y', '8', '0', '0'),
+    GST_MAKE_FOURCC ('Y', '8', ' ', ' '),
+    GST_MAKE_FOURCC ('Y', '1', '6', ' '),
+    GST_MAKE_FOURCC ('Y', 'U', 'Y', '_'),
+    GST_MAKE_FOURCC ('Y', 'U', 'Y', '#'),
+  };
+  gint fourccs_size = sizeof (fourccs) / sizeof (fourccs[0]);
+  const gchar *fourcc_strings[] = {
+    "YUY2",
+    "Y800",
+    "Y8  ",
+    "Y16 ",
+    "0x5f595559",               /* Ascii values of YUY_ */
+    "0x23595559",               /* Ascii values of YUY# */
+  };
+  gint fourcc_strings_size =
+      sizeof (fourcc_strings) / sizeof (fourcc_strings[0]);
+
+  fail_unless (fourccs_size == fourcc_strings_size);
+
+  for (i = 0; i < fourccs_size; ++i) {
+    gchar *str;
+    GValue value = { 0 };
+    g_value_init (&value, GST_TYPE_FOURCC);
+
+    gst_value_set_fourcc (&value, fourccs[i]);
+    str = gst_value_serialize (&value);
+
+    fail_unless (strcmp (str, fourcc_strings[i]) == 0);
+
+    g_free (str);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deserialize_buffer)
 {
   GValue value = { 0 };
@@ -1762,6 +1804,7 @@ gst_value_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_serialize_fourcc);
   tcase_add_test (tc_chain, test_deserialize_buffer);
   tcase_add_test (tc_chain, test_serialize_buffer);
   tcase_add_test (tc_chain, test_deserialize_gint);
