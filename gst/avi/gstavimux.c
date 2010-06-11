@@ -1105,7 +1105,7 @@ gst_avi_mux_end_chunk (GstByteWriter * bw, guint chunk_offset)
 {
   guint size;
 
-  size = gst_byte_writer_get_size (bw);
+  size = gst_byte_writer_get_pos (bw);
 
   gst_byte_writer_set_pos (bw, chunk_offset);
   gst_byte_writer_put_uint32_le (bw, size - chunk_offset - 4);
@@ -1361,14 +1361,14 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   if (tags) {
     guint info;
 
-    gst_avi_mux_start_chunk (&bw, "LIST", 0);
-    info = gst_byte_writer_put_data (&bw, (guint8 *) "INFO", 4);
+    info = gst_avi_mux_start_chunk (&bw, "LIST", 0);
+    gst_byte_writer_put_data (&bw, (guint8 *) "INFO", 4);
 
     gst_tag_list_foreach (tags, gst_avi_mux_write_tag, &bw);
-    if (info == gst_byte_writer_get_size (&bw)) {
+    if (info + 8 == gst_byte_writer_get_pos (&bw)) {
       /* no tags writen, remove the empty INFO LIST as it is useless
        * and prevents playback in vlc */
-      gst_byte_writer_set_pos (&bw, info - 8);
+      gst_byte_writer_set_pos (&bw, info - 4);
     } else {
       gst_avi_mux_end_chunk (&bw, info);
     }
@@ -1383,7 +1383,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   gst_byte_writer_put_data (&bw, (guint8 *) "movi", 4);
 
   /* now get the data */
-  buffer = gst_byte_writer_free_and_get_buffer (&bw);
+  buffer = gst_byte_writer_reset_and_get_buffer (&bw);
 
   /* ... but RIFF includes more than just header */
   size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buffer) + 4);
