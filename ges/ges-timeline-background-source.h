@@ -72,6 +72,8 @@ struct _GESTimelineBackgroundSourceClass {
 GType ges_tl_bg_src_get_type (void);
 
 GESTimelineBackgroundSource* ges_timeline_background_source_new (void);
+GESTimelineBackgroundSource* ges_timeline_background_source_new_for_nick(gchar
+    * nick);
 
 G_END_DECLS
 

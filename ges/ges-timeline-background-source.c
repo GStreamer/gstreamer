@@ -32,6 +32,7 @@
 #include "ges-track-object.h"
 #include "ges-track-video-background-source.h"
 #include "ges-track-audio-background-source.h"
+#include <string.h>
 
 G_DEFINE_TYPE (GESTimelineBackgroundSource, ges_tl_bg_src,
     GES_TYPE_TIMELINE_SOURCE);
@@ -263,4 +264,24 @@ ges_timeline_background_source_new (void)
 {
   /* FIXME : Check for validity/existence of URI */
   return g_object_new (GES_TYPE_TIMELINE_BACKGROUND_SOURCE, NULL);
+}
+
+GESTimelineBackgroundSource *
+ges_timeline_background_source_new_for_nick (gchar * nick)
+{
+  GESTimelineBackgroundSource *ret;
+  GEnumValue *value;
+  int i;
+
+  for (i = 0, value = &vpattern_enum_values[i]; value->value_nick;
+      value = &vpattern_enum_values[i++]) {
+    if (!strcmp (nick, value->value_nick)) {
+      ret = g_object_new (GES_TYPE_TIMELINE_BACKGROUND_SOURCE, "vpattern",
+          (gint) value->value, NULL);
+      return ret;
+    }
+    value++;
+  }
+
+  return NULL;
 }
