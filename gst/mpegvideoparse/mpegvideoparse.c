@@ -41,7 +41,7 @@
  *     sequence changes, but if we then seek to a different spot it might
  *     be wrong. Fortunately almost every stream only has 1 sequence.
  */
-GST_DEBUG_CATEGORY_STATIC (mpv_parse_debug);
+GST_DEBUG_CATEGORY (mpv_parse_debug);
 #define GST_CAT_DEFAULT mpv_parse_debug
 
 static GstStaticPadTemplate src_template =

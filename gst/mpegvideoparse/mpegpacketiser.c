@@ -31,6 +31,9 @@
  * otherwise it is accumulated with the GOP */
 #include "mpegpacketiser.h"
 
+GST_DEBUG_CATEGORY_EXTERN (mpv_parse_debug);
+#define GST_CAT_DEFAULT mpv_parse_debug
+
 static void collect_packets (MPEGPacketiser * p, GstBuffer * buf);
 
 void
@@ -149,12 +152,11 @@ get_next_free_block (MPEGPacketiser * p)
     /* Now we may need to move some data up to the end of the array, if the 
      * cur_block_idx is before the first_block_idx in the array. */
     if (p->cur_block_idx < p->first_block_idx) {
-#if 0
-      g_print ("Moving %d blocks from idx %d to idx %d of %d\n",
+
+      GST_LOG ("Moving %d blocks from idx %d to idx %d of %d",
           old_n_blocks - p->first_block_idx,
           p->first_block_idx, p->first_block_idx + BLOCKS_INCREMENT,
           p->n_blocks);
-#endif
 
       memmove (p->blocks + p->first_block_idx + BLOCKS_INCREMENT,
           p->blocks + p->first_block_idx,
@@ -188,10 +190,8 @@ complete_current_block (MPEGPacketiser * p, guint64 offset)
   g_assert (block->offset < offset);
   block->length = offset - block->offset;
 
-#if 0
-  g_print ("Completed block of type 0x%02x @ offset %" G_GUINT64_FORMAT
-      " with size %u\n", block->first_pack_type, block->offset, block->length);
-#endif
+  GST_LOG ("Completed block of type 0x%02x @ offset %" G_GUINT64_FORMAT
+      " with size %u", block->first_pack_type, block->offset, block->length);
 
   /* If this is the first complete block, set first_block_idx to be this block */
   if (p->first_block_idx == -1)
@@ -283,16 +283,16 @@ start_new_block (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
   /* Make this our current block */
   p->cur_block_idx = block_idx;
 
-#if 0
-  g_print ("Started new block in slot %d with first pack 0x%02x @ offset %"
-      G_GUINT64_FORMAT "\n", block_idx, block->first_pack_type, block->offset);
-#endif
+  GST_LOG ("Started new block in slot %d with first pack 0x%02x @ offset %"
+      G_GUINT64_FORMAT, block_idx, block->first_pack_type, block->offset);
 
 }
 
 static void
 handle_packet (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
 {
+  GST_LOG ("handle_packet: offset %" G_GUINT64_FORMAT ", pack_type %2x", offset,
+      pack_type);
   switch (pack_type) {
     case MPEG_PACKET_SEQUENCE:
     case MPEG_PACKET_GOP:
@@ -335,10 +335,8 @@ handle_packet (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
       if (G_LIKELY (p->cur_block_idx != -1)) {
         block = p->blocks + p->cur_block_idx;
         block->ts = ts;
-#if 0
-        g_print ("Picture @ offset %" G_GINT64_FORMAT " has ts %"
-            GST_TIME_FORMAT "\n", block->offset, GST_TIME_ARGS (block->ts));
-#endif
+        GST_LOG ("Picture @ offset %" G_GINT64_FORMAT " has ts %"
+            GST_TIME_FORMAT, block->offset, GST_TIME_ARGS (block->ts));
       }
       break;
     }
