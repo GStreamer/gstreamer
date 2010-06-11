@@ -31,6 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-video-background-source.h"
+#include "ges-track-audio-background-source.h"
 
 G_DEFINE_TYPE (GESTimelineBackgroundSource, ges_tl_bg_src,
     GES_TYPE_TIMELINE_SOURCE);
@@ -143,7 +144,7 @@ ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute)
 static GESTrackObject *
 ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
 {
-  //GESTimelineBackgroundSource *tfs = (GESTimelineBackgroundSource *) obj;
+  GESTimelineBackgroundSource *tfs = (GESTimelineBackgroundSource *) obj;
   GESTrackObject *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackBackgroundSource");
@@ -151,14 +152,12 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_background_source_new ();
   }
-#if 0
-  /* If mute and track is audio */
+
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackObject *) ges_track_audio_backgroundsource_new ();
+    res = (GESTrackObject *) ges_track_audio_background_source_new ();
     if (tfs->mute)
       ges_track_object_set_active (res, FALSE);
   }
-#endif
 
   else {
     res = (GESTrackObject *) ges_track_background_source_new ();
