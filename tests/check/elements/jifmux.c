@@ -28,7 +28,6 @@
 
 #include <gst/check/gstcheck.h>
 
-#ifdef HAVE_EXIF
 #include <libexif/exif-data.h>
 #include <libexif/exif-loader.h>
 
@@ -194,18 +193,13 @@ GST_START_TEST (test_jifmux_tags)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 asfmux_suite (void)
 {
   Suite *s = suite_create ("jifmux");
   TCase *tc_chain = tcase_create ("general");
-#ifdef HAVE_EXIF
   tcase_add_test (tc_chain, test_jifmux_tags);
-#else
-  GST_WARNING ("Not running jifmux tags tests that depend on libexif");
-#endif
 
   suite_add_tcase (s, tc_chain);
 

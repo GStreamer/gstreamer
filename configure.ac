@@ -739,13 +739,20 @@ AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
   ])
 ])
 
+dnl **** exif (used on metadata and jifmux tests) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_EXIF, true)
+AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
+  PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
+    HAVE_EXIF="no"
+    AC_MSG_RESULT(no)
+  ])
+])
+
+
 dnl *** METADATA ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_METADATA, true)
 AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
   HAVE_METADATA="no"
-  PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
-    HAVE_EXIF="no"
-  ])
   PKG_CHECK_MODULES(IPTC, libiptcdata >= 1.0.2, HAVE_IPTC="yes", [
     HAVE_IPTC="no"
   ])
@@ -754,7 +761,7 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
   ])
   PKG_CHECK_MODULES(XMP_1_99_5, exempi-2.0 >= 1.99.5, XMP_CFLAGS="-DXMP_1_99_5 $XMP_CFLAGS", AC_MSG_RESULT(no))
   if test x$HAVE_EXIF = xyes; then
-    METADATA_CFLAGS="-DHAVE_EXIF $EXIF_CFLAGS $METADATA_CFLAGS"
+    METADATA_CFLAGS="$EXIF_CFLAGS $METADATA_CFLAGS"
     METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS -lm"
     HAVE_METADATA="yes"
   fi
