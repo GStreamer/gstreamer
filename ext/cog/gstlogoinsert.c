@@ -69,13 +69,6 @@ struct _GstLogoinsertClass
 
 };
 
-/* GstLogoinsert signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
@@ -154,9 +147,9 @@ gst_logoinsert_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_logoinsert_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "Video Filter Template",
-      "Filter/Effect/Video",
-      "Template for a video filter", "David Schleef <ds@schleef.org>");
+  gst_element_class_set_details_simple (element_class,
+      "Overlay image onto video", "Filter/Effect/Video",
+      "Overlay image onto video", "David Schleef <ds@schleef.org>");
 }
 
 static void

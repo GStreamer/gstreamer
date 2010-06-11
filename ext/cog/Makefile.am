@@ -28,7 +28,6 @@ libgstcog_la_SOURCES = \
 	gstcog.c \
 	gstcogcolorspace.c \
 	gstcogdownsample.c \
-	gstcogfilter.c \
 	gstcogmse.c \
 	gstcogscale.c \
 	gstcogutils.c \

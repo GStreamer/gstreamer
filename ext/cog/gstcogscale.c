@@ -132,54 +132,43 @@ enum
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV, Y42B }") ";" \
     GST_VIDEO_CAPS_ARGB)
 
-#if 0
-/* not supported */
-GST_VIDEO_CAPS_RGBx
-    GST_VIDEO_CAPS_BGRx
-    GST_VIDEO_CAPS_xRGB
-    GST_VIDEO_CAPS_xBGR
-    GST_VIDEO_CAPS_RGBA
-    GST_VIDEO_CAPS_BGRA
-    GST_VIDEO_CAPS_ABGR GST_VIDEO_CAPS_RGB GST_VIDEO_CAPS_BGR
-GST_VIDEO_CAPS_YUV ("{ Y41B, YVYU }")
-#endif
-     static GstStaticPadTemplate gst_cog_scale_src_template =
-         GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate gst_cog_scale_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     TEMPLATE_CAPS);
 
-     static GstStaticPadTemplate gst_cog_scale_sink_template =
-         GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate gst_cog_scale_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     TEMPLATE_CAPS);
 
-     static void gst_cog_scale_base_init (gpointer g_class);
-     static void gst_cog_scale_class_init (GstCogScaleClass * klass);
-     static void gst_cog_scale_init (GstCogScale * videoscale);
-     static void gst_cog_scale_finalize (GstCogScale * videoscale);
-     static gboolean gst_cog_scale_src_event (GstBaseTransform * trans,
+static void gst_cog_scale_base_init (gpointer g_class);
+static void gst_cog_scale_class_init (GstCogScaleClass * klass);
+static void gst_cog_scale_init (GstCogScale * videoscale);
+static void gst_cog_scale_finalize (GstCogScale * videoscale);
+static gboolean gst_cog_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
 /* base transform vmethods */
-     static GstCaps *gst_cog_scale_transform_caps (GstBaseTransform * trans,
+static GstCaps *gst_cog_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
-     static gboolean gst_cog_scale_set_caps (GstBaseTransform * trans,
+static gboolean gst_cog_scale_set_caps (GstBaseTransform * trans,
     GstCaps * in, GstCaps * out);
-     static gboolean gst_cog_scale_get_unit_size (GstBaseTransform * trans,
+static gboolean gst_cog_scale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
-     static GstFlowReturn gst_cog_scale_transform (GstBaseTransform * trans,
+static GstFlowReturn gst_cog_scale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
-     static void gst_cog_scale_fixate_caps (GstBaseTransform * base,
+static void gst_cog_scale_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
-     static void gst_cog_scale_set_property (GObject * object, guint prop_id,
+static void gst_cog_scale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-     static void gst_cog_scale_get_property (GObject * object, guint prop_id,
+static void gst_cog_scale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-     static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 
 
 GType
