@@ -544,6 +544,11 @@ gst_base_transform_transform_size (GstBaseTransform * trans,
     /* if there is a custom transform function, use this */
     ret = klass->transform_size (trans, direction, caps, size, othercaps,
         othersize);
+  } else if (klass->get_unit_size == NULL) {
+    /* if there is no transform_size and no unit_size, it means the
+     * element does not modify the size of a buffer */
+    *othersize = size;
+    ret = TRUE;
   } else {
     /* there is no transform_size function, we have to use the unit_size
      * functions. This method assumes there is a fixed unit_size associated with
