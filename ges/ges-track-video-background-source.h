@@ -89,6 +89,10 @@ struct _GESTrackVideoBackgroundSourceClass {
 GType ges_track_vbg_src_get_type (void);
 
 GESTrackVideoBackgroundSource* ges_track_video_background_source_new (void);
+void
+
+ges_track_video_background_source_set_pattern(GESTrackVideoBackgroundSource *,
+    GESTrackVideoBgSrcPattern);
 
 G_END_DECLS
 

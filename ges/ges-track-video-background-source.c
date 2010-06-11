@@ -108,6 +108,16 @@ ges_track_vbg_src_create_element (GESTrackBackgroundSource * self)
   return gst_element_factory_make ("videotestsrc", NULL);
 }
 
+void
+ges_track_video_background_source_set_pattern (GESTrackVideoBackgroundSource
+    * self, GESTrackVideoBgSrcPattern pattern)
+{
+  GstElement *element;
+  element = GES_TRACK_BACKGROUND_SOURCE (self)->element;
+  if (element)
+    g_object_set (element, "pattern", (gint) pattern, NULL);
+}
+
 GESTrackVideoBackgroundSource *
 ges_track_video_background_source_new (void)
 {
