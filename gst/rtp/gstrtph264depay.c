@@ -735,8 +735,9 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
            */
           nalu_size = (payload[0] << 8) | payload[1];
 
-          if (nalu_size > payload_len)
-            nalu_size = payload_len;
+          /* dont include nalu_size */
+          if (nalu_size > (payload_len - 2))
+            nalu_size = payload_len - 2;
 
           outsize = nalu_size + sizeof (sync_bytes);
           outbuf = gst_buffer_new_and_alloc (outsize);
