@@ -83,10 +83,14 @@ enum
 {
   PROP_0,
   PROP_MUTE,
+  PROP_VPATTERN,
 };
 
 static void
 ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute);
+
+static void
+ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern);
 
 static GESTrackObject
     * ges_tl_bg_src_create_track_object (GESTimelineObject * obj,
@@ -102,6 +106,9 @@ ges_tl_bg_src_get_property (GObject * object, guint property_id,
     case PROP_MUTE:
       g_value_set_boolean (value, tfs->mute);
       break;
+    case PROP_VPATTERN:
+      g_value_set_enum (value, tfs->vpattern);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -116,6 +123,9 @@ ges_tl_bg_src_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_MUTE:
       ges_tl_bg_src_set_mute (tfs, g_value_get_boolean (value));
+      break;
+    case PROP_VPATTERN:
+      ges_tl_bg_src_set_vpattern (tfs, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -146,6 +156,17 @@ ges_tl_bg_src_class_init (GESTimelineBackgroundSourceClass * klass)
   object_class->finalize = ges_tl_bg_src_finalize;
 
   /**
+   * GESTimelineBackgroundSource:vpattern:
+   *
+   * Video pattern to display in video track objects.
+   */
+  g_object_class_install_property (object_class, PROP_VPATTERN,
+      g_param_spec_enum ("vpattern", "VPattern",
+          "Which video pattern to display. See videotestsrc element",
+          GES_TIMELINE_BACKGROUND_SOURCE_VPATTERN_TYPE,
+          GES_TRACK_VIDEO_BG_SRC_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
    * GESTimelineBackgroundSource:mute:
    *
    * Whether the sound will be played or not.
@@ -161,8 +182,8 @@ ges_tl_bg_src_class_init (GESTimelineBackgroundSourceClass * klass)
 static void
 ges_tl_bg_src_init (GESTimelineBackgroundSource * self)
 {
-  /* Setting the duration to -1 by default. */
-  GES_TIMELINE_OBJECT (self)->duration = GST_CLOCK_TIME_NONE;
+  self->vpattern = 0;
+  GES_TIMELINE_OBJECT (self)->duration = 0;
 }
 
 static void
@@ -181,6 +202,22 @@ ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute)
 
     if (trackobject->track->type == GES_TRACK_TYPE_AUDIO)
       ges_track_object_set_active (trackobject, !mute);
+  }
+}
+
+static void
+ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  self->vpattern = vpattern;
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+    if (GES_IS_TRACK_VIDEO_BACKGROUND_SOURCE (trackobject))
+      ges_track_video_background_source_set_pattern (
+          (GESTrackVideoBackgroundSource *) trackobject, vpattern);
   }
 }
 
