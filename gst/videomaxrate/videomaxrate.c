@@ -44,7 +44,9 @@ static GstStaticPadTemplate gst_video_max_rate_sink_template =
     GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
-static gboolean gst_video_max_rate_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_video_max_rate_start (GstBaseTransform * trans);
+static gboolean gst_video_max_rate_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstCaps *gst_video_max_rate_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps);
 static gboolean gst_video_max_rate_set_caps (GstBaseTransform * trans,
@@ -81,42 +83,53 @@ gst_video_max_rate_class_init (GstVideoMaxRateClass * klass)
   base_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_max_rate_set_caps);
   base_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_video_max_rate_transform_ip);
+  base_class->event = GST_DEBUG_FUNCPTR (gst_video_max_rate_sink_event);
+  base_class->start = GST_DEBUG_FUNCPTR (gst_video_max_rate_start);
+}
+
+static void
+gst_video_max_rate_reset (GstVideoMaxRate * videomaxrate)
+{
+  videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
+  videomaxrate->average = 0;
 }
 
 static void
 gst_video_max_rate_init (GstVideoMaxRate * videomaxrate,
     GstVideoMaxRateClass * gclass)
 {
-  videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
-  videomaxrate->average = 0;
+  gst_video_max_rate_reset (videomaxrate);
   videomaxrate->wanted_diff = 0;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (videomaxrate), TRUE);
+  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (videomaxrate), TRUE);
+}
 
-  gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (videomaxrate),
-      GST_DEBUG_FUNCPTR (gst_video_max_rate_sink_event));
+static gboolean
+gst_video_max_rate_start (GstBaseTransform * trans)
+{
+  GstVideoMaxRate *videomaxrate = GST_VIDEO_MAX_RATE (trans);
+
+  gst_video_max_rate_reset (videomaxrate);
+
+  return TRUE;
 }
 
 gboolean
-gst_video_max_rate_sink_event (GstPad * pad, GstEvent * event)
+gst_video_max_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstVideoMaxRate *videomaxrate = GST_VIDEO_MAX_RATE (gst_pad_get_parent (pad));
-  gboolean ret;
+  GstVideoMaxRate *videomaxrate = GST_VIDEO_MAX_RATE (trans);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_STOP:
-      videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
-      videomaxrate->average = 0;
+      gst_video_max_rate_reset (videomaxrate);
       break;
     default:
       break;
   }
 
-  ret = gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (videomaxrate), event);
-
-  gst_object_unref (videomaxrate);
-  return ret;
+  return TRUE;
 }
 
 GstCaps *
@@ -159,8 +172,8 @@ gst_video_max_rate_set_caps (GstBaseTransform * trans, GstCaps * incaps,
         denominator, numerator);
   else
     videomaxrate->wanted_diff = 0;
-  videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
-  videomaxrate->average = 0;
+
+  gst_video_max_rate_reset (videomaxrate);
 
   return TRUE;
 }
