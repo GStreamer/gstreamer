@@ -137,19 +137,20 @@ gst_video_max_rate_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCaps *ret;
-  GstStructure *structure;
+  GstStructure *s;
 
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   ret = gst_caps_copy (caps);
 
+  s = gst_structure_copy (gst_caps_get_structure (caps, 0));
+
   /* set the framerate as a range */
-  structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
-  gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
+  gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
       G_MAXINT, 1, NULL);
-  gst_caps_merge_structure (ret, gst_structure_copy (structure));
-  gst_structure_free (structure);
+
+  gst_caps_merge_structure (ret, s);
 
   return ret;
 }
