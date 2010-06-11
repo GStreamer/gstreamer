@@ -223,7 +223,7 @@ gst_v4l2src_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class,
       "Video (video4linux2) Source", "Source/Video",
-      "Reads frames from a video4linux2 (BT8x8) device",
+      "Reads frames from a Video4Linux2 device",
       "Edgard Lima <edgard.lima@indt.org.br>,"
       " Stefan Kost <ensonic@users.sf.net>");
 
