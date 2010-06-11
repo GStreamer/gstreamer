@@ -55,6 +55,7 @@
 #include "gstwavparse.h"
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-media.h"
+#include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
@@ -1728,22 +1729,32 @@ static void
 gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
 {
   GstStructure *s;
-  const guint8 dts_marker[] = { 0xFF, 0x1F, 0x00, 0xE8, 0xF1, 0x07 };
 
   GST_DEBUG_OBJECT (wav, "adding src pad");
 
   if (wav->caps) {
     s = gst_caps_get_structure (wav->caps, 0);
-    if (s && gst_structure_has_name (s, "audio/x-raw-int") && buf &&
-        GST_BUFFER_SIZE (buf) > 6 &&
-        memcmp (GST_BUFFER_DATA (buf), dts_marker, 6) == 0) {
+    if (s && gst_structure_has_name (s, "audio/x-raw-int") && buf != NULL) {
+      GstTypeFindProbability prob;
+      GstCaps *tf_caps;
 
-      GST_WARNING_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
-      gst_caps_unref (wav->caps);
-      wav->caps = gst_caps_from_string ("audio/x-dts");
+      tf_caps = gst_type_find_helper_for_buffer (GST_OBJECT (wav), buf, &prob);
+      if (tf_caps != NULL) {
+        s = gst_caps_get_structure (tf_caps, 0);
+        if (gst_structure_has_name (s, "audio/x-dts")
+            && prob >= GST_TYPE_FIND_LIKELY) {
+          GST_INFO_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
+          gst_caps_unref (wav->caps);
+          wav->caps = tf_caps;
 
-      gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
-          GST_TAG_AUDIO_CODEC, "dts", NULL);
+          gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+              GST_TAG_AUDIO_CODEC, "dts", NULL);
+        } else {
+          GST_DEBUG_OBJECT (wav, "found caps %" GST_PTR_FORMAT " for stream "
+              "marked as raw PCM audio, but ignoring for now", tf_caps);
+          gst_caps_unref (tf_caps);
+        }
+      }
     }
   }
 
