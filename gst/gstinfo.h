@@ -457,7 +457,7 @@ gint    gst_debug_construct_win_color  (guint colorinfo);
  * GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
  * ...
  * GST_DEBUG_CATEGORY_INIT (gst_myplugin_debug, "myplugin", 0, "nice element");
- * GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "performance");
+ * GST_DEBUG_CATEGORY_GET (GST_CAT_PERFORMANCE, "GST_PERFORMANCE");
  * ]|
  *
  * Since: 0.10.24
