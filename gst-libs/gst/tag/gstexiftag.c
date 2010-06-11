@@ -1257,7 +1257,8 @@ deserialize_geo_direction (GstExifReader * exif_reader,
 
   /* some checking */
   if (next_tagdata.tag_type != EXIF_TYPE_RATIONAL) {
-    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type);
+    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type,
+        next_tagdata.tag);
     return ret;
   }
   if (next_tagdata.count != 1) {
@@ -1354,7 +1355,8 @@ deserialize_geo_elevation (GstExifReader * exif_reader,
 
   /* some checking */
   if (next_tagdata.tag_type != EXIF_TYPE_RATIONAL) {
-    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type);
+    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type,
+        next_tagdata.tag);
     return ret;
   }
   if (next_tagdata.count != 1) {
@@ -1452,7 +1454,8 @@ deserialize_speed (GstExifReader * exif_reader,
 
   /* some checking */
   if (next_tagdata.tag_type != EXIF_TYPE_RATIONAL) {
-    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type);
+    GST_WARNING ("Invalid type %d for 0x%x", next_tagdata.tag_type,
+        next_tagdata.tag);
     return ret;
   }
   if (next_tagdata.count != 1) {
