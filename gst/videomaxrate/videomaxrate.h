@@ -45,11 +45,10 @@ struct _GstVideoMaxRate
 {
   GstBaseTransform parent;
 
-  gint to_rate_numerator;
-  gint to_rate_denominator;
+  GstClockTimeDiff wanted_diff;
 
-  gboolean have_last_ts;
   GstClockTime last_ts;
+  GstClockTimeDiff average;
 };
 
 struct _GstVideoMaxRateClass

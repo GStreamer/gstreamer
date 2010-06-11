@@ -76,21 +76,25 @@ gst_video_max_rate_class_init (GstVideoMaxRateClass * klass)
 {
   GstBaseTransformClass *base_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  base_class->transform_caps = gst_video_max_rate_transform_caps;
-  base_class->set_caps = gst_video_max_rate_set_caps;
-  base_class->transform_ip = gst_video_max_rate_transform_ip;
+  base_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_video_max_rate_transform_caps);
+  base_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_max_rate_set_caps);
+  base_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_video_max_rate_transform_ip);
 }
 
 static void
 gst_video_max_rate_init (GstVideoMaxRate * videomaxrate,
     GstVideoMaxRateClass * gclass)
 {
-  videomaxrate->to_rate_numerator = -1;
-  videomaxrate->to_rate_denominator = -1;
-  videomaxrate->have_last_ts = FALSE;
+  videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
+  videomaxrate->average = 0;
+  videomaxrate->wanted_diff = 0;
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (videomaxrate), TRUE);
 
   gst_pad_set_event_function (GST_BASE_TRANSFORM_SINK_PAD (videomaxrate),
-      gst_video_max_rate_sink_event);
+      GST_DEBUG_FUNCPTR (gst_video_max_rate_sink_event));
 }
 
 gboolean
@@ -102,7 +106,8 @@ gst_video_max_rate_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_STOP:
-      videomaxrate->have_last_ts = FALSE;
+      videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
+      videomaxrate->average = 0;
       break;
     default:
       break;
@@ -149,8 +154,13 @@ gst_video_max_rate_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   if (!gst_structure_get_fraction (cs, "framerate", &numerator, &denominator))
     return FALSE;
 
-  videomaxrate->to_rate_numerator = numerator;
-  videomaxrate->to_rate_denominator = denominator;
+  if (numerator)
+    videomaxrate->wanted_diff = gst_util_uint64_scale_int (GST_SECOND,
+        denominator, numerator);
+  else
+    videomaxrate->wanted_diff = 0;
+  videomaxrate->last_ts = GST_CLOCK_TIME_NONE;
+  videomaxrate->average = 0;
 
   return TRUE;
 }
@@ -160,18 +170,43 @@ gst_video_max_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstVideoMaxRate *videomaxrate = GST_VIDEO_MAX_RATE (trans);
   GstClockTime ts = GST_BUFFER_TIMESTAMP (buf);
+  const GstClockTime average_period = GST_SECOND;
+
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf) || videomaxrate->wanted_diff == 0)
+    return GST_FLOW_OK;
 
   /* drop frames if they exceed our output rate */
-  if (videomaxrate->have_last_ts) {
-    if (ts < videomaxrate->last_ts + gst_util_uint64_scale (1,
-            videomaxrate->to_rate_denominator * GST_SECOND,
-            videomaxrate->to_rate_numerator)) {
+  if (GST_CLOCK_TIME_IS_VALID (videomaxrate->last_ts)) {
+    GstClockTimeDiff diff = ts - videomaxrate->last_ts;
+
+    /* Drop buffer if its early compared to the desired frame rate and
+     * the current average is higher than the desired average
+     */
+    if (diff < videomaxrate->wanted_diff &&
+        videomaxrate->average < videomaxrate->wanted_diff)
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
+
+    /* Update average */
+    if (videomaxrate->average) {
+      GstClockTimeDiff wanted_diff;
+
+      if (G_LIKELY (average_period > videomaxrate->wanted_diff))
+        wanted_diff = videomaxrate->wanted_diff;
+      else
+        wanted_diff = average_period * 10;
+
+      videomaxrate->average =
+          gst_util_uint64_scale_round (videomaxrate->average,
+          average_period - wanted_diff,
+          average_period) +
+          gst_util_uint64_scale_round (diff, wanted_diff,
+          average_period);
+    } else {
+      videomaxrate->average = diff;
     }
   }
 
   videomaxrate->last_ts = ts;
-  videomaxrate->have_last_ts = TRUE;
   return GST_FLOW_OK;
 }
 
