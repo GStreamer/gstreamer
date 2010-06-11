@@ -103,9 +103,6 @@ GST_START_TEST (test_background_source_properties)
   gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
 
   ges_timeline_object_release_track_object (object, trackobject);
-
-  g_object_unref (object);
-  g_object_unref (track);
 }
 
 GST_END_TEST;
@@ -115,7 +112,9 @@ GST_START_TEST (test_background_source_in_layer)
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
+  GESTrackObject *trobj;
   GESTimelineBackgroundSource *source;
+  GESTrackVideoBgSrcPattern ptrn;
 
   ges_init ();
 
@@ -128,14 +127,28 @@ GST_START_TEST (test_background_source_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_background_source_new ();
+  source = ges_timeline_background_source_new_for_nick ((gchar *) "red");
+  g_object_get (source, "vpattern", &ptrn, NULL);
+  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_RED);
+
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
       (GESTimelineObject *) source, 0);
+
+  /* specifically test the vpattern property */
+  g_object_set (source, "vpattern", (gint) GES_TRACK_VIDEO_BG_SRC_WHITE, NULL);
+  g_object_get (source, "vpattern", &ptrn, NULL);
+  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
+
+  trobj =
+      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
+
+  ptrn = ((GESTrackVideoBackgroundSource *) trobj)->pattern;
+  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
+
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
   g_object_unref (timeline);
-
 }
 
 GST_END_TEST;
