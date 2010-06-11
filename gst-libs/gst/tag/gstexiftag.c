@@ -470,7 +470,7 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
   while (gst_byte_writer_get_pos (&writer->tagwriter) <
       gst_byte_writer_get_size (&writer->tagwriter)) {
     guint16 type;
-    guint32 cur_offset;
+    guint32 cur_offset = 0;
     GstByteReader *reader;
     gint byte_size = 0;
     guint32 count = 0;
