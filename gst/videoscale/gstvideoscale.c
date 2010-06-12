@@ -102,8 +102,11 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY16 ("BYTE_ORDER")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y16 ")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800"))
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y8  ")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("GREY"))
 };
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
@@ -985,6 +988,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
             break;
           case GST_VIDEO_FORMAT_GRAY16_LE:
           case GST_VIDEO_FORMAT_GRAY16_BE:
+          case GST_VIDEO_FORMAT_Y16:
             vs_image_scale_nearest_Y16 (&dest, &src, videoscale->tmp_buf);
             break;
           case GST_VIDEO_FORMAT_I420:
