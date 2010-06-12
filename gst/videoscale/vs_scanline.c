@@ -127,7 +127,6 @@ vs_scanline_resample_nearest_Y16 (uint8_t * dest, uint8_t * src, int src_width,
   *accumulator = acc;
 }
 
-#include <glib.h>
 void
 vs_scanline_resample_linear_Y16 (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
@@ -157,13 +156,11 @@ void
 vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
-  int i;
-  uint16_t *d = (uint16_t *) dest, *s1 = (uint16_t *) src1, *s2 =
-      (uint16_t *) src2;
+  uint16_t *d = (uint16_t *) dest;
+  const uint16_t *s1 = (const uint16_t *) src1;
+  const uint16_t *s2 = (const uint16_t *) src2;
 
-  for (i = 0; i < n; i++) {
-    d[i] = (s1[i] * (65536 - x) + s2[i] * x) >> 16;
-  }
+  orc_merge_linear_u16 (d, s1, s2, 65536 - x, x, n);
 }
 
 /* RGBA */
