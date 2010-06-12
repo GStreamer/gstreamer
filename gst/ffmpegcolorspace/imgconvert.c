@@ -3138,6 +3138,8 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
     h >>= dst_pix->y_chroma_shift;
     for (i = 1; i <= 2; i++) {
       d = dst->data[i];
+      if (!d)
+        continue;
       for (y = 0; y < h; y++) {
         memset (d, 128, w);
         d += dst->linesize[i];
