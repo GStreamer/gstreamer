@@ -6,13 +6,62 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
 
-void orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
-    int p1, int p2, int n);
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
+
+void orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, int p1, int p2, int n);
+void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int p1, int p2, int n);
 
 
 /* begin Orc C target preamble */
@@ -41,17 +90,6 @@ void orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -59,29 +97,29 @@ typedef union
 /* orc_merge_linear_u8 */
 #ifdef DISABLE_ORC
 void
-orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
     int p1, int p2, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 128;
-  const int16_t var17 = 8;
-  const int8_t var24 = p1;
-  const int8_t var25 = p2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 128;
+  const orc_int16 var17 = 8;
+  const orc_int8 var24 = p1;
+  const orc_int8 var25 = p2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -89,15 +127,15 @@ orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
     var5 = *ptr5;
     ptr5++;
     /* 0: mulubw */
-    var32 = (uint8_t) var4 *(uint8_t) var24;
+    var32 = (orc_uint8) var4 *(orc_uint8) var24;
     /* 1: mulubw */
-    var33 = (uint8_t) var5 *(uint8_t) var25;
+    var33 = (orc_uint8) var5 *(orc_uint8) var25;
     /* 2: addw */
     var34 = var32 + var33;
     /* 3: addw */
     var35 = var34 + var16;
     /* 4: shruw */
-    var36 = ((uint16_t) var35) >> var17;
+    var36 = ((orc_uint16) var35) >> var17;
     /* 5: convwb */
     var0 = var36;
     *ptr0 = var0;
@@ -112,25 +150,25 @@ _backup_orc_merge_linear_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  const int16_t var16 = 128;
-  const int16_t var17 = 8;
-  const int8_t var24 = ex->params[24];
-  const int8_t var25 = ex->params[25];
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  const orc_int16 var16 = 128;
+  const orc_int16 var17 = 8;
+  const orc_int8 var24 = ex->params[24];
+  const orc_int8 var25 = ex->params[25];
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -138,15 +176,15 @@ _backup_orc_merge_linear_u8 (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: mulubw */
-    var32 = (uint8_t) var4 *(uint8_t) var24;
+    var32 = (orc_uint8) var4 *(orc_uint8) var24;
     /* 1: mulubw */
-    var33 = (uint8_t) var5 *(uint8_t) var25;
+    var33 = (orc_uint8) var5 *(orc_uint8) var25;
     /* 2: addw */
     var34 = var32 + var33;
     /* 3: addw */
     var35 = var34 + var16;
     /* 4: shruw */
-    var36 = ((uint16_t) var35) >> var17;
+    var36 = ((orc_uint16) var35) >> var17;
     /* 5: convwb */
     var0 = var36;
     *ptr0 = var0;
@@ -156,7 +194,7 @@ _backup_orc_merge_linear_u8 (OrcExecutor * ex)
 }
 
 void
-orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
+orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
     int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -188,6 +226,149 @@ orc_merge_linear_u8 (uint8_t * d1, const uint8_t * s1, const uint8_t * s2,
       orc_program_append (p, "addw", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1);
       orc_program_append (p, "shruw", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2);
       orc_program_append (p, "convwb", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->arrays[ORC_VAR_S2] = (void *) s2;
+  ex->params[ORC_VAR_P1] = p1;
+  ex->params[ORC_VAR_P2] = p2;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_merge_linear_u16 */
+#ifdef DISABLE_ORC
+void
+orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int p1, int p2, int n)
+{
+  int i;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var24 = p1;
+  const orc_int16 var25 = p2;
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int16 *) s1;
+  ptr5 = (orc_int16 *) s2;
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    var5 = *ptr5;
+    ptr5++;
+    /* 0: muluwl */
+    var32.i = (orc_uint16) var4 *(orc_uint16) var24;
+    /* 1: muluwl */
+    var33.i = (orc_uint16) var5 *(orc_uint16) var25;
+    /* 2: addl */
+    var34.i = var32.i + var33.i;
+    /* 3: shrul */
+    var35.i = ((orc_uint32) var34.i) >> var16;
+    /* 4: convlw */
+    var0 = var35.i;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+#else
+static void
+_backup_orc_merge_linear_u16 (OrcExecutor * ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
+  orc_int16 var5;
+  const orc_int16 *ptr5;
+  const orc_int16 var16 = 16;
+  const orc_int16 var24 = ex->params[24];
+  const orc_int16 var25 = ex->params[25];
+  orc_union32 var32;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr5 = (orc_int16 *) ex->arrays[5];
+
+  for (i = 0; i < n; i++) {
+    var4 = *ptr4;
+    ptr4++;
+    var5 = *ptr5;
+    ptr5++;
+    /* 0: muluwl */
+    var32.i = (orc_uint16) var4 *(orc_uint16) var24;
+    /* 1: muluwl */
+    var33.i = (orc_uint16) var5 *(orc_uint16) var25;
+    /* 2: addl */
+    var34.i = var32.i + var33.i;
+    /* 3: shrul */
+    var35.i = ((orc_uint32) var34.i) >> var16;
+    /* 4: convlw */
+    var0 = var35.i;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
+    const orc_uint16 * s2, int p1, int p2, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_merge_linear_u16");
+      orc_program_set_backup_function (p, _backup_orc_merge_linear_u16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_source (p, 2, "s1");
+      orc_program_add_source (p, 2, "s2");
+      orc_program_add_constant (p, 2, 16, "c1");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_parameter (p, 2, "p2");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+
+      orc_program_append (p, "muluwl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
+      orc_program_append (p, "muluwl", ORC_VAR_T2, ORC_VAR_S2, ORC_VAR_P2);
+      orc_program_append (p, "addl", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_T2);
+      orc_program_append (p, "shrul", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1);
+      orc_program_append (p, "convlw", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
