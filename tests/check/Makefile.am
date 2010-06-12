@@ -257,4 +257,7 @@ orc/videobox.c: $(top_srcdir)/gst/videobox/gstvideoboxorc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 
+clean-local-orc:
+	rm -rf orc
+
 EXTRA_DIST = gst-plugins-good.supp
