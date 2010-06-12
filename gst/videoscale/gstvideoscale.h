@@ -21,7 +21,7 @@
 #define __GST_VIDEO_SCALE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
 #include "vs_image.h"
@@ -70,16 +70,17 @@ struct _GstVideoScale {
   GstVideoScaleMethod method;
 
   /* negotiated stuff */
-  int format;
-  VSImage src;
-  VSImage dest;
-  guint src_size;
-  guint dest_size;
+  GstVideoFormat format;
   gint to_width;
   gint to_height;
   gint from_width;
   gint from_height;
+  guint src_size;
+  guint dest_size;
   gboolean interlaced;
+
+  VSImage src;
+  VSImage dest;
   
   /*< private >*/
   guint8 *tmp_buf;
