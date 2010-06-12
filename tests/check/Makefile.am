@@ -31,7 +31,7 @@ TESTS_ENVIRONMENT = \
 # the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 
-clean-local: clean-local-check
+clean-local: clean-local-check clean-local-orc
 
 if USE_ANNODEX
 check_annodex = \
@@ -89,6 +89,13 @@ else
 check_wavpack =
 endif
 
+if HAVE_ORC
+check_orc = orc/deinterlace orc/videomixer orc/videobox
+else
+check_orc =
+endif
+
+
 check_PROGRAMS = \
 	generic/states \
 	$(check_annodex) \
@@ -141,7 +148,8 @@ check_PROGRAMS = \
 	$(check_soup) \
 	$(check_sunaudio) \
 	$(check_taglib) \
-	$(check_wavpack)
+	$(check_wavpack) \
+	$(check_orc)
 
 VALGRIND_TO_FIX = \
 	elements/rtp-payloading
@@ -229,5 +237,24 @@ elements_gdkpixbufsink_LDADD = \
 
 pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
 pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+orc_deinterlace_CFLAGS = $(ORC_CFLAGS)
+orc_deinterlace_LDADD = $(ORC_LIBS) -lorc-test-0.4
+orc_videomixer_CFLAGS = $(ORC_CFLAGS)
+orc_videomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+orc_videobox_CFLAGS = $(ORC_CFLAGS)
+orc_videobox_LDADD = $(ORC_LIBS) -lorc-test-0.4
+
+orc/deinterlace.c: $(top_srcdir)/gst/deinterlace/tvtime.orc
+	$(MKDIR_P) orc/
+	$(ORCC) --test -o $@ $<
+
+orc/videomixer.c: $(top_srcdir)/gst/videomixer/blendorc.orc
+	$(MKDIR_P) orc/
+	$(ORCC) --test -o $@ $<
+
+orc/videobox.c: $(top_srcdir)/gst/videobox/gstvideoboxorc.orc
+	$(MKDIR_P) orc/
+	$(ORCC) --test -o $@ $<
 
 EXTRA_DIST = gst-plugins-good.supp
