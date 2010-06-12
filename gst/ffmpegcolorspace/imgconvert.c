@@ -3119,7 +3119,8 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
   }
 
   /* gray to YUV */
-  if (is_yuv_planar (dst_pix) && src_pix_fmt == PIX_FMT_GRAY8) {
+  if (is_yuv_planar (dst_pix) && dst_pix_fmt != PIX_FMT_Y16
+      && src_pix_fmt == PIX_FMT_GRAY8) {
     int w, h, y;
     uint8_t *d;
 
@@ -3149,7 +3150,8 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
   }
 
   /* YUV to gray */
-  if (is_yuv_planar (src_pix) && dst_pix_fmt == PIX_FMT_GRAY8) {
+  if (is_yuv_planar (src_pix) && src_pix_fmt != PIX_FMT_Y16
+      && dst_pix_fmt == PIX_FMT_GRAY8) {
     if (src_pix->color_type == FF_COLOR_YUV_JPEG) {
       img_copy_plane (dst->data[0], dst->linesize[0],
           src->data[0], src->linesize[0], dst_width, dst_height);
