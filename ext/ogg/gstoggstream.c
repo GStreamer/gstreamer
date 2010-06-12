@@ -1176,7 +1176,7 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
   if (best == NULL)
     return FALSE;
 
-  GST_INFO ("found at index %u", (best - pad->index));
+  GST_INFO ("found at index %li", (best - pad->index));
 
   if (offset)
     *offset = best->offset;
