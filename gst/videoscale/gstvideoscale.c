@@ -493,7 +493,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
       if (!gst_value_is_fixed (to_par)) {
         if (gst_video_calculate_display_ratio (&n, &d, from_w, from_h,
                 from_par_n, from_par_d, w, h)) {
-          GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", num, den);
+          GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", n, d);
           if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
             gst_structure_fixate_field_nearest_fraction (outs,
                 "pixel-aspect-ratio", n, d);
