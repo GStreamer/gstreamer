@@ -24,6 +24,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include <stdio.h>
 #include <string.h>
 #include "gstrtpmparobustdepay.h"
 
