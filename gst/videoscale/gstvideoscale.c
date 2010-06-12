@@ -101,17 +101,8 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y41B")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15),
-  GST_STATIC_CAPS ("video/x-raw-gray, "
-      "bpp = 16, "
-      "depth = 16, "
-      "endianness = BYTE_ORDER, "
-      "width = " GST_VIDEO_SIZE_RANGE ", "
-      "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE),
-  GST_STATIC_CAPS ("video/x-raw-gray, "
-      "bpp = 8, "
-      "depth = 8, "
-      "width = " GST_VIDEO_SIZE_RANGE ", "
-      "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY16 ("BYTE_ORDER")),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("Y800"))
 };
 
