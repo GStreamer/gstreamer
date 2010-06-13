@@ -3266,9 +3266,9 @@ gst_pad_iterate_internal_links (GstPad * pad)
 
 #ifndef GST_REMOVE_DEPRECATED
 static void
-add_unref_pad_to_list (GstPad * pad, GList * list)
+add_unref_pad_to_list (GstPad * pad, GList ** list)
 {
-  list = g_list_prepend (list, pad);
+  *list = g_list_prepend (*list, pad);
   gst_object_unref (pad);
 }
 #endif
@@ -3318,7 +3318,7 @@ gst_pad_get_internal_links_default (GstPad * pad)
     /* loop over the iterator and put all elements into a list, we also
      * immediatly unref them, which is bad. */
     do {
-      ires = gst_iterator_foreach (it, (GFunc) add_unref_pad_to_list, res);
+      ires = gst_iterator_foreach (it, (GFunc) add_unref_pad_to_list, &res);
       switch (ires) {
         case GST_ITERATOR_OK:
         case GST_ITERATOR_DONE:
