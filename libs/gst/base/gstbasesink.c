@@ -2673,7 +2673,6 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
   GstBaseSinkClass *bclass;
   gboolean late, step_end;
   gpointer sync_obj;
-
   GstBaseSinkPrivate *priv;
 
   priv = basesink->priv;
@@ -2749,7 +2748,7 @@ again:
 
       priv->rendered++;
     }
-  } else {
+  } else if (G_LIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
     gboolean event_res = TRUE;
     GstEventType type;
@@ -2813,6 +2812,8 @@ again:
           break;
       }
     }
+  } else {
+    g_return_val_if_reached (GST_FLOW_ERROR);
   }
 
 done:
