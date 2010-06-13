@@ -22,9 +22,6 @@
 #include <gst/gst.h>
 
 #define BUFFER_COUNT (1000)
-#define SRC_ELEMENT "fakesrc"
-#define SINK_ELEMENT "fakesink"
-
 
 gint
 main (gint argc, gchar * argv[])
@@ -34,7 +31,6 @@ main (gint argc, gchar * argv[])
   GSList *saved_src_list, *src_list, *new_src_list;
   guint complexity_order, n_elements, i, j, max_this_level;
   GstClockTime start, end;
-  gboolean all_srcs_linked;
 
   gst_init (&argc, &argv);
 
@@ -60,22 +56,16 @@ main (gint argc, gchar * argv[])
   new_src_list = NULL;
 
   max_this_level = 1;
-  j = 0;
-  i = 0;
-  all_srcs_linked = FALSE;
   for (i = 0, j = 0; i < n_elements; i++, j++) {
     if (j >= max_this_level) {
       g_slist_free (saved_src_list);
       saved_src_list = g_slist_reverse (new_src_list);
       new_src_list = NULL;
       j = 0;
-      all_srcs_linked = FALSE;
       max_this_level *= complexity_order;
     }
 
     if (!src_list) {
-      if (j)
-        all_srcs_linked = TRUE;
       src_list = saved_src_list;
     }
 
