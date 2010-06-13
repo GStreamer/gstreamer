@@ -2288,7 +2288,13 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
