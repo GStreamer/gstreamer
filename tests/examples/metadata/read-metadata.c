@@ -184,7 +184,12 @@ main (int argc, char *argv[])
       g_print ("No metadata found for %s\n", argv[i]);
 
     sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-#ifndef NEW_PIPE_PER_FILE
+#ifdef NEW_PIPE_PER_FILE
+    if (sret != GST_STATE_CHANGE_SUCCESS) {
+      g_print ("State change failed. Aborting\n");
+      break;
+    }
+#else
     if (GST_STATE_CHANGE_ASYNC == sret) {
       if (GST_STATE_CHANGE_FAILURE ==
           gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
@@ -192,6 +197,9 @@ main (int argc, char *argv[])
         g_print ("State change failed. Aborting");
         break;
       }
+    } else if (sret != GST_STATE_CHANGE_SUCCESS) {
+      g_print ("State change failed. Aborting\n");
+      break;
     }
 #endif
 
