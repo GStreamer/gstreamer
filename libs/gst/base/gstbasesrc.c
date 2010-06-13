@@ -2559,8 +2559,6 @@ null_buffer:
     GST_ELEMENT_ERROR (src, STREAM, FAILED,
         (_("Internal data flow error.")), ("element returned NULL buffer"));
     GST_LIVE_UNLOCK (src);
-    /* we finished the segment on error */
-    ret = GST_FLOW_ERROR;
     goto done;
   }
 }

@@ -986,7 +986,6 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   const gchar *req_name = NULL;
   gboolean templ_found = FALSE;
   GList *list;
-  gint n;
   const gchar *data;
   gchar *str, *endptr = NULL;
   GstElementClass *class;
@@ -1027,7 +1026,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
           data = name + (str - templ->name_template);
           if (*(str + 1) == 'd') {
             /* it's an int */
-            n = (gint) strtol (data, &endptr, 10);
+            strtol (data, &endptr, 10);
             if (endptr && *endptr == '\0') {
               templ_found = TRUE;
               req_name = name;
