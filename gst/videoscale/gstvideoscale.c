@@ -1096,6 +1096,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
             break;
           case GST_VIDEO_FORMAT_GRAY16_LE:
           case GST_VIDEO_FORMAT_GRAY16_BE:
+          case GST_VIDEO_FORMAT_Y16:
             vs_image_scale_4tap_Y16 (&dest, &src, videoscale->tmp_buf);
             break;
           case GST_VIDEO_FORMAT_I420:
