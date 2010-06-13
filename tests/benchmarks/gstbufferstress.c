@@ -40,6 +40,8 @@ run_test (void *user_data)
 
   start = gst_util_get_timestamp ();
 
+  g_assert (nbbuffers > 0);
+
   for (nb = nbbuffers; nb; nb--) {
     buf = gst_buffer_new ();
     gst_buffer_unref (buf);
@@ -74,6 +76,16 @@ main (gint argc, gchar * argv[])
 
   num_threads = atoi (argv[1]);
   nbbuffers = atoi (argv[2]);
+
+  if (num_threads <= 0 || num_threads > MAX_THREADS) {
+    g_print ("number of threads must be between 0 and %d\n", MAX_THREADS);
+    exit (-2);
+  }
+
+  if (nbbuffers <= 0) {
+    g_print ("number of buffers must be greater than 0\n");
+    exit (-3);
+  }
 
   g_mutex_lock (mutex);
   /* Let's just make sure the GstBufferClass is loaded ... */
