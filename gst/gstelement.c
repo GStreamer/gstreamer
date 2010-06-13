@@ -1026,7 +1026,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
           data = name + (str - templ->name_template);
           if (*(str + 1) == 'd') {
             /* it's an int */
-            strtol (data, &endptr, 10);
+            (void) strtol (data, &endptr, 10);
             if (endptr && *endptr == '\0') {
               templ_found = TRUE;
               req_name = name;
