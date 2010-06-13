@@ -81,8 +81,11 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
       } else if (G_VALUE_HOLDS_POINTER (val)) {
         g_message ("object: type %s, value %p", G_VALUE_TYPE_NAME (val),
             g_value_get_pointer (val));
-      } else {
+      } else if (G_IS_VALUE (val)) {
         g_message ("object: type %s", G_VALUE_TYPE_NAME (val));
+      } else {
+        g_message ("object: (null)");
+        break;
       }
 
       /* see if we know how to deal with this object */
