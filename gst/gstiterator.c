@@ -634,8 +634,7 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  *
  * The iterator will not be freed.
  *
- * This function will return NULL if an error or resync happened to
- * the iterator.
+ * This function will return NULL if an error happened to the iterator.
  *
  * Returns: The element in the iterator that matches the compare
  * function or NULL when no element matched.
@@ -654,11 +653,11 @@ gst_iterator_find_custom (GstIterator * it, GCompareFunc func,
   data.func = func;
   data.user_data = user_data;
 
-  /* FIXME, we totally ignore RESYNC and return NULL so that the
-   * app does not know if the element was not found or a resync happened */
-  res =
-      gst_iterator_fold (it, (GstIteratorFoldFunction) find_custom_fold_func,
-      &ret, &data);
+  do {
+    res =
+        gst_iterator_fold (it, (GstIteratorFoldFunction) find_custom_fold_func,
+        &ret, &data);
+  } while (res == GST_ITERATOR_RESYNC);
 
   /* no need to unset, it's just a pointer */
   return g_value_get_pointer (&ret);
