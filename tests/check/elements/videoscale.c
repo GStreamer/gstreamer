@@ -94,7 +94,8 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
     GCallback sink_handoff, gpointer sink_handoff_user_data)
 {
   GstElement *pipeline;
-  GstElement *src, *capsfilter1, *identity, *scale, *capsfilter2, *sink;
+  GstElement *src, *ffmpegcolorspace, *capsfilter1, *identity, *scale,
+      *capsfilter2, *sink;
   GstBus *bus;
   GMainLoop *loop;
   GstCaps *copy;
@@ -107,6 +108,9 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   src = gst_element_factory_make ("videotestsrc", "src");
   fail_unless (src != NULL);
   g_object_set (G_OBJECT (src), "num-buffers", 5, NULL);
+
+  ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  fail_unless (ffmpegcolorspace != NULL);
 
   capsfilter1 = gst_element_factory_make ("capsfilter", "filter1");
   fail_unless (capsfilter1 != NULL);
@@ -145,10 +149,10 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
         sink_handoff_user_data);
   }
 
-  gst_bin_add_many (GST_BIN (pipeline), src, capsfilter1, identity, scale,
-      capsfilter2, sink, NULL);
-  fail_unless (gst_element_link_many (src, capsfilter1, identity, scale,
-          capsfilter2, sink, NULL));
+  gst_bin_add_many (GST_BIN (pipeline), src, ffmpegcolorspace, capsfilter1,
+      identity, scale, capsfilter2, sink, NULL);
+  fail_unless (gst_element_link_many (src, ffmpegcolorspace, capsfilter1,
+          identity, scale, capsfilter2, sink, NULL));
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -321,9 +325,22 @@ static void
 _test_negotiation_message (GstBus * bus, GstMessage * message,
     TestNegotiationData * data)
 {
+  GError *err = NULL;
+  gchar *debug;
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
+      gst_message_parse_error (message, &err, &debug);
+      gst_object_default_error (GST_MESSAGE_SRC (message), err, debug);
+      g_error_free (err);
+      g_free (debug);
+      g_assert_not_reached ();
+      break;
     case GST_MESSAGE_WARNING:
+      gst_message_parse_warning (message, &err, &debug);
+      gst_object_default_error (GST_MESSAGE_SRC (message), err, debug);
+      g_error_free (err);
+      g_free (debug);
       g_assert_not_reached ();
       break;
     case GST_MESSAGE_EOS:
