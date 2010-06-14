@@ -107,7 +107,7 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
 
   src = gst_element_factory_make ("videotestsrc", "src");
   fail_unless (src != NULL);
-  g_object_set (G_OBJECT (src), "num-buffers", 5, NULL);
+  g_object_set (G_OBJECT (src), "num-buffers", 1, NULL);
 
   ffmpegcolorspace = gst_element_factory_make ("ffmpegcolorspace", "csp");
   fail_unless (ffmpegcolorspace != NULL);
