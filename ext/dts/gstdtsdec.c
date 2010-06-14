@@ -948,6 +948,10 @@ gst_dtsdec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if HAVE_ORC
+  orc_init ();
+#endif
+
   if (!gst_element_register (plugin, "dtsdec", GST_RANK_PRIMARY,
           GST_TYPE_DTSDEC))
     return FALSE;
