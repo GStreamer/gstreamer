@@ -128,7 +128,6 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   GstCaps *template;
   GstCaps *tmp, *tmp2;
   GstCaps *result;
-  guint i, n;
   GstStructure *s;
   GstCaps *alpha, *non_alpha;
 
@@ -143,18 +142,14 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
 
   /* Now move alpha formats to the beginning if caps is an alpha format
    * or at the end if caps is no alpha format */
-  n = gst_caps_get_size (tmp);
-
   alpha = gst_caps_new_empty ();
   non_alpha = gst_caps_new_empty ();
 
-  for (i = 0; i < n; i++) {
-    s = gst_caps_get_structure (tmp, i);
-
+  while ((s = gst_caps_steal_structure (tmp, 0))) {
     if (gst_ffmpegcsp_structure_is_alpha (s))
-      gst_caps_append_structure (alpha, gst_structure_copy (s));
+      gst_caps_append_structure (alpha, s);
     else
-      gst_caps_append_structure (non_alpha, gst_structure_copy (s));
+      gst_caps_append_structure (non_alpha, s);
   }
 
   s = gst_caps_get_structure (caps, 0);
