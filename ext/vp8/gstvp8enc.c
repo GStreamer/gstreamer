@@ -701,11 +701,17 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 
     status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
         &cfg, 0);
-    if (status) {
+    if (status != VPX_CODEC_OK) {
       GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
           ("Failed to initialize encoder"), ("%s",
               gst_vpx_error_name (status)));
       return GST_FLOW_ERROR;
+    }
+
+    status = vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED, 0);
+    if (status != VPX_CODEC_OK) {
+      GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
+          gst_vpx_error_name (status));
     }
 
     gst_base_video_encoder_set_latency (base_video_encoder, 0,
