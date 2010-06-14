@@ -279,14 +279,14 @@ gst_capsfilter_accept_caps (GstBaseTransform * base,
   GST_OBJECT_UNLOCK (capsfilter);
 
   ret = gst_caps_can_intersect (caps, filter_caps);
-  GST_DEBUG_OBJECT (capsfilter, "can intersect: %" GST_PTR_FORMAT, ret);
+  GST_DEBUG_OBJECT (capsfilter, "can intersect: %d", ret);
   if (ret) {
     /* if we can intersect, see if the other end also accepts */
     if (direction == GST_PAD_SRC)
       ret = gst_pad_peer_accept_caps (GST_BASE_TRANSFORM_SINK_PAD (base), caps);
     else
       ret = gst_pad_peer_accept_caps (GST_BASE_TRANSFORM_SRC_PAD (base), caps);
-    GST_DEBUG_OBJECT (capsfilter, "peer accept: %" GST_PTR_FORMAT, ret);
+    GST_DEBUG_OBJECT (capsfilter, "peer accept: %d", ret);
   }
 
   gst_caps_unref (filter_caps);
