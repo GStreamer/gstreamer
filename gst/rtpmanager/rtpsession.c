@@ -42,6 +42,7 @@ enum
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
   SIGNAL_ON_SENDER_TIMEOUT,
+  SIGNAL_ON_SENDING_RTCP,
   LAST_SIGNAL
 };
 
@@ -106,6 +107,16 @@ static GstFlowReturn rtp_session_schedule_bye_locked (RTPSession * sess,
     const gchar * reason, GstClockTime current_time);
 static GstClockTime calculate_rtcp_interval (RTPSession * sess,
     gboolean deterministic, gboolean first);
+
+static gboolean
+accumulate_trues (GSignalInvocationHint * ihint, GValue * return_accu,
+    const GValue * handler_return, gpointer data)
+{
+  if (g_value_get_boolean (handler_return))
+    g_value_set_boolean (return_accu, TRUE);
+
+  return TRUE;
+}
 
 static void
 rtp_session_class_init (RTPSessionClass * klass)
@@ -239,6 +250,24 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sender_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       RTP_TYPE_SOURCE);
+
+  /**
+   * RTPSession::on-sending-rtcp
+   * @session: the object which received the signal
+   * @buffer: the #GstBuffer containing the RTCP packet about to be sent
+   * @early: %TRUE if the packet is early, %FALSE if it is regular
+   *
+   * This signal is emitted before sending an RTCP packet, it can be used
+   * to add extra RTCP Packets.
+   *
+   * Returns: %TRUE if the RTCP buffer should NOT be suppressed, %FALSE
+   * if suppressing it is acceptable
+   */
+  rtp_session_signals[SIGNAL_ON_SENDING_RTCP] =
+      g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
+      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__POINTER_BOOLEAN,
+      G_TYPE_BOOLEAN, 2, G_TYPE_POINTER, G_TYPE_BOOLEAN);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
@@ -2704,6 +2733,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* push out the RTCP packet */
   if (data.rtcp) {
+    /* Give the user a change to add its own packet */
+    g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
+        data.rtcp, FALSE, NULL);
+
     /* close the RTCP packet */
     gst_rtcp_buffer_end (data.rtcp);
 
