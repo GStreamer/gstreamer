@@ -29,6 +29,8 @@
 
 #include "gstvideoscaleorc.h"
 
+#include <string.h>
+
 /* greyscale, i.e., single componenet */
 
 void
@@ -92,7 +94,11 @@ vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n);
+  if (value == 0) {
+    memcpy (dest, src1, n);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n);
+  }
 }
 
 void
@@ -160,7 +166,11 @@ vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   const uint16_t *s1 = (const uint16_t *) src1;
   const uint16_t *s2 = (const uint16_t *) src2;
 
-  orc_merge_linear_u16 (d, s1, s2, 65536 - x, x, n);
+  if (x == 0) {
+    memcpy (d, s1, n * 2);
+  } else {
+    orc_merge_linear_u16 (d, s1, s2, 65536 - x, x, n);
+  }
 }
 
 /* RGBA */
@@ -277,7 +287,11 @@ vs_scanline_merge_linear_RGBA (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 4);
+  if (value == 0) {
+    memcpy (dest, src1, n * 4);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 4);
+  }
 }
 
 
@@ -358,7 +372,11 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 {
   uint32_t value = x >> 8;
 
-  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 3);
+  if (value == 0) {
+    memcpy (dest, src1, n * 3);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 3);
+  }
 }
 
 
@@ -483,7 +501,11 @@ vs_scanline_merge_linear_YUYV (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   int quads = (n + 1) / 2;
   uint32_t value = x >> 8;
 
-  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+  if (value == 0) {
+    memcpy (dest, src1, quads * 4);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+  }
 }
 
 
@@ -608,7 +630,11 @@ vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
   int quads = (n + 1) / 2;
   uint32_t value = x >> 8;
 
-  orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+  if (value == 4) {
+    memcpy (dest, src1, quads * 4);
+  } else {
+    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+  }
 }
 
 
