@@ -1743,6 +1743,9 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GstEvent * event)
 {
   gint i;
+  gint bitrate, idx_bitrate;
+
+  g_return_val_if_fail (chain != NULL, FALSE);
 
   if (chain == ogg->current_chain) {
     if (event)
@@ -1750,51 +1753,47 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     return TRUE;
   }
 
-  /* FIXME, should not be called with NULL */
-  if (chain != NULL) {
-    gint bitrate, idx_bitrate;
 
-    GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
+  GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
 
-    bitrate = idx_bitrate = 0;
+  bitrate = idx_bitrate = 0;
 
-    /* first add the pads */
-    for (i = 0; i < chain->streams->len; i++) {
-      GstOggPad *pad;
-      GstStructure *structure;
+  /* first add the pads */
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad;
+    GstStructure *structure;
 
-      pad = g_array_index (chain->streams, GstOggPad *, i);
+    pad = g_array_index (chain->streams, GstOggPad *, i);
 
-      if (pad->map.idx_bitrate)
-        idx_bitrate = MAX (idx_bitrate, pad->map.idx_bitrate);
+    if (pad->map.idx_bitrate)
+      idx_bitrate = MAX (idx_bitrate, pad->map.idx_bitrate);
 
-      bitrate += pad->map.bitrate;
+    bitrate += pad->map.bitrate;
 
-      /* mark discont */
-      gst_ogg_pad_mark_discont (pad);
-      pad->last_ret = GST_FLOW_OK;
+    /* mark discont */
+    gst_ogg_pad_mark_discont (pad);
+    pad->last_ret = GST_FLOW_OK;
 
-      if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
-        continue;
+    if (pad->map.is_skeleton || pad->added || GST_PAD_CAPS (pad) == NULL)
+      continue;
 
-      GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
+    GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
-      structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
-      pad->is_sparse =
-          gst_structure_has_name (structure, "application/x-ogm-text") ||
-          gst_structure_has_name (structure, "text/x-cmml") ||
-          gst_structure_has_name (structure, "subtitle/x-kate") ||
-          gst_structure_has_name (structure, "application/x-kate");
+    structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
+    pad->is_sparse =
+        gst_structure_has_name (structure, "application/x-ogm-text") ||
+        gst_structure_has_name (structure, "text/x-cmml") ||
+        gst_structure_has_name (structure, "subtitle/x-kate") ||
+        gst_structure_has_name (structure, "application/x-kate");
 
-      /* activate first */
-      gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
+    /* activate first */
+    gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
 
-      gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
-      pad->added = TRUE;
-    }
-    /* prefer the index bitrate over the ones encoded in the streams */
-    ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);
+    gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
+    pad->added = TRUE;
   }
+  /* prefer the index bitrate over the ones encoded in the streams */
+  ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);
 
   /* after adding the new pads, remove the old pads */
   gst_ogg_demux_deactivate_current_chain (ogg);
