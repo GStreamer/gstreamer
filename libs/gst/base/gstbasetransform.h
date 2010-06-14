@@ -186,6 +186,10 @@ struct _GstBaseTransform {
  *                    This method is called right before the base class will
  *                    start processing. Dynamic properties or other delayed
  *                    configuration could be performed in this method.
+ * @accept_caps: Optional. Since 0.10.30
+ *               Subclasses can override this method to check if @caps can be
+ *               handled by the element. The default implementation might not be
+ *               the most optimal way to check this in all cases.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
@@ -237,8 +241,11 @@ struct _GstBaseTransformClass {
 
   void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
 
+  gboolean      (*accept_caps)  (GstBaseTransform *trans, GstPadDirection direction,
+                                         GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
 };
 
 GType           gst_base_transform_get_type         (void);

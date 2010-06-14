@@ -321,6 +321,8 @@ static GstFlowReturn gst_base_transform_chain (GstPad * pad,
     GstBuffer * buffer);
 static GstCaps *gst_base_transform_getcaps (GstPad * pad);
 static gboolean gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps);
 static gboolean gst_base_transform_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_transform_buffer_alloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
@@ -368,6 +370,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   klass->passthrough_on_same_caps = FALSE;
   klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
+  klass->accept_caps =
+      GST_DEBUG_FUNCPTR (gst_base_transform_acceptcaps_default);
 }
 
 static void
@@ -984,16 +988,14 @@ error_cleanup:
 }
 
 static gboolean
-gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
+gst_base_transform_acceptcaps_default (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps)
 {
-  GstBaseTransform *trans;
 #if 0
   GstPad *otherpad;
   GstCaps *othercaps = NULL;
 #endif
   gboolean ret = TRUE;
-
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
 #if 0
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
@@ -1005,16 +1007,20 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
   {
     GstCaps *allowed;
 
-    GST_DEBUG_OBJECT (pad, "non fixed accept caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (trans, "non fixed accept caps %" GST_PTR_FORMAT, caps);
 
     /* get all the formats we can handle on this pad */
-    allowed = gst_pad_get_caps_reffed (pad);
+    if (direction == GST_PAD_SRC)
+      allowed = gst_pad_get_caps_reffed (trans->srcpad);
+    else
+      allowed = gst_pad_get_caps_reffed (trans->sinkpad);
+
     if (!allowed) {
-      GST_DEBUG_OBJECT (pad, "gst_pad_get_caps() failed");
+      GST_DEBUG_OBJECT (trans, "gst_pad_get_caps() failed");
       goto no_transform_possible;
     }
 
-    GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
+    GST_DEBUG_OBJECT (trans, "allowed caps %" GST_PTR_FORMAT, allowed);
 
     /* intersect with the requested format */
     ret = gst_caps_can_intersect (allowed, caps);
@@ -1043,7 +1049,6 @@ done:
   if (othercaps)
     gst_caps_unref (othercaps);
 #endif
-  gst_object_unref (trans);
 
   return ret;
 
@@ -1056,6 +1061,24 @@ no_transform_possible:
     ret = FALSE;
     goto done;
   }
+}
+
+static gboolean
+gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  gboolean ret = TRUE;
+  GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
+
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (bclass->accept_caps)
+    ret = bclass->accept_caps (trans, GST_PAD_DIRECTION (pad), caps);
+
+  gst_object_unref (trans);
+
+  return ret;
 }
 
 /* called when new caps arrive on the sink or source pad,
