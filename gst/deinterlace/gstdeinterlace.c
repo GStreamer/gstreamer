@@ -42,6 +42,10 @@
 
 #include <string.h>
 
+#if HAVE_ORC
+#include <orc/orc.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (deinterlace_debug);
 #define GST_CAT_DEFAULT (deinterlace_debug)
 
@@ -1758,6 +1762,10 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (deinterlace_debug, "deinterlace", 0, "Deinterlacer");
+
+#if HAVE_ORC
+  orc_init ();
+#endif
 
   if (!gst_element_register (plugin, "deinterlace", GST_RANK_NONE,
           GST_TYPE_DEINTERLACE)) {
