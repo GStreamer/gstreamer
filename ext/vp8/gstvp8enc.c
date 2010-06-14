@@ -636,9 +636,9 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstBuffer * buffer)
 }
 
 static const int speed_table[] = {
-  0,
-  100000,
-  1,
+  VPX_DL_BEST_QUALITY,
+  VPX_DL_GOOD_QUALITY,
+  VPX_DL_REALTIME,
 };
 
 static gboolean
