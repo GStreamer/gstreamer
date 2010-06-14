@@ -176,7 +176,7 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
 
   fail_unless (omud.eos == TRUE);
-  fail_unless (n_buffers == 5);
+  fail_unless (n_buffers == 1);
 
   gst_object_unref (pipeline);
   g_main_loop_unref (loop);
