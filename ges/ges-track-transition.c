@@ -184,10 +184,13 @@ ges_track_transition_dispose (GObject * object)
     self->a_bcontrol_source = NULL;
   }
 
-  if (self->sinka) {
+  if (self->vmixer && self->sinka && self->sinkb) {
     GST_DEBUG ("releasing request pads for vmixer");
     gst_element_release_request_pad (self->vmixer, self->sinka);
     gst_element_release_request_pad (self->vmixer, self->sinkb);
+    gst_object_unref (self->vmixer);
+    gst_object_unref (self->sinka);
+    gst_object_unref (self->sinkb);
     self->vmixer = NULL;
     self->sinka = NULL;
     self->sinkb = NULL;
@@ -212,6 +215,7 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
   g_assert (srcpad);
 
   gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (srcpad);
 
   return G_OBJECT (sinkpad);
 }
@@ -282,7 +286,7 @@ create_video_bin (GESTrackTransition * self)
     self->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
     self->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
     target = (GObject *) self->sinkb;
-    self->vmixer = mixer;
+    self->vmixer = gst_object_ref (mixer);
     propname = "alpha";
     self->vstart_value = 0.0;
     self->vend_value = 1.0;
@@ -301,6 +305,10 @@ create_video_bin (GESTrackTransition * self)
   gst_element_add_pad (topbin, src);
   gst_element_add_pad (topbin, sinka);
   gst_element_add_pad (topbin, sinkb);
+
+  gst_object_unref (sinka_target);
+  gst_object_unref (sinkb_target);
+  gst_object_unref (src_target);
 
   /* set up interpolation */
 
@@ -368,6 +376,11 @@ create_audio_bin (GESTrackTransition * self)
   gst_element_add_pad (topbin, sinkb);
 
   /* set up interpolation */
+
+  gst_object_unref (sinka_target);
+  gst_object_unref (sinkb_target);
+  gst_object_unref (src_target);
+
 
   //g_object_set(atarget, propname, (gdouble) 0, NULL);
   //g_object_set(btarget, propname, (gdouble) 0, NULL);
