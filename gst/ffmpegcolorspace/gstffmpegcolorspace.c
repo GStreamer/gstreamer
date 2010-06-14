@@ -54,6 +54,10 @@ static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
 
 static GstPadTemplate *sinktempl, *srctempl;
 
+static GQuark _QRAWRGB;         /* "video/x-raw-rgb" */
+static GQuark _QRAWYUV;         /* "video/x-raw-yuv" */
+static GQuark _QALPHAMASK;      /* "alpha_mask" */
+
 /* copies the given caps */
 static GstCaps *
 gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
@@ -86,13 +90,13 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 static gboolean
 gst_ffmpegcsp_structure_is_alpha (GstStructure * s)
 {
-  const gchar *name;
+  GQuark name;
 
-  name = gst_structure_get_name (s);
+  name = gst_structure_get_name_id (s);
 
-  if (g_str_equal (name, "video/x-raw-rgb")) {
-    return gst_structure_has_field (s, "alpha_mask");
-  } else if (g_str_equal (name, "video/x-raw-yuv")) {
+  if (name == _QRAWRGB) {
+    return gst_structure_id_has_field (s, _QALPHAMASK);
+  } else if (name == _QRAWYUV) {
     guint32 fourcc;
 
     if (!gst_structure_get_fourcc (s, "format", &fourcc))
@@ -305,6 +309,10 @@ gst_ffmpegcsp_base_init (gpointer klass)
       "FFMPEG Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
+
+  _QRAWRGB = g_quark_from_string ("video/x-raw-rgb");
+  _QRAWYUV = g_quark_from_string ("video/x-raw-yuv");
+  _QALPHAMASK = g_quark_from_string ("alpha_mask");
 }
 
 static void
