@@ -412,8 +412,10 @@ gst_rtp_h264_depay_mark_delta (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
 
   nal_unit_type = (GST_BUFFER_DATA (nal))[4] & 0x1f;
   GST_DEBUG_OBJECT (rtph264depay, "type %d", nal_unit_type);
-  /* non-IDR VCL layer NAL considered DELTA */
-  if (nal_unit_type >= 1 && nal_unit_type <= 4) {
+  /* non-IDR VCL layer NAL considered DELTA, also AU and SEI;
+   * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
+  if ((nal_unit_type >= 1 && nal_unit_type <= 4) ||
+      (nal_unit_type == 6) || (nal_unit_type == 9)) {
     GST_BUFFER_FLAG_SET (nal, GST_BUFFER_FLAG_DELTA_UNIT);
     res = TRUE;
   } else {
