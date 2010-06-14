@@ -206,8 +206,6 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   cpuflags = 0;
 #endif
 
-  g_print ("%p\n", orc_target_get_by_name ("mmx"));
-
   GST_LOG ("CPU flags: a52=%08x, liboil=%08x", klass->a52_cpuflags, cpuflags);
 }
 
