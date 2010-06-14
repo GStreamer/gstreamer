@@ -2,6 +2,7 @@ gst-vaapi NEWS -- summary of changes.  2010-05-DD
 Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.2.4 - DD.May.2010
+* Fix build with older VA-API 0.29-sds
 * Fix video rendering rect within an embedder window (Totem)
 * Disable GLX rendering when vaapisink uses a foreign X window
 
