@@ -27,6 +27,9 @@
 # include <va_x11.h>
 #else
 # include <va/va.h>
+# if !VA_CHECK_VERSION(0,30,4)
+#  include <va/va_x11.h>
+# endif
 #endif
 
 #if USE_VAAPI_GLX
