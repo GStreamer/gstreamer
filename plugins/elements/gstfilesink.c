@@ -237,7 +237,6 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
           "Append to an already existing file", DEFAULT_APPEND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstbasesink_class->get_times = NULL;
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
