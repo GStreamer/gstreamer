@@ -2626,12 +2626,18 @@ read_joystick (GIOChannel * source, GIOCondition condition, gpointer user_data)
 {
   gchar buf[sizeof (struct js_event)];
   struct js_event *js = (struct js_event *) buf;
+  GError *err = NULL;
   gsize bytes_read = 0;
   GIOStatus result;
 
   result =
-      g_io_channel_read (source, buf, sizeof (struct js_event), &bytes_read);
-  if (bytes_read != sizeof (struct js_event)) {
+      g_io_channel_read_chars (source, buf, sizeof (struct js_event),
+      &bytes_read, &err);
+  if (err) {
+    g_print ("error reading from joystick: %s", err->message);
+    g_error_free (err);
+    return FALSE;
+  } else if (bytes_read != sizeof (struct js_event)) {
     g_print ("error reading joystick, read %u bytes of %u\n",
         (guint) bytes_read, (guint) sizeof (struct js_event));
     return TRUE;
