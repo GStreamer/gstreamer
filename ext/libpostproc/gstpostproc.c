@@ -894,6 +894,11 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (postproc_debug, "postproc", 0,
       "video postprocessing elements");
+
+#if HAVE_ORC
+  orc_init ();
+#endif
+
 #ifndef GST_DISABLE_GST_DEBUG
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
