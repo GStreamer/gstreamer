@@ -39,7 +39,6 @@
 #include <math.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_XIMAGESINK \
   (gst_ximagesink_get_type())
 #define GST_XIMAGESINK(obj) \
@@ -50,7 +49,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XIMAGESINK))
 #define GST_IS_XIMAGESINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XIMAGESINK))
-
 typedef struct _GstXContext GstXContext;
 typedef struct _GstXWindow GstXWindow;
 
@@ -85,7 +83,8 @@ typedef struct _GstXImageSinkClass GstXImageSinkClass;
  * Structure used to store various informations collected/calculated for a
  * Display.
  */
-struct _GstXContext {
+struct _GstXContext
+{
   Display *disp;
 
   Screen *screen;
@@ -108,6 +107,7 @@ struct _GstXContext {
   gboolean use_xshm;
 
   GstCaps *caps;
+  GstCaps *last_caps;
 };
 
 /*
@@ -121,7 +121,8 @@ struct _GstXContext {
  *
  * Structure used to store informations about a Window.
  */
-struct _GstXWindow {
+struct _GstXWindow
+{
   Window win;
   gint width, height;
   gboolean internal;
@@ -138,7 +139,8 @@ struct _GstXWindow {
  *
  * Subclass of #GstBuffer containing additional information about an XImage.
  */
-struct _GstXImageBuffer {
+struct _GstXImageBuffer
+{
   GstBuffer buffer;
 
   /* Reference to the ximagesink we belong to */
@@ -148,7 +150,7 @@ struct _GstXImageBuffer {
 
 #ifdef HAVE_XSHM
   XShmSegmentInfo SHMInfo;
-#endif /* HAVE_XSHM */
+#endif                          /* HAVE_XSHM */
 
   gint width, height;
   size_t size;
@@ -183,7 +185,8 @@ struct _GstXImageBuffer {
  *
  * The #GstXImageSink data structure.
  */
-struct _GstXImageSink {
+struct _GstXImageSink
+{
   /* Our element stuff */
   GstVideoSink videosink;
 
@@ -193,7 +196,7 @@ struct _GstXImageSink {
   GstXWindow *xwindow;
   GstXImageBuffer *ximage;
   GstXImageBuffer *cur_image;
-  
+
   GThread *event_thread;
   gboolean running;
 
@@ -203,7 +206,7 @@ struct _GstXImageSink {
 
   GMutex *x_lock;
   GMutex *flow_lock;
-  
+
   /* object-set pixel aspect ratio */
   GValue *par;
 
@@ -215,17 +218,17 @@ struct _GstXImageSink {
   gboolean handle_events;
   gboolean handle_expose;
   gboolean draw_border;
-  
+
   /* stream metadata */
   gchar *media_title;
 };
 
-struct _GstXImageSinkClass {
+struct _GstXImageSinkClass
+{
   GstVideoSinkClass parent_class;
 };
 
-GType gst_ximagesink_get_type(void);
+GType gst_ximagesink_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_XIMAGESINK_H__ */

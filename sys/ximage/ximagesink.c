@@ -1396,6 +1396,9 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
   g_free (ximagesink->par);
   ximagesink->par = NULL;
 
+  if (xcontext->last_caps)
+    gst_caps_replace (&xcontext->last_caps, NULL);
+
   g_mutex_lock (ximagesink->x_lock);
 
   XCloseDisplay (xcontext->disp);
@@ -1770,6 +1773,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   gboolean alloc_unref = FALSE;
   gint width, height;
   GstVideoRectangle dst, src, result;
+  gboolean caps_accepted = FALSE;
 
   ximagesink = GST_XIMAGESINK (bsink);
 
@@ -1856,10 +1860,22 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
           GST_TYPE_FRACTION, nom, den, NULL);
     }
 
+
     /* see if peer accepts our new suggestion, if there is no peer, this 
      * function returns true. */
-    if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink),
-            desired_caps)) {
+    if (!ximagesink->xcontext->last_caps ||
+        !gst_caps_is_equal (desired_caps, ximagesink->xcontext->last_caps)) {
+      caps_accepted =
+          gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink),
+          desired_caps);
+
+      /* Suggestion failed, prevent future attempts for the same caps
+       * to fail as well. */
+      if (!caps_accepted)
+        gst_caps_replace (&ximagesink->xcontext->last_caps, desired_caps);
+    }
+
+    if (caps_accepted) {
       /* we will not alloc a buffer of the new suggested caps. Make sure
        * we also unref this new caps after we set it on the buffer. */
       alloc_caps = desired_caps;
@@ -2414,24 +2430,16 @@ gst_ximagesink_get_type (void)
       (GClassInitFunc) gst_ximagesink_class_init,
       NULL,
       NULL,
-      sizeof (GstXImageSink),
-      0,
-      (GInstanceInitFunc) gst_ximagesink_init,
+      sizeof (GstXImageSink), 0, (GInstanceInitFunc) gst_ximagesink_init,
     };
     static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_ximagesink_interface_init,
-      NULL,
-      NULL,
+      (GInterfaceInitFunc) gst_ximagesink_interface_init, NULL, NULL,
     };
     static const GInterfaceInfo navigation_info = {
-      (GInterfaceInitFunc) gst_ximagesink_navigation_init,
-      NULL,
-      NULL,
+      (GInterfaceInitFunc) gst_ximagesink_navigation_init, NULL, NULL,
     };
     static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) gst_ximagesink_xoverlay_init,
-      NULL,
-      NULL,
+      (GInterfaceInitFunc) gst_ximagesink_xoverlay_init, NULL, NULL,
     };
 
     ximagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
