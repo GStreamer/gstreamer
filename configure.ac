@@ -179,12 +179,6 @@ AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.16])
 
-dnl liboil is required
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x$HAVE_LIBOIL" != "xyes"; then
-  AC_ERROR([liboil-0.3.8 or later is required])
-fi
-
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ], yes)
