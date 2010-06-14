@@ -212,6 +212,7 @@ struct _GstRTSPSrc {
   gchar             *addr;
   gboolean           need_redirect;
   GstRTSPTimeRange  *range;
+  gchar             *control;
 
   /* supported methods */
   gint               methods;

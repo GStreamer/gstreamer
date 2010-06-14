@@ -957,7 +957,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       const gchar *base;
       gboolean has_slash;
 
-      if (src->content_base)
+      if (src->control)
+        base = src->control;
+      else if (src->content_base)
         base = src->content_base;
       else if (src->req_location)
         base = src->req_location;
@@ -1066,6 +1068,9 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
 
   g_free (src->content_base);
   src->content_base = NULL;
+
+  g_free (src->control);
+  src->control = NULL;
 
   if (src->range)
     gst_rtsp_range_free (src->range);
@@ -5016,6 +5021,23 @@ restart:
         break;
     }
   }
+  /* try to find a global control attribute */
+  g_free (src->control);
+  src->control = NULL;
+  {
+    const gchar *control;
+
+    for (i = 0;; i++) {
+      control = gst_sdp_message_get_attribute_val_n (&sdp, "control", i);
+      if (control == NULL)
+        break;
+
+      if (g_str_has_prefix (control, "rtsp://")) {
+        src->control = g_strdup (control);
+        break;
+      }
+    }
+  }
 
   /* create streams */
   n_streams = gst_sdp_message_medias_len (&sdp);
@@ -5142,6 +5164,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
   gboolean ret = FALSE;
+  gchar *control;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
 
@@ -5185,11 +5208,15 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     goto close;
   }
 
+  /* construct a control url */
+  if (src->control)
+    control = src->control;
+  else
+    control = src->req_location;
+
   if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)) {
     /* do TEARDOWN */
-    res =
-        gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN,
-        src->req_location);
+    res = gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN, control);
     if (res < 0)
       goto create_request_failed;
 
@@ -5366,6 +5393,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   gchar *hval;
   gfloat fval;
   gint hval_idx;
+  gchar *control;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -5380,6 +5408,12 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   if (!src->connection || !src->connected)
     goto done;
 
+  /* construct a control url */
+  if (src->control)
+    control = src->control;
+  else
+    control = src->req_location;
+
   /* waiting for connection idle, we were flushing so any attempt at doing data
    * transfer will result in pausing the tasks. */
   GST_DEBUG_OBJECT (src, "wait for connection idle");
@@ -5391,9 +5425,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   gst_rtsp_connection_flush (src->connection, FALSE);
 
   /* do play */
-  res =
-      gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
-      src->req_location);
+  res = gst_rtsp_message_init_request (&request, GST_RTSP_PLAY, control);
   if (res < 0)
     goto create_request_failed;
 
@@ -5504,6 +5536,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
+  gchar *control;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -5528,9 +5561,14 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
   GST_DEBUG_OBJECT (src, "stop connection flush");
   gst_rtsp_connection_flush (src->connection, FALSE);
 
+  /* construct a control url */
+  if (src->control)
+    control = src->control;
+  else
+    control = src->req_location;
+
   /* do pause */
-  if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
-          src->req_location) < 0)
+  if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE, control) < 0)
     goto create_request_failed;
 
   if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
