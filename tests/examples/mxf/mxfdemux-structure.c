@@ -30,12 +30,8 @@ static gchar *
 g_value_to_string (const GValue * val)
 {
   if (G_VALUE_TYPE (val) == GST_TYPE_BUFFER) {
-#if GLIB_CHECK_VERSION (2,16,0)
     const GstBuffer *buf = gst_value_get_buffer (val);
     gchar *ret = g_base64_encode (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-#else
-    gchar *ret = gst_value_serialize (val);
-#endif
 
     return ret;
   } else {
