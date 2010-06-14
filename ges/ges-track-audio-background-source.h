@@ -43,11 +43,13 @@ G_BEGIN_DECLS
 
 #define GES_TRACK_AUDIO_BACKGROUND_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE, GESTrackAudioBackgroundSourceClass))
+
 /** 
  * GESTrackAudioBackgroundSource:
- * @uri: #gchar *, the URI of the media audio_background to play
+ * @parent: parent
  *
  */
+
 struct _GESTrackAudioBackgroundSource {
   GESTrackBackgroundSource parent;
 
@@ -57,12 +59,13 @@ struct _GESTrackAudioBackgroundSource {
 /**
  * GESTrackAudioBackgroundSourceClass:
  * @parent_class: parent class
+ *
  */
 
 struct _GESTrackAudioBackgroundSourceClass {
   GESTrackBackgroundSourceClass parent_class;
 
-  /* <public> */
+  /*< public >*/
 };
 
 GType ges_track_abg_src_get_type (void);

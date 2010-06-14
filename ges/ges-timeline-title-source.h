@@ -46,7 +46,8 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TITLE_SOURCE, GESTimelineTitleSourceClass))
 
 /**
- * GESTimelineSource:
+ * GESTimelineTitleSource:
+ * @parent: parent
  * 
  */
 

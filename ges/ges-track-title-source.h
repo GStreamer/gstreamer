@@ -46,7 +46,7 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourceClass))
 /** 
  * GESTrackTitleSource:
- * @uri: #gchar *, the URI of the media file to play
+ * @parent: parent
  *
  */
 struct _GESTrackTitleSource {

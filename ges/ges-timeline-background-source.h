@@ -46,15 +46,16 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_BACKGROUND_SOURCE, GESTimelineBackgroundSourceClass))
 
 /**
- * GESTimelineSource:
+ * GESTimelineBackgroundSource:
+ * @parent: parent
  * 
  */
 
 struct _GESTimelineBackgroundSource {
   GESTimelineSource parent;
-  gboolean mute;
 
   /*< private >*/
+  gboolean mute;
   gint vpattern;
 };
 

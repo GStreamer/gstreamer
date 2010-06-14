@@ -331,8 +331,9 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 <SECTION>
 <FILE>ges-track-video-background-source</FILE>
 <TITLE>GESTrackVideoBackgroundSource</TITLE>
-GESTrackAudioBackgroundSource
-GESTrackAudioBackgroundSourceClass
+GESTrackVideoBackgroundSource
+GESTrackVideoBackgroundSourceClass
+GESTrackVideoBgSrcPattern
 ges_track_video_background_source_new
 ges_track_vbg_src_get_type
 <SUBSECTION Standard>
@@ -377,17 +378,10 @@ GES_TYPE_TRACK_TITLE_SOURCE
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-video-background-source</FILE>
-<TITLE>GESTrackVideoBackgroundSource</TITLE>
-GESTrackVideoBackgroundSource
-GESTrackVideoBackgroundSourceClass
-GESTrackVideoBgSrcPattern
-<SUBSECTION Standard>
-</SECTION>
-
-<SECTION>
 <FILE>ges-track-audio-background-source</FILE>
 <TITLE>GESTrackAudioBackgroundSource</TITLE>
+GESTrackAudioBackgroundSource
+GESTrackAudioBackgroundSourceClass
 ges_track_audio_background_source_new
 ges_track_abg_src_get_type
 ges_track_video_title_source_new

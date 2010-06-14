@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:ges-track-source
- * @short_description: Base Class for single-media sources
+ * SECTION:ges-track-background-source
+ * @short_description: Base Class for background source track objects
  */
 
 #include "ges-internal.h"

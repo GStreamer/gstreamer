@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-track-source
+ * SECTION:ges-track-audio-background-source
  * @short_description: Base Class for single-media sources
  */
 

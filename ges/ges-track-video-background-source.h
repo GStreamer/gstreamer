@@ -44,6 +44,26 @@ G_BEGIN_DECLS
 #define GES_TRACK_VIDEO_BACKGROUND_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE, GESTrackVideoBackgroundSourceClass))
 
+/**$
+ * GESTrackVideoBgSrcPattern:$
+ * @GES_TRACK_VIDEO_BG_SRC_SMPTE: A standard SMPTE test pattern$
+ * @GES_TRACK_VIDEO_BG_SRC_SNOW: Random noise$
+ * @GES_TRACK_VIDEO_BG_SRC_BLACK: A black image$
+ * @GES_TRACK_VIDEO_BG_SRC_WHITE: A white image$
+ * @GES_TRACK_VIDEO_BG_SRC_RED: A red image$
+ * @GES_TRACK_VIDEO_BG_SRC_GREEN: A green image$
+ * @GES_TRACK_VIDEO_BG_SRC_BLUE: A blue image$
+ * @GES_TRACK_VIDEO_BG_SRC_CHECKERS1: Checkers pattern (1px)$
+ * @GES_TRACK_VIDEO_BG_SRC_CHECKERS2: Checkers pattern (2px)$
+ * @GES_TRACK_VIDEO_BG_SRC_CHECKERS4: Checkers pattern (4px)$
+ * @GES_TRACK_VIDEO_BG_SRC_CHECKERS8: Checkers pattern (8px)$
+ * @GES_TRACK_VIDEO_BG_SRC_CIRCULAR: Circular pattern$
+ * @GES_TRACK_VIDEO_BG_SRC_BLINK: Alternate between black and white$
+ * @GES_TRACK_VIDEO_BG_SRC_SMPTE75: SMPTE test pattern (75% color bars)$
+ *
+ */
+
+
 typedef enum {
   GES_TRACK_VIDEO_BG_SRC_SMPTE,
   GES_TRACK_VIDEO_BG_SRC_SNOW,
@@ -63,8 +83,7 @@ typedef enum {
 
 /** 
  * GESTrackVideoBackgroundSource:
- * @uri: #gchar *, the URI of the media video_background to play
- *
+ * @parent: parent
  */
 struct _GESTrackVideoBackgroundSource {
   GESTrackBackgroundSource parent;

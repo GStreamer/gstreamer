@@ -46,13 +46,13 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_BACKGROUND_SOURCE, GESTrackBackgroundSourceClass))
 /** 
  * GESTrackBackgroundSource:
- * @uri: #gchar *, the URI of the media file to play
+ * @parent: parent
  *
  */
 struct _GESTrackBackgroundSource {
   GESTrackSource parent;
 
-  /*< public >*/
+  /*< private >*/
   GstElement *element;
 };
 
@@ -64,7 +64,7 @@ struct _GESTrackBackgroundSource {
 struct _GESTrackBackgroundSourceClass {
   GESTrackSourceClass parent_class;
 
-  /* <public> */
+  /*< public >*/
   GstElement* (*create_element) (GESTrackBackgroundSource *obj);
 };
 

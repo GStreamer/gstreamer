@@ -19,8 +19,8 @@
  */
 
 /**
- * SECTION:ges-track-source
- * @short_description: Base Class for single-media sources
+ * SECTION:ges-track-video-background-source
+ * @short_description: implements solid colors and patterns with videotestsrc
  */
 
 #include "ges-internal.h"

@@ -120,7 +120,7 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
   object_class->finalize = ges_timeline_transition_finalize;
 
   /**
-   * GESTimelineTransition: vtype
+   * GESTimelineTransition:vtype
    *
    * The SMPTE wipe to use, or 0 for crossfade.
    */
