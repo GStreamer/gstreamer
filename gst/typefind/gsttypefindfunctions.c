@@ -1342,7 +1342,7 @@ dts_type_find (GstTypeFind * tf, gpointer unused)
    * a lower probability if not found right at the start. Check that the
    * frame is followed by a second frame at the expected offset. */
   while (c.offset <= DTS_MAX_FRAMESIZE) {
-    guint frame_size, rate, chans;
+    guint frame_size = 0, rate = 0, chans = 0;
 
     if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, DTS_MIN_FRAMESIZE)))
       return;
