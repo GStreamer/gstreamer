@@ -171,6 +171,7 @@ EXPORTS
 	gst_caps_new_full_valist
 	gst_caps_new_simple
 	gst_caps_normalize
+	gst_caps_steal_structure
 	gst_caps_ref
 	gst_caps_remove_structure
 	gst_caps_replace

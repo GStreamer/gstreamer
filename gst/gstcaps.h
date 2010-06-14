@@ -205,6 +205,8 @@ void              gst_caps_merge_structure         (GstCaps       *caps,
 guint             gst_caps_get_size                (const GstCaps *caps);
 GstStructure *    gst_caps_get_structure           (const GstCaps *caps,
                                                     guint          index);
+GstStructure *    gst_caps_steal_structure         (GstCaps *caps,
+                                                    guint          index);
 GstCaps *         gst_caps_copy_nth                (const GstCaps *caps, guint nth);
 void              gst_caps_truncate                (GstCaps       *caps);
 void              gst_caps_set_value               (GstCaps       *caps,

@@ -529,6 +529,28 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
   return s;
 }
 
+/**
+ * gst_caps_steal_structure:
+ * @caps: the #GstCaps to retrieve from
+ * @idx: Index of the structure to retrieve
+ *
+ * Retrieves the stucture with the given index from the list of structures
+ * contained in @caps. The caller becomes the owner of the returned structure.
+ *
+ * Returns: a pointer to the #GstStructure corresponding to @index.
+ */
+GstStructure *
+gst_caps_steal_structure (GstCaps * caps, guint idx)
+{
+  g_return_val_if_fail (caps != NULL, NULL);
+  g_return_val_if_fail (IS_WRITABLE (caps), NULL);
+
+  if (G_UNLIKELY (idx >= caps->structs->len))
+    return NULL;
+
+  return gst_caps_remove_and_get_structure (caps, idx);
+}
+
 static gboolean
 gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
     gpointer data)

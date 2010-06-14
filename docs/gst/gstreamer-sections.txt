@@ -288,6 +288,7 @@ gst_caps_append
 gst_caps_merge
 gst_caps_append_structure
 gst_caps_remove_structure
+gst_caps_steal_structure
 gst_caps_merge_structure
 gst_caps_get_size
 gst_caps_get_structure
