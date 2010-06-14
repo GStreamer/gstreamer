@@ -626,6 +626,26 @@ add_relative_volume_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
   id3v2tag->addFrame (frame);
 }
 
+static void
+add_bpm_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  gdouble bpm;
+
+  if (gst_tag_list_get_double_index (list, tag, 0, &bpm)) {
+    ID3v2::TextIdentificationFrame * frame;
+    gchar *tag_str;
+
+    tag_str = g_strdup_printf ("%u", (guint)bpm);
+
+    GST_DEBUG ("Setting %s to %s", tag, tag_str);
+    frame = new ID3v2::TextIdentificationFrame ("TBPM", String::UTF8);
+    id3v2tag->addFrame (frame);
+    frame->setText (tag_str);
+    g_free (tag_str);
+  }
+}
+
 /* id3demux produces these for frames it cannot parse */
 #define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
 
@@ -669,7 +689,8 @@ static const struct
   GST_TAG_TRACK_PEAK, add_relative_volume_tag, ""}, {
   GST_TAG_TRACK_GAIN, add_relative_volume_tag, ""}, {
   GST_TAG_ALBUM_PEAK, add_relative_volume_tag, ""}, {
-  GST_TAG_ALBUM_GAIN, add_relative_volume_tag, ""}
+  GST_TAG_ALBUM_GAIN, add_relative_volume_tag, ""}, {
+  GST_TAG_BEATS_PER_MINUTE, add_bpm_tag, ""}
 };
 
 

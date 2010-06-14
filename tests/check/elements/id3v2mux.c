@@ -37,6 +37,7 @@
 #define TEST_ALBUM_GAIN      0.78
 #define TEST_TRACK_PEAK      0.83
 #define TEST_ALBUM_PEAK      0.18
+#define TEST_BPM             113.0
 
 /* for dummy mp3 frame sized MP3_FRAME_SIZE bytes,
  * start: ff fb b0 44 00 00 08 00  00 4b 00 00 00 00 00 00 */
@@ -117,6 +118,8 @@ test_taglib_id3mux_create_tags (guint32 mask)
         GST_TAG_ALBUM_PEAK, TEST_ALBUM_PEAK, NULL);
   }
   if (mask & (1 << 12)) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_BEATS_PER_MINUTE, TEST_BPM, NULL);
   }
   if (mask & (1 << 13)) {
   }
@@ -239,6 +242,11 @@ test_taglib_id3mux_check_tags (GstTagList * tags, guint32 mask)
     fail_unless_sorta_equals_float (peak, TEST_ALBUM_PEAK);
   }
   if (mask & (1 << 12)) {
+    gdouble bpm;
+
+    fail_unless (gst_tag_list_get_double (tags, GST_TAG_BEATS_PER_MINUTE,
+            &bpm));
+    fail_unless_sorta_equals_float (bpm, TEST_BPM);
   }
   if (mask & (1 << 13)) {
   }
