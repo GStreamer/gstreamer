@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example code</title>
  * <para>
- * The following example reads data from a #GMemoryOutputStream.
+ * The following example reads data from a #GMemoryInputStream.
  * |[
 
 #include &lt;gst/gst.h&gt;
