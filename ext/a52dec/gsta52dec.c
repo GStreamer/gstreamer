@@ -975,6 +975,10 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if HAVE_ORC
+  orc_init ();
+#endif
+
   /* ensure GstAudioChannelPosition type is registered */
   if (!gst_audio_channel_position_get_type ())
     return FALSE;
