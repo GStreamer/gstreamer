@@ -205,11 +205,6 @@ G_STMT_START {			       \
   }                                    \
 } G_STMT_END
 
-/* FIXME: remove once we depend on GLib >= 2.20 */
-#if GLIB_CHECK_VERSION (2, 20, 0)
-#define gst_rtsp_base64_decode_ip g_base64_decode_inplace
-#endif
-
 #define READ_BUFFER_GEN(src, func, name, dest, dest_len)    \
 G_STMT_START {			                            \
   dest = (gchar *)func (src, name);                         \
@@ -221,7 +216,7 @@ G_STMT_START {			                            \
     dest += 8;                                              \
     dest_len = strlen (dest) - 1;                           \
     dest[dest_len] = '\0';                                  \
-    gst_rtsp_base64_decode_ip (dest, &dest_len);            \
+    g_base64_decode_inplace (dest, &dest_len);            \
   }                                                         \
 } G_STMT_END
 
