@@ -152,6 +152,7 @@ check_PROGRAMS = \
 	elements/selector \
 	elements/mxfdemux \
 	elements/mxfmux \
+	elements/id3mux \
 	pipelines/mxf \
 	$(check_metadata) \
 	$(check_mimic) \

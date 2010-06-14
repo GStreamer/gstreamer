@@ -593,6 +593,31 @@ add_count_or_num_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 }
 
 static void
+add_bpm_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
+{
+  gdouble bpm;
+
+  GST_LOG ("Adding BPM frame");
+
+  if (gst_tag_list_get_double (list, tag, &bpm)) {
+    gchar *tag_str;
+
+    /* bpm is stored as an integer in id3 tags, but is a double in
+     * tag lists.
+     */
+    tag_str = g_strdup_printf ("%u", (guint) bpm);
+    GST_DEBUG ("Setting %s to %s", tag, tag_str);
+    id3v2_tag_add_text_frame (id3v2tag, "TBPM", (const gchar **) &tag_str, 1);
+    g_free (tag_str);
+  }
+
+  if (num_tags > 1) {
+    GST_WARNING ("more than one %s, can only handle one", tag);
+  }
+}
+
+static void
 add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * unused)
 {
@@ -1027,6 +1052,9 @@ static const struct
     /* Comment tags */
   GST_TAG_COMMENT, add_comment_tag, NULL}, {
   GST_TAG_EXTENDED_COMMENT, add_comment_tag, NULL}, {
+
+    /* BPM tag */
+  GST_TAG_BEATS_PER_MINUTE, add_bpm_tag, NULL}, {
 
     /* Images */
   GST_TAG_IMAGE, add_image_tag, NULL}, {
