@@ -478,10 +478,10 @@ decode_frame(GstVaapiDecoderFfmpeg *ffdecoder, guchar *buf, guint buf_size)
         buf, buf_size
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
-    if (bytes_read < 0)
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     if (!got_picture)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    if (bytes_read < 0)
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     surface = gst_vaapi_context_find_surface_by_id(
         GST_VAAPI_DECODER_CONTEXT(ffdecoder),

@@ -3,6 +3,7 @@ Copyright (C) 2010 Splitted-Desktop Systems
 
 Version 0.2.4 - DD.May.2010
 * Fix build with older VA-API 0.29-sds
+* Fix decoding of some H.264 streams. e.g. Ice Age 2 trailer
 * Fix video rendering rect within an embedder window (Totem)
 * Disable GLX rendering when vaapisink uses a foreign X window
 
