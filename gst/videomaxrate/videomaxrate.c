@@ -24,6 +24,20 @@
  *
  */
 
+
+/**
+ * SECTION:element-videomaxrate
+ * @see_also: videorate
+ *
+ * This object will drop buffers that go beyond a certain buffer rate
+ * (ie frame rate). It should work with any kind of data where each buffer
+ * is independent. This currently means raw video frames and still image
+ * formats.
+ *
+ * The framerate is computed using a moving average. The period over which this
+ * average is computed is configurable using the "average-period" property.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

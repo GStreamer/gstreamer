@@ -1117,6 +1117,20 @@ GST_IS_VIDEO_DETECT_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-videomaxrate</FILE>
+<TITLE>videomaxrate</TITLE>
+GstVideoMaxRate
+<SUBSECTION Standard>
+GstVideoMaxRateClass
+GST_VIDEO_MAX_RATE
+GST_IS_VIDEO_MAX_RATE
+GST_TYPE_VIDEO_MAX_RATE
+gst_video_max_rate_get_type
+GST_VIDEO_MAX_RATE_CLASS
+GST_IS_VIDEO_MAX_RATE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-videomark</FILE>
 <TITLE>videomark</TITLE>
 GstVideoMark

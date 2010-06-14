@@ -45,6 +45,8 @@ struct _GstVideoMaxRate
 {
   GstBaseTransform parent;
 
+  /*< private >*/
+
   GstClockTimeDiff wanted_diff;
   GstClockTime average_period;
 
