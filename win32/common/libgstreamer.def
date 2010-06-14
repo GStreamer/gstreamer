@@ -171,7 +171,6 @@ EXPORTS
 	gst_caps_new_full_valist
 	gst_caps_new_simple
 	gst_caps_normalize
-	gst_caps_steal_structure
 	gst_caps_ref
 	gst_caps_remove_structure
 	gst_caps_replace
@@ -179,6 +178,7 @@ EXPORTS
 	gst_caps_set_simple
 	gst_caps_set_simple_valist
 	gst_caps_set_value
+	gst_caps_steal_structure
 	gst_caps_subtract
 	gst_caps_to_string
 	gst_caps_truncate
