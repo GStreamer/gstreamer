@@ -910,7 +910,7 @@ gst_oss4_mixer_control_get_translated_name (GstOss4MixerControl * mc)
     if (*ptr == '.')
       ptr++;
     for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
-      if (g_strcasecmp (ptr, labels[i].oss_name) == 0) {
+      if (g_ascii_strcasecmp (ptr, labels[i].oss_name) == 0) {
         g_strlcpy (name, _(labels[i].label), sizeof (name));
         goto append_suffixes;
       }
@@ -943,7 +943,7 @@ gst_oss4_mixer_control_get_translated_option (const gchar * name)
 {
   int i;
   for (i = 0; i < G_N_ELEMENTS (labels); ++i) {
-    if (g_strcasecmp (name, labels[i].oss_name) == 0) {
+    if (g_ascii_strcasecmp (name, labels[i].oss_name) == 0) {
       return _(labels[i].label);
     }
   }
