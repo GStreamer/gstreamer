@@ -624,7 +624,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   }
 
   buf = gst_buffer_try_new_and_alloc (size);
-  if (G_UNLIKELY (buf == NULL && size == 0)) {
+  if (G_UNLIKELY (buf == NULL)) {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", size);
     return GST_FLOW_ERROR;
   }
