@@ -786,6 +786,13 @@ static gchar *
 gst_value_collect_int_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
+  if (n_collect_values != 2)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[0].v_int >= collect_values[1].v_int)
+    return g_strdup_printf ("range start is not smaller than end for `%s'",
+        G_VALUE_TYPE_NAME (value));
+
   value->data[0].v_int = collect_values[0].v_int;
   value->data[1].v_int = collect_values[1].v_int;
 
@@ -915,6 +922,13 @@ static gchar *
 gst_value_collect_double_range (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
+  if (n_collect_values != 2)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[0].v_double >= collect_values[1].v_double)
+    return g_strdup_printf ("range start is not smaller than end for `%s'",
+        G_VALUE_TYPE_NAME (value));
+
   value->data[0].v_double = collect_values[0].v_double;
   value->data[1].v_double = collect_values[1].v_double;
 
@@ -1086,6 +1100,19 @@ gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
   if (n_collect_values != 4)
     return g_strdup_printf ("not enough value locations for `%s' passed",
         G_VALUE_TYPE_NAME (value));
+  if (collect_values[1].v_int == 0)
+    return g_strdup_printf ("passed '0' as first denominator for `%s'",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[3].v_int == 0)
+    return g_strdup_printf ("passed '0' as second denominator for `%s'",
+        G_VALUE_TYPE_NAME (value));
+  if ((((gdouble) collect_values[0].v_int) /
+          ((gdouble) collect_values[1].v_int)) >=
+      (((gdouble) collect_values[2].v_int) /
+          ((gdouble) collect_values[3].v_int)))
+    return g_strdup_printf ("range start is not smaller than end for `%s'",
+        G_VALUE_TYPE_NAME (value));
+
   if (vals == NULL) {
     gst_value_init_fraction_range (value);
     vals = value->data[0].v_pointer;
@@ -1146,6 +1173,11 @@ gst_value_set_fraction_range (GValue * value, const GValue * start,
   GValue *vals;
 
   g_return_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (value));
+  g_return_if_fail (GST_VALUE_HOLDS_FRACTION (start));
+  g_return_if_fail (GST_VALUE_HOLDS_FRACTION (end));
+  g_return_if_fail (((gdouble) start->data[0].v_int) /
+      ((gdouble) start->data[1].v_int) <
+      ((gdouble) end->data[0].v_int) / ((gdouble) end->data[1].v_int));
 
   vals = (GValue *) value->data[0].v_pointer;
   if (vals == NULL) {
@@ -1178,6 +1210,9 @@ gst_value_set_fraction_range_full (GValue * value,
   g_return_if_fail (value != NULL);
   g_return_if_fail (denominator_start != 0);
   g_return_if_fail (denominator_end != 0);
+  g_return_if_fail (((gdouble) numerator_start) /
+      ((gdouble) denominator_start) <
+      ((gdouble) numerator_end) / ((gdouble) denominator_end));
 
   g_value_init (&start, GST_TYPE_FRACTION);
   g_value_init (&end, GST_TYPE_FRACTION);
@@ -3570,6 +3605,23 @@ static gchar *
 gst_value_collect_fraction (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
+  if (n_collect_values != 2)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[1].v_int == 0)
+    return g_strdup_printf ("passed '0' as denominator for `%s'",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[0].v_int < -G_MAXINT)
+    return
+        g_strdup_printf
+        ("passed value smaller than -G_MAXINT as numerator for `%s'",
+        G_VALUE_TYPE_NAME (value));
+  if (collect_values[1].v_int < -G_MAXINT)
+    return
+        g_strdup_printf
+        ("passed value smaller than -G_MAXINT as denominator for `%s'",
+        G_VALUE_TYPE_NAME (value));
+
   gst_value_set_fraction (value,
       collect_values[0].v_int, collect_values[1].v_int);
 
@@ -3685,6 +3737,7 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
   gint n1, n2, d1, d2;
   gint res_n, res_d;
 
+  g_return_val_if_fail (product != NULL, FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor1), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (factor2), FALSE);
 
@@ -3718,6 +3771,7 @@ gst_value_fraction_subtract (GValue * dest,
   gint n1, n2, d1, d2;
   gint res_n, res_d;
 
+  g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (minuend), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (subtrahend), FALSE);
 
@@ -3769,6 +3823,9 @@ gst_value_deserialize_fraction (GValue * dest, const gchar * s)
   if (sscanf (s, "%d/%d%n", &num, &den, &num_chars) >= 2) {
     if (s[num_chars] != 0)
       return FALSE;
+    if (den == 0)
+      return FALSE;
+
     gst_value_set_fraction (dest, num, den);
     return TRUE;
   } else if (g_ascii_strcasecmp (s, "1/max") == 0) {
