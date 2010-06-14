@@ -253,7 +253,7 @@ deserialize_exif_gps_coordinate (GstTagList * taglist, const gchar * gst_tag,
   gdouble value = 0;
   gint d = 0, m = 0, s = 0;
   gdouble m2 = 0;
-  gchar c;
+  gchar c = 0;
   const gchar *current;
 
   /* get the degrees */
