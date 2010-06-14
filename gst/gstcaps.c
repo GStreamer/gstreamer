@@ -538,6 +538,8 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
  * contained in @caps. The caller becomes the owner of the returned structure.
  *
  * Returns: a pointer to the #GstStructure corresponding to @index.
+ *
+ * Since: 0.10.30
  */
 GstStructure *
 gst_caps_steal_structure (GstCaps * caps, guint idx)
