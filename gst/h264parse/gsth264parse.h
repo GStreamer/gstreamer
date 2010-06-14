@@ -70,6 +70,9 @@ struct _GstH264Parse
   guint nal_length_size;
   guint format;
 
+  guint interval;
+  GstClockTime last_report;
+
   GstSegment segment;
   gboolean packetized;
   gboolean discont;
@@ -125,6 +128,7 @@ struct _GstH264Parse
   /* NALU AU */
   GstAdapter *picture_adapter;
   gboolean picture_start;
+  gint idr_offset;
 
   /* codec data NALUs to be inserted into stream */
   GSList  *codec_nals;
