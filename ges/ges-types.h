@@ -81,5 +81,8 @@ typedef struct _GESTrackAudioBackgroundSource GESTrackAudioBackgroundSource;
 typedef struct _GESTrackAudioBackgroundSourceClass
   GESTrackAudioBackgroundSourceClass;
 
+typedef struct _GESTrackTitleSource GESTrackTitleSource;
+typedef struct _GESTrackTitleSourceClass
+  GESTrackTitleSourceClass;
 
 #endif /* __GES_TYPES_H__ */
