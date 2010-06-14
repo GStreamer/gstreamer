@@ -20,11 +20,11 @@ static const gchar *caps_list[] = {
   "test/gst-fraction, fraction = (fraction) MIN",
   "test/gst-fraction, fraction = (fraction) MAX",
   /* Test fraction range */
-  "test/gst-fraction-range, fraction = (fraction) [ 1/3, 1/4 ]",
+  "test/gst-fraction-range, fraction = (fraction) [ 1/4, 1/3 ]",
   "test/gst-fraction-range, fraction = (fraction) [ MIN, MAX ]",
   /* Test lists of fractions and fraction ranges */
-  "test/gst-fraction-range, fraction = (fraction) { [ 1/3, 1/4 ], 1/8 }",
-  "test/gst-fraction-range, fraction = (fraction) { [ 1/3, 1/4 ], [ 1/8, 2/8 ] }",
+  "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], 1/8 }",
+  "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], [ 1/8, 2/8 ] }",
   "ANY",
   "EMPTY"
 };
