@@ -28,6 +28,7 @@
 #include "vs_scanline.h"
 
 #include "gstvideoscaleorc.h"
+#include <gst/gst.h>
 
 #include <string.h>
 
@@ -36,31 +37,17 @@
 void
 vs_scanline_downsample_Y (uint8_t * dest, uint8_t * src, int n)
 {
-  int i;
-
-  for (i = 0; i < n; i++) {
-    dest[i] = (src[i * 2] + src[i * 2 + 1]) / 2;
-  }
+  orc_downsample_u8 (dest, src, n);
 }
 
 void
 vs_scanline_resample_nearest_Y (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  gst_videoscale_orc_resample_nearest_u8 (dest, src,
+      *accumulator, increment, n);
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i] = (x < 32768 || j + 1 >= src_width) ? src[j] : src[j + 1];
-
-    acc += increment;
-  }
-
-  *accumulator = acc;
+  *accumulator += n * increment;
 }
 
 #include <glib.h>
@@ -68,24 +55,10 @@ void
 vs_scanline_resample_linear_Y (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  gst_videoscale_orc_resample_bilinear_u8 (dest, src,
+      *accumulator, increment, n);
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-
-    if (j + 1 < src_width)
-      dest[i] = (src[j] * (65536 - x) + src[j + 1] * x) >> 16;
-    else
-      dest[i] = src[j];
-
-    acc += increment;
-  }
-
-  *accumulator = acc;
+  *accumulator += n * increment;
 }
 
 void
@@ -97,19 +70,14 @@ vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n);
+    orc_merge_linear_u8 (dest, src1, src2, value, n);
   }
 }
 
 void
 vs_scanline_downsample_Y16 (uint8_t * dest, uint8_t * src, int n)
 {
-  int i;
-  uint16_t *d = (uint16_t *) dest, *s = (uint16_t *) src;
-
-  for (i = 0; i < n; i++) {
-    d[i] = (s[i * 2] + s[i * 2 + 1]) / 2;
-  }
+  orc_downsample_u16 ((uint16_t *) dest, (uint16_t *) src, n);
 }
 
 void
@@ -178,80 +146,27 @@ vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 void
 vs_scanline_downsample_RGBA (uint8_t * dest, uint8_t * src, int n)
 {
-  int i;
-
-  for (i = 0; i < n; i++) {
-    dest[i * 4 + 0] = (src[i * 8 + 0] + src[i * 8 + 4]) / 2;
-    dest[i * 4 + 1] = (src[i * 8 + 1] + src[i * 8 + 5]) / 2;
-    dest[i * 4 + 2] = (src[i * 8 + 2] + src[i * 8 + 6]) / 2;
-    dest[i * 4 + 3] = (src[i * 8 + 3] + src[i * 8 + 7]) / 2;
-  }
+  gst_videoscale_orc_downsample_u32 (dest, src, n);
 }
 
 void
 vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  gst_videoscale_orc_resample_nearest_u32 (dest, src,
+      *accumulator, increment, n);
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-
-    if (j + 1 < src_width) {
-      dest[i * 4 + 0] = (x < 32768) ? src[j * 4 + 0] : src[j * 4 + 4];
-      dest[i * 4 + 1] = (x < 32768) ? src[j * 4 + 1] : src[j * 4 + 5];
-      dest[i * 4 + 2] = (x < 32768) ? src[j * 4 + 2] : src[j * 4 + 6];
-      dest[i * 4 + 3] = (x < 32768) ? src[j * 4 + 3] : src[j * 4 + 7];
-    } else {
-      dest[i * 4 + 0] = src[j * 4 + 0];
-      dest[i * 4 + 1] = src[j * 4 + 1];
-      dest[i * 4 + 2] = src[j * 4 + 2];
-      dest[i * 4 + 3] = src[j * 4 + 3];
-    }
-
-    acc += increment;
-  }
-
-  *accumulator = acc;
+  *accumulator += n * increment;
 }
 
 void
 vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  gst_videoscale_orc_resample_bilinear_u32 (dest, src,
+      *accumulator, increment, n);
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-
-    if (j + 1 < src_width) {
-      dest[i * 4 + 0] =
-          (src[j * 4 + 0] * (65536 - x) + src[j * 4 + 4] * x) >> 16;
-      dest[i * 4 + 1] =
-          (src[j * 4 + 1] * (65536 - x) + src[j * 4 + 5] * x) >> 16;
-      dest[i * 4 + 2] =
-          (src[j * 4 + 2] * (65536 - x) + src[j * 4 + 6] * x) >> 16;
-      dest[i * 4 + 3] =
-          (src[j * 4 + 3] * (65536 - x) + src[j * 4 + 7] * x) >> 16;
-    } else {
-      dest[i * 4 + 0] = src[j * 4 + 0];
-      dest[i * 4 + 1] = src[j * 4 + 1];
-      dest[i * 4 + 2] = src[j * 4 + 2];
-      dest[i * 4 + 3] = src[j * 4 + 3];
-    }
-
-    acc += increment;
-  }
-
-  *accumulator = acc;
+  *accumulator += n * increment;
 }
 
 void
@@ -263,7 +178,7 @@ vs_scanline_merge_linear_RGBA (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 4);
+    orc_merge_linear_u8 (dest, src1, src2, value, n * 4);
   }
 }
 
@@ -348,7 +263,7 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n * 3);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, n * 3);
+    orc_merge_linear_u8 (dest, src1, src2, value, n * 3);
   }
 }
 
@@ -361,14 +276,7 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 void
 vs_scanline_downsample_YUYV (uint8_t * dest, uint8_t * src, int n)
 {
-  int i;
-
-  for (i = 0; i < n; i++) {
-    dest[i * 4 + 0] = (src[i * 8 + 0] + src[i * 8 + 2]) / 2;
-    dest[i * 4 + 1] = (src[i * 8 + 1] + src[i * 8 + 5]) / 2;
-    dest[i * 4 + 2] = (src[i * 8 + 4] + src[i * 8 + 6]) / 2;
-    dest[i * 4 + 3] = (src[i * 8 + 3] + src[i * 8 + 7]) / 2;
-  }
+  gst_videoscale_orc_downsample_yuyv (dest, src, n);
 }
 
 void
@@ -477,7 +385,7 @@ vs_scanline_merge_linear_YUYV (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, quads * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+    orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
   }
 }
 
@@ -606,7 +514,7 @@ vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
   if (value == 0) {
     memcpy (dest, src1, quads * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
+    orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
   }
 }
 
