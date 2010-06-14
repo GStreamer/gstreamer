@@ -709,6 +709,11 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
     ret = klass->set_caps (trans, in, out);
   }
 
+  GST_OBJECT_LOCK (trans);
+  /* make sure we reevaluate how the buffer_alloc works wrt to proxy allocating
+   * the buffer. */
+  trans->priv->suggest_pending = TRUE;
+  GST_OBJECT_UNLOCK (trans);
   trans->negotiated = ret;
 
   return ret;
