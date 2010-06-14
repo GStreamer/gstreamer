@@ -58,40 +58,26 @@ static GstPadTemplate *sinktempl, *srctempl;
 static GstCaps *
 gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 {
-  int i;
-  GstStructure *structure;
-  GstCaps *rgbcaps;
-  GstCaps *graycaps;
+  GstStructure *yuvst, *rgbst, *grayst;
 
+  /* We know there's only one structure since we're given simple caps */
   caps = gst_caps_copy (caps);
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
+  yuvst = gst_caps_get_structure (caps, 0);
 
-    gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_structure_remove_fields (structure, "format", "endianness", "depth",
-        "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
-        "palette_data", NULL);
-  }
+  gst_structure_set_name (yuvst, "video/x-raw-yuv");
+  gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
+      "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
+      "palette_data", NULL);
 
-  gst_caps_do_simplify (caps);
-  rgbcaps = gst_caps_copy (caps);
+  rgbst = gst_structure_copy (yuvst);
+  gst_structure_set_name (rgbst, "video/x-raw-rgb");
 
-  for (i = 0; i < gst_caps_get_size (rgbcaps); i++) {
-    structure = gst_caps_get_structure (rgbcaps, i);
+  grayst = gst_structure_copy (rgbst);
+  gst_structure_set_name (grayst, "video/x-raw-gray");
 
-    gst_structure_set_name (structure, "video/x-raw-rgb");
-  }
-  graycaps = gst_caps_copy (caps);
-
-  for (i = 0; i < gst_caps_get_size (graycaps); i++) {
-    structure = gst_caps_get_structure (graycaps, i);
-
-    gst_structure_set_name (structure, "video/x-raw-gray");
-  }
-
-  gst_caps_append (caps, graycaps);
-  gst_caps_append (caps, rgbcaps);
+  gst_caps_append_structure (caps, rgbst);
+  gst_caps_append_structure (caps, grayst);
 
   return caps;
 }
