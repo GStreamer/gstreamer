@@ -2181,10 +2181,10 @@ gst_pad_get_caps_unlocked (GstPad * pad)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
-  /* If the parent element is in GST_STATE_NULL, return the template caps */
+  /* If the pad is not negotiable, return the template caps */
   if (G_UNLIKELY (!GST_PAD_IS_NEGOTIABLE (pad) && GST_PAD_PAD_TEMPLATE (pad))) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "parent element is in GST_STATE_NULL, using pad templates");
+        "pad is not negotiable, using pad template");
     result = gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad)));
     goto done;
   }
