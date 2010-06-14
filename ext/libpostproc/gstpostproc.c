@@ -24,9 +24,10 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
+
+#if HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
@@ -280,7 +281,8 @@ gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 static void
 change_context (GstPostProc * postproc, gint width, gint height)
 {
-  guint flags;
+  guint mmx_flags;
+  guint altivec_flags;
   gint ppflags;
 
   GST_DEBUG_OBJECT (postproc, "change_context, width:%d, height:%d",
@@ -289,11 +291,21 @@ change_context (GstPostProc * postproc, gint width, gint height)
   if ((width != postproc->width) && (height != postproc->height)) {
     if (postproc->context)
       pp_free_context (postproc->context);
-    flags = oil_cpu_get_flags ();
-    ppflags = (flags & OIL_IMPL_FLAG_MMX ? PP_CPU_CAPS_MMX : 0)
-        | (flags & OIL_IMPL_FLAG_MMXEXT ? PP_CPU_CAPS_MMX2 : 0)
-        | (flags & OIL_IMPL_FLAG_3DNOW ? PP_CPU_CAPS_3DNOW : 0)
-        | (flags & OIL_IMPL_FLAG_ALTIVEC ? PP_CPU_CAPS_ALTIVEC : 0);
+
+#ifdef HAVE_ORC
+    mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+    altivec_flags =
+        orc_target_get_default_flags (orc_target_get_by_name ("altivec"));
+#else
+    mmx_flags = 0;
+    altivec_flags = 0;
+#endif
+
+    ppflags = (mmx_flags & ORC_TARGET_MMX_MMX ? PP_CPU_CAPS_MMX : 0)
+        | (mmx_flags & ORC_TARGET_MMX_MMXEXT ? PP_CPU_CAPS_MMX2 : 0)
+        | (mmx_flags & ORC_TARGET_MMX_3DNOW ? PP_CPU_CAPS_3DNOW : 0)
+        | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? PP_CPU_CAPS_ALTIVEC :
+        0);
     postproc->context = pp_get_context (width, height, PP_FORMAT_420 | ppflags);
     postproc->width = width;
     postproc->height = height;

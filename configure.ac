@@ -46,8 +46,7 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.22
-LIBOIL_MAJORMINOR=0.3
-LIBOIL_REQ=0.3.6
+ORC_REQ=0.4.5
 
 dnl *** autotools stuff ****
 
@@ -125,18 +124,8 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-dnl liboil is required for cpu detection for libpostproc
-dnl FIXME : In theory we should be able to compile libpostproc with cpudetect
-dnl capabilities, which would enable us to get rid of this
-PKG_CHECK_MODULES(LIBOIL, liboil-$LIBOIL_MAJORMINOR >= $LIBOIL_REQ, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x$HAVE_LIBOIL" != "xyes"
-then
-  AC_MSG_ERROR([liboil-$LIBOIL_REQ or later is required])
-  AC_ERROR
-fi
-
-AC_SUBST(LIBOIL_CFLAGS)
-AC_SUBST(LIBOIL_LIBS)
+dnl orc is required for cpu detection for libpostproc
+ORC_CHECK([$ORC_REQ])
 
 dnl *** set variables based on configure arguments ***
 
@@ -423,3 +412,4 @@ tests/files/Makefile
 )
 AC_OUTPUT
 
+ORC_OUTPUT

@@ -32,9 +32,10 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
-#include <liboil/liboil.h>
-#include <liboil/liboilcpu.h>
-#include <liboil/liboilfunction.h>
+
+#if HAVE_ORC
+#include <orc/orc.h>
+#endif
 
 #include <string.h>
 
@@ -595,7 +596,8 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
-  gint flags, swsflags;
+  guint mmx_flags, altivec_flags;
+  gint swsflags;
   GstVideoFormat in_format, out_format;
   gboolean ok;
 
@@ -629,11 +631,20 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gst_ffmpegscale_fill_info (scale, out_format, scale->out_width,
       scale->out_height, scale->out_stride, scale->out_offset);
 
-  flags = oil_cpu_get_flags ();
-  swsflags = (flags & OIL_IMPL_FLAG_MMX ? SWS_CPU_CAPS_MMX : 0)
-      | (flags & OIL_IMPL_FLAG_MMXEXT ? SWS_CPU_CAPS_MMX2 : 0)
-      | (flags & OIL_IMPL_FLAG_3DNOW ? SWS_CPU_CAPS_3DNOW : 0)
-      | (flags & OIL_IMPL_FLAG_ALTIVEC ? SWS_CPU_CAPS_ALTIVEC : 0);
+#ifdef HAVE_ORC
+  mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
+  altivec_flags =
+      orc_target_get_default_flags (orc_target_get_by_name ("altivec"));
+#else
+  mmx_flags = 0;
+  altivec_flags = 0;
+#endif
+
+  swsflags = (mmx_flags & ORC_TARGET_MMX_MMX ? SWS_CPU_CAPS_MMX : 0)
+      | (mmx_flags & ORC_TARGET_MMX_MMXEXT ? SWS_CPU_CAPS_MMX2 : 0)
+      | (mmx_flags & ORC_TARGET_MMX_3DNOW ? SWS_CPU_CAPS_3DNOW : 0)
+      | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? SWS_CPU_CAPS_ALTIVEC : 0);
+
   scale->ctx = sws_getContext (scale->in_width, scale->in_height,
       scale->in_pixfmt, scale->out_width, scale->out_height, scale->out_pixfmt,
       swsflags | gst_ffmpegscale_method_flags[scale->method], NULL, NULL, NULL);
