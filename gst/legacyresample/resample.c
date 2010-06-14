@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <liboil/liboil.h>
 
 #include "resample.h"
 #include "buffer.h"
@@ -41,7 +40,6 @@ resample_init (void)
   static int inited = 0;
 
   if (!inited) {
-    oil_init ();
     inited = 1;
     GST_DEBUG_CATEGORY_INIT (libaudioresample_debug, "libaudioresample", 0,
         "audio resampling library");
