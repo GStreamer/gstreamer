@@ -56,10 +56,6 @@ static GEnumValue vpattern_enum_values[] = {
   {GES_TRACK_VIDEO_BG_SRC_CIRCULAR, "Circular", "circular"},
   {GES_TRACK_VIDEO_BG_SRC_BLINK, "Blink", "blink"},
   {GES_TRACK_VIDEO_BG_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
-  {GES_TRACK_VIDEO_BG_SRC_ZONE_PLATE, "Zone plate", "zone-plate"},
-  {GES_TRACK_VIDEO_BG_SRC_GAMUT, "Gamut checkers", "gamut"},
-  {GES_TRACK_VIDEO_BG_SRC_CHROMA_ZONE_PLATE, "Chroma zone plate",
-      "chroma-zone-plate"},
   {0, NULL, NULL}
 };
 
