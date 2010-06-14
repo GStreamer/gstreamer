@@ -889,7 +889,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 static gboolean
 gst_app_src_emit_seek (GstAppSrc * appsrc, guint64 offset)
 {
-  gboolean res;
+  gboolean res = FALSE;
   gboolean emit;
   GstAppSrcPrivate *priv = appsrc->priv;
 
