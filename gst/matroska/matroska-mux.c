@@ -2681,15 +2681,13 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
 
     return gst_ebml_last_write_result (ebml);
   } else {
-    int flags =
-        GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
     gst_ebml_write_set_cache (ebml, GST_BUFFER_SIZE (buf) * 2);
     /* write and call order slightly unnatural,
      * but avoids seek and minizes pushing */
     blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
     hdr =
         gst_matroska_mux_create_buffer_header (collect_pad->track,
-        relative_timestamp, flags);
+        relative_timestamp, 0);
     if (write_duration) {
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION,
           gst_util_uint64_scale (block_duration, 1, mux->time_scale));
