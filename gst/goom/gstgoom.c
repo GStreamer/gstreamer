@@ -43,6 +43,10 @@
 #include <gst/video/video.h>
 #include "goom.h"
 
+#if HAVE_ORC
+#include <orc/orc.h>
+#endif
+
 GST_DEBUG_CATEGORY (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
@@ -584,6 +588,10 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
+
+#if HAVE_ORC
+  orc_init ();
+#endif
 
   return gst_element_register (plugin, "goom", GST_RANK_NONE, GST_TYPE_GOOM);
 }
