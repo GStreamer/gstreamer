@@ -90,6 +90,8 @@ setup_audioconvert (GstCaps * outcaps)
   g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate, NULL);
+  gst_pad_set_negotiable (mysrcpad, TRUE);
+  gst_pad_set_negotiable (mysinkpad, TRUE);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_use_fixed_caps (mysinkpad);
@@ -1317,7 +1319,8 @@ GST_START_TEST (test_caps_negotiation)
 
   caps1 = gst_pad_get_caps (ac3_src);
   fail_if (caps1 == NULL, "gst_pad_get_caps returned NULL");
-  GST_DEBUG ("Caps size 1 : %d", gst_caps_get_size (caps1));
+  GST_DEBUG ("Caps size 1 : %" GST_PTR_FORMAT " %d", caps1,
+      gst_caps_get_size (caps1));
 
   fail_if (gst_element_set_state (pipeline, GST_STATE_READY) ==
       GST_STATE_CHANGE_FAILURE, "Failed to set test pipeline back to READY");
@@ -1337,7 +1340,8 @@ GST_START_TEST (test_caps_negotiation)
   caps2 = gst_pad_get_caps (ac3_src);
 
   fail_if (caps2 == NULL, "gst_pad_get_caps returned NULL");
-  GST_DEBUG ("Caps size 2 : %d", gst_caps_get_size (caps2));
+  GST_DEBUG ("Caps size 2 : %" GST_PTR_FORMAT " %d", caps2,
+      gst_caps_get_size (caps2));
   fail_unless (gst_caps_get_size (caps1) == gst_caps_get_size (caps2));
 
   gst_caps_unref (caps1);
