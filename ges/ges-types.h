@@ -44,11 +44,15 @@ typedef struct _GESTimelineSourceClass GESTimelineSourceClass;
 
 typedef struct _GESTimelineFileSource GESTimelineFileSource;
 typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
+
 typedef struct _GESTimelineTransition GESTimelineTransition;
 typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
 
 typedef struct _GESTimelineBackgroundSource GESTimelineBackgroundSource;
 typedef struct _GESTimelineBackgroundSourceClass GESTimelineBackgroundSourceClass;
+
+typedef struct _GESTimelineTitleSource GESTimelineTitleSource;
+typedef struct _GESTimelineTitleSourceClass GESTimelineTitleSourceClass;
 
 typedef struct _GESTrack GESTrack;
 typedef struct _GESTrackClass GESTrackClass;
