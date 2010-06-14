@@ -98,4 +98,3 @@ ges_track_video_background_source_set_pattern(GESTrackVideoBackgroundSource *,
 G_END_DECLS
 
 #endif /* _GES_TRACK_VIDEO_BACKGROUND_SOURCE */
-
