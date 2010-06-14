@@ -568,7 +568,7 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
     int depth;
     int bpp;
     gboolean have_alpha;
-    unsigned int mask;
+    unsigned int mask = 0;
 
     switch (format) {
       case GST_VIDEO_FORMAT_RGBx:
