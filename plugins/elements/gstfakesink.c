@@ -262,12 +262,13 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
 {
   fakesink->silent = DEFAULT_SILENT;
   fakesink->dump = DEFAULT_DUMP;
-  GST_BASE_SINK (fakesink)->sync = DEFAULT_SYNC;
   fakesink->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
   g_static_rec_mutex_init (&fakesink->notify_lock);
+
+  gst_base_sink_set_sync (GST_BASE_SINK (fakesink), DEFAULT_SYNC);
 }
 
 static void
