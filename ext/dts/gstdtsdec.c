@@ -198,6 +198,7 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   if (cpuflags & ORC_TARGET_MMX_MMXEXT)
     klass->dts_cpuflags |= MM_ACCEL_X86_MMXEXT;
 #else
+  cpuflags = 0;
   klass->dts_cpuflags = 0;
 #endif
 
