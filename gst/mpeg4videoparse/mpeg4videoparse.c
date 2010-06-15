@@ -47,11 +47,13 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
 
 /* Properties */
 #define DEFAULT_PROP_DROP	TRUE
+#define DEFAULT_CONFIG_INTERVAL (0)
 
 enum
 {
   PROP_0,
   PROP_DROP,
+  PROP_CONFIG_INTERVAL,
   PROP_LAST
 };
 
@@ -478,14 +480,54 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
     GstBuffer *out_buf;
 
     out_buf = gst_adapter_take_buffer (parse->adapter, parse->offset);
+    GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
 
     if (out_buf) {
       /* Set GST_BUFFER_FLAG_DELTA_UNIT if it's not an intra frame */
       if (!parse->intra_frame) {
         GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
+      } else if (parse->interval > 0 && parse->config) {
+        GstClockTime timestamp = GST_BUFFER_TIMESTAMP (out_buf);
+        guint64 diff;
+
+        /* init */
+        if (!GST_CLOCK_TIME_IS_VALID (parse->last_report)) {
+          parse->last_report = timestamp;
+        }
+
+        /* insert on intra frames */
+        if (timestamp > parse->last_report)
+          diff = timestamp - parse->last_report;
+        else
+          diff = 0;
+
+        GST_LOG_OBJECT (parse,
+            "now %" GST_TIME_FORMAT ", last VOP-I %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (timestamp), GST_TIME_ARGS (parse->last_report));
+
+        GST_DEBUG_OBJECT (parse,
+            "interval since last config %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (diff));
+
+        if (GST_TIME_AS_SECONDS (diff) >= parse->interval) {
+          /* we need to send config now first */
+          GstBuffer *superbuf;
+
+          GST_LOG_OBJECT (parse, "inserting config in stream");
+
+          /* insert header */
+          superbuf = gst_buffer_merge (parse->config, out_buf);
+
+          GST_BUFFER_TIMESTAMP (superbuf) = timestamp;
+          gst_buffer_unref (out_buf);
+          out_buf = superbuf;
+
+          if (timestamp != -1) {
+            parse->last_report = timestamp;
+          }
+        }
       }
       gst_buffer_set_caps (out_buf, GST_PAD_CAPS (parse->srcpad));
-      GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
       gst_pad_push (parse->srcpad, out_buf);
     }
   }
@@ -820,6 +862,7 @@ gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
   parse->state = PARSE_NEED_START;
   parse->have_config = FALSE;
   parse->offset = 0;
+  parse->last_report = GST_CLOCK_TIME_NONE;
 }
 
 static GstStateChangeReturn
@@ -884,6 +927,9 @@ gst_mpeg4vparse_set_property (GObject * object, guint property_id,
     case PROP_DROP:
       parse->drop = g_value_get_boolean (value);
       break;
+    case PROP_CONFIG_INTERVAL:
+      parse->interval = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -898,6 +944,9 @@ gst_mpeg4vparse_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_DROP:
       g_value_set_boolean (value, parse->drop);
+      break;
+    case PROP_CONFIG_INTERVAL:
+      g_value_set_uint (value, parse->interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -925,6 +974,14 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
           "in the stream or through caps", DEFAULT_PROP_DROP,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
+      g_param_spec_uint ("config-interval",
+          "Configuration Send Interval",
+          "Send Configuration Insertion Interval in seconds (configuration headers "
+          "will be multiplexed in the data stream when detected.) (0 = disabled)",
+          0, 3600, DEFAULT_CONFIG_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mpeg4vparse_change_state);
 }
@@ -948,6 +1005,9 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse, GstMpeg4VParseClass * g_class)
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   parse->adapter = gst_adapter_new ();
+
+  parse->interval = DEFAULT_CONFIG_INTERVAL;
+  parse->last_report = GST_CLOCK_TIME_NONE;
 
   gst_mpeg4vparse_cleanup (parse);
 }

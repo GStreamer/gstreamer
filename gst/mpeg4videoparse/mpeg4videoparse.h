@@ -54,6 +54,9 @@ struct _GstMpeg4VParse {
   GstPad * sinkpad;
   GstPad * srcpad;
 
+  guint interval;
+  GstClockTime last_report;
+
   GstAdapter * adapter;
   guint offset;
   guint vos_offset;
