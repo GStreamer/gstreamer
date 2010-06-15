@@ -679,9 +679,15 @@ GType                   gst_element_get_type            (void);
 
 /**
  * gst_element_get_name:
- * @elem: a #GstElement to set the name of.
+ * @elem: a #GstElement to get the name of @elem.
  *
- * Gets the name of the element.
+ * Returns a copy of the name of @elem.
+ * Caller should g_free() the return value after usage.
+ * For a nameless element, this returns NULL, which you can safely g_free()
+ * as well.
+ *
+ * Returns: the name of @elem. g_free() after usage. MT safe. 
+ *
  */
 #define                 gst_element_get_name(elem)      gst_object_get_name(GST_OBJECT_CAST(elem))
 
