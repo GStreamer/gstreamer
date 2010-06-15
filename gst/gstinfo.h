@@ -1302,6 +1302,7 @@ GST_TRACE (const char *format, ...)
 #define GST_CAT_DEBUG_OBJECT(...)			G_STMT_START{ }G_STMT_END
 #define GST_CAT_LOG_OBJECT(...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_FIXME_OBJECT(...)			G_STMT_START{ }G_STMT_END
+#define GST_CAT_TRACE_OBJECT(...)			G_STMT_START{ }G_STMT_END
 
 #define GST_CAT_ERROR(...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_WARNING(...)				G_STMT_START{ }G_STMT_END
@@ -1309,6 +1310,7 @@ GST_TRACE (const char *format, ...)
 #define GST_CAT_DEBUG(...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_LOG(...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_FIXME(...)				G_STMT_START{ }G_STMT_END
+#define GST_CAT_TRACE(...)				G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR_OBJECT(...)				G_STMT_START{ }G_STMT_END
 #define GST_WARNING_OBJECT(...)				G_STMT_START{ }G_STMT_END
@@ -1316,6 +1318,7 @@ GST_TRACE (const char *format, ...)
 #define GST_DEBUG_OBJECT(...)				G_STMT_START{ }G_STMT_END
 #define GST_LOG_OBJECT(...)				G_STMT_START{ }G_STMT_END
 #define GST_FIXME_OBJECT(...)				G_STMT_START{ }G_STMT_END
+#define GST_TRACE_OBJECT(...)				G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR(...)					G_STMT_START{ }G_STMT_END
 #define GST_WARNING(...)				G_STMT_START{ }G_STMT_END
@@ -1323,6 +1326,7 @@ GST_TRACE (const char *format, ...)
 #define GST_DEBUG(...)					G_STMT_START{ }G_STMT_END
 #define GST_LOG(...)					G_STMT_START{ }G_STMT_END
 #define GST_FIXME(...)					G_STMT_START{ }G_STMT_END
+#define GST_TRACE(...)					G_STMT_START{ }G_STMT_END
 
 #else /* !G_HAVE_ISO_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
@@ -1335,6 +1339,7 @@ GST_TRACE (const char *format, ...)
 #define GST_CAT_DEBUG_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 #define GST_CAT_LOG_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 #define GST_CAT_FIXME_OBJECT(args...)			G_STMT_START{ }G_STMT_END
+#define GST_CAT_TRACE_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 
 #define GST_CAT_ERROR(args...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_WARNING(args...)			G_STMT_START{ }G_STMT_END
@@ -1342,6 +1347,7 @@ GST_TRACE (const char *format, ...)
 #define GST_CAT_DEBUG(args...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_LOG(args...)				G_STMT_START{ }G_STMT_END
 #define GST_CAT_FIXME(args...)				G_STMT_START{ }G_STMT_END
+#define GST_CAT_TRACE(args...)				G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 #define GST_WARNING_OBJECT(args...)			G_STMT_START{ }G_STMT_END
@@ -1349,6 +1355,7 @@ GST_TRACE (const char *format, ...)
 #define GST_DEBUG_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 #define GST_LOG_OBJECT(args...)				G_STMT_START{ }G_STMT_END
 #define GST_FIXME_OBJECT(args...)			G_STMT_START{ }G_STMT_END
+#define GST_TRACE_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR(args...)				G_STMT_START{ }G_STMT_END
 #define GST_WARNING(args...)				G_STMT_START{ }G_STMT_END
@@ -1356,6 +1363,7 @@ GST_TRACE (const char *format, ...)
 #define GST_DEBUG(args...)				G_STMT_START{ }G_STMT_END
 #define GST_LOG(args...)				G_STMT_START{ }G_STMT_END
 #define GST_FIXME(args...)				G_STMT_START{ }G_STMT_END
+#define GST_TRACE(args...)				G_STMT_START{ }G_STMT_END
 
 #else /* !G_HAVE_GNUC_VARARGS */
 static inline void
@@ -1401,6 +1409,12 @@ GST_CAT_FIXME_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
 }
 
 static inline void
+GST_CAT_TRACE_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
+
+static inline void
 GST_CAT_ERROR (GstDebugCategory * cat, const char *format, ...)
 {
 }
@@ -1427,6 +1441,11 @@ GST_CAT_LOG (GstDebugCategory * cat, const char *format, ...)
 
 static inline void
 GST_CAT_FIXME (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_TRACE (GstDebugCategory * cat, const char *format, ...)
 {
 }
 
@@ -1461,6 +1480,11 @@ GST_FIXME_OBJECT (gpointer obj, const char *format, ...)
 }
 
 static inline void
+GST_TRACE_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
 GST_ERROR (const char *format, ...)
 {
 }
@@ -1487,6 +1511,11 @@ GST_LOG (const char *format, ...)
 
 static inline void
 GST_FIXME (const char *format, ...)
+{
+}
+
+static inline void
+GST_TRACE (const char *format, ...)
 {
 }
 
