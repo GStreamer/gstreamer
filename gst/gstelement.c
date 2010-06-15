@@ -686,7 +686,7 @@ gboolean
 gst_element_add_pad (GstElement * element, GstPad * pad)
 {
   gchar *pad_name;
-  gboolean flushing, negotiable;
+  gboolean flushing;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -697,7 +697,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (pad_name));
   flushing = GST_PAD_IS_FLUSHING (pad);
-  negotiable = GST_PAD_IS_NEGOTIABLE (pad);
   GST_OBJECT_UNLOCK (pad);
 
   /* then check to see if there's already a pad by that name here */
@@ -709,14 +708,6 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   if (G_UNLIKELY (!gst_object_set_parent (GST_OBJECT_CAST (pad),
               GST_OBJECT_CAST (element))))
     goto had_parent;
-
-  /* sync pad state with element */
-  if (!negotiable && (GST_STATE (element) > GST_STATE_NULL ||
-          GST_STATE_NEXT (element) == GST_STATE_READY)) {
-    GST_OBJECT_LOCK (pad);
-    GST_PAD_SET_NEGOTIABLE (pad);
-    GST_OBJECT_UNLOCK (pad);
-  }
 
   /* check for flushing pads */
   if (flushing && (GST_STATE (element) > GST_STATE_READY ||
@@ -2677,51 +2668,6 @@ done:
   return g_value_get_boolean (&ret);
 }
 
-static gboolean
-negotiable_pads (GstPad * pad, GValue * ret, gboolean * active)
-{
-  if (!gst_pad_set_negotiable (pad, *active))
-    g_value_set_boolean (ret, FALSE);
-
-  /* unref the object that was reffed for us by _fold */
-  gst_object_unref (pad);
-  return TRUE;
-}
-
-/* is called with STATE_LOCK */
-static gboolean
-gst_element_pads_negotiable (GstElement * element, gboolean negotiable)
-{
-  GstIterator *iter;
-  gboolean res;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "pads_negotiable with negotiable %d", negotiable);
-
-  /* clear the caps on all pads, this should never fail */
-  iter = gst_element_iterate_pads (element);
-  res =
-      iterator_activate_fold_with_resync (iter,
-      (GstIteratorFoldFunction) negotiable_pads, &negotiable);
-  gst_iterator_free (iter);
-  if (G_UNLIKELY (!res))
-    goto negotiable_failed;
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-      "pads_negotiable successful");
-
-  return TRUE;
-
-  /* ERRORS */
-negotiable_failed:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
-        "failed to set pads to 'negotiable'");
-    return FALSE;
-  }
-}
-
-
 /* is called with STATE_LOCK
  *
  * Pads are activated from source pads to sinkpads.
@@ -2812,9 +2758,6 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_element_pads_negotiable (element, TRUE)) {
-        result = GST_STATE_CHANGE_FAILURE;
-      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!gst_element_pads_activate (element, TRUE)) {
@@ -2834,7 +2777,6 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
       } else {
         gst_element_set_base_time (element, 0);
       }
-      gst_element_pads_negotiable (element, FALSE);
 
       /* In null state release the reference to the clock */
       GST_OBJECT_LOCK (element);

@@ -1372,9 +1372,6 @@ gst_pad_use_fixed_caps
 
 gst_pad_is_active
 
-gst_pad_is_negotiable
-gst_pad_set_negotiable
-
 gst_pad_set_blocked
 gst_pad_set_blocked_async
 gst_pad_set_blocked_async_full
@@ -1564,9 +1561,6 @@ GST_PAD_IS_BLOCKED
 GST_PAD_IS_BLOCKING
 GST_PAD_IS_IN_SETCAPS
 GST_PAD_SET_FLUSHING
-GST_PAD_IS_NEGOTIABLE
-GST_PAD_SET_NEGOTIABLE
-GST_PAD_UNSET_NEGOTIABLE
 GST_PAD_TASK
 GST_PAD_UNSET_FLUSHING
 
