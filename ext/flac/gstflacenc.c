@@ -1064,8 +1064,10 @@ gst_flac_enc_sink_event (GstPad * pad, GstEvent * event)
             &stream_time);
       } else {
         start = -1;
+        stream_time = -1;
       }
-      if (start != 0) {
+
+      if (start > 0) {
         if (flacenc->offset > 0)
           GST_DEBUG ("Not handling mid-stream newsegment event");
         else
@@ -1076,9 +1078,11 @@ gst_flac_enc_sink_event (GstPad * pad, GstEvent * event)
 
         ret = gst_pad_push_event (flacenc->srcpad, e);
       }
-      if (stream_time != 0) {
+
+      if (stream_time > 0) {
         GST_DEBUG ("Not handling non-zero stream time");
       }
+
       gst_event_unref (event);
       /* don't push it downstream, we'll generate our own via seek to 0 */
       break;
