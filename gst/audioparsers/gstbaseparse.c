@@ -1341,8 +1341,8 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
   /* Caching here actually makes much less difference than one would expect.
    * We do it mainly to avoid pulling buffers of 1 byte all the time */
   if (parse->priv->cache) {
-    guint64 cache_offset = GST_BUFFER_OFFSET (parse->priv->cache);
-    guint cache_size = GST_BUFFER_SIZE (parse->priv->cache);
+    gint64 cache_offset = GST_BUFFER_OFFSET (parse->priv->cache);
+    gint cache_size = GST_BUFFER_SIZE (parse->priv->cache);
 
     if (cache_offset <= parse->priv->offset &&
         (parse->priv->offset + size) <= (cache_offset + cache_size)) {
