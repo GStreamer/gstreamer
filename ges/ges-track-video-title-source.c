@@ -165,7 +165,8 @@ ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
     const gchar * text)
 {
   self->text = g_strdup (text);
-  g_object_set (self->text_el, "text", text, NULL);
+  if (self->text_el)
+    g_object_set (self->text_el, "text", text, NULL);
 }
 
 GESTrackVideoTitleSource *
