@@ -39,5 +39,7 @@ Makefile
 
 ext/dv/smpte_test
 
+gst/deinterlace/tvtime.h
+
 tmp-orc.c
 *orc.h
