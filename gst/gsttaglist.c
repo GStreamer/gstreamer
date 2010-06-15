@@ -349,6 +349,9 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("device model"),
       _("Model of the device used to create this media"), NULL);
+  gst_tag_register (GST_TAG_IMAGE_ORIENTATION, GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("image orientation"),
+      _("How the image should be rotated or flipped before display"), NULL);
 }
 
 /**

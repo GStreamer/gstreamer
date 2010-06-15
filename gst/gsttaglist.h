@@ -944,6 +944,32 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  * Since: 0.10.30
  */
 #define GST_TAG_DEVICE_MODEL                      "device-model"
+/**
+ * GST_TAG_IMAGE_ORIENTATION:
+ *
+ * Represents the 'Orientation' tag from EXIF. Defines how the image
+ * should be rotated and mirrored for display. (string)
+ *
+ * This tag has a predefined set of allowed values:
+ *   "rotate-0"
+ *   "rotate-90"
+ *   "rotate-180"
+ *   "rotate-270"
+ *   "flip-rotate-0"
+ *   "flip-rotate-90"
+ *   "flip-rotate-180"
+ *   "flip-rotate-270"
+ *
+ * The naming is adopted according to a possible transformation to perform
+ * on the image to fix its orientation, obviously equivalent operations will
+ * yield the same result.
+ *
+ * Rotations indicated by the values are in clockwise direction and
+ * 'flip' means an horizontal mirroring.
+ *
+ * Since: 0.10.30
+ */
+#define GST_TAG_IMAGE_ORIENTATION            "image-orientation"
 
 G_END_DECLS
 
