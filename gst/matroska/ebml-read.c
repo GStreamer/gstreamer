@@ -194,7 +194,7 @@ gst_ebml_read_clear (GstEbmlRead * ebml)
 static const guint8 *
 gst_ebml_read_peek (GstByteReader * br, guint peek)
 {
-  const guint8 *data;
+  const guint8 *data = NULL;
 
   if (G_LIKELY (gst_byte_reader_peek_data (br, peek, &data)))
     return data;
@@ -252,7 +252,7 @@ gst_ebml_read_master (GstEbmlRead * ebml, guint32 * id)
 {
   guint64 length;
   guint prefix;
-  const guint8 *data;
+  const guint8 *data = NULL;
   GstFlowReturn ret;
   GstEbmlMaster m;
 
