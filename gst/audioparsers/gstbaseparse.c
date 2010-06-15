@@ -696,6 +696,8 @@ gst_base_parse_src_event (GstPad * pad, GstEvent * event)
 
   if (!handled)
     ret = gst_pad_event_default (pad, event);
+  else
+    gst_event_unref (event);
 
   gst_object_unref (parse);
   return ret;
@@ -724,7 +726,6 @@ gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
     {
       if (bclass->is_seekable (parse)) {
         handled = gst_base_parse_handle_seek (parse, event);
-        gst_event_unref (event);
       }
       break;
     }
@@ -2066,7 +2067,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   } else {
     gst_event_ref (event);
     if (gst_pad_push_event (parse->sinkpad, event)) {
-      gst_event_unref (event);
       return TRUE;
     }
   }
