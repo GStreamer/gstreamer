@@ -37,10 +37,13 @@
 G_DEFINE_TYPE (GESTimelineTitleSource, ges_tl_title_src,
     GES_TYPE_TIMELINE_SOURCE);
 
+#define DEFAULT_PROP_TEXT ""
+
 enum
 {
   PROP_0,
   PROP_MUTE,
+  PROP_TEXT,
 };
 
 static void
@@ -60,6 +63,9 @@ ges_tl_title_src_get_property (GObject * object, guint property_id,
     case PROP_MUTE:
       g_value_set_boolean (value, tfs->mute);
       break;
+    case PROP_TEXT:
+      g_value_set_string (value, "");
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -74,6 +80,8 @@ ges_tl_title_src_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_MUTE:
       ges_tl_title_src_set_mute (tfs, g_value_get_boolean (value));
+      break;
+    case PROP_TEXT:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -102,6 +110,16 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
   object_class->set_property = ges_tl_title_src_set_property;
   object_class->dispose = ges_tl_title_src_dispose;
   object_class->finalize = ges_tl_title_src_finalize;
+
+  /**
+   * GESTimelineTitleSource:text
+   *
+   * The text to diplay
+   */
+
+  g_object_class_install_property (object_class, PROP_TEXT,
+      g_param_spec_string ("text", "Text", "The text to display",
+          DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineTitleSource:mute:
