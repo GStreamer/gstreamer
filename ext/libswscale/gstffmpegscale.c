@@ -33,7 +33,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
-#if HAVE_ORC
+#ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
 
@@ -635,15 +635,16 @@ gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
   altivec_flags =
       orc_target_get_default_flags (orc_target_get_by_name ("altivec"));
-#else
-  mmx_flags = 0;
-  altivec_flags = 0;
-#endif
-
   swsflags = (mmx_flags & ORC_TARGET_MMX_MMX ? SWS_CPU_CAPS_MMX : 0)
       | (mmx_flags & ORC_TARGET_MMX_MMXEXT ? SWS_CPU_CAPS_MMX2 : 0)
       | (mmx_flags & ORC_TARGET_MMX_3DNOW ? SWS_CPU_CAPS_3DNOW : 0)
       | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? SWS_CPU_CAPS_ALTIVEC : 0);
+#else
+  mmx_flags = 0;
+  altivec_flags = 0;
+  swsflags = 0;
+#endif
+
 
   scale->ctx = sws_getContext (scale->in_width, scale->in_height,
       scale->in_pixfmt, scale->out_width, scale->out_height, scale->out_pixfmt,
@@ -803,7 +804,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (ffmpegscale_debug, "ffvideoscale", 0,
       "video scaling element");
 
-#if HAVE_ORC
+#ifdef HAVE_ORC
   orc_init ();
 #endif
 

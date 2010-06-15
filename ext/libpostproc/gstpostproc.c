@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
-#if HAVE_ORC
+#ifdef HAVE_ORC
 #include <orc/orc.h>
 #endif
 
@@ -296,16 +296,17 @@ change_context (GstPostProc * postproc, gint width, gint height)
     mmx_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
     altivec_flags =
         orc_target_get_default_flags (orc_target_get_by_name ("altivec"));
-#else
-    mmx_flags = 0;
-    altivec_flags = 0;
-#endif
-
     ppflags = (mmx_flags & ORC_TARGET_MMX_MMX ? PP_CPU_CAPS_MMX : 0)
         | (mmx_flags & ORC_TARGET_MMX_MMXEXT ? PP_CPU_CAPS_MMX2 : 0)
         | (mmx_flags & ORC_TARGET_MMX_3DNOW ? PP_CPU_CAPS_3DNOW : 0)
         | (altivec_flags & ORC_TARGET_ALTIVEC_ALTIVEC ? PP_CPU_CAPS_ALTIVEC :
         0);
+#else
+    mmx_flags = 0;
+    altivec_flags = 0;
+    ppflags = 0;
+#endif
+
     postproc->context = pp_get_context (width, height, PP_FORMAT_420 | ppflags);
     postproc->width = width;
     postproc->height = height;
@@ -895,7 +896,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (postproc_debug, "postproc", 0,
       "video postprocessing elements");
 
-#if HAVE_ORC
+#ifdef HAVE_ORC
   orc_init ();
 #endif
 
