@@ -49,6 +49,9 @@ enum
 static void
 ges_tl_title_src_set_mute (GESTimelineTitleSource * self, gboolean mute);
 
+static void
+ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text);
+
 static GESTrackObject
     * ges_tl_title_src_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
@@ -64,7 +67,7 @@ ges_tl_title_src_get_property (GObject * object, guint property_id,
       g_value_set_boolean (value, tfs->mute);
       break;
     case PROP_TEXT:
-      g_value_set_string (value, "");
+      g_value_set_string (value, tfs->text);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -82,6 +85,7 @@ ges_tl_title_src_set_property (GObject * object, guint property_id,
       ges_tl_title_src_set_mute (tfs, g_value_get_boolean (value));
       break;
     case PROP_TEXT:
+      ges_tl_title_src_set_text (tfs, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -91,6 +95,11 @@ ges_tl_title_src_set_property (GObject * object, guint property_id,
 static void
 ges_tl_title_src_dispose (GObject * object)
 {
+  GESTimelineTitleSource *self = GES_TIMELINE_TITLE_SOURCE (object);
+
+  if (self->text)
+    g_free (self->text);
+
   G_OBJECT_CLASS (ges_tl_title_src_parent_class)->dispose (object);
 }
 
@@ -138,6 +147,26 @@ static void
 ges_tl_title_src_init (GESTimelineTitleSource * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
+  self->text = NULL;
+}
+
+static void
+ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, text:%s", self, text);
+
+  self->text = g_strdup (text);
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+      ges_track_video_title_source_set_text (GES_TRACK_VIDEO_TITLE_SOURCE
+          (trackobject), self->text);
+  }
 }
 
 static void
