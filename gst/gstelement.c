@@ -2834,15 +2834,13 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
       } else {
         gst_element_set_base_time (element, 0);
       }
+      gst_element_pads_negotiable (element, FALSE);
+
       /* In null state release the reference to the clock */
       GST_OBJECT_LOCK (element);
       clock_p = &element->clock;
       gst_object_replace ((GstObject **) clock_p, NULL);
       GST_OBJECT_UNLOCK (element);
-
-      /* only clear negotiable when going to NULL */
-      if (transition == GST_STATE_CHANGE_READY_TO_NULL)
-        gst_element_pads_negotiable (element, FALSE);
       break;
     default:
       /* this will catch real but unhandled state changes;
