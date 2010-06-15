@@ -30,7 +30,7 @@
 #include "ges-timeline-title-source.h"
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
-//#include "ges-track-video-title-source.h"
+#include "ges-track-video-title-source.h"
 //#include "ges-track-audio-title-source.h"
 #include <string.h>
 
@@ -163,7 +163,6 @@ static GESTrackObject *
 ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
 {
 
-#if 0
   GESTimelineTitleSource *tfs = (GESTimelineTitleSource *) obj;
   GESTrackObject *res = NULL;
 
@@ -171,24 +170,23 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_title_source_new ();
-    ges_track_video_title_source_set_pattern (
-        (GESTrackVideoTitleSource *) res, tfs->vpattern);
+    GST_DEBUG ("Setting text property");
+    ges_track_video_title_source_set_text (
+        (GESTrackVideoTitleSource *) res, tfs->text);
   }
-
+#if 0
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_title_source_new ();
     if (tfs->mute)
       ges_track_object_set_active (res, FALSE);
   }
+#endif
 
   else {
-    res = (GESTrackObject *) ges_track_title_source_new ();
+    res = GES_TRACK_OBJECT (ges_track_title_source_new ());
   }
 
   return res;
-#endif
-
-  return NULL;
 }
 
 /**
