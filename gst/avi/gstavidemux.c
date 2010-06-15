@@ -644,9 +644,9 @@ gst_avi_demux_seek_streams (GstAviDemux * avi, guint64 offset, gboolean before)
 
     if (before) {
       if (entry) {
+        gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &val);
         GST_DEBUG_OBJECT (avi, "stream %d, previous entry at %"
             G_GUINT64_FORMAT, i, val);
-        gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &val);
         if (val < min)
           min = val;
       }
@@ -711,9 +711,9 @@ gst_avi_demux_seek_streams_index (GstAviDemux * avi, guint64 offset,
 
     if (before) {
       if (entry) {
+        val = stream->index[index].offset;
         GST_DEBUG_OBJECT (avi,
             "stream %d, previous entry at %" G_GUINT64_FORMAT, i, val);
-        val = stream->index[index].offset;
         if (val < min)
           min = val;
       }
