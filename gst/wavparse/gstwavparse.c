@@ -1162,7 +1162,7 @@ static GstFlowReturn
 gst_wavparse_stream_headers (GstWavParse * wav)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   gst_riff_strf_auds *header = NULL;
   guint32 tag, size;
   gboolean gotdata = FALSE;
