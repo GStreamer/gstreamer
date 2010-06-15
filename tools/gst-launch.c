@@ -89,8 +89,8 @@ xmllaunch_parse_cmdline (const gchar ** argv)
   gint i = 0;
 
   if (!(arg = argv[0])) {
-    g_print (_
-        ("Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"));
+    g_printerr ("%s",
+        _("Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"));
     exit (1);
   }
 
@@ -160,13 +160,14 @@ fault_handler_sighandler (int signum)
    * deadlock */
   switch (signum) {
     case SIGSEGV:
-      printf ("Caught SIGSEGV\n");
+      fprintf (stderr, "Caught SIGSEGV\n");
       break;
     case SIGQUIT:
-      printf ("Caught SIGQUIT\n");
+      if (!quiet)
+        printf ("Caught SIGQUIT\n");
       break;
     default:
-      printf ("signo:  %d\n", signum);
+      fprintf (stderr, "signo:  %d\n", signum);
       break;
   }
 
@@ -184,15 +185,16 @@ fault_handler_sigaction (int signum, siginfo_t * si, void *misc)
    * deadlock */
   switch (si->si_signo) {
     case SIGSEGV:
-      printf ("Caught SIGSEGV accessing address %p\n", si->si_addr);
+      fprintf (stderr, "Caught SIGSEGV accessing address %p\n", si->si_addr);
       break;
     case SIGQUIT:
-      printf ("Caught SIGQUIT\n");
+      if (!quiet)
+        printf ("Caught SIGQUIT\n");
       break;
     default:
-      printf ("signo:  %d\n", si->si_signo);
-      printf ("errno:  %d\n", si->si_errno);
-      printf ("code:   %d\n", si->si_code);
+      fprintf (stderr, "signo:  %d\n", si->si_signo);
+      fprintf (stderr, "errno:  %d\n", si->si_errno);
+      fprintf (stderr, "code:   %d\n", si->si_code);
       break;
   }
 
@@ -211,7 +213,8 @@ fault_spin (void)
   wait (NULL);
 
   /* FIXME how do we know if we were run by libtool? */
-  printf ("Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
+  fprintf (stderr,
+      "Spinning.  Please run 'gdb gst-launch %d' to continue debugging, "
       "Ctrl-C to quit, or Ctrl-\\ to dump core.\n", (gint) getpid ());
   while (spinning)
     g_usleep (1000000);
@@ -248,6 +251,24 @@ fault_setup (void)
 #endif /* DISABLE_FAULT_HANDLER */
 
 static void
+print_error_message (GstMessage * msg)
+{
+  GError *err = NULL;
+  gchar *name, *debug = NULL;
+
+  name = gst_object_get_path_string (msg->src);
+  gst_message_parse_error (msg, &err, &debug);
+
+  g_printerr (_("ERROR: from element %s: %s\n"), name, err->message);
+  if (debug != NULL)
+    g_printerr (_("Additional debug info:\n%s\n"), debug);
+
+  g_error_free (err);
+  g_free (debug);
+  g_free (name);
+}
+
+static void
 print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
 {
   gint i, count;
@@ -281,9 +302,9 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     }
 
     if (i == 0) {
-      g_print ("%16s: %s\n", gst_tag_get_nick (tag), str);
+      PRINT ("%16s: %s\n", gst_tag_get_nick (tag), str);
     } else {
-      g_print ("%16s: %s\n", "", str);
+      PRINT ("%16s: %s\n", "", str);
     }
 
     g_free (str);
@@ -295,7 +316,7 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
 static void
 sigint_handler_sighandler (int signum)
 {
-  g_print ("Caught interrupt -- ");
+  PRINT ("Caught interrupt -- ");
 
   /* If we were waiting for an EOS, we still want to catch
    * the next signal to shutdown properly (and the following one
@@ -319,7 +340,7 @@ check_intr (GstElement * pipeline)
     return TRUE;
   } else {
     caught_intr = FALSE;
-    g_print ("handling interrupt.\n");
+    PRINT ("handling interrupt.\n");
 
     /* post an application specific message */
     gst_element_post_message (GST_ELEMENT (pipeline),
@@ -359,11 +380,11 @@ play_handler (int signum)
 {
   switch (signum) {
     case SIGUSR1:
-      g_print ("Caught SIGUSR1 - Play request.\n");
+      PRINT ("Caught SIGUSR1 - Play request.\n");
       gst_element_set_state (pipeline, GST_STATE_PLAYING);
       break;
     case SIGUSR2:
-      g_print ("Caught SIGUSR2 - Stop request.\n");
+      PRINT ("Caught SIGUSR2 - Stop request.\n");
       gst_element_set_state (pipeline, GST_STATE_NULL);
       break;
   }
@@ -530,17 +551,12 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         break;
       }
       case GST_MESSAGE_ERROR:{
-        GError *gerror;
-        gchar *debug;
-
         /* dump graph on error */
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
             GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.error");
 
-        gst_message_parse_error (message, &gerror, &debug);
-        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
-        g_error_free (gerror);
-        g_free (debug);
+        print_error_message (message);
+
         /* we have an error */
         res = ELR_ERROR;
         goto exit;
@@ -859,14 +875,8 @@ main (int argc, char *argv[])
         g_printerr (_("ERROR: pipeline doesn't want to play.\n"));
         bus = gst_element_get_bus (pipeline);
         if ((err_msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0))) {
-          GError *gerror;
-          gchar *debug;
-
-          gst_message_parse_error (err_msg, &gerror, &debug);
-          gst_object_default_error (GST_MESSAGE_SRC (err_msg), gerror, debug);
+          print_error_message (err_msg);
           gst_message_unref (err_msg);
-          g_error_free (gerror);
-          g_free (debug);
         }
         gst_object_unref (bus);
         res = -1;
