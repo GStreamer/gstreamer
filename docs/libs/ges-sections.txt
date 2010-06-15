@@ -403,6 +403,7 @@ GES_IS_TRACK_VIDEO_TITLE_SOURCE_CLASS
 GESTrackVideoTitleSource
 GESTrackVideoTitleSourceClass
 ges_tl_title_src_get_type
+ges_track_video_title_source_set_text
 <SUBSECTION Standard>
 GES_TRACK_VIDEO_TITLE_SOURCE
 GES_TRACK_VIDEO_TITLE_SOURCE_CLASS
