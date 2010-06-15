@@ -251,7 +251,7 @@ static GstFlowReturn
 gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstWavpackDec *dec;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   WavpackHeader wph;
   int32_t decoded, unpacked_size;
@@ -422,7 +422,8 @@ decode_error:
     }
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("Failed to decode wavpack stream: %s", reason));
-    gst_buffer_unref (outbuf);
+    if (outbuf)
+      gst_buffer_unref (outbuf);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
