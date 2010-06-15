@@ -1731,7 +1731,7 @@ default_frame_sizes:
     /* Since we can't get framerate directly, try to use the current norm */
     if (v4l2object->norm && v4l2object->norms) {
       GList *norms;
-      GstTunerNorm *norm;
+      GstTunerNorm *norm = NULL;
 
       for (norms = v4l2object->norms; norms != NULL; norms = norms->next) {
         norm = (GstTunerNorm *) norms->data;
