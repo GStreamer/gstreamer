@@ -1630,6 +1630,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
       goto seek_failed;
 
     if (new_writing_pos > writing_pos) {
+      GST_INFO_OBJECT (queue, "writing %u bytes", buf_size);
       /* no wrapping, just write */
       if (fwrite (data, buf_size, 1, queue->temp_file) != 1)
         goto handle_error;
@@ -1640,16 +1641,22 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
       block_one = rb_size - writing_pos;
       block_two = buf_size - block_one;
 
-      /* write data to end of ring buffer */
-      if (fwrite (data, block_one, 1, queue->temp_file) != 1)
-        goto handle_error;
+      if (block_one > 0) {
+        GST_INFO_OBJECT (queue, "writing %u bytes", block_one);
+        /* write data to end of ring buffer */
+        if (fwrite (data, block_one, 1, queue->temp_file) != 1)
+          goto handle_error;
+      }
 
       if (FSEEK_FILE (queue->temp_file, 0))
         goto seek_failed;
 
-      data += block_one;
-      if (fwrite (data, block_two, 1, queue->temp_file) != 1)
-        goto handle_error;
+      if (block_two > 0) {
+        GST_INFO_OBJECT (queue, "writing %u bytes", block_two);
+        data += block_one;
+        if (fwrite (data, block_two, 1, queue->temp_file) != 1)
+          goto handle_error;
+      }
     }
 
     /* update the writing positions */
