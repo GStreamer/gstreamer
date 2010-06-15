@@ -3,6 +3,7 @@
  *                    2003 Colin Walters <cwalters@gnome.org>
  *                    2000,2005,2007 Wim Taymans <wim.taymans@gmail.com>
  *                    2007 Thiago Sousa Santos <thiagoss@lcc.ufcg.edu.br>
+ *                 SA 2010 ST-Ericsson <benjamin.gaignard@stericsson.com>
  *
  * gstqueue2.c:
  *
