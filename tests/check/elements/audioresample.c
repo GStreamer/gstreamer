@@ -110,9 +110,6 @@ setup_audioresample (int channels, int inrate, int outrate, int width,
   gst_pad_set_caps (mysinkpad, caps);
   gst_pad_use_fixed_caps (mysinkpad);
 
-  gst_pad_set_negotiable (mysinkpad, TRUE);
-  gst_pad_set_negotiable (mysrcpad, TRUE);
-
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
 
