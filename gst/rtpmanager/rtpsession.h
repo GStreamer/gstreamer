@@ -183,6 +183,9 @@ struct _RTPSession {
   GstClockTime  next_rtcp_check_time;
   GstClockTime  last_rtcp_send_time;
   gboolean      first_rtcp;
+  gboolean      allow_early;
+
+  GstClockTime  next_early_rtcp_time;
 
   gchar        *bye_reason;
   gboolean      sent_bye;
@@ -297,5 +300,10 @@ GstFlowReturn   rtp_session_schedule_bye           (RTPSession *sess, const gcha
 GstClockTime    rtp_session_next_timeout           (RTPSession *sess, GstClockTime current_time);
 GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTime current_time,
                                                     guint64 ntpnstime, GstClockTime running_time);
+
+/* request the transmittion of an early RTCP packet */
+void            rtp_session_request_early_rtcp     (RTPSession * sess, GstClockTime current_time,
+                                                    GstClockTimeDiff max_delay);
+
 
 #endif /* __RTP_SESSION_H__ */

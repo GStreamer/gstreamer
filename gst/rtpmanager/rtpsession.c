@@ -421,6 +421,7 @@ rtp_session_init (RTPSession * sess)
   rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_TOOL, "GStreamer");
 
   sess->first_rtcp = TRUE;
+  sess->allow_early = TRUE;
 
   GST_DEBUG ("%p: session using SSRC: %08x", sess, sess->source->ssrc);
 }
@@ -2223,6 +2224,7 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   sess->stats.bye_members = 1;
   sess->first_rtcp = TRUE;
   sess->sent_bye = FALSE;
+  sess->allow_early = TRUE;
 
   /* reschedule transmission */
   sess->last_rtcp_send_time = current_time;
@@ -2286,6 +2288,11 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
 
   RTP_SESSION_LOCK (sess);
 
+  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time)) {
+    result = sess->next_early_rtcp_time;
+    goto early_exit;
+  }
+
   result = sess->next_rtcp_check_time;
 
   GST_DEBUG ("current time: %" GST_TIME_FORMAT ", next :%" GST_TIME_FORMAT,
@@ -2326,7 +2333,11 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
 
   sess->next_rtcp_check_time = result;
 
-  GST_DEBUG ("next timeout: %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
+early_exit:
+
+  GST_DEBUG ("current time: %" GST_TIME_FORMAT
+      ", next time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_time), GST_TIME_ARGS (result));
   RTP_SESSION_UNLOCK (sess);
 
   return result;
@@ -2343,6 +2354,8 @@ typedef struct
   GstRTCPPacket packet;
   gboolean is_bye;
   gboolean has_sdes;
+  gboolean is_early;
+  gboolean may_suppress;
 } ReportData;
 
 static void
@@ -2390,6 +2403,9 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
   /* create a new buffer if needed */
   if (data->rtcp == NULL) {
     session_start_rtcp (sess, data);
+  } else if (data->is_early) {
+    /* Put a single RR or SR in minimal compound packets */
+    return;
   }
   if (gst_rtcp_packet_get_rb_count (packet) < GST_RTCP_MAX_RB_COUNT) {
     /* only report about other sender sources */
@@ -2521,6 +2537,10 @@ session_sdes (RTPSession * sess, ReportData * data)
       continue;
     type = gst_rtcp_sdes_name_to_type (field);
 
+    /* Early packets are minimal and only include the CNAME */
+    if (data->is_early && type != GST_RTCP_SDES_CNAME)
+      continue;
+
     if (type > GST_RTCP_SDES_END && type < GST_RTCP_SDES_PRIV) {
       gst_rtcp_packet_sdes_add_entry (packet, type, strlen (value),
           (const guint8 *) value);
@@ -2578,7 +2598,9 @@ static gboolean
 is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
 {
   GstClockTime new_send_time, elapsed;
-  gboolean result;
+
+  if (data->is_early && sess->next_early_rtcp_time < current_time)
+    goto early;
 
   /* no need to check yet */
   if (sess->next_rtcp_check_time > current_time) {
@@ -2603,18 +2625,40 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   if (current_time < new_send_time) {
     GST_DEBUG ("reconsider RTCP for %" GST_TIME_FORMAT,
         GST_TIME_ARGS (new_send_time));
-    result = FALSE;
     /* store new check time */
     sess->next_rtcp_check_time = new_send_time;
-  } else {
-    result = TRUE;
-    new_send_time = calculate_rtcp_interval (sess, FALSE, FALSE);
-
-    GST_DEBUG ("can send RTCP now, next interval %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (new_send_time));
-    sess->next_rtcp_check_time = current_time + new_send_time;
+    return FALSE;
   }
-  return result;
+
+early:
+
+  new_send_time = calculate_rtcp_interval (sess, FALSE, FALSE);
+
+  GST_DEBUG ("can send RTCP now, next interval %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (new_send_time));
+  sess->next_rtcp_check_time = current_time + new_send_time;
+
+  /* Apply the rules from RFC 4585 section 3.5.3 */
+  if (sess->stats.min_interval != 0 && !sess->first_rtcp) {
+    GstClockTimeDiff T_rr_current_interval = g_random_double_range (0.5, 1.5) *
+        sess->stats.min_interval;
+
+    /* This will caused the RTCP to be suppressed if no FB packets are added */
+    if (sess->last_rtcp_send_time + T_rr_current_interval >
+        sess->next_rtcp_check_time) {
+      GST_DEBUG ("RTCP packet could be suppressed min: %" GST_TIME_FORMAT
+          " last: %" GST_TIME_FORMAT
+          " + T_rr_current_interval: %" GST_TIME_FORMAT
+          " >  sess->next_rtcp_check_time: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (sess->stats.min_interval),
+          GST_TIME_ARGS (sess->last_rtcp_send_time),
+          GST_TIME_ARGS (T_rr_current_interval),
+          GST_TIME_ARGS (sess->next_rtcp_check_time));
+      data->may_suppress = TRUE;
+    }
+  }
+
+  return TRUE;
 }
 
 static void
@@ -2668,6 +2712,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.ntpnstime = ntpnstime;
   data.is_bye = FALSE;
   data.has_sdes = FALSE;
+  data.may_suppress = FALSE;
   data.running_time = running_time;
 
   own = sess->source;
@@ -2692,6 +2737,11 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
       (GHRFunc) remove_closing_sources, NULL);
 
+  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
+    data.is_early = TRUE;
+  else
+    data.is_early = FALSE;
+
   /* see if we need to generate SR or RR packets */
   if (is_rtcp_time (sess, current_time, &data)) {
     if (own->received_bye) {
@@ -2709,8 +2759,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (data.rtcp) {
     /* we keep track of the last report time in order to timeout inactive
      * receivers or senders */
-    sess->last_rtcp_send_time = data.current_time;
+    if (!data.is_early && !data.may_suppress)
+      sess->last_rtcp_send_time = data.current_time;
     sess->first_rtcp = FALSE;
+    sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
 
     /* add SDES for this source when not already added */
     if (!data.has_sdes)
@@ -2740,6 +2792,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     notify = TRUE;
     GST_DEBUG ("changed our SSRC to %08x", own->ssrc);
   }
+
+  sess->allow_early = TRUE;
+
   RTP_SESSION_UNLOCK (sess);
 
   if (notify)
@@ -2747,12 +2802,15 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* push out the RTCP packet */
   if (data.rtcp) {
+    gboolean do_not_suppress;
+
     /* Give the user a change to add its own packet */
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
-        data.rtcp, FALSE, NULL);
+        data.rtcp, data.is_early, &do_not_suppress);
 
-    /* close the RTCP packet */
-    gst_rtcp_buffer_end (data.rtcp);
+    if (sess->callbacks.send_rtcp && (do_not_suppress || !data.may_suppress)) {
+      /* close the RTCP packet */
+      gst_rtcp_buffer_end (data.rtcp);
 
     if (sess->callbacks.send_rtcp) {
       guint packet_size;
@@ -2766,10 +2824,73 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
           sess->callbacks.send_rtcp (sess, own, data.rtcp, sess->sent_bye,
           sess->send_rtcp_user_data);
     } else {
-      GST_DEBUG ("freeing packet");
+      GST_DEBUG ("freeing packet callback: %p"
+          " do_not_suppress: %d may_suppress: %d",
+          sess->callbacks.send_rtcp, do_not_suppress, data.may_suppress);
       gst_buffer_unref (data.rtcp);
     }
   }
 
   return result;
+}
+
+void
+rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
+    GstClockTimeDiff max_delay)
+{
+  GstClockTime T_dither_max;
+
+  /* Implements the algorithm described in RFC 4585 section 3.5.2 */
+
+  RTP_SESSION_LOCK (sess);
+
+  /* Check if already requested */
+  /*  RFC 4585 section 3.5.2 step 2 */
+  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
+    goto dont_send;
+
+  /* Ignore the request a scheduled packet will be in time anyway */
+  if (current_time + max_delay > sess->next_rtcp_check_time)
+    goto dont_send;
+
+  /*  RFC 4585 section 3.5.2 step 2b */
+  /* If the total sources is <=2, then there is only us and one peer */
+  if (sess->total_sources <= 2) {
+    T_dither_max = 0;
+  } else {
+    /* Divide by 2 because l = 0.5 */
+    T_dither_max = sess->next_rtcp_check_time - sess->last_rtcp_send_time;
+    T_dither_max /= 2;
+  }
+
+  /*  RFC 4585 section 3.5.2 step 3 */
+  if (current_time + T_dither_max > sess->next_rtcp_check_time)
+    goto dont_send;
+
+  /*  RFC 4585 section 3.5.2 step 4 */
+  if (sess->allow_early == FALSE)
+    goto dont_send;
+
+  if (T_dither_max) {
+    /* Schedule an early transmission later */
+    sess->next_early_rtcp_time = g_random_double () * T_dither_max +
+        current_time;
+  } else {
+    /* If no dithering, schedule it for NOW */
+    sess->next_early_rtcp_time = current_time;
+  }
+
+  RTP_SESSION_UNLOCK (sess);
+
+  /* notify app of need to send packet early
+   * and therefore of timeout change */
+  if (sess->callbacks.reconsider)
+    sess->callbacks.reconsider (sess, sess->reconsider_user_data);
+
+  return;
+
+dont_send:
+
+  RTP_SESSION_UNLOCK (sess);
+
 }
