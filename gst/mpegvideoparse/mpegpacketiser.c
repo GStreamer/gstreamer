@@ -319,7 +319,8 @@ handle_packet (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
        * previous buffer in order to handle this correctly. It would still be
        * possible to get it wrong if there was a PES packet smaller than 3 bytes
        * but anyone that does that can suck it.  */
-      if (offset >= p->tracked_offset) {
+      if ((offset >= p->tracked_offset)
+          && (p->cur_buf_ts != GST_CLOCK_TIME_NONE)) {
         /* sync word started within this buffer - take the cur ts */
         ts = p->cur_buf_ts;
         p->cur_buf_ts = GST_CLOCK_TIME_NONE;
