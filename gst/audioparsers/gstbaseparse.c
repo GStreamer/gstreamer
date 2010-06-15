@@ -2046,6 +2046,11 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
+  GST_DEBUG_OBJECT (parse, "seek to format %s, "
+      "start type %d at %" GST_TIME_FORMAT ", end type %d at %"
+      GST_TIME_FORMAT, gst_format_get_name (format),
+      cur_type, GST_TIME_ARGS (cur), stop_type, GST_TIME_ARGS (stop));
+
   /* no negative rates yet */
   if (rate < 0.0)
     goto negative_rate;
@@ -2066,17 +2071,33 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     }
   }
 
-  /* to much estimating going on to support this sensibly,
+  /* too much estimating going on to support this sensibly,
    * and no eos/end-of-segment loop handling either ... */
-  if (stop_type != GST_SEEK_TYPE_NONE || (flags & GST_SEEK_FLAG_SEGMENT))
+  if ((stop_type == GST_SEEK_TYPE_SET && stop != GST_CLOCK_TIME_NONE) ||
+      (stop_type != GST_SEEK_TYPE_NONE && stop_type != GST_SEEK_TYPE_SET) ||
+      (flags & GST_SEEK_FLAG_SEGMENT))
     goto wrong_type;
   stop = -1;
 
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
+  /* copy segment, we need this because we still need the old
+   * segment when we close the current segment. */
+  memcpy (&seeksegment, &parse->segment, sizeof (GstSegment));
+
+  GST_DEBUG_OBJECT (parse, "configuring seek");
+  gst_segment_set_seek (&seeksegment, rate, format, flags,
+      cur_type, cur, stop_type, stop, &update);
+
+  /* figure out the last position we need to play. If it's configured (stop !=
+   * -1), use that, else we play until the total duration of the file */
+  if ((stop = seeksegment.stop) == -1)
+    stop = seeksegment.duration;
+
   dstformat = GST_FORMAT_BYTES;
-  if (!gst_pad_query_convert (parse->srcpad, format, cur, &dstformat, &seekpos)) {
+  if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.last_stop,
+          &dstformat, &seekpos)) {
     GST_DEBUG_OBJECT (parse, "conversion failed");
     return FALSE;
   }
@@ -2108,19 +2129,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     GST_DEBUG_OBJECT (parse, "stopped streaming at %" G_GINT64_FORMAT,
         last_stop);
 
-    /* copy segment, we need this because we still need the old
-     * segment when we close the current segment. */
-    memcpy (&seeksegment, &parse->segment, sizeof (GstSegment));
-
-    GST_DEBUG_OBJECT (parse, "configuring seek");
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
-
-    /* figure out the last position we need to play. If it's configured (stop !=
-     * -1), use that, else we play until the total duration of the file */
-    if ((stop = seeksegment.stop) == -1)
-      stop = seeksegment.duration;
-
+    /* now commit to new position */
     parse->priv->offset = seekpos;
 
     /* prepare for streaming again */
