@@ -482,7 +482,7 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
     out_buf = gst_adapter_take_buffer (parse->adapter, parse->offset);
     GST_BUFFER_TIMESTAMP (out_buf) = parse->timestamp;
 
-    if (out_buf) {
+    if (G_LIKELY (out_buf)) {
       /* Set GST_BUFFER_FLAG_DELTA_UNIT if it's not an intra frame */
       if (!parse->intra_frame) {
         GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -491,12 +491,12 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
         guint64 diff;
 
         /* init */
-        if (!GST_CLOCK_TIME_IS_VALID (parse->last_report)) {
+        if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (parse->last_report))) {
           parse->last_report = timestamp;
         }
 
         /* insert on intra frames */
-        if (timestamp > parse->last_report)
+        if (G_LIKELY (timestamp > parse->last_report))
           diff = timestamp - parse->last_report;
         else
           diff = 0;
@@ -509,7 +509,7 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
             "interval since last config %" GST_TIME_FORMAT,
             GST_TIME_ARGS (diff));
 
-        if (GST_TIME_AS_SECONDS (diff) >= parse->interval) {
+        if (G_UNLIKELY (GST_TIME_AS_SECONDS (diff) >= parse->interval)) {
           /* we need to send config now first */
           GstBuffer *superbuf;
 
@@ -522,7 +522,7 @@ gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
           gst_buffer_unref (out_buf);
           out_buf = superbuf;
 
-          if (timestamp != -1) {
+          if (G_UNLIKELY (timestamp != -1)) {
             parse->last_report = timestamp;
           }
         }
