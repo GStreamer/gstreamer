@@ -777,6 +777,12 @@ gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      parse->last_report = GST_CLOCK_TIME_NONE;
+      gst_adapter_clear (parse->adapter);
+      parse->state = PARSE_NEED_START;
+      parse->offset = 0;
+      break;
     case GST_EVENT_EOS:
       if (parse->state == PARSE_VOP_FOUND) {
         /* If we've found the start of the VOP assume what's left in the
@@ -787,10 +793,10 @@ gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
       }
       /* fallthrough */
     default:
-      res = gst_pad_event_default (pad, event);
       break;
   }
 
+  res = gst_pad_event_default (pad, event);
   gst_object_unref (parse);
 
   return res;
