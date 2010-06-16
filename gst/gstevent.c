@@ -513,12 +513,12 @@ gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
 /**
  * gst_event_parse_new_segment:
  * @event: The event to query
- * @update: A pointer to the update flag of the segment
- * @rate: A pointer to the rate of the segment
- * @format: A pointer to the format of the newsegment values
- * @start: A pointer to store the start value in
- * @stop: A pointer to store the stop value in
- * @position: A pointer to store the stream time in
+ * @update: (out): A pointer to the update flag of the segment
+ * @rate: (out): A pointer to the rate of the segment
+ * @format: (out): A pointer to the format of the newsegment values
+ * @start: (out): A pointer to store the start value in
+ * @stop: (out): A pointer to store the stop value in
+ * @position: (out): A pointer to store the stream time in
  *
  * Get the update flag, rate, format, start, stop and position in the 
  * newsegment event. In general, gst_event_parse_new_segment_full() should
@@ -626,13 +626,13 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
 /**
  * gst_event_parse_new_segment_full:
  * @event: The event to query
- * @update: A pointer to the update flag of the segment
- * @rate: A pointer to the rate of the segment
- * @applied_rate: A pointer to the applied_rate of the segment
- * @format: A pointer to the format of the newsegment values
- * @start: A pointer to store the start value in
- * @stop: A pointer to store the stop value in
- * @position: A pointer to store the stream time in
+ * @update: (out): A pointer to the update flag of the segment
+ * @rate: (out): A pointer to the rate of the segment
+ * @applied_rate: (out): A pointer to the applied_rate of the segment
+ * @format: (out): A pointer to the format of the newsegment values
+ * @start: (out): A pointer to store the start value in
+ * @stop: (out): A pointer to store the stop value in
+ * @position: (out): A pointer to store the stream time in
  *
  * Get the update, rate, applied_rate, format, start, stop and 
  * position in the newsegment event. See gst_event_new_new_segment_full() 
@@ -700,7 +700,7 @@ gst_event_new_tag (GstTagList * taglist)
 /**
  * gst_event_parse_tag:
  * @event: a tag event
- * @taglist: pointer to metadata list
+ * @taglist: (out): pointer to metadata list
  *
  * Parses a tag @event and stores the results in the given @taglist location.
  */
@@ -754,10 +754,10 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
 /**
  * gst_event_parse_buffer_size:
  * @event: The event to query
- * @format: A pointer to store the format in
- * @minsize: A pointer to store the minsize in
- * @maxsize: A pointer to store the maxsize in
- * @async: A pointer to store the async-flag in
+ * @format: (out): A pointer to store the format in
+ * @minsize: (out): A pointer to store the minsize in
+ * @maxsize: (out): A pointer to store the maxsize in
+ * @async: (out): A pointer to store the async-flag in
  *
  * Get the format, minsize, maxsize and async-flag in the buffersize event.
  */
@@ -858,9 +858,9 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
 /**
  * gst_event_parse_qos:
  * @event: The event to query
- * @proportion: A pointer to store the proportion in
- * @diff: A pointer to store the diff in
- * @timestamp: A pointer to store the timestamp in
+ * @proportion: (out): A pointer to store the proportion in
+ * @diff: (out): A pointer to store the diff in
+ * @timestamp: (out): A pointer to store the timestamp in
  *
  * Get the proportion, diff and timestamp in the qos event. See
  * gst_event_new_qos() for more information about the different QoS values.
@@ -974,13 +974,13 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
 /**
  * gst_event_parse_seek:
  * @event: a seek event
- * @rate: result location for the rate
- * @format: result location for the stream format
- * @flags:  result location for the #GstSeekFlags
- * @start_type: result location for the #GstSeekType of the start position
- * @start: result location for the start postion expressed in @format
- * @stop_type:  result location for the #GstSeekType of the stop position
- * @stop: result location for the stop postion expressed in @format
+ * @rate: (out): result location for the rate
+ * @format: (out): result location for the stream format
+ * @flags:  (out): result location for the #GstSeekFlags
+ * @start_type: (out): result location for the #GstSeekType of the start position
+ * @start: (out): result location for the start postion expressed in @format
+ * @stop_type:  (out): result location for the #GstSeekType of the stop position
+ * @stop: (out): result location for the stop postion expressed in @format
  *
  * Parses a seek @event and stores the results in the given result locations.
  */
@@ -1076,7 +1076,7 @@ gst_event_new_latency (GstClockTime latency)
 /**
  * gst_event_parse_latency:
  * @event: The event to query
- * @latency: A pointer to store the latency in.
+ * @latency: (out): A pointer to store the latency in.
  *
  * Get the latency in the latency event.
  *
@@ -1147,11 +1147,11 @@ gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
 /**
  * gst_event_parse_step:
  * @event: The event to query
- * @format: A pointer to store the format in.
- * @amount: A pointer to store the amount in.
- * @rate: A pointer to store the rate in.
- * @flush: A pointer to store the flush boolean in.
- * @intermediate: A pointer to store the intermediate boolean in.
+ * @format: (out): A pointer to store the format in.
+ * @amount: (out): A pointer to store the amount in.
+ * @rate: (out): A pointer to store the rate in.
+ * @flush: (out): A pointer to store the flush boolean in.
+ * @intermediate: (out): A pointer to store the intermediate boolean in.
  *
  * Parse the step event.
  *
@@ -1216,7 +1216,7 @@ gst_event_new_sink_message (GstMessage * msg)
 /**
  * gst_event_parse_sink_message:
  * @event: The event to query
- * @msg: A pointer to store the #GstMessage in.
+ * @msg: (out): A pointer to store the #GstMessage in.
  *
  * Parse the sink-message event. Unref @msg after usage.
  *
