@@ -657,6 +657,50 @@ deserialize_xmp_rating (GstTagList * taglist, const gchar * gst_tag,
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, gst_tag, value, NULL);
 }
 
+static gchar *
+serialize_tiff_orientation (const GValue * value)
+{
+  const gchar *str;
+  gint num;
+
+  str = g_value_get_string (value);
+  if (str == NULL) {
+    GST_WARNING ("Failed to get image orientation tag value");
+    return NULL;
+  }
+
+  num = gst_tag_image_orientation_to_exif_value (str);
+  if (num == -1)
+    return NULL;
+
+  return g_strdup_printf ("%d", num);
+}
+
+static void
+deserialize_tiff_orientation (GstTagList * taglist, const gchar * gst_tag,
+    const gchar * xmp_tag, const gchar * str, GSList ** pending_tags)
+{
+  guint value;
+  const gchar *orientation = NULL;
+
+  if (sscanf (str, "%u", &value) != 1) {
+    GST_WARNING ("Failed to parse tiff:Orientation %s", str);
+    return;
+  }
+
+  if (value < 1 || value > 8) {
+    GST_WARNING ("Invalid tiff:Orientation tag %u (should be from 1 to 8), "
+        "ignoring", value);
+    return;
+  }
+
+  orientation = gst_tag_image_orientation_from_exif_value (value);
+  if (orientation == NULL)
+    return;
+  gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, gst_tag, orientation, NULL);
+}
+
+
 /* look at this page for addtional schemas
  * http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/XMP.html
  */
@@ -693,6 +737,8 @@ _init_xmp_tag_map ()
   _xmp_tag_add_simple_mapping (GST_TAG_DEVICE_MANUFACTURER, "tiff:Make", NULL,
       NULL);
   _xmp_tag_add_simple_mapping (GST_TAG_DEVICE_MODEL, "tiff:Model", NULL, NULL);
+  _xmp_tag_add_simple_mapping (GST_TAG_IMAGE_ORIENTATION, "tiff:Orientation",
+      serialize_tiff_orientation, deserialize_tiff_orientation);
 
   /* exif schema */
   _xmp_tag_add_simple_mapping (GST_TAG_GEO_LOCATION_LATITUDE,
