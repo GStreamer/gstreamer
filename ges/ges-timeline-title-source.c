@@ -31,7 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-video-title-source.h"
-//#include "ges-track-audio-title-source.h"
+#include "ges-track-audio-title-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineTitleSource, ges_tl_title_src,
@@ -203,13 +203,12 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
     ges_track_video_title_source_set_text (
         (GESTrackVideoTitleSource *) res, tfs->text);
   }
-#if 0
+
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_title_source_new ();
     if (tfs->mute)
       ges_track_object_set_active (res, FALSE);
   }
-#endif
 
   else {
     res = GES_TRACK_OBJECT (ges_track_title_source_new ());
