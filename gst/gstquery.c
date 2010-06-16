@@ -420,8 +420,8 @@ gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
 /**
  * gst_query_parse_position:
  * @query: a #GstQuery
- * @format: the storage for the #GstFormat of the position values (may be NULL)
- * @cur: the storage for the current position (may be NULL)
+ * @format: (out): the storage for the #GstFormat of the position values (may be NULL)
+ * @cur: (out): the storage for the current position (may be NULL)
  *
  * Parse a position query, writing the format into @format, and the position
  * into @cur, if the respective parameters are non-NULL.
@@ -492,8 +492,8 @@ gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
 /**
  * gst_query_parse_duration:
  * @query: a #GstQuery
- * @format: the storage for the #GstFormat of the duration value, or NULL.
- * @duration: the storage for the total duration, or NULL.
+ * @format: (out): the storage for the #GstFormat of the duration value, or NULL.
+ * @duration: (out): the storage for the total duration, or NULL.
  *
  * Parse a duration query answer. Write the format of the duration into @format,
  * and the value into @duration, if the respective variables are non-NULL.
@@ -572,9 +572,9 @@ gst_query_set_latency (GstQuery * query, gboolean live,
 /**
  * gst_query_parse_latency:
  * @query: a #GstQuery
- * @live: storage for live or NULL
- * @min_latency: the storage for the min latency or NULL
- * @max_latency: the storage for the max latency or NULL
+ * @live: (out): storage for live or NULL
+ * @min_latency: (out): the storage for the min latency or NULL
+ * @max_latency: (out): the storage for the max latency or NULL
  *
  * Parse a latency query answer.
  *
@@ -660,10 +660,10 @@ gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
 /**
  * gst_query_parse_convert:
  * @query: a #GstQuery
- * @src_format: the storage for the #GstFormat of the source value, or NULL
- * @src_value: the storage for the source value, or NULL
- * @dest_format: the storage for the #GstFormat of the destination value, or NULL
- * @dest_value: the storage for the destination value, or NULL
+ * @src_format: (out): the storage for the #GstFormat of the source value, or NULL
+ * @src_value: (out): the storage for the source value, or NULL
+ * @dest_format: (out): the storage for the #GstFormat of the destination value, or NULL
+ * @dest_value: (out): the storage for the destination value, or NULL
  *
  * Parse a convert query answer. Any of @src_format, @src_value, @dest_format,
  * and @dest_value may be NULL, in which case that value is omitted.
@@ -757,10 +757,10 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
 /**
  * gst_query_parse_segment:
  * @query: a #GstQuery
- * @rate: the storage for the rate of the segment, or NULL
- * @format: the storage for the #GstFormat of the values, or NULL
- * @start_value: the storage for the start value, or NULL
- * @stop_value: the storage for the stop value, or NULL
+ * @rate: (out): the storage for the rate of the segment, or NULL
+ * @format: (out): the storage for the #GstFormat of the values, or NULL
+ * @start_value: (out): the storage for the start value, or NULL
+ * @stop_value: (out): the storage for the stop value, or NULL
  *
  * Parse a segment query answer. Any of @rate, @format, @start_value, and
  * @stop_value may be NULL, which will cause this value to be omitted.
@@ -881,10 +881,10 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
 /**
  * gst_query_parse_seeking:
  * @query: a GST_QUERY_SEEKING type query #GstQuery
- * @format: the format to set for the @segment_start and @segment_end values
- * @seekable: the seekable flag to set
- * @segment_start: the segment_start to set
- * @segment_end: the segment_end to set
+ * @format: (out): the format to set for the @segment_start and @segment_end values
+ * @seekable: (out): the seekable flag to set
+ * @segment_start: (out): the segment_start to set
+ * @segment_end: (out): the segment_end to set
  *
  * Parse a seeking query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
@@ -1013,7 +1013,7 @@ gst_query_set_formatsv (GstQuery * query, gint n_formats, GstFormat * formats)
 /**
  * gst_query_parse_formats_length:
  * @query: a #GstQuery
- * @n_formats: the number of formats in this query.
+ * @n_formats: (out): the number of formats in this query.
  *
  * Parse the number of formats in the formats @query.
  *
@@ -1041,8 +1041,8 @@ gst_query_parse_formats_length (GstQuery * query, guint * n_formats)
 /**
  * gst_query_parse_formats_nth:
  * @query: a #GstQuery
- * @nth: the nth format to retrieve.
- * @format: a pointer to store the nth format
+ * @nth: (out): the nth format to retrieve.
+ * @format: (out): a pointer to store the nth format
  *
  * Parse the format query and retrieve the @nth format from it into
  * @format. If the list contains less elements than @nth, @format will be
@@ -1134,8 +1134,8 @@ gst_query_set_buffering_percent (GstQuery * query, gboolean busy, gint percent)
 /**
  * gst_query_parse_buffering_percent
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @busy: if buffering is busy
- * @percent: a buffering percent
+ * @busy: (out): if buffering is busy
+ * @percent: (out): a buffering percent
  *
  * Get the percentage of buffered data. This is a value between 0 and 100.
  * The @busy indicator is %TRUE when the buffering is in progress.
@@ -1184,10 +1184,10 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
 /**
  * gst_query_parse_buffering_stats:
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
- * @mode: a buffering mode
- * @avg_in: the average input rate
- * @avg_out: the average output rate
- * @buffering_left: amount of buffering time left
+ * @mode: (out): a buffering mode
+ * @avg_in: (out): the average input rate
+ * @avg_out: (out): the average output rate
+ * @buffering_left: (out): amount of buffering time left
  *
  * Extracts the buffering stats values from @query.
  *
@@ -1247,10 +1247,10 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
 /**
  * gst_query_parse_buffering_range:
  * @query: a GST_QUERY_SEEKING type query #GstQuery
- * @format: the format to set for the @segment_start and @segment_end values
- * @start: the start to set
- * @stop: the stop to set
- * @estimated_total: estimated total amount of download time
+ * @format: (out): the format to set for the @segment_start and @segment_end values
+ * @start: (out): the start to set
+ * @stop: (out): the stop to set
+ * @estimated_total: (out): estimated total amount of download time
  *
  * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
@@ -1331,7 +1331,7 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
 /**
  * gst_query_parse_uri:
  * @query: a #GstQuery
- * @uri: the storage for the current URI (may be NULL)
+ * @uri: (out): the storage for the current URI (may be NULL)
  *
  * Parse an URI query, writing the URI into @uri as a newly
  * allocated string, if the respective parameters are non-NULL.
