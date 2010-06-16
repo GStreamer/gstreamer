@@ -26,6 +26,7 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-video-title-source.h"
+#include "ges-track-video-background-source.h"
 
 G_DEFINE_TYPE (GESTrackVideoTitleSource, ges_track_video_title_src,
     GES_TYPE_TRACK_TITLE_SOURCE);
@@ -133,6 +134,9 @@ ges_track_video_title_src_create_element (GESTrackTitleSource * object)
   if (self->text) {
     g_object_set (text, "text", self->text, NULL);
   }
+
+  g_object_set (background, "pattern", (gint) GES_TRACK_VIDEO_BG_SRC_BLACK,
+      NULL);
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
 
