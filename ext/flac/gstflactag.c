@@ -364,6 +364,8 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
       if (buffer == NULL) {
         GST_ELEMENT_ERROR (tag, CORE, TOO_LAZY, (NULL),
             ("Error creating 12-byte buffer for padding block"));
+        ret = GST_FLOW_ERROR;
+        goto cleanup;
       }
       memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
       GST_BUFFER_DATA (buffer)[0] = 0x81;       /* 0x80 = Last metadata block, 
@@ -383,6 +385,7 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
       if (buffer == NULL) {
         GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
             ("Error converting tag list to vorbiscomment buffer"));
+        ret = GST_FLOW_ERROR;
         goto cleanup;
       }
       size = GST_BUFFER_SIZE (buffer) - 4;
@@ -393,6 +396,7 @@ gst_flac_tag_chain (GstPad * pad, GstBuffer * buffer)
          */
         GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
             ("Vorbis comment of size %d too long", size));
+        ret = GST_FLOW_ERROR;
         goto cleanup;
       }
 
