@@ -185,7 +185,7 @@ gst_pnmdec_chain_ascii (GstPnmdec * s, GstPad * src, GstBuffer * buf)
   g_scanner_destroy (scanner);
 
   /* If we didn't get the whole image, handle the last byte with care. */
-  if (i < target && b[bs - 1] > '0' && b[bs - 1] <= '9')
+  if (i && i < target && b[bs - 1] > '0' && b[bs - 1] <= '9')
     s->last_byte = GST_BUFFER_DATA (out)[--i];
 
   gst_buffer_unref (buf);
