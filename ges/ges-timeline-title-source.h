@@ -58,6 +58,8 @@ struct _GESTimelineTitleSource {
   gboolean mute;
   gchar *text;
   gchar *font_desc;
+  gint halign;
+  gint valign;
 };
 
 /**

@@ -39,6 +39,10 @@ G_DEFINE_TYPE (GESTimelineTitleSource, ges_tl_title_src,
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC
+#define DEFAULT_PROP_VALIGNMENT DEFAULT_VALIGNMENT
+#define DEFAULT_PROP_HALIGNMENT DEFAULT_HALIGNMENT
+#define GES_TIMELINE_TITLE_SRC_VALIGN_TYPE (ges_timeline_title_source_valign_get_type())
+#define GES_TIMELINE_TITLE_SRC_HALIGN_TYPE (ges_timeline_title_source_halign_get_type())
 
 enum
 {
@@ -46,6 +50,8 @@ enum
   PROP_MUTE,
   PROP_TEXT,
   PROP_FONT_DESC,
+  PROP_HALIGNMENT,
+  PROP_VALIGNMENT,
 };
 
 static void
@@ -58,9 +64,21 @@ static void
 ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
     font_desc);
 
+static void
+ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
+    GESTrackVideoTitleSrcVAlign);
+
+static void
+ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
+    GESTrackVideoTitleSrcHAlign);
+
 static GESTrackObject
     * ges_tl_title_src_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
+
+static GType ges_timeline_title_source_valign_get_type (void);
+
+static GType ges_timeline_title_source_halign_get_type (void);
 
 static void
 ges_tl_title_src_get_property (GObject * object, guint property_id,
@@ -77,6 +95,12 @@ ges_tl_title_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_FONT_DESC:
       g_value_set_string (value, tfs->font_desc);
+      break;
+    case PROP_HALIGNMENT:
+      g_value_set_enum (value, tfs->halign);
+      break;
+    case PROP_VALIGNMENT:
+      g_value_set_enum (value, tfs->valign);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -98,6 +122,12 @@ ges_tl_title_src_set_property (GObject * object, guint property_id,
       break;
     case PROP_FONT_DESC:
       ges_tl_title_src_set_font_desc (tfs, g_value_get_string (value));
+      break;
+    case PROP_HALIGNMENT:
+      ges_tl_title_src_set_halign (tfs, g_value_get_enum (value));
+      break;
+    case PROP_VALIGNMENT:
+      ges_tl_title_src_set_valign (tfs, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -155,8 +185,27 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GESTimelineTitleSource:valignment
+   *
+   * Vertical alignent of the text
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
+      g_param_spec_enum ("valignment", "vertical alignment",
+          "Vertical alignment of the text", GES_TIMELINE_TITLE_SRC_VALIGN_TYPE,
+          DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GESTimelineTitleSource:halignment
+   *
+   * Horizontal alignment of the text
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
+      g_param_spec_enum ("halignment", "horizontal alignment",
+          "Horizontal alignment of the text",
+          GES_TIMELINE_TITLE_SRC_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GESTimelineTitleSource:mute:
    *
@@ -176,6 +225,50 @@ ges_tl_title_src_init (GESTimelineTitleSource * self)
   GES_TIMELINE_OBJECT (self)->duration = 0;
   self->text = NULL;
   self->text = NULL;
+  self->halign = DEFAULT_PROP_HALIGNMENT;
+  self->valign = DEFAULT_PROP_VALIGNMENT;
+}
+
+static GType
+ges_timeline_title_source_valign_get_type (void)
+{
+  static GType text_overlay_valign_type = 0;
+  static gsize initialized = 0;
+  static const GEnumValue text_overlay_valign[] = {
+    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
+    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
+    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP, "top", "top"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&initialized)) {
+    text_overlay_valign_type =
+        g_enum_register_static ("GESTimelineTitleSourceVAlign",
+        text_overlay_valign);
+    g_once_init_leave (&initialized, 1);
+  }
+  return text_overlay_valign_type;
+}
+
+static GType
+ges_timeline_title_source_halign_get_type (void)
+{
+  static GType text_overlay_halign_type = 0;
+  static gsize initialized = 0;
+  static const GEnumValue text_overlay_halign[] = {
+    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT, "left", "left"},
+    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER, "center", "center"},
+    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&initialized)) {
+    text_overlay_halign_type =
+        g_enum_register_static ("GESTimelineTitleSourceHAlign",
+        text_overlay_halign);
+    g_once_init_leave (&initialized, 1);
+  }
+  return text_overlay_halign_type;
 }
 
 static void
@@ -214,6 +307,46 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_video_title_source_set_font_desc (GES_TRACK_VIDEO_TITLE_SOURCE
           (trackobject), self->font_desc);
+  }
+}
+
+static void
+ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
+    GESTrackVideoTitleSrcHAlign halign)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, halign:%d", self, halign);
+
+  self->halign = halign;
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+      ges_track_video_title_source_set_halignment (GES_TRACK_VIDEO_TITLE_SOURCE
+          (trackobject), self->halign);
+  }
+}
+
+static void
+ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
+    GESTrackVideoTitleSrcVAlign valign)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, valign:%d", self, valign);
+
+  self->valign = valign;
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+      ges_track_video_title_source_set_valignment (GES_TRACK_VIDEO_TITLE_SOURCE
+          (trackobject), self->valign);
   }
 }
 
