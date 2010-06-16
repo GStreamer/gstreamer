@@ -516,8 +516,8 @@ gst_v4l2src_negotiate (GstBaseSrc * basesrc)
         result = TRUE;
       } else if (gst_caps_is_fixed (caps)) {
         /* yay, fixed caps, use those then */
-        gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
-        result = TRUE;
+        if (gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps))
+          result = TRUE;
       }
     }
     gst_caps_unref (caps);
