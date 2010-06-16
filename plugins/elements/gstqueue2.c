@@ -798,7 +798,11 @@ update_buffering (GstQueue2 * queue)
       GstFormat fmt = GST_FORMAT_BYTES;
       gint64 duration;
 
-      mode = GST_BUFFERING_DOWNLOAD;
+      if (QUEUE_IS_USING_RING_BUFFER (queue))
+        mode = GST_BUFFERING_TIMESHIFT;
+      else
+        mode = GST_BUFFERING_DOWNLOAD;
+
       if (queue->byte_in_rate > 0) {
         if (gst_pad_query_peer_duration (queue->sinkpad, &fmt, &duration))
           buffering_left =
