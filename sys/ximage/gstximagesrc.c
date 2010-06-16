@@ -389,7 +389,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         (BufferReturnFunc) (gst_ximage_src_return_buf));
     if (ximage == NULL) {
       GST_ELEMENT_ERROR (ximagesrc, RESOURCE, WRITE, (NULL),
-          ("could not create a %dx%d ximage", ximage->width, ximage->height));
+          ("could not create a %dx%d ximage", ximagesrc->width,
+              ximagesrc->height));
       g_mutex_unlock (ximagesrc->x_lock);
       return NULL;
     }
