@@ -38,12 +38,14 @@ G_DEFINE_TYPE (GESTimelineTitleSource, ges_tl_title_src,
     GES_TYPE_TIMELINE_SOURCE);
 
 #define DEFAULT_PROP_TEXT ""
+#define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC
 
 enum
 {
   PROP_0,
   PROP_MUTE,
   PROP_TEXT,
+  PROP_FONT_DESC,
 };
 
 static void
@@ -51,6 +53,10 @@ ges_tl_title_src_set_mute (GESTimelineTitleSource * self, gboolean mute);
 
 static void
 ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text);
+
+static void
+ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
+    font_desc);
 
 static GESTrackObject
     * ges_tl_title_src_create_track_object (GESTimelineObject * obj,
@@ -68,6 +74,9 @@ ges_tl_title_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_TEXT:
       g_value_set_string (value, tfs->text);
+      break;
+    case PROP_FONT_DESC:
+      g_value_set_string (value, tfs->font_desc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -87,6 +96,9 @@ ges_tl_title_src_set_property (GObject * object, guint property_id,
     case PROP_TEXT:
       ges_tl_title_src_set_text (tfs, g_value_get_string (value));
       break;
+    case PROP_FONT_DESC:
+      ges_tl_title_src_set_font_desc (tfs, g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -99,6 +111,8 @@ ges_tl_title_src_dispose (GObject * object)
 
   if (self->text)
     g_free (self->text);
+  if (self->font_desc)
+    g_free (self->font_desc);
 
   G_OBJECT_CLASS (ges_tl_title_src_parent_class)->dispose (object);
 }
@@ -131,6 +145,19 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
           DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
+   * GESTimelineTitleSource:font-dec
+   *
+   * Pango font description string
+   */
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
+      g_param_spec_string ("font-desc", "font description",
+          "Pango font description of font to be used for rendering. "
+          "See documentation of pango_font_description_from_string "
+          "for syntax.", DEFAULT_PROP_FONT_DESC,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GESTimelineTitleSource:mute:
    *
    * Whether the sound will be played or not.
@@ -147,6 +174,7 @@ static void
 ges_tl_title_src_init (GESTimelineTitleSource * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
+  self->text = NULL;
   self->text = NULL;
 }
 
@@ -166,6 +194,26 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_video_title_source_set_text (GES_TRACK_VIDEO_TITLE_SOURCE
           (trackobject), self->text);
+  }
+}
+
+static void
+ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
+    font_desc)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
+
+  self->font_desc = g_strdup (font_desc);
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+      ges_track_video_title_source_set_font_desc (GES_TRACK_VIDEO_TITLE_SOURCE
+          (trackobject), self->font_desc);
   }
 }
 
