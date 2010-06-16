@@ -1503,82 +1503,39 @@ out_flushing:
   }
 }
 
-static guint64
-gst_queue2_get_free_space (GstQueue2 * queue)
-{
-  guint64 level, space;
-
-  if (queue->current->writing_pos > queue->current->max_reading_pos)
-    level = queue->current->writing_pos - queue->current->max_reading_pos;
-  else
-    level = 0;
-
-  if (queue->ring_buffer_max_size > level)
-    space = queue->ring_buffer_max_size - level;
-  else
-    space = 0;
-
-  return space;
-}
-
 static gboolean
 gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 {
-  GstBuffer *buf, *rem;
-  guint buf_size, rem_size;
-  guint rb_size;
   guint8 *data;
+  guint size, rb_size;
   guint64 writing_pos, new_writing_pos;
-  gint64 space, rb_space;
+  gint64 space;
   GstQueue2Range *range, *prev;
 
   writing_pos = queue->current->rb_writing_pos;
   rb_size = queue->ring_buffer_max_size;
 
-  rem = buffer;
+  size = GST_BUFFER_SIZE (buffer);
+  data = GST_BUFFER_DATA (buffer);
 
-  do {
-    rb_space = gst_queue2_get_free_space (queue);
-    if (rb_space > 0)
-      break;
+  while (size > 0) {
+    guint to_write;
 
-    GST_QUEUE2_WAIT_DEL_CHECK (queue, queue->sinkresult, out_flushing);
-  } while (TRUE);
-
-  /* loop if we can't write the whole buffer at once */
-  do {
     /* calculate the space in the ring buffer not used by data from the
      * current range */
+    while (QUEUE_MAX_BYTES (queue) <= queue->cur_level.bytes) {
+      /* wait until there is some free space */
+      GST_QUEUE2_WAIT_DEL_CHECK (queue, queue->sinkresult, out_flushing);
+    }
+    /* get the amount of space we have */
     space = QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes;
-    space = MIN (space, rb_space);
-
-    rem_size = GST_BUFFER_SIZE (rem);
-    /* don't try to process 0 size buffers */
-    if (!rem_size)
-      break;
 
     /* calculate if we need to split or if we can write the entire buffer now */
-    if (rem_size > space) {
-      buf_size = space;
-      buf = gst_buffer_create_sub (rem, 0, space);
-
-      rem_size -= space;
-      rem = gst_buffer_create_sub (rem, space, rem_size);
-      space = 0;
-    } else {
-      buf_size = rem_size;
-      buf = rem;
-
-      rem_size = 0;
-      rem = NULL;
-      space -= buf_size;
-    }
-
-    data = GST_BUFFER_DATA (buf);
+    to_write = MIN (size, space);
 
     /* the writing position in the ring buffer after writing (part or all of)
      * the buffer */
-    new_writing_pos = (writing_pos + buf_size) % rb_size;
+    new_writing_pos = (writing_pos + to_write) % rb_size;
 
     prev = NULL;
     range = queue->ranges;
@@ -1623,7 +1580,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
           }
         }
       } else {
-        guint64 new_wpos_virt = writing_pos + buf_size;
+        guint64 new_wpos_virt = writing_pos + to_write;
 
         if (new_wpos_virt <= range_data_start)
           goto next_range;
@@ -1665,16 +1622,16 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
       goto seek_failed;
 
     if (new_writing_pos > writing_pos) {
-      GST_INFO_OBJECT (queue, "writing %u bytes", buf_size);
+      GST_INFO_OBJECT (queue, "writing %u bytes", to_write);
       /* no wrapping, just write */
-      if (fwrite (data, buf_size, 1, queue->temp_file) != 1)
+      if (fwrite (data, to_write, 1, queue->temp_file) != 1)
         goto handle_error;
     } else {
       /* wrapping */
       guint block_one, block_two;
 
       block_one = rb_size - writing_pos;
-      block_two = buf_size - block_one;
+      block_two = to_write - block_one;
 
       if (block_one > 0) {
         GST_INFO_OBJECT (queue, "writing %u bytes", block_one);
@@ -1688,36 +1645,27 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 
       if (block_two > 0) {
         GST_INFO_OBJECT (queue, "writing %u bytes", block_two);
-        data += block_one;
-        if (fwrite (data, block_two, 1, queue->temp_file) != 1)
+        if (fwrite (data + block_one, block_two, 1, queue->temp_file) != 1)
           goto handle_error;
       }
     }
 
     /* update the writing positions */
-    GST_INFO_OBJECT (queue,
-        "wrote %u bytes to %" G_GUINT64_FORMAT " (%u bytes remaining to write)",
-        buf_size, writing_pos, rem_size);
-    queue->current->writing_pos += buf_size;
+    size -= to_write;
+    data += to_write;
+    queue->current->writing_pos += to_write;
     queue->current->rb_writing_pos = writing_pos = new_writing_pos;
     update_cur_level (queue, queue->current);
+
+    GST_INFO_OBJECT (queue,
+        "wrote %u bytes to %" G_GUINT64_FORMAT " (%u bytes remaining to write)",
+        to_write, writing_pos, size);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     GST_QUEUE2_SIGNAL_ADD (queue);
-
-    /* if we have a remainder of the buffer data, wait until there's space to
-     * write before looping */
-    if (rem_size) {
-      if (!gst_queue2_wait_free_space (queue))
-        goto out_flushing;
-
-      GST_DEBUG_OBJECT (queue, "flushed/space made");
-
-      rb_space = gst_queue2_get_free_space (queue);
-    }
-  } while (rem_size);
+  };
 
   return TRUE;
 
