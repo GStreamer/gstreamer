@@ -394,13 +394,19 @@ gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (size < 1 || size > 8) {
+  if (size > 8) {
     GST_ERROR_OBJECT (ebml->el,
         "Invalid integer element size %d at position %" G_GUINT64_FORMAT " (0x%"
         G_GINT64_MODIFIER "x)", size, gst_ebml_read_get_pos (ebml) - size,
         gst_ebml_read_get_pos (ebml) - size);
     return GST_FLOW_ERROR;
   }
+
+  if (size == 0) {
+    *num = 0;
+    return ret;
+  }
+
   *num = 0;
   while (size > 0) {
     *num = (*num << 8) | *data;
@@ -427,12 +433,17 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (size < 1 || size > 8) {
+  if (size > 8) {
     GST_ERROR_OBJECT (ebml->el,
         "Invalid integer element size %d at position %" G_GUINT64_FORMAT " (0x%"
         G_GINT64_MODIFIER "x)", size, gst_ebml_read_get_pos (ebml) - size,
         gst_ebml_read_get_pos (ebml) - size);
     return GST_FLOW_ERROR;
+  }
+
+  if (size == 0) {
+    *num = 0;
+    return ret;
   }
 
   *num = 0;
@@ -505,7 +516,7 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (size != 4 && size != 8 && size != 10) {
+  if (size != 0 && size != 4 && size != 8 && size != 10) {
     GST_ERROR_OBJECT (ebml->el,
         "Invalid float element size %d at position %" G_GUINT64_FORMAT " (0x%"
         G_GINT64_MODIFIER "x)", size, gst_ebml_read_get_pos (ebml) - size,
@@ -527,8 +538,11 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
     d = GDOUBLE_FROM_BE (d);
 
     *num = d;
-  } else {
+  } else if (size == 10) {
     *num = _ext2dbl (data);
+  } else {
+    /* size == 0 means a value of 0.0 */
+    *num = 0.0;
   }
 
   return ret;
