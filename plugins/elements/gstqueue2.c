@@ -107,8 +107,7 @@ enum
 #define DEFAULT_LOW_PERCENT        10
 #define DEFAULT_HIGH_PERCENT       99
 #define DEFAULT_TEMP_REMOVE        TRUE
-#define DEFAULT_USE_RING_BUFFER    FALSE
-#define DEFAULT_RING_BUFFER_MAX_SIZE (1024 * DEFAULT_BUFFER_SIZE)       /* 4 MB */
+#define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
 enum
 {
@@ -126,7 +125,6 @@ enum
   PROP_TEMP_TEMPLATE,
   PROP_TEMP_LOCATION,
   PROP_TEMP_REMOVE,
-  PROP_USE_RING_BUFFER,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_LAST
 };
@@ -355,27 +353,15 @@ gst_queue2_class_init (GstQueue2Class * klass)
           DEFAULT_TEMP_REMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstQueue2:use-ring-buffer
-   *
-   * When use-ring-buffer is set, buffer data into a ring buffer containing ranges
-   * of source data. Default FALSE.
-   *
-   * Since: 0.10.30
-   */
-  g_object_class_install_property (gobject_class, PROP_USE_RING_BUFFER,
-      g_param_spec_boolean ("use-ring-buffer", "Use a ring buffer",
-          "Use a ring buffer of size ring-buffer-max-size bytes",
-          DEFAULT_USE_RING_BUFFER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
    * GstQueue2:ring-buffer-max-size
    *
-   * The maximum size of the ring buffer in kilobytes. If set to 0 kB then the size
-   * is unlimited. Default 16 megabytes.
+   * The maximum size of the ring buffer in bytes. If set to 0, the ring
+   * buffer is disabled. Default 0.
    *
    * Since: 0.10.30
    */
   g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
-      g_param_spec_uint ("ring-buffer-max-size",
+      g_param_spec_uint64 ("ring-buffer-max-size",
           "Max. ring buffer size (bytes)",
           "Max. amount of data in the ring buffer (bytes, 0=unlimited)",
           DEFAULT_BUFFER_SIZE, G_MAXUINT, DEFAULT_RING_BUFFER_MAX_SIZE,
@@ -460,8 +446,9 @@ gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class)
   queue->temp_location_set = FALSE;
   queue->temp_remove = DEFAULT_TEMP_REMOVE;
 
-  queue->use_ring_buffer = DEFAULT_USE_RING_BUFFER;
+  queue->use_ring_buffer = FALSE;
   queue->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
+
   GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
 }
@@ -2821,11 +2808,9 @@ gst_queue2_set_property (GObject * object,
     case PROP_TEMP_REMOVE:
       queue->temp_remove = g_value_get_boolean (value);
       break;
-    case PROP_USE_RING_BUFFER:
-      queue->use_ring_buffer = g_value_get_boolean (value);
-      break;
     case PROP_RING_BUFFER_MAX_SIZE:
-      queue->ring_buffer_max_size = g_value_get_uint (value);
+      queue->ring_buffer_max_size = g_value_get_uint64 (value);
+      queue->use_ring_buffer = !!queue->ring_buffer_max_size;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2883,11 +2868,8 @@ gst_queue2_get_property (GObject * object,
     case PROP_TEMP_REMOVE:
       g_value_set_boolean (value, queue->temp_remove);
       break;
-    case PROP_USE_RING_BUFFER:
-      g_value_set_boolean (value, queue->use_ring_buffer);
-      break;
     case PROP_RING_BUFFER_MAX_SIZE:
-      g_value_set_uint (value, queue->ring_buffer_max_size);
+      g_value_set_uint64 (value, queue->ring_buffer_max_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
