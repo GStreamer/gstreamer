@@ -118,7 +118,7 @@ static void
 initSinTable (void)
 {
   gint32 *tptr, *tsinptr;
-  double i;
+  gint i;
 
   tsinptr = tptr = sintable;
 
@@ -132,7 +132,7 @@ initSinTable (void)
 static void
 initOffsTable (GstWarpTV * filter)
 {
-  int y;
+  gint y;
 
   for (y = 0; y < filter->height; y++) {
     filter->offstable[y] = y * filter->width;
@@ -143,11 +143,11 @@ static void
 initDistTable (GstWarpTV * filter)
 {
   gint32 halfw, halfh, *distptr;
-
+  gint x, y;
 #ifdef PS2
-  float x, y, m;
+  float m;
 #else
-  double x, y, m;
+  float m;
 #endif
 
   halfw = filter->width >> 1;
