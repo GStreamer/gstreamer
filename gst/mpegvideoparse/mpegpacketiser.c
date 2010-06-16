@@ -291,8 +291,7 @@ start_new_block (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
 static void
 handle_packet (MPEGPacketiser * p, guint64 offset, guint8 pack_type)
 {
-  GST_LOG ("handle_packet: offset %" G_GUINT64_FORMAT ", pack_type %2x", offset,
-      pack_type);
+  GST_LOG ("offset %" G_GUINT64_FORMAT ", pack_type %2x", offset, pack_type);
   switch (pack_type) {
     case MPEG_PACKET_SEQUENCE:
     case MPEG_PACKET_GOP:
