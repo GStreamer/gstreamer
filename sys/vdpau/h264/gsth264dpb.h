@@ -1,0 +1,74 @@
+/* GStreamer
+ *
+ * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifndef _GST_H264_DPB_H_
+#define _GST_H264_DPB_H_
+
+#include <glib-object.h>
+
+#include "../gstvdp/gstvdpvideobuffer.h"
+
+#include "gstvdph264frame.h"
+
+G_BEGIN_DECLS
+
+#define MAX_DPB_SIZE 16
+
+
+#define GST_TYPE_H264_DPB             (gst_h264_dpb_get_type ())
+#define GST_H264_DPB(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_H264_DPB, GstH264DPB))
+#define GST_H264_DPB_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_H264_DPB, GstH264DPBClass))
+#define GST_IS_H264_DPB(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_H264_DPB))
+#define GST_IS_H264_DPB_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_H264_DPB))
+#define GST_H264_DPB_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_H264_DPB, GstH264DPBClass))
+
+typedef struct _GstH264DPB GstH264DPB;
+typedef struct _GstH264DPBClass GstH264DPBClass;
+
+struct _GstH264DPB
+{
+  GObject parent_instance;
+
+  GstVdpH264Frame *frames[MAX_DPB_SIZE];  
+  guint n_frames;
+  
+  guint max_frames;
+
+  void (*output) (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
+};
+
+struct _GstH264DPBClass
+{
+  GObjectClass parent_class;
+};
+
+void
+gst_h264_dpb_fill_reference_frames (GstH264DPB *dpb, VdpReferenceFrameH264 reference_frames[16]);
+
+gboolean gst_h264_dpb_add (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
+void gst_h264_dpb_flush (GstH264DPB *dpb, gboolean output);
+
+void gst_h264_dpb_mark_sliding (GstH264DPB *dpb);
+
+GType gst_h264_dpb_get_type (void) G_GNUC_CONST;
+
+G_END_DECLS
+
+#endif /* _GST_H264_DPB_H_ */

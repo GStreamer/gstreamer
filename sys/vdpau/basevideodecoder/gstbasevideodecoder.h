@@ -95,8 +95,6 @@ struct _GstBaseVideoDecoder
   GstPad *srcpad;
   GstAdapter *input_adapter;
 
-  GList *frames;
-
   gboolean have_sync;
   gboolean discont;
 

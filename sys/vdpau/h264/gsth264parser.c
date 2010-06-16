@@ -374,6 +374,7 @@ gst_h264_parser_parse_sequence (GstH264Parser * parser, guint8 * data,
   seq->bit_depth_chroma_minus8 = 0;
   memset (seq->scaling_lists_4x4, 16, 96);
   memset (seq->scaling_lists_8x8, 16, 384);
+  seq->mb_adaptive_frame_field_flag = 0;
   seq->frame_crop_left_offset = 0;
   seq->frame_crop_right_offset = 0;
   seq->frame_crop_top_offset = 0;
@@ -417,7 +418,7 @@ gst_h264_parser_parse_sequence (GstH264Parser * parser, guint8 * data,
 
   READ_UE_ALLOWED (&reader, seq->log2_max_frame_num_minus4, 0, 12);
   /* calculate MaxFrameNum */
-  seq->MaxFrameNum = pow (2, seq->log2_max_frame_num_minus4 + 4);
+  seq->MaxFrameNum = 1 << (seq->log2_max_frame_num_minus4 + 4);
 
   READ_UE_ALLOWED (&reader, seq->pic_order_cnt_type, 0, 2);
   if (seq->pic_order_cnt_type == 0) {
@@ -753,40 +754,39 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264Slice * slice,
 
   m = &slice->dec_ref_pic_marking;
 
-  if (slice->nal_unit.IdrPicFlag) {
+  if (slice->nal_unit.IdrPicFlag == 0) {
     READ_UINT8 (reader, m->no_output_of_prior_pics_flag, 1);
     READ_UINT8 (reader, m->long_term_reference_flag, 1);
   } else {
     READ_UINT8 (reader, m->adaptive_ref_pic_marking_mode_flag, 1);
     if (m->adaptive_ref_pic_marking_mode_flag) {
       guint8 memory_management_control_operation;
+      guint i = 0;
 
       do {
         READ_UE_ALLOWED (reader, memory_management_control_operation, 0, 6);
+        m->ref_pic_marking[i].memory_management_control_operation =
+            memory_management_control_operation;
+
         if (memory_management_control_operation == 1 ||
-            memory_management_control_operation == 3) {
-          guint32 difference_of_pic_nums_minus1;
+            memory_management_control_operation == 3)
+          READ_UE (reader, m->ref_pic_marking[i].difference_of_pic_nums_minus1);
 
-          READ_UE (reader, difference_of_pic_nums_minus1);
-        }
-        if (memory_management_control_operation == 2) {
-          guint32 long_term_pic_num;
+        if (memory_management_control_operation == 2)
+          READ_UE (reader, m->ref_pic_marking[i].long_term_pic_num);
 
-          READ_UE (reader, long_term_pic_num);
-        }
         if (memory_management_control_operation == 3 ||
-            memory_management_control_operation == 6) {
-          guint32 long_term_frame_idx;
+            memory_management_control_operation == 6)
+          READ_UE (reader, m->ref_pic_marking[i].long_term_frame_idx);
 
-          READ_UE (reader, long_term_frame_idx);
-        }
-        if (memory_management_control_operation == 4) {
-          guint32 max_long_term_frame_idx_plus1;
+        if (memory_management_control_operation == 4)
+          READ_UE (reader, m->ref_pic_marking[i].max_long_term_frame_idx_plus1);
 
-          READ_UE (reader, max_long_term_frame_idx_plus1);
-        }
+        i++;
       }
       while (memory_management_control_operation != 0);
+
+      m->n_ref_pic_marking = i;
     }
   }
 

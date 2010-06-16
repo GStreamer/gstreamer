@@ -26,6 +26,7 @@
 #include "../basevideodecoder/gstbasevideodecoder.h"
 
 #include "gsth264parser.h"
+#include "gsth264dpb.h"
 
 G_BEGIN_DECLS
 
@@ -44,10 +45,18 @@ typedef struct _GstVdpH264DecClass GstVdpH264DecClass;
 struct _GstVdpH264Dec {
   GstBaseVideoDecoder base_video_decoder;
 
-  GstBuffer *codec_data;
   gboolean packetized;
   guint8 nal_length_size;
+
   GstH264Parser *parser;
+  GstH264DPB *dpb;
+
+  GstH264Sequence *sequence;
+  gboolean got_idr;
+  VdpDecoder decoder;
+  
+  guint poc_msb;
+  guint prev_poc_lsb;
 };
 
 struct _GstVdpH264DecClass {

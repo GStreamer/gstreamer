@@ -183,7 +183,6 @@ struct _GstH264Sequence
   guint32 pic_height_in_map_units_minus1;
   guint8 frame_mbs_only_flag;
 
-  /* if !frame_mbs_only_flag */
   guint8 mb_adaptive_frame_field_flag;
 
   guint8 direct_8x8_inference_flag;
@@ -256,6 +255,18 @@ struct _GstH264DecRefPicMarking
 
   /* else */
   guint8 adaptive_ref_pic_marking_mode_flag;
+
+  struct {
+    guint8 memory_management_control_operation;
+
+    union {
+      guint32 difference_of_pic_nums_minus1;
+      guint32 long_term_pic_num;
+      guint32 long_term_frame_idx;
+      guint32 max_long_term_frame_idx_plus1;
+    };
+  } ref_pic_marking[10];
+  guint8 n_ref_pic_marking;
 };
 
 struct _GstH264PredWeightTable

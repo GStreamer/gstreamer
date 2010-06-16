@@ -42,8 +42,13 @@ struct _GstVdpH264Frame
   GstVideoFrame video_frame;
 
   GstH264Slice slice_hdr;
-  
   GPtrArray *slices;
+
+  guint poc;
+  guint16 frame_num;
+  gboolean is_reference;
+  gboolean is_long_term;
+  gboolean output_needed;
 };
 
 struct _GstVdpH264FrameClass

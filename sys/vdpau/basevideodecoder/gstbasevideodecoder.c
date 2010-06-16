@@ -124,8 +124,6 @@ gst_base_video_decoder_new_frame (GstBaseVideoDecoder * base_video_decoder)
 static void
 gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
 {
-  GList *g;
-
   GST_DEBUG ("reset");
 
   base_video_decoder->discont = TRUE;
@@ -151,13 +149,6 @@ gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
   }
 
   base_video_decoder->have_src_caps = FALSE;
-
-  for (g = g_list_first (base_video_decoder->frames); g; g = g_list_next (g)) {
-    GstVideoFrame *frame = g->data;
-    gst_video_frame_unref (frame);
-  }
-  g_list_free (base_video_decoder->frames);
-  base_video_decoder->frames = NULL;
 
   GST_OBJECT_LOCK (base_video_decoder);
   base_video_decoder->earliest_time = GST_CLOCK_TIME_NONE;
@@ -1022,9 +1013,6 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
   GST_DEBUG ("pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
-  base_video_decoder->frames =
-      g_list_remove (base_video_decoder->frames, frame);
-
   gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   if (base_video_decoder->sink_clipping) {
@@ -1137,9 +1125,6 @@ gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
   GST_DEBUG ("skipping frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
-  base_video_decoder->frames =
-      g_list_remove (base_video_decoder->frames, frame);
-
   gst_video_frame_unref (frame);
 }
 
@@ -1170,9 +1155,6 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder,
       GST_TIME_ARGS (frame->presentation_timestamp));
   GST_DEBUG ("dts %" GST_TIME_FORMAT, GST_TIME_ARGS (frame->decode_timestamp));
   GST_DEBUG ("dist %d", frame->distance_from_sync);
-
-  base_video_decoder->frames = g_list_append (base_video_decoder->frames,
-      frame);
 
   running_time = gst_segment_to_running_time (&base_video_decoder->segment,
       GST_FORMAT_TIME, frame->presentation_timestamp);
@@ -1234,37 +1216,6 @@ gst_base_video_decoder_get_current_frame (GstBaseVideoDecoder *
   return base_video_decoder->current_frame;
 }
 
-
-GstVideoFrame *
-gst_base_video_decoder_get_oldest_frame (GstBaseVideoDecoder *
-    base_video_decoder)
-{
-  GList *g;
-
-  g = g_list_first (base_video_decoder->frames);
-
-  if (g == NULL)
-    return NULL;
-  return (GstVideoFrame *) (g->data);
-}
-
-GstVideoFrame *
-gst_base_video_decoder_get_frame (GstBaseVideoDecoder * base_video_decoder,
-    int frame_number)
-{
-  GList *g;
-
-  for (g = g_list_first (base_video_decoder->frames); g; g = g_list_next (g)) {
-    GstVideoFrame *frame = g->data;
-
-    if (frame->system_frame_number == frame_number) {
-      return frame;
-    }
-  }
-
-  return NULL;
-}
-
 void
 gst_base_video_decoder_update_src_caps (GstBaseVideoDecoder *
     base_video_decoder)
@@ -1295,7 +1246,6 @@ gst_base_video_decoder_get_property (GObject * object, guint property_id,
   }
 }
 
-/* GObject vmethod implementations */
 static void
 gst_base_video_decoder_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)

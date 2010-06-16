@@ -72,6 +72,21 @@ GST_BOILERPLATE_FULL (GstVdpH264Dec, gst_vdp_h264_dec, GstBaseVideoDecoder,
   } \
 }
 
+static GstFlowReturn
+gst_vdp_h264_dec_alloc_buffer (GstVdpH264Dec * h264_dec,
+    GstVdpVideoBuffer ** outbuf)
+{
+  GstVdpVideoSrcPad *vdp_pad;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (h264_dec);
+  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, outbuf);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  return GST_FLOW_OK;
+}
+
 static gboolean
 gst_vdp_h264_dec_set_sink_caps (GstBaseVideoDecoder * base_video_decoder,
     GstCaps * caps)
@@ -165,25 +180,354 @@ gst_vdp_h264_dec_shape_output (GstBaseVideoDecoder * base_video_decoder,
   return gst_vdp_video_src_pad_push (vdp_pad, GST_VDP_VIDEO_BUFFER (buf));
 }
 
+static void
+gst_vdp_h264_dec_output (GstH264DPB * dpb, GstVdpH264Frame * h264_frame)
+{
+  GST_DEBUG ("poc: %d", h264_frame->poc);
+
+  gst_video_frame_unref (GST_VIDEO_FRAME_CAST (h264_frame));
+}
+
+static guint
+gst_vdp_h264_dec_calculate_poc (GstVdpH264Dec * h264_dec, GstH264Slice * slice)
+{
+  GstH264Picture *pic;
+  GstH264Sequence *seq;
+
+  guint poc;
+
+  pic = slice->picture;
+  seq = pic->sequence;
+
+  if (seq->pic_order_cnt_type == 0) {
+    guint32 max_poc_cnt_lsb = 1 << (seq->log2_max_pic_order_cnt_lsb_minus4 + 4);
+
+    if ((slice->pic_order_cnt_lsb < h264_dec->prev_poc_lsb) &&
+        ((h264_dec->prev_poc_lsb - slice->pic_order_cnt_lsb) >=
+            (max_poc_cnt_lsb / 2)))
+      h264_dec->poc_msb = h264_dec->poc_msb + max_poc_cnt_lsb;
+
+    else if ((slice->pic_order_cnt_lsb > h264_dec->prev_poc_lsb) &&
+        ((slice->pic_order_cnt_lsb - h264_dec->prev_poc_lsb) >
+            (max_poc_cnt_lsb / 2)))
+      h264_dec->poc_msb = h264_dec->poc_msb - max_poc_cnt_lsb;
+
+    poc = h264_dec->poc_msb + slice->pic_order_cnt_lsb;
+
+    h264_dec->prev_poc_lsb = slice->pic_order_cnt_lsb;
+  }
+
+  return poc;
+}
+
+static void
+gst_vdp_h264_dec_init_frame_info (GstVdpH264Dec * h264_dec,
+    GstVdpH264Frame * h264_frame)
+{
+  GstH264Slice *slice;
+
+  slice = &h264_frame->slice_hdr;
+
+  h264_frame->poc = gst_vdp_h264_dec_calculate_poc (h264_dec, slice);
+
+  h264_frame->is_long_term = FALSE;
+
+  /* is reference */
+  if (slice->nal_unit.ref_idc == 0)
+    h264_frame->is_reference = FALSE;
+  else if (slice->nal_unit.IdrPicFlag) {
+    h264_frame->is_reference = TRUE;
+    h264_frame->is_long_term =
+        slice->dec_ref_pic_marking.long_term_reference_flag;
+  } else {
+    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag)
+      GST_ERROR ("FIXME: implement adaptive ref pic marking");
+    else
+      h264_frame->is_reference = TRUE;
+  }
+
+}
+
+static gboolean
+gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstVdpH264Frame * h264_frame)
+{
+  GstH264Slice *slice;
+  GstH264Sequence *seq;
+
+  h264_dec->poc_msb = 0;
+  h264_dec->prev_poc_lsb = 0;
+
+  slice = &h264_frame->slice_hdr;
+  if (slice->dec_ref_pic_marking.no_output_of_prior_pics_flag)
+    gst_h264_dpb_flush (h264_dec->dpb, FALSE);
+  else
+    gst_h264_dpb_flush (h264_dec->dpb, TRUE);
+
+
+  seq = slice->picture->sequence;
+  if (seq != h264_dec->sequence) {
+    GstVdpDevice *device;
+
+    gst_base_video_decoder_update_src_caps (GST_BASE_VIDEO_DECODER (h264_dec));
+
+    device = gst_vdp_video_src_pad_get_device
+        (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (h264_dec)));
+
+    if (device) {
+      GstVideoState *state;
+      VdpDecoderProfile profile;
+      VdpStatus status;
+
+      if (h264_dec->decoder != VDP_INVALID_HANDLE) {
+        device->vdp_decoder_destroy (h264_dec->decoder);
+        h264_dec->decoder = VDP_INVALID_HANDLE;
+      }
+
+      state =
+          gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (h264_dec));
+
+      switch (seq->profile_idc) {
+        case 66:
+          profile = VDP_DECODER_PROFILE_H264_BASELINE;
+          break;
+
+        case 77:
+          profile = VDP_DECODER_PROFILE_H264_MAIN;
+          break;
+
+        case 100:
+          profile = VDP_DECODER_PROFILE_H264_HIGH;
+          break;
+
+        default:
+          return FALSE;
+      }
+
+      status = device->vdp_decoder_create (device->device, profile,
+          state->width, state->height, seq->num_ref_frames, &h264_dec->decoder);
+      if (status != VDP_STATUS_OK) {
+        GST_ELEMENT_ERROR (h264_dec, RESOURCE, READ,
+            ("Could not create vdpau decoder"),
+            ("Error returned from vdpau was: %s",
+                device->vdp_get_error_string (status)));
+
+        return FALSE;
+      }
+    } else
+      return FALSE;
+
+    g_object_set (h264_dec->dpb, "num-ref-frames", seq->num_ref_frames, NULL);
+
+    h264_dec->sequence = seq;
+  }
+
+  return TRUE;
+}
+
+static VdpPictureInfoH264
+gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec,
+    GstVdpH264Frame * h264_frame)
+{
+  GstH264Slice *slice;
+  GstH264Picture *pic;
+  GstH264Sequence *seq;
+  VdpPictureInfoH264 info;
+
+  slice = &h264_frame->slice_hdr;
+  pic = slice->picture;
+  seq = pic->sequence;
+
+  info.slice_count = h264_frame->slices->len;
+
+  /* FIXME: we only handle frames for now */
+  info.field_order_cnt[0] = h264_frame->poc;
+  info.field_order_cnt[1] = h264_frame->poc;
+
+  info.is_reference = h264_frame->is_reference;
+
+  info.field_pic_flag = slice->field_pic_flag;
+  info.bottom_field_flag = slice->bottom_field_flag;
+
+  info.num_ref_frames = seq->num_ref_frames;
+  info.frame_mbs_only_flag = seq->frame_mbs_only_flag;
+  info.mb_adaptive_frame_field_flag = seq->mb_adaptive_frame_field_flag;
+  info.log2_max_frame_num_minus4 = seq->log2_max_frame_num_minus4;
+  info.pic_order_cnt_type = seq->pic_order_cnt_type;
+  info.log2_max_pic_order_cnt_lsb_minus4 =
+      seq->log2_max_pic_order_cnt_lsb_minus4;
+  info.delta_pic_order_always_zero_flag = seq->delta_pic_order_always_zero_flag;
+  info.direct_8x8_inference_flag = seq->direct_8x8_inference_flag;
+
+
+  info.constrained_intra_pred_flag = pic->constrained_intra_pred_flag;
+  info.weighted_pred_flag = pic->weighted_pred_flag;
+  info.weighted_bipred_idc = pic->weighted_bipred_idc;
+  info.transform_8x8_mode_flag = pic->transform_8x8_mode_flag;
+  info.chroma_qp_index_offset = pic->chroma_qp_index_offset;
+  info.second_chroma_qp_index_offset = pic->second_chroma_qp_index_offset;
+  info.pic_init_qp_minus26 = pic->pic_init_qp_minus26;
+  info.num_ref_idx_l0_active_minus1 = pic->num_ref_idx_l0_active_minus1;
+  info.num_ref_idx_l1_active_minus1 = pic->num_ref_idx_l1_active_minus1;
+  info.entropy_coding_mode_flag = pic->entropy_coding_mode_flag;
+  info.pic_order_present_flag = pic->pic_order_present_flag;
+  info.deblocking_filter_control_present_flag =
+      pic->deblocking_filter_control_present_flag;
+  info.redundant_pic_cnt_present_flag = pic->redundant_pic_cnt_present_flag;
+
+  memcpy (&info.scaling_lists_4x4, &pic->scaling_lists_4x4, 96);
+  memcpy (&info.scaling_lists_8x8, &pic->scaling_lists_8x8, 128);
+
+  gst_h264_dpb_fill_reference_frames (h264_dec->dpb, info.referenceFrames);
+
+  return info;
+}
+
+static VdpBitstreamBuffer *
+gst_vdp_h264_dec_create_bitstream_buffers (GstVdpH264Dec * h264_dec,
+    GstVdpH264Frame * h264_frame, guint * n_bufs)
+{
+  VdpBitstreamBuffer *bufs;
+
+  if (h264_dec->packetized) {
+    guint i;
+
+    bufs = g_new (VdpBitstreamBuffer, h264_frame->slices->len * 2);
+    *n_bufs = h264_frame->slices->len * 2;
+
+    for (i = 0; i < h264_frame->slices->len; i++) {
+      static const guint8 start_code[] = { 0x00, 0x00, 0x01 };
+      guint idx;
+      GstBuffer *buf;
+
+      idx = i * 2;
+      bufs[idx].bitstream = start_code;
+      bufs[idx].bitstream_bytes = 3;
+      bufs[idx].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
+
+      idx = idx + 1;
+      buf = GST_BUFFER_CAST (g_ptr_array_index (h264_frame->slices, i));
+      bufs[idx].bitstream = GST_BUFFER_DATA (buf) + h264_dec->nal_length_size;
+      bufs[idx].bitstream_bytes = GST_BUFFER_SIZE (buf) -
+          h264_dec->nal_length_size;
+      bufs[idx].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
+    }
+  }
+
+  else {
+    guint i;
+
+    bufs = g_new (VdpBitstreamBuffer, h264_frame->slices->len * 2);
+    *n_bufs = h264_frame->slices->len * 2;
+
+    for (i = 0; i < h264_frame->slices->len; i++) {
+      GstBuffer *buf;
+
+      buf = GST_BUFFER_CAST (g_ptr_array_index (h264_frame->slices, i));
+      bufs[i].bitstream = GST_BUFFER_DATA (buf);
+      bufs[i].bitstream_bytes = GST_BUFFER_SIZE (buf);
+      bufs[i].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
+    }
+  }
+
+  return bufs;
+}
+
 static GstFlowReturn
 gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame, GstClockTimeDiff deadline)
 {
+  GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
+
   GstVdpH264Frame *h264_frame;
+  GstH264Slice *slice;
+  GstH264Picture *pic;
+  GstH264Sequence *seq;
+
+  GstFlowReturn ret;
+  GstVdpVideoBuffer *outbuf;
+  VdpPictureInfoH264 info;
+  GstVdpDevice *device;
+  VdpVideoSurface surface;
+  VdpBitstreamBuffer *bufs;
+  guint n_bufs;
+  VdpStatus status;
 
   GST_DEBUG ("handle_frame");
 
   h264_frame = (GstVdpH264Frame *) frame;
 
-  GST_DEBUG ("frame_num: %d", h264_frame->slice_hdr.frame_num);
-  GST_DEBUG ("pic_order_cnt_type: %d",
-      h264_frame->slice_hdr.picture->sequence->pic_order_cnt_type);
-  GST_DEBUG ("pic_order_cnt_lsb: %d", h264_frame->slice_hdr.pic_order_cnt_lsb);
-  GST_DEBUG ("delta_pic_order_cnt_bottom: %d",
-      h264_frame->slice_hdr.delta_pic_order_cnt_bottom);
+  slice = &h264_frame->slice_hdr;
+  pic = slice->picture;
+  seq = pic->sequence;
 
-  gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+
+  if (slice->nal_unit.IdrPicFlag) {
+    if (gst_vdp_h264_dec_idr (h264_dec, h264_frame))
+      h264_dec->got_idr = TRUE;
+    else {
+      gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+      return GST_FLOW_OK;
+    }
+  }
+
+  /* check if we've got a IDR frame yet */
+  if (!h264_dec->got_idr) {
+    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+    return GST_FLOW_OK;
+  }
+
+  gst_vdp_h264_dec_init_frame_info (h264_dec, h264_frame);
+
+
+
+  /* decoding */
+  if ((ret = gst_vdp_h264_dec_alloc_buffer (h264_dec, &outbuf) != GST_FLOW_OK))
+    goto alloc_error;
+
+  device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
+  surface = GST_VDP_VIDEO_BUFFER (outbuf)->surface;
+
+  info = gst_vdp_h264_dec_fill_info (h264_dec, h264_frame);
+  bufs = gst_vdp_h264_dec_create_bitstream_buffers (h264_dec, h264_frame,
+      &n_bufs);
+
+  status = device->vdp_decoder_render (h264_dec->decoder, surface,
+      (VdpPictureInfo *) & info, n_bufs, bufs);
+
+  g_free (bufs);
+  if (status != VDP_STATUS_OK)
+    goto decode_error;
+
+  frame->src_buffer = GST_BUFFER_CAST (outbuf);
+
+
+
+  /* DPB handling */
+  if (slice->nal_unit.ref_idc != 0 && !slice->nal_unit.IdrPicFlag) {
+    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag)
+      GST_ERROR ("FIXME: implement adaptive ref pic marking");
+    else
+      gst_h264_dpb_mark_sliding (h264_dec->dpb);
+  }
+  gst_h264_dpb_add (h264_dec->dpb, h264_frame);
+
   return GST_FLOW_OK;
+
+alloc_error:
+  GST_ERROR_OBJECT (h264_dec, "Could not allocate output buffer");
+  gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+  return ret;
+
+decode_error:
+  GST_ELEMENT_ERROR (h264_dec, RESOURCE, READ,
+      ("Could not decode"),
+      ("Error returned from vdpau was: %s",
+          device->vdp_get_error_string (status)));
+
+  gst_buffer_unref (GST_BUFFER_CAST (outbuf));
+  gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+
+  return GST_FLOW_ERROR;
 }
 
 static gint
@@ -445,6 +789,11 @@ gst_vdp_h264_dec_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
 static gboolean
 gst_vdp_h264_dec_flush (GstBaseVideoDecoder * base_video_decoder)
 {
+  GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
+
+  h264_dec->got_idr = FALSE;
+  gst_h264_dpb_flush (h264_dec->dpb, FALSE);
+
   return TRUE;
 }
 
@@ -455,7 +804,14 @@ gst_vdp_h264_dec_start (GstBaseVideoDecoder * base_video_decoder)
 
   h264_dec->packetized = FALSE;
   h264_dec->nal_length_size = SYNC_CODE_SIZE;
+
+  h264_dec->got_idr = FALSE;
+  h264_dec->sequence = NULL;
+
   h264_dec->parser = g_object_new (GST_TYPE_H264_PARSER, NULL);
+
+  h264_dec->dpb = g_object_new (GST_TYPE_H264_DPB, NULL);
+  h264_dec->dpb->output = gst_vdp_h264_dec_output;
 
   return TRUE;
 }
@@ -465,7 +821,21 @@ gst_vdp_h264_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
 
+  GstVdpVideoSrcPad *vdp_pad;
+  GstVdpDevice *device;
+
   g_object_unref (h264_dec->parser);
+  g_object_unref (h264_dec->dpb);
+
+  vdp_pad =
+      GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD
+      (base_video_decoder));
+
+  if ((device = gst_vdp_video_src_pad_get_device (vdp_pad))) {
+
+    if (h264_dec->decoder != VDP_INVALID_HANDLE)
+      device->vdp_decoder_destroy (h264_dec->decoder);
+  }
 
   return TRUE;
 }
