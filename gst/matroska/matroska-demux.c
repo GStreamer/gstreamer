@@ -797,10 +797,8 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
 {
   guint8 *new_data = NULL;
   guint new_size = 0;
-
   guint8 *data = *data_out;
   guint size = *size_out;
-
   gboolean ret = TRUE;
 
   if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_ZLIB) {
@@ -945,7 +943,8 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       memcpy (new_data + enc->comp_settings_length, data, size);
     }
   } else {
-    g_assert_not_reached ();
+    GST_ERROR ("invalid compression algorithm %d", algo);
+    ret = FALSE;
   }
 
 out:
@@ -2721,7 +2720,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
           return ret;
-        g_assert (id == GST_EBML_ID_EBMLREADVERSION);
         if (num != GST_EBML_VERSION) {
           GST_ERROR_OBJECT (ebml, "Unsupported EBML version %" G_GUINT64_FORMAT,
               num);
@@ -2739,7 +2737,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
           return ret;
-        g_assert (id == GST_EBML_ID_EBMLMAXSIZELENGTH);
         if (num > sizeof (guint64)) {
           GST_ERROR_OBJECT (ebml,
               "Unsupported EBML maximum size %" G_GUINT64_FORMAT, num);
@@ -2756,7 +2753,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
           return ret;
-        g_assert (id == GST_EBML_ID_EBMLMAXIDLENGTH);
         if (num > sizeof (guint32)) {
           GST_ERROR_OBJECT (ebml,
               "Unsupported EBML maximum ID %" G_GUINT64_FORMAT, num);
@@ -2772,7 +2768,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         ret = gst_ebml_read_ascii (ebml, &id, &text);
         if (ret != GST_FLOW_OK)
           return ret;
-        g_assert (id == GST_EBML_ID_DOCTYPE);
 
         GST_DEBUG_OBJECT (ebml, "EbmlDocType: %s", GST_STR_NULL (text));
 
@@ -2788,7 +2783,6 @@ gst_matroska_demux_parse_header (GstMatroskaDemux * demux, GstEbmlRead * ebml)
         ret = gst_ebml_read_uint (ebml, &id, &num);
         if (ret != GST_FLOW_OK)
           return ret;
-        g_assert (id == GST_EBML_ID_DOCTYPEREADVERSION);
         version = num;
         GST_DEBUG_OBJECT (ebml, "EbmlReadVersion: %" G_GUINT64_FORMAT, num);
         break;
@@ -5441,7 +5435,8 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
           GST_READ_CHECK (gst_matroska_demux_take (demux, read, &ebml));
           ret = gst_matroska_demux_parse_index (demux, &ebml);
           /* only push based; delayed index building */
-          if (demux->state == GST_MATROSKA_DEMUX_STATE_SEEK) {
+          if (ret == GST_FLOW_OK
+              && demux->state == GST_MATROSKA_DEMUX_STATE_SEEK) {
             GstEvent *event;
 
             GST_OBJECT_LOCK (demux);
@@ -6100,14 +6095,12 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     *codec_name = g_strdup ("Microsoft MPEG-4 v.3");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG1) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG2)) {
-    gint mpegversion = -1;
+    gint mpegversion;
 
     if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG1))
       mpegversion = 1;
-    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG2))
-      mpegversion = 2;
     else
-      g_assert_not_reached ();
+      mpegversion = 2;
 
     caps = gst_caps_new_simple ("video/mpeg",
         "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -6360,30 +6353,26 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3)) {
-    gint layer = -1;
+    gint layer;
 
     if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1))
       layer = 1;
     else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2))
       layer = 2;
-    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L3))
-      layer = 3;
     else
-      g_assert_not_reached ();
+      layer = 3;
 
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer, NULL);
     *codec_name = g_strdup_printf ("MPEG-1 layer %d", layer);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE)) {
-    gint endianness = -1;
+    gint endianness;
 
     if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_BE))
       endianness = G_BIG_ENDIAN;
-    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_INT_LE))
-      endianness = G_LITTLE_ENDIAN;
     else
-      g_assert_not_reached ();
+      endianness = G_LITTLE_ENDIAN;
 
     caps = gst_caps_new_simple ("audio/x-raw-int",
         "width", G_TYPE_INT, audiocontext->bitdepth,
