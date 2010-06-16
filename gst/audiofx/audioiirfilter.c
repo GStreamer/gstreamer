@@ -161,19 +161,17 @@ gst_audio_iir_filter_update_coefficients (GstAudioIIRFilter * self,
     self->b = vb;
   }
 
-  if (self->a && self->a->n_values > 0)
+  if (self->a && self->a->n_values > 0) {
     a = g_new (gdouble, self->a->n_values);
-  if (self->b && self->b->n_values > 0)
-    b = g_new (gdouble, self->b->n_values);
 
-  if (self->a) {
     for (i = 0; i < self->a->n_values; i++) {
       GValue *v = g_value_array_get_nth (self->a, i);
       a[i] = g_value_get_double (v);
     }
   }
 
-  if (self->b) {
+  if (self->b && self->b->n_values > 0) {
+    b = g_new (gdouble, self->b->n_values);
     for (i = 0; i < self->b->n_values; i++) {
       GValue *v = g_value_array_get_nth (self->b, i);
       b[i] = g_value_get_double (v);
