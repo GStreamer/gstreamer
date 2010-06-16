@@ -1297,11 +1297,6 @@ gst_queue2_read_item_from_file (GstQueue2 * queue)
     switch (ret) {
       case GST_FLOW_OK:
         item = GST_MINI_OBJECT_CAST (buffer);
-        queue->current->reading_pos += DEFAULT_BUFFER_SIZE;
-        if (QUEUE_IS_USING_RING_BUFFER (queue))
-          queue->current->rb_reading_pos =
-              (queue->current->rb_reading_pos +
-              DEFAULT_BUFFER_SIZE) % queue->ring_buffer_max_size;
         break;
       case GST_FLOW_UNEXPECTED:
         item = GST_MINI_OBJECT_CAST (gst_event_new_eos ());
@@ -2530,8 +2525,7 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
 
   GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   length = (length == -1) ? DEFAULT_BUFFER_SIZE : length;
-  queue->current->reading_pos = offset =
-      (offset == -1) ? queue->current->reading_pos : offset;
+  offset = (offset == -1) ? queue->current->reading_pos : offset;
 
   GST_DEBUG_OBJECT (queue,
       "Getting range: offset %" G_GUINT64_FORMAT ", length %u", offset, length);
