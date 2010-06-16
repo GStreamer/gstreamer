@@ -212,6 +212,15 @@ create_timeline (int nbargs, gchar ** argv)
 
     }
 
+    else if (!g_strcmp0 ("+title", source)) {
+      obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
+
+      g_object_set (obj, "duration", duration, "text", arg0, NULL);
+
+      g_print ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n",
+          arg0, GST_TIME_ARGS (duration));
+    }
+
     else {
       gchar *uri;
       guint64 inpoint;
