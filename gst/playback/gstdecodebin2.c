@@ -1972,7 +1972,19 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
 
-  caps = gst_pad_get_caps_reffed (pad);
+  /* first check the pad caps, if this is set, we are positively sure it is
+   * fixed and exactly what the element will produce. */
+  GST_OBJECT_LOCK (pad);
+  if ((caps = GST_PAD_CAPS (pad)))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (pad);
+
+  /* then use the getcaps function if we don't have caps. These caps might not
+   * be fixed in some cases, in which case analyze_new_pad will set up a
+   * notify::caps signal to continue autoplugging. */
+  if (caps == NULL)
+    caps = gst_pad_get_caps_reffed (pad);
+
   analyze_new_pad (dbin, element, pad, caps, chain);
   if (caps)
     gst_caps_unref (caps);
