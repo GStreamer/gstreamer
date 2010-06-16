@@ -523,6 +523,20 @@ find_range (GstQueue2 * queue, guint64 offset, guint64 length)
   return range;
 }
 
+static void
+update_cur_level (GstQueue2 * queue, GstQueue2Range * range)
+{
+  guint64 max_reading_pos, writing_pos;
+
+  writing_pos = range->writing_pos;
+  max_reading_pos = range->max_reading_pos;
+
+  if (writing_pos > max_reading_pos)
+    queue->cur_level.bytes = writing_pos - max_reading_pos;
+  else
+    queue->cur_level.bytes = 0;
+}
+
 /* make a new range for @offset or reuse an existing range */
 static GstQueue2Range *
 add_range (GstQueue2 * queue, guint64 offset)
@@ -572,6 +586,9 @@ add_range (GstQueue2 * queue, guint64 offset)
       queue->ranges = range;
   }
   debug_ranges (queue);
+
+  /* update the stats for this range */
+  update_cur_level (queue, range);
 
   return range;
 }
@@ -933,20 +950,6 @@ update_out_rates (GstQueue2 * queue)
       queue->byte_out_rate, GST_TIME_ARGS (queue->cur_level.rate_time));
 }
 
-static void
-update_cur_level (GstQueue2 * queue, GstQueue2Range * range)
-{
-  guint64 max_reading_pos, writing_pos;
-
-  writing_pos = range->writing_pos;
-  max_reading_pos = range->max_reading_pos;
-
-  if (writing_pos > max_reading_pos)
-    queue->cur_level.bytes = writing_pos - max_reading_pos;
-  else
-    queue->cur_level.bytes = 0;
-}
-
 #ifdef HAVE_FSEEKO
 #define FSEEK_FILE(file,offset)  (fseeko (file, (off_t) offset, SEEK_SET) != 0)
 #elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
@@ -981,11 +984,6 @@ gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
       "writing %" G_GUINT64_FORMAT ", max_reading %" G_GUINT64_FORMAT,
       writing_pos, max_reading_pos);
 
-  if (writing_pos > max_reading_pos)
-    queue->cur_level.bytes = writing_pos - max_reading_pos;
-  else
-    queue->cur_level.bytes = 0;
-
   /* try to merge with next range */
   while ((next = queue->current->next)) {
     GST_INFO_OBJECT (queue,
@@ -1008,6 +1006,7 @@ gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
     debug_ranges (queue);
   }
   queue->current->writing_pos = writing_pos;
+  update_cur_level (queue, queue->current);
 
   return TRUE;
 
@@ -1065,6 +1064,9 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   GST_QUEUE2_MUTEX_UNLOCK (queue);
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
+
+  if (res)
+    queue->current = add_range (queue, offset);
 
   return res;
 }
@@ -1498,6 +1500,24 @@ out_flushing:
   }
 }
 
+static guint64
+gst_queue2_get_free_space (GstQueue2 * queue)
+{
+  guint64 level, space;
+
+  if (queue->current->writing_pos > queue->current->max_reading_pos)
+    level = queue->current->writing_pos - queue->current->max_reading_pos;
+  else
+    level = 0;
+
+  if (queue->ring_buffer_max_size > level)
+    space = queue->ring_buffer_max_size - level;
+  else
+    space = 0;
+
+  return space;
+}
+
 static gboolean
 gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 {
@@ -1515,10 +1535,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
   rem = buffer;
 
   do {
-    rb_space =
-        queue->ring_buffer_max_size - (queue->current->writing_pos -
-        queue->current->reading_pos);
-
+    rb_space = gst_queue2_get_free_space (queue);
     if (rb_space > 0)
       break;
 
@@ -1682,13 +1699,13 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
         buf_size, writing_pos, rem_size);
     queue->current->writing_pos += buf_size;
     queue->current->rb_writing_pos = writing_pos = new_writing_pos;
-
-    GST_QUEUE2_SIGNAL_ADD (queue);
-
     update_cur_level (queue, queue->current);
+
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
         queue->cur_level.bytes, MIN (queue->max_level.bytes,
             queue->ring_buffer_max_size));
+
+    GST_QUEUE2_SIGNAL_ADD (queue);
 
     /* if we have a remainder of the buffer data, wait until there's space to
      * write before looping */
@@ -1698,9 +1715,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 
       GST_DEBUG_OBJECT (queue, "flushed/space made");
 
-      rb_space =
-          queue->ring_buffer_max_size - (queue->current->writing_pos -
-          queue->current->reading_pos);
+      rb_space = gst_queue2_get_free_space (queue);
     }
   } while (rem_size);
 
@@ -2337,8 +2352,12 @@ gst_queue2_handle_src_event (GstPad * pad, GstEvent * event)
         /* now unblock the getrange function */
         GST_QUEUE2_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_OK;
-        if (queue->current)
+        if (queue->current) {
+          /* forget the highest read offset, we'll calculate a new one when we
+           * get the next getrange request. We need to do this in order to reset
+           * the buffering percentage */
           queue->current->max_reading_pos = 0;
+        }
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         /* when using a temp file, we eat the event */
