@@ -116,6 +116,7 @@ GST_START_TEST (test_title_source_in_layer)
   GESTrackObject *trobj;
   GESTimelineTitleSource *source;
   gchar *text;
+  gint halign, valign;
 
   ges_init ();
 
@@ -135,7 +136,7 @@ GST_START_TEST (test_title_source_in_layer)
   ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) layer,
       (GESTimelineObject *) source, 0);
 
-  /* specifically test the vpattern property */
+  /* specifically test the text property */
   g_object_set (source, "text", (gchar *) "some text", NULL);
   g_object_get (source, "text", &text, NULL);
   assert_equals_string ("some text", text);
@@ -143,8 +144,26 @@ GST_START_TEST (test_title_source_in_layer)
   trobj =
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
 
-  text = ((GESTrackVideoTitleSource *) trobj)->text;
-  assert_equals_string ("some text", text);
+  /* test the font-desc property */
+  g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
+  g_object_get (source, "font-desc", &text, NULL);
+  assert_equals_string ("sans 72", text);
+
+  text = ((GESTrackVideoTitleSource *) trobj)->font_desc;
+  assert_equals_string ("sans 72", text);
+
+  /* test halign and valign */
+  g_object_set (source, "halignment", (gint)
+      GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT,
+      "valignment", (gint) GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP, NULL);
+  g_object_get (source, "halignment", &halign, "valignment", &valign, NULL);
+  assert_equals_int (halign, GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP);
+
+  halign = ((GESTrackVideoTitleSource *) trobj)->halign;
+  valign = ((GESTrackVideoTitleSource *) trobj)->valign;
+  assert_equals_int (halign, GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP);
 
   GST_DEBUG ("removing the source");
 
