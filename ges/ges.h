@@ -47,6 +47,7 @@
 #include <ges/ges-track-audio-background-source.h>
 #include <ges/ges-track-title-source.h>
 #include <ges/ges-track-video-title-source.h>
+#include <ges/ges-track-audio-title-source.h>
 
 #include <ges/ges-utils.h>
 
