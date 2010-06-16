@@ -6432,7 +6432,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     }
   } else if (g_str_has_prefix (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC)) {
     GstBuffer *priv = NULL;
-    gint mpegversion = -1;
+    gint mpegversion;
     gint rate_idx, profile;
     guint8 *data = NULL;
 
@@ -6472,35 +6472,37 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
       data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
       GST_BUFFER_SIZE (priv) = 2;
-    }
 
-    if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2,
-            strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2))) {
-      mpegversion = 2;
-    } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4,
-            strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4))) {
-      mpegversion = 4;
+      if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2,
+              strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2))) {
+        mpegversion = 2;
+      } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4,
+              strlen (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4))) {
+        mpegversion = 4;
 
-      if (g_strrstr (codec_id, "SBR")) {
-        /* HE-AAC (aka SBR AAC) */
-        audiocontext->samplerate *= 2;
-        rate_idx = aac_rate_idx (audiocontext->samplerate);
-        data[2] = AAC_SYNC_EXTENSION_TYPE >> 3;
-        data[3] = ((AAC_SYNC_EXTENSION_TYPE & 0x07) << 5) | 5;
-        data[4] = (1 << 7) | (rate_idx << 3);
-        GST_BUFFER_SIZE (priv) = 5;
+        if (g_strrstr (codec_id, "SBR")) {
+          /* HE-AAC (aka SBR AAC) */
+          audiocontext->samplerate *= 2;
+          rate_idx = aac_rate_idx (audiocontext->samplerate);
+          data[2] = AAC_SYNC_EXTENSION_TYPE >> 3;
+          data[3] = ((AAC_SYNC_EXTENSION_TYPE & 0x07) << 5) | 5;
+          data[4] = (1 << 7) | (rate_idx << 3);
+          GST_BUFFER_SIZE (priv) = 5;
+        }
+      } else {
+        gst_buffer_unref (priv);
+        priv = NULL;
+        GST_ERROR ("Unknown AAC profile and no codec private data");
       }
-    } else {
-      g_assert_not_reached ();
     }
 
-    caps = gst_caps_new_simple ("audio/mpeg",
-        "mpegversion", G_TYPE_INT, mpegversion,
-        "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     if (priv) {
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, mpegversion,
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
+      *codec_name = g_strdup_printf ("MPEG-%d AAC audio", mpegversion);
     }
-    *codec_name = g_strdup_printf ("MPEG-%d AAC audio", mpegversion);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TTA)) {
     caps = gst_caps_new_simple ("audio/x-tta",
         "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
