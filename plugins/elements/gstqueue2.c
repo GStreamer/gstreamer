@@ -99,6 +99,8 @@ enum
 #define QUEUE_IS_USING_RING_BUFFER(queue) ((queue)->use_ring_buffer)    /* for consistency with the above macro */
 #define QUEUE_IS_USING_QUEUE(queue) (!QUEUE_IS_USING_TEMP_FILE(queue) && !QUEUE_IS_USING_RING_BUFFER (queue))
 
+#define QUEUE_MAX_BYTES(queue) MIN((queue)->max_level.bytes, (queue)->ring_buffer_max_size)
+
 /* default property values */
 #define DEFAULT_MAX_SIZE_BUFFERS   100  /* 100 buffers */
 #define DEFAULT_MAX_SIZE_BYTES     (2 * 1024 * 1024)    /* 2 MB */
@@ -1089,8 +1091,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
     update_cur_pos (queue, queue->current, offset + length);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
-        queue->cur_level.bytes, MIN (queue->max_level.bytes,
-            queue->ring_buffer_max_size));
+        queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     /* we have a range for offset */
     GST_DEBUG_OBJECT (queue,
@@ -1183,6 +1184,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   guint64 file_offset;
   guint block_length, remaining, read_length;
   gint64 read_return;
+  guint64 rb_size;
 
   /* allocate the output buffer of the requested size */
   buf = gst_buffer_new_and_alloc (length);
@@ -1190,6 +1192,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
       offset);
+
+  rb_size = queue->ring_buffer_max_size;
 
   remaining = length;
   while (remaining > 0) {
@@ -1211,13 +1215,13 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
             ", level %" G_GUINT64_FORMAT,
             queue->current->reading_pos, queue->current->writing_pos, level);
 
-        if (level >= queue->ring_buffer_max_size) {
+        if (level >= rb_size) {
           /* we don't have the data but if we have a ring buffer that is full, we
            * need to read */
           GST_DEBUG_OBJECT (queue,
               "ring buffer full, reading ring-buffer-max-size %d bytes",
-              queue->ring_buffer_max_size);
-          read_length = queue->ring_buffer_max_size;
+              rb_size);
+          read_length = rb_size;
         }
       }
       if (read_length == 0) {
@@ -1233,9 +1237,9 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     if (QUEUE_IS_USING_RING_BUFFER (queue)) {
       file_offset =
           (queue->current->rb_offset + (offset -
-              queue->current->offset)) % queue->ring_buffer_max_size;
-      if (file_offset + read_length > queue->ring_buffer_max_size) {
-        block_length = queue->ring_buffer_max_size - file_offset;
+              queue->current->offset)) % rb_size;
+      if (file_offset + read_length > rb_size) {
+        block_length = rb_size - file_offset;
       } else {
         block_length = read_length;
       }
@@ -1254,7 +1258,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
 
       file_offset += read_return;
       if (QUEUE_IS_USING_RING_BUFFER (queue))
-        file_offset %= queue->ring_buffer_max_size;
+        file_offset %= rb_size;
 
       data += read_return;
       read_length -= read_return;
@@ -1522,13 +1526,14 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
 {
   GstBuffer *buf, *rem;
   guint buf_size, rem_size;
-  const guint rb_size = queue->ring_buffer_max_size;
+  guint rb_size;
   guint8 *data;
   guint64 writing_pos, new_writing_pos;
   gint64 space, rb_space;
   GstQueue2Range *range, *prev;
 
   writing_pos = queue->current->rb_writing_pos;
+  rb_size = queue->ring_buffer_max_size;
 
   rem = buffer;
 
@@ -1544,9 +1549,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
   do {
     /* calculate the space in the ring buffer not used by data from the
      * current range */
-    space =
-        MIN (queue->max_level.bytes,
-        queue->ring_buffer_max_size) - queue->cur_level.bytes;
+    space = QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes;
     space = MIN (space, rb_space);
 
     rem_size = GST_BUFFER_SIZE (rem);
@@ -1700,8 +1703,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
     update_cur_level (queue, queue->current);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
-        queue->cur_level.bytes, MIN (queue->max_level.bytes,
-            queue->ring_buffer_max_size));
+        queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     GST_QUEUE2_SIGNAL_ADD (queue);
 
