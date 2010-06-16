@@ -488,8 +488,9 @@ debug_ranges (GstQueue2 * queue)
   GstQueue2Range *walk;
 
   for (walk = queue->ranges; walk; walk = walk->next) {
-    GST_DEBUG_OBJECT (queue, "range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
-        walk->offset, walk->writing_pos);
+    GST_DEBUG_OBJECT (queue, "range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
+        ", reading %" G_GUINT64_FORMAT, walk->offset, walk->writing_pos,
+        walk->reading_pos);
   }
 }
 
