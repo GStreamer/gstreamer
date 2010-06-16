@@ -1190,16 +1190,23 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   while (remaining > 0) {
     /* configure how much/whether to read */
     if (!gst_queue2_have_data (queue, offset, length)) {
-      if (QUEUE_IS_USING_RING_BUFFER (queue)
-          && queue->current->writing_pos - queue->current->reading_pos >=
-          queue->ring_buffer_max_size) {
-        /* we don't have the data but if we have a ring buffer that is full, we
-         * need to read */
+      read_length = 0;
+
+      if (QUEUE_IS_USING_RING_BUFFER (queue)) {
         GST_DEBUG_OBJECT (queue,
-            "ring buffer full, reading ring-buffer-max-size %d bytes",
-            queue->ring_buffer_max_size);
-        read_length = queue->ring_buffer_max_size;
-      } else {
+            "reading %" G_GUINT64_FORMAT ", writing %" G_GUINT64_FORMAT,
+            queue->current->reading_pos, queue->current->writing_pos);
+        if (queue->current->writing_pos - queue->current->reading_pos >=
+            queue->ring_buffer_max_size) {
+          /* we don't have the data but if we have a ring buffer that is full, we
+           * need to read */
+          GST_DEBUG_OBJECT (queue,
+              "ring buffer full, reading ring-buffer-max-size %d bytes",
+              queue->ring_buffer_max_size);
+          read_length = queue->ring_buffer_max_size;
+        }
+      }
+      if (read_length == 0) {
         GST_QUEUE2_WAIT_ADD_CHECK (queue, queue->srcresult, out_flushing);
         continue;
       }
