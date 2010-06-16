@@ -138,6 +138,10 @@ typedef enum
  * @flags: extra flags.
  * 
  * Base class for refcounted lightweight objects.
+ * Ref Func: gst_mini_object_ref
+ * Unref Func: gst_mini_object_unref
+ * Set Value Func: gst_value_set_mini_object
+ * Get Value Func: gst_value_get_mini_object
  */
 struct _GstMiniObject {
   GTypeInstance instance;
