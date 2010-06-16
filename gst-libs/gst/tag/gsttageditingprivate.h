@@ -35,6 +35,9 @@ struct _GstTagEntryMatch {
 
 GType gst_vorbis_tag_get_type (void);
 
+gint gst_tag_image_orientation_to_exif_value (const gchar * str);
+const gchar * gst_tag_image_orientation_from_exif_value (gint value);
+
 
 G_END_DECLS
 

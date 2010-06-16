@@ -13,6 +13,8 @@ EXPORTS
 	gst_tag_id3_genre_count
 	gst_tag_id3_genre_get
 	gst_tag_image_data_to_image_buffer
+	gst_tag_image_orientation_from_exif_value
+	gst_tag_image_orientation_to_exif_value
 	gst_tag_image_type_get_type
 	gst_tag_list_add_id3_image
 	gst_tag_list_from_exif_buffer

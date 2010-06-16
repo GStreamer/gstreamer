@@ -129,6 +129,12 @@ struct _GstExifReader
   gint byte_order;
 };
 
+static void serialize_orientation (GstExifWriter * writer,
+    const GstTagList * taglist, const GstExifTagMatch * exiftag);
+static gint deserialize_orientation (GstExifReader * exif_reader,
+    GstByteReader * reader, const GstExifTagMatch * exiftag,
+    GstExifTagData * tagdata);
+
 static void serialize_geo_coordinate (GstExifWriter * writer,
     const GstTagList * taglist, const GstExifTagMatch * exiftag);
 static gint deserialize_geo_coordinate (GstExifReader * exif_reader,
@@ -170,6 +176,8 @@ static const GstExifTagMatch tag_map_ifd0[] = {
   {GST_TAG_DESCRIPTION, 0x10E, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_DEVICE_MANUFACTURER, 0x10F, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_DEVICE_MODEL, 0x110, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_IMAGE_ORIENTATION, 0x112, EXIF_TYPE_SHORT, 0, serialize_orientation,
+      deserialize_orientation},
   {GST_TAG_ARTIST, 0x13B, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
@@ -366,6 +374,22 @@ gst_exif_writer_write_byte_tag (GstExifWriter * writer, guint16 tag,
 
   GST_WRITE_UINT8 ((guint8 *) & offset, value);
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_BYTE,
+      1, offset, TRUE);
+}
+
+static void
+gst_exif_writer_write_short_tag (GstExifWriter * writer, guint16 tag,
+    guint16 value)
+{
+  guint32 offset = 0;
+
+  if (writer->byte_order == G_LITTLE_ENDIAN) {
+    GST_WRITE_UINT16_LE ((guint8 *) & offset, value);
+  } else {
+    GST_WRITE_UINT16_BE ((guint8 *) & offset, value);
+  }
+
+  gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_SHORT,
       1, offset, TRUE);
 }
 
@@ -1007,6 +1031,65 @@ byte_reader_fail:
 }
 
 /* special serialization functions */
+static void
+serialize_orientation (GstExifWriter * writer, const GstTagList * taglist,
+    const GstExifTagMatch * exiftag)
+{
+  gchar *str = NULL;
+  gint exif_value;
+
+  if (!gst_tag_list_get_string_index (taglist, GST_TAG_IMAGE_ORIENTATION, 0,
+          &str)) {
+    GST_WARNING ("No image orientation tag present in taglist");
+    return;
+  }
+
+  exif_value = gst_tag_image_orientation_to_exif_value (str);
+  if (exif_value == -1) {
+    GST_WARNING ("Invalid image orientation value: %s", str);
+    g_free (str);
+    return;
+  }
+  g_free (str);
+
+  gst_exif_writer_write_short_tag (writer, exiftag->exif_tag, exif_value);
+}
+
+static gint
+deserialize_orientation (GstExifReader * exif_reader,
+    GstByteReader * reader, const GstExifTagMatch * exiftag,
+    GstExifTagData * tagdata)
+{
+  gint ret = 1;
+  const gchar *str = NULL;
+  gint value;
+
+  GST_LOG ("Starting to parse %s tag in exif 0x%x", exiftag->gst_tag,
+      exiftag->exif_tag);
+
+  /* validate tag */
+  if (tagdata->tag_type != EXIF_TYPE_SHORT || tagdata->count != 1) {
+    GST_WARNING ("Orientation tag has unexpected type/count");
+    return ret;
+  }
+
+  if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
+    value = GST_READ_UINT16_LE (tagdata->offset_as_data);
+  } else {
+    value = GST_READ_UINT16_BE (tagdata->offset_as_data);
+  }
+
+  str = gst_tag_image_orientation_from_exif_value (value);
+  if (str == NULL) {
+    GST_WARNING ("Invalid value for exif orientation tag: %d", value);
+    return ret;
+  }
+  gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
+      exiftag->gst_tag, str, NULL);
+
+  return ret;
+}
+
 static void
 serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,
     const GstExifTagMatch * exiftag)

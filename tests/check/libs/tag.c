@@ -1126,6 +1126,24 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   do_exif_tag_serialization_deserialization (GST_TAG_COPYRIGHT, &value);
   g_value_set_static_string (&value, "ty");
   do_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+
+  /* image orientation tests */
+  g_value_set_static_string (&value, "rotate-0");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "flip-rotate-0");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "rotate-180");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "flip-rotate-180");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "flip-rotate-270");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "rotate-90");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "flip-rotate-90");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
+  g_value_set_static_string (&value, "rotate-270");
+  do_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);
