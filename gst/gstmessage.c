@@ -982,7 +982,7 @@ gst_message_get_structure (GstMessage * message)
 /**
  * gst_message_parse_tag:
  * @message: A valid #GstMessage of type GST_MESSAGE_TAG.
- * @tag_list: Return location for the tag-list.
+ * @tag_list: (out): Return location for the tag-list.
  *
  * Extracts the tag list from the GstMessage. The tag list returned in the
  * output argument is a copy; the caller must free it when done.
@@ -1025,8 +1025,8 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 /**
  * gst_message_parse_tag_full:
  * @message: A valid #GstMessage of type GST_MESSAGE_TAG.
- * @pad: Location where the originating pad is stored, unref after usage
- * @tag_list: Return location for the tag-list.
+ * @pad: (out): Location where the originating pad is stored, unref after usage
+ * @tag_list: (out): Return location for the tag-list.
  *
  * Extracts the tag list from the GstMessage. The tag list returned in the
  * output argument is a copy; the caller must free it when done.
@@ -1066,7 +1066,7 @@ gst_message_parse_tag_full (GstMessage * message, GstPad ** pad,
 /**
  * gst_message_parse_buffering:
  * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
- * @percent: Return location for the percent.
+ * @percent: (out): Return location for the percent.
  *
  * Extracts the buffering percent from the GstMessage. see also
  * gst_message_new_buffering().
@@ -1114,10 +1114,10 @@ gst_message_set_buffering_stats (GstMessage * message, GstBufferingMode mode,
 /**
  * gst_message_parse_buffering_stats:
  * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
- * @mode: a buffering mode 
- * @avg_in: the average input rate
- * @avg_out: the average output rate
- * @buffering_left: amount of buffering time left in milliseconds.
+ * @mode: (out): a buffering mode 
+ * @avg_in: (out): the average input rate
+ * @avg_out: (out): the average output rate
+ * @buffering_left: (out): amount of buffering time left in milliseconds.
  *
  * Extracts the buffering stats values from @message.
  *
@@ -1148,9 +1148,9 @@ gst_message_parse_buffering_stats (GstMessage * message,
 /**
  * gst_message_parse_state_changed:
  * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
- * @oldstate: the previous state, or NULL
- * @newstate: the new (current) state, or NULL
- * @pending: the pending (target) state, or NULL
+ * @oldstate: (out): the previous state, or NULL
+ * @newstate: (out): the new (current) state, or NULL
+ * @pending: (out): the pending (target) state, or NULL
  *
  * Extracts the old and new states from the GstMessage.
  *
@@ -1198,8 +1198,8 @@ gst_message_parse_state_changed (GstMessage * message,
 /**
  * gst_message_parse_clock_provide:
  * @message: A valid #GstMessage of type GST_MESSAGE_CLOCK_PROVIDE.
- * @clock: A pointer to  hold a clock object.
- * @ready: A pointer to hold the ready flag.
+ * @clock: (out): A pointer to  hold a clock object.
+ * @ready: (out): A pointer to hold the ready flag.
  *
  * Extracts the clock and ready flag from the GstMessage.
  * The clock object returned remains valid until the message is freed.
@@ -1231,7 +1231,7 @@ gst_message_parse_clock_provide (GstMessage * message, GstClock ** clock,
 /**
  * gst_message_parse_clock_lost:
  * @message: A valid #GstMessage of type GST_MESSAGE_CLOCK_LOST.
- * @clock: A pointer to hold the lost clock
+ * @clock: (out): A pointer to hold the lost clock
  *
  * Extracts the lost clock from the GstMessage.
  * The clock object returned remains valid until the message is freed.
@@ -1285,9 +1285,9 @@ gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
 /**
  * gst_message_parse_structure_change:
  * @message: A valid #GstMessage of type GST_MESSAGE_STRUCTURE_CHANGE.
- * @type: A pointer to hold the change type
- * @owner: The owner element of the message source
- * @busy: A pointer to hold whether the change is in progress or has been
+ * @type: (out): A pointer to hold the change type
+ * @owner: (out): The owner element of the message source
+ * @busy: (out): A pointer to hold whether the change is in progress or has been
  * completed
  *
  * Extracts the change type and completion status from the GstMessage.
@@ -1324,8 +1324,8 @@ gst_message_parse_structure_change (GstMessage * message,
 /**
  * gst_message_parse_error:
  * @message: A valid #GstMessage of type GST_MESSAGE_ERROR.
- * @gerror: Location for the GError
- * @debug: Location for the debug message, or NULL
+ * @gerror: (out): Location for the GError
+ * @debug: (out): Location for the debug message, or NULL
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -1382,8 +1382,8 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
 /**
  * gst_message_parse_warning:
  * @message: A valid #GstMessage of type GST_MESSAGE_WARNING.
- * @gerror: Location for the GError
- * @debug: Location for the debug message, or NULL
+ * @gerror: (out): Location for the GError
+ * @debug: (out): Location for the debug message, or NULL
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -1420,8 +1420,8 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 /**
  * gst_message_parse_info:
  * @message: A valid #GstMessage of type GST_MESSAGE_INFO.
- * @gerror: Location for the GError
- * @debug: Location for the debug message, or NULL
+ * @gerror: (out): Location for the GError
+ * @debug: (out): Location for the debug message, or NULL
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -1459,8 +1459,8 @@ gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
 /**
  * gst_message_parse_segment_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
- * @format: Result location for the format, or NULL
- * @position: Result location for the position, or NULL
+ * @format: (out): Result location for the format, or NULL
+ * @position: (out): Result location for the position, or NULL
  *
  * Extracts the position and format from the segment start message.
  *
@@ -1486,8 +1486,8 @@ gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_segment_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
- * @format: Result location for the format, or NULL
- * @position: Result location for the position, or NULL
+ * @format: (out): Result location for the format, or NULL
+ * @position: (out): Result location for the position, or NULL
  *
  * Extracts the position and format from the segment start message.
  *
@@ -1513,8 +1513,8 @@ gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_duration:
  * @message: A valid #GstMessage of type GST_MESSAGE_DURATION.
- * @format: Result location for the format, or NULL
- * @duration: Result location for the duration, or NULL
+ * @format: (out): Result location for the format, or NULL
+ * @duration: (out): Result location for the duration, or NULL
  *
  * Extracts the duration and format from the duration message. The duration
  * might be GST_CLOCK_TIME_NONE, which indicates that the duration has
@@ -1543,7 +1543,7 @@ gst_message_parse_duration (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_async_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_ASYNC_DONE.
- * @new_base_time: Result location for the new_base_time or NULL
+ * @new_base_time: (out): Result location for the new_base_time or NULL
  *
  * Extract the new_base_time from the async_start message. 
  *
@@ -1566,7 +1566,7 @@ gst_message_parse_async_start (GstMessage * message, gboolean * new_base_time)
 /**
  * gst_message_parse_request_state:
  * @message: A valid #GstMessage of type GST_MESSAGE_REQUEST_STATE.
- * @state: Result location for the requested state or NULL
+ * @state: (out): Result location for the requested state or NULL
  *
  * Extract the requested state from the request_state message.
  *
@@ -1618,8 +1618,8 @@ gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
 /**
  * gst_message_parse_stream_status:
  * @message: A valid #GstMessage of type GST_MESSAGE_STREAM_STATUS.
- * @type: A pointer to hold the status type
- * @owner: The owner element of the message source
+ * @type: (out): A pointer to hold the status type
+ * @owner: (out): The owner element of the message source
  *
  * Extracts the stream status type and owner the GstMessage. The returned
  * owner remains valid for as long as the reference to @message is valid and
@@ -1742,13 +1742,13 @@ gst_message_new_step_done (GstObject * src, GstFormat format, guint64 amount,
 /**
  * gst_message_parse_step_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_STEP_DONE.
- * @format: result location for the format
- * @amount: result location for the amount
- * @rate: result location for the rate
- * @flush: result location for the flush flag
- * @intermediate: result location for the intermediate flag
- * @duration: result location for the duration
- * @eos: result location for the EOS flag
+ * @format: (out): result location for the format
+ * @amount: (out): result location for the amount
+ * @rate: (out): result location for the rate
+ * @flush: (out): result location for the flush flag
+ * @intermediate: (out): result location for the intermediate flag
+ * @duration: (out): result location for the duration
+ * @eos: (out): result location for the EOS flag
  *
  * Extract the values the step_done message.
  *
@@ -1823,12 +1823,12 @@ gst_message_new_step_start (GstObject * src, gboolean active, GstFormat format,
 /**
  * gst_message_parse_step_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_STEP_DONE.
- * @active: result location for the active flag
- * @format: result location for the format
- * @amount: result location for the amount
- * @rate: result location for the rate
- * @flush: result location for the flush flag
- * @intermediate: result location for the intermediate flag
+ * @active: (out): result location for the active flag
+ * @format: (out): result location for the format
+ * @amount: (out): result location for the amount
+ * @rate: (out): result location for the rate
+ * @flush: (out): result location for the flush flag
+ * @intermediate: (out): result location for the intermediate flag
  *
  * Extract the values from step_start message.
  *
@@ -1971,11 +1971,11 @@ gst_message_set_qos_stats (GstMessage * message, GstFormat format,
 /**
  * gst_message_parse_qos:
  * @message: A valid #GstMessage of type GST_MESSAGE_QOS.
- * @live: if the message was generated by a live element
- * @running_time: the running time of the buffer that generated the message
- * @stream_time: the stream time of the buffer that generated the message
- * @timestamp: the timestamps of the buffer that generated the message
- * @duration: the duration of the buffer that generated the message
+ * @live: (out): if the message was generated by a live element
+ * @running_time: (out): the running time of the buffer that generated the message
+ * @stream_time: (out): the stream time of the buffer that generated the message
+ * @timestamp: (out): the timestamps of the buffer that generated the message
+ * @duration: (out): the duration of the buffer that generated the message
  *
  * Extract the timestamps and live status from the QoS message.
  *
@@ -2006,10 +2006,10 @@ gst_message_parse_qos (GstMessage * message, gboolean * live,
 /**
  * gst_message_parse_qos_values:
  * @message: A valid #GstMessage of type GST_MESSAGE_QOS.
- * @jitter: The difference of the running-time against the deadline.
- * @proportion: Long term prediction of the ideal rate relative to normal rate
+ * @jitter: (out): The difference of the running-time against the deadline.
+ * @proportion: (out): Long term prediction of the ideal rate relative to normal rate
  * to get optimal quality.
- * @quality: An element dependent integer value that specifies the current
+ * @quality: (out): An element dependent integer value that specifies the current
  * quality level of the element. The default maximum quality is 1000000.
  *
  * Extract the QoS values that have been calculated/analysed from the QoS data
@@ -2034,12 +2034,12 @@ gst_message_parse_qos_values (GstMessage * message, gint64 * jitter,
 /**
  * gst_message_parse_qos_stats:
  * @message: A valid #GstMessage of type GST_MESSAGE_QOS.
- * @format: Units of the 'processed' and 'dropped' fields. Video sinks and video
+ * @format: (out): Units of the 'processed' and 'dropped' fields. Video sinks and video
  * filters will use GST_FORMAT_BUFFERS (frames). Audio sinks and audio filters
  * will likely use GST_FORMAT_DEFAULT (samples).
- * @processed: Total number of units correctly processed since the last state
+ * @processed: (out): Total number of units correctly processed since the last state
  * change to READY or a flushing operation.
- * @dropped: Total number of units dropped since the last state change to READY
+ * @dropped: (out): Total number of units dropped since the last state change to READY
  * or a flushing operation.
  *
  * Extract the QoS stats representing the history of the current continuous
