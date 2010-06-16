@@ -414,7 +414,7 @@ no_element:
 /**
  * gst_element_factory_make:
  * @factoryname: a named factory to instantiate
- * @name: name of new element
+ * @name: (allow-none): name of new element
  *
  * Create a new element of the type defined by the given element factory.
  * If name is NULL, then the element will receive a guaranteed unique name,
