@@ -44,6 +44,9 @@ G_BEGIN_DECLS
 #define GES_TRACK_VIDEO_TITLE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, GESTrackVideoTitleSourceClass))
 
+#define DEFAULT_FONT_DESC "serif 36"
+
+
 /** 
  * GESTrackVideoTitleSource:
  * @parent: parent
@@ -54,6 +57,7 @@ struct _GESTrackVideoTitleSource {
 
   /*< private >*/
   gchar         *text;
+  gchar         *font_desc;
   GstElement    *text_el;
   GstElement    *background_el;
 };
@@ -71,7 +75,10 @@ struct _GESTrackVideoTitleSourceClass {
 
 GType ges_track_video_title_src_get_type (void);
 
-void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *, const gchar *);
+void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *, const
+    gchar *);
+void ges_track_video_title_source_set_font_desc(GESTrackVideoTitleSource *,
+    const gchar *);
 GESTrackVideoTitleSource* ges_track_video_title_source_new (void);
 
 G_END_DECLS

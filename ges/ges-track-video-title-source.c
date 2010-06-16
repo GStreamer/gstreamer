@@ -70,6 +70,7 @@ static void
 ges_track_video_title_src_init (GESTrackVideoTitleSource * self)
 {
   self->text = NULL;
+  self->font_desc = g_strdup (DEFAULT_FONT_DESC);
   self->text_el = NULL;
   self->background_el = NULL;
 }
@@ -80,6 +81,10 @@ ges_track_video_title_src_dispose (GObject * object)
   GESTrackVideoTitleSource *self = GES_TRACK_VIDEO_TITLE_SOURCE (object);
   if (self->text) {
     g_free (self->text);
+  }
+
+  if (self->font_desc) {
+    g_free (self->font_desc);
   }
 
   if (self->text_el) {
@@ -130,9 +135,13 @@ ges_track_video_title_src_create_element (GESTrackTitleSource * object)
 
   topbin = gst_bin_new ("titlesrc-bin");
   background = gst_element_factory_make ("videotestsrc", "titlesrc-bg");
+
   text = gst_element_factory_make ("textoverlay", "titlsrc-text");
   if (self->text) {
     g_object_set (text, "text", self->text, NULL);
+  }
+  if (self->font_desc) {
+    g_object_set (text, "font-desc", self->font_desc, NULL);
   }
 
   g_object_set (background, "pattern", (gint) GES_TRACK_VIDEO_BG_SRC_BLACK,
@@ -171,6 +180,25 @@ ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
   self->text = g_strdup (text);
   if (self->text_el)
     g_object_set (self->text_el, "text", text, NULL);
+}
+
+/**
+ * ges_track_video_title_source_set_font_desc:
+ * @self: the #GESTrackVideoTitleSource* to set text on
+ * @font_desc: the pango font description
+ * 
+ * Sets the text this track object will render.
+ *
+ */
+
+void
+ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
+    const gchar * font_desc)
+{
+  self->font_desc = g_strdup (font_desc);
+  GST_LOG ("setting font-desc to '%s'", font_desc);
+  if (self->text_el)
+    g_object_set (self->text_el, "font-desc", font_desc, NULL);
 }
 
 GESTrackVideoTitleSource *

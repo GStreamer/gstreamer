@@ -404,6 +404,7 @@ GESTrackVideoTitleSource
 GESTrackVideoTitleSourceClass
 ges_tl_title_src_get_type
 ges_track_video_title_source_set_text
+ges_track_video_title_source_set_font_desc
 <SUBSECTION Standard>
 GES_TRACK_VIDEO_TITLE_SOURCE
 GES_TRACK_VIDEO_TITLE_SOURCE_CLASS
@@ -414,10 +415,12 @@ GES_TYPE_TRACK_VIDEO_TITLE_SOURCE
 </SECTION>
 
 <SECTION>
+<FILE>ges-track-audio-title-source</FILE>
 GESTrackAudioTitleSource
 GESTrackAudioTitleSourceClass
 ges_track_audio_title_source_new
 ges_track_audio_title_src_get_type
+DEFAULT_FONT_DESC
 <SUBSECTION Standard>
 GES_IS_TRACK_AUDIO_TITLE_SOURCE
 GES_IS_TRACK_AUDIO_TITLE_SOURCE_CLASS
