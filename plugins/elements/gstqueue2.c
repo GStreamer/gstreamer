@@ -2545,8 +2545,6 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
       "Getting range: offset %" G_GUINT64_FORMAT ", length %u", offset, length);
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
-
-  GST_QUEUE2_SIGNAL_DEL (queue);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   gst_object_unref (queue);
