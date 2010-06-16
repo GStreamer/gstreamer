@@ -1917,6 +1917,14 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
          * flush_start downstream. */
         gst_pad_pause_task (queue->srcpad);
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
+      } else {
+        GST_QUEUE2_MUTEX_LOCK (queue);
+        /* flush the sink pad */
+        queue->sinkresult = GST_FLOW_WRONG_STATE;
+        GST_QUEUE2_SIGNAL_DEL (queue);
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
+
+        gst_event_unref (event);
       }
       goto done;
     }
@@ -1944,7 +1952,10 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
         queue->segment_event_received = FALSE;
         queue->is_eos = FALSE;
         queue->unexpected = FALSE;
+        queue->sinkresult = GST_FLOW_OK;
         GST_QUEUE2_MUTEX_UNLOCK (queue);
+
+        gst_event_unref (event);
       }
       goto done;
     }
