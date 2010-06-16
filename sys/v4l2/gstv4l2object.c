@@ -1869,6 +1869,22 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
 
+  if (format.type == v4l2object->type &&
+      format.fmt.pix.width == width &&
+      format.fmt.pix.height == height &&
+      format.fmt.pix.pixelformat == pixelformat) {
+    /* Nothing to do. We want to succeed immediately
+     * here because setting the same format back
+     * can still fail due to EBUSY. By short-circuiting
+     * here, we allow pausing and re-playing pipelines
+     * with changed caps, as long as the changed caps
+     * do not change the webcam's format. Otherwise,
+     * any caps change would require us to go to NULL
+     * state to close the device and set format.
+     */
+    return TRUE;
+  }
+
   format.type = v4l2object->type;
   format.fmt.pix.width = width;
   format.fmt.pix.height = height;
