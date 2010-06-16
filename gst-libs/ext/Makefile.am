@@ -25,6 +25,7 @@ dist-clean:
 	cd ffmpeg && $(MAKE) distclean
 	rm -rf $(TMP_DIST_DIR)
 	rm -f Makefile
+	rm -f ffmpeg/.version
 
 distclean: dist-clean
 
