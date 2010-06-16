@@ -1193,11 +1193,20 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
       read_length = 0;
 
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
+        guint64 level;
+
+        /* calculate how far away the offset is */
+        if (queue->current->writing_pos > offset)
+          level = queue->current->writing_pos - offset;
+        else
+          level = 0;
+
         GST_DEBUG_OBJECT (queue,
-            "reading %" G_GUINT64_FORMAT ", writing %" G_GUINT64_FORMAT,
-            queue->current->reading_pos, queue->current->writing_pos);
-        if (queue->current->writing_pos - queue->current->reading_pos >=
-            queue->ring_buffer_max_size) {
+            "reading %" G_GUINT64_FORMAT ", writing %" G_GUINT64_FORMAT
+            ", level %" G_GUINT64_FORMAT,
+            queue->current->reading_pos, queue->current->writing_pos, level);
+
+        if (level >= queue->ring_buffer_max_size) {
           /* we don't have the data but if we have a ring buffer that is full, we
            * need to read */
           GST_DEBUG_OBJECT (queue,
@@ -1246,6 +1255,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
       read_length -= read_return;
       block_length = read_length;
       remaining -= read_return;
+
       queue->current->reading_pos += read_return;
     }
     GST_QUEUE2_SIGNAL_DEL (queue);
