@@ -561,7 +561,6 @@ add_range (GstQueue2 * queue, guint64 offset)
     range->writing_pos = offset;
     range->rb_writing_pos = range->rb_offset;
     range->reading_pos = offset;
-    range->rb_reading_pos = range->rb_offset;
     range->max_reading_pos = offset;
 
     /* insert sorted */
@@ -1525,12 +1524,11 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
   guint buf_size, rem_size;
   const guint rb_size = queue->ring_buffer_max_size;
   guint8 *data;
-  guint64 writing_pos, reading_pos, new_writing_pos;
+  guint64 writing_pos, new_writing_pos;
   gint64 space, rb_space;
   GstQueue2Range *range, *prev;
 
   writing_pos = queue->current->rb_writing_pos;
-  reading_pos = queue->current->rb_reading_pos;
 
   rem = buffer;
 

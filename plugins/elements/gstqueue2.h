@@ -65,7 +65,6 @@ struct _GstQueue2Range
   guint64 writing_pos;     /* writing position in source */
   guint64 rb_writing_pos;  /* writing position in ring buffer */
   guint64 reading_pos;     /* reading position in source */
-  guint64 rb_reading_pos;  /* reading position in ring buffer */
   guint64 max_reading_pos; /* latest requested offset in source */
 };
 
