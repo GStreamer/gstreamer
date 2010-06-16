@@ -45,7 +45,36 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, GESTrackVideoTitleSourceClass))
 
 #define DEFAULT_FONT_DESC "serif 36"
+#define DEFAULT_VALIGNMENT GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE
+#define DEFAULT_HALIGNMENT GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER
 
+/**
+ * GESTrackVideoTitleSrcVAlign:
+ * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE: draw text on the baseline
+ * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM: draw text on the bottom
+ * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP: draw test on top
+ *
+ * Vertical alignment of the text.
+ */
+typedef enum {
+    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE,
+    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM,
+    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP
+} GESTrackVideoTitleSrcVAlign;
+
+/**
+ * GESTrackVideoTitleSrcHAlign:
+ * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT: align text left
+ * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER: align text center
+ * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT: align text right
+ *
+ * Horizontal alignment of the text.
+ */
+typedef enum {
+    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT,
+    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER,
+    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT
+} GESTrackVideoTitleSrcHAlign;
 
 /** 
  * GESTrackVideoTitleSource:
@@ -58,6 +87,8 @@ struct _GESTrackVideoTitleSource {
   /*< private >*/
   gchar         *text;
   gchar         *font_desc;
+  gint          halign;
+  gint          valign;
   GstElement    *text_el;
   GstElement    *background_el;
 };
@@ -77,8 +108,16 @@ GType ges_track_video_title_src_get_type (void);
 
 void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *, const
     gchar *);
+
 void ges_track_video_title_source_set_font_desc(GESTrackVideoTitleSource *,
     const gchar *);
+
+void ges_track_video_title_source_set_halignment(GESTrackVideoTitleSource *,
+  GESTrackVideoTitleSrcHAlign);
+
+void ges_track_video_title_source_set_valignment(GESTrackVideoTitleSource *,
+  GESTrackVideoTitleSrcVAlign);
+
 GESTrackVideoTitleSource* ges_track_video_title_source_new (void);
 
 G_END_DECLS

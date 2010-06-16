@@ -72,6 +72,8 @@ ges_track_video_title_src_init (GESTrackVideoTitleSource * self)
   self->text = NULL;
   self->font_desc = g_strdup (DEFAULT_FONT_DESC);
   self->text_el = NULL;
+  self->halign = DEFAULT_HALIGNMENT;
+  self->valign = DEFAULT_VALIGNMENT;
   self->background_el = NULL;
 }
 
@@ -143,6 +145,8 @@ ges_track_video_title_src_create_element (GESTrackTitleSource * object)
   if (self->font_desc) {
     g_object_set (text, "font-desc", self->font_desc, NULL);
   }
+  g_object_set (text, "valignment", (gint) self->valign, "halignment",
+      (gint) self->halign, NULL);
 
   g_object_set (background, "pattern", (gint) GES_TRACK_VIDEO_BG_SRC_BLACK,
       NULL);
@@ -199,6 +203,40 @@ ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
   GST_LOG ("setting font-desc to '%s'", font_desc);
   if (self->text_el)
     g_object_set (self->text_el, "font-desc", font_desc, NULL);
+}
+
+/**
+ * ges_track_video_title_source_valignment:
+ * @self: the #GESTrackVideoTitleSource* to set text on
+ * @valignment: #GESTrackVideoTitleSrcVAlign
+ *
+ * Sets the vertical aligment of the text.
+ */
+void
+ges_track_video_title_source_set_valignment (GESTrackVideoTitleSource * self,
+    GESTrackVideoTitleSrcVAlign valign)
+{
+  self->valign = valign;
+  GST_LOG ("set valignment to: %d", valign);
+  if (self->text_el)
+    g_object_set (self->text_el, "valignment", valign, NULL);
+}
+
+/**
+ * ges_track_video_title_source_halignment:
+ * @self: the #GESTrackVideoTitleSource* to set text on
+ * @halignment: #GESTrackVideoTitleSrcHAlign
+ *
+ * Sets the vertical aligment of the text.
+ */
+void
+ges_track_video_title_source_set_halignment (GESTrackVideoTitleSource * self,
+    GESTrackVideoTitleSrcHAlign halign)
+{
+  self->halign = halign;
+  GST_LOG ("set halignment to: %d", halign);
+  if (self->text_el)
+    g_object_set (self->text_el, "halignment", halign, NULL);
 }
 
 GESTrackVideoTitleSource *
