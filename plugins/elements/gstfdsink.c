@@ -155,7 +155,6 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gobject_class->get_property = gst_fd_sink_get_property;
   gobject_class->dispose = gst_fd_sink_dispose;
 
-  gstbasesink_class->get_times = NULL;
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_fd_sink_render);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_fd_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_fd_sink_stop);
@@ -181,7 +180,7 @@ gst_fd_sink_init (GstFdSink * fdsink, GstFdSinkClass * klass)
   fdsink->bytes_written = 0;
   fdsink->current_pos = 0;
 
-  GST_BASE_SINK (fdsink)->sync = TRUE;
+  gst_base_sink_set_sync (GST_BASE_SINK (fdsink), FALSE);
 }
 
 static void
