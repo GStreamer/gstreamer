@@ -6442,6 +6442,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         guint obj_type, freq_index, explicit_freq_bytes = 0;
 
         codec_id = GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4;
+        mpegversion = 4;
         freq_index = (GST_READ_UINT16_BE (context->codec_priv) & 0x780) >> 7;
         obj_type = (GST_READ_UINT16_BE (context->codec_priv) & 0xF800) >> 11;
         if (freq_index == 15)
