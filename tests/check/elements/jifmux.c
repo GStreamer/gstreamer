@@ -49,20 +49,93 @@ typedef struct
 #define EXIF_TYPE_SLONG      9
 #define EXIF_TYPE_SRATIONAL 10
 
-typedef struct _GstExifTagMatch
+typedef struct _GstExifTagMatch GstExifTagMatch;
+typedef void (*CompareFunc) (ExifEntry * entry, ExifTagCheckData * testdata);
+
+struct _GstExifTagMatch
 {
   const gchar *gst_tag;
   guint16 exif_tag;
   guint16 exif_type;
   guint16 complementary_tag;
-} GstExifTagMatch;
+  CompareFunc compare_func;
+};
+
+/* compare funcs */
+
+/* Copied over from gst-libs/gst/tag/gsttagedittingprivate.c from -base */
+static gint
+gst_tag_image_orientation_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "rotate-0") == 0)
+    return 1;
+  else if (strcmp (str, "flip-rotate-0") == 0)
+    return 2;
+  else if (strcmp (str, "rotate-180") == 0)
+    return 3;
+  else if (strcmp (str, "flip-rotate-180") == 0)
+    return 4;
+  else if (strcmp (str, "flip-rotate-270") == 0)
+    return 5;
+  else if (strcmp (str, "rotate-90") == 0)
+    return 6;
+  else if (strcmp (str, "flip-rotate-90") == 0)
+    return 7;
+  else if (strcmp (str, "rotate-270") == 0)
+    return 8;
+
+end:
+  GST_WARNING ("Invalid image orientation tag: %d", str);
+  return -1;
+}
+
+
+static void
+compare_image_orientation (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gchar *str_tag = NULL;
+  gint exif_value;
+  gint value;
+
+  if (!gst_tag_list_get_string_index (testdata->taglist,
+          GST_TAG_IMAGE_ORIENTATION, 0, &str_tag)) {
+    /* fail the test if we can't get the tag */
+    GST_WARNING ("Failed to get image orientation tag from taglist");
+    fail ();
+  }
+
+  value = gst_tag_image_orientation_to_exif_value (str_tag);
+
+  if (value == -1) {
+    GST_WARNING ("Invalid image orientation tag value: %s", str_tag);
+    fail ();
+  }
+
+  exif_value = (gint) exif_get_short (entry->data,
+      exif_data_get_byte_order (entry->parent->parent));
+
+  if (value != exif_value) {
+    GST_WARNING ("Gstreamer tag value (%d) is different from libexif (%d)",
+        value, exif_value);
+    fail ();
+  }
+
+  testdata->result = TRUE;
+
+  g_free (str_tag);
+}
 
 static const GstExifTagMatch tag_map[] = {
-  {GST_TAG_DESCRIPTION, 0x10E, EXIF_TYPE_ASCII, 0},
-  {GST_TAG_DEVICE_MANUFACTURER, 0x10F, EXIF_TYPE_ASCII, 0},
-  {GST_TAG_DEVICE_MODEL, 0x110, EXIF_TYPE_ASCII, 0},
-  {GST_TAG_ARTIST, 0x13B, EXIF_TYPE_ASCII, 0},
-  {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0}
+  {GST_TAG_DESCRIPTION, 0x10E, EXIF_TYPE_ASCII, 0, NULL},
+  {GST_TAG_DEVICE_MANUFACTURER, 0x10F, EXIF_TYPE_ASCII, 0, NULL},
+  {GST_TAG_DEVICE_MODEL, 0x110, EXIF_TYPE_ASCII, 0, NULL},
+  {GST_TAG_IMAGE_ORIENTATION, 0x112, EXIF_TYPE_SHORT, 0,
+      compare_image_orientation},
+  {GST_TAG_ARTIST, 0x13B, EXIF_TYPE_ASCII, 0, NULL},
+  {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0, NULL}
 };
 
 static gint
@@ -93,6 +166,11 @@ check_content (ExifContent * content, void *user_data)
   if (entry == NULL)
     return;
   fail_unless (entry->format == tag_map[tagindex].exif_type);
+
+  if (tag_map[tagindex].compare_func) {
+    tag_map[tagindex].compare_func (entry, test_data);
+    return;
+  }
 
   switch (entry->format) {
     case EXIF_TYPE_ASCII:{
@@ -188,6 +266,32 @@ GST_START_TEST (test_jifmux_tags)
     "description=testtags"
   generate_jif_file_with_tags (EXIF_0IFD_TAGS, tmpfile);
   libexif_check_tags ("taglist," EXIF_0IFD_TAGS, tmpfile);
+
+#define IMAGE_ORIENTATION_TAG(t) GST_TAG_IMAGE_ORIENTATION "=" t
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("rotate-0"), tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("rotate-0"), tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("flip-rotate-0"),
+      tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("flip-rotate-0"),
+      tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("rotate-180"), tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("rotate-180"), tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("flip-rotate-180"),
+      tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("flip-rotate-180"),
+      tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG
+      ("flip-rotate-270"), tmpfile);
+  libexif_check_tags ("taglist,"
+      IMAGE_ORIENTATION_TAG ("flip-rotate-270"), tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("rotate-90"), tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("rotate-90"), tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG
+      ("flip-rotate-90"), tmpfile);
+  libexif_check_tags ("taglist,"
+      IMAGE_ORIENTATION_TAG ("flip-rotate-90"), tmpfile);
+  generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("rotate-270"), tmpfile);
+  libexif_check_tags ("taglist," IMAGE_ORIENTATION_TAG ("rotate-270"), tmpfile);
 
   g_free (tmpfile);
 }
