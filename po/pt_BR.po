@@ -17,10 +17,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"POT-Creation-Date: 2010-06-16 11:08+0100\n"
 "PO-Revision-Date: 2009-11-05 01:18-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -653,6 +654,34 @@ msgid ""
 "the neighborhood)"
 msgstr ""
 
+#, fuzzy
+msgid "geo location movement speed"
+msgstr "longitude da localização geográfica"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+
+#, fuzzy
+msgid "geo location movement direction"
+msgstr "elevação da localização geográfica"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+
+#, fuzzy
+msgid "geo location capture direction"
+msgstr "elevação da localização geográfica"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr ""
@@ -714,6 +743,20 @@ msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+
+msgid "device manufacturer"
+msgstr ""
+
+#, fuzzy
+msgid "Manufacturer of the device used to create this media"
+msgstr "versão do codificador usado pelo fluxo"
+
+msgid "device model"
+msgstr ""
+
+#, fuzzy
+msgid "Model of the device used to create this media"
+msgstr "versão do codificador usado pelo fluxo"
 
 msgid ", "
 msgstr ", "
@@ -1080,6 +1123,10 @@ msgid "FILE"
 msgstr "ARQUIVO"
 
 msgid "Do not install a fault handler"
+msgstr "Não instale um manipulador de falhas"
+
+#, fuzzy
+msgid "Do not install a play handler"
 msgstr "Não instale um manipulador de falhas"
 
 msgid "Print alloc trace (if enabled at compile time)"

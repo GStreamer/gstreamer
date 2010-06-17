@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"POT-Creation-Date: 2010-06-16 11:08+0100\n"
 "PO-Revision-Date: 2010-04-27 22:59+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -630,6 +631,34 @@ msgstr ""
 "một vùng bên trong thành phố ở đó phương tiện đã được tạo hay sản xuất (v.d. "
 "hàng xóm)"
 
+#, fuzzy
+msgid "geo location movement speed"
+msgstr "độ kinh định vị địa lý"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+
+#, fuzzy
+msgid "geo location movement direction"
+msgstr "độ cao định vị địa lý"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+
+#, fuzzy
+msgid "geo location capture direction"
+msgstr "độ cao định vị địa lý"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr "hiện tên"
@@ -691,6 +720,20 @@ msgid ""
 msgstr ""
 "Đánh giá bởi người dùng. Càng cao điểm càng nhiều người dùng thích nhạc/phim "
 "này"
+
+msgid "device manufacturer"
+msgstr ""
+
+#, fuzzy
+msgid "Manufacturer of the device used to create this media"
+msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
+
+msgid "device model"
+msgstr ""
+
+#, fuzzy
+msgid "Model of the device used to create this media"
+msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
 
 msgid ", "
 msgstr ", "
@@ -1048,6 +1091,10 @@ msgid "FILE"
 msgstr "TẬP_TIN"
 
 msgid "Do not install a fault handler"
+msgstr "Không cài đặt bộ quản lý lỗi"
+
+#, fuzzy
+msgid "Do not install a play handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
 msgid "Print alloc trace (if enabled at compile time)"

@@ -9,10 +9,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"POT-Creation-Date: 2010-06-16 11:08+0100\n"
 "PO-Revision-Date: 2010-01-30 21:23+0100\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -641,6 +642,34 @@ msgid ""
 "the neighborhood)"
 msgstr ""
 
+#, fuzzy
+msgid "geo location movement speed"
+msgstr "longitude de l'emplacement"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+
+#, fuzzy
+msgid "geo location movement direction"
+msgstr "altitude de l'emplacement"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+
+#, fuzzy
+msgid "geo location capture direction"
+msgstr "altitude de l'emplacement"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr "nom d'émission"
@@ -701,6 +730,20 @@ msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+
+msgid "device manufacturer"
+msgstr ""
+
+#, fuzzy
+msgid "Manufacturer of the device used to create this media"
+msgstr "version du codeur utilisé pour le codage du flux"
+
+msgid "device model"
+msgstr ""
+
+#, fuzzy
+msgid "Model of the device used to create this media"
+msgstr "version du codeur utilisé pour le codage du flux"
 
 msgid ", "
 msgstr ", "
@@ -1065,6 +1108,10 @@ msgid "FILE"
 msgstr "FICHIER"
 
 msgid "Do not install a fault handler"
+msgstr "N'installe pas de gestionnaire de dysfonctionnement"
+
+#, fuzzy
+msgid "Do not install a play handler"
 msgstr "N'installe pas de gestionnaire de dysfonctionnement"
 
 msgid "Print alloc trace (if enabled at compile time)"

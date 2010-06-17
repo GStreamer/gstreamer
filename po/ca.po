@@ -7,10 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-04-27 19:51+0100\n"
+"POT-Creation-Date: 2010-06-16 11:08+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
+"Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -641,6 +642,34 @@ msgid ""
 "the neighborhood)"
 msgstr ""
 
+#, fuzzy
+msgid "geo location movement speed"
+msgstr "ubicació"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+
+#, fuzzy
+msgid "geo location movement direction"
+msgstr "ubicació"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+
+#, fuzzy
+msgid "geo location capture direction"
+msgstr "ubicació"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
 msgstr ""
@@ -700,6 +729,20 @@ msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+
+msgid "device manufacturer"
+msgstr ""
+
+#, fuzzy
+msgid "Manufacturer of the device used to create this media"
+msgstr "versió del codificador utilitzat per a codificar aquest flux"
+
+msgid "device model"
+msgstr ""
+
+#, fuzzy
+msgid "Model of the device used to create this media"
+msgstr "versió del codificador utilitzat per a codificar aquest flux"
 
 msgid ", "
 msgstr ", "
@@ -1059,6 +1102,10 @@ msgid "FILE"
 msgstr "FITXER"
 
 msgid "Do not install a fault handler"
+msgstr "No instal·les un gestor de fallades"
+
+#, fuzzy
+msgid "Do not install a play handler"
 msgstr "No instal·les un gestor de fallades"
 
 msgid "Print alloc trace (if enabled at compile time)"
