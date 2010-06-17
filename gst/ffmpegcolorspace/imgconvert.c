@@ -1019,7 +1019,6 @@ yvyu422_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
   }
 }
 
-
 static void
 yvyu422_to_yuv420p (AVPicture * dst, const AVPicture * src,
     int width, int height)
@@ -2777,6 +2776,19 @@ static ConvertEntry convert_table[] = {
 
   {PIX_FMT_YUV422, PIX_FMT_YUV420P, yuv422_to_yuv420p},
   {PIX_FMT_YUV422, PIX_FMT_YUV422P, yuv422_to_yuv422p},
+  {PIX_FMT_YUV422, PIX_FMT_GRAY8, yvyu422_to_gray},
+  {PIX_FMT_YUV422, PIX_FMT_RGB555, yuv422_to_rgb555},
+  {PIX_FMT_YUV422, PIX_FMT_RGB565, yuv422_to_rgb565},
+  {PIX_FMT_YUV422, PIX_FMT_BGR24, yuv422_to_bgr24},
+  {PIX_FMT_YUV422, PIX_FMT_RGB24, yuv422_to_rgb24},
+  {PIX_FMT_YUV422, PIX_FMT_BGR32, yuv422_to_bgr32},
+  {PIX_FMT_YUV422, PIX_FMT_RGB32, yuv422_to_rgb32},
+  {PIX_FMT_YUV422, PIX_FMT_xRGB32, yuv422_to_xrgb32},
+  {PIX_FMT_YUV422, PIX_FMT_BGRx32, yuv422_to_bgrx32},
+  {PIX_FMT_YUV422, PIX_FMT_BGRA32, yuv422_to_bgra32},
+  {PIX_FMT_YUV422, PIX_FMT_RGBA32, yuv422_to_rgba32},
+  {PIX_FMT_YUV422, PIX_FMT_ABGR32, yuv422_to_abgr32},
+  {PIX_FMT_YUV422, PIX_FMT_ARGB32, yuv422_to_argb32},
 
   {PIX_FMT_UYVY422, PIX_FMT_YUV420P, uyvy422_to_yuv420p},
   {PIX_FMT_UYVY422, PIX_FMT_YUV422P, uyvy422_to_yuv422p},
@@ -2797,6 +2809,18 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_YVYU422, PIX_FMT_YUV420P, yvyu422_to_yuv420p},
   {PIX_FMT_YVYU422, PIX_FMT_YUV422P, yvyu422_to_yuv422p},
   {PIX_FMT_YVYU422, PIX_FMT_GRAY8, yvyu422_to_gray},
+  {PIX_FMT_YVYU422, PIX_FMT_RGB555, yvyu422_to_rgb555},
+  {PIX_FMT_YVYU422, PIX_FMT_RGB565, yvyu422_to_rgb565},
+  {PIX_FMT_YVYU422, PIX_FMT_BGR24, yvyu422_to_bgr24},
+  {PIX_FMT_YVYU422, PIX_FMT_RGB24, yvyu422_to_rgb24},
+  {PIX_FMT_YVYU422, PIX_FMT_BGR32, yvyu422_to_bgr32},
+  {PIX_FMT_YVYU422, PIX_FMT_RGB32, yvyu422_to_rgb32},
+  {PIX_FMT_YVYU422, PIX_FMT_xRGB32, yvyu422_to_xrgb32},
+  {PIX_FMT_YVYU422, PIX_FMT_BGRx32, yvyu422_to_bgrx32},
+  {PIX_FMT_YVYU422, PIX_FMT_BGRA32, yvyu422_to_bgra32},
+  {PIX_FMT_YVYU422, PIX_FMT_RGBA32, yvyu422_to_rgba32},
+  {PIX_FMT_YVYU422, PIX_FMT_ABGR32, yvyu422_to_abgr32},
+  {PIX_FMT_YVYU422, PIX_FMT_ARGB32, yvyu422_to_argb32},
 
   {PIX_FMT_RGB24, PIX_FMT_YUV420P, rgb24_to_yuv420p},
   {PIX_FMT_RGB24, PIX_FMT_NV12, rgb24_to_nv12},
