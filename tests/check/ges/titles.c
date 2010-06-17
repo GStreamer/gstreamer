@@ -140,6 +140,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_set (source, "text", (gchar *) "some text", NULL);
   g_object_get (source, "text", &text, NULL);
   assert_equals_string ("some text", text);
+  g_free (text);
 
   trobj =
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
@@ -148,6 +149,7 @@ GST_START_TEST (test_title_source_in_layer)
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
   g_object_get (source, "font-desc", &text, NULL);
   assert_equals_string ("sans 72", text);
+  g_free (text);
 
   text = ((GESTrackVideoTitleSource *) trobj)->font_desc;
   assert_equals_string ("sans 72", text);
