@@ -17,16 +17,10 @@
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>current_subpicture</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
-          <name>subpicture_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
         </caps>
         <caps>
           <name>current_audio</name>
@@ -35,10 +29,22 @@
           <details>audio/mpeg, mpegversion=(int)1; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
         </caps>
         <caps>
+          <name>current_subpicture</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-dvd-subpicture</details>
+        </caps>
+        <caps>
           <name>current_video</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int)1</details>
         </caps>
         <caps>
           <name>dvd_audio_%02d</name>
@@ -47,22 +53,16 @@
           <details>audio/mpeg, mpegversion=(int)1; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)true</details>
-        </caps>
-        <caps>
           <name>private_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
+          <name>subpicture_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int)1</details>
+          <details>video/x-dvd-subpicture</details>
         </caps>
         <caps>
           <name>video_%02d</name>
@@ -86,16 +86,16 @@
           <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>private_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>audio_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>audio/mpeg, mpegversion=(int)1</details>
+        </caps>
+        <caps>
+          <name>private_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
         <caps>
           <name>video_%02d</name>

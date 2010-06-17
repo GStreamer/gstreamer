@@ -32,16 +32,16 @@
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-pn-realaudio</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>
@@ -74,18 +74,6 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>rtcp_src_%d</name>
-          <direction>source</direction>
-          <presence>request</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>recv_rtp_src_%d_%d_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>application/x-rdt</details>
-        </caps>
-        <caps>
           <name>recv_rtcp_sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
@@ -97,6 +85,18 @@
           <presence>request</presence>
           <details>application/x-rdt</details>
         </caps>
+        <caps>
+          <name>recv_rtp_src_%d_%d_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-rdt</details>
+        </caps>
+        <caps>
+          <name>rtcp_src_%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
+        </caps>
       </pads>
     </element>
     <element>
@@ -106,6 +106,12 @@
       <description>Demultiplex a RealMedia file into audio and video streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/vnd.rn-realmedia</details>
+        </caps>
         <caps>
           <name>audio_%02d</name>
           <direction>source</direction>
@@ -118,12 +124,6 @@
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>application/vnd.rn-realmedia</details>
-        </caps>
       </pads>
     </element>
     <element>
@@ -133,7 +133,6 @@
       <description>Extends RTSP so that it can handle RealMedia setup</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
   </elements>

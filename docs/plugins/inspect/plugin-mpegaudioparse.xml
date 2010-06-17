@@ -17,16 +17,16 @@
       <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;,Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], parsed=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/mpeg, mpegversion=(int)1, parsed=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>

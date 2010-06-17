@@ -23,13 +23,13 @@
           <details>video/x-ms-asf</details>
         </caps>
         <caps>
-          <name>video_%02d</name>
+          <name>audio_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
+          <name>video_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
@@ -64,7 +64,6 @@
       <description>Extends RTSP so that it can handle WMS setup</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
   </elements>

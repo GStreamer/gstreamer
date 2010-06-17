@@ -17,16 +17,16 @@
       <author>Jan Schmidt &lt;jan@noraisin.net&gt;, Michael Smith &lt;msmith@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int){ 16, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], endianness=(int){ 4321 }, depth=(int){ 16, 24 }, signed=(boolean){ true }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-private1-lpcm; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ true, false }, mute=(boolean){ true, false }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int){ 16, 24 }, rate=(int){ 32000, 44100, 48000, 96000 }, channels=(int)[ 1, 8 ], endianness=(int){ 4321 }, depth=(int){ 16, 24 }, signed=(boolean){ true }</details>
         </caps>
       </pads>
     </element>

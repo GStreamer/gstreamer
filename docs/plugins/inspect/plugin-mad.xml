@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)32, depth=(int)32, rate=(int){ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

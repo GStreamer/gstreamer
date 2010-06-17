@@ -17,16 +17,16 @@
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-iec958, rate=(int){ 32000, 44100, 48000 }; audio/x-raw-int, endianness=(int)4321, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 32000, 44100, 48000 }, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-private1-ac3; audio/x-ac3; audio/ac3</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-iec958, rate=(int){ 32000, 44100, 48000 }; audio/x-raw-int, endianness=(int)4321, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 32000, 44100, 48000 }, channels=(int)2</details>
         </caps>
       </pads>
     </element>
