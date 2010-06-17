@@ -35,7 +35,7 @@
       <longname>Fake Sink</longname>
       <class>Sink</class>
       <description>Black hole for data</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Mr. 'frag-me-more' Vanderwingo &lt;wingo@fluendo.com&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Mr. &apos;frag-me-more&apos; Vanderwingo &lt;wingo@fluendo.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -149,15 +149,15 @@
       <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink%d</name>
           <direction>sink</direction>
           <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
       </pads>
@@ -212,15 +212,15 @@
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>request</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
           <details>ANY</details>
         </caps>
       </pads>
