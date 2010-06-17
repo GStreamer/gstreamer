@@ -122,7 +122,7 @@
       </listitem>
       <listitem>
         <para>
-          <emphasis>messages</emphasis>: are object send from elements over the
+          <emphasis>messages</emphasis>: are objects send from elements over the
           bus to the application. Messages can be received synchronously, but
           then from the streaming thread context of the sender or asynchronously
           marshalled to the main thread of the application.
