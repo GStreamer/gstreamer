@@ -3104,6 +3104,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   GstRTSPMessage request = { 0 };
   GstRTSPResult res;
   GstRTSPMethod method;
+  gchar *control;
 
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
@@ -3113,7 +3114,15 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   else
     method = GST_RTSP_OPTIONS;
 
-  res = gst_rtsp_message_init_request (&request, method, src->req_location);
+  if (src->control)
+    control = src->control;
+  else
+    control = src->req_location;
+
+  if (control == NULL)
+    goto no_control;
+
+  res = gst_rtsp_message_init_request (&request, method, control);
   if (res < 0)
     goto send_error;
 
@@ -3130,6 +3139,11 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   return GST_RTSP_OK;
 
   /* ERRORS */
+no_control:
+  {
+    GST_WARNING_OBJECT (src, "no control url to send keepalive");
+    return GST_RTSP_OK;
+  }
 send_error:
   {
     gchar *str = gst_rtsp_strresult (res);
@@ -4871,6 +4885,77 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
 }
 
 static gboolean
+gst_rtspsrc_from_sdp (GstRTSPSrc * src, guint8 * data, guint size)
+{
+  GstSDPMessage sdp = { 0 };
+  gint i, n_streams;
+
+  GST_DEBUG_OBJECT (src, "parse SDP...");
+  gst_sdp_message_init (&sdp);
+  gst_sdp_message_parse_buffer (data, size, &sdp);
+
+  if (src->debug)
+    gst_sdp_message_dump (&sdp);
+
+  gst_rtsp_ext_list_parse_sdp (src->extensions, &sdp, src->props);
+
+  /* parse range for duration reporting. */
+  {
+    const gchar *range;
+
+    for (i = 0;; i++) {
+      range = gst_sdp_message_get_attribute_val_n (&sdp, "range", i);
+      if (range == NULL)
+        break;
+
+      /* keep track of the range and configure it in the segment */
+      if (gst_rtspsrc_parse_range (src, range, &src->segment))
+        break;
+    }
+  }
+  /* try to find a global control attribute */
+  {
+    const gchar *control;
+
+    for (i = 0;; i++) {
+      control = gst_sdp_message_get_attribute_val_n (&sdp, "control", i);
+      if (control == NULL)
+        break;
+
+      /* only take fully qualified urls */
+      if (g_str_has_prefix (control, "rtsp://"))
+        break;
+    }
+    g_free (src->control);
+    src->control = g_strdup (control);
+  }
+
+  /* create streams */
+  n_streams = gst_sdp_message_medias_len (&sdp);
+  for (i = 0; i < n_streams; i++) {
+    gst_rtspsrc_create_stream (src, &sdp, i);
+  }
+
+  src->state = GST_RTSP_STATE_INIT;
+
+  /* setup streams */
+  if (!gst_rtspsrc_setup_streams (src))
+    goto setup_failed;
+
+  src->state = GST_RTSP_STATE_READY;
+
+  gst_sdp_message_uninit (&sdp);
+
+  return TRUE;
+
+setup_failed:
+  {
+    gst_sdp_message_uninit (&sdp);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
   GstRTSPResult res;
@@ -4878,8 +4963,6 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   GstRTSPMessage response = { 0 };
   guint8 *data;
   guint size;
-  gint i, n_streams;
-  GstSDPMessage sdp = { 0 };
   gchar *respcont = NULL;
   GstRTSPUrl *url;
 
@@ -4998,66 +5081,12 @@ restart:
   if (data == NULL)
     goto no_describe;
 
-  GST_DEBUG_OBJECT (src, "parse SDP...");
-  gst_sdp_message_init (&sdp);
-  gst_sdp_message_parse_buffer (data, size, &sdp);
-
-  if (src->debug)
-    gst_sdp_message_dump (&sdp);
-
-  gst_rtsp_ext_list_parse_sdp (src->extensions, &sdp, src->props);
-
-  /* parse range for duration reporting. */
-  {
-    const gchar *range;
-
-    for (i = 0;; i++) {
-      range = gst_sdp_message_get_attribute_val_n (&sdp, "range", i);
-      if (range == NULL)
-        break;
-
-      /* keep track of the range and configure it in the segment */
-      if (gst_rtspsrc_parse_range (src, range, &src->segment))
-        break;
-    }
-  }
-  /* try to find a global control attribute */
-  g_free (src->control);
-  src->control = NULL;
-  {
-    const gchar *control;
-
-    for (i = 0;; i++) {
-      control = gst_sdp_message_get_attribute_val_n (&sdp, "control", i);
-      if (control == NULL)
-        break;
-
-      if (g_str_has_prefix (control, "rtsp://")) {
-        src->control = g_strdup (control);
-        break;
-      }
-    }
-  }
-
-  /* create streams */
-  n_streams = gst_sdp_message_medias_len (&sdp);
-  for (i = 0; i < n_streams; i++) {
-    gst_rtspsrc_create_stream (src, &sdp, i);
-  }
-
-  src->state = GST_RTSP_STATE_INIT;
-
-  /* setup streams */
-  if (!gst_rtspsrc_setup_streams (src))
-    goto setup_failed;
-
-  src->state = GST_RTSP_STATE_READY;
-  GST_RTSP_STATE_UNLOCK (src);
+  if (!gst_rtspsrc_from_sdp (src, data, size))
+    goto sdp_failed;
 
   /* clean up any messages */
   gst_rtsp_message_unset (&request);
   gst_rtsp_message_unset (&response);
-  gst_sdp_message_uninit (&sdp);
 
   return TRUE;
 
@@ -5118,7 +5147,7 @@ no_describe:
         ("Server can not provide an SDP."));
     goto cleanup_error;
   }
-setup_failed:
+sdp_failed:
   {
     gst_rtspsrc_close (src);
     /* error was posted */
@@ -5135,7 +5164,6 @@ cleanup_error:
     GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
-    gst_sdp_message_uninit (&sdp);
     return FALSE;
   }
 }
@@ -5163,6 +5191,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
+  GList *walk;
   gboolean ret = FALSE;
   gchar *control;
 
@@ -5214,9 +5243,22 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   else
     control = src->req_location;
 
-  if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)) {
+  if (!(src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)))
+    goto not_supported;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    gchar *setup_url;
+
+    /* try aggregate control first but do non-aggregate control otherwise */
+    if (control)
+      setup_url = control;
+    else if ((setup_url = stream->setup_url) == NULL)
+      continue;
+
     /* do TEARDOWN */
-    res = gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN, control);
+    res =
+        gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN, setup_url);
     if (res < 0)
       goto create_request_failed;
 
@@ -5226,9 +5268,10 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     /* FIXME, parse result? */
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
-  } else {
-    GST_DEBUG_OBJECT (src,
-        "TEARDOWN and PLAY not supported, can't do TEARDOWN");
+
+    /* early exit when we did aggregate control */
+    if (control)
+      break;
   }
 
 close:
@@ -5265,6 +5308,12 @@ send_error:
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
     ret = FALSE;
+    goto close;
+  }
+not_supported:
+  {
+    GST_DEBUG_OBJECT (src,
+        "TEARDOWN and PLAY not supported, can't do TEARDOWN");
     goto close;
   }
 }
@@ -5390,6 +5439,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
+  GList *walk;
   gchar *hval;
   gfloat fval;
   gint hval_idx;
@@ -5408,12 +5458,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   if (!src->connection || !src->connected)
     goto done;
 
-  /* construct a control url */
-  if (src->control)
-    control = src->control;
-  else
-    control = src->req_location;
-
   /* waiting for connection idle, we were flushing so any attempt at doing data
    * transfer will result in pausing the tasks. */
   GST_DEBUG_OBJECT (src, "wait for connection idle");
@@ -5424,63 +5468,84 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
   GST_DEBUG_OBJECT (src, "stop connection flush");
   gst_rtsp_connection_flush (src->connection, FALSE);
 
-  /* do play */
-  res = gst_rtsp_message_init_request (&request, GST_RTSP_PLAY, control);
-  if (res < 0)
-    goto create_request_failed;
+  /* construct a control url */
+  if (src->control)
+    control = src->control;
+  else
+    control = src->req_location;
 
-  if (src->need_range) {
-    hval = gen_range_header (src, segment);
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    gchar *setup_url;
 
-    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
-    g_free (hval);
-    src->need_range = FALSE;
+    /* try aggregate control first but do non-aggregate control otherwise */
+    if (control)
+      setup_url = control;
+    else if ((setup_url = stream->setup_url) == NULL)
+      continue;
+
+    /* do play */
+    res = gst_rtsp_message_init_request (&request, GST_RTSP_PLAY, setup_url);
+    if (res < 0)
+      goto create_request_failed;
+
+    if (src->need_range) {
+      hval = gen_range_header (src, segment);
+
+      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
+      g_free (hval);
+      src->need_range = FALSE;
+    }
+
+    if (segment->rate != 1.0) {
+      hval = gst_rtspsrc_dup_printf ("%f", segment->rate);
+      if (src->skip)
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
+      else
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
+      g_free (hval);
+    }
+
+    if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
+      goto send_error;
+
+    gst_rtsp_message_unset (&request);
+
+    /* parse RTP npt field. This is the current position in the stream (Normal
+     * Play Time) and should be put in the NEWSEGMENT position field. */
+    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
+            0) == GST_RTSP_OK)
+      gst_rtspsrc_parse_range (src, hval, segment);
+
+    /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
+    segment->rate = 1.0;
+
+    /* parse Speed header. This is the intended playback rate of the stream
+     * and should be put in the NEWSEGMENT rate field. */
+    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SPEED, &hval,
+            0) == GST_RTSP_OK) {
+      if (gst_rtspsrc_get_float (hval, &fval) > 0)
+        segment->rate = fval;
+    } else if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE,
+            &hval, 0) == GST_RTSP_OK) {
+      if (gst_rtspsrc_get_float (hval, &fval) > 0)
+        segment->rate = fval;
+    }
+
+    /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
+     * for the RTP packets. If this is not present, we assume all starts from 0...
+     * This is info for the RTP session manager that we pass to it in caps. */
+    hval_idx = 0;
+    while (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
+            &hval, hval_idx++) == GST_RTSP_OK)
+      gst_rtspsrc_parse_rtpinfo (src, hval);
+
+    gst_rtsp_message_unset (&response);
+
+    /* early exit when we did aggregate control */
+    if (control)
+      break;
   }
-
-  if (segment->rate != 1.0) {
-    hval = gst_rtspsrc_dup_printf ("%f", segment->rate);
-    if (src->skip)
-      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
-    else
-      gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
-    g_free (hval);
-  }
-
-  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
-    goto send_error;
-
-  gst_rtsp_message_unset (&request);
-
-  /* parse RTP npt field. This is the current position in the stream (Normal
-   * Play Time) and should be put in the NEWSEGMENT position field. */
-  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
-          0) == GST_RTSP_OK)
-    gst_rtspsrc_parse_range (src, hval, segment);
-
-  /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
-  segment->rate = 1.0;
-
-  /* parse Speed header. This is the intended playback rate of the stream
-   * and should be put in the NEWSEGMENT rate field. */
-  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SPEED, &hval,
-          0) == GST_RTSP_OK) {
-    if (gst_rtspsrc_get_float (hval, &fval) > 0)
-      segment->rate = fval;
-  } else if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE, &hval,
-          0) == GST_RTSP_OK) {
-    if (gst_rtspsrc_get_float (hval, &fval) > 0)
-      segment->rate = fval;
-  }
-
-  /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
-   * for the RTP packets. If this is not present, we assume all starts from 0... 
-   * This is info for the RTP session manager that we pass to it in caps. */
-  hval_idx = 0;
-  while (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
-          &hval, hval_idx++) == GST_RTSP_OK)
-    gst_rtspsrc_parse_rtpinfo (src, hval);
-
-  gst_rtsp_message_unset (&response);
 
   /* configure the caps of the streams after we parsed all headers. */
   gst_rtspsrc_configure_caps (src, segment);
@@ -5536,6 +5601,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
+  GList *walk;
   gchar *control;
 
   GST_RTSP_STATE_LOCK (src);
@@ -5567,15 +5633,31 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean idle)
   else
     control = src->req_location;
 
-  /* do pause */
-  if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE, control) < 0)
-    goto create_request_failed;
+  /* loop over the streams. We might exit the loop early when we could do an
+   * aggregate control */
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    gchar *setup_url;
 
-  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
-    goto send_error;
+    /* try aggregate control first but do non-aggregate control otherwise */
+    if (control)
+      setup_url = control;
+    else if ((setup_url = stream->setup_url) == NULL)
+      continue;
 
-  gst_rtsp_message_unset (&request);
-  gst_rtsp_message_unset (&response);
+    if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE, setup_url) < 0)
+      goto create_request_failed;
+
+    if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
+      goto send_error;
+
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
+
+    /* exit early when we did agregate control */
+    if (control)
+      break;
+  }
 
   if (idle && src->task) {
     GST_DEBUG_OBJECT (src, "starting idle task again");
