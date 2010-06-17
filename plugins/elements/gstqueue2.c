@@ -1613,7 +1613,7 @@ gst_queue2_write_buffer_to_ring_buffer (GstQueue2 * queue, GstBuffer * buffer)
       if (range_to_destroy) {
         if (range_to_destroy == queue->ranges)
           queue->ranges = range;
-        g_slice_free1 (sizeof (GstQueue2Range), range_to_destroy);
+        g_slice_free (GstQueue2Range, range_to_destroy);
         range_to_destroy = NULL;
       }
     }
