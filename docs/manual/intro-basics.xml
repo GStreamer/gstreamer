@@ -108,32 +108,38 @@
     <itemizedlist>
       <listitem>
         <para>
-          <emphasis>buffers</emphasis>: are objects for passing streaming data
+          <emphasis>buffers</emphasis> are objects for passing streaming data
           between elements in the pipeline. Buffers always travel from sources
           to sinks (downstream).
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>events</emphasis>: are objects send between elements or from
+          <emphasis>events</emphasis> are objects sent between elements or from
           the application to elements. Events can travel upstream and downstream.
           Downstream events can be synchronised to the data flow.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>messages</emphasis>: are objects send from elements over the
-          bus to the application. Messages can be received synchronously, but
-          then from the streaming thread context of the sender or asynchronously
-          marshalled to the main thread of the application.
+          <emphasis>messages</emphasis> are objects posted by elements on
+          the pipeline's message bus, where they will be held for collection
+          by the application. Messages can be intercepted synchronously from
+          the streaming thread context of the element posting the message, but
+          are usually handled asynchronously by the application from the
+          application's main thread. Messages are used to transmit information
+          such as errors, tags, state changes, buffering state, redirects etc.
+          from elements to the application in a thread-safe way.
         </para>
       </listitem>
       <listitem>
         <para>
-          <emphasis>queries</emphasis>: allow application to request information
-          from the pipeline. Queries are answered synchronously. Also elements
-          can use queries. They can be used both ways, but most common are
-          downstream queries.
+          <emphasis>queries</emphasis> allow applications to request information
+          such as duration or current playback position from the pipeline.
+          Queries are always answered synchronously. Elements can also use
+          queries to request information from their peer elements (such as the
+          file size or duration). They can be used both ways within a pipeline,
+          but upstream queries are more common.
         </para>
       </listitem>
     </itemizedlist>
