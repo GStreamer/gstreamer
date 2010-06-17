@@ -537,7 +537,7 @@ gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
  * By specifying the rectangle, the video can be overlayed to a specific region
  * of that window only. After setting the new rectangle one should call
  * gst_x_overlay_expose() to force a redraw. To unset the region pass -1 for
- * the @x, @y, @width, and @height parameters.
+ * the @width and @height parameters.
  *
  * This method is needed for non fullscreen video overlay in UI toolkits that
  * do not support subwindows.
@@ -554,8 +554,8 @@ gst_x_overlay_set_render_rectangle (GstXOverlay * overlay,
 
   g_return_val_if_fail (overlay != NULL, FALSE);
   g_return_val_if_fail (GST_IS_X_OVERLAY (overlay), FALSE);
-  g_return_val_if_fail ((x == -1 && y == -1 && width == -1 && height == -1) ||
-      (x >= 0 && y >= 0 && width > 0 && height > 0), FALSE);
+  g_return_val_if_fail ((width == -1 && height == -1) ||
+      (width > 0 && height > 0), FALSE);
 
   klass = GST_X_OVERLAY_GET_CLASS (overlay);
 
