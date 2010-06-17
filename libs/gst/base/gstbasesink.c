@@ -2233,7 +2233,7 @@ static GstFlowReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
     GstMiniObject * obj, gboolean * late, gboolean * step_end)
 {
-  GstClockTimeDiff jitter;
+  GstClockTimeDiff jitter = 0;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
   GstClockTime rstart, rstop, sstart, sstop, stime;
