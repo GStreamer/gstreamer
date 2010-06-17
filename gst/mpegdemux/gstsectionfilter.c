@@ -128,7 +128,7 @@ gst_section_filter_push (GstSectionFilter * filter, gboolean pusi,      /* deter
   if (pusi) {
     const guint8 *data = GST_BUFFER_DATA (buf);
     if (filter->last_continuity_counter != 255) {
-      GST_WARNING ("section lost, last continuity counter: %d"
+      GST_WARNING ("section lost, last continuity counter: %d, "
           "we now have a pusi at continuity counter: %d",
           filter->last_continuity_counter, continuity_counter);
       gst_section_filter_clear (filter);
@@ -152,7 +152,7 @@ gst_section_filter_push (GstSectionFilter * filter, gboolean pusi,      /* deter
   /* we have lost the section and we are not a start
    * section, so clear what was in it */
   else {
-    GST_WARNING ("section lost, last continuity counter: %d"
+    GST_WARNING ("section lost, last continuity counter: %d, "
         "new continuity counter but not pusi: %d",
         filter->last_continuity_counter, continuity_counter);
     gst_section_filter_clear (filter);
