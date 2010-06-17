@@ -17,15 +17,15 @@
       <author>Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
       </pads>

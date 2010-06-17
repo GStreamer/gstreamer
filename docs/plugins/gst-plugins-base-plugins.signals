@@ -463,3 +463,11 @@ guint64  arg1
 GstPlaySink *gstplaysink
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstPlaySink::convert-frame</NAME>
+<RETURNS>GstBuffer*</RETURNS>
+<FLAGS>la</FLAGS>
+GstPlaySink *gstplaysink
+GstCaps *arg1
+</SIGNAL>
+

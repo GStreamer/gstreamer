@@ -16,7 +16,6 @@
       <description>Autoplug and play media from an uri</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>
@@ -26,7 +25,6 @@
       <description>Autoplug and play media from an uri</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>
@@ -37,19 +35,7 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>text_sink</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>video_sink</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
-          <name>video_raw_sink</name>
+          <name>audio_raw_sink</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>
@@ -61,7 +47,19 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_raw_sink</name>
+          <name>text_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_raw_sink</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>ANY</details>

@@ -17,16 +17,16 @@
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-gdp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-gdp</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gdp</details>
         </caps>
       </pads>
     </element>

@@ -17,15 +17,15 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
       </pads>

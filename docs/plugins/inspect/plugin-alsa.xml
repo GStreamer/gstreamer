@@ -16,7 +16,6 @@
       <description>Control sound input and output levels with ALSA</description>
       <author>Leif Johnson &lt;leif@ambient.2y.net&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>

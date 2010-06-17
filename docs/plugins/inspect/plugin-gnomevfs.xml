@@ -1,6 +1,6 @@
 <plugin>
   <name>gnomevfs</name>
-  <description>elements to read from and write to  Gnome-VFS uri's</description>
+  <description>elements to read from and write to  Gnome-VFS uri&apos;s</description>
   <filename>../../ext/gnomevfs/.libs/libgstgnomevfs.so</filename>
   <basename>libgstgnomevfs.so</basename>
   <version>0.10.29.1</version>

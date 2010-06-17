@@ -82,12 +82,13 @@ GObject
       GstOggAviParse
       GstAdder
       GstBaseTransform
-        GstVideoScale
+        GstVideoFilter
+          GstVideoScale
+          GstFFMpegCsp
         GstAudioFilter
           GstVolume
         GstAudioConvert
         GstAudioResample
-        GstFFMpegCsp
       GstVideoRate
       GstStreamSelector
       GstPlaybin2InputSelector
@@ -105,8 +106,8 @@ GObject
     GstPlugin
     GstRegistry
     GstRingBuffer
-      GstAudioSinkRingBuffer
       GstAudioSrcRingBuffer
+      GstAudioSinkRingBuffer
   GstSignalObject
   GstMixerTrack
   GstStreamInfo

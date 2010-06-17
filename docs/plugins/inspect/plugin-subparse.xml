@@ -17,16 +17,16 @@
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>text/x-pango-markup</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-ssa; application/x-ass</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>text/x-pango-markup</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Gustavo J. A. M. Carneiro &lt;gjc@inescporto.pt&gt;, GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>text/plain; text/x-pango-markup</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-subtitle; application/x-subtitle-sami; application/x-subtitle-tmplayer; application/x-subtitle-mpl2; application/x-subtitle-dks; application/x-subtitle-qttext</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>text/plain; text/x-pango-markup</details>
         </caps>
       </pads>
     </element>

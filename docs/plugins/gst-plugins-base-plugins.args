@@ -2229,6 +2229,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecodeBin2::expose-all-streams</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Expose All Streams</NICK>
+<BLURB>Expose all streams, including those of unknown type or that don't match the 'caps' property.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURIDecodeBin::uri</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -2316,6 +2326,16 @@
 <NICK>Use Buffering</NICK>
 <BLURB>Perform buffering on demuxed/parsed media.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin::expose-all-streams</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Expose All Streams</NICK>
+<BLURB>Expose all streams, including those of unknown type or that don't match the 'caps' property.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2686,6 +2706,16 @@
 <NICK>Subpicture plugin</NICK>
 <BLURB>the subpicture output element to use (NULL = default dvdspu).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::av-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AV Offset</NICK>
+<BLURB>The synchronisation offset between audio and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3064,7 +3094,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Emit signals</NICK>
-<BLURB>Emit new-preroll and new-buffer signals.</BLURB>
+<BLURB>Emit need-data, enough-data and seek-data signals.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -3166,6 +3196,26 @@
 <NICK>subtitle encoding</NICK>
 <BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::av-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AV Offset</NICK>
+<BLURB>The synchronisation offset between audio and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::frame</NAME>
+<TYPE>GstBuffer*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Frame</NICK>
+<BLURB>The last frame (NULL = no video available).</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>

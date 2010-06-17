@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv; video/x-raw-rgb; image/jpeg; image/png</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv; video/x-raw-rgb; image/jpeg; image/png</details>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray; image/jpeg; image/png</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray; image/jpeg; image/png</details>
         </caps>
       </pads>
     </element>
