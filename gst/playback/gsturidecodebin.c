@@ -103,6 +103,8 @@ struct _GstURIDecodeBin
   gboolean async_pending;       /* async-start has been emited */
 
   gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
+
+  guint64 ring_buffer_max_size; /* 0 means disabled */
 };
 
 struct _GstURIDecodeBinClass
@@ -158,6 +160,7 @@ enum
 #define DEFAULT_DOWNLOAD            FALSE
 #define DEFAULT_USE_BUFFERING       FALSE
 #define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
+#define DEFAULT_RING_BUFFER_MAX_SIZE 0
 
 enum
 {
@@ -172,6 +175,7 @@ enum
   PROP_DOWNLOAD,
   PROP_USE_BUFFERING,
   PROP_EXPOSE_ALL_STREAMS,
+  PROP_RING_BUFFER_MAX_SIZE,
   PROP_LAST
 };
 
@@ -385,6 +389,22 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           "Expose all streams, including those of unknown type or that don't match the 'caps' property",
           DEFAULT_EXPOSE_ALL_STREAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstQueue2:ring-buffer-max-size
+   *
+   * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
+   * buffer is disabled. Default is 0.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_RING_BUFFER_MAX_SIZE,
+      g_param_spec_uint64 ("ring-buffer-max-size",
+          "Max. ring buffer size (bytes)",
+          "Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled)",
+          0, G_MAXUINT, DEFAULT_RING_BUFFER_MAX_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstURIDecodeBin::unknown-type:
    * @bin: The uridecodebin
@@ -524,6 +544,7 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
   dec->download = DEFAULT_DOWNLOAD;
   dec->use_buffering = DEFAULT_USE_BUFFERING;
   dec->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
+  dec->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
 }
 
 static void
@@ -609,6 +630,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_EXPOSE_ALL_STREAMS:
       dec->expose_allstreams = g_value_get_boolean (value);
       break;
+    case PROP_RING_BUFFER_MAX_SIZE:
+      dec->ring_buffer_max_size = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -665,6 +689,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXPOSE_ALL_STREAMS:
       g_value_set_boolean (value, dec->expose_allstreams);
+      break;
+    case PROP_RING_BUFFER_MAX_SIZE:
+      g_value_set_uint64 (value, dec->ring_buffer_max_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1461,6 +1488,8 @@ type_found (GstElement * typefind, guint probability,
     goto no_queue2;
 
   g_object_set (queue, "use-buffering", TRUE, NULL);
+  g_object_set (queue, "ring-buffer-max-size", decoder->ring_buffer_max_size,
+      NULL);
 
   GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
       decoder->download);
