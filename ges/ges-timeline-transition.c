@@ -460,6 +460,12 @@ ges_type_timeline_transition_vtype_get_type (void)
   return the_type;
 }
 
+/**
+ * ges_timeline_transition_new:
+ * @vtype: the type of transition to create
+ *
+ */
+
 GESTimelineTransition *
 ges_timeline_transition_new (gint vtype)
 {
@@ -470,6 +476,11 @@ ges_timeline_transition_new (gint vtype)
 
   return ret;
 }
+
+/**
+ * ges_timeline_transition_new_for_nick:
+ * @nick: a string representing the type of transition to create
+ */
 
 GESTimelineTransition *
 ges_timeline_transition_new_for_nick (gchar * nick)

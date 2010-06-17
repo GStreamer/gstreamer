@@ -181,6 +181,9 @@ void
 ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
     const gchar * text)
 {
+  if (self->text)
+    g_free (self->text);
+
   self->text = g_strdup (text);
   if (self->text_el)
     g_object_set (self->text_el, "text", text, NULL);
@@ -199,6 +202,9 @@ void
 ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
     const gchar * font_desc)
 {
+  if (self->font_desc)
+    g_free (self->font_desc);
+
   self->font_desc = g_strdup (font_desc);
   GST_LOG ("setting font-desc to '%s'", font_desc);
   if (self->text_el)

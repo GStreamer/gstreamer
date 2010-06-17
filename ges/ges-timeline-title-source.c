@@ -279,6 +279,9 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
 
   GST_DEBUG ("self:%p, text:%s", self, text);
 
+  if (self->text)
+    g_free (self->text);
+
   self->text = g_strdup (text);
 
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
@@ -298,6 +301,9 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
+
+  if (self->font_desc)
+    g_free (self->font_desc);
 
   self->font_desc = g_strdup (font_desc);
 
