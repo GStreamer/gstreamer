@@ -48,8 +48,8 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     GstVdpH264Frame *frame = frames[i];
 
     reference_frames[i].surface =
-        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->src_buffer)->
-        surface;
+        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->
+        src_buffer)->surface;
 
     reference_frames[i].is_long_term = frame->is_long_term;
     reference_frames[i].top_is_reference = frame->is_reference;
@@ -58,6 +58,26 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     reference_frames[i].field_order_cnt[1] = frame->poc;
     reference_frames[i].frame_idx = frame->frame_num;
   }
+
+  for (i = dpb->n_frames; i < 16; i++) {
+    reference_frames[i].surface = VDP_INVALID_HANDLE;
+    reference_frames[i].top_is_reference = VDP_FALSE;
+    reference_frames[i].bottom_is_reference = VDP_FALSE;
+  }
+}
+
+static void
+gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
+{
+  GstVdpH264Frame **frames;
+  guint i;
+
+  frames = dpb->frames;
+  gst_video_frame_unref (GST_VIDEO_FRAME_CAST (frames[idx]));
+  dpb->n_frames--;
+
+  for (i = idx; i < dpb->n_frames; i++)
+    frames[i] = frames[i + 1];
 }
 
 static void
@@ -67,18 +87,10 @@ gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
 
   gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
   dpb->output (dpb, frame);
+  frame->output_needed = FALSE;
 
-  if (!frame->is_reference) {
-    GstVdpH264Frame **frames;
-    guint i;
-
-    gst_video_frame_unref (GST_VIDEO_FRAME_CAST (frame));
-    dpb->n_frames--;
-
-    frames = dpb->frames;
-    for (i = idx; i < dpb->n_frames; i++)
-      frames[i] = frames[i + 1];
-  }
+  if (!frame->is_reference)
+    gst_h264_dpb_remove (dpb, idx);
 }
 
 static gboolean
@@ -153,6 +165,8 @@ gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
   GstVideoFrame **frames;
   guint i;
 
+  GST_DEBUG ("flush");
+
   if (output)
     while (gst_h264_dpb_bump (dpb, G_MAXUINT));
 
@@ -171,6 +185,9 @@ gst_h264_dpb_mark_sliding (GstH264DPB * dpb)
   guint i;
   gint mark_idx;
 
+  if (dpb->n_frames != dpb->max_frames)
+    return;
+
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
     if (frames[i]->is_reference && !frames[i]->is_long_term) {
@@ -187,6 +204,8 @@ gst_h264_dpb_mark_sliding (GstH264DPB * dpb)
     }
 
     frames[mark_idx]->is_reference = FALSE;
+    if (!frames[mark_idx]->output_needed)
+      gst_h264_dpb_remove (dpb, mark_idx);
   }
 }
 

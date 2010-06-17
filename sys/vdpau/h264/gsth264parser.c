@@ -255,45 +255,46 @@ gst_h264_parser_parse_scaling_list (GstNalReader * reader,
     const guint8 fallback_8x8_inter[64], const guint8 fallback_8x8_intra[64],
     guint32 chroma_format_idc)
 {
-  gint i;
-  guint8 seq_scaling_list_present_flag[12] = { 0, };
+  guint i;
 
   GST_WARNING ("parsing scaling lists");
-
-  for (i = 0; i < ((chroma_format_idc) != 3) ? 8 : 12; i++) {
-    READ_UINT8 (reader, seq_scaling_list_present_flag[i], 1);
-  }
 
   for (i = 0; i < 12; i++) {
     gboolean use_default = FALSE;
 
-    if (seq_scaling_list_present_flag[i]) {
-      guint8 *scaling_list;
-      guint size;
-      guint j;
-      guint8 last_scale, next_scale;
+    if (i < ((chroma_format_idc != 3) ? 8 : 12)) {
+      guint8 scaling_list_present_flag;
 
-      if (i <= 5) {
-        scaling_list = scaling_lists_4x4[i];
-        size = 16;
-      } else {
-        scaling_list = scaling_lists_8x8[i];
-        size = 64;
-      }
+      READ_UINT8 (reader, scaling_list_present_flag, 1);
+      if (scaling_list_present_flag) {
+        guint8 *scaling_list;
+        guint size;
+        guint j;
+        guint8 last_scale, next_scale;
 
-      last_scale = 8;
-      next_scale = 8;
-      for (j = 0; j < size; j++) {
-        if (next_scale != 0) {
-          gint32 delta_scale;
-
-          READ_SE (reader, delta_scale);
-          next_scale = (last_scale + delta_scale + 256) % 256;
-          use_default = (j == 0 && next_scale == 0);
+        if (i <= 5) {
+          scaling_list = scaling_lists_4x4[i];
+          size = 16;
+        } else {
+          scaling_list = scaling_lists_8x8[i - 6];
+          size = 64;
         }
-        scaling_list[j] = (next_scale == 0) ? last_scale : next_scale;
-        last_scale = scaling_list[j];
-      }
+
+        last_scale = 8;
+        next_scale = 8;
+        for (j = 0; j < size; j++) {
+          if (next_scale != 0) {
+            gint32 delta_scale;
+
+            READ_SE (reader, delta_scale);
+            next_scale = (last_scale + delta_scale + 256) % 256;
+            use_default = (j == 0 && next_scale == 0);
+          }
+          scaling_list[j] = (next_scale == 0) ? last_scale : next_scale;
+          last_scale = scaling_list[j];
+        }
+      } else
+        use_default = TRUE;
     } else
       use_default = TRUE;
 
@@ -396,8 +397,8 @@ gst_h264_parser_parse_sequence (GstH264Parser * parser, guint8 * data,
 
   if (seq->profile_idc == 100 || seq->profile_idc == 110 ||
       seq->profile_idc == 122 || seq->profile_idc == 244 ||
-      seq->profile_idc == 244 || seq->profile_idc == 44 ||
-      seq->profile_idc == 83 || seq->profile_idc == 86) {
+      seq->profile_idc == 44 || seq->profile_idc == 83 ||
+      seq->profile_idc == 86) {
     READ_UE_ALLOWED (&reader, seq->chroma_format_idc, 0, 3);
     if (seq->chroma_format_idc == 3)
       READ_UINT8 (&reader, seq->separate_colour_plane_flag, 1);
@@ -497,8 +498,18 @@ gst_h264_parser_more_data (GstNalReader * reader)
     if (!gst_nal_reader_peek_bits_uint8 (reader, &rbsp_stop_one_bit, 1))
       return FALSE;
 
-    if (rbsp_stop_one_bit == 1)
-      return FALSE;
+    if (rbsp_stop_one_bit == 1) {
+      guint8 zero_bits;
+
+      if (remaining == 1)
+        return FALSE;
+
+      if (!gst_nal_reader_peek_bits_uint8 (reader, &zero_bits, remaining))
+        return FALSE;
+
+      if ((zero_bits - (1 << (remaining - 1))) == 0)
+        return FALSE;
+    }
   }
 
   return TRUE;
@@ -754,7 +765,7 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264Slice * slice,
 
   m = &slice->dec_ref_pic_marking;
 
-  if (slice->nal_unit.IdrPicFlag == 0) {
+  if (slice->nal_unit.IdrPicFlag) {
     READ_UINT8 (reader, m->no_output_of_prior_pics_flag, 1);
     READ_UINT8 (reader, m->long_term_reference_flag, 1);
   } else {
