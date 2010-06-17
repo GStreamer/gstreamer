@@ -2934,7 +2934,7 @@ gst_xvimagesink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
 
   /* FIXME: how about some locking? */
-  if (x >= 0 && y >= 0 && width >= 0 && height >= 0) {
+  if (width >= 0 && height >= 0) {
     xvimagesink->render_rect.x = x;
     xvimagesink->render_rect.y = y;
     xvimagesink->render_rect.w = width;
