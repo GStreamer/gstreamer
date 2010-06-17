@@ -1601,6 +1601,44 @@ TAG_MERGE_FUNCS (pointer, gpointer, (*value != NULL))
  */
 TAG_MERGE_FUNCS (string, gchar *, (*value != NULL && **value != '\0'))
 
+/*
+ *FIXME 0.11: Instead of _peek (non-copy) and _get (copy), we could have
+ *            _get (non-copy) and _dup (copy) for strings, seems more
+ *            widely used
+ */
+/**
+ * gst_tag_list_peek_string_index:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Peeks at the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * The resulting string in @value will be in UTF-8 encoding and doesn't need
+ * to be freed by the caller. The returned string is also guaranteed to
+ * be non-NULL and non-empty.
+ *
+ * Returns: TRUE, if a value was set, FALSE if the tag didn't exist in the
+ *              given list.
+ */
+gboolean
+gst_tag_list_peek_string_index (const GstTagList * list,
+    const gchar * tag, guint index, const gchar ** value)
+{
+  const GValue *v;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
+    return FALSE;
+  *value = g_value_get_string (v);
+  return *value != NULL && **value != '\0';
+}
+
 /**
  * gst_tag_list_get_date:
  * @list: a #GstTagList to get the tag from

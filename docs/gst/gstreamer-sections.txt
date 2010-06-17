@@ -2255,6 +2255,7 @@ gst_tag_list_get_double
 gst_tag_list_get_double_index
 gst_tag_list_get_string
 gst_tag_list_get_string_index
+gst_tag_list_peek_string_index
 gst_tag_list_get_pointer
 gst_tag_list_get_pointer_index
 gst_tag_list_get_date

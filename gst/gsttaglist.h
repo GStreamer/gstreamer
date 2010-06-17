@@ -345,6 +345,10 @@ gboolean     gst_tag_list_get_string_index  (const GstTagList * list,
                                              const gchar      * tag,
                                              guint              index,
                                              gchar           ** value);
+gboolean     gst_tag_list_peek_string_index (const GstTagList * list,
+                                             const gchar      * tag,
+                                             guint              index,
+                                             const gchar     ** value);
 gboolean     gst_tag_list_get_pointer       (const GstTagList * list,
                                              const gchar      * tag,
                                              gpointer         * value);

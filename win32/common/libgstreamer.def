@@ -991,6 +991,7 @@ EXPORTS
 	gst_tag_list_new
 	gst_tag_list_new_full
 	gst_tag_list_new_full_valist
+	gst_tag_list_peek_string_index
 	gst_tag_list_remove_tag
 	gst_tag_merge_mode_get_type
 	gst_tag_merge_strings_with_comma
