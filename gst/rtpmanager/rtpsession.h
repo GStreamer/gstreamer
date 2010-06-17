@@ -229,6 +229,8 @@ struct _RTPSessionClass {
   void (*on_sender_timeout) (RTPSession *sess, RTPSource *source);
   gboolean (*on_sending_rtcp) (RTPSession *sess, GstBuffer *buffer,
       gboolean early);
+  void (*on_feedback_rtcp)  (RTPSession *sess, guint type, guint fbtype,
+      guint sender_ssrc, guint media_ssrc, GstBuffer *fci);
 };
 
 GType rtp_session_get_type (void);

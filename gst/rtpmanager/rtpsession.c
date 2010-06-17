@@ -43,6 +43,7 @@ enum
   SIGNAL_ON_TIMEOUT,
   SIGNAL_ON_SENDER_TIMEOUT,
   SIGNAL_ON_SENDING_RTCP,
+  SIGNAL_ON_FEEDBACK_RTCP,
   LAST_SIGNAL
 };
 
@@ -270,6 +271,27 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
       accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__POINTER_BOOLEAN,
       G_TYPE_BOOLEAN, 2, G_TYPE_POINTER, G_TYPE_BOOLEAN);
+
+  /**
+   * RTPSession::on-feedback-rtcp:
+   * @session: the object which received the signal
+   * @type: Type of RTCP packet, will be %GST_RTCP_TYPE_RTPFB or
+   *  %GST_RTCP_TYPE_RTPFB
+   * @fbtype: The type of RTCP FB packet, probably part of #GstRTCPFBType
+   * @sender_ssrc: The SSRC of the sender
+   * @media_ssrc: The SSRC of the media this refers to
+   * @fci: a #GstBuffer with the FCI data from the FB packet or %NULL if
+   * there was no FCI
+   *
+   * Notify that a RTCP feedback packet has been received
+   */
+
+  rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP] =
+      g_signal_new ("on-feedback-rtcp", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_feedback_rtcp),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_POINTER,
+      G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
+      G_TYPE_POINTER);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
@@ -1960,6 +1982,37 @@ rtp_session_process_app (RTPSession * sess, GstRTCPPacket * packet,
   GST_DEBUG ("received APP");
 }
 
+
+static void
+rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
+    RTPArrivalStats * arrival)
+{
+  GstRTCPType type = gst_rtcp_packet_get_type (packet);
+  GstRTCPFBType fbtype = gst_rtcp_packet_fb_get_type (packet);
+  guint32 sender_ssrc = gst_rtcp_packet_fb_get_sender_ssrc (packet);
+  guint32 media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
+  guint length = 4 * (gst_rtcp_packet_get_length (packet) - 2);
+
+  GST_DEBUG ("received feedback %d:%d from %08X about %08X"
+      " with FCI of length %d", type, fbtype, sender_ssrc, media_ssrc, length);
+
+  if (g_signal_has_handler_pending (sess,
+          rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0, TRUE)) {
+    GstBuffer *fci = NULL;
+
+    if (length) {
+      fci = gst_buffer_create_sub (packet->buffer, packet->offset + 72, length);
+      GST_BUFFER_TIMESTAMP (fci) = arrival->running_time;
+    }
+
+    g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0,
+        type, fbtype, sender_ssrc, media_ssrc, fci);
+
+    if (fci)
+      gst_buffer_unref (fci);
+  }
+}
+
 /**
  * rtp_session_process_rtcp:
  * @sess: and #RTPSession
@@ -2029,6 +2082,10 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
         break;
       case GST_RTCP_TYPE_APP:
         rtp_session_process_app (sess, &packet, &arrival);
+        break;
+      case GST_RTCP_TYPE_RTPFB:
+      case GST_RTCP_TYPE_PSFB:
+        rtp_session_process_feedback (sess, &packet, &arrival);
         break;
       default:
         GST_WARNING ("got unknown RTCP packet");
