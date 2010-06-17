@@ -34,7 +34,7 @@
       <quote>plug</quote> or <quote>port</quote> on an element where
       links may be made with other elements, and through which data can
       flow to or from those elements. Pads have specific data handling
-      capabilities: A pad can restrict the type of data that flows
+      capabilities: a pad can restrict the type of data that flows
       through it. Links are only allowed between two pads when the
       allowed data types of the two pads are compatible. Data types are
       negotiated between pads using a process called <emphasis>caps
