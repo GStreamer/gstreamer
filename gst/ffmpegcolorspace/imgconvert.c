@@ -983,6 +983,11 @@ uyvy422_to_yuv422p (AVPicture * dst, const AVPicture * src,
       cb++;
       cr++;
     }
+    if (w) {
+      lum[0] = p[1];
+      cb[0] = p[0];
+      cr[0] = p[2];
+    }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
     cb1 += dst->linesize[1];
@@ -1098,6 +1103,11 @@ yvyu422_to_yuv422p (AVPicture * dst, const AVPicture * src,
       cb++;
       cr++;
     }
+    if (w) {
+      lum[0] = p[0];
+      cb[0] = p[3];
+      cr[0] = p[1];
+    }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
     cb1 += dst->linesize[1];
@@ -1131,6 +1141,11 @@ yuv422_to_yuv422p (AVPicture * dst, const AVPicture * src,
       lum += 2;
       cb++;
       cr++;
+    }
+    if (w) {
+      lum[0] = p[0];
+      cb[0] = p[1];
+      cr[0] = p[3];
     }
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
