@@ -245,12 +245,14 @@ gst_vdp_mpeg_dec_handle_quant_matrix (GstVdpMpegDec * mpeg_dec,
 static gboolean
 gst_vdp_mpeg_dec_create_decoder (GstVdpMpegDec * mpeg_dec)
 {
+  GstFlowReturn ret;
   GstVdpDevice *device;
 
-  device = gst_vdp_video_src_pad_get_device
-      (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)));
+  ret = gst_vdp_video_src_pad_get_device
+      (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)),
+      &device, NULL);
 
-  if (device) {
+  if (ret == GST_FLOW_OK) {
     VdpStatus status;
     GstVdpMpegStreamInfo *stream_info;
 
@@ -722,13 +724,15 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
   GstVdpVideoSrcPad *vdp_pad;
+  GstFlowReturn ret;
   GstVdpDevice *device;
 
   vdp_pad =
       GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD
       (base_video_decoder));
 
-  if ((device = gst_vdp_video_src_pad_get_device (vdp_pad))) {
+  ret = gst_vdp_video_src_pad_get_device (vdp_pad, &device, NULL);
+  if (ret == GST_FLOW_OK) {
 
     if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
       device->vdp_decoder_destroy (mpeg_dec->decoder);

@@ -142,6 +142,23 @@ gst_vdp_video_src_pad_update_caps (GstVdpVideoSrcPad * vdp_pad)
     vdp_pad->caps = caps;
 }
 
+static gboolean
+gst_vdp_video_src_pad_open_device (GstVdpVideoSrcPad * vdp_pad, GError ** error)
+{
+  GstVdpDevice *device;
+
+  vdp_pad->device = device = gst_vdp_get_device (vdp_pad->display);
+  if (G_UNLIKELY (!vdp_pad->device))
+    goto device_error;
+
+  return TRUE;
+
+device_error:
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+      "Couldn't create GstVdpDevice");
+  return FALSE;
+}
+
 GstFlowReturn
 gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpVideoBuffer ** video_buf)
@@ -159,8 +176,7 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpDevice *device;
 
     if (G_UNLIKELY (!vdp_pad->device)) {
-      vdp_pad->device = gst_vdp_get_device (vdp_pad->display);
-      if (G_UNLIKELY (!vdp_pad->device))
+      if (!gst_vdp_video_src_pad_open_device (vdp_pad, NULL))
         goto device_error;
 
       gst_vdp_video_src_pad_update_caps (vdp_pad);
@@ -233,12 +249,64 @@ gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
-GstVdpDevice *
-gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad)
+GstFlowReturn
+gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad,
+    GstVdpDevice ** device, GError ** error)
 {
   g_return_val_if_fail (GST_IS_VDP_VIDEO_SRC_PAD (vdp_pad), FALSE);
 
-  return vdp_pad->device;
+  if (!GST_PAD_CAPS (vdp_pad))
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  if (G_UNLIKELY (!vdp_pad->device)) {
+
+    if (vdp_pad->yuv_output) {
+      if (!gst_vdp_video_src_pad_open_device (vdp_pad, error))
+        return GST_FLOW_ERROR;
+    }
+
+    else {
+      GstFlowReturn ret;
+      GstBuffer *buf;
+
+      ret = gst_pad_alloc_buffer (GST_PAD (vdp_pad), 0, 0,
+          GST_PAD_CAPS (vdp_pad), &buf);
+      if (ret != GST_FLOW_OK)
+        goto alloc_failed;
+
+      if (!gst_caps_is_equal_fixed (GST_PAD_CAPS (vdp_pad),
+              GST_BUFFER_CAPS (buf))) {
+        gst_buffer_unref (buf);
+        goto wrong_caps;
+      }
+      if (!GST_IS_VDP_VIDEO_BUFFER (buf)) {
+        gst_buffer_unref (buf);
+        goto invalid_buffer;
+      }
+
+      vdp_pad->device = g_object_ref (GST_VDP_VIDEO_BUFFER (buf)->device);
+    }
+
+    gst_vdp_video_src_pad_update_caps (vdp_pad);
+  }
+
+  *device = vdp_pad->device;
+  return GST_FLOW_OK;
+
+alloc_failed:
+  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+      "Couldn't allocate buffer");
+  return GST_FLOW_ERROR;
+
+wrong_caps:
+  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+      "Sink element returned buffer with wrong caps");
+  return GST_FLOW_ERROR;
+
+invalid_buffer:
+  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+      "Sink element returned invalid buffer type");
+  return GST_FLOW_ERROR;
 }
 
 static GstCaps *
