@@ -378,6 +378,7 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GMainLoop *mainloop;
   GstBus *bus;
+  GstEncodingProfile *prof = NULL;
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -429,7 +430,6 @@ main (int argc, gchar ** argv)
 
   /* Setup profile/encoding if needed */
   if (render || smartrender) {
-    GstEncodingProfile *prof;
     prof = make_encoding_profile (audio, video, video_restriction, container);
 
     if (!prof ||
@@ -456,6 +456,9 @@ main (int argc, gchar ** argv)
   g_main_loop_run (mainloop);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+
+  gst_object_unref (pipeline);
+  gst_encoding_profile_free (prof);
 
   return 0;
 }
