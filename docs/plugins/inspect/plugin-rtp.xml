@@ -164,16 +164,16 @@
       <author>Wim Taymans &lt;wim.taymans@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)BV32</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-bv, mode=(int){ 16, 32 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)BV32</details>
         </caps>
       </pads>
     </element>
@@ -206,16 +206,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-celt, rate=(int)[ 32000, 64000 ], channels=(int)[ 1, 2 ], frame-size=(int)[ 64, 512 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
         </caps>
       </pads>
     </element>
@@ -281,16 +281,16 @@
       <author>Marcel Moreaux &lt;marcelm@spacelabs.nl&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-dv</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
         </caps>
       </pads>
     </element>
@@ -323,16 +323,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G723</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/G723, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G723</details>
         </caps>
       </pads>
     </element>
@@ -365,16 +365,16 @@
       <author>Axis Communications &lt;dev-gstreamer@axis.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string){ G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-adpcm, channels=(int)1, rate=(int)8000, bitrate=(int){ 16000, 24000, 32000, 40000 }, layout=(string)g726</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string){ G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }</details>
         </caps>
       </pads>
     </element>
@@ -407,16 +407,16 @@
       <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G729</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/G729, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G729</details>
         </caps>
       </pads>
     </element>
@@ -449,16 +449,16 @@
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)3, clock-rate=(int)8000, encoding-name=(string)GSM; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)GSM</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-gsm, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)3, clock-rate=(int)8000, encoding-name=(string)GSM; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)GSM</details>
         </caps>
       </pads>
     </element>
@@ -617,16 +617,16 @@
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-iLBC, mode=(int){ 20, 30 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
         </caps>
       </pads>
     </element>
@@ -764,16 +764,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T-ES</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/mpegts, packetsize=(int)188, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MP2T-ES</details>
         </caps>
       </pads>
     </element>
@@ -946,6 +946,27 @@
       </pads>
     </element>
     <element>
+      <name>rtpmparobustdepay</name>
+      <longname>RTP MPEG audio depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts MPEG audio from RTP packets (RFC 5219)</description>
+      <author>Mark Nauwelaerts &lt;mark.nauwelaerts@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPA-ROBUST; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ X-MP3-DRAFT-00, X-MP3-DRAFT-01, X-MP3-DRAFT-02, X-MP3-DRAFT-03, X-MP3-DRAFT-04, X-MP3-DRAFT-05, X-MP3-DRAFT-06 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, mpegversion=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpmpvdepay</name>
       <longname>RTP MPEG video depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -974,16 +995,16 @@
       <author>Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000, encoding-name=(string)MPV</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000, encoding-name=(string)MPV</details>
         </caps>
       </pads>
     </element>
@@ -1016,16 +1037,16 @@
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)8, clock-rate=(int)8000, encoding-name=(string)PCMA; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)PCMA</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-alaw, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)8, clock-rate=(int)8000, encoding-name=(string)PCMA; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)PCMA</details>
         </caps>
       </pads>
     </element>
@@ -1058,16 +1079,16 @@
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)0, clock-rate=(int)8000, encoding-name=(string)PCMU; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)PCMU</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-mulaw, channels=(int)1, rate=(int)8000</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)0, clock-rate=(int)8000, encoding-name=(string)PCMU; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)PCMU</details>
         </caps>
       </pads>
     </element>
@@ -1142,16 +1163,16 @@
       <author>Youness Alaoui &lt;kakaroto@kakaroto.homelinux.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, bitrate=(string)16000, dct-length=(int)320</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-siren, dct-length=(int)320</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, bitrate=(string)16000, dct-length=(int)320</details>
         </caps>
       </pads>
     </element>
@@ -1184,16 +1205,16 @@
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX, encoding-params=(string)1</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-speex, rate=(int)[ 6000, 48000 ], channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX, encoding-params=(string)1</details>
         </caps>
       </pads>
     </element>
@@ -1226,16 +1247,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-theora</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-theora</details>
         </caps>
       </pads>
     </element>
@@ -1268,16 +1289,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-vorbis</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)VORBIS</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-vorbis</details>
         </caps>
       </pads>
     </element>

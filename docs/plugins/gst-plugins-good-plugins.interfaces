@@ -1,9 +1,9 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstGConfVideoSink GstChildProxy
-GstGConfVideoSrc GstChildProxy
 GstSwitchSink GstChildProxy
+GstGConfVideoSink GstChildProxy
 GstGConfAudioSink GstChildProxy
+GstGConfVideoSrc GstChildProxy
 GstGConfAudioSrc GstChildProxy
 GstHalAudioSink GstChildProxy
 GstHalAudioSrc GstChildProxy

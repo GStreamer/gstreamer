@@ -23,16 +23,16 @@
           <details>video/x-matroska; video/webm</details>
         </caps>
         <caps>
-          <name>subtitle_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; subpicture/x-pgs; subtitle/x-kate; application/x-subtitle-unknown</details>
-        </caps>
-        <caps>
           <name>audio_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>subtitle_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>text/plain; application/x-ssa; application/x-ass; application/x-usf; video/x-dvd-subpicture; subpicture/x-pgs; subtitle/x-kate; application/x-subtitle-unknown</details>
         </caps>
         <caps>
           <name>video_%02d</name>
@@ -50,10 +50,10 @@
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-matroska</details>
+          <name>audio_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], stream-format=(string){ raw }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int){ 2, 4 }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-ac3, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-vorbis, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-flac, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-speex, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)8, depth=(int)8, signed=(boolean)false, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 32, 64 ], endianness=(int)1234, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]; audio/x-pn-realaudio, raversion=(int){ 1, 2, 8 }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-wma, wmaversion=(int)[ 1, 3 ], block_align=(int)[ 0, 65535 ], bitrate=(int)[ 0, 524288 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>subtitle_%d</name>
@@ -62,16 +62,16 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%d</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>audio/mpeg, mpegversion=(int)1, layer=(int)[ 1, 3 ], stream-format=(string){ raw }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/mpeg, mpegversion=(int){ 2, 4 }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-ac3, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-vorbis, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-flac, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-speex, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)8, depth=(int)8, signed=(boolean)false, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)24, depth=(int)24, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-int, width=(int)32, depth=(int)32, endianness=(int){ 4321, 1234 }, signed=(boolean)true, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 32, 64 ], endianness=(int)1234, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-tta, width=(int){ 8, 16, 24 }, channels=(int){ 1, 2 }, rate=(int)[ 8000, 96000 ]; audio/x-pn-realaudio, raversion=(int){ 1, 2, 8 }, channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-wma, wmaversion=(int)[ 1, 3 ], block_align=(int)[ 0, 65535 ], bitrate=(int)[ 0, 524288 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>video_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h264, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-divx, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-xvid, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-huffyuv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-dv, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-h263, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-msmpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/jpeg, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-theora; video/x-dirac, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-pn-realvideo, rmversion=(int)[ 1, 4 ], width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc){ YUY2, I420, YV12, UYVY, AYUV }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-wmv, wmvversion=(int)[ 1, 3 ], width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-matroska</details>
         </caps>
       </pads>
     </element>
@@ -83,12 +83,6 @@
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/webm</details>
-        </caps>
-        <caps>
           <name>audio_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
@@ -99,6 +93,12 @@
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/webm</details>
         </caps>
       </pads>
     </element>

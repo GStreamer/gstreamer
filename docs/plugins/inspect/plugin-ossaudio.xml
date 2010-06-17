@@ -16,7 +16,6 @@
       <description>Control sound input and output levels with OSS</description>
       <author>Andrew Vander Wingo &lt;wingo@pobox.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>

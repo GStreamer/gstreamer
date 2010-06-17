@@ -1,6 +1,6 @@
 <plugin>
   <name>efence</name>
-  <description>This element converts a stream of normal GStreamer buffers into a stream of buffers that are allocated in such a way that out-of-bounds access to data in the buffer is more likely to cause segmentation faults.  This allocation method is very similar to the debugging tool "Electric Fence".</description>
+  <description>This element converts a stream of normal GStreamer buffers into a stream of buffers that are allocated in such a way that out-of-bounds access to data in the buffer is more likely to cause segmentation faults.  This allocation method is very similar to the debugging tool &quot;Electric Fence&quot;.</description>
   <filename>../../gst/debugutils/.libs/libgstefence.so</filename>
   <basename>libgstefence.so</basename>
   <version>0.10.23.1</version>
@@ -13,18 +13,18 @@
       <name>efence</name>
       <longname>Electric Fence</longname>
       <class>Testing</class>
-      <description>This element converts a stream of normal GStreamer buffers into a stream of buffers that are allocated in such a way that out-of-bounds access to data in the buffer is more likely to cause segmentation faults.  This allocation method is very similar to the debugging tool "Electric Fence".</description>
+      <description>This element converts a stream of normal GStreamer buffers into a stream of buffers that are allocated in such a way that out-of-bounds access to data in the buffer is more likely to cause segmentation faults.  This allocation method is very similar to the debugging tool &quot;Electric Fence&quot;.</description>
       <author>David A. Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>

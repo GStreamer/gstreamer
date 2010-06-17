@@ -17,16 +17,16 @@
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;,Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)YUY2, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-dv, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)YUY2, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)720, framerate=(fraction)[ 1/1, 60/1 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,6 +38,12 @@
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-dv, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
           <name>audio</name>
           <direction>source</direction>
           <presence>sometimes</presence>
@@ -48,12 +54,6 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>video/x-dv, systemstream=(boolean)false</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-dv, systemstream=(boolean)true</details>
         </caps>
       </pads>
     </element>

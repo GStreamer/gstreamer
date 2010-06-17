@@ -38,10 +38,10 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>wvcsrc</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/x-wavpack-correction, framed=(boolean)true</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)32, depth=(int)[ 1, 32 ], endianness=(int)1234, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], signed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
@@ -50,10 +50,10 @@
           <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 2 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)32, depth=(int)[ 1, 32 ], endianness=(int)1234, channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], signed=(boolean)true</details>
+          <name>wvcsrc</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/x-wavpack-correction, framed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -71,16 +71,16 @@
           <details>audio/x-wavpack, framed=(boolean)false; audio/x-wavpack-correction, framed=(boolean)false</details>
         </caps>
         <caps>
-          <name>wvcsrc</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/x-wavpack-correction, framed=(boolean)true</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>audio/x-wavpack, width=(int)[ 1, 32 ], channels=(int)[ 1, 8 ], rate=(int)[ 6000, 192000 ], framed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>wvcsrc</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/x-wavpack-correction, framed=(boolean)true</details>
         </caps>
       </pads>
     </element>

@@ -969,6 +969,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAlpha::prefer-passthrough</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Prefer Passthrough</NICK>
+<BLURB>Don't do any processing for alpha=1.0 if possible.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstShout2send::description</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -1836,6 +1846,16 @@
 <NICK>Minimum time between index entries</NICK>
 <BLURB>An index entry is created every so many nanoseconds.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Determines whether output should be streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20665,6 +20685,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Is Live</NICK>
 <BLURB>The stream is live and does not need an index.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlvMux::streamable</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>streamable</NICK>
+<BLURB>If set to true, the output should be as if it is to be streamed and hence no indexes written or duration written.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

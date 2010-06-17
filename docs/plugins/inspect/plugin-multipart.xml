@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Sjoerd Simons &lt;sjoerd@luon.net&gt;</author>
       <pads>
         <caps>
-          <name>src_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>multipart/x-mixed-replace</details>
+        </caps>
+        <caps>
+          <name>src_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>

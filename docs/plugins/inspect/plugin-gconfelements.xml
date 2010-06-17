@@ -16,7 +16,6 @@
       <description>Audio sink embedding the GConf-settings for audio output</description>
       <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>
@@ -41,12 +40,6 @@
       <description>Video sink embedding the GConf-settings for video output</description>
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
       <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
       </pads>
     </element>
     <element>

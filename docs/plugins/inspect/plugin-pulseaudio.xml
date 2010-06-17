@@ -16,7 +16,6 @@
       <description>Control sound input and output levels for PulseAudio</description>
       <author>Lennart Poettering</author>
       <pads>
-    
       </pads>
     </element>
     <element>

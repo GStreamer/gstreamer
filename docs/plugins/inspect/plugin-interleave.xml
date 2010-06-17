@@ -17,16 +17,16 @@
       <author>Andy Wingo &lt;wingo at pobox.com&gt;, Iain &lt;iain@prettypeople.org&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Andy Wingo &lt;wingo at pobox.com&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean)true; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
-        </caps>
-        <caps>
           <name>sink%d</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean)true; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean)true; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 32, 64 }</details>
         </caps>
       </pads>
     </element>

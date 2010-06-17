@@ -17,13 +17,19 @@
       <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>subtitle_%02d</name>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/quicktime; video/mj2; audio/x-m4a; application/x-3gp</details>
+        </caps>
+        <caps>
+          <name>audio_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_%02d</name>
+          <name>subtitle_%02d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
@@ -33,12 +39,6 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/quicktime; video/mj2; audio/x-m4a; application/x-3gp</details>
         </caps>
       </pads>
     </element>

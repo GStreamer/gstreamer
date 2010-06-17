@@ -17,16 +17,16 @@
       <author>Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/pdf, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; application/postscript, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/svg+xml, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/png, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-yuv, format=(fourcc)Y800, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; image/png, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/pdf, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; application/postscript, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/svg+xml, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]; image/png, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -65,14 +65,14 @@
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>

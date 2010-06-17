@@ -17,18 +17,6 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>rtcp_src_%d</name>
-          <direction>source</direction>
-          <presence>request</presence>
-          <details>application/x-rtcp</details>
-        </caps>
-        <caps>
-          <name>recv_rtp_src_%d_%d_%d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>application/x-rtp</details>
-        </caps>
-        <caps>
           <name>recv_rtcp_sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
@@ -39,6 +27,18 @@
           <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>recv_rtp_src_%d_%d_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>rtcp_src_%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>application/x-rtcp</details>
         </caps>
       </pads>
     </element>

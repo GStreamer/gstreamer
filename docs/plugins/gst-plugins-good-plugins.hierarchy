@@ -11,10 +11,10 @@ GObject
     GstElement
       GstBin
         GstPipeline
-        GstGConfVideoSink
-        GstGConfVideoSrc
         GstSwitchSink
+          GstGConfVideoSink
           GstGConfAudioSink
+        GstGConfVideoSrc
         GstGConfAudioSrc
         GstHalAudioSink
         GstHalAudioSrc
@@ -158,6 +158,7 @@ GObject
         GstRtpPcmaDepay
         GstRtpPcmuDepay
         GstRtpMPADepay
+        GstRtpMPARobustDepay
         GstRtpMPVDepay
         GstRtpH263PDepay
         GstRtpH263Depay
@@ -220,8 +221,7 @@ GObject
       GstRndBufferSize
       GstEFence
       GstCutter
-      GstEbmlRead
-        GstMatroskaDemux
+      GstMatroskaDemux
       GstMatroskaMux
         GstWebMMux
       GstRTPDec
@@ -265,8 +265,6 @@ GObject
   GstCmmlTagClip
   GstColorBalanceChannel
   RTPSession
-  GstMixerTrack
-    GstMixerOptions
   GstTunerNorm
   GstTunerChannel
   GdkPixbuf

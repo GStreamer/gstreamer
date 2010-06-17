@@ -16,7 +16,6 @@
       <description>Control sound input and output levels with OSS4</description>
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
-    
       </pads>
     </element>
     <element>
