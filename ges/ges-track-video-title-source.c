@@ -94,8 +94,8 @@ ges_track_video_title_src_dispose (GObject * object)
     self->text_el = NULL;
   }
 
-  if (self->text_el) {
-    g_object_unref (self->text_el);
+  if (self->background_el) {
+    g_object_unref (self->background_el);
     self->background_el = NULL;
   }
 
