@@ -191,7 +191,7 @@ ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
 
 /**
  * ges_track_video_title_source_set_font_desc:
- * @self: the #GESTrackVideoTitleSource* to set text on
+ * @self: the #GESTrackVideoTitleSource
  * @font_desc: the pango font description
  * 
  * Sets the text this track object will render.
@@ -214,7 +214,7 @@ ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
 /**
  * ges_track_video_title_source_valignment:
  * @self: the #GESTrackVideoTitleSource* to set text on
- * @valignment: #GESTrackVideoTitleSrcVAlign
+ * @valign: #GESTrackVideoTitleSrcVAlign
  *
  * Sets the vertical aligment of the text.
  */
@@ -231,7 +231,7 @@ ges_track_video_title_source_set_valignment (GESTrackVideoTitleSource * self,
 /**
  * ges_track_video_title_source_halignment:
  * @self: the #GESTrackVideoTitleSource* to set text on
- * @halignment: #GESTrackVideoTitleSrcHAlign
+ * @halign: #GESTrackVideoTitleSrcHAlign
  *
  * Sets the vertical aligment of the text.
  */

@@ -106,17 +106,17 @@ struct _GESTrackVideoTitleSourceClass {
 
 GType ges_track_video_title_src_get_type (void);
 
-void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *, const
-    gchar *);
+void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *self, const
+    gchar *text);
 
-void ges_track_video_title_source_set_font_desc(GESTrackVideoTitleSource *,
-    const gchar *);
+void ges_track_video_title_source_set_font_desc(GESTrackVideoTitleSource *self,
+    const gchar *font_desc);
 
-void ges_track_video_title_source_set_halignment(GESTrackVideoTitleSource *,
-  GESTrackVideoTitleSrcHAlign);
+void ges_track_video_title_source_set_halignment(GESTrackVideoTitleSource
+    *self, GESTrackVideoTitleSrcHAlign halgn);
 
-void ges_track_video_title_source_set_valignment(GESTrackVideoTitleSource *,
-  GESTrackVideoTitleSrcVAlign);
+void ges_track_video_title_source_set_valignment(GESTrackVideoTitleSource
+    *self, GESTrackVideoTitleSrcVAlign valign);
 
 GESTrackVideoTitleSource* ges_track_video_title_source_new (void);
 
