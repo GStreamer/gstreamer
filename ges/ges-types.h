@@ -69,6 +69,10 @@ typedef struct _GESTrackFileSourceClass GESTrackFileSourceClass;
 typedef struct _GESTrackTransition GESTrackTransition;
 typedef struct _GESTrackTransitionClass GESTrackTransitionClass;
 
+typedef struct _GESTrackAudioTransition GESTrackAudioTransition;
+typedef struct _GESTrackAudioTransitionClass
+  GESTrackAudioTransitionClass;
+
 typedef struct _GESTrackBackgroundSource GESTrackBackgroundSource;
 typedef struct _GESTrackBackgroundSourceClass
   GESTrackBackgroundSourceClass;
