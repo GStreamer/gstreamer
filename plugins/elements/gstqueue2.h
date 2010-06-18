@@ -137,6 +137,7 @@ struct _GstQueue2
 
   gboolean use_ring_buffer;
   guint64 ring_buffer_max_size;
+  guint8 * ring_buffer;
 };
 
 struct _GstQueue2Class
