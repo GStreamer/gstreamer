@@ -5310,12 +5310,12 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* ERRORS */
 no_sdp:
   {
-    GST_ERROR_OBJECT (src, "can't get sdp");
+    GST_WARNING_OBJECT (src, "can't get sdp");
     return FALSE;
   }
 open_failed:
   {
-    GST_ERROR_OBJECT (src, "can't setup streaming from sdp");
+    GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
     return FALSE;
   }
 }
