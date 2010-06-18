@@ -31,6 +31,9 @@
 
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
+GstElement *ges_track_transition_create_element (GESTrackTransition * self,
+    GESTrack * track);
+
 static void
 ges_track_transition_update_vcontroller (GESTrackTransition * self,
     GstElement * gnlobj)
@@ -418,11 +421,16 @@ create_audio_bin (GESTrackTransition * self)
 static gboolean
 ges_track_transition_create_gnl_object (GESTrackObject * object)
 {
-  GESTrackTransition *self = GES_TRACK_TRANSITION (object);
-
+  GESTrackTransition *self;
+  GESTrackTransitionClass *klass;
+  GstElement *element;
+  gchar *name;
   static gint tnum = 0;
 
-  gchar *name = g_strdup_printf ("transition-operation%d", tnum++);
+  self = GES_TRACK_TRANSITION (object);
+  klass = GES_TRACK_TRANSITION_GET_CLASS (object);
+
+  name = g_strdup_printf ("transition-operation%d", tnum++);
   object->gnlobject = gst_element_factory_make ("gnloperation", name);
   g_free (name);
 
@@ -430,18 +438,27 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
   g_signal_connect (G_OBJECT (object->gnlobject), "notify::duration",
       G_CALLBACK (gnlobject_duration_cb), object);
 
-  if ((object->track->type) == GES_TRACK_TYPE_VIDEO) {
-    gst_bin_add (GST_BIN (object->gnlobject), create_video_bin (self));
-    return TRUE;
+  element = klass->create_element (self, object->track);
+  if (!GST_IS_ELEMENT (element))
+    return FALSE;
+
+  gst_bin_add (GST_BIN (object->gnlobject), element);
+  return TRUE;
+}
+
+GstElement *
+ges_track_transition_create_element (GESTrackTransition * self,
+    GESTrack * track)
+{
+  if ((track->type) == GES_TRACK_TYPE_VIDEO) {
+    return create_video_bin (self);
   }
 
-  else if ((object->track->type) == GES_TRACK_TYPE_AUDIO) {
-    gst_bin_add (GST_BIN (object->gnlobject), create_audio_bin (self));
-    return TRUE;
+  else if ((track->type) == GES_TRACK_TYPE_AUDIO) {
+    return create_audio_bin (self);
   }
 
-  return FALSE;
-
+  return gst_element_factory_make ("identity", "invalid-track-type");
 }
 
 static void
@@ -456,6 +473,7 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
   object_class->finalize = ges_track_transition_finalize;
 
   track_class->create_gnl_object = ges_track_transition_create_gnl_object;
+  klass->create_element = ges_track_transition_create_element;
 }
 
 static void
