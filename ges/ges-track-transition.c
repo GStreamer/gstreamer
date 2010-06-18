@@ -123,8 +123,21 @@ static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackTransition * self)
 {
-  GESTrackType type = ((GESTrackObject *) self)->track->type;
+  GESTrackTransitionClass *klass;
+
+  klass = GES_TRACK_TRANSITION_GET_CLASS (self);
   GST_LOG ("got duration changed signal");
+
+  klass = GES_TRACK_TRANSITION_GET_CLASS (self);
+  klass->duration_changed (self, gnlobject);
+}
+
+static void
+ges_track_transition_duration_changed (GESTrackTransition * self, GstElement
+    * gnlobject)
+{
+  GESTrackType type;
+  type = ((GESTrackObject *) self)->track->type;
 
   if (type == GES_TRACK_TYPE_VIDEO)
     ges_track_transition_update_vcontroller (self, gnlobject);
@@ -328,10 +341,6 @@ create_video_bin (GESTrackTransition * self)
   self->vcontroller = controller;
   self->vcontrol_source = control_source;
 
-  GST_LOG ("controller created, updating");
-  ges_track_transition_update_vcontroller (self,
-      ((GESTrackObject *) self)->gnlobject);
-
   return topbin;
 }
 
@@ -410,11 +419,6 @@ create_audio_bin (GESTrackTransition * self)
   self->a_acontrol_source = acontrol_source;
   self->a_bcontrol_source = bcontrol_source;
 
-  GST_LOG ("controllers created, updating");
-
-  ges_track_transition_update_acontroller (self,
-      ((GESTrackObject *) self)->gnlobject);
-
   return topbin;
 }
 
@@ -443,6 +447,8 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
     return FALSE;
 
   gst_bin_add (GST_BIN (object->gnlobject), element);
+
+  klass->duration_changed (self, object->gnlobject);
   return TRUE;
 }
 
@@ -474,6 +480,7 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
 
   track_class->create_gnl_object = ges_track_transition_create_gnl_object;
   klass->create_element = ges_track_transition_create_element;
+  klass->duration_changed = ges_track_transition_duration_changed;
 }
 
 static void

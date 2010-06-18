@@ -101,8 +101,11 @@ struct _GESTrackTransition
 
 struct _GESTrackTransitionClass {
     GESTrackObjectClass parent_class;
+
     /* <public> */
     GstElement* (*create_element) (GESTrackTransition *self, GESTrack *track);
+    void (*duration_changed) (GESTrackTransition *self, GstElement
+        *gnlobj);
 };
 
 GType ges_track_transition_get_type (void);
