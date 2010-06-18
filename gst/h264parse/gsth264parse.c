@@ -1706,6 +1706,24 @@ gst_h264_parse_push_nal (GstH264Parse * h264parse, GstBuffer * nal,
   data = GST_BUFFER_DATA (nal);
   size = GST_BUFFER_SIZE (nal);
 
+  /* deal with 3-byte start code by normalizing to 4-byte here */
+  if (!h264parse->packetized && data[2] == 0x01) {
+    GstBuffer *tmp;
+
+    /* ouch, copy */
+    GST_DEBUG_OBJECT (h264parse, "replacing 3-byte startcode");
+    tmp = gst_buffer_new_and_alloc (1);
+    GST_BUFFER_DATA (tmp)[0] = 0;
+    gst_buffer_ref (nal);
+    tmp = gst_buffer_join (tmp, nal);
+    GST_BUFFER_TIMESTAMP (tmp) = GST_BUFFER_TIMESTAMP (nal);
+    gst_buffer_unref (nal);
+    nal = tmp;
+
+    data = GST_BUFFER_DATA (nal);
+    size = GST_BUFFER_SIZE (nal);
+  }
+
   /* caller ensures number of bytes available */
   g_return_val_if_fail (size >= nal_length + 1, NULL);
 
@@ -1866,14 +1884,49 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
     data = gst_adapter_peek (h264parse->adapter, avail);
 
     if (!h264parse->packetized) {
-      /* Bytestream format, first 4 bytes are sync code */
-      /* Find next NALU header */
+      /* Bytestream format, first 3/4 bytes are sync code */
+      /* re-sync; locate initial startcode */
+      if (G_UNLIKELY (h264parse->discont)) {
+        guint32 value;
+
+        /* check for initial 00 00 01 */
+        i = gst_adapter_masked_scan_uint32 (h264parse->adapter, 0xffffff00,
+            0x00000100, 0, 4);
+        if (i < 0) {
+          i = gst_adapter_masked_scan_uint32_peek (h264parse->adapter,
+              0x00ffffff, 0x01, 0, avail, &value);
+          if (i < 0) {
+            /* no sync code, flush and try next time */
+            gst_adapter_flush (h264parse->adapter, avail - 2);
+            break;
+          } else {
+            if (value >> 24 != 00)
+              /* so a 3 byte startcode */
+              i++;
+            gst_adapter_flush (h264parse->adapter, i);
+            avail -= i;
+            data = gst_adapter_peek (h264parse->adapter, avail);
+          }
+        }
+        GST_DEBUG_OBJECT (h264parse, "re-sync found startcode at %d", i);
+      }
+      /* Find next NALU header, might be 3 or 4 bytes */
       for (i = 1; i < avail - 4; ++i) {
-        if (data[i + 0] == 0 && data[i + 1] == 0 && data[i + 2] == 0
-            && data[i + 3] == 1) {
-          next_nalu_pos = i;
+        if (data[i + 1] == 0 && data[i + 2] == 0 && data[i + 3] == 1) {
+          if (data[i + 0] == 0)
+            next_nalu_pos = i;
+          else
+            next_nalu_pos = i + 1;
           break;
         }
+      }
+      /* skip sync */
+      if (data[2] == 0x1) {
+        data += 3;
+        avail -= 3;
+      } else {
+        data += 4;
+        avail -= 4;
       }
     } else {
       guint32 nalu_size;
@@ -1900,11 +1953,10 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       } else {
         next_nalu_pos = avail;
       }
+      /* skip nalu_size bytes */
+      data += h264parse->nal_length_size;
+      avail -= h264parse->nal_length_size;
     }
-
-    /* skip nalu_size bytes or sync */
-    data += h264parse->nal_length_size;
-    avail -= h264parse->nal_length_size;
 
     /* Figure out if this is a delta unit */
     {
