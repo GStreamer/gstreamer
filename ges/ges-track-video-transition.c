@@ -25,6 +25,7 @@
 
 #include "ges-internal.h"
 #include "ges-track-object.h"
+#include "ges-timeline-transition.h"
 #include "ges-track-video-transition.h"
 
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
@@ -34,6 +35,20 @@ enum
 {
   PROP_0,
 };
+
+static GObject *link_element_to_mixer (GstElement * element,
+    GstElement * mixer);
+
+static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
+    GstElement * element, GstElement * mixer, gint type,
+    GstElement ** smpteref);
+
+static void
+ges_track_video_transition_duration_changed (GESTrackTransition * self,
+    GstElement * gnlobj);
+
+static GstElement *ges_track_video_transition_create_element (GESTrackTransition
+    * self, GESTrack * unused);
 
 static void ges_track_video_transition_dispose (GObject * object);
 
@@ -49,16 +64,18 @@ static void
 ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackTransitionClass *bg_class;
+  GESTrackTransitionClass *pclass;
 
   object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_TRANSITION_CLASS (klass);
+  pclass = GES_TRACK_TRANSITION_CLASS (klass);
 
   object_class->get_property = ges_track_video_transition_get_property;
   object_class->set_property = ges_track_video_transition_set_property;
   object_class->dispose = ges_track_video_transition_dispose;
   object_class->finalize = ges_track_video_transition_finalize;
 
+  pclass->create_element = ges_track_video_transition_create_element;
+  pclass->duration_changed = ges_track_video_transition_duration_changed;
 }
 
 static void
@@ -96,6 +113,156 @@ ges_track_video_transition_set_property (GObject * object,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
+}
+
+static GstElement *
+ges_track_video_transition_create_element (GESTrackTransition * self,
+    GESTrack * unused)
+{
+  GstElement *topbin, *iconva, *iconvb, *oconv;
+  GObject *target = NULL;
+  const gchar *propname = NULL;
+  GstElement *mixer = NULL;
+  GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
+  GstController *controller;
+  GstInterpolationControlSource *control_source;
+
+  GST_LOG ("creating a video bin");
+
+  topbin = gst_bin_new ("transition-bin");
+  iconva = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-a");
+  iconvb = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-b");
+  oconv = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-output");
+
+  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
+  mixer = gst_element_factory_make ("videomixer", NULL);
+  g_object_set (G_OBJECT (mixer), "background", 1, NULL);
+  gst_bin_add (GST_BIN (topbin), mixer);
+
+  if (self->vtype != VTYPE_CROSSFADE) {
+    link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
+        self->vtype, NULL);
+    target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
+        mixer, self->vtype, &self->vsmpte);
+    propname = "position";
+    self->vstart_value = 1.0;
+    self->vend_value = 0.0;
+  } else {
+    self->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
+    self->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
+    target = (GObject *) self->sinkb;
+    self->vmixer = gst_object_ref (mixer);
+    propname = "alpha";
+    self->vstart_value = 0.0;
+    self->vend_value = 1.0;
+  }
+
+  gst_element_link (mixer, oconv);
+
+  sinka_target = gst_element_get_static_pad (iconva, "sink");
+  sinkb_target = gst_element_get_static_pad (iconvb, "sink");
+  src_target = gst_element_get_static_pad (oconv, "src");
+
+  sinka = gst_ghost_pad_new ("sinka", sinka_target);
+  sinkb = gst_ghost_pad_new ("sinkb", sinkb_target);
+  src = gst_ghost_pad_new ("src", src_target);
+
+  gst_element_add_pad (topbin, src);
+  gst_element_add_pad (topbin, sinka);
+  gst_element_add_pad (topbin, sinkb);
+
+  gst_object_unref (sinka_target);
+  gst_object_unref (sinkb_target);
+  gst_object_unref (src_target);
+
+  /* set up interpolation */
+
+  g_object_set (target, propname, (gfloat) 0.0, NULL);
+
+  controller = gst_object_control_properties (target, propname, NULL);
+
+  control_source = gst_interpolation_control_source_new ();
+  gst_controller_set_control_source (controller,
+      propname, GST_CONTROL_SOURCE (control_source));
+  gst_interpolation_control_source_set_interpolation_mode (control_source,
+      GST_INTERPOLATE_LINEAR);
+
+  self->vcontroller = controller;
+  self->vcontrol_source = control_source;
+
+  return topbin;
+}
+
+static GObject *
+link_element_to_mixer (GstElement * element, GstElement * mixer)
+{
+  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  GstPad *srcpad = gst_element_get_static_pad (element, "src");
+
+  g_assert (sinkpad);
+  g_assert (srcpad);
+
+  gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (srcpad);
+
+  return G_OBJECT (sinkpad);
+}
+
+static GObject *
+link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
+    GstElement * mixer, gint type, GstElement ** smpteref)
+{
+  GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
+  g_object_set (G_OBJECT (smptealpha),
+      "type", (gint) type, "invert", (gboolean) TRUE, NULL);
+  gst_bin_add (bin, smptealpha);
+
+  gst_element_link_many (element, smptealpha, mixer, NULL);
+
+  /* crack */
+  if (smpteref) {
+    *smpteref = smptealpha;
+  }
+
+  return G_OBJECT (smptealpha);
+}
+
+static void
+ges_track_video_transition_duration_changed (GESTrackTransition * self,
+    GstElement * gnlobj)
+{
+  GValue start_value = { 0, };
+  GValue end_value = { 0, };
+  guint64 duration;
+
+  GST_LOG ("updating controller");
+
+  if (!gnlobj)
+    return;
+
+  if (!(self->vcontroller))
+    return;
+
+  GST_LOG ("getting properties");
+  g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
+
+  GST_INFO ("duration: %d\n", duration);
+  g_value_init (&start_value, G_TYPE_DOUBLE);
+  g_value_init (&end_value, G_TYPE_DOUBLE);
+  g_value_set_double (&start_value, self->vstart_value);
+  g_value_set_double (&end_value, self->vend_value);
+
+  GST_LOG ("setting values on controller");
+
+  g_assert (GST_IS_CONTROLLER (self->vcontroller));
+  g_assert (GST_IS_CONTROL_SOURCE (self->vcontrol_source));
+
+  gst_interpolation_control_source_unset_all (self->vcontrol_source);
+  gst_interpolation_control_source_set (self->vcontrol_source, 0, &start_value);
+  gst_interpolation_control_source_set (self->vcontrol_source,
+      duration, &end_value);
+
+  GST_LOG ("done updating controller");
 }
 
 GESTrackVideoTransition *
