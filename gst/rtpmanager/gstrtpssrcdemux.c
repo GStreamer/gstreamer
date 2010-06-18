@@ -208,6 +208,7 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
       gst_rtp_ssrc_demux_iterate_internal_links);
   gst_pad_set_active (rtp_pad, TRUE);
 
+  gst_pad_set_event_function (rtcp_pad, gst_rtp_ssrc_demux_src_event);
   gst_pad_set_iterate_internal_links_function (rtcp_pad,
       gst_rtp_ssrc_demux_iterate_internal_links);
   gst_pad_set_active (rtcp_pad, TRUE);
@@ -621,18 +622,39 @@ static gboolean
 gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
 {
   GstRtpSsrcDemux *demux;
-  gboolean res = FALSE;
+  const GstStructure *s;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+    case GST_EVENT_CUSTOM_BOTH_OOB:
+      s = gst_event_get_structure (event);
+      if (s && !gst_structure_has_field (s, "ssrc")) {
+        GSList *walk;
+
+        for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+          GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+
+          if (dpad->rtp_pad == pad || dpad->rtcp_pad == pad) {
+            event =
+                GST_EVENT_CAST (gst_mini_object_make_writable
+                (GST_MINI_OBJECT_CAST (event)));
+            gst_structure_set (event->structure, "ssrc", G_TYPE_UINT,
+                dpad->ssrc, NULL);
+            break;
+          }
+        }
+      }
+      break;
     default:
-      res = gst_pad_event_default (pad, event);
       break;
   }
+
   gst_object_unref (demux);
-  return res;
+
+  return gst_pad_event_default (pad, event);
 }
 
 static GstIterator *
