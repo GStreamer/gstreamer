@@ -477,8 +477,9 @@ stop_typefinding (GstTypeFindElement * typefind)
 
   GST_OBJECT_LOCK (typefind);
   if (typefind->store) {
-    GstBuffer *store = typefind->store;
+    GstBuffer *store;
 
+    store = gst_buffer_make_metadata_writable (typefind->store);
     typefind->store = NULL;
     gst_buffer_set_caps (store, typefind->caps);
     GST_OBJECT_UNLOCK (typefind);
@@ -646,6 +647,7 @@ gst_type_find_element_setcaps (GstPad * pad, GstCaps * caps)
       typefind->store = NULL;
       GST_DEBUG_OBJECT (typefind, "Pushing store: %d", GST_BUFFER_SIZE (store));
 
+      store = gst_buffer_make_metadata_writable (store);
       gst_buffer_set_caps (store, typefind->caps);
       GST_OBJECT_UNLOCK (typefind);
 
@@ -754,6 +756,7 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
       return GST_FLOW_ERROR;
     case MODE_NORMAL:
       GST_OBJECT_LOCK (typefind);
+      buffer = gst_buffer_make_metadata_writable (buffer);
       gst_buffer_set_caps (buffer, typefind->caps);
       GST_OBJECT_UNLOCK (typefind);
       return gst_pad_push (typefind->src, buffer);
@@ -862,6 +865,8 @@ gst_type_find_element_getrange (GstPad * srcpad,
 
   if (ret == GST_FLOW_OK && buffer && *buffer) {
     GST_OBJECT_LOCK (typefind);
+
+    /* we assume that pulled buffers are meta-data writable */
     gst_buffer_set_caps (*buffer, typefind->caps);
     GST_OBJECT_UNLOCK (typefind);
   }
