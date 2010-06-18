@@ -5137,8 +5137,6 @@ gst_rtspsrc_retrieve_sdp (GstRTSPSrc * src, GstSDPMessage ** sdp)
   guint size;
   gchar *respcont = NULL;
 
-  GST_RTSP_STATE_LOCK (src);
-
 restart:
   src->need_redirect = FALSE;
 
@@ -5282,7 +5280,6 @@ cleanup_error:
       GST_DEBUG_OBJECT (src, "free connection");
       gst_rtsp_conninfo_close (src, &src->conninfo, TRUE);
     }
-    GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
     return FALSE;
@@ -5297,6 +5294,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   src->methods =
       GST_RTSP_SETUP | GST_RTSP_PLAY | GST_RTSP_PAUSE | GST_RTSP_TEARDOWN;
 
+  GST_RTSP_STATE_LOCK (src);
+
   if (src->sdp == NULL) {
     if (!(res = gst_rtspsrc_retrieve_sdp (src, &src->sdp)))
       goto no_sdp;
@@ -5305,17 +5304,21 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (!(res = gst_rtspsrc_open_from_sdp (src, src->sdp)))
     goto open_failed;
 
+  GST_RTSP_STATE_UNLOCK (src);
+
   return res;
 
   /* ERRORS */
 no_sdp:
   {
     GST_WARNING_OBJECT (src, "can't get sdp");
+    GST_RTSP_STATE_UNLOCK (src);
     return FALSE;
   }
 open_failed:
   {
     GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
+    GST_RTSP_STATE_UNLOCK (src);
     return FALSE;
   }
 }
@@ -5452,7 +5455,6 @@ close:
   /* ERRORS */
 create_request_failed:
   {
-    GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request."));
     ret = FALSE;
@@ -5460,7 +5462,6 @@ create_request_failed:
   }
 send_error:
   {
-    GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
