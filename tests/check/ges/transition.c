@@ -21,7 +21,8 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 #include <ges/ges-timeline-transition.h>
-#include <ges/ges-track-transition.h>
+#include <ges/ges-track-video-transition.h>
+#include <ges/ges-track-audio-transition.h>
 
 /* This test uri will eventually have to be fixed */
 #define TEST_URI "blahblahblah"
@@ -51,7 +52,7 @@ GST_START_TEST (test_transition_basic)
       track);
 
   fail_unless (trackobject != NULL);
-  fail_unless (GES_TRACK_TRANSITION (trackobject)->vtype == 1);
+  fail_unless (GES_TRACK_VIDEO_TRANSITION (trackobject)->type == 1);
 
   fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
           (tr2), trackobject) == TRUE);
@@ -127,17 +128,17 @@ GST_START_TEST (test_transition_properties)
   /* test changing vtype */
   g_object_set (object, "vtype", VTYPE_CROSSFADE, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, VTYPE_CROSSFADE);
-  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype,
+  assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
       VTYPE_CROSSFADE);
   g_object_set (object, "vtype", 1, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 1);
-  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 1);
+  assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 1);
   g_object_set (object, "vtype", 8, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 8);
-  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype, 8);
+  assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 8);
   g_object_set (object, "vtype", VTYPE_CROSSFADE, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, VTYPE_CROSSFADE);
-  assert_equals_int (GES_TRACK_TRANSITION (trackobject)->vtype,
+  assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
       VTYPE_CROSSFADE);
 
   ges_timeline_object_release_track_object (object, trackobject);
