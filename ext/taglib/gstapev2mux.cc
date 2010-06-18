@@ -110,60 +110,54 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
    * work, only the first value will be taken into account
    */
   if (strcmp (tag, GST_TAG_TITLE) == 0) {
-    char *title;
+    const char *title;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &title);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &title);
     if (result != FALSE) {
       GST_DEBUG ("Setting title to %s", title);
       apev2tag->setTitle (String (title, String::UTF8));
     }
-    g_free (title);
   } else if (strcmp (tag, GST_TAG_ALBUM) == 0) {
-    char *album;
+    const char *album;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &album);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &album);
     if (result != FALSE) {
       GST_DEBUG ("Setting album to %s", album);
       apev2tag->setAlbum (String (album, String::UTF8));
     }
-    g_free (album);
   } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
-    char *artist;
+    const char *artist;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &artist);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &artist);
     if (result != FALSE) {
       GST_DEBUG ("Setting artist to %s", artist);
       apev2tag->setArtist (String (artist, String::UTF8));
     }
-    g_free (artist);
   } else if (strcmp (tag, GST_TAG_COMPOSER) == 0) {
-    char *composer;
+    const char *composer;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &composer);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &composer);
     if (result != FALSE) {
       GST_DEBUG ("Setting composer to %s", composer);
       apev2tag->addValue (String ("COMPOSER", String::UTF8),
           String (composer, String::UTF8));
     }
-    g_free (composer);
   } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
-    char *genre;
+    const char *genre;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &genre);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &genre);
     if (result != FALSE) {
       GST_DEBUG ("Setting genre to %s", genre);
       apev2tag->setGenre (String (genre, String::UTF8));
     }
-    g_free (genre);
   } else if (strcmp (tag, GST_TAG_COMMENT) == 0) {
-    char *comment;
+    const char *comment;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &comment);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &comment);
     if (result != FALSE) {
       GST_DEBUG ("Setting comment to %s", comment);
       apev2tag->setComment (String (comment, String::UTF8));
     }
-    g_free (comment);
   } else if (strcmp (tag, GST_TAG_DATE) == 0) {
     GDate *date;
 
@@ -255,37 +249,34 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     }
 #endif
   } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
-    gchar *copyright;
+    const gchar *copyright;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &copyright);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &copyright);
 
     if (result != FALSE) {
       GST_DEBUG ("Setting copyright to %s", copyright);
       apev2tag->addValue (String ("COPYRIGHT", String::UTF8),
           String (copyright, String::UTF8), true);
-      g_free (copyright);
     }
   } else if (strcmp (tag, GST_TAG_LOCATION) == 0) {
-    gchar *location;
+    const gchar *location;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &location);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &location);
 
     if (result != FALSE) {
       GST_DEBUG ("Setting location to %s", location);
       apev2tag->addValue (String ("FILE", String::UTF8),
           String (location, String::UTF8), true);
-      g_free (location);
     }
   } else if (strcmp (tag, GST_TAG_ISRC) == 0) {
-    gchar *isrc;
+    const gchar *isrc;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &isrc);
+    result = gst_tag_list_peek_string_index (list, tag, 0, &isrc);
 
     if (result != FALSE) {
       GST_DEBUG ("Setting ISRC to %s", isrc);
       apev2tag->addValue (String ("ISRC", String::UTF8),
           String (isrc, String::UTF8), true);
-      g_free (isrc);
     }
   } else if (strcmp (tag, GST_TAG_TRACK_GAIN) == 0) {
     gdouble value;
