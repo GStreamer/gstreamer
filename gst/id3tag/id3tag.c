@@ -156,7 +156,7 @@ static void id3v2_frame_finish (GstId3v2Tag * tag, GstId3v2Frame * frame);
 static guint id3v2_frame_get_size (GstId3v2Tag * tag, GstId3v2Frame * frame);
 
 static void id3v2_tag_add_text_frame (GstId3v2Tag * tag,
-    const gchar * frame_id, gchar ** strings, int num_strings);
+    const gchar * frame_id, const gchar ** strings, int num_strings);
 
 static gboolean
 id3v2_tag_init (GstId3v2Tag * tag, guint major_version)
@@ -391,7 +391,7 @@ id3v2_frame_write_string (GstId3v2Frame * frame, int encoding,
 
 static void
 id3v2_tag_add_text_frame (GstId3v2Tag * tag, const gchar * frame_id,
-    gchar ** strings_utf8, int num_strings)
+    const gchar ** strings_utf8, int num_strings)
 {
   GstId3v2Frame frame;
   guint len, i;
@@ -440,14 +440,14 @@ static void
 add_text_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * frame_id)
 {
-  gchar **strings;
+  const gchar **strings;
   guint n, i;
 
   GST_LOG ("Adding '%s' frame", frame_id);
 
-  strings = g_new0 (gchar *, num_tags + 1);
+  strings = g_new0 (const gchar *, num_tags + 1);
   for (n = 0, i = 0; n < num_tags; ++n) {
-    if (gst_tag_list_get_string_index (list, tag, n, &strings[i]) &&
+    if (gst_tag_list_peek_string_index (list, tag, n, &strings[i]) &&
         strings[i] != NULL) {
       GST_LOG ("%s: %s[%u] = '%s'", frame_id, tag, i, strings[i]);
       ++i;
@@ -460,7 +460,7 @@ add_text_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     GST_WARNING ("Empty list for tag %s, skipping", tag);
   }
 
-  g_strfreev (strings);
+  g_free (strings);
 }
 
 static void
@@ -567,7 +567,8 @@ add_count_or_num_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
       GST_DEBUG ("Setting %s to %s (frame_id = %s)", tag, tag_str, frame_id);
 
-      id3v2_tag_add_text_frame (id3v2tag, frame_id, &tag_str, 1);
+      id3v2_tag_add_text_frame (id3v2tag, frame_id, (const gchar **) &tag_str,
+          1);
       g_free (tag_str);
     }
   } else if (corr[idx].corr_count == NULL) {
@@ -580,7 +581,8 @@ add_count_or_num_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       gchar *tag_str = g_strdup_printf ("0/%u", count);
       GST_DEBUG ("Setting %s to %s (frame_id = %s)", tag, tag_str, frame_id);
 
-      id3v2_tag_add_text_frame (id3v2tag, frame_id, &tag_str, 1);
+      id3v2_tag_add_text_frame (id3v2tag, frame_id, (const gchar **) &tag_str,
+          1);
       g_free (tag_str);
     }
   }
@@ -598,9 +600,9 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
   GST_LOG ("Adding comment frames");
   for (n = 0; n < num_tags; ++n) {
-    gchar *s = NULL;
+    const gchar *s = NULL;
 
-    if (gst_tag_list_get_string_index (list, tag, n, &s) && s != NULL) {
+    if (gst_tag_list_peek_string_index (list, tag, n, &s) && s != NULL) {
       gchar *desc = NULL, *val = NULL, *lang = NULL;
       int desclen, vallen, encoding1, encoding2, encoding;
       GstId3v2Frame frame;
@@ -643,7 +645,6 @@ add_comment_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
       g_array_append_val (id3v2tag->frames, frame);
     }
-    g_free (s);
   }
 }
 
@@ -744,9 +745,9 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   g_assert (idx < G_N_ELEMENTS (mb_ids));
 
   for (i = 0; i < num_tags; ++i) {
-    gchar *id_str;
+    const gchar *id_str;
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+    if (gst_tag_list_peek_string_index (list, tag, 0, &id_str) && id_str) {
       /* add two frames, one with the ID the musicbrainz.org spec mentions
        * and one with the ID that applications use in the real world */
       GstId3v2Frame frame1, frame2;
@@ -767,8 +768,6 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
           mb_ids[idx].realworld_id, TRUE);
       id3v2_frame_write_string (&frame2, encoding, id_str, FALSE);
       g_array_append_val (id3v2tag->frames, frame2);
-
-      g_free (id_str);
     }
   }
 }
@@ -778,9 +777,9 @@ add_unique_file_id_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * unused)
 {
   const gchar *origin = "http://musicbrainz.org";
-  gchar *id_str = NULL;
+  const gchar *id_str = NULL;
 
-  if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+  if (gst_tag_list_peek_string_index (list, tag, 0, &id_str) && id_str) {
     GstId3v2Frame frame;
 
     GST_LOG ("Adding %s (%s): %s", tag, origin, id_str);
@@ -791,8 +790,6 @@ add_unique_file_id_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     id3v2_frame_write_bytes (&frame, (const guint8 *) id_str,
         strlen (id_str) + 1);
     g_array_append_val (id3v2tag->frames, frame);
-
-    g_free (id_str);
   }
 }
 
@@ -835,7 +832,7 @@ add_date_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   }
 
   if (strings[0] != NULL) {
-    id3v2_tag_add_text_frame (id3v2tag, frame_id, strings, i);
+    id3v2_tag_add_text_frame (id3v2tag, frame_id, (const gchar **) strings, i);
   } else {
     GST_WARNING ("Empty list for tag %s, skipping", tag);
   }
@@ -857,9 +854,9 @@ add_encoder_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
   strings = g_new0 (gchar *, num_tags + 1);
   for (n = 0; n < num_tags; ++n) {
-    gchar *encoder = NULL;
+    const gchar *encoder = NULL;
 
-    if (gst_tag_list_get_string_index (list, tag, n, &encoder) && encoder) {
+    if (gst_tag_list_peek_string_index (list, tag, n, &encoder) && encoder) {
       guint encoder_version;
       gchar *s;
 
@@ -873,12 +870,11 @@ add_encoder_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       GST_LOG ("encoder[%u] = '%s'", n, s);
       strings[i] = s;
       i++;
-      g_free (encoder);
     }
   }
 
   if (strings[0] != NULL) {
-    id3v2_tag_add_text_frame (id3v2tag, "TSSE", strings, i);
+    id3v2_tag_add_text_frame (id3v2tag, "TSSE", (const gchar **) strings, i);
   } else {
     GST_WARNING ("Empty list for tag %s, skipping", tag);
   }
@@ -890,12 +886,12 @@ static void
 add_uri_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * frame_id)
 {
-  gchar *url = NULL;
+  const gchar *url = NULL;
 
   g_assert (frame_id != NULL);
 
   /* URI tags are limited to one of each per taglist */
-  if (gst_tag_list_get_string_index (list, tag, 0, &url) && url != NULL) {
+  if (gst_tag_list_peek_string_index (list, tag, 0, &url) && url != NULL) {
     guint url_len;
 
     url_len = strlen (url);
@@ -908,8 +904,6 @@ add_uri_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     } else {
       GST_WARNING ("Tag %s does not contain a valid URI (%s)", tag, url);
     }
-
-    g_free (url);
   }
 }
 
@@ -1195,12 +1189,12 @@ static void
 genre_v1_convert (const GstTagList * list, const gchar * tag,
     guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
-  gchar *str;
+  const gchar *str;
   int genreidx = -1;
   guint i, max;
 
   /* We only support one genre */
-  if (!gst_tag_list_get_string_index (list, tag, 0, &str) || str == NULL)
+  if (!gst_tag_list_peek_string_index (list, tag, 0, &str) || str == NULL)
     return;
 
   max = gst_tag_id3_genre_count ();
@@ -1217,8 +1211,6 @@ genre_v1_convert (const GstTagList * list, const gchar * tag,
     *dst = (guint8) genreidx;
     *wrote_tag = TRUE;
   }
-
-  g_free (str);
 }
 
 static void
