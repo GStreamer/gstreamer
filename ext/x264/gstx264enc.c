@@ -67,6 +67,18 @@
 #define X264_ENC_NALS 1
 #endif
 
+#if X264_BUILD >= 69
+#define X264_MB_RC
+#endif
+
+#if X264_BUILD >= 80
+#define X264_ENH_THREADING
+#endif
+
+#if X264_BUILD >= 82
+#define X264_INTRA_REFRESH
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -77,12 +89,15 @@ enum
 {
   ARG_0,
   ARG_THREADS,
+  ARG_SLICED_THREADS,
+  ARG_SYNC_LOOKAHEAD,
   ARG_PASS,
   ARG_QUANTIZER,
   ARG_STATS_FILE,
   ARG_MULTIPASS_CACHE_FILE,
   ARG_BYTE_STREAM,
   ARG_BITRATE,
+  ARG_INTRA_REFRESH,
   ARG_VBV_BUF_CAPACITY,
   ARG_ME,
   ARG_SUBME,
@@ -103,6 +118,8 @@ enum
   ARG_QP_STEP,
   ARG_IP_FACTOR,
   ARG_PB_FACTOR,
+  ARG_RC_MB_TREE,
+  ARG_RC_LOOKAHEAD,
   ARG_NR,
   ARG_INTERLACED
 };
@@ -136,6 +153,11 @@ enum
 #define ARG_PB_FACTOR_DEFAULT          1.3
 #define ARG_NR_DEFAULT                 0
 #define ARG_INTERLACED_DEFAULT         FALSE
+#define ARG_SLICED_THREADS_DEFAULT     FALSE
+#define ARG_SYNC_LOOKAHEAD_DEFAULT     -1
+#define ARG_RC_MB_TREE_DEFAULT         TRUE
+#define ARG_RC_LOOKAHEAD_DEFAULT       40
+#define ARG_INTRA_REFRESH_DEFAULT      FALSE
 
 enum
 {
@@ -299,6 +321,16 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_uint ("threads", "Threads",
           "Number of threads used by the codec (0 for automatic)",
           0, 4, ARG_THREADS_DEFAULT, G_PARAM_READWRITE));
+#ifdef X264_ENH_THREADING
+  g_object_class_install_property (gobject_class, ARG_SLICED_THREADS,
+      g_param_spec_boolean ("sliced-threads", "Sliced Threads",
+          "Low latency but lower efficiency threading",
+          ARG_SLICED_THREADS_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SYNC_LOOKAHEAD,
+      g_param_spec_int ("sync-lookahead", "Sync Lookahead",
+          "Number of buffer frames for threaded lookahead (-1 for automatic)",
+          -1, 250, ARG_SYNC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+#endif
   g_object_class_install_property (gobject_class, ARG_PASS,
       g_param_spec_enum ("pass", "Encoding pass/type",
           "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
@@ -322,6 +354,12 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
           100 * 1024, ARG_BITRATE_DEFAULT, G_PARAM_READWRITE));
+#ifdef X264_INTRA_REFRESH
+  g_object_class_install_property (gobject_class, ARG_INTRA_REFRESH,
+      g_param_spec_boolean ("intra-refresh", "Intra Refresh",
+          "Use Periodic Intra Refresh instead of IDR frames",
+          ARG_INTRA_REFRESH_DEFAULT, G_PARAM_READWRITE));
+#endif
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
@@ -398,6 +436,16 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_float ("pb-factor", "PB-Factor",
           "Quantizer factor between P- and B-frames",
           0, 2, ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE));
+#ifdef X264_MB_RC
+  g_object_class_install_property (gobject_class, ARG_RC_MB_TREE,
+      g_param_spec_boolean ("mb-tree", "Macroblock Tree",
+          "Macroblock-Tree ratecontrol",
+          ARG_RC_MB_TREE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_RC_LOOKAHEAD,
+      g_param_spec_int ("rc-lookahead", "Rate Control Lookahead",
+          "Number of frames for frametype lookahead",
+          0, 250, ARG_RC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+#endif
   g_object_class_install_property (gobject_class, ARG_NR,
       g_param_spec_uint ("noise-reduction", "Noise Reducation",
           "Noise reduction strength",
@@ -465,11 +513,14 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
 
   /* properties */
   encoder->threads = ARG_THREADS_DEFAULT;
+  encoder->sliced_threads = ARG_SLICED_THREADS_DEFAULT;
+  encoder->sync_lookahead = ARG_SYNC_LOOKAHEAD_DEFAULT;
   encoder->pass = ARG_PASS_DEFAULT;
   encoder->quantizer = ARG_QUANTIZER_DEFAULT;
   encoder->mp_cache_file = g_strdup (ARG_MULTIPASS_CACHE_FILE_DEFAULT);
   encoder->byte_stream = ARG_BYTE_STREAM_DEFAULT;
   encoder->bitrate = ARG_BITRATE_DEFAULT;
+  encoder->intra_refresh = ARG_INTRA_REFRESH_DEFAULT;
   encoder->vbv_buf_capacity = ARG_VBV_BUF_CAPACITY_DEFAULT;
   encoder->me = ARG_ME_DEFAULT;
   encoder->subme = ARG_SUBME_DEFAULT;
@@ -490,6 +541,8 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->qp_step = ARG_QP_STEP_DEFAULT;
   encoder->ip_factor = ARG_IP_FACTOR_DEFAULT;
   encoder->pb_factor = ARG_PB_FACTOR_DEFAULT;
+  encoder->mb_tree = ARG_RC_MB_TREE_DEFAULT;
+  encoder->rc_lookahead = ARG_RC_LOOKAHEAD_DEFAULT;
   encoder->noise_reduction = ARG_NR_DEFAULT;
   encoder->interlaced = ARG_INTERLACED_DEFAULT;
 
@@ -559,6 +612,10 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   /* set up encoder parameters */
   encoder->x264param.i_threads = encoder->threads;
+#ifdef X264_ENH_THREADING
+  encoder->x264param.b_sliced_threads = encoder->sliced_threads;
+  encoder->x264param.i_sync_lookahead = encoder->sync_lookahead;
+#endif
   encoder->x264param.i_fps_num = encoder->fps_num;
   encoder->x264param.i_fps_den = encoder->fps_den;
   encoder->x264param.i_width = encoder->width;
@@ -618,8 +675,16 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_deblocking_filter_beta = 0;
   encoder->x264param.rc.f_ip_factor = encoder->ip_factor;
   encoder->x264param.rc.f_pb_factor = encoder->pb_factor;
+#ifdef X264_MB_RC
+  encoder->x264param.rc.b_mb_tree = encoder->mb_tree;
+  encoder->x264param.rc.i_lookahead = encoder->rc_lookahead;
+  GST_DEBUG_OBJECT (encoder, "here %d", encoder->rc_lookahead);
+#endif
 #ifdef X264_ENC_NALS
   encoder->x264param.b_annexb = encoder->byte_stream;
+#endif
+#ifdef X264_INTRA_REFRESH
+  encoder->x264param.b_intra_refresh = encoder->intra_refresh;
 #endif
 
   switch (encoder->pass) {
@@ -1137,7 +1202,11 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   GST_BUFFER_TIMESTAMP (out_buf) = pic_out.i_pts;
   GST_BUFFER_DURATION (out_buf) = duration;
 
+#ifdef X264_INTRA_REFRESH
+  if (pic_out.b_keyframe) {
+#else
   if (pic_out.i_type == X264_TYPE_IDR) {
+#endif
     GST_BUFFER_FLAG_UNSET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
   } else {
     GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -1217,6 +1286,12 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_THREADS:
       encoder->threads = g_value_get_uint (value);
       break;
+    case ARG_SLICED_THREADS:
+      encoder->sliced_threads = g_value_get_boolean (value);
+      break;
+    case ARG_SYNC_LOOKAHEAD:
+      encoder->sync_lookahead = g_value_get_int (value);
+      break;
     case ARG_PASS:
       encoder->pass = g_value_get_enum (value);
       break;
@@ -1234,6 +1309,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_BITRATE:
       encoder->bitrate = g_value_get_uint (value);
+      break;
+    case ARG_INTRA_REFRESH:
+      encoder->intra_refresh = g_value_get_boolean (value);
       break;
     case ARG_VBV_BUF_CAPACITY:
       encoder->vbv_buf_capacity = g_value_get_uint (value);
@@ -1295,6 +1373,12 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_PB_FACTOR:
       encoder->pb_factor = g_value_get_float (value);
       break;
+    case ARG_RC_MB_TREE:
+      encoder->mb_tree = g_value_get_boolean (value);
+      break;
+    case ARG_RC_LOOKAHEAD:
+      encoder->rc_lookahead = g_value_get_int (value);
+      break;
     case ARG_NR:
       encoder->noise_reduction = g_value_get_uint (value);
       break;
@@ -1329,6 +1413,12 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
     case ARG_THREADS:
       g_value_set_uint (value, encoder->threads);
       break;
+    case ARG_SLICED_THREADS:
+      g_value_set_boolean (value, encoder->sliced_threads);
+      break;
+    case ARG_SYNC_LOOKAHEAD:
+      g_value_set_int (value, encoder->sync_lookahead);
+      break;
     case ARG_PASS:
       g_value_set_enum (value, encoder->pass);
       break;
@@ -1344,6 +1434,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_BITRATE:
       g_value_set_uint (value, encoder->bitrate);
+      break;
+    case ARG_INTRA_REFRESH:
+      g_value_set_boolean (value, encoder->intra_refresh);
       break;
     case ARG_VBV_BUF_CAPACITY:
       g_value_set_uint (value, encoder->vbv_buf_capacity);
@@ -1404,6 +1497,12 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PB_FACTOR:
       g_value_set_float (value, encoder->pb_factor);
+      break;
+    case ARG_RC_MB_TREE:
+      g_value_set_boolean (value, encoder->mb_tree);
+      break;
+    case ARG_RC_LOOKAHEAD:
+      g_value_set_int (value, encoder->rc_lookahead);
       break;
     case ARG_NR:
       g_value_set_uint (value, encoder->noise_reduction);

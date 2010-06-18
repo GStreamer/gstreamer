@@ -55,11 +55,14 @@ struct _GstX264Enc
 
   /* properties */
   guint threads;
+  gboolean sliced_threads;
+  gint sync_lookahead;
   gint pass;
   guint quantizer;
   gchar *mp_cache_file;
   gboolean byte_stream;
   guint bitrate;
+  gboolean intra_refresh;
   gint me;
   guint subme;
   guint analyse;
@@ -80,6 +83,8 @@ struct _GstX264Enc
   guint qp_min;
   guint qp_max;
   guint qp_step;
+  gboolean mb_tree;
+  gint rc_lookahead;
   guint noise_reduction;
   gboolean interlaced;
 
