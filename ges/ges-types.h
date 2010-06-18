@@ -73,6 +73,10 @@ typedef struct _GESTrackAudioTransition GESTrackAudioTransition;
 typedef struct _GESTrackAudioTransitionClass
   GESTrackAudioTransitionClass;
 
+typedef struct _GESTrackVideoTransition GESTrackVideoTransition;
+typedef struct _GESTrackVideoTransitionClass
+  GESTrackVideoTransitionClass;
+
 typedef struct _GESTrackBackgroundSource GESTrackBackgroundSource;
 typedef struct _GESTrackBackgroundSourceClass
   GESTrackBackgroundSourceClass;
