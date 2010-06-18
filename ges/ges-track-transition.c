@@ -31,8 +31,7 @@
 
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
-GstElement *ges_track_transition_create_element (GESTrackTransition * self,
-    GESTrack * track);
+GstElement *ges_track_transition_create_element (GESTrackTransition * self);
 
 static void
 gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
@@ -109,7 +108,7 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
   g_signal_connect (G_OBJECT (object->gnlobject), "notify::duration",
       G_CALLBACK (gnlobject_duration_cb), object);
 
-  element = klass->create_element (self, object->track);
+  element = klass->create_element (self);
   if (!GST_IS_ELEMENT (element))
     return FALSE;
 
@@ -120,8 +119,7 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 }
 
 GstElement *
-ges_track_transition_create_element (GESTrackTransition * self,
-    GESTrack * track)
+ges_track_transition_create_element (GESTrackTransition * self)
 {
   GST_WARNING ("transitions don't handle this track type!");
 

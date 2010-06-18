@@ -76,7 +76,7 @@ struct _GESTrackTransitionClass {
     GESTrackObjectClass parent_class;
 
     /* <public> */
-    GstElement* (*create_element) (GESTrackTransition *self, GESTrack *track);
+    GstElement* (*create_element) (GESTrackTransition *self);
     void (*duration_changed) (GESTrackTransition *self, GstElement
         *gnlobj);
 };

@@ -41,7 +41,7 @@ ges_track_audio_transition_duration_changed (GESTrackTransition * self,
     GstElement * gnlobj);
 
 static GstElement *ges_track_audio_transition_create_element (GESTrackTransition
-    * self, GESTrack * unused);
+    * self);
 
 static void ges_track_audio_transition_dispose (GObject * object);
 
@@ -147,8 +147,7 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
 }
 
 static GstElement *
-ges_track_audio_transition_create_element (GESTrackTransition * object,
-    GESTrack * unded)
+ges_track_audio_transition_create_element (GESTrackTransition * object)
 {
   GESTrackAudioTransition *self;
   GstElement *topbin, *iconva, *iconvb, *oconv;

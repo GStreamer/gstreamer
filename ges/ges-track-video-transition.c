@@ -48,7 +48,7 @@ ges_track_video_transition_duration_changed (GESTrackTransition * self,
     GstElement * gnlobj);
 
 static GstElement *ges_track_video_transition_create_element (GESTrackTransition
-    * self, GESTrack * unused);
+    * self);
 
 static void ges_track_video_transition_dispose (GObject * object);
 
@@ -151,8 +151,7 @@ ges_track_video_transition_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_transition_create_element (GESTrackTransition * object,
-    GESTrack * unused)
+ges_track_video_transition_create_element (GESTrackTransition * object)
 {
   GstElement *topbin, *iconva, *iconvb, *oconv;
   GObject *target = NULL;
