@@ -80,32 +80,6 @@ ges_track_transition_set_property (GObject * object, guint property_id,
 static void
 ges_track_transition_dispose (GObject * object)
 {
-  GESTrackTransition *self = GES_TRACK_TRANSITION (object);
-
-  GST_DEBUG ("disposing");
-  GST_LOG ("mixer: %p smpte: %p sinka: %p sinkb: %p",
-      self->vmixer, self->vsmpte, self->sinka, self->sinkb);
-
-  if (self->vcontroller) {
-    g_object_unref (self->vcontroller);
-    self->vcontroller = NULL;
-    if (self->vcontrol_source)
-      gst_object_unref (self->vcontrol_source);
-    self->vcontrol_source = NULL;
-  }
-
-  if (self->vmixer && self->sinka && self->sinkb) {
-    GST_DEBUG ("releasing request pads for vmixer");
-    gst_element_release_request_pad (self->vmixer, self->sinka);
-    gst_element_release_request_pad (self->vmixer, self->sinkb);
-    gst_object_unref (self->vmixer);
-    gst_object_unref (self->sinka);
-    gst_object_unref (self->sinkb);
-    self->vmixer = NULL;
-    self->sinka = NULL;
-    self->sinkb = NULL;
-  }
-
   G_OBJECT_CLASS (ges_track_transition_parent_class)->dispose (object);
 }
 
@@ -173,36 +147,12 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
 static void
 ges_track_transition_init (GESTrackTransition * self)
 {
-  self->vcontroller = NULL;
-  self->vcontrol_source = NULL;
-  self->vsmpte = NULL;
-  self->vmixer = NULL;
-  self->sinka = NULL;
-  self->sinkb = NULL;
-  self->vtype = 0;
-  self->vstart_value = 0.0;
-  self->vend_value = 0.0;
-}
-
-void
-ges_track_transition_set_vtype (GESTrackTransition * self, gint vtype)
-{
-  if (((vtype == VTYPE_CROSSFADE) && (self->vtype != VTYPE_CROSSFADE)) ||
-      ((vtype != VTYPE_CROSSFADE) && (self->vtype = VTYPE_CROSSFADE))) {
-    GST_WARNING
-        ("Changing between 'crossfade' and other types is not supported\n");
-  }
-
-  self->vtype = vtype;
-  if (self->vsmpte && (vtype != VTYPE_CROSSFADE))
-    g_object_set (self->vsmpte, "type", (gint) vtype, NULL);
 }
 
 GESTrackTransition *
-ges_track_transition_new (gint value)
+ges_track_transition_new (void)
 {
   GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
-  ret->vtype = value;
 
   return ret;
 }

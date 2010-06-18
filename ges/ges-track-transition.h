@@ -65,25 +65,6 @@ struct _GESTrackTransition
   GESTrackObject parent;
 
   /*< public >*/
-  /* given to to smpte alpha element */
-  gint                          vtype;
-
-  /*< private >*/
-  
-  /* these enable video interpolation */
-  GstController                 *vcontroller;
-  GstInterpolationControlSource *vcontrol_source;
-
-  /* so we can support changing between wipes */
-  GstElement                    *vsmpte;
-  GstElement                    *vmixer;
-  GstPad                        *sinka;
-  GstPad                        *sinkb;
-  
-  /* these will be different depending on whether smptealpha or alpha element
-   * is used */
-  gdouble                       vstart_value;
-  gdouble                       vend_value;
 };
 
 /**
@@ -102,8 +83,7 @@ struct _GESTrackTransitionClass {
 
 GType ges_track_transition_get_type (void);
 
-GESTrackTransition *ges_track_transition_new (gint value);
-void ges_track_transition_set_vtype(GESTrackTransition *tr, gint vtype);
+GESTrackTransition *ges_track_transition_new (void);
 
 G_END_DECLS
 
