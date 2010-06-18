@@ -134,22 +134,6 @@ ges_track_transition_dispose (GObject * object)
     self->vcontrol_source = NULL;
   }
 
-  if (self->a_acontroller) {
-    g_object_unref (self->a_acontroller);
-    self->a_acontroller = NULL;
-    if (self->a_acontrol_source)
-      gst_object_unref (self->a_acontrol_source);
-    self->a_acontrol_source = NULL;
-  }
-
-  if (self->a_bcontroller) {
-    g_object_unref (self->a_bcontroller);
-    self->a_bcontroller = NULL;
-    if (self->a_bcontrol_source)
-      gst_object_unref (self->a_bcontrol_source);
-    self->a_bcontrol_source = NULL;
-  }
-
   if (self->vmixer && self->sinka && self->sinkb) {
     GST_DEBUG ("releasing request pads for vmixer");
     gst_element_release_request_pad (self->vmixer, self->sinka);
@@ -351,12 +335,6 @@ ges_track_transition_init (GESTrackTransition * self)
   self->vtype = 0;
   self->vstart_value = 0.0;
   self->vend_value = 0.0;
-
-  self->a_acontroller = NULL;
-  self->a_acontrol_source = NULL;
-
-  self->a_bcontroller = NULL;
-  self->a_bcontrol_source = NULL;
 }
 
 void

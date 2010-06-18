@@ -84,14 +84,6 @@ struct _GESTrackTransition
    * is used */
   gdouble                       vstart_value;
   gdouble                       vend_value;
-
-  /* these enable volume interpolation. Unlike video, both inputs are adjusted
-   * simultaneously */
-  GstController                 *a_acontroller;
-  GstInterpolationControlSource *a_acontrol_source;
-
-  GstController                 *a_bcontroller;
-  GstInterpolationControlSource *a_bcontrol_source;
 };
 
 /**

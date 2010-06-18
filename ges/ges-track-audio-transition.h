@@ -53,6 +53,15 @@ G_BEGIN_DECLS
 struct _GESTrackAudioTransition {
   GESTrackTransition parent;
 
+  /*< private >*/
+  /* these enable volume interpolation. Unlike video, both inputs are adjusted
+   * simultaneously */
+  GstController                 *a_controller;
+  GstInterpolationControlSource *a_control_source;
+
+  GstController                 *b_controller;
+  GstInterpolationControlSource *b_control_source;
+
   /*< public >*/
 };
 
