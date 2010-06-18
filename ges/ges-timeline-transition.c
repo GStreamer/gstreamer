@@ -25,7 +25,8 @@
 
 #include "ges-internal.h"
 #include "ges-timeline-transition.h"
-#include "ges-track-transition.h"
+#include "ges-track-video-transition.h"
+#include "ges-track-audio-transition.h"
 
 #define GES_TYPE_TIMELINE_TRANSITION_VTYPE_TYPE \
     (ges_type_timeline_transition_vtype_get_type())
@@ -150,7 +151,19 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG ("Creating a GESTrackTransition");
 
-  res = GES_TRACK_OBJECT (ges_track_transition_new (transition->vtype));
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
+    res = GES_TRACK_OBJECT (ges_track_video_transition_new ());
+    ges_track_transition_set_vtype (GES_TRACK_TRANSITION (res),
+        transition->vtype);
+  }
+
+  else if (track->type == GES_TRACK_TYPE_AUDIO) {
+    res = GES_TRACK_OBJECT (ges_track_audio_transition_new ());
+  }
+
+  else {
+    res = GES_TRACK_OBJECT (ges_track_transition_new (transition->vtype));
+  }
 
   return res;
 }
