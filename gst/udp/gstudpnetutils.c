@@ -370,7 +370,7 @@ gst_udp_uri_update (GstUDPUri * uri, const gchar * host, gint port)
 int
 gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
 {
-  gchar *protocol;
+  gchar *protocol, *location_start;
   gchar *location, *location_end;
   gchar *colptr;
 
@@ -379,11 +379,19 @@ gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
     goto wrong_protocol;
   g_free (protocol);
 
-  location = gst_uri_get_location (uristr);
-  if (!location)
+  location_start = gst_uri_get_location (uristr);
+  if (!location_start)
     return FALSE;
 
-  GST_DEBUG ("got location '%s'", location);
+  GST_DEBUG ("got location '%s'", location_start);
+
+  /* VLC compatibility, strip everything before the @ sign. VLC uses that as the
+   * remote address. */
+  location = g_strstr_len (location_start, -1, "@");
+  if (location == NULL)
+    location = location_start;
+  else
+    location += 1;
 
   if (location[0] == '[') {
     GST_DEBUG ("parse IPV6 address '%s'", location);
@@ -412,7 +420,7 @@ gst_udp_parse_uri (const gchar * uristr, GstUDPUri * uri)
   if (colptr != NULL) {
     uri->port = atoi (colptr + 1);
   }
-  g_free (location);
+  g_free (location_start);
 
   return 0;
 
