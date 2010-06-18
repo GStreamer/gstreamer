@@ -551,9 +551,9 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         break;
       }
       case G_TYPE_STRING:{
-        gchar *str = NULL;
+        const gchar *str = NULL;
 
-        if (!gst_tag_list_get_string_index (list, tag, i, &str))
+        if (!gst_tag_list_peek_string_index (list, tag, i, &str))
           g_return_val_if_reached (NULL);
 
         /* special case: GST_TAG_EXTENDED_COMMENT */
@@ -571,7 +571,6 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         } else {
           result = g_strdup_printf ("%s=%s", vorbis_tag, str);
         }
-        g_free (str);
         break;
       }
       case G_TYPE_DOUBLE:{
