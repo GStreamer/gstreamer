@@ -758,6 +758,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   GstUDPSrc *src;
   gint ret;
   int rcvsize;
+  struct sockaddr_storage bind_address;
 #ifdef G_OS_WIN32
   gint len;
 #else
@@ -789,14 +790,36 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->uri.port);
 
-    len = gst_udp_get_sockaddr_length (&src->myaddr);
-    if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr, len)) < 0)
+    /* Take a temporary copy of the address in case we need to fix it for bind */
+    memcpy (&bind_address, &src->myaddr, sizeof (struct sockaddr_storage));
+
+#ifdef G_OS_WIN32
+    /* Windows does not allow binding to a multicast group so fix source address */
+    if (gst_udp_is_multicast (&src->myaddr)) {
+      switch (((struct sockaddr *) &bind_address)->sa_family) {
+        case AF_INET:
+          ((struct sockaddr_in *) &bind_address)->sin_addr.s_addr =
+              htonl (INADDR_ANY);
+          break;
+        case AF_INET6:
+          ((struct sockaddr_in6 *) &bind_address)->sin6_addr = in6addr_any;
+          break;
+        default:
+          break;
+      }
+    }
+#endif
+
+    len = gst_udp_get_sockaddr_length (&bind_address);
+    if ((ret = bind (src->sock.fd, (struct sockaddr *) &bind_address, len)) < 0)
       goto bind_error;
 
-    len = sizeof (src->myaddr);
-    if ((ret = getsockname (src->sock.fd, (struct sockaddr *) &src->myaddr,
-                &len)) < 0)
-      goto getsockname_error;
+    if (!gst_udp_is_multicast (&src->myaddr)) {
+      len = sizeof (src->myaddr);
+      if ((ret = getsockname (src->sock.fd, (struct sockaddr *) &src->myaddr,
+                  &len)) < 0)
+        goto getsockname_error;
+    }
   } else {
     GST_DEBUG_OBJECT (src, "using provided socket %d", src->sockfd);
     /* we use the configured socket, try to get some info about it */
