@@ -1184,28 +1184,19 @@ gst_rtp_session_cache_caps (GstRtpSession * rtpsession, GstCaps * caps)
       gst_caps_ref (caps));
 }
 
-/* called when the session manager needs the clock rate */
-static gint
-gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
-    gpointer user_data)
+static GstCaps *
+gst_rtp_session_get_caps_for_pt (GstRtpSession * rtpsession, guint payload)
 {
-  gint ipayload, result = -1;
-  GstRtpSession *rtpsession;
-  GstRtpSessionPrivate *priv;
-  GValue ret = { 0 };
+  GstCaps *caps = NULL;
   GValue args[2] = { {0}, {0} };
-  GstCaps *caps;
-  const GstStructure *s;
-
-  rtpsession = GST_RTP_SESSION_CAST (user_data);
-  priv = rtpsession->priv;
+  GValue ret = { 0 };
 
   GST_RTP_SESSION_LOCK (rtpsession);
-  ipayload = payload;           /* make compiler happy */
-  caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (ipayload));
+  caps = g_hash_table_lookup (rtpsession->priv->ptmap,
+      GINT_TO_POINTER (payload));
   if (caps) {
     gst_caps_ref (caps);
-    goto found;
+    goto done;
   }
 
   /* not found in the cache, try to get it with a signal */
@@ -1229,7 +1220,35 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
 
   gst_rtp_session_cache_caps (rtpsession, caps);
 
-found:
+done:
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
+  return caps;
+
+no_caps:
+  {
+    GST_DEBUG_OBJECT (rtpsession, "could not get caps");
+    goto done;
+  }
+}
+
+/* called when the session manager needs the clock rate */
+static gint
+gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
+    gpointer user_data)
+{
+  gint result = -1;
+  GstRtpSession *rtpsession;
+  GstCaps *caps;
+  const GstStructure *s;
+
+  rtpsession = GST_RTP_SESSION_CAST (user_data);
+
+  caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
+
+  if (!caps)
+    goto done;
+
   s = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (s, "clock-rate", &result))
     goto no_clock_rate;
@@ -1239,16 +1258,10 @@ found:
   GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", result);
 
 done:
-  GST_RTP_SESSION_UNLOCK (rtpsession);
 
   return result;
 
   /* ERRORS */
-no_caps:
-  {
-    GST_DEBUG_OBJECT (rtpsession, "could not get caps");
-    goto done;
-  }
 no_clock_rate:
   {
     gst_caps_unref (caps);
