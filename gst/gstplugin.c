@@ -231,7 +231,7 @@ gst_plugin_register_static (gint major_version, gint minor_version,
     const gchar * package, const gchar * origin)
 {
   GstPluginDesc desc = { major_version, minor_version, name, description,
-    init_func, version, license, source, package, origin,
+    init_func, version, license, source, package, origin, NULL,
   };
   GstPlugin *plugin;
   gboolean res = FALSE;
@@ -300,7 +300,7 @@ gst_plugin_register_static_full (gint major_version, gint minor_version,
 {
   GstPluginDesc desc = { major_version, minor_version, name, description,
     (GstPluginInitFunc) init_full_func, version, license, source, package,
-    origin,
+    origin, NULL,
   };
   GstPlugin *plugin;
   gboolean res = FALSE;
@@ -645,6 +645,44 @@ _gst_plugin_fault_handler_setup (void)
 }
 #endif /* HAVE_SIGACTION */
 
+/* g_time_val_from_iso8601() doesn't do quite what we want */
+static gboolean
+check_release_datetime (const gchar * date_time)
+{
+  guint64 val;
+
+  /* we require YYYY-MM-DD or YYYY-MM-DDTHH:MMZ format */
+  if (!g_ascii_isdigit (*date_time))
+    return FALSE;
+
+  val = g_ascii_strtoull (date_time, (gchar **) & date_time, 10);
+  if (val < 2000 || val > 2100 || *date_time != '-')
+    return FALSE;
+
+  val = g_ascii_strtoull (date_time + 1, (gchar **) & date_time, 10);
+  if (val == 0 || val > 12 || *date_time != '-')
+    return FALSE;
+
+  val = g_ascii_strtoull (date_time + 1, (gchar **) & date_time, 10);
+  if (val == 0 || val > 32)
+    return FALSE;
+
+  /* end of string or date/time separator + HH:MMZ */
+  if (*date_time == 'T' || *date_time == ' ') {
+    val = g_ascii_strtoull (date_time + 1, (gchar **) & date_time, 10);
+    if (val > 24 || *date_time != ':')
+      return FALSE;
+
+    val = g_ascii_strtoull (date_time + 1, (gchar **) & date_time, 10);
+    if (val > 59 || *date_time != 'Z')
+      return FALSE;
+
+    ++date_time;
+  }
+
+  return (*date_time == '\0');
+}
+
 static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 
 #define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \
@@ -769,6 +807,13 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, source, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
+
+    if (plugin->orig_desc->release_datetime != NULL &&
+        !check_release_datetime (plugin->orig_desc->release_datetime)) {
+      GST_ERROR ("GstPluginDesc for '%s' has invalid datetime '%s'",
+          filename, plugin->orig_desc->release_datetime);
+      plugin->orig_desc->release_datetime = NULL;
+    }
   }
 
   GST_LOG ("Plugin %p for file \"%s\" prepared, calling entry function...",
@@ -829,6 +874,7 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
   dest->source = g_intern_string (src->source);
   dest->package = g_intern_string (src->package);
   dest->origin = g_intern_string (src->origin);
+  dest->release_datetime = g_intern_string (src->release_datetime);
 }
 
 /**

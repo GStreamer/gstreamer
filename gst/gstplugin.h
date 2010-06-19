@@ -150,7 +150,11 @@ typedef gboolean (*GstPluginInitFullFunc) (GstPlugin *plugin, gpointer user_data
  * @source: source module plugin belongs to
  * @package: shipped package plugin belongs to
  * @origin: URL to provider of plugin
- * @_gst_reserved: private, for later expansion
+ * @release_datetime: date time string in ISO 8601 format (or rather, a
+ *     subset thereof), or NULL. Allowed are the following formats:
+ *     "YYYY-MM-DD" and "YYY-MM-DDTHH:MMZ" (with 'T' a separator and 'Z'
+ *     indicating UTC/Zulu time). This field should be set via the
+ *     GST_PACKAGE_RELEASE_DATETIME preprocessor macro (Since: 0.10.31)
  *
  * A plugin should export a variable of this type called plugin_desc. The plugin
  * loader will use the data provided there to initialize the plugin.
@@ -169,8 +173,9 @@ struct _GstPluginDesc {
   const gchar *source;
   const gchar *package;
   const gchar *origin;
-
-  gpointer _gst_reserved[GST_PADDING];
+  const gchar *release_datetime;
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 
@@ -218,6 +223,12 @@ struct _GstPluginClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+#ifdef GST_PACKAGE_RELEASE_DATETIME
+#define __GST_PACKAGE_RELEASE_DATETIME GST_PACKAGE_RELEASE_DATETIME
+#else
+#define __GST_PACKAGE_RELEASE_DATETIME NULL
+#endif
+
 /**
  * GST_PLUGIN_DEFINE:
  * @major: major version number of the gstreamer-core that plugin was compiled for
@@ -235,6 +246,13 @@ struct _GstPluginClass {
  * by other applications.
  *
  * The macro uses a define named PACKAGE for the #GstPluginDesc,source field.
+ * When using autoconf, this is usually set automatically via the AC_INIT
+ * macro, and set in config.h. If you are not using autoconf, you will need to
+ * define PACKAGE yourself and set it to a short mnemonic string identifying
+ * your application/package, e.g. 'someapp' or 'my-plugins-foo.
+ *
+ * If defined, the GST_PACKAGE_RELEASE_DATETIME will also be used for the
+ * #GstPluginDesc,release_datetime field.
  */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
 G_BEGIN_DECLS \
@@ -249,6 +267,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   PACKAGE,						\
   package,						\
   origin,						\
+  __GST_PACKAGE_RELEASE_DATETIME,                       \
   GST_PADDING_INIT				        \
 }; \
 G_END_DECLS
@@ -294,6 +313,7 @@ _gst_plugin_static_init__ ##init (void)			\
     PACKAGE,						\
     package,						\
     origin,						\
+    NULL,						\
     GST_PADDING_INIT				        \
   };							\
   _gst_plugin_register_static (&plugin_desc_);		\

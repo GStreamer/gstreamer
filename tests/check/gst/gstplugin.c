@@ -104,7 +104,7 @@ static GstPluginDesc plugin_desc = {
   PACKAGE,
   GST_PACKAGE_NAME,
   GST_PACKAGE_ORIGIN,
-
+  NULL,
   GST_PADDING_INIT
 };
 
