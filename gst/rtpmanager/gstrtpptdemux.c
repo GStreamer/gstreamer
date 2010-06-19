@@ -132,6 +132,9 @@ static void gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux);
 
 static GstRtpPtDemuxPad *find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt);
 
+static gboolean gst_rtp_pt_demux_src_event (GstPad * pad, GstEvent * event);
+
+
 static guint gst_rtp_pt_demux_signals[LAST_SIGNAL] = { 0 };
 
 static void
@@ -329,6 +332,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     srcpad = gst_pad_new_from_template (templ, padname);
     gst_pad_use_fixed_caps (srcpad);
     g_free (padname);
+    gst_pad_set_event_function (srcpad, gst_rtp_pt_demux_src_event);
 
     caps = gst_rtp_pt_demux_get_caps (rtpdemux, pt);
     if (!caps)
@@ -460,6 +464,47 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
   gst_object_unref (rtpdemux);
   return res;
 }
+
+
+static gboolean
+gst_rtp_pt_demux_src_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpPtDemux *demux;
+  const GstStructure *s;
+
+  demux = GST_RTP_PT_DEMUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+    case GST_EVENT_CUSTOM_BOTH_OOB:
+      s = gst_event_get_structure (event);
+      if (s && !gst_structure_has_field (s, "payload")) {
+        GSList *walk;
+
+        for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+          GstRtpPtDemuxPad *dpad = (GstRtpPtDemuxPad *) walk->data;
+
+          if (dpad->pad == pad) {
+            event =
+                GST_EVENT_CAST (gst_mini_object_make_writable
+                (GST_MINI_OBJECT_CAST (event)));
+            gst_structure_set (event->structure,
+                "payload", G_TYPE_UINT, dpad->pt, NULL);
+            break;
+          }
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  gst_object_unref (demux);
+
+  return gst_pad_event_default (pad, event);
+}
+
 
 
 /*
