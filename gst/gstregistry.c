@@ -1073,6 +1073,25 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
 }
 
 static gboolean
+is_blacklisted_hidden_directory (const gchar * dirent)
+{
+  if (G_LIKELY (dirent[0] != '.'))
+    return FALSE;
+
+  /* skip the .debug directory, these contain elf files that are not
+   * useful or worse, can crash dlopen () */
+  if (strcmp (dirent, ".debug") == 0)
+    return TRUE;
+
+  /* can also skip .git and .deps dirs, those won't contain useful files.
+   * This speeds up scanning a bit in uninstalled setups. */
+  if (strcmp (dirent, ".git") == 0 || strcmp (dirent, ".deps") == 0)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 gst_registry_scan_path_level (GstRegistryScanContext * context,
     const gchar * path, int level)
 {
@@ -1098,12 +1117,8 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
     }
 
     if (file_status.st_mode & S_IFDIR) {
-      /* skip the .debug directory, these contain elf files that are not
-       * useful or worse, can crash dlopen (). do a quick check for the . first
-       * and then call the compare functions. */
-      if (G_UNLIKELY (dirent[0] == '.' && (g_str_equal (dirent, ".debug")
-                  || g_str_equal (dirent, ".git")))) {
-        GST_LOG_OBJECT (context->registry, "ignoring .debug or .git directory");
+      if (G_UNLIKELY (is_blacklisted_hidden_directory (dirent))) {
+        GST_LOG_OBJECT (context->registry, "ignoring %s directory", dirent);
         g_free (filename);
         continue;
       }
