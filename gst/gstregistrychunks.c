@@ -447,6 +447,8 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
   }
 
   /* pack plugin element strings */
+  gst_registry_chunks_save_const_string (list,
+      (plugin->desc.release_datetime) ? plugin->desc.release_datetime : "");
   gst_registry_chunks_save_const_string (list, plugin->desc.origin);
   gst_registry_chunks_save_const_string (list, plugin->desc.package);
   gst_registry_chunks_save_const_string (list, plugin->desc.source);
@@ -779,6 +781,8 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   unpack_const_string (*in, plugin->desc.source, end, fail);
   unpack_const_string (*in, plugin->desc.package, end, fail);
   unpack_const_string (*in, plugin->desc.origin, end, fail);
+  unpack_const_string (*in, plugin->desc.release_datetime, end, fail);
+
   GST_LOG ("read strings for name='%s'", plugin->desc.name);
   GST_LOG ("  desc.description='%s'", plugin->desc.description);
   GST_LOG ("  filename='%s'", plugin->filename);
@@ -787,6 +791,10 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   GST_LOG ("  desc.source='%s'", plugin->desc.source);
   GST_LOG ("  desc.package='%s'", plugin->desc.package);
   GST_LOG ("  desc.origin='%s'", plugin->desc.origin);
+  GST_LOG ("  desc.datetime=%s", plugin->desc.release_datetime);
+
+  if (plugin->desc.release_datetime[0] == '\0')
+    plugin->desc.release_datetime = NULL;
 
   /* unpack cache data */
   unpack_string_nocopy (*in, cache_str, end, fail);
