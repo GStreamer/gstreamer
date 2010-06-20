@@ -3024,6 +3024,7 @@ main (int argc, char **argv)
 
   {
     GIOChannel *js_watch = g_io_channel_unix_new (js_fd);
+    g_io_channel_set_encoding (js_watch, NULL, NULL);
     g_io_add_watch (js_watch, G_IO_IN, read_joystick, NULL);
   }
 
