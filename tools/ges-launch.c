@@ -160,17 +160,26 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
 {
   GstEncodingProfile *profile;
   GstStreamEncodingProfile *stream;
+  GstCaps *caps;
 
-  profile = gst_encoding_profile_new ((gchar *) "ges-test4",
-      gst_caps_from_string (container), NULL, FALSE);
+  caps = gst_caps_from_string (container);
+  profile = gst_encoding_profile_new ((gchar *) "ges-test4", caps, NULL, FALSE);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (audio);
   stream =
       gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_AUDIO,
-      gst_caps_from_string (audio), NULL, NULL, 0);
+      caps, NULL, NULL, 0);
   gst_encoding_profile_add_stream (profile, stream);
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (video);
   stream = gst_stream_encoding_profile_new (GST_ENCODING_PROFILE_VIDEO,
       gst_caps_from_string (video),
       NULL, gst_caps_from_string (video_restriction), 0);
   gst_encoding_profile_add_stream (profile, stream);
+  gst_caps_unref (caps);
+
   return profile;
 }
 
