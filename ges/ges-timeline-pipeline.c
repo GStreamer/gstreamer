@@ -363,10 +363,12 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   /* Linking pad to tee */
   sinkpad = gst_element_get_static_pad (chain->tee, "sink");
   gst_pad_link (pad, sinkpad);
+  gst_object_unref (sinkpad);
 
   /* Connect playsink */
   if (self->mode & TIMELINE_MODE_PREVIEW) {
     const gchar *sinkpad_name;
+    GstPad *tmppad;
 
     GST_DEBUG_OBJECT (self, "Connecting to playsink");
 
@@ -393,11 +395,13 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       goto error;
     }
 
-    if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
-                    "src%d"), sinkpad) != GST_PAD_LINK_OK)) {
+    tmppad = gst_element_get_request_pad (chain->tee, "src%d");
+    if (G_UNLIKELY (gst_pad_link (tmppad, sinkpad) != GST_PAD_LINK_OK)) {
       GST_ERROR_OBJECT (self, "Couldn't link track pad to playsink");
+      gst_object_unref (tmppad);
       goto error;
     }
+    gst_object_unref (tmppad);
 
     GST_DEBUG ("Reconfiguring playsink");
 
@@ -405,11 +409,13 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     g_signal_emit_by_name (self->playsink, "reconfigure", &reconfigured);
     GST_DEBUG ("'reconfigure' returned %d", reconfigured);
 
+    /* We still hold a reference on the sinkpad */
     chain->playsinkpad = sinkpad;
   }
 
   /* Connect to encodebin */
   if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) {
+    GstPad *tmppad;
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
     if (!chain->encodebinpad) {
@@ -428,11 +434,13 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       chain->encodebinpad = sinkpad;
     }
 
-    if (G_UNLIKELY (gst_pad_link (gst_element_get_request_pad (chain->tee,
-                    "src%d"), chain->encodebinpad) != GST_PAD_LINK_OK)) {
+    tmppad = gst_element_get_request_pad (chain->tee, "src%d");
+    if (G_UNLIKELY (gst_pad_link (tmppad,
+                chain->encodebinpad) != GST_PAD_LINK_OK)) {
       GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
       goto error;
     }
+    gst_object_unref (tmppad);
 
   }
 
@@ -478,6 +486,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   if (chain->encodebinpad) {
     peer = gst_pad_get_peer (chain->encodebinpad);
     gst_pad_unlink (peer, chain->encodebinpad);
+    gst_object_unref (peer);
     gst_element_release_request_pad (self->encodebin, chain->encodebinpad);
   }
 
@@ -485,12 +494,15 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   if (chain->playsinkpad) {
     peer = gst_pad_get_peer (chain->playsinkpad);
     gst_pad_unlink (peer, chain->playsinkpad);
+    gst_object_unref (peer);
     gst_element_release_request_pad (self->playsink, chain->playsinkpad);
+    gst_object_unref (chain->playsinkpad);
   }
 
   /* Unlike/remove tee */
   peer = gst_element_get_static_pad (chain->tee, "sink");
   gst_pad_unlink (pad, peer);
+  gst_object_unref (peer);
   gst_element_set_state (chain->tee, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (self), chain->tee);
 
