@@ -360,6 +360,22 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>ges-timeline-overlay</FILE>
+<TITLE>GESTimelineOverlay</TITLE>
+GESTimelineOverlay
+GESTimelineOverlayClass
+ges_timeline_overlay_new
+ges_tl_overlay_get_type
+<SUBSECTION Standard>
+GES_IS_TIMELINE_OVERLAY
+GES_IS_TIMELINE_OVERLAY_CLASS
+GES_TIMELINE_OVERLAY
+GES_TIMELINE_OVERLAY_CLASS
+GES_TIMELINE_OVERLAY_GET_CLASS
+GES_TYPE_TIMELINE_OVERLAY
+</SECTION>
+
+<SECTION>
 <FILE>ges-track-video-background-source</FILE>
 <TITLE>GESTrackVideoBackgroundSource</TITLE>
 GESTrackVideoBackgroundSource

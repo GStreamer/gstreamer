@@ -35,6 +35,7 @@
 #include <ges/ges-timeline-transition.h>
 #include <ges/ges-timeline-background-source.h>
 #include <ges/ges-timeline-title-source.h>
+#include <ges/ges-timeline-overlay.h>
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>
 #include <ges/ges-track-source.h>
