@@ -22,7 +22,8 @@ check_PROGRAMS = \
 	ges/transition	\
 	ges/timelineobject	\
 	ges/backgroundsource\
-	ges/titles
+	ges/titles\
+	ges/overlays
 
 noinst_HEADERS = 
 
