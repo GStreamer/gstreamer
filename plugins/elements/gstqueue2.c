@@ -947,10 +947,12 @@ gst_queue2_write_buffer_to_file (GstQueue2 * queue, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (queue, "merging ranges %" G_GUINT64_FORMAT,
         next->writing_pos);
-    /* we ran over the offset of the next group */
-    queue->current->writing_pos = writing_pos = next->writing_pos;
 
-    /* remove the group */
+    /* remove the group, we could choose to not read the data in this range
+     * again. This would involve us doing a seek to the current writing position
+     * in the range. FIXME, It would probably make sense to do a seek when there
+     * is a lot of data in the range we merged with to avoid reading it all
+     * again. */
     queue->current->next = next->next;
     g_slice_free (GstQueue2Range, next);
 
