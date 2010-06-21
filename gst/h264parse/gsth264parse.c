@@ -43,7 +43,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) true"));
+    GST_STATIC_CAPS ("video/x-h264"));
 
 GST_DEBUG_CATEGORY_STATIC (h264_parse_debug);
 #define GST_CAT_DEFAULT h264_parse_debug
