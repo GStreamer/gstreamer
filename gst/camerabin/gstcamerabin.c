@@ -890,6 +890,16 @@ camerabin_dispose_elements (GstCameraBin * camera)
     camera->app_viewfinder_filter = NULL;
   }
 
+  if (camera->app_preview_source_filter) {
+    gst_object_unref (camera->app_preview_source_filter);
+    camera->app_preview_source_filter = NULL;
+  }
+
+  if (camera->app_video_preview_source_filter) {
+    gst_object_unref (camera->app_video_preview_source_filter);
+    camera->app_video_preview_source_filter = NULL;
+  }
+
   /* Free caps */
   gst_caps_replace (&camera->image_capture_caps, NULL);
   gst_caps_replace (&camera->view_finder_caps, NULL);
@@ -2857,6 +2867,22 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstCameraBin:preview-source-filter:
+   * Set up preview filter element, all frames coming from appsrc
+   * element will be processed by this element.
+   * Applications can use this to overlay text/images for preview frame, 
+   * for example.
+   * This property can only be set while #GstCameraBin is in NULL state.
+   * The ownership of the element will be taken by #GstCameraBin.
+   */
+
+  g_object_class_install_property (gobject_class, ARG_PREVIEW_SOURCE_FILTER,
+      g_param_spec_object ("preview-source-filter",
+          "preview source filter element",
+          "Optional preview source filter GStreamer element",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstCameraBin:viewfinder-filter:
    * Set up viewfinder filter element, all frames going to viewfinder sink
    * element will be processed by this element.
@@ -3155,6 +3181,10 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->app_vf_sink = NULL;
   camera->app_viewfinder_filter = NULL;
 
+  /* preview elements */
+  camera->app_preview_source_filter = NULL;
+  camera->app_video_preview_source_filter = NULL;
+
   /* source elements */
   camera->src_vid_src = NULL;
   camera->src_filter = NULL;
@@ -3337,14 +3367,17 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
     case ARG_PREVIEW_CAPS:
     {
       GstElement **prev_pipe = NULL;
+      GstElement **preview_source_filter = NULL;
       GstCaps **prev_caps = NULL;
       GstCaps *new_caps = NULL;
 
       if (camera->mode == MODE_IMAGE) {
         prev_pipe = &camera->preview_pipeline;
+        preview_source_filter = &camera->app_preview_source_filter;
         prev_caps = &camera->preview_caps;
       } else if (camera->mode == MODE_VIDEO) {
         prev_pipe = &camera->video_preview_pipeline;
+        preview_source_filter = &camera->app_video_preview_source_filter;
         prev_caps = &camera->video_preview_caps;
       }
 
@@ -3363,11 +3396,45 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
 
         if (new_caps && !gst_caps_is_any (new_caps) &&
             !gst_caps_is_empty (new_caps)) {
-          *prev_pipe = gst_camerabin_preview_create_pipeline (camera, new_caps);
+          *prev_pipe =
+              gst_camerabin_preview_create_pipeline (camera, new_caps,
+              *preview_source_filter);
         }
       }
       break;
     }
+    case ARG_PREVIEW_SOURCE_FILTER:
+      if (GST_STATE (camera) != GST_STATE_NULL) {
+        GST_ELEMENT_ERROR (camera, CORE, FAILED,
+            ("camerabin must be in NULL state when setting the preview source filter element"),
+            (NULL));
+      } else {
+        GstElement **preview_pipe = NULL;
+        GstElement **preview_source_filter = NULL;
+        GstCaps *preview_caps = NULL;
+
+        if (camera->mode == MODE_IMAGE) {
+          preview_pipe = &camera->preview_pipeline;
+          preview_source_filter = &camera->app_preview_source_filter;
+          preview_caps = camera->preview_caps;
+        } else if (camera->mode == MODE_VIDEO) {
+          preview_pipe = &camera->video_preview_pipeline;
+          preview_source_filter = &camera->app_video_preview_source_filter;
+          preview_caps = camera->video_preview_caps;
+        }
+
+        if (*preview_source_filter)
+          gst_object_unref (*preview_source_filter);
+        *preview_source_filter = g_value_dup_object (value);
+
+        if (*preview_pipe) {
+          gst_camerabin_preview_destroy_pipeline (camera, *preview_pipe);
+          *preview_pipe =
+              gst_camerabin_preview_create_pipeline (camera, preview_caps,
+              *preview_source_filter);
+        }
+      }
+      break;
     case ARG_VIEWFINDER_FILTER:
       if (GST_STATE (camera) != GST_STATE_NULL) {
         GST_ELEMENT_ERROR (camera, CORE, FAILED,
@@ -3525,6 +3592,12 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
         gst_value_set_caps (value, camera->preview_caps);
       else if (camera->mode == MODE_VIDEO)
         gst_value_set_caps (value, camera->video_preview_caps);
+      break;
+    case ARG_PREVIEW_SOURCE_FILTER:
+      if (camera->mode == MODE_IMAGE)
+        g_value_set_object (value, camera->app_preview_source_filter);
+      else if (camera->mode == MODE_VIDEO)
+        g_value_set_object (value, camera->app_video_preview_source_filter);
       break;
     case ARG_VIEWFINDER_FILTER:
       g_value_set_object (value, camera->app_viewfinder_filter);

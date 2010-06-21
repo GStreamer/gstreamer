@@ -162,6 +162,8 @@ struct _GstCameraBin
   GstElement *app_vf_sink;
   GstElement *app_video_filter;
   GstElement *app_viewfinder_filter;
+  GstElement *app_preview_source_filter;
+  GstElement *app_video_preview_source_filter;
 
   /* Night mode handling */
   gboolean night_mode;

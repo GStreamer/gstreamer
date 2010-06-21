@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
     GstElement * gst_camerabin_preview_create_pipeline (GstCameraBin * camera,
-    GstCaps * caps);
+    GstCaps * caps, GstElement * src_filter);
 
 void gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
     GstElement * pipeline);
