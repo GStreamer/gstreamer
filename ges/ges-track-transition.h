@@ -53,7 +53,6 @@ G_BEGIN_DECLS
 /**
  * GESTrackTransition:
  * @parent: parent
- * @vtype: a #GEnumValue representing the type of transition to apply.
  *
  * Track level representation of a transition. Has a concrete implementation
  * for both audio and video streams.
