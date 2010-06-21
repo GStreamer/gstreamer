@@ -35,7 +35,7 @@
 //#include "ges-track-audio-overlay.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTimelineOverlay, ges_tl_overlay, GES_TYPE_TIMELINE_SOURCE);
+G_DEFINE_TYPE (GESTimelineOverlay, ges_tl_overlay, GES_TYPE_TIMELINE_OBJECT);
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC

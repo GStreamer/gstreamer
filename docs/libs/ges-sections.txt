@@ -463,6 +463,7 @@ GES_TYPE_TRACK_VIDEO_TITLE_SOURCE
 
 <SECTION>
 <FILE>ges-track-audio-title-source</FILE>
+<TITLE>GESTrackAudioTitleSource</TITLE>
 GESTrackAudioTitleSource
 GESTrackAudioTitleSourceClass
 ges_track_audio_title_source_new
@@ -482,3 +483,20 @@ GES_TRACK_AUDIO_TITLE_SOURCE_CLASS
 GES_TRACK_AUDIO_TITLE_SOURCE_GET_CLASS
 GES_TYPE_TRACK_AUDIO_TITLE_SOURCE
 </SECTION>
+
+<SECTION>
+<FILE>ges-track-overlay</FILE>
+<TITLE>GESTrackOverlay</TITLE>
+GESTrackOverlay
+GESTrackOverlayClass
+ges_track_overlay_get_type
+ges_track_overlay_new
+<SUBSECTION Standard>
+GES_IS_TRACK_OVERLAY
+GES_IS_TRACK_OVERLAY_CLASS
+GES_TRACK_OVERLAY
+GES_TRACK_OVERLAY_CLASS
+GES_TRACK_OVERLAY_GET_CLASS
+GES_TYPE_TRACK_OVERLAY
+</SECTION>
+

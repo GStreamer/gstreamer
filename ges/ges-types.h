@@ -104,4 +104,8 @@ typedef struct _GESTrackAudioTitleSource GESTrackAudioTitleSource;
 typedef struct _GESTrackAudioTitleSourceClass
   GESTrackAudioTitleSourceClass;
 
+typedef struct _GESTrackOverlay GESTrackOverlay;
+typedef struct _GESTrackOverlayClass
+  GESTrackOverlayClass;
+
 #endif /* __GES_TYPES_H__ */
