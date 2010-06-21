@@ -287,3 +287,30 @@ no_pipeline:
     return NULL;
   }
 }
+
+/**
+ * gst_camerabin_preview_send_event:
+ * @camera: the #GstCameraBin
+ * @evt: The #GstEvent to be pushed, takes ownership
+ *
+ * Pushes an event to the preview pipeline.
+ *
+ * Returns: True if the event was handled
+ */
+gboolean
+gst_camerabin_preview_send_event (GstCameraBin * camera, GstElement * pipeline,
+    GstEvent * evt)
+{
+  GstElement *src;
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "prev_src");
+  if (!src) {
+    GST_WARNING ("Preview pipeline doesn't have src element, can't push event");
+    gst_event_unref (evt);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (camera, "Pushing event %p to preview pipeline", evt);
+
+  return gst_element_send_event (src, evt);
+}

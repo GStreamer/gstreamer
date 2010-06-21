@@ -35,5 +35,8 @@ void gst_camerabin_preview_destroy_pipeline (GstCameraBin * camera,
 GstBuffer *gst_camerabin_preview_convert (GstCameraBin * camera,
     GstElement * pipeline, GstBuffer * buf);
 
+gboolean gst_camerabin_preview_send_event (GstCameraBin * camera,
+    GstElement * pipeline, GstEvent * event);
+
 G_END_DECLS
 #endif                          /* __CAMERABINPREVIEW_H__ */

@@ -261,7 +261,7 @@ static void
 camerabin_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data);
 
 static gboolean
-gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
+gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
     gpointer u_data);
 static gboolean
 gst_camerabin_have_vid_buffer (GstPad * pad, GstBuffer * buffer,
@@ -715,7 +715,7 @@ camerabin_create_elements (GstCameraBin * camera)
   camera->pad_src_img =
       gst_element_get_request_pad (camera->src_out_sel, "src%d");
 
-  gst_pad_add_buffer_probe (camera->pad_src_img,
+  gst_pad_add_data_probe (camera->pad_src_img,
       G_CALLBACK (gst_camerabin_have_img_buffer), camera);
 
   /* Add queue leading to image bin */
@@ -1713,55 +1713,75 @@ gst_camerabin_send_preview (GstCameraBin * camera, GstBuffer * buffer)
  * Generates and sends preview image as gst message if requested.
  */
 static gboolean
-gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
+gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
     gpointer u_data)
 {
   GstCameraBin *camera = (GstCameraBin *) u_data;
-  GstStructure *fn_ev_struct = NULL;
-  gboolean ret = TRUE;
-  GstPad *os_sink = NULL;
 
-  GST_LOG ("got buffer %p with size %d", buffer, GST_BUFFER_SIZE (buffer));
+  if (GST_IS_BUFFER (obj)) {
+    GstBuffer *buffer = GST_BUFFER_CAST (obj);
+    GstStructure *fn_ev_struct = NULL;
+    gboolean ret = TRUE;
+    GstPad *os_sink = NULL;
 
-  /* Image filename should be set by now */
-  if (g_str_equal (camera->filename->str, "")) {
-    GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
-    ret = FALSE;
-    goto done;
+    GST_LOG ("got buffer %p with size %d", buffer, GST_BUFFER_SIZE (buffer));
+
+    /* Image filename should be set by now */
+    if (g_str_equal (camera->filename->str, "")) {
+      GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
+      ret = FALSE;
+      goto done;
+    }
+
+    if (camera->preview_caps) {
+      gst_camerabin_send_preview (camera, buffer);
+    }
+
+    gst_camerabin_rewrite_tags (camera);
+
+    /* Send a custom event which tells the filename to image queue */
+    /* NOTE: This needs to be THE FIRST event to be sent to queue for
+       every image. It triggers imgbin state change to PLAYING. */
+    fn_ev_struct = gst_structure_new ("img-filename",
+        "filename", G_TYPE_STRING, camera->filename->str, NULL);
+    GST_DEBUG_OBJECT (camera, "sending filename event to image queue");
+    gst_camerabin_send_img_queue_custom_event (camera, fn_ev_struct);
+
+    /* Add buffer probe to outputselector's sink pad. It sends
+       EOS event to image queue. */
+    os_sink = gst_element_get_static_pad (camera->src_out_sel, "sink");
+    camera->image_captured_id = gst_pad_add_buffer_probe (os_sink,
+        G_CALLBACK (gst_camerabin_have_src_buffer), camera);
+    gst_object_unref (os_sink);
+
+  done:
+
+    /* HACK: v4l2camsrc changes to view finder resolution automatically
+       after one captured still image */
+    gst_camerabin_finish_image_capture (camera);
+
+    GST_DEBUG_OBJECT (camera, "image captured, switching to viewfinder");
+
+    gst_camerabin_reset_to_view_finder (camera);
+
+    GST_DEBUG_OBJECT (camera, "switched back to viewfinder");
+
+    return TRUE;
+  } else if (GST_IS_EVENT (obj)) {
+    GstEvent *event = GST_EVENT_CAST (obj);
+
+    GST_DEBUG_OBJECT (camera, "Received event in image pipeline");
+
+    /* forward tag events to preview pipeline */
+    if (camera->preview_caps && GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+      GstElement *pipeline;
+
+      pipeline = (camera->mode == MODE_IMAGE) ?
+          camera->preview_pipeline : camera->video_preview_pipeline;
+      gst_camerabin_preview_send_event (camera, pipeline,
+          gst_event_ref (event));
+    }
   }
-
-  if (camera->preview_caps) {
-    gst_camerabin_send_preview (camera, buffer);
-  }
-
-  gst_camerabin_rewrite_tags (camera);
-
-  /* Send a custom event which tells the filename to image queue */
-  /* NOTE: This needs to be THE FIRST event to be sent to queue for
-     every image. It triggers imgbin state change to PLAYING. */
-  fn_ev_struct = gst_structure_new ("img-filename",
-      "filename", G_TYPE_STRING, camera->filename->str, NULL);
-  GST_DEBUG_OBJECT (camera, "sending filename event to image queue");
-  gst_camerabin_send_img_queue_custom_event (camera, fn_ev_struct);
-
-  /* Add buffer probe to outputselector's sink pad. It sends
-     EOS event to image queue. */
-  os_sink = gst_element_get_static_pad (camera->src_out_sel, "sink");
-  camera->image_captured_id = gst_pad_add_buffer_probe (os_sink,
-      G_CALLBACK (gst_camerabin_have_src_buffer), camera);
-  gst_object_unref (os_sink);
-
-done:
-
-  /* HACK: v4l2camsrc changes to view finder resolution automatically
-     after one captured still image */
-  gst_camerabin_finish_image_capture (camera);
-
-  GST_DEBUG_OBJECT (camera, "image captured, switching to viewfinder");
-
-  gst_camerabin_reset_to_view_finder (camera);
-
-  GST_DEBUG_OBJECT (camera, "switched back to viewfinder");
 
   return TRUE;
 }
