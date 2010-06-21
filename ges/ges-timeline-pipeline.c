@@ -54,7 +54,7 @@ static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
 
 static void
-ges_timeline_pipeline_finalize (GObject * object)
+ges_timeline_pipeline_dispose (GObject * object)
 {
   GESTimelinePipeline *self = GES_TIMELINE_PIPELINE (object);
 
@@ -64,7 +64,7 @@ ges_timeline_pipeline_finalize (GObject * object)
     gst_object_unref (self->playsink);
     self->playsink = NULL;
   }
-  G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->dispose (object);
 }
 
 static void
@@ -73,7 +73,7 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  object_class->finalize = ges_timeline_pipeline_finalize;
+  object_class->dispose = ges_timeline_pipeline_dispose;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (ges_timeline_pipeline_change_state);
