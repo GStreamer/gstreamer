@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2008 Nokia Corporation <multimedia@maemo.org>
+ * Copyright (C) 2010 Nokia Corporation <multimedia@maemo.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,19 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __CAMERABIN_GENERAL_H_
-#define __CAMERABIN_GENERAL_H_
+#ifndef __CAMERABIN_DEBUG_H_
+#define __CAMERABIN_DEBUG_H_
 
 #include <gst/gst.h>
 
-gboolean gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem);
-gboolean gst_camerabin_add_element (GstBin * bin, GstElement * new_elem);
-GstElement *gst_camerabin_create_and_add_element (GstBin * bin, const gchar * elem_name);
+/* debug logging category */
+GST_DEBUG_CATEGORY_EXTERN (gst_camerabin_debug);
+#define GST_CAT_DEFAULT gst_camerabin_debug
 
-GstElement * gst_camerabin_setup_default_element (GstBin * bin, GstElement *user_elem, const gchar *auto_elem_name, const gchar *default_elem_name);
-
-void gst_camerabin_remove_elements_from_bin (GstBin * bin);
-
-gboolean gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data);
-
-#endif /* #ifndef __CAMERABIN_GENERAL_H_ */
+#endif /* #ifndef __CAMERABIN_DEBUG_H_ */

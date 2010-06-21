@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#include "camerabindebug.h"
 #include "camerabingeneral.h"
 #include "camerabinpreview.h"
 

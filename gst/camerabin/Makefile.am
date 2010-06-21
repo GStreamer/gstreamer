@@ -40,6 +40,7 @@ noinst_HEADERS = gstcamerabin.h             \
 		 gstcamerabincolorbalance.h \
 		 camerabinimage.h           \
 		 camerabinvideo.h           \
+		 camerabindebug.h           \
 		 camerabingeneral.h         \
 		 camerabinpreview.h         \
 		 gstcamerabinphotography.h  \

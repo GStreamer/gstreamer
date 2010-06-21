@@ -56,6 +56,7 @@
 #endif
 
 #include <gst/gst.h>
+#include "camerabindebug.h"
 #include "camerabingeneral.h"
 
 #include "camerabinvideo.h"

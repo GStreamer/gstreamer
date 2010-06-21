@@ -51,6 +51,7 @@
 #include <gst/gst.h>
 
 #include "camerabinimage.h"
+#include "camerabindebug.h"
 #include "camerabingeneral.h"
 #include "gstcamerabin-enum.h"
 

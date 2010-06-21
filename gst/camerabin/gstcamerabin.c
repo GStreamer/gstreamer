@@ -163,6 +163,7 @@
 #include "gstcamerabincolorbalance.h"
 #include "gstcamerabinphotography.h"
 
+#include "camerabindebug.h"
 #include "camerabingeneral.h"
 #include "camerabinpreview.h"
 
