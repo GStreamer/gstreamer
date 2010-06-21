@@ -259,11 +259,11 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       g_param_spec_uint ("queue-size", "Queue size",
           "Number of buffers to be enqueud in the driver in streaming mode",
           GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, PROP_DEF_QUEUE_SIZE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ALWAYS_COPY,
       g_param_spec_boolean ("always-copy", "Always Copy",
           "If the buffer will or not be used directly from mmap",
-          PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE));
+          PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
