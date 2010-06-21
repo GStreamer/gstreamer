@@ -755,7 +755,7 @@ gst_wildmidi_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_object_unref (pad);
+  gst_object_unref (wildmidi);
   return res;
 }
 
