@@ -2498,24 +2498,21 @@ gst_qt_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstQTMux *mux = GST_QT_MUX_CAST (element);
   GSList *walk;
-  gboolean to_remove;
 
-  /* let GstCollectPads complain if it is some unknown pad */
-  if (gst_collect_pads_remove_pad (mux->collect, pad)) {
-    gst_element_remove_pad (element, pad);
-    to_remove = TRUE;
-    for (walk = mux->sinkpads; walk; walk = g_slist_next (walk)) {
-      GstQTPad *qtpad = (GstQTPad *) walk->data;
-      if (qtpad->collect.pad == pad) {
-        /* this is it, remove */
-        mux->sinkpads = g_slist_delete_link (mux->sinkpads, walk);
-        to_remove = FALSE;
-        break;
-      }
+  GST_DEBUG_OBJECT (element, "Releasing %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  for (walk = mux->sinkpads; walk; walk = g_slist_next (walk)) {
+    GstQTPad *qtpad = (GstQTPad *) walk->data;
+    GST_DEBUG ("Checking %s:%s", GST_DEBUG_PAD_NAME (qtpad->collect.pad));
+    if (qtpad->collect.pad == pad) {
+      /* this is it, remove */
+      mux->sinkpads = g_slist_delete_link (mux->sinkpads, walk);
+      gst_element_remove_pad (element, pad);
+      break;
     }
-    if (to_remove)
-      GST_WARNING_OBJECT (mux, "Released pad not in internal sinkpad list");
   }
+
+  gst_collect_pads_remove_pad (mux->collect, pad);
 }
 
 static GstPad *
