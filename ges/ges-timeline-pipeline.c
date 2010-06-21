@@ -74,6 +74,11 @@ ges_timeline_pipeline_dispose (GObject * object)
     self->encodebin = NULL;
   }
 
+  if (self->profile) {
+    gst_encoding_profile_free (self->profile);
+    self->profile = NULL;
+  }
+
   G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->dispose (object);
 }
 
@@ -534,9 +539,12 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
  * ges_timeline_pipeline_set_render_settings:
  * @pipeline: a #GESTimelinePipeline
  * @output_uri: the %URI to which the timeline will be rendered
- * @profile: the #GstEncodingProfile to use to render the timeline
+ * @profile: the #GstEncodingProfile to use to render the timeline.
  *
  * Specify where the pipeline shall be rendered and with what settings.
+ *
+ * A copy of @profile and @output_uri will be done internally, the caller can
+ * safely free those values afterwards.
  *
  * This method must be called before setting the pipeline mode to
  * #TIMELINE_MODE_RENDER
@@ -563,8 +571,10 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
     return FALSE;
   }
 
+  if (pipeline->profile)
+    gst_encoding_profile_free (pipeline->profile);
   g_object_set (pipeline->encodebin, "profile", profile, NULL);
-  pipeline->profile = profile;
+  pipeline->profile = gst_encoding_profile_copy (profile);
 
   return TRUE;
 }
