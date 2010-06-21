@@ -61,9 +61,19 @@ ges_timeline_pipeline_dispose (GObject * object)
   if (self->playsink) {
     if (self->mode & (TIMELINE_MODE_PREVIEW))
       gst_bin_remove (GST_BIN (object), self->playsink);
-    gst_object_unref (self->playsink);
+    else
+      gst_object_unref (self->playsink);
     self->playsink = NULL;
   }
+
+  if (self->encodebin) {
+    if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      gst_bin_remove (GST_BIN (object), self->encodebin);
+    else
+      gst_object_unref (self->encodebin);
+    self->encodebin = NULL;
+  }
+
   G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->dispose (object);
 }
 
