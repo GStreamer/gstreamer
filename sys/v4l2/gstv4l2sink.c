@@ -232,21 +232,19 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_OVERLAY_TOP,
       g_param_spec_int ("overlay-top", "Overlay top",
           "The topmost (y) coordinate of the video overlay; top left corner of screen is 0,0",
-          0x80000000, 0x7fffffff, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_LEFT,
       g_param_spec_int ("overlay-left", "Overlay left",
           "The leftmost (x) coordinate of the video overlay; top left corner of screen is 0,0",
-          0x80000000, 0x7fffffff, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_WIDTH,
       g_param_spec_uint ("overlay-width", "Overlay width",
           "The width of the video overlay; default is equal to negotiated image width",
-          0, 0xffffffff, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OVERLAY_HEIGHT,
       g_param_spec_uint ("overlay-height", "Overlay height",
           "The height of the video overlay; default is equal to negotiated image height",
-          0, 0xffffffff, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_get_caps);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2sink_set_caps);
