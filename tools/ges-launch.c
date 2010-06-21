@@ -378,7 +378,6 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GMainLoop *mainloop;
   GstBus *bus;
-  GstEncodingProfile *prof = NULL;
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -430,6 +429,8 @@ main (int argc, gchar ** argv)
 
   /* Setup profile/encoding if needed */
   if (render || smartrender) {
+    GstEncodingProfile *prof;
+
     prof = make_encoding_profile (audio, video, video_restriction, container);
 
     if (!prof ||
@@ -437,6 +438,9 @@ main (int argc, gchar ** argv)
         || !ges_timeline_pipeline_set_mode (pipeline,
             smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER))
       exit (-1);
+
+    g_free (outputuri);
+    gst_encoding_profile_free (prof);
   } else {
     ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
   }
@@ -458,7 +462,6 @@ main (int argc, gchar ** argv)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
   gst_object_unref (pipeline);
-  gst_encoding_profile_free (prof);
 
   return 0;
 }
