@@ -170,6 +170,8 @@ struct _RTPSource {
   RTPReceiverReport last_rr;
 
   GList         *conflicting_addresses;
+
+  GQueue        *retained_feedback;
 };
 
 struct _RTPSourceClass {
@@ -248,7 +250,16 @@ void            rtp_source_add_conflicting_address (RTPSource * src,
 
 void            rtp_source_timeout             (RTPSource * src,
                                                 GstClockTime current_time,
-                                                GstClockTime collision_timeout);
+                                                GstClockTime collision_timeout,
+                                                GstClockTime feedback_retention_window);
+
+void            rtp_source_retain_rtcp_packet  (RTPSource * src,
+                                                GstRTCPPacket *pkt,
+                                                GstClockTime running_time);
+
+gboolean        rtp_source_has_retained        (RTPSource * src,
+                                                GCompareFunc func,
+                                                gconstpointer data);
 
 
 #endif /* __RTP_SOURCE_H__ */

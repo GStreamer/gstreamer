@@ -202,6 +202,7 @@ struct _RTPSession {
 
   gboolean      change_ssrc;
   gboolean      favor_new;
+  GstClockTime  rtcp_feedback_retention_window;
 };
 
 /**

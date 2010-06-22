@@ -238,6 +238,8 @@ rtp_source_init (RTPSource * src)
   src->seqnum_base = -1;
   src->last_rtptime = -1;
 
+  src->retained_feedback = g_queue_new ();
+
   rtp_source_reset (src);
 }
 
@@ -261,6 +263,10 @@ rtp_source_finalize (GObject * object)
 
   g_list_foreach (src->conflicting_addresses, (GFunc) g_free, NULL);
   g_list_free (src->conflicting_addresses);
+
+  while ((buffer = g_queue_pop_head (src->retained_feedback)))
+    gst_buffer_unref (buffer);
+  g_queue_free (src->retained_feedback);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }
@@ -1719,14 +1725,18 @@ rtp_source_add_conflicting_address (RTPSource * src,
  * @src: The #RTPSource
  * @current_time: The current time
  * @collision_timeout: The amount of time after which a collision is timed out
+ * @feedback_retention_window: The running time before which retained feedback
+ * packets have to be discarded
  *
  * This is processed on each RTCP interval. It times out old collisions.
+ * It also times out old retained feedback packets
  */
 void
 rtp_source_timeout (RTPSource * src, GstClockTime current_time,
-    GstClockTime collision_timeout)
+    GstClockTime collision_timeout, GstClockTime feedback_retention_window)
 {
   GList *item;
+  GstRTCPPacket *pkt;
 
   item = g_list_first (src->conflicting_addresses);
   while (item) {
@@ -1744,4 +1754,41 @@ rtp_source_timeout (RTPSource * src, GstClockTime current_time,
     }
     item = next_item;
   }
+
+  /* Time out AVPF packets that are older than the desired length */
+  while ((pkt = g_queue_peek_tail (src->retained_feedback)) &&
+      GST_BUFFER_TIMESTAMP (pkt) < feedback_retention_window)
+    gst_buffer_unref (g_queue_pop_tail (src->retained_feedback));
+}
+
+static gint
+compare_buffers (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+  const GstBuffer *bufa = a;
+  const GstBuffer *bufb = b;
+
+  return GST_BUFFER_TIMESTAMP (bufa) - GST_BUFFER_TIMESTAMP (bufb);
+}
+
+void
+rtp_source_retain_rtcp_packet (RTPSource * src, GstRTCPPacket * packet,
+    GstClockTime running_time)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_create_sub (packet->buffer, packet->offset,
+      (gst_rtcp_packet_get_length (packet) + 1) * 4);
+
+  GST_BUFFER_TIMESTAMP (buffer) = running_time;
+
+  g_queue_insert_sorted (src->retained_feedback, buffer, compare_buffers, NULL);
+}
+
+gboolean
+rtp_source_has_retained (RTPSource * src, GCompareFunc func, gconstpointer data)
+{
+  if (g_queue_find_custom (src->retained_feedback, data, func))
+    return TRUE;
+  else
+    return FALSE;
 }

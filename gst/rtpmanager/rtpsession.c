@@ -58,6 +58,7 @@ enum
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
 #define DEFAULT_SOURCES              NULL
 #define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
+#define DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW (2 * GST_SECOND)
 
 enum
 {
@@ -75,6 +76,7 @@ enum
   PROP_SOURCES,
   PROP_FAVOR_NEW,
   PROP_RTCP_MIN_INTERVAL,
+  PROP_RTCP_FEEDBACK_RETENTION_WINDOW,
   PROP_LAST
 };
 
@@ -390,6 +392,15 @@ rtp_session_class_init (RTPSessionClass * klass)
           0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class,
+      PROP_RTCP_FEEDBACK_RETENTION_WINDOW,
+      g_param_spec_uint64 ("rtcp-feedback-retention-window",
+          "RTCP Feedback retention window",
+          "Duration during which RTCP Feedback packets are retained (in ns)",
+          0, G_MAXUINT64, DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
 
@@ -444,6 +455,7 @@ rtp_session_init (RTPSession * sess)
 
   sess->first_rtcp = TRUE;
   sess->allow_early = TRUE;
+  sess->rtcp_feedback_retention_window = DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW;
 
   GST_DEBUG ("%p: session using SSRC: %08x", sess, sess->source->ssrc);
 }
@@ -2005,11 +2017,21 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       GST_BUFFER_TIMESTAMP (fci) = arrival->running_time;
     }
 
+    RTP_SESSION_UNLOCK (sess);
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0,
         type, fbtype, sender_ssrc, media_ssrc, fci);
+    RTP_SESSION_LOCK (sess);
 
     if (fci)
       gst_buffer_unref (fci);
+  }
+
+  if (sess->rtcp_feedback_retention_window) {
+    RTPSource *src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+        GINT_TO_POINTER (media_ssrc));
+
+    if (src)
+      rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
   }
 }
 
@@ -2829,7 +2851,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* check for outdated collisions */
   GST_DEBUG ("Timing out collisions");
   rtp_source_timeout (sess->source, current_time,
-      data.interval * RTCP_INTERVAL_COLLISION_TIMEOUT);
+      data.interval * RTCP_INTERVAL_COLLISION_TIMEOUT,
+      running_time - sess->rtcp_feedback_retention_window);
 
   if (sess->change_ssrc) {
     GST_DEBUG ("need to change our SSRC (%08x)", own->ssrc);
