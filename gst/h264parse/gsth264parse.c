@@ -1202,7 +1202,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   GstCaps *src_caps = NULL;
   GstStructure *structure;
   gboolean modified = FALSE;
-  const gchar *stream_format;
+  const gchar *stream_format, *alignment;
 
   /* current PPS dictates which SPS to use */
   if (h264parse->pps && h264parse->pps->sps_id < MAX_SPS_COUNT) {
@@ -1301,6 +1301,38 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     gst_structure_set (structure, "stream-format", G_TYPE_STRING, stream_format,
         NULL);
     modified = TRUE;
+  }
+
+  /* set alignment field */
+  if (h264parse->merge) {
+    alignment = "au";
+  } else {
+    if (h264parse->packetized) {
+      /* if packetized input, take upstream alignment if validly provided,
+       * otherwise assume au aligned ... */
+      alignment = gst_structure_get_string (structure, "alignment");
+      if (!alignment || (alignment &&
+              strcmp (alignment, "au") != 0 &&
+              strcmp (alignment, "nal") != 0)) {
+        if (h264parse->split_packetized)
+          alignment = "nal";
+        else
+          alignment = "au";
+      }
+    } else {
+      alignment = "nal";
+    }
+  }
+  /* now only set if changed */
+  {
+    const gchar *old_alignment;
+
+    old_alignment = gst_structure_get_string (structure, "alignment");
+    if (!old_alignment || strcmp (alignment, old_alignment) != 0) {
+      gst_structure_set (structure, "alignment", G_TYPE_STRING, alignment,
+          NULL);
+      modified = TRUE;
+    }
   }
 
   /* transforming to non-bytestream needs to make codec-data */
