@@ -1455,11 +1455,20 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   if (base_video_decoder->have_src_caps)
     return;
 
-  caps = gst_video_format_new_caps (state->format,
-      state->width, state->height,
-      state->fps_n, state->fps_d, state->par_n, state->par_d);
-  gst_caps_set_simple (caps, "interlaced",
-      G_TYPE_BOOLEAN, state->interlaced, NULL);
+  caps = gst_pad_get_allowed_caps
+    (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder));
+  if (!caps)
+    goto null_caps;
+  if (gst_caps_is_empty (caps))
+    goto empty_caps;
+
+  gst_caps_set_simple (caps,
+      "width", G_TYPE_INT, state->width,
+      "height", G_TYPE_INT, state->height,
+      "framerate", GST_TYPE_FRACTION, state->fps_n, state->fps_d,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n, state->par_d,
+      "interlaced", G_TYPE_BOOLEAN, state->interlaced, NULL);
+  gst_pad_fixate_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder), caps);
 
   GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
 
@@ -1468,6 +1477,16 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   base_video_decoder->have_src_caps = TRUE;
 
   gst_caps_unref (caps);
+  return;
+
+null_caps:
+  GST_WARNING ("Got null caps from get_allowed_caps");
+  return;
+
+empty_caps:
+  GST_WARNING ("Got empty caps from get_allowed_caps");
+  gst_caps_unref (caps);
+  return;
 }
 
 GstFlowReturn
@@ -1475,15 +1494,12 @@ gst_base_video_decoder_alloc_src_frame (GstBaseVideoDecoder *
     base_video_decoder, GstVideoFrame * frame)
 {
   GstFlowReturn flow_ret;
-  int num_bytes;
 
   gst_base_video_decoder_set_src_caps (base_video_decoder);
 
-  num_bytes = gst_video_format_get_size (base_video_decoder->state.format,
-      base_video_decoder->state.width, base_video_decoder->state.height);
   flow_ret =
       gst_pad_alloc_buffer_and_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD
-      (base_video_decoder), GST_BUFFER_OFFSET_NONE, num_bytes,
+      (base_video_decoder), GST_BUFFER_OFFSET_NONE, 0,
       GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder)),
       &frame->src_buffer);
 
