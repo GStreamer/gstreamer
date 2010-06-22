@@ -245,7 +245,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-h264, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
-        "stream-format = (string) { byte-stream, avc }")
+        "stream-format = (string) { byte-stream, avc }, "
+        "alignment = (string) { au }")
     );
 
 static void gst_x264_enc_finalize (GObject * object);
@@ -906,6 +907,7 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
     gst_structure_set (structure, "stream-format", G_TYPE_STRING, "byte-stream",
         NULL);
   }
+  gst_structure_set (structure, "alignment", G_TYPE_STRING, "au", NULL);
 
   res = gst_pad_set_caps (pad, outcaps);
   gst_caps_unref (outcaps);
