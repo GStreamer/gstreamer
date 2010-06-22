@@ -1370,6 +1370,77 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 
 }
 
+static gboolean
+gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
+    guint32 ssrc, guint payload, gboolean all_headers)
+{
+  GstCaps *caps;
+  gboolean requested = FALSE;
+
+  caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
+
+  if (caps) {
+    gboolean fir, pli;
+    const GstStructure *s = gst_caps_get_structure (caps, 0);
+
+    if (all_headers &&
+        gst_structure_get_boolean (s, "rtcp-fb-nack-fir", &fir) && fir) {
+      /* 500 ms acceptable delay for FIR request is a guesstimate, it could
+       * be made configurable if needed
+       */
+      rtp_session_request_early_rtcp (rtpsession->priv->session,
+          gst_clock_get_time (rtpsession->priv->sysclock), 500 * GST_MSECOND);
+      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, TRUE);
+      requested = TRUE;
+    } else if (gst_structure_get_boolean (s, "rtcp-fb-nack-pli", &pli) && pli) {
+      rtp_session_request_key_unit (rtpsession->priv->session, ssrc, FALSE);
+      requested = TRUE;
+    }
+    gst_caps_unref (caps);
+  }
+
+  return requested;
+}
+
+static gboolean
+gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstEvent * event)
+{
+  GstRtpSession *rtpsession;
+  gboolean forward = TRUE;
+  gboolean ret = TRUE;
+  const GstStructure *s;
+  guint32 ssrc;
+  guint pt;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit") &&
+          gst_structure_get_uint (s, "ssrc", &ssrc) &&
+          gst_structure_get_uint (s, "payload", &pt)) {
+        gboolean all_headers = FALSE;
+
+        gst_structure_get_boolean (s, "all-headers", &all_headers);
+        if (gst_rtp_session_request_remote_key_unit (rtpsession, ssrc, pt,
+                all_headers))
+          forward = FALSE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  if (forward)
+    ret = gst_pad_push_event (rtpsession->recv_rtp_sink, event);
+
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
+
 static GstIterator *
 gst_rtp_session_iterate_internal_links (GstPad * pad)
 {
@@ -1780,6 +1851,8 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
   rtpsession->recv_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_src_template,
       "recv_rtp_src");
+  gst_pad_set_event_function (rtpsession->recv_rtp_src,
+      (GstPadEventFunction) gst_rtp_session_event_recv_rtp_src);
   gst_pad_set_iterate_internal_links_function (rtpsession->recv_rtp_src,
       gst_rtp_session_iterate_internal_links);
   gst_pad_use_fixed_caps (rtpsession->recv_rtp_src);

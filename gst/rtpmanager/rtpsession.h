@@ -203,6 +203,8 @@ struct _RTPSession {
   gboolean      change_ssrc;
   gboolean      favor_new;
   GstClockTime  rtcp_feedback_retention_window;
+
+  GArray       *rtcp_pli_requests;
 };
 
 /**
@@ -308,5 +310,9 @@ GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTi
 void            rtp_session_request_early_rtcp     (RTPSession * sess, GstClockTime current_time,
                                                     GstClockTimeDiff max_delay);
 
+/* Notify session of a request for a new key unit */
+void            rtp_session_request_key_unit       (RTPSession * sess,
+                                                    guint32 ssrc,
+                                                    gboolean fir);
 
 #endif /* __RTP_SESSION_H__ */

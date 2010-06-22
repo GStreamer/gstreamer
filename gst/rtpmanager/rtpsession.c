@@ -102,6 +102,10 @@ static void rtp_session_set_property (GObject * object, guint prop_id,
 static void rtp_session_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean rtp_session_on_sending_rtcp (RTPSession * sess,
+    GstBuffer * buffer, gboolean early);
+
+
 static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (RTPSession, rtp_session, G_TYPE_OBJECT);
@@ -403,6 +407,7 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
+  klass->on_sending_rtcp = GST_DEBUG_FUNCPTR (rtp_session_on_sending_rtcp);
 
   GST_DEBUG_CATEGORY_INIT (rtp_session_debug, "rtpsession", 0, "RTP Session");
 }
@@ -457,6 +462,8 @@ rtp_session_init (RTPSession * sess)
   sess->allow_early = TRUE;
   sess->rtcp_feedback_retention_window = DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW;
 
+  sess->rtcp_pli_requests = g_array_new (FALSE, FALSE, sizeof (guint32));
+
   GST_DEBUG ("%p: session using SSRC: %08x", sess, sess->source->ssrc);
 }
 
@@ -476,6 +483,8 @@ rtp_session_finalize (GObject * object)
 
   g_hash_table_destroy (sess->cnames);
   g_object_unref (sess->source);
+
+  g_array_free (sess->rtcp_pli_requests, TRUE);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
 }
@@ -2972,4 +2981,72 @@ dont_send:
 
   RTP_SESSION_UNLOCK (sess);
 
+}
+
+void
+rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, gboolean fir)
+{
+  guint i;
+
+  if (fir)
+    return;
+
+  for (i = 0; i < sess->rtcp_pli_requests->len; i++)
+    if (ssrc == g_array_index (sess->rtcp_pli_requests, guint32, i))
+      return;
+
+  g_array_append_val (sess->rtcp_pli_requests, ssrc);
+}
+
+static gboolean
+has_pli_compare_func (gconstpointer a, gconstpointer ignored)
+{
+  GstRTCPPacket packet;
+
+  packet.buffer = (GstBuffer *) a;
+  packet.offset = 0;
+
+  if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_PSFB &&
+      gst_rtcp_packet_fb_get_type (&packet) == GST_RTCP_PSFB_TYPE_PLI)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+static gboolean
+rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
+    gboolean early)
+{
+  gboolean ret = FALSE;
+
+  RTP_SESSION_LOCK (sess);
+
+  while (sess->rtcp_pli_requests->len) {
+    GstRTCPPacket rtcppacket;
+    guint media_ssrc = g_array_index (sess->rtcp_pli_requests, guint32, 0);
+    RTPSource *media_src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+        GUINT_TO_POINTER (media_ssrc));
+
+    if (media_src && !rtp_source_has_retained (media_src,
+            has_pli_compare_func, NULL)) {
+      if (gst_rtcp_buffer_add_packet (buffer, GST_RTCP_TYPE_PSFB, &rtcppacket)) {
+        gst_rtcp_packet_fb_set_type (&rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
+        gst_rtcp_packet_fb_set_sender_ssrc (&rtcppacket,
+            rtp_source_get_ssrc (sess->source));
+        gst_rtcp_packet_fb_set_media_ssrc (&rtcppacket, media_ssrc);
+        ret = TRUE;
+      } else {
+        /* Break because the packet is full, will put next request in a
+         * further packet
+         */
+        break;
+      }
+    }
+
+    g_array_remove_index (sess->rtcp_pli_requests, 0);
+  }
+
+  RTP_SESSION_UNLOCK (sess);
+
+  return ret;
 }
