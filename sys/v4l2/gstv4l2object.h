@@ -49,6 +49,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/controller/gstcontroller.h>
 
 #include <gst/interfaces/propertyprobe.h>
 
@@ -132,7 +133,11 @@ GType gst_v4l2_object_get_type (void);
     PROP_DEVICE,			\
     PROP_DEVICE_NAME,			\
     PROP_DEVICE_FD,			\
-    PROP_FLAGS
+    PROP_FLAGS,			\
+    PROP_BRIGHTNESS,			\
+    PROP_CONTRAST,			\
+    PROP_SATURATION,			\
+    PROP_HUE
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,

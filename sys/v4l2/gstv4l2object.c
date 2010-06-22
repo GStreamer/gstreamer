@@ -328,6 +328,27 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
       g_param_spec_flags ("flags", "Flags", "Device type flags",
           GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
+      g_param_spec_int ("brightness", "Brightness",
+          "Picture brightness, or more precisely, the black level", G_MININT,
+          G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_CONTRAST,
+      g_param_spec_int ("contrast", "Contrast",
+          "Picture contrast or luma gain", G_MININT,
+          G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_SATURATION,
+      g_param_spec_int ("saturation", "Saturation",
+          "Picture color saturation or chroma gain", G_MININT,
+          G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  g_object_class_install_property (gobject_class, PROP_HUE,
+      g_param_spec_int ("hue", "Hue",
+          "Hue or color balance", G_MININT,
+          G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 }
 
 GstV4l2Object *
@@ -405,6 +426,30 @@ gst_v4l2_object_clear_format_list (GstV4l2Object * v4l2object)
   return TRUE;
 }
 
+static gint
+gst_v4l2_object_prop_to_cid (guint prop_id)
+{
+  gint cid = -1;
+
+  switch (prop_id) {
+    case PROP_BRIGHTNESS:
+      cid = V4L2_CID_BRIGHTNESS;
+      break;
+    case PROP_CONTRAST:
+      cid = V4L2_CID_CONTRAST;
+      break;
+    case PROP_SATURATION:
+      cid = V4L2_CID_SATURATION;
+      break;
+    case PROP_HUE:
+      cid = V4L2_CID_HUE;
+      break;
+    default:
+      GST_WARNING ("unmapped property id: %d", prop_id);
+  }
+  return cid;
+}
+
 
 gboolean
 gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
@@ -414,6 +459,21 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
     case PROP_DEVICE:
       g_free (v4l2object->videodev);
       v4l2object->videodev = g_value_dup_string (value);
+      break;
+    case PROP_BRIGHTNESS:
+    case PROP_CONTRAST:
+    case PROP_SATURATION:
+    case PROP_HUE:
+    {
+      gint cid = gst_v4l2_object_prop_to_cid (prop_id);
+
+      if (cid != -1) {
+        if (GST_V4L2_IS_OPEN (v4l2object)) {
+          gst_v4l2_set_attribute (v4l2object, cid, g_value_get_int (value));
+        }
+      }
+      return TRUE;
+    }
       break;
 #if 0
     case PROP_NORM:
@@ -518,6 +578,24 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       g_value_set_flags (value, flags);
       break;
     }
+    case PROP_BRIGHTNESS:
+    case PROP_CONTRAST:
+    case PROP_SATURATION:
+    case PROP_HUE:
+    {
+      gint cid = gst_v4l2_object_prop_to_cid (prop_id);
+
+      if (cid != -1) {
+        if (GST_V4L2_IS_OPEN (v4l2object)) {
+          gint v;
+          if (gst_v4l2_get_attribute (v4l2object, cid, &v)) {
+            g_value_set_int (value, v);
+          }
+        }
+      }
+      return TRUE;
+    }
+      break;
     default:
       return FALSE;
       break;

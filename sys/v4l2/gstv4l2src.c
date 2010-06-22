@@ -626,7 +626,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   /* we want our own v4l2 type of fourcc codes */
   if (!gst_v4l2_object_get_caps_info (v4l2src->v4l2object, caps, &format, &w,
           &h, &fps_n, &fps_d, &size)) {
-    GST_DEBUG_OBJECT (v4l2src,
+    GST_INFO_OBJECT (v4l2src,
         "can't get capture format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
@@ -722,6 +722,10 @@ gst_v4l2src_start (GstBaseSrc * src)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
   v4l2src->offset = 0;
+
+  /* activate settings for first frame */
+  v4l2src->ctrl_time = 0;
+  gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
 
   return TRUE;
 }
@@ -945,6 +949,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
 
     /* timestamps, LOCK to get clock and base time. */
+    /* FIXME: element clock and base_time is rarely changing */
     GST_OBJECT_LOCK (v4l2src);
     if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
       /* we have a clock, get base time and ref clock */
@@ -969,6 +974,19 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
           timestamp = 0;
       }
     }
+
+    /* activate settings for next frame */
+    if (GST_CLOCK_TIME_IS_VALID (v4l2src->duration)) {
+      v4l2src->ctrl_time += v4l2src->duration;
+    } else {
+      /* this is not very good (as it should be the next timestamp),
+       * still good enough for linear fades (as long as it is not -1) 
+       */
+      v4l2src->ctrl_time = timestamp;
+    }
+    gst_object_sync_values (G_OBJECT (src), v4l2src->ctrl_time);
+    GST_INFO_OBJECT (src, "sync to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (v4l2src->ctrl_time));
 
     /* FIXME: use the timestamp from the buffer itself! */
     GST_BUFFER_TIMESTAMP (*buf) = timestamp;
