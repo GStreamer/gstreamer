@@ -594,7 +594,6 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   return GST_FLOW_OK;
 
 alloc_error:
-  GST_ERROR_OBJECT (h264_dec, "Could not allocate output buffer");
   gst_base_video_decoder_skip_frame (base_video_decoder, frame);
   return ret;
 
@@ -704,6 +703,7 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   gint i;
 
   GstVideoFrame *frame;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_MEMDUMP ("data", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
@@ -746,14 +746,18 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   frame = gst_base_video_decoder_get_current_frame (base_video_decoder);
 
   /* does this mark the beginning of a new access unit */
-  if (nal_unit.type == GST_NAL_AU_DELIMITER)
-    gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+  if (nal_unit.type == GST_NAL_AU_DELIMITER) {
+    ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+    gst_base_video_decoder_frame_start (base_video_decoder, buf);
+  }
 
   if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
     if (nal_unit.type == GST_NAL_SPS || nal_unit.type == GST_NAL_PPS ||
         nal_unit.type == GST_NAL_SEI ||
-        (nal_unit.type >= 14 && nal_unit.type <= 18))
-      gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+        (nal_unit.type >= 14 && nal_unit.type <= 18)) {
+      ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+      gst_base_video_decoder_frame_start (base_video_decoder, buf);
+    }
   }
 
   if (nal_unit.type >= GST_NAL_SLICE && nal_unit.type <= GST_NAL_SLICE_IDR) {
@@ -767,35 +771,41 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
         GstH264Slice *p_slice;
         guint8 pic_order_cnt_type, p_pic_order_cnt_type;
+        gboolean finish_frame = FALSE;
 
         p_slice = &(GST_VDP_H264_FRAME_CAST (frame)->slice_hdr);
         pic_order_cnt_type = slice.picture->sequence->pic_order_cnt_type;
         p_pic_order_cnt_type = p_slice->picture->sequence->pic_order_cnt_type;
 
         if (slice.frame_num != p_slice->frame_num)
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
 
         else if (slice.picture != p_slice->picture)
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
 
         else if (slice.bottom_field_flag != p_slice->bottom_field_flag)
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
 
         else if (nal_unit.ref_idc != p_slice->nal_unit.ref_idc &&
             (nal_unit.ref_idc == 0 || p_slice->nal_unit.ref_idc == 0))
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
 
         else if ((pic_order_cnt_type == 0 && p_pic_order_cnt_type == 0) &&
             (slice.pic_order_cnt_lsb != p_slice->pic_order_cnt_lsb ||
                 slice.delta_pic_order_cnt_bottom !=
                 p_slice->delta_pic_order_cnt_bottom))
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
 
         else if ((p_pic_order_cnt_type == 1 && p_pic_order_cnt_type == 1) &&
             (slice.delta_pic_order_cnt[0] != p_slice->delta_pic_order_cnt[0] ||
                 slice.delta_pic_order_cnt[1] !=
                 p_slice->delta_pic_order_cnt[1]))
-          gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          finish_frame = TRUE;
+
+        if (finish_frame) {
+          ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
+          gst_base_video_decoder_frame_start (base_video_decoder, buf);
+        }
       }
 
       if (!GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
@@ -820,22 +830,8 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       goto invalid_packet;
   }
 
-  if (nal_unit.type == GST_NAL_SEI) {
-    GstH264Sequence *seq;
-    GstH264SEIMessage sei;
-
-    if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY))
-      seq = GST_VDP_H264_FRAME_CAST (frame)->slice_hdr.picture->sequence;
-    else
-      seq = NULL;
-
-    if (!gst_h264_parser_parse_sei_message (h264_dec->parser, seq, &sei, data,
-            size))
-      goto invalid_packet;
-  }
-
   gst_buffer_unref (buf);
-  return GST_FLOW_OK;
+  return ret;
 
 invalid_packet:
   GST_WARNING ("Invalid packet size!");

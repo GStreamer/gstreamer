@@ -184,6 +184,9 @@ GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_vid
 void gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame);
 
+void
+gst_base_video_decoder_frame_start (GstBaseVideoDecoder *base_video_decoder,
+    GstBuffer *buf);
 GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder,
     GstVideoFrame **new_frame);

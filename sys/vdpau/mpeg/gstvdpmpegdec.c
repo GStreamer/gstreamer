@@ -477,7 +477,6 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   return GST_FLOW_OK;
 
 alloc_error:
-  GST_ERROR_OBJECT (mpeg_dec, "Could not allocate output buffer");
   gst_base_video_decoder_skip_frame (base_video_decoder, frame);
   return ret;
 
@@ -546,6 +545,7 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       if (mpeg_dec->prev_packet != -1) {
         ret = gst_base_video_decoder_have_frame (base_video_decoder,
             (GstVideoFrame **) & mpeg_frame);
+        gst_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->seq = buf;
@@ -559,6 +559,7 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
           mpeg_dec->prev_packet != MPEG_PACKET_GOP) {
         ret = gst_base_video_decoder_have_frame (base_video_decoder,
             (GstVideoFrame **) & mpeg_frame);
+        gst_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->pic = buf;
@@ -570,6 +571,7 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE) {
         ret = gst_base_video_decoder_have_frame (base_video_decoder,
             (GstVideoFrame **) & mpeg_frame);
+        gst_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->gop = buf;
