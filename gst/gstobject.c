@@ -726,7 +726,14 @@ gst_object_get_name (GstObject * object)
  * retains ownership of the name prefix it sent.
  *
  * MT safe.  This function grabs and releases @object's LOCK.
+ *
+ * Deprecated: deprecated because the name prefix has never actually been used
+ *     for anything.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+void gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix);
+#endif
 void
 gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
 {
@@ -737,6 +744,7 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
   object->name_prefix = g_strdup (name_prefix); /* NULL gives NULL */
   GST_OBJECT_UNLOCK (object);
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_object_get_name_prefix:
@@ -750,7 +758,14 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
  * Returns: the name prefix of @object. g_free() after usage.
  *
  * MT safe. This function grabs and releases @object's LOCK.
+ *
+ * Deprecated: deprecated because the name prefix has never actually been used
+ *     for anything.
  */
+#ifndef GST_REMOVE_DEPRECATED
+#ifdef GST_DISABLE_DEPRECATED
+gchar *gst_object_get_name_prefix (GstObject * object);
+#endif
 gchar *
 gst_object_get_name_prefix (GstObject * object)
 {
@@ -764,6 +779,7 @@ gst_object_get_name_prefix (GstObject * object)
 
   return result;
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_object_set_parent:

@@ -186,7 +186,7 @@ typedef struct _GstObjectClass GstObjectClass;
  * @refcount: unused
  * @lock: object LOCK
  * @name: The name of the object
- * @name_prefix: used for debugging
+ * @name_prefix: unused
  * @parent: this object's parent, weak ref
  * @flags: use GST_OBJECT_IS_XXX macros to access the flags
  *
@@ -196,12 +196,12 @@ struct _GstObject {
   GObject 	 object;
 
   /*< public >*/
-  gint           refcount;
+  gint           refcount;    /* unused (FIXME 0.11: remove) */
 
   /*< public >*/ /* with LOCK */
   GMutex        *lock;        /* object LOCK */
   gchar         *name;        /* object name */
-  gchar         *name_prefix; /* used for debugging */
+  gchar         *name_prefix; /* (un)used for debugging (FIXME 0.11: remove) */
   GstObject     *parent;      /* this object's parent, weak ref */
   guint32        flags;
 
@@ -285,8 +285,11 @@ GType		gst_object_get_type		(void);
 /* name routines */
 gboolean	gst_object_set_name		(GstObject *object, const gchar *name);
 gchar*		gst_object_get_name		(GstObject *object);
+
+#ifndef GST_DISABLE_DEPRECATED
 void		gst_object_set_name_prefix	(GstObject *object, const gchar *name_prefix);
 gchar*		gst_object_get_name_prefix	(GstObject *object);
+#endif
 
 /* parentage routines */
 gboolean	gst_object_set_parent		(GstObject *object, GstObject *parent);
