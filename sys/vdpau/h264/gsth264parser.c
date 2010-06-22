@@ -539,11 +539,6 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
 
   pic = g_slice_new (GstH264Picture);
 
-  /* set default values for fields that might not be present in the bitstream
-     and have valid defaults */
-  pic->slice_group_id = NULL;
-  pic->transform_8x8_mode_flag = 0;
-
   READ_UE_ALLOWED (&reader, pic->id, 0, 255);
   READ_UE_ALLOWED (&reader, seq_parameter_set_id, 0, 31);
   seq = g_hash_table_lookup (parser->sequences, &seq_parameter_set_id);
@@ -553,6 +548,13 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
     goto error;
   }
   pic->sequence = seq;
+
+  /* set default values for fields that might not be present in the bitstream
+     and have valid defaults */
+  pic->slice_group_id = NULL;
+  pic->transform_8x8_mode_flag = 0;
+  memcpy (&pic->scaling_lists_4x4, &seq->scaling_lists_4x4, 96);
+  memcpy (&pic->scaling_lists_8x8, &seq->scaling_lists_8x8, 384);
 
   READ_UINT8 (&reader, pic->entropy_coding_mode_flag, 1);
   READ_UINT8 (&reader, pic->pic_order_present_flag, 1);
@@ -621,9 +623,6 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
               default_8x8_inter, default_8x8_intra, seq->chroma_format_idc))
         goto error;
     }
-  } else {
-    memcpy (&pic->scaling_lists_4x4, &seq->scaling_lists_4x4, 96);
-    memcpy (&pic->scaling_lists_8x8, &seq->scaling_lists_8x8, 384);
   }
 
   READ_SE_ALLOWED (&reader, pic->second_chroma_qp_index_offset, -12, 12);
