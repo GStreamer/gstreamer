@@ -36,7 +36,6 @@ typedef struct _GstVideoFrame GstVideoFrame;
 
 struct _GstVideoState
 {
-  GstVideoFormat format;
   int width, height;
   int fps_n, fps_d;
   int par_n, par_d;
@@ -80,19 +79,8 @@ struct _GstVideoFrame
   void *coder_hook;
 };
 
-gboolean gst_base_video_rawvideo_convert (GstVideoState *state,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 *dest_value);
-gboolean gst_base_video_encoded_video_convert (GstVideoState *state,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 *dest_value);
-
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
     GstSegment *segment, int frame_number);
-
-int gst_adapter_masked_scan_uint32_compat (GstAdapter *adapter,
-    guint32 pattern, guint32 mask, guint offset, guint n);
-GstBuffer *gst_adapter_get_buffer (GstAdapter *adapter);
 
 G_END_DECLS
 

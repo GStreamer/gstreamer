@@ -610,19 +610,6 @@ gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
   GST_DEBUG_OBJECT (base_video_decoder, "sink query fps=%d/%d",
       base_video_decoder->state.fps_n, base_video_decoder->state.fps_d);
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONVERT:
-    {
-      GstFormat src_fmt, dest_fmt;
-      gint64 src_val, dest_val;
-
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      res = gst_base_video_rawvideo_convert (&base_video_decoder->state,
-          src_fmt, src_val, &dest_fmt, &dest_val);
-      if (!res)
-        goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      break;
-    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
