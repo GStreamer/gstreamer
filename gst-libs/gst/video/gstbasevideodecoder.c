@@ -147,25 +147,31 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   state = &base_video_decoder->state;
 
-  if (state->codec_data) {
+  if (state->codec_data)
     gst_buffer_unref (state->codec_data);
-  }
   memset (state, 0, sizeof (GstVideoState));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
-  gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
-  gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
+  gst_structure_get_int (structure, "width", &state->width);
+  gst_structure_get_int (structure, "height", &state->height);
 
-#if 0
-  /* requires 0.10.23 */
-  state->have_interlaced =
-      gst_video_format_parse_caps_interlaced (caps, &state->interlaced);
-#else
+  /* framerate default: 25 fps */
+  if (!gst_structure_get_fraction (structure, "framerate",
+                                   &state->fps_n, &state->fps_d)) {
+    state->fps_n = 25;
+    state->fps_d = 1;
+  }
+
+  /* pixel-aspect-ratio default: 1/1 */
+  if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+                                   &state->par_n, &state->par_d)) {
+    state->par_n = 1;
+    state->par_d = 1;
+  }
+
   state->have_interlaced = gst_structure_get_boolean (structure,
       "interlaced", &state->interlaced);
-#endif
 
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
