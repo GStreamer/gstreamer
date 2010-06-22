@@ -160,8 +160,6 @@ struct _GstBaseVideoDecoderClass
   
   GstFlowReturn (*parse_data) (GstBaseVideoDecoder *decoder,
       GstBuffer *buf, gboolean at_eos);
-  GstFlowReturn (*parse_codec_data) (GstBaseVideoDecoder *decoder,
-      GstBuffer *buf);
 
 	
 	GstVideoFrame *(*create_frame) (GstBaseVideoDecoder *coder);

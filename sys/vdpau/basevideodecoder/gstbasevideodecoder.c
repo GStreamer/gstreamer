@@ -37,7 +37,7 @@ enum
 
 
 static GstFlowReturn gst_base_video_decoder_drain (GstBaseVideoDecoder * dec,
-    gboolean at_eos, gboolean codec_data);
+    gboolean at_eos);
 
 
 GST_BOILERPLATE (GstBaseVideoDecoder, gst_base_video_decoder,
@@ -229,7 +229,7 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
     {
       if (!base_video_decoder->packetized)
-        gst_base_video_decoder_drain (base_video_decoder, TRUE, FALSE);
+        gst_base_video_decoder_drain (base_video_decoder, TRUE);
 
       ret =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
@@ -654,12 +654,10 @@ empty_caps:
 }
 
 static GstFlowReturn
-gst_base_video_decoder_drain (GstBaseVideoDecoder * dec, gboolean at_eos,
-    gboolean codec_data)
+gst_base_video_decoder_drain (GstBaseVideoDecoder * dec, gboolean at_eos)
 {
   GstBaseVideoDecoderClass *klass;
   GstBaseVideoDecoderScanResult res;
-  GstFlowReturn ret;
   guint size;
 
   klass = GST_BASE_VIDEO_DECODER_GET_CLASS (dec);
@@ -737,23 +735,21 @@ lost_sync:
     else
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_GAP);
 
-    if (codec_data)
-      ret = klass->parse_codec_data (dec, buf);
-    else
-      ret = klass->parse_data (dec, buf, at_eos);
-    if (ret != GST_FLOW_OK)
-      break;
-
     res = klass->scan_for_packet_end (dec, dec->input_adapter, &size, at_eos);
   }
 
-  if (res == GST_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC) {
-    dec->have_sync = FALSE;
-    goto lost_sync;
-  } else if (res == GST_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA)
-    return GST_FLOW_OK;
+  switch (res) {
+    case GST_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC:
+      dec->have_sync = FALSE;
+      goto lost_sync;
 
-  return ret;
+    case GST_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA:
+      return GST_FLOW_OK;
+
+    default:
+      GST_ERROR_OBJECT (dec, "Subclass returned invalid scan result");
+      return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -831,7 +827,7 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 
     gst_adapter_push (base_video_decoder->input_adapter, buf);
 
-    ret = gst_base_video_decoder_drain (base_video_decoder, FALSE, FALSE);
+    ret = gst_base_video_decoder_drain (base_video_decoder, FALSE);
   }
 
   gst_object_unref (base_video_decoder);
@@ -1311,11 +1307,6 @@ gst_base_video_decoder_class_init (GstBaseVideoDecoderClass * klass)
       g_param_spec_boolean ("packetized", "Packetized",
           "Whether the incoming data is already packetized into suitable "
           "packets", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_PACKETIZED,
-      g_param_spec_boolean ("parse-codec-data", "Parse Codec Data",
-          "Whether the codec_data should be parsed", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PACKETIZED,
       g_param_spec_boolean ("sink-clipping", "Sink Clipping",
