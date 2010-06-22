@@ -963,17 +963,14 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       /* we are running the current segment and doing a non-flushing seek,
        * close the segment first based on the previous last_stop. */
       GST_DEBUG_OBJECT (wav, "closing running segment %" G_GINT64_FORMAT
-          " to %" G_GINT64_FORMAT, wav->segment.accum, wav->segment.last_stop);
+          " to %" G_GINT64_FORMAT, wav->segment.start, wav->segment.last_stop);
 
       /* queue the segment for sending in the stream thread */
       if (wav->close_segment)
         gst_event_unref (wav->close_segment);
       wav->close_segment = gst_event_new_new_segment (TRUE,
           wav->segment.rate, wav->segment.format,
-          wav->segment.accum, wav->segment.last_stop, wav->segment.accum);
-
-      /* keep track of our last_stop */
-      seeksegment.accum = wav->segment.last_stop;
+          wav->segment.start, wav->segment.last_stop, wav->segment.start);
     }
   }
 
@@ -1905,7 +1902,9 @@ iterate_adapter:
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
-    gst_segment_set_last_stop (&wav->segment, GST_FORMAT_TIME, next_timestamp);
+    if (G_LIKELY (next_timestamp >= wav->segment.start))
+      gst_segment_set_last_stop (&wav->segment, GST_FORMAT_TIME,
+          next_timestamp);
   } else if (wav->fact) {
     guint64 bps =
         gst_util_uint64_scale_int (wav->datasize, wav->rate, wav->fact);
@@ -1922,7 +1921,8 @@ iterate_adapter:
       timestamp = GST_CLOCK_TIME_NONE;
     duration = GST_CLOCK_TIME_NONE;
     /* update current running segment position with byte offset */
-    gst_segment_set_last_stop (&wav->segment, GST_FORMAT_BYTES, nextpos);
+    if (G_LIKELY (nextpos >= wav->segment.start))
+      gst_segment_set_last_stop (&wav->segment, GST_FORMAT_BYTES, nextpos);
   }
   if ((pos > 0) && wav->vbr) {
     /* don't set timestamps for VBR files if it's not the first buffer */
