@@ -1448,18 +1448,26 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   if (base_video_decoder->have_src_caps)
     return;
 
-  caps = gst_pad_get_allowed_caps
-    (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder));
-  if (!caps)
-    goto null_caps;
-  if (gst_caps_is_empty (caps))
-    goto empty_caps;
+  caps = GST_PAD_CAPS (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder));
+  if (caps)
+    caps = gst_caps_copy (caps);
+  else {
+    caps = gst_pad_get_allowed_caps
+      (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder));
+    if (!caps)
+      goto null_caps;
+    if (gst_caps_is_empty (caps))
+      goto empty_caps;
+  }
 
   gst_caps_set_simple (caps,
       "width", G_TYPE_INT, state->width,
       "height", G_TYPE_INT, state->height,
       "framerate", GST_TYPE_FRACTION, state->fps_n, state->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n, state->par_d,
+      NULL);
+  if (state->have_interlaced)
+    gst_caps_set_simple (caps,
       "interlaced", G_TYPE_BOOLEAN, state->interlaced, NULL);
   gst_pad_fixate_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_decoder), caps);
 
@@ -1480,6 +1488,16 @@ empty_caps:
   GST_WARNING ("Got empty caps from get_allowed_caps");
   gst_caps_unref (caps);
   return;
+}
+
+void
+gst_base_video_decoder_update_src_caps (GstBaseVideoDecoder *
+    base_video_decoder)
+{
+  g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (base_video_decoder));
+
+  base_video_decoder->have_src_caps = FALSE;
+  gst_base_video_decoder_set_src_caps (base_video_decoder);
 }
 
 GstFlowReturn
