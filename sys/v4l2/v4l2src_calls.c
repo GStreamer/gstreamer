@@ -272,7 +272,18 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
 
   v4l2src->fps_n = fps_n;
   v4l2src->fps_d = fps_d;
-  GST_INFO_OBJECT (v4l2src, "Set framerate to %u/%u", fps_n, fps_d);
+
+  /* if we have a framerate pre-calculate duration */
+  if (fps_n > 0 && fps_d > 0) {
+    v4l2src->duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+  } else {
+    v4l2src->duration = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_INFO_OBJECT (v4l2src,
+      "Set framerate to %u/%u and duration to %" GST_TIME_FORMAT, fps_n, fps_d,
+      GST_TIME_ARGS (v4l2src->duration));
+
 
 done:
 

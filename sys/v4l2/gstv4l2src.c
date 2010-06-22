@@ -913,7 +913,6 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   if (G_LIKELY (ret == GST_FLOW_OK && *buf)) {
     GstClock *clock;
     GstClockTime timestamp;
-    GstClockTime duration = GST_CLOCK_TIME_NONE;
 
     GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
     GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
@@ -930,30 +929,23 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     }
     GST_OBJECT_UNLOCK (v4l2src);
 
-    if (clock) {
+    if (G_LIKELY (clock)) {
       /* the time now is the time of the clock minus the base time */
       timestamp = gst_clock_get_time (clock) - timestamp;
       gst_object_unref (clock);
 
       /* if we have a framerate adjust timestamp for frame latency */
-      if (v4l2src->fps_n > 0 && v4l2src->fps_d > 0) {
-        GstClockTime latency;
-
-        latency = gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
-            v4l2src->fps_n);
-
-        if (timestamp > latency)
-          timestamp -= latency;
+      if (GST_CLOCK_TIME_IS_VALID (v4l2src->duration)) {
+        if (timestamp > v4l2src->duration)
+          timestamp -= v4l2src->duration;
         else
           timestamp = 0;
-
-        duration = latency;
       }
     }
 
     /* FIXME: use the timestamp from the buffer itself! */
     GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-    GST_BUFFER_DURATION (*buf) = duration;
+    GST_BUFFER_DURATION (*buf) = v4l2src->duration;
   }
   return ret;
 }
