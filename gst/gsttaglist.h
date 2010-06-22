@@ -468,6 +468,13 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_DATE                   "date"
 /**
+ * GST_TAG_DATE_TIME:
+ * date and time the data was created (#GstDateTime structure)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_DATE_TIME              "datetime"
+/**
  * GST_TAG_GENRE:
  *
  * genre this data belongs to (string)
