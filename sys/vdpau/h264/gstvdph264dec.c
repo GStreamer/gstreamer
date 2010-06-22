@@ -236,20 +236,33 @@ gst_vdp_h264_dec_init_frame_info (GstVdpH264Dec * h264_dec,
 
   h264_frame->output_needed = TRUE;
   h264_frame->is_long_term = FALSE;
-  h264_frame->frame_num = slice->frame_num;
+  h264_frame->frame_idx = slice->frame_num;
 
   /* is reference */
   if (slice->nal_unit.ref_idc == 0)
     h264_frame->is_reference = FALSE;
   else if (slice->nal_unit.IdrPicFlag) {
     h264_frame->is_reference = TRUE;
-    h264_frame->is_long_term =
-        slice->dec_ref_pic_marking.long_term_reference_flag;
+    if (slice->dec_ref_pic_marking.long_term_reference_flag) {
+      h264_frame->is_long_term = TRUE;
+      h264_frame->frame_idx = 0;
+    }
   } else {
-    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag)
-      GST_ERROR ("FIXME: implement adaptive ref pic marking");
-    else
-      h264_frame->is_reference = TRUE;
+    h264_frame->is_reference = TRUE;
+
+    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag) {
+      GstH264RefPicMarking *marking;
+      guint i;
+
+      marking = slice->dec_ref_pic_marking.ref_pic_marking;
+      for (i = 0; i < slice->dec_ref_pic_marking.n_ref_pic_marking; i++) {
+        if (marking[i].memory_management_control_operation == 6) {
+          h264_frame->is_long_term = TRUE;
+          h264_frame->frame_idx = marking[i].long_term_frame_idx;
+          break;
+        }
+      }
+    }
   }
 
 }
@@ -269,6 +282,10 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstVdpH264Frame * h264_frame)
   else
     gst_h264_dpb_flush (h264_dec->dpb, TRUE);
 
+  if (slice->dec_ref_pic_marking.long_term_reference_flag)
+    g_object_set (h264_dec->dpb, "max-longterm-frame-idx", 0, NULL);
+  else
+    g_object_set (h264_dec->dpb, "max-longterm-frame-idx", -1, NULL);
 
   seq = slice->picture->sequence;
   if (seq != h264_dec->sequence) {
@@ -356,6 +373,8 @@ gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec,
 
   info.field_pic_flag = slice->field_pic_flag;
   info.bottom_field_flag = slice->bottom_field_flag;
+  info.num_ref_idx_l0_active_minus1 = slice->num_ref_idx_l0_active_minus1;
+  info.num_ref_idx_l1_active_minus1 = slice->num_ref_idx_l1_active_minus1;
 
   info.num_ref_frames = seq->num_ref_frames;
   info.frame_mbs_only_flag = seq->frame_mbs_only_flag;
@@ -375,21 +394,14 @@ gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec,
   info.chroma_qp_index_offset = pic->chroma_qp_index_offset;
   info.second_chroma_qp_index_offset = pic->second_chroma_qp_index_offset;
   info.pic_init_qp_minus26 = pic->pic_init_qp_minus26;
-  info.num_ref_idx_l0_active_minus1 = pic->num_ref_idx_l0_active_minus1;
-  info.num_ref_idx_l1_active_minus1 = pic->num_ref_idx_l1_active_minus1;
   info.entropy_coding_mode_flag = pic->entropy_coding_mode_flag;
   info.pic_order_present_flag = pic->pic_order_present_flag;
   info.deblocking_filter_control_present_flag =
       pic->deblocking_filter_control_present_flag;
   info.redundant_pic_cnt_present_flag = pic->redundant_pic_cnt_present_flag;
 
-  if (pic->scaling_matrix_present_flag) {
-    memcpy (&info.scaling_lists_4x4, &pic->scaling_lists_4x4, 96);
-    memcpy (&info.scaling_lists_8x8, &pic->scaling_lists_8x8, 128);
-  } else {
-    memcpy (&info.scaling_lists_4x4, &seq->scaling_lists_4x4, 96);
-    memcpy (&info.scaling_lists_8x8, &seq->scaling_lists_8x8, 128);
-  }
+  memcpy (&info.scaling_lists_4x4, &pic->scaling_lists_4x4, 96);
+  memcpy (&info.scaling_lists_8x8, &pic->scaling_lists_8x8, 128);
 
   gst_h264_dpb_fill_reference_frames (h264_dec->dpb, info.referenceFrames);
 
@@ -490,6 +502,8 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     return GST_FLOW_OK;
   }
 
+
+
   gst_vdp_h264_dec_init_frame_info (h264_dec, h264_frame);
 
 
@@ -515,14 +529,66 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   frame->src_buffer = GST_BUFFER_CAST (outbuf);
 
 
-
   /* DPB handling */
   if (slice->nal_unit.ref_idc != 0 && !slice->nal_unit.IdrPicFlag) {
-    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag)
-      GST_ERROR ("FIXME: implement adaptive ref pic marking");
-    else
+    if (slice->dec_ref_pic_marking.adaptive_ref_pic_marking_mode_flag) {
+      GstH264RefPicMarking *marking;
+      guint i;
+
+      marking = slice->dec_ref_pic_marking.ref_pic_marking;
+      for (i = 0; i < slice->dec_ref_pic_marking.n_ref_pic_marking; i++) {
+
+        switch (marking[i].memory_management_control_operation) {
+          case 1:
+          {
+            guint16 pic_num;
+
+            pic_num = slice->frame_num -
+                (marking[i].difference_of_pic_nums_minus1 + 1);
+            gst_h264_dpb_mark_short_term_unused (h264_dec->dpb, pic_num);
+            break;
+          }
+
+          case 2:
+          {
+            gst_h264_dpb_mark_long_term_unused (h264_dec->dpb,
+                marking[i].long_term_pic_num);
+            break;
+          }
+
+          case 3:
+          {
+            guint16 pic_num;
+
+            pic_num = slice->frame_num -
+                (marking[i].difference_of_pic_nums_minus1 + 1);
+            gst_h264_dpb_mark_long_term (h264_dec->dpb, pic_num,
+                marking[i].long_term_frame_idx);
+            break;
+          }
+
+          case 4:
+          {
+            g_object_set (h264_dec->dpb, "max-longterm-frame-idx",
+                marking[i].max_long_term_frame_idx_plus1 - 1, NULL);
+            break;
+          }
+
+          case 5:
+          {
+            gst_h264_dpb_mark_all_unused (h264_dec->dpb);
+            g_object_set (h264_dec->dpb, "max-longterm-frame-idx", -1, NULL);
+            break;
+          }
+
+          default:
+            break;
+        }
+      }
+    } else
       gst_h264_dpb_mark_sliding (h264_dec->dpb);
   }
+
   gst_h264_dpb_add (h264_dec->dpb, h264_frame);
 
   return GST_FLOW_OK;

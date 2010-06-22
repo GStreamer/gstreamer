@@ -71,6 +71,7 @@ typedef struct _GstH264Sequence GstH264Sequence;
 typedef struct _GstH264Picture GstH264Picture;
 
 typedef struct _GstH264DecRefPicMarking GstH264DecRefPicMarking;
+typedef struct _GstH264RefPicMarking GstH264RefPicMarking;
 typedef struct _GstH264PredWeightTable GstH264PredWeightTable;
 typedef struct _GstH264Slice GstH264Slice;
 
@@ -239,12 +240,20 @@ struct _GstH264Picture
 
   guint8 transform_8x8_mode_flag;
 
-  guint8 scaling_matrix_present_flag;
-  /* if scaling_matrix_present_flag == 1 */
   guint8 scaling_lists_4x4[6][16];
   guint8 scaling_lists_8x8[6][64];
 
   guint8 second_chroma_qp_index_offset;
+};
+
+struct _GstH264RefPicMarking
+{
+  guint8 memory_management_control_operation;
+
+  guint32 difference_of_pic_nums_minus1;
+  guint32 long_term_pic_num;
+  guint32 long_term_frame_idx;
+  guint32 max_long_term_frame_idx_plus1;
 };
 
 struct _GstH264DecRefPicMarking
@@ -253,19 +262,8 @@ struct _GstH264DecRefPicMarking
   guint8 no_output_of_prior_pics_flag;
   guint8 long_term_reference_flag;
 
-  /* else */
   guint8 adaptive_ref_pic_marking_mode_flag;
-
-  struct {
-    guint8 memory_management_control_operation;
-
-    union {
-      guint32 difference_of_pic_nums_minus1;
-      guint32 long_term_pic_num;
-      guint32 long_term_frame_idx;
-      guint32 max_long_term_frame_idx_plus1;
-    };
-  } ref_pic_marking[10];
+  GstH264RefPicMarking ref_pic_marking[10]; 
   guint8 n_ref_pic_marking;
 };
 

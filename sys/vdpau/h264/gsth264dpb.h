@@ -50,6 +50,7 @@ struct _GstH264DPB
   guint n_frames;
   
   guint max_frames;
+  gint max_longterm_frame_idx;
 
   void (*output) (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
 };
@@ -66,6 +67,11 @@ gboolean gst_h264_dpb_add (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
 void gst_h264_dpb_flush (GstH264DPB *dpb, gboolean output);
 
 void gst_h264_dpb_mark_sliding (GstH264DPB *dpb);
+
+void gst_h264_dpb_mark_long_term_unused (GstH264DPB *dpb, guint16 long_term_pic_num);
+void gst_h264_dpb_mark_short_term_unused (GstH264DPB *dpb, guint16 pic_num);
+void gst_h264_dpb_mark_all_unused (GstH264DPB *dpb);
+void gst_h264_dpb_mark_long_term (GstH264DPB *dpb, guint16 pic_num, guint16 long_term_frame_idx);
 
 GType gst_h264_dpb_get_type (void) G_GNUC_CONST;
 

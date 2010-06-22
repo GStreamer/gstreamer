@@ -257,7 +257,7 @@ gst_h264_parser_parse_scaling_list (GstNalReader * reader,
 {
   guint i;
 
-  GST_WARNING ("parsing scaling lists");
+  GST_DEBUG ("parsing scaling lists");
 
   for (i = 0; i < 12; i++) {
     gboolean use_default = FALSE;
@@ -460,6 +460,12 @@ gst_h264_parser_parse_sequence (GstH264Parser * parser, guint8 * data,
       goto error;
   }
 
+  /* calculate ChromaArrayType */
+  if (seq->separate_colour_plane_flag)
+    seq->ChromaArrayType = 0;
+  else
+    seq->ChromaArrayType = seq->chroma_format_idc;
+
   GST_DEBUG ("adding sequence parameter set with id: %d to hash table",
       seq->id);
   g_hash_table_replace (parser->sequences, &seq->id, seq);
@@ -523,6 +529,7 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
   GstH264Picture *pic;
   gint seq_parameter_set_id;
   GstH264Sequence *seq;
+  guint8 pic_scaling_matrix_present_flag;
 
   g_return_val_if_fail (GST_IS_H264_PARSER (parser), NULL);
   g_return_val_if_fail (data != NULL, NULL);
@@ -557,27 +564,28 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
 
       for (i = 0; i <= pic->num_slice_groups_minus1; i++)
         READ_UE (&reader, pic->run_length_minus1[i]);
+    } else if (pic->slice_group_map_type == 2) {
+      gint i;
+
+      for (i = 0; i <= pic->num_slice_groups_minus1; i++) {
+        READ_UE (&reader, pic->top_left[i]);
+        READ_UE (&reader, pic->bottom_right[i]);
+      }
+    } else if (pic->slice_group_map_type >= 3 && pic->slice_group_map_type <= 5) {
+      READ_UINT8 (&reader, pic->slice_group_change_direction_flag, 1);
+      READ_UE (&reader, pic->slice_group_change_rate_minus1);
+    } else if (pic->slice_group_map_type == 6) {
+      gint bits;
+      gint i;
+
+      READ_UE (&reader, pic->pic_size_in_map_units_minus1);
+      bits = ceil (log2 (pic->num_slice_groups_minus1 + 1));
+
+      pic->slice_group_id =
+          g_new (guint8, pic->pic_size_in_map_units_minus1 + 1);
+      for (i = 0; i <= pic->pic_size_in_map_units_minus1; i++)
+        READ_UINT8 (&reader, pic->slice_group_id[i], bits);
     }
-  } else if (pic->slice_group_map_type == 2) {
-    gint i;
-
-    for (i = 0; i <= pic->num_slice_groups_minus1; i++) {
-      READ_UE (&reader, pic->top_left[i]);
-      READ_UE (&reader, pic->bottom_right[i]);
-    }
-  } else if (pic->slice_group_map_type >= 3 && pic->slice_group_map_type <= 5) {
-    READ_UINT8 (&reader, pic->slice_group_change_direction_flag, 1);
-    READ_UE (&reader, pic->slice_group_change_rate_minus1);
-  } else if (pic->slice_group_map_type == 6) {
-    gint bits;
-    gint i;
-
-    READ_UE (&reader, pic->pic_size_in_map_units_minus1);
-    bits = ceil (log2 (pic->num_slice_groups_minus1 + 1));
-
-    pic->slice_group_id = g_new (guint8, pic->pic_size_in_map_units_minus1 + 1);
-    for (i = 0; i <= pic->pic_size_in_map_units_minus1; i++)
-      READ_UINT8 (&reader, pic->slice_group_id[i], bits);
   }
 
   READ_UE_ALLOWED (&reader, pic->num_ref_idx_l0_active_minus1, 0, 31);
@@ -597,8 +605,8 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
 
   READ_UINT8 (&reader, pic->transform_8x8_mode_flag, 1);
 
-  READ_UINT8 (&reader, pic->scaling_matrix_present_flag, 1);
-  if (pic->scaling_matrix_present_flag) {
+  READ_UINT8 (&reader, pic_scaling_matrix_present_flag, 1);
+  if (pic_scaling_matrix_present_flag) {
     if (seq->scaling_matrix_present_flag) {
       if (!gst_h264_parser_parse_scaling_list (&reader,
               pic->scaling_lists_4x4, pic->scaling_lists_8x8,
@@ -613,6 +621,9 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
               default_8x8_inter, default_8x8_intra, seq->chroma_format_idc))
         goto error;
     }
+  } else {
+    memcpy (&pic->scaling_lists_4x4, &seq->scaling_lists_4x4, 96);
+    memcpy (&pic->scaling_lists_8x8, &seq->scaling_lists_8x8, 384);
   }
 
   READ_SE_ALLOWED (&reader, pic->second_chroma_qp_index_offset, -12, 12);
@@ -653,7 +664,7 @@ gst_h264_slice_parse_pred_weight_table (GstH264Slice * slice,
     memset (p->chroma_offset_l0, 0, 64);
   }
 
-  for (i = 0; i <= pic->num_ref_idx_l0_active_minus1; i++) {
+  for (i = 0; i <= slice->num_ref_idx_l0_active_minus1; i++) {
     guint8 luma_weight_l0_flag;
 
     READ_UINT8 (reader, luma_weight_l0_flag, 1);
@@ -666,15 +677,17 @@ gst_h264_slice_parse_pred_weight_table (GstH264Slice * slice,
       gint j;
 
       READ_UINT8 (reader, chroma_weight_l0_flag, 1);
-      for (j = 0; j <= 2; j++) {
-        READ_SE_ALLOWED (reader, p->chroma_weight_l0[i][j], -128, 127);
-        READ_SE_ALLOWED (reader, p->chroma_offset_l0[i][j], -128, 127);
+      if (chroma_weight_l0_flag) {
+        for (j = 0; j < 2; j++) {
+          READ_SE_ALLOWED (reader, p->chroma_weight_l0[i][j], -128, 127);
+          READ_SE_ALLOWED (reader, p->chroma_offset_l0[i][j], -128, 127);
+        }
       }
     }
   }
 
   if (GST_H264_IS_B_SLICE (slice->type)) {
-    for (i = 0; i <= pic->num_ref_idx_l1_active_minus1; i++) {
+    for (i = 0; i <= slice->num_ref_idx_l1_active_minus1; i++) {
       guint8 luma_weight_l1_flag;
 
       READ_UINT8 (reader, luma_weight_l1_flag, 1);
@@ -687,9 +700,11 @@ gst_h264_slice_parse_pred_weight_table (GstH264Slice * slice,
         gint j;
 
         READ_UINT8 (reader, chroma_weight_l1_flag, 1);
-        for (j = 0; j <= 2; j++) {
-          READ_SE_ALLOWED (reader, p->chroma_weight_l1[i][j], -128, 127);
-          READ_SE_ALLOWED (reader, p->chroma_offset_l1[i][j], -128, 127);
+        if (chroma_weight_l1_flag) {
+          for (j = 0; j < 2; j++) {
+            READ_SE_ALLOWED (reader, p->chroma_weight_l1[i][j], -128, 127);
+            READ_SE_ALLOWED (reader, p->chroma_offset_l1[i][j], -128, 127);
+          }
         }
       }
     }
@@ -740,7 +755,7 @@ gst_h264_slice_parse_ref_pic_list_reordering (GstH264Slice * slice,
         if (reordering_of_pic_nums_idc == 0 || reordering_of_pic_nums_idc == 1) {
           guint32 abs_diff_num_minus1;
           READ_UE (reader, abs_diff_num_minus1);
-        } else if (reordering_of_pic_nums_idc == 3) {
+        } else if (reordering_of_pic_nums_idc == 2) {
           guint32 long_term_pic_num;
 
           READ_UE (reader, long_term_pic_num);
@@ -772,32 +787,39 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264Slice * slice,
     READ_UINT8 (reader, m->adaptive_ref_pic_marking_mode_flag, 1);
     if (m->adaptive_ref_pic_marking_mode_flag) {
       guint8 memory_management_control_operation;
-      guint i = 0;
 
-      do {
+      m->n_ref_pic_marking = 0;
+      while (1) {
         READ_UE_ALLOWED (reader, memory_management_control_operation, 0, 6);
-        m->ref_pic_marking[i].memory_management_control_operation =
+        if (memory_management_control_operation == 0)
+          break;
+
+        m->ref_pic_marking[m->n_ref_pic_marking].
+            memory_management_control_operation =
             memory_management_control_operation;
 
         if (memory_management_control_operation == 1 ||
             memory_management_control_operation == 3)
-          READ_UE (reader, m->ref_pic_marking[i].difference_of_pic_nums_minus1);
+          READ_UE (reader,
+              m->ref_pic_marking[m->n_ref_pic_marking].
+              difference_of_pic_nums_minus1);
 
         if (memory_management_control_operation == 2)
-          READ_UE (reader, m->ref_pic_marking[i].long_term_pic_num);
+          READ_UE (reader,
+              m->ref_pic_marking[m->n_ref_pic_marking].long_term_pic_num);
 
         if (memory_management_control_operation == 3 ||
             memory_management_control_operation == 6)
-          READ_UE (reader, m->ref_pic_marking[i].long_term_frame_idx);
+          READ_UE (reader,
+              m->ref_pic_marking[m->n_ref_pic_marking].long_term_frame_idx);
 
         if (memory_management_control_operation == 4)
-          READ_UE (reader, m->ref_pic_marking[i].max_long_term_frame_idx_plus1);
+          READ_UE (reader,
+              m->ref_pic_marking[m->n_ref_pic_marking].
+              max_long_term_frame_idx_plus1);
 
-        i++;
+        m->n_ref_pic_marking++;
       }
-      while (memory_management_control_operation != 0);
-
-      m->n_ref_pic_marking = i;
     }
   }
 

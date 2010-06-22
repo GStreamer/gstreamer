@@ -45,7 +45,7 @@ struct _GstVdpH264Frame
   GPtrArray *slices;
 
   guint poc;
-  guint16 frame_num;
+  guint16 frame_idx;
   gboolean is_reference;
   gboolean is_long_term;
   gboolean output_needed;
