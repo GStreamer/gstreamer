@@ -345,7 +345,7 @@ typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
  *
  * The signature of the internal pad link function.
  *
- * Returns: a newly allocated #GList of pads that are linked to the given pad on
+ * Returns: (element-type Gst.Pad) (transfer container): a newly allocated #GList of pads that are linked to the given pad on
  * the inside of the parent element.
  *
  * The caller must call g_list_free() on it after use.
