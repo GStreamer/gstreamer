@@ -461,6 +461,8 @@ gst_v4l2sink_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_v4l2_buffer_pool_destroy (v4l2sink->pool);
+      v4l2sink->pool = NULL;
       /* close the device */
       if (!gst_v4l2_object_stop (v4l2sink->v4l2object))
         return GST_STATE_CHANGE_FAILURE;
