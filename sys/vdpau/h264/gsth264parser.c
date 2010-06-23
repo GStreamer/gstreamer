@@ -683,13 +683,13 @@ gst_h264_slice_parse_pred_weight_table (GstH264Slice * slice,
 
   READ_UE_ALLOWED (reader, p->luma_log2_weight_denom, 0, 7);
   /* set default values */
-  memset (p->luma_weight_l0, pow (2, p->luma_log2_weight_denom), 32);
+  memset (p->luma_weight_l0, 1 << p->luma_log2_weight_denom, 32);
   memset (p->luma_offset_l0, 0, 32);
 
   if (seq->ChromaArrayType != 0) {
     READ_UE_ALLOWED (reader, p->chroma_log2_weight_denom, 0, 7);
     /* set default values */
-    memset (p->chroma_weight_l0, pow (2, p->chroma_log2_weight_denom), 64);
+    memset (p->chroma_weight_l0, 1 << p->chroma_log2_weight_denom, 64);
     memset (p->chroma_offset_l0, 0, 64);
   }
 
