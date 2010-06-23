@@ -1112,7 +1112,8 @@ all_streams_prerolled (GstASFDemux * demux)
   GstClockTime preroll_time;
   guint i, num_no_data = 0;
 
-  preroll_time = demux->preroll;
+  /* Allow at least 500ms of preroll_time  */
+  preroll_time = MAX(demux->preroll, 500 * GST_MSECOND);
 
   /* returns TRUE as long as there isn't a stream which (a) has data queued
    * and (b) the timestamp of last piece of data queued is < demux->preroll
