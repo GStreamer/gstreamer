@@ -116,7 +116,7 @@ GST_START_TEST (test_overlay_in_layer)
   GESTrackObject *trobj;
   GESTimelineOverlay *source;
   gchar *text;
-  //gint halign, valign;
+  gint halign, valign;
 
   ges_init ();
 
@@ -151,7 +151,6 @@ GST_START_TEST (test_overlay_in_layer)
   assert_equals_string ("sans 72", text);
   g_free (text);
 
-#if 0
   text = ((GESTrackVideoOverlay *) trobj)->font_desc;
   assert_equals_string ("sans 72", text);
 
@@ -173,7 +172,6 @@ GST_START_TEST (test_overlay_in_layer)
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
 
   GST_DEBUG ("removing the layer");
-#endif
 
   g_object_unref (trobj);
   g_object_unref (timeline);
