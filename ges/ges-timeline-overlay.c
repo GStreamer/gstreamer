@@ -31,8 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-video-title-source.h"
-//#include "ges-track-video-overlay.h"
-//#include "ges-track-audio-overlay.h"
+#include "ges-track-video-overlay.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineOverlay, ges_tl_overlay, GES_TYPE_TIMELINE_OBJECT);
@@ -384,7 +383,6 @@ static GESTrackObject *
 ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
 {
 
-#if 0
   GESTimelineOverlay *tfs = (GESTimelineOverlay *) obj;
   GESTrackObject *res = NULL;
 
@@ -396,19 +394,11 @@ ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
     ges_track_video_overlay_set_text ((GESTrackVideoOverlay *) res, tfs->text);
   }
 
-  else if (track->type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackObject *) ges_track_audio_overlay_new ();
-    if (tfs->mute)
-      ges_track_object_set_active (res, FALSE);
-  }
-
   else {
     res = GES_TRACK_OBJECT (ges_track_overlay_new ());
   }
 
   return res;
-#endif
-  return NULL;
 }
 
 /**
