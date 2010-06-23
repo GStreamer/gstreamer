@@ -213,7 +213,8 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     unsigned int port;
     AVal playpath, app;
 
-    if (!RTMP_ParseURL (uri, &protocol, &host, &port, &playpath, &app)) {
+    if (!RTMP_ParseURL (uri, &protocol, &host, &port, &playpath, &app) ||
+        !host.av_len || !playpath.av_len) {
       GST_ERROR_OBJECT (src, "Failed to parse URI %s", uri);
       return FALSE;
     }
