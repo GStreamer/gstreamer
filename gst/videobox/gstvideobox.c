@@ -2921,8 +2921,10 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
         gst_structure_set_value (s2, "depth", &list);
         gst_structure_set_value (s2, "bpp", &list);
         g_value_unset (&list);
+        gst_caps_append_structure (to, s2);
+      } else {
+        gst_structure_free (s2);
       }
-      gst_caps_append_structure (to, s2);
     }
   } else if (g_str_equal (name, "video/x-raw-rgb")) {
     gint bpp;
