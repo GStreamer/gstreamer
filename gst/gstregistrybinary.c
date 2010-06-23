@@ -377,6 +377,9 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
     }
   }
 
+  _priv_gst_registry_chunks_save_global_header (&to_write, registry,
+      priv_gst_plugin_loading_get_whitelist_hash ());
+
   GST_INFO ("Writing binary registry cache");
 
   cache = gst_registry_binary_cache_init (registry, location);
@@ -495,6 +498,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   gsize size;
   GError *err = NULL;
   gboolean res = FALSE;
+  guint32 filter_env_hash = 0;
   gint check_magic_result;
 #ifndef GST_DISABLE_GST_DEBUG
   GTimer *timer = NULL;
@@ -554,6 +558,18 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     goto Error;
   }
 
+  if (!_priv_gst_registry_chunks_load_global_header (registry, &in,
+          contents + size, &filter_env_hash)) {
+    GST_ERROR ("Couldn't read global header chunk");
+    goto Error;
+  }
+
+  if (filter_env_hash != priv_gst_plugin_loading_get_whitelist_hash ()) {
+    GST_INFO_OBJECT (registry, "Plugin loading filter environment changed, "
+        "ignoring plugin cache to force update with new filter environment");
+    goto done;
+  }
+
   /* check if there are plugins in the file */
   if (G_UNLIKELY (!(((gsize) in + sizeof (GstRegistryChunkPluginElement)) <
               (gsize) contents + size))) {
@@ -574,6 +590,8 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
       }
     }
   }
+
+done:
 
 #ifndef GST_DISABLE_GST_DEBUG
   g_timer_stop (timer);

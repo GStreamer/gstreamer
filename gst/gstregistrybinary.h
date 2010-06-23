@@ -55,7 +55,7 @@ G_BEGIN_DECLS
  * This _must_ be updated whenever the registry format changes,
  * we currently use the core version where this change happened.
  */
-#define GST_MAGIC_BINARY_VERSION_STR ("0.10.23.1")
+#define GST_MAGIC_BINARY_VERSION_STR ("0.10.29.1")
 
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:

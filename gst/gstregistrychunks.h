@@ -50,6 +50,11 @@ typedef struct _GstRegistryChunk
   gboolean align;
 } GstRegistryChunk;
 
+typedef struct _GstRegistryChunkGlobalHeader
+{
+  guint32  filter_env_hash;
+} GstRegistryChunkGlobalHeader;
+
 /*
  * GstRegistryChunkPluginElement:
  *
@@ -146,6 +151,14 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
 gboolean
 _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
     gchar *end, GstPlugin **out_plugin);
+
+void
+_priv_gst_registry_chunks_save_global_header (GList ** list,
+    GstRegistry * registry, guint32 filter_env_hash);
+
+gboolean
+_priv_gst_registry_chunks_load_global_header (GstRegistry * registry,
+    gchar ** in, gchar *end, guint32 * filter_env_hash);
 
 void
 _priv_gst_registry_chunk_free (GstRegistryChunk *chunk);

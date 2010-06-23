@@ -75,6 +75,8 @@ struct _GstPluginPrivate {
 
 gboolean priv_gst_plugin_loading_have_whitelist (void);
 
+guint32  priv_gst_plugin_loading_get_whitelist_hash (void);
+
 gboolean priv_gst_plugin_desc_is_whitelisted (GstPluginDesc * desc,
                                               const gchar   * filename);
 

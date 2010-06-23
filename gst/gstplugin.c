@@ -463,6 +463,21 @@ priv_gst_plugin_loading_have_whitelist (void)
   return (_plugin_loading_whitelist != NULL);
 }
 
+guint32
+priv_gst_plugin_loading_get_whitelist_hash (void)
+{
+  guint32 hash = 0;
+
+  if (_plugin_loading_whitelist != NULL) {
+    gchar **w;
+
+    for (w = _plugin_loading_whitelist; *w != NULL; ++w)
+      hash = (hash << 1) ^ g_str_hash (*w);
+  }
+
+  return hash;
+}
+
 /* this function could be extended to check if the plugin license matches the
  * applications license (would require the app to register its license somehow).
  * We'll wait for someone who's interested in it to code it :)

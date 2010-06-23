@@ -837,3 +837,39 @@ fail:
   GST_INFO ("Reading plugin failed after %u bytes", (guint) (end - start));
   return FALSE;
 }
+
+void
+_priv_gst_registry_chunks_save_global_header (GList ** list,
+    GstRegistry * registry, guint32 filter_env_hash)
+{
+  GstRegistryChunkGlobalHeader *hdr;
+  GstRegistryChunk *chk;
+
+  hdr = g_slice_new (GstRegistryChunkGlobalHeader);
+  chk = gst_registry_chunks_make_data (hdr,
+      sizeof (GstRegistryChunkGlobalHeader));
+
+  hdr->filter_env_hash = filter_env_hash;
+
+  *list = g_list_prepend (*list, chk);
+
+  GST_LOG ("Saved global header (filter_env_hash=0x%08x)", filter_env_hash);
+}
+
+gboolean
+_priv_gst_registry_chunks_load_global_header (GstRegistry * registry,
+    gchar ** in, gchar * end, guint32 * filter_env_hash)
+{
+  GstRegistryChunkGlobalHeader *hdr;
+
+  align (*in);
+  GST_LOG ("Reading/casting for GstRegistryChunkGlobalHeader at %p", *in);
+  unpack_element (*in, hdr, GstRegistryChunkGlobalHeader, end, fail);
+  *filter_env_hash = hdr->filter_env_hash;
+  return TRUE;
+
+  /* Errors */
+fail:
+  GST_WARNING ("Reading global header failed");
+  return FALSE;
+}
