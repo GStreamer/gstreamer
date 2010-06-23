@@ -1775,14 +1775,28 @@ gst_pad_is_linked (GstPad * pad)
  * pads
  */
 static gboolean
-gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
+gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
+    GstPadLinkCheck flags)
 {
-  GstCaps *srccaps;
-  GstCaps *sinkcaps;
+  GstCaps *srccaps = NULL;
+  GstCaps *sinkcaps = NULL;
   gboolean compatible = FALSE;
 
-  srccaps = gst_pad_get_caps_unlocked (src);
-  sinkcaps = gst_pad_get_caps_unlocked (sink);
+  if (!(flags & (GST_PAD_LINK_CHECK_CAPS | GST_PAD_LINK_CHECK_TEMPLATE_CAPS)))
+    return TRUE;
+
+  /* Doing the expensive caps checking takes priority over only checking the template caps */
+  if (flags & GST_PAD_LINK_CHECK_CAPS) {
+    srccaps = gst_pad_get_caps_unlocked (src);
+    sinkcaps = gst_pad_get_caps_unlocked (sink);
+  } else {
+    if (GST_PAD_PAD_TEMPLATE (src))
+      srccaps =
+          gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (src)));
+    if (GST_PAD_PAD_TEMPLATE (sink))
+      sinkcaps =
+          gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (sink)));
+  }
 
   GST_CAT_DEBUG (GST_CAT_CAPS, "src caps %" GST_PTR_FORMAT, srccaps);
   GST_CAT_DEBUG (GST_CAT_CAPS, "sink caps %" GST_PTR_FORMAT, sinkcaps);
@@ -1880,7 +1894,7 @@ wrong_grandparents:
 /* call with the two pads unlocked, when this function returns GST_PAD_LINK_OK,
  * the two pads will be locked in the srcpad, sinkpad order. */
 static GstPadLinkReturn
-gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
+gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
@@ -1897,11 +1911,12 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 
   /* check hierarchy, pads can only be linked if the grandparents
    * are the same. */
-  if (!gst_pad_link_check_hierarchy (srcpad, sinkpad))
+  if ((flags & GST_PAD_LINK_CHECK_HIERARCHY)
+      && !gst_pad_link_check_hierarchy (srcpad, sinkpad))
     goto wrong_hierarchy;
 
   /* check pad caps for non-empty intersection */
-  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad))
+  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad, flags))
     goto no_format;
 
   /* FIXME check pad scheduling for non-empty intersection */
@@ -1970,7 +1985,7 @@ gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
   /* gst_pad_link_prepare does everything for us, we only release the locks
    * on the pads that it gets us. If this function returns !OK the locks are not
    * taken anymore. */
-  result = gst_pad_link_prepare (srcpad, sinkpad);
+  result = gst_pad_link_prepare (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
   if (result != GST_PAD_LINK_OK)
     goto done;
 
@@ -1982,19 +1997,22 @@ done:
 }
 
 /**
- * gst_pad_link:
+ * gst_pad_link_full:
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.
+ * @flags: the checks to validate when linking
  *
  * Links the source pad and the sink pad.
  *
  * Returns: A result code indicating if the connection worked or
  *          what went wrong.
  *
+ * Since: 0.10.30
+ *
  * MT Safe.
  */
 GstPadLinkReturn
-gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
+gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
 {
   GstPadLinkReturn result;
   GstElement *parent;
@@ -2018,7 +2036,7 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
   }
 
   /* prepare will also lock the two pads */
-  result = gst_pad_link_prepare (srcpad, sinkpad);
+  result = gst_pad_link_prepare (srcpad, sinkpad, flags);
 
   if (result != GST_PAD_LINK_OK)
     goto done;
@@ -2077,6 +2095,24 @@ done:
   }
 
   return result;
+}
+
+/**
+ * gst_pad_link:
+ * @srcpad: the source #GstPad to link.
+ * @sinkpad: the sink #GstPad to link.
+ *
+ * Links the source pad and the sink pad.
+ *
+ * Returns: A result code indicating if the connection worked or
+ *          what went wrong.
+ *
+ * MT Safe.
+ */
+GstPadLinkReturn
+gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
+{
+  return gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_DEFAULT);
 }
 
 static void

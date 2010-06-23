@@ -615,6 +615,8 @@ EXPORTS
 	gst_pad_iterate_internal_links
 	gst_pad_iterate_internal_links_default
 	gst_pad_link
+	gst_pad_link_check_get_type
+	gst_pad_link_full
 	gst_pad_link_return_get_type
 	gst_pad_load_and_link
 	gst_pad_new

@@ -1343,6 +1343,8 @@ GstPadFlags
 GstPadLinkReturn
 GST_PAD_LINK_FAILED
 GST_PAD_LINK_SUCCESSFUL
+GstPadLinkCheck
+GST_PAD_LINK_CHECK_DEFAULT
 GstFlowReturn
 GstActivateMode
 
@@ -1354,6 +1356,7 @@ gst_pad_get_parent_element
 gst_pad_get_pad_template
 
 gst_pad_link
+gst_pad_link_full
 gst_pad_unlink
 gst_pad_is_linked
 gst_pad_can_link
@@ -1524,6 +1527,7 @@ GST_TYPE_PAD
 GST_TYPE_PAD_DIRECTION
 GST_TYPE_PAD_FLAGS
 GST_TYPE_PAD_LINK_RETURN
+GST_TYPE_PAD_LINK_CHECK
 GST_TYPE_PAD_PRESENCE
 GST_TYPE_FLOW_RETURN
 GST_TYPE_ACTIVATE_MODE
@@ -1533,6 +1537,7 @@ gst_pad_get_type
 gst_pad_direction_get_type
 gst_pad_flags_get_type
 gst_pad_link_return_get_type
+gst_pad_link_check_get_type
 gst_pad_presence_get_type
 gst_flow_return_get_type
 gst_activate_mode_get_type

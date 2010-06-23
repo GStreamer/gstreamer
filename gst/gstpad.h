@@ -178,6 +178,35 @@ G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
 /**
+ * GstPadLinkCheck:
+ * @GST_PAD_LINK_CHECK_NOTHING: Don't check hierarchy or compatibily
+ * @GST_PAD_LINK_CHECK_HIERARCHY: Check the pads have same parents/grandparents
+ * @GST_PAD_LINK_CHECK_TEMPLATE_CAPS: Check if the pads are compatible by using their
+ * template caps.
+ * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by checking their full caps
+ *
+ * The amount of check to be done when linking pads.
+ *
+ * Since: 0.10.30
+ */
+
+typedef enum {
+  GST_PAD_LINK_CHECK_NOTHING       = 1 << 0,
+  GST_PAD_LINK_CHECK_HIERARCHY     = 1 << 1,
+  GST_PAD_LINK_CHECK_TEMPLATE_CAPS = 1 << 2,
+  GST_PAD_LINK_CHECK_CAPS          = 1 << 3,
+} GstPadLinkCheck;
+
+/**
+ * GST_PAD_LINK_CHECK_DEFAULT:
+ *
+ * The default checks done when linking pads (i.e. the ones used by #gst_pad_link.
+ *
+ * Since: 0.10.30
+ */
+#define GST_PAD_LINK_CHECK_DEFAULT (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS)
+
+/**
  * GstActivateMode:
  * @GST_ACTIVATE_NONE:	  	 Pad will not handle dataflow
  * @GST_ACTIVATE_PUSH:		 Pad handles dataflow in downstream push mode
@@ -892,6 +921,7 @@ void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
 gboolean                gst_pad_can_link                        (GstPad *srcpad, GstPad *sinkpad);
 GstPadLinkReturn        gst_pad_link				(GstPad *srcpad, GstPad *sinkpad);
+GstPadLinkReturn        gst_pad_link_full			(GstPad *srcpad, GstPad *sinkpad, GstPadLinkCheck flags);
 gboolean		gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);
 
