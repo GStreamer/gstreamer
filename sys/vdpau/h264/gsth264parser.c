@@ -50,6 +50,23 @@ const guint8 default_8x8_inter[64] =
   28, 28, 28, 28, 30, 30, 30, 30, 32, 32, 32, 33, 33, 35
 };
 
+const guint8 zigzag_8x8[64] = {
+  0, 1, 8, 16, 9, 2, 3, 10,
+  17, 24, 32, 25, 18, 11, 4, 5,
+  12, 19, 26, 33, 40, 48, 41, 34,
+  27, 20, 13, 6, 7, 14, 21, 28,
+  35, 42, 49, 56, 57, 50, 43, 36,
+  29, 22, 15, 23, 30, 37, 44, 51,
+  58, 59, 52, 45, 38, 31, 39, 46,
+  53, 60, 61, 54, 47, 55, 62, 63
+};
+
+const guint8 zigzag_4x4[16] = {
+  0, 1, 4, 8,
+  5, 2, 3, 6,
+  9, 12, 13, 10,
+  7, 11, 14, 15,
+};
 
 #define CHECK_ALLOWED(val, min, max) { \
   if (val < min || val > max) { \
@@ -253,7 +270,7 @@ gst_h264_parser_parse_scaling_list (GstNalReader * reader,
     guint8 scaling_lists_4x4[6][16], guint8 scaling_lists_8x8[6][64],
     const guint8 fallback_4x4_inter[16], const guint8 fallback_4x4_intra[16],
     const guint8 fallback_8x8_inter[64], const guint8 fallback_8x8_intra[64],
-    guint32 chroma_format_idc)
+    guint8 n_lists)
 {
   guint i;
 
@@ -262,21 +279,24 @@ gst_h264_parser_parse_scaling_list (GstNalReader * reader,
   for (i = 0; i < 12; i++) {
     gboolean use_default = FALSE;
 
-    if (i < ((chroma_format_idc != 3) ? 8 : 12)) {
+    if (i < n_lists) {
       guint8 scaling_list_present_flag;
 
       READ_UINT8 (reader, scaling_list_present_flag, 1);
       if (scaling_list_present_flag) {
         guint8 *scaling_list;
+        const guint8 *scan;
         guint size;
         guint j;
         guint8 last_scale, next_scale;
 
-        if (i <= 5) {
+        if (i < 6) {
           scaling_list = scaling_lists_4x4[i];
+          scan = zigzag_4x4;
           size = 16;
         } else {
           scaling_list = scaling_lists_8x8[i - 6];
+          scan = zigzag_8x8;
           size = 64;
         }
 
@@ -287,11 +307,14 @@ gst_h264_parser_parse_scaling_list (GstNalReader * reader,
             gint32 delta_scale;
 
             READ_SE (reader, delta_scale);
-            next_scale = (last_scale + delta_scale + 256) % 256;
-            use_default = (j == 0 && next_scale == 0);
+            next_scale = (last_scale + delta_scale) & 0xff;
           }
-          scaling_list[j] = (next_scale == 0) ? last_scale : next_scale;
-          last_scale = scaling_list[j];
+          if (j == 0 && next_scale == 0) {
+            use_default = TRUE;
+            break;
+          }
+          last_scale = scaling_list[scan[j]] =
+              (next_scale == 0) ? last_scale : next_scale;
         }
       } else
         use_default = TRUE;
@@ -409,10 +432,13 @@ gst_h264_parser_parse_sequence (GstH264Parser * parser, guint8 * data,
 
     READ_UINT8 (&reader, seq->scaling_matrix_present_flag, 1);
     if (seq->scaling_matrix_present_flag) {
+      guint8 n_lists;
+
+      n_lists = (seq->chroma_format_idc != 3) ? 8 : 12;
       if (!gst_h264_parser_parse_scaling_list (&reader,
               seq->scaling_lists_4x4, seq->scaling_lists_8x8,
               default_4x4_inter, default_4x4_intra,
-              default_8x8_inter, default_8x8_intra, seq->chroma_format_idc))
+              default_8x8_inter, default_8x8_intra, n_lists))
         goto error;
     }
   }
@@ -609,18 +635,22 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
 
   READ_UINT8 (&reader, pic_scaling_matrix_present_flag, 1);
   if (pic_scaling_matrix_present_flag) {
+    guint8 n_lists;
+
+    n_lists = 6 + ((seq->chroma_format_idc != 3) ? 2 : 6) *
+        pic->transform_8x8_mode_flag;
+
     if (seq->scaling_matrix_present_flag) {
       if (!gst_h264_parser_parse_scaling_list (&reader,
               pic->scaling_lists_4x4, pic->scaling_lists_8x8,
               seq->scaling_lists_4x4[0], seq->scaling_lists_4x4[3],
-              seq->scaling_lists_8x8[0], seq->scaling_lists_8x8[3],
-              seq->chroma_format_idc))
+              seq->scaling_lists_8x8[0], seq->scaling_lists_8x8[3], n_lists))
         goto error;
     } else {
       if (!gst_h264_parser_parse_scaling_list (&reader,
-              seq->scaling_lists_4x4, seq->scaling_lists_8x8,
+              pic->scaling_lists_4x4, pic->scaling_lists_8x8,
               default_4x4_inter, default_4x4_intra,
-              default_8x8_inter, default_8x8_intra, seq->chroma_format_idc))
+              default_8x8_inter, default_8x8_intra, n_lists))
         goto error;
     }
   }
@@ -793,15 +823,15 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264Slice * slice,
         if (memory_management_control_operation == 0)
           break;
 
-        m->ref_pic_marking[m->n_ref_pic_marking].
-            memory_management_control_operation =
+        m->ref_pic_marking[m->
+            n_ref_pic_marking].memory_management_control_operation =
             memory_management_control_operation;
 
         if (memory_management_control_operation == 1 ||
             memory_management_control_operation == 3)
           READ_UE (reader,
-              m->ref_pic_marking[m->n_ref_pic_marking].
-              difference_of_pic_nums_minus1);
+              m->ref_pic_marking[m->
+                  n_ref_pic_marking].difference_of_pic_nums_minus1);
 
         if (memory_management_control_operation == 2)
           READ_UE (reader,
@@ -814,8 +844,8 @@ gst_h264_slice_parse_dec_ref_pic_marking (GstH264Slice * slice,
 
         if (memory_management_control_operation == 4)
           READ_UE (reader,
-              m->ref_pic_marking[m->n_ref_pic_marking].
-              max_long_term_frame_idx_plus1);
+              m->ref_pic_marking[m->
+                  n_ref_pic_marking].max_long_term_frame_idx_plus1);
 
         m->n_ref_pic_marking++;
       }
