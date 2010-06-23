@@ -2076,8 +2076,8 @@ gst_h264_parse_chain_forward (GstH264Parse * h264parse, gboolean discont,
       gboolean start;
       guint8 *next_data;
 
-      outbuf = gst_adapter_take_buffer (h264parse->adapter, next_nalu_pos);
       outbuf_dts = gst_adapter_prev_timestamp (h264parse->adapter, NULL);       /* Better value for the second parameter? */
+      outbuf = gst_adapter_take_buffer (h264parse->adapter, next_nalu_pos);
 
       /* packetized will have no next data, which serves fine here */
       next_data = (guint8 *) gst_adapter_peek (h264parse->adapter, 6);
