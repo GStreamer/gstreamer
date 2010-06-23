@@ -769,6 +769,10 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
     sess->callbacks.reconsider = callbacks->reconsider;
     sess->reconsider_user_data = user_data;
   }
+  if (callbacks->request_key_unit) {
+    sess->callbacks.request_key_unit = callbacks->request_key_unit;
+    sess->request_key_unit_user_data = user_data;
+  }
 }
 
 /**
@@ -2041,6 +2045,25 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
 
     if (src)
       rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
+  }
+
+  if (rtp_source_get_ssrc (sess->source) == media_ssrc) {
+    switch (type) {
+      case GST_RTCP_TYPE_PSFB:
+        switch (fbtype) {
+          case GST_RTCP_PSFB_TYPE_PLI:
+            if (sess->callbacks.request_key_unit)
+              sess->callbacks.request_key_unit (sess, FALSE,
+                  sess->request_key_unit_user_data);
+            break;
+          default:
+            break;
+        }
+        break;
+      case GST_RTCP_TYPE_RTPFB:
+      default:
+        break;
+    }
   }
 }
 

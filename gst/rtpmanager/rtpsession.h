@@ -121,12 +121,26 @@ typedef gint (*RTPSessionClockRate) (RTPSession *sess, guint8 payload, gpointer 
 typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
 
 /**
+ * RTPSessionRequestKeyUnit:
+ * @sess: an #RTPSession
+ * @all_headers: %TRUE if "all-headers" property should be set on the key unit
+ *  request
+ * @user_data: user data specified when registering
+*
+ * Asks the encoder to produce a key unit as soon as possibly within the
+ * bandwidth constraints
+ */
+typedef void (*RTPSessionRequestKeyUnit) (RTPSession *sess,
+    gboolean all_headers, gpointer user_data);
+
+/**
  * RTPSessionCallbacks:
  * @RTPSessionProcessRTP: callback to process RTP packets
  * @RTPSessionSendRTP: callback for sending RTP packets
  * @RTPSessionSendRTCP: callback for sending RTCP packets
  * @RTPSessionSyncRTCP: callback for handling SR packets
  * @RTPSessionReconsider: callback for reconsidering the timeout
+ * @RTPSessionRequestKeyUnit: callback for requesting a new key unit
  *
  * These callbacks can be installed on the session manager to get notification
  * when RTP and RTCP packets are ready for further processing. These callbacks
@@ -139,6 +153,7 @@ typedef struct {
   RTPSessionSendRTCP    send_rtcp;
   RTPSessionClockRate   clock_rate;
   RTPSessionReconsider  reconsider;
+  RTPSessionRequestKeyUnit request_key_unit;
 } RTPSessionCallbacks;
 
 /**
@@ -197,6 +212,7 @@ struct _RTPSession {
   gpointer              sync_rtcp_user_data;
   gpointer              clock_rate_user_data;
   gpointer              reconsider_user_data;
+  gpointer              request_key_unit_user_data;
 
   RTPSessionStats stats;
 
