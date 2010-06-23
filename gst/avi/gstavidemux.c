@@ -5346,6 +5346,7 @@ gst_avi_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      avi->have_index = FALSE;
       gst_avi_demux_reset (avi);
       break;
     default:
