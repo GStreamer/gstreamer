@@ -125,9 +125,33 @@ ges_track_video_overlay_set_property (GObject * object,
 static GstElement *
 ges_track_video_overlay_create_element (GESTrackOverlay * object)
 {
-  //GESTrackVideoOverlay *self = GES_TRACK_VIDEO_OVERLAY (object);
+  GstElement *ret, *text;
+  GstPad *src, *sink;
+  GESTrackVideoOverlay *self = GES_TRACK_VIDEO_OVERLAY (object);
 
-  return gst_element_factory_make ("identity", NULL);
+  text = gst_element_factory_make ("textoverlay", NULL);
+  self->text_el = text;
+  g_object_ref (text);
+
+  if (self->text)
+    g_object_set (text, "text", (gchar *) self->text, NULL);
+  if (self->font_desc)
+    g_object_set (text, "font-desc", (gchar *) self->font_desc, NULL);
+
+  g_object_set (text, "halignment", (gint) self->halign, "valignment",
+      (gint) self->valign, NULL);
+
+  ret = gst_bin_new ("overlay-bin");
+  gst_bin_add (GST_BIN (ret), text);
+
+  src = gst_ghost_pad_new ("src", gst_element_get_static_pad (text, "src"));
+  sink = gst_ghost_pad_new ("video_sink", gst_element_get_static_pad (text,
+          "video_sink"));
+
+  gst_element_add_pad (ret, src);
+  gst_element_add_pad (ret, sink);
+
+  return ret;
 }
 
 /**
