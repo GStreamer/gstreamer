@@ -1532,7 +1532,7 @@ cleanup_fail:
 }
 
 static gboolean
-pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
+pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
 {
   GSList *pads_created = NULL;
   gboolean ret;
@@ -1540,7 +1540,7 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
   if (!prepare_link_maybe_ghosting (&src, &sink, &pads_created)) {
     ret = FALSE;
   } else {
-    ret = (gst_pad_link (src, sink) == GST_PAD_LINK_OK);
+    ret = (gst_pad_link_full (src, sink, flags) == GST_PAD_LINK_OK);
   }
 
   if (!ret) {
@@ -1552,12 +1552,13 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
 }
 
 /**
- * gst_element_link_pads:
+ * gst_element_link_pads_full:
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
  * @destpadname: the name of the #GstPad in destination element,
  * or NULL for any pad.
+ * @flags: the #GstPadLinkCheck to be performed when linking pads.
  *
  * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
@@ -1565,10 +1566,12 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
  * parents, the link fails.
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
+ *
+ * Since: 0.10.30
  */
 gboolean
-gst_element_link_pads (GstElement * src, const gchar * srcpadname,
-    GstElement * dest, const gchar * destpadname)
+gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
+    GstElement * dest, const gchar * destpadname, GstPadLinkCheck flags)
 {
   const GList *srcpads, *destpads, *srctempls, *desttempls, *l;
   GstPad *srcpad, *destpad;
@@ -1656,7 +1659,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     gboolean result;
 
     /* two explicitly specified pads */
-    result = pad_link_maybe_ghosting (srcpad, destpad);
+    result = pad_link_maybe_ghosting (srcpad, destpad, flags);
 
     gst_object_unref (srcpad);
     gst_object_unref (destpad);
@@ -1683,7 +1686,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           temp = gst_element_get_compatible_pad (dest, srcpad, NULL);
         }
 
-        if (temp && pad_link_maybe_ghosting (srcpad, temp)) {
+        if (temp && pad_link_maybe_ghosting (srcpad, temp, flags)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (temp));
           if (destpad)
@@ -1728,7 +1731,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
           (GST_PAD_PEER (destpad) == NULL)) {
         GstPad *temp = gst_element_get_compatible_pad (src, destpad, NULL);
 
-        if (temp && pad_link_maybe_ghosting (temp, destpad)) {
+        if (temp && pad_link_maybe_ghosting (temp, destpad, flags)) {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "linked pad %s:%s to pad %s:%s",
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           gst_object_unref (temp);
@@ -1784,7 +1787,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
               destpad =
                   gst_element_get_request_pad (dest, desttempl->name_template);
               if (srcpad && destpad
-                  && pad_link_maybe_ghosting (srcpad, destpad)) {
+                  && pad_link_maybe_ghosting (srcpad, destpad, flags)) {
                 GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                     "linked pad %s:%s to pad %s:%s",
                     GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (destpad));
@@ -1808,6 +1811,29 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s",
       GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (dest));
   return FALSE;
+}
+
+/**
+ * gst_element_link_pads:
+ * @src: a #GstElement containing the source pad.
+ * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
+ * @dest: the #GstElement containing the destination pad.
+ * @destpadname: the name of the #GstPad in destination element,
+ * or NULL for any pad.
+ *
+ * Links the two named pads of the source and destination elements.
+ * Side effect is that if one of the pads has no parent, it becomes a
+ * child of the parent of the other element.  If they have different
+ * parents, the link fails.
+ *
+ * Returns: TRUE if the pads could be linked, FALSE otherwise.
+ */
+gboolean
+gst_element_link_pads (GstElement * src, const gchar * srcpadname,
+    GstElement * dest, const gchar * destpadname)
+{
+  return gst_element_link_pads_full (src, srcpadname, dest, destpadname,
+      GST_PAD_LINK_CHECK_DEFAULT);
 }
 
 /**

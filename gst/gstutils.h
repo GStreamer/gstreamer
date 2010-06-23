@@ -1018,6 +1018,9 @@ void                    gst_element_unlink_many         (GstElement *element_1,
 
 gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
+gboolean		gst_element_link_pads_full      (GstElement *src, const gchar *srcpadname,
+		                                         GstElement *dest, const gchar *destpadname,
+							 GstPadLinkCheck flags);
 void                    gst_element_unlink_pads         (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
 

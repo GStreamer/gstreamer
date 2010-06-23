@@ -315,6 +315,7 @@ EXPORTS
 	gst_element_link_many
 	gst_element_link_pads
 	gst_element_link_pads_filtered
+	gst_element_link_pads_full
 	gst_element_lost_state
 	gst_element_lost_state_full
 	gst_element_make_from_uri

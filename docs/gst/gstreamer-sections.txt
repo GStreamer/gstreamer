@@ -530,6 +530,7 @@ gst_element_unlink
 gst_element_link_many
 gst_element_unlink_many
 gst_element_link_pads
+gst_element_link_pads_full
 gst_element_unlink_pads
 gst_element_link_pads_filtered
 gst_element_link_filtered
