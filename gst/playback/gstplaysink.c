@@ -2174,6 +2174,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
+      playsink->videochain->ts_offset = NULL;
     }
 
     if (playsink->videodeinterlacechain) {
