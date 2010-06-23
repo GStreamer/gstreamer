@@ -108,4 +108,9 @@ typedef struct _GESTrackOverlay GESTrackOverlay;
 typedef struct _GESTrackOverlayClass
   GESTrackOverlayClass;
 
+typedef struct _GESTrackVideoOverlay GESTrackVideoOverlay;
+typedef struct _GESTrackVideoOverlayClass
+  GESTrackVideoOverlayClass;
+
+
 #endif /* __GES_TYPES_H__ */
