@@ -458,7 +458,7 @@ gst_nal_reader_peek_ue (const GstNalReader * reader, guint32 * val)
 }
 
 /**
- * gst_nal_reader_get_e:
+ * gst_nal_reader_get_se:
  * @reader: a #GstNalReader instance
  * @val: Pointer to a #gint32 to store the result
  *
@@ -475,9 +475,9 @@ gst_nal_reader_get_se (GstNalReader * reader, gint32 * val)
     return FALSE;
 
   if (value % 2)
-    *val = -(value / 2);
+    *val = (value / 2) + 1;
   else
-    *val = value / 2;
+    *val = -(value / 2);
 
   return TRUE;
 }
