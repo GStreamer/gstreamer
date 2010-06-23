@@ -319,7 +319,7 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
       break;
     }
 
-    if (G_UNLIKELY (read == -1))
+    if (G_UNLIKELY (read < 0))
       goto read_failed;
 
     if (read < todo) {
