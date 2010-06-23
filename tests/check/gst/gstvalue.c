@@ -1707,13 +1707,214 @@ GST_START_TEST (test_date)
 
 GST_END_TEST;
 
+static gboolean
+date_time_equal (GstDateTime * a, GstDateTime * b)
+{
+  if (gst_date_time_get_year (a) != gst_date_time_get_year (b) ||
+      gst_date_time_get_month (a) != gst_date_time_get_month (b) ||
+      gst_date_time_get_day (a) != gst_date_time_get_day (b))
+    return FALSE;
+
+  if (gst_date_time_get_hour (a) != gst_date_time_get_hour (b) ||
+      gst_date_time_get_minute (a) != gst_date_time_get_minute (b) ||
+      gst_date_time_get_second (a) != gst_date_time_get_second (b) ||
+      gst_date_time_get_microsecond (a) != gst_date_time_get_microsecond (b))
+    return FALSE;
+
+  if (gst_date_time_get_time_zone_offset (a) !=
+      gst_date_time_get_time_zone_offset (b))
+    return FALSE;
+
+  return TRUE;
+}
+
+GST_START_TEST (test_date_time)
+{
+  GstStructure *s;
+  GstDateTime *datetime, *datetime2;
+  gchar *str;
+
+  /* utc timezone */
+  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 0, 0);
+
+  s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
+      GST_TYPE_DATE_TIME, datetime, NULL);
+
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime2));
+  fail_unless (datetime2 != NULL);
+  fail_unless (date_time_equal (datetime, datetime2));
+
+  gst_date_time_unref (datetime);
+  gst_date_time_unref (datetime2);
+  datetime = NULL;
+  datetime2 = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000000+0000\";"));
+
+  s = gst_structure_from_string (str, NULL);
+  g_free (str);
+  str = NULL;
+
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "media/x-type"));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime));
+  fail_unless (datetime != NULL);
+  fail_unless (gst_date_time_get_year (datetime) == 2010);
+  fail_unless (gst_date_time_get_month (datetime) == 6);
+  fail_unless (gst_date_time_get_day (datetime) == 23);
+  fail_unless (gst_date_time_get_hour (datetime) == 7);
+  fail_unless (gst_date_time_get_minute (datetime) == 40);
+  fail_unless (gst_date_time_get_second (datetime) == 10);
+  fail_unless (gst_date_time_get_microsecond (datetime) == 0);
+  fail_unless (gst_date_time_get_time_zone_offset (datetime) == 0);
+  gst_date_time_unref (datetime);
+  datetime = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000000+0000\";"));
+  g_free (str);
+  str = NULL;
+
+  /* with timezone */
+  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, -3 * 60);
+
+  s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
+      GST_TYPE_DATE_TIME, datetime, NULL);
+
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime2));
+  fail_unless (datetime2 != NULL);
+  fail_unless (date_time_equal (datetime, datetime2));
+
+  gst_date_time_unref (datetime);
+  gst_date_time_unref (datetime2);
+  datetime = NULL;
+  datetime2 = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001-0300\";"));
+
+  s = gst_structure_from_string (str, NULL);
+  g_free (str);
+  str = NULL;
+
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "media/x-type"));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime));
+  fail_unless (datetime != NULL);
+  fail_unless (gst_date_time_get_year (datetime) == 2010);
+  fail_unless (gst_date_time_get_month (datetime) == 6);
+  fail_unless (gst_date_time_get_day (datetime) == 23);
+  fail_unless (gst_date_time_get_hour (datetime) == 7);
+  fail_unless (gst_date_time_get_minute (datetime) == 40);
+  fail_unless (gst_date_time_get_second (datetime) == 10);
+  fail_unless (gst_date_time_get_microsecond (datetime) == 1);
+  fail_unless (gst_date_time_get_time_zone_offset (datetime) ==
+      ((gint64) - 3 * 60));
+  gst_date_time_unref (datetime);
+  datetime = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001-0300\";"));
+
+  g_free (str);
+  str = NULL;
+
+  /* with positive timezone */
+  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, 2 * 60);
+
+  s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
+      GST_TYPE_DATE_TIME, datetime, NULL);
+
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime2));
+  fail_unless (datetime2 != NULL);
+  fail_unless (date_time_equal (datetime, datetime2));
+
+  gst_date_time_unref (datetime);
+  gst_date_time_unref (datetime2);
+  datetime = NULL;
+  datetime2 = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001+0200\";"));
+
+  s = gst_structure_from_string (str, NULL);
+  g_free (str);
+  str = NULL;
+
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_has_name (s, "media/x-type"));
+  fail_unless (gst_structure_has_field_typed (s, "SOME_DATE_TIME_TAG",
+          GST_TYPE_DATE_TIME));
+  fail_unless (gst_structure_get_date_time (s, "SOME_DATE_TIME_TAG",
+          &datetime));
+  fail_unless (datetime != NULL);
+  fail_unless (gst_date_time_get_year (datetime) == 2010);
+  fail_unless (gst_date_time_get_month (datetime) == 6);
+  fail_unless (gst_date_time_get_day (datetime) == 23);
+  fail_unless (gst_date_time_get_hour (datetime) == 7);
+  fail_unless (gst_date_time_get_minute (datetime) == 40);
+  fail_unless (gst_date_time_get_second (datetime) == 10);
+  fail_unless (gst_date_time_get_microsecond (datetime) == 1);
+  fail_unless (gst_date_time_get_time_zone_offset (datetime) ==
+      ((gint64) 2 * 60));
+  gst_date_time_unref (datetime);
+  datetime = NULL;
+
+  str = gst_structure_to_string (s);
+  gst_structure_free (s);
+  s = NULL;
+  fail_unless (g_str_equal (str,
+          "media/x-type, SOME_DATE_TIME_TAG=(datetime)\"2010-06-23T07:40:10.000001+0200\";"));
+
+  g_free (str);
+  str = NULL;
+
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_fraction_range)
 {
   GValue range = { 0, };
-  GValue start = { 0, }, end = {
-  0,};
-  GValue src = { 0, }, dest = {
-  0,};
+  GValue start = { 0, };
+  GValue end = { 0, };
+  GValue src = { 0, };
+  GValue dest = { 0, };
   GValue range2 = { 0, };
 
   g_value_init (&range, GST_TYPE_FRACTION_RANGE);
@@ -1801,7 +2002,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_serialize_deserialize_caps)
 {
-  GValue value = { 0 }, value2 = {
+  GValue value = { 0 }
+  , value2 = {
   0};
   GstCaps *caps, *caps2;
   gchar *serialized;
@@ -1872,6 +2074,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_value_subtract_fraction_list);
   tcase_add_test (tc_chain, test_date);
+  tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
   tcase_add_test (tc_chain, test_serialize_deserialize_caps);
 
