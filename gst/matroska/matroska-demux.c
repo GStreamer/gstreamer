@@ -112,8 +112,8 @@ static GstStaticPadTemplate subtitle_src_templ =
     GST_STATIC_PAD_TEMPLATE ("subtitle_%02d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("text/plain; application/x-ssa; application/x-ass; "
-        "application/x-usf; video/x-dvd-subpicture; "
+    GST_STATIC_CAPS ("text/x-pango-markup; application/x-ssa; "
+        "application/x-ass;application/x-usf; video/x-dvd-subpicture; "
         "subpicture/x-pgs; subtitle/x-kate; " "application/x-subtitle-unknown")
     );
 
@@ -3797,6 +3797,38 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   return GST_FLOW_OK;
 }
 
+/* @text must be null-terminated */
+static gboolean
+gst_matroska_demux_subtitle_chunk_has_tag (GstElement * element,
+    const gchar * text)
+{
+  gchar *tag;
+
+  /* yes, this might all lead to false positives ... */
+  tag = (gchar *) text;
+  while ((tag = strchr (tag, '<'))) {
+    tag++;
+    if (*tag != '\0' && *(tag + 1) == '>') {
+      /* some common convenience ones */
+      /* maybe any character will do here ? */
+      switch (*tag) {
+        case 'b':
+        case 'i':
+        case 'u':
+        case 's':
+          return TRUE;
+        default:
+          return FALSE;
+      }
+    }
+  }
+
+  if (strstr (text, "<span"))
+    return TRUE;
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     GstMatroskaTrackContext * stream, GstBuffer ** buf)
@@ -3815,7 +3847,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
   if (!sub_stream->invalid_utf8) {
     if (g_utf8_validate (data, size, NULL)) {
-      return GST_FLOW_OK;
+      goto next;
     }
     GST_WARNING_OBJECT (element, "subtitle stream %d is not valid UTF-8, this "
         "is broken according to the matroska specification", stream->num);
@@ -3862,6 +3894,29 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   gst_buffer_unref (*buf);
 
   *buf = newbuf;
+  data = (const gchar *) GST_BUFFER_DATA (*buf);
+  size = GST_BUFFER_SIZE (*buf);
+
+next:
+  /* caps claim markup text, so we need to escape text,
+   * except if text is already markup and then needs no further escaping */
+  sub_stream->seen_markup_tag = sub_stream->seen_markup_tag ||
+      gst_matroska_demux_subtitle_chunk_has_tag (element, data);
+
+  if (!sub_stream->seen_markup_tag) {
+    utf8 = g_markup_escape_text (data, size);
+
+    newbuf = gst_buffer_new ();
+    GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
+    GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
+    GST_BUFFER_SIZE (newbuf) = strlen (utf8);
+    gst_buffer_copy_metadata (newbuf, *buf,
+        GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
+    gst_buffer_unref (*buf);
+
+    *buf = newbuf;
+  }
+
   return GST_FLOW_OK;
 }
 
@@ -6249,7 +6304,8 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   /* TODO: Add GST_MATROSKA_CODEC_ID_SUBTITLE_BMP support
    * Check if we have to do something with codec_private */
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8)) {
-    caps = gst_caps_new_simple ("text/plain", NULL);
+    /* well, plain text simply does not have a lot of markup ... */
+    caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
     caps = gst_caps_new_simple ("application/x-ssa", NULL);
