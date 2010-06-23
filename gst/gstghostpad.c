@@ -1226,13 +1226,15 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
           G_CALLBACK (on_src_target_notify), NULL);
     }
 
-    /* and link to internal pad */
+    /* and link to internal pad without any checks */
     GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
 
     if (GST_PAD_IS_SRC (internal))
-      lret = gst_pad_link (internal, newtarget);
+      lret =
+          gst_pad_link_full (internal, newtarget, GST_PAD_LINK_CHECK_NOTHING);
     else
-      lret = gst_pad_link (newtarget, internal);
+      lret =
+          gst_pad_link_full (newtarget, internal, GST_PAD_LINK_CHECK_NOTHING);
 
     if (lret != GST_PAD_LINK_OK)
       goto link_failed;
