@@ -23,6 +23,7 @@
 #include <gst/gstconfig.h>
 #include <glib-object.h>
 #include <gst/gstclock.h>
+#include <gst/gstdatetime.h>
 #include <gst/glib-compat.h>
 
 G_BEGIN_DECLS
@@ -202,6 +203,9 @@ gboolean                gst_structure_get_double           (const GstStructure  
 gboolean                gst_structure_get_date             (const GstStructure      *structure,
 							    const gchar             *fieldname,
                                                             GDate                  **value);
+gboolean                gst_structure_get_date_time        (const GstStructure      *structure,
+							    const gchar             *fieldname,
+                                                            GstDateTime              **value);
 gboolean                gst_structure_get_clock_time       (const GstStructure      *structure,
 							    const gchar             *fieldname,
 							    GstClockTime            *value);

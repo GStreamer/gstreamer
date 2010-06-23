@@ -1310,6 +1310,48 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
 }
 
 /**
+ * gst_structure_get_date_time:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value: a pointer to a #GstDateTime to set
+ *
+ * Sets the datetime pointed to by @value corresponding to the datetime of the
+ * given field. Caller is responsible for making sure the field exists
+ * and has the correct type.
+ *
+ * On success @value will point to a reference of the datetime which
+ * should be unreffed with gst_date_time_unref() when no longer needed
+ * (note: this is inconsistent with e.g. gst_structure_get_string()
+ * which doesn't return a copy of the string).
+ *
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a data, this function
+ * returns FALSE.
+ */
+gboolean
+gst_structure_get_date_time (const GstStructure * structure,
+    const gchar * fieldname, GstDateTime ** value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!GST_VALUE_HOLDS_DATE_TIME (&field->value))
+    return FALSE;
+
+  /* FIXME: 0.11 g_value_dup_boxed() -> g_value_get_boxed() */
+  *value = g_value_dup_boxed (&field->value);
+
+  return TRUE;
+}
+
+/**
  * gst_structure_get_clock_time:
  * @structure: a #GstStructure
  * @fieldname: the name of a field

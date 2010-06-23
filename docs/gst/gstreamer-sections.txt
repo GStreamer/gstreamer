@@ -2085,6 +2085,7 @@ gst_structure_get_fourcc
 gst_structure_get_double
 gst_structure_get_string
 gst_structure_get_date
+gst_structure_get_date_time
 gst_structure_get_clock_time
 gst_structure_get_enum
 gst_structure_get_fraction
