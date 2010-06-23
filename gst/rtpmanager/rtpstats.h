@@ -56,7 +56,7 @@ typedef struct {
 
 /**
  * RTPArrivalStats:
- * @current_time: arrival time of a packet according to the system clock
+ * @current_time: current time according to the system clock
  * @running_time: arrival time of a packet as buffer running_time
  * @have_address: if the @address field contains a valid address
  * @address: address of the sender of the packet
