@@ -2219,6 +2219,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        playsink->audiochain->ts_offset = NULL;
         free_chain ((GstPlayChain *) playsink->audiochain);
         playsink->audiochain = NULL;
         playsink->volume_changed = playsink->mute_changed = FALSE;
@@ -2256,6 +2257,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        playsink->audiochain->ts_offset = NULL;
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -2941,6 +2943,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         disconnect_chain (playsink->audiochain, playsink);
         playsink->audiochain->volume = NULL;
         playsink->audiochain->mute = NULL;
+        playsink->audiochain->ts_offset = NULL;
       }
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
