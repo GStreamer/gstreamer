@@ -39,7 +39,7 @@ static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE (GST_BASE_VIDEO_DECODER_SINK_NAME,
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, " "parsed = (boolean) false")
+    GST_STATIC_CAPS ("video/x-h264, " "interlaced = (boolean) false")
     );
 
 #define DEBUG_INIT(bla) \
