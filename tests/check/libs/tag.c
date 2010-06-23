@@ -870,6 +870,7 @@ tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
   n_recv = gst_structure_n_fields (taglist2);
   n_sent = gst_structure_n_fields (taglist);
   fail_unless (n_recv == n_sent);
+  fail_unless (n_sent > 0);
 
   /* FIXME: compare taglist values */
   for (i = 0; i < n_sent; i++) {
@@ -935,6 +936,7 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
 {
   GValue value = { 0 };
   GDate *date;
+  GstDateTime *datetime;
 
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
@@ -1050,6 +1052,37 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
   do_xmp_tag_serialization_deserialization (GST_TAG_USER_RATING, &value);
   g_value_set_uint (&value, 22);
   do_xmp_tag_serialization_deserialization (GST_TAG_USER_RATING, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, GST_TYPE_DATE_TIME);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 0, 0);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 125, 0);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 1, 0);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 123456, 0);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 123456, -3);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new (2010, 6, 22, 12, 5, 10, 123456, 5);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  datetime = gst_date_time_new_local_time (2010, 12, 2, 12, 5, 10, 43);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
   g_value_unset (&value);
 }
 
