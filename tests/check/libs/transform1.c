@@ -1278,6 +1278,7 @@ GST_START_TEST (basetransform_chain_ct3)
 
 GST_END_TEST;
 
+
 static Suite *
 gst_basetransform_suite (void)
 {
@@ -1285,10 +1286,13 @@ gst_basetransform_suite (void)
   TCase *tc = tcase_create ("general");
 
   suite_add_tcase (s, tc);
+  /* pass through */
   tcase_add_test (tc, basetransform_chain_pt1);
   tcase_add_test (tc, basetransform_chain_pt2);
+  /* in place */
   tcase_add_test (tc, basetransform_chain_ip1);
   tcase_add_test (tc, basetransform_chain_ip2);
+  /* copy transform */
   tcase_add_test (tc, basetransform_chain_ct1);
   tcase_add_test (tc, basetransform_chain_ct2);
   tcase_add_test (tc, basetransform_chain_ct3);
