@@ -40,9 +40,6 @@
  *   select and fpsdisplaysink is set to use autovideosink as its internal sink
  *   it doesn't work. Reason: autovideosink creates a fpsdisplaysink, that
  *   creates an autovideosink, that...
- *
- * IDEAS:
- * - do we want to gather min/max fps and show in GST_STATE_CHANGE_READY_TO_NULL
  */
 
 #ifdef HAVE_CONFIG_H
@@ -71,7 +68,9 @@ enum
   ARG_SYNC,
   ARG_TEXT_OVERLAY,
   ARG_VIDEO_SINK,
-  ARG_FPS_UPDATE_INTERVAL
+  ARG_FPS_UPDATE_INTERVAL,
+  ARG_MAX_FPS,
+  ARG_MIN_FPS
       /* FILL ME */
 };
 
@@ -121,6 +120,16 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           " (in ms). Should be set on NULL state", 1, G_MAXINT,
           DEFAULT_FPS_UPDATE_INTERVAL_MS,
           G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_MAX_FPS,
+      g_param_spec_double ("max-fps", "Max fps",
+          "Maximum fps rate measured. Reset when going from NULL to READY."
+          "-1 means no measurement has yet been done", -1, G_MAXDOUBLE, -1,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_MIN_FPS,
+      g_param_spec_double ("min-fps", "Min fps",
+          "Minimum fps rate measured. Reset when going from NULL to READY."
+          "-1 means no measurement has yet been done", -1, G_MAXDOUBLE, -1,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
@@ -256,6 +265,8 @@ fps_display_sink_init (GstFPSDisplaySink * self,
   self->use_text_overlay = TRUE;
   self->fps_update_interval = DEFAULT_FPS_UPDATE_INTERVAL_MS;
   self->video_sink = NULL;
+  self->max_fps = -1;
+  self->min_fps = -1;
 
   self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
@@ -286,6 +297,15 @@ display_current_fps (gpointer data)
         self->last_frames_dropped) / time_diff;
 
     average_fps = self->frames_rendered / (gdouble) (current_ts / GST_SECOND);
+
+    if (self->max_fps == -1 || rr > self->max_fps) {
+      self->max_fps = rr;
+      GST_DEBUG_OBJECT (self, "Updated max-fps to %f", rr);
+    }
+    if (self->min_fps == -1 || rr < self->min_fps) {
+      self->min_fps = rr;
+      GST_DEBUG_OBJECT (self, "Updated min-fps to %f", rr);
+    }
 
     if (dr == 0.0) {
       g_snprintf (fps_message, 255, "current: %.2f\naverage: %.2f", rr,
@@ -318,6 +338,8 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   self->last_ts = GST_CLOCK_TIME_NONE;
   self->frames_rendered = G_GUINT64_CONSTANT (0);
   self->frames_dropped = G_GUINT64_CONSTANT (0);
+  self->max_fps = -1;
+  self->min_fps = -1;
 
   GST_DEBUG_OBJECT (self, "Use text-overlay? %d", self->use_text_overlay);
 
@@ -373,6 +395,9 @@ fps_display_sink_stop (GstFPSDisplaySink * self)
     gst_bin_remove (GST_BIN (self), self->text_overlay);
     gst_object_unref (self->text_overlay);
     self->text_overlay = NULL;
+  } else {
+    /* print the max and minimum fps values */
+    g_print ("Max-fps: %0.2f\nMin-fps: %0.2f\n", self->max_fps, self->min_fps);
   }
 }
 
@@ -461,6 +486,12 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_FPS_UPDATE_INTERVAL:
       g_value_set_int (value, self->fps_update_interval);
+      break;
+    case ARG_MAX_FPS:
+      g_value_set_double (value, self->max_fps);
+      break;
+    case ARG_MIN_FPS:
+      g_value_set_double (value, self->min_fps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
