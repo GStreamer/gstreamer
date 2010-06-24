@@ -219,66 +219,39 @@ vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int src_width,
   *accumulator = acc;
 }
 
-#include <stdio.h>
-
-static void
-oil_resample_linear_argb (uint32_t * d, uint32_t * s, int n, uint32_t * in)
+void
+vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int src_width,
+    int n, int *accumulator, int increment)
 {
-  uint8_t *src = (uint8_t *) s;
-  uint8_t *dest = (uint8_t *) d;
-  int acc = in[0];
-  int increment = in[1];
+  int acc = *accumulator;
   int i;
   int j;
   int x;
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = (acc & 0xffff) >> 8;
-    dest[4 * i + 0] = (src[4 * j + 0] * (256 - x) + src[4 * j + 4] * x) >> 8;
-    dest[4 * i + 1] = (src[4 * j + 1] * (256 - x) + src[4 * j + 5] * x) >> 8;
-    dest[4 * i + 2] = (src[4 * j + 2] * (256 - x) + src[4 * j + 6] * x) >> 8;
-    dest[4 * i + 3] = (src[4 * j + 3] * (256 - x) + src[4 * j + 7] * x) >> 8;
+    x = acc & 0xffff;
+
+    if (j + 1 < src_width) {
+      dest[i * 4 + 0] =
+          (src[j * 4 + 0] * (65536 - x) + src[j * 4 + 4] * x) >> 16;
+      dest[i * 4 + 1] =
+          (src[j * 4 + 1] * (65536 - x) + src[j * 4 + 5] * x) >> 16;
+      dest[i * 4 + 2] =
+          (src[j * 4 + 2] * (65536 - x) + src[j * 4 + 6] * x) >> 16;
+      dest[i * 4 + 3] =
+          (src[j * 4 + 3] * (65536 - x) + src[j * 4 + 7] * x) >> 16;
+    } else {
+      dest[i * 4 + 0] = src[j * 4 + 0];
+      dest[i * 4 + 1] = src[j * 4 + 1];
+      dest[i * 4 + 2] = src[j * 4 + 2];
+      dest[i * 4 + 3] = src[j * 4 + 3];
+    }
 
     acc += increment;
   }
 
-  in[0] = acc;
-}
-
-void
-vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int src_width,
-    int n, int *accumulator, int increment)
-{
-  uint32_t vals[2];
-
-  vals[0] = *accumulator;
-  vals[1] = increment;
-
-  if (src_width % 2 == 0) {
-    oil_resample_linear_argb ((uint32_t *) dest, (uint32_t *) src, n, vals);
-  } else if (src_width > 1) {
-    if (n > 1)
-      oil_resample_linear_argb ((uint32_t *) dest, (uint32_t *) src, n - 1,
-          vals);
-    dest[4 * (n - 1) + 0] = src[(vals[0] >> 16) + 0];
-    dest[4 * (n - 1) + 1] = src[(vals[0] >> 16) + 1];
-    dest[4 * (n - 1) + 2] = src[(vals[0] >> 16) + 2];
-    dest[4 * (n - 1) + 3] = src[(vals[0] >> 16) + 3];
-    vals[0] += increment;
-  } else {
-    int i;
-
-    for (i = 0; i < n; i++) {
-      dest[4 * i + 0] = src[0];
-      dest[4 * i + 1] = src[1];
-      dest[4 * i + 2] = src[2];
-      dest[4 * i + 3] = src[3];
-      vals[0] += increment;
-    }
-  }
-
-  *accumulator = vals[0];
+  *accumulator = acc;
 }
 
 void
