@@ -386,6 +386,7 @@ gst_asf_put_subpayload (guint8 * buf, AsfPayload * payload, guint16 size)
   payload->offset_in_media_obj += payload_size;
   newbuf = gst_buffer_create_sub (payload->data, payload_size,
       GST_BUFFER_SIZE (payload->data) - payload_size);
+  payload->data = gst_buffer_make_metadata_writable (payload->data);
   gst_buffer_copy_metadata (payload->data, newbuf, GST_BUFFER_COPY_FLAGS |
       GST_BUFFER_COPY_CAPS);
   GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (payload->data);
