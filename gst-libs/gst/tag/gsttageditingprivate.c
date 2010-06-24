@@ -45,7 +45,7 @@ gst_tag_image_orientation_to_exif_value (const gchar * str)
     return 8;
 
 end:
-  GST_WARNING ("Invalid image orientation tag: %d", str);
+  GST_WARNING ("Invalid image orientation tag: %s", str);
   return -1;
 }
 
