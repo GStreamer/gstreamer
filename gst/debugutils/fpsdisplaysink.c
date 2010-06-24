@@ -113,13 +113,14 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
       g_param_spec_object ("video-sink",
           "video-sink",
           "Video sink to use (Must only be called on NULL state)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          GST_TYPE_ELEMENT, G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_FPS_UPDATE_INTERVAL,
       g_param_spec_int ("fps-update-interval", "Fps update interval",
           "Time between consecutive frames per second measures and update "
           " (in ms). Should be set on NULL state", 1, G_MAXINT,
-          DEFAULT_FPS_UPDATE_INTERVAL_MS, G_PARAM_READWRITE));
+          DEFAULT_FPS_UPDATE_INTERVAL_MS,
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
