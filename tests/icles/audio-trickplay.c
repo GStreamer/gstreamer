@@ -34,9 +34,8 @@ check_position (GstElement * elem, GstQuery * pos, const gchar * info)
 static gboolean
 print_buffer_ts (GstPad * pad, GstBuffer * buffer, gpointer user_data)
 {
-  GstClockTime ts = GST_BUFFER_TIMESTAMP (buffer);
-
-  GST_DEBUG ("  ts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+  GST_DEBUG_OBJECT (pad, "  ts: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
   return TRUE;
 }
 
