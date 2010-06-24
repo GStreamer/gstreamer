@@ -73,6 +73,7 @@
 #endif
 
 #include <string.h>
+#include <gst/gst-i18n-plugin.h>
 #include "gstasfmux.h"
 
 #define DEFAULT_SIMPLE_INDEX_TIME_INTERVAL G_GUINT64_CONSTANT (10000000)
@@ -1783,6 +1784,14 @@ gst_asf_mux_stop_file (GstAsfMux * asfmux)
   GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 24, (play_duration / 100) +
       ASF_MILI_TO_100NANO (asfmux->preroll));
   GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 32, (play_duration / 100));      /* TODO send duration */
+
+  /* if play duration is smaller then preroll, player might have problems */
+  if (asfmux->preroll > play_duration / GST_MSECOND) {
+    GST_ELEMENT_WARNING (asfmux, STREAM, MUX, (_("Generated file has a larger"
+                " preroll time than its streams duration")),
+        ("Preroll time larger than streams duration, "
+            "try setting a smaller preroll value next time"));
+  }
   GST_WRITE_UINT64_LE (GST_BUFFER_DATA (buf) + 40, asfmux->preroll);
   GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 48, 0x2);        /* flags - seekable */
   GST_WRITE_UINT32_LE (GST_BUFFER_DATA (buf) + 52, asfmux->packet_size);
