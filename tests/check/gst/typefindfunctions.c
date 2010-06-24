@@ -142,6 +142,51 @@ GST_START_TEST (test_jpeg_not_ac3)
 
 GST_END_TEST;
 
+#define TEST_RANDOM_DATA_SIZE (4*1024)
+
+/* typefind random data, to make sure all typefinders are called */
+GST_START_TEST (test_random_data)
+{
+  GstTypeFindProbability prob;
+  const gchar *seed_env;
+  GstBuffer *buf;
+  GstCaps *caps;
+  guint32 seed;
+  guint8 *data;
+  gint i;
+
+  seed_env = g_getenv ("GST_TYPEFIND_TEST_SEED");
+  if (seed_env != NULL)
+    seed = atoi (seed_env);
+  else
+    seed = (guint32) time (NULL);
+
+  g_random_set_seed (seed);
+
+  data = g_malloc (TEST_RANDOM_DATA_SIZE);
+  for (i = 0; i < TEST_RANDOM_DATA_SIZE; ++i)
+    data[i] = g_random_int () & 0xff;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (guint8 *) data;
+  GST_BUFFER_SIZE (buf) = TEST_RANDOM_DATA_SIZE;
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  caps = gst_type_find_helper_for_buffer (NULL, buf, &prob);
+  GST_INFO ("caps: %" GST_PTR_FORMAT ", probability=%u", caps, prob);
+  /* for now we just print an error log message */
+  if (caps != NULL /* && prob >= GST_TYPE_FIND_LIKELY */ ) {
+    GST_ERROR ("typefinder thinks random data is %" GST_PTR_FORMAT ", with a "
+        "probability of %u (seed was %u)", caps, prob, seed);
+    gst_caps_unref (caps);
+  }
+
+  gst_buffer_unref (buf);
+  g_free (data);
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -153,6 +198,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_quicktime_mpeg4video);
   tcase_add_test (tc_chain, test_broken_flac_in_ogg);
   tcase_add_test (tc_chain, test_jpeg_not_ac3);
+  tcase_add_test (tc_chain, test_random_data);
 
   return s;
 }
