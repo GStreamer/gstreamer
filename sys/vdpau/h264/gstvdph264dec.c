@@ -641,7 +641,7 @@ gst_vdp_h264_dec_scan_for_packet_end (GstBaseVideoDecoder * base_video_decoder,
   if (h264_dec->packetized) {
     guint8 *data;
     gint i;
-    guint32 nal_length;
+    guint32 nal_length = 0;
 
     data = g_slice_alloc (h264_dec->nal_length_size);
     gst_adapter_copy (adapter, data, 0, h264_dec->nal_length_size);
