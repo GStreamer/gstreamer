@@ -24,6 +24,10 @@ XML\-FILE can be a URI as well, thanks to the wizardry of libxml. I'm not really
 sure what all is supported, it seems http works just fine though.
 
 .
+.SH "WARNING"
+\fIgst\-xmllaunch\fP is deprecated and broken for all but the most simple
+pipelines. It will most likely be removed in future. Don't use it.
+.
 .SH "OPTIONS"
 .l
 \fIgst\-xmllaunch\fP accepts the following options:

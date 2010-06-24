@@ -779,6 +779,10 @@ main (int argc, char *argv[])
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
 #ifndef GST_DISABLE_LOADSAVE
   if (strstr (argv[0], "gst-xmllaunch")) {
+    /* FIXME 0.11: remove xmllaunch entirely */
+    g_warning ("gst-xmllaunch is deprecated and broken for all but the most "
+        "simple pipelines. It will most likely be removed in future. Don't "
+        "use it.\n");
     pipeline = xmllaunch_parse_cmdline ((const gchar **) argvn);
   } else
 #endif
@@ -812,6 +816,10 @@ main (int argc, char *argv[])
   }
 #ifndef GST_DISABLE_LOADSAVE
   if (savefile) {
+    g_warning ("Pipeline serialization to XML is deprecated and broken for "
+        "all but the most simple pipelines. It will most likely be removed "
+        "in future. Don't use it.\n");
+
     gst_xml_write_file (GST_ELEMENT (pipeline), fopen (savefile, "w"));
   }
 #endif
