@@ -106,6 +106,8 @@ static void gst_asf_demux_activate_stream (GstASFDemux * demux,
     AsfStream * stream);
 static GstStructure *gst_asf_demux_get_metadata_for_stream (GstASFDemux * d,
     guint stream_num);
+static GstFlowReturn gst_asf_demux_push_complete_payloads (GstASFDemux * demux,
+    gboolean force);
 
 GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT);
 
@@ -374,12 +376,22 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:{
+      GstFlowReturn flow;
+
       if (demux->state == GST_ASF_DEMUX_STATE_HEADER) {
         GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
             (_("This stream contains no data.")),
             ("got eos and didn't receive a complete header object"));
         break;
       }
+      flow = gst_asf_demux_push_complete_payloads (demux, TRUE);
+      if (GST_FLOW_IS_FATAL (flow) || flow == GST_FLOW_NOT_LINKED) {
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+            (_("Internal data stream error.")),
+            ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+        break;
+      }
+
       GST_OBJECT_LOCK (demux);
       gst_adapter_clear (demux->adapter);
       GST_OBJECT_UNLOCK (demux);
