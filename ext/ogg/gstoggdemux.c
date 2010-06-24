@@ -2085,7 +2085,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     if (ret == GST_FLOW_LIMIT) {
       GST_LOG_OBJECT (ogg, "reached limit");
       break;
-    }
+    } else if (ret != GST_FLOW_OK)
+      goto seek_error;
 
     /* get the stream */
     pad = gst_ogg_chain_get_stream (chain, ogg_page_serialno (&og));
