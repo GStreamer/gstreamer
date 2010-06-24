@@ -3186,7 +3186,6 @@ static gboolean
 gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
-  GstVideoBox *video_box = GST_VIDEO_BOX (trans);
   GstVideoFormat format;
   gint width, height;
   gboolean ret;
@@ -3195,13 +3194,13 @@ gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 
   ret = gst_video_format_parse_caps (caps, &format, &width, &height);
   if (!ret) {
-    GST_ERROR_OBJECT (video_box, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    GST_ERROR_OBJECT (trans, "Invalid caps: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 
   *size = gst_video_format_get_size (format, width, height);
 
-  GST_LOG_OBJECT (video_box, "Returning from _unit_size %d", *size);
+  GST_LOG_OBJECT (trans, "Returning from _unit_size %d", *size);
 
   return TRUE;
 }

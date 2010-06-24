@@ -187,7 +187,6 @@ static gboolean
 gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstVideoFlip *videoflip = GST_VIDEO_FLIP (btrans);
   GstVideoFormat format;
   gint width, height;
 
@@ -196,7 +195,7 @@ gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   *size = gst_video_format_get_size (format, width, height);
 
-  GST_DEBUG_OBJECT (videoflip, "our frame size is %d bytes (%dx%d)", *size,
+  GST_DEBUG_OBJECT (btrans, "our frame size is %d bytes (%dx%d)", *size,
       width, height);
 
   return TRUE;

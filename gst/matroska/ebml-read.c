@@ -207,7 +207,6 @@ gst_ebml_peek_id_full (GstEbmlRead * ebml, guint32 * id, guint64 * length,
     guint * prefix)
 {
   GstFlowReturn ret;
-  const guint8 *data = NULL;
 
   ret = gst_ebml_peek_id_length (id, length, prefix,
       (GstPeekData) gst_ebml_read_peek, (gpointer) gst_ebml_read_br (ebml),
@@ -221,8 +220,10 @@ gst_ebml_peek_id_full (GstEbmlRead * ebml, guint32 * id, guint64 * length,
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
+    const guint8 *data = NULL;
     GstByteReader *br = gst_ebml_read_br (ebml);
     guint size = gst_byte_reader_get_remaining (br);
+
     gst_byte_reader_peek_data (br, size, &data);
 
     GST_LOG_OBJECT (ebml->el, "current br %p; remaining %d", br, size);
