@@ -42,11 +42,11 @@ Output tags (also known as metadata)
 .B  \-o FILE, \-\-output=FILE
 Save XML representation of pipeline to FILE and exit
 .TP 8
-.B  \-f, \-\-no_fault
+.B  \-f, \-\-no\-fault
 Do not install a fault handler
 .TP 8
-.B  \-p, \-\-no_play
-Do not install a playback handler (SIGUSR1/2)
+.B  \-p, \-\-no\-sigusr-handler
+Do not install signal handlers for SIGUSR1 (play) and SIGUSR2 (stop)
 .TP 8
 .B  \-T, \-\-trace
 Print memory allocation traces. The feature must be enabled at compile time to
