@@ -79,7 +79,7 @@ gboolean gst_nal_reader_peek_se (const GstNalReader *reader, gint32 *val);
  *
  * Since: 0.10.22
  */
-#define GST_NAL_READER_INIT(data, size) {data, size, 0, 0, 0xff, 0xffffffffff}
+#define GST_NAL_READER_INIT(data, size) {data, size, 0, 0, 0xff, 0xff}
 
 /**
  * GST_NAL_READER_INIT_FROM_BUFFER:
@@ -92,7 +92,7 @@ gboolean gst_nal_reader_peek_se (const GstNalReader *reader, gint32 *val);
  *
  * Since: 0.10.22
  */
-#define GST_NAL_READER_INIT_FROM_BUFFER(buffer) {GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 0, 0, 0xff, 0xffffffffff}
+#define GST_NAL_READER_INIT_FROM_BUFFER(buffer) {GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), 0, 0, 0xff, 0xff}
 
 G_END_DECLS
 

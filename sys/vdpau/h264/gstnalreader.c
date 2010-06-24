@@ -53,7 +53,7 @@ gst_nal_reader_new (const guint8 * data, guint size)
   ret->size = size;
 
   ret->first_byte = 0xff;
-  ret->cache = 0xffffffff;
+  ret->cache = 0xff;
 
   return ret;
 }
@@ -118,7 +118,7 @@ gst_nal_reader_init (GstNalReader * reader, const guint8 * data, guint size)
   reader->bits_in_cache = 0;
   /* fill with something other than 0 to detect emulation prevention bytes */
   reader->first_byte = 0xff;
-  reader->cache = 0xffffffff;
+  reader->cache = 0xff;
 }
 
 /**
