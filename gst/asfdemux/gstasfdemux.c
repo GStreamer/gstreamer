@@ -1113,7 +1113,7 @@ all_streams_prerolled (GstASFDemux * demux)
   guint i, num_no_data = 0;
 
   /* Allow at least 500ms of preroll_time  */
-  preroll_time = MAX(demux->preroll, 500 * GST_MSECOND);
+  preroll_time = MAX (demux->preroll, 500 * GST_MSECOND);
 
   /* returns TRUE as long as there isn't a stream which (a) has data queued
    * and (b) the timestamp of last piece of data queued is < demux->preroll
@@ -1483,6 +1483,7 @@ gst_asf_demux_loop (GstASFDemux * demux)
   GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint64 off;
+  gboolean sent_eos = FALSE;
 
   if (G_UNLIKELY (demux->state == GST_ASF_DEMUX_STATE_HEADER)) {
     if (!gst_asf_demux_pull_headers (demux)) {
@@ -1622,21 +1623,22 @@ eos:
         gst_asf_demux_reset (demux, TRUE);
         return;
       }
-      /* normal playback, send EOS to all linked pads */
-      GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
-      gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     }
+    /* normal playback, send EOS to all linked pads */
+    GST_INFO_OBJECT (demux, "Sending EOS, at end of stream");
+    gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+    sent_eos = TRUE;
     /* ... and fall through to pause */
-    GST_DEBUG_OBJECT (demux, "EOSing");
   }
 pause:
   {
-    GST_DEBUG_OBJECT (demux, "pausing task");
+    GST_DEBUG_OBJECT (demux, "pausing task, flow return: %s",
+        gst_flow_get_name (flow));
     demux->segment_running = FALSE;
     gst_pad_pause_task (demux->sinkpad);
 
     /* For the error cases (not EOS) */
-    if (GST_FLOW_IS_FATAL (flow) || flow == GST_FLOW_NOT_LINKED) {
+    if (!sent_eos) {
       /* Post an error. Hopefully something else already has, but if not... */
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           (_("Internal data stream error.")),
