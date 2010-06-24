@@ -38,10 +38,45 @@
 
 #include "gstffmpegcolorspace.h"
 #include "gstffmpegcodecmap.h"
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 GST_DEBUG_CATEGORY (ffmpegcolorspace_performance);
+
+#define FFMPEGCSP_VIDEO_CAPS						\
+  "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
+  "height="GST_VIDEO_SIZE_RANGE",framerate="GST_VIDEO_FPS_RANGE","	\
+  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV } ;" \
+  GST_VIDEO_CAPS_RGB";"							\
+  GST_VIDEO_CAPS_BGR";"							\
+  GST_VIDEO_CAPS_RGBx";"						\
+  GST_VIDEO_CAPS_xRGB";"						\
+  GST_VIDEO_CAPS_BGRx";"						\
+  GST_VIDEO_CAPS_xBGR";"						\
+  GST_VIDEO_CAPS_RGBA";"						\
+  GST_VIDEO_CAPS_ARGB";"						\
+  GST_VIDEO_CAPS_BGRA";"						\
+  GST_VIDEO_CAPS_ABGR";"						\
+  GST_VIDEO_CAPS_RGB_16";"						\
+  GST_VIDEO_CAPS_RGB_15";"						\
+  GST_VIDEO_CAPS_GRAY8";"						\
+  GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
+  GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"
+
+static GstStaticPadTemplate gst_ffmpegcsp_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (FFMPEGCSP_VIDEO_CAPS)
+    );
+
+static GstStaticPadTemplate gst_ffmpegcsp_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (FFMPEGCSP_VIDEO_CAPS)
+    );
 
 GType gst_ffmpegcsp_get_type (void);
 
@@ -51,8 +86,6 @@ static gboolean gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_ffmpegcsp_transform (GstBaseTransform * btrans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-
-static GstPadTemplate *sinktempl, *srctempl;
 
 static GQuark _QRAWRGB;         /* "video/x-raw-rgb" */
 static GQuark _QRAWYUV;         /* "video/x-raw-yuv" */
@@ -121,7 +154,7 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
   GstStructure *s;
   GstCaps *alpha, *non_alpha;
 
-  template = gst_pad_template_get_caps (srctempl);
+  template = gst_static_pad_template_get_caps (&gst_ffmpegcsp_src_template);
   result = gst_caps_copy (caps);
 
   /* Get all possible caps that we can transform to */
@@ -303,8 +336,11 @@ gst_ffmpegcsp_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, srctempl);
-  gst_element_class_add_pad_template (element_class, sinktempl);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_ffmpegcsp_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_ffmpegcsp_sink_template));
+
   gst_element_class_set_details_simple (element_class,
       "FFMPEG Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
@@ -459,23 +495,11 @@ not_supported:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstCaps *caps;
-
   GST_DEBUG_CATEGORY_INIT (ffmpegcolorspace_debug, "ffmpegcolorspace", 0,
       "FFMPEG-based colorspace converter");
   GST_DEBUG_CATEGORY_GET (ffmpegcolorspace_performance, "GST_PERFORMANCE");
 
   avcodec_init ();
-
-  /* template caps */
-  caps = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
-
-  /* build templates */
-  srctempl = gst_pad_template_new ("src",
-      GST_PAD_SRC, GST_PAD_ALWAYS, gst_caps_copy (caps));
-
-  /* the sink template will do palette handling as well... */
-  sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps);
 
   return gst_element_register (plugin, "ffmpegcolorspace",
       GST_RANK_NONE, GST_TYPE_FFMPEGCSP);
