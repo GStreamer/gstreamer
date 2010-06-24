@@ -2065,13 +2065,12 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
   GstBuffer *outbuf;
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
-  guint leaf_size = stream->leaf_size;
   guint p;
 
   g_assert (stream->height == height);
 
   GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
-      leaf_size, height);
+      stream->leaf_size, height);
 
   ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
       GST_BUFFER_OFFSET_NONE, height * packet_size,
