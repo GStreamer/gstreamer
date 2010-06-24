@@ -27,6 +27,7 @@
     <xi:include href="xml/element-mad.xml" />
     <xi:include href="xml/element-mp3parse.xml" />
     <xi:include href="xml/element-rademux.xml" />
+    <xi:include href="xml/element-rmdemux.xml" />
     <xi:include href="xml/element-rdtmanager.xml" />
     <xi:include href="xml/element-rtspreal.xml" />
     <xi:include href="xml/element-rtspwms.xml" />
@@ -54,7 +55,6 @@
     <xi:include href="xml/plugin-mpegaudioparse.xml" />
     <xi:include href="xml/plugin-mpegstream.xml" />
     <xi:include href="xml/plugin-realmedia.xml" />
-    <xi:include href="xml/plugin-rmdemux.xml" />
     <xi:include href="xml/plugin-siddec.xml" />
     <xi:include href="xml/plugin-synaesthesia.xml" />
     <xi:include href="xml/plugin-twolame.xml" />

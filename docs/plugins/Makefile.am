@@ -99,6 +99,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/mpegaudioparse/gstxingmux.h \
 	$(top_srcdir)/gst/realmedia/rademux.h \
 	$(top_srcdir)/gst/realmedia/rdtmanager.h \
+	$(top_srcdir)/gst/realmedia/rmdemux.h \
 	$(top_srcdir)/gst/realmedia/rtspreal.h \
 	$(top_srcdir)/gst/synaesthesia/gstsynaesthesia.h
 
