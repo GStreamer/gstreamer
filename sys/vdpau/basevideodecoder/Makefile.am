@@ -1,15 +1,15 @@
-noinst_LTLIBRARIES = libsatbasevideodecoder.la
+noinst_LTLIBRARIES = libgstbasevideodecoder.la
 
-libsatbasevideodecoder_la_SOURCES = \
-	satvideoframe.c \
-	satbasevideodecoder.c
+libgstbasevideodecoder_la_SOURCES = \
+	gstvideoframe.c \
+	gstbasevideodecoder.c
 
-libsatbasevideodecoder_la_CFLAGS = $(GST_CFLAGS)
-libsatbasevideodecoder_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
+libgstbasevideodecoder_la_CFLAGS = $(GST_CFLAGS)
+libgstbasevideodecoder_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR)
-libsatbasevideodecoder_la_LDFLAGS = $(GST_ALL_LDFLAGS) -module -avoid-version
+libgstbasevideodecoder_la_LDFLAGS = $(GST_ALL_LDFLAGS) -module -avoid-version
 
 noinst_HEADERS = \
-	satvideoframe.h \
-	satbasevideodecoder.h \
-	satbasevideoutils.h
+	gstvideoframe.h \
+	gstbasevideodecoder.h \
+	gstbasevideoutils.h

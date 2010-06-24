@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include "../basevideodecoder/satvideoframe.h"
+#include "../basevideodecoder/gstvideoframe.h"
 
 #include "gsth264parser.h"
 
@@ -32,14 +32,14 @@
 #define GST_VDP_H264_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_H264_FRAME, GstVdpH264Frame))
 #define GST_VDP_H264_FRAME_CAST(obj) ((GstVdpH264Frame *)obj)
 
-#define GST_VDP_H264_FRAME_GOT_PRIMARY SAT_VIDEO_FRAME_FLAG_LAST
+#define GST_VDP_H264_FRAME_GOT_PRIMARY GST_VIDEO_FRAME_FLAG_LAST
 
 typedef struct _GstVdpH264Frame GstVdpH264Frame;
 typedef struct _GstVdpH264FrameClass GstVdpH264FrameClass;
 
 struct _GstVdpH264Frame
 {
-  SatVideoFrame video_frame;
+  GstVideoFrame video_frame;
 
   GstH264Slice slice_hdr;
   GPtrArray *slices;
@@ -53,7 +53,7 @@ struct _GstVdpH264Frame
 
 struct _GstVdpH264FrameClass
 {
-	SatVideoFrameClass video_frame_class;
+	GstVideoFrameClass video_frame_class;
 };
 
 void gst_vdp_h264_frame_add_slice (GstVdpH264Frame *h264_frame, GstBuffer *buf);

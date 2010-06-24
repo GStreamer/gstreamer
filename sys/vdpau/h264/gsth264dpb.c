@@ -49,7 +49,7 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     GstVdpH264Frame *frame = frames[i];
 
     reference_frames[i].surface =
-        GST_VDP_VIDEO_BUFFER (SAT_VIDEO_FRAME_CAST (frame)->src_buffer)->
+        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->src_buffer)->
         surface;
 
     reference_frames[i].is_long_term = frame->is_long_term;
@@ -74,7 +74,7 @@ gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
   guint i;
 
   frames = dpb->frames;
-  sat_video_frame_unref (SAT_VIDEO_FRAME_CAST (frames[idx]));
+  gst_video_frame_unref (GST_VIDEO_FRAME_CAST (frames[idx]));
   dpb->n_frames--;
 
   for (i = idx; i < dpb->n_frames; i++)
@@ -86,7 +86,7 @@ gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
 {
   GstVdpH264Frame *frame = dpb->frames[idx];
 
-  sat_video_frame_ref (SAT_VIDEO_FRAME_CAST (frame));
+  gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
   dpb->output (dpb, frame);
   frame->output_needed = FALSE;
 
@@ -160,7 +160,7 @@ gst_h264_dpb_add (GstH264DPB * dpb, GstVdpH264Frame * h264_frame)
 void
 gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
 {
-  SatVideoFrame **frames;
+  GstVideoFrame **frames;
   guint i;
 
   GST_DEBUG ("flush");
@@ -168,9 +168,9 @@ gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
   if (output)
     while (gst_h264_dpb_bump (dpb, G_MAXUINT));
 
-  frames = (SatVideoFrame **) dpb->frames;
+  frames = (GstVideoFrame **) dpb->frames;
   for (i = 0; i < dpb->n_frames; i++)
-    sat_video_frame_unref (frames[i]);
+    gst_video_frame_unref (frames[i]);
 
   dpb->n_frames = 0;
 
@@ -182,8 +182,6 @@ gst_h264_dpb_mark_sliding (GstH264DPB * dpb)
   GstVdpH264Frame **frames;
   guint i;
   gint mark_idx = -1;
-
-  GST_DEBUG ("mark_sliding");
 
   if (dpb->n_frames != dpb->max_frames)
     return;
@@ -217,8 +215,6 @@ gst_h264_dpb_mark_long_term (GstH264DPB * dpb, guint16 pic_num,
   guint i;
   gint mark_idx = -1;
 
-  GST_DEBUG ("mark_long_term");
-
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
     if (frames[i]->is_reference && !frames[i]->is_long_term &&
@@ -240,8 +236,6 @@ gst_h264_dpb_mark_short_term_unused (GstH264DPB * dpb, guint16 pic_num)
   GstVdpH264Frame **frames;
   guint i;
   gint mark_idx = -1;
-
-  GST_DEBUG ("mark_short_term_unused");
 
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
@@ -267,8 +261,6 @@ gst_h264_dpb_mark_long_term_unused (GstH264DPB * dpb, guint16 long_term_pic_num)
   guint i;
   gint mark_idx = -1;
 
-  GST_DEBUG ("mark_long_term_unused");
-
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
     if (frames[i]->is_reference && frames[i]->is_long_term &&
@@ -291,8 +283,6 @@ gst_h264_dpb_mark_all_unused (GstH264DPB * dpb)
 {
   GstVdpH264Frame **frames;
   guint i;
-
-  GST_DEBUG ("mark_all_unused");
 
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {

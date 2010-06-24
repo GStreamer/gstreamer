@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "satbasevideodecoder.h"
+#include "gstbasevideodecoder.h"
 
 #include <string.h>
 
@@ -36,11 +36,11 @@ enum
 };
 
 
-static GstFlowReturn sat_base_video_decoder_drain (SatBaseVideoDecoder * dec,
+static GstFlowReturn gst_base_video_decoder_drain (GstBaseVideoDecoder * dec,
     gboolean at_eos);
 
 
-GST_BOILERPLATE (SatBaseVideoDecoder, sat_base_video_decoder,
+GST_BOILERPLATE (GstBaseVideoDecoder, gst_base_video_decoder,
     GstElement, GST_TYPE_ELEMENT);
 
 
@@ -54,7 +54,7 @@ struct _Timestamp
 };
 
 static void
-sat_base_video_decoder_add_timestamp (SatBaseVideoDecoder * base_video_decoder,
+gst_base_video_decoder_add_timestamp (GstBaseVideoDecoder * base_video_decoder,
     GstBuffer * buffer)
 {
   Timestamp *ts;
@@ -74,7 +74,7 @@ sat_base_video_decoder_add_timestamp (SatBaseVideoDecoder * base_video_decoder,
 }
 
 static void
-sat_base_video_decoder_get_timestamp_at_offset (SatBaseVideoDecoder *
+gst_base_video_decoder_get_timestamp_at_offset (GstBaseVideoDecoder *
     base_video_decoder, guint64 offset, GstClockTime * timestamp,
     GstClockTime * duration)
 {
@@ -105,7 +105,7 @@ sat_base_video_decoder_get_timestamp_at_offset (SatBaseVideoDecoder *
 }
 
 static guint64
-sat_base_video_decoder_get_timestamp (SatBaseVideoDecoder * base_video_decoder,
+gst_base_video_decoder_get_timestamp (GstBaseVideoDecoder * base_video_decoder,
     gint picture_number)
 {
   if (base_video_decoder->state.fps_d == 0) {
@@ -126,7 +126,7 @@ sat_base_video_decoder_get_timestamp (SatBaseVideoDecoder * base_video_decoder,
 }
 
 static guint64
-sat_base_video_decoder_get_field_timestamp (SatBaseVideoDecoder *
+gst_base_video_decoder_get_field_timestamp (GstBaseVideoDecoder *
     base_video_decoder, gint field_offset)
 {
   if (base_video_decoder->state.fps_d == 0) {
@@ -143,7 +143,7 @@ sat_base_video_decoder_get_field_timestamp (SatBaseVideoDecoder *
 }
 
 static guint64
-sat_base_video_decoder_get_field_duration (SatBaseVideoDecoder *
+gst_base_video_decoder_get_field_duration (GstBaseVideoDecoder *
     base_video_decoder, gint n_fields)
 {
   if (base_video_decoder->state.fps_d == 0) {
@@ -158,18 +158,18 @@ sat_base_video_decoder_get_field_duration (SatBaseVideoDecoder *
       base_video_decoder->state.fps_n * 2);
 }
 
-static SatVideoFrame *
-sat_base_video_decoder_new_frame (SatBaseVideoDecoder * base_video_decoder)
+static GstVideoFrame *
+gst_base_video_decoder_new_frame (GstBaseVideoDecoder * base_video_decoder)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+  GstBaseVideoDecoderClass *base_video_decoder_class =
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  SatVideoFrame *frame;
+  GstVideoFrame *frame;
 
   if (base_video_decoder_class->create_frame)
     frame = base_video_decoder_class->create_frame (base_video_decoder);
   else
-    frame = sat_video_frame_new ();
+    frame = gst_video_frame_new ();
 
   frame->system_frame_number = base_video_decoder->system_frame_number;
   base_video_decoder->system_frame_number++;
@@ -181,7 +181,7 @@ sat_base_video_decoder_new_frame (SatBaseVideoDecoder * base_video_decoder)
 }
 
 static void
-sat_base_video_decoder_reset (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_reset (GstBaseVideoDecoder * base_video_decoder)
 {
   GST_DEBUG ("reset");
 
@@ -203,7 +203,7 @@ sat_base_video_decoder_reset (SatBaseVideoDecoder * base_video_decoder)
   }
 
   if (base_video_decoder->current_frame) {
-    sat_video_frame_unref (base_video_decoder->current_frame);
+    gst_video_frame_unref (base_video_decoder->current_frame);
     base_video_decoder->current_frame = NULL;
   }
 
@@ -216,14 +216,14 @@ sat_base_video_decoder_reset (SatBaseVideoDecoder * base_video_decoder)
 }
 
 static void
-sat_base_video_decoder_flush (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_flush (GstBaseVideoDecoder * base_video_decoder)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
-  sat_base_video_decoder_reset (base_video_decoder);
+  gst_base_video_decoder_reset (base_video_decoder);
 
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   if (base_video_decoder_class->flush)
     base_video_decoder_class->flush (base_video_decoder);
@@ -231,18 +231,18 @@ sat_base_video_decoder_flush (SatBaseVideoDecoder * base_video_decoder)
 
 
 static gboolean
-sat_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  SatBaseVideoDecoder *base_video_decoder;
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
   GstStructure *structure;
   const GValue *codec_data;
-  SatVideoState *state;
+  GstVideoState *state;
   gboolean ret = TRUE;
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG ("setcaps %" GST_PTR_FORMAT, caps);
 
@@ -251,7 +251,7 @@ sat_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (state->codec_data) {
     gst_buffer_unref (state->codec_data);
   }
-  memset (state, 0, sizeof (SatVideoState));
+  memset (state, 0, sizeof (GstVideoState));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -274,24 +274,24 @@ sat_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-sat_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
+gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
 {
-  SatBaseVideoDecoder *base_video_decoder;
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
   gboolean ret = FALSE;
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
       if (!base_video_decoder->packetized)
-        sat_base_video_decoder_drain (base_video_decoder, TRUE);
+        gst_base_video_decoder_drain (base_video_decoder, TRUE);
 
       ret =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SRC_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
     }
       break;
@@ -313,7 +313,7 @@ sat_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_format;
 
       if (!update) {
-        sat_base_video_decoder_flush (base_video_decoder);
+        gst_base_video_decoder_flush (base_video_decoder);
       }
 
       base_video_decoder->timestamp_offset = start;
@@ -331,7 +331,7 @@ sat_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time), update);
 
       ret =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SRC_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
     }
       break;
@@ -344,7 +344,7 @@ sat_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
     default:
       /* FIXME this changes the order of events */
       ret =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SRC_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
       break;
   }
@@ -363,19 +363,19 @@ newseg_wrong_format:
 
 #if 0
 static gboolean
-sat_base_video_decoder_sink_convert (GstPad * pad,
+gst_base_video_decoder_sink_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  SatBaseVideoDecoder *enc;
+  GstBaseVideoDecoder *enc;
 
   if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
 
-  enc = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   /* FIXME: check if we are in a decoding state */
 
@@ -418,19 +418,19 @@ sat_base_video_decoder_sink_convert (GstPad * pad,
 #endif
 
 static gboolean
-sat_base_video_decoder_src_convert (GstPad * pad,
+gst_base_video_decoder_src_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  SatBaseVideoDecoder *enc;
+  GstBaseVideoDecoder *enc;
 
   if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
 
-  enc = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   /* FIXME: check if we are in a encoding state */
 
@@ -472,12 +472,12 @@ sat_base_video_decoder_src_convert (GstPad * pad,
 }
 
 static gboolean
-sat_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
+gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
 {
-  SatBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoder *base_video_decoder;
   gboolean res = FALSE;
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -498,12 +498,12 @@ sat_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
 
       tformat = GST_FORMAT_TIME;
       res =
-          sat_base_video_decoder_src_convert (pad, format, cur, &tformat,
+          gst_base_video_decoder_src_convert (pad, format, cur, &tformat,
           &tcur);
       if (!res)
         goto convert_error;
       res =
-          sat_base_video_decoder_src_convert (pad, format, stop, &tformat,
+          gst_base_video_decoder_src_convert (pad, format, stop, &tformat,
           &tstop);
       if (!res)
         goto convert_error;
@@ -512,7 +512,7 @@ sat_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
           flags, cur_type, tcur, stop_type, tstop);
 
       res =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SINK_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SINK_PAD
           (base_video_decoder), real_seek);
 
       break;
@@ -551,13 +551,13 @@ sat_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (timestamp), diff, proportion);
 
       res =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SINK_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SINK_PAD
           (base_video_decoder), event);
       break;
     }
     default:
       res =
-          gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SINK_PAD
+          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SINK_PAD
           (base_video_decoder), event);
       break;
   }
@@ -571,7 +571,7 @@ convert_error:
 }
 
 static const GstQueryType *
-sat_base_video_decoder_get_query_types (GstPad * pad)
+gst_base_video_decoder_get_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
@@ -584,12 +584,12 @@ sat_base_video_decoder_get_query_types (GstPad * pad)
 }
 
 static gboolean
-sat_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
+gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
 {
-  SatBaseVideoDecoder *dec;
+  GstBaseVideoDecoder *dec;
   gboolean res = TRUE;
 
-  dec = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  dec = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   switch GST_QUERY_TYPE
     (query) {
@@ -628,7 +628,7 @@ sat_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       res =
-          sat_base_video_decoder_src_convert (pad, src_fmt, src_val, &dest_fmt,
+          gst_base_video_decoder_src_convert (pad, src_fmt, src_val, &dest_fmt,
           &dest_val);
       if (!res)
         goto error;
@@ -648,12 +648,12 @@ error:
 }
 
 static gboolean
-sat_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
+gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
 {
-  SatBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoder *base_video_decoder;
   gboolean res = FALSE;
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (base_video_decoder, "sink query fps=%d/%d",
       base_video_decoder->state.fps_n, base_video_decoder->state.fps_d);
@@ -670,10 +670,10 @@ sat_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
 }
 
 static void
-sat_base_video_decoder_set_src_caps (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 {
   GstCaps *caps;
-  SatVideoState *state = &base_video_decoder->state;
+  GstVideoState *state = &base_video_decoder->state;
 
   if (base_video_decoder->have_src_caps)
     return;
@@ -695,7 +695,7 @@ sat_base_video_decoder_set_src_caps (SatBaseVideoDecoder * base_video_decoder)
 
   GST_DEBUG ("setting caps %" GST_PTR_FORMAT, caps);
 
-  gst_pad_set_caps (SAT_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder), caps);
+  gst_pad_set_caps (GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder), caps);
 
   base_video_decoder->have_src_caps = TRUE;
 
@@ -713,13 +713,13 @@ empty_caps:
 }
 
 static GstFlowReturn
-sat_base_video_decoder_drain (SatBaseVideoDecoder * dec, gboolean at_eos)
+gst_base_video_decoder_drain (GstBaseVideoDecoder * dec, gboolean at_eos)
 {
-  SatBaseVideoDecoderClass *klass;
-  SatBaseVideoDecoderScanResult res;
+  GstBaseVideoDecoderClass *klass;
+  GstBaseVideoDecoderScanResult res;
   guint size;
 
-  klass = SAT_BASE_VIDEO_DECODER_GET_CLASS (dec);
+  klass = GST_BASE_VIDEO_DECODER_GET_CLASS (dec);
 
   if (gst_adapter_available (dec->input_adapter) == 0)
     return GST_FLOW_OK;
@@ -759,7 +759,7 @@ lost_sync:
   }
 
   res = klass->scan_for_packet_end (dec, dec->input_adapter, &size, at_eos);
-  while (res == SAT_BASE_VIDEO_DECODER_SCAN_RESULT_OK) {
+  while (res == GST_BASE_VIDEO_DECODER_SCAN_RESULT_OK) {
     GstBuffer *buf;
     GstFlowReturn ret;
 
@@ -779,11 +779,11 @@ lost_sync:
   }
 
   switch (res) {
-    case SAT_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC:
+    case GST_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC:
       dec->have_sync = FALSE;
       goto lost_sync;
 
-    case SAT_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA:
+    case GST_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA:
       return GST_FLOW_OK;
 
     default:
@@ -793,10 +793,10 @@ lost_sync:
 }
 
 static GstFlowReturn
-sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
+gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 {
-  SatBaseVideoDecoder *base_video_decoder;
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
   GstFlowReturn ret;
 
   GST_DEBUG ("chain %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
@@ -812,9 +812,9 @@ sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   }
 #endif
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
+  base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG_OBJECT (base_video_decoder, "chain");
 
@@ -833,7 +833,7 @@ sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
         GST_CLOCK_TIME_NONE, 0);
 
     ret =
-        gst_pad_push_event (SAT_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder),
+        gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder),
         event);
     if (!ret) {
       GST_ERROR ("new segment event ret=%d", ret);
@@ -843,16 +843,16 @@ sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (base_video_decoder, "received DISCONT buffer");
-    sat_base_video_decoder_flush (base_video_decoder);
+    gst_base_video_decoder_flush (base_video_decoder);
   }
 
   if (base_video_decoder->current_frame == NULL) {
     base_video_decoder->current_frame =
-        sat_base_video_decoder_new_frame (base_video_decoder);
+        gst_base_video_decoder_new_frame (base_video_decoder);
   }
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    sat_base_video_decoder_add_timestamp (base_video_decoder, buf);
+    gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
   }
   base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
 
@@ -860,12 +860,12 @@ sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
   if (base_video_decoder->packetized) {
     base_video_decoder->current_frame->sink_buffer = buf;
 
-    ret = sat_base_video_decoder_have_frame (base_video_decoder, NULL);
+    ret = gst_base_video_decoder_have_frame (base_video_decoder, NULL);
   } else {
 
     gst_adapter_push (base_video_decoder->input_adapter, buf);
 
-    ret = sat_base_video_decoder_drain (base_video_decoder, FALSE);
+    ret = gst_base_video_decoder_drain (base_video_decoder, FALSE);
   }
 
   gst_object_unref (base_video_decoder);
@@ -873,14 +873,14 @@ sat_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static gboolean
-sat_base_video_decoder_stop (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_stop (GstBaseVideoDecoder * base_video_decoder)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
   GST_DEBUG ("stop");
 
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   if (base_video_decoder_class->stop)
     return base_video_decoder_class->stop (base_video_decoder);
@@ -889,16 +889,16 @@ sat_base_video_decoder_stop (SatBaseVideoDecoder * base_video_decoder)
 }
 
 static gboolean
-sat_base_video_decoder_start (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_start (GstBaseVideoDecoder * base_video_decoder)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
   GST_DEBUG ("start");
 
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  sat_base_video_decoder_reset (base_video_decoder);
+  gst_base_video_decoder_reset (base_video_decoder);
 
   if (base_video_decoder_class->start)
     return base_video_decoder_class->start (base_video_decoder);
@@ -907,17 +907,17 @@ sat_base_video_decoder_start (SatBaseVideoDecoder * base_video_decoder)
 }
 
 static GstStateChangeReturn
-sat_base_video_decoder_change_state (GstElement * element,
+gst_base_video_decoder_change_state (GstElement * element,
     GstStateChange transition)
 {
-  SatBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoder *base_video_decoder;
   GstStateChangeReturn ret;
 
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (element);
+  base_video_decoder = GST_BASE_VIDEO_DECODER (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      sat_base_video_decoder_start (base_video_decoder);
+      gst_base_video_decoder_start (base_video_decoder);
       break;
 
     default:
@@ -928,7 +928,7 @@ sat_base_video_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      sat_base_video_decoder_stop (base_video_decoder);
+      gst_base_video_decoder_stop (base_video_decoder);
       break;
 
     default:
@@ -939,19 +939,19 @@ sat_base_video_decoder_change_state (GstElement * element,
 }
 
 GstFlowReturn
-sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
-    SatVideoFrame * frame)
+gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoFrame * frame)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
   GstBuffer *src_buffer;
 
   GST_DEBUG ("finish frame");
 
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG ("finish frame sync=%d pts=%" GST_TIME_FORMAT,
-      SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_SYNC_POINT),
+      GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT),
       GST_TIME_ARGS (frame->presentation_timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
@@ -969,7 +969,7 @@ sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
       frame->presentation_timestamp = GST_CLOCK_TIME_NONE;
     }
   } else {
-    if (SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_SYNC_POINT)) {
+    if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT)) {
       GST_WARNING ("sync point doesn't have timestamp");
       if (!GST_CLOCK_TIME_IS_VALID (base_video_decoder->timestamp_offset)) {
         GST_WARNING
@@ -985,16 +985,16 @@ sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
 
   if (frame->presentation_timestamp == GST_CLOCK_TIME_NONE) {
     frame->presentation_timestamp =
-        sat_base_video_decoder_get_field_timestamp (base_video_decoder,
+        gst_base_video_decoder_get_field_timestamp (base_video_decoder,
         frame->field_index);
     frame->presentation_duration = GST_CLOCK_TIME_NONE;
     frame->decode_timestamp =
-        sat_base_video_decoder_get_timestamp (base_video_decoder,
+        gst_base_video_decoder_get_timestamp (base_video_decoder,
         frame->decode_frame_number);
   }
   if (frame->presentation_duration == GST_CLOCK_TIME_NONE) {
     frame->presentation_duration =
-        sat_base_video_decoder_get_field_duration (base_video_decoder,
+        gst_base_video_decoder_get_field_duration (base_video_decoder,
         frame->n_fields);
   }
 
@@ -1021,7 +1021,7 @@ sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
 #define GST_VIDEO_BUFFER_ONEFIELD (GST_MINI_OBJECT_FLAG_LAST << 7)
 #endif
 
-    if (SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_TFF)) {
+    if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_TFF)) {
       GST_BUFFER_FLAG_SET (src_buffer, GST_VIDEO_BUFFER_TFF);
     } else {
       GST_BUFFER_FLAG_UNSET (src_buffer, GST_VIDEO_BUFFER_TFF);
@@ -1047,7 +1047,7 @@ sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
   GST_DEBUG ("pushing frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
-  sat_base_video_decoder_set_src_caps (base_video_decoder);
+  gst_base_video_decoder_set_src_caps (base_video_decoder);
 
   if (base_video_decoder->sink_clipping) {
     gint64 start = GST_BUFFER_TIMESTAMP (src_buffer);
@@ -1079,35 +1079,35 @@ sat_base_video_decoder_finish_frame (SatBaseVideoDecoder * base_video_decoder,
           GST_TIME_ARGS (base_video_decoder->segment.start),
           GST_TIME_ARGS (base_video_decoder->segment.stop),
           GST_TIME_ARGS (base_video_decoder->segment.time));
-      sat_video_frame_unref (frame);
+      gst_video_frame_unref (frame);
       return GST_FLOW_OK;
     }
   }
 
   gst_buffer_ref (src_buffer);
-  sat_video_frame_unref (frame);
+  gst_video_frame_unref (frame);
 
   if (base_video_decoder_class->shape_output)
     return base_video_decoder_class->shape_output (base_video_decoder,
         src_buffer);
 
-  return gst_pad_push (SAT_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder),
+  return gst_pad_push (GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder),
       src_buffer);
 }
 
 void
-sat_base_video_decoder_skip_frame (SatBaseVideoDecoder * base_video_decoder,
-    SatVideoFrame * frame)
+gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoFrame * frame)
 {
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
   GST_DEBUG ("skip frame");
 
   base_video_decoder_class =
-      SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+      GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   GST_DEBUG ("skip frame sync=%d pts=%" GST_TIME_FORMAT,
-      SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_SYNC_POINT),
+      GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT),
       GST_TIME_ARGS (frame->presentation_timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (frame->presentation_timestamp)) {
@@ -1125,7 +1125,7 @@ sat_base_video_decoder_skip_frame (SatBaseVideoDecoder * base_video_decoder,
       frame->presentation_timestamp = GST_CLOCK_TIME_NONE;
     }
   } else {
-    if (SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_SYNC_POINT)) {
+    if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT)) {
       GST_WARNING ("sync point doesn't have timestamp");
       if (GST_CLOCK_TIME_IS_VALID (base_video_decoder->timestamp_offset)) {
         GST_WARNING
@@ -1141,16 +1141,16 @@ sat_base_video_decoder_skip_frame (SatBaseVideoDecoder * base_video_decoder,
 
   if (frame->presentation_timestamp == GST_CLOCK_TIME_NONE) {
     frame->presentation_timestamp =
-        sat_base_video_decoder_get_field_timestamp (base_video_decoder,
+        gst_base_video_decoder_get_field_timestamp (base_video_decoder,
         frame->field_index);
     frame->presentation_duration = GST_CLOCK_TIME_NONE;
     frame->decode_timestamp =
-        sat_base_video_decoder_get_timestamp (base_video_decoder,
+        gst_base_video_decoder_get_timestamp (base_video_decoder,
         frame->decode_frame_number);
   }
   if (frame->presentation_duration == GST_CLOCK_TIME_NONE) {
     frame->presentation_duration =
-        sat_base_video_decoder_get_field_duration (base_video_decoder,
+        gst_base_video_decoder_get_field_duration (base_video_decoder,
         frame->n_fields);
   }
 
@@ -1159,29 +1159,29 @@ sat_base_video_decoder_skip_frame (SatBaseVideoDecoder * base_video_decoder,
   GST_DEBUG ("skipping frame %" GST_TIME_FORMAT,
       GST_TIME_ARGS (frame->presentation_timestamp));
 
-  sat_video_frame_unref (frame);
+  gst_video_frame_unref (frame);
 }
 
 GstFlowReturn
-sat_base_video_decoder_have_frame (SatBaseVideoDecoder * base_video_decoder,
-    SatVideoFrame ** new_frame)
+gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoFrame ** new_frame)
 {
-  SatVideoFrame *frame = base_video_decoder->current_frame;
-  SatBaseVideoDecoderClass *klass;
+  GstVideoFrame *frame = base_video_decoder->current_frame;
+  GstBaseVideoDecoderClass *klass;
   GstClockTime timestamp, duration;
   GstClockTime running_time;
   GstClockTimeDiff deadline;
   GstFlowReturn ret;
 
-  klass = SAT_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
+  klass = GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
-  sat_base_video_decoder_get_timestamp_at_offset (base_video_decoder,
+  gst_base_video_decoder_get_timestamp_at_offset (base_video_decoder,
       base_video_decoder->frame_offset, &timestamp, &duration);
 
   frame->presentation_duration = timestamp;
   frame->presentation_duration = duration;
 
-  if (SAT_VIDEO_FRAME_FLAG_IS_SET (frame, SAT_VIDEO_FRAME_FLAG_SYNC_POINT))
+  if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT))
     base_video_decoder->distance_from_sync = 0;
 
   frame->distance_from_sync = base_video_decoder->distance_from_sync;
@@ -1208,7 +1208,7 @@ sat_base_video_decoder_have_frame (SatBaseVideoDecoder * base_video_decoder,
 
   /* create new frame */
   base_video_decoder->current_frame =
-      sat_base_video_decoder_new_frame (base_video_decoder);
+      gst_base_video_decoder_new_frame (base_video_decoder);
 
   if (new_frame)
     *new_frame = base_video_decoder->current_frame;
@@ -1217,29 +1217,29 @@ sat_base_video_decoder_have_frame (SatBaseVideoDecoder * base_video_decoder,
 }
 
 void
-sat_base_video_decoder_frame_start (SatBaseVideoDecoder * base_video_decoder,
+gst_base_video_decoder_frame_start (GstBaseVideoDecoder * base_video_decoder,
     GstBuffer * buf)
 {
   base_video_decoder->frame_offset = GST_BUFFER_OFFSET (buf);
 }
 
-SatVideoState *
-sat_base_video_decoder_get_state (SatBaseVideoDecoder * base_video_decoder)
+GstVideoState *
+gst_base_video_decoder_get_state (GstBaseVideoDecoder * base_video_decoder)
 {
   return &base_video_decoder->state;
 
 }
 
 void
-sat_base_video_decoder_set_state (SatBaseVideoDecoder * base_video_decoder,
-    SatVideoState * state)
+gst_base_video_decoder_set_state (GstBaseVideoDecoder * base_video_decoder,
+    GstVideoState * state)
 {
   memcpy (&base_video_decoder->state, state, sizeof (*state));
 
 }
 
 void
-sat_base_video_decoder_lost_sync (SatBaseVideoDecoder * base_video_decoder)
+gst_base_video_decoder_lost_sync (GstBaseVideoDecoder * base_video_decoder)
 {
   g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (base_video_decoder));
 
@@ -1252,29 +1252,29 @@ sat_base_video_decoder_lost_sync (SatBaseVideoDecoder * base_video_decoder)
   base_video_decoder->have_sync = FALSE;
 }
 
-SatVideoFrame *
-sat_base_video_decoder_get_current_frame (SatBaseVideoDecoder *
+GstVideoFrame *
+gst_base_video_decoder_get_current_frame (GstBaseVideoDecoder *
     base_video_decoder)
 {
   return base_video_decoder->current_frame;
 }
 
 void
-sat_base_video_decoder_update_src_caps (SatBaseVideoDecoder *
+gst_base_video_decoder_update_src_caps (GstBaseVideoDecoder *
     base_video_decoder)
 {
   g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (base_video_decoder));
 
   base_video_decoder->have_src_caps = FALSE;
-  sat_base_video_decoder_set_src_caps (base_video_decoder);
+  gst_base_video_decoder_set_src_caps (base_video_decoder);
 }
 
 /* GObject vmethod implementations */
 static void
-sat_base_video_decoder_get_property (GObject * object, guint property_id,
+gst_base_video_decoder_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  SatBaseVideoDecoder *base_video_decoder = SAT_BASE_VIDEO_DECODER (object);
+  GstBaseVideoDecoder *base_video_decoder = GST_BASE_VIDEO_DECODER (object);
 
   switch (property_id) {
     case PROP_PACKETIZED:
@@ -1290,10 +1290,10 @@ sat_base_video_decoder_get_property (GObject * object, guint property_id,
 }
 
 static void
-sat_base_video_decoder_set_property (GObject * object, guint property_id,
+gst_base_video_decoder_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  SatBaseVideoDecoder *base_video_decoder = SAT_BASE_VIDEO_DECODER (object);
+  GstBaseVideoDecoder *base_video_decoder = GST_BASE_VIDEO_DECODER (object);
 
   switch (property_id) {
     case PROP_PACKETIZED:
@@ -1309,16 +1309,16 @@ sat_base_video_decoder_set_property (GObject * object, guint property_id,
 }
 
 static void
-sat_base_video_decoder_finalize (GObject * object)
+gst_base_video_decoder_finalize (GObject * object)
 {
-  SatBaseVideoDecoder *base_video_decoder;
-  SatBaseVideoDecoderClass *base_video_decoder_class;
+  GstBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
   g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (object));
-  base_video_decoder = SAT_BASE_VIDEO_DECODER (object);
-  base_video_decoder_class = SAT_BASE_VIDEO_DECODER_GET_CLASS (object);
+  base_video_decoder = GST_BASE_VIDEO_DECODER (object);
+  base_video_decoder_class = GST_BASE_VIDEO_DECODER_GET_CLASS (object);
 
-  sat_base_video_decoder_reset (base_video_decoder);
+  gst_base_video_decoder_reset (base_video_decoder);
 
   if (base_video_decoder->input_adapter) {
     g_object_unref (base_video_decoder->input_adapter);
@@ -1331,14 +1331,14 @@ sat_base_video_decoder_finalize (GObject * object)
 }
 
 static void
-sat_base_video_decoder_base_init (gpointer g_class)
+gst_base_video_decoder_base_init (gpointer g_class)
 {
   GST_DEBUG_CATEGORY_INIT (basevideodecoder_debug, "basevideodecoder", 0,
       "Base Video Decoder");
 }
 
 static void
-sat_base_video_decoder_class_init (SatBaseVideoDecoderClass * klass)
+gst_base_video_decoder_class_init (GstBaseVideoDecoderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -1346,9 +1346,9 @@ sat_base_video_decoder_class_init (SatBaseVideoDecoderClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->finalize = sat_base_video_decoder_finalize;
-  gobject_class->get_property = sat_base_video_decoder_get_property;
-  gobject_class->set_property = sat_base_video_decoder_set_property;
+  gobject_class->finalize = gst_base_video_decoder_finalize;
+  gobject_class->get_property = gst_base_video_decoder_get_property;
+  gobject_class->set_property = gst_base_video_decoder_set_property;
 
   g_object_class_install_property (gobject_class, PROP_PACKETIZED,
       g_param_spec_boolean ("packetized", "Packetized",
@@ -1357,22 +1357,22 @@ sat_base_video_decoder_class_init (SatBaseVideoDecoderClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PACKETIZED,
       g_param_spec_boolean ("sink-clipping", "Sink Clipping",
-          "If enabled SatBaseVideoDecoder will clip outgoing frames", FALSE,
+          "If enabled GstBaseVideoDecoder will clip outgoing frames", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->change_state = sat_base_video_decoder_change_state;
+  gstelement_class->change_state = gst_base_video_decoder_change_state;
 
   parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-sat_base_video_decoder_init (SatBaseVideoDecoder * base_video_decoder,
-    SatBaseVideoDecoderClass * base_video_decoder_class)
+gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
+    GstBaseVideoDecoderClass * base_video_decoder_class)
 {
   GstPadTemplate *pad_template;
   GstPad *pad;
 
-  GST_DEBUG ("sat_base_video_decoder_init");
+  GST_DEBUG ("gst_base_video_decoder_init");
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS
@@ -1383,10 +1383,10 @@ sat_base_video_decoder_init (SatBaseVideoDecoder * base_video_decoder,
       gst_pad_new_from_template (pad_template, "sink");
   gst_element_add_pad (GST_ELEMENT (base_video_decoder), pad);
 
-  gst_pad_set_chain_function (pad, sat_base_video_decoder_chain);
-  gst_pad_set_event_function (pad, sat_base_video_decoder_sink_event);
-  gst_pad_set_setcaps_function (pad, sat_base_video_decoder_sink_setcaps);
-  gst_pad_set_query_function (pad, sat_base_video_decoder_sink_query);
+  gst_pad_set_chain_function (pad, gst_base_video_decoder_chain);
+  gst_pad_set_event_function (pad, gst_base_video_decoder_sink_event);
+  gst_pad_set_setcaps_function (pad, gst_base_video_decoder_sink_setcaps);
+  gst_pad_set_query_function (pad, gst_base_video_decoder_sink_query);
 
   if (base_video_decoder_class->create_srcpad) {
     base_video_decoder->srcpad = pad =
@@ -1403,9 +1403,9 @@ sat_base_video_decoder_init (SatBaseVideoDecoder * base_video_decoder,
   }
   gst_element_add_pad (GST_ELEMENT (base_video_decoder), pad);
 
-  gst_pad_set_event_function (pad, sat_base_video_decoder_src_event);
-  gst_pad_set_query_type_function (pad, sat_base_video_decoder_get_query_types);
-  gst_pad_set_query_function (pad, sat_base_video_decoder_src_query);
+  gst_pad_set_event_function (pad, gst_base_video_decoder_src_event);
+  gst_pad_set_query_type_function (pad, gst_base_video_decoder_get_query_types);
+  gst_pad_set_query_function (pad, gst_base_video_decoder_src_query);
   gst_pad_use_fixed_caps (pad);
 
   base_video_decoder->input_adapter = gst_adapter_new ();
@@ -1413,7 +1413,7 @@ sat_base_video_decoder_init (SatBaseVideoDecoder * base_video_decoder,
   gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
 
   base_video_decoder->current_frame =
-      sat_base_video_decoder_new_frame (base_video_decoder);
+      gst_base_video_decoder_new_frame (base_video_decoder);
 
   /* properties */
   base_video_decoder->packetized = FALSE;

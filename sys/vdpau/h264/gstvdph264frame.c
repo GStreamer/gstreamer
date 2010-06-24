@@ -95,7 +95,7 @@ gst_vdp_h264_frame_get_type (void)
       (GInstanceInitFunc) gst_vdp_h264_frame_init,
       NULL
     };
-    _gst_vdp_h264_frame_type = g_type_register_static (SAT_TYPE_VIDEO_FRAME,
+    _gst_vdp_h264_frame_type = g_type_register_static (GST_TYPE_VIDEO_FRAME,
         "GstVdpH264Frame", &info, 0);
 
     DEBUG_INIT ();
