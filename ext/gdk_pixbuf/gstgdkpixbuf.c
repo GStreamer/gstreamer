@@ -544,7 +544,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_gdk_pixbuf_debug, PLUGIN_NAME, 0,
       "gdk pixbuf loader");
 
-  if (!gst_element_register (plugin, GDKPIXBUFDEC, GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, GDKPIXBUFDEC, GST_RANK_SECONDARY,
           GST_TYPE_GDK_PIXBUF))
     return FALSE;
 
