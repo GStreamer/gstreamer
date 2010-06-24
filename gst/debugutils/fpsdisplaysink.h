@@ -63,6 +63,7 @@ struct _GstFPSDisplaySink
   /* properties */
   gboolean sync;
   gboolean use_text_overlay;
+  gboolean signal_measurements;
   gint fps_update_interval;
   gdouble max_fps;
   gdouble min_fps;
