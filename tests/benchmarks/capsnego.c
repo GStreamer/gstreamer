@@ -43,20 +43,21 @@ enum
 {
   ELEM_SRC = 0,
   ELEM_MIX,
+  SINKPAD_MIX,
   ELEM_PROC,
   ELEM_CONV,
   NUM_ELEM
 };
 
 static const gchar *factories[NUM_FLAVOURS][NUM_ELEM] = {
-  {"audiotestsrc", "adder", "volume", "audioconvert"},
-  {"videotestsrc", "videomixer", "videoscale", "ffmpegcolorspace"}
+  {"audiotestsrc", "adder", "sink%d", "volume", "audioconvert"},
+  {"videotestsrc", "videomixer", "sink_%d", "videoscale", "ffmpegcolorspace"}
 };
 
 
 static gboolean
-create_node (GstBin * bin, GstElement * sink, GstElement ** new_sink,
-    gint children, gint flavour)
+create_node (GstBin * bin, GstElement * sink, const gchar * sinkpadname,
+    GstElement ** new_sink, gint children, gint flavour)
 {
   GstElement *mix, *proc, *conv;
 
@@ -80,7 +81,12 @@ create_node (GstBin * bin, GstElement * sink, GstElement ** new_sink,
     return FALSE;
   }
   gst_bin_add_many (bin, mix, proc, conv, NULL);
-  if (!gst_element_link_many (mix, proc, conv, sink, NULL)) {
+  if (!gst_element_link_pads_full (mix, "src", proc, "sink",
+          GST_PAD_LINK_CHECK_NOTHING)
+      || !gst_element_link_pads_full (proc, "src", conv, "sink",
+          GST_PAD_LINK_CHECK_NOTHING)
+      || !gst_element_link_pads_full (conv, "src", sink, sinkpadname,
+          GST_PAD_LINK_CHECK_NOTHING)) {
     GST_WARNING ("can't link elements");
     return FALSE;
   }
@@ -97,7 +103,8 @@ create_nodes (GstBin * bin, GstElement * sink, gint depth, gint children,
 
   for (i = 0; i < children; i++) {
     if (depth > 0) {
-      if (!create_node (bin, sink, &new_sink, children, flavour)) {
+      if (!create_node (bin, sink, factories[flavour][SINKPAD_MIX], &new_sink,
+              children, flavour)) {
         return FALSE;
       }
       if (!create_nodes (bin, new_sink, depth - 1, children, flavour)) {
@@ -110,7 +117,8 @@ create_nodes (GstBin * bin, GstElement * sink, gint depth, gint children,
         return FALSE;
       }
       gst_bin_add (bin, src);
-      if (!gst_element_link (src, sink)) {
+      if (!gst_element_link_pads_full (src, "src", sink,
+              factories[flavour][SINKPAD_MIX], GST_PAD_LINK_CHECK_NOTHING)) {
         GST_WARNING ("can't link elements");
         return FALSE;
       }
@@ -197,7 +205,7 @@ main (gint argc, gchar * argv[])
   bin = GST_BIN (gst_pipeline_new ("pipeline"));
   sink = gst_element_factory_make ("fakesink", NULL);
   gst_bin_add (bin, sink);
-  if (!create_node (bin, sink, &new_sink, children, flavour)) {
+  if (!create_node (bin, sink, "sink", &new_sink, children, flavour)) {
     goto Error;
   }
   if (!create_nodes (bin, new_sink, depth, children, flavour)) {
