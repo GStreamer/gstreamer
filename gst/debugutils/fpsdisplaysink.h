@@ -63,6 +63,7 @@ struct _GstFPSDisplaySink
   /* properties */
   gboolean sync;
   gboolean use_text_overlay;
+  gint fps_update_interval;
 };
 
 struct _GstFPSDisplaySinkClass

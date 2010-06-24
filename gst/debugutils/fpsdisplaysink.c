@@ -43,7 +43,6 @@
  *
  * IDEAS:
  * - do we want to gather min/max fps and show in GST_STATE_CHANGE_READY_TO_NULL
- * - add another property for the FPS_DISPLAY_INTERVAL_MS
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,7 +52,7 @@
 #include "fpsdisplaysink.h"
 #include <gst/interfaces/xoverlay.h>
 
-#define FPS_DISPLAY_INTERVAL_MS 500     /* 500 ms */
+#define DEFAULT_FPS_UPDATE_INTERVAL_MS 500      /* 500 ms */
 #define DEFAULT_FONT "Sans 20"
 
 /* generic templates */
@@ -72,7 +71,8 @@ enum
   ARG_SYNC,
   ARG_TEXT_OVERLAY,
   ARG_VIDEO_SINK,
-  /* FILL ME */
+  ARG_FPS_UPDATE_INTERVAL
+      /* FILL ME */
 };
 
 static GstBinClass *parent_class = NULL;
@@ -114,6 +114,12 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "video-sink",
           "Video sink to use (Must only be called on NULL state)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_klass, ARG_FPS_UPDATE_INTERVAL,
+      g_param_spec_int ("fps-update-interval", "Fps update interval",
+          "Time between consecutive frames per second measures and update "
+          " (in ms). Should be set on NULL state", 1, G_MAXINT,
+          DEFAULT_FPS_UPDATE_INTERVAL_MS, G_PARAM_READWRITE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
 
@@ -247,6 +253,7 @@ fps_display_sink_init (GstFPSDisplaySink * self,
 {
   self->sync = FALSE;
   self->use_text_overlay = TRUE;
+  self->fps_update_interval = DEFAULT_FPS_UPDATE_INTERVAL_MS;
   self->video_sink = NULL;
 
   self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
@@ -347,8 +354,8 @@ no_text_overlay:
 
   /* Set a timeout for the fps display */
   self->timeout_id =
-      g_timeout_add (FPS_DISPLAY_INTERVAL_MS,
-      display_current_fps, (gpointer) self);
+      g_timeout_add (self->fps_update_interval, display_current_fps,
+      (gpointer) self);
 }
 
 static void
@@ -426,6 +433,9 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
       }
       update_video_sink (self, (GstElement *) g_value_get_object (value));
       break;
+    case ARG_FPS_UPDATE_INTERVAL:
+      self->fps_update_interval = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -447,6 +457,9 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_VIDEO_SINK:
       g_value_set_object (value, self->video_sink);
+      break;
+    case ARG_FPS_UPDATE_INTERVAL:
+      g_value_set_int (value, self->fps_update_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
