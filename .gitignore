@@ -47,3 +47,4 @@ gst-libs/gst/tag/mklangtables
 
 tmp-orc.c
 gst*orc.h
+tests/check/orc
