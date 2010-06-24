@@ -1059,6 +1059,56 @@
 </ARG>
 
 <ARG>
+<NAME>GstX264Enc::intra-refresh</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Refresh</NICK>
+<BLURB>Use Periodic Intra Refresh instead of IDR frames.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::mb-tree</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Tree</NICK>
+<BLURB>Macroblock-Tree ratecontrol.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::rc-lookahead</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,250]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate Control Lookahead</NICK>
+<BLURB>Number of frames for frametype lookahead.</BLURB>
+<DEFAULT>40</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::sliced-threads</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sliced Threads</NICK>
+<BLURB>Low latency but lower efficiency threading.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::sync-lookahead</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,250]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync Lookahead</NICK>
+<BLURB>Number of buffer frames for threaded lookahead (-1 for automatic).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMad::half</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

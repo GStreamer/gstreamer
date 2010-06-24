@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], stream-format=(string){ byte-stream, avc }</details>
+          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], stream-format=(string){ byte-stream, avc }, alignment=(string){ au }</details>
         </caps>
       </pads>
     </element>
