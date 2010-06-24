@@ -20,7 +20,7 @@ libgstvdpau_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) $
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	-lgstinterfaces-$(GST_MAJORMINOR) $(VDPAU_LIBS) \
-	basevideodecoder/libgstbasevideodecoder.la \
+	basevideodecoder/libsatbasevideodecoder.la \
 	gstvdp/libgstvdp-@GST_MAJORMINOR@.la
 	
 libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_BASE_VIDEO_UTILS_H_
-#define _GST_BASE_VIDEO_UTILS_H_
+#ifndef _SAT_BASE_VIDEO_UTILS_H_
+#define _SAT_BASE_VIDEO_UTILS_H_
 
 #define GST_USE_UNSTABLE_API 1
 
@@ -33,9 +33,9 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVideoState GstVideoState;
+typedef struct _SatVideoState SatVideoState;
 
-struct _GstVideoState
+struct _SatVideoState
 {
 	gint width, height;
   gint fps_n, fps_d;
@@ -52,4 +52,4 @@ struct _GstVideoState
 
 };
 
-#endif /* _GST_BASE_VIDEO_UTILS_H_ */
+#endif /* _SAT_BASE_VIDEO_UTILS_H_ */

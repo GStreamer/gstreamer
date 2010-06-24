@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "../basevideodecoder/gstbasevideodecoder.h"
+#include "../basevideodecoder/satbasevideodecoder.h"
 #include "gstvdpmpegframe.h"
 
 G_BEGIN_DECLS
@@ -46,7 +46,7 @@ typedef struct _GstVdpMpegDecClass GstVdpMpegDecClass;
 
 struct _GstVdpMpegDec
 {
-  GstBaseVideoDecoder base_video_decoder;
+  SatBaseVideoDecoder base_video_decoder;
 
   VdpDecoder decoder;
 
@@ -64,13 +64,13 @@ struct _GstVdpMpegDec
   guint64 gop_frame;
   
   /* forward and backward reference */
-  GstVideoFrame *f_frame, *b_frame;
+  SatVideoFrame *f_frame, *b_frame;
   
 };
 
 struct _GstVdpMpegDecClass 
 {
-  GstBaseVideoDecoderClass base_video_decoder_class;  
+  SatBaseVideoDecoderClass base_video_decoder_class;  
 };
 
 GType gst_vdp_mpeg_dec_get_type (void);

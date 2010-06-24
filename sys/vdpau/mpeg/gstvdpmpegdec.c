@@ -78,7 +78,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     "VDPAU mpeg decoder");
 
 GST_BOILERPLATE_FULL (GstVdpMpegDec, gst_vdp_mpeg_dec,
-    GstBaseVideoDecoder, GST_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
+    SatBaseVideoDecoder, SAT_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
 
 static void gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 
@@ -108,7 +108,7 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec,
   GstVdpVideoSrcPad *vdp_pad;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec);
+  vdp_pad = (GstVdpVideoSrcPad *) SAT_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec);
   ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, outbuf);
   if (ret != GST_FLOW_OK)
     return ret;
@@ -117,20 +117,20 @@ gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec,
 }
 
 static GstFlowReturn
-gst_vdp_mpeg_dec_shape_output (GstBaseVideoDecoder * base_video_decoder,
+gst_vdp_mpeg_dec_shape_output (SatBaseVideoDecoder * base_video_decoder,
     GstBuffer * buf)
 {
   GstVdpVideoSrcPad *vdp_pad;
 
   vdp_pad =
-      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
+      (GstVdpVideoSrcPad *) SAT_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
 
   return gst_vdp_video_src_pad_push (vdp_pad, GST_VDP_VIDEO_BUFFER (buf));
 }
 
 static gboolean
 gst_vdp_mpeg_dec_handle_picture_coding (GstVdpMpegDec * mpeg_dec,
-    GstBuffer * buffer, GstVideoFrame * frame)
+    GstBuffer * buffer, SatVideoFrame * frame)
 {
   MPEGPictureExt pic_ext;
   VdpPictureInfoMPEG1Or2 *info;
@@ -175,7 +175,7 @@ gst_vdp_mpeg_dec_handle_picture_coding (GstVdpMpegDec * mpeg_dec,
   frame->n_fields = fields;
 
   if (pic_ext.top_field_first)
-    GST_VIDEO_FRAME_FLAG_SET (frame, GST_VIDEO_FRAME_FLAG_TFF);
+    SAT_VIDEO_FRAME_FLAG_SET (frame, SAT_VIDEO_FRAME_FLAG_TFF);
 
   return TRUE;
 }
@@ -249,7 +249,7 @@ gst_vdp_mpeg_dec_create_decoder (GstVdpMpegDec * mpeg_dec)
   GstVdpDevice *device;
 
   ret = gst_vdp_video_src_pad_get_device
-      (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)),
+      (GST_VDP_VIDEO_SRC_PAD (SAT_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)),
       &device, NULL);
 
   if (ret == GST_FLOW_OK) {
@@ -280,7 +280,7 @@ static gboolean
 gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
     GstBuffer * seq, GstBuffer * seq_ext)
 {
-  GstBaseVideoDecoder *base_video_decoder = GST_BASE_VIDEO_DECODER (mpeg_dec);
+  SatBaseVideoDecoder *base_video_decoder = SAT_BASE_VIDEO_DECODER (mpeg_dec);
 
   MPEGSeqHdr hdr;
   GstVdpMpegStreamInfo stream_info;
@@ -328,9 +328,9 @@ gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
 
   if (memcmp (&mpeg_dec->stream_info, &stream_info,
           sizeof (GstVdpMpegStreamInfo)) != 0) {
-    GstVideoState *state;
+    SatVideoState *state;
 
-    state = gst_base_video_decoder_get_state (base_video_decoder);
+    state = sat_base_video_decoder_get_state (base_video_decoder);
 
     state->width = stream_info.width;
     state->height = stream_info.height;
@@ -343,8 +343,8 @@ gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
 
     state->interlaced = stream_info.interlaced;
 
-    gst_base_video_decoder_set_state (base_video_decoder, state);
-    gst_base_video_decoder_update_src_caps (base_video_decoder);
+    sat_base_video_decoder_set_state (base_video_decoder, state);
+    sat_base_video_decoder_update_src_caps (base_video_decoder);
 
     memcpy (&mpeg_dec->stream_info, &stream_info,
         sizeof (GstVdpMpegStreamInfo));
@@ -354,8 +354,8 @@ gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
 }
 
 static GstFlowReturn
-gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame, GstClockTimeDiff deadline)
+gst_vdp_mpeg_dec_handle_frame (SatBaseVideoDecoder * base_video_decoder,
+    SatVideoFrame * frame, GstClockTimeDiff deadline)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
@@ -404,7 +404,7 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     GST_DEBUG_OBJECT (mpeg_dec,
         "Drop frame since we haven't got an I_FRAME yet");
 
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+    sat_base_video_decoder_skip_frame (base_video_decoder, frame);
     return GST_FLOW_OK;
   }
   if (info->picture_coding_type == B_FRAME
@@ -412,19 +412,19 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     GST_DEBUG_OBJECT (mpeg_dec,
         "Drop frame since we haven't got two non B_FRAMES yet");
 
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+    sat_base_video_decoder_skip_frame (base_video_decoder, frame);
     return GST_FLOW_OK;
   }
 
 
   if (info->picture_coding_type != B_FRAME) {
     if (info->backward_reference != VDP_INVALID_HANDLE) {
-      gst_base_video_decoder_finish_frame (base_video_decoder,
+      sat_base_video_decoder_finish_frame (base_video_decoder,
           mpeg_dec->b_frame);
     }
 
     if (info->forward_reference != VDP_INVALID_HANDLE) {
-      gst_video_frame_unref (mpeg_dec->f_frame);
+      sat_video_frame_unref (mpeg_dec->f_frame);
       info->forward_reference = VDP_INVALID_HANDLE;
     }
 
@@ -468,16 +468,16 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   frame->src_buffer = GST_BUFFER_CAST (outbuf);
 
   if (info->picture_coding_type == B_FRAME) {
-    gst_base_video_decoder_finish_frame (base_video_decoder, frame);
+    sat_base_video_decoder_finish_frame (base_video_decoder, frame);
   } else {
     info->backward_reference = surface;
-    mpeg_dec->b_frame = gst_video_frame_ref (frame);
+    mpeg_dec->b_frame = sat_video_frame_ref (frame);
   }
 
   return GST_FLOW_OK;
 
 alloc_error:
-  gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+  sat_base_video_decoder_skip_frame (base_video_decoder, frame);
   return ret;
 
 decode_error:
@@ -487,19 +487,19 @@ decode_error:
           device->vdp_get_error_string (status)));
 
   gst_buffer_unref (GST_BUFFER_CAST (outbuf));
-  gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+  sat_base_video_decoder_skip_frame (base_video_decoder, frame);
 
   return GST_FLOW_ERROR;
 }
 
-static GstVideoFrame *
-gst_vdp_mpeg_dec_create_frame (GstBaseVideoDecoder * base_video_decoder)
+static SatVideoFrame *
+gst_vdp_mpeg_dec_create_frame (SatBaseVideoDecoder * base_video_decoder)
 {
-  return GST_VIDEO_FRAME (gst_vdp_mpeg_frame_new ());
+  return SAT_VIDEO_FRAME (gst_vdp_mpeg_frame_new ());
 }
 
 static GstFlowReturn
-gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
+gst_vdp_mpeg_dec_parse_data (SatBaseVideoDecoder * base_video_decoder,
     GstBuffer * buf, gboolean at_eos)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
@@ -528,7 +528,7 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   }
 
   mpeg_frame = (GstVdpMpegFrame *)
-      gst_base_video_decoder_get_current_frame (base_video_decoder);
+      sat_base_video_decoder_get_current_frame (base_video_decoder);
 
   if (start_code >= MPEG_PACKET_SLICE_MIN
       && start_code <= MPEG_PACKET_SLICE_MAX) {
@@ -543,9 +543,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
 
       if (mpeg_dec->prev_packet != -1) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
-            (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
+        ret = sat_base_video_decoder_have_frame (base_video_decoder,
+            (SatVideoFrame **) & mpeg_frame);
+        sat_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->seq = buf;
@@ -557,9 +557,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
 
       if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE &&
           mpeg_dec->prev_packet != MPEG_PACKET_GOP) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
-            (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
+        ret = sat_base_video_decoder_have_frame (base_video_decoder,
+            (SatVideoFrame **) & mpeg_frame);
+        sat_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->pic = buf;
@@ -569,9 +569,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");
 
       if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
-            (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
+        ret = sat_base_video_decoder_have_frame (base_video_decoder,
+            (SatVideoFrame **) & mpeg_frame);
+        sat_base_video_decoder_frame_start (base_video_decoder, buf);
       }
 
       mpeg_frame->gop = buf;
@@ -635,24 +635,24 @@ done:
 }
 
 static GstPad *
-gst_vdp_mpeg_dec_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
-    GstBaseVideoDecoderClass * base_video_decoder_class)
+gst_vdp_mpeg_dec_create_srcpad (SatBaseVideoDecoder * base_video_decoder,
+    SatBaseVideoDecoderClass * base_video_decoder_class)
 {
   GstPadTemplate *pad_template;
   GstVdpVideoSrcPad *vdp_pad;
 
   pad_template = gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (base_video_decoder_class),
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
+      SAT_BASE_VIDEO_DECODER_SRC_NAME);
 
   vdp_pad = gst_vdp_video_src_pad_new (pad_template,
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
+      SAT_BASE_VIDEO_DECODER_SRC_NAME);
 
   return GST_PAD (vdp_pad);
 }
 
 static gint
-gst_vdp_mpeg_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
+gst_vdp_mpeg_dec_scan_for_sync (SatBaseVideoDecoder * base_video_decoder,
     GstAdapter * adapter)
 {
   gint m;
@@ -665,8 +665,8 @@ gst_vdp_mpeg_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
   return m;
 }
 
-static GstBaseVideoDecoderScanResult
-gst_vdp_mpeg_dec_scan_for_packet_end (GstBaseVideoDecoder * base_video_decoder,
+static SatBaseVideoDecoderScanResult
+gst_vdp_mpeg_dec_scan_for_packet_end (SatBaseVideoDecoder * base_video_decoder,
     GstAdapter * adapter, guint * size, gboolean at_eos)
 {
   guint8 *data;
@@ -677,26 +677,26 @@ gst_vdp_mpeg_dec_scan_for_packet_end (GstBaseVideoDecoder * base_video_decoder,
   sync_code = ((data[0] << 16) | (data[1] << 8) | data[2]);
 
   if (sync_code != 0x000001)
-    return GST_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC;
+    return SAT_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC;
 
   *size = gst_adapter_masked_scan_uint32 (adapter, 0xffffff00, 0x00000100,
       SYNC_CODE_SIZE, gst_adapter_available (adapter) - SYNC_CODE_SIZE);
 
   if (*size == -1)
-    return GST_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA;
+    return SAT_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA;
 
-  return GST_BASE_VIDEO_DECODER_SCAN_RESULT_OK;
+  return SAT_BASE_VIDEO_DECODER_SCAN_RESULT_OK;
 }
 
 static gboolean
-gst_vdp_mpeg_dec_flush (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_flush (SatBaseVideoDecoder * base_video_decoder)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-    gst_video_frame_unref (mpeg_dec->f_frame);
+    sat_video_frame_unref (mpeg_dec->f_frame);
   if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
-    gst_video_frame_unref (mpeg_dec->b_frame);
+    sat_video_frame_unref (mpeg_dec->b_frame);
 
   gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
 
@@ -706,7 +706,7 @@ gst_vdp_mpeg_dec_flush (GstBaseVideoDecoder * base_video_decoder)
 }
 
 static gboolean
-gst_vdp_mpeg_dec_start (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_start (SatBaseVideoDecoder * base_video_decoder)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
@@ -721,7 +721,7 @@ gst_vdp_mpeg_dec_start (GstBaseVideoDecoder * base_video_decoder)
 }
 
 static gboolean
-gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_stop (SatBaseVideoDecoder * base_video_decoder)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
@@ -730,7 +730,7 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   GstVdpDevice *device;
 
   vdp_pad =
-      GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD
+      GST_VDP_VIDEO_SRC_PAD (SAT_BASE_VIDEO_DECODER_SRC_PAD
       (base_video_decoder));
 
   ret = gst_vdp_video_src_pad_get_device (vdp_pad, &device, NULL);
@@ -767,7 +767,7 @@ gst_vdp_mpeg_dec_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DISPLAY:
       g_object_get_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
+          (G_OBJECT (SAT_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
           value);
       break;
     default:
@@ -785,7 +785,7 @@ gst_vdp_mpeg_dec_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DISPLAY:
       g_object_set_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
+          (G_OBJECT (SAT_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
           value);
       break;
     default:
@@ -813,7 +813,7 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
       gst_static_pad_template_get (&sink_template));
 
   src_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new (GST_BASE_VIDEO_DECODER_SRC_NAME,
+  src_template = gst_pad_template_new (SAT_BASE_VIDEO_DECODER_SRC_NAME,
       GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
 
   gst_element_class_add_pad_template (element_class, src_template);
@@ -825,11 +825,11 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
+  SatBaseVideoDecoderClass *base_video_decoder_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  base_video_decoder_class = (GstBaseVideoDecoderClass *) klass;
+  base_video_decoder_class = (SatBaseVideoDecoderClass *) klass;
 
   gobject_class->get_property = gst_vdp_mpeg_dec_get_property;
   gobject_class->set_property = gst_vdp_mpeg_dec_set_property;

@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include "../basevideodecoder/gstbasevideodecoder.h"
+#include "../basevideodecoder/satbasevideodecoder.h"
 
 #include "gsth264parser.h"
 #include "gsth264dpb.h"
@@ -43,7 +43,7 @@ typedef struct _GstVdpH264DecClass GstVdpH264DecClass;
 
 
 struct _GstVdpH264Dec {
-  GstBaseVideoDecoder base_video_decoder;
+  SatBaseVideoDecoder base_video_decoder;
 
   gboolean packetized;
   guint8 nal_length_size;
@@ -60,7 +60,7 @@ struct _GstVdpH264Dec {
 };
 
 struct _GstVdpH264DecClass {
-  GstBaseVideoDecoderClass base_video_decoder_class;
+  SatBaseVideoDecoderClass base_video_decoder_class;
 };
 
 GType gst_vdp_h264_dec_get_type (void);

@@ -25,7 +25,7 @@
 
 #include <vdpau/vdpau.h>
 
-#include "../basevideodecoder/gstvideoframe.h"
+#include "../basevideodecoder/satvideoframe.h"
 
 #define GST_TYPE_VDP_MPEG_FRAME (gst_vdp_mpeg_frame_get_type())
 #define GST_IS_VDP_MPEG_FRAME(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_MPEG_FRAME))
@@ -48,7 +48,7 @@ typedef struct _GstVdpMpegFrameClass GstVdpMpegFrameClass;
 
 struct _GstVdpMpegFrame
 {
-  GstVideoFrame video_frame;
+  SatVideoFrame video_frame;
 
 	GstBuffer *seq;
 	GstBuffer *seq_ext;
@@ -65,7 +65,7 @@ struct _GstVdpMpegFrame
 
 struct _GstVdpMpegFrameClass
 {
-	GstVideoFrameClass video_frame_class;
+	SatVideoFrameClass video_frame_class;
 };
 
 void gst_vdp_mpeg_frame_add_slice (GstVdpMpegFrame *mpeg_frame, GstBuffer *buf);

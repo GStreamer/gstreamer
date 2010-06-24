@@ -124,7 +124,7 @@ gst_vdp_mpeg_frame_get_type (void)
       (GInstanceInitFunc) gst_vdp_mpeg_frame_init,
       NULL
     };
-    _gst_vdp_mpeg_frame_type = g_type_register_static (GST_TYPE_VIDEO_FRAME,
+    _gst_vdp_mpeg_frame_type = g_type_register_static (SAT_TYPE_VIDEO_FRAME,
         "GstVdpMpegFrame", &info, 0);
 
     DEBUG_INIT ();
