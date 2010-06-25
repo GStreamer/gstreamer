@@ -126,6 +126,7 @@ static GstElement *
 ges_track_video_overlay_create_element (GESTrackOverlay * object)
 {
   GstElement *ret, *text;
+  GstPad *src_target, *sink_target;
   GstPad *src, *sink;
   GESTrackVideoOverlay *self = GES_TRACK_VIDEO_OVERLAY (object);
 
@@ -144,9 +145,13 @@ ges_track_video_overlay_create_element (GESTrackOverlay * object)
   ret = gst_bin_new ("overlay-bin");
   gst_bin_add (GST_BIN (ret), text);
 
-  src = gst_ghost_pad_new ("src", gst_element_get_static_pad (text, "src"));
-  sink = gst_ghost_pad_new ("video_sink", gst_element_get_static_pad (text,
-          "video_sink"));
+  src_target = gst_element_get_static_pad (text, "src");
+  sink_target = gst_element_get_static_pad (text, "video_sink");
+
+  src = gst_ghost_pad_new ("src", src_target);
+  sink = gst_ghost_pad_new ("video_sink", sink_target);
+  g_object_unref (src_target);
+  g_object_unref (sink_target);
 
   gst_element_add_pad (ret, src);
   gst_element_add_pad (ret, sink);
