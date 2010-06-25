@@ -1776,7 +1776,7 @@ again:
       GstEvent *event;
 
       /* we had a gap and thus we lost a packet. Create an event for this.  */
-      GST_WARNING_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
+      GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", next_seqnum);
       priv->num_late++;
       discont = TRUE;
 
