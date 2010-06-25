@@ -835,6 +835,11 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       goto next;
     }
 
+    if ((!strncmp (in_plugin->long_name, "raw ", 4))) {
+      GST_LOG ("Ignoring raw muxer %s", in_plugin->name);
+      goto next;
+    }
+
     /* FIXME : We need a fast way to know whether we have mappings for this
      * muxer type. */
 
