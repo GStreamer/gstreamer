@@ -2007,6 +2007,12 @@ done:
  *
  * Links the source pad and the sink pad.
  *
+ * This variant of #gst_pad_link provides a more granular control on the
+ * checks being done when linking. While providing some considerable speedups
+ * the caller of this method must be aware that wrong usage of those flags
+ * can cause severe issues. Refer to the documentation of #GstPadLinkCheck
+ * for more information.
+ *
  * Returns: A result code indicating if the connection worked or
  *          what went wrong.
  *

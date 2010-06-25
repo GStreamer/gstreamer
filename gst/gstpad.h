@@ -179,13 +179,18 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
 /**
  * GstPadLinkCheck:
- * @GST_PAD_LINK_CHECK_NOTHING: Don't check hierarchy or compatibily
- * @GST_PAD_LINK_CHECK_HIERARCHY: Check the pads have same parents/grandparents
+ * @GST_PAD_LINK_CHECK_NOTHING: Don't check hierarchy or caps compatibility.
+ * @GST_PAD_LINK_CHECK_HIERARCHY: Check the pads have same parents/grandparents.
  * @GST_PAD_LINK_CHECK_TEMPLATE_CAPS: Check if the pads are compatible by using their
  * template caps.
- * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by checking their full caps
+ * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by comparing the caps
+ * returned by #gst_pad_get_caps.
  *
  * The amount of check to be done when linking pads.
+ *
+ * Warning: Only use these flags if you are 100% certain you know the link will
+ * not fail because of hierarchy/caps failures. If uncertain, use the default
+ * checks (#GST_PAD_LINK_CHECK_DEFAULT) or the regular methods.
  *
  * Since: 0.10.30
  */
