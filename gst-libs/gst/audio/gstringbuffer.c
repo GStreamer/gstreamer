@@ -1960,18 +1960,18 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
+  if (buf->callback == NULL) {
+    /* push mode, fail when nothing is started */
+    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
+      return FALSE;
+  }
+
   g_return_val_if_fail (buf->data != NULL, FALSE);
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (readptr != NULL, FALSE);
   g_return_val_if_fail (len != NULL, FALSE);
 
   data = GST_BUFFER_DATA (buf->data);
-
-  if (buf->callback == NULL) {
-    /* push mode, fail when nothing is started */
-    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
-      return FALSE;
-  }
 
   /* get the position of the pointer */
   segdone = g_atomic_int_get (&buf->segdone);
