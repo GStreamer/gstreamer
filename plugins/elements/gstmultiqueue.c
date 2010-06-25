@@ -1315,6 +1315,22 @@ gst_multi_queue_getcaps (GstPad * pad)
   return result;
 }
 
+static gboolean
+gst_multi_queue_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstSingleQueue *sq = gst_pad_get_element_private (pad);
+  GstPad *otherpad;
+  gboolean result;
+
+  otherpad = (pad == sq->srcpad) ? sq->sinkpad : sq->srcpad;
+
+  GST_LOG_OBJECT (otherpad, "Accept caps from the peer of this pad");
+
+  result = gst_pad_peer_accept_caps (otherpad, caps);
+
+  return result;
+}
+
 static GstFlowReturn
 gst_multi_queue_bufferalloc (GstPad * pad, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -1652,6 +1668,8 @@ gst_single_queue_new (GstMultiQueue * mqueue)
       GST_DEBUG_FUNCPTR (gst_multi_queue_sink_event));
   gst_pad_set_getcaps_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
+  gst_pad_set_acceptcaps_function (sq->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
   gst_pad_set_bufferalloc_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_bufferalloc));
   gst_pad_set_iterate_internal_links_function (sq->sinkpad,
@@ -1665,6 +1683,8 @@ gst_single_queue_new (GstMultiQueue * mqueue)
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
   gst_pad_set_getcaps_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
+  gst_pad_set_acceptcaps_function (sq->srcpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
   gst_pad_set_event_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,
