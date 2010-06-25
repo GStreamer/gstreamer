@@ -97,7 +97,7 @@ struct _GstControllerPrivate
 };
 
 /* helper */
-
+#ifndef GST_REMOVE_DEPRECATED
 static void
 gst_controlled_property_add_interpolation_control_source (GstControlledProperty
     * self)
@@ -111,6 +111,7 @@ gst_controlled_property_add_interpolation_control_source (GstControlledProperty
   gst_control_source_bind (GST_CONTROL_SOURCE (csource), self->pspec);
   self->csource = csource;
 }
+#endif
 
 /*
  * gst_controlled_property_new:
@@ -987,6 +988,7 @@ gst_controller_get_type (void)
  *
  * Returns: %TRUE for success
  */
+#ifndef GST_REMOVE_DEPRECATED
 static gboolean
 gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
     GstInterpolateMode mode)
@@ -1005,6 +1007,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
   return gst_interpolation_control_source_set_interpolation_mode (icsource,
       mode);
 }
+#endif
 
 /**
  * gst_controller_set:
@@ -1170,7 +1173,8 @@ out:
  */
 #ifndef GST_REMOVE_DEPRECATED
 #ifdef GST_DISABLE_DEPRECATED
-gboolean gst_controller_unset_all (GstController * self, const gchar * property_name);
+gboolean gst_controller_unset_all (GstController * self,
+    const gchar * property_name);
 #endif
 gboolean
 gst_controller_unset_all (GstController * self, const gchar * property_name)
