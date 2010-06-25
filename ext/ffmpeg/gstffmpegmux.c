@@ -137,6 +137,40 @@ static GstElementClass *parent_class = NULL;
 
 /*static guint gst_ffmpegmux_signals[LAST_SIGNAL] = { 0 }; */
 
+typedef struct
+{
+  const char *name;
+  const char *replacement;
+} GstFFMpegMuxReplacement;
+
+static const char *
+gst_ffmpegmux_get_replacement (const char *name)
+{
+  static const GstFFMpegMuxReplacement blacklist[] = {
+    {"avi", "avimux"},
+    {"matroska", "matroskamux"},
+    {"mov", "qtmux"},
+    {"mpegts", "mpegtsmux"},
+    {"mp4", "mp4mux"},
+    {"mpjpeg", "multipartmux"},
+    {"ogg", "oggmux"},
+    {"wav", "wavenc"},
+    {"webm", "webmmux"},
+    {"mxf", "mxfmux"},
+    {"3gp", "gppmux"},
+    {"yuv4mpegpipe", "y4menc"}
+  };
+  int i;
+
+  for (i = 0; i < sizeof (blacklist) / sizeof (blacklist[0]); i++) {
+    if (strcmp (blacklist[i].name, name) == 0) {
+      return blacklist[i].replacement;
+    }
+  }
+
+  return NULL;
+}
+
 static void
 gst_ffmpegmux_base_init (gpointer g_class)
 {
@@ -147,6 +181,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
   GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
   enum CodecID *video_ids = NULL, *audio_ids = NULL;
   gchar *longname, *description;
+  const char *replacement;
 
   in_plugin =
       (AVOutputFormat *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -154,8 +189,18 @@ gst_ffmpegmux_base_init (gpointer g_class)
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
-  longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
-  description = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+  replacement = gst_ffmpegmux_get_replacement (in_plugin->name);
+  if (replacement != NULL) {
+    longname =
+        g_strdup_printf ("FFmpeg %s muxer (not recommended, use %s instead)",
+        in_plugin->long_name, replacement);
+    description =
+        g_strdup_printf ("FFmpeg %s muxer (not recommended, use %s instead)",
+        in_plugin->long_name, replacement);
+  } else {
+    longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+    description = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+  }
   gst_element_class_set_details_simple (element_class, longname, "Codec/Muxer",
       description,
       "Wim Taymans <wim.taymans@chello.be>, "
