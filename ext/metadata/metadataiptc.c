@@ -58,6 +58,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include "metadataiptc.h"
 #include "metadataparseutil.h"
 #include "metadatatags.h"

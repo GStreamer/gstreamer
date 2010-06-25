@@ -65,6 +65,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include "metadataxmp.h"
 #include "metadataparseutil.h"
 #include "metadatatags.h"

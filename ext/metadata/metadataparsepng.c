@@ -65,6 +65,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include "metadataparsepng.h"
 #include "metadataparseutil.h"
 

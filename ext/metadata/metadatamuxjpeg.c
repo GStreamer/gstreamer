@@ -76,6 +76,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include "metadatamuxjpeg.h"
 #include "metadataxmp.h"
 

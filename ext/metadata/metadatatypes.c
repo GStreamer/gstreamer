@@ -53,6 +53,9 @@
  * includes
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 #include "metadatatypes.h"
 
 #include <string.h>
