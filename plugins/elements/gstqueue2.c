@@ -1659,6 +1659,9 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     }
     update_cur_level (queue, queue->current);
 
+    /* update the buffering status */
+    update_buffering (queue);
+
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
@@ -1719,8 +1722,10 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
     /* update the byterate stats */
     update_in_rates (queue);
 
-    /* FIXME - check return value? */
-    gst_queue2_create_write (queue, buffer);
+    if (!QUEUE_IS_USING_QUEUE (queue)) {
+      /* FIXME - check return value? */
+      gst_queue2_create_write (queue, buffer);
+    }
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event;
 
@@ -1764,13 +1769,14 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
   }
 
   if (item) {
-    /* update the buffering status */
-    update_buffering (queue);
+    if (QUEUE_IS_USING_QUEUE (queue)) {
+      /* update the buffering status */
+      update_buffering (queue);
 
-    if (QUEUE_IS_USING_QUEUE (queue))
       g_queue_push_tail (queue->queue, item);
-    else
+    } else {
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (item));
+    }
 
     if (!QUEUE_IS_USING_RING_BUFFER (queue))
       GST_QUEUE2_SIGNAL_ADD (queue);
