@@ -234,6 +234,7 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
 {
   GString *str = (GString *) ptr;
   gchar *value_str = gst_value_serialize (value);
+  gchar *esc_value_str;
 
   /* some enums can become really long */
   if (strlen (value_str) > 25) {
@@ -242,7 +243,7 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
     /* truncate */
     value_str[25] = '\0';
 
-    /* mirror any brackets */
+    /* mirror any brackets and quotes */
     if (value_str[0] == '<')
       value_str[pos--] = '>';
     if (value_str[0] == '[')
@@ -251,6 +252,8 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
       value_str[pos--] = ')';
     if (value_str[0] == '{')
       value_str[pos--] = '}';
+    if (value_str[0] == '"')
+      value_str[pos--] = '"';
     if (pos != 24)
       value_str[pos--] = ' ';
     /* elippsize */
@@ -258,10 +261,13 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
     value_str[pos--] = '.';
     value_str[pos--] = '.';
   }
+  esc_value_str = g_strescape (value_str, NULL);
+
   g_string_append_printf (str, "  %18s: %s\\l", g_quark_to_string (field),
-      value_str);
+      esc_value_str);
 
   g_free (value_str);
+  g_free (esc_value_str);
   return TRUE;
 }
 
