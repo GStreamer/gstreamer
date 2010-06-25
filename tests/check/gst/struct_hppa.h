@@ -67,7 +67,7 @@ static GstCheckABIStruct list[] = {
   {"GstTypeFindFactoryClass", sizeof (GstTypeFindFactoryClass), 152},
   {"GstURIHandlerInterface", sizeof (GstURIHandlerInterface), 44},
   {"GstValueTable", sizeof (GstValueTable), 32},
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED) && !defined(GST_REMOVE_DEPRECATED)
   {"GstXML", sizeof (GstXML), 64},
   {"GstXMLClass", sizeof (GstXMLClass), 144},
 #endif
