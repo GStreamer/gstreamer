@@ -20,6 +20,8 @@
 
 #include <gst/gst.h>
 
+#include <stdlib.h>
+
 static void
 type_found (GstElement * typefind, guint probability, const GstCaps * caps,
     gpointer user_data)
