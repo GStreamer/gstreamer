@@ -428,13 +428,13 @@ gst_qt_mux_add_mp4_tag (GstQTMux * qtmux, const GstTagList * list,
     }
     case G_TYPE_UINT:
     {
-      guint value;
+      guint value = 0;
       if (tag2) {
         /* paired unsigned integers */
-        guint count;
+        guint count = 0;
 
-        if (!gst_tag_list_get_uint (list, tag, &value) ||
-            !gst_tag_list_get_uint (list, tag2, &count))
+        if (!(gst_tag_list_get_uint (list, tag, &value) ||
+                gst_tag_list_get_uint (list, tag2, &count)))
           break;
         GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %u/%u",
             GST_FOURCC_ARGS (fourcc), value, count);
