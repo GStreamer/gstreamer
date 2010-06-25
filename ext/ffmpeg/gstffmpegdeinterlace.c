@@ -112,6 +112,9 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
       GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   AVCodecContext *ctx;
+  GValue interlaced = { 0 };
+  GstCaps *srcCaps;
+  GstFlowReturn ret;
 
   if (!gst_structure_get_int (structure, "width", &deinterlace->width))
     return FALSE;
@@ -136,7 +139,15 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
       avpicture_get_size (deinterlace->pixfmt, deinterlace->width,
       deinterlace->height);
 
-  return gst_pad_set_caps (deinterlace->srcpad, caps);
+  srcCaps = gst_caps_copy (caps);
+  g_value_init (&interlaced, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&interlaced, FALSE);
+  gst_caps_set_value (srcCaps, "interlaced", &interlaced);
+  g_value_unset (&interlaced);
+
+  ret = gst_pad_set_caps (deinterlace->srcpad, srcCaps);
+  gst_caps_unref (srcCaps);
+  return ret;
 }
 
 static void
