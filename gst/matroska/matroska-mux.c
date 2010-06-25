@@ -2500,6 +2500,7 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
   gst_structure_set_value (s, "streamheader", &streamheader);
   g_value_unset (&streamheader);
   gst_caps_unref (ebml->caps);
+  gst_buffer_unref (streamheader_buffer);
   ebml->caps = caps;
 }
 
