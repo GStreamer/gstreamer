@@ -244,7 +244,7 @@ GstCaps *         gst_caps_union                   (const GstCaps *caps1,
 GstCaps *         gst_caps_normalize               (const GstCaps *caps);
 gboolean          gst_caps_do_simplify             (GstCaps       *caps);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED)
 xmlNodePtr        gst_caps_save_thyself            (const GstCaps *caps,
                                                     xmlNodePtr     parent);
 GstCaps *         gst_caps_load_thyself            (xmlNodePtr     parent);

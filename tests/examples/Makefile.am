@@ -1,9 +1,3 @@
-if GST_DISABLE_LOADSAVE
-GST_LOADSAVE_DIRS = 
-else
-GST_LOADSAVE_DIRS = xml typefind
-endif
-
 if GST_DISABLE_PARSE
 GST_PARSE_DIRS = 
 else
@@ -24,7 +18,8 @@ always_dirs = \
 	metadata   \
 	queue      \
 	stepping \
-	streams
+	streams \
+	typefind
 
 #appreader
 #cutter
@@ -45,9 +40,8 @@ always_dirs = \
 SUBDIRS = 				\
 	$(always_dirs)			\
 	$(ADAPTER_TEST_DIR)		\
-	$(GST_PARSE_DIRS)		\
-	$(GST_LOADSAVE_DIRS)
+	$(GST_PARSE_DIRS)
 
-DIST_SUBDIRS = $(always_dirs) adapter xml typefind launch
+DIST_SUBDIRS = $(always_dirs) adapter launch
 
 include $(top_srcdir)/common/parallel-subdirs.mak

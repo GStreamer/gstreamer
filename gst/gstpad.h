@@ -1001,7 +1001,7 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 gboolean		gst_pad_dispatcher			(GstPad *pad, GstPadDispatcherFunction dispatch,
 								 gpointer data);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_DISABLE_DEPRECATED)
 void			gst_pad_load_and_link			(xmlNodePtr self, GstObject *parent);
 #endif
 

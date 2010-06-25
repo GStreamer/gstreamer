@@ -77,7 +77,7 @@ static GstPad *gst_proxy_pad_get_target (GstPad * pad);
 static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
     xmlNodePtr parent);
 #endif
@@ -381,12 +381,14 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
   gobject_class->dispose = gst_proxy_pad_dispose;
   gobject_class->finalize = gst_proxy_pad_finalize;
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   {
     GstObjectClass *gstobject_class = (GstObjectClass *) klass;
 
     gstobject_class->save_thyself =
-        GST_DEBUG_FUNCPTR (gst_proxy_pad_save_thyself);
+        ((gpointer (*)(GstObject * object,
+                gpointer self)) *
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_save_thyself));
   }
 #endif
   /* Register common function pointer descriptions */
@@ -457,7 +459,7 @@ gst_proxy_pad_init (GstProxyPad * ppad)
   gst_pad_set_unlink_function (pad, gst_proxy_pad_do_unlink);
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /**
  * gst_proxy_pad_save_thyself:
  * @pad: a ghost #GstPad to save.

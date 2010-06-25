@@ -109,6 +109,15 @@ enum
       /* FILL ME */
 };
 
+#ifdef GST_DISABLE_DEPRECATED
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+xmlNodePtr gst_object_save_thyself (const GstObject * object,
+    xmlNodePtr parent);
+GstObject *gst_object_load_thyself (xmlNodePtr parent);
+void gst_pad_load_and_link (xmlNodePtr self, GstObject * parent);
+#endif
+#endif
+
 static void gst_element_class_init (GstElementClass * klass);
 static void gst_element_init (GstElement * element);
 static void gst_element_base_class_init (gpointer g_class);
@@ -134,7 +143,7 @@ static GstPadTemplate
     * gst_element_class_get_request_pad_template (GstElementClass *
     element_class, const gchar * name);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
     xmlNodePtr parent);
 static void gst_element_restore_thyself (GstObject * parent, xmlNodePtr self);
@@ -223,10 +232,13 @@ gst_element_class_init (GstElementClass * klass)
   gobject_class->dispose = gst_element_dispose;
   gobject_class->finalize = gst_element_finalize;
 
-#ifndef GST_DISABLE_LOADSAVE
-  gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_element_save_thyself);
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+  gstobject_class->save_thyself =
+      ((gpointer (*)(GstObject * object,
+              gpointer self)) * GST_DEBUG_FUNCPTR (gst_element_save_thyself));
   gstobject_class->restore_thyself =
-      GST_DEBUG_FUNCPTR (gst_element_restore_thyself);
+      ((void (*)(GstObject * object,
+              gpointer self)) *GST_DEBUG_FUNCPTR (gst_element_restore_thyself));
 #endif
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
@@ -2905,7 +2917,7 @@ gst_element_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /**
  * gst_element_save_thyself:
  * @element: a #GstElement to save.

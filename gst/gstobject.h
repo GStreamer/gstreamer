@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 
 /* make sure we don't change the object size but still make it compile
  * without libxml */
-#ifdef GST_DISABLE_LOADSAVE
+#if defined(GST_DISABLE_LOADSAVE) || defined(GST_DISABLE_DEPRECATED)
 #define GstXmlNodePtr	gpointer
 #else
 #define GstXmlNodePtr	xmlNodePtr
@@ -267,11 +267,13 @@ struct _GstObjectClass {
   /* FIXME-0.11: remove, and pass NULL in g_signal_new(), we never used them */
   void          (*parent_set)       (GstObject * object, GstObject * parent);
   void          (*parent_unset)     (GstObject * object, GstObject * parent);
+  /* FIXME 0.11: Remove this, it's deprecated */
   void          (*object_saved)     (GstObject * object, GstXmlNodePtr parent);
   void          (*deep_notify)      (GstObject * object, GstObject * orig, GParamSpec * pspec);
 
   /*< public >*/
   /* virtual methods for subclasses */
+  /* FIXME 0.11: Remove this, it's deprecated */
   GstXmlNodePtr (*save_thyself)     (GstObject * object, GstXmlNodePtr parent);
   void          (*restore_thyself)  (GstObject * object, GstXmlNodePtr self);
 
@@ -316,6 +318,7 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 /* load/save */
+#ifndef GST_DISABLE_DEPRECATED
 #ifndef GST_DISABLE_LOADSAVE
 GstXmlNodePtr   gst_object_save_thyself    (GstObject *object, GstXmlNodePtr parent);
 void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr self);
@@ -325,6 +328,7 @@ void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr sel
 #pragma GCC poison gst_object_restore_thyself
 #endif
 #endif
+#endif
 
 /* class signal stuff */
 guint		gst_class_signal_connect	(GstObjectClass	*klass,
@@ -332,6 +336,7 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 gpointer	 func,
 						 gpointer	 func_data);
 
+#ifndef GST_DISABLE_DEPRECATED
 #ifndef GST_DISABLE_LOADSAVE
 void        gst_class_signal_emit_by_name   (GstObject     * object,
                                              const gchar   * name,
@@ -341,7 +346,7 @@ void        gst_class_signal_emit_by_name   (GstObject     * object,
 #pragma GCC poison gst_class_signal_emit_by_name
 #endif
 #endif
-
+#endif
 
 G_END_DECLS
 

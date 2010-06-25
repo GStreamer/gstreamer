@@ -118,8 +118,9 @@ static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
+void gst_pad_load_and_link (xmlNodePtr self, GstObject * parent);
 #endif
 
 /* Some deprecated stuff that we need inside here for
@@ -322,8 +323,10 @@ gst_pad_class_init (GstPadClass * klass)
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-#ifndef GST_DISABLE_LOADSAVE
-  gstobject_class->save_thyself = GST_DEBUG_FUNCPTR (gst_pad_save_thyself);
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+  gstobject_class->save_thyself =
+      ((gpointer (*)(GstObject * object,
+              gpointer self)) * GST_DEBUG_FUNCPTR (gst_pad_save_thyself));
 #endif
   gstobject_class->path_string_separator = ".";
 
@@ -3753,7 +3756,7 @@ gst_pad_query_default (GstPad * pad, GstQuery * query)
   }
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /* FIXME: why isn't this on a GstElement ? */
 /**
  * gst_pad_load_and_link:

@@ -104,7 +104,7 @@ enum
 {
   PARENT_SET,
   PARENT_UNSET,
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   OBJECT_SAVED,
 #endif
   DEEP_NOTIFY,
@@ -134,7 +134,7 @@ typedef struct _GstSignalObjectClass GstSignalObjectClass;
 
 static GType gst_signal_object_get_type (void);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 #endif
 
@@ -150,9 +150,21 @@ static void gst_object_finalize (GObject * object);
 
 static gboolean gst_object_set_name_default (GstObject * object);
 
-#ifndef GST_DISABLE_LOADSAVE
+#ifdef GST_DISABLE_DEPRECATED
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+#undef GstXmlNodePtr
+#define GstXmlNodePtr xmlNodePtr
+GstXmlNodePtr gst_object_save_thyself (GstObject * object,
+    GstXmlNodePtr parent);
+void gst_object_restore_thyself (GstObject * object, GstXmlNodePtr parent);
+void gst_class_signal_emit_by_name (GstObject * object, const gchar * name,
+    GstXmlNodePtr self);
+#endif
+#endif
+
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static void gst_object_real_restore_thyself (GstObject * object,
-    xmlNodePtr self);
+    GstXmlNodePtr self);
 #endif
 
 static GObjectClass *parent_class = NULL;
@@ -203,7 +215,7 @@ gst_object_class_init (GstObjectClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
       NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   /**
    * GstObject::object-saved:
    * @gstobject: a #GstObject
@@ -220,7 +232,9 @@ gst_object_class_init (GstObjectClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, object_saved), NULL,
       NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
-  klass->restore_thyself = gst_object_real_restore_thyself;
+  klass->restore_thyself =
+      ((void (*)(GstObject * object,
+              gpointer self)) *gst_object_real_restore_thyself);
 #endif
 
   /**
@@ -976,7 +990,7 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 }
 
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /**
  * gst_object_save_thyself:
  * @object: a #GstObject to save
@@ -986,8 +1000,8 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
  *
  * Returns: the new xmlNodePtr with the saved object
  */
-xmlNodePtr
-gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
+GstXmlNodePtr
+gst_object_save_thyself (GstObject * object, GstXmlNodePtr parent)
 {
   GstObjectClass *oclass;
 
@@ -1012,7 +1026,7 @@ gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
  * Restores @object with the data from the parent XML node.
  */
 void
-gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
+gst_object_restore_thyself (GstObject * object, GstXmlNodePtr self)
 {
   GstObjectClass *oclass;
 
@@ -1026,7 +1040,7 @@ gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
 }
 
 static void
-gst_object_real_restore_thyself (GstObject * object, xmlNodePtr self)
+gst_object_real_restore_thyself (GstObject * object, GstXmlNodePtr self)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (self != NULL);
@@ -1166,9 +1180,9 @@ struct _GstSignalObjectClass
   GObjectClass parent_class;
 
   /* signals */
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   void (*object_loaded) (GstSignalObject * object, GstObject * new,
-      xmlNodePtr self);
+      GstXmlNodePtr self);
 #endif
 };
 
@@ -1179,7 +1193,7 @@ gst_signal_object_class_init (GstSignalObjectClass * klass)
 {
   parent_class = g_type_class_peek_parent (klass);
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   gst_signal_object_signals[SO_OBJECT_LOADED] =
       g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded),
@@ -1214,7 +1228,7 @@ gst_class_signal_connect (GstObjectClass * klass,
       func_data);
 }
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /**
  * gst_class_signal_emit_by_name:
  * @object: a #GstObject that emits the signal
@@ -1225,7 +1239,7 @@ gst_class_signal_connect (GstObjectClass * klass,
  */
 void
 gst_class_signal_emit_by_name (GstObject * object,
-    const gchar * name, xmlNodePtr self)
+    const gchar * name, GstXmlNodePtr self)
 {
   GstObjectClass *oclass;
 

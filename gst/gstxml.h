@@ -25,6 +25,7 @@
 
 #include <gst/gstconfig.h>
 
+#ifndef GST_DISABLE_DEPRECATED
 #ifndef GST_DISABLE_LOADSAVE
 
 #include <gst/gstelement.h>
@@ -106,5 +107,7 @@ G_END_DECLS
 #endif
 
 #endif /* GST_DISABLE_LOADSAVE */
+
+#endif
 
 #endif /* __GST_XML_H__ */

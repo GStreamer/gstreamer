@@ -73,6 +73,13 @@
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
+#ifdef GST_DISABLE_DEPRECATED
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+xmlNodePtr gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent);
+GstCaps *gst_caps_load_thyself (xmlNodePtr parent);
+#endif
+#endif
+
 #define DEBUG_REFCOUNT
 
 #define CAPS_POISON(caps) G_STMT_START{ \
@@ -1961,7 +1968,7 @@ gst_caps_do_simplify (GstCaps * caps)
 
 /* persistence */
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 /**
  * gst_caps_save_thyself:
  * @caps: a #GstCaps structure

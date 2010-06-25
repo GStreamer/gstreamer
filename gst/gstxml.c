@@ -32,6 +32,10 @@
  *
  * #GstElement implementations need to override the #GstObjectClass.save_thyself()
  * and #GstObjectClass.restore_thyself() virtual functions of #GstObject.
+ *
+ * Deprecated: This feature is deprecated pipeline serialization to XML is
+ * broken for all but the most simple pipelines. It will most likely be
+ * removed in future. Don't use it.
  */
 
 #include "gst_private.h"
@@ -40,6 +44,64 @@
 #include "gstmarshal.h"
 #include "gstinfo.h"
 #include "gstbin.h"
+
+#ifdef GST_DISABLE_DEPRECATED
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+xmlNodePtr gst_object_save_thyself (const GstObject * object,
+    xmlNodePtr parent);
+GstObject *gst_object_load_thyself (xmlNodePtr parent);
+void gst_object_restore_thyself (GstObject * object, GstXmlNodePtr self);
+
+#define GST_TYPE_XML 		(gst_xml_get_type ())
+#define GST_XML(obj) 		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XML, GstXML))
+#define GST_IS_XML(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XML))
+#define GST_XML_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_XML, GstXMLClass))
+#define GST_IS_XML_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_XML))
+#define GST_XML_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XML, GstXMLClass))
+
+typedef struct _GstXML GstXML;
+typedef struct _GstXMLClass GstXMLClass;
+
+struct _GstXML
+{
+  GstObject object;
+
+  /*< public > */
+  GList *topelements;
+
+  xmlNsPtr ns;
+
+  /*< private > */
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstXMLClass
+{
+  GstObjectClass parent_class;
+
+  /* signal callbacks */
+  void (*object_loaded) (GstXML * xml, GstObject * object, xmlNodePtr self);
+  void (*object_saved) (GstXML * xml, GstObject * object, xmlNodePtr self);
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GType gst_xml_get_type (void);
+xmlDocPtr gst_xml_write (GstElement * element);
+gint gst_xml_write_file (GstElement * element, FILE * out);
+GstXML *gst_xml_new (void);
+gboolean gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root);
+gboolean gst_xml_parse_file (GstXML * xml, const guchar * fname,
+    const guchar * root);
+gboolean gst_xml_parse_memory (GstXML * xml, guchar * buffer, guint size,
+    const gchar * root);
+GstElement *gst_xml_get_element (GstXML * xml, const guchar * name);
+GList *gst_xml_get_topelements (GstXML * xml);
+GstElement *gst_xml_make_element (xmlNodePtr cur, GstObject * parent);
+#endif
+#endif
+
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 
 enum
 {
@@ -461,3 +523,5 @@ gst_xml_make_element (xmlNodePtr cur, GstObject * parent)
 
   return element;
 }
+
+#endif

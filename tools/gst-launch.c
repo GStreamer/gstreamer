@@ -76,7 +76,7 @@ static gboolean waiting_eos = FALSE;
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
 
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 static GstElement *
 xmllaunch_parse_cmdline (const gchar ** argv)
 {
@@ -703,7 +703,7 @@ main (int argc, char *argv[])
         N_("Output messages"), NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
     {"output", 'o', 0, G_OPTION_ARG_STRING, &savefile,
         N_("Save xml representation of pipeline to FILE and exit"), N_("FILE")},
 #endif
@@ -777,7 +777,7 @@ main (int argc, char *argv[])
   /* make a null-terminated version of argv */
   argvn = g_new0 (char *, argc);
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   if (strstr (argv[0], "gst-xmllaunch")) {
     /* FIXME 0.11: remove xmllaunch entirely */
     g_warning ("gst-xmllaunch is deprecated and broken for all but the most "
@@ -814,7 +814,7 @@ main (int argc, char *argv[])
     g_signal_connect (pipeline, "deep-notify",
         G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
-#ifndef GST_DISABLE_LOADSAVE
+#if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
   if (savefile) {
     g_warning ("Pipeline serialization to XML is deprecated and broken for "
         "all but the most simple pipelines. It will most likely be removed "
