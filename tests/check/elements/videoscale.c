@@ -23,6 +23,9 @@
 #include <gst/check/gstcheck.h>
 #include <string.h>
 
+/* kids, don't do this at home, skipping checks is *BAD* */
+#define LINK_CHECK_FLAGS GST_PAD_LINK_CHECK_NOTHING
+
 static GstCaps **
 videoscale_get_allowed_caps (void)
 {
@@ -151,8 +154,19 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
 
   gst_bin_add_many (GST_BIN (pipeline), src, ffmpegcolorspace, capsfilter1,
       identity, scale, capsfilter2, sink, NULL);
-  fail_unless (gst_element_link_many (src, ffmpegcolorspace, capsfilter1,
-          identity, scale, capsfilter2, sink, NULL));
+
+  fail_unless (gst_element_link_pads_full (src, "src", ffmpegcolorspace, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (ffmpegcolorspace, "src", capsfilter1,
+          "sink", LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (capsfilter1, "src", identity, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (identity, "src", scale, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (scale, "src", capsfilter2, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (capsfilter2, "src", sink, "sink",
+          LINK_CHECK_FLAGS));
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -434,8 +448,15 @@ _test_negotiation (const gchar * src_templ, const gchar * sink_templ,
 
   gst_bin_add_many (GST_BIN (pipeline), src, capsfilter1, scale, capsfilter2,
       sink, NULL);
-  fail_unless (gst_element_link_many (src, capsfilter1, scale, capsfilter2,
-          sink, NULL));
+
+  fail_unless (gst_element_link_pads_full (src, "src", capsfilter1, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (capsfilter1, "src", scale, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (scale, "src", capsfilter2, "sink",
+          LINK_CHECK_FLAGS));
+  fail_unless (gst_element_link_pads_full (capsfilter2, "src", sink, "sink",
+          LINK_CHECK_FLAGS));
 
   loop = g_main_loop_new (NULL, FALSE);
 
