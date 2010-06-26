@@ -525,4 +525,17 @@ gst_xml_make_element (xmlNodePtr cur, GstObject * parent)
   return element;
 }
 
+#else
+
+/* FIXME: keep this dummy _get_type function around for now, so
+ * gobject-introspection doesn't fail in the GST_REMOVE_DEPRECATED and
+ * GST_DISABLE_LOADSAVE case */
+GType gst_xml_get_type (void);
+
+GType
+gst_xml_get_type (void)
+{
+  return g_pointer_type_register_static ("GstXML");
+}
+
 #endif
