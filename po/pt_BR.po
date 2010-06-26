@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.24.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-16 11:08+0100\n"
+"POT-Creation-Date: 2010-06-26 14:09+0100\n"
 "PO-Revision-Date: 2009-11-05 01:18-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -758,6 +758,12 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versão do codificador usado pelo fluxo"
 
+msgid "image orientation"
+msgstr ""
+
+msgid "How the image should be rotated or flipped before display"
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -1126,7 +1132,7 @@ msgid "Do not install a fault handler"
 msgstr "Não instale um manipulador de falhas"
 
 #, fuzzy
-msgid "Do not install a play handler"
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Não instale um manipulador de falhas"
 
 msgid "Print alloc trace (if enabled at compile time)"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-16 11:08+0100\n"
+"POT-Creation-Date: 2010-06-26 14:09+0100\n"
 "PO-Revision-Date: 2010-04-27 22:59+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -735,6 +735,12 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
 
+msgid "image orientation"
+msgstr ""
+
+msgid "How the image should be rotated or flipped before display"
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -1094,7 +1100,7 @@ msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
 #, fuzzy
-msgid "Do not install a play handler"
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
 msgid "Print alloc trace (if enabled at compile time)"

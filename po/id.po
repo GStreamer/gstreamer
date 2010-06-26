@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-16 11:08+0100\n"
+"POT-Creation-Date: 2010-06-26 14:09+0100\n"
 "PO-Revision-Date: 2010-04-26 21:55+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -738,6 +738,12 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versi penyandi yang digunakan untuk menyandi arus ini"
 
+msgid "image orientation"
+msgstr ""
+
+msgid "How the image should be rotated or flipped before display"
+msgstr ""
+
 msgid ", "
 msgstr ", "
 
@@ -1093,7 +1099,7 @@ msgid "Do not install a fault handler"
 msgstr "Jangan instal penanganan galat"
 
 #, fuzzy
-msgid "Do not install a play handler"
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr "Jangan instal penanganan galat"
 
 msgid "Print alloc trace (if enabled at compile time)"
