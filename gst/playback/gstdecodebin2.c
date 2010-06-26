@@ -3492,6 +3492,11 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       g_mutex_unlock (dbin->factories_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* Make sure we've cleared all existing chains */
+      if (dbin->decode_chain) {
+        gst_decode_chain_free (dbin->decode_chain);
+        dbin->decode_chain = NULL;
+      }
       DYN_LOCK (dbin);
       GST_LOG_OBJECT (dbin, "clearing shutdown flag");
       dbin->shutdown = FALSE;
