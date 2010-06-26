@@ -56,31 +56,6 @@ videoscale_get_allowed_caps (void)
   return ret;
 }
 
-typedef struct
-{
-  GMainLoop *loop;
-  gboolean eos;
-} OnMessageUserData;
-
-static void
-on_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
-{
-  OnMessageUserData *d = user_data;
-
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-    case GST_MESSAGE_WARNING:
-      g_assert_not_reached ();
-      break;
-    case GST_MESSAGE_EOS:
-      g_main_loop_quit (d->loop);
-      d->eos = TRUE;
-      break;
-    default:
-      break;
-  }
-}
-
 static void
 on_sink_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
     gpointer user_data)
@@ -99,11 +74,10 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   GstElement *pipeline;
   GstElement *src, *ffmpegcolorspace, *capsfilter1, *identity, *scale,
       *capsfilter2, *sink;
+  GstMessage *msg;
   GstBus *bus;
-  GMainLoop *loop;
   GstCaps *copy;
   guint n_buffers = 0;
-  OnMessageUserData omud = { NULL, };
 
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   fail_unless (pipeline != NULL);
@@ -168,32 +142,25 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   fail_unless (gst_element_link_pads_full (capsfilter2, "src", sink, "sink",
           LINK_CHECK_FLAGS));
 
-  loop = g_main_loop_new (NULL, FALSE);
-
   bus = gst_element_get_bus (pipeline);
   fail_unless (bus != NULL);
-  gst_bus_add_signal_watch (bus);
-
-  omud.loop = loop;
-  omud.eos = FALSE;
-
-  g_signal_connect (bus, "message", (GCallback) on_message_cb, &omud);
-
-  gst_object_unref (bus);
 
   fail_unless (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
-  g_main_loop_run (loop);
+  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_EOS | GST_MESSAGE_ERROR | GST_MESSAGE_WARNING);
+
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_EOS);
 
   fail_unless (gst_element_set_state (pipeline,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
 
-  fail_unless (omud.eos == TRUE);
   fail_unless (n_buffers == 1);
 
   gst_object_unref (pipeline);
-  g_main_loop_unref (loop);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
 }
 
 static void
