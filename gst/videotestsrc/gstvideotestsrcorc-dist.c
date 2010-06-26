@@ -6,10 +6,57 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
+
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
 
 void gst_orc_splat_u8 (guint8 * d1, int p1, int n);
 void gst_orc_splat_s16 (gint8 * d1, int p1, int n);
@@ -43,17 +90,6 @@ void gst_orc_splat_u32 (guint8 * d1, int p1, int n);
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -64,11 +100,11 @@ void
 gst_orc_splat_u8 (guint8 * d1, int p1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  const int8_t var24 = p1;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const int var24 = p1;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyb */
@@ -85,11 +121,11 @@ _backup_gst_orc_splat_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  const int8_t var24 = ex->params[24];
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const int var24 = ex->params[24];
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyb */
@@ -144,11 +180,11 @@ void
 gst_orc_splat_s16 (gint8 * d1, int p1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = p1;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = p1;
 
-  ptr0 = (int16_t *) d1;
+  ptr0 = (orc_int16 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -165,11 +201,11 @@ _backup_gst_orc_splat_s16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = ex->params[24];
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = ex->params[24];
 
-  ptr0 = (int16_t *) ex->arrays[0];
+  ptr0 = (orc_int16 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -224,11 +260,11 @@ void
 gst_orc_splat_u16 (guint8 * d1, int p1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = p1;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = p1;
 
-  ptr0 = (int16_t *) d1;
+  ptr0 = (orc_int16 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -245,11 +281,11 @@ _backup_gst_orc_splat_u16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var24 = ex->params[24];
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = ex->params[24];
 
-  ptr0 = (int16_t *) ex->arrays[0];
+  ptr0 = (orc_int16 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyw */
@@ -306,13 +342,13 @@ gst_orc_splat_u32 (guint8 * d1, int p1, int n)
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  const orc_union32 var24 = { p1 };
+  const int var24 = p1;
 
   ptr0 = (orc_union32 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyl */
-    var0.i = var24.i;
+    var0.i = var24;
     *ptr0 = var0;
     ptr0++;
   }
@@ -327,13 +363,13 @@ _backup_gst_orc_splat_u32 (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  const orc_union32 var24 = *(orc_union32 *) (ex->params + 24);
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_union32 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyl */
-    var0.i = var24.i;
+    var0.i = var24;
     *ptr0 = var0;
     ptr0++;
   }

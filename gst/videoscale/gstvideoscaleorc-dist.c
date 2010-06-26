@@ -109,8 +109,8 @@ orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   const orc_int8 *ptr5;
   const orc_int16 var16 = 128;
   const orc_int16 var17 = 8;
-  const orc_int8 var24 = p1;
-  const orc_int8 var25 = p2;
+  const int var24 = p1;
+  const int var25 = p2;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -158,8 +158,8 @@ _backup_orc_merge_linear_u8 (OrcExecutor * ex)
   const orc_int8 *ptr5;
   const orc_int16 var16 = 128;
   const orc_int16 var17 = 8;
-  const orc_int8 var24 = ex->params[24];
-  const orc_int8 var25 = ex->params[25];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -261,8 +261,8 @@ orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
   orc_int16 var5;
   const orc_int16 *ptr5;
   const orc_int16 var16 = 16;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
+  const int var24 = p1;
+  const int var25 = p2;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -306,8 +306,8 @@ _backup_orc_merge_linear_u16 (OrcExecutor * ex)
   orc_int16 var5;
   const orc_int16 *ptr5;
   const orc_int16 var16 = 16;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;

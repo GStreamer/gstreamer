@@ -6,10 +6,57 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
+
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
 
 void add_int32 (gint32 * d1, const gint32 * s1, int n);
 void add_int16 (gint16 * d1, const gint16 * s1, int n);
@@ -46,17 +93,6 @@ void add_float32 (float *d1, const float *s1, int n);
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -80,7 +116,7 @@ add_int32 (gint32 * d1, const gint32 * s1, int n)
     var4 = *ptr4;
     ptr4++;
     /* 0: addssl */
-    var0.i = ORC_CLAMP_SL ((int64_t) var0.i + (int64_t) var4.i);
+    var0.i = ORC_CLAMP_SL ((orc_int64) var0.i + (orc_int64) var4.i);
     *ptr0 = var0;
     ptr0++;
   }
@@ -106,7 +142,7 @@ _backup_add_int32 (OrcExecutor * ex)
     var4 = *ptr4;
     ptr4++;
     /* 0: addssl */
-    var0.i = ORC_CLAMP_SL ((int64_t) var0.i + (int64_t) var4.i);
+    var0.i = ORC_CLAMP_SL ((orc_int64) var0.i + (orc_int64) var4.i);
     *ptr0 = var0;
     ptr0++;
   }
@@ -157,13 +193,13 @@ void
 add_int16 (gint16 * d1, const gint16 * s1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int16_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -183,13 +219,13 @@ _backup_add_int16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int16_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -247,13 +283,13 @@ void
 add_int8 (gint8 * d1, const gint8 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -273,13 +309,13 @@ _backup_add_int8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -351,8 +387,8 @@ add_uint32 (guint32 * d1, const guint32 * s1, int n)
     ptr4++;
     /* 0: addusl */
     var0.i =
-        ORC_CLAMP_UL ((int64_t) (uint32_t) var0.i +
-        (int64_t) (uint32_t) var4.i);
+        ORC_CLAMP_UL ((orc_int64) (orc_uint32) var0.i +
+        (orc_int64) (orc_uint32) var4.i);
     *ptr0 = var0;
     ptr0++;
   }
@@ -379,8 +415,8 @@ _backup_add_uint32 (OrcExecutor * ex)
     ptr4++;
     /* 0: addusl */
     var0.i =
-        ORC_CLAMP_UL ((int64_t) (uint32_t) var0.i +
-        (int64_t) (uint32_t) var4.i);
+        ORC_CLAMP_UL ((orc_int64) (orc_uint32) var0.i +
+        (orc_int64) (orc_uint32) var4.i);
     *ptr0 = var0;
     ptr0++;
   }
@@ -431,20 +467,20 @@ void
 add_uint16 (guint16 * d1, const guint16 * s1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int16_t *) d1;
-  ptr4 = (int16_t *) s1;
+  ptr0 = (orc_int16 *) d1;
+  ptr4 = (orc_int16 *) s1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
     var4 = *ptr4;
     ptr4++;
     /* 0: addusw */
-    var0 = ORC_CLAMP_UW ((uint16_t) var0 + (uint16_t) var4);
+    var0 = ORC_CLAMP_UW ((orc_uint16) var0 + (orc_uint16) var4);
     *ptr0 = var0;
     ptr0++;
   }
@@ -457,20 +493,20 @@ _backup_add_uint16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  int16_t var4;
-  const int16_t *ptr4;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  orc_int16 var4;
+  const orc_int16 *ptr4;
 
-  ptr0 = (int16_t *) ex->arrays[0];
-  ptr4 = (int16_t *) ex->arrays[4];
+  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr4 = (orc_int16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
     var4 = *ptr4;
     ptr4++;
     /* 0: addusw */
-    var0 = ORC_CLAMP_UW ((uint16_t) var0 + (uint16_t) var4);
+    var0 = ORC_CLAMP_UW ((orc_uint16) var0 + (orc_uint16) var4);
     *ptr0 = var0;
     ptr0++;
   }
@@ -521,20 +557,20 @@ void
 add_uint8 (guint8 * d1, const guint8 * s1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
     var4 = *ptr4;
     ptr4++;
     /* 0: addusb */
-    var0 = ORC_CLAMP_UB ((uint8_t) var0 + (uint8_t) var4);
+    var0 = ORC_CLAMP_UB ((orc_uint8) var0 + (orc_uint8) var4);
     *ptr0 = var0;
     ptr0++;
   }
@@ -547,20 +583,20 @@ _backup_add_uint8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
     var4 = *ptr4;
     ptr4++;
     /* 0: addusb */
-    var0 = ORC_CLAMP_UB ((uint8_t) var0 + (uint8_t) var4);
+    var0 = ORC_CLAMP_UB ((orc_uint8) var0 + (orc_uint8) var4);
     *ptr0 = var0;
     ptr0++;
   }

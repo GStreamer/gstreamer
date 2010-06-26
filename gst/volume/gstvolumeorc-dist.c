@@ -6,10 +6,57 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
+
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
 
 void orc_process_int16 (gint16 * d1, int p1, int n);
 void orc_process_int16_clamp (gint16 * d1, int p1, int n);
@@ -43,17 +90,6 @@ void orc_process_int8_clamp (gint8 * d1, int p1, int n);
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -64,14 +100,14 @@ void
 orc_process_int16 (gint16 * d1, int p1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var16 = 13;
-  const int16_t var24 = p1;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var16 = 13;
+  const int var24 = p1;
   orc_union32 var32;
   orc_union32 var33;
 
-  ptr0 = (int16_t *) d1;
+  ptr0 = (orc_int16 *) d1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -93,14 +129,14 @@ _backup_orc_process_int16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var16 = 13;
-  const int16_t var24 = ex->params[24];
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var16 = 13;
+  const int var24 = ex->params[24];
   orc_union32 var32;
   orc_union32 var33;
 
-  ptr0 = (int16_t *) ex->arrays[0];
+  ptr0 = (orc_int16 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -164,14 +200,14 @@ void
 orc_process_int16_clamp (gint16 * d1, int p1, int n)
 {
   int i;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var16 = 13;
-  const int16_t var24 = p1;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var16 = 13;
+  const int var24 = p1;
   orc_union32 var32;
   orc_union32 var33;
 
-  ptr0 = (int16_t *) d1;
+  ptr0 = (orc_int16 *) d1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -193,14 +229,14 @@ _backup_orc_process_int16_clamp (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int16_t var0;
-  int16_t *ptr0;
-  const int16_t var16 = 13;
-  const int16_t var24 = ex->params[24];
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const orc_int16 var16 = 13;
+  const int var24 = ex->params[24];
   orc_union32 var32;
   orc_union32 var33;
 
-  ptr0 = (int16_t *) ex->arrays[0];
+  ptr0 = (orc_int16 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -264,14 +300,14 @@ void
 orc_process_int8 (gint8 * d1, int p1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  const int16_t var16 = 5;
-  const int8_t var24 = p1;
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int16 var16 = 5;
+  const int var24 = p1;
+  orc_int16 var32;
+  orc_int16 var33;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -293,14 +329,14 @@ _backup_orc_process_int8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  const int16_t var16 = 5;
-  const int8_t var24 = ex->params[24];
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int16 var16 = 5;
+  const int var24 = ex->params[24];
+  orc_int16 var32;
+  orc_int16 var33;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -364,14 +400,14 @@ void
 orc_process_int8_clamp (gint8 * d1, int p1, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  const int16_t var16 = 5;
-  const int8_t var24 = p1;
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int16 var16 = 5;
+  const int var24 = p1;
+  orc_int16 var32;
+  orc_int16 var33;
 
-  ptr0 = (int8_t *) d1;
+  ptr0 = (orc_int8 *) d1;
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
@@ -393,14 +429,14 @@ _backup_orc_process_int8_clamp (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  const int16_t var16 = 5;
-  const int8_t var24 = ex->params[24];
-  int16_t var32;
-  int16_t var33;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  const orc_int16 var16 = 5;
+  const int var24 = ex->params[24];
+  orc_int16 var32;
+  orc_int16 var33;
 
-  ptr0 = (int8_t *) ex->arrays[0];
+  ptr0 = (orc_int8 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     var0 = *ptr0;
