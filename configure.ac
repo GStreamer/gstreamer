@@ -711,7 +711,6 @@ tests/examples/metadata/Makefile
 tests/examples/queue/Makefile
 tests/examples/streams/Makefile
 tests/examples/typefind/Makefile
-tests/examples/xml/Makefile
 tools/Makefile
 common/Makefile
 common/m4/Makefile

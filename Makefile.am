@@ -197,6 +197,9 @@ CRUFT_FILES = \
 	$(top_builddir)/common/m4/wint_t.m4 \
 	$(top_builddir)/common/m4/xsize.m4
 
+CRUFT_DIRS = \
+	$(top_builddir)/tests/examples/xml
+
 include $(top_srcdir)/common/cruft.mak
 
 all-local: gst-element-check-@GST_MAJORMINOR@.m4 check-cruft
