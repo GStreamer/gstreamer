@@ -42,17 +42,21 @@ G_BEGIN_DECLS
 typedef struct _GstH264DPB GstH264DPB;
 typedef struct _GstH264DPBClass GstH264DPBClass;
 
+typedef void (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstVdpH264Frame *h264_frame, gpointer user_data);
+
 struct _GstH264DPB
 {
   GObject parent_instance;
 
+	/* private */
   GstVdpH264Frame *frames[MAX_DPB_SIZE];  
   guint n_frames;
   
   guint max_frames;
   gint max_longterm_frame_idx;
 
-  void (*output) (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
+	GstH264DPBOutputFunc output;
+	gpointer user_data;
 };
 
 struct _GstH264DPBClass
@@ -72,6 +76,9 @@ void gst_h264_dpb_mark_long_term_unused (GstH264DPB *dpb, guint16 long_term_pic_
 void gst_h264_dpb_mark_short_term_unused (GstH264DPB *dpb, guint16 pic_num);
 void gst_h264_dpb_mark_all_unused (GstH264DPB *dpb);
 void gst_h264_dpb_mark_long_term (GstH264DPB *dpb, guint16 pic_num, guint16 long_term_frame_idx);
+
+void gst_h264_dpb_set_output_func (GstH264DPB *dpb, GstH264DPBOutputFunc func,
+    gpointer user_data);
 
 GType gst_h264_dpb_get_type (void) G_GNUC_CONST;
 

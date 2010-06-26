@@ -181,13 +181,13 @@ gst_vdp_h264_dec_shape_output (GstBaseVideoDecoder * base_video_decoder,
 }
 
 static void
-gst_vdp_h264_dec_output (GstH264DPB * dpb, GstVdpH264Frame * h264_frame)
+gst_vdp_h264_dec_output (GstH264DPB * dpb, GstVdpH264Frame * h264_frame,
+    gpointer user_data)
 {
-  GstBaseVideoDecoder *base_video_decoder;
+  GstBaseVideoDecoder *base_video_decoder = (GstBaseVideoDecoder *) user_data;
 
   GST_DEBUG ("poc: %d", h264_frame->poc);
 
-  base_video_decoder = g_object_get_data (G_OBJECT (dpb), "decoder");
   gst_base_video_decoder_finish_frame (base_video_decoder,
       GST_VIDEO_FRAME_CAST (h264_frame));
 }
@@ -888,8 +888,8 @@ gst_vdp_h264_dec_start (GstBaseVideoDecoder * base_video_decoder)
   h264_dec->parser = g_object_new (GST_TYPE_H264_PARSER, NULL);
 
   h264_dec->dpb = g_object_new (GST_TYPE_H264_DPB, NULL);
-  g_object_set_data (G_OBJECT (h264_dec->dpb), "decoder", h264_dec);
-  h264_dec->dpb->output = gst_vdp_h264_dec_output;
+  gst_h264_dpb_set_output_func (h264_dec->dpb, gst_vdp_h264_dec_output,
+      h264_dec);
 
   return TRUE;
 }

@@ -49,8 +49,8 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     GstVdpH264Frame *frame = frames[i];
 
     reference_frames[i].surface =
-        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->src_buffer)->
-        surface;
+        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->
+        src_buffer)->surface;
 
     reference_frames[i].is_long_term = frame->is_long_term;
     reference_frames[i].top_is_reference = frame->is_reference;
@@ -87,7 +87,7 @@ gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
   GstVdpH264Frame *frame = dpb->frames[idx];
 
   gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
-  dpb->output (dpb, frame);
+  dpb->output (dpb, frame, dpb->user_data);
   frame->output_needed = FALSE;
 
   if (!frame->is_reference)
@@ -151,7 +151,7 @@ gst_h264_dpb_add (GstH264DPB * dpb, GstVdpH264Frame * h264_frame)
 
   else {
     while (gst_h264_dpb_bump (dpb, h264_frame->poc));
-    dpb->output (dpb, h264_frame);
+    dpb->output (dpb, h264_frame, dpb->user_data);
   }
 
   return TRUE;
@@ -293,6 +293,16 @@ gst_h264_dpb_mark_all_unused (GstH264DPB * dpb)
     }
   }
 
+}
+
+void
+gst_h264_dpb_set_output_func (GstH264DPB * dpb, GstH264DPBOutputFunc func,
+    gpointer user_data)
+{
+  g_return_if_fail (GST_IS_H264_DPB (dpb));
+
+  dpb->output = func;
+  dpb->user_data = user_data;
 }
 
 /* GObject vmethod implementations */
