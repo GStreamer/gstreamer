@@ -34,6 +34,9 @@
 /* Default visualizer */
 #define DEFAULT_VISUALIZER "goom"
 
+/* Disable Orc */
+#undef DISABLE_ORC
+
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -66,7 +69,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -76,9 +79,6 @@
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
-
-/* Define to 1 if you have the `cbrt' function. */
-#undef HAVE_CBRT
 
 /* Define to enable CDParanoia (used by cdparanoia). */
 #undef HAVE_CDPARANOIA
@@ -224,6 +224,9 @@
 /* Define to enable Xiph Ogg library (used by ogg). */
 #undef HAVE_OGG
 
+/* Use Orc */
+#undef HAVE_ORC
+
 /* Define to enable Pango font rendering (used by pango). */
 #undef HAVE_PANGO
 
@@ -322,7 +325,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.29.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.29.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -331,7 +334,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.29.1"
+#define PACKAGE_VERSION "0.10.29.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -359,7 +362,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.29.1"
+#define VERSION "0.10.29.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

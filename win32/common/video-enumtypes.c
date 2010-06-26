@@ -39,6 +39,13 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_GRAY8, "GST_VIDEO_FORMAT_GRAY8", "gray8"},
       {GST_VIDEO_FORMAT_GRAY16_BE, "GST_VIDEO_FORMAT_GRAY16_BE", "gray16-be"},
       {GST_VIDEO_FORMAT_GRAY16_LE, "GST_VIDEO_FORMAT_GRAY16_LE", "gray16-le"},
+      {GST_VIDEO_FORMAT_v308, "GST_VIDEO_FORMAT_v308", "v308"},
+      {GST_VIDEO_FORMAT_Y800, "GST_VIDEO_FORMAT_Y800", "y800"},
+      {GST_VIDEO_FORMAT_Y16, "GST_VIDEO_FORMAT_Y16", "y16"},
+      {GST_VIDEO_FORMAT_RGB16, "GST_VIDEO_FORMAT_RGB16", "rgb16"},
+      {GST_VIDEO_FORMAT_BGR16, "GST_VIDEO_FORMAT_BGR16", "bgr16"},
+      {GST_VIDEO_FORMAT_RGB15, "GST_VIDEO_FORMAT_RGB15", "rgb15"},
+      {GST_VIDEO_FORMAT_BGR15, "GST_VIDEO_FORMAT_BGR15", "bgr15"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
