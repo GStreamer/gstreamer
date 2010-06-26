@@ -331,6 +331,7 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   GstVdpMpegFrame *mpeg_frame;
 
   GstFlowReturn ret;
+  GError *err = NULL;
   GstVdpVideoBuffer *outbuf;
   VdpVideoSurface surface;
   GstVdpDevice *device;
@@ -402,8 +403,8 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     info->backward_reference = VDP_INVALID_HANDLE;
   }
 
-  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (mpeg_dec), &outbuf)
-          != GST_FLOW_OK))
+  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (mpeg_dec), &outbuf,
+              &err) != GST_FLOW_OK))
     goto alloc_error;
 
   /* create decoder */
@@ -447,6 +448,9 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
 alloc_error:
   gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+
+  if (ret == GST_FLOW_ERROR)
+    gst_vdp_decoder_post_error (GST_VDP_DECODER (mpeg_dec), err);
   return ret;
 
 decode_error:

@@ -159,9 +159,41 @@ device_error:
   return FALSE;
 }
 
+static GstFlowReturn
+gst_vdp_video_src_pad_alloc_with_caps (GstVdpVideoSrcPad * vdp_pad,
+    GstCaps * caps, GstVdpVideoBuffer ** video_buf, GError ** error)
+{
+  GstFlowReturn ret;
+
+  ret = gst_pad_alloc_buffer ((GstPad *) vdp_pad, 0, 0, caps,
+      (GstBuffer **) video_buf);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*video_buf)))
+    goto wrong_caps;
+
+  if (!GST_IS_VDP_VIDEO_BUFFER (*video_buf))
+    goto invalid_buf;
+
+  return GST_FLOW_OK;
+
+wrong_caps:
+  gst_buffer_unref (GST_BUFFER (*video_buf));
+  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+      "Sink element returned buffer with wrong caps");
+  return GST_FLOW_ERROR;
+
+invalid_buf:
+  gst_buffer_unref (GST_BUFFER (*video_buf));
+  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+      "Sink element returned buffer of wrong type");
+  return GST_FLOW_ERROR;
+}
+
 GstFlowReturn
 gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
-    GstVdpVideoBuffer ** video_buf)
+    GstVdpVideoBuffer ** video_buf, GError ** error)
 {
   GstCaps *caps;
   GstFlowReturn ret;
@@ -176,8 +208,8 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpDevice *device;
 
     if (G_UNLIKELY (!vdp_pad->device)) {
-      if (!gst_vdp_video_src_pad_open_device (vdp_pad, NULL))
-        goto device_error;
+      if (!gst_vdp_video_src_pad_open_device (vdp_pad, error))
+        return GST_FLOW_ERROR;
 
       gst_vdp_video_src_pad_update_caps (vdp_pad);
     }
@@ -186,15 +218,12 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     *video_buf = gst_vdp_video_buffer_new (device, VDP_CHROMA_TYPE_420,
         vdp_pad->width, vdp_pad->height);
     if (!*video_buf)
-      goto video_buffer_error;
+      goto video_buf_error;
   } else {
-    ret = gst_pad_alloc_buffer ((GstPad *) vdp_pad, 0, 0, caps,
-        (GstBuffer **) video_buf);
+    ret = gst_vdp_video_src_pad_alloc_with_caps (vdp_pad, caps, video_buf,
+        error);
     if (ret != GST_FLOW_OK)
       return ret;
-
-    if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*video_buf)))
-      goto wrong_caps;
 
     if (G_UNLIKELY (!vdp_pad->device)) {
       vdp_pad->device =
@@ -206,17 +235,9 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
 
   return GST_FLOW_OK;
 
-device_error:
-  GST_ERROR_OBJECT (vdp_pad, "Couldn't create GstVdpDevice");
-  return GST_FLOW_ERROR;
-
-video_buffer_error:
-  GST_ERROR_OBJECT (vdp_pad, "Couldn't create GstVdpVideoBuffer");
-  return GST_FLOW_ERROR;
-
-wrong_caps:
-  GST_ERROR_OBJECT (vdp_pad, "Sink element returned buffer with wrong caps");
-  gst_buffer_unref (GST_BUFFER_CAST (*video_buf));
+video_buf_error:
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+      "Couldn't create a GstVdpVideoBuffer");
   return GST_FLOW_ERROR;
 }
 
@@ -267,24 +288,15 @@ gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad,
 
     else {
       GstFlowReturn ret;
-      GstBuffer *buf;
+      GstVdpVideoBuffer *buf;
 
-      ret = gst_pad_alloc_buffer (GST_PAD (vdp_pad), 0, 0,
-          GST_PAD_CAPS (vdp_pad), &buf);
+      ret = gst_vdp_video_src_pad_alloc_with_caps (vdp_pad,
+          GST_PAD_CAPS (vdp_pad), &buf, error);
       if (ret != GST_FLOW_OK)
-        goto alloc_failed;
+        return ret;
 
-      if (!gst_caps_is_equal_fixed (GST_PAD_CAPS (vdp_pad),
-              GST_BUFFER_CAPS (buf))) {
-        gst_buffer_unref (buf);
-        goto wrong_caps;
-      }
-      if (!GST_IS_VDP_VIDEO_BUFFER (buf)) {
-        gst_buffer_unref (buf);
-        goto invalid_buffer;
-      }
-
-      vdp_pad->device = g_object_ref (GST_VDP_VIDEO_BUFFER (buf)->device);
+      vdp_pad->device = g_object_ref (buf->device);
+      gst_buffer_unref (GST_BUFFER (buf));
     }
 
     gst_vdp_video_src_pad_update_caps (vdp_pad);
@@ -292,21 +304,6 @@ gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad,
 
   *device = vdp_pad->device;
   return GST_FLOW_OK;
-
-alloc_failed:
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Couldn't allocate buffer");
-  return GST_FLOW_ERROR;
-
-wrong_caps:
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element returned buffer with wrong caps");
-  return GST_FLOW_ERROR;
-
-invalid_buffer:
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element returned invalid buffer type");
-  return GST_FLOW_ERROR;
 }
 
 static GstCaps *

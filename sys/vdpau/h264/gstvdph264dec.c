@@ -440,6 +440,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   GstH264Sequence *seq;
 
   GstFlowReturn ret;
+  GError *err = NULL;
   GstVdpVideoBuffer *outbuf;
   VdpPictureInfoH264 info;
   GstVdpDevice *device;
@@ -479,8 +480,8 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
 
   /* decoding */
-  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (h264_dec), &outbuf)
-          != GST_FLOW_OK))
+  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (h264_dec), &outbuf,
+              &err) != GST_FLOW_OK))
     goto alloc_error;
 
   device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
@@ -566,6 +567,9 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
 alloc_error:
   gst_base_video_decoder_skip_frame (base_video_decoder, frame);
+
+  if (ret == GST_FLOW_ERROR)
+    gst_vdp_decoder_post_error (GST_VDP_DECODER (h264_dec), err);
   return ret;
 
 decode_error:

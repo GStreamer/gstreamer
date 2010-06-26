@@ -65,14 +65,27 @@ gst_vdp_decoder_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
   return GST_PAD (vdp_pad);
 }
 
+void
+gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error)
+{
+  GstMessage *message;
+
+  g_return_if_fail (GST_IS_VDP_DECODER (decoder));
+  g_return_if_fail (decoder != NULL);
+
+  message = gst_message_new_error (GST_OBJECT (decoder), error, NULL);
+  gst_element_post_message (GST_ELEMENT (decoder), message);
+  g_error_free (error);
+}
+
 GstFlowReturn
 gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder,
-    GstVdpVideoBuffer ** video_buf)
+    GstVdpVideoBuffer ** video_buf, GError ** error)
 {
   GstVdpVideoSrcPad *vdp_pad;
 
   vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
-  return gst_vdp_video_src_pad_alloc_buffer (vdp_pad, video_buf);
+  return gst_vdp_video_src_pad_alloc_buffer (vdp_pad, video_buf, error);
 }
 
 GstFlowReturn

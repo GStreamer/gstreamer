@@ -47,8 +47,13 @@ struct _GstVdpDecoderClass {
   GstBaseVideoDecoderClass base_video_decoder_class;
 };
 
-GstFlowReturn gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder, GstVdpVideoBuffer **video_buf);
-GstFlowReturn gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder, GstVdpDevice ** device, GError ** error);
+void gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error);
+
+GstFlowReturn gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder,
+    GstVdpVideoBuffer **video_buf, GError ** error);
+
+GstFlowReturn gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder,
+    GstVdpDevice ** device, GError ** error);
 
 GType gst_vdp_decoder_get_type (void);
 
