@@ -160,7 +160,7 @@ audioconvert
 
   Orc doesn't have a mechanism for generating random numbers, which
   prevents its use as-is for dithering.  One way around this is to
-  generate suitible dithering values in one pass, then use those
+  generate suitable dithering values in one pass, then use those
   values in a second Orc-based pass.
 
   Orc doesn't handle 64-bit float, for no good reason.
@@ -187,8 +187,8 @@ videoscale
 
 videotestsrc
 
-  Lots of code in videotestsrc needs to be reweitten to be SIMD
-  (and Orc) friendly, e.g., sutff that uses oil_splat_u8().
+  Lots of code in videotestsrc needs to be rewritten to be SIMD
+  (and Orc) friendly, e.g., stuff that uses oil_splat_u8().
 
   A fast low-quality random number generator in Orc would be useful
   here.
@@ -197,7 +197,7 @@ volume
   
   Many of the comments on audioconvert apply here as well.
 
-  There are a bunch of FIXME's in here that are due to misapplied
+  There are a bunch of FIXMEs in here that are due to misapplied
   patches.
 
 
