@@ -25,7 +25,7 @@
 
 #include "../gstvdp/gstvdpvideobuffer.h"
 
-#include "gstvdph264frame.h"
+#include "gsth264frame.h"
 
 G_BEGIN_DECLS
 
@@ -42,14 +42,14 @@ G_BEGIN_DECLS
 typedef struct _GstH264DPB GstH264DPB;
 typedef struct _GstH264DPBClass GstH264DPBClass;
 
-typedef void (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstVdpH264Frame *h264_frame, gpointer user_data);
+typedef void (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstH264Frame *h264_frame, gpointer user_data);
 
 struct _GstH264DPB
 {
   GObject parent_instance;
 
 	/* private */
-  GstVdpH264Frame *frames[MAX_DPB_SIZE];  
+  GstH264Frame *frames[MAX_DPB_SIZE];  
   guint n_frames;
   
   guint max_frames;
@@ -67,7 +67,7 @@ struct _GstH264DPBClass
 void
 gst_h264_dpb_fill_reference_frames (GstH264DPB *dpb, VdpReferenceFrameH264 reference_frames[16]);
 
-gboolean gst_h264_dpb_add (GstH264DPB *dpb, GstVdpH264Frame *h264_frame);
+gboolean gst_h264_dpb_add (GstH264DPB *dpb, GstH264Frame *h264_frame);
 void gst_h264_dpb_flush (GstH264DPB *dpb, gboolean output);
 
 void gst_h264_dpb_mark_sliding (GstH264DPB *dpb);

@@ -18,8 +18,8 @@
 * Boston, MA 02111-1307, USA.
 */
 
-#ifndef _GST_VDP_H264_FRAME_H_
-#define _GST_VDP_H264_FRAME_H_
+#ifndef _GST_H264_FRAME_H_
+#define _GST_H264_FRAME_H_
 
 #include <gst/gst.h>
 
@@ -27,17 +27,17 @@
 
 #include "gsth264parser.h"
 
-#define GST_TYPE_VDP_H264_FRAME      (gst_vdp_h264_frame_get_type())
-#define GST_IS_VDP_H264_FRAME(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_H264_FRAME))
-#define GST_VDP_H264_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_H264_FRAME, GstVdpH264Frame))
-#define GST_VDP_H264_FRAME_CAST(obj) ((GstVdpH264Frame *)obj)
+#define GST_TYPE_H264_FRAME      (gst_h264_frame_get_type())
+#define GST_IS_H264_FRAME(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_H264_FRAME))
+#define GST_H264_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_H264_FRAME, GstH264Frame))
+#define GST_H264_FRAME_CAST(obj) ((GstH264Frame *)obj)
 
-#define GST_VDP_H264_FRAME_GOT_PRIMARY GST_VIDEO_FRAME_FLAG_LAST
+#define GST_H264_FRAME_GOT_PRIMARY GST_VIDEO_FRAME_FLAG_LAST
 
-typedef struct _GstVdpH264Frame GstVdpH264Frame;
-typedef struct _GstVdpH264FrameClass GstVdpH264FrameClass;
+typedef struct _GstH264Frame GstH264Frame;
+typedef struct _GstH264FrameClass GstH264FrameClass;
 
-struct _GstVdpH264Frame
+struct _GstH264Frame
 {
   GstVideoFrame video_frame;
 
@@ -51,15 +51,15 @@ struct _GstVdpH264Frame
   gboolean output_needed;
 };
 
-struct _GstVdpH264FrameClass
+struct _GstH264FrameClass
 {
 	GstVideoFrameClass video_frame_class;
 };
 
-void gst_vdp_h264_frame_add_slice (GstVdpH264Frame *h264_frame, GstBuffer *buf);
+void gst_h264_frame_add_slice (GstH264Frame *h264_frame, GstBuffer *buf);
 
-GstVdpH264Frame *gst_vdp_h264_frame_new (void);
+GstH264Frame *gst_h264_frame_new (void);
 
-GType gst_vdp_h264_frame_get_type (void);
+GType gst_h264_frame_get_type (void);
 
 #endif

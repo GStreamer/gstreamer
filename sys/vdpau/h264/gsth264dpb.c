@@ -41,12 +41,12 @@ void
 gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     VdpReferenceFrameH264 reference_frames[16])
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
 
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
-    GstVdpH264Frame *frame = frames[i];
+    GstH264Frame *frame = frames[i];
 
     reference_frames[i].surface =
         GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->
@@ -70,7 +70,7 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
 static void
 gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
 
   frames = dpb->frames;
@@ -84,7 +84,7 @@ gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
 static void
 gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
 {
-  GstVdpH264Frame *frame = dpb->frames[idx];
+  GstH264Frame *frame = dpb->frames[idx];
 
   gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
   dpb->output (dpb, frame, dpb->user_data);
@@ -97,7 +97,7 @@ gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
 static gboolean
 gst_h264_dpb_bump (GstH264DPB * dpb, guint poc)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
   gint bump_idx;
 
@@ -127,9 +127,9 @@ gst_h264_dpb_bump (GstH264DPB * dpb, guint poc)
 }
 
 gboolean
-gst_h264_dpb_add (GstH264DPB * dpb, GstVdpH264Frame * h264_frame)
+gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
 
   GST_DEBUG ("add frame with poc: %d", h264_frame->poc);
 
@@ -179,7 +179,7 @@ gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
 void
 gst_h264_dpb_mark_sliding (GstH264DPB * dpb)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
   gint mark_idx = -1;
 
@@ -211,7 +211,7 @@ void
 gst_h264_dpb_mark_long_term (GstH264DPB * dpb, guint16 pic_num,
     guint16 long_term_frame_idx)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
   gint mark_idx = -1;
 
@@ -233,7 +233,7 @@ gst_h264_dpb_mark_long_term (GstH264DPB * dpb, guint16 pic_num,
 void
 gst_h264_dpb_mark_short_term_unused (GstH264DPB * dpb, guint16 pic_num)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
   gint mark_idx = -1;
 
@@ -257,7 +257,7 @@ gst_h264_dpb_mark_short_term_unused (GstH264DPB * dpb, guint16 pic_num)
 void
 gst_h264_dpb_mark_long_term_unused (GstH264DPB * dpb, guint16 long_term_pic_num)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
   gint mark_idx = -1;
 
@@ -281,7 +281,7 @@ gst_h264_dpb_mark_long_term_unused (GstH264DPB * dpb, guint16 long_term_pic_num)
 void
 gst_h264_dpb_mark_all_unused (GstH264DPB * dpb)
 {
-  GstVdpH264Frame **frames;
+  GstH264Frame **frames;
   guint i;
 
   frames = dpb->frames;
@@ -345,7 +345,7 @@ gst_h264_dpb_set_property (GObject * object, guint property_id,
 
     case PROP_MAX_LONGTERM_IDX:
     {
-      GstVdpH264Frame **frames;
+      GstH264Frame **frames;
       guint i;
 
       dpb->max_longterm_frame_idx = g_value_get_int (value);

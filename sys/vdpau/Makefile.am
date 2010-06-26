@@ -11,7 +11,7 @@ libgstvdpau_la_SOURCES = \
 	mpeg/gstvdpmpegdec.c \
 	h264/gstnalreader.c \
 	h264/gsth264parser.c \
-	h264/gstvdph264frame.c \
+	h264/gsth264frame.c \
 	h264/gsth264dpb.c \
 	h264/gstvdph264dec.c
 
@@ -34,6 +34,6 @@ noinst_HEADERS = \
 	mpeg/gstvdpmpegdec.h \
 	h264/gstnalreader.h \
 	h264/gsth264parser.h \
-	h264/gstvdph264frame.h \
+	h264/gsth264frame.h \
 	h264/gsth264dpb.h \
 	h264/gstvdph264dec.h

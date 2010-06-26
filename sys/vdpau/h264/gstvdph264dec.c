@@ -26,7 +26,7 @@
 #include <gst/base/gstbitreader.h>
 #include <string.h>
 
-#include "gstvdph264frame.h"
+#include "gsth264frame.h"
 
 #include "gstvdph264dec.h"
 
@@ -152,7 +152,7 @@ gst_vdp_h264_dec_set_sink_caps (GstBaseVideoDecoder * base_video_decoder,
 }
 
 static void
-gst_vdp_h264_dec_output (GstH264DPB * dpb, GstVdpH264Frame * h264_frame,
+gst_vdp_h264_dec_output (GstH264DPB * dpb, GstH264Frame * h264_frame,
     gpointer user_data)
 {
   GstBaseVideoDecoder *base_video_decoder = (GstBaseVideoDecoder *) user_data;
@@ -197,7 +197,7 @@ gst_vdp_h264_dec_calculate_poc (GstVdpH264Dec * h264_dec, GstH264Slice * slice)
 
 static void
 gst_vdp_h264_dec_init_frame_info (GstVdpH264Dec * h264_dec,
-    GstVdpH264Frame * h264_frame)
+    GstH264Frame * h264_frame)
 {
   GstH264Slice *slice;
 
@@ -239,7 +239,7 @@ gst_vdp_h264_dec_init_frame_info (GstVdpH264Dec * h264_dec,
 }
 
 static gboolean
-gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstVdpH264Frame * h264_frame)
+gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
 {
   GstH264Slice *slice;
   GstH264Sequence *seq;
@@ -320,8 +320,7 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstVdpH264Frame * h264_frame)
 }
 
 static VdpPictureInfoH264
-gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec,
-    GstVdpH264Frame * h264_frame)
+gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
 {
   GstH264Slice *slice;
   GstH264Picture *pic;
@@ -380,7 +379,7 @@ gst_vdp_h264_dec_fill_info (GstVdpH264Dec * h264_dec,
 
 static VdpBitstreamBuffer *
 gst_vdp_h264_dec_create_bitstream_buffers (GstVdpH264Dec * h264_dec,
-    GstVdpH264Frame * h264_frame, guint * n_bufs)
+    GstH264Frame * h264_frame, guint * n_bufs)
 {
   VdpBitstreamBuffer *bufs;
 
@@ -434,7 +433,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 {
   GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
 
-  GstVdpH264Frame *h264_frame;
+  GstH264Frame *h264_frame;
   GstH264Slice *slice;
   GstH264Picture *pic;
   GstH264Sequence *seq;
@@ -451,7 +450,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GST_DEBUG ("handle_frame");
 
-  h264_frame = (GstVdpH264Frame *) frame;
+  h264_frame = (GstH264Frame *) frame;
 
   slice = &h264_frame->slice_hdr;
   pic = slice->picture;
@@ -726,7 +725,7 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     gst_base_video_decoder_frame_start (base_video_decoder, buf);
   }
 
-  if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
+  if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
     if (nal_unit.type == GST_NAL_SPS || nal_unit.type == GST_NAL_PPS ||
         nal_unit.type == GST_NAL_SEI ||
         (nal_unit.type >= 14 && nal_unit.type <= 18)) {
@@ -743,12 +742,12 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       goto invalid_packet;
 
     if (slice.redundant_pic_cnt == 0) {
-      if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
+      if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
         GstH264Slice *p_slice;
         guint8 pic_order_cnt_type, p_pic_order_cnt_type;
         gboolean finish_frame = FALSE;
 
-        p_slice = &(GST_VDP_H264_FRAME_CAST (frame)->slice_hdr);
+        p_slice = &(GST_H264_FRAME_CAST (frame)->slice_hdr);
         pic_order_cnt_type = slice.picture->sequence->pic_order_cnt_type;
         p_pic_order_cnt_type = p_slice->picture->sequence->pic_order_cnt_type;
 
@@ -783,16 +782,16 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
         }
       }
 
-      if (!GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY)) {
+      if (!GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
         if (GST_H264_IS_I_SLICE (slice.type)
             || GST_H264_IS_SI_SLICE (slice.type))
           GST_VIDEO_FRAME_FLAG_SET (frame, GST_VIDEO_FRAME_FLAG_KEYFRAME);
 
-        GST_VDP_H264_FRAME_CAST (frame)->slice_hdr = slice;
-        GST_VIDEO_FRAME_FLAG_SET (frame, GST_VDP_H264_FRAME_GOT_PRIMARY);
+        GST_H264_FRAME_CAST (frame)->slice_hdr = slice;
+        GST_VIDEO_FRAME_FLAG_SET (frame, GST_H264_FRAME_GOT_PRIMARY);
       }
     }
-    gst_vdp_h264_frame_add_slice ((GstVdpH264Frame *) frame, buf);
+    gst_h264_frame_add_slice ((GstH264Frame *) frame, buf);
   }
 
   if (nal_unit.type == GST_NAL_SPS) {
@@ -818,7 +817,7 @@ invalid_packet:
 static GstVideoFrame *
 gst_vdp_h264_dec_create_frame (GstBaseVideoDecoder * base_video_decoder)
 {
-  return GST_VIDEO_FRAME_CAST (gst_vdp_h264_frame_new ());
+  return GST_VIDEO_FRAME_CAST (gst_h264_frame_new ());
 }
 
 static gboolean
