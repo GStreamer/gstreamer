@@ -83,14 +83,16 @@ draw_spectrum (gfloat * data)
   if (!drawingarea)
     return;
 
-  gdk_window_begin_paint_rect (drawingarea->window, &rect);
-  gdk_draw_rectangle (drawingarea->window, drawingarea->style->black_gc,
+  gdk_window_begin_paint_rect (gtk_widget_get_window (drawingarea), &rect);
+  gdk_draw_rectangle (gtk_widget_get_window (drawingarea),
+      gtk_widget_get_style (drawingarea)->black_gc,
       TRUE, 0, 0, spect_bands, spect_height);
   for (i = 0; i < spect_bands; i++) {
-    gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
+    gdk_draw_rectangle (gtk_widget_get_window (drawingarea),
+        gtk_widget_get_style (drawingarea)->white_gc,
         TRUE, i, -data[i], 1, spect_height + data[i]);
   }
-  gdk_window_end_paint (drawingarea->window);
+  gdk_window_end_paint (gtk_widget_get_window (drawingarea));
 }
 
 /* receive spectral data from element message */
