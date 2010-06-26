@@ -102,13 +102,13 @@ orc_splat_u32 (guint32 * d1, int p1, int n)
   int i;
   orc_union32 var0;
   orc_union32 *ptr0;
-  const orc_union32 var24 = { p1 };
+  const int var24 = p1;
 
   ptr0 = (orc_union32 *) d1;
 
   for (i = 0; i < n; i++) {
     /* 0: copyl */
-    var0.i = var24.i;
+    var0.i = var24;
     *ptr0 = var0;
     ptr0++;
   }
@@ -123,13 +123,13 @@ _backup_orc_splat_u32 (OrcExecutor * ex)
   int n = ex->n;
   orc_union32 var0;
   orc_union32 *ptr0;
-  const orc_union32 var24 = *(orc_union32 *) (ex->params + 24);
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_union32 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
     /* 0: copyl */
-    var0.i = var24.i;
+    var0.i = var24;
     *ptr0 = var0;
     ptr0++;
   }
@@ -275,7 +275,7 @@ orc_blend_u8 (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
   orc_int8 var4;
   const orc_int8 *ptr4;
   const orc_int8 var16 = 8;
-  const orc_int16 var24 = p1;
+  const int var24 = p1;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -328,7 +328,7 @@ _backup_orc_blend_u8 (OrcExecutor * ex)
   orc_int8 var4;
   const orc_int8 *ptr4;
   const orc_int8 var16 = 8;
-  const orc_int16 var24 = ex->params[24];
+  const int var24 = ex->params[24];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;

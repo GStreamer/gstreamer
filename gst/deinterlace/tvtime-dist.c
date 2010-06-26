@@ -6,10 +6,57 @@
 #endif
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
-#else
-#include <stdint.h>
 #endif
 #include <glib.h>
+
+#ifndef _ORC_INTEGER_TYPEDEFS_
+#define _ORC_INTEGER_TYPEDEFS_
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#include <stdint.h>
+typedef int8_t orc_int8;
+typedef int16_t orc_int16;
+typedef int32_t orc_int32;
+typedef int64_t orc_int64;
+typedef uint8_t orc_uint8;
+typedef uint16_t orc_uint16;
+typedef uint32_t orc_uint32;
+typedef uint64_t orc_uint64;
+#elif defined(_MSC_VER)
+typedef signed __int8 orc_int8;
+typedef signed __int16 orc_int16;
+typedef signed __int32 orc_int32;
+typedef signed __int64 orc_int64;
+typedef unsigned __int8 orc_uint8;
+typedef unsigned __int16 orc_uint16;
+typedef unsigned __int32 orc_uint32;
+typedef unsigned __int64 orc_uint64;
+#else
+#include <limits.h>
+typedef signed char orc_int8;
+typedef short orc_int16;
+typedef int orc_int32;
+typedef unsigned char orc_uint8;
+typedef unsigned short orc_uint16;
+typedef unsigned int orc_uint32;
+#if INT_MAX == LONG_MAX
+typedef long long orc_int64;
+typedef unsigned long long orc_uint64;
+#else
+typedef long orc_int64;
+typedef unsigned long orc_uint64;
+#endif
+#endif
+typedef union
+{
+  orc_int32 i;
+  float f;
+} orc_union32;
+typedef union
+{
+  orc_int64 i;
+  double f;
+} orc_union64;
+#endif
 
 void deinterlace_line_vfir (guint8 * d1, const guint8 * s1, const guint8 * s2,
     const guint8 * s3, const guint8 * s4, const guint8 * s5, int n);
@@ -45,17 +92,6 @@ void deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1,
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_AS_FLOAT(x) (((union { int i; float f; } *)(&x))->f)
-typedef union
-{
-  int32_t i;
-  float f;
-} orc_union32;
-typedef union
-{
-  int64_t i;
-  double f;
-} orc_union64;
 /* end Orc C target preamble */
 
 
@@ -67,42 +103,42 @@ deinterlace_line_vfir (guint8 * d1, const guint8 * s1, const guint8 * s2,
     const guint8 * s3, const guint8 * s4, const guint8 * s5, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  int8_t var8;
-  const int8_t *ptr8;
-  const int16_t var16 = 2;
-  const int16_t var17 = 1;
-  const int16_t var18 = 4;
-  const int16_t var19 = 3;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  orc_int8 var8;
+  const orc_int8 *ptr8;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 1;
+  const orc_int16 var18 = 4;
+  const orc_int16 var19 = 3;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
-  ptr7 = (int8_t *) s4;
-  ptr8 = (int8_t *) s5;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
+  ptr7 = (orc_int8 *) s4;
+  ptr8 = (orc_int8 *) s5;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -116,21 +152,21 @@ deinterlace_line_vfir (guint8 * d1, const guint8 * s1, const guint8 * s2,
     var8 = *ptr8;
     ptr8++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var8;
+    var33 = (orc_uint8) var8;
     /* 2: addw */
     var35 = var32 + var33;
     /* 3: convubw */
-    var36 = (uint8_t) var5;
+    var36 = (orc_uint8) var5;
     /* 4: convubw */
-    var34 = (uint8_t) var7;
+    var34 = (orc_uint8) var7;
     /* 5: addw */
     var37 = var36 + var34;
     /* 6: shlw */
     var38 = var37 << var16;
     /* 7: convubw */
-    var39 = (uint8_t) var6;
+    var39 = (orc_uint8) var6;
     /* 8: shlw */
     var40 = var39 << var17;
     /* 9: subw */
@@ -155,42 +191,42 @@ _backup_deinterlace_line_vfir (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  int8_t var7;
-  const int8_t *ptr7;
-  int8_t var8;
-  const int8_t *ptr8;
-  const int16_t var16 = 2;
-  const int16_t var17 = 1;
-  const int16_t var18 = 4;
-  const int16_t var19 = 3;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
-  int16_t var40;
-  int16_t var41;
-  int16_t var42;
-  int16_t var43;
-  int16_t var44;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  orc_int8 var7;
+  const orc_int8 *ptr7;
+  orc_int8 var8;
+  const orc_int8 *ptr8;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 1;
+  const orc_int16 var18 = 4;
+  const orc_int16 var19 = 3;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
+  orc_int16 var40;
+  orc_int16 var41;
+  orc_int16 var42;
+  orc_int16 var43;
+  orc_int16 var44;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
-  ptr7 = (int8_t *) ex->arrays[7];
-  ptr8 = (int8_t *) ex->arrays[8];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
+  ptr7 = (orc_int8 *) ex->arrays[7];
+  ptr8 = (orc_int8 *) ex->arrays[8];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -204,21 +240,21 @@ _backup_deinterlace_line_vfir (OrcExecutor * ex)
     var8 = *ptr8;
     ptr8++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var8;
+    var33 = (orc_uint8) var8;
     /* 2: addw */
     var35 = var32 + var33;
     /* 3: convubw */
-    var36 = (uint8_t) var5;
+    var36 = (orc_uint8) var5;
     /* 4: convubw */
-    var34 = (uint8_t) var7;
+    var34 = (orc_uint8) var7;
     /* 5: addw */
     var37 = var36 + var34;
     /* 6: shlw */
     var38 = var37 << var16;
     /* 7: convubw */
-    var39 = (uint8_t) var6;
+    var39 = (orc_uint8) var6;
     /* 8: shlw */
     var40 = var39 << var17;
     /* 9: subw */
@@ -311,16 +347,16 @@ deinterlace_line_linear (guint8 * d1, const guint8 * s1, const guint8 * s2,
     int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -328,7 +364,7 @@ deinterlace_line_linear (guint8 * d1, const guint8 * s1, const guint8 * s2,
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -341,16 +377,16 @@ _backup_deinterlace_line_linear (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -358,7 +394,7 @@ _backup_deinterlace_line_linear (OrcExecutor * ex)
     var5 = *ptr5;
     ptr5++;
     /* 0: avgub */
-    var0 = ((uint8_t) var4 + (uint8_t) var5 + 1) >> 1;
+    var0 = ((orc_uint8) var4 + (orc_uint8) var5 + 1) >> 1;
     *ptr0 = var0;
     ptr0++;
   }
@@ -413,29 +449,29 @@ deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1,
     const guint8 * s2, const guint8 * s3, int n)
 {
   int i;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
 
-  ptr0 = (int8_t *) d1;
-  ptr4 = (int8_t *) s1;
-  ptr5 = (int8_t *) s2;
-  ptr6 = (int8_t *) s3;
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -445,11 +481,11 @@ deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1,
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: addw */
     var35 = var32 + var33;
     /* 4: addw */
@@ -474,29 +510,29 @@ _backup_deinterlace_line_linear_blend (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  int8_t var0;
-  int8_t *ptr0;
-  int8_t var4;
-  const int8_t *ptr4;
-  int8_t var5;
-  const int8_t *ptr5;
-  int8_t var6;
-  const int8_t *ptr6;
-  const int16_t var16 = 2;
-  const int16_t var17 = 2;
-  int16_t var32;
-  int16_t var33;
-  int16_t var34;
-  int16_t var35;
-  int16_t var36;
-  int16_t var37;
-  int16_t var38;
-  int16_t var39;
+  orc_int8 var0;
+  orc_int8 *ptr0;
+  orc_int8 var4;
+  const orc_int8 *ptr4;
+  orc_int8 var5;
+  const orc_int8 *ptr5;
+  orc_int8 var6;
+  const orc_int8 *ptr6;
+  const orc_int16 var16 = 2;
+  const orc_int16 var17 = 2;
+  orc_int16 var32;
+  orc_int16 var33;
+  orc_int16 var34;
+  orc_int16 var35;
+  orc_int16 var36;
+  orc_int16 var37;
+  orc_int16 var38;
+  orc_int16 var39;
 
-  ptr0 = (int8_t *) ex->arrays[0];
-  ptr4 = (int8_t *) ex->arrays[4];
-  ptr5 = (int8_t *) ex->arrays[5];
-  ptr6 = (int8_t *) ex->arrays[6];
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
 
   for (i = 0; i < n; i++) {
     var4 = *ptr4;
@@ -506,11 +542,11 @@ _backup_deinterlace_line_linear_blend (OrcExecutor * ex)
     var6 = *ptr6;
     ptr6++;
     /* 0: convubw */
-    var32 = (uint8_t) var4;
+    var32 = (orc_uint8) var4;
     /* 1: convubw */
-    var33 = (uint8_t) var5;
+    var33 = (orc_uint8) var5;
     /* 2: convubw */
-    var34 = (uint8_t) var6;
+    var34 = (orc_uint8) var6;
     /* 3: addw */
     var35 = var32 + var33;
     /* 4: addw */
