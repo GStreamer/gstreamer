@@ -359,6 +359,7 @@ gst_vdp_vpp_post_error (GstVdpVideoPostProcess * vpp, GError * error)
 
   message = gst_message_new_error (GST_OBJECT (vpp), error, NULL);
   gst_element_post_message (GST_ELEMENT (vpp), message);
+  g_error_free (error);
 }
 
 static GstFlowReturn
@@ -372,10 +373,8 @@ gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
   ret =
       gst_vdp_output_src_pad_get_device (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
       &vpp->device, &err);
-  if (ret == GST_FLOW_ERROR) {
+  if (ret == GST_FLOW_ERROR)
     gst_vdp_vpp_post_error (vpp, err);
-    g_error_free (err);
-  }
 
   return ret;
 }
@@ -716,10 +715,8 @@ gst_vdp_vpp_drain (GstVdpVideoPostProcess * vpp)
     break;
 
   output_pad_error:
-    if (ret == GST_FLOW_ERROR && err != NULL) {
+    if (ret == GST_FLOW_ERROR && err != NULL)
       gst_vdp_vpp_post_error (vpp, err);
-      g_error_free (err);
-    }
     break;
   }
 
