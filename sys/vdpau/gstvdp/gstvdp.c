@@ -25,6 +25,7 @@
 #include "gstvdpvideosrcpad.h"
 #include "gstvdpoutputbuffer.h"
 #include "gstvdpoutputsrcpad.h"
+#include "gstvdpdecoder.h"
 
 #include "gstvdp.h"
 
@@ -39,6 +40,7 @@ gst_vdp_init (void)
   gst_vdp_video_buffer_get_type ();
   gst_vdp_video_src_pad_get_type ();
   gst_vdp_output_src_pad_get_type ();
+  gst_vdp_decoder_get_type ();
 
   GST_DEBUG_CATEGORY_INIT (gst_vdp_debug, "vdp", 0, "GstVdp debug category");
 }

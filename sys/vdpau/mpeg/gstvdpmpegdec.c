@@ -41,8 +41,6 @@
 #include <string.h>
 
 #include "mpegutil.h"
-#include "../gstvdp/gstvdpvideosrcpad.h"
-#include "../gstvdp/gstvdpvideobuffer.h"
 
 #include "gstvdpmpegdec.h"
 
@@ -78,7 +76,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     "VDPAU mpeg decoder");
 
 GST_BOILERPLATE_FULL (GstVdpMpegDec, gst_vdp_mpeg_dec,
-    GstBaseVideoDecoder, GST_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
+    GstVdpDecoder, GST_TYPE_VDP_DECODER, DEBUG_INIT);
 
 static void gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 
@@ -99,33 +97,6 @@ gst_vdp_mpeg_dec_get_profile (MPEGSeqExtHdr * hdr)
   }
 
   return profile;
-}
-
-static GstFlowReturn
-gst_vdp_mpeg_dec_alloc_buffer (GstVdpMpegDec * mpeg_dec,
-    GstVdpVideoBuffer ** outbuf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec);
-  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, outbuf);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_vdp_mpeg_dec_shape_output (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-
-  vdp_pad =
-      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
-
-  return gst_vdp_video_src_pad_push (vdp_pad, GST_VDP_VIDEO_BUFFER (buf));
 }
 
 static gboolean
@@ -248,10 +219,7 @@ gst_vdp_mpeg_dec_create_decoder (GstVdpMpegDec * mpeg_dec)
   GstFlowReturn ret;
   GstVdpDevice *device;
 
-  ret = gst_vdp_video_src_pad_get_device
-      (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)),
-      &device, NULL);
-
+  ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (mpeg_dec), &device, NULL);
   if (ret == GST_FLOW_OK) {
     VdpStatus status;
     GstVdpMpegStreamInfo *stream_info;
@@ -434,7 +402,8 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     info->backward_reference = VDP_INVALID_HANDLE;
   }
 
-  if ((ret = gst_vdp_mpeg_dec_alloc_buffer (mpeg_dec, &outbuf) != GST_FLOW_OK))
+  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (mpeg_dec), &outbuf)
+          != GST_FLOW_OK))
     goto alloc_error;
 
   /* create decoder */
@@ -634,23 +603,6 @@ done:
   return ret;
 }
 
-static GstPad *
-gst_vdp_mpeg_dec_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
-    GstBaseVideoDecoderClass * base_video_decoder_class)
-{
-  GstPadTemplate *pad_template;
-  GstVdpVideoSrcPad *vdp_pad;
-
-  pad_template = gst_element_class_get_pad_template
-      (GST_ELEMENT_CLASS (base_video_decoder_class),
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  vdp_pad = gst_vdp_video_src_pad_new (pad_template,
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  return GST_PAD (vdp_pad);
-}
-
 static gint
 gst_vdp_mpeg_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
     GstAdapter * adapter)
@@ -725,15 +677,10 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
-  GstVdpVideoSrcPad *vdp_pad;
   GstFlowReturn ret;
   GstVdpDevice *device;
 
-  vdp_pad =
-      GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD
-      (base_video_decoder));
-
-  ret = gst_vdp_video_src_pad_get_device (vdp_pad, &device, NULL);
+  ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (mpeg_dec), &device, NULL);
   if (ret == GST_FLOW_OK) {
 
     if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
@@ -799,24 +746,14 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  GstCaps *src_caps;
-  GstPadTemplate *src_template;
-
   gst_element_class_set_details_simple (element_class,
       "VDPAU Mpeg Decoder",
       "Decoder",
       "Decode mpeg stream with vdpau",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-
-  src_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new (GST_BASE_VIDEO_DECODER_SRC_NAME,
-      GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
-
-  gst_element_class_add_pad_template (element_class, src_template);
 }
 
 /* initialize the vdpaumpegdecoder's class */
@@ -838,7 +775,6 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
   base_video_decoder_class->start = gst_vdp_mpeg_dec_start;
   base_video_decoder_class->stop = gst_vdp_mpeg_dec_stop;
   base_video_decoder_class->flush = gst_vdp_mpeg_dec_flush;
-  base_video_decoder_class->create_srcpad = gst_vdp_mpeg_dec_create_srcpad;
 
   base_video_decoder_class->scan_for_sync = gst_vdp_mpeg_dec_scan_for_sync;
   base_video_decoder_class->scan_for_packet_end =
@@ -847,8 +783,6 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 
   base_video_decoder_class->handle_frame = gst_vdp_mpeg_dec_handle_frame;
   base_video_decoder_class->create_frame = gst_vdp_mpeg_dec_create_frame;
-
-  base_video_decoder_class->shape_output = gst_vdp_mpeg_dec_shape_output;
 
   g_object_class_install_property (gobject_class,
       PROP_DISPLAY, g_param_spec_string ("display", "Display", "X Display name",

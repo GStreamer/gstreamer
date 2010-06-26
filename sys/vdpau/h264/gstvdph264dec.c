@@ -26,8 +26,6 @@
 #include <gst/base/gstbitreader.h>
 #include <string.h>
 
-#include "../gstvdp/gstvdpvideosrcpad.h"
-
 #include "gstvdph264frame.h"
 
 #include "gstvdph264dec.h"
@@ -46,8 +44,8 @@ GST_STATIC_PAD_TEMPLATE (GST_BASE_VIDEO_DECODER_SINK_NAME,
     GST_DEBUG_CATEGORY_INIT (gst_vdp_h264_dec_debug, "vdpauh264dec", 0, \
     "VDPAU h264 decoder");
 
-GST_BOILERPLATE_FULL (GstVdpH264Dec, gst_vdp_h264_dec, GstBaseVideoDecoder,
-    GST_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstVdpH264Dec, gst_vdp_h264_dec, GstVdpDecoder,
+    GST_TYPE_VDP_DECODER, DEBUG_INIT);
 
 #define SYNC_CODE_SIZE 3
 
@@ -70,21 +68,6 @@ GST_BOILERPLATE_FULL (GstVdpH264Dec, gst_vdp_h264_dec, GstBaseVideoDecoder,
   GST_WARNING ("failed to skip nbits: %d", nbits); \
     return FALSE; \
   } \
-}
-
-static GstFlowReturn
-gst_vdp_h264_dec_alloc_buffer (GstVdpH264Dec * h264_dec,
-    GstVdpVideoBuffer ** outbuf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (h264_dec);
-  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, outbuf);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -166,18 +149,6 @@ gst_vdp_h264_dec_set_sink_caps (GstBaseVideoDecoder * base_video_decoder,
   }
 
   return TRUE;
-}
-
-static GstFlowReturn
-gst_vdp_h264_dec_shape_output (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-
-  vdp_pad =
-      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
-
-  return gst_vdp_video_src_pad_push (vdp_pad, GST_VDP_VIDEO_BUFFER (buf));
 }
 
 static void
@@ -294,9 +265,8 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstVdpH264Frame * h264_frame)
 
     gst_base_video_decoder_update_src_caps (GST_BASE_VIDEO_DECODER (h264_dec));
 
-    ret = gst_vdp_video_src_pad_get_device
-        (GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD (h264_dec)),
-        &device, NULL);
+    ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (h264_dec), &device,
+        NULL);
 
     if (ret == GST_FLOW_OK) {
       GstVideoState *state;
@@ -509,7 +479,8 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
 
   /* decoding */
-  if ((ret = gst_vdp_h264_dec_alloc_buffer (h264_dec, &outbuf) != GST_FLOW_OK))
+  if ((ret = gst_vdp_decoder_alloc_buffer (GST_VDP_DECODER (h264_dec), &outbuf)
+          != GST_FLOW_OK))
     goto alloc_error;
 
   device = GST_VDP_VIDEO_BUFFER (outbuf)->device;
@@ -846,23 +817,6 @@ gst_vdp_h264_dec_create_frame (GstBaseVideoDecoder * base_video_decoder)
   return GST_VIDEO_FRAME_CAST (gst_vdp_h264_frame_new ());
 }
 
-static GstPad *
-gst_vdp_h264_dec_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
-    GstBaseVideoDecoderClass * base_video_decoder_class)
-{
-  GstPadTemplate *pad_template;
-  GstVdpVideoSrcPad *vdp_pad;
-
-  pad_template = gst_element_class_get_pad_template
-      (GST_ELEMENT_CLASS (base_video_decoder_class),
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  vdp_pad = gst_vdp_video_src_pad_new (pad_template,
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  return GST_PAD (vdp_pad);
-}
-
 static gboolean
 gst_vdp_h264_dec_flush (GstBaseVideoDecoder * base_video_decoder)
 {
@@ -899,18 +853,13 @@ gst_vdp_h264_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
 
-  GstVdpVideoSrcPad *vdp_pad;
   GstFlowReturn ret;
   GstVdpDevice *device;
 
   g_object_unref (h264_dec->parser);
   g_object_unref (h264_dec->dpb);
 
-  vdp_pad =
-      GST_VDP_VIDEO_SRC_PAD (GST_BASE_VIDEO_DECODER_SRC_PAD
-      (base_video_decoder));
-
-  ret = gst_vdp_video_src_pad_get_device (vdp_pad, &device, NULL);
+  ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (h264_dec), &device, NULL);
   if (ret == GST_FLOW_OK) {
 
     if (h264_dec->decoder != VDP_INVALID_HANDLE)
@@ -925,9 +874,6 @@ gst_vdp_h264_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  GstCaps *src_caps;
-  GstPadTemplate *src_template;
-
   gst_element_class_set_details_simple (element_class,
       "VDPAU H264 Decoder",
       "Decoder",
@@ -936,12 +882,6 @@ gst_vdp_h264_dec_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-
-  src_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new (GST_BASE_VIDEO_DECODER_SRC_NAME,
-      GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
-
-  gst_element_class_add_pad_template (element_class, src_template);
 }
 
 static void
@@ -968,7 +908,6 @@ gst_vdp_h264_dec_class_init (GstVdpH264DecClass * klass)
   base_video_decoder_class->stop = gst_vdp_h264_dec_stop;
   base_video_decoder_class->flush = gst_vdp_h264_dec_flush;
 
-  base_video_decoder_class->create_srcpad = gst_vdp_h264_dec_create_srcpad;
   base_video_decoder_class->set_sink_caps = gst_vdp_h264_dec_set_sink_caps;
 
   base_video_decoder_class->scan_for_sync = gst_vdp_h264_dec_scan_for_sync;
@@ -978,6 +917,4 @@ gst_vdp_h264_dec_class_init (GstVdpH264DecClass * klass)
 
   base_video_decoder_class->handle_frame = gst_vdp_h264_dec_handle_frame;
   base_video_decoder_class->create_frame = gst_vdp_h264_dec_create_frame;
-
-  base_video_decoder_class->shape_output = gst_vdp_h264_dec_shape_output;
 }
