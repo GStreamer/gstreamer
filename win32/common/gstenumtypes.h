@@ -125,6 +125,8 @@ GType gst_pad_link_return_get_type (void);
 #define GST_TYPE_PAD_LINK_RETURN (gst_pad_link_return_get_type())
 GType gst_flow_return_get_type (void);
 #define GST_TYPE_FLOW_RETURN (gst_flow_return_get_type())
+GType gst_pad_link_check_get_type (void);
+#define GST_TYPE_PAD_LINK_CHECK (gst_pad_link_check_get_type())
 GType gst_activate_mode_get_type (void);
 #define GST_TYPE_ACTIVATE_MODE (gst_activate_mode_get_type())
 GType gst_pad_direction_get_type (void);
