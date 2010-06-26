@@ -15,7 +15,7 @@ libgstvideoscale_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoscale_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 libgstvideoscale_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
