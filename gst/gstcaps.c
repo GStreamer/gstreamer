@@ -75,6 +75,7 @@
 
 #ifdef GST_DISABLE_DEPRECATED
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+#include <libxml/parser.h>
 xmlNodePtr gst_caps_save_thyself (const GstCaps * caps, xmlNodePtr parent);
 GstCaps *gst_caps_load_thyself (xmlNodePtr parent);
 #endif

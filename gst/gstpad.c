@@ -119,6 +119,9 @@ static gboolean gst_pad_activate_default (GstPad * pad);
 static gboolean gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps);
 
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+#ifdef GST_DISABLE_DEPRECATED
+#include <libxml/parser.h>
+#endif
 static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 void gst_pad_load_and_link (xmlNodePtr self, GstObject * parent);
 #endif

@@ -78,6 +78,9 @@ static void gst_proxy_pad_dispose (GObject * object);
 static void gst_proxy_pad_finalize (GObject * object);
 
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+#ifdef GST_DISABLE_DEPRECATED
+#include <libxml/parser.h>
+#endif
 static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
     xmlNodePtr parent);
 #endif

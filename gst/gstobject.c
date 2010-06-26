@@ -154,6 +154,7 @@ static gboolean gst_object_set_name_default (GstObject * object);
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
 #undef GstXmlNodePtr
 #define GstXmlNodePtr xmlNodePtr
+#include <libxml/parser.h>
 GstXmlNodePtr gst_object_save_thyself (GstObject * object,
     GstXmlNodePtr parent);
 void gst_object_restore_thyself (GstObject * object, GstXmlNodePtr parent);

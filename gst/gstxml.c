@@ -47,6 +47,7 @@
 
 #ifdef GST_DISABLE_DEPRECATED
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
+#include <libxml/parser.h>
 xmlNodePtr gst_object_save_thyself (const GstObject * object,
     xmlNodePtr parent);
 GstObject *gst_object_load_thyself (xmlNodePtr parent);

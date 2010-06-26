@@ -27,6 +27,10 @@
 #include <fcntl.h>
 #include <string.h>
 
+#ifdef GST_DISABLE_DEPRECATED
+#include <libxml/parser.h>
+#endif
+
 #include "gstindexers.h"
 
 #define GST_TYPE_FILE_INDEX             \

@@ -194,7 +194,9 @@
 /* FIXME: move include to where we need it */
 /*#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )*/
 #ifndef GST_DISABLE_XML
+#ifndef GST_DISABLE_DEPRECATED
 # include <libxml/parser.h>
+#endif
 #else
   /* FIXME: 0.11 (replace by GST_DISABLE_XML) */
 # define GST_DISABLE_LOADSAVE_REGISTRY
