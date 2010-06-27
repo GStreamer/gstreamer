@@ -146,7 +146,7 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   frame->components[2].v_shift = v_shift;
   frame->components[2].h_shift = h_shift;
 
-  frame->regions[0] = malloc (frame->components[0].length +
+  frame->regions[0] = g_malloc (frame->components[0].length +
       frame->components[1].length + frame->components[2].length);
 
   frame->components[0].data = COG_OFFSET (frame->regions[0],

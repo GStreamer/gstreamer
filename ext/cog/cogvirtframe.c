@@ -52,7 +52,7 @@ cog_frame_new_virtual (CogMemoryDomain * domain, CogFrameFormat format,
     frame->components[0].h_shift = 0;
 
     frame->regions[0] =
-        malloc (frame->components[0].stride * COG_FRAME_CACHE_SIZE);
+        g_malloc (frame->components[0].stride * COG_FRAME_CACHE_SIZE);
     for (i = 0; i < COG_FRAME_CACHE_SIZE; i++) {
       frame->cached_lines[0][i] = 0;
     }
@@ -114,7 +114,7 @@ cog_frame_new_virtual (CogMemoryDomain * domain, CogFrameFormat format,
     CogFrameData *comp = &frame->components[i];
     int j;
 
-    frame->regions[i] = malloc (comp->stride * COG_FRAME_CACHE_SIZE);
+    frame->regions[i] = g_malloc (comp->stride * COG_FRAME_CACHE_SIZE);
     for (j = 0; j < COG_FRAME_CACHE_SIZE; j++) {
       frame->cached_lines[i][j] = 0;
     }
