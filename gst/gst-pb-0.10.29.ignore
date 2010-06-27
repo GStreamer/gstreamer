@@ -1,0 +1,9 @@
+%%
+ignore
+	gst_x_overlay_set_render_rectangle
+	gst_tag_list_from_xmp_buffer
+	gst_tag_list_to_xmp_buffer
+	gst_video_format_is_gray
+	gst_video_parse_caps_chroma_site
+	gst_video_parse_caps_color_matrix
+%%

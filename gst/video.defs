@@ -45,6 +45,16 @@
     '("v216" "GST_VIDEO_FORMAT_v216")
     '("nv12" "GST_VIDEO_FORMAT_NV12")
     '("nv21" "GST_VIDEO_FORMAT_NV21")
+    '("gray8" "GST_VIDEO_FORMAT_GRAY8")
+    '("gray16-be" "GST_VIDEO_FORMAT_GRAY16_BE")
+    '("gray16-le" "GST_VIDEO_FORMAT_GRAY16_LE")
+    '("v308" "GST_VIDEO_FORMAT_v308")
+    '("y800" "GST_VIDEO_FORMAT_Y800")
+    '("y16" "GST_VIDEO_FORMAT_Y16")
+    '("rgb16" "GST_VIDEO_FORMAT_RGB16")
+    '("bgr16" "GST_VIDEO_FORMAT_BGR16")
+    '("rgb15" "GST_VIDEO_FORMAT_RGB15")
+    '("bgr15" "GST_VIDEO_FORMAT_BGR15")
   )
 )
 
@@ -145,6 +155,22 @@
   )
 )
 
+(define-function parse_caps_color_matrix
+  (c-name "gst_video_parse_caps_color_matrix")
+  (return-type "const-char*")
+  (parameters
+    '("GstCaps*" "caps")
+  )
+)
+
+(define-function parse_caps_chroma_site
+  (c-name "gst_video_parse_caps_chroma_site")
+  (return-type "const-char*")
+  (parameters
+    '("GstCaps*" "caps")
+  )
+)
+
 (define-method new_caps
   (of-object "GstVideoFormat")
   (c-name "gst_video_format_new_caps")
@@ -199,6 +225,12 @@
 (define-method is_yuv
   (of-object "GstVideoFormat")
   (c-name "gst_video_format_is_yuv")
+  (return-type "gboolean")
+)
+
+(define-method is_gray
+  (of-object "GstVideoFormat")
+  (c-name "gst_video_format_is_gray")
   (return-type "gboolean")
 )
 

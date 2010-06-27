@@ -19,6 +19,18 @@
   )
 )
 
+(define-method set_render_rectangle
+  (of-object "GstXOverlay")
+  (c-name "gst_x_overlay_set_render_rectangle")
+  (return-type "gboolean")
+  (parameters
+    '("gint" "x")
+    '("gint" "y")
+    '("gint" "width")
+    '("gint" "height")
+  )
+)
+
 (define-method expose
   (of-object "GstXOverlay")
   (c-name "gst_x_overlay_expose")
