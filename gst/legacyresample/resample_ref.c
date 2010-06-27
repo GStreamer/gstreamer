@@ -28,10 +28,11 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include "_stdint.h"
+
 #include "resample.h"
 #include "buffer.h"
 #include "debug.h"
-
 
 static double
 resample_sinc_window (double x, double halfwidth, double scale)
