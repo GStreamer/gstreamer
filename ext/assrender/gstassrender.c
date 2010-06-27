@@ -157,9 +157,9 @@ gst_ass_render_class_init (GstAssRenderClass * klass)
 
 #if defined(LIBASS_VERSION) && LIBASS_VERSION >= 0x00907000
 static void
-_libass_message_cb (gint level, const gchar * fmt, va_list args, gpointer data)
+_libass_message_cb (gint level, const gchar * fmt, va_list args,
+    gpointer render)
 {
-  GstAssRender *render = GST_ASS_RENDER (data);
   gchar *message = g_strdup_vprintf (fmt, args);
 
   if (level < 2)

@@ -188,7 +188,10 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
         guint16 height = GST_READ_UINT16_LE (data + 14);
         guint32 rate_num = GST_READ_UINT32_LE (data + 16);
         guint32 rate_den = GST_READ_UINT32_LE (data + 20);
+#ifndef GST_DISABLE_GST_DEBUG
         guint32 num_frames = GST_READ_UINT32_LE (data + 24);
+#endif
+
         /* last 4 bytes unused */
         gst_adapter_flush (ivf->adapter, 32);
 
@@ -233,8 +236,9 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
         guint32 frame_size = GST_READ_UINT32_LE (data);
         guint64 frame_pts = GST_READ_UINT64_LE (data + 4);
 
-        GST_LOG_OBJECT (ivf, "Read frame header: size %u, pts %" G_GUINT64_FORMAT,
-            frame_size, frame_pts);
+        GST_LOG_OBJECT (ivf,
+            "Read frame header: size %u, pts %" G_GUINT64_FORMAT, frame_size,
+            frame_pts);
 
         if (gst_adapter_available (ivf->adapter) >= 12 + frame_size) {
           GstBuffer *frame;

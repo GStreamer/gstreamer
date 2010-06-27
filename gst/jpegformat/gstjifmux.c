@@ -182,13 +182,12 @@ gst_jif_mux_finalize (GObject * object)
 static gboolean
 gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstJifMux *self = GST_JIF_MUX (GST_PAD_PARENT (pad));
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *variant;
 
   /* should be {combined (default), EXIF, JFIF} */
   if ((variant = gst_structure_get_string (s, "variant")) != NULL) {
-    GST_INFO_OBJECT (self, "muxing to '%s'", variant);
+    GST_INFO_OBJECT (pad, "muxing to '%s'", variant);
     /* FIXME: do we want to switch it like this or use a gobject property ? */
   }
 
@@ -635,7 +634,6 @@ static GstFlowReturn
 gst_jif_mux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstJifMux *self = GST_JIF_MUX (GST_PAD_PARENT (pad));
-  guint8 *data = GST_BUFFER_DATA (buf);
   GstFlowReturn fret = GST_FLOW_OK;
 
   if (GST_BUFFER_CAPS (buf) == NULL) {
@@ -644,8 +642,9 @@ gst_jif_mux_chain (GstPad * pad, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  GST_MEMDUMP ("jpeg beg", data, 64);
-  GST_MEMDUMP ("jpeg end", &data[GST_BUFFER_SIZE (buf) - 64], 64);
+  GST_MEMDUMP ("jpeg beg", GST_BUFFER_DATA (buf), 64);
+  GST_MEMDUMP ("jpeg end", GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf) - 64,
+      64);
 
   /* we should have received a whole picture from SOI to EOI
    * build a list of markers */
