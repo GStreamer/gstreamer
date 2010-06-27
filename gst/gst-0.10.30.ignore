@@ -5,6 +5,7 @@ ignore
   gst_tag_list_peek_string_index
   gst_pad_link_full
   gst_element_link_pads_full
+  gst_adapter_masked_scan_uint32_peek
 %%
 ignore-type
   GstPadLinkCheck

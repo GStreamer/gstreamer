@@ -168,6 +168,19 @@
   )
 )
 
+(define-method masked_scan_uint32_peek
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_masked_scan_uint32_peek")
+  (return-type "guint")
+  (parameters
+    '("guint32" "mask")
+    '("guint32" "pattern")
+    '("guint" "offset")
+    '("guint" "size")
+    '("guint32*" "value")
+  )
+)
+
 (define-function gst_adapter_get_type
   (c-name "gst_adapter_get_type")
   (return-type "GType")
