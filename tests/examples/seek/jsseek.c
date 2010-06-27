@@ -2847,10 +2847,8 @@ main (int argc, char **argv)
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_scale_set_value_pos (GTK_SCALE (hscale), GTK_POS_RIGHT);
-#if GTK_CHECK_VERSION(2,12,0)
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
   gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
-#endif
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   g_signal_connect (hscale, "button_press_event", G_CALLBACK (start_seek),
