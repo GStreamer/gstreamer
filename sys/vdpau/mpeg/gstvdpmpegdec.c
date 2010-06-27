@@ -47,19 +47,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_dec_debug);
 #define GST_CAT_DEFAULT gst_vdp_mpeg_dec_debug
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  PROP_0,
-  PROP_DISPLAY
-};
-
 /* the capabilities of the inputs and outputs.
  *
  * describe the real formats here.
@@ -701,50 +688,6 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   return TRUE;
 }
 
-
-/* GObject vmethod implementations */
-static void
-gst_vdp_mpeg_dec_finalize (GObject * object)
-{
-
-}
-
-static void
-gst_vdp_mpeg_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
-
-  switch (prop_id) {
-    case PROP_DISPLAY:
-      g_object_get_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
-          value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_vdp_mpeg_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) object;
-
-  switch (prop_id) {
-    case PROP_DISPLAY:
-      g_object_set_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (mpeg_dec)), "display",
-          value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static void
 gst_vdp_mpeg_dec_base_init (gpointer gclass)
 {
@@ -764,17 +707,9 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
 static void
 gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseVideoDecoderClass *base_video_decoder_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  base_video_decoder_class = (GstBaseVideoDecoderClass *) klass;
-
-  gobject_class->get_property = gst_vdp_mpeg_dec_get_property;
-  gobject_class->set_property = gst_vdp_mpeg_dec_set_property;
-  gobject_class->finalize = gst_vdp_mpeg_dec_finalize;
+  base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
 
   base_video_decoder_class->start = gst_vdp_mpeg_dec_start;
   base_video_decoder_class->stop = gst_vdp_mpeg_dec_stop;
@@ -787,10 +722,6 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 
   base_video_decoder_class->handle_frame = gst_vdp_mpeg_dec_handle_frame;
   base_video_decoder_class->create_frame = gst_vdp_mpeg_dec_create_frame;
-
-  g_object_class_install_property (gobject_class,
-      PROP_DISPLAY, g_param_spec_string ("display", "Display", "X Display name",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
 static void

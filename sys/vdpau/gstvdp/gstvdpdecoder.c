@@ -36,6 +36,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdp_decoder_debug);
 GST_BOILERPLATE_FULL (GstVdpDecoder, gst_vdp_decoder, GstBaseVideoDecoder,
     GST_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
 
+enum
+{
+  PROP_0,
+  PROP_DISPLAY
+};
+
 static GstFlowReturn
 gst_vdp_decoder_shape_output (GstBaseVideoDecoder * base_video_decoder,
     GstBuffer * buf)
@@ -99,6 +105,42 @@ gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder, GstVdpDevice ** device,
 }
 
 static void
+gst_vdp_decoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_object_get_property
+          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder)), "display",
+          value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vdp_decoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_object_set_property
+          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder)), "display",
+          value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_vdp_decoder_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -121,9 +163,19 @@ gst_vdp_decoder_init (GstVdpDecoder * decoder, GstVdpDecoderClass * klass)
 static void
 gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
 {
-  GstBaseVideoDecoderClass *base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_CLASS (klass);
+  GObjectClass *object_class;
+  GstBaseVideoDecoderClass *base_video_decoder_class;
+
+  object_class = G_OBJECT_CLASS (klass);
+  base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
+
+  object_class->get_property = gst_vdp_decoder_get_property;
+  object_class->set_property = gst_vdp_decoder_set_property;
 
   base_video_decoder_class->create_srcpad = gst_vdp_decoder_create_srcpad;
   base_video_decoder_class->shape_output = gst_vdp_decoder_shape_output;
+
+  g_object_class_install_property (object_class,
+      PROP_DISPLAY, g_param_spec_string ("display", "Display", "X Display name",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }

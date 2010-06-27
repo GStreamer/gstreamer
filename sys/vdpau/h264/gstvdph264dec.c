@@ -893,19 +893,11 @@ gst_vdp_h264_dec_init (GstVdpH264Dec * h264_dec, GstVdpH264DecClass * klass)
 }
 
 static void
-gst_vdp_h264_dec_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
 gst_vdp_h264_dec_class_init (GstVdpH264DecClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseVideoDecoderClass *base_video_decoder_class =
-      GST_BASE_VIDEO_DECODER_CLASS (klass);
+  GstBaseVideoDecoderClass *base_video_decoder_class;
 
-  gobject_class->finalize = gst_vdp_h264_dec_finalize;
+  base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
 
   base_video_decoder_class->start = gst_vdp_h264_dec_start;
   base_video_decoder_class->stop = gst_vdp_h264_dec_stop;
