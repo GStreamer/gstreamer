@@ -740,6 +740,7 @@
     '("debug" "GST_LEVEL_DEBUG")
     '("log" "GST_LEVEL_LOG")
     '("fixme" "GST_LEVEL_FIXME")
+    '("trace" "GST_LEVEL_TRACE")
     '("memdump" "GST_LEVEL_MEMDUMP")
     '("count" "GST_LEVEL_COUNT")
   )
@@ -824,6 +825,7 @@
     '("async-done" "GST_MESSAGE_ASYNC_DONE")
     '("request-state" "GST_MESSAGE_REQUEST_STATE")
     '("step-start" "GST_MESSAGE_STEP_START")
+    '("qos" "GST_MESSAGE_QOS")
     '("any" "GST_MESSAGE_ANY")
   )
 )
@@ -894,6 +896,8 @@
   (c-name "GstFlowReturn")
   (gtype-id "GST_TYPE_FLOW_RETURN")
   (values
+    '("custom-success-2" "GST_FLOW_CUSTOM_SUCCESS_2")
+    '("custom-success-1" "GST_FLOW_CUSTOM_SUCCESS_1")
     '("custom-success" "GST_FLOW_CUSTOM_SUCCESS")
     '("resend" "GST_FLOW_RESEND")
     '("ok" "GST_FLOW_OK")
@@ -904,6 +908,20 @@
     '("error" "GST_FLOW_ERROR")
     '("not-supported" "GST_FLOW_NOT_SUPPORTED")
     '("custom-error" "GST_FLOW_CUSTOM_ERROR")
+    '("custom-error-1" "GST_FLOW_CUSTOM_ERROR_1")
+    '("custom-error-2" "GST_FLOW_CUSTOM_ERROR_2")
+  )
+)
+
+(define-flags PadLinkCheck
+  (in-module "Gst")
+  (c-name "GstPadLinkCheck")
+  (gtype-id "GST_TYPE_PAD_LINK_CHECK")
+  (values
+    '("nothing" "GST_PAD_LINK_CHECK_NOTHING")
+    '("hierarchy" "GST_PAD_LINK_CHECK_HIERARCHY")
+    '("template-caps" "GST_PAD_LINK_CHECK_TEMPLATE_CAPS")
+    '("caps" "GST_PAD_LINK_CHECK_CAPS")
   )
 )
 

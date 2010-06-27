@@ -760,6 +760,16 @@
   )
 )
 
+(define-method steal_structure
+  (of-object "GstCaps")
+  (c-name "gst_caps_steal_structure")
+  (return-type "GstStructure*")
+  (caller-owns-return #t)
+  (parameters
+    '("guint" "index")
+  )
+)
+
 (define-method copy_nth
   (of-object "GstCaps")
   (c-name "gst_caps_copy_nth")
@@ -3565,6 +3575,77 @@
   )
 )
 
+(define-function message_new_qos
+  (c-name "gst_message_new_qos")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("gboolean" "live")
+    '("guint64" "running_time")
+    '("guint64" "stream_time")
+    '("guint64" "timestamp")
+    '("guint64" "duration")
+  )
+)
+
+(define-method set_qos_values
+  (of-object "GstMessage")
+  (c-name "gst_message_set_qos_values")
+  (return-type "none")
+  (parameters
+    '("gint64" "jitter")
+    '("gdouble" "proportion")
+    '("gint" "quality")
+  )
+)
+
+(define-method set_qos_stats
+  (of-object "GstMessage")
+  (c-name "gst_message_set_qos_stats")
+  (return-type "none")
+  (parameters
+    '("GstFormat" "format")
+    '("guint64" "processed")
+    '("guint64" "dropped")
+  )
+)
+
+(define-method parse_qos
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_qos")
+  (return-type "none")
+  (parameters
+    '("gboolean*" "live")
+    '("guint64*" "running_time")
+    '("guint64*" "stream_time")
+    '("guint64*" "timestamp")
+    '("guint64*" "duration")
+  )
+)
+
+(define-method parse_qos_values
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_qos_values")
+  (return-type "none")
+  (parameters
+    '("gint64*" "jitter")
+    '("gdouble*" "proportion")
+    '("gint*" "quality")
+  )
+)
+
+(define-method parse_qos_stats
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_qos_stats")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("guint64*" "processed")
+    '("guint64*" "dropped")
+  )
+)
+
 (define-function message_new_custom
   (c-name "gst_message_new_custom")
   (return-type "GstMessage*")
@@ -4331,6 +4412,16 @@
   )
 )
 
+(define-method link_full
+  (of-object "GstPad")
+  (c-name "gst_pad_link_full")
+  (return-type "GstPadLinkReturn")
+  (parameters
+    '("GstPad*" "sinkpad")
+    '("GstPadLinkCheck" "flags")
+  )
+)
+
 (define-method unlink
   (of-object "GstPad")
   (c-name "gst_pad_unlink")
@@ -4856,7 +4947,7 @@
   (c-name "gst_event_new_sink_message")
   (return-type "GstEvent*")
   (parameters
-    '("struct-GstMessage*" "msg")
+    '("GstMessage*" "msg")
   )
 )
 
@@ -4865,7 +4956,7 @@
   (c-name "gst_event_parse_sink_message")
   (return-type "none")
   (parameters
-    '("struct-GstMessage**" "msg")
+    '("GstMessage**" "msg")
   )
 )
 
@@ -6797,6 +6888,16 @@
   )
 )
 
+(define-method fixate_field_string
+  (of-object "GstStructure")
+  (c-name "gst_structure_fixate_field_string")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "field_name")
+    '("const-gchar*" "target")
+  )
+)
+
 (define-method fixate_field_nearest_fraction
   (of-object "GstStructure")
   (c-name "gst_structure_fixate_field_nearest_fraction")
@@ -7316,6 +7417,17 @@
     '("const-gchar*" "tag")
     '("guint" "index")
     '("gchar**" "value")
+  )
+)
+
+(define-method peek_string_index
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_peek_string_index")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "tag")
+    '("guint" "index")
+    '("const-gchar**" "value")
   )
 )
 
@@ -8172,6 +8284,18 @@
     '("const-gchar*" "srcpadname")
     '("GstElement*" "dest")
     '("const-gchar*" "destpadname")
+  )
+)
+
+(define-method link_pads_full
+  (of-object "GstElement")
+  (c-name "gst_element_link_pads_full")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "srcpadname")
+    '("GstElement*" "dest")
+    '("const-gchar*" "destpadname")
+    '("GstPadLinkCheck" "flags")
   )
 )
 

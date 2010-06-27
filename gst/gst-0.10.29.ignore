@@ -1,0 +1,9 @@
+%%
+ignore
+   gst_message_new_qos
+   gst_message_set_qos_values
+   gst_message_set_qos_stats
+   gst_message_parse_qos
+   gst_message_parse_qos_values
+   gst_message_parse_qos_stats
+%%
