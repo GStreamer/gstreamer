@@ -268,7 +268,7 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
 
   /* FIXME: make sure to get XID in main thread */
   gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (message->src),
-      GDK_WINDOW_XWINDOW (ui_drawing->window));
+      GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
 
   gst_message_unref (message);
   return GST_BUS_DROP;
@@ -838,7 +838,7 @@ void
 on_drawingareaView_realize (GtkWidget * widget, gpointer data)
 {
 #if GTK_CHECK_VERSION (2, 18, 0)
-  gdk_window_ensure_native (widget->window);
+  gdk_window_ensure_native (gtk_widget_get_window (widget));
 #endif
 }
 
@@ -846,9 +846,11 @@ gboolean
 on_drawingareaView_configure_event (GtkWidget * widget,
     GdkEventConfigure * event, gpointer data)
 {
-  gdk_window_move_resize (widget->window,
-      widget->allocation.x, widget->allocation.y,
-      widget->allocation.width, widget->allocation.height);
+  GtkAllocation a;
+
+  gtk_widget_get_allocation (widget, &a);
+  gdk_window_move_resize (gtk_widget_get_window (widget),
+      a.x, a.y, a.width, a.height);
   gdk_display_sync (gtk_widget_get_display (widget));
 
   return TRUE;

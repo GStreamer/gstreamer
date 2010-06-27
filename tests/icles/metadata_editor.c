@@ -322,8 +322,10 @@ gboolean
 on_drawingMain_expose_event (GtkWidget * widget, GdkEventExpose * event,
     gpointer data)
 {
-  GtkAllocation a = widget->allocation;
+  GtkAllocation a;
   gint w, h, x, y;
+
+  gtk_widget_get_allocation (widget, &a);
 
   if (draw_pixbuf == NULL)
     return FALSE;
@@ -341,7 +343,8 @@ on_drawingMain_expose_event (GtkWidget * widget, GdkEventExpose * event,
   if (y < 0)
     y = 0;
 
-  gdk_draw_pixbuf (GDK_DRAWABLE (widget->window), widget->style->black_gc,
+  gdk_draw_pixbuf (GDK_DRAWABLE (gtk_widget_get_window (widget)),
+      gtk_widget_get_style (widget)->black_gc,
       draw_pixbuf, 0, 0, x, y, w, h, GDK_RGB_DITHER_NONE, 0, 0);
 
   return TRUE; /* handled expose event */
@@ -902,6 +905,7 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
       break;
     case GST_MESSAGE_ELEMENT: {
       const GValue *val;
+      GtkAllocation a;
 
       /* only interested in element messages from our gdkpixbufsink */
       if (message->src != GST_OBJECT_CAST (gst_video_sink))
@@ -925,8 +929,8 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
       g_print ("Got image pixbuf: %dx%d\n", gdk_pixbuf_get_width (last_pixbuf),
           gdk_pixbuf_get_height (last_pixbuf));
 
-      update_draw_pixbuf (GTK_WIDGET (ui_drawing)->allocation.width,
-          GTK_WIDGET (ui_drawing)->allocation.height);
+      gtk_widget_get_allocation (GTK_WIDGET (ui_drawing), &a);
+      update_draw_pixbuf (a.width, a.height);
 
       gtk_widget_queue_draw (ui_drawing);
       break;
