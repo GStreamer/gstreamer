@@ -27,10 +27,6 @@
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "demo-gui"
 
-#if !GTK_CHECK_VERSION(2,12,0)
-#define gtk_widget_error_bell(w)        /* nop */
-#endif
-
 enum
 {
   SIGNAL_ERROR,

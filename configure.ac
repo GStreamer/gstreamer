@@ -204,7 +204,7 @@ AC_SUBST(GSTPB_PREFIX)
 dnl GTK is optional and used in examples
 HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK, gtk+-x11-3.0, HAVE_GTK=yes,
-    [PKG_CHECK_MODULES(GTK, gtk+-x11-2.0 >= 2.12.0, HAVE_GTK=yes,HAVE_GTK=no)])
+    [PKG_CHECK_MODULES(GTK, gtk+-x11-2.0 >= 2.14.0, HAVE_GTK=yes,HAVE_GTK=no)])
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl Needed for GtkBuilder to autoconnect signals
