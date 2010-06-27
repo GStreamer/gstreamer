@@ -49,8 +49,8 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
     GstH264Frame *frame = frames[i];
 
     reference_frames[i].surface =
-        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->
-        src_buffer)->surface;
+        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->src_buffer)->
+        surface;
 
     reference_frames[i].is_long_term = frame->is_long_term;
     reference_frames[i].top_is_reference = frame->is_reference;
@@ -373,7 +373,13 @@ gst_h264_dpb_set_property (GObject * object, guint property_id,
 static void
 gst_h264_dpb_finalize (GObject * object)
 {
-  /* TODO: Add deinitalization code here */
+  GstH264DPB *dpb = GST_H264_DPB (object);
+  GstVideoFrame **frames;
+  guint i;
+
+  frames = (GstVideoFrame **) dpb->frames;
+  for (i = 0; i < dpb->n_frames; i++)
+    gst_video_frame_unref (frames[i]);
 
   G_OBJECT_CLASS (gst_h264_dpb_parent_class)->finalize (object);
 }
