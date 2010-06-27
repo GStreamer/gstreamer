@@ -45,6 +45,14 @@
 #include <time.h>
 #include <glib/gstdio.h>        // g_fopen()
 
+#if !GTK_CHECK_VERSION (2, 17, 7)
+static void
+gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
+{
+  *a = w->allocation;
+}
+#endif
+
 /*
  * enums, typedefs and defines
  */

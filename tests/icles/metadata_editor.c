@@ -54,6 +54,14 @@
 
 #include <gst/gst.h>
 
+#if !GTK_CHECK_VERSION (2, 17, 7)
+static void
+gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
+{
+  *a = w->allocation;
+}
+#endif
+
 /*
  * Global constants
  */
