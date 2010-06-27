@@ -263,13 +263,12 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
     GstFlowReturn ret;
     GstVdpDevice *device;
 
-    gst_base_video_decoder_update_src_caps (GST_BASE_VIDEO_DECODER (h264_dec));
-
+    gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (h264_dec));
     ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (h264_dec), &device,
         NULL);
 
     if (ret == GST_FLOW_OK) {
-      GstVideoState *state;
+      GstVideoState state;
       VdpDecoderProfile profile;
       VdpStatus status;
 
@@ -299,7 +298,7 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
       }
 
       status = device->vdp_decoder_create (device->device, profile,
-          state->width, state->height, seq->num_ref_frames, &h264_dec->decoder);
+          state.width, state.height, seq->num_ref_frames, &h264_dec->decoder);
       if (status != VDP_STATUS_OK) {
         GST_ELEMENT_ERROR (h264_dec, RESOURCE, READ,
             ("Could not create vdpau decoder"),

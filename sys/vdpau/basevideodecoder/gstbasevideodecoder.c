@@ -669,7 +669,7 @@ gst_base_video_decoder_sink_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-static void
+void
 gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
 {
   GstCaps *caps;
@@ -1223,19 +1223,20 @@ gst_base_video_decoder_frame_start (GstBaseVideoDecoder * base_video_decoder,
   base_video_decoder->frame_offset = GST_BUFFER_OFFSET (buf);
 }
 
-GstVideoState *
+GstVideoState
 gst_base_video_decoder_get_state (GstBaseVideoDecoder * base_video_decoder)
 {
-  return &base_video_decoder->state;
-
+  return base_video_decoder->state;
 }
 
 void
 gst_base_video_decoder_set_state (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoState * state)
+    GstVideoState state)
 {
-  memcpy (&base_video_decoder->state, state, sizeof (*state));
+  base_video_decoder->state = state;
 
+  base_video_decoder->have_src_caps = FALSE;
+  gst_base_video_decoder_set_src_caps (base_video_decoder);
 }
 
 void
@@ -1257,16 +1258,6 @@ gst_base_video_decoder_get_current_frame (GstBaseVideoDecoder *
     base_video_decoder)
 {
   return base_video_decoder->current_frame;
-}
-
-void
-gst_base_video_decoder_update_src_caps (GstBaseVideoDecoder *
-    base_video_decoder)
-{
-  g_return_if_fail (GST_IS_BASE_VIDEO_DECODER (base_video_decoder));
-
-  base_video_decoder->have_src_caps = FALSE;
-  gst_base_video_decoder_set_src_caps (base_video_decoder);
 }
 
 /* GObject vmethod implementations */

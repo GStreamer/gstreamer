@@ -185,13 +185,12 @@ GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder,
     GstVideoFrame **new_frame);
 
-GstVideoState * gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
+GstVideoState gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
 void gst_base_video_decoder_set_state (GstBaseVideoDecoder *base_video_decoder,
-    GstVideoState *state);
+    GstVideoState state);
+void gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder);
 
 void gst_base_video_decoder_lost_sync (GstBaseVideoDecoder *base_video_decoder);
-
-void gst_base_video_decoder_update_src_caps (GstBaseVideoDecoder *base_video_decoder);
 
 G_END_DECLS
 

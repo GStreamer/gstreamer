@@ -283,23 +283,22 @@ gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
 
   if (memcmp (&mpeg_dec->stream_info, &stream_info,
           sizeof (GstVdpMpegStreamInfo)) != 0) {
-    GstVideoState *state;
+    GstVideoState state;
 
     state = gst_base_video_decoder_get_state (base_video_decoder);
 
-    state->width = stream_info.width;
-    state->height = stream_info.height;
+    state.width = stream_info.width;
+    state.height = stream_info.height;
 
-    state->fps_n = stream_info.fps_n;
-    state->fps_d = stream_info.fps_d;
+    state.fps_n = stream_info.fps_n;
+    state.fps_d = stream_info.fps_d;
 
-    state->par_n = stream_info.par_n;
-    state->par_d = stream_info.par_d;
+    state.par_n = stream_info.par_n;
+    state.par_d = stream_info.par_d;
 
-    state->interlaced = stream_info.interlaced;
+    state.interlaced = stream_info.interlaced;
 
     gst_base_video_decoder_set_state (base_video_decoder, state);
-    gst_base_video_decoder_update_src_caps (base_video_decoder);
 
     memcpy (&mpeg_dec->stream_info, &stream_info,
         sizeof (GstVdpMpegStreamInfo));
