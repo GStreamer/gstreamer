@@ -37,12 +37,33 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-timeline-layer.xml"/>
     <xi:include href="xml/ges-timeline-object.xml"/>
     <xi:include href="xml/ges-timeline-source.xml"/>
-    <xi:include href="xml/ges-timeline-filesource.xml"/>
     <xi:include href="xml/ges-timeline-transition.xml"/>
     <xi:include href="xml/ges-track.xml"/>
     <xi:include href="xml/ges-track-object.xml"/>
     <xi:include href="xml/ges-track-source.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Timeline objects</title>
+    <xi:include href="xml/ges-timeline-filesource.xml"/>
+    <xi:include href="xml/ges-timeline-title-source.xml"/>
+    <xi:include href="xml/ges-timeline-background-source.xml"/>
+    <xi:include href="xml/ges-timeline-overlay.xml"/>
+  </chapter>
+
+  <chapter>
+    <title>Track objects</title>
     <xi:include href="xml/ges-track-filesource.xml"/>
+    <xi:include href="xml/ges-track-overlay.xml"/>
+    <xi:include href="xml/ges-track-title-source.xml"/>
+    <xi:include href="xml/ges-track-transition.xml"/>
+    <xi:include href="xml/ges-track-audio-background-source.xml"/>
+    <xi:include href="xml/ges-track-audio-transition.xml"/>
+    <xi:include href="xml/ges-track-background-source.xml"/>
+    <xi:include href="xml/ges-track-video-background-source.xml"/>
+    <xi:include href="xml/ges-track-video-overlay.xml"/>
+    <xi:include href="xml/ges-track-video-title-source.xml"/>
+    <xi:include href="xml/ges-track-video-transition.xml"/>
   </chapter>
 
   <chapter>
