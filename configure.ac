@@ -9,7 +9,7 @@ AC_INIT(GStreamer, 0.10.29.2,
 AG_GST_INIT
 
 dnl initialize automake (we require GNU make)
-AM_INIT_AUTOMAKE([-Wno-portability])
+AM_INIT_AUTOMAKE([-Wno-portability 1.10])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
