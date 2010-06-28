@@ -964,6 +964,9 @@ update_cur_pos (GstQueue2 * queue, GstQueue2Range * range, guint64 pos)
 
   max_reading_pos = MAX (max_reading_pos, reading_pos);
 
+  GST_DEBUG_OBJECT (queue,
+      "updating max_reading_pos to %" G_GUINT64_FORMAT " from %"
+      G_GUINT64_FORMAT, max_reading_pos, range->max_reading_pos);
   range->max_reading_pos = max_reading_pos;
 
   update_cur_level (queue, range);
@@ -1130,7 +1133,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
   GST_DEBUG_OBJECT (queue, "Reading %u bytes from %" G_GUINT64_FORMAT, length,
       offset);
 
-  rpos = queue->current->reading_pos = offset;
+  rpos = offset;
   rb_size = queue->ring_buffer_max_size;
 
   remaining = length;
@@ -1138,6 +1141,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
     /* configure how much/whether to read */
     if (!gst_queue2_have_data (queue, rpos, remaining)) {
       read_length = 0;
+
+      queue->current->reading_pos = rpos;
 
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
         guint64 level;
@@ -1167,6 +1172,9 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
         if (QUEUE_IS_USING_RING_BUFFER (queue)) {
           /* protect cached data (data between offset and max_reading_pos)
            * and update current level */
+          GST_DEBUG_OBJECT (queue,
+              "protecting cached data [%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
+              "]", rpos, queue->current->max_reading_pos);
           queue->current->max_reading_pos = rpos;
           update_cur_level (queue, queue->current);
         }
@@ -1600,10 +1608,12 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 
           GST_DEBUG_OBJECT (queue, "merging ranges %" G_GUINT64_FORMAT,
               next->writing_pos);
-          /* we will run over the offset of the next group */
-          queue->current->writing_pos = new_writing_pos = next->writing_pos;
 
-          /* remove the group */
+          /* remove the group, we could choose to not read the data in this range
+           * again. This would involve us doing a seek to the current writing position
+           * in the range. FIXME, It would probably make sense to do a seek when there
+           * is a lot of data in the range we merged with to avoid reading it all
+           * again. */
           queue->current->next = next->next;
           g_slice_free (GstQueue2Range, next);
 
@@ -2631,13 +2641,12 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       }
-
-      init_ranges (queue);
 
       GST_QUEUE2_MUTEX_LOCK (queue);
       GST_DEBUG_OBJECT (queue, "activating pull mode");
+      init_ranges (queue);
       queue->srcresult = GST_FLOW_OK;
       queue->sinkresult = GST_FLOW_OK;
       queue->is_eos = FALSE;
@@ -2829,7 +2838,7 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       queue->ring_buffer_max_size = g_value_get_uint64 (value);
-      queue->use_ring_buffer = !!queue->ring_buffer_max_size;
+      queue->use_ring_buffer = ! !queue->ring_buffer_max_size;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
