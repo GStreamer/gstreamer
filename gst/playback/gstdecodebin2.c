@@ -1753,6 +1753,27 @@ beach:
   return res;
 }
 
+static GstCaps *
+get_pad_caps (GstPad * pad)
+{
+  GstCaps *caps;
+
+  /* first check the pad caps, if this is set, we are positively sure it is
+   * fixed and exactly what the element will produce. */
+  GST_OBJECT_LOCK (pad);
+  if ((caps = GST_PAD_CAPS (pad)))
+    gst_caps_ref (caps);
+  GST_OBJECT_UNLOCK (pad);
+
+  /* then use the getcaps function if we don't have caps. These caps might not
+   * be fixed in some cases, in which case analyze_new_pad will set up a
+   * notify::caps signal to continue autoplugging. */
+  if (caps == NULL)
+    caps = gst_pad_get_caps_reffed (pad);
+
+  return caps;
+}
+
 static gboolean
 connect_element (GstDecodeBin * dbin, GstElement * element,
     GstDecodeChain * chain)
@@ -1841,7 +1862,7 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
     GstPad *pad = GST_PAD_CAST (pads->data);
     GstCaps *caps;
 
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = get_pad_caps (pad);
     analyze_new_pad (dbin, element, pad, caps, chain);
     if (caps)
       gst_caps_unref (caps);
@@ -1972,19 +1993,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeChain * chain)
 
   GST_DEBUG_OBJECT (pad, "pad added, chain:%p", chain);
 
-  /* first check the pad caps, if this is set, we are positively sure it is
-   * fixed and exactly what the element will produce. */
-  GST_OBJECT_LOCK (pad);
-  if ((caps = GST_PAD_CAPS (pad)))
-    gst_caps_ref (caps);
-  GST_OBJECT_UNLOCK (pad);
-
-  /* then use the getcaps function if we don't have caps. These caps might not
-   * be fixed in some cases, in which case analyze_new_pad will set up a
-   * notify::caps signal to continue autoplugging. */
-  if (caps == NULL)
-    caps = gst_pad_get_caps_reffed (pad);
-
+  caps = get_pad_caps (pad);
   analyze_new_pad (dbin, element, pad, caps, chain);
   if (caps)
     gst_caps_unref (caps);
@@ -2873,8 +2882,8 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
   GstStructure *sa, *sb;
   const gchar *namea, *nameb;
 
-  capsa = gst_pad_get_caps_reffed (GST_PAD_CAST (da));
-  capsb = gst_pad_get_caps_reffed (GST_PAD_CAST (db));
+  capsa = get_pad_caps (GST_PAD_CAST (da));
+  capsb = get_pad_caps (GST_PAD_CAST (db));
 
   sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
   sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
@@ -3015,7 +3024,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   /* Caps that resulted in this chain */
   caps = gst_pad_get_negotiated_caps (chain->pad);
   if (!caps) {
-    caps = gst_pad_get_caps_reffed (chain->pad);
+    caps = get_pad_caps (chain->pad);
     if (G_UNLIKELY (!gst_caps_is_fixed (caps))) {
       GST_ERROR_OBJECT (chain->pad,
           "Couldn't get fixed caps, got %" GST_PTR_FORMAT, caps);
