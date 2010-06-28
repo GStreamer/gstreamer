@@ -1650,7 +1650,7 @@ pause:
     gst_pad_pause_task (demux->sinkpad);
 
     /* For the error cases (not EOS) */
-    if (!sent_eos) {
+    if (!sent_eos && (GST_FLOW_IS_FATAL (flow) || flow == GST_FLOW_NOT_LINKED)) {
       /* Post an error. Hopefully something else already has, but if not... */
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           (_("Internal data stream error.")),
