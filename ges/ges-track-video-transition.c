@@ -109,16 +109,20 @@ ges_track_video_transition_dispose (GObject * object)
     self->control_source = NULL;
   }
 
-  if (self->mixer && self->sinka && self->sinkb) {
+  if (self->sinka && self->sinkb) {
     GST_DEBUG ("releasing request pads for mixer");
     gst_element_release_request_pad (self->mixer, self->sinka);
     gst_element_release_request_pad (self->mixer, self->sinkb);
-    gst_object_unref (self->mixer);
     gst_object_unref (self->sinka);
     gst_object_unref (self->sinkb);
-    self->mixer = NULL;
     self->sinka = NULL;
     self->sinkb = NULL;
+  }
+
+  if (self->mixer) {
+    GST_LOG ("unrefing mixer");
+    gst_object_unref (self->mixer);
+    self->mixer = NULL;
   }
 
   G_OBJECT_CLASS (ges_track_video_transition_parent_class)->dispose (object);
