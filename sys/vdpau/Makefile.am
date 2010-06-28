@@ -20,7 +20,8 @@ libgstvdpau_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) $
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) $(X11_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	-lgstinterfaces-$(GST_MAJORMINOR) $(VDPAU_LIBS) \
-	gstvdp/libgstvdp-@GST_MAJORMINOR@.la
+	gstvdp/libgstvdp-@GST_MAJORMINOR@.la \
+	$(LIBM)
 	
 libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
