@@ -181,10 +181,13 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
   gst_bin_add (GST_BIN (topbin), mixer);
 
   if (self->type != VTYPE_CROSSFADE) {
-    link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva, mixer,
-        self->type, NULL);
-    target = link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
+    self->sinka =
+        (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
+        mixer, self->type, NULL);
+    self->sinkb =
+        (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
         mixer, self->type, &self->smpte);
+    target = (GObject *) self->smpte;
     propname = "position";
     self->start_value = 1.0;
     self->end_value = 0.0;
@@ -192,11 +195,12 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
     self->sinka = (GstPad *) link_element_to_mixer (iconva, mixer);
     self->sinkb = (GstPad *) link_element_to_mixer (iconvb, mixer);
     target = (GObject *) self->sinkb;
-    self->mixer = gst_object_ref (mixer);
     propname = "alpha";
     self->start_value = 0.0;
     self->end_value = 1.0;
   }
+
+  self->mixer = gst_object_ref (mixer);
 
   gst_element_link (mixer, oconv);
 
@@ -253,19 +257,26 @@ static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
     GstElement * mixer, gint type, GstElement ** smpteref)
 {
+  GstPad *srcpad, *sinkpad;
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
+
   g_object_set (G_OBJECT (smptealpha),
       "type", (gint) type, "invert", (gboolean) TRUE, NULL);
   gst_bin_add (bin, smptealpha);
 
-  gst_element_link_many (element, smptealpha, mixer, NULL);
+  gst_element_link (element, smptealpha);
 
   /* crack */
   if (smpteref) {
     *smpteref = smptealpha;
   }
 
-  return G_OBJECT (smptealpha);
+  srcpad = gst_element_get_static_pad (smptealpha, "src");
+  sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
+  gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (srcpad);
+
+  return G_OBJECT (sinkpad);
 }
 
 static void
