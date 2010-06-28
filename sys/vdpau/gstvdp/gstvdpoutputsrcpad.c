@@ -232,19 +232,10 @@ gst_vdp_output_src_pad_alloc_with_caps (GstVdpOutputSrcPad * vdp_pad,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*output_buf)))
-    goto wrong_caps;
-
   if (!GST_IS_VDP_OUTPUT_BUFFER (*output_buf))
     goto invalid_buf;
 
   return GST_FLOW_OK;
-
-wrong_caps:
-  gst_buffer_unref (GST_BUFFER (*output_buf));
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element returned buffer with wrong caps");
-  return GST_FLOW_ERROR;
 
 invalid_buf:
   gst_buffer_unref (GST_BUFFER (*output_buf));
