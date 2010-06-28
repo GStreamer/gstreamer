@@ -52,7 +52,8 @@ static GObjectClass *gst_h264_frame_parent_class;
 static void
 gst_h264_frame_finalize (GstH264Frame * h264_frame)
 {
-  g_ptr_array_unref (h264_frame->slices);
+  g_ptr_array_foreach (h264_frame->slices, (GFunc) gst_buffer_unref, NULL);
+  g_ptr_array_free (h264_frame->slices, TRUE);
 
   GST_MINI_OBJECT_CLASS (gst_h264_frame_parent_class)->finalize
       (GST_MINI_OBJECT (h264_frame));
@@ -61,8 +62,7 @@ gst_h264_frame_finalize (GstH264Frame * h264_frame)
 static void
 gst_h264_frame_init (GstH264Frame * h264_frame, gpointer g_class)
 {
-  h264_frame->slices = g_ptr_array_new_with_free_func (
-      (GDestroyNotify) gst_buffer_unref);
+  h264_frame->slices = g_ptr_array_new ();
 }
 
 static void
