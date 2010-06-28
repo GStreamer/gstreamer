@@ -46,6 +46,7 @@
 #include "mmx.h"
 #endif /* HAVE_MMX */
 
+#include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
@@ -115,46 +116,45 @@ void
 plugin_info_init (PluginInfo * pp, int nbVisuals)
 {
 
-  PluginInfo p = { 0, };
   int i;
 
-  p.sound.speedvar = p.sound.accelvar = p.sound.totalgoom = 0;
-  p.sound.prov_max = 0;
-  p.sound.goom_limit = 1;
-  p.sound.allTimesMax = 1;
-  p.sound.timeSinceLastGoom = 1;
-  p.sound.timeSinceLastBigGoom = 1;
-  p.sound.cycle = 0;
+  memset (pp, 0, sizeof (PluginInfo));
 
-  secure_f_feedback (&p.sound.volume_p, "Sound Volume");
-  secure_f_feedback (&p.sound.accel_p, "Sound Acceleration");
-  secure_f_feedback (&p.sound.speed_p, "Sound Speed");
-  secure_f_feedback (&p.sound.goom_limit_p, "Goom Limit");
-  secure_f_feedback (&p.sound.last_goom_p, "Goom Detection");
-  secure_f_feedback (&p.sound.last_biggoom_p, "Big Goom Detection");
-  secure_f_feedback (&p.sound.goom_power_p, "Goom Power");
+  pp->sound.speedvar = pp->sound.accelvar = pp->sound.totalgoom = 0;
+  pp->sound.prov_max = 0;
+  pp->sound.goom_limit = 1;
+  pp->sound.allTimesMax = 1;
+  pp->sound.timeSinceLastGoom = 1;
+  pp->sound.timeSinceLastBigGoom = 1;
+  pp->sound.cycle = 0;
 
-  secure_i_param (&p.sound.biggoom_speed_limit_p, "Big Goom Speed Limit");
-  IVAL (p.sound.biggoom_speed_limit_p) = 10;
-  IMIN (p.sound.biggoom_speed_limit_p) = 0;
-  IMAX (p.sound.biggoom_speed_limit_p) = 100;
-  ISTEP (p.sound.biggoom_speed_limit_p) = 1;
+  secure_f_feedback (&pp->sound.volume_p, "Sound Volume");
+  secure_f_feedback (&pp->sound.accel_p, "Sound Acceleration");
+  secure_f_feedback (&pp->sound.speed_p, "Sound Speed");
+  secure_f_feedback (&pp->sound.goom_limit_p, "Goom Limit");
+  secure_f_feedback (&pp->sound.last_goom_p, "Goom Detection");
+  secure_f_feedback (&pp->sound.last_biggoom_p, "Big Goom Detection");
+  secure_f_feedback (&pp->sound.goom_power_p, "Goom Power");
 
-  secure_i_param (&p.sound.biggoom_factor_p, "Big Goom Factor");
-  IVAL (p.sound.biggoom_factor_p) = 10;
-  IMIN (p.sound.biggoom_factor_p) = 0;
-  IMAX (p.sound.biggoom_factor_p) = 100;
-  ISTEP (p.sound.biggoom_factor_p) = 1;
+  secure_i_param (&pp->sound.biggoom_speed_limit_p, "Big Goom Speed Limit");
+  IVAL (pp->sound.biggoom_speed_limit_p) = 10;
+  IMIN (pp->sound.biggoom_speed_limit_p) = 0;
+  IMAX (pp->sound.biggoom_speed_limit_p) = 100;
+  ISTEP (pp->sound.biggoom_speed_limit_p) = 1;
 
-  plugin_parameters (&p.sound.params, "Sound", 11);
+  secure_i_param (&pp->sound.biggoom_factor_p, "Big Goom Factor");
+  IVAL (pp->sound.biggoom_factor_p) = 10;
+  IMIN (pp->sound.biggoom_factor_p) = 0;
+  IMAX (pp->sound.biggoom_factor_p) = 100;
+  ISTEP (pp->sound.biggoom_factor_p) = 1;
 
-  p.nbParams = 0;
-  p.params = NULL;
-  p.nbVisuals = nbVisuals;
-  p.visuals = (VisualFX **) malloc (sizeof (VisualFX *) * nbVisuals);
+  plugin_parameters (&pp->sound.params, "Sound", 11);
 
-  /* huh, we're setting a local variable and now copying it over? */
-  *pp = p;
+  pp->nbParams = 0;
+  pp->params = NULL;
+  pp->nbVisuals = nbVisuals;
+  pp->visuals = (VisualFX **) malloc (sizeof (VisualFX *) * nbVisuals);
+
   pp->sound.params.params[0] = &pp->sound.biggoom_speed_limit_p;
   pp->sound.params.params[1] = &pp->sound.biggoom_factor_p;
   pp->sound.params.params[2] = 0;
