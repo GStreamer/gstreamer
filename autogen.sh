@@ -68,18 +68,17 @@ autogen_options $@
 
 printf "+ check for build tools"
 if test ! -z "$NOCHECK"; then echo " skipped"; else  echo; fi
-version_check "autoconf" "$AUTOCONF autoconf autoconf-2.54 autoconf-2.53 autoconf-2.52" \
-              "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
-version_check "automake" "$AUTOMAKE automake automake-1.11 automake-1.10 automake-1.9 automake-1.7 automake-1.6 automake-1.5" \
-              "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
-version_check "libtoolize" "$LIBTOOLIZE libtoolize libtoolize14 glibtoolize" \
-              "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 4 0 || DIE=1
+version_check "autoconf" "$AUTOCONF autoconf autoconf270 autoconf269 autoconf268 autoconf267 autoconf266 autoconf265 autoconf264 autoconf263 autoconf262 autoconf261 autoconf260" \
+              "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 60 || DIE=1
+version_check "automake" "$AUTOMAKE automake automake-1.11 automake-1.10" \
+              "ftp://ftp.gnu.org/pub/gnu/automake/" 1 10 || DIE=1
+version_check "libtoolize" "$LIBTOOLIZE libtoolize glibtoolize" \
+              "ftp://ftp.gnu.org/pub/gnu/libtool/" 1 5 0 || DIE=1
 version_check "pkg-config" "" \
               "http://www.freedesktop.org/software/pkgconfig" 0 8 0 || DIE=1
 
 die_check $DIE
 
-autoconf_2_52d_check || DIE=1
 aclocal_check || DIE=1
 autoheader_check || DIE=1
 
