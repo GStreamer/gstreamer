@@ -172,13 +172,18 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
           gst_caps_append (ocaps, rcaps);
           ges_track_set_caps (track, ocaps);
         } else {
+          GstCaps *caps = NULL;
+
           /* Raw preview or rendering mode */
           if (track->type == GES_TRACK_TYPE_VIDEO)
-            ges_track_set_caps (track,
-                gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb"));
+            caps = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
           else if (track->type == GES_TRACK_TYPE_AUDIO)
-            ges_track_set_caps (track,
-                gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float"));
+            gst_caps_from_string ("audio/x-raw-int;audio/x-raw-float");
+
+          if (caps) {
+            ges_track_set_caps (track, caps);
+            gst_caps_unref (caps);
+          }
         }
         break;
       }
@@ -276,7 +281,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
     pads = gst_element_iterate_sink_pads (element);
   else
     pads = gst_element_iterate_src_pads (element);
-  srccaps = gst_pad_get_caps (pad);
+  srccaps = gst_pad_get_caps_reffed (pad);
 
   GST_DEBUG ("srccaps %" GST_PTR_FORMAT, srccaps);
 
@@ -291,7 +296,7 @@ get_compatible_unlinked_pad (GstElement * element, GstPad * pad)
         if (gst_pad_is_linked (testpad)) {
           gst_object_unref (testpad);
         } else {
-          GstCaps *sinkcaps = gst_pad_get_caps (testpad);
+          GstCaps *sinkcaps = gst_pad_get_caps_reffed (testpad);
 
           GST_DEBUG ("sinkccaps %" GST_PTR_FORMAT, sinkcaps);
 
@@ -423,9 +428,10 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       sinkpad = get_compatible_unlinked_pad (self->encodebin, pad);
 
       if (sinkpad == NULL) {
+        GstCaps *caps = gst_pad_get_caps_reffed (pad);
         /* If no compatible static pad is available, request a pad */
-        g_signal_emit_by_name (self->encodebin, "request-pad",
-            gst_pad_get_caps (pad), &sinkpad);
+        g_signal_emit_by_name (self->encodebin, "request-pad", caps, &sinkpad);
+        gst_caps_unref (caps);
         if (G_UNLIKELY (sinkpad == NULL)) {
           GST_ERROR_OBJECT (self, "Couldn't get a pad from encodebin !");
           goto error;
