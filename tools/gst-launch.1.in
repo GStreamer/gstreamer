@@ -39,8 +39,13 @@ Output messages posted on the pipeline's bus
 .B  \-t, \-\-tags
 Output tags (also known as metadata)
 .TP 8
+.B  \-e, \-\-eos\-on\-shutdown
+Force an EOS event on sources before shutting the pipeline down. This is
+useful to make sure muxers create readable files when a muxing pipeline is
+shut down forcefully via Control-C.
+.TP 8
 .B  \-o FILE, \-\-output=FILE
-Save XML representation of pipeline to FILE and exit
+Save XML representation of pipeline to FILE and exit (DEPRECATED, DO NOT USE)
 .TP 8
 .B  \-f, \-\-no\-fault
 Do not install a fault handler
