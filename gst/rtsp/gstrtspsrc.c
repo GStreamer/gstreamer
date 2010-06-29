@@ -3703,12 +3703,6 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   if (!restart)
     goto done;
 
-  /* We post a warning message now to inform the user
-   * that nothing happened. It's most likely a firewall thing. */
-  GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
-      ("Could not receive any UDP packets for %.4f seconds, maybe your "
-          "firewall is blocking it. Retrying using a TCP connection.",
-          gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
   /* we can try only TCP now */
   src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
@@ -3729,6 +3723,13 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   /* see if we have TCP left to try */
   if (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP))
     goto no_protocols;
+
+  /* We post a warning message now to inform the user
+   * that nothing happened. It's most likely a firewall thing. */
+  GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+      ("Could not receive any UDP packets for %.4f seconds, maybe your "
+          "firewall is blocking it. Retrying using a TCP connection.",
+          gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
 
   /* open new connection using tcp */
   if (!gst_rtspsrc_open (src))
@@ -3781,8 +3782,10 @@ no_protocols:
   {
     src->cur_protocols = 0;
     /* no transport possible, post an error and stop */
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
-        ("Could not connect to server, no protocols left"));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not receive any UDP packets for %.4f seconds, maybe your "
+            "firewall is blocking it. No other protocols to try.",
+            gst_guint64_to_gdouble (src->udp_timeout / 1000000.0)));
     return GST_FLOW_ERROR;
   }
 open_failed:
