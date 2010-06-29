@@ -72,6 +72,8 @@ struct _GstJpegDec {
 
   GstAdapter *adapter;
 
+  guint8     *cur_buf;
+
   /* TRUE if each input buffer contains a whole jpeg image */
   gboolean packetized;
 
