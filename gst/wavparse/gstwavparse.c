@@ -662,15 +662,16 @@ gst_wavparse_other (GstWavParse * wav)
           length = G_MAXUINT32;
         }
         if (file_length > G_MAXUINT32) {
-          GST_DEBUG_OBJECT (wav, "file length %lld, clipping to 32 bits");
+          GST_DEBUG_OBJECT (wav, "file length %" G_GUINT64_FORMAT
+              ", clipping to 32 bits", file_length);
           /* could not get length, assuming till eof */
           length = G_MAXUINT32;
         } else {
-          GST_DEBUG_OBJECT (wav, "file length %lld, datalength",
-              file_length, length);
+          GST_DEBUG_OBJECT (wav, "file length %" G_GUINT64_FORMAT
+              ", datalength %u", file_length, length);
           /* substract offset of datastart from length */
           length = file_length - wav->datastart;
-          GST_DEBUG_OBJECT (wav, "datalength %lld", length);
+          GST_DEBUG_OBJECT (wav, "datalength %u", length);
         }
       }
       wav->datasize = (guint64) length;
