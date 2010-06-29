@@ -18,8 +18,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <string.h>
 #include <math.h>
+
+#ifndef HAVE_LOG2
+#define log2(x) (log(x)/log(2))
+#endif
 
 #include "gstnalreader.h"
 

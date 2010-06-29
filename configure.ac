@@ -167,6 +167,11 @@ dnl *** checks for compiler characteristics ***
 dnl *** checks for library functions ***
 AC_CHECK_FUNCS([gmtime_r])
 
+LIBS_SAVE=$LIBS
+LIBS="$LIBS $LIBM"
+AC_CHECK_FUNCS([log2])
+LIBS=$LIBS_SAVE
+
 dnl *** checks for headers ***
 AC_CHECK_HEADERS([sys/utsname.h])
 
