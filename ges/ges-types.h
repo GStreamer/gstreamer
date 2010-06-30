@@ -48,8 +48,8 @@ typedef struct _GESTimelineFileSourceClass GESTimelineFileSourceClass;
 typedef struct _GESTimelineTransition GESTimelineTransition;
 typedef struct _GESTimelineTransitionClass GESTimelineTransitionClass;
 
-typedef struct _GESTimelineBackgroundSource GESTimelineBackgroundSource;
-typedef struct _GESTimelineBackgroundSourceClass GESTimelineBackgroundSourceClass;
+typedef struct _GESTimelineTestSource GESTimelineTestSource;
+typedef struct _GESTimelineTestSourceClass GESTimelineTestSourceClass;
 
 typedef struct _GESTimelineTitleSource GESTimelineTitleSource;
 typedef struct _GESTimelineTitleSourceClass GESTimelineTitleSourceClass;

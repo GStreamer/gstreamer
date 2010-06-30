@@ -20,13 +20,13 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (test_background_source_basic)
+GST_START_TEST (test_test_source_basic)
 {
-  GESTimelineBackgroundSource *source;
+  GESTimelineTestSource *source;
 
   ges_init ();
 
-  source = ges_timeline_background_source_new ();
+  source = ges_timeline_test_source_new ();
   fail_unless (source != NULL);
 
   g_object_unref (source);
@@ -49,7 +49,7 @@ GST_END_TEST;
   }
 
 
-GST_START_TEST (test_background_source_properties)
+GST_START_TEST (test_test_source_properties)
 {
   GESTrack *track;
   GESTrackObject *trackobject;
@@ -61,7 +61,7 @@ GST_START_TEST (test_background_source_properties)
   fail_unless (track != NULL);
 
   object = (GESTimelineObject *)
-      ges_timeline_background_source_new ();
+      ges_timeline_test_source_new ();
   fail_unless (object != NULL);
 
   /* Set some properties */
@@ -108,13 +108,13 @@ GST_START_TEST (test_background_source_properties)
 
 GST_END_TEST;
 
-GST_START_TEST (test_background_source_in_layer)
+GST_START_TEST (test_test_source_in_layer)
 {
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *a, *v;
   GESTrackObject *trobj;
-  GESTimelineBackgroundSource *source;
+  GESTimelineTestSource *source;
   GESTrackVideoBgSrcPattern ptrn;
 
   ges_init ();
@@ -128,7 +128,7 @@ GST_START_TEST (test_background_source_in_layer)
   ges_timeline_add_track (timeline, v);
   ges_timeline_add_layer (timeline, layer);
 
-  source = ges_timeline_background_source_new_for_nick ((gchar *) "red");
+  source = ges_timeline_test_source_new_for_nick ((gchar *) "red");
   g_object_get (source, "vpattern", &ptrn, NULL);
   assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_RED);
 
@@ -168,9 +168,9 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_background_source_basic);
-  tcase_add_test (tc_chain, test_background_source_properties);
-  tcase_add_test (tc_chain, test_background_source_in_layer);
+  tcase_add_test (tc_chain, test_test_source_basic);
+  tcase_add_test (tc_chain, test_test_source_properties);
+  tcase_add_test (tc_chain, test_test_source_in_layer);
 
   return s;
 }

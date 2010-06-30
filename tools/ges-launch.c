@@ -79,7 +79,7 @@ GESTimelineObject *
 pattern_source_new (guint pattern)
 {
   GESTimelineObject *ret;
-  ret = GES_TIMELINE_OBJECT (ges_timeline_background_source_new ());
+  ret = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
   g_object_set (ret, "vpattern", pattern, NULL);
   return ret;
 }
@@ -185,8 +185,7 @@ create_timeline (int nbargs, gchar ** argv)
     guint64 duration = str_to_time (argv[(i * 3) + 2]);
 
     if (!g_strcmp0 ("+pattern", source)) {
-      obj = GES_TIMELINE_OBJECT (ges_timeline_background_source_new_for_nick
-          (arg0));
+      obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new_for_nick (arg0));
       if (!obj)
         g_error ("%s invalid pattern!", arg0);
 
@@ -315,13 +314,13 @@ void
 print_pattern_list (void)
 {
   GEnumClass *enum_class;
-  GESTimelineBackgroundSource *tr;
-  GESTimelineBackgroundSourceClass *klass;
+  GESTimelineTestSource *tr;
+  GESTimelineTestSourceClass *klass;
   GParamSpec *pspec;
   GEnumValue *v;
 
-  tr = ges_timeline_background_source_new ();
-  klass = GES_TIMELINE_BACKGROUND_SOURCE_GET_CLASS (tr);
+  tr = ges_timeline_test_source_new ();
+  klass = GES_TIMELINE_TEST_SOURCE_GET_CLASS (tr);
 
   pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern");
 

@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-background-source
+ * SECTION:ges-timeline-test-source
  * @short_description: An object for manipulating media files in a GESTimeline
  * 
  * Represents all the output treams from a particular uri. It is assumed that
@@ -27,18 +27,18 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-background-source.h"
+#include "ges-timeline-test-source.h"
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-video-test-source.h"
 #include "ges-track-audio-test-source.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTimelineBackgroundSource, ges_tl_bg_src,
+G_DEFINE_TYPE (GESTimelineTestSource, ges_timeline_test_source,
     GES_TYPE_TIMELINE_SOURCE);
 
-#define GES_TIMELINE_BACKGROUND_SOURCE_VPATTERN_TYPE\
-  ges_timeline_background_source_vpattern_get_type()
+#define GES_TIMELINE_TEST_SOURCE_VPATTERN_TYPE\
+  ges_timeline_test_source_vpattern_get_type()
 
 /* table more-or-less copied from gstvideotestsrc.c */
 static GEnumValue vpattern_enum_values[] = {
@@ -59,17 +59,17 @@ static GEnumValue vpattern_enum_values[] = {
   {0, NULL, NULL}
 };
 
-GType ges_timeline_background_source_vpattern_get_type (void);
+GType ges_timeline_test_source_vpattern_get_type (void);
 
 GType
-ges_timeline_background_source_vpattern_get_type (void)
+ges_timeline_test_source_vpattern_get_type (void)
 {
 
   static gsize once = 0;
   static GType theType = 0;
 
   if (g_once_init_enter (&once)) {
-    theType = g_enum_register_static ("GESTimelineBackgroundSourceVPattern",
+    theType = g_enum_register_static ("GESTimelineTestSourceVPattern",
         vpattern_enum_values);
     g_once_init_leave (&once, 1);
   };
@@ -85,20 +85,21 @@ enum
 };
 
 static void
-ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute);
+ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute);
 
 static void
-ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern);
+ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
+    gint vpattern);
 
 static GESTrackObject
-    * ges_tl_bg_src_create_track_object (GESTimelineObject * obj,
+    * ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
 
 static void
-ges_tl_bg_src_get_property (GObject * object, guint property_id,
+ges_timeline_test_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineBackgroundSource *tfs = GES_TIMELINE_BACKGROUND_SOURCE (object);
+  GESTimelineTestSource *tfs = GES_TIMELINE_TEST_SOURCE (object);
 
   switch (property_id) {
     case PROP_MUTE:
@@ -113,17 +114,17 @@ ges_tl_bg_src_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_bg_src_set_property (GObject * object, guint property_id,
+ges_timeline_test_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineBackgroundSource *tfs = GES_TIMELINE_BACKGROUND_SOURCE (object);
+  GESTimelineTestSource *tfs = GES_TIMELINE_TEST_SOURCE (object);
 
   switch (property_id) {
     case PROP_MUTE:
-      ges_tl_bg_src_set_mute (tfs, g_value_get_boolean (value));
+      ges_timeline_test_source_set_mute (tfs, g_value_get_boolean (value));
       break;
     case PROP_VPATTERN:
-      ges_tl_bg_src_set_vpattern (tfs, g_value_get_enum (value));
+      ges_timeline_test_source_set_vpattern (tfs, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -131,41 +132,41 @@ ges_tl_bg_src_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_bg_src_dispose (GObject * object)
+ges_timeline_test_source_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ges_tl_bg_src_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_timeline_test_source_parent_class)->dispose (object);
 }
 
 static void
-ges_tl_bg_src_finalize (GObject * object)
+ges_timeline_test_source_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_tl_bg_src_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_timeline_test_source_parent_class)->finalize (object);
 }
 
 static void
-ges_tl_bg_src_class_init (GESTimelineBackgroundSourceClass * klass)
+ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
-  object_class->get_property = ges_tl_bg_src_get_property;
-  object_class->set_property = ges_tl_bg_src_set_property;
-  object_class->dispose = ges_tl_bg_src_dispose;
-  object_class->finalize = ges_tl_bg_src_finalize;
+  object_class->get_property = ges_timeline_test_source_get_property;
+  object_class->set_property = ges_timeline_test_source_set_property;
+  object_class->dispose = ges_timeline_test_source_dispose;
+  object_class->finalize = ges_timeline_test_source_finalize;
 
   /**
-   * GESTimelineBackgroundSource:vpattern:
+   * GESTimelineTestSource:vpattern:
    *
    * Video pattern to display in video track objects.
    */
   g_object_class_install_property (object_class, PROP_VPATTERN,
       g_param_spec_enum ("vpattern", "VPattern",
           "Which video pattern to display. See videotestsrc element",
-          GES_TIMELINE_BACKGROUND_SOURCE_VPATTERN_TYPE,
+          GES_TIMELINE_TEST_SOURCE_VPATTERN_TYPE,
           GES_TRACK_VIDEO_BG_SRC_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineBackgroundSource:mute:
+   * GESTimelineTestSource:mute:
    *
    * Whether the sound will be played or not.
    */
@@ -173,18 +174,19 @@ ges_tl_bg_src_class_init (GESTimelineBackgroundSourceClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object = ges_tl_bg_src_create_track_object;
+  timobj_class->create_track_object =
+      ges_timeline_test_source_create_track_object;
   timobj_class->need_fill_track = FALSE;
 }
 
 static void
-ges_tl_bg_src_init (GESTimelineBackgroundSource * self)
+ges_timeline_test_source_init (GESTimelineTestSource * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
 }
 
 static void
-ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute)
+ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -203,7 +205,8 @@ ges_tl_bg_src_set_mute (GESTimelineBackgroundSource * self, gboolean mute)
 }
 
 static void
-ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern)
+ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
+    gint vpattern)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -219,12 +222,13 @@ ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern)
 }
 
 static GESTrackObject *
-ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
+ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
+    GESTrack * track)
 {
-  GESTimelineBackgroundSource *tfs = (GESTimelineBackgroundSource *) obj;
+  GESTimelineTestSource *tfs = (GESTimelineTestSource *) obj;
   GESTrackObject *res = NULL;
 
-  GST_DEBUG ("Creating a GESTrackBackgroundSource");
+  GST_DEBUG ("Creating a GESTrackTestSource");
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_test_source_new ();
@@ -245,32 +249,32 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
 }
 
 /**
- * ges_timeline_backgroundsource_new:
+ * ges_timeline_testsource_new:
  * @uri: the URI the source should control
  *
- * Creates a new #GESTimelineBackgroundSource for the provided @uri.
+ * Creates a new #GESTimelineTestSource for the provided @uri.
  *
- * Returns: The newly created #GESTimelineBackgroundSource, or NULL if there was an
+ * Returns: The newly created #GESTimelineTestSource, or NULL if there was an
  * error.
  */
-GESTimelineBackgroundSource *
-ges_timeline_background_source_new (void)
+GESTimelineTestSource *
+ges_timeline_test_source_new (void)
 {
   /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TIMELINE_BACKGROUND_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, NULL);
 }
 
-GESTimelineBackgroundSource *
-ges_timeline_background_source_new_for_nick (gchar * nick)
+GESTimelineTestSource *
+ges_timeline_test_source_new_for_nick (gchar * nick)
 {
-  GESTimelineBackgroundSource *ret;
+  GESTimelineTestSource *ret;
   GEnumValue *value;
   int i;
 
   for (i = 0, value = &vpattern_enum_values[i]; value->value_nick;
       value = &vpattern_enum_values[i++]) {
     if (!strcmp (nick, value->value_nick)) {
-      ret = g_object_new (GES_TYPE_TIMELINE_BACKGROUND_SOURCE, "vpattern",
+      ret = g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, "vpattern",
           (gint) value->value, NULL);
       return ret;
     }
