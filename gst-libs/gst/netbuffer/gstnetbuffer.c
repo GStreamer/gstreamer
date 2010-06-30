@@ -34,51 +34,26 @@
 
 #include "gstnetbuffer.h"
 
-static void gst_netbuffer_init (GTypeInstance * instance, gpointer g_class);
-static void gst_netbuffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_netbuffer_finalize (GstNetBuffer * nbuf);
 static GstNetBuffer *gst_netbuffer_copy (GstNetBuffer * nbuf);
 
 static GstBufferClass *parent_class;
 
-GType
-gst_netbuffer_get_type (void)
-{
-  static GType _gst_netbuffer_type = 0;
-
-  if (G_UNLIKELY (_gst_netbuffer_type == 0)) {
-    static const GTypeInfo netbuffer_info = {
-      sizeof (GstNetBufferClass),
-      NULL,
-      NULL,
-      gst_netbuffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstNetBuffer),
-      0,
-      gst_netbuffer_init,
-      NULL
-    };
-
-    _gst_netbuffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstNetBuffer", &netbuffer_info, 0);
-  }
-  return _gst_netbuffer_type;
-}
+G_DEFINE_TYPE (GstNetBuffer, gst_netbuffer, GST_TYPE_BUFFER);
 
 static void
-gst_netbuffer_class_init (gpointer g_class, gpointer class_data)
+gst_netbuffer_class_init (GstNetBufferClass * netbuffer_class)
 {
-  GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (g_class);
+  GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (netbuffer_class);
 
-  parent_class = g_type_class_peek_parent (g_class);
+  parent_class = g_type_class_peek_parent (netbuffer_class);
 
   mo_class->copy = (GstMiniObjectCopyFunction) gst_netbuffer_copy;
   mo_class->finalize = (GstMiniObjectFinalizeFunction) gst_netbuffer_finalize;
 }
 
 static void
-gst_netbuffer_init (GTypeInstance * instance, gpointer g_class)
+gst_netbuffer_init (GstNetBuffer * instance)
 {
 }
 
