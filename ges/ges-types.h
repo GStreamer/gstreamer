@@ -83,9 +83,9 @@ typedef struct _GESTrackVideoTransition GESTrackVideoTransition;
 typedef struct _GESTrackVideoTransitionClass
   GESTrackVideoTransitionClass;
 
-typedef struct _GESTrackVideoBackgroundSource GESTrackVideoBackgroundSource;
-typedef struct _GESTrackVideoBackgroundSourceClass
-  GESTrackVideoBackgroundSourceClass;
+typedef struct _GESTrackVideoTestSource GESTrackVideoTestSource;
+typedef struct _GESTrackVideoTestSourceClass
+  GESTrackVideoTestSourceClass;
 
 typedef struct _GESTrackAudioBackgroundSource GESTrackAudioBackgroundSource;
 typedef struct _GESTrackAudioBackgroundSourceClass

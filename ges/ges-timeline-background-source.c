@@ -30,7 +30,7 @@
 #include "ges-timeline-background-source.h"
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
-#include "ges-track-video-background-source.h"
+#include "ges-track-video-test-source.h"
 #include "ges-track-audio-background-source.h"
 #include <string.h>
 
@@ -212,9 +212,9 @@ ges_tl_bg_src_set_vpattern (GESTimelineBackgroundSource * self, gint vpattern)
 
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-    if (GES_IS_TRACK_VIDEO_BACKGROUND_SOURCE (trackobject))
-      ges_track_video_background_source_set_pattern (
-          (GESTrackVideoBackgroundSource *) trackobject, vpattern);
+    if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackobject))
+      ges_track_video_test_source_set_pattern (
+          (GESTrackVideoTestSource *) trackobject, vpattern);
   }
 }
 
@@ -227,9 +227,9 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
   GST_DEBUG ("Creating a GESTrackBackgroundSource");
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_video_background_source_new ();
-    ges_track_video_background_source_set_pattern (
-        (GESTrackVideoBackgroundSource *) res, tfs->vpattern);
+    res = (GESTrackObject *) ges_track_video_test_source_new ();
+    ges_track_video_test_source_set_pattern (
+        (GESTrackVideoTestSource *) res, tfs->vpattern);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {

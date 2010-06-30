@@ -26,7 +26,7 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
-#include "ges-track-video-background-source.h"
+#include "ges-track-video-test-source.h"
 
 G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_src, GES_TYPE_TRACK_SOURCE);
 

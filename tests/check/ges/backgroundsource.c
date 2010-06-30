@@ -145,7 +145,7 @@ GST_START_TEST (test_background_source_in_layer)
   trobj =
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
 
-  ptrn = ((GESTrackVideoBackgroundSource *) trobj)->pattern;
+  ptrn = ((GESTrackVideoTestSource *) trobj)->pattern;
   assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
 
   GST_DEBUG ("removing the source");

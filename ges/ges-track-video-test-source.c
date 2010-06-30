@@ -19,15 +19,15 @@
  */
 
 /**
- * SECTION:ges-track-video-background-source
+ * SECTION:ges-track-video-test-source
  * @short_description: implements solid colors and patterns with videotestsrc
  */
 
 #include "ges-internal.h"
 #include "ges-track-object.h"
-#include "ges-track-video-background-source.h"
+#include "ges-track-video-test-source.h"
 
-G_DEFINE_TYPE (GESTrackVideoBackgroundSource, ges_track_vbg_src,
+G_DEFINE_TYPE (GESTrackVideoTestSource, ges_track_video_test_source,
     GES_TYPE_TRACK_SOURCE);
 
 enum
@@ -35,20 +35,21 @@ enum
   PROP_0,
 };
 
-static void ges_track_vbg_src_dispose (GObject * object);
+static void ges_track_video_test_source_dispose (GObject * object);
 
-static void ges_track_vbg_src_finalize (GObject * object);
+static void ges_track_video_test_source_finalize (GObject * object);
 
-static void ges_track_vbg_src_get_property (GObject * object, guint
+static void ges_track_video_test_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_vbg_src_set_property (GObject * object, guint
+static void ges_track_video_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_vbg_src_create_element (GESTrackSource * self);
+static GstElement *ges_track_video_test_source_create_element (GESTrackSource *
+    self);
 
 static void
-ges_track_vbg_src_class_init (GESTrackVideoBackgroundSourceClass * klass)
+ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 {
   GObjectClass *object_class;
   GESTrackSourceClass *track_source_class;
@@ -56,34 +57,35 @@ ges_track_vbg_src_class_init (GESTrackVideoBackgroundSourceClass * klass)
   object_class = G_OBJECT_CLASS (klass);
   track_source_class = GES_TRACK_SOURCE_CLASS (klass);
 
-  object_class->get_property = ges_track_vbg_src_get_property;
-  object_class->set_property = ges_track_vbg_src_set_property;
-  object_class->dispose = ges_track_vbg_src_dispose;
-  object_class->finalize = ges_track_vbg_src_finalize;
+  object_class->get_property = ges_track_video_test_source_get_property;
+  object_class->set_property = ges_track_video_test_source_set_property;
+  object_class->dispose = ges_track_video_test_source_dispose;
+  object_class->finalize = ges_track_video_test_source_finalize;
 
-  track_source_class->create_element = ges_track_vbg_src_create_element;
+  track_source_class->create_element =
+      ges_track_video_test_source_create_element;
 }
 
 static void
-ges_track_vbg_src_init (GESTrackVideoBackgroundSource * self)
+ges_track_video_test_source_init (GESTrackVideoTestSource * self)
 {
   self->pattern = GES_TRACK_VIDEO_BG_SRC_BLACK;
 }
 
 static void
-ges_track_vbg_src_dispose (GObject * object)
+ges_track_video_test_source_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_vbg_src_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_video_test_source_parent_class)->dispose (object);
 }
 
 static void
-ges_track_vbg_src_finalize (GObject * object)
+ges_track_video_test_source_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_vbg_src_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_video_test_source_parent_class)->finalize (object);
 }
 
 static void
-ges_track_vbg_src_get_property (GObject * object,
+ges_track_video_test_source_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -93,7 +95,7 @@ ges_track_vbg_src_get_property (GObject * object,
 }
 
 static void
-ges_track_vbg_src_set_property (GObject * object,
+ges_track_video_test_source_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -103,12 +105,12 @@ ges_track_vbg_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_vbg_src_create_element (GESTrackSource * self)
+ges_track_video_test_source_create_element (GESTrackSource * self)
 {
   GstElement *ret;
   gint pattern;
 
-  pattern = ((GESTrackVideoBackgroundSource *) self)->pattern;
+  pattern = ((GESTrackVideoTestSource *) self)->pattern;
 
   ret = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (ret, "pattern", (gint) pattern, NULL);
@@ -116,7 +118,7 @@ ges_track_vbg_src_create_element (GESTrackSource * self)
 }
 
 void
-ges_track_video_background_source_set_pattern (GESTrackVideoBackgroundSource
+ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
     * self, GESTrackVideoBgSrcPattern pattern)
 {
   GstElement *element;
@@ -126,8 +128,8 @@ ges_track_video_background_source_set_pattern (GESTrackVideoBackgroundSource
     g_object_set (element, "pattern", (gint) pattern, NULL);
 }
 
-GESTrackVideoBackgroundSource *
-ges_track_video_background_source_new (void)
+GESTrackVideoTestSource *
+ges_track_video_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_VIDEO_TEST_SOURCE, NULL);
 }

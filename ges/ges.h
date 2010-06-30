@@ -43,7 +43,7 @@
 #include <ges/ges-custom-timeline-source.h>
 #include <ges/ges-timeline-file-source.h>
 #include <ges/ges-track-filesource.h>
-#include <ges/ges-track-video-background-source.h>
+#include <ges/ges-track-video-test-source.h>
 #include <ges/ges-track-audio-background-source.h>
 #include <ges/ges-track-title-source.h>
 #include <ges/ges-track-text-overlay.h>

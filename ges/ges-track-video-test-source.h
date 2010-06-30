@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TRACK_VIDEO_BACKGROUND_SOURCE
-#define _GES_TRACK_VIDEO_BACKGROUND_SOURCE
+#ifndef _GES_TRACK_VIDEO_TEST_SOURCE
+#define _GES_TRACK_VIDEO_TEST_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,22 +27,22 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE ges_track_vbg_src_get_type()
+#define GES_TYPE_TRACK_VIDEO_TEST_SOURCE ges_track_video_test_source_get_type()
 
-#define GES_TRACK_VIDEO_BACKGROUND_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE, GESTrackVideoBackgroundSource))
+#define GES_TRACK_VIDEO_TEST_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSource))
 
-#define GES_TRACK_VIDEO_BACKGROUND_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE, GESTrackVideoBackgroundSourceClass))
+#define GES_TRACK_VIDEO_TEST_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourceClass))
 
-#define GES_IS_TRACK_VIDEO_BACKGROUND_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE))
+#define GES_IS_TRACK_VIDEO_TEST_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_VIDEO_TEST_SOURCE))
 
-#define GES_IS_TRACK_VIDEO_BACKGROUND_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE))
+#define GES_IS_TRACK_VIDEO_TEST_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_VIDEO_TEST_SOURCE))
 
-#define GES_TRACK_VIDEO_BACKGROUND_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_BACKGROUND_SOURCE, GESTrackVideoBackgroundSourceClass))
+#define GES_TRACK_VIDEO_TEST_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourceClass))
 
 /**
  * GESTrackVideoBgSrcPattern:
@@ -82,10 +82,10 @@ typedef enum {
 } GESTrackVideoBgSrcPattern;
 
 /** 
- * GESTrackVideoBackgroundSource:
+ * GESTrackVideoTestSource:
  * @parent: parent
  */
-struct _GESTrackVideoBackgroundSource {
+struct _GESTrackVideoTestSource {
   GESTrackSource parent;
 
   /*< private >*/
@@ -93,24 +93,24 @@ struct _GESTrackVideoBackgroundSource {
 };
 
 /**
- * GESTrackVideoBackgroundSourceClass:
+ * GESTrackVideoTestSourceClass:
  * @parent_class: parent class
  */
 
-struct _GESTrackVideoBackgroundSourceClass {
+struct _GESTrackVideoTestSourceClass {
   GESTrackSourceClass parent_class;
 
   /* <public> */
 };
 
-GType ges_track_vbg_src_get_type (void);
+GType ges_track_video_test_source_get_type (void);
 
-GESTrackVideoBackgroundSource* ges_track_video_background_source_new (void);
+GESTrackVideoTestSource* ges_track_video_test_source_new (void);
 void
 
-ges_track_video_background_source_set_pattern(GESTrackVideoBackgroundSource *,
+ges_track_video_test_source_set_pattern(GESTrackVideoTestSource *,
     GESTrackVideoBgSrcPattern);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_VIDEO_BACKGROUND_SOURCE */
+#endif /* _GES_TRACK_VIDEO_TEST_SOURCE */
