@@ -430,6 +430,13 @@ class TimelineWidget (gtk.DrawingArea):
 
         self.__position_ts_range = None
 
+        try:
+            self.set_tooltip_text (_("Log event histogram\n"
+                                     "Different colors represent different log-levels"))
+        except AttributeError:
+            # Compatibility.
+            pass
+
     def __handle_sentinel_progress (self, sentinel):
 
         self.__redraw ()
