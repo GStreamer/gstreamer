@@ -81,10 +81,10 @@ void ges_track_video_overlay_set_font_desc(GESTrackVideoOverlay *self,
     const gchar *font_desc);
 
 void ges_track_video_overlay_set_halignment(GESTrackVideoOverlay
-    *self, GESTrackVideoTitleSrcHAlign halgn);
+    *self, GESTrackTitleSrcHAlign halgn);
 
 void ges_track_video_overlay_set_valignment(GESTrackVideoOverlay
-    *self, GESTrackVideoTitleSrcVAlign valign);
+    *self, GESTrackTitleSrcVAlign valign);
 
 GESTrackVideoOverlay* ges_track_video_overlay_new (void);
 

@@ -206,13 +206,13 @@ ges_track_video_overlay_set_font_desc (GESTrackVideoOverlay * self,
 /**
  * ges_track_video_overlay_valignment:
  * @self: the #GESTrackVideoOverlay* to set text on
- * @valign: #GESTrackVideoTitleSrcVAlign
+ * @valign: #GESTrackTitleSrcVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_video_overlay_set_valignment (GESTrackVideoOverlay * self,
-    GESTrackVideoTitleSrcVAlign valign)
+    GESTrackTitleSrcVAlign valign)
 {
   self->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
@@ -223,13 +223,13 @@ ges_track_video_overlay_set_valignment (GESTrackVideoOverlay * self,
 /**
  * ges_track_video_overlay_halignment:
  * @self: the #GESTrackVideoOverlay* to set text on
- * @halign: #GESTrackVideoTitleSrcHAlign
+ * @halign: #GESTrackTitleSrcHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_video_overlay_set_halignment (GESTrackVideoOverlay * self,
-    GESTrackVideoTitleSrcHAlign halign)
+    GESTrackTitleSrcHAlign halign)
 {
   self->halign = halign;
   GST_LOG ("set halignment to: %d", halign);

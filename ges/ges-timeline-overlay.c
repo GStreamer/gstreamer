@@ -63,12 +63,10 @@ ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
     font_desc);
 
 static void
-ges_tl_overlay_set_valign (GESTimelineOverlay * self,
-    GESTrackVideoTitleSrcVAlign);
+ges_tl_overlay_set_valign (GESTimelineOverlay * self, GESTrackTitleSrcVAlign);
 
 static void
-ges_tl_overlay_set_halign (GESTimelineOverlay * self,
-    GESTrackVideoTitleSrcHAlign);
+ges_tl_overlay_set_halign (GESTimelineOverlay * self, GESTrackTitleSrcHAlign);
 
 static GESTrackObject
     * ges_tl_overlay_create_track_object (GESTimelineObject * obj,
@@ -233,9 +231,9 @@ ges_timeline_overlay_valign_get_type (void)
   static GType text_overlay_valign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_valign[] = {
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP, "top", "top"},
+    {GES_TRACK_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
+    {GES_TRACK_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
+    {GES_TRACK_TITLE_SRC_VALIGN_TOP, "top", "top"},
     {0, NULL, NULL},
   };
 
@@ -254,9 +252,9 @@ ges_timeline_overlay_halign_get_type (void)
   static GType text_overlay_halign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_halign[] = {
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT, "left", "left"},
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER, "center", "center"},
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
+    {GES_TRACK_TITLE_SRC_HALIGN_LEFT, "left", "left"},
+    {GES_TRACK_TITLE_SRC_HALIGN_CENTER, "center", "center"},
+    {GES_TRACK_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
     {0, NULL, NULL},
   };
 
@@ -317,7 +315,7 @@ ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
 
 static void
 ges_tl_overlay_set_halign (GESTimelineOverlay * self,
-    GESTrackVideoTitleSrcHAlign halign)
+    GESTrackTitleSrcHAlign halign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -339,7 +337,7 @@ ges_tl_overlay_set_halign (GESTimelineOverlay * self,
 
 static void
 ges_tl_overlay_set_valign (GESTimelineOverlay * self,
-    GESTrackVideoTitleSrcVAlign valign)
+    GESTrackTitleSrcVAlign valign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;

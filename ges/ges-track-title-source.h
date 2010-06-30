@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TRACK_VIDEO_TITLE_SOURCE
-#define _GES_TRACK_VIDEO_TITLE_SOURCE
+#ifndef _GES_TRACK_TITLE_SOURCE
+#define _GES_TRACK_TITLE_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,61 +27,61 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_VIDEO_TITLE_SOURCE ges_track_video_title_src_get_type()
+#define GES_TYPE_TRACK_TITLE_SOURCE ges_track_title_src_get_type()
 
-#define GES_TRACK_VIDEO_TITLE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, GESTrackVideoTitleSource))
+#define GES_TRACK_TITLE_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSource))
 
-#define GES_TRACK_VIDEO_TITLE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, GESTrackVideoTitleSourceClass))
+#define GES_TRACK_TITLE_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourceClass))
 
-#define GES_IS_TRACK_VIDEO_TITLE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE))
+#define GES_IS_TRACK_TITLE_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_TITLE_SOURCE))
 
-#define GES_IS_TRACK_VIDEO_TITLE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE))
+#define GES_IS_TRACK_TITLE_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_TITLE_SOURCE))
 
-#define GES_TRACK_VIDEO_TITLE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, GESTrackVideoTitleSourceClass))
+#define GES_TRACK_TITLE_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourceClass))
 
 #define DEFAULT_FONT_DESC "serif 36"
-#define DEFAULT_VALIGNMENT GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE
-#define DEFAULT_HALIGNMENT GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER
+#define DEFAULT_VALIGNMENT GES_TRACK_TITLE_SRC_VALIGN_BASELINE
+#define DEFAULT_HALIGNMENT GES_TRACK_TITLE_SRC_HALIGN_CENTER
 
 /**
- * GESTrackVideoTitleSrcVAlign:
- * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE: draw text on the baseline
- * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM: draw text on the bottom
- * @GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP: draw test on top
+ * GESTrackTitleSrcVAlign:
+ * @GES_TRACK_TITLE_SRC_VALIGN_BASELINE: draw text on the baseline
+ * @GES_TRACK_TITLE_SRC_VALIGN_BOTTOM: draw text on the bottom
+ * @GES_TRACK_TITLE_SRC_VALIGN_TOP: draw test on top
  *
  * Vertical alignment of the text.
  */
 typedef enum {
-    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE,
-    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM,
-    GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP
-} GESTrackVideoTitleSrcVAlign;
+    GES_TRACK_TITLE_SRC_VALIGN_BASELINE,
+    GES_TRACK_TITLE_SRC_VALIGN_BOTTOM,
+    GES_TRACK_TITLE_SRC_VALIGN_TOP
+} GESTrackTitleSrcVAlign;
 
 /**
- * GESTrackVideoTitleSrcHAlign:
- * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT: align text left
- * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER: align text center
- * @GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT: align text right
+ * GESTrackTitleSrcHAlign:
+ * @GES_TRACK_TITLE_SRC_HALIGN_LEFT: align text left
+ * @GES_TRACK_TITLE_SRC_HALIGN_CENTER: align text center
+ * @GES_TRACK_TITLE_SRC_HALIGN_RIGHT: align text right
  *
  * Horizontal alignment of the text.
  */
 typedef enum {
-    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT,
-    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER,
-    GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT
-} GESTrackVideoTitleSrcHAlign;
+    GES_TRACK_TITLE_SRC_HALIGN_LEFT,
+    GES_TRACK_TITLE_SRC_HALIGN_CENTER,
+    GES_TRACK_TITLE_SRC_HALIGN_RIGHT
+} GESTrackTitleSrcHAlign;
 
 /** 
- * GESTrackVideoTitleSource:
+ * GESTrackTitleSource:
  * @parent: parent
  *
  */
-struct _GESTrackVideoTitleSource {
+struct _GESTrackTitleSource {
   GESTrackSource parent;
 
   /*< private >*/
@@ -94,33 +94,33 @@ struct _GESTrackVideoTitleSource {
 };
 
 /**
- * GESTrackVideoTitleSourceClass:
+ * GESTrackTitleSourceClass:
  * @parent_class: parent class
  */
 
-struct _GESTrackVideoTitleSourceClass {
+struct _GESTrackTitleSourceClass {
   GESTrackSourceClass parent_class;
 
   /*< private >*/
 };
 
-GType ges_track_video_title_src_get_type (void);
+GType ges_track_title_src_get_type (void);
 
-void ges_track_video_title_source_set_text(GESTrackVideoTitleSource *self, const
+void ges_track_title_source_set_text(GESTrackTitleSource *self, const
     gchar *text);
 
-void ges_track_video_title_source_set_font_desc(GESTrackVideoTitleSource *self,
+void ges_track_title_source_set_font_desc(GESTrackTitleSource *self,
     const gchar *font_desc);
 
-void ges_track_video_title_source_set_halignment(GESTrackVideoTitleSource
-    *self, GESTrackVideoTitleSrcHAlign halgn);
+void ges_track_title_source_set_halignment(GESTrackTitleSource
+    *self, GESTrackTitleSrcHAlign halgn);
 
-void ges_track_video_title_source_set_valignment(GESTrackVideoTitleSource
-    *self, GESTrackVideoTitleSrcVAlign valign);
+void ges_track_title_source_set_valignment(GESTrackTitleSource
+    *self, GESTrackTitleSrcVAlign valign);
 
-GESTrackVideoTitleSource* ges_track_video_title_source_new (void);
+GESTrackTitleSource* ges_track_title_source_new (void);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_VIDEO_TITLE_SOURCE */
+#endif /* _GES_TRACK_TITLE_SOURCE */
 

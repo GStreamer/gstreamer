@@ -66,11 +66,11 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
 
 static void
 ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
-    GESTrackVideoTitleSrcVAlign);
+    GESTrackTitleSrcVAlign);
 
 static void
 ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
-    GESTrackVideoTitleSrcHAlign);
+    GESTrackTitleSrcHAlign);
 
 static GESTrackObject
     * ges_tl_title_src_create_track_object (GESTimelineObject * obj,
@@ -235,9 +235,9 @@ ges_timeline_title_source_valign_get_type (void)
   static GType text_overlay_valign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_valign[] = {
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
-    {GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP, "top", "top"},
+    {GES_TRACK_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
+    {GES_TRACK_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
+    {GES_TRACK_TITLE_SRC_VALIGN_TOP, "top", "top"},
     {0, NULL, NULL},
   };
 
@@ -256,9 +256,9 @@ ges_timeline_title_source_halign_get_type (void)
   static GType text_overlay_halign_type = 0;
   static gsize initialized = 0;
   static const GEnumValue text_overlay_halign[] = {
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT, "left", "left"},
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_CENTER, "center", "center"},
-    {GES_TRACK_VIDEO_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
+    {GES_TRACK_TITLE_SRC_HALIGN_LEFT, "left", "left"},
+    {GES_TRACK_TITLE_SRC_HALIGN_CENTER, "center", "center"},
+    {GES_TRACK_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
     {0, NULL, NULL},
   };
 
@@ -288,7 +288,7 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_title_source_set_text (GES_TRACK_VIDEO_TITLE_SOURCE
+      ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE
           (trackobject), self->text);
   }
 }
@@ -311,14 +311,14 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_title_source_set_font_desc (GES_TRACK_VIDEO_TITLE_SOURCE
+      ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE
           (trackobject), self->font_desc);
   }
 }
 
 static void
 ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
-    GESTrackVideoTitleSrcHAlign halign)
+    GESTrackTitleSrcHAlign halign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -331,14 +331,14 @@ ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_title_source_set_halignment (GES_TRACK_VIDEO_TITLE_SOURCE
+      ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->halign);
   }
 }
 
 static void
 ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
-    GESTrackVideoTitleSrcVAlign valign)
+    GESTrackTitleSrcVAlign valign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -351,7 +351,7 @@ ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_title_source_set_valignment (GES_TRACK_VIDEO_TITLE_SOURCE
+      ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->valign);
   }
 }
@@ -385,10 +385,9 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
   GST_DEBUG ("Creating a GESTrackTitleSource");
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_video_title_source_new ();
+    res = (GESTrackObject *) ges_track_title_source_new ();
     GST_DEBUG ("Setting text property");
-    ges_track_video_title_source_set_text (
-        (GESTrackVideoTitleSource *) res, tfs->text);
+    ges_track_title_source_set_text ((GESTrackTitleSource *) res, tfs->text);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {

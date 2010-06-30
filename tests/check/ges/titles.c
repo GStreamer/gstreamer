@@ -151,21 +151,21 @@ GST_START_TEST (test_title_source_in_layer)
   assert_equals_string ("sans 72", text);
   g_free (text);
 
-  text = ((GESTrackVideoTitleSource *) trobj)->font_desc;
+  text = ((GESTrackTitleSource *) trobj)->font_desc;
   assert_equals_string ("sans 72", text);
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
-      GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT,
-      "valignment", (gint) GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP, NULL);
+      GES_TRACK_TITLE_SRC_HALIGN_LEFT,
+      "valignment", (gint) GES_TRACK_TITLE_SRC_VALIGN_TOP, NULL);
   g_object_get (source, "halignment", &halign, "valignment", &valign, NULL);
-  assert_equals_int (halign, GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT);
-  assert_equals_int (valign, GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP);
+  assert_equals_int (halign, GES_TRACK_TITLE_SRC_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TRACK_TITLE_SRC_VALIGN_TOP);
 
-  halign = ((GESTrackVideoTitleSource *) trobj)->halign;
-  valign = ((GESTrackVideoTitleSource *) trobj)->valign;
-  assert_equals_int (halign, GES_TRACK_VIDEO_TITLE_SRC_HALIGN_LEFT);
-  assert_equals_int (valign, GES_TRACK_VIDEO_TITLE_SRC_VALIGN_TOP);
+  halign = ((GESTrackTitleSource *) trobj)->halign;
+  valign = ((GESTrackTitleSource *) trobj)->valign;
+  assert_equals_int (halign, GES_TRACK_TITLE_SRC_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TRACK_TITLE_SRC_VALIGN_TOP);
 
   GST_DEBUG ("removing the source");
 

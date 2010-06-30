@@ -28,29 +28,27 @@
 #include "ges-track-title-source.h"
 #include "ges-track-video-background-source.h"
 
-G_DEFINE_TYPE (GESTrackVideoTitleSource, ges_track_video_title_src,
-    GES_TYPE_TRACK_SOURCE);
+G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_src, GES_TYPE_TRACK_SOURCE);
 
 enum
 {
   PROP_0,
 };
 
-static void ges_track_video_title_src_dispose (GObject * object);
+static void ges_track_title_src_dispose (GObject * object);
 
-static void ges_track_video_title_src_finalize (GObject * object);
+static void ges_track_title_src_finalize (GObject * object);
 
-static void ges_track_video_title_src_get_property (GObject * object, guint
+static void ges_track_title_src_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_video_title_src_set_property (GObject * object, guint
+static void ges_track_title_src_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_video_title_src_create_element (GESTrackSource
-    * self);
+static GstElement *ges_track_title_src_create_element (GESTrackSource * self);
 
 static void
-ges_track_video_title_src_class_init (GESTrackVideoTitleSourceClass * klass)
+ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
 {
   GObjectClass *object_class;
   GESTrackSourceClass *bg_class;
@@ -58,16 +56,16 @@ ges_track_video_title_src_class_init (GESTrackVideoTitleSourceClass * klass)
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
-  object_class->get_property = ges_track_video_title_src_get_property;
-  object_class->set_property = ges_track_video_title_src_set_property;
-  object_class->dispose = ges_track_video_title_src_dispose;
-  object_class->finalize = ges_track_video_title_src_finalize;
+  object_class->get_property = ges_track_title_src_get_property;
+  object_class->set_property = ges_track_title_src_set_property;
+  object_class->dispose = ges_track_title_src_dispose;
+  object_class->finalize = ges_track_title_src_finalize;
 
-  bg_class->create_element = ges_track_video_title_src_create_element;
+  bg_class->create_element = ges_track_title_src_create_element;
 }
 
 static void
-ges_track_video_title_src_init (GESTrackVideoTitleSource * self)
+ges_track_title_src_init (GESTrackTitleSource * self)
 {
   self->text = NULL;
   self->font_desc = g_strdup (DEFAULT_FONT_DESC);
@@ -78,9 +76,9 @@ ges_track_video_title_src_init (GESTrackVideoTitleSource * self)
 }
 
 static void
-ges_track_video_title_src_dispose (GObject * object)
+ges_track_title_src_dispose (GObject * object)
 {
-  GESTrackVideoTitleSource *self = GES_TRACK_VIDEO_TITLE_SOURCE (object);
+  GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   if (self->text) {
     g_free (self->text);
   }
@@ -99,17 +97,17 @@ ges_track_video_title_src_dispose (GObject * object)
     self->background_el = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_video_title_src_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_title_src_parent_class)->dispose (object);
 }
 
 static void
-ges_track_video_title_src_finalize (GObject * object)
+ges_track_title_src_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_video_title_src_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_title_src_parent_class)->finalize (object);
 }
 
 static void
-ges_track_video_title_src_get_property (GObject * object,
+ges_track_title_src_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -119,7 +117,7 @@ ges_track_video_title_src_get_property (GObject * object,
 }
 
 static void
-ges_track_video_title_src_set_property (GObject * object,
+ges_track_title_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -129,9 +127,9 @@ ges_track_video_title_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_title_src_create_element (GESTrackSource * object)
+ges_track_title_src_create_element (GESTrackSource * object)
 {
-  GESTrackVideoTitleSource *self = GES_TRACK_VIDEO_TITLE_SOURCE (object);
+  GESTrackTitleSource *self = GES_TRACK_TITLE_SOURCE (object);
   GstElement *topbin, *background, *text;
   GstPad *src;
 
@@ -168,8 +166,8 @@ ges_track_video_title_src_create_element (GESTrackSource * object)
 }
 
 /**
- * ges_track_video_title_source_set_text:
- * @self: the #GESTrackVideoTitleSource* to set text on
+ * ges_track_title_source_set_text:
+ * @self: the #GESTrackTitleSource* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
  * 
@@ -178,8 +176,7 @@ ges_track_video_title_src_create_element (GESTrackSource * object)
  */
 
 void
-ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
-    const gchar * text)
+ges_track_title_source_set_text (GESTrackTitleSource * self, const gchar * text)
 {
   if (self->text)
     g_free (self->text);
@@ -190,8 +187,8 @@ ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
 }
 
 /**
- * ges_track_video_title_source_set_font_desc:
- * @self: the #GESTrackVideoTitleSource
+ * ges_track_title_source_set_font_desc:
+ * @self: the #GESTrackTitleSource
  * @font_desc: the pango font description
  * 
  * Sets the text this track object will render.
@@ -199,7 +196,7 @@ ges_track_video_title_source_set_text (GESTrackVideoTitleSource * self,
  */
 
 void
-ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
+ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
     const gchar * font_desc)
 {
   if (self->font_desc)
@@ -212,15 +209,15 @@ ges_track_video_title_source_set_font_desc (GESTrackVideoTitleSource * self,
 }
 
 /**
- * ges_track_video_title_source_valignment:
- * @self: the #GESTrackVideoTitleSource* to set text on
- * @valign: #GESTrackVideoTitleSrcVAlign
+ * ges_track_title_source_valignment:
+ * @self: the #GESTrackTitleSource* to set text on
+ * @valign: #GESTrackTitleSrcVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_video_title_source_set_valignment (GESTrackVideoTitleSource * self,
-    GESTrackVideoTitleSrcVAlign valign)
+ges_track_title_source_set_valignment (GESTrackTitleSource * self,
+    GESTrackTitleSrcVAlign valign)
 {
   self->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
@@ -229,15 +226,15 @@ ges_track_video_title_source_set_valignment (GESTrackVideoTitleSource * self,
 }
 
 /**
- * ges_track_video_title_source_halignment:
- * @self: the #GESTrackVideoTitleSource* to set text on
- * @halign: #GESTrackVideoTitleSrcHAlign
+ * ges_track_title_source_halignment:
+ * @self: the #GESTrackTitleSource* to set text on
+ * @halign: #GESTrackTitleSrcHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_video_title_source_set_halignment (GESTrackVideoTitleSource * self,
-    GESTrackVideoTitleSrcHAlign halign)
+ges_track_title_source_set_halignment (GESTrackTitleSource * self,
+    GESTrackTitleSrcHAlign halign)
 {
   self->halign = halign;
   GST_LOG ("set halignment to: %d", halign);
@@ -245,8 +242,8 @@ ges_track_video_title_source_set_halignment (GESTrackVideoTitleSource * self,
     g_object_set (self->text_el, "halignment", halign, NULL);
 }
 
-GESTrackVideoTitleSource *
-ges_track_video_title_source_new (void)
+GESTrackTitleSource *
+ges_track_title_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_TITLE_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_TITLE_SOURCE, NULL);
 }

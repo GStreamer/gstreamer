@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-title-source
+ * SECTION:ges-track-overlay
  * @short_description: Base Class for single-media sources
  */
 
