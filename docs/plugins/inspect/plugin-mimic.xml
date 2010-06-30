@@ -11,10 +11,10 @@
   <elements>
     <element>
       <name>mimdec</name>
-      <longname>MimDec</longname>
+      <longname>Mimic Decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>Mimic decoder</description>
-      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;, Rob Taylor &lt;robtaylor@fastmail.fm&gt;, Philippe Khalaf &lt;burger@speedy.org&gt;, Ole André Vadla Ravnås &lt;oleavr@gmail.com&gt;</author>
+      <description>MSN Messenger compatible Mimic video decoder element</description>
+      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;, Rob Taylor &lt;robtaylor@fastmail.fm&gt;, Philippe Khalaf &lt;burger@speedy.org&gt;, Ole André Vadla Ravnås &lt;oleavr@gmail.com&gt;,Olivier Crête &lt;olivier.crete@collabora.co.uk</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -26,16 +26,16 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)[ 0/1, 30/1 ], red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, height=(int)[ 16, 4096 ], width=(int)[ 16, 4096 ]</details>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)0/1, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)320, height=(int)240; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)0/1, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)160, height=(int)120</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>mimenc</name>
-      <longname>MimEnc</longname>
+      <longname>Mimic Encoder</longname>
       <class>Codec/Encoder/Video</class>
-      <description>Mimic encoder</description>
-      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;</author>
+      <description>MSN Messenger compatible Mimic video encoder element</description>
+      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;,Olivier Crête &lt;olivier.crete@collabora.co.uk</author>
       <pads>
         <caps>
           <name>sink</name>

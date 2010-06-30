@@ -17,16 +17,16 @@
       <author>Ole André Vadla Ravnås &lt;ole.andre.ravnas@tandberg.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>raw/x-pcap</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>

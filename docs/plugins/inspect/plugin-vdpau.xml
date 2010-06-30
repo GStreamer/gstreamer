@@ -3,30 +3,51 @@
   <description>Various elements utilizing VDPAU</description>
   <filename>../../sys/vdpau/.libs/libgstvdpau.so</filename>
   <basename>libgstvdpau.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.19.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
   <origin>http://gstreamer.net/</origin>
   <elements>
     <element>
-      <name>vdpaumpegdec</name>
-      <longname>VDPAU Mpeg Decoder</longname>
+      <name>vdpauh264dec</name>
+      <longname>VDPAU H264 Decoder</longname>
       <class>Decoder</class>
-      <description>decode mpeg stream with vdpau</description>
+      <description>Decode h264 stream with vdpau</description>
       <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
       <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-h264, interlaced=(boolean)false</details>
+        </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-vdpau-video, chroma-type=(int)0, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)NV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
         </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vdpaumpegdec</name>
+      <longname>VDPAU Mpeg Decoder</longname>
+      <class>Decoder</class>
+      <description>Decode mpeg stream with vdpau</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false, parsed=(boolean)true</details>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-video, chroma-type=(int)0, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)NV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
         </caps>
       </pads>
     </element>

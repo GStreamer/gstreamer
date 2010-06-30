@@ -17,16 +17,16 @@
       <author>Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-subtitle</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>text/plain; text/x-pango-markup</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-subtitle</details>
         </caps>
       </pads>
     </element>

@@ -17,16 +17,16 @@
       <author>Michael Smith &lt;msmith@songbirdnest.com&gt;, Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>application/x-id3</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-id3</details>
         </caps>
       </pads>
     </element>

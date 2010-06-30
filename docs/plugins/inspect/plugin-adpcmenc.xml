@@ -17,16 +17,16 @@
       <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-adpcm, layout=(string){ dvi }, block_align=(int)[ 64, 8192 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, channels=(int)[ 1, 2 ], rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-adpcm, layout=(string){ dvi }, block_align=(int)[ 64, 8192 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
         </caps>
       </pads>
     </element>

@@ -15,8 +15,8 @@
       <class>Codec/Muxer</class>
       <description>High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer</description>
       <author>Andrew Stevens &lt;andrew.stevens@nexgo.de&gt;
-    Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Mark Nauwelaerts &lt;mnauw@users.sourceforge.net</author>
+Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
+Mark Nauwelaerts &lt;mnauw@users.sourceforge.net</author>
       <pads>
         <caps>
           <name>audio_%d</name>

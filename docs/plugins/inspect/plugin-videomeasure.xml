@@ -17,14 +17,14 @@
       <author>Руслан Ижбулатов &lt;lrn _at_ gmail _dot_ com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>ANY</details>
         </caps>

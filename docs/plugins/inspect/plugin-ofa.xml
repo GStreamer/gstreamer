@@ -13,7 +13,7 @@
       <name>ofa</name>
       <longname>OFA</longname>
       <class>MusicIP Fingerprinting element</class>
-      <description>Find a music fingerprint using MusicIP's libofa</description>
+      <description>Find a music fingerprint using MusicIP&apos;s libofa</description>
       <author>Milosz Derezynski &lt;internalerror@gmail.com&gt;, Eric Buehl &lt;eric.buehl@gmail.com&gt;</author>
       <pads>
         <caps>

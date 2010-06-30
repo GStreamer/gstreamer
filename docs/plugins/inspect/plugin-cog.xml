@@ -80,13 +80,13 @@
       <author>FIXME &lt;fixme@fixme.com&gt;</author>
       <pads>
         <caps>
-          <name>sink_test</name>
+          <name>sink_ref</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc){ I420, YUY2, AYUV }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_ref</name>
+          <name>sink_test</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc){ I420, YUY2, AYUV }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>

@@ -17,16 +17,16 @@
       <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
       <pads>
         <caps>
-          <name>subpicture</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
           <name>audio</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>audio/x-raw-int; audio/x-raw-float</details>
+        </caps>
+        <caps>
+          <name>subpicture</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/x-dvd-subpicture</details>
         </caps>
         <caps>
           <name>video</name>

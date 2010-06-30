@@ -23,13 +23,13 @@
           <details>video/x-nuv</details>
         </caps>
         <caps>
-          <name>video_src</name>
+          <name>audio_src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
         </caps>
         <caps>
-          <name>audio_src</name>
+          <name>video_src</name>
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>

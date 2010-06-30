@@ -30,5 +30,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>rgb2bayer</name>
+      <longname>RGB to Bayer converter</longname>
+      <class>Filter/Converter/Video</class>
+      <description>Converts video/x-raw-rgb to video/x-raw-bayer</description>
+      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, alpha_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-bayer, format=(string){ bggr, gbrg, grbg, rggb }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

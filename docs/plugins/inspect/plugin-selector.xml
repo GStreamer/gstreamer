@@ -17,15 +17,15 @@
       <author>Julien Moutte &lt;julien@moutte.net&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink%d</name>
           <direction>sink</direction>
           <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
           <details>ANY</details>
         </caps>
       </pads>
@@ -38,15 +38,15 @@
       <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
       <pads>
         <caps>
-          <name>src%d</name>
-          <direction>source</direction>
-          <presence>request</presence>
-          <details>ANY</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
           <details>ANY</details>
         </caps>
       </pads>

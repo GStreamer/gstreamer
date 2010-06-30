@@ -1067,13 +1067,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1094,13 +1094,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Richard Spindler</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1121,13 +1121,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1148,13 +1148,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1175,13 +1175,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1202,13 +1202,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1229,13 +1229,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1256,13 +1256,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1280,17 +1280,17 @@
       <longname>burn</longname>
       <class>Filter/Editor/Video</class>
       <description>Perform an RGB[A] dodge operation between the pixel sources, using the generalised algorithm:
-    D = saturation of 255 or depletion of 0, of ((255 - A) * 256) / (B + 1)</description>
+D = saturation of 255 or depletion of 0, of ((255 - A) * 256) / (B + 1)</description>
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1311,13 +1311,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1338,13 +1338,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Richard Spindler</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1365,13 +1365,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1392,13 +1392,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1419,13 +1419,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1443,17 +1443,17 @@
       <longname>dodge</longname>
       <class>Filter/Editor/Video</class>
       <description>Perform an RGB[A] dodge operation between the pixel sources, using the generalised algorithm:
-    D = saturation of 255 or (A * 256) / (256 - B)</description>
+D = saturation of 255 or (A * 256) / (256 - B)</description>
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1474,13 +1474,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1501,13 +1501,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1528,13 +1528,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1555,13 +1555,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1582,13 +1582,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1609,13 +1609,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1633,17 +1633,17 @@
       <longname>overlay</longname>
       <class>Filter/Editor/Video</class>
       <description>Perform an RGB[A] overlay operation between the pixel sources, using the generalised algorithm:
-    D =  A * (B + (2 * B) * (255 - A))</description>
+D =  A * (B + (2 * B) * (255 - A))</description>
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1664,7 +1664,7 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Richard Spindler</author>
       <pads>
         <caps>
-          <name>sink_2</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1676,7 +1676,7 @@
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_2</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1697,13 +1697,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1721,17 +1721,17 @@
       <longname>screen</longname>
       <class>Filter/Editor/Video</class>
       <description>Perform an RGB[A] screen operation between the pixel sources, using the generalised algorithm:
-    D = 255 - (255 - A) * (255 - B)</description>
+D = 255 - (255 - A) * (255 - B)</description>
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1752,13 +1752,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1779,13 +1779,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1806,13 +1806,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Richard Spindler</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1833,13 +1833,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Jean-Sebastien Senecal</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)-16777216, green_mask=(int)16711680, blue_mask=(int)65280, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
@@ -1860,13 +1860,13 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, Martin Bayer</author>
       <pads>
         <caps>
-          <name>sink_1</name>
+          <name>sink_0</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink_0</name>
+          <name>sink_1</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-rgb, bpp=(int)32, depth=(int)32, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, alpha_mask=(int)255, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>

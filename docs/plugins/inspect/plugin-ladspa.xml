@@ -17,14 +17,14 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -38,14 +38,14 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -59,14 +59,8 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Out_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Out_L</name>
-          <direction>source</direction>
+          <name>In_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -77,8 +71,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>In_L</name>
-          <direction>sink</direction>
+          <name>Out_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Out_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -104,14 +104,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -125,12 +125,6 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Resonance</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Exp_FM</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -143,14 +137,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
+          <name>Resonance</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -164,12 +164,6 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Resonance</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Exp_FM</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -182,14 +176,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
+          <name>Resonance</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -203,12 +203,6 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Resonance</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Exp_FM</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -221,14 +215,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
+          <name>Resonance</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -242,12 +242,6 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Resonance</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Exp_FM</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -260,14 +254,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
+          <name>Resonance</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -275,17 +275,11 @@
     </element>
     <element>
       <name>ladspa-Phaser1</name>
-      <longname>Phaser1 - Similar to CSound's phaser1 by Sean Costello</longname>
+      <longname>Phaser1 - Similar to CSound&apos;s phaser1 by Sean Costello</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
-      <description>Phaser1 - Similar to CSound's phaser1 by Sean Costello</description>
+      <description>Phaser1 - Similar to CSound&apos;s phaser1 by Sean Costello</description>
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
-        <caps>
-          <name>Lin_FM</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
         <caps>
           <name>Exp_FM</name>
           <direction>sink</direction>
@@ -299,14 +293,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
+          <name>Lin_FM</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -320,14 +320,14 @@
       <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -341,14 +341,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -362,14 +362,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -383,14 +383,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -404,14 +404,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -425,14 +425,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -446,14 +446,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -467,14 +467,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -488,8 +488,8 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output_-Right-</name>
-          <direction>source</direction>
+          <name>Input_-Left-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -506,8 +506,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_-Left-</name>
-          <direction>sink</direction>
+          <name>Output_-Right-</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -536,14 +536,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -557,14 +557,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -578,14 +578,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -599,14 +599,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -620,8 +620,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Up_out</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -632,8 +632,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Up_out</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -647,20 +647,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Mix_out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Up_out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Down_out</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -671,8 +659,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Down_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Mix_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Up_out</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -686,14 +686,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -707,14 +707,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -728,6 +728,12 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
           <name>HP-Output</name>
           <direction>source</direction>
           <presence>always</presence>
@@ -736,12 +742,6 @@
         <caps>
           <name>LP-Output</name>
           <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input</name>
-          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -755,14 +755,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -776,14 +776,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -797,14 +797,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -818,14 +818,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -839,14 +839,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -860,8 +860,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_2</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -872,8 +872,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output_2</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -887,14 +887,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -908,14 +908,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -929,14 +929,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -950,14 +950,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -971,14 +971,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -992,14 +992,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1013,14 +1013,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1034,14 +1034,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1055,14 +1055,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1076,14 +1076,14 @@
       <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1097,14 +1097,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1118,14 +1118,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1139,14 +1139,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1160,14 +1160,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1178,8 +1172,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1193,14 +1193,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1214,14 +1214,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1235,14 +1235,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1256,14 +1256,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1277,14 +1277,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_2</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_1</name>
-          <direction>source</direction>
+          <name>Input_1</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1295,8 +1289,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_1</name>
-          <direction>sink</direction>
+          <name>Output_1</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_2</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1310,14 +1310,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1331,14 +1331,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Frequency_-Hz-</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1352,14 +1352,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1373,14 +1373,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1394,14 +1394,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1415,14 +1415,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Frequency_-Hz-</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Frequency_-Hz-</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1436,14 +1436,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1457,14 +1457,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1478,14 +1478,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1499,14 +1499,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1520,14 +1520,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1541,8 +1541,8 @@
       <author>Juhana Sadeharju &lt;kouhia at nic.funet.fi&gt;, LADSPAification by Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1553,8 +1553,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Right_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1568,14 +1568,14 @@
       <author>Marcus Andersson</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1589,14 +1589,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1610,14 +1610,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1631,14 +1631,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1652,8 +1652,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>90deg_output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1664,8 +1664,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>90deg_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1679,14 +1679,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1700,14 +1700,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1736,14 +1736,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1757,14 +1757,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Left_out</name>
-          <direction>source</direction>
+          <name>Left_in</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1775,8 +1769,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Left_in</name>
-          <direction>sink</direction>
+          <name>Left_out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Right_out</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1790,14 +1790,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>R_output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>L_output</name>
-          <direction>source</direction>
+          <name>L_input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1808,8 +1802,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>L_input</name>
-          <direction>sink</direction>
+          <name>L_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>R_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1823,14 +1823,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1844,14 +1844,14 @@
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1865,14 +1865,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1886,14 +1886,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1907,14 +1907,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Left</name>
-          <direction>source</direction>
+          <name>Mid</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1925,8 +1919,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Mid</name>
-          <direction>sink</direction>
+          <name>Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1940,14 +1940,8 @@
       <author>Joern Nettingsmeier &lt;nettings@folkwang-hochschule.de&gt;</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1958,8 +1952,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1973,14 +1973,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Side</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Mid</name>
-          <direction>source</direction>
+          <name>Left</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -1991,8 +1985,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Left</name>
-          <direction>sink</direction>
+          <name>Mid</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Side</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2006,14 +2006,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2027,8 +2027,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Delay_-s-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2039,8 +2039,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Delay_-s-</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2054,14 +2054,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2084,20 +2084,20 @@
     </element>
     <element>
       <name>ladspa-notch-iir</name>
-      <longname>Mag's Notch Filter</longname>
+      <longname>Mag&apos;s Notch Filter</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
-      <description>Mag's Notch Filter</description>
+      <description>Mag&apos;s Notch Filter</description>
       <author>Alexander Ehlert &lt;mag@glame.de&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2111,14 +2111,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2132,14 +2132,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2153,8 +2153,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2165,8 +2165,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Right_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2180,14 +2180,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2201,14 +2201,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2222,14 +2222,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2243,14 +2243,14 @@
       <author>Jesse Chappell &lt;jesse at essej dot net&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2264,14 +2264,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2285,8 +2285,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2297,8 +2297,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2306,20 +2306,20 @@
     </element>
     <element>
       <name>ladspa-satanMaximiser</name>
-      <longname>Barry's Satan Maximiser</longname>
+      <longname>Barry&apos;s Satan Maximiser</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
-      <description>Barry's Satan Maximiser</description>
+      <description>Barry&apos;s Satan Maximiser</description>
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2333,14 +2333,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2354,12 +2354,6 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Input</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -2368,6 +2362,12 @@
         <caps>
           <name>Sidechain</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2381,14 +2381,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Left_output</name>
-          <direction>source</direction>
+          <name>Left_input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2399,14 +2393,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Left_input</name>
+          <name>Sidechain</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Sidechain</name>
-          <direction>sink</direction>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2420,14 +2420,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Left_output</name>
-          <direction>source</direction>
+          <name>Left_input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2438,8 +2432,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Left_input</name>
-          <direction>sink</direction>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2453,14 +2453,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2474,14 +2474,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Right_output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Left_output</name>
-          <direction>source</direction>
+          <name>Left_input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2492,8 +2486,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Left_input</name>
-          <direction>sink</direction>
+          <name>Left_output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Right_output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2507,14 +2507,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2528,14 +2528,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2570,12 +2570,6 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>Amplitude</name>
           <direction>sink</direction>
           <presence>always</presence>
@@ -2584,6 +2578,12 @@
         <caps>
           <name>Frequency_-Hz-</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2597,14 +2597,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Frequency_-Hz-</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2618,14 +2618,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Amplitude</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Amplitude</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2654,14 +2654,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2675,14 +2675,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2696,14 +2696,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2717,8 +2717,8 @@
       <author>Frank Neumann &lt;franky@users.sourceforge.net&gt;</author>
       <pads>
         <caps>
-          <name>Output_2</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2729,8 +2729,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output_2</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2744,49 +2744,7 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_8</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_7</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_6</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_5</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_4</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_3</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_2</name>
+          <name>Clock</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
@@ -2798,8 +2756,50 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Clock</name>
+          <name>Input_2</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_3</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_4</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_5</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_6</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_7</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_8</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2813,25 +2813,13 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Rt</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Lt</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>S</name>
+          <name>C</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>C</name>
+          <name>L</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
@@ -2843,8 +2831,20 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>L</name>
+          <name>S</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Lt</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Rt</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2858,14 +2858,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2879,14 +2879,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2897,8 +2891,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2912,14 +2912,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2930,8 +2924,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2945,14 +2945,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2966,14 +2966,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2984,8 +2978,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -2999,14 +2999,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3020,14 +3020,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_Right</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_Left</name>
-          <direction>source</direction>
+          <name>Input_Left</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3038,8 +3032,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_Left</name>
-          <direction>sink</direction>
+          <name>Output_Left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_Right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3053,14 +3053,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3074,14 +3074,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3095,14 +3095,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3116,14 +3116,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3137,14 +3137,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3158,14 +3158,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3179,8 +3179,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_Right</name>
-          <direction>source</direction>
+          <name>Input_Left</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3197,8 +3197,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_Left</name>
-          <direction>sink</direction>
+          <name>Output_Right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3212,14 +3212,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3230,8 +3224,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3245,14 +3245,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3266,8 +3266,8 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_Right</name>
-          <direction>source</direction>
+          <name>Input_Left</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3284,8 +3284,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_Left</name>
-          <direction>sink</direction>
+          <name>Output_Right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3299,14 +3299,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output_0</name>
-          <direction>source</direction>
+          <name>Input_0</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_0</name>
-          <direction>sink</direction>
+          <name>Output_0</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3320,14 +3320,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3341,14 +3341,14 @@
       <author>Tom Szilagyi</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3362,14 +3362,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3383,14 +3383,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3404,14 +3404,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3425,14 +3425,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3446,14 +3446,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3467,14 +3467,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_R</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_L</name>
-          <direction>source</direction>
+          <name>Input_L</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3485,8 +3479,14 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_L</name>
-          <direction>sink</direction>
+          <name>Output_L</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_R</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3500,8 +3500,8 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>z</name>
-          <direction>source</direction>
+          <name>x</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3512,8 +3512,8 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>x</name>
-          <direction>sink</direction>
+          <name>z</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3527,25 +3527,7 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_right</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_left</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_B_right</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_B_left</name>
+          <name>Input_A_left</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
@@ -3557,8 +3539,26 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_A_left</name>
+          <name>Input_B_left</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_B_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3572,37 +3572,7 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output_B_right</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_B_left</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_A_right</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Output_A_left</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_B_right</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
-          <name>Input_B_left</name>
+          <name>Input_A_left</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
@@ -3614,8 +3584,38 @@
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input_A_left</name>
+          <name>Input_B_left</name>
           <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Input_B_right</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_A_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_A_right</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_B_left</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output_B_right</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -3629,14 +3629,14 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
       <pads>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>

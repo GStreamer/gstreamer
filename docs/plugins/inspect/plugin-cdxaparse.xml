@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim.taymans@tvd.be&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/mpeg, systemstream=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-cdxa</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, systemstream=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/mpeg, systemstream=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-vcd</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, systemstream=(boolean)true</details>
         </caps>
       </pads>
     </element>

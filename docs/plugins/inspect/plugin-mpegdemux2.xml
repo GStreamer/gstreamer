@@ -23,6 +23,12 @@
           <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)true; video/x-cdxa</details>
         </caps>
         <caps>
+          <name>audio_%02x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-private1-lpcm; audio/x-private1-ac3; audio/x-private1-dts; audio/ac3</details>
+        </caps>
+        <caps>
           <name>private_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
@@ -33,12 +39,6 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
-          <name>audio_%02x</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-private1-lpcm; audio/x-private1-ac3; audio/x-private1-dts; audio/ac3</details>
         </caps>
         <caps>
           <name>video_%02x</name>
@@ -62,6 +62,12 @@
           <details>video/mpegts</details>
         </caps>
         <caps>
+          <name>audio_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
+        </caps>
+        <caps>
           <name>private_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
@@ -72,12 +78,6 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>subpicture/x-pgs; video/x-dvd-subpicture</details>
-        </caps>
-        <caps>
-          <name>audio_%04x</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-eac3; audio/x-dts; audio/x-private-ts-lpcm</details>
         </caps>
         <caps>
           <name>video_%04x</name>
@@ -95,6 +95,12 @@
       <author>Alessandro Decina &lt;alessandro@nnva.org&gt;, Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
           <name>program_%d</name>
           <direction>source</direction>
           <presence>sometimes</presence>
@@ -104,12 +110,6 @@
           <name>src%d</name>
           <direction>source</direction>
           <presence>request</presence>
-          <details>video/mpegts, systemstream=(boolean)true</details>
-        </caps>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
       </pads>

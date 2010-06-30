@@ -17,14 +17,14 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -38,14 +38,14 @@
       <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-grey, framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-grey, framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>

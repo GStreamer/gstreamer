@@ -38,16 +38,16 @@
       <author>Pioneers of the Inevitable &lt;songbird@songbirdnest.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-aiff</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int){ 1234, 4321 }, width=(int){ 8, 16, 24, 32 }, depth=(int)[ 1, 32 ], signed=(boolean){ true, false }</details>
         </caps>
       </pads>
     </element>

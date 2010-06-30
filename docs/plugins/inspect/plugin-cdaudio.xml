@@ -16,7 +16,6 @@
       <description>Play CD audio through the CD Drive</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
-    
       </pads>
     </element>
   </elements>

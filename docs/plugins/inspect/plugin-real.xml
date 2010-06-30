@@ -17,16 +17,16 @@
       <author>Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], depth=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-pn-realaudio, raversion=(int){ 3, 4, 5, 6, 8 }; audio/x-sipro</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], depth=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-pn-realvideo, rmversion=(int)[ 2, 4 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
         </caps>
       </pads>
     </element>

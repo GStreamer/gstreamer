@@ -15,7 +15,7 @@
       <class>Codec/Encoder/Video</class>
       <description>High-quality MPEG-1/2 video encoder</description>
       <author>Andrew Stevens &lt;andrew.stevens@nexgo.de&gt;
-    Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

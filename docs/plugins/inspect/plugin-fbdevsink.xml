@@ -14,7 +14,7 @@
       <longname>fbdev video sink</longname>
       <class>Sink/Video</class>
       <description>A linux framebuffer videosink</description>
-      <author>Sean D'Epagnier &lt;sean@depagnier.com&gt;</author>
+      <author>Sean D&apos;Epagnier &lt;sean@depagnier.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

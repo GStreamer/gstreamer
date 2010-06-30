@@ -17,16 +17,16 @@
       <author>Fluendo &lt;contact@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/mpegts, systemstream=(boolean)true, packetsize=(int){ 188, 192 }</details>
-        </caps>
-        <caps>
           <name>sink_%d</name>
           <direction>sink</direction>
           <presence>request</presence>
           <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-dirac; video/x-h264; audio/mpeg, mpegversion=(int){ 1, 2, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true, packetsize=(int){ 188, 192 }</details>
         </caps>
       </pads>
     </element>

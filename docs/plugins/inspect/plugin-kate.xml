@@ -14,7 +14,7 @@
       <longname>Kate stream text decoder</longname>
       <class>Codec/Decoder/Subtitle</class>
       <description>Decodes Kate text streams</description>
-      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -35,7 +35,7 @@
       <longname>Kate stream encoder</longname>
       <class>Codec/Encoder/Subtitle</class>
       <description>Encodes Kate streams from text or subpictures</description>
-      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -56,7 +56,7 @@
       <longname>Kate stream parser</longname>
       <class>Codec/Parser/Subtitle</class>
       <description>parse raw kate streams</description>
-      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k at googlemail dot com&gt;</author>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k at googlemail dot com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -77,7 +77,7 @@
       <longname>Kate stream tagger</longname>
       <class>Formatter/Metadata</class>
       <description>Retags kate streams</description>
-      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -98,19 +98,19 @@
       <longname>Kate stream renderer</longname>
       <class>Mixer/Video/Overlay/Subtitle</class>
       <description>Decodes and renders Kate streams on top of a video</description>
-      <author>Vincent Penquerc'h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
       <pads>
-        <caps>
-          <name>video_sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
-        </caps>
         <caps>
           <name>subtitle_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
         </caps>
         <caps>
           <name>src</name>

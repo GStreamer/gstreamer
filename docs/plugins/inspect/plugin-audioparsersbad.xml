@@ -17,16 +17,16 @@
       <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/mpeg, framed=(boolean)true, mpegversion=(int){ 2, 4 }, stream-format=(string){ raw, adts, adif }</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/mpeg, framed=(boolean)false, mpegversion=(int){ 2, 4 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, framed=(boolean)true, mpegversion=(int){ 2, 4 }, stream-format=(string){ raw, adts, adif }</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-ac3, framed=(boolean)true, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]; audio/ac3, framed=(boolean)true, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-ac3, framed=(boolean)false; audio/ac3, framed=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-ac3, framed=(boolean)true, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]; audio/ac3, framed=(boolean)true, channels=(int)[ 1, 6 ], rate=(int)[ 32000, 48000 ]</details>
         </caps>
       </pads>
     </element>
@@ -59,16 +59,16 @@
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/AMR, rate=(int)8000, channels=(int)1; audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-amr-nb-sh; audio/x-amr-wb-sh</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1; audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
         </caps>
       </pads>
     </element>

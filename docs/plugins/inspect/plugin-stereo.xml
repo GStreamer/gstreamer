@@ -1,6 +1,6 @@
 <plugin>
   <name>stereo</name>
-  <description>Muck with the stereo signal, enhance it's 'stereo-ness'</description>
+  <description>Muck with the stereo signal, enhance it&apos;s &apos;stereo-ness&apos;</description>
   <filename>../../gst/stereo/.libs/libgststereo.so</filename>
   <basename>libgststereo.so</basename>
   <version>0.10.19.1</version>
@@ -13,7 +13,7 @@
       <name>stereo</name>
       <longname>Stereo effect</longname>
       <class>Filter/Effect/Audio</class>
-      <description>Muck with the stereo signal to enhance its 'stereo-ness'</description>
+      <description>Muck with the stereo signal to enhance its &apos;stereo-ness&apos;</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
       <pads>
         <caps>
