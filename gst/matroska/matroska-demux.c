@@ -165,11 +165,11 @@ static GstIndex *gst_matroska_demux_get_index (GstElement * element);
 
 /* caps functions */
 static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
-    * videocontext,
-    const gchar * codec_id, guint8 * data, guint size, gchar ** codec_name);
+    * videocontext, const gchar * codec_id, guint8 * data, guint size,
+    gchar ** codec_name, guint32 * riff_fourcc);
 static GstCaps *gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext
-    * audiocontext,
-    const gchar * codec_id, guint8 * data, guint size, gchar ** codec_name);
+    * audiocontext, const gchar * codec_id, guint8 * data, guint size,
+    gchar ** codec_name, guint16 * riff_audio_fmt);
 static GstCaps
     * gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext, const gchar * codec_id, gpointer data, guint size);
@@ -1173,7 +1173,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   GstCaps *caps = NULL;
   gchar *padname = NULL;
   GstFlowReturn ret;
-  guint32 id;
+  guint32 id, riff_fourcc = 0;
+  guint16 riff_audio_fmt = 0;
   GstTagList *list = NULL;
   gchar *codec = NULL;
 
@@ -1852,8 +1853,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       padname = g_strdup_printf ("video_%02d", demux->num_v_streams++);
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
       caps = gst_matroska_demux_video_caps (videocontext,
-          context->codec_id,
-          (guint8 *) context->codec_priv, context->codec_priv_size, &codec);
+          context->codec_id, (guint8 *) context->codec_priv,
+          context->codec_priv_size, &codec, &riff_fourcc);
+
       if (codec) {
         list = gst_tag_list_new ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -1870,8 +1872,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       padname = g_strdup_printf ("audio_%02d", demux->num_a_streams++);
       templ = gst_element_class_get_pad_template (klass, "audio_%02d");
       caps = gst_matroska_demux_audio_caps (audiocontext,
-          context->codec_id,
-          context->codec_priv, context->codec_priv_size, &codec);
+          context->codec_id, context->codec_priv, context->codec_priv_size,
+          &codec, &riff_audio_fmt);
+
       if (codec) {
         list = gst_tag_list_new ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -1940,6 +1943,12 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
     }
     gst_caps_set_simple (caps, "codec-id", G_TYPE_STRING, context->codec_id,
         NULL);
+
+    /* add any unrecognised riff fourcc / audio format, but after codec-id */
+    if (context->type == GST_MATROSKA_TRACK_TYPE_AUDIO && riff_audio_fmt != 0)
+      gst_caps_set_simple (caps, "format", G_TYPE_INT, riff_audio_fmt, NULL);
+    else if (context->type == GST_MATROSKA_TRACK_TYPE_VIDEO && riff_fourcc != 0)
+      gst_caps_set_simple (caps, "fourcc", GST_TYPE_FOURCC, riff_fourcc, NULL);
   }
 
   /* the pad in here */
@@ -6286,7 +6295,7 @@ gst_matroska_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     videocontext, const gchar * codec_id, guint8 * data, guint size,
-    gchar ** codec_name)
+    gchar ** codec_name, guint32 * riff_fourcc)
 {
   GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) videocontext;
   GstCaps *caps = NULL;
@@ -6297,6 +6306,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   context->send_xiph_headers = FALSE;
   context->send_flac_headers = FALSE;
   context->send_speex_headers = FALSE;
+
+  if (riff_fourcc)
+    *riff_fourcc = 0;
 
   /* TODO: check if we have all codec types from matroska-ids.h
    *       check if we have to do more special things with codec_private
@@ -6344,8 +6356,16 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
             GST_BUFFER_SIZE (buf));
       }
 
+      if (riff_fourcc)
+        *riff_fourcc = vids->compression;
+
       caps = gst_riff_create_video_caps (vids->compression, NULL, vids,
           buf, NULL, codec_name);
+
+      if (caps == NULL) {
+        GST_WARNING ("Unhandled RIFF fourcc %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (vids->compression));
+      }
 
       if (buf)
         gst_buffer_unref (buf);
@@ -6652,13 +6672,16 @@ aac_profile_idx (const gchar * codec_id)
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     audiocontext, const gchar * codec_id, guint8 * data, guint size,
-    gchar ** codec_name)
+    gchar ** codec_name, guint16 * riff_audio_fmt)
 {
   GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) audiocontext;
   GstCaps *caps = NULL;
 
   g_assert (audiocontext != NULL);
   g_assert (codec_name != NULL);
+
+  if (riff_audio_fmt)
+    *riff_audio_fmt = 0;
 
   context->send_xiph_headers = FALSE;
   context->send_flac_headers = FALSE;
@@ -6753,9 +6776,16 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       /* 18 is the waveformatex size */
       gst_buffer_set_data (codec_data, data + 18, auds.size);
 
+      if (riff_audio_fmt)
+        *riff_audio_fmt = auds.format;
+
       caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, NULL,
           codec_data, codec_name);
       gst_buffer_unref (codec_data);
+
+      if (caps == NULL) {
+        GST_WARNING ("Unhandled RIFF audio format 0x%02x", auds.format);
+      }
     }
   } else if (g_str_has_prefix (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC)) {
     GstBuffer *priv = NULL;
