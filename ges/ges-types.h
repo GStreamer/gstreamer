@@ -88,10 +88,6 @@ typedef struct _GESTrackAudioBackgroundSource GESTrackAudioBackgroundSource;
 typedef struct _GESTrackAudioBackgroundSourceClass
   GESTrackAudioBackgroundSourceClass;
 
-typedef struct _GESTrackTitleSource GESTrackTitleSource;
-typedef struct _GESTrackTitleSourceClass
-  GESTrackTitleSourceClass;
-
 typedef struct _GESTrackVideoTitleSource GESTrackVideoTitleSource;
 typedef struct _GESTrackVideoTitleSourceClass
   GESTrackVideoTitleSourceClass;

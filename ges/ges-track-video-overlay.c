@@ -25,7 +25,7 @@
 
 #include "ges-internal.h"
 #include "ges-track-object.h"
-#include "ges-track-video-title-source.h"
+#include "ges-track-title-source.h"
 #include "ges-track-video-overlay.h"
 
 G_DEFINE_TYPE (GESTrackVideoOverlay, ges_track_video_overlay,

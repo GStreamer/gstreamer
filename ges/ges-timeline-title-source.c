@@ -30,7 +30,7 @@
 #include "ges-timeline-title-source.h"
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
-#include "ges-track-video-title-source.h"
+#include "ges-track-title-source.h"
 #include "ges-track-audio-background-source.h"
 #include <string.h>
 

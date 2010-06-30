@@ -31,7 +31,6 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-video-background-source.c			\
 	ges-track-audio-background-source.c			\
 	ges-track-title-source.c			\
-	ges-track-video-title-source.c			\
 	ges-track-overlay.c			\
 	ges-track-video-overlay.c			\
 	ges-utils.c
@@ -63,7 +62,6 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-track-video-background-source.h			\
 	ges-track-audio-background-source.h			\
 	ges-track-title-source.h			\
-	ges-track-video-title-source.h			\
 	ges-track-overlay.h			\
 	ges-track-video-overlay.h			\
 	ges-utils.h
