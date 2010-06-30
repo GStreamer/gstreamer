@@ -429,7 +429,7 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
   GstRtpPtDemux *rtpdemux;
   gboolean res = FALSE;
 
-  rtpdemux = GST_RTP_PT_DEMUX (GST_PAD_PARENT (pad));
+  rtpdemux = GST_RTP_PT_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -444,15 +444,20 @@ gst_rtp_pt_demux_sink_event (GstPad * pad, GstEvent * event)
 
         if (rtpdemuxpad)
           res = gst_pad_push_event (rtpdemuxpad->pad, event);
+        else
+          gst_event_unref (event);
 
       } else {
         res = gst_pad_event_default (pad, event);
       }
+      break;
     }
     default:
       res = gst_pad_event_default (pad, event);
       break;
   }
+
+  gst_object_unref (rtpdemux);
   return res;
 }
 
