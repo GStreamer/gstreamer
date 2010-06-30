@@ -22,6 +22,7 @@
 #define _GES_TRACK_SOURCE
 
 #include <glib-object.h>
+#include <gst/gst.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-object.h>
 
@@ -53,8 +54,9 @@ G_BEGIN_DECLS
  */
 
 struct _GESTrackSource {
-  /* <public> */
   GESTrackObject parent;
+  GstElement *element;
+  /* <public> */
 };
 
 /**
@@ -67,6 +69,7 @@ struct _GESTrackSource {
 
 struct _GESTrackSourceClass {
   GESTrackObjectClass parent_class;
+  GstElement *(*create_element) (GESTrackSource *);
 };
 
 GType ges_track_source_get_type (void);
