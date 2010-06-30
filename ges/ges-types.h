@@ -66,6 +66,9 @@ typedef struct _GESTrackObjectClass GESTrackObjectClass;
 typedef struct _GESTrackSource GESTrackSource;
 typedef struct _GESTrackSourceClass GESTrackSourceClass;
 
+typedef struct _GESTrackOperation GESTrackOperation;
+typedef struct _GESTrackOperationClass GESTrackOperationClass;
+
 typedef struct _GESTrackFileSource GESTrackFileSource;
 typedef struct _GESTrackFileSourceClass GESTrackFileSourceClass;
 

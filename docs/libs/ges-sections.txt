@@ -80,6 +80,22 @@ ges_track_source_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ges-track-operation</FILE>
+<TITLE>GESTrackOperation</TITLE>
+GESTrackOperation
+GESTrackOperationClass
+ges_track_operation_get_type
+ges_track_operation_new
+<SUBSECTION Standard>
+GES_IS_TRACK_OPERATION
+GES_IS_TRACK_OPERATION_CLASS
+GES_TRACK_OPERATION
+GES_TRACK_OPERATION_CLASS
+GES_TRACK_OPERATION_GET_CLASS
+GES_TYPE_TRACK_OPERATION
+</SECTION>
+
+<SECTION>
 <FILE>ges-track-filesource</FILE>
 <TITLE>GESTrackFileSource</TITLE>
 GESTrackFileSource
