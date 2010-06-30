@@ -1872,6 +1872,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     GstElement *capsfilter;
     GstObject *parent;
     GstState state, pending;
+    gboolean lr1, lr2;
 
     capsfilter = gst_element_factory_make ("capsfilter", NULL);
     if (!capsfilter) {
@@ -1900,18 +1901,31 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 
     g_object_set (capsfilter, "caps", filter, NULL);
 
-    if (gst_element_link_pads (src, srcpadname, capsfilter, "sink")
-        && gst_element_link_pads (capsfilter, "src", dest, destpadname)) {
+    lr1 = gst_element_link_pads (src, srcpadname, capsfilter, "sink");
+    lr2 = gst_element_link_pads (capsfilter, "src", dest, destpadname);
+    if (lr1 && lr2) {
       return TRUE;
     } else {
-      GST_INFO ("Could not link elements");
+      if (!lr1) {
+        GST_INFO ("Could not link pads: %s:%s - capsfilter:sink",
+            GST_ELEMENT_NAME (src), srcpadname);
+      } else {
+        GST_INFO ("Could not link pads: capsfilter:src - %s:%s",
+            GST_ELEMENT_NAME (dest), destpadname);
+      }
       gst_element_set_state (capsfilter, GST_STATE_NULL);
       /* this will unlink and unref as appropriate */
       gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (capsfilter)), capsfilter);
       return FALSE;
     }
   } else {
-    return gst_element_link_pads (src, srcpadname, dest, destpadname);
+    if (gst_element_link_pads (src, srcpadname, dest, destpadname)) {
+      return TRUE;
+    } else {
+      GST_INFO ("Could not link pads: %s:%s - %s:%s", GST_ELEMENT_NAME (src),
+          srcpadname, GST_ELEMENT_NAME (dest), destpadname);
+      return FALSE;
+    }
   }
 }
 
