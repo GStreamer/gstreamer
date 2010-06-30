@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-background-source.h>
+#include <ges/ges-track-source.h>
 
 G_BEGIN_DECLS
 

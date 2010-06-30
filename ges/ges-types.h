@@ -80,10 +80,6 @@ typedef struct _GESTrackVideoTransition GESTrackVideoTransition;
 typedef struct _GESTrackVideoTransitionClass
   GESTrackVideoTransitionClass;
 
-typedef struct _GESTrackBackgroundSource GESTrackBackgroundSource;
-typedef struct _GESTrackBackgroundSourceClass
-  GESTrackBackgroundSourceClass;
-
 typedef struct _GESTrackVideoBackgroundSource GESTrackVideoBackgroundSource;
 typedef struct _GESTrackVideoBackgroundSourceClass
   GESTrackVideoBackgroundSourceClass;

@@ -238,9 +238,8 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
       ges_track_object_set_active (res, FALSE);
   }
 
-  else {
-    res = (GESTrackObject *) ges_track_background_source_new ();
-  }
+  else
+    res = NULL;
 
   return res;
 }
