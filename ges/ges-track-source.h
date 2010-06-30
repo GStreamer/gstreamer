@@ -54,14 +54,17 @@ G_BEGIN_DECLS
  */
 
 struct _GESTrackSource {
+  /*< public >*/
   GESTrackObject parent;
+  /*< private >*/
   GstElement *element;
-  /* <public> */
 };
 
 /**
  * GESTrackSourceClass:
  * @parent_class: the parent class
+ * @create_element: method to create the gstreamer element which fills the
+ * gnlobject
  *
  * Base class for track objects which produce data but do not consuem it.
  *
