@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  */
 
 struct _GESTrackAudioBackgroundSource {
-  GESTrackBackgroundSource parent;
+  GESTrackSource parent;
 
   /*< public >*/
 };
@@ -63,7 +63,7 @@ struct _GESTrackAudioBackgroundSource {
  */
 
 struct _GESTrackAudioBackgroundSourceClass {
-  GESTrackBackgroundSourceClass parent_class;
+  GESTrackSourceClass parent_class;
 
   /*< public >*/
 };

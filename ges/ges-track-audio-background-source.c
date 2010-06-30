@@ -28,7 +28,7 @@
 #include "ges-track-audio-background-source.h"
 
 G_DEFINE_TYPE (GESTrackAudioBackgroundSource, ges_track_abg_src,
-    GES_TYPE_TRACK_BACKGROUND_SOURCE);
+    GES_TYPE_TRACK_SOURCE);
 
 enum
 {
@@ -45,17 +45,16 @@ static void ges_track_abg_src_get_property (GObject * object, guint
 static void ges_track_abg_src_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_abg_src_create_element (GESTrackBackgroundSource
-    * self);
+static GstElement *ges_track_abg_src_create_element (GESTrackSource * self);
 
 static void
 ges_track_abg_src_class_init (GESTrackAudioBackgroundSourceClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackBackgroundSourceClass *bg_class;
+  GESTrackSourceClass *bg_class;
 
   object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_BACKGROUND_SOURCE_CLASS (klass);
+  bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_abg_src_get_property;
   object_class->set_property = ges_track_abg_src_set_property;
@@ -103,7 +102,7 @@ ges_track_abg_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_abg_src_create_element (GESTrackBackgroundSource * self)
+ges_track_abg_src_create_element (GESTrackSource * self)
 {
   GstElement *ret;
   ret = gst_element_factory_make ("audiotestsrc", NULL);
