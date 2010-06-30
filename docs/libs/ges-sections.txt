@@ -453,22 +453,6 @@ GES_IS_TRACK_TITLE_SOURCE_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-overlay</FILE>
-<TITLE>GESTrackOverlay</TITLE>
-GESTrackOverlay
-GESTrackOverlayClass
-ges_track_overlay_get_type
-ges_track_overlay_new
-<SUBSECTION Standard>
-GES_IS_TRACK_OVERLAY
-GES_IS_TRACK_OVERLAY_CLASS
-GES_TRACK_OVERLAY
-GES_TRACK_OVERLAY_CLASS
-GES_TRACK_OVERLAY_GET_CLASS
-GES_TYPE_TRACK_OVERLAY
-</SECTION>
-
-<SECTION>
 <FILE>ges-track-video-overlay</FILE>
 <TITLE>GESTrackOverlay</TITLE>
 GESTrackVideoOverlay

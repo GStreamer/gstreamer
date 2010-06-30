@@ -95,10 +95,6 @@ typedef struct _GESTrackTitleSource GESTrackTitleSource;
 typedef struct _GESTrackTitleSourceClass
   GESTrackTitleSourceClass;
 
-typedef struct _GESTrackOverlay GESTrackOverlay;
-typedef struct _GESTrackOverlayClass
-  GESTrackOverlayClass;
-
 typedef struct _GESTrackVideoOverlay GESTrackVideoOverlay;
 typedef struct _GESTrackVideoOverlayClass
   GESTrackVideoOverlayClass;
