@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-background-source.h>
+#include <ges/ges-track-source.h>
 
 G_BEGIN_DECLS
 
@@ -86,7 +86,7 @@ typedef enum {
  * @parent: parent
  */
 struct _GESTrackVideoBackgroundSource {
-  GESTrackBackgroundSource parent;
+  GESTrackSource parent;
 
   /*< private >*/
   GESTrackVideoBgSrcPattern pattern;
@@ -98,7 +98,7 @@ struct _GESTrackVideoBackgroundSource {
  */
 
 struct _GESTrackVideoBackgroundSourceClass {
-  GESTrackBackgroundSourceClass parent_class;
+  GESTrackSourceClass parent_class;
 
   /* <public> */
 };

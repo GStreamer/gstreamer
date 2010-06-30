@@ -28,7 +28,7 @@
 #include "ges-track-video-background-source.h"
 
 G_DEFINE_TYPE (GESTrackVideoBackgroundSource, ges_track_vbg_src,
-    GES_TYPE_TRACK_BACKGROUND_SOURCE);
+    GES_TYPE_TRACK_SOURCE);
 
 enum
 {
@@ -45,24 +45,23 @@ static void ges_track_vbg_src_get_property (GObject * object, guint
 static void ges_track_vbg_src_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_vbg_src_create_element (GESTrackBackgroundSource
-    * self);
+static GstElement *ges_track_vbg_src_create_element (GESTrackSource * self);
 
 static void
 ges_track_vbg_src_class_init (GESTrackVideoBackgroundSourceClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackBackgroundSourceClass *bg_class;
+  GESTrackSourceClass *track_source_class;
 
   object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_BACKGROUND_SOURCE_CLASS (klass);
+  track_source_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_vbg_src_get_property;
   object_class->set_property = ges_track_vbg_src_set_property;
   object_class->dispose = ges_track_vbg_src_dispose;
   object_class->finalize = ges_track_vbg_src_finalize;
 
-  bg_class->create_element = ges_track_vbg_src_create_element;
+  track_source_class->create_element = ges_track_vbg_src_create_element;
 }
 
 static void
@@ -104,7 +103,7 @@ ges_track_vbg_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_vbg_src_create_element (GESTrackBackgroundSource * self)
+ges_track_vbg_src_create_element (GESTrackSource * self)
 {
   GstElement *ret;
   gint pattern;
@@ -121,7 +120,7 @@ ges_track_video_background_source_set_pattern (GESTrackVideoBackgroundSource
     * self, GESTrackVideoBgSrcPattern pattern)
 {
   GstElement *element;
-  element = GES_TRACK_BACKGROUND_SOURCE (self)->element;
+  element = GES_TRACK_SOURCE (self)->element;
   self->pattern = pattern;
   if (element)
     g_object_set (element, "pattern", (gint) pattern, NULL);
