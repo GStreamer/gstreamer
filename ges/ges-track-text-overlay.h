@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TRACK_VIDEO_OVERLAY
-#define _GES_TRACK_VIDEO_OVERLAY
+#ifndef _GES_TRACK_TEXT_OVERLAY
+#define _GES_TRACK_TEXT_OVERLAY
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -28,29 +28,29 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_VIDEO_OVERLAY ges_track_video_overlay_get_type()
+#define GES_TYPE_TRACK_TEXT_OVERLAY ges_track_text_overlay_get_type()
 
-#define GES_TRACK_VIDEO_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_VIDEO_OVERLAY, GESTrackVideoOverlay))
+#define GES_TRACK_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlay))
 
-#define GES_TRACK_VIDEO_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_VIDEO_OVERLAY, GESTrackVideoOverlayClass))
+#define GES_TRACK_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayClass))
 
-#define GES_IS_TRACK_VIDEO_OVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_VIDEO_OVERLAY))
+#define GES_IS_TRACK_TEXT_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_TEXT_OVERLAY))
 
-#define GES_IS_TRACK_VIDEO_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_VIDEO_OVERLAY))
+#define GES_IS_TRACK_TEXT_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_TEXT_OVERLAY))
 
-#define GES_TRACK_VIDEO_OVERLAY_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_OVERLAY, GESTrackVideoOverlayClass))
+#define GES_TRACK_TEXT_OVERLAY_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayClass))
 
 /** 
- * GESTrackVideoOverlay:
+ * GESTrackTextOverlay:
  * @parent: parent
  *
  */
-struct _GESTrackVideoOverlay {
+struct _GESTrackTextOverlay {
   GESTrackOperation parent;
 
   /*< private >*/
@@ -62,33 +62,33 @@ struct _GESTrackVideoOverlay {
 };
 
 /**
- * GESTrackVideoOverlayClass:
+ * GESTrackTextOverlayClass:
  * @parent_class: parent class
  */
 
-struct _GESTrackVideoOverlayClass {
+struct _GESTrackTextOverlayClass {
   GESTrackOperationClass parent_class;
 
   /*< private >*/
 };
 
-GType ges_track_video_overlay_get_type (void);
+GType ges_track_text_overlay_get_type (void);
 
-void ges_track_video_overlay_set_text(GESTrackVideoOverlay *self, const
+void ges_track_text_overlay_set_text(GESTrackTextOverlay *self, const
     gchar *text);
 
-void ges_track_video_overlay_set_font_desc(GESTrackVideoOverlay *self,
+void ges_track_text_overlay_set_font_desc(GESTrackTextOverlay *self,
     const gchar *font_desc);
 
-void ges_track_video_overlay_set_halignment(GESTrackVideoOverlay
+void ges_track_text_overlay_set_halignment(GESTrackTextOverlay
     *self, GESTrackTitleSrcHAlign halgn);
 
-void ges_track_video_overlay_set_valignment(GESTrackVideoOverlay
+void ges_track_text_overlay_set_valignment(GESTrackTextOverlay
     *self, GESTrackTitleSrcVAlign valign);
 
-GESTrackVideoOverlay* ges_track_video_overlay_new (void);
+GESTrackTextOverlay* ges_track_text_overlay_new (void);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_VIDEO_OVERLAY */
+#endif /* _GES_TRACK_TEXT_OVERLAY */
 

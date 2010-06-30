@@ -31,7 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
-#include "ges-track-video-overlay.h"
+#include "ges-track-text-overlay.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineOverlay, ges_tl_overlay, GES_TYPE_TIMELINE_OBJECT);
@@ -284,7 +284,7 @@ ges_tl_overlay_set_text (GESTimelineOverlay * self, const gchar * text)
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_overlay_set_text (GES_TRACK_VIDEO_OVERLAY
+      ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->text);
   }
 }
@@ -307,7 +307,7 @@ ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_overlay_set_font_desc (GES_TRACK_VIDEO_OVERLAY
+      ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->font_desc);
   }
 
@@ -329,7 +329,7 @@ ges_tl_overlay_set_halign (GESTimelineOverlay * self,
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_overlay_set_halignment (GES_TRACK_VIDEO_OVERLAY
+      ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->halign);
   }
 
@@ -350,7 +350,7 @@ ges_tl_overlay_set_valign (GESTimelineOverlay * self,
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
-      ges_track_video_overlay_set_valignment (GES_TRACK_VIDEO_OVERLAY
+      ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->valign);
   }
 
@@ -385,9 +385,9 @@ ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
   GST_DEBUG ("Creating a GESTrackOverlay");
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
-    res = (GESTrackObject *) ges_track_video_overlay_new ();
+    res = (GESTrackObject *) ges_track_text_overlay_new ();
     GST_DEBUG ("Setting text property");
-    ges_track_video_overlay_set_text ((GESTrackVideoOverlay *) res, tfs->text);
+    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, tfs->text);
   }
 
   else {

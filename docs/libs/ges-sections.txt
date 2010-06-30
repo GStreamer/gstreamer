@@ -453,21 +453,21 @@ GES_IS_TRACK_TITLE_SOURCE_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-video-overlay</FILE>
+<FILE>ges-track-text-overlay</FILE>
 <TITLE>GESTrackOverlay</TITLE>
-GESTrackVideoOverlay
-GESTrackVideoOverlayClass
-ges_track_video_overlay_get_type
-ges_track_video_overlay_new
-ges_track_video_overlay_set_font_desc
-ges_track_video_overlay_set_halignment
-ges_track_video_overlay_set_text
-ges_track_video_overlay_set_valignment
+GESTrackTextOverlay
+GESTrackTextOverlayClass
+ges_track_text_overlay_get_type
+ges_track_text_overlay_new
+ges_track_text_overlay_set_font_desc
+ges_track_text_overlay_set_halignment
+ges_track_text_overlay_set_text
+ges_track_text_overlay_set_valignment
 <SUBSECTION Standard>
-GES_IS_TRACK_VIDEO_OVERLAY
-GES_IS_TRACK_VIDEO_OVERLAY_CLASS
-GES_TRACK_VIDEO_OVERLAY
-GES_TRACK_VIDEO_OVERLAY_CLASS
-GES_TRACK_VIDEO_OVERLAY_GET_CLASS
-GES_TYPE_TRACK_VIDEO_OVERLAY
+GES_IS_TRACK_TEXT_OVERLAY
+GES_IS_TRACK_TEXT_OVERLAY_CLASS
+GES_TRACK_TEXT_OVERLAY
+GES_TRACK_TEXT_OVERLAY_CLASS
+GES_TRACK_TEXT_OVERLAY_GET_CLASS
+GES_TYPE_TRACK_TEXT_OVERLAY
 </SECTION>

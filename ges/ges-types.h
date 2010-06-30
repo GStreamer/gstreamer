@@ -95,9 +95,9 @@ typedef struct _GESTrackTitleSource GESTrackTitleSource;
 typedef struct _GESTrackTitleSourceClass
   GESTrackTitleSourceClass;
 
-typedef struct _GESTrackVideoOverlay GESTrackVideoOverlay;
-typedef struct _GESTrackVideoOverlayClass
-  GESTrackVideoOverlayClass;
+typedef struct _GESTrackTextOverlay GESTrackTextOverlay;
+typedef struct _GESTrackTextOverlayClass
+  GESTrackTextOverlayClass;
 
 
 #endif /* __GES_TYPES_H__ */

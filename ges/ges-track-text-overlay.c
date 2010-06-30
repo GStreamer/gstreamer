@@ -26,9 +26,9 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
-#include "ges-track-video-overlay.h"
+#include "ges-track-text-overlay.h"
 
-G_DEFINE_TYPE (GESTrackVideoOverlay, ges_track_video_overlay,
+G_DEFINE_TYPE (GESTrackTextOverlay, ges_track_text_overlay,
     GES_TYPE_TRACK_OPERATION);
 
 enum
@@ -36,21 +36,21 @@ enum
   PROP_0,
 };
 
-static void ges_track_video_overlay_dispose (GObject * object);
+static void ges_track_text_overlay_dispose (GObject * object);
 
-static void ges_track_video_overlay_finalize (GObject * object);
+static void ges_track_text_overlay_finalize (GObject * object);
 
-static void ges_track_video_overlay_get_property (GObject * object, guint
+static void ges_track_text_overlay_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_video_overlay_set_property (GObject * object, guint
+static void ges_track_text_overlay_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_video_overlay_create_element (GESTrackOperation
+static GstElement *ges_track_text_overlay_create_element (GESTrackOperation
     * self);
 
 static void
-ges_track_video_overlay_class_init (GESTrackVideoOverlayClass * klass)
+ges_track_text_overlay_class_init (GESTrackTextOverlayClass * klass)
 {
   GObjectClass *object_class;
   GESTrackOperationClass *bg_class;
@@ -58,16 +58,16 @@ ges_track_video_overlay_class_init (GESTrackVideoOverlayClass * klass)
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_OPERATION_CLASS (klass);
 
-  object_class->get_property = ges_track_video_overlay_get_property;
-  object_class->set_property = ges_track_video_overlay_set_property;
-  object_class->dispose = ges_track_video_overlay_dispose;
-  object_class->finalize = ges_track_video_overlay_finalize;
+  object_class->get_property = ges_track_text_overlay_get_property;
+  object_class->set_property = ges_track_text_overlay_set_property;
+  object_class->dispose = ges_track_text_overlay_dispose;
+  object_class->finalize = ges_track_text_overlay_finalize;
 
-  bg_class->create_element = ges_track_video_overlay_create_element;
+  bg_class->create_element = ges_track_text_overlay_create_element;
 }
 
 static void
-ges_track_video_overlay_init (GESTrackVideoOverlay * self)
+ges_track_text_overlay_init (GESTrackTextOverlay * self)
 {
   self->text = NULL;
   self->font_desc = g_strdup (DEFAULT_FONT_DESC);
@@ -77,9 +77,9 @@ ges_track_video_overlay_init (GESTrackVideoOverlay * self)
 }
 
 static void
-ges_track_video_overlay_dispose (GObject * object)
+ges_track_text_overlay_dispose (GObject * object)
 {
-  GESTrackVideoOverlay *self = GES_TRACK_VIDEO_OVERLAY (object);
+  GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
   if (self->text) {
     g_free (self->text);
   }
@@ -93,17 +93,17 @@ ges_track_video_overlay_dispose (GObject * object)
     self->text_el = NULL;
   }
 
-  G_OBJECT_CLASS (ges_track_video_overlay_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_text_overlay_parent_class)->dispose (object);
 }
 
 static void
-ges_track_video_overlay_finalize (GObject * object)
+ges_track_text_overlay_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_video_overlay_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_text_overlay_parent_class)->finalize (object);
 }
 
 static void
-ges_track_video_overlay_get_property (GObject * object,
+ges_track_text_overlay_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -113,7 +113,7 @@ ges_track_video_overlay_get_property (GObject * object,
 }
 
 static void
-ges_track_video_overlay_set_property (GObject * object,
+ges_track_text_overlay_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -123,12 +123,12 @@ ges_track_video_overlay_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_overlay_create_element (GESTrackOperation * object)
+ges_track_text_overlay_create_element (GESTrackOperation * object)
 {
   GstElement *ret, *text;
   GstPad *src_target, *sink_target;
   GstPad *src, *sink;
-  GESTrackVideoOverlay *self = GES_TRACK_VIDEO_OVERLAY (object);
+  GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
 
   text = gst_element_factory_make ("textoverlay", NULL);
   self->text_el = text;
@@ -160,8 +160,8 @@ ges_track_video_overlay_create_element (GESTrackOperation * object)
 }
 
 /**
- * ges_track_video_overlay_set_text:
- * @self: the #GESTrackVideoOverlay* to set text on
+ * ges_track_text_overlay_set_text:
+ * @self: the #GESTrackTextOverlay* to set text on
  * @text: the text to render. an internal copy of this text will be
  * made.
  * 
@@ -170,8 +170,7 @@ ges_track_video_overlay_create_element (GESTrackOperation * object)
  */
 
 void
-ges_track_video_overlay_set_text (GESTrackVideoOverlay * self,
-    const gchar * text)
+ges_track_text_overlay_set_text (GESTrackTextOverlay * self, const gchar * text)
 {
   if (self->text)
     g_free (self->text);
@@ -182,8 +181,8 @@ ges_track_video_overlay_set_text (GESTrackVideoOverlay * self,
 }
 
 /**
- * ges_track_video_overlay_set_font_desc:
- * @self: the #GESTrackVideoOverlay
+ * ges_track_text_overlay_set_font_desc:
+ * @self: the #GESTrackTextOverlay
  * @font_desc: the pango font description
  * 
  * Sets the text this track object will render.
@@ -191,7 +190,7 @@ ges_track_video_overlay_set_text (GESTrackVideoOverlay * self,
  */
 
 void
-ges_track_video_overlay_set_font_desc (GESTrackVideoOverlay * self,
+ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
     const gchar * font_desc)
 {
   if (self->font_desc)
@@ -204,14 +203,14 @@ ges_track_video_overlay_set_font_desc (GESTrackVideoOverlay * self,
 }
 
 /**
- * ges_track_video_overlay_valignment:
- * @self: the #GESTrackVideoOverlay* to set text on
+ * ges_track_text_overlay_valignment:
+ * @self: the #GESTrackTextOverlay* to set text on
  * @valign: #GESTrackTitleSrcVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_video_overlay_set_valignment (GESTrackVideoOverlay * self,
+ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
     GESTrackTitleSrcVAlign valign)
 {
   self->valign = valign;
@@ -221,14 +220,14 @@ ges_track_video_overlay_set_valignment (GESTrackVideoOverlay * self,
 }
 
 /**
- * ges_track_video_overlay_halignment:
- * @self: the #GESTrackVideoOverlay* to set text on
+ * ges_track_text_overlay_halignment:
+ * @self: the #GESTrackTextOverlay* to set text on
  * @halign: #GESTrackTitleSrcHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
-ges_track_video_overlay_set_halignment (GESTrackVideoOverlay * self,
+ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
     GESTrackTitleSrcHAlign halign)
 {
   self->halign = halign;
@@ -237,8 +236,8 @@ ges_track_video_overlay_set_halignment (GESTrackVideoOverlay * self,
     g_object_set (self->text_el, "halignment", halign, NULL);
 }
 
-GESTrackVideoOverlay *
-ges_track_video_overlay_new (void)
+GESTrackTextOverlay *
+ges_track_text_overlay_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_OVERLAY, NULL);
+  return g_object_new (GES_TYPE_TRACK_TEXT_OVERLAY, NULL);
 }
