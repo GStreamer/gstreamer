@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TRACK_AUDIO_BACKGROUND_SOURCE
-#define _GES_TRACK_AUDIO_BACKGROUND_SOURCE
+#ifndef _GES_TRACK_AUDIO_TEST_SOURCE
+#define _GES_TRACK_AUDIO_TEST_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
@@ -27,52 +27,52 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE ges_track_abg_src_get_type()
+#define GES_TYPE_TRACK_AUDIO_TEST_SOURCE ges_track_audio_test_source_get_type()
 
-#define GES_TRACK_AUDIO_BACKGROUND_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE, GESTrackAudioBackgroundSource))
+#define GES_TRACK_AUDIO_TEST_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSource))
 
-#define GES_TRACK_AUDIO_BACKGROUND_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE, GESTrackAudioBackgroundSourceClass))
+#define GES_TRACK_AUDIO_TEST_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSourceClass))
 
-#define GES_IS_TRACK_AUDIO_BACKGROUND_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE))
+#define GES_IS_TRACK_AUDIO_TEST_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TRACK_AUDIO_TEST_SOURCE))
 
-#define GES_IS_TRACK_AUDIO_BACKGROUND_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE))
+#define GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_AUDIO_TEST_SOURCE))
 
-#define GES_TRACK_AUDIO_BACKGROUND_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE, GESTrackAudioBackgroundSourceClass))
+#define GES_TRACK_AUDIO_TEST_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSourceClass))
 
 /** 
- * GESTrackAudioBackgroundSource:
+ * GESTrackAudioTestSource:
  * @parent: parent
  *
  */
 
-struct _GESTrackAudioBackgroundSource {
+struct _GESTrackAudioTestSource {
   GESTrackSource parent;
 
   /*< public >*/
 };
 
 /**
- * GESTrackAudioBackgroundSourceClass:
+ * GESTrackAudioTestSourceClass:
  * @parent_class: parent class
  *
  */
 
-struct _GESTrackAudioBackgroundSourceClass {
+struct _GESTrackAudioTestSourceClass {
   GESTrackSourceClass parent_class;
 
   /*< public >*/
 };
 
-GType ges_track_abg_src_get_type (void);
+GType ges_track_audio_test_source_get_type (void);
 
-GESTrackAudioBackgroundSource* ges_track_audio_background_source_new (void);
+GESTrackAudioTestSource* ges_track_audio_test_source_new (void);
 
 G_END_DECLS
 
-#endif /* _GES_TRACK_AUDIO_BACKGROUND_SOURCE */
+#endif /* _GES_TRACK_AUDIO_TEST_SOURCE */
 

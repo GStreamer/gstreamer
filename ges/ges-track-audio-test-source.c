@@ -19,15 +19,15 @@
  */
 
 /**
- * SECTION:ges-track-audio-background-source
+ * SECTION:ges-track-audio-test-source
  * @short_description: Base Class for single-media sources
  */
 
 #include "ges-internal.h"
 #include "ges-track-object.h"
-#include "ges-track-audio-background-source.h"
+#include "ges-track-audio-test-source.h"
 
-G_DEFINE_TYPE (GESTrackAudioBackgroundSource, ges_track_abg_src,
+G_DEFINE_TYPE (GESTrackAudioTestSource, ges_track_audio_test_source,
     GES_TYPE_TRACK_SOURCE);
 
 enum
@@ -35,20 +35,21 @@ enum
   PROP_0,
 };
 
-static void ges_track_abg_src_dispose (GObject * object);
+static void ges_track_audio_test_source_dispose (GObject * object);
 
-static void ges_track_abg_src_finalize (GObject * object);
+static void ges_track_audio_test_source_finalize (GObject * object);
 
-static void ges_track_abg_src_get_property (GObject * object, guint
+static void ges_track_audio_test_source_get_property (GObject * object, guint
     property_id, GValue * value, GParamSpec * pspec);
 
-static void ges_track_abg_src_set_property (GObject * object, guint
+static void ges_track_audio_test_source_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_abg_src_create_element (GESTrackSource * self);
+static GstElement *ges_track_audio_test_source_create_element (GESTrackSource *
+    self);
 
 static void
-ges_track_abg_src_class_init (GESTrackAudioBackgroundSourceClass * klass)
+ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
 {
   GObjectClass *object_class;
   GESTrackSourceClass *bg_class;
@@ -56,33 +57,33 @@ ges_track_abg_src_class_init (GESTrackAudioBackgroundSourceClass * klass)
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
-  object_class->get_property = ges_track_abg_src_get_property;
-  object_class->set_property = ges_track_abg_src_set_property;
-  object_class->dispose = ges_track_abg_src_dispose;
-  object_class->finalize = ges_track_abg_src_finalize;
+  object_class->get_property = ges_track_audio_test_source_get_property;
+  object_class->set_property = ges_track_audio_test_source_set_property;
+  object_class->dispose = ges_track_audio_test_source_dispose;
+  object_class->finalize = ges_track_audio_test_source_finalize;
 
-  bg_class->create_element = ges_track_abg_src_create_element;
+  bg_class->create_element = ges_track_audio_test_source_create_element;
 }
 
 static void
-ges_track_abg_src_init (GESTrackAudioBackgroundSource * self)
+ges_track_audio_test_source_init (GESTrackAudioTestSource * self)
 {
 }
 
 static void
-ges_track_abg_src_dispose (GObject * object)
+ges_track_audio_test_source_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_abg_src_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_track_audio_test_source_parent_class)->dispose (object);
 }
 
 static void
-ges_track_abg_src_finalize (GObject * object)
+ges_track_audio_test_source_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_track_abg_src_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_track_audio_test_source_parent_class)->finalize (object);
 }
 
 static void
-ges_track_abg_src_get_property (GObject * object,
+ges_track_audio_test_source_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -92,7 +93,7 @@ ges_track_abg_src_get_property (GObject * object,
 }
 
 static void
-ges_track_abg_src_set_property (GObject * object,
+ges_track_audio_test_source_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec)
 {
   switch (property_id) {
@@ -102,7 +103,7 @@ ges_track_abg_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_abg_src_create_element (GESTrackSource * self)
+ges_track_audio_test_source_create_element (GESTrackSource * self)
 {
   GstElement *ret;
   ret = gst_element_factory_make ("audiotestsrc", NULL);
@@ -110,8 +111,8 @@ ges_track_abg_src_create_element (GESTrackSource * self)
   return ret;
 }
 
-GESTrackAudioBackgroundSource *
-ges_track_audio_background_source_new (void)
+GESTrackAudioTestSource *
+ges_track_audio_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_AUDIO_TEST_SOURCE, NULL);
 }

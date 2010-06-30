@@ -31,7 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-video-test-source.h"
-#include "ges-track-audio-background-source.h"
+#include "ges-track-audio-test-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineBackgroundSource, ges_tl_bg_src,
@@ -233,7 +233,7 @@ ges_tl_bg_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackObject *) ges_track_audio_background_source_new ();
+    res = (GESTrackObject *) ges_track_audio_test_source_new ();
     if (tfs->mute)
       ges_track_object_set_active (res, FALSE);
   }

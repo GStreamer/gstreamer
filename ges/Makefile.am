@@ -30,7 +30,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-audio-transition.c			\
 	ges-track-video-transition.c			\
 	ges-track-video-test-source.c			\
-	ges-track-audio-background-source.c			\
+	ges-track-audio-test-source.c			\
 	ges-track-title-source.c			\
 	ges-track-text-overlay.c			\
 	ges-utils.c
@@ -61,7 +61,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-track-audio-transition.h			\
 	ges-track-video-transition.h			\
 	ges-track-video-test-source.h			\
-	ges-track-audio-background-source.h			\
+	ges-track-audio-test-source.h			\
 	ges-track-title-source.h			\
 	ges-track-text-overlay.h			\
 	ges-utils.h

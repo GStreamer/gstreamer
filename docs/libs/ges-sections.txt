@@ -398,7 +398,7 @@ GESTrackVideoTestSource
 GESTrackVideoTestSourceClass
 GESTrackVideoBgSrcPattern
 ges_track_video_test_source_new
-ges_track_vbg_src_get_type
+ges_track_video_test_source_get_type
 <SUBSECTION Standard>
 GES_IS_TRACK_VIDEO_TEST_SOURCE
 GES_IS_TRACK_VIDEO_TEST_SOURCE_CLASS
@@ -409,22 +409,22 @@ GES_TYPE_TRACK_VIDEO_TEST_SOURCE
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-audio-background-source</FILE>
-<TITLE>GESTrackAudioBackgroundSource</TITLE>
-GESTrackAudioBackgroundSource
-GESTrackAudioBackgroundSourceClass
-ges_track_audio_background_source_new
-ges_track_abg_src_get_type
+<FILE>ges-track-audio-test-source</FILE>
+<TITLE>GESTrackAudioTestSource</TITLE>
+GESTrackAudioTestSource
+GESTrackAudioTestSourceClass
+ges_track_audio_test_source_new
+ges_track_audio_test_source_get_type
 DEFAULT_FONT_DESC
 DEFAULT_HALIGNMENT
 DEFAULT_VALIGNMENT
 <SUBSECTION Standard>
-GES_TRACK_AUDIO_BACKGROUND_SOURCE
-GES_TRACK_AUDIO_BACKGROUND_SOURCE_CLASS
-GES_TRACK_AUDIO_BACKGROUND_SOURCE_GET_CLASS
-GES_TYPE_TRACK_AUDIO_BACKGROUND_SOURCE
-GES_IS_TRACK_AUDIO_BACKGROUND_SOURCE
-GES_IS_TRACK_AUDIO_BACKGROUND_SOURCE_CLASS
+GES_TRACK_AUDIO_TEST_SOURCE
+GES_TRACK_AUDIO_TEST_SOURCE_CLASS
+GES_TRACK_AUDIO_TEST_SOURCE_GET_CLASS
+GES_TYPE_TRACK_AUDIO_TEST_SOURCE
+GES_IS_TRACK_AUDIO_TEST_SOURCE
+GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS
 </SECTION>
 
 <SECTION>
