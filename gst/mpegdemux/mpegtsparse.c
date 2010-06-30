@@ -267,9 +267,6 @@ mpegts_parse_reset (MpegTSParse * parse)
   /* PAT */
   g_hash_table_insert (parse->psi_pids,
       GINT_TO_POINTER (0), GINT_TO_POINTER (1));
-  if (parse->pat != NULL)
-    gst_structure_free (parse->pat);
-  parse->pat = NULL;
   /* pmt pids will be added and removed dynamically */
 
 }
