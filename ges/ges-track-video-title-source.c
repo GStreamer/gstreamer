@@ -29,7 +29,7 @@
 #include "ges-track-video-background-source.h"
 
 G_DEFINE_TYPE (GESTrackVideoTitleSource, ges_track_video_title_src,
-    GES_TYPE_TRACK_TITLE_SOURCE);
+    GES_TYPE_TRACK_SOURCE);
 
 enum
 {
@@ -46,17 +46,17 @@ static void ges_track_video_title_src_get_property (GObject * object, guint
 static void ges_track_video_title_src_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_video_title_src_create_element (GESTrackTitleSource
+static GstElement *ges_track_video_title_src_create_element (GESTrackSource
     * self);
 
 static void
 ges_track_video_title_src_class_init (GESTrackVideoTitleSourceClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackTitleSourceClass *bg_class;
+  GESTrackSourceClass *bg_class;
 
   object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_TITLE_SOURCE_CLASS (klass);
+  bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_video_title_src_get_property;
   object_class->set_property = ges_track_video_title_src_set_property;
@@ -129,7 +129,7 @@ ges_track_video_title_src_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_title_src_create_element (GESTrackTitleSource * object)
+ges_track_video_title_src_create_element (GESTrackSource * object)
 {
   GESTrackVideoTitleSource *self = GES_TRACK_VIDEO_TITLE_SOURCE (object);
   GstElement *topbin, *background, *text;

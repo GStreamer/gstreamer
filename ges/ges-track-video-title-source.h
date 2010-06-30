@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-track-title-source.h>
+#include <ges/ges-track-source.h>
 
 G_BEGIN_DECLS
 
@@ -82,7 +82,7 @@ typedef enum {
  *
  */
 struct _GESTrackVideoTitleSource {
-  GESTrackTitleSource parent;
+  GESTrackSource parent;
 
   /*< private >*/
   gchar         *text;
@@ -99,7 +99,7 @@ struct _GESTrackVideoTitleSource {
  */
 
 struct _GESTrackVideoTitleSourceClass {
-  GESTrackTitleSourceClass parent_class;
+  GESTrackSourceClass parent_class;
 
   /*< private >*/
 };

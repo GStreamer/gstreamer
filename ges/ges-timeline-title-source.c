@@ -398,7 +398,7 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
   }
 
   else {
-    res = GES_TRACK_OBJECT (ges_track_title_source_new ());
+    res = NULL;
   }
 
   return res;
