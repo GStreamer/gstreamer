@@ -59,10 +59,8 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-track-transition.xml"/>
     <xi:include href="xml/ges-track-audio-background-source.xml"/>
     <xi:include href="xml/ges-track-audio-transition.xml"/>
-    <xi:include href="xml/ges-track-background-source.xml"/>
     <xi:include href="xml/ges-track-video-background-source.xml"/>
     <xi:include href="xml/ges-track-video-overlay.xml"/>
-    <xi:include href="xml/ges-track-video-title-source.xml"/>
     <xi:include href="xml/ges-track-video-transition.xml"/>
   </chapter>
 
