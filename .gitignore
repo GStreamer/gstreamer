@@ -39,3 +39,7 @@ tests/examples/shapewipe/shapewipe-example
 /m4
 Makefile.in
 Makefile
+
+tmp-orc.c
+gst*orc.h
+/tests/check/orc
