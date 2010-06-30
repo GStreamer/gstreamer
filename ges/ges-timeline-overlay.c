@@ -391,7 +391,7 @@ ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
   }
 
   else {
-    res = GES_TRACK_OBJECT (ges_track_overlay_new ());
+    res = NULL;
   }
 
   return res;

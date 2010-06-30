@@ -29,7 +29,7 @@
 #include "ges-track-video-overlay.h"
 
 G_DEFINE_TYPE (GESTrackVideoOverlay, ges_track_video_overlay,
-    GES_TYPE_TRACK_OVERLAY);
+    GES_TYPE_TRACK_OPERATION);
 
 enum
 {
@@ -46,17 +46,17 @@ static void ges_track_video_overlay_get_property (GObject * object, guint
 static void ges_track_video_overlay_set_property (GObject * object, guint
     property_id, const GValue * value, GParamSpec * pspec);
 
-static GstElement *ges_track_video_overlay_create_element (GESTrackOverlay
+static GstElement *ges_track_video_overlay_create_element (GESTrackOperation
     * self);
 
 static void
 ges_track_video_overlay_class_init (GESTrackVideoOverlayClass * klass)
 {
   GObjectClass *object_class;
-  GESTrackOverlayClass *bg_class;
+  GESTrackOperationClass *bg_class;
 
   object_class = G_OBJECT_CLASS (klass);
-  bg_class = GES_TRACK_OVERLAY_CLASS (klass);
+  bg_class = GES_TRACK_OPERATION_CLASS (klass);
 
   object_class->get_property = ges_track_video_overlay_get_property;
   object_class->set_property = ges_track_video_overlay_set_property;
@@ -123,7 +123,7 @@ ges_track_video_overlay_set_property (GObject * object,
 }
 
 static GstElement *
-ges_track_video_overlay_create_element (GESTrackOverlay * object)
+ges_track_video_overlay_create_element (GESTrackOperation * object)
 {
   GstElement *ret, *text;
   GstPad *src_target, *sink_target;

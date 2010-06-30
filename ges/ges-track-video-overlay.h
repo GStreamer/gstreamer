@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-title-source.h>
-#include <ges/ges-track-overlay.h>
+#include <ges/ges-track-operation.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  *
  */
 struct _GESTrackVideoOverlay {
-  GESTrackOverlay parent;
+  GESTrackOperation parent;
 
   /*< private >*/
   gchar         *text;
@@ -67,7 +67,7 @@ struct _GESTrackVideoOverlay {
  */
 
 struct _GESTrackVideoOverlayClass {
-  GESTrackOverlayClass parent_class;
+  GESTrackOperationClass parent_class;
 
   /*< private >*/
 };
