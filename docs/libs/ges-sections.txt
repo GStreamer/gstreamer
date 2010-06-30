@@ -462,29 +462,6 @@ GES_TYPE_TRACK_VIDEO_TITLE_SOURCE
 </SECTION>
 
 <SECTION>
-<FILE>ges-track-audio-title-source</FILE>
-<TITLE>GESTrackAudioTitleSource</TITLE>
-GESTrackAudioTitleSource
-GESTrackAudioTitleSourceClass
-ges_track_audio_title_source_new
-ges_track_audio_title_src_get_type
-DEFAULT_HALIGNMENT
-DEFAULT_VALIGNMENT
-GESTrackVideoTitleSrcHAlign
-GESTrackVideoTitleSrcVAlign
-ges_track_video_title_source_set_halignment
-ges_track_video_title_source_set_valignment
-DEFAULT_FONT_DESC
-<SUBSECTION Standard>
-GES_IS_TRACK_AUDIO_TITLE_SOURCE
-GES_IS_TRACK_AUDIO_TITLE_SOURCE_CLASS
-GES_TRACK_AUDIO_TITLE_SOURCE
-GES_TRACK_AUDIO_TITLE_SOURCE_CLASS
-GES_TRACK_AUDIO_TITLE_SOURCE_GET_CLASS
-GES_TYPE_TRACK_AUDIO_TITLE_SOURCE
-</SECTION>
-
-<SECTION>
 <FILE>ges-track-overlay</FILE>
 <TITLE>GESTrackOverlay</TITLE>
 GESTrackOverlay
