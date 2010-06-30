@@ -1170,6 +1170,7 @@ do_exif_tag_serialization_deserialization (const gchar * gsttag, GValue * value)
 GST_START_TEST (test_exif_tags_serialization_deserialization)
 {
   GValue value = { 0 };
+  GstDateTime *datetime = NULL;
 
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
@@ -1242,6 +1243,13 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, 100 / 3.6);
   do_exif_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, GST_TYPE_DATE_TIME);
+  datetime = gst_date_time_new_local_time (2010, 6, 22, 12, 5, 10, 0);
+  g_value_set_boxed (&value, datetime);
+  gst_date_time_unref (datetime);
+  do_exif_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
   g_value_unset (&value);
 }
 

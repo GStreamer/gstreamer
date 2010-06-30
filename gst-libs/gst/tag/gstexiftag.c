@@ -38,6 +38,7 @@
 #include <gst/base/gstbytewriter.h>
 #include "gsttageditingprivate.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -163,6 +164,7 @@ static gint deserialize_speed (GstExifReader * exif_reader,
 /* FIXME copyright tag has a weird "artist\0editor\0" format that is
  * not yet handled */
 
+#define EXIF_IFD_TAG 0x8769
 #define EXIF_GPS_IFD_TAG 0x8825
 
 /* useful macros for speed tag */
@@ -180,7 +182,13 @@ static const GstExifTagMatch tag_map_ifd0[] = {
       deserialize_orientation},
   {GST_TAG_ARTIST, 0x13B, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {NULL, EXIF_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
   {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
+  {NULL, 0, 0, 0, NULL, NULL}
+};
+
+static const GstExifTagMatch tag_map_exif[] = {
+  {GST_TAG_DATE_TIME, 0x9003, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
@@ -279,6 +287,9 @@ gst_tag_list_has_ifd_tags (const GstTagList * taglist,
     if (tag_map[i].gst_tag == NULL) {
       if (tag_map[i].exif_tag == EXIF_GPS_IFD_TAG &&
           gst_tag_list_has_ifd_tags (taglist, tag_map_gps))
+        return TRUE;
+      if (tag_map[i].exif_tag == EXIF_IFD_TAG &&
+          gst_tag_list_has_ifd_tags (taglist, tag_map_exif))
         return TRUE;
       continue;
     }
@@ -439,8 +450,24 @@ write_exif_ascii_tag_from_taglist (GstExifWriter * writer,
       str = (gchar *) g_value_get_string (value);
       break;
     default:
-      GST_WARNING ("Conversion from %s to ascii string not supported",
-          G_VALUE_TYPE_NAME (value));
+      if (G_VALUE_TYPE (value) == GST_TYPE_DATE_TIME) {
+        GstDateTime *dt = (GstDateTime *) g_value_get_boxed (value);
+
+        if (dt == NULL) {
+          GST_WARNING ("NULL datetime received");
+          break;
+        }
+
+        str = g_strdup_printf ("%04d:%02d:%02d %02d:%02d:%02d",
+            gst_date_time_get_year (dt), gst_date_time_get_month (dt),
+            gst_date_time_get_day (dt), gst_date_time_get_hour (dt),
+            gst_date_time_get_minute (dt), gst_date_time_get_second (dt));
+
+        cleanup = TRUE;
+      } else {
+        GST_WARNING ("Conversion from %s to ascii string not supported",
+            G_VALUE_TYPE_NAME (value));
+      }
       break;
   }
 
@@ -542,7 +569,7 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
     }
 
     /* adjust the offset if needed */
-    if (byte_size > 4 || tag_id == EXIF_GPS_IFD_TAG) {
+    if (byte_size > 4 || tag_id == EXIF_GPS_IFD_TAG || tag_id == EXIF_IFD_TAG) {
       if (writer->byte_order == G_LITTLE_ENDIAN) {
         if (gst_byte_reader_peek_uint32_le (reader, &cur_offset)) {
           gst_byte_writer_put_uint32_le (&writer->tagwriter,
@@ -565,9 +592,10 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
 }
 
 static void
-parse_exif_ascii_tag (GstExifReader * reader, const gchar * gst_tag,
+parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     guint32 count, guint32 offset, const guint8 * offset_as_data)
 {
+  GType tagtype;
   gchar *str;
   guint32 real_offset;
 
@@ -581,7 +609,7 @@ parse_exif_ascii_tag (GstExifReader * reader, const gchar * gst_tag,
     real_offset = offset - reader->base_offset;
     if (real_offset >= GST_BUFFER_SIZE (reader->buffer)) {
       GST_WARNING ("Invalid offset %u for buffer of size %u, not adding tag %s",
-          real_offset, GST_BUFFER_SIZE (reader->buffer), gst_tag);
+          real_offset, GST_BUFFER_SIZE (reader->buffer), tag->gst_tag);
       return;
     }
 
@@ -591,7 +619,26 @@ parse_exif_ascii_tag (GstExifReader * reader, const gchar * gst_tag,
   } else {
     str = g_strndup ((gchar *) offset_as_data, count);
   }
-  gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, gst_tag, str, NULL);
+
+  tagtype = gst_tag_get_type (tag->gst_tag);
+  if (tagtype == GST_TYPE_DATE_TIME) {
+    gint year = 0, month = 1, day = 1, hour = 0, minute = 0, second = 0;
+
+    if (sscanf (str, "%04d:%02d:%02d %02d:%02d:%02d", &year, &month, &day,
+            &hour, &minute, &second) > 0) {
+      gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+          gst_date_time_new_local_time (year, month, day, hour, minute, second,
+              0), NULL);
+    } else {
+      GST_WARNING ("Failed to parse %s into a datetime tag", str);
+    }
+  } else if (tagtype == G_TYPE_STRING) {
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag, str,
+        NULL);
+  } else {
+    GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
+        tag->gst_tag);
+  }
   g_free (str);
 }
 
@@ -686,6 +733,8 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
 
       if (tag_map[i].exif_tag == EXIF_GPS_IFD_TAG) {
         inner_tag_map = tag_map_gps;
+      } else if (tag_map[i].exif_tag == EXIF_IFD_TAG) {
+        inner_tag_map = tag_map_exif;
       }
 
       if (inner_tag_map) {
@@ -821,6 +870,12 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
 
       continue;
     }
+    if (tagdata.tag == EXIF_IFD_TAG) {
+      i += parse_exif_ifd (exif_reader,
+          tagdata.offset - exif_reader->base_offset, tag_map_exif);
+
+      continue;
+    }
 
     /* tags that need specialized deserialization */
     if (tag_map[map_index].deserialize) {
@@ -831,7 +886,7 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
 
     switch (tagdata.tag_type) {
       case EXIF_TYPE_ASCII:
-        parse_exif_ascii_tag (exif_reader, tag_map[map_index].gst_tag,
+        parse_exif_ascii_tag (exif_reader, &tag_map[map_index],
             tagdata.count, tagdata.offset, tagdata.offset_as_data);
         break;
       case EXIF_TYPE_RATIONAL:
