@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 #include <ges/ges-types.h>
+#include <ges/ges-enums.h>
 
 #include <ges/ges-timeline.h>
 #include <ges/ges-timeline-layer.h>
