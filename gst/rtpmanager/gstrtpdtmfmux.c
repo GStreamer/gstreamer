@@ -66,7 +66,8 @@ static GstPad *gst_rtp_dtmf_mux_request_new_pad (GstElement * element,
 static GstStateChangeReturn gst_rtp_dtmf_mux_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_rtp_dtmf_mux_accept_buffer_locked (GstRTPMux * rtp_mux,
+    GstRTPMuxPadPrivate * padpriv, GstBuffer * buffer);
 
 GST_BOILERPLATE (GstRTPDTMFMux, gst_rtp_dtmf_mux, GstRTPMux, GST_TYPE_RTP_MUX);
 
@@ -104,24 +105,19 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_request_new_pad);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_change_state);
-  gstrtpmux_class->chain_func = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_chain);
+  gstrtpmux_class->accept_buffer_locked = gst_rtp_dtmf_mux_accept_buffer_locked;
 }
 
-static GstFlowReturn
-gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
+static gboolean
+gst_rtp_dtmf_mux_accept_buffer_locked (GstRTPMux * rtp_mux,
+    GstRTPMuxPadPrivate * padpriv, GstBuffer * buffer)
 {
-  GstRTPDTMFMux *mux;
-  GstFlowReturn ret = GST_FLOW_ERROR;
-  GstRTPMuxPadPrivate *padpriv = NULL;
+  GstRTPDTMFMux *mux = GST_RTP_DTMF_MUX (rtp_mux);
   GstClockTime running_ts;
-
-  mux = GST_RTP_DTMF_MUX (gst_pad_get_parent (pad));
 
   running_ts = GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_OBJECT_LOCK (mux);
   if (GST_CLOCK_TIME_IS_VALID (running_ts)) {
-    padpriv = gst_pad_get_element_private (pad);
     if (padpriv && padpriv->segment.format == GST_FORMAT_TIME)
       running_ts = gst_segment_to_running_time (&padpriv->segment,
           GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer));
@@ -134,12 +130,12 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
               mux->last_priority_end);
         else
           mux->last_priority_end = running_ts + GST_BUFFER_DURATION (buffer);
-        GST_LOG_OBJECT (mux, "Got buffer %p on priority pad %s,"
+        GST_LOG_OBJECT (mux, "Got buffer %p on priority pad, "
             " blocking regular pads until %" GST_TIME_FORMAT, buffer,
-            GST_PAD_NAME (pad), GST_TIME_ARGS (mux->last_priority_end));
+            GST_TIME_ARGS (mux->last_priority_end));
       } else {
-        GST_WARNING_OBJECT (mux, "Buffer %p on pad %s has an invalid duration,"
-            " not blocking other pad", buffer, GST_PAD_NAME (pad));
+        GST_WARNING_OBJECT (mux, "Buffer %p has an invalid duration,"
+            " not blocking other pad", buffer);
       }
     } else {
       if (GST_CLOCK_TIME_IS_VALID (mux->last_priority_end) &&
@@ -147,30 +143,15 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (mux, "Dropping buffer %p because running time"
             " %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT, buffer,
             GST_TIME_ARGS (running_ts), GST_TIME_ARGS (mux->last_priority_end));
-        goto drop_buffer;
+        return FALSE;
       }
     }
   } else {
-    GST_LOG_OBJECT (pad, "Buffer %p has an invalid timestamp,"
+    GST_LOG_OBJECT (mux, "Buffer %p has an invalid timestamp,"
         " letting through", buffer);
   }
-  GST_OBJECT_UNLOCK (mux);
 
-  if (parent_class->chain_func)
-    ret = parent_class->chain_func (pad, buffer);
-  else
-    gst_buffer_unref (buffer);
-
-out:
-
-  gst_object_unref (mux);
-  return ret;
-
-drop_buffer:
-  gst_buffer_unref (buffer);
-  ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (mux);
-  goto out;
+  return TRUE;
 }
 
 

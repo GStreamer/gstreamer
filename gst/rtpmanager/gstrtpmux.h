@@ -38,6 +38,20 @@ G_BEGIN_DECLS
 typedef struct _GstRTPMux GstRTPMux;
 typedef struct _GstRTPMuxClass GstRTPMuxClass;
 
+
+typedef struct
+{
+  gboolean have_clock_base;
+  guint clock_base;
+
+  GstCaps *out_caps;
+
+  GstSegment segment;
+
+  gboolean priority;
+} GstRTPMuxPadPrivate;
+
+
 /**
  * GstRTPMux:
  *
@@ -66,21 +80,9 @@ struct _GstRTPMuxClass
 {
   GstElementClass parent_class;
 
-  GstFlowReturn (*chain_func) (GstPad * pad, GstBuffer * buffer);
+  gboolean (*accept_buffer_locked) (GstRTPMux *rtp_mux,
+      GstRTPMuxPadPrivate * padpriv, GstBuffer * buffer);
 };
-
-
-typedef struct
-{
-  gboolean have_clock_base;
-  guint clock_base;
-
-  GstCaps *out_caps;
-
-  GstSegment segment;
-
-  gboolean priority;
-} GstRTPMuxPadPrivate;
 
 
 GType gst_rtp_mux_get_type (void);
