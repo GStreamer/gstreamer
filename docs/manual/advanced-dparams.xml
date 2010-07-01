@@ -73,7 +73,7 @@
       has timestamped control-values assigned one can change the GObject
       property through <function>g_object_set()</function>.
       This is highly useful when binding the GObject properties to GUI widgets.
-      When the user adjusts the value with the widget, one can set the GOBject
+      When the user adjusts the value with the widget, one can set the GObject
       property and this remains active until the next timestamped value overrides.
       This also works with smoothed parameters.  
     </para>

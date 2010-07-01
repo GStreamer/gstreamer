@@ -148,7 +148,7 @@
     </note>
     <para>
       This interface is currently implemented by many elements, including
-      the ALSA, OSS, XVImageSink, Video4linux and Video4linux2 elements.
+      the ALSA, OSS, XVideo, Video4linux and Video4linux2 elements.
     </para>
   </sect1>
 

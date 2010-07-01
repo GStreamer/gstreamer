@@ -18,7 +18,7 @@
     <title>Querying: getting the position or length of a stream</title>
 
     <para>
-      Querying is defined as requesting a specific stream-property related
+      Querying is defined as requesting a specific stream property related
       to progress tracking. This includes getting the length of a stream (if
       available) or getting the current position. Those stream properties
       can be retrieved in various formats such as time, audio samples, video

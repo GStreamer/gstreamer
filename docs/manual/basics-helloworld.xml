@@ -225,11 +225,20 @@ main (int   argc,
       $(pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;)
       helloworld.c -o helloworld</command>. &GStreamer; makes use of
       <command>pkg-config</command> to get compiler and linker flags
-      needed to compile this application. If you're running a
-      non-standard installation, make sure the
-      <classname>PKG_CONFIG_PATH</classname> environment variable is
-      set to the correct location (<filename>$libdir/pkgconfig</filename>).
-      application against the uninstalled location.
+      needed to compile this application.
+    </para>
+    <para>
+      If you're running a non-standard installation (ie. you've installed
+      GStreamer from source yourself instead of using pre-built packages),
+      make sure the <classname>PKG_CONFIG_PATH</classname> environment variable
+      is set to the correct location (<filename>$libdir/pkgconfig</filename>).
+    </para>
+    <para>
+      In the unlikely case that you are using an uninstalled GStreamer
+      setup (ie. gst-uninstalled), you will need to use libtool to build the
+      hello world program, like this: <command>libtool --mode=link gcc -Wall
+      $(pkg-config --cflags --libs gstreamer-&GST_MAJORMINOR;)
+      helloworld.c -o helloworld</command>.
     </para>
     <para>
       You can run this example application with <command>./helloworld

@@ -105,11 +105,11 @@
        </listitem>
        <listitem>
          <para>
-          <option>--gst-debug-no-color</option> will disable color debugging
+          <option>--gst-debug-no-color</option> will disable color debugging.
           You can also set the GST_DEBUG_NO_COLOR environment variable to 1
           if you want to disable colored debug output permanently. Note that
           if you are disabling color purely to avoid messing up your pager
-          output, trying using <command>less -R</command>.
+          output, try using <command>less -R</command>.
          </para>
        </listitem>
        <listitem>

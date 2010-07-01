@@ -85,7 +85,7 @@
       concept of typefinding for this. Typefinding is a normal part of a
       pipeline, it will read data for as long as the type of a stream is
       unknown. During this period, it will provide data to all plugins
-      that implement a typefinder. when one of the typefinders recognizes
+      that implement a typefinder. When one of the typefinders recognizes
       the stream, the typefind element will emit a signal and act as a
       passthrough module from that point on. If no type was found, it will
       emit an error and further media processing will stop.
