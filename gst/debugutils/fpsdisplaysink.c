@@ -150,7 +150,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
           "Signal fps measurements",
           "If the fps-measurements signal should be emited.",
           DEFAULT_SIGNAL_FPS_MEASUREMENTS,
-          G_PARAM_STATIC_STRINGS | G_PARAM_READABLE));
+          G_PARAM_STATIC_STRINGS | G_PARAM_READWRITE));
 
   /**
    * GstFPSDisplaySink::fps-measurements:
@@ -320,10 +320,14 @@ display_current_fps (gpointer data)
   gint64 current_ts;
 
   /* if query failed try again on next timer tick */
-  if (!gst_element_query (self->video_sink, self->query))
+  if (!gst_element_query (self->video_sink, self->query)) {
+    GST_DEBUG_OBJECT (self, "Failed to query position, skipping measurement");
     return TRUE;
+  }
 
   gst_query_parse_position (self->query, NULL, &current_ts);
+  GST_LOG_OBJECT (self, "Received position %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_ts));
 
   if (GST_CLOCK_TIME_IS_VALID (self->last_ts)) {
     gdouble rr, dr, average_fps;
@@ -347,6 +351,8 @@ display_current_fps (gpointer data)
     }
 
     if (self->signal_measurements) {
+      GST_LOG_OBJECT (self, "Signaling measurements: fps:%f droprate:%f "
+          "avg-fps:%f", rr, dr, average_fps);
       g_signal_emit (G_OBJECT (self),
           fpsdisplaysink_signals[SIGNAL_FPS_MEASUREMENTS], 0, rr, dr,
           average_fps);
@@ -421,6 +427,8 @@ no_text_overlay:
   gst_object_unref (target_pad);
 
   /* Set a timeout for the fps display */
+  GST_DEBUG_OBJECT (self, "setting a timeout with a %dms interval",
+      self->fps_update_interval);
   self->timeout_id =
       g_timeout_add (self->fps_update_interval, display_current_fps,
       (gpointer) self);
