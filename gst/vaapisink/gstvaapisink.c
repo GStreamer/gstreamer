@@ -631,7 +631,8 @@ gst_vaapisink_show_frame_glx(
     if (target != GL_TEXTURE_2D || !texture)
         return FALSE;
 
-    render_background(sink);
+    if (sink->use_reflection)
+        render_background(sink);
 
     glEnable(target);
     glBindTexture(target, texture);
