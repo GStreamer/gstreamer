@@ -54,6 +54,7 @@ public:
   virtual void MoveWindow() = 0;
   virtual void DestroyWindow() = 0;
   virtual void DisplayModeChanged() = 0;
+  virtual void SetAspectRatioMode() = 0;
 };
 
 struct _GstDshowVideoSink

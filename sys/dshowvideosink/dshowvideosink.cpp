@@ -256,6 +256,8 @@ gst_dshowvideosink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_KEEP_ASPECT_RATIO:
       sink->keep_aspect_ratio = g_value_get_boolean (value);
+      if (sink->renderersupport)
+        sink->renderersupport->SetAspectRatioMode();
       break;
     case PROP_FULL_SCREEN:
       sink->full_screen = g_value_get_boolean (value);
@@ -979,13 +981,17 @@ public:
       return FALSE;
     }
 
+    SetAspectRatioMode();
+    return TRUE;
+  }
+
+  void SetAspectRatioMode() {
     if (sink->keep_aspect_ratio) {
       control->SetAspectRatioMode(VMR9ARMode_LetterBox);
     }
     else {
       control->SetAspectRatioMode(VMR9ARMode_None);
     }
-    return TRUE;
   }
 
   gboolean SetRendererWindow(HWND window) {
@@ -1102,13 +1108,17 @@ public:
       return FALSE;
     }
 
+    SetAspectRatioMode();
+    return TRUE;
+  }
+
+  void SetAspectRatioMode() {
     if (sink->keep_aspect_ratio) {
       control->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
     }
     else {
       control->SetAspectRatioMode(VMR_ARMODE_NONE);
     }
-    return TRUE;
   }
 
   gboolean SetRendererWindow(HWND window) {
