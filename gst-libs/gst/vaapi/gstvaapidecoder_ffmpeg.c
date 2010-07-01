@@ -25,9 +25,18 @@
  */
 
 #include "config.h"
-#include <libavcodec/avcodec.h>
-#include <libavcodec/vaapi.h>
-#include <libavformat/avformat.h>
+#ifdef HAVE_LIBAVCODEC_AVCODEC_H
+# include <libavcodec/avcodec.h>
+#endif
+#ifdef HAVE_FFMPEG_AVCODEC_H
+# include <ffmpeg/avcodec.h>
+#endif
+#ifdef HAVE_LIBAVCODEC_VAAPI_H
+# include <libavcodec/vaapi.h>
+#endif
+#ifdef HAVE_FFMPEG_VAAPI_H
+# include <ffmpeg/vaapi.h>
+#endif
 #include "gstvaapidecoder_ffmpeg.h"
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
@@ -598,7 +607,7 @@ gst_vaapi_decoder_ffmpeg_class_init(GstVaapiDecoderFfmpegClass *klass)
 static gpointer
 gst_vaapi_decoder_ffmpeg_init_once_cb(gpointer user_data)
 {
-    av_register_all();
+    avcodec_register_all();
     return NULL;
 }
 

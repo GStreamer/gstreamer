@@ -140,7 +140,6 @@ libgstvaapi_@GST_MAJORMINOR@_la_CFLAGS =	\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_CFLAGS)				\
 	$(LIBAVCODEC_CFLAGS)			\
-	$(LIBAVFORMAT_CFLAGS)			\
 	$(LIBVA_CFLAGS)				\
 	$(NULL)
 
@@ -148,7 +147,6 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GST_BASE_LIBS)			\
 	$(GST_LIBS)				\
 	$(LIBAVCODEC_LIBS)			\
-	$(LIBAVFORMAT_LIBS)			\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 

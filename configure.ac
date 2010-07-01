@@ -272,12 +272,9 @@ else
 fi
 
 dnl Check for FFmpeg
-PKG_CHECK_MODULES(LIBAVFORMAT, [libavformat])
-AC_CHECK_HEADERS([libavformat/avformat.h])
-
 PKG_CHECK_MODULES(LIBAVCODEC, [libavcodec])
-AC_CHECK_HEADERS([libavcodec/avcodec.h])
-AC_CHECK_HEADERS([libavcodec/vaapi.h], [],
+AC_CHECK_HEADERS([libavcodec/avcodec.h ffmpeg/avcodec.h])
+AC_CHECK_HEADERS([libavcodec/vaapi.h ffmpeg/vaapi.h], [break],
     AC_MSG_ERROR([The system FFmpeg headers do not support VA-API]))
 
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
