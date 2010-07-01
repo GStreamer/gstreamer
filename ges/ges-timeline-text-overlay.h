@@ -18,12 +18,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GES_TL_OVERLAY
-#define _GES_TL_OVERLAY
+#ifndef _GES_TIMELINE_TEXT_OVERLAY
+#define _GES_TIMELINE_TEXT_OVERLAY
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-timeline-object.h>
+#include <ges/ges-timeline-overlay.h>
 #include <ges/ges-track.h>
 
 G_BEGIN_DECLS
@@ -52,7 +52,7 @@ G_BEGIN_DECLS
  */
 
 struct _GESTimelineTextOverlay {
-  GESTimelineObject parent;
+  GESTimelineOverlay parent;
 
   /*< private >*/
   gboolean mute;
@@ -68,7 +68,7 @@ struct _GESTimelineTextOverlay {
  */
 
 struct _GESTimelineTextOverlayClass {
-  GESTimelineObjectClass parent_class;
+  GESTimelineOverlayClass parent_class;
 
   /*< public >*/
 };

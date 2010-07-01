@@ -35,7 +35,7 @@
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineTextOverlay, ges_tl_text_overlay,
-    GES_TYPE_TIMELINE_OBJECT);
+    GES_TYPE_TIMELINE_OVERLAY);
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC
