@@ -295,7 +295,7 @@ print_transition_list (void)
   GParamSpec *pspec;
   GEnumValue *v;
 
-  tr = ges_timeline_transition_new (VTYPE_CROSSFADE);
+  tr = ges_timeline_transition_new (GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   klass = GES_TIMELINE_TRANSITION_GET_CLASS (tr);
 
   pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype");

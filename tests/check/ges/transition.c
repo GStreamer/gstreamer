@@ -38,9 +38,9 @@ GST_START_TEST (test_transition_basic)
   track = ges_track_video_raw_new ();
   fail_unless (track != 0);
 
-  tr1 = ges_timeline_transition_new (VTYPE_CROSSFADE);
+  tr1 = ges_timeline_transition_new (GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   fail_unless (tr1 != 0);
-  fail_unless (tr1->vtype == VTYPE_CROSSFADE);
+  fail_unless (tr1->vtype == GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
 
   tr2 = ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
   fail_unless (tr2 != 0);
@@ -87,7 +87,9 @@ GST_START_TEST (test_transition_properties)
 
   ges_init ();
 
-  object = GES_TIMELINE_OBJECT (ges_timeline_transition_new (VTYPE_CROSSFADE));
+  object =
+      GES_TIMELINE_OBJECT (ges_timeline_transition_new
+      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
 
   track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
@@ -126,20 +128,22 @@ GST_START_TEST (test_transition_properties)
   gnl_object_check (trackobject->gnlobject, 420, 510, 120, 510, 0, TRUE);
 
   /* test changing vtype */
-  g_object_set (object, "vtype", VTYPE_CROSSFADE, NULL);
-  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, VTYPE_CROSSFADE);
+  g_object_set (object, "vtype", GES_VIDEO_TRANSITION_TYPE_CROSSFADE, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype,
+      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
-      VTYPE_CROSSFADE);
+      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   g_object_set (object, "vtype", 1, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 1);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 1);
   g_object_set (object, "vtype", 8, NULL);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 8);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 8);
-  g_object_set (object, "vtype", VTYPE_CROSSFADE, NULL);
-  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, VTYPE_CROSSFADE);
+  g_object_set (object, "vtype", GES_VIDEO_TRANSITION_TYPE_CROSSFADE, NULL);
+  assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype,
+      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type,
-      VTYPE_CROSSFADE);
+      GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
 
   ges_timeline_object_release_track_object (object, trackobject);
 

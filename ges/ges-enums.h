@@ -23,7 +23,10 @@
 
 #include <glib-object.h>
 
+G_BEGIN_DECLS
+
 #define GES_TYPE_TRACK_TYPE (ges_track_type_get_type ())
+GType ges_track_type_get_type (void);
 
 /**
  * GESTrackType:
@@ -49,9 +52,162 @@ typedef enum {
   GES_TRACK_TYPE_CUSTOM  = 1 << 4,
 } GESTrackType;
 
-G_BEGIN_DECLS
+/**
+ * GESVideoTransitionType:
+ * @GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR: A bar moves from left to right,
+ * @GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_TB: A bar moves from top to bottom,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TL: A box expands from the upper-left corner to the lower-right corner,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TR: A box expands from the upper-right corner to the lower-left corner,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BR: A box expands from the lower-right corner to the upper-left corner,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BL: A box expands from the lower-left corner to the upper-right corner,
+ * @GES_VIDEO_TRANSITION_TYPE_FOUR_BOX_WIPE_CI: A box shape expands from each of the four corners toward the center,
+ * @GES_VIDEO_TRANSITION_TYPE_FOUR_BOX_WIPE_CO: A box shape expands from the center of each quadrant toward the corners of each quadrant,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNDOOR_V: A central, vertical line splits and expands toward the left and right edges,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNDOOR_H: A central, horizontal line splits and expands toward the top and bottom edges,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TC: A box expands from the top edge's midpoint to the bottom corners,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_RC: A box expands from the right edge's midpoint to the left corners,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BC: A box expands from the bottom edge's midpoint to the top corners,
+ * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_LC: A box expands from the left edge's midpoint to the right corners,
+ * @GES_VIDEO_TRANSITION_TYPE_DIAGONAL_TL: A diagonal line moves from the upper-left corner to the lower-right corner,
+ * @GES_VIDEO_TRANSITION_TYPE_DIAGONAL_TR: A diagonal line moves from the upper right corner to the lower-left corner,
+ * @GES_VIDEO_TRANSITION_TYPE_BOWTIE_V: Two wedge shapes slide in from the top and bottom edges toward the center,
+ * @GES_VIDEO_TRANSITION_TYPE_BOWTIE_H: Two wedge shapes slide in from the left and right edges toward the center,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNDOOR_DBL: A diagonal line from the lower-left to upper-right corners splits and expands toward the opposite corners,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNDOOR_DTL: A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners,
+ * @GES_VIDEO_TRANSITION_TYPE_MISC_DIAGONAL_DBD: Four wedge shapes split from the center and retract toward the four edges,
+ * @GES_VIDEO_TRANSITION_TYPE_MISC_DIAGONAL_DD: A diamond connecting the four edge midpoints simultaneously contracts toward the center and expands toward the edges,
+ * @GES_VIDEO_TRANSITION_TYPE_VEE_D: A wedge shape moves from top to bottom,
+ * @GES_VIDEO_TRANSITION_TYPE_VEE_L: A wedge shape moves from right to left,
+ * @GES_VIDEO_TRANSITION_TYPE_VEE_U: A wedge shape moves from bottom to top,
+ * @GES_VIDEO_TRANSITION_TYPE_VEE_R: A wedge shape moves from left to right,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNVEE_D: A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNVEE_L: A 'V' shape extending from the left edge's midpoint to the opposite corners contracts toward the center and expands toward the edges,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNVEE_U: A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges,
+ * @GES_VIDEO_TRANSITION_TYPE_BARNVEE_R: A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges,
+ * @GES_VIDEO_TRANSITION_TYPE_IRIS_RECT: A rectangle expands from the center.,
+ * @GES_VIDEO_TRANSITION_TYPE_CLOCK_CW12: A radial hand sweeps clockwise from the twelve o'clock position,
+ * @GES_VIDEO_TRANSITION_TYPE_CLOCK_CW3: A radial hand sweeps clockwise from the three o'clock position,
+ * @GES_VIDEO_TRANSITION_TYPE_CLOCK_CW6: A radial hand sweeps clockwise from the six o'clock position,
+ * @GES_VIDEO_TRANSITION_TYPE_CLOCK_CW9: A radial hand sweeps clockwise from the nine o'clock position,
+ * @GES_VIDEO_TRANSITION_TYPE_PINWHEEL_TBV: Two radial hands sweep clockwise from the twelve and six o'clock positions,
+ * @GES_VIDEO_TRANSITION_TYPE_PINWHEEL_TBH: Two radial hands sweep clockwise from the nine and three o'clock positions,
+ * @GES_VIDEO_TRANSITION_TYPE_PINWHEEL_FB: Four radial hands sweep clockwise,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_CT: A fan unfolds from the top edge, the fan axis at the center,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_CR: A fan unfolds from the right edge, the fan axis at the center,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FOV: Two fans, their axes at the center, unfold from the top and bottom,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FOH: Two fans, their axes at the center, unfold from the left and right,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWT: A radial hand sweeps clockwise from the top edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWR: A radial hand sweeps clockwise from the right edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWB: A radial hand sweeps clockwise from the bottom edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWL: A radial hand sweeps clockwise from the left edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PV: Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PD: Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_OV: Two radial hands attached at the top and bottom edges' midpoints sweep from right to left,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_OH: Two radial hands attached at the left and right edges' midpoints sweep from top to bottom,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_T: A fan unfolds from the bottom, the fan axis at the top edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_R: A fan unfolds from the left, the fan axis at the right edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_B: A fan unfolds from the top, the fan axis at the bottom edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_FAN_L: A fan unfolds from the right, the fan axis at the left edge's midpoint,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FIV: Two fans, their axes at the top and bottom, unfold from the center,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FIH: Two fans, their axes at the left and right, unfold from the center,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWTL: A radial hand sweeps clockwise from the upper-left corner,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWBL: A radial hand sweeps counter-clockwise from the lower-left corner.,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWBR: A radial hand sweeps clockwise from the lower-right corner,
+ * @GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWTR: A radial hand sweeps counter-clockwise from the upper-right corner,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PDTL: Two radial hands attached at the upper-left and lower-right corners sweep down and up,
+ * @GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PDBL: Two radial hands attached at the lower-left and upper-right corners sweep down and up,
+ * @GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_T: Two radial hands attached at the upper-left and upper-right corners sweep down,
+ * @GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_L: Two radial hands attached at the upper-left and lower-left corners sweep to the right,
+ * @GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_B: Two radial hands attached at the lower-left and lower-right corners sweep up,
+ * @GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_R: Two radial hands attached at the upper-right and lower-right corners sweep to the left,
+ * @GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_R: Two radial hands attached at the midpoints of the top and bottom halves sweep from right to left,
+ * @GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_U: Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom,
+ * @GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_V: Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top,
+ * @GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_H: Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left,
+ * @GES_VIDEO_TRANSITION_TYPE_CROSSFADE: Crossfade
+ *
+ */
 
-GType ges_track_type_get_type (void);
+typedef enum {
+  GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR = 1,
+  GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_TB = 2,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TL = 3,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TR = 4,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BR = 5,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BL = 6,
+  GES_VIDEO_TRANSITION_TYPE_FOUR_BOX_WIPE_CI = 7,
+  GES_VIDEO_TRANSITION_TYPE_FOUR_BOX_WIPE_CO = 8,
+  GES_VIDEO_TRANSITION_TYPE_BARNDOOR_V = 21,
+  GES_VIDEO_TRANSITION_TYPE_BARNDOOR_H = 22,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TC = 23,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_RC = 24,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_BC = 25,
+  GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_LC = 26,
+  GES_VIDEO_TRANSITION_TYPE_DIAGONAL_TL = 41,
+  GES_VIDEO_TRANSITION_TYPE_DIAGONAL_TR = 42,
+  GES_VIDEO_TRANSITION_TYPE_BOWTIE_V = 43,
+  GES_VIDEO_TRANSITION_TYPE_BOWTIE_H = 44,
+  GES_VIDEO_TRANSITION_TYPE_BARNDOOR_DBL = 45,
+  GES_VIDEO_TRANSITION_TYPE_BARNDOOR_DTL = 46,
+  GES_VIDEO_TRANSITION_TYPE_MISC_DIAGONAL_DBD = 47,
+  GES_VIDEO_TRANSITION_TYPE_MISC_DIAGONAL_DD = 48,
+  GES_VIDEO_TRANSITION_TYPE_VEE_D = 61,
+  GES_VIDEO_TRANSITION_TYPE_VEE_L = 62,
+  GES_VIDEO_TRANSITION_TYPE_VEE_U = 63,
+  GES_VIDEO_TRANSITION_TYPE_VEE_R = 64,
+  GES_VIDEO_TRANSITION_TYPE_BARNVEE_D = 65,
+  GES_VIDEO_TRANSITION_TYPE_BARNVEE_L = 66,
+  GES_VIDEO_TRANSITION_TYPE_BARNVEE_U = 67,
+  GES_VIDEO_TRANSITION_TYPE_BARNVEE_R = 68,
+  GES_VIDEO_TRANSITION_TYPE_IRIS_RECT = 101,
+  GES_VIDEO_TRANSITION_TYPE_CLOCK_CW12 = 201,
+  GES_VIDEO_TRANSITION_TYPE_CLOCK_CW3 = 202,
+  GES_VIDEO_TRANSITION_TYPE_CLOCK_CW6 = 203,
+  GES_VIDEO_TRANSITION_TYPE_CLOCK_CW9 = 204,
+  GES_VIDEO_TRANSITION_TYPE_PINWHEEL_TBV = 205,
+  GES_VIDEO_TRANSITION_TYPE_PINWHEEL_TBH = 206,
+  GES_VIDEO_TRANSITION_TYPE_PINWHEEL_FB = 207,
+  GES_VIDEO_TRANSITION_TYPE_FAN_CT = 211,
+  GES_VIDEO_TRANSITION_TYPE_FAN_CR = 212,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FOV = 213,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FOH = 214,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWT = 221,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWR = 222,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWB = 223,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWL = 224,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PV = 225,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PD = 226,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_OV = 227,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_OH = 228,
+  GES_VIDEO_TRANSITION_TYPE_FAN_T = 231,
+  GES_VIDEO_TRANSITION_TYPE_FAN_R = 232,
+  GES_VIDEO_TRANSITION_TYPE_FAN_B = 233,
+  GES_VIDEO_TRANSITION_TYPE_FAN_L = 234,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FIV = 235,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLEFAN_FIH = 236,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWTL = 241,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWBL = 242,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWBR = 243,
+  GES_VIDEO_TRANSITION_TYPE_SINGLESWEEP_CWTR = 244,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PDTL = 245,
+  GES_VIDEO_TRANSITION_TYPE_DOUBLESWEEP_PDBL = 246,
+  GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_T = 251,
+  GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_L = 252,
+  GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_B = 253,
+  GES_VIDEO_TRANSITION_TYPE_SALOONDOOR_R = 254,
+  GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_R = 261,
+  GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_U = 262,
+  GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_V = 263,
+  GES_VIDEO_TRANSITION_TYPE_WINDSHIELD_H = 264,
+  GES_VIDEO_TRANSITION_TYPE_CROSSFADE = 512
+} GESVideoTransitionType;
+
+extern GEnumValue transition_types[];
+
+#define GES_VIDEO_TRANSITION_TYPE_TYPE \
+    (ges_video_transition_type_get_type())
+
+GType ges_video_transition_type_get_type (void);
 
 G_END_DECLS
 

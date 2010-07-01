@@ -45,13 +45,14 @@ G_BEGIN_DECLS
 
 /**
  * GESTimelineTransition:
- * @vtype: a #GEnumValue indicating the type of video transition to apply.
+ * @vtype: a #GESVideoTransitionType indicating the type of video transition
+ * to apply.
  *
  */
 struct _GESTimelineTransition {
   GESTimelineObject parent;
   /*< public >*/
-  gint vtype;
+  GESVideoTransitionType vtype;
 };
 
 /**
@@ -67,14 +68,9 @@ struct _GESTimelineTransitionClass {
 
 GType ges_timeline_transition_get_type (void);
 
-GESTimelineTransition *ges_timeline_transition_new (gint vtype);
+GESTimelineTransition *ges_timeline_transition_new (GESVideoTransitionType vtype);
 GESTimelineTransition *ges_timeline_transition_new_for_nick (char *nick);
 
 G_END_DECLS
-
-enum
-{
-  VTYPE_CROSSFADE = 512,
-};
 
 #endif /* _GES_TIMELINE_TRANSITION */

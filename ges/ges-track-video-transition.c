@@ -180,7 +180,7 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (self->type != VTYPE_CROSSFADE) {
+  if (self->type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE) {
     self->sinka =
         (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
         mixer, self->type, NULL);
@@ -321,14 +321,16 @@ ges_track_video_transition_duration_changed (GESTrackTransition * object,
 void
 ges_track_video_transition_set_type (GESTrackVideoTransition * self, gint type)
 {
-  if (((type == VTYPE_CROSSFADE) && (self->type != VTYPE_CROSSFADE)) ||
-      ((type != VTYPE_CROSSFADE) && (self->type = VTYPE_CROSSFADE))) {
+  if (((type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE)
+          && (self->type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
+      || ((type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE)
+          && (self->type = GES_VIDEO_TRANSITION_TYPE_CROSSFADE))) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported\n");
   }
 
   self->type = type;
-  if (self->smpte && (type != VTYPE_CROSSFADE))
+  if (self->smpte && (type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
     g_object_set (self->smpte, "type", (gint) type, NULL);
 }
 
