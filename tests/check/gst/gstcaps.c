@@ -728,6 +728,72 @@ GST_START_TEST (test_intersect2)
 
 GST_END_TEST;
 
+static gboolean
+_caps_is_fixed_foreach (GQuark field_id, const GValue * value, gpointer unused)
+{
+  return gst_value_is_fixed (value);
+}
+
+
+GST_START_TEST (test_normalize)
+{
+  GstCaps *in, *norm, *out;
+  guint i;
+
+  in = gst_caps_from_string ("some/type, foo=(int){ 1 , 2 }");
+  out = gst_caps_from_string ("some/type, foo=(int) 1; some/type, foo=(int) 2");
+  norm = gst_caps_normalize (in);
+  fail_if (gst_caps_is_empty (norm));
+  fail_unless (gst_caps_is_equal (norm, out));
+  for (i = 0; i < gst_caps_get_size (norm); i++) {
+    GstStructure *st = gst_caps_get_structure (norm, i);
+    /* Make sure all fields of all structures are fixed */
+    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+  }
+
+  gst_caps_unref (in);
+  gst_caps_unref (out);
+  gst_caps_unref (norm);
+
+  in = gst_caps_from_string
+      ("some/type, foo=(int){ 1 , 2 }, bar=(int){ 3, 4 }");
+  out =
+      gst_caps_from_string
+      ("some/type, foo=(int) 1, bar=(int) 3; some/type, foo=(int) 2, bar=(int) 3;"
+      "some/type, foo=(int) 1, bar=(int) 4; some/type, foo=(int) 2, bar=(int) 4;");
+  norm = gst_caps_normalize (in);
+  fail_if (gst_caps_is_empty (norm));
+  fail_unless (gst_caps_is_equal (norm, out));
+  for (i = 0; i < gst_caps_get_size (norm); i++) {
+    GstStructure *st = gst_caps_get_structure (norm, i);
+    /* Make sure all fields of all structures are fixed */
+    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+  }
+
+  gst_caps_unref (in);
+  gst_caps_unref (out);
+  gst_caps_unref (norm);
+
+  in = gst_caps_from_string
+      ("some/type, foo=(string){ 1 , 2 }, bar=(string) { 3 }");
+  out =
+      gst_caps_from_string
+      ("some/type, foo=(string) 1, bar=(string) 3; some/type, foo=(string) 2, bar=(string) 3");
+  norm = gst_caps_normalize (in);
+  fail_if (gst_caps_is_empty (norm));
+  fail_unless (gst_caps_is_equal (norm, out));
+  for (i = 0; i < gst_caps_get_size (norm); i++) {
+    GstStructure *st = gst_caps_get_structure (norm, i);
+    /* Make sure all fields of all structures are fixed */
+    fail_unless (gst_structure_foreach (st, _caps_is_fixed_foreach, NULL));
+  }
+
+  gst_caps_unref (in);
+  gst_caps_unref (out);
+  gst_caps_unref (norm);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_caps_suite (void)
@@ -748,6 +814,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_merge_subset);
   tcase_add_test (tc_chain, test_intersect);
   tcase_add_test (tc_chain, test_intersect2);
+  tcase_add_test (tc_chain, test_normalize);
 
   return s;
 }

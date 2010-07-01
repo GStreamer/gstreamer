@@ -1763,15 +1763,14 @@ gst_caps_normalize (const GstCaps * caps)
 {
   NormalizeForeach nf;
   GstCaps *newcaps;
-  guint i, nlen;
+  guint i;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
   newcaps = gst_caps_copy (caps);
   nf.caps = newcaps;
-  nlen = newcaps->structs->len;
 
-  for (i = 0; i < nlen; i++) {
+  for (i = 0; i < gst_caps_get_size (newcaps); i++) {
     nf.structure = gst_caps_get_structure_unchecked (newcaps, i);
 
     while (!gst_structure_foreach (nf.structure,
