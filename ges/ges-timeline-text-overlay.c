@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:ges-timeline-overlay
+ * SECTION:ges-timeline-text-overlay
  * @short_description: An object for manipulating media files in a GESTimeline
  * 
  * Represents all the output treams from a particular uri. It is assumed that
@@ -27,21 +27,22 @@
  */
 
 #include "ges-internal.h"
-#include "ges-timeline-overlay.h"
+#include "ges-timeline-text-overlay.h"
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
 #include "ges-track-text-overlay.h"
 #include <string.h>
 
-G_DEFINE_TYPE (GESTimelineOverlay, ges_tl_overlay, GES_TYPE_TIMELINE_OBJECT);
+G_DEFINE_TYPE (GESTimelineTextOverlay, ges_tl_text_overlay,
+    GES_TYPE_TIMELINE_OBJECT);
 
 #define DEFAULT_PROP_TEXT ""
 #define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC
 #define DEFAULT_PROP_VALIGNMENT DEFAULT_VALIGNMENT
 #define DEFAULT_PROP_HALIGNMENT DEFAULT_HALIGNMENT
-#define GES_TIMELINE_TITLE_SRC_VALIGN_TYPE (ges_timeline_overlay_valign_get_type())
-#define GES_TIMELINE_TITLE_SRC_HALIGN_TYPE (ges_timeline_overlay_halign_get_type())
+#define GES_TIMELINE_TITLE_SRC_VALIGN_TYPE (ges_timeline_text_overlay_valign_get_type())
+#define GES_TIMELINE_TITLE_SRC_HALIGN_TYPE (ges_timeline_text_overlay_halign_get_type())
 
 enum
 {
@@ -53,34 +54,38 @@ enum
   PROP_VALIGNMENT,
 };
 
-static void ges_tl_overlay_set_mute (GESTimelineOverlay * self, gboolean mute);
+static void ges_tl_text_overlay_set_mute (GESTimelineTextOverlay * self,
+    gboolean mute);
 
 static void
-ges_tl_overlay_set_text (GESTimelineOverlay * self, const gchar * text);
+ges_tl_text_overlay_set_text (GESTimelineTextOverlay * self,
+    const gchar * text);
 
 static void
-ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
+ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
     font_desc);
 
 static void
-ges_tl_overlay_set_valign (GESTimelineOverlay * self, GESTrackTitleSrcVAlign);
+ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
+    GESTrackTitleSrcVAlign);
 
 static void
-ges_tl_overlay_set_halign (GESTimelineOverlay * self, GESTrackTitleSrcHAlign);
+ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
+    GESTrackTitleSrcHAlign);
 
 static GESTrackObject
-    * ges_tl_overlay_create_track_object (GESTimelineObject * obj,
+    * ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
 
-static GType ges_timeline_overlay_valign_get_type (void);
+static GType ges_timeline_text_overlay_valign_get_type (void);
 
-static GType ges_timeline_overlay_halign_get_type (void);
+static GType ges_timeline_text_overlay_halign_get_type (void);
 
 static void
-ges_tl_overlay_get_property (GObject * object, guint property_id,
+ges_tl_text_overlay_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESTimelineOverlay *tfs = GES_TIMELINE_OVERLAY (object);
+  GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
 
   switch (property_id) {
     case PROP_MUTE:
@@ -104,26 +109,26 @@ ges_tl_overlay_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_overlay_set_property (GObject * object, guint property_id,
+ges_tl_text_overlay_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTimelineOverlay *tfs = GES_TIMELINE_OVERLAY (object);
+  GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
 
   switch (property_id) {
     case PROP_MUTE:
-      ges_tl_overlay_set_mute (tfs, g_value_get_boolean (value));
+      ges_tl_text_overlay_set_mute (tfs, g_value_get_boolean (value));
       break;
     case PROP_TEXT:
-      ges_tl_overlay_set_text (tfs, g_value_get_string (value));
+      ges_tl_text_overlay_set_text (tfs, g_value_get_string (value));
       break;
     case PROP_FONT_DESC:
-      ges_tl_overlay_set_font_desc (tfs, g_value_get_string (value));
+      ges_tl_text_overlay_set_font_desc (tfs, g_value_get_string (value));
       break;
     case PROP_HALIGNMENT:
-      ges_tl_overlay_set_halign (tfs, g_value_get_enum (value));
+      ges_tl_text_overlay_set_halign (tfs, g_value_get_enum (value));
       break;
     case PROP_VALIGNMENT:
-      ges_tl_overlay_set_valign (tfs, g_value_get_enum (value));
+      ges_tl_text_overlay_set_valign (tfs, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -131,37 +136,37 @@ ges_tl_overlay_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_tl_overlay_dispose (GObject * object)
+ges_tl_text_overlay_dispose (GObject * object)
 {
-  GESTimelineOverlay *self = GES_TIMELINE_OVERLAY (object);
+  GESTimelineTextOverlay *self = GES_TIMELINE_TEXT_OVERLAY (object);
 
   if (self->text)
     g_free (self->text);
   if (self->font_desc)
     g_free (self->font_desc);
 
-  G_OBJECT_CLASS (ges_tl_overlay_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_tl_text_overlay_parent_class)->dispose (object);
 }
 
 static void
-ges_tl_overlay_finalize (GObject * object)
+ges_tl_text_overlay_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ges_tl_overlay_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_tl_text_overlay_parent_class)->finalize (object);
 }
 
 static void
-ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
+ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
-  object_class->get_property = ges_tl_overlay_get_property;
-  object_class->set_property = ges_tl_overlay_set_property;
-  object_class->dispose = ges_tl_overlay_dispose;
-  object_class->finalize = ges_tl_overlay_finalize;
+  object_class->get_property = ges_tl_text_overlay_get_property;
+  object_class->set_property = ges_tl_text_overlay_set_property;
+  object_class->dispose = ges_tl_text_overlay_dispose;
+  object_class->finalize = ges_tl_text_overlay_finalize;
 
   /**
-   * GESTimelineOverlay:text
+   * GESTimelineTextOverlay:text
    *
    * The text to diplay
    */
@@ -171,7 +176,7 @@ ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
           DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineOverlay:font-dec
+   * GESTimelineTextOverlay:font-dec
    *
    * Pango font description string
    */
@@ -184,7 +189,7 @@ ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GESTimelineOverlay:valignment
+   * GESTimelineTextOverlay:valignment
    *
    * Vertical alignent of the text
    */
@@ -193,7 +198,7 @@ ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
           "Vertical alignment of the text", GES_TIMELINE_TITLE_SRC_VALIGN_TYPE,
           DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineOverlay:halignment
+   * GESTimelineTextOverlay:halignment
    *
    * Horizontal alignment of the text
    */
@@ -203,7 +208,7 @@ ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
           GES_TIMELINE_TITLE_SRC_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineOverlay:mute:
+   * GESTimelineTextOverlay:mute:
    *
    * Whether the sound will be played or not.
    */
@@ -211,12 +216,12 @@ ges_tl_overlay_class_init (GESTimelineOverlayClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute audio track",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  timobj_class->create_track_object = ges_tl_overlay_create_track_object;
+  timobj_class->create_track_object = ges_tl_text_overlay_create_track_object;
   timobj_class->need_fill_track = FALSE;
 }
 
 static void
-ges_tl_overlay_init (GESTimelineOverlay * self)
+ges_tl_text_overlay_init (GESTimelineTextOverlay * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
   self->text = NULL;
@@ -226,7 +231,7 @@ ges_tl_overlay_init (GESTimelineOverlay * self)
 }
 
 static GType
-ges_timeline_overlay_valign_get_type (void)
+ges_timeline_text_overlay_valign_get_type (void)
 {
   static GType text_overlay_valign_type = 0;
   static gsize initialized = 0;
@@ -239,7 +244,7 @@ ges_timeline_overlay_valign_get_type (void)
 
   if (g_once_init_enter (&initialized)) {
     text_overlay_valign_type =
-        g_enum_register_static ("GESTimelineOverlayVAlign",
+        g_enum_register_static ("GESTimelineTextOverlayVAlign",
         text_overlay_valign);
     g_once_init_leave (&initialized, 1);
   }
@@ -247,7 +252,7 @@ ges_timeline_overlay_valign_get_type (void)
 }
 
 static GType
-ges_timeline_overlay_halign_get_type (void)
+ges_timeline_text_overlay_halign_get_type (void)
 {
   static GType text_overlay_halign_type = 0;
   static gsize initialized = 0;
@@ -260,7 +265,7 @@ ges_timeline_overlay_halign_get_type (void)
 
   if (g_once_init_enter (&initialized)) {
     text_overlay_halign_type =
-        g_enum_register_static ("GESTimelineOverlayHAlign",
+        g_enum_register_static ("GESTimelineTextOverlayHAlign",
         text_overlay_halign);
     g_once_init_leave (&initialized, 1);
   }
@@ -268,7 +273,7 @@ ges_timeline_overlay_halign_get_type (void)
 }
 
 static void
-ges_tl_overlay_set_text (GESTimelineOverlay * self, const gchar * text)
+ges_tl_text_overlay_set_text (GESTimelineTextOverlay * self, const gchar * text)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -290,7 +295,7 @@ ges_tl_overlay_set_text (GESTimelineOverlay * self, const gchar * text)
 }
 
 static void
-ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
+ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
     font_desc)
 {
   GList *tmp;
@@ -314,7 +319,7 @@ ges_tl_overlay_set_font_desc (GESTimelineOverlay * self, const gchar *
 }
 
 static void
-ges_tl_overlay_set_halign (GESTimelineOverlay * self,
+ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
     GESTrackTitleSrcHAlign halign)
 {
   GList *tmp;
@@ -336,7 +341,7 @@ ges_tl_overlay_set_halign (GESTimelineOverlay * self,
 }
 
 static void
-ges_tl_overlay_set_valign (GESTimelineOverlay * self,
+ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
     GESTrackTitleSrcVAlign valign)
 {
   GList *tmp;
@@ -357,7 +362,7 @@ ges_tl_overlay_set_valign (GESTimelineOverlay * self,
 }
 
 static void
-ges_tl_overlay_set_mute (GESTimelineOverlay * self, gboolean mute)
+ges_tl_text_overlay_set_mute (GESTimelineTextOverlay * self, gboolean mute)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -376,10 +381,11 @@ ges_tl_overlay_set_mute (GESTimelineOverlay * self, gboolean mute)
 }
 
 static GESTrackObject *
-ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
+ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,
+    GESTrack * track)
 {
 
-  GESTimelineOverlay *tfs = (GESTimelineOverlay *) obj;
+  GESTimelineTextOverlay *tfs = (GESTimelineTextOverlay *) obj;
   GESTrackObject *res = NULL;
 
   GST_DEBUG ("Creating a GESTrackOverlay");
@@ -400,14 +406,14 @@ ges_tl_overlay_create_track_object (GESTimelineObject * obj, GESTrack * track)
 /**
  * ges_timeline_titlesource_new:
  *
- * Creates a new #GESTimelineOverlay
+ * Creates a new #GESTimelineTextOverlay
  *
- * Returns: The newly created #GESTimelineOverlay, or NULL if there was an
+ * Returns: The newly created #GESTimelineTextOverlay, or NULL if there was an
  * error.
  */
-GESTimelineOverlay *
-ges_timeline_overlay_new (void)
+GESTimelineTextOverlay *
+ges_timeline_text_overlay_new (void)
 {
   /* FIXME : Check for validity/existence of URI */
-  return g_object_new (GES_TYPE_TIMELINE_OVERLAY, NULL);
+  return g_object_new (GES_TYPE_TIMELINE_TEXT_OVERLAY, NULL);
 }

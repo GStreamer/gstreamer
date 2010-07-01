@@ -57,7 +57,8 @@ make_source (char *path, guint64 start, guint64 duration, gint priority)
 GESTimelineObject *
 make_overlay (char *text, guint64 start, guint64 duration, gint priority)
 {
-  GESTimelineObject *ret = GES_TIMELINE_OBJECT (ges_timeline_overlay_new ());
+  GESTimelineObject *ret =
+      GES_TIMELINE_OBJECT (ges_timeline_text_overlay_new ());
 
   g_object_set (ret,
       "text", (gchar *) text,
