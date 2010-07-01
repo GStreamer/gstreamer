@@ -254,15 +254,16 @@ gst_ks_video_device_clear_buffers (GstKsVideoDevice * self)
   if (priv->requests == NULL)
     return;
 
-  /* Cancel pending requests */
-  CancelIo (priv->pin_handle);
-
+  /* Join any pending requests */
   for (i = 0; i < priv->num_requests; i++) {
     ReadRequest *req = &g_array_index (priv->requests, ReadRequest, i);
-    DWORD bytes_returned;
+    HANDLE ev = g_array_index (priv->request_events, HANDLE, i);
+    DWORD n;
 
-    GetOverlappedResult (priv->pin_handle, &req->overlapped, &bytes_returned,
-        TRUE);
+    if (!GetOverlappedResult (priv->pin_handle, &req->overlapped, &n, FALSE)) {
+      if (WaitForSingleObject (ev, 1000) == WAIT_OBJECT_0)
+        GetOverlappedResult (priv->pin_handle, &req->overlapped, &n, FALSE);
+    }
   }
 
   /* Clean up */
