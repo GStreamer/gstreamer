@@ -19,8 +19,11 @@
  */
 
 /**
- * SECTION:ges-track-source
- * @short_description: Base Class for single-media sources
+ * SECTION:ges-track-filesource
+ * @short_description: outputs a single media stream from a given file
+ * 
+ * Outputs a single media stream from a given file. The stream chosen depends on
+ * the type of the track which contains the object.
  */
 
 #include "ges-internal.h"

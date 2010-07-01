@@ -20,10 +20,12 @@
 
 /**
  * SECTION:ges-timeline-title-source
- * @short_description: An object for manipulating media files in a GESTimeline
+ * @short_description: Render stand-alone titles in  GESTimelineLayer.
  * 
- * Represents all the output treams from a particular uri. It is assumed that
- * the URI points to a file of some type.
+ * Renders the given text in the specified font, at specified position, and
+ * with the specified background pattern.
+ *
+ * Note: creates a silent #GESTrackAudioTestSource to fill audio tracks
  */
 
 #include "ges-internal.h"

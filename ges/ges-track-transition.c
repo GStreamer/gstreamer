@@ -20,8 +20,8 @@
 
 /** 
  * SECTION:ges-track-transition
- * @short_description: Concrete, track-level implemenation of audio and video
- * transitinos.
+ * @short_description: base class for audio and video transitions
+ *
  */
 
 #include "ges-internal.h"

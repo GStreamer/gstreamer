@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-track-audio-transition
- * @short_description: implements audio crossfade transitino
+ * @short_description: implements audio crossfade transition
  */
 
 #include "ges-internal.h"

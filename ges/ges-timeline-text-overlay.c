@@ -20,10 +20,9 @@
 
 /**
  * SECTION:ges-timeline-text-overlay
- * @short_description: An object for manipulating media files in a GESTimeline
+ * @short_description: Render text onto another stream in a #GESTimelineLayer
  * 
- * Represents all the output treams from a particular uri. It is assumed that
- * the URI points to a file of some type.
+ * Renders text onto the next lower priority stream using textrender.
  */
 
 #include "ges-internal.h"

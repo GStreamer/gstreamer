@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-timeline-overlay
- * @short_description: Base Class for overlays of a #GESTimelineLayer
+ * @short_description: Base Class for overlays in a #GESTimelineLayer
  *
  * Overlays are objects which modify the underlying layer(s). Examples of
  * overlays include text, image watermarks, or audio dubbing. Transitions,

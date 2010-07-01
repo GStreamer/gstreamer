@@ -20,10 +20,11 @@
 
 /**
  * SECTION:ges-timeline-test-source
- * @short_description: An object for manipulating media files in a GESTimeline
+ * @short_description: Render video and audio test patterns in a
+ * #GESTimelineLayer
  * 
- * Represents all the output treams from a particular uri. It is assumed that
- * the URI points to a file of some type.
+ * Useful for testing purposes or for filling gaps between media in
+ * a #GESTimelineLayer.
  */
 
 #include "ges-internal.h"

@@ -46,7 +46,7 @@ G_BEGIN_DECLS
 
 /**
  * GESTimelineOverlay:
- *
+ * @parent: parent object
  */
 
 struct _GESTimelineOverlay {

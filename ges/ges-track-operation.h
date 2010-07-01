@@ -63,11 +63,8 @@ struct _GESTrackOperation {
 /**
  * GESTrackOperationClass:
  * @parent_class: the parent class
- * @create_element: method to create the gstreamer element which fills the
- * gnlobject
- *
- * Base class for track objects which produce data but do not consuem it.
- *
+ * @create_element: virtual method which creates the GStreamer element for
+ * this object
  */
 
 struct _GESTrackOperationClass {

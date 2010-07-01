@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-track-video-test-source
- * @short_description: implements solid colors and patterns with videotestsrc
+ * @short_description: produce solid colors and patterns
  */
 
 #include "ges-internal.h"

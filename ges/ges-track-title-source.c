@@ -19,8 +19,9 @@
  */
 
 /**
- * SECTION:ges-track-source
- * @short_description: Base Class for single-media sources
+ * SECTION:ges-track-title-source
+ * @short_description: render stand-alone text titles
+ * 
  */
 
 #include "ges-internal.h"

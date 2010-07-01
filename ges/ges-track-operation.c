@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-track-operation
- * @short_description: Base Class for single-media operations
+ * @short_description: Base Class for effects and overlays
  */
 
 #include "ges-internal.h"

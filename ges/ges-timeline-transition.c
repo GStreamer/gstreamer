@@ -20,7 +20,21 @@
 
 /**
  * SECTION: ges-timeline-transition
- * @short_description: Base Class for transitions in a #GESTimelineLayer
+ * @short_description: Transition from one clip to another in a
+ * #GESTimelineLayer
+ *
+ * Creates an object that mixes together the two underlying objects, A and B.
+ * The A object is assumed to have a higher prioirity (lower number) than the
+ * B object. At the transition in point, only A will be visible, and by the
+ * end only B will be visible. 
+ * 
+ * The shape of the video transition depends on the value of the "vtype"
+ * property. The default value is "crossfade". For audio, only "crossfade" is
+ * supported.
+ *
+ * #GESSimpleTimelineLayer will automatically manage the priorities of sources
+ * and transitions. If you use #GESTimelineTransitions in another type of
+ * #GESTimelineLayer, you will need to manage priorities yourself.
  */
 
 #include "ges-internal.h"

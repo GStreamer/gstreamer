@@ -19,8 +19,10 @@
  */
 
 /**
- * SECTION:ges-track-source
- * @short_description: Base Class for single-media sources
+ * SECTION:ges-track-text-overlay
+ * @short_description: render text onto another video stream in a
+ * #GESTimelineLayer
+ *
  */
 
 #include "ges-internal.h"

@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-track-video-transition
- * @short_description: implements video crossfade transitino
+ * @short_description: implements video crossfade transition
  */
 
 #include "ges-internal.h"

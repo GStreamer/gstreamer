@@ -290,6 +290,21 @@ GES_TIMELINE_FILE_SOURCE_GET_CLASS
 GES_TYPE_TIMELINE_FILE_SOURCE
 </SECTION>
 
+<SECTION>
+<FILE>ges-timeline-overlay</FILE>
+<TITLE>GESTimelineOverlay</TITLE>
+GESTimelineOverlay
+GESTimelineOverlayClass
+ges_timeline_overlay_get_type
+ges_timeline_overlay_new
+<SUBSECTION Standard>
+GES_IS_TIMELINE_OVERLAY
+GES_IS_TIMELINE_OVERLAY_CLASS
+GES_TIMELINE_OVERLAY
+GES_TIMELINE_OVERLAY_CLASS
+GES_TIMELINE_OVERLAY_GET_CLASS
+GES_TYPE_TIMELINE_OVERLAY
+</SECTION>
 
 <SECTION>
 <FILE>ges-timeline-transition</FILE>
@@ -454,7 +469,7 @@ GES_IS_TRACK_TITLE_SOURCE_CLASS
 
 <SECTION>
 <FILE>ges-track-text-overlay</FILE>
-<TITLE>GESTrackOverlay</TITLE>
+<TITLE>GESTrackTextOverlay</TITLE>
 GESTrackTextOverlay
 GESTrackTextOverlayClass
 ges_track_text_overlay_get_type

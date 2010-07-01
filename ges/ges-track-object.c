@@ -206,7 +206,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   /**
    * GESTrackObject:active
    *
-   * Whether the object should be taken into account in the #GEStrack output.
+   * Whether the object should be taken into account in the #GESTrack output.
    * If #FALSE, then its contents will not be used in the resulting track.
    */
   g_object_class_install_property (object_class, PROP_ACTIVE,
