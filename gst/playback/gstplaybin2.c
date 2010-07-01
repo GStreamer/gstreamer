@@ -3561,8 +3561,10 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       for (i = 0; i < 3; i++)
         gst_segment_init (&playbin->segments[i], GST_FORMAT_UNDEFINED);
 
-      if (!setup_next_source (playbin, GST_STATE_READY))
-        goto source_failed;
+      if (!setup_next_source (playbin, GST_STATE_READY)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto failure;
+      }
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -3607,22 +3609,8 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
-      GstSourceGroup *curr_group;
-
-      curr_group = playbin->curr_group;
-      if (curr_group && curr_group->valid) {
-        /* unlink our pads with the sink */
-        deactivate_group (playbin, curr_group);
-      }
-
-      /* Swap current and next group back */
-      playbin->curr_group = playbin->next_group;
-      playbin->next_group = curr_group;
-    }
-    return ret;
-  }
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto failure;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -3645,9 +3633,22 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   return ret;
 
   /* ERRORS */
-source_failed:
+failure:
   {
-    return GST_STATE_CHANGE_FAILURE;
+    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
+      GstSourceGroup *curr_group;
+
+      curr_group = playbin->curr_group;
+      if (curr_group && curr_group->valid) {
+        /* unlink our pads with the sink */
+        deactivate_group (playbin, curr_group);
+      }
+
+      /* Swap current and next group back */
+      playbin->curr_group = playbin->next_group;
+      playbin->next_group = curr_group;
+    }
+    return ret;
   }
 }
 
