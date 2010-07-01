@@ -1,10 +1,10 @@
-gst-vaapi NEWS -- summary of changes.  2010-06-DD
+gst-vaapi NEWS -- summary of changes.  2010-07-01
 Copyright (C) 2010 Splitted-Desktop Systems
 
-Version 0.2.5 - DD.Jun.2010
-* Drop dependency on libavformat
+Version 0.2.5 - 01.Jul.2010
 * Fix build with older VA-API 0.29-sds
 * Fix decoding of some H.264 streams. e.g. Ice Age 2 trailer
+* Fix VA/GLX support with texture-from-pixmap and GLX version < 1.3
 
 Version 0.2.4 - 18.May.2010
 * Fix video rendering rect within an embedder window (Totem)
