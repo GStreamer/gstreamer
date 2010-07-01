@@ -54,6 +54,9 @@ typedef struct _GESTimelineTestSourceClass GESTimelineTestSourceClass;
 typedef struct _GESTimelineTitleSource GESTimelineTitleSource;
 typedef struct _GESTimelineTitleSourceClass GESTimelineTitleSourceClass;
 
+typedef struct _GESTimelineOverlay GESTimelineOverlay;
+typedef struct _GESTimelineOverlayClass GESTimelineOverlayClass;
+
 typedef struct _GESTimelineTextOverlay GESTimelineTextOverlay;
 typedef struct _GESTimelineTextOverlayClass GESTimelineTextOverlayClass;
 

@@ -20,6 +20,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-timeline-transition.c		\
 	ges-timeline-test-source.c		\
 	ges-timeline-title-source.c		\
+	ges-timeline-overlay.c		\
 	ges-timeline-text-overlay.c		\
 	ges-track.c				\
 	ges-track-object.c			\
