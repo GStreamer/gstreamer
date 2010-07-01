@@ -18,6 +18,7 @@ ges_init
 GESVideoTransitionType
 GES_VIDEO_TRANSITION_TYPE_TYPE
 ges_video_transition_type_get_type
+GESTrackType
 GES_TYPE_TRACK_TYPE
 ges_track_type_get_type
 </SECTION>
@@ -26,7 +27,6 @@ ges_track_type_get_type
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack
-GESTrackType
 GESTrackClass
 ges_track_audio_raw_new
 ges_track_video_raw_new
