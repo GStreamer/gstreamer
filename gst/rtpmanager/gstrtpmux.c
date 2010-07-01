@@ -318,6 +318,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
   if (!gst_rtp_buffer_validate (buffer)) {
+    gst_buffer_unref (buffer);
     GST_ERROR_OBJECT (rtp_mux, "Invalid RTP buffer");
     gst_object_unref (rtp_mux);
     return GST_FLOW_ERROR;
