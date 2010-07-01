@@ -34,6 +34,13 @@ typedef void (*PFNGLXBINDTEXIMAGEEXTPROC)(Display *, GLXDrawable, int, const int
 typedef void (*PFNGLXRELEASETEXIMAGEEXTPROC)(Display *, GLXDrawable, int);
 #endif
 
+#if GLX_GLXEXT_VERSION < 27
+/* XXX: this is not exactly that version but this is the only means to
+   make sure we have the correct <GL/glx.h> with those signatures */
+typedef GLXPixmap (*PFNGLXCREATEPIXMAPPROC)(Display *, GLXFBConfig, Pixmap, const int *);
+typedef void (*PFNGLXDESTROYPIXMAPPROC)(Display *, GLXPixmap);
+#endif
+
 #ifndef GL_FRAMEBUFFER_BINDING
 #define GL_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING_EXT
 #endif
@@ -117,6 +124,8 @@ gl_create_texture(GLenum target, GLenum format, guint width, guint height)
 
 typedef struct _GLVTable GLVTable;
 struct _GLVTable {
+    PFNGLXCREATEPIXMAPPROC              glx_create_pixmap;
+    PFNGLXDESTROYPIXMAPPROC             glx_destroy_pixmap;
     PFNGLXBINDTEXIMAGEEXTPROC           glx_bind_tex_image;
     PFNGLXRELEASETEXIMAGEEXTPROC        glx_release_tex_image;
     PFNGLGENFRAMEBUFFERSEXTPROC         gl_gen_framebuffers;
