@@ -852,16 +852,10 @@ gl_create_pixmap_object(Display *dpy, guint width, guint height)
 
     /* XXX: this won't work for different displays */
     if (!gl_vtable->has_texture_from_pixmap) {
-        const char *glx_extensions;
-        int glx_major, glx_minor;
-        glx_extensions = glXQueryExtensionsString(dpy, screen);
+        const char *glx_extensions = glXQueryExtensionsString(dpy, screen);
         if (!glx_extensions)
             return NULL;
         if (!find_string("GLX_EXT_texture_from_pixmap", glx_extensions, " "))
-            return NULL;
-        if (!glXQueryVersion(dpy, &glx_major, &glx_minor))
-            return NULL;
-        if (glx_major < 1 || (glx_major == 1 && glx_minor < 3)) /* 1.3 */
             return NULL;
         gl_vtable->has_texture_from_pixmap = TRUE;
     }
