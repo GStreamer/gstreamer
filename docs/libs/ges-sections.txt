@@ -13,6 +13,16 @@ ges_init
 </SECTION>
 
 <SECTION>
+<FILE>ges-enums</FILE>
+<TITLE>GES Enums</TITLE>
+GESVideoTransitionType
+GES_VIDEO_TRANSITION_TYPE_TYPE
+ges_video_transition_type_get_type
+GES_TYPE_TRACK_TYPE
+ges_track_type_get_type
+</SECTION>
+
+<SECTION>
 <FILE>ges-track</FILE>
 <TITLE>GESTrack</TITLE>
 GESTrack
@@ -27,14 +37,12 @@ ges_track_set_caps
 <SUBSECTION Standard>
 ges_track_set_timeline
 ges_track_get_type
-ges_track_type_get_type
 GES_IS_TRACK
 GES_IS_TRACK_CLASS
 GES_TRACK
 GES_TRACK_CLASS
 GES_TRACK_GET_CLASS
 GES_TYPE_TRACK
-GES_TYPE_TRACK_TYPE
 </SECTION>
 
 <SECTION>

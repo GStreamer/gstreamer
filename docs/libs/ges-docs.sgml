@@ -29,6 +29,7 @@ platform as well as Windows. It is released under the GNU Library General Public
     </para>
   <xi:include href="architecture.xml"/>
   <xi:include href="xml/ges-common.xml"/>
+  <xi:include href="xml/ges-enums.xml"/>
   </chapter>
 
   <chapter>
