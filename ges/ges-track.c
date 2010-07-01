@@ -47,32 +47,6 @@ static void pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track);
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, GESTrack * track);
 
-#define C_ENUM(v) ((guint) v)
-static void
-register_ges_track_type_select_result (GType * id)
-{
-  static const GFlagsValue values[] = {
-    {C_ENUM (GES_TRACK_TYPE_UNKNOWN), "GES_TRACK_TYPE_UNKNOWN", "unknown"},
-    {C_ENUM (GES_TRACK_TYPE_AUDIO), "GES_TRACK_TYPE_AUDIO", "audio"},
-    {C_ENUM (GES_TRACK_TYPE_VIDEO), "GES_TRACK_TYPE_VIDEO", "video"},
-    {C_ENUM (GES_TRACK_TYPE_TEXT), "GES_TRACK_TYPE_TEXT", "text"},
-    {C_ENUM (GES_TRACK_TYPE_CUSTOM), "GES_TRACK_TYPE_CUSTOM", "custom"},
-    {0, NULL, NULL}
-  };
-
-  *id = g_flags_register_static ("GESTrackType", values);
-}
-
-GType
-ges_track_type_get_type (void)
-{
-  static GType id;
-  static GOnce once = G_ONCE_INIT;
-
-  g_once (&once, (GThreadFunc) register_ges_track_type_select_result, &id);
-  return id;
-}
-
 static void
 ges_track_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
