@@ -27,9 +27,7 @@
 
 #include "ges-internal.h"
 #include "ges-timeline-text-overlay.h"
-#include "ges-timeline-source.h"
 #include "ges-track-object.h"
-#include "ges-track-title-source.h"
 #include "ges-track-text-overlay.h"
 #include <string.h>
 
@@ -37,12 +35,10 @@ G_DEFINE_TYPE (GESTimelineTextOverlay, ges_tl_text_overlay,
     GES_TYPE_TIMELINE_OVERLAY);
 
 #define DEFAULT_PROP_TEXT ""
-#define DEFAULT_PROP_FONT_DESC DEFAULT_FONT_DESC
-#define DEFAULT_PROP_VALIGNMENT DEFAULT_VALIGNMENT
-#define DEFAULT_PROP_HALIGNMENT DEFAULT_HALIGNMENT
-#define GES_TIMELINE_TITLE_SRC_VALIGN_TYPE (ges_timeline_text_overlay_valign_get_type())
-#define GES_TIMELINE_TITLE_SRC_HALIGN_TYPE (ges_timeline_text_overlay_halign_get_type())
-
+#define DEFAULT_PROP_FONT_DESC "Serif 36"
+#define DEFAULT_PROP_VALIGNMENT GES_TEXT_VALIGN_BASELINE
+#define DEFAULT_PROP_HALIGNMENT GES_TEXT_HALIGN_CENTER
+#
 enum
 {
   PROP_0,
@@ -65,20 +61,14 @@ ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
     font_desc);
 
 static void
-ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
-    GESTrackTitleSrcVAlign);
+ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self, GESTextVAlign);
 
 static void
-ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
-    GESTrackTitleSrcHAlign);
+ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self, GESTextHAlign);
 
 static GESTrackObject
     * ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
-
-static GType ges_timeline_text_overlay_valign_get_type (void);
-
-static GType ges_timeline_text_overlay_halign_get_type (void);
 
 static void
 ges_tl_text_overlay_get_property (GObject * object, guint property_id,
@@ -204,8 +194,8 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
       g_param_spec_enum ("halignment", "horizontal alignment",
           "Horizontal alignment of the text",
-          GES_TIMELINE_TITLE_SRC_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GES_TEXT_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   /**
    * GESTimelineTextOverlay:mute:
    *
@@ -227,48 +217,6 @@ ges_tl_text_overlay_init (GESTimelineTextOverlay * self)
   self->text = NULL;
   self->halign = DEFAULT_PROP_HALIGNMENT;
   self->valign = DEFAULT_PROP_VALIGNMENT;
-}
-
-static GType
-ges_timeline_text_overlay_valign_get_type (void)
-{
-  static GType text_overlay_valign_type = 0;
-  static gsize initialized = 0;
-  static const GEnumValue text_overlay_valign[] = {
-    {GES_TRACK_TITLE_SRC_VALIGN_BASELINE, "baseline", "baseline"},
-    {GES_TRACK_TITLE_SRC_VALIGN_BOTTOM, "bottom", "bottom"},
-    {GES_TRACK_TITLE_SRC_VALIGN_TOP, "top", "top"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&initialized)) {
-    text_overlay_valign_type =
-        g_enum_register_static ("GESTimelineTextOverlayVAlign",
-        text_overlay_valign);
-    g_once_init_leave (&initialized, 1);
-  }
-  return text_overlay_valign_type;
-}
-
-static GType
-ges_timeline_text_overlay_halign_get_type (void)
-{
-  static GType text_overlay_halign_type = 0;
-  static gsize initialized = 0;
-  static const GEnumValue text_overlay_halign[] = {
-    {GES_TRACK_TITLE_SRC_HALIGN_LEFT, "left", "left"},
-    {GES_TRACK_TITLE_SRC_HALIGN_CENTER, "center", "center"},
-    {GES_TRACK_TITLE_SRC_HALIGN_RIGHT, "right", "right"},
-    {0, NULL, NULL},
-  };
-
-  if (g_once_init_enter (&initialized)) {
-    text_overlay_halign_type =
-        g_enum_register_static ("GESTimelineTextOverlayHAlign",
-        text_overlay_halign);
-    g_once_init_leave (&initialized, 1);
-  }
-  return text_overlay_halign_type;
 }
 
 static void
@@ -319,7 +267,7 @@ ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
 
 static void
 ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
-    GESTrackTitleSrcHAlign halign)
+    GESTextHAlign halign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;
@@ -341,7 +289,7 @@ ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
 
 static void
 ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
-    GESTrackTitleSrcVAlign valign)
+    GESTextVAlign valign)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;

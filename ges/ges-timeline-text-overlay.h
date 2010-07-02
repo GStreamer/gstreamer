@@ -58,8 +58,8 @@ struct _GESTimelineTextOverlay {
   gboolean mute;
   gchar *text;
   gchar *font_desc;
-  gint halign;
-  gint valign;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
 };
 
 /**
