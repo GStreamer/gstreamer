@@ -29,6 +29,9 @@ GESTextVAlign
 DEFAULT_VALIGNMENT
 GES_TEXT_VALIGN_TYPE
 ges_text_valign_get_type
+GESVideoTestPattern
+GES_VIDEO_TEST_PATTERN_TYPE
+ges_video_test_pattern_get_type
 </SECTION>
 
 <SECTION>
@@ -428,7 +431,6 @@ GES_TYPE_TIMELINE_TEXT_OVERLAY
 <TITLE>GESTrackVideoTestSource</TITLE>
 GESTrackVideoTestSource
 GESTrackVideoTestSourceClass
-GESTrackVideoBgSrcPattern
 ges_track_video_test_source_new
 ges_track_video_test_source_get_type
 <SUBSECTION Standard>

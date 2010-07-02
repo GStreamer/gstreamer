@@ -16,3 +16,5 @@ ges_timeline_transition_get_type
 ges_cust_timeline_src_get_type
 ges_simple_timeline_layer_get_type
 ges_video_transition_type_get_type
+ges_text_valign_get_type
+ges_text_halign_get_type

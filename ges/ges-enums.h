@@ -251,6 +251,51 @@ typedef enum {
 
 GType ges_text_halign_get_type (void);
 
+/**
+ * GESVideoTestPattern:
+ * @GES_VIDEO_TEST_PATTERN_SMPTE: A standard SMPTE test pattern
+ * @GES_VIDEO_TEST_PATTERN_SNOW: Random noise
+ * @GES_VIDEO_TEST_PATTERN_BLACK: A black image
+ * @GES_VIDEO_TEST_PATTERN_WHITE: A white image
+ * @GES_VIDEO_TEST_PATTERN_RED: A red image
+ * @GES_VIDEO_TEST_PATTERN_GREEN: A green image
+ * @GES_VIDEO_TEST_PATTERN_BLUE: A blue image
+ * @GES_VIDEO_TEST_PATTERN_CHECKERS1: Checkers pattern (1px)
+ * @GES_VIDEO_TEST_PATTERN_CHECKERS2: Checkers pattern (2px)
+ * @GES_VIDEO_TEST_PATTERN_CHECKERS4: Checkers pattern (4px)
+ * @GES_VIDEO_TEST_PATTERN_CHECKERS8: Checkers pattern (8px)
+ * @GES_VIDEO_TEST_PATTERN_CIRCULAR: Circular pattern
+ * @GES_VIDEO_TEST_PATTERN_BLINK: Alternate between black and white
+ * @GES_VIDEO_TEST_PATTERN_SMPTE75: SMPTE test pattern (75% color bars)
+ *
+ * The test pattern to produce
+ */
+
+typedef enum {
+  GES_VIDEO_TEST_PATTERN_SMPTE,
+  GES_VIDEO_TEST_PATTERN_SNOW,
+  GES_VIDEO_TEST_PATTERN_BLACK,
+  GES_VIDEO_TEST_PATTERN_WHITE,
+  GES_VIDEO_TEST_PATTERN_RED,
+  GES_VIDEO_TEST_PATTERN_GREEN,
+  GES_VIDEO_TEST_PATTERN_BLUE,
+  GES_VIDEO_TEST_PATTERN_CHECKERS1,
+  GES_VIDEO_TEST_PATTERN_CHECKERS2,
+  GES_VIDEO_TEST_PATTERN_CHECKERS4,
+  GES_VIDEO_TEST_PATTERN_CHECKERS8,
+  GES_VIDEO_TEST_PATTERN_CIRCULAR,
+  GES_VIDEO_TEST_PATTERN_BLINK,
+  GES_VIDEO_TEST_PATTERN_SMPTE75,
+} GESVideoTestPattern;
+
+
+#define GES_VIDEO_TEST_PATTERN_TYPE\
+  ges_video_test_pattern_get_type()
+
+extern GEnumValue vpattern_enum_values[];
+
+GType ges_video_test_pattern_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GES_ENUMS_H__ */

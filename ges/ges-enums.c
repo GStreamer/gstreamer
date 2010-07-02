@@ -463,3 +463,52 @@ ges_text_halign_get_type (void)
   }
   return text_overlay_halign_type;
 }
+
+/* table more-or-less copied from gstvideotestsrc.c */
+GEnumValue vpattern_enum_values[] = {
+  {GES_VIDEO_TEST_PATTERN_SMPTE, "SMPTE 100% color bars", "smpte"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_SNOW, "Random (television snow)", "snow"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_BLACK, "100% Black", "black"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_WHITE, "100% White", "white"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_RED, "Red", "red"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_GREEN, "Green", "green"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_BLUE, "Blue", "blue"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_CHECKERS1, "Checkers 1px", "checkers-1"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_CHECKERS2, "Checkers 2px", "checkers-2"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_CHECKERS4, "Checkers 4px", "checkers-4"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_CHECKERS8, "Checkers 8px", "checkers-8"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_CIRCULAR, "Circular", "circular"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_BLINK, "Blink", "blink"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_SMPTE75, "SMPTE 75% color bars", "smpte75"}
+  ,
+  {0, NULL, NULL}
+};
+
+GType
+ges_video_test_pattern_get_type (void)
+{
+
+  static gsize once = 0;
+  static GType theType = 0;
+
+  if (g_once_init_enter (&once)) {
+    theType = g_enum_register_static ("GESTimelineTestSourceVPattern",
+        vpattern_enum_values);
+    g_once_init_leave (&once, 1);
+  };
+
+  return theType;
+}
