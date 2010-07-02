@@ -436,8 +436,7 @@ ges_text_valign_get_type (void)
 
   if (g_once_init_enter (&initialized)) {
     text_overlay_valign_type =
-        g_enum_register_static ("GESTimelineTextOverlayVAlign",
-        text_overlay_valign);
+        g_enum_register_static ("GESTextVAlign", text_overlay_valign);
     g_once_init_leave (&initialized, 1);
   }
   return text_overlay_valign_type;
@@ -457,8 +456,7 @@ ges_text_halign_get_type (void)
 
   if (g_once_init_enter (&initialized)) {
     text_overlay_halign_type =
-        g_enum_register_static ("GESTimelineTextOverlayHAlign",
-        text_overlay_halign);
+        g_enum_register_static ("GESTextHAlign", text_overlay_halign);
     g_once_init_leave (&initialized, 1);
   }
   return text_overlay_halign_type;
@@ -505,7 +503,7 @@ ges_video_test_pattern_get_type (void)
   static GType theType = 0;
 
   if (g_once_init_enter (&once)) {
-    theType = g_enum_register_static ("GESTimelineTestSourceVPattern",
+    theType = g_enum_register_static ("GESVideoTestPattern",
         vpattern_enum_values);
     g_once_init_leave (&once, 1);
   };
