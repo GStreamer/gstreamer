@@ -78,8 +78,12 @@ class Widgets (dict):
     def __init__ (self, builder):
 
         widgets = (obj for obj in builder.get_objects ()
-                   if hasattr (obj, "name"))
-        dict.__init__ (self, ((w.name, w,) for w in widgets))
+                   if isinstance(obj, gtk.Buildable))
+        # gtk.Widget.get_name() shadows out the GtkBuildable interface method
+        # of the same name, hence calling the unbound interface method here:
+        items = ((gtk.Buildable.get_name (w), w,) for w in widgets)
+
+        dict.__init__ (self, items)
 
     def __getattr__ (self, name):
 
