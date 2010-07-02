@@ -139,7 +139,7 @@ ges_track_audio_test_source_set_volume (GESTrackAudioTestSource * self,
   self->volume = volume;
   element = ((GESTrackSource *) self)->element;
   if (element)
-    g_object_set (element, "freq", (gdouble) volume, NULL);
+    g_object_set (element, "volume", (gdouble) volume, NULL);
 }
 
 GESTrackAudioTestSource *

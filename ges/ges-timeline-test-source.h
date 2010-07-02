@@ -57,7 +57,9 @@ struct _GESTimelineTestSource {
 
   /*< private >*/
   gboolean mute;
-  gint vpattern;
+  GESVideoTestPattern vpattern;
+  gdouble freq;
+  gdouble volume;
 };
 
 /**

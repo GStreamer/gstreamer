@@ -116,6 +116,7 @@ GST_START_TEST (test_test_source_in_layer)
   GESTrackObject *trobj;
   GESTimelineTestSource *source;
   GESVideoTestPattern ptrn;
+  gdouble freq, volume;
 
   ges_init ();
 
@@ -147,14 +148,44 @@ GST_START_TEST (test_test_source_in_layer)
 
   ptrn = ((GESTrackVideoTestSource *) trobj)->pattern;
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
+  g_object_unref (trobj);
 
-  GST_DEBUG ("removing the source");
+  /* test audio properties as well */
+
+  trobj = ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source),
+      a);
+  g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
+  assert_equals_float (source->freq, 440);
+  assert_equals_float (source->volume, 0);
+
+  g_object_get (source, "freq", &freq, "volume", &volume, NULL);
+  assert_equals_float (freq, 440);
+  assert_equals_float (volume, 0);
+
+  freq = ((GESTrackAudioTestSource *) trobj)->freq;
+  volume = ((GESTrackAudioTestSource *) trobj)->volume;
+  g_assert (freq == 440);
+  g_assert (volume == 0);
+
+
+  g_object_set (source, "freq", (gdouble) 2000, "volume", (gdouble) 0.5, NULL);
+
+  g_object_get (source, "freq", &freq, "volume", &volume, NULL);
+  assert_equals_float (freq, 2000);
+  assert_equals_float (volume, 0.5);
+
+  freq = ((GESTrackAudioTestSource *) trobj)->freq;
+  volume = ((GESTrackAudioTestSource *) trobj)->volume;
+
+  g_assert (freq == 2000);
+  g_assert (volume == 0.5);
+
+  g_object_unref (trobj);
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
 
   GST_DEBUG ("removing the layer");
 
-  g_object_unref (trobj);
   g_object_unref (timeline);
 }
 
