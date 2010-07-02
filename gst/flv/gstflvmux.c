@@ -764,7 +764,7 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
 
     GST_DEBUG_OBJECT (mux, "determined the duration to be %f", d);
     data = GST_BUFFER_DATA (script_tag);
-    GST_WRITE_DOUBLE_BE (data + 42 + 2 + 8, d);
+    GST_WRITE_DOUBLE_BE (data + 29 + 2 + 8 + 1, d);
   }
 
   if (mux->have_video) {
@@ -1251,7 +1251,7 @@ gst_flv_mux_rewrite_header (GstFlvMux * mux)
 
   /* seek back to the preallocated index space */
   event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-      42, GST_CLOCK_TIME_NONE, 42);
+      13 + 29, GST_CLOCK_TIME_NONE, 13 + 29);
   if (!gst_pad_push_event (mux->srcpad, event)) {
     GST_WARNING_OBJECT (mux, "Seek to rewrite header failed");
     return GST_FLOW_OK;
