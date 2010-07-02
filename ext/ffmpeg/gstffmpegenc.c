@@ -930,15 +930,18 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       ffmpegenc->adapter_consumed = 0;
     } else {
       GstClockTime upstream_time;
+      GstClockTime consumed_time;
       guint64 bytes;
 
       /* use timestamp at head of the adapter */
-      GST_LOG_OBJECT (ffmpegenc, "taking adapter timestamp %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (ffmpegenc->adapter_ts));
-      timestamp = ffmpegenc->adapter_ts;
-      timestamp +=
+      consumed_time =
           gst_util_uint64_scale (ffmpegenc->adapter_consumed, GST_SECOND,
           ctx->sample_rate);
+      timestamp = ffmpegenc->adapter_ts + consumed_time;
+      GST_LOG_OBJECT (ffmpegenc, "taking adapter timestamp %" GST_TIME_FORMAT
+          " and adding consumed time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (ffmpegenc->adapter_ts), GST_TIME_ARGS (consumed_time));
+
       /* check with upstream timestamps, if too much deviation,
        * forego some timestamp perfection in favour of upstream syncing
        * (particularly in case these do not happen to come in multiple
@@ -948,7 +951,8 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
         GstClockTimeDiff diff;
 
         upstream_time +=
-            gst_util_uint64_scale (bytes, GST_SECOND, ctx->sample_rate);
+            gst_util_uint64_scale (bytes, GST_SECOND,
+            ctx->sample_rate * osize * ctx->channels);
         diff = upstream_time - timestamp;
         /* relaxed difference, rather than half a sample or so ... */
         if (diff > GST_SECOND / 10 || diff < -GST_SECOND / 10) {
@@ -977,6 +981,10 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
     while (avail >= frame_bytes) {
       GST_LOG_OBJECT (ffmpegenc, "taking %u bytes from the adapter",
           frame_bytes);
+
+      /* Note that we take frame_bytes and add frame_size.
+       * Makes sense when resyncing because you don't have to count channels
+       * or samplesize to divide by the samplerate */
 
       /* take an audio buffer out of the adapter */
       in_data = (guint8 *) gst_adapter_peek (ffmpegenc->adapter, frame_bytes);
