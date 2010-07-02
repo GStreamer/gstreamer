@@ -47,7 +47,7 @@ typedef struct _GstRingBufferSpec GstRingBufferSpec;
  * @user_data: user data
  *
  * This function is set with gst_ring_buffer_set_callback() and is
- * called to fill the memory at @data with @len bytes of samples. 
+ * called to fill the memory at @data with @len bytes of samples.
  */
 typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
@@ -84,7 +84,7 @@ typedef enum {
 /**
  * GstBufferFormatType:
  * @GST_BUFTYPE_LINEAR: samples in linear PCM
- * @GST_BUFTYPE_FLOAT: samples in float 
+ * @GST_BUFTYPE_FLOAT: samples in float
  * @GST_BUFTYPE_MU_LAW: samples in mulaw
  * @GST_BUFTYPE_A_LAW: samples in alaw
  * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
@@ -201,7 +201,7 @@ struct _GstRingBufferSpec
   gint      depth;
   gint      rate;
   gint      channels;
-  
+
   guint64  latency_time;        /* the required/actual latency time, this is the
 				 * actual the size of one segment and the
 				 * minimum possible latency we can achieve. */
@@ -325,7 +325,7 @@ struct _GstRingBufferClass {
   gboolean     (*activate)     (GstRingBuffer *buf, gboolean active);
 
   guint        (*commit)       (GstRingBuffer * buf, guint64 *sample,
-                                guchar * data, gint in_samples, 
+                                guchar * data, gint in_samples,
                                 gint out_samples, gint * accum);
 
   void         (*clear_all)    (GstRingBuffer * buf);
@@ -337,7 +337,7 @@ struct _GstRingBufferClass {
 GType gst_ring_buffer_get_type(void);
 
 /* callback stuff */
-void            gst_ring_buffer_set_callback    (GstRingBuffer *buf, GstRingBufferCallback cb, 
+void            gst_ring_buffer_set_callback    (GstRingBuffer *buf, GstRingBufferCallback cb,
                                                  gpointer user_data);
 
 gboolean        gst_ring_buffer_parse_caps      (GstRingBufferSpec *spec, GstCaps *caps);
@@ -382,14 +382,14 @@ void            gst_ring_buffer_set_sample      (GstRingBuffer *buf, guint64 sam
 void            gst_ring_buffer_clear_all       (GstRingBuffer *buf);
 
 /* commit samples */
-guint           gst_ring_buffer_commit          (GstRingBuffer *buf, guint64 sample, 
+guint           gst_ring_buffer_commit          (GstRingBuffer *buf, guint64 sample,
                                                  guchar *data, guint len);
 guint           gst_ring_buffer_commit_full     (GstRingBuffer * buf, guint64 *sample,
-		                                 guchar * data, gint in_samples, 
+		                                 guchar * data, gint in_samples,
 						 gint out_samples, gint * accum);
 
 /* read samples */
-guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sample, 
+guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sample,
                                                  guchar *data, guint len);
 
 /* mostly protected */
