@@ -21,6 +21,14 @@ ges_video_transition_type_get_type
 GESTrackType
 GES_TYPE_TRACK_TYPE
 ges_track_type_get_type
+GESTextHAlign
+DEFAULT_HALIGNMENT
+GES_TEXT_HALIGN_TYPE
+ges_text_halign_get_type
+GESTextVAlign
+DEFAULT_VALIGNMENT
+GES_TEXT_VALIGN_TYPE
+ges_text_valign_get_type
 </SECTION>
 
 <SECTION>

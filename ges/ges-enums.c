@@ -421,3 +421,45 @@ ges_video_transition_type_get_type (void)
 
   return the_type;
 }
+
+GType
+ges_text_valign_get_type (void)
+{
+  static GType text_overlay_valign_type = 0;
+  static gsize initialized = 0;
+  static const GEnumValue text_overlay_valign[] = {
+    {GES_TEXT_VALIGN_BASELINE, "baseline", "baseline"},
+    {GES_TEXT_VALIGN_BOTTOM, "bottom", "bottom"},
+    {GES_TEXT_VALIGN_TOP, "top", "top"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&initialized)) {
+    text_overlay_valign_type =
+        g_enum_register_static ("GESTimelineTextOverlayVAlign",
+        text_overlay_valign);
+    g_once_init_leave (&initialized, 1);
+  }
+  return text_overlay_valign_type;
+}
+
+GType
+ges_text_halign_get_type (void)
+{
+  static GType text_overlay_halign_type = 0;
+  static gsize initialized = 0;
+  static const GEnumValue text_overlay_halign[] = {
+    {GES_TEXT_HALIGN_LEFT, "left", "left"},
+    {GES_TEXT_HALIGN_CENTER, "center", "center"},
+    {GES_TEXT_HALIGN_RIGHT, "right", "right"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&initialized)) {
+    text_overlay_halign_type =
+        g_enum_register_static ("GESTimelineTextOverlayHAlign",
+        text_overlay_halign);
+    g_once_init_leave (&initialized, 1);
+  }
+  return text_overlay_halign_type;
+}

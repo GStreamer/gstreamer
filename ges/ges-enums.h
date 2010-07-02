@@ -209,6 +209,48 @@ extern GEnumValue transition_types[];
 
 GType ges_video_transition_type_get_type (void);
 
+/**
+ * GESTextVAlign:
+ * @GES_TEXT_VALIGN_BASELINE: draw text on the baseline
+ * @GES_TEXT_VALIGN_BOTTOM: draw text on the bottom
+ * @GES_TEXT_VALIGN_TOP: draw test on top
+ *
+ * Vertical alignment of the text.
+ */
+typedef enum {
+    GES_TEXT_VALIGN_BASELINE,
+    GES_TEXT_VALIGN_BOTTOM,
+    GES_TEXT_VALIGN_TOP
+} GESTextVAlign;
+
+#define DEFAULT_VALIGNMENT GES_TEXT_VALIGN_BASELINE
+
+#define GES_TEXT_VALIGN_TYPE\
+  (ges_text_valign_get_type ())
+
+GType ges_text_valign_get_type (void);
+
+/**
+ * GESTextHAlign:
+ * @GES_TEXT_HALIGN_LEFT: align text left
+ * @GES_TEXT_HALIGN_CENTER: align text center
+ * @GES_TEXT_HALIGN_RIGHT: align text right
+ *
+ * Horizontal alignment of the text.
+ */
+typedef enum {
+    GES_TEXT_HALIGN_LEFT,
+    GES_TEXT_HALIGN_CENTER,
+    GES_TEXT_HALIGN_RIGHT
+} GESTextHAlign;
+
+#define DEFAULT_HALIGNMENT GES_TEXT_HALIGN_CENTER
+
+#define GES_TEXT_HALIGN_TYPE\
+  (ges_text_halign_get_type ())
+
+GType ges_text_halign_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GES_ENUMS_H__ */
