@@ -115,7 +115,7 @@ GST_START_TEST (test_test_source_in_layer)
   GESTrack *a, *v;
   GESTrackObject *trobj;
   GESTimelineTestSource *source;
-  GESTrackVideoBgSrcPattern ptrn;
+  GESVideoTestPattern ptrn;
 
   ges_init ();
 
@@ -130,7 +130,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   source = ges_timeline_test_source_new_for_nick ((gchar *) "red");
   g_object_get (source, "vpattern", &ptrn, NULL);
-  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_RED);
+  assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_RED);
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
@@ -138,15 +138,15 @@ GST_START_TEST (test_test_source_in_layer)
       (GESTimelineObject *) source, 0);
 
   /* specifically test the vpattern property */
-  g_object_set (source, "vpattern", (gint) GES_TRACK_VIDEO_BG_SRC_WHITE, NULL);
+  g_object_set (source, "vpattern", (gint) GES_VIDEO_TEST_PATTERN_WHITE, NULL);
   g_object_get (source, "vpattern", &ptrn, NULL);
-  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
+  assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
 
   trobj =
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
 
   ptrn = ((GESTrackVideoTestSource *) trobj)->pattern;
-  assert_equals_int (ptrn, GES_TRACK_VIDEO_BG_SRC_WHITE);
+  assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
 
   GST_DEBUG ("removing the source");
 

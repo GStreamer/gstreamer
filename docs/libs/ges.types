@@ -18,3 +18,4 @@ ges_simple_timeline_layer_get_type
 ges_video_transition_type_get_type
 ges_text_valign_get_type
 ges_text_halign_get_type
+ges_video_test_pattern_get_type

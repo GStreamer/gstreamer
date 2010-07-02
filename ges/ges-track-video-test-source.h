@@ -22,6 +22,7 @@
 #define _GES_TRACK_VIDEO_TEST_SOURCE
 
 #include <glib-object.h>
+#include <ges/ges-enums.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-source.h>
 
@@ -44,43 +45,6 @@ G_BEGIN_DECLS
 #define GES_TRACK_VIDEO_TEST_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourceClass))
 
-/**
- * GESTrackVideoBgSrcPattern:
- * @GES_TRACK_VIDEO_BG_SRC_SMPTE: A standard SMPTE test pattern
- * @GES_TRACK_VIDEO_BG_SRC_SNOW: Random noise
- * @GES_TRACK_VIDEO_BG_SRC_BLACK: A black image
- * @GES_TRACK_VIDEO_BG_SRC_WHITE: A white image
- * @GES_TRACK_VIDEO_BG_SRC_RED: A red image
- * @GES_TRACK_VIDEO_BG_SRC_GREEN: A green image
- * @GES_TRACK_VIDEO_BG_SRC_BLUE: A blue image
- * @GES_TRACK_VIDEO_BG_SRC_CHECKERS1: Checkers pattern (1px)
- * @GES_TRACK_VIDEO_BG_SRC_CHECKERS2: Checkers pattern (2px)
- * @GES_TRACK_VIDEO_BG_SRC_CHECKERS4: Checkers pattern (4px)
- * @GES_TRACK_VIDEO_BG_SRC_CHECKERS8: Checkers pattern (8px)
- * @GES_TRACK_VIDEO_BG_SRC_CIRCULAR: Circular pattern
- * @GES_TRACK_VIDEO_BG_SRC_BLINK: Alternate between black and white
- * @GES_TRACK_VIDEO_BG_SRC_SMPTE75: SMPTE test pattern (75% color bars)
- *
- * The test pattern to produce
- */
-
-typedef enum {
-  GES_TRACK_VIDEO_BG_SRC_SMPTE,
-  GES_TRACK_VIDEO_BG_SRC_SNOW,
-  GES_TRACK_VIDEO_BG_SRC_BLACK,
-  GES_TRACK_VIDEO_BG_SRC_WHITE,
-  GES_TRACK_VIDEO_BG_SRC_RED,
-  GES_TRACK_VIDEO_BG_SRC_GREEN,
-  GES_TRACK_VIDEO_BG_SRC_BLUE,
-  GES_TRACK_VIDEO_BG_SRC_CHECKERS1,
-  GES_TRACK_VIDEO_BG_SRC_CHECKERS2,
-  GES_TRACK_VIDEO_BG_SRC_CHECKERS4,
-  GES_TRACK_VIDEO_BG_SRC_CHECKERS8,
-  GES_TRACK_VIDEO_BG_SRC_CIRCULAR,
-  GES_TRACK_VIDEO_BG_SRC_BLINK,
-  GES_TRACK_VIDEO_BG_SRC_SMPTE75,
-} GESTrackVideoBgSrcPattern;
-
 /** 
  * GESTrackVideoTestSource:
  * @parent: parent
@@ -89,7 +53,7 @@ struct _GESTrackVideoTestSource {
   GESTrackSource parent;
 
   /*< private >*/
-  GESTrackVideoBgSrcPattern pattern;
+  GESVideoTestPattern pattern;
 };
 
 /**
@@ -109,7 +73,7 @@ GESTrackVideoTestSource* ges_track_video_test_source_new (void);
 void
 
 ges_track_video_test_source_set_pattern(GESTrackVideoTestSource *,
-    GESTrackVideoBgSrcPattern);
+    GESVideoTestPattern);
 
 G_END_DECLS
 

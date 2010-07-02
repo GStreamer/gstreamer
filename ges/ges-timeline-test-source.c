@@ -38,46 +38,6 @@
 G_DEFINE_TYPE (GESTimelineTestSource, ges_timeline_test_source,
     GES_TYPE_TIMELINE_SOURCE);
 
-#define GES_TIMELINE_TEST_SOURCE_VPATTERN_TYPE\
-  ges_timeline_test_source_vpattern_get_type()
-
-/* table more-or-less copied from gstvideotestsrc.c */
-static GEnumValue vpattern_enum_values[] = {
-  {GES_TRACK_VIDEO_BG_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
-  {GES_TRACK_VIDEO_BG_SRC_SNOW, "Random (television snow)", "snow"},
-  {GES_TRACK_VIDEO_BG_SRC_BLACK, "100% Black", "black"},
-  {GES_TRACK_VIDEO_BG_SRC_WHITE, "100% White", "white"},
-  {GES_TRACK_VIDEO_BG_SRC_RED, "Red", "red"},
-  {GES_TRACK_VIDEO_BG_SRC_GREEN, "Green", "green"},
-  {GES_TRACK_VIDEO_BG_SRC_BLUE, "Blue", "blue"},
-  {GES_TRACK_VIDEO_BG_SRC_CHECKERS1, "Checkers 1px", "checkers-1"},
-  {GES_TRACK_VIDEO_BG_SRC_CHECKERS2, "Checkers 2px", "checkers-2"},
-  {GES_TRACK_VIDEO_BG_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
-  {GES_TRACK_VIDEO_BG_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
-  {GES_TRACK_VIDEO_BG_SRC_CIRCULAR, "Circular", "circular"},
-  {GES_TRACK_VIDEO_BG_SRC_BLINK, "Blink", "blink"},
-  {GES_TRACK_VIDEO_BG_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
-  {0, NULL, NULL}
-};
-
-GType ges_timeline_test_source_vpattern_get_type (void);
-
-GType
-ges_timeline_test_source_vpattern_get_type (void)
-{
-
-  static gsize once = 0;
-  static GType theType = 0;
-
-  if (g_once_init_enter (&once)) {
-    theType = g_enum_register_static ("GESTimelineTestSourceVPattern",
-        vpattern_enum_values);
-    g_once_init_leave (&once, 1);
-  };
-
-  return theType;
-}
-
 enum
 {
   PROP_0,
@@ -163,8 +123,8 @@ ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
   g_object_class_install_property (object_class, PROP_VPATTERN,
       g_param_spec_enum ("vpattern", "VPattern",
           "Which video pattern to display. See videotestsrc element",
-          GES_TIMELINE_TEST_SOURCE_VPATTERN_TYPE,
-          GES_TRACK_VIDEO_BG_SRC_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GES_VIDEO_TEST_PATTERN_TYPE,
+          GES_VIDEO_TEST_PATTERN_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineTestSource:mute:

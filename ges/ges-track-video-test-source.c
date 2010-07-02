@@ -69,7 +69,7 @@ ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 static void
 ges_track_video_test_source_init (GESTrackVideoTestSource * self)
 {
-  self->pattern = GES_TRACK_VIDEO_BG_SRC_BLACK;
+  self->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
 }
 
 static void
@@ -119,7 +119,7 @@ ges_track_video_test_source_create_element (GESTrackSource * self)
 
 void
 ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
-    * self, GESTrackVideoBgSrcPattern pattern)
+    * self, GESVideoTestPattern pattern)
 {
   GstElement *element;
   element = GES_TRACK_SOURCE (self)->element;

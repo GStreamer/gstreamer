@@ -22,6 +22,7 @@
 #define _GES_TL_TESTSOURCE
 
 #include <glib-object.h>
+#include <ges/ges-enums.h>
 #include <ges/ges-types.h>
 #include <ges/ges-timeline-source.h>
 #include <ges/ges-track.h>

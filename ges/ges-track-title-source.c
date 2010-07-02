@@ -147,7 +147,7 @@ ges_track_title_src_create_element (GESTrackSource * object)
   g_object_set (text, "valignment", (gint) self->valign, "halignment",
       (gint) self->halign, NULL);
 
-  g_object_set (background, "pattern", (gint) GES_TRACK_VIDEO_BG_SRC_BLACK,
+  g_object_set (background, "pattern", (gint) GES_VIDEO_TEST_PATTERN_BLACK,
       NULL);
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
