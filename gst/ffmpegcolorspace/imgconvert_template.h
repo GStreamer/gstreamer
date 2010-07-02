@@ -47,6 +47,14 @@ static void glue (uyvy422_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
 
             s1 += 4;
         }
+
+        if (w) {
+            YUV_TO_RGB1_CCIR(s1[0], s1[2]);
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[1]);
+            RGB_OUT(d1, r, g, b);
+        }
+
         d += dst->linesize[0];
         s += src->linesize[0];
     }
@@ -78,6 +86,14 @@ static void glue (yuv422_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
 
             s1 += 4;
         }
+
+        if (w) {
+            YUV_TO_RGB1_CCIR(s1[1], s1[3]);
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[0]);
+            RGB_OUT(d1, r, g, b);
+        }
+
         d += dst->linesize[0];
         s += src->linesize[0];
     }
@@ -109,6 +125,14 @@ static void glue (yvyu422_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
 
             s1 += 4;
         }
+
+        if (w) {
+            YUV_TO_RGB1_CCIR(s1[3], s1[1]);
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[0]);
+            RGB_OUT(d1, r, g, b);
+        }
+
         d += dst->linesize[0];
         s += src->linesize[0];
     }
