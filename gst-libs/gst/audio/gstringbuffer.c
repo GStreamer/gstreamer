@@ -793,7 +793,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
-  GST_DEBUG_OBJECT (buf, "acquiring device");
+  GST_DEBUG_OBJECT (buf, "acquiring device %p", buf);
 
   GST_OBJECT_LOCK (buf);
   if (G_UNLIKELY (!buf->open))
@@ -864,7 +864,8 @@ acquire_failed:
 invalid_bps:
   {
     g_warning
-        ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
+        ("invalid bytes_per_sample from acquire ringbuffer %p, fix the element",
+        buf);
     buf->acquired = FALSE;
     res = FALSE;
     goto done;
