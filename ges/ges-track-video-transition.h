@@ -46,17 +46,14 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackVideoTransition:
- * @type: the 
  */
 
 struct _GESTrackVideoTransition {
   GESTrackTransition parent;
   
-  /*< public >*/
-  GESVideoTransitionType        type;
-
   /*< private >*/
-  
+  GESVideoTransitionType        type;
+ 
   /* these enable video interpolation */
   GstController                 *controller;
   GstInterpolationControlSource *control_source;
