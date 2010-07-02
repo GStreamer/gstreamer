@@ -598,7 +598,8 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
       GST_TIME_ARGS (demux->src_segment.position),
       GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
 
-  if (demux->src_segment.position != GST_CLOCK_TIME_NONE) {
+  if (demux->src_segment.position != GST_CLOCK_TIME_NONE &&
+      demux->base_time != GST_CLOCK_TIME_NONE) {
     GstClockTime new_time = demux->base_time + demux->src_segment.position;
 
     if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < new_time) {
