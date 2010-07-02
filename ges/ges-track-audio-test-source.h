@@ -53,7 +53,9 @@ G_BEGIN_DECLS
 struct _GESTrackAudioTestSource {
   GESTrackSource parent;
 
-  /*< public >*/
+  /*< private >*/
+  gdouble freq;
+  gdouble volume;
 };
 
 /**
@@ -71,6 +73,12 @@ struct _GESTrackAudioTestSourceClass {
 GType ges_track_audio_test_source_get_type (void);
 
 GESTrackAudioTestSource* ges_track_audio_test_source_new (void);
+
+void ges_track_audio_test_source_set_freq(GESTrackAudioTestSource *self,
+    gdouble freq);
+
+void ges_track_audio_test_source_set_volume(GESTrackAudioTestSource *self,
+    gdouble volume);
 
 G_END_DECLS
 
