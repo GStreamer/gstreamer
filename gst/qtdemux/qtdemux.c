@@ -6980,7 +6980,11 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
 
     taglist = gst_tag_list_from_xmp_buffer (buf);
     gst_buffer_unref (buf);
+
+    /* Strip out bogus fields */
+
     if (taglist) {
+      gst_tag_list_remove_tag (taglist, GST_TAG_VIDEO_CODEC);
       if (qtdemux->tag_list) {
         GST_DEBUG_OBJECT (qtdemux, "Found XMP tags");
 
