@@ -155,16 +155,15 @@ GST_START_TEST (test_overlay_in_layer)
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)
-      GES_TRACK_TITLE_SRC_HALIGN_LEFT,
-      "valignment", (gint) GES_TRACK_TITLE_SRC_VALIGN_TOP, NULL);
+      GES_TEXT_HALIGN_LEFT, "valignment", (gint) GES_TEXT_VALIGN_TOP, NULL);
   g_object_get (source, "halignment", &halign, "valignment", &valign, NULL);
-  assert_equals_int (halign, GES_TRACK_TITLE_SRC_HALIGN_LEFT);
-  assert_equals_int (valign, GES_TRACK_TITLE_SRC_VALIGN_TOP);
+  assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
   halign = ((GESTrackTextOverlay *) trobj)->halign;
   valign = ((GESTrackTextOverlay *) trobj)->valign;
-  assert_equals_int (halign, GES_TRACK_TITLE_SRC_HALIGN_LEFT);
-  assert_equals_int (valign, GES_TRACK_TITLE_SRC_VALIGN_TOP);
+  assert_equals_int (halign, GES_TEXT_HALIGN_LEFT);
+  assert_equals_int (valign, GES_TEXT_VALIGN_TOP);
 
   GST_DEBUG ("removing the source");
 
