@@ -175,7 +175,7 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTimelineTextOverlay:valignment
@@ -184,8 +184,9 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
       g_param_spec_enum ("valignment", "vertical alignment",
-          "Vertical alignment of the text", GES_TIMELINE_TITLE_SRC_VALIGN_TYPE,
-          DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Vertical alignment of the text", GES_TEXT_VALIGN_TYPE,
+          DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
   /**
    * GESTimelineTextOverlay:halignment
    *
@@ -341,6 +342,12 @@ ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,
     res = (GESTrackObject *) ges_track_text_overlay_new ();
     GST_DEBUG ("Setting text property");
     ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, tfs->text);
+    ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) res,
+        tfs->font_desc);
+    ges_track_text_overlay_set_halignment ((GESTrackTextOverlay *) res,
+        tfs->halign);
+    ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *) res,
+        tfs->valign);
   }
 
   else {

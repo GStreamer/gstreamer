@@ -166,7 +166,7 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
 
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
-          DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineTitleSource:font-dec
@@ -178,8 +178,8 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
-          "for syntax.", DEFAULT_PROP_FONT_DESC,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "for syntax.", DEFAULT_FONT_DESC,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GESTimelineTitleSource:valignment
@@ -341,6 +341,12 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
     res = (GESTrackObject *) ges_track_title_source_new ();
     GST_DEBUG ("Setting text property");
     ges_track_title_source_set_text ((GESTrackTitleSource *) res, tfs->text);
+    ges_track_title_source_set_font_desc ((GESTrackTitleSource *) res,
+        tfs->font_desc);
+    ges_track_title_source_set_halignment ((GESTrackTitleSource *) res,
+        tfs->halign);
+    ges_track_title_source_set_valignment ((GESTrackTitleSource *) res,
+        tfs->valign);
   }
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
