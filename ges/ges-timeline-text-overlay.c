@@ -42,15 +42,12 @@ G_DEFINE_TYPE (GESTimelineTextOverlay, ges_tl_text_overlay,
 enum
 {
   PROP_0,
-  PROP_MUTE,
   PROP_TEXT,
   PROP_FONT_DESC,
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
 };
 
-static void ges_tl_text_overlay_set_mute (GESTimelineTextOverlay * self,
-    gboolean mute);
 
 static void
 ges_tl_text_overlay_set_text (GESTimelineTextOverlay * self,
@@ -77,9 +74,6 @@ ges_tl_text_overlay_get_property (GObject * object, guint property_id,
   GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
 
   switch (property_id) {
-    case PROP_MUTE:
-      g_value_set_boolean (value, tfs->mute);
-      break;
     case PROP_TEXT:
       g_value_set_string (value, tfs->text);
       break;
@@ -104,9 +98,6 @@ ges_tl_text_overlay_set_property (GObject * object, guint property_id,
   GESTimelineTextOverlay *tfs = GES_TIMELINE_TEXT_OVERLAY (object);
 
   switch (property_id) {
-    case PROP_MUTE:
-      ges_tl_text_overlay_set_mute (tfs, g_value_get_boolean (value));
-      break;
     case PROP_TEXT:
       ges_tl_text_overlay_set_text (tfs, g_value_get_string (value));
       break;
@@ -197,14 +188,6 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           "Horizontal alignment of the text",
           GES_TEXT_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
-  /**
-   * GESTimelineTextOverlay:mute:
-   *
-   * Whether the sound will be played or not.
-   */
-  g_object_class_install_property (object_class, PROP_MUTE,
-      g_param_spec_boolean ("mute", "Mute", "Mute audio track",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   timobj_class->create_track_object = ges_tl_text_overlay_create_track_object;
   timobj_class->need_fill_track = FALSE;
@@ -307,25 +290,6 @@ ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
           (trackobject), self->valign);
   }
 
-}
-
-static void
-ges_tl_text_overlay_set_mute (GESTimelineTextOverlay * self, gboolean mute)
-{
-  GList *tmp;
-  GESTimelineObject *object = (GESTimelineObject *) self;
-
-  GST_DEBUG ("self:%p, mute:%d", self, mute);
-
-  self->mute = mute;
-
-  /* Go over tracked objects, and update 'active' status on all audio objects */
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
-    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
-
-    if (trackobject->track->type == GES_TRACK_TYPE_AUDIO)
-      ges_track_object_set_active (trackobject, !mute);
-  }
 }
 
 static GESTrackObject *
