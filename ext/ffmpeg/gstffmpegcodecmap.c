@@ -2537,9 +2537,9 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
         gst_caps_from_string
         ("application/x-3gp; video/quicktime; audio/x-m4a");
   } else if (!strcmp (format_name, "mov")) {
-    caps = gst_caps_new_simple ("video/quicktime", NULL);
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)apple");
   } else if (!strcmp (format_name, "mp4")) {
-    caps = gst_caps_new_simple ("video/quicktime", NULL);
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)iso");
   } else if ((!strcmp (format_name, "3gp")) || (!strcmp (format_name, "3gp2"))) {
     caps = gst_caps_new_simple ("application/x-3gp", NULL);
   } else if (!strcmp (format_name, "aac")) {
