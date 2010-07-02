@@ -47,7 +47,6 @@ G_BEGIN_DECLS
 
 /**
  * GESTimelineTextOverlay:
- * @parent: parent
  * 
  */
 

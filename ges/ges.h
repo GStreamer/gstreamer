@@ -49,6 +49,9 @@
 #include <ges/ges-track-audio-test-source.h>
 #include <ges/ges-track-title-source.h>
 #include <ges/ges-track-text-overlay.h>
+#include <ges/ges-track-transition.h>
+#include <ges/ges-track-video-transition.h>
+#include <ges/ges-track-audio-transition.h>
 
 #include <ges/ges-utils.h>
 

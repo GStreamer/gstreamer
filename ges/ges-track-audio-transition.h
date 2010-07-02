@@ -46,7 +46,6 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackAudioTransition:
- * @parent: parent
  *
  */
 

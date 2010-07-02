@@ -159,21 +159,19 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
   object_class->finalize = ges_tl_title_src_finalize;
 
   /**
-   * GESTimelineTitleSource:text
+   * GESTimelineTitleSource:text:
    *
    * The text to diplay
    */
-
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
           DEFAULT_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:font-dec
+   * GESTimelineTitleSource:font-desc:
    *
    * Pango font description string
    */
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font to be used for rendering. "
@@ -182,7 +180,7 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GESTimelineTitleSource:valignment
+   * GESTimelineTitleSource:valignment:
    *
    * Vertical alignent of the text
    */
@@ -192,7 +190,7 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
           DEFAULT_VALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineTitleSource:halignment
+   * GESTimelineTitleSource:halignment:
    *
    * Horizontal alignment of the text
    */

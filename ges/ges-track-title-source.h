@@ -46,7 +46,6 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackTitleSource:
- * @parent: parent
  *
  */
 struct _GESTrackTitleSource {

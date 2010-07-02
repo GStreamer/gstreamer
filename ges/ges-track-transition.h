@@ -52,7 +52,6 @@ G_BEGIN_DECLS
 
 /**
  * GESTrackTransition:
- * @parent: parent
  *
  * Track level representation of a transition. Has a concrete implementation
  * for both audio and video streams.

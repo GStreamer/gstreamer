@@ -46,7 +46,6 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackAudioTestSource:
- * @parent: parent
  *
  */
 

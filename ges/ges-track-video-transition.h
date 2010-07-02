@@ -46,16 +46,14 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackVideoTransition:
- * @parent: parent
- *
+ * @type: the 
  */
 
 struct _GESTrackVideoTransition {
   GESTrackTransition parent;
   
   /*< public >*/
-  /* given to to smpte alpha element */
-  gint                          type;
+  GESVideoTransitionType        type;
 
   /*< private >*/
   

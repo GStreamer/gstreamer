@@ -48,7 +48,6 @@ G_BEGIN_DECLS
 
 /**
  * GESTimelineTestSource:
- * @parent: parent
  * 
  */
 

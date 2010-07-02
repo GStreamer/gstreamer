@@ -47,7 +47,6 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackVideoTestSource:
- * @parent: parent
  */
 struct _GESTrackVideoTestSource {
   GESTrackSource parent;

@@ -47,7 +47,6 @@ G_BEGIN_DECLS
 
 /** 
  * GESTrackTextOverlay:
- * @parent: parent
  *
  */
 struct _GESTrackTextOverlay {
