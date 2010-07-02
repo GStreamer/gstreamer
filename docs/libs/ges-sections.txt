@@ -447,9 +447,6 @@ GESTrackAudioTestSource
 GESTrackAudioTestSourceClass
 ges_track_audio_test_source_new
 ges_track_audio_test_source_get_type
-DEFAULT_FONT_DESC
-DEFAULT_HALIGNMENT
-DEFAULT_VALIGNMENT
 <SUBSECTION Standard>
 GES_TRACK_AUDIO_TEST_SOURCE
 GES_TRACK_AUDIO_TEST_SOURCE_CLASS
@@ -464,8 +461,6 @@ GES_IS_TRACK_AUDIO_TEST_SOURCE_CLASS
 <TITLE>GESTrackTitleSource</TITLE>
 GESTrackTitleSource
 GESTrackTitleSourceClass
-GESTrackTitleSrcHAlign
-GESTrackTitleSrcVAlign
 ges_tl_title_src_get_type
 ges_track_title_source_set_text
 ges_track_title_source_set_font_desc

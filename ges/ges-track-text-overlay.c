@@ -72,7 +72,7 @@ static void
 ges_track_text_overlay_init (GESTrackTextOverlay * self)
 {
   self->text = NULL;
-  self->font_desc = g_strdup (DEFAULT_FONT_DESC);
+  self->font_desc = NULL;
   self->text_el = NULL;
   self->halign = DEFAULT_HALIGNMENT;
   self->valign = DEFAULT_VALIGNMENT;
@@ -207,13 +207,13 @@ ges_track_text_overlay_set_font_desc (GESTrackTextOverlay * self,
 /**
  * ges_track_text_overlay_valignment:
  * @self: the #GESTrackTextOverlay* to set text on
- * @valign: #GESTrackTitleSrcVAlign
+ * @valign: #GESTextVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
-    GESTrackTitleSrcVAlign valign)
+    GESTextVAlign valign)
 {
   self->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
@@ -224,13 +224,13 @@ ges_track_text_overlay_set_valignment (GESTrackTextOverlay * self,
 /**
  * ges_track_text_overlay_halignment:
  * @self: the #GESTrackTextOverlay* to set text on
- * @halign: #GESTrackTitleSrcHAlign
+ * @halign: #GESTextHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_text_overlay_set_halignment (GESTrackTextOverlay * self,
-    GESTrackTitleSrcHAlign halign)
+    GESTextHAlign halign)
 {
   self->halign = halign;
   GST_LOG ("set halignment to: %d", halign);

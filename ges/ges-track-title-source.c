@@ -69,7 +69,7 @@ static void
 ges_track_title_src_init (GESTrackTitleSource * self)
 {
   self->text = NULL;
-  self->font_desc = g_strdup (DEFAULT_FONT_DESC);
+  self->font_desc = NULL;
   self->text_el = NULL;
   self->halign = DEFAULT_HALIGNMENT;
   self->valign = DEFAULT_VALIGNMENT;
@@ -212,13 +212,13 @@ ges_track_title_source_set_font_desc (GESTrackTitleSource * self,
 /**
  * ges_track_title_source_valignment:
  * @self: the #GESTrackTitleSource* to set text on
- * @valign: #GESTrackTitleSrcVAlign
+ * @valign: #GESTextVAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_title_source_set_valignment (GESTrackTitleSource * self,
-    GESTrackTitleSrcVAlign valign)
+    GESTextVAlign valign)
 {
   self->valign = valign;
   GST_LOG ("set valignment to: %d", valign);
@@ -229,13 +229,13 @@ ges_track_title_source_set_valignment (GESTrackTitleSource * self,
 /**
  * ges_track_title_source_halignment:
  * @self: the #GESTrackTitleSource* to set text on
- * @halign: #GESTrackTitleSrcHAlign
+ * @halign: #GESTextHAlign
  *
  * Sets the vertical aligment of the text.
  */
 void
 ges_track_title_source_set_halignment (GESTrackTitleSource * self,
-    GESTrackTitleSrcHAlign halign)
+    GESTextHAlign halign)
 {
   self->halign = halign;
   GST_LOG ("set halignment to: %d", halign);

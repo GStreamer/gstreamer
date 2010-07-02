@@ -56,8 +56,8 @@ struct _GESTrackTextOverlay {
   /*< private >*/
   gchar         *text;
   gchar         *font_desc;
-  gint          halign;
-  gint          valign;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
   GstElement    *text_el;
 };
 
@@ -81,10 +81,10 @@ void ges_track_text_overlay_set_font_desc(GESTrackTextOverlay *self,
     const gchar *font_desc);
 
 void ges_track_text_overlay_set_halignment(GESTrackTextOverlay
-    *self, GESTrackTitleSrcHAlign halgn);
+    *self, GESTextHAlign halgn);
 
 void ges_track_text_overlay_set_valignment(GESTrackTextOverlay
-    *self, GESTrackTitleSrcVAlign valign);
+    *self, GESTextVAlign valign);
 
 GESTrackTextOverlay* ges_track_text_overlay_new (void);
 
