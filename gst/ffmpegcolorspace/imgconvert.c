@@ -893,6 +893,10 @@ uyvy422_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
       p += 4;
       lum += 2;
     }
+
+    if (w)
+      lum[0] = p[1];
+
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
   }
@@ -1014,6 +1018,10 @@ yvyu422_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
       p += 4;
       lum += 2;
     }
+
+    if (w)
+      lum[0] = p[0];
+
     p1 += src->linesize[0];
     lum1 += dst->linesize[0];
   }
