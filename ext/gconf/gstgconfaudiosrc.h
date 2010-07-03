@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gconf/gconf-client.h>
 
+#include "gstswitchsrc.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_GCONF_AUDIO_SRC            (gst_gconf_audio_src_get_type ())
@@ -33,12 +35,10 @@ G_BEGIN_DECLS
 #define GST_IS_GCONF_AUDIO_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GCONF_AUDIO_SRC))
 
 typedef struct _GstGConfAudioSrc {
-  GstBin parent;
+  GstSwitchSrc parent;
 
   /* explicit pointers to stuff used */
   GConfClient *client;
-  GstElement *kid;
-  GstPad *pad;
 
   guint gconf_notify_id;
 
@@ -47,7 +47,7 @@ typedef struct _GstGConfAudioSrc {
 } GstGConfAudioSrc;
 
 typedef struct _GstGConfAudioSrcClass {
-  GstBinClass parent_class;
+  GstSwitchSrcClass parent_class;
 } GstGConfAudioSrcClass;
 
 GType   gst_gconf_audio_src_get_type   (void);

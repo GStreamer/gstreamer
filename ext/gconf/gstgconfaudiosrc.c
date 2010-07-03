@@ -49,20 +49,14 @@ static GstStateChangeReturn
 gst_gconf_audio_src_change_state (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstGConfAudioSrc, gst_gconf_audio_src, GstBin, GST_TYPE_BIN);
+GST_BOILERPLATE (GstGConfAudioSrc, gst_gconf_audio_src, GstSwitchSrc,
+    GST_TYPE_SWITCH_SRC);
 
 static void
 gst_gconf_audio_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS_ANY);
-
-  gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&src_template));
   gst_element_class_set_details_simple (eklass, "GConf audio source",
       "Source/Audio",
       "Audio source embedding the GConf-settings for audio input",
@@ -87,23 +81,7 @@ gst_gconf_audio_src_class_init (GstGConfAudioSrcClass * klass)
 static gboolean
 gst_gconf_audio_src_reset (GstGConfAudioSrc * src)
 {
-  GstPad *targetpad;
-
-  /* fakesrc */
-  if (src->kid) {
-    gst_element_set_state (src->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (src), src->kid);
-  }
-  src->kid = gst_element_factory_make ("fakesrc", "testsrc");
-  if (!src->kid) {
-    GST_ERROR_OBJECT (src, "Failed to create fakesrc");
-    return FALSE;
-  }
-  gst_bin_add (GST_BIN (src), src->kid);
-
-  targetpad = gst_element_get_static_pad (src->kid, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
-  gst_object_unref (targetpad);
+  gst_switch_src_set_child (GST_SWITCH_SRC (src), NULL);
 
   g_free (src->gconf_str);
   src->gconf_str = NULL;
@@ -114,9 +92,6 @@ static void
 gst_gconf_audio_src_init (GstGConfAudioSrc * src,
     GstGConfAudioSrcClass * g_class)
 {
-  src->pad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (src), src->pad);
-
   gst_gconf_audio_src_reset (src);
 
   src->client = gconf_client_get_default ();
@@ -156,8 +131,7 @@ gst_gconf_audio_src_finalize (GstGConfAudioSrc * src)
 static gboolean
 do_toggle_element (GstGConfAudioSrc * src)
 {
-  GstState cur, next;
-  GstPad *targetpad;
+  GstElement *new_kid;
   gchar *new_gconf_str;
 
   new_gconf_str = gst_gconf_get_string (GST_GCONF_AUDIOSRC_KEY);
@@ -169,50 +143,30 @@ do_toggle_element (GstGConfAudioSrc * src)
     return TRUE;
   }
 
-  GST_OBJECT_LOCK (src);
-  cur = GST_STATE (src);
-  next = GST_STATE_PENDING (src);
-  GST_OBJECT_UNLOCK (src);
-
-  if (cur >= GST_STATE_READY || next == GST_STATE_PAUSED) {
-    GST_DEBUG_OBJECT (src, "already running, ignoring GConf change");
-    g_free (new_gconf_str);
-    return TRUE;
-  }
-
   GST_DEBUG_OBJECT (src, "GConf key changed: '%s' to '%s'",
       GST_STR_NULL (src->gconf_str), GST_STR_NULL (new_gconf_str));
+
+  GST_DEBUG_OBJECT (src, "Creating new kid");
+  if (!(new_kid = gst_gconf_get_default_audio_src ())) {
+    GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
+        ("Failed to render audio src from GConf"));
+    return FALSE;
+  }
+
+  if (!gst_switch_src_set_child (GST_SWITCH_SRC (src), new_kid)) {
+    GST_WARNING_OBJECT (src, "Failed to update child element");
+    goto fail;
+  }
 
   g_free (src->gconf_str);
   src->gconf_str = new_gconf_str;
 
-  /* kill old element */
-  if (src->kid) {
-    GST_DEBUG_OBJECT (src, "Removing old kid");
-    gst_element_set_state (src->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (src), src->kid);
-    src->kid = NULL;
-  }
-
-  GST_DEBUG_OBJECT (src, "Creating new kid");
-  if (!(src->kid = gst_gconf_get_default_audio_src ())) {
-    GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
-        ("Failed to render audio source from GConf"));
-    g_free (src->gconf_str);
-    src->gconf_str = NULL;
-    return FALSE;
-  }
-  gst_element_set_state (src->kid, GST_STATE (src));
-  gst_bin_add (GST_BIN (src), src->kid);
-
-  /* re-attach ghostpad */
-  GST_DEBUG_OBJECT (src, "Creating new ghostpad");
-  targetpad = gst_element_get_static_pad (src->kid, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
-  gst_object_unref (targetpad);
-  GST_DEBUG_OBJECT (src, "done changing gconf audio source");
+  GST_DEBUG_OBJECT (src, "done changing gconf audio src");
 
   return TRUE;
+fail:
+  g_free (new_gconf_str);
+  return FALSE;
 }
 
 static void
@@ -231,8 +185,10 @@ gst_gconf_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!do_toggle_element (src))
+      if (!do_toggle_element (src)) {
+        gst_gconf_audio_src_reset (src);
         return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     default:
       break;
