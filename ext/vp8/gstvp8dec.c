@@ -1,4 +1,4 @@
-/* VP8 plugin
+/* VP8
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2008,2009,2010 Entropy Wave Inc
  * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
@@ -26,72 +26,13 @@
 
 #ifdef HAVE_VP8_DECODER
 
-#include <gst/gst.h>
-#include <gst/video/gstbasevideodecoder.h>
-#include <gst/video/gstbasevideoutils.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/base/gstadapter.h>
-#include <gst/video/video.h>
 #include <string.h>
-#include <math.h>
 
-/* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
- * which causes compilation failures */
-#ifdef HAVE_CONFIG_H
-#undef HAVE_CONFIG_H
-#endif
-
-#include <vpx/vpx_decoder.h>
-#include <vpx/vp8dx.h>
-
+#include "gstvp8dec.h"
 #include "gstvp8utils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8dec_debug);
 #define GST_CAT_DEFAULT gst_vp8dec_debug
-
-#define GST_TYPE_VP8_DEC \
-  (gst_vp8_dec_get_type())
-#define GST_VP8_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VP8_DEC,GstVP8Dec))
-#define GST_VP8_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VP8_DEC,GstVP8DecClass))
-#define GST_IS_GST_VP8_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP8_DEC))
-#define GST_IS_GST_VP8_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP8_DEC))
-
-typedef struct _GstVP8Dec GstVP8Dec;
-typedef struct _GstVP8DecClass GstVP8DecClass;
-
-struct _GstVP8Dec
-{
-  GstBaseVideoDecoder base_video_decoder;
-
-  vpx_codec_ctx_t decoder;
-
-  /* state */
-
-  gboolean decoder_inited;
-
-  /* properties */
-  gboolean post_processing;
-  enum vp8_postproc_level post_processing_flags;
-  gint deblocking_level;
-  gint noise_level;
-};
-
-struct _GstVP8DecClass
-{
-  GstBaseVideoDecoderClass base_video_decoder_class;
-};
-
-
-/* GstVP8Dec signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
 
 #define DEFAULT_POST_PROCESSING FALSE
 #define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK)
@@ -146,8 +87,6 @@ static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
     GstVideoFrame * frame, GstClockTimeDiff deadline);
-
-GType gst_vp8_dec_get_type (void);
 
 static GstStaticPadTemplate gst_vp8_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

@@ -25,8 +25,8 @@
 
 #include <gst/gst.h>
 
-GType gst_vp8_dec_get_type (void);
-GType gst_vp8_enc_get_type (void);
+#include "gstvp8dec.h"
+#include "gstvp8enc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
