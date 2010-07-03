@@ -19,6 +19,30 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+/**
+ * SECTION:element-vp8enc
+ * @see_also: vp8dec, webmmux, oggmux
+ *
+ * This element encodes raw video into a VP8 stream.
+ * <ulink url="http://www.webmproject.org">VP8</ulink> is a royalty-free
+ * video codec maintained by <ulink url="http://www.google.com/">Google
+ * </ulink>. It's the successor of On2 VP3, which was the base of the
+ * Theora video codec.
+ *
+ * To control the quality of the encoding, the #GstVP8Enc::bitrate and
+ * #GstVP8Enc::quality properties can be used. These two properties are
+ * mutualy exclusive. Setting the bitrate property will produce a constant
+ * bitrate (CBR) stream while setting the quality property will produce a
+ * variable bitrate (VBR) stream.
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! vp8enc ! webmmux ! filesink location=videotestsrc.webm
+ * ]| This example pipeline will encode a test video source to VP8 muxed in an
+ * WebM container.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -295,7 +319,7 @@ gst_vp8_enc_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (object, "finalize");
 
-  g_return_if_fail (GST_IS_GST_VP8_ENC (object));
+  g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
   g_free (gst_vp8_enc->multipass_cache_file);
@@ -311,7 +335,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
 {
   GstVP8Enc *gst_vp8_enc;
 
-  g_return_if_fail (GST_IS_GST_VP8_ENC (object));
+  g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
   GST_DEBUG_OBJECT (object, "gst_vp8_enc_set_property");
@@ -359,7 +383,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVP8Enc *gst_vp8_enc;
 
-  g_return_if_fail (GST_IS_GST_VP8_ENC (object));
+  g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
   switch (prop_id) {
