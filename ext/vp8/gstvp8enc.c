@@ -26,92 +26,20 @@
 
 #ifdef HAVE_VP8_ENCODER
 
-#include <gst/gst.h>
-#include <gst/video/gstbasevideoencoder.h>
-#include <gst/video/gstbasevideoutils.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/base/gstadapter.h>
-#include <gst/video/video.h>
 #include <gst/tag/tag.h>
 #include <string.h>
-#include <math.h>
-
-/* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
- * which causes compilation failures */
-#ifdef HAVE_CONFIG_H
-#undef HAVE_CONFIG_H
-#endif
-
-#include <vpx/vpx_encoder.h>
-#include <vpx/vp8cx.h>
 
 #include "gstvp8utils.h"
+#include "gstvp8enc.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug
-
-#define GST_TYPE_VP8_ENC \
-  (gst_vp8_enc_get_type())
-#define GST_VP8_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VP8_ENC,GstVP8Enc))
-#define GST_VP8_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VP8_ENC,GstVP8EncClass))
-#define GST_IS_GST_VP8_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP8_ENC))
-#define GST_IS_GST_VP8_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP8_ENC))
-
-typedef struct _GstVP8Enc GstVP8Enc;
-typedef struct _GstVP8EncClass GstVP8EncClass;
-
-struct _GstVP8Enc
-{
-  GstBaseVideoEncoder base_video_encoder;
-
-  vpx_codec_ctx_t encoder;
-
-  /* properties */
-  int bitrate;
-  enum vpx_rc_mode mode;
-  double quality;
-  gboolean error_resilient;
-  int max_latency;
-  int max_keyframe_distance;
-  int speed;
-  int threads;
-  enum vpx_enc_pass multipass_mode;
-  gchar *multipass_cache_file;
-  GByteArray *first_pass_cache_content;
-  vpx_fixed_buf_t last_pass_cache_content;
-
-  /* state */
-
-  gboolean force_keyframe;
-  gboolean inited;
-
-  int resolution_id;
-  int n_frames;
-  int keyframe_distance;
-
-  GstPadEventFunction base_sink_event_func;
-};
-
-struct _GstVP8EncClass
-{
-  GstBaseVideoEncoderClass base_video_encoder_class;
-};
 
 typedef struct
 {
   vpx_image_t *image;
   GList *invisible;
 } GstVP8EncCoderHook;
-
-/* GstVP8Enc signals and args */
-enum
-{
-  LAST_SIGNAL
-};
 
 #define DEFAULT_BITRATE 0
 #define DEFAULT_MODE VPX_VBR
@@ -202,8 +130,6 @@ static GstFlowReturn gst_vp8_enc_shape_output (GstBaseVideoEncoder * encoder,
 static GstCaps *gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder);
 
 static gboolean gst_vp8_enc_sink_event (GstPad * pad, GstEvent * event);
-
-GType gst_vp8_enc_get_type (void);
 
 static GstStaticPadTemplate gst_vp8_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -766,8 +692,8 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
   encoder->n_frames++;
 
-  GST_DEBUG_OBJECT (base_video_encoder, "res id %d size %d %d",
-      encoder->resolution_id, state->width, state->height);
+  GST_DEBUG_OBJECT (base_video_encoder, "size %d %d", state->width,
+      state->height);
 
   if (!encoder->inited) {
     vpx_codec_enc_cfg_t cfg;

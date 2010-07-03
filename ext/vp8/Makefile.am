@@ -20,4 +20,6 @@ libgstvp8_la_LIBADD += $(top_builddir)/gst-libs/gst/video/libgstbasevideo-@GST_M
 libgstvp8_la_LIBADD += $(VPX_LIBS)
 
 noinst_HEADERS = \
+	gstvp8dec.h \
+	gstvp8enc.h \
 	gstvp8utils.h
