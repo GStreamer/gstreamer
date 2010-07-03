@@ -175,10 +175,13 @@ GST_START_TEST (test_class)
   factory = gst_element_factory_find ("queue");
   fail_if (factory == NULL);
 
-  GST_DEBUG ("getting the type");
-  /* feature is not loaded, should return 0 as the type */
-  type = gst_element_factory_get_element_type (factory);
-  fail_if (type != 0);
+  /* it may already be loaded if check is being run with CK_FORK=no */
+  if (!GST_PLUGIN_FEATURE (factory)->loaded) {
+    GST_DEBUG ("getting the type");
+    /* feature is not loaded, should return 0 as the type */
+    type = gst_element_factory_get_element_type (factory);
+    fail_if (type != 0);
+  }
 
   GST_DEBUG ("now loading the plugin");
   tmp =
