@@ -56,6 +56,7 @@ setup_fakesrc (void)
   mysinkpad = gst_check_setup_sink_pad (fakesrc, &sinktemplate, NULL);
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
+  have_eos = FALSE;
   return fakesrc;
 }
 
@@ -81,7 +82,7 @@ GST_START_TEST (test_num_buffers)
     g_usleep (1000);
   }
 
-  fail_unless (g_list_length (buffers) == 3);
+  fail_unless_equals_int (g_list_length (buffers), 3);
   gst_check_drop_buffers ();
 
   fail_unless (gst_element_set_state (src,
@@ -111,7 +112,7 @@ GST_START_TEST (test_sizetype_empty)
     g_usleep (1000);
   }
 
-  fail_unless (g_list_length (buffers) == 100);
+  fail_unless_equals_int (g_list_length (buffers), 100);
   l = buffers;
   while (l) {
     GstBuffer *buf = l->data;
