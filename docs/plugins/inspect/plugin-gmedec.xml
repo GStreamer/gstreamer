@@ -3,7 +3,7 @@
   <description>GME Audio Decoder</description>
   <filename>../../ext/gme/.libs/libgstgme.so</filename>
   <basename>libgstgme.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.19.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -17,16 +17,16 @@
       <author>Chris Lee &lt;clee@kde.org&gt;, Brian Koropoff &lt;bkoropoff@gmail.com&gt;, Michael Pyne &lt;mpyne@kde.org&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)32000, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-ay; audio/x-gbs; audio/x-gym; audio/x-hes; audio/x-kss; audio/x-nsf; audio/x-sap; audio/x-spc; audio/x-vgm</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)32000, channels=(int)2</details>
         </caps>
       </pads>
     </element>

@@ -489,3 +489,29 @@ guint  arg1
 GstPad *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstFPSDisplaySink::fps-measurements</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstFPSDisplaySink *gstfpsdisplaysink
+gdouble  arg1
+gdouble  arg2
+gdouble  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstShmSink::client-connected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstShmSink *gstshmsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstShmSink::client-disconnected</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstShmSink *gstshmsink
+gint  arg1
+</SIGNAL>
+

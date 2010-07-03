@@ -3,7 +3,7 @@
   <description>All LV2 plugins</description>
   <filename>../../ext/lv2/.libs/libgstlv2.so</filename>
   <basename>libgstlv2.so</basename>
-  <version>0.10.17.1</version>
+  <version>0.10.19.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -17,16 +17,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -62,13 +62,13 @@
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -80,16 +80,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -104,13 +104,13 @@
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -122,16 +122,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -143,16 +143,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -164,16 +164,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -185,16 +185,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -206,16 +206,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -227,16 +227,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -248,28 +248,28 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>outR</name>
-          <direction>source</direction>
+          <name>inL</name>
+          <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
-          <name>outL</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>inR</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>inL</name>
-          <direction>sink</direction>
+          <name>outL</name>
+          <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>outR</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -284,13 +284,13 @@
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -302,22 +302,22 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>inR</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>inL</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>inR</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -329,16 +329,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -353,7 +353,7 @@
           <name>out</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -365,16 +365,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -386,16 +386,16 @@
       <author>Invada</author>
       <pads>
         <caps>
-          <name>out</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
-        </caps>
-        <caps>
           <name>in</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>out</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)2, rate=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
