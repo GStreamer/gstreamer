@@ -19,6 +19,23 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+/**
+ * SECTION:element-vp8dec
+ * @see_also: vp8enc, matroskademux
+ *
+ * This element decodes VP8 streams into raw video.
+ * <ulink url="http://www.webmproject.org">VP8</ulink> is a royalty-free
+ * video codec maintained by <ulink url="http://www.google.com/">Google
+ * </ulink>. It's the successor of On2 VP3, which was the base of the
+ * Theora video codec.
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -v filesrc location=videotestsrc.webm ! matroskademux ! vp8dec ! xvimagesink
+ * ]| This example pipeline will decode a WebM stream and decodes the VP8 video.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -185,7 +202,7 @@ gst_vp8_dec_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (object, "finalize");
 
-  g_return_if_fail (GST_IS_GST_VP8_DEC (object));
+  g_return_if_fail (GST_IS_VP8_DEC (object));
   gst_vp8_dec = GST_VP8_DEC (object);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -197,7 +214,7 @@ gst_vp8_dec_set_property (GObject * object, guint prop_id,
 {
   GstVP8Dec *dec;
 
-  g_return_if_fail (GST_IS_GST_VP8_DEC (object));
+  g_return_if_fail (GST_IS_VP8_DEC (object));
   dec = GST_VP8_DEC (object);
 
   GST_DEBUG_OBJECT (object, "gst_vp8_dec_set_property");
@@ -226,7 +243,7 @@ gst_vp8_dec_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstVP8Dec *dec;
 
-  g_return_if_fail (GST_IS_GST_VP8_DEC (object));
+  g_return_if_fail (GST_IS_VP8_DEC (object));
   dec = GST_VP8_DEC (object);
 
   switch (prop_id) {

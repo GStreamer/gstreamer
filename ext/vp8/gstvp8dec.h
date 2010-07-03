@@ -44,9 +44,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VP8_DEC,GstVP8Dec))
 #define GST_VP8_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VP8_DEC,GstVP8DecClass))
-#define GST_IS_GST_VP8_DEC(obj) \
+#define GST_IS_VP8_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VP8_DEC))
-#define GST_IS_GST_VP8_DEC_CLASS(obj) \
+#define GST_IS_VP8_DEC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VP8_DEC))
 
 typedef struct _GstVP8Dec GstVP8Dec;
