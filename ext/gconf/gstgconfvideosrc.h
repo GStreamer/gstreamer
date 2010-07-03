@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gconf/gconf-client.h>
 
+#include "gstswitchsrc.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_GCONF_VIDEO_SRC            (gst_gconf_video_src_get_type ())
@@ -33,12 +35,10 @@ G_BEGIN_DECLS
 #define GST_IS_GCONF_VIDEO_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GCONF_VIDEO_SRC))
 
 typedef struct _GstGConfVideoSrc {
-  GstBin parent;
+  GstSwitchSrc parent;
 
   /* explicit pointers to stuff used */
   GConfClient *client;
-  GstElement *kid;
-  GstPad *pad;
 
   /* gconf key notification id */
   guint notify_id;
@@ -48,7 +48,7 @@ typedef struct _GstGConfVideoSrc {
 } GstGConfVideoSrc;
 
 typedef struct _GstGConfVideoSrcClass {
-  GstBinClass parent_class;
+  GstSwitchSrcClass parent_class;
 } GstGConfVideoSrcClass;
 
 GType   gst_gconf_video_src_get_type   (void);
