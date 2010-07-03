@@ -335,11 +335,8 @@ gst_check_teardown_sink_pad (GstElement * element)
 void
 gst_check_drop_buffers (void)
 {
-  GstBuffer *temp_buffer;
-
-  while (g_list_length (buffers)) {
-    temp_buffer = GST_BUFFER (buffers->data);
-    gst_buffer_unref (temp_buffer);
+  while (buffers != NULL) {
+    gst_buffer_unref (GST_BUFFER (buffers->data));
     buffers = g_list_delete_link (buffers, buffers);
   }
 }
@@ -449,14 +446,14 @@ gst_check_element_push_buffer_list (const gchar * element_name,
       "could not set to playing");
   /* push all the buffers in the buffer_in list */
   fail_unless (g_list_length (buffer_in) > 0, "the buffer_in list is empty");
-  while (g_list_length (buffer_in) > 0) {
+  while (buffer_in != NULL) {
     GstBuffer *next_buffer = GST_BUFFER (buffer_in->data);
 
     fail_unless (GST_IS_BUFFER (next_buffer),
         "data in buffer_in should be a buffer");
     /* remove the buffer from the list */
     buffer_in = g_list_remove (buffer_in, next_buffer);
-    if (g_list_length (buffer_in) == 0) {
+    if (buffer_in == NULL) {
       fail_unless (gst_pad_push (src_pad, next_buffer) == last_flow_return,
           "we expect something else from the last buffer");
     } else {
@@ -467,10 +464,8 @@ gst_check_element_push_buffer_list (const gchar * element_name,
   fail_unless (gst_element_set_state (element,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   /* check that there is a buffer out */
-  fail_unless (g_list_length (buffers) == g_list_length (buffer_out),
-      "We expected %d buffers, but there are %d buffers",
-      g_list_length (buffer_out), g_list_length (buffers));
-  while (g_list_length (buffers) > 0) {
+  fail_unless_equals_int (g_list_length (buffers), g_list_length (buffer_out));
+  while (buffers != NULL) {
     GstBuffer *new = GST_BUFFER (buffers->data);
     GstBuffer *orig = GST_BUFFER (buffer_out->data);
 
