@@ -1529,6 +1529,15 @@ AG_GST_CHECK_FEATURE(RTMP, [rtmp library], rtmp, [
   AG_GST_PKG_CHECK_MODULES(RTMP, librtmp)
 ])
 
+dnl *** GSettings ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GSETTINGS, true)
+AG_GST_CHECK_FEATURE(GSETTINGS, [GSettings plugin], gsettings, [
+  AG_GST_PKG_CHECK_MODULES(GSETTINGS, gio-2.0 >= 2.25.0)
+  if test "x$HAVE_GSETTINGS" = "xyes"; then
+    GLIB_GSETTINGS
+  fi
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1579,6 +1588,7 @@ AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_GME, false)
+AM_CONDITIONAL(USE_GSETTINGS, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
@@ -1793,6 +1803,8 @@ ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/gme/Makefile
+ext/gsettings/Makefile
+ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile

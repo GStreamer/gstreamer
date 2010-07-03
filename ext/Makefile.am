@@ -348,6 +348,12 @@ else
 VP8_DIR=
 endif
 
+if USE_GSETTINGS
+GSETTINGS_DIR=gsettings
+else
+GSETTINGS_DIR=
+endif
+
 # if USE_XINE
 # XINE_DIR=xine
 # else
@@ -395,6 +401,7 @@ SUBDIRS=\
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
+	$(GSETTINGS_DIR) \
 	$(GSM_DIR) \
 	$(G729_DIR) \
 	$(HERMES_DIR) \
@@ -451,6 +458,7 @@ DIST_SUBDIRS = \
 	faac \
 	faad \
 	flite \
+	gsettings \
 	gsm \
 	ladspa \
 	jack \
