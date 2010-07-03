@@ -100,11 +100,12 @@ gst_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_init);
-  tcase_add_test (tc_chain, test_deinit);
-  tcase_add_test (tc_chain, test_deinit_sysclock);
   tcase_add_test (tc_chain, test_new_pipeline);
   tcase_add_test (tc_chain, test_new_fakesrc);
   tcase_add_test (tc_chain, test_version);
+  /* run these last so the others don't fail if CK_FORK=no is being used */
+  tcase_add_test (tc_chain, test_deinit_sysclock);
+  tcase_add_test (tc_chain, test_deinit);
 
   return s;
 }
