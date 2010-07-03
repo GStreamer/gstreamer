@@ -535,7 +535,8 @@ gst_object_suite (void)
    * the effort to try and detect which one should be producing which
    */
   /* SEGV tests go last so we can debug the others */
-  tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
+  if (g_getenv ("CK_FORK") == NULL || strcmp (g_getenv ("CK_FORK"), "no") != 0)
+    tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
 #endif
 
   return s;
