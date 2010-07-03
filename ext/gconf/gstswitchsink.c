@@ -85,7 +85,11 @@ gst_switch_sink_reset (GstSwitchSink * sink)
 static void
 gst_switch_sink_init (GstSwitchSink * sink, GstSwitchSinkClass * g_class)
 {
-  sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
+  GstElementClass *eklass = GST_ELEMENT_GET_CLASS (sink);
+  GstPadTemplate *templ;
+
+  templ = gst_element_class_get_pad_template (eklass, "sink");
+  sink->pad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
   gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
 
   gst_switch_sink_reset (sink);
