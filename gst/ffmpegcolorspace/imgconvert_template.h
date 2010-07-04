@@ -80,7 +80,7 @@ static void glue (yuv422_to_, RGB_NAME)(AVPicture *dst, const AVPicture *src,
             RGB_OUT(d1, r, g, b);
             d1 += BPP;
 
-            YUV_TO_RGB2_CCIR(r, g, b, s1[1]);
+            YUV_TO_RGB2_CCIR(r, g, b, s1[2]);
             RGB_OUT(d1, r, g, b);
             d1 += BPP;
 
