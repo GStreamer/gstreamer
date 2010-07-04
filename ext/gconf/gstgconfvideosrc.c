@@ -133,7 +133,7 @@ do_toggle_element (GstGConfVideoSrc * src)
   GstElement *new_kid;
   gchar *new_gconf_str;
 
-  new_gconf_str = gst_gconf_get_string (GST_GCONF_AUDIOSRC_KEY);
+  new_gconf_str = gst_gconf_get_string (GST_GCONF_VIDEOSRC_KEY);
   if (new_gconf_str != NULL && src->gconf_str != NULL &&
       (strlen (new_gconf_str) == 0 ||
           strcmp (src->gconf_str, new_gconf_str) == 0)) {
