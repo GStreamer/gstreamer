@@ -112,7 +112,7 @@ gst_switch_src_dispose (GObject * object)
 }
 
 static gboolean
-gst_switch_commit_new_kid (GstSwitchSrc * src)
+gst_switch_src_commit_new_kid (GstSwitchSrc * src)
 {
   GstPad *targetpad;
   GstState kid_state;
@@ -130,7 +130,7 @@ gst_switch_commit_new_kid (GstSwitchSrc * src)
   else
     kid_state = GST_STATE (src);
 
-  new_kid = src->new_kid;
+  new_kid = src->new_kid ? gst_object_ref (src->new_kid) : NULL;
   src->new_kid = NULL;
   GST_OBJECT_UNLOCK (src);
 
@@ -168,8 +168,6 @@ gst_switch_commit_new_kid (GstSwitchSrc * src)
       GST_INFO_OBJECT (src, "Forwarding kid error: %" GST_PTR_FORMAT, msg);
       gst_element_post_message (GST_ELEMENT (src), msg);
     }
-    /* FIXME: need a translated error message that tells the user to check
-     * her GConf audio/video settings */
     GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, (NULL),
         ("Failed to set state on new child."));
     gst_element_set_bus (new_kid, NULL);
@@ -193,8 +191,6 @@ gst_switch_commit_new_kid (GstSwitchSrc * src)
     gst_element_set_state (old_kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (src), old_kid);
     gst_object_unref (old_kid);
-    /* Don't lose the SINK flag */
-    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SINK);
   }
 
   /* re-attach ghostpad */
@@ -203,12 +199,6 @@ gst_switch_commit_new_kid (GstSwitchSrc * src)
   gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (src, "done changing child of switchsrc");
-
-  /* Unblock the target pad if necessary */
-  if (src->awaiting_block) {
-    gst_pad_set_blocked (src->pad, FALSE);
-    src->awaiting_block = FALSE;
-  }
 
   return TRUE;
 }
@@ -230,6 +220,8 @@ gst_switch_src_set_child (GstSwitchSrc * src, GstElement * new_kid)
   p_kid = &src->new_kid;
   gst_object_replace ((GstObject **) p_kid, (GstObject *) new_kid);
   GST_OBJECT_UNLOCK (src);
+  if (new_kid)
+    gst_object_unref (new_kid);
 
   /* Sometime, it would be lovely to allow src changes even when
    * already running */
@@ -241,7 +233,7 @@ gst_switch_src_set_child (GstSwitchSrc * src, GstElement * new_kid)
     return TRUE;
   }
 
-  return gst_switch_commit_new_kid (src);
+  return gst_switch_src_commit_new_kid (src);
 }
 
 static GstStateChangeReturn

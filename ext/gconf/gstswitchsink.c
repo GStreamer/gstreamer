@@ -1,7 +1,7 @@
 /* GStreamer
- * (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * (c) 2006 Jürg Billeter <j@bitron.ch>
- * (c) 2007 Jan Schmidt <thaytan@noraisin.net>
+ * Copyright (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (c) 2006 Jürg Billeter <j@bitron.ch>
+ * Copyright (c) 2007 Jan Schmidt <thaytan@noraisin.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -118,7 +118,7 @@ gst_switch_sink_dispose (GObject * object)
 }
 
 static gboolean
-gst_switch_commit_new_kid (GstSwitchSink * sink)
+gst_switch_sink_commit_new_kid (GstSwitchSink * sink)
 {
   GstPad *targetpad;
   GstState kid_state;
@@ -136,7 +136,7 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
   else
     kid_state = GST_STATE (sink);
 
-  new_kid = sink->new_kid;
+  new_kid = sink->new_kid ? gst_object_ref (sink->new_kid) : NULL;
   sink->new_kid = NULL;
   GST_OBJECT_UNLOCK (sink);
 
@@ -175,8 +175,6 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
       GST_INFO_OBJECT (sink, "Forwarding kid error: %" GST_PTR_FORMAT, msg);
       gst_element_post_message (GST_ELEMENT (sink), msg);
     }
-    /* FIXME: need a translated error message that tells the user to check
-     * her GConf audio/video settings */
     GST_ELEMENT_ERROR (sink, CORE, STATE_CHANGE, (NULL),
         ("Failed to set state on new child."));
     gst_element_set_bus (new_kid, NULL);
@@ -213,12 +211,6 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
 
   /* FIXME: Push new-segment info and pre-roll buffer(s) into the kid */
 
-  /* Unblock the target pad if necessary */
-  if (sink->awaiting_block) {
-    gst_pad_set_blocked (sink->pad, FALSE);
-    sink->awaiting_block = FALSE;
-  }
-
   return TRUE;
 }
 
@@ -239,6 +231,8 @@ gst_switch_sink_set_child (GstSwitchSink * sink, GstElement * new_kid)
   p_kid = &sink->new_kid;
   gst_object_replace ((GstObject **) p_kid, (GstObject *) new_kid);
   GST_OBJECT_UNLOCK (sink);
+  if (new_kid)
+    gst_object_unref (new_kid);
 
   /* Sometime, it would be lovely to allow sink changes even when
    * already running, but this involves sending an appropriate new-segment
@@ -251,7 +245,7 @@ gst_switch_sink_set_child (GstSwitchSink * sink, GstElement * new_kid)
     return TRUE;
   }
 
-  return gst_switch_commit_new_kid (sink);
+  return gst_switch_sink_commit_new_kid (sink);
 }
 
 static GstStateChangeReturn

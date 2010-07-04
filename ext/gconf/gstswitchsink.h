@@ -1,6 +1,6 @@
 /* GStreamer
- * (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * (c) 2007 Jan Schmidt <thaytan@mad.scientist.com>
+ * Copyright (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (c) 2007 Jan Schmidt <thaytan@mad.scientist.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,14 +45,8 @@ typedef struct _GstSwitchSink {
   GstElement *new_kid;
   GstPad *pad;
 
-  /* Track incoming segment info for switchover */
-  GstSegment segment;
-
   /* If a custom child has been set... */
   gboolean have_kid;
-
-  /* If waiting for a pad block to complete on the ghost pad */
-  gboolean awaiting_block;
 } GstSwitchSink;
 
 typedef struct _GstSwitchSinkClass {

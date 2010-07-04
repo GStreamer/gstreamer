@@ -43,9 +43,6 @@ typedef struct _GstSwitchSrc {
 
   /* If a custom child has been set... */
   gboolean have_kid;
-
-  /* If waiting for a pad block to complete on the ghost pad */
-  gboolean awaiting_block;
 } GstSwitchSrc;
 
 typedef struct _GstSwitchSrcClass {
