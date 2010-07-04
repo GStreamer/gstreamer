@@ -51,8 +51,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define THEORA_DEF_CROP         TRUE
 enum
 {
-  ARG_0,
-  ARG_CROP
+  PROP_0,
+  PROP_CROP
 };
 
 static GstStaticPadTemplate theora_dec_src_factory =
@@ -123,7 +123,7 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
   gobject_class->set_property = theora_dec_set_property;
   gobject_class->get_property = theora_dec_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_CROP,
+  g_object_class_install_property (gobject_class, PROP_CROP,
       g_param_spec_boolean ("crop", "Crop",
           "Crop the image to the visible region", THEORA_DEF_CROP,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -1470,7 +1470,7 @@ theora_dec_set_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case ARG_CROP:
+    case PROP_CROP:
       dec->crop = g_value_get_boolean (value);
       break;
     default:
@@ -1486,7 +1486,7 @@ theora_dec_get_property (GObject * object, guint prop_id,
   GstTheoraDec *dec = GST_THEORA_DEC (object);
 
   switch (prop_id) {
-    case ARG_CROP:
+    case PROP_CROP:
       g_value_set_boolean (value, dec->crop);
       break;
     default:

@@ -111,25 +111,25 @@ _ilog (unsigned int v)
 #define THEORA_DEF_RATE_BUFFER          0
 enum
 {
-  ARG_0,
-  ARG_CENTER,
-  ARG_BORDER,
-  ARG_BITRATE,
-  ARG_QUALITY,
-  ARG_QUICK,
-  ARG_KEYFRAME_AUTO,
-  ARG_KEYFRAME_FREQ,
-  ARG_KEYFRAME_FREQ_FORCE,
-  ARG_KEYFRAME_THRESHOLD,
-  ARG_KEYFRAME_MINDISTANCE,
-  ARG_NOISE_SENSITIVITY,
-  ARG_SHARPNESS,
-  ARG_SPEEDLEVEL,
-  ARG_VP3_COMPATIBLE,
-  ARG_DROP_FRAMES,
-  ARG_CAP_OVERFLOW,
-  ARG_CAP_UNDERFLOW,
-  ARG_RATE_BUFFER,
+  PROP_0,
+  PROP_CENTER,
+  PROP_BORDER,
+  PROP_BITRATE,
+  PROP_QUALITY,
+  PROP_QUICK,
+  PROP_KEYFRAME_AUTO,
+  PROP_KEYFRAME_FREQ,
+  PROP_KEYFRAME_FREQ_FORCE,
+  PROP_KEYFRAME_THRESHOLD,
+  PROP_KEYFRAME_MINDISTANCE,
+  PROP_NOISE_SENSITIVITY,
+  PROP_SHARPNESS,
+  PROP_SPEEDLEVEL,
+  PROP_VP3_COMPATIBLE,
+  PROP_DROP_FRAMES,
+  PROP_CAP_OVERFLOW,
+  PROP_CAP_UNDERFLOW,
+  PROP_RATE_BUFFER,
   /* FILL ME */
 };
 
@@ -223,88 +223,88 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   gobject_class->get_property = theora_enc_get_property;
   gobject_class->finalize = theora_enc_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_CENTER,
+  g_object_class_install_property (gobject_class, PROP_CENTER,
       g_param_spec_boolean ("center", "Center",
           "ignored and kept for API compat only", TRUE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_BORDER,
+  g_object_class_install_property (gobject_class, PROP_BORDER,
       g_param_spec_enum ("border", "Border",
           "ignored and kept for API compat only",
           GST_TYPE_BORDER_MODE, BORDER_BLACK,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* general encoding stream options */
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
           0, (1 << 24) - 1, THEORA_DEF_BITRATE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_QUALITY,
+  g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Video quality", 0, 63,
           THEORA_DEF_QUALITY,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_QUICK,
+  g_object_class_install_property (gobject_class, PROP_QUICK,
       g_param_spec_boolean ("quick", "Quick",
           "ignored and kept for API compat only", TRUE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_KEYFRAME_AUTO,
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_AUTO,
       g_param_spec_boolean ("keyframe-auto", "Keyframe Auto",
           "Automatic keyframe detection", THEORA_DEF_KEYFRAME_AUTO,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ,
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_FREQ,
       g_param_spec_int ("keyframe-freq", "Keyframe frequency",
           "Keyframe frequency", 1, 32768, THEORA_DEF_KEYFRAME_FREQ,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_KEYFRAME_FREQ_FORCE,
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_FREQ_FORCE,
       g_param_spec_int ("keyframe-force", "Keyframe force",
           "Force keyframe every N frames", 1, 32768,
           THEORA_DEF_KEYFRAME_FREQ_FORCE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_KEYFRAME_THRESHOLD,
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_THRESHOLD,
       g_param_spec_int ("keyframe-threshold", "Keyframe threshold",
           "ignored and kept for API compat only", 0, 32768, 80,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_KEYFRAME_MINDISTANCE,
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_MINDISTANCE,
       g_param_spec_int ("keyframe-mindistance", "Keyframe mindistance",
           "ignored and kept for API compat only", 1, 32768, 8,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_NOISE_SENSITIVITY,
+  g_object_class_install_property (gobject_class, PROP_NOISE_SENSITIVITY,
       g_param_spec_int ("noise-sensitivity", "Noise sensitivity",
           "ignored and kept for API compat only", 0, 32768, 1,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SHARPNESS,
+  g_object_class_install_property (gobject_class, PROP_SHARPNESS,
       g_param_spec_int ("sharpness", "Sharpness",
           "ignored and kept for API compat only", 0, 2, 0,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_SPEEDLEVEL,
+  g_object_class_install_property (gobject_class, PROP_SPEEDLEVEL,
       g_param_spec_int ("speed-level", "Speed level",
           "Controls the amount of motion vector searching done while "
           "encoding.  This property requires libtheora version >= 1.0",
           0, 2, THEORA_DEF_SPEEDLEVEL,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_VP3_COMPATIBLE,
+  g_object_class_install_property (gobject_class, PROP_VP3_COMPATIBLE,
       g_param_spec_boolean ("vp3-compatible", "VP3 Compatible",
           "Disables non-VP3 compatible features."
           "  This property requires libtheora version >= 1.1",
           THEORA_DEF_VP3_COMPATIBLE,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_DROP_FRAMES,
+  g_object_class_install_property (gobject_class, PROP_DROP_FRAMES,
       g_param_spec_boolean ("drop-frames", "VP3 Compatible",
           "Allow or disallow frame dropping."
           "  This property requires libtheora version >= 1.1",
           THEORA_DEF_DROP_FRAMES,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_CAP_OVERFLOW,
+  g_object_class_install_property (gobject_class, PROP_CAP_OVERFLOW,
       g_param_spec_boolean ("cap-overflow", "VP3 Compatible",
           "Enable capping of bit reservoir overflows."
           "  This property requires libtheora version >= 1.1",
           THEORA_DEF_CAP_OVERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_CAP_UNDERFLOW,
+  g_object_class_install_property (gobject_class, PROP_CAP_UNDERFLOW,
       g_param_spec_boolean ("cap-underflow", "VP3 Compatible",
           "Enable capping of bit reservoir underflows."
           "  This property requires libtheora version >= 1.1",
           THEORA_DEF_CAP_UNDERFLOW,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_RATE_BUFFER,
+  g_object_class_install_property (gobject_class, PROP_RATE_BUFFER,
       g_param_spec_int ("rate-buffer", "Rate Control Buffer",
           "Sets the size of the rate control buffer, in units of frames.  "
           "The default value of 0 instructs the encoder to automatically "
@@ -1123,58 +1123,58 @@ theora_enc_set_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
-    case ARG_CENTER:
-    case ARG_BORDER:
-    case ARG_QUICK:
-    case ARG_KEYFRAME_THRESHOLD:
-    case ARG_KEYFRAME_MINDISTANCE:
-    case ARG_NOISE_SENSITIVITY:
-    case ARG_SHARPNESS:
+    case PROP_CENTER:
+    case PROP_BORDER:
+    case PROP_QUICK:
+    case PROP_KEYFRAME_THRESHOLD:
+    case PROP_KEYFRAME_MINDISTANCE:
+    case PROP_NOISE_SENSITIVITY:
+    case PROP_SHARPNESS:
       /* kept for API compat, but ignored */
       break;
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       enc->video_bitrate = g_value_get_int (value) * 1000;
       enc->video_quality = 0;
       break;
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       enc->video_quality = g_value_get_int (value);
       enc->video_bitrate = 0;
       break;
-    case ARG_KEYFRAME_AUTO:
+    case PROP_KEYFRAME_AUTO:
       enc->keyframe_auto = g_value_get_boolean (value);
       break;
-    case ARG_KEYFRAME_FREQ:
+    case PROP_KEYFRAME_FREQ:
       enc->keyframe_freq = g_value_get_int (value);
       break;
-    case ARG_KEYFRAME_FREQ_FORCE:
+    case PROP_KEYFRAME_FREQ_FORCE:
       enc->keyframe_force = g_value_get_int (value);
       break;
-    case ARG_SPEEDLEVEL:
+    case PROP_SPEEDLEVEL:
 #ifdef TH_ENCCTL_SET_SPLEVEL
       enc->speed_level = g_value_get_int (value);
 #endif
       break;
-    case ARG_VP3_COMPATIBLE:
+    case PROP_VP3_COMPATIBLE:
 #ifdef TH_ENCCTL_SET_VP3_COMPATIBLE
       enc->vp3_compatible = g_value_get_boolean (value);
 #endif
       break;
-    case ARG_DROP_FRAMES:
+    case PROP_DROP_FRAMES:
 #ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->drop_frames = g_value_get_boolean (value);
 #endif
       break;
-    case ARG_CAP_OVERFLOW:
+    case PROP_CAP_OVERFLOW:
 #ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->cap_overflow = g_value_get_boolean (value);
 #endif
       break;
-    case ARG_CAP_UNDERFLOW:
+    case PROP_CAP_UNDERFLOW:
 #ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->cap_underflow = g_value_get_boolean (value);
 #endif
       break;
-    case ARG_RATE_BUFFER:
+    case PROP_RATE_BUFFER:
 #ifdef TH_ENCCTL_SET_RATE_BUFFER
       enc->rate_buffer = g_value_get_int (value);
 #endif
@@ -1192,58 +1192,58 @@ theora_enc_get_property (GObject * object, guint prop_id,
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
   switch (prop_id) {
-    case ARG_CENTER:
+    case PROP_CENTER:
       g_value_set_boolean (value, TRUE);
       break;
-    case ARG_BORDER:
+    case PROP_BORDER:
       g_value_set_enum (value, BORDER_BLACK);
       break;
-    case ARG_BITRATE:
+    case PROP_BITRATE:
       g_value_set_int (value, enc->video_bitrate / 1000);
       break;
-    case ARG_QUALITY:
+    case PROP_QUALITY:
       g_value_set_int (value, enc->video_quality);
       break;
-    case ARG_QUICK:
+    case PROP_QUICK:
       g_value_set_boolean (value, TRUE);
       break;
-    case ARG_KEYFRAME_AUTO:
+    case PROP_KEYFRAME_AUTO:
       g_value_set_boolean (value, enc->keyframe_auto);
       break;
-    case ARG_KEYFRAME_FREQ:
+    case PROP_KEYFRAME_FREQ:
       g_value_set_int (value, enc->keyframe_freq);
       break;
-    case ARG_KEYFRAME_FREQ_FORCE:
+    case PROP_KEYFRAME_FREQ_FORCE:
       g_value_set_int (value, enc->keyframe_force);
       break;
-    case ARG_KEYFRAME_THRESHOLD:
+    case PROP_KEYFRAME_THRESHOLD:
       g_value_set_int (value, 80);
       break;
-    case ARG_KEYFRAME_MINDISTANCE:
+    case PROP_KEYFRAME_MINDISTANCE:
       g_value_set_int (value, 8);
       break;
-    case ARG_NOISE_SENSITIVITY:
+    case PROP_NOISE_SENSITIVITY:
       g_value_set_int (value, 1);
       break;
-    case ARG_SHARPNESS:
+    case PROP_SHARPNESS:
       g_value_set_int (value, 0);
       break;
-    case ARG_SPEEDLEVEL:
+    case PROP_SPEEDLEVEL:
       g_value_set_int (value, enc->speed_level);
       break;
-    case ARG_VP3_COMPATIBLE:
+    case PROP_VP3_COMPATIBLE:
       g_value_set_boolean (value, enc->vp3_compatible);
       break;
-    case ARG_DROP_FRAMES:
+    case PROP_DROP_FRAMES:
       g_value_set_boolean (value, enc->drop_frames);
       break;
-    case ARG_CAP_OVERFLOW:
+    case PROP_CAP_OVERFLOW:
       g_value_set_boolean (value, enc->cap_overflow);
       break;
-    case ARG_CAP_UNDERFLOW:
+    case PROP_CAP_UNDERFLOW:
       g_value_set_boolean (value, enc->cap_underflow);
       break;
-    case ARG_RATE_BUFFER:
+    case PROP_RATE_BUFFER:
       g_value_set_int (value, enc->rate_buffer);
       break;
     default:
