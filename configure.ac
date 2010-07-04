@@ -728,11 +728,7 @@ AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
 AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
-  dnl theora uses pkg-config version incorrectly, for pkg-config:
-  dnl 1.0 < 1.0RCX < 1.0alphaX < 1.0betaX < 1.0.0
-  dnl theoraenc and theoradec appeared in 1.0beta3
-
-  AG_GST_PKG_CHECK_MODULES(THEORA, theoradec theoraenc)
+  AG_GST_PKG_CHECK_MODULES(THEORA, theoradec >= 1.1 theoraenc >= 1.1)
 ])
 
 dnl *** vorbis ***

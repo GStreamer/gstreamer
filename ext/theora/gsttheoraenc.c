@@ -376,17 +376,12 @@ theora_enc_reset (GstTheoraEnc * enc)
   enc->encoder = th_encode_alloc (&enc->info);
   /* We ensure this function cannot fail. */
   g_assert (enc->encoder != NULL);
-#ifdef TH_ENCCTL_SET_SPLEVEL
   th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
       sizeof (enc->speed_level));
-#endif
-#ifdef TH_ENCCTL_SET_VP3_COMPATIBLE
   th_encode_ctl (enc->encoder, TH_ENCCTL_SET_VP3_COMPATIBLE,
       &enc->vp3_compatible, sizeof (enc->vp3_compatible));
-#endif
 
   rate_flags = 0;
-#ifdef TH_ENCCTL_SET_RATE_FLAGS
   if (enc->drop_frames)
     rate_flags |= TH_RATECTL_DROP_FRAMES;
   if (enc->drop_frames)
@@ -395,16 +390,13 @@ theora_enc_reset (GstTheoraEnc * enc)
     rate_flags |= TH_RATECTL_CAP_UNDERFLOW;
   th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_FLAGS,
       &rate_flags, sizeof (rate_flags));
-#endif
 
-#ifdef TH_ENCCTL_SET_RATE_BUFFER
   if (enc->rate_buffer) {
     th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_BUFFER,
         &enc->rate_buffer, sizeof (enc->rate_buffer));
   } else {
     /* FIXME */
   }
-#endif
 
   keyframe_force = enc->keyframe_auto ?
       enc->keyframe_force : enc->keyframe_freq;
@@ -1150,34 +1142,22 @@ theora_enc_set_property (GObject * object, guint prop_id,
       enc->keyframe_force = g_value_get_int (value);
       break;
     case PROP_SPEEDLEVEL:
-#ifdef TH_ENCCTL_SET_SPLEVEL
       enc->speed_level = g_value_get_int (value);
-#endif
       break;
     case PROP_VP3_COMPATIBLE:
-#ifdef TH_ENCCTL_SET_VP3_COMPATIBLE
       enc->vp3_compatible = g_value_get_boolean (value);
-#endif
       break;
     case PROP_DROP_FRAMES:
-#ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->drop_frames = g_value_get_boolean (value);
-#endif
       break;
     case PROP_CAP_OVERFLOW:
-#ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->cap_overflow = g_value_get_boolean (value);
-#endif
       break;
     case PROP_CAP_UNDERFLOW:
-#ifdef TH_ENCCTL_SET_RATE_FLAGS
       enc->cap_underflow = g_value_get_boolean (value);
-#endif
       break;
     case PROP_RATE_BUFFER:
-#ifdef TH_ENCCTL_SET_RATE_BUFFER
       enc->rate_buffer = g_value_get_int (value);
-#endif
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
