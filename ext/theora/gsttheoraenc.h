@@ -21,6 +21,7 @@
 #define __GST_THEORAENC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include <theora/theoraenc.h>
 
 G_BEGIN_DECLS
@@ -54,6 +55,20 @@ typedef enum
   BORDER_MIRROR
 }
 GstTheoraEncBorderMode;
+
+/**
+ * GstTheoraEncMultipassMode:
+ * @MULTIPASS_MODE_SINGLE_PASS: Single pass encoding
+ * @MULTIPASS_MODE_FIRST_PASS: First pass of two pass encoding
+ * @MULTIPASS_MODE_SECOND_PASS: Second pass of two pass encoding
+ *
+ */
+typedef enum
+{
+  MULTIPASS_MODE_SINGLE_PASS,
+  MULTIPASS_MODE_FIRST_PASS,
+  MULTIPASS_MODE_SECOND_PASS
+} GstTheoraEncMultipassMode;
 
 /**
  * GstTheoraEnc:
@@ -103,6 +118,11 @@ struct _GstTheoraEnc
   gboolean cap_overflow;
   gboolean cap_underflow;
   int rate_buffer;
+
+  GstTheoraEncMultipassMode multipass_mode;
+  GIOChannel *multipass_cache_fd;
+  GstAdapter *multipass_cache_adapter;
+  gchar *multipass_cache_file;
 };
 
 struct _GstTheoraEncClass
