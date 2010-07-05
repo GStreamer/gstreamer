@@ -584,6 +584,12 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
   ], [
           AC_MSG_RESULT(no)
   ])
+
+  PKG_CHECK_MODULES(CELT_0_8, celt >= 0.8.0, [
+          AC_DEFINE([HAVE_CELT_0_8], 1, [Define if libcelt 0.8 is installed])
+  ], [
+          AC_MSG_RESULT(no)
+  ])
   AC_SUBST(CELT_CFLAGS)
   AC_SUBST(CELT_LIBS)
 ])
