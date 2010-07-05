@@ -21,6 +21,9 @@
 
 #include <gst/check/gstcheck.h>
 
+static GMutex *af_lock;
+static GCond *af_cond;
+
 /* see if the defines make sense */
 GST_START_TEST (test_range)
 {
@@ -556,6 +559,91 @@ GST_START_TEST (test_mixed)
 
 GST_END_TEST;
 
+static gboolean
+test_async_full_slave_callback (GstClock * master, GstClockTime time,
+    GstClockID id, GstClock * clock)
+{
+  GstClockTime stime, mtime;
+  gdouble r_squared;
+
+  /* notify the test case that we started */
+  GST_INFO ("callback started");
+  g_mutex_lock (af_lock);
+  g_cond_signal (af_cond);
+
+  /* wait for the test case to unref "clock" and signal */
+  GST_INFO ("waiting for test case to signal");
+  g_cond_wait (af_cond, af_lock);
+
+  stime = gst_clock_get_internal_time (clock);
+  mtime = gst_clock_get_time (master);
+
+  gst_clock_add_observation (clock, stime, mtime, &r_squared);
+
+  g_cond_signal (af_cond);
+  g_mutex_unlock (af_lock);
+  GST_INFO ("callback finished");
+
+  return TRUE;
+}
+
+GST_START_TEST (test_async_full)
+{
+  GstClock *master, *slave;
+  GstClockID *clockid;
+
+  af_lock = g_mutex_new ();
+  af_cond = g_cond_new ();
+
+  /* create master and slave */
+  master =
+      g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClockMaster", NULL);
+  slave = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClockMaster", NULL);
+  GST_OBJECT_FLAG_SET (slave, GST_CLOCK_FLAG_CAN_SET_MASTER);
+  g_object_set (slave, "timeout", 50 * GST_MSECOND, NULL);
+
+  fail_unless (GST_OBJECT_REFCOUNT (master) == 1);
+  fail_unless (GST_OBJECT_REFCOUNT (slave) == 1);
+
+  /* register a periodic shot on the master to calibrate the slave */
+  g_mutex_lock (af_lock);
+  clockid = gst_clock_new_periodic_id (master,
+      gst_clock_get_time (master), slave->timeout);
+  gst_clock_id_wait_async_full (clockid,
+      (GstClockCallback) test_async_full_slave_callback,
+      gst_object_ref (slave), (GDestroyNotify) gst_object_unref);
+
+  /* wait for the shot to be fired and test_async_full_slave_callback to be
+   * called */
+  GST_INFO ("waiting for the slave callback to start");
+  g_cond_wait (af_cond, af_lock);
+  GST_INFO ("slave callback running, unreffing slave");
+
+  /* unref the slave clock while the slave_callback is running. This should be
+   * safe since the master clock now stores a ref to the slave */
+  gst_object_unref (slave);
+
+  /* unref the clock entry. This should be safe as well since the clock thread
+   * refs the entry before executing it */
+  gst_clock_id_unschedule (clockid);
+  gst_clock_id_unref (clockid);
+
+  /* signal and wait for the callback to complete */
+  g_cond_signal (af_cond);
+
+  GST_INFO ("waiting for callback to finish");
+  g_cond_wait (af_cond, af_lock);
+  GST_INFO ("callback finished");
+  g_mutex_unlock (af_lock);
+
+  gst_object_unref (master);
+
+  g_mutex_free (af_lock);
+  g_cond_free (af_cond);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_systemclock_suite (void)
 {
@@ -572,6 +660,7 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_async_sync_interaction);
   tcase_add_test (tc_chain, test_diff);
   tcase_add_test (tc_chain, test_mixed);
+  tcase_add_test (tc_chain, test_async_full);
 
   return s;
 }

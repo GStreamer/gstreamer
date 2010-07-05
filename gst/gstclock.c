@@ -1095,8 +1095,9 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
      * clock calibration. */
     clock->clockid = gst_clock_new_periodic_id (master,
         gst_clock_get_time (master), clock->timeout);
-    gst_clock_id_wait_async (clock->clockid,
-        (GstClockCallback) gst_clock_slave_callback, clock);
+    gst_clock_id_wait_async_full (clock->clockid,
+        (GstClockCallback) gst_clock_slave_callback,
+        gst_object_ref (clock), (GDestroyNotify) gst_object_unref);
   }
   GST_CLOCK_SLAVE_UNLOCK (clock);
 

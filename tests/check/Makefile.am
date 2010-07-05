@@ -86,6 +86,7 @@ check_PROGRAMS =				\
 	gst/gstpoll     			\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
+	gst/gstclock				\
 	gst/gststructure			\
 	gst/gsttag				\
 	gst/gsttagsetter			\
