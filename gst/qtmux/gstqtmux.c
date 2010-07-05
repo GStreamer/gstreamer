@@ -258,6 +258,8 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->last_dts = 0;
   qtpad->first_ts = GST_CLOCK_TIME_NONE;
   qtpad->prepare_buf_func = NULL;
+  qtpad->avg_bitrate = 0;
+  qtpad->max_bitrate = 0;
 
   if (qtpad->last_buf)
     gst_buffer_replace (&qtpad->last_buf, NULL);
@@ -1943,7 +1945,8 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
               entry.fourcc = FOURCC_mp4a;
               ext_atom =
                   build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG1_P3,
-                  ESDS_STREAM_TYPE_AUDIO, codec_data);
+                  ESDS_STREAM_TYPE_AUDIO, codec_data, qtpad->avg_bitrate,
+                  qtpad->max_bitrate);
             }
             entry.samples_per_packet = 1152;
             entry.bytes_per_sample = 2;
@@ -1981,11 +1984,13 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
         entry.fourcc = FOURCC_mp4a;
 
         if (format == GST_QT_MUX_FORMAT_QT)
-          ext_atom = build_mov_aac_extension (qtpad->trak, codec_data);
+          ext_atom = build_mov_aac_extension (qtpad->trak, codec_data,
+              qtpad->avg_bitrate, qtpad->max_bitrate);
         else
           ext_atom =
               build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG4_P3,
-              ESDS_STREAM_TYPE_AUDIO, codec_data);
+              ESDS_STREAM_TYPE_AUDIO, codec_data, qtpad->avg_bitrate,
+              qtpad->max_bitrate);
         break;
       default:
         break;
@@ -2302,7 +2307,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       entry.fourcc = FOURCC_mp4v;
       ext_atom =
           build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG4_P2,
-          ESDS_STREAM_TYPE_VISUAL, codec_data);
+          ESDS_STREAM_TYPE_VISUAL, codec_data, qtpad->avg_bitrate,
+          qtpad->max_bitrate);
       if (ext_atom != NULL)
         ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
       if (!codec_data)
@@ -2473,6 +2479,7 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
   GstQTMux *qtmux;
+  guint32 avg_bitrate = 0, max_bitrate = 0;
 
   qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
   switch (GST_EVENT_TYPE (event)) {
@@ -2489,6 +2496,18 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
 
       gst_tag_setter_merge_tags (setter, list, mode);
       GST_OBJECT_UNLOCK (qtmux);
+
+      if (gst_tag_list_get_uint (list, GST_TAG_BITRATE, &avg_bitrate) |
+          gst_tag_list_get_uint (list, GST_TAG_MAXIMUM_BITRATE, &max_bitrate)) {
+        GstQTPad *qtpad = gst_pad_get_element_private (pad);
+        g_assert (qtpad);
+
+        if (avg_bitrate > 0 && avg_bitrate < G_MAXUINT32)
+          qtpad->avg_bitrate = avg_bitrate;
+        if (max_bitrate > 0 && max_bitrate < G_MAXUINT32)
+          qtpad->max_bitrate = max_bitrate;
+      }
+
       break;
     }
     default:

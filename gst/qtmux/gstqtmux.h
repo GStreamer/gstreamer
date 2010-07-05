@@ -92,6 +92,8 @@ struct _GstQTPad
   guint sample_size;
   /* make sync table entry */
   gboolean sync;
+  /* bitrates */
+  guint32 avg_bitrate, max_bitrate;
 
   GstBuffer *last_buf;
   /* dts of last_buf */

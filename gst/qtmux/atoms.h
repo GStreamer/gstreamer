@@ -720,10 +720,12 @@ void atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
                                GList * ext_atoms_list);
 
 AtomInfo *   build_codec_data_extension  (guint32 fourcc, const GstBuffer * codec_data);
-AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data);
+AtomInfo *   build_mov_aac_extension     (AtomTRAK * trak, const GstBuffer * codec_data,
+                                          guint32 avg_bitrate, guint32 max_bitrate);
 AtomInfo *   build_mov_alac_extension    (AtomTRAK * trak, const GstBuffer * codec_data);
 AtomInfo *   build_esds_extension        (AtomTRAK * trak, guint8 object_type,
-                                          guint8 stream_type, const GstBuffer * codec_data);
+                                          guint8 stream_type, const GstBuffer * codec_data,
+                                          guint32 avg_bitrate, guint32 max_bitrate);
 AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint height,
                                           guint32 fourcc, gint ncomp,
                                           const GValue * cmap_array,
