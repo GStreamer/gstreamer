@@ -2596,15 +2596,14 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
     /* get intersection */
     caps = gst_caps_intersect (thiscaps, peercaps);
     GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (thiscaps);
     gst_caps_unref (peercaps);
   } else {
     /* no peer, work with our own caps then */
-    caps = thiscaps;
+    caps = gst_caps_copy (thiscaps);
   }
+  gst_caps_unref (thiscaps);
   if (caps) {
     /* take first (and best, since they are sorted) possibility */
-    caps = gst_caps_make_writable (caps);
     gst_caps_truncate (caps);
 
     /* now fixate */
