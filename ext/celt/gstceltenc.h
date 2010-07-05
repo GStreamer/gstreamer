@@ -65,6 +65,8 @@ struct _GstCeltEnc {
   gboolean              cbr;
   gint                  complexity;
   gint                  max_bitrate;
+  gint                  prediction;
+  gint                  start_band;
 
   gint                  channels;
   gint                  rate;
