@@ -573,15 +573,8 @@ AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
 dnl *** celt ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CELT, true)
 AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
-  PKG_CHECK_MODULES(CELT, celt >= 0.4.0, [
-          HAVE_CELT="yes"
-  ], [
-          AC_MSG_RESULT(no)
-	  HAVE_CELT="no"
-  ])
-
-  PKG_CHECK_MODULES(CELT_0_5, celt >= 0.5.0, [
-          AC_DEFINE([HAVE_CELT_0_5], 1, [Define if libcelt 0.5 is installed])
+  PKG_CHECK_MODULES(CELT, celt >= 0.5.0, [
+          AC_DEFINE([HAVE_CELT], 1, [Define if libcelt 0.5 is installed])
   ], [
           AC_MSG_RESULT(no)
   ])

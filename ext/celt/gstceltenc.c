@@ -798,15 +798,9 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
         celt_encode (enc->state, data, frame_size,
         GST_BUFFER_DATA (outbuf), bytes_per_packet);
 #else
-#ifdef HAVE_CELT_0_5
     outsize =
         celt_encode (enc->state, data, NULL,
         GST_BUFFER_DATA (outbuf), bytes_per_packet);
-#else
-    outsize =
-        celt_encode (enc->state, data,
-        GST_BUFFER_DATA (outbuf), bytes_per_packet);
-#endif
 #endif
 
     g_free (data);
