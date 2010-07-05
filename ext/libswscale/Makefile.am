@@ -2,9 +2,8 @@ plugin_LTLIBRARIES = libgstffmpegscale.la
 
 libgstffmpegscale_la_SOURCES = gstffmpegscale.c
 
-libgstffmpegscale_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(ORC_CFLAGS) $(SWSCALE_CFLAGS)
+libgstffmpegscale_la_CFLAGS = $(SWSCALE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+	$(ORC_CFLAGS)
 libgstffmpegscale_la_LIBADD = $(SWSCALE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(ORC_LIBS) $(LIBM) -lz
