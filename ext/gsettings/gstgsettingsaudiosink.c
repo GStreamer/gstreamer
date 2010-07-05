@@ -112,7 +112,7 @@ gst_gsettings_audio_sink_change_child (GstGSettingsAudioSink * sink)
   if (new_string) {
     new_kid = gst_parse_bin_from_description (new_string, TRUE, &err);
     if (err) {
-      GST_ERROR_OBJECT ("error creating bin '%s': %s", new_string,
+      GST_ERROR_OBJECT (sink, "error creating bin '%s': %s", new_string,
           err->message);
       g_error_free (err);
     }
