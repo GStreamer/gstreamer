@@ -202,6 +202,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   entry->status = GST_CLOCK_OK;
   entry->func = NULL;
   entry->user_data = NULL;
+  entry->destroy_data = NULL;
 
   return (GstClockID) entry;
 }
@@ -229,9 +230,13 @@ gst_clock_id_ref (GstClockID id)
 static void
 _gst_clock_id_free (GstClockID id)
 {
+  GstClockEntry *entry;
   g_return_if_fail (id != NULL);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "freed entry %p", id);
+  entry = (GstClockEntry *) id;
+  if (entry->destroy_data)
+    entry->destroy_data (entry->user_data);
 
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_clock_entry_trace, id);
@@ -457,10 +462,11 @@ not_supported:
 }
 
 /**
- * gst_clock_id_wait_async:
+ * gst_clock_id_wait_async_full:
  * @id: a #GstClockID to wait on
  * @func: The callback function
  * @user_data: User data passed in the callback
+ * @destroy_data: #GDestroyNotify for user_data
  *
  * Register a callback on the given #GstClockID @id with the given
  * function and user_data. When passing a #GstClockID with an invalid
@@ -474,10 +480,12 @@ not_supported:
  * Returns: the result of the non blocking wait.
  *
  * MT safe.
+ *
+ * Since: 0.10.30
  */
 GstClockReturn
-gst_clock_id_wait_async (GstClockID id,
-    GstClockCallback func, gpointer user_data)
+gst_clock_id_wait_async_full (GstClockID id,
+    GstClockCallback func, gpointer user_data, GDestroyNotify destroy_data)
 {
   GstClockEntry *entry;
   GstClock *clock;
@@ -503,6 +511,7 @@ gst_clock_id_wait_async (GstClockID id,
 
   entry->func = func;
   entry->user_data = user_data;
+  entry->destroy_data = destroy_data;
 
   res = cclass->wait_async (clock, entry);
 
@@ -521,6 +530,32 @@ not_supported:
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "clock wait is not supported");
     return GST_CLOCK_UNSUPPORTED;
   }
+}
+
+/**
+ * gst_clock_id_wait_async:
+ * @id: a #GstClockID to wait on
+ * @func: The callback function
+ * @user_data: User data passed in the callback
+ *
+ * Register a callback on the given #GstClockID @id with the given
+ * function and user_data. When passing a #GstClockID with an invalid
+ * time to this function, the callback will be called immediately
+ * with  a time set to GST_CLOCK_TIME_NONE. The callback will
+ * be called when the time of @id has been reached.
+ *
+ * The callback @func can be invoked from any thread, either provided by the
+ * core or from a streaming thread. The application should be prepared for this.
+ *
+ * Returns: the result of the non blocking wait.
+ *
+ * MT safe.
+ */
+GstClockReturn
+gst_clock_id_wait_async (GstClockID id,
+    GstClockCallback func, gpointer user_data)
+{
+  return gst_clock_id_wait_async_full (id, func, user_data, NULL);
 }
 
 /**

@@ -346,6 +346,7 @@ struct _GstClockEntry {
   GstClockReturn	 status;
   GstClockCallback	 func;
   gpointer		 user_data;
+  GDestroyNotify	 destroy_data;
 };
 
 /**
@@ -544,6 +545,10 @@ GstClockReturn		gst_clock_id_wait		(GstClockID id,
 GstClockReturn		gst_clock_id_wait_async		(GstClockID id,
 							 GstClockCallback func,
 							 gpointer user_data);
+GstClockReturn		gst_clock_id_wait_async_full	(GstClockID id,
+							 GstClockCallback func,
+							 gpointer user_data,
+							 GDestroyNotify destroy_data);
 void			gst_clock_id_unschedule		(GstClockID id);
 
 
