@@ -960,9 +960,11 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
               "taking upstream timestamp %" GST_TIME_FORMAT,
               GST_TIME_ARGS (upstream_time));
           timestamp = upstream_time;
+          /* samples corresponding to bytes */
+          ffmpegenc->adapter_consumed = bytes / (osize * ctx->channels);
           ffmpegenc->adapter_ts = upstream_time -
-              gst_util_uint64_scale (bytes, GST_SECOND, ctx->sample_rate);
-          ffmpegenc->adapter_consumed = bytes;
+              gst_util_uint64_scale (ffmpegenc->adapter_consumed, GST_SECOND,
+              ctx->sample_rate);
           ffmpegenc->discont = TRUE;
         }
       }
