@@ -1198,6 +1198,7 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
           queue->current->max_reading_pos = rpos;
           update_cur_level (queue, queue->current);
         }
+        GST_DEBUG_OBJECT (queue, "waiting for add");
         GST_QUEUE2_WAIT_ADD_CHECK (queue, queue->srcresult, out_flushing);
         continue;
       }
@@ -2717,6 +2718,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_QUEUE2_MUTEX_LOCK (queue);
       if (!QUEUE_IS_USING_QUEUE (queue)) {
         if (QUEUE_IS_USING_TEMP_FILE (queue)) {
           if (!gst_queue2_open_temp_location_file (queue))
@@ -2733,6 +2735,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
       }
       queue->segment_event_received = FALSE;
       queue->starting_segment = NULL;
+      GST_QUEUE2_MUTEX_UNLOCK (queue);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -2752,6 +2755,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_QUEUE2_MUTEX_LOCK (queue);
       if (!QUEUE_IS_USING_QUEUE (queue)) {
         if (QUEUE_IS_USING_TEMP_FILE (queue)) {
           gst_queue2_close_temp_location_file (queue);
@@ -2764,6 +2768,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
         gst_event_unref (queue->starting_segment);
         queue->starting_segment = NULL;
       }
+      GST_QUEUE2_MUTEX_UNLOCK (queue);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
