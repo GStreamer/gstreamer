@@ -329,7 +329,7 @@ gst_jpeg_parse_get_image_length (GstJpegParse * parse)
     /* may have marker, but could have been resyncng */
     resync = resync || parse->priv->last_resync;
     /* Skip over extra 0xff */
-    while ((noffset > 0) && ((value & 0xff) == 0xff)) {
+    while ((noffset >= 0) && ((value & 0xff) == 0xff)) {
       noffset++;
       noffset =
           gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
@@ -832,6 +832,8 @@ gst_jpeg_parse_chain (GstPad * pad, GstBuffer * buf)
     len = gst_jpeg_parse_get_image_length (parse);
     if (len == 0)
       return GST_FLOW_OK;
+
+    GST_LOG_OBJECT (parse, "parsed image of size %d", len);
 
     /* now we have enough in the adapter to process a full jpeg image */
     ret = gst_jpeg_parse_push_buffer (parse, len);
