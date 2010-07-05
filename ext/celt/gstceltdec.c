@@ -687,7 +687,7 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
   }
 
   if (skip > 0) {
-    GST_ERROR ("skipping %d samples", skip);
+    GST_ERROR_OBJECT (dec, "skipping %d samples", skip);
     GST_BUFFER_DATA (outbuf) = GST_BUFFER_DATA (outbuf) +
         skip * dec->header.nb_channels * 2;
     GST_BUFFER_SIZE (outbuf) = GST_BUFFER_SIZE (outbuf) -

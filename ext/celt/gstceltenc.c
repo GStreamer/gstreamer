@@ -655,7 +655,6 @@ gst_celt_enc_setup (GstCeltEnc * enc)
 
 #ifdef CELT_SET_VBR_RATE
   if (!enc->cbr) {
-    GST_ERROR ("setting vbr");
     celt_encoder_ctl (enc->state, CELT_SET_VBR_RATE (enc->bitrate), 0);
   }
 #endif
