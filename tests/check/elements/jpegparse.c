@@ -117,6 +117,7 @@ GST_START_TEST (test_parse_all_in_one_buf)
   GstBuffer *buffer = NULL;
   gsize total_size = 0;
   gsize offset = 0;
+  GstCaps *caps;
 
   /* Push the data in a single buffer, injecting some garbage. */
   total_size += sizeof (test_data_garbage);
@@ -149,8 +150,10 @@ GST_START_TEST (test_parse_all_in_one_buf)
       sizeof (test_data_extra_ff));
   offset += sizeof (test_data_extra_ff);
 
-  gst_buffer_set_caps (buffer, gst_caps_new_simple ("image/jpeg", "parsed",
-          G_TYPE_BOOLEAN, FALSE, NULL));
+  caps = gst_caps_new_simple ("image/jpeg", "parsed",
+      G_TYPE_BOOLEAN, FALSE, NULL);
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
   GST_LOG ("Pushing single buffer of %u bytes.", (guint) total_size);
   buffer_in = g_list_append (buffer_in, buffer);
 
