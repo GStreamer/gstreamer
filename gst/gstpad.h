@@ -181,16 +181,24 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
  * GstPadLinkCheck:
  * @GST_PAD_LINK_CHECK_NOTHING: Don't check hierarchy or caps compatibility.
  * @GST_PAD_LINK_CHECK_HIERARCHY: Check the pads have same parents/grandparents.
- * @GST_PAD_LINK_CHECK_TEMPLATE_CAPS: Check if the pads are compatible by using their
- * template caps.
- * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by comparing the caps
- * returned by #gst_pad_get_caps.
+ *   Could be omitted if it is already known that the two elements that own the
+ *   pads are in the same bin. 
+ * @GST_PAD_LINK_CHECK_TEMPLATE_CAPS: Check if the pads are compatible by using
+ *   their template caps. This is much faster than @GST_PAD_LINK_CHECK_CAPS, but
+ *   would be unsafe e.g. if one pad has %GST_CAPS_ANY.
+ * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by comparing the
+ *   caps returned by gst_pad_get_caps().
  *
- * The amount of check to be done when linking pads.
+ * The amount of checking to be done when linking pads. @GST_PAD_LINK_CHECK_CAPS
+ * and @GST_PAD_LINK_CHECK_TEMPLATE_CAPS are mutually exclusive. If both are
+ * specified, expensive but safe @GST_PAD_LINK_CHECK_CAPS are performed.
  *
- * Warning: Only use these flags if you are 100% certain you know the link will
- * not fail because of hierarchy/caps failures. If uncertain, use the default
- * checks (#GST_PAD_LINK_CHECK_DEFAULT) or the regular methods.
+ * <warning><para>
+ * Only disable some of the checks if you are 100% certain you know the link
+ * will not fail because of hierarchy/caps compatibility failures. If uncertain,
+ * use the default checks (%GST_PAD_LINK_CHECK_DEFAULT) or the regular methods
+ * for linking the pads.
+ * </para></warning>
  *
  * Since: 0.10.30
  */
@@ -205,7 +213,8 @@ typedef enum {
 /**
  * GST_PAD_LINK_CHECK_DEFAULT:
  *
- * The default checks done when linking pads (i.e. the ones used by #gst_pad_link.
+ * The default checks done when linking pads (i.e. the ones used by 
+ * gst_pad_link()).
  *
  * Since: 0.10.30
  */

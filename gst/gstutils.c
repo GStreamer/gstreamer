@@ -1565,6 +1565,10 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink, GstPadLinkCheck flags)
  * child of the parent of the other element.  If they have different
  * parents, the link fails.
  *
+ * Calling gst_element_link_pads_full() with @flags == %GST_PAD_LINK_CHECK_DEFAULT
+ * is the same as calling gst_element_link_pads() and the recommended way of
+ * linking pads with safety checks applied.
+ *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  *
  * Since: 0.10.30
