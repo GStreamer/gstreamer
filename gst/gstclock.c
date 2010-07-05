@@ -1078,11 +1078,8 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   /* we always allow setting the master to NULL */
   if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
     goto not_supported;
-
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "slaving %p to master clock %p", clock, master);
-  master_p = &clock->master;
-  gst_object_replace ((GstObject **) master_p, (GstObject *) master);
   GST_OBJECT_UNLOCK (clock);
 
   GST_CLOCK_SLAVE_LOCK (clock);
@@ -1102,6 +1099,11 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
         (GstClockCallback) gst_clock_slave_callback, clock);
   }
   GST_CLOCK_SLAVE_UNLOCK (clock);
+
+  GST_OBJECT_LOCK (clock);
+  master_p = &clock->master;
+  gst_object_replace ((GstObject **) master_p, (GstObject *) master);
+  GST_OBJECT_UNLOCK (clock);
 
   return TRUE;
 
