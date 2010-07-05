@@ -400,7 +400,7 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
     /* may have marker, but could have been resyncng */
     resync = resync || dec->parse_resync;
     /* Skip over extra 0xff */
-    while ((noffset > 0) && ((value & 0xff) == 0xff)) {
+    while ((noffset >= 0) && ((value & 0xff) == 0xff)) {
       noffset++;
       noffset =
           gst_adapter_masked_scan_uint32_peek (adapter, 0x0000ff00, 0x0000ff00,
