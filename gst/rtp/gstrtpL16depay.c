@@ -168,9 +168,14 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (clock_rate == 0)
     goto no_clockrate;
 
-  channels = gst_rtp_L16_depay_parse_int (structure, "channels", channels);
-  if (channels == 0)
-    goto no_channels;
+  channels =
+      gst_rtp_L16_depay_parse_int (structure, "encoding-params", channels);
+  if (channels == 0) {
+    channels = gst_rtp_L16_depay_parse_int (structure, "channels", channels);
+    if (channels == 0) {
+      goto no_channels;
+    }
+  }
 
   depayload->clock_rate = clock_rate;
   rtpL16depay->rate = clock_rate;
