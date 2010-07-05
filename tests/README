@@ -1,13 +1,12 @@
 This directory contains regression tests, functionality tests, examples,
 benchmarks, ...
 
-check/
-   unit tests using the check library, non-interactive
 benchmarks/
    benchmarks to profile pieces of GStreamer
+check/
+   unit tests using the check library, non-interactive
+examples/
+   small examples demonstrating the use of various features
 misc/
    prototypes, random bits, ...
 
-old/
-   outdated tests that need to be converted to this new layout,
-   possibly use check, ported, ...
