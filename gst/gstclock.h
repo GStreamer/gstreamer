@@ -335,6 +335,8 @@ typedef enum {
  *
  * All pending timeouts or periodic notifies are converted into
  * an entry.
+ * Note that GstClockEntry should be treated as an opaque structure. It must
+ * not be extended or allocated using a custom allocator.
  */
 struct _GstClockEntry {
   gint			refcount;
