@@ -782,9 +782,9 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 #endif /* GST_DISABLE_TRACE */
 
-  GST_INFO ("GLib runtime version: %d.%d.%d\n", glib_major_version,
+  GST_INFO ("GLib runtime version: %d.%d.%d", glib_major_version,
       glib_minor_version, glib_micro_version);
-  GST_INFO ("GLib headers version: %d.%d.%d\n", GLIB_MAJOR_VERSION,
+  GST_INFO ("GLib headers version: %d.%d.%d", GLIB_MAJOR_VERSION,
       GLIB_MINOR_VERSION, GLIB_MICRO_VERSION);
 
   return TRUE;
