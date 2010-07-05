@@ -518,7 +518,11 @@ celt_dec_chain_parse_header (GstCeltDec * dec, GstBuffer * buf)
   if (!dec->state)
     goto init_failed;
 
+#ifdef HAVE_CELT_0_8
+  dec->frame_size = dec->header.frame_size;
+#else
   celt_mode_info (dec->mode, CELT_GET_FRAME_SIZE, &dec->frame_size);
+#endif
 
   dec->frame_duration = gst_util_uint64_scale_int (dec->frame_size,
       GST_SECOND, dec->header.sample_rate);
@@ -672,7 +676,11 @@ celt_dec_chain_parse_data (GstCeltDec * dec, GstBuffer * buf,
 
   GST_LOG_OBJECT (dec, "decoding frame");
 
+#ifdef HAVE_CELT_0_8
+  error = celt_decode (dec->state, data, size, out_data, dec->frame_size);
+#else
   error = celt_decode (dec->state, data, size, out_data);
+#endif
   if (error != CELT_OK) {
     GST_WARNING_OBJECT (dec, "Decoding error: %d", error);
     return GST_FLOW_ERROR;

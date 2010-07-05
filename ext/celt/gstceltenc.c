@@ -594,14 +594,18 @@ gst_celt_enc_setup (GstCeltEnc * enc)
   if (!enc->mode)
     goto mode_initialization_failed;
 
-  celt_mode_info (enc->mode, CELT_GET_FRAME_SIZE, &enc->frame_size);
-
 #ifdef HAVE_CELT_0_7
   celt_header_init (&enc->header, enc->mode, enc->channels);
 #else
   celt_header_init (&enc->header, enc->mode);
 #endif
   enc->header.nb_channels = enc->channels;
+
+#ifdef HAVE_CELT_0_8
+  enc->frame_size = enc->header.frame_size;
+#else
+  celt_mode_info (enc->mode, CELT_GET_FRAME_SIZE, &enc->frame_size);
+#endif
 
 #ifdef HAVE_CELT_0_7
   enc->state = celt_encoder_create (enc->mode, enc->channels, &error);
@@ -789,6 +793,11 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
 
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size, bytes);
 
+#ifdef HAVE_CELT_0_8
+    outsize =
+        celt_encode (enc->state, data, frame_size,
+        GST_BUFFER_DATA (outbuf), bytes_per_packet);
+#else
 #ifdef HAVE_CELT_0_5
     outsize =
         celt_encode (enc->state, data, NULL,
@@ -797,6 +806,7 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
     outsize =
         celt_encode (enc->state, data,
         GST_BUFFER_DATA (outbuf), bytes_per_packet);
+#endif
 #endif
 
     g_free (data);
