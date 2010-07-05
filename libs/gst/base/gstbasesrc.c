@@ -883,7 +883,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
           GstFormat seg_format;
 
           GST_OBJECT_LOCK (src);
-          position = src->segment.last_stop;
+          position =
+              gst_segment_to_stream_time (&src->segment, src->segment.format,
+              src->segment.last_stop);
           seg_format = src->segment.format;
           GST_OBJECT_UNLOCK (src);
 
@@ -990,6 +992,7 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
         if (stop != -1)
           stop -= src->segment.time;
       }
+
       gst_query_set_segment (query, src->segment.rate, src->segment.format,
           start, stop);
       GST_OBJECT_UNLOCK (src);
