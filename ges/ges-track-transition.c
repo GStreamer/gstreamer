@@ -121,7 +121,7 @@ ges_track_transition_create_element (GESTrackTransition * self)
 {
   GST_WARNING ("transitions don't handle this track type!");
 
-  return gst_element_factory_make ("identity", "invalid-track-type");
+  return NULL;
 }
 
 static void
