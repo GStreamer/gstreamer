@@ -184,12 +184,8 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
 GESTimelineTransition *
 ges_timeline_transition_new (GESVideoTransitionType vtype)
 {
-  GESTimelineTransition *ret;
-
-  ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype", (gint) vtype,
+  return g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype", (gint) vtype,
       NULL);
-
-  return ret;
 }
 
 /**

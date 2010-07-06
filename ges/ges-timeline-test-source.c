@@ -308,16 +308,14 @@ ges_timeline_test_source_new (void)
 GESTimelineTestSource *
 ges_timeline_test_source_new_for_nick (gchar * nick)
 {
-  GESTimelineTestSource *ret;
   GEnumValue *value;
   int i;
 
   for (i = 0, value = &vpattern_enum_values[i]; value->value_nick;
       value = &vpattern_enum_values[i++]) {
     if (!strcmp (nick, value->value_nick)) {
-      ret = g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, "vpattern",
+      return g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, "vpattern",
           (gint) value->value, NULL);
-      return ret;
     }
     value++;
   }
