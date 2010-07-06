@@ -53,12 +53,16 @@ GST_START_TEST (basesink_last_buffer_enabled)
   gst_message_unref (msg);
 
   /* last-buffer should be != NULL */
+  fail_unless (gst_base_sink_is_last_buffer_enabled (GST_BASE_SINK (sink))
+      == TRUE);
   g_object_get (sink, "last-buffer", &last_buffer, NULL);
   fail_unless (last_buffer != NULL);
   gst_buffer_unref (last_buffer);
 
   /* set enable-last-buffer to FALSE now, this should set last-buffer to NULL */
   g_object_set (sink, "enable-last-buffer", FALSE, NULL);
+  fail_unless (gst_base_sink_is_last_buffer_enabled (GST_BASE_SINK (sink))
+      == FALSE);
   g_object_get (sink, "last-buffer", &last_buffer, NULL);
   fail_unless (last_buffer == NULL);
 
@@ -91,7 +95,7 @@ GST_START_TEST (basesink_last_buffer_disabled)
 
   /* set enable-last-buffer to FALSE */
   g_object_set (src, "num-buffers", 1, NULL);
-  g_object_set (sink, "enable-last-buffer", FALSE, NULL);
+  gst_base_sink_set_last_buffer_enabled (GST_BASE_SINK (sink), FALSE);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   fail_unless (msg != NULL);

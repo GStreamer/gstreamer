@@ -986,6 +986,55 @@ out:
 }
 
 /**
+ * gst_base_sink_set_last_buffer_enabled:
+ * @sink: the sink
+ * @enabled: the new enable-last-buffer value.
+ *
+ * Configures @sink to store the last received buffer in the last-buffer
+ * property.
+ *
+ * Since: 0.10.30
+ */
+void
+gst_base_sink_set_last_buffer_enabled (GstBaseSink * sink, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  if (enabled != sink->priv->enable_last_buffer) {
+    sink->priv->enable_last_buffer = enabled;
+    if (!enabled)
+      gst_base_sink_set_last_buffer_unlocked (sink, NULL);
+  }
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_is_last_buffer_enabled:
+ * @sink: the sink
+ *
+ * Checks if @sink is currently configured to store the last received buffer in
+ * the last-buffer property.
+ *
+ * Returns: TRUE if the sink is configured to store the last received buffer.
+ *
+ * Since: 0.10.30
+ */
+gboolean
+gst_base_sink_is_last_buffer_enabled (GstBaseSink * sink)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->priv->enable_last_buffer;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
+/**
  * gst_base_sink_get_latency:
  * @sink: the sink
  *
@@ -1254,19 +1303,8 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       gst_base_sink_set_render_delay (sink, g_value_get_uint64 (value));
       break;
     case PROP_ENABLE_LAST_BUFFER:
-    {
-      gboolean enable;
-      enable = g_value_get_boolean (value);
-
-      GST_OBJECT_LOCK (sink);
-      if (enable != sink->priv->enable_last_buffer) {
-        sink->priv->enable_last_buffer = enable;
-        if (!enable)
-          gst_base_sink_set_last_buffer_unlocked (sink, NULL);
-      }
-      GST_OBJECT_UNLOCK (sink);
+      gst_base_sink_set_last_buffer_enabled (sink, g_value_get_boolean (value));
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1304,7 +1342,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       gst_value_take_buffer (value, gst_base_sink_get_last_buffer (sink));
       break;
     case PROP_ENABLE_LAST_BUFFER:
-      g_value_set_boolean (value, sink->priv->enable_last_buffer);
+      g_value_set_boolean (value, gst_base_sink_is_last_buffer_enabled (sink));
       break;
     case PROP_BLOCKSIZE:
       g_value_set_uint (value, gst_base_sink_get_blocksize (sink));

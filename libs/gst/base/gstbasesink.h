@@ -218,6 +218,8 @@ GstClockTimeDiff gst_base_sink_get_ts_offset    (GstBaseSink *sink);
 
 /* last buffer */
 GstBuffer *     gst_base_sink_get_last_buffer   (GstBaseSink *sink);
+void            gst_base_sink_set_last_buffer_enabled (GstBaseSink *sink, gboolean enable);
+gboolean        gst_base_sink_is_last_buffer_enabled (GstBaseSink *sink);
 
 /* latency */
 gboolean        gst_base_sink_query_latency     (GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
