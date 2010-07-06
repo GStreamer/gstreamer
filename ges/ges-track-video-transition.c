@@ -322,12 +322,14 @@ void
 ges_track_video_transition_set_type (GESTrackVideoTransition * self,
     GESVideoTransitionType type)
 {
-  if (((type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE)
-          && (self->type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
-      || ((type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE)
-          && (self->type = GES_VIDEO_TRANSITION_TYPE_CROSSFADE))) {
+  GST_DEBUG ("%p %d => %d", self, self->type, type);
+
+  if (self->type && (self->type != type) &&
+      ((type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE) ||
+          (self->type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE))) {
     GST_WARNING
-        ("Changing between 'crossfade' and other types is not supported\n");
+        ("Changing between 'crossfade' and other types is not supported");
+    return;
   }
 
   self->type = type;
