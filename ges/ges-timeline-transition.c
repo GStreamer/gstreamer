@@ -59,18 +59,11 @@ ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
     GESVideoTransitionType value)
 {
   GList *tmp;
-  GESTrackTransition *tr;
-  GESTrackObject *to;
 
-  for (tmp = g_list_first (self->trackobjects); tmp; tmp = g_list_next (tmp)) {
-    tr = GES_TRACK_TRANSITION (tmp->data);
-    to = (GESTrackObject *) tr;
-
-    if ((to->track) && (to->track->type == GES_TRACK_TYPE_VIDEO)) {
-      ges_track_video_transition_set_type ((GESTrackVideoTransition *) tr,
-          value);
-    }
-  }
+  for (tmp = self->trackobjects; tmp; tmp = g_list_next (tmp))
+    if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data))
+      ges_track_video_transition_set_type ((GESTrackVideoTransition *)
+          tmp->data, value);
 }
 
 static void
@@ -196,19 +189,12 @@ ges_timeline_transition_new (GESVideoTransitionType vtype)
 GESTimelineTransition *
 ges_timeline_transition_new_for_nick (gchar * nick)
 {
-  GESTimelineTransition *ret;
   GEnumValue *value;
-  int i;
 
-  for (i = 0, value = &transition_types[i]; value->value;
-      value = &transition_types[i++]) {
-    if (!strcmp (nick, value->value_nick)) {
-      ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype",
+  for (value = &transition_types[0]; value->value_name; value++)
+    if (!strcmp (nick, value->value_nick))
+      return g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype",
           (gint) value->value, NULL);
-      return ret;
-    }
-    value++;
-  }
 
   return NULL;
 }
