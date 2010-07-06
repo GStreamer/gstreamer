@@ -2540,8 +2540,14 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("video/quicktime,variant=(string)apple");
   } else if (!strcmp (format_name, "mp4")) {
     caps = gst_caps_from_string ("video/quicktime,variant=(string)iso");
-  } else if ((!strcmp (format_name, "3gp")) || (!strcmp (format_name, "3gp2"))) {
-    caps = gst_caps_new_simple ("application/x-3gp", NULL);
+  } else if (!strcmp (format_name, "3gp")) {
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)3gpp");
+  } else if (!strcmp (format_name, "3g2")) {
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)3g2");
+  } else if (!strcmp (format_name, "psp")) {
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)psp");
+  } else if (!strcmp (format_name, "ipod")) {
+    caps = gst_caps_from_string ("video/quicktime,variant=(string)ipod");
   } else if (!strcmp (format_name, "aac")) {
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 4, NULL);
@@ -2562,6 +2568,10 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("audio/x-vqf");
   } else if (!strcmp (format_name, "nsv")) {
     caps = gst_caps_from_string ("video/x-nsv");
+  } else if (!strcmp (format_name, "amr")) {
+    caps = gst_caps_from_string ("audio/x-amr-nb-sh");
+  } else if (!strcmp (format_name, "webm")) {
+    caps = gst_caps_from_string ("video/webm");
   } else {
     gchar *name;
 
