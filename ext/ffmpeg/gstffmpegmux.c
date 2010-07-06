@@ -854,6 +854,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   while (in_plugin) {
     gchar *type_name;
     gchar *p;
+    GstRank rank = GST_RANK_MARGINAL;
 
     if ((!strncmp (in_plugin->name, "u16", 3)) ||
         (!strncmp (in_plugin->name, "s16", 3)) ||
@@ -886,6 +887,9 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       goto next;
     }
 
+    if (gst_ffmpegmux_get_replacement (in_plugin->name))
+      rank = GST_RANK_NONE;
+
     /* FIXME : We need a fast way to know whether we have mappings for this
      * muxer type. */
 
@@ -909,7 +913,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
     }
 
-    if (!gst_element_register (plugin, type_name, GST_RANK_MARGINAL, type)) {
+    if (!gst_element_register (plugin, type_name, rank, type)) {
       g_free (type_name);
       return FALSE;
     }
