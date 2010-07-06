@@ -226,26 +226,30 @@ GST_START_TEST (test_merge_modes_skip_empty)
 GST_END_TEST static int spin_and_wait = 1;
 static int threads_running = 0;
 
-#define THREADS_CYCLES 1000
+#define THREADS_TEST_SECONDS 1.5
 
 static gpointer
 test_threads_thread_func1 (gpointer data)
 {
   GstTagSetter *setter = GST_TAG_SETTER (data);
-  int i;
+  GTimer *timer;
+
+  timer = g_timer_new ();
 
   g_atomic_int_inc (&threads_running);
   while (g_atomic_int_get (&spin_and_wait))
     g_usleep (0);
 
   GST_INFO ("Go!");
+  g_timer_start (timer);
 
-  for (i = 0; i < THREADS_CYCLES; ++i) {
+  while (g_timer_elapsed (timer, NULL) < THREADS_TEST_SECONDS) {
     gst_tag_setter_add_tags (setter, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST,
         "some artist", GST_TAG_TITLE, "some title", GST_TAG_TRACK_NUMBER, 6,
         NULL);
   }
 
+  g_timer_destroy (timer);
   GST_INFO ("Done");
 
   return NULL;
@@ -255,20 +259,24 @@ static gpointer
 test_threads_thread_func2 (gpointer data)
 {
   GstTagSetter *setter = GST_TAG_SETTER (data);
-  int i;
+  GTimer *timer;
+
+  timer = g_timer_new ();
 
   g_atomic_int_inc (&threads_running);
   while (g_atomic_int_get (&spin_and_wait))
     g_usleep (0);
 
   GST_INFO ("Go!");
+  g_timer_start (timer);
 
-  for (i = 0; i < THREADS_CYCLES; ++i) {
+  while (g_timer_elapsed (timer, NULL) < THREADS_TEST_SECONDS) {
     gst_tag_setter_add_tags (setter, GST_TAG_MERGE_PREPEND, GST_TAG_CODEC,
         "MP42", GST_TAG_COMMENT, "deep insights go here", GST_TAG_TRACK_COUNT,
         10, NULL);
   }
 
+  g_timer_destroy (timer);
   GST_INFO ("Done");
 
   return NULL;
@@ -278,19 +286,22 @@ static gpointer
 test_threads_thread_func3 (gpointer data)
 {
   GstTagSetter *setter = GST_TAG_SETTER (data);
-  int i;
+  GTimer *timer;
+
+  timer = g_timer_new ();
 
   g_atomic_int_inc (&threads_running);
   while (g_atomic_int_get (&spin_and_wait))
     g_usleep (0);
 
   GST_INFO ("Go!");
+  g_timer_start (timer);
 
-  for (i = 0; i < THREADS_CYCLES; ++i) {
+  while (g_timer_elapsed (timer, NULL) < THREADS_TEST_SECONDS) {
     gst_tag_setter_reset_tags (setter);
-    g_usleep (10);
   }
 
+  g_timer_destroy (timer);
   GST_INFO ("Done");
 
   return NULL;
