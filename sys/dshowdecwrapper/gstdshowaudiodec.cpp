@@ -318,7 +318,7 @@ gst_dshowaudiodec_base_init (gpointer klass)
 
   audiodec_class->entry = tmp;
   description = g_strdup_printf ("DirectShow %s Decoder Wrapper",
-      tmp->element_description);
+      tmp->element_longname);
   gst_element_class_set_details_simple (element_class, description,
       "Codec/Decoder/Audio", description,
       "Sebastien Moutte <sebastien@moutte.net>");
