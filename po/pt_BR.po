@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 18:27+0100\n"
-"PO-Revision-Date: 2010-05-25 23:40-0300\n"
+"POT-Creation-Date: 2010-07-07 00:30+0100\n"
+"PO-Revision-Date: 2010-06-28 21:00-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "Language: pt_BR\n"
@@ -379,23 +379,23 @@ msgstr "Rápido"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr "Muito baixo"
+msgstr "Muito baixa"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr "Baixo"
+msgstr "Baixa"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr "Médio"
+msgstr "Média"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr "Alto"
+msgstr "Alta"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr "Muito alto"
+msgstr "Muito alta"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"

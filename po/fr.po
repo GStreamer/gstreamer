@@ -1,16 +1,16 @@
 # Translation of gst-plugins-good to French
-# Copyright (C) 2003-2009 GStreamer core team
+# Copyright (C) 2003-2010 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008-2009.
+# Claude Paroz <claude@2xlibre.net>, 2008-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.15.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 18:27+0100\n"
-"PO-Revision-Date: 2009-09-22 19:36+0200\n"
+"POT-Creation-Date: 2010-07-07 00:30+0100\n"
+"PO-Revision-Date: 2010-06-05 21:09+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -28,7 +28,7 @@ msgstr ""
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "« %s » par « %s »"
 
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
@@ -70,13 +70,13 @@ msgstr ""
 "Aucun flux pris en charge n'a été trouvé. Il faut peut-être installer un "
 "greffon d'extension GStreamer RTSP pour les flux Real media."
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Aucun flux pris en charge n'a été trouvé. Il manque peut-être le bon greffon "
+"Aucun flux pris en charge n'a été trouvé. Il faut peut-être autoriser "
+"davantage de protocoles de transport ou il manque peut-être le bon greffon "
 "d'extension GStreamer RTSP."
 
 msgid "Internal data flow error."
@@ -372,7 +372,7 @@ msgid "Off"
 msgstr "Désactivé"
 
 msgid "Mute"
-msgstr "Sourdine"
+msgstr "Son coupé"
 
 msgid "Fast"
 msgstr "Rapide"
@@ -483,9 +483,9 @@ msgid "Virtual Mixer Channels"
 msgstr "Canaux de mélangeur virtuel"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "Fonction %s"
+msgstr "Fonction %s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
