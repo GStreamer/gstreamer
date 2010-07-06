@@ -217,8 +217,10 @@ static void
 ges_tl_title_src_init (GESTimelineTitleSource * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
+  /* Not 100% required since a new gobject's content will always be memzero'd */
+  self->mute = FALSE;
   self->text = NULL;
-  self->text = NULL;
+  self->font_desc = NULL;
   self->halign = DEFAULT_HALIGNMENT;
   self->valign = DEFAULT_VALIGNMENT;
 }

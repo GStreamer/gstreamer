@@ -199,8 +199,9 @@ static void
 ges_tl_text_overlay_init (GESTimelineTextOverlay * self)
 {
   GES_TIMELINE_OBJECT (self)->duration = 0;
+  /* Not 100% needed since gobject contents are memzero'd when created */
   self->text = NULL;
-  self->text = NULL;
+  self->font_desc = NULL;
   self->halign = DEFAULT_PROP_HALIGNMENT;
   self->valign = DEFAULT_PROP_VALIGNMENT;
 }
