@@ -123,6 +123,10 @@ class LevelColorThemeTango (LevelColorTheme):
         p = TangoPalette.get ()
         self.add_color (Data.debug_level_none,
                         None, None, None)
+        self.add_color (Data.debug_level_trace,
+                        p.black, p.aluminium2, Color ("#d3d7cf"))
+        self.add_color (Data.debug_level_fixme,
+                        p.black, p.butter3, Color ("#c4a000"))
         self.add_color (Data.debug_level_log,
                         p.black, p.plum1, Color ("#e0a4d9"))
         self.add_color (Data.debug_level_debug,

@@ -69,7 +69,7 @@ def parse_time (st):
 
 class DebugLevel (int):
 
-    __names = ["NONE", "ERROR", "WARN", "INFO", "DEBUG", "LOG"]
+    __names = ["NONE", "ERROR", "WARN", "INFO", "DEBUG", "LOG", "FIXME", "TRACE"]
     __instances = {}
 
     def __new__ (cls, level):
@@ -113,7 +113,11 @@ debug_level_warning = DebugLevel ("WARN")
 debug_level_info = DebugLevel ("INFO")
 debug_level_debug = DebugLevel ("DEBUG")
 debug_level_log = DebugLevel ("LOG")
+debug_level_fixme = DebugLevel ("FIXME")
+debug_level_trace = DebugLevel ("TRACE")
 debug_levels = [debug_level_none,
+                debug_level_trace,
+                debug_level_fixme,
                 debug_level_log,
                 debug_level_debug,
                 debug_level_info,
@@ -213,10 +217,11 @@ class LineCache (Producer):
         offsets = self.offsets
         levels = self.levels
 
-        dict_levels = {"D" : debug_level_debug, "L" : debug_level_log,
-                       "I" : debug_level_info, "E" : debug_level_error,
-                       "W" : debug_level_warning, " " : debug_level_none}
-        rexp = re.compile (r"\d:\d\d:\d\d\.\d+\s+\d+\s+0x[0-9a-f]+\s+([DLIEW ])")
+        dict_levels = {"T" : debug_level_trace, "F" : debug_level_fixme,
+                       "L" : debug_level_log, "D" : debug_level_debug,
+                       "I" : debug_level_info, "W" : debug_level_warning,
+                       "E" : debug_level_error, " " : debug_level_none}
+        rexp = re.compile (r"\d:\d\d:\d\d\.\d+\s+\d+\s+0x[0-9a-f]+\s+([TFLDIEW ])")
 
         # Moving attribute lookups out of the loop:
         readline = self.__fileobj.readline

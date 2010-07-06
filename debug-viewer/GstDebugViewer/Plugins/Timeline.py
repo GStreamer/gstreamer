@@ -152,6 +152,7 @@ class LevelDistributionSentinel (object):
 
     def process (self):
 
+        MAX_LEVELS = 8
         YIELD_LIMIT = 10000
         y = YIELD_LIMIT
 
@@ -164,7 +165,7 @@ class LevelDistributionSentinel (object):
         i = 0
         partitions_i = 0
         partitions = self.freq_sentinel.partitions
-        counts = [0] * 6
+        counts = [0] * MAX_LEVELS
         tree_iter = self.model.get_iter_first ()
 
         if not partitions:
@@ -179,7 +180,7 @@ class LevelDistributionSentinel (object):
             level = model_get (tree_iter, id_level)
             while i > partitions[partitions_i]:
                 data.append (tuple (counts))
-                counts = [0] * 6
+                counts = [0] * MAX_LEVELS
                 partitions_i += 1
                 if partitions_i == len (partitions):
                     finished = True
@@ -608,18 +609,30 @@ class TimelineWidget (gtk.DrawingArea):
                 yield sum ((level_counts[level] for level in levels))
 
         level = Data.debug_level_info
-        levels_prev = (Data.debug_level_log, Data.debug_level_debug,)
+        levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,Data.debug_level_log, Data.debug_level_debug,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_debug
-        levels_prev = (Data.debug_level_log,)
+        levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,Data.debug_level_log,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_log
+        levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,)
+        ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
+        self.__draw_graph (ctx, w, h, maximum,
+                           list (cumulative_level_counts (level, *levels_prev)))
+
+        level = Data.debug_level_fixme
+        levels_prev = (Data.debug_level_trace,)
+        ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
+        self.__draw_graph (ctx, w, h, maximum,
+                           list (cumulative_level_counts (level, *levels_prev)))
+
+        level = Data.debug_level_trace
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
         self.__draw_graph (ctx, w, h, maximum, [counts[level] for counts in dist_data])
 
