@@ -44,8 +44,7 @@ static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
     GstElement ** smpteref);
 
 static void
-ges_track_video_transition_duration_changed (GESTrackTransition * self,
-    GstElement * gnlobj);
+ges_track_video_transition_duration_changed (GESTrackTransition * self);
 
 static GstElement *ges_track_video_transition_create_element (GESTrackTransition
     * self);
@@ -280,26 +279,20 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
 }
 
 static void
-ges_track_video_transition_duration_changed (GESTrackTransition * object,
-    GstElement * gnlobj)
+ges_track_video_transition_duration_changed (GESTrackTransition * object)
 {
   GValue start_value = { 0, };
   GValue end_value = { 0, };
-  guint64 duration;
+  guint64 duration = GES_TRACK_OBJECT_DURATION (object);
+  GstElement *gnlobj = GES_TRACK_OBJECT (object)->gnlobject;
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
 
   GST_LOG ("updating controller");
 
-  if (!gnlobj)
+  if (G_UNLIKELY (!gnlobj || !self->controller))
     return;
 
-  if (!(self->controller))
-    return;
-
-  GST_LOG ("getting properties");
-  g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
-
-  GST_INFO ("duration: %d\n", duration);
+  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   g_value_init (&start_value, G_TYPE_DOUBLE);
   g_value_init (&end_value, G_TYPE_DOUBLE);
   g_value_set_double (&start_value, self->start_value);

@@ -39,20 +39,16 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
 {
   GESTrackTransitionClass *klass;
 
-  klass = GES_TRACK_TRANSITION_GET_CLASS (self);
   GST_LOG ("got duration changed signal");
 
   klass = GES_TRACK_TRANSITION_GET_CLASS (self);
-  klass->duration_changed (self, gnlobject);
+  if (klass->duration_changed)
+    klass->duration_changed (self);
 }
 
 static void
-ges_track_transition_duration_changed (GESTrackTransition * self, GstElement
-    * gnlobject)
+ges_track_transition_duration_changed (GESTrackTransition * self)
 {
-  GESTrackType type;
-  type = ((GESTrackObject *) self)->track->type;
-
   GST_WARNING ("transitions don't handle this track type!");
 }
 
@@ -114,7 +110,9 @@ ges_track_transition_create_gnl_object (GESTrackObject * object)
 
   gst_bin_add (GST_BIN (object->gnlobject), element);
 
-  klass->duration_changed (self, object->gnlobject);
+  if (klass->duration_changed)
+    klass->duration_changed (self);
+
   return TRUE;
 }
 

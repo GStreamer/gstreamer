@@ -37,8 +37,7 @@ enum
 
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackTransition * self,
-    GstElement * gnlobj);
+ges_track_audio_transition_duration_changed (GESTrackTransition * self);
 
 static GstElement *ges_track_audio_transition_create_element (GESTrackTransition
     * self);
@@ -228,12 +227,11 @@ ges_track_audio_transition_create_element (GESTrackTransition * object)
 }
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackTransition * object,
-    GstElement * gnlobj)
+ges_track_audio_transition_duration_changed (GESTrackTransition * object)
 {
-
   GESTrackAudioTransition *self;
-  guint64 duration;
+  guint64 duration = GES_TRACK_OBJECT_DURATION (object);
+  GstElement *gnlobj = GES_TRACK_OBJECT (object)->gnlobject;
   GValue zero = { 0, };
   GValue one = { 0, };
 
@@ -242,16 +240,11 @@ ges_track_audio_transition_duration_changed (GESTrackTransition * object,
   GST_LOG ("updating controller: gnlobj (%p) acontroller(%p) bcontroller(%p)",
       gnlobj, self->a_controller, self->b_controller);
 
-  if (!gnlobj)
+  if (G_UNLIKELY ((gnlobj == NULL) || !self->a_controller
+          || !self->b_controller))
     return;
 
-  if (!(self->a_controller) || !(self->b_controller))
-    return;
-
-  GST_LOG ("getting properties");
-  g_object_get (G_OBJECT (gnlobj), "duration", (guint64 *) & duration, NULL);
-
-  GST_INFO ("duration: %lud\n", duration);
+  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   g_value_init (&zero, G_TYPE_DOUBLE);
   g_value_init (&one, G_TYPE_DOUBLE);
   g_value_set_double (&zero, 0.0);
