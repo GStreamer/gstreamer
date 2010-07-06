@@ -1341,8 +1341,8 @@ gst_value_deserialize_fraction_range (GValue * dest, const gchar * s)
  * @value: a GValue initialized to GST_TYPE_CAPS
  * @caps: the caps to set the value to
  *
- * Sets the contents of @value to @caps.  The actual
- * #GstCaps structure is copied before it is used.
+ * Sets the contents of @value to @caps. A reference to the
+ * provided @caps will be taken by the @value.
  */
 void
 gst_value_set_caps (GValue * value, const GstCaps * caps)
@@ -1358,7 +1358,9 @@ gst_value_set_caps (GValue * value, const GstCaps * caps)
  * gst_value_get_caps:
  * @value: a GValue initialized to GST_TYPE_CAPS
  *
- * Gets the contents of @value.
+ * Gets the contents of @value. The reference count of the returned
+ * #GstCaps will not be modified, therefore the caller must take one
+ * before getting rid of the @value.
  *
  * Returns: the contents of @value
  */
