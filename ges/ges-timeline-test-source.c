@@ -276,17 +276,15 @@ ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
 
   else if (track->type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_test_source_new ();
-    if (tfs->mute) {
-      ges_track_object_set_active (res, FALSE);
-      ges_track_audio_test_source_set_freq ((GESTrackAudioTestSource *) res,
-          tfs->freq);
-      ges_track_audio_test_source_set_volume ((GESTrackAudioTestSource *) res,
-          tfs->volume);
-    }
-  }
 
-  else
-    res = NULL;
+    if (tfs->mute)
+      ges_track_object_set_active (res, FALSE);
+
+    ges_track_audio_test_source_set_freq ((GESTrackAudioTestSource *) res,
+        tfs->freq);
+    ges_track_audio_test_source_set_volume ((GESTrackAudioTestSource *) res,
+        tfs->volume);
+  }
 
   return res;
 }
