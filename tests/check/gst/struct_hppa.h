@@ -8,7 +8,6 @@ static GstCheckABIStruct list[] = {
   {"GstCaps", sizeof (GstCaps), 32},
   {"GstStaticCaps", sizeof (GstStaticCaps), 52},
   {"GstChildProxyInterface", sizeof (GstChildProxyInterface), 40},
-  {"GstClockEntry", sizeof (GstClockEntry), 48},
   {"GstClock", sizeof (GstClock), 176},
   {"GstClockClass", sizeof (GstClockClass), 160},
   {"GstElement", sizeof (GstElement), 136},
