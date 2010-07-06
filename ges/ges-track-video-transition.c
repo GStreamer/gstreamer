@@ -319,7 +319,8 @@ ges_track_video_transition_duration_changed (GESTrackTransition * object,
 }
 
 void
-ges_track_video_transition_set_type (GESTrackVideoTransition * self, gint type)
+ges_track_video_transition_set_type (GESTrackVideoTransition * self,
+    GESVideoTransitionType type)
 {
   if (((type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE)
           && (self->type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
