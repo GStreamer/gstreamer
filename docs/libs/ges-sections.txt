@@ -16,22 +16,23 @@ ges_init
 <FILE>ges-enums</FILE>
 <TITLE>GES Enums</TITLE>
 GESVideoTransitionType
-GES_VIDEO_TRANSITION_TYPE_TYPE
-ges_video_transition_type_get_type
 GESTrackType
-GES_TYPE_TRACK_TYPE
-ges_track_type_get_type
 GESTextHAlign
 DEFAULT_HALIGNMENT
-GES_TEXT_HALIGN_TYPE
-ges_text_halign_get_type
 GESTextVAlign
 DEFAULT_VALIGNMENT
+GESVideoTestPattern
+<SUBSECTION Standard>
+GES_TYPE_TRACK_TYPE
+ges_track_type_get_type
+GES_TEXT_HALIGN_TYPE
+ges_text_halign_get_type
 GES_TEXT_VALIGN_TYPE
 ges_text_valign_get_type
-GESVideoTestPattern
 GES_VIDEO_TEST_PATTERN_TYPE
 ges_video_test_pattern_get_type
+GES_VIDEO_TRANSITION_TYPE_TYPE
+ges_video_transition_type_get_type
 </SECTION>
 
 <SECTION>
@@ -103,9 +104,9 @@ ges_track_source_get_type
 <TITLE>GESTrackOperation</TITLE>
 GESTrackOperation
 GESTrackOperationClass
-ges_track_operation_get_type
 ges_track_operation_new
 <SUBSECTION Standard>
+ges_track_operation_get_type
 GES_IS_TRACK_OPERATION
 GES_IS_TRACK_OPERATION_CLASS
 GES_TRACK_OPERATION
@@ -135,6 +136,7 @@ ges_track_filesource_get_type
 <TITLE>GESTrackTransition</TITLE>
 GESTrackTransition
 GESTrackTransitionClass
+<SUBSECTION Standard>
 GES_IS_TRACK_TRANSITION
 GES_IS_TRACK_TRANSITION_CLASS
 GES_TRACK_TRANSITION
@@ -150,10 +152,10 @@ ges_track_transition_new
 <TITLE>GESTrackAudioTransition</TITLE>
 GESTrackAudioTransition
 GESTrackAudioTransitionClass
-GES_IS_TRACK_AUDIO_TRANSITION
-ges_track_audio_transition_get_type
 ges_track_audio_transition_new
 <SUBSECTION Standard>
+GES_IS_TRACK_AUDIO_TRANSITION
+ges_track_audio_transition_get_type
 GES_IS_TRACK_AUDIO_TRANSITION_CLASS
 GES_TRACK_AUDIO_TRANSITION
 GES_TRACK_AUDIO_TRANSITION_CLASS
@@ -166,10 +168,10 @@ GES_TYPE_TRACK_AUDIO_TRANSITION
 <TITLE>GESTrackVideoTransition</TITLE>
 GESTrackVideoTransition
 GESTrackVideoTransitionClass
-ges_track_video_transition_get_type
 ges_track_video_transition_new
 ges_track_video_transition_set_type
 <SUBSECTION Standard>
+ges_track_video_transition_get_type
 GES_IS_TRACK_VIDEO_TRANSITION
 GES_IS_TRACK_VIDEO_TRANSITION_CLASS
 GES_TRACK_VIDEO_TRANSITION
@@ -314,9 +316,9 @@ GES_TYPE_TIMELINE_FILE_SOURCE
 <TITLE>GESTimelineOverlay</TITLE>
 GESTimelineOverlay
 GESTimelineOverlayClass
-ges_timeline_overlay_get_type
 ges_timeline_overlay_new
 <SUBSECTION Standard>
+ges_timeline_overlay_get_type
 GES_IS_TIMELINE_OVERLAY
 GES_IS_TIMELINE_OVERLAY_CLASS
 GES_TIMELINE_OVERLAY
@@ -385,8 +387,8 @@ GESTimelineTestSource
 GESTimelineTestSourceClass
 ges_timeline_test_source_new
 ges_timeline_test_source_new_for_nick
-ges_timeline_test_source_get_type
 <SUBSECTION Standard>
+ges_timeline_test_source_get_type
 GES_TYPE_TIMELINE_TEST_SOURCE
 GES_IS_TIMELINE_TEST_SOURCE
 GES_IS_TIMELINE_TEST_SOURCE_CLASS
@@ -401,8 +403,8 @@ GES_TIMELINE_TEST_SOURCE_GET_CLASS
 GESTimelineTitleSource
 GESTimelineTitleSourceClass
 ges_timeline_title_source_new
-ges_tl_title_src_get_type
 <SUBSECTION Standard>
+ges_tl_title_src_get_type
 GES_IS_TIMELINE_TITLE_SOURCE
 GES_IS_TIMELINE_TITLE_SOURCE_CLASS
 GES_TIMELINE_TITLE_SOURCE
@@ -416,8 +418,8 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 GESTimelineTextOverlay
 GESTimelineTextOverlayClass
 ges_timeline_text_overlay_new
-ges_tl_text_overlay_get_type
 <SUBSECTION Standard>
+ges_tl_text_overlay_get_type
 GES_IS_TIMELINE_TEXT_OVERLAY
 GES_IS_TIMELINE_TEXT_OVERLAY_CLASS
 GES_TIMELINE_TEXT_OVERLAY
@@ -432,8 +434,8 @@ GES_TYPE_TIMELINE_TEXT_OVERLAY
 GESTrackVideoTestSource
 GESTrackVideoTestSourceClass
 ges_track_video_test_source_new
-ges_track_video_test_source_get_type
 <SUBSECTION Standard>
+ges_track_video_test_source_get_type
 GES_IS_TRACK_VIDEO_TEST_SOURCE
 GES_IS_TRACK_VIDEO_TEST_SOURCE_CLASS
 GES_TRACK_VIDEO_TEST_SOURCE
@@ -448,10 +450,10 @@ GES_TYPE_TRACK_VIDEO_TEST_SOURCE
 GESTrackAudioTestSource
 GESTrackAudioTestSourceClass
 ges_track_audio_test_source_new
-ges_track_audio_test_source_get_type
 ges_track_audio_test_source_set_freq
 ges_track_audio_test_source_set_volume
 <SUBSECTION Standard>
+ges_track_audio_test_source_get_type
 GES_TRACK_AUDIO_TEST_SOURCE
 GES_TRACK_AUDIO_TEST_SOURCE_CLASS
 GES_TRACK_AUDIO_TEST_SOURCE_GET_CLASS
@@ -468,11 +470,11 @@ GESTrackTitleSourceClass
 ges_tl_title_src_get_type
 ges_track_title_source_set_text
 ges_track_title_source_set_font_desc
-ges_track_title_src_get_type
 ges_track_title_source_set_halignment
 ges_track_title_source_set_valignment
 ges_track_title_source_new
 <SUBSECTION Standard>
+ges_track_title_src_get_type
 GES_TRACK_TITLE_SOURCE
 GES_TRACK_TITLE_SOURCE_CLASS
 GES_TRACK_TITLE_SOURCE_GET_CLASS
@@ -487,13 +489,13 @@ GES_IS_TRACK_TITLE_SOURCE_CLASS
 <TITLE>GESTrackTextOverlay</TITLE>
 GESTrackTextOverlay
 GESTrackTextOverlayClass
-ges_track_text_overlay_get_type
 ges_track_text_overlay_new
 ges_track_text_overlay_set_font_desc
 ges_track_text_overlay_set_halignment
 ges_track_text_overlay_set_text
 ges_track_text_overlay_set_valignment
 <SUBSECTION Standard>
+ges_track_text_overlay_get_type
 GES_IS_TRACK_TEXT_OVERLAY
 GES_IS_TRACK_TEXT_OVERLAY_CLASS
 GES_TRACK_TEXT_OVERLAY
