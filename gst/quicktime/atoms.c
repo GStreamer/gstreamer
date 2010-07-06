@@ -3124,6 +3124,30 @@ build_esds_extension (AtomTRAK * trak, guint8 object_type, guint8 stream_type,
       atom_esds_free);
 }
 
+AtomInfo *
+build_btrt_extension (guint32 buffer_size_db, guint32 avg_bitrate,
+    guint32 max_bitrate)
+{
+  AtomData *atom_data;
+  GstBuffer *buf;
+
+  if (buffer_size_db == 0 && avg_bitrate == 0 && max_bitrate == 0)
+    return 0;
+
+  buf = gst_buffer_new_and_alloc (12);
+
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), buffer_size_db);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 4, avg_bitrate);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 8, max_bitrate);
+
+  atom_data =
+      atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('b', 't', 'r', 't'), buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
 static AtomInfo *
 build_mov_wave_extension (AtomTRAK * trak, guint32 fourcc, AtomInfo * atom1,
     AtomInfo * atom2, gboolean terminator)
