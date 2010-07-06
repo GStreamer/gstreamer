@@ -2325,7 +2325,8 @@ gst_asf_mux_get_property (GObject * object,
       g_value_set_uint64 (value, asfmux->prop_padding);
       break;
     case PROP_IS_LIVE:
-      g_warning ("This property is deprecated, use 'streamable' instead");
+      GST_WARNING_OBJECT (object, "The 'is-live' property is deprecated, use "
+          "the 'streamable' property instead");
       g_value_set_boolean (value, asfmux->prop_streamable);
       break;
     case PROP_STREAMABLE:
