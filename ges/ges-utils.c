@@ -30,6 +30,15 @@
 #include "ges-timeline-layer.h"
 #include "ges.h"
 
+/**
+ * ges_timeline_new_audio_video:
+ * 
+ * Creates a new #GESTimeline containg a raw audio and a
+ * raw video track.
+ *
+ * Returns: The newly created #GESTimeline
+ */
+
 GESTimeline *
 ges_timeline_new_audio_video (void)
 {
