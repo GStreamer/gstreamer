@@ -1,16 +1,16 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2009 Free Software Foundation, Inc.
+# Copyright (C) 2008-2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2009.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2010.
 #
 # PCM -> PCM
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base-0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
-"PO-Revision-Date: 2009-11-05 01:06-0300\n"
+"POT-Creation-Date: 2010-07-01 01:54+0100\n"
+"PO-Revision-Date: 2010-06-28 20:25-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "Language: pt_BR\n"
@@ -189,9 +189,9 @@ msgstr "Os elementos autovideosink e %s estão faltando."
 msgid "The autovideosink element is missing."
 msgstr "O elemento autovideosink está faltando."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "O elemento autovideosink não está funcionando."
+msgstr "O videosink configurado %s não está funcionando."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -213,9 +213,9 @@ msgstr "Os elementos autoaudiosink e %s estão faltando."
 msgid "The autoaudiosink element is missing."
 msgstr "O elemento autoaudiosink não está faltando."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "O elemento autoaudiosink não está funcionando."
+msgstr "O audiosink configurado %s não está funcionando."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -224,9 +224,9 @@ msgstr "Os elementos autoaudiosink e %s não estão funcionando."
 msgid "The autoaudiosink element is not working."
 msgstr "O elemento autoaudiosink não está funcionando."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Não é possível reproduzir um arquivo de texto sem vídeo."
+msgstr ""
+"Não é possível reproduzir um arquivo de texto sem vídeo ou visualização."
 
 #, c-format
 msgid "No decoder available for type '%s'."

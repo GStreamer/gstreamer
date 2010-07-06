@@ -1,16 +1,16 @@
 # Translation of gst-plugins-base to French
-# Copyright (C) 2003-2009 GStreamer core team
+# Copyright (C) 2003-2010 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
-# Claude Paroz <claude@2xlibre.net>, 2008-2009.
+# Claude Paroz <claude@2xlibre.net>, 2008-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
-"PO-Revision-Date: 2009-09-22 19:21+0200\n"
+"POT-Creation-Date: 2010-07-01 01:54+0100\n"
+"PO-Revision-Date: 2010-04-30 22:47+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -193,9 +193,9 @@ msgstr "Les éléments autovideosink et %s sont tous deux manquants."
 msgid "The autovideosink element is missing."
 msgstr "L'élément autovideosink est manquant."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "L'élément autovideosink ne fonctionne pas."
+msgstr "L'élément videosink configuré %s ne fonctionne pas."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -217,9 +217,9 @@ msgstr "Les éléments autoaudiosink et %s sont tous deux manquants."
 msgid "The autoaudiosink element is missing."
 msgstr "L'élément autoaudiosink est manquant."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "L'élément autoaudiosink ne fonctionne pas."
+msgstr "L'élément autoaudiosink configuré %s ne fonctionne pas."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -228,9 +228,8 @@ msgstr "Les éléments autoaudiosink et %s ne fonctionnent pas."
 msgid "The autoaudiosink element is not working."
 msgstr "L'élément autoaudiosink ne fonctionne pas."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Impossible de lire un fichier texte sans vidéo."
+msgstr "Impossible de lire un fichier texte sans vidéo ou visualisation."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -491,30 +490,3 @@ msgstr "Le périphérique « %s » est déjà en cours d'utilisation."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Impossible de créer un élément « decodebin2 »."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Impossible de créer un élément « queue2 »."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Impossible de créer un élément « typefind »."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Impossible d'afficher à la fois des sous-titres et des sous-images."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Aucun répertoire temporaire indiqué."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Impossible de créer le fichier temporaire « %s »."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Impossible d'ouvrir le fichier « %s » en lecture."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Erreur interne de flux de données."
-
-#~ msgid "No file name specified."
-#~ msgstr "Aucun nom de fichier indiqué."

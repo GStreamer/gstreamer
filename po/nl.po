@@ -1,21 +1,20 @@
-# translation of gst-plugins-base-0.10.26.2.po to Dutch
+# translation of gst-plugins-base-0.10.28.2.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009, 2010.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2010.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
-"PO-Revision-Date: 2010-02-21 15:23+0100\n"
+"POT-Creation-Date: 2010-07-01 01:54+0100\n"
+"PO-Revision-Date: 2010-04-30 15:37+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.0\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Master"
@@ -188,9 +187,9 @@ msgstr "De elementen 'autovideosink' en '%s' ontbreken beide."
 msgid "The autovideosink element is missing."
 msgstr "Het element 'autovideosink' ontbreekt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Het element 'autovideosink' werkt niet."
+msgstr "Het geconfigureerde videosink %s werkt niet."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -212,9 +211,9 @@ msgstr "De elementen 'autoaudiosink' en '%s' ontbreken beide."
 msgid "The autoaudiosink element is missing."
 msgstr "Het element 'autoaudiosink' ontbreekt."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Het element 'autoaudiosink' werkt niet."
+msgstr "Het geconfigureerde audiosink %s werkt niet."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -223,9 +222,8 @@ msgstr "De elementen 'autoaudiosink' en '%s' werken beide niet."
 msgid "The autoaudiosink element is not working."
 msgstr "Het element 'autoaudiosink' werkt niet."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Kan geen tekstbestand afspelen zonder video."
+msgstr "Kan geen tekstbestand afspelen zonder video of visualisaties."
 
 #, c-format
 msgid "No decoder available for type '%s'."

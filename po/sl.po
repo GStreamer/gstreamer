@@ -1,0 +1,518 @@
+# -*- mode:po; coding:utf-8; -*- Slovenian message catalogue for gst-plugins-base.
+# This file is distributed under the same license as the gst-plugins-base package.
+# Copyright (C) 2005 Free Software Foundation, Inc.
+#
+# Matej Urbančič <matej.urban@gmail.com>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2010-07-01 01:54+0100\n"
+"PO-Revision-Date: 2010-07-02 20:45+0100\n"
+"Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
+"Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
+"Language: sl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
+"%100==4 ? 3 : 0);\n"
+"X-Poedit-Language: Slovenian\n"
+"X-Poedit-Country: SLOVENIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
+
+msgid "Master"
+msgstr "Glavni"
+
+msgid "Bass"
+msgstr "Basovski toni"
+
+msgid "Treble"
+msgstr "Visoki toni"
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Synth"
+msgstr "Sintetizator"
+
+msgid "Line-in"
+msgstr "Analogni vhod"
+
+msgid "CD"
+msgstr "CD"
+
+msgid "Microphone"
+msgstr "Mikrofon"
+
+msgid "PC Speaker"
+msgstr "Računalniški zvočnik"
+
+msgid "Playback"
+msgstr "Predvajanje"
+
+msgid "Capture"
+msgstr "Zajemanje"
+
+msgid "Could not open device for playback in mono mode."
+msgstr "Ni mogoče odpreti naprave za predvajanje v mono načinu."
+
+msgid "Could not open device for playback in stereo mode."
+msgstr "Ni mogoče odpreti naprave za predvajanje v stereo načinu."
+
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Ni mogoče odpreti naprave za predvajanje v %d-kanalnem načinu."
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Ni mogoče odpreti zvočne naprave za predvajanje. Napravo uporablja drug "
+"program."
+
+msgid "Could not open audio device for playback."
+msgstr "Ni mogoče odpreti zvočne naprave za predvajanje."
+
+msgid "Could not open device for recording in mono mode."
+msgstr "Ni mogoče odpreti naprave za snemanje v mono načinu."
+
+msgid "Could not open device for recording in stereo mode."
+msgstr "Ni mogoče odpreti naprave za snemanje v stereo načinu."
+
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Ni mogoče odpreti naprave za snemanje v %d-kanalnem načinu."
+
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Ni mogoče odpreti zvočne naprave za snemanje. Napravo uporablja drug program."
+
+msgid "Could not open audio device for recording."
+msgstr "Ni mogoče odpreti zvočne naprave za snemanje."
+
+msgid "Could not open CD device for reading."
+msgstr "Ni mogoče odpreti CD naprave za branje."
+
+msgid "Could not seek CD."
+msgstr "Ni mogoče iskati po vsebini CD nosilca."
+
+msgid "Could not read CD."
+msgstr "Ni mogoče prebrati CD nosilca."
+
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Ni mogoče odpreti vfs datoteke \"%s\" za pisanje: %s."
+
+msgid "No filename given"
+msgstr "Ni podanega imena datoteke."
+
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Ni mogoče zapreti vfs datoteke \"%s\"."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Napaka med pisanjem v  datoteko \"%s\"."
+
+msgid "Internal data stream error."
+msgstr "Notranja napaka pretoka podatkov."
+
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr "Za predvajanje tega pretoka je zahtevan vstavek %s, ki pa ni nameščen."
+
+msgid "This appears to be a text file"
+msgstr "Datoteka je videti kot besedilna datoteka."
+
+msgid "Could not determine type of stream"
+msgstr "Ni mogoče določiti vrste pretoka"
+
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "Neveljaven naslov URI \"%s\", zato bodo podnapisi onemogočeni."
+
+msgid "No URI specified to play from."
+msgstr "Ni določenega naslova URI za predvajanje."
+
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "Neveljaven  naslov URI \"%s\"."
+
+msgid "RTSP streams cannot be played yet."
+msgstr "Pretokov RTSP še ni mogoče predvajati."
+
+msgid "Could not create \"decodebin\" element."
+msgstr "Ni mogoče ustvariti predmeta \"decodebin\""
+
+msgid "Source element is invalid."
+msgstr "Izvorni predmet je neveljaven."
+
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Zaznan je le pretok podnapisov. Morda je datoteka podnapisov ali katera "
+"druga besedilna datoteka naložena krajevno, ali pa večpredstavnostne "
+"datoteke ni mogoče prepoznati."
+
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Ni nameščenega ustreznega odkodirnika za to vrsto datoteke. Morda je treba "
+"namestiti manjkajoče vstavke."
+
+msgid "This is not a media file"
+msgstr "Datoteka ni večpredstavnostna datoteka"
+
+msgid "A subtitle stream was detected, but no video stream."
+msgstr "Zaznan je pretok podnapisov, ne pa tudi pretoka videa."
+
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "Manjkata predmeta autoaudiosink in xvimagesink."
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Manjka predmet '%s' - preverite namestitev paketa GStreamer"
+
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "Manjkata predmeta autoaudiosink in alsasink."
+
+#, c-format
+msgid "Both autovideosink and %s elements are missing."
+msgstr "Manjkata predmeta autovideosink in %s."
+
+msgid "The autovideosink element is missing."
+msgstr "Manjka predmet autovideosink."
+
+#, c-format
+msgid "Configured videosink %s is not working."
+msgstr "Nastavljen predmet videosink %s ne deluje."
+
+#, c-format
+msgid "Both autovideosink and %s elements are not working."
+msgstr "Predmeta autovideosink in %s ne delujeta."
+
+msgid "The autovideosink element is not working."
+msgstr "Predmet autovideosink ne deluje."
+
+msgid "Custom text sink element is not usable."
+msgstr "Prilagojen besedilni ponor ni uporaben."
+
+msgid "No volume control found"
+msgstr "Ni mogoče najti nadzornika zvoka"
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are missing."
+msgstr "Manjkata predmeta autoaudiosink in %s."
+
+msgid "The autoaudiosink element is missing."
+msgstr "Manjka predmet autoaudiosink."
+
+#, c-format
+msgid "Configured audiosink %s is not working."
+msgstr "Nastavljen predmet audiosink %s ne deluje."
+
+#, c-format
+msgid "Both autoaudiosink and %s elements are not working."
+msgstr "Predmeta autovideosink in %s ne delujeta."
+
+msgid "The autoaudiosink element is not working."
+msgstr "Predmet autoaudiosink ne deluje."
+
+msgid "Can't play a text file without video or visualizations."
+msgstr ""
+"Ni mogoče predvajati besedilne datoteke brez videa ali druge vrste "
+"predočenja."
+
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Ni ustreznega odkodirnika za vrsto '%s'."
+
+msgid "This stream type cannot be played yet."
+msgstr "Te vrste pretoka še ni mogoče predvajati."
+
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Ni ročnika naslovov URI za \"%s\"."
+
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
+
+#, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov glave gdp na \"%s:%d\"."
+
+#, fuzzy, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr "Napaka med pošiljanjem podatkov pretoka gdp na \"%s:%d\"."
+
+#, c-format
+msgid "Connection to %s:%d refused."
+msgstr "Povezava s strežnikom %s:%d je zavrnjena."
+
+msgid "Can't record audio fast enough"
+msgstr "Ni mogoče dovolj hitro snemati zvoka"
+
+msgid "Failed to read tag: not enough data"
+msgstr "Ni mogoče prebrati oznake: ni dovolj podatkov"
+
+msgid "track ID"
+msgstr "ID sledi"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz ID sledi"
+
+msgid "artist ID"
+msgstr "ID izvajalca"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz ID izvajalca"
+
+msgid "album ID"
+msgstr "ID albuma"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz ID albuma"
+
+msgid "album artist ID"
+msgstr "ID izvajalca albuma"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz ID izvajalca albuma"
+
+msgid "track TRM ID"
+msgstr "TRM ID sledi"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+msgid "This CD has no audio tracks"
+msgstr "Vstavljeni CD nosilec nima zvočnih sledi."
+
+msgid "ID3 tag"
+msgstr "Oznaka ID3"
+
+msgid "APE tag"
+msgstr "Oznaka APE"
+
+msgid "ICY internet radio"
+msgstr "Spletna radijska postaja ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple kodek za kodiranje zvoka brez izgub (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Prosti kodek za kodiranje zvoka brez izgub (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Kodek True Audio za kodiranje zvoka brez izgub (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Govor Windows Media"
+
+msgid "CYUV Lossless"
+msgstr "Kodek za kodiranje brez izgub CYUV"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Kodek za kodiranje brez izgub (MSZH)"
+
+msgid "Uncompressed Gray Image"
+msgstr "Nestisnjena sivinska slika"
+
+msgid "Run-length encoding"
+msgstr "Kodiranje trajanja izvajanja"
+
+msgid "Sami subtitle format"
+msgstr "Zapis podnapisov Sami"
+
+msgid "TMPlayer subtitle format"
+msgstr "Zapis podnapisov TMPlayer"
+
+msgid "Kate subtitle format"
+msgstr "Zapis podnapisov Kate"
+
+msgid "Uncompressed planar YUV 4:2:0"
+msgstr "Nestisnjen ploskovni YUV 4:2:0"
+
+msgid "Uncompressed planar YVU 4:2:0"
+msgstr "Nestisnjen ploskovni YVU 4:2:0"
+
+msgid "Uncompressed packed YUV 4:2:2"
+msgstr "Nestisnjen pakiran YUV 4:2:2"
+
+msgid "Uncompressed packed YUV 4:1:0"
+msgstr "Nestisnjen pakiran YUV 4:1:0"
+
+msgid "Uncompressed packed YVU 4:1:0"
+msgstr "Nestisnjen pakiran YVU 4:1:0"
+
+msgid "Uncompressed packed YUV 4:1:1"
+msgstr "Nestisnjen pakiran YUV 4:1:1"
+
+msgid "Uncompressed packed YUV 4:4:4"
+msgstr "Nestisnjen pakiran YUV 4:4:4"
+
+msgid "Uncompressed planar YUV 4:2:2"
+msgstr "Nestisnjen ploskovni YUV 4:2:2"
+
+msgid "Uncompressed planar YUV 4:1:1"
+msgstr "Nestisnjen ploskovni YUV 4:1:1"
+
+msgid "Uncompressed black and white Y-plane"
+msgstr "Nestisnjen črno-bela slika Y-ravnine"
+
+msgid "Uncompressed YUV"
+msgstr "Nestisnjen YUV"
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Nestisnjen paletni %d-bitni %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 različice %d"
+
+#, c-format
+msgid "Raw %d-bit PCM audio"
+msgstr "Surovi %d-bitni zvok PCM"
+
+msgid "Raw PCM audio"
+msgstr "Surovi zvok PCM"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit floating-point audio"
+msgstr "Zvočno pretvarjanje s plavajočo vejico"
+
+#, fuzzy
+msgid "Raw floating-point audio"
+msgstr "Zvočno pretvarjanje s plavajočo vejico"
+
+msgid "Audio CD source"
+msgstr "Zvočni disk"
+
+msgid "DVD source"
+msgstr "Vir DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Vir protokola pretakanja Real Time (RTSP)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Vir protokola Microsoft Media Server (MMS)"
+
+#, fuzzy, c-format
+msgid "%s protocol source"
+msgstr "Izvorna datoteka:"
+
+#, fuzzy, c-format
+msgid "%s video RTP depayloader"
+msgstr "Največje število RTP virov"
+
+#, fuzzy, c-format
+msgid "%s audio RTP depayloader"
+msgstr "Največje število RTP virov"
+
+#, fuzzy, c-format
+msgid "%s RTP depayloader"
+msgstr "Največje število RTP virov"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "%s odvijalnik"
+
+#, c-format
+msgid "%s decoder"
+msgstr "%s odkodirnik"
+
+#, fuzzy, c-format
+msgid "%s video RTP payloader"
+msgstr "%s video RTP koristna vsebina"
+
+#, fuzzy, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s zvočna RTP koristna vsebina"
+
+#, fuzzy, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP nalagalnik"
+
+#, c-format
+msgid "%s muxer"
+msgstr "%s zvijalnik"
+
+#, c-format
+msgid "%s encoder"
+msgstr "%s kodirnik"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Predmet GStreamer \"%s\""
+
+msgid "Unknown source element"
+msgstr "Neznana vrsta vira"
+
+msgid "Unknown sink element"
+msgstr "Neznan predmet ponora"
+
+msgid "Unknown element"
+msgstr "Neznan predmet"
+
+msgid "Unknown decoder element"
+msgstr "Neznan predmet odkodirnika"
+
+msgid "Unknown encoder element"
+msgstr "Neznan predmet kodirnika"
+
+msgid "Plugin or element of unknown type"
+msgstr "Vstavek oziroma predmet neznane vrste"
+
+msgid "No device specified."
+msgstr "Ni določene naprave."
+
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Naprava \"%s\" ne obstaja."
+
+#, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "Naprava \"%s\" je že v uporabi."
+
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Ni mogoče odpreti naprave \"%s\" za branje in pisanje."
+
+#, fuzzy
+#~ msgid "No Temp directory specified."
+#~ msgstr "Ni določenega izvornega pogona"
+
+#, fuzzy
+#~ msgid "Could not create temp file \"%s\"."
+#~ msgstr "Ni mogoče ustvariti datoteke predpomnilnika"
+
+#, fuzzy
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Ni mogoče odpreti CD naprave za branje."
+
+#, fuzzy
+#~ msgid "Internal data flow error."
+#~ msgstr "Notranja napaka pretoka podatkov."
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin2\" element."
+#~ msgstr "Elementa filesrc ni mogoče ustvariti"
+
+#, fuzzy
+#~ msgid "Could not create \"queue2\" element."
+#~ msgstr "Elementa filesrc ni mogoče ustvariti"
+
+#, fuzzy
+#~ msgid "Could not create \"typefind\" element."
+#~ msgstr "Elementa filesrc ni mogoče ustvariti"
