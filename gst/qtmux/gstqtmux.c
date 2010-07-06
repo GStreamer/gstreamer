@@ -2318,6 +2318,9 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-h264") == 0) {
     entry.fourcc = FOURCC_avc1;
     qtpad->is_out_of_order = TRUE;
+    ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
+    if (ext_atom != NULL)
+      ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
     if (!codec_data)
       GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
     ext_atom = build_codec_data_extension (FOURCC_avcC, codec_data);
