@@ -4741,10 +4741,13 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       break;
     case GST_QUERY_SEGMENT:
     {
-      /* FIXME, bring start/stop to stream time */
-      gst_query_set_segment (query, basesink->segment.rate,
-          GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
-      res = TRUE;
+      if (basesink->pad_mode == GST_ACTIVATE_PULL) {
+        gst_query_set_segment (query, basesink->segment.rate,
+            GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
+        res = TRUE;
+      } else {
+        res = gst_pad_peer_query (basesink->sinkpad, query);
+      }
       break;
     }
     case GST_QUERY_SEEKING:
