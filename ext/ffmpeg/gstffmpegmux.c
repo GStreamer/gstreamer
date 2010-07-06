@@ -158,7 +158,14 @@ gst_ffmpegmux_get_replacement (const char *name)
     {"webm", "webmmux"},
     {"mxf", "mxfmux"},
     {"3gp", "gppmux"},
-    {"yuv4mpegpipe", "y4menc"}
+    {"yuv4mpegpipe", "y4menc"},
+    {"aiff", "aiffmux"},
+    {"adts", "aacparse"},
+    {"asf", "asfmux"},
+    {"asf_stream", "asfmux"},
+    {"flv", "flvmux"},
+    {"mp3", "id3v2mux"},
+    {"mp2", "id3v2mux"}
   };
   int i;
 
