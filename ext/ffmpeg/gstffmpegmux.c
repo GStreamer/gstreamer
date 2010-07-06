@@ -178,6 +178,20 @@ gst_ffmpegmux_get_replacement (const char *name)
   return NULL;
 }
 
+static gboolean
+gst_ffmpegmux_is_formatter (const char *name)
+{
+  static const char *replace[] = {
+    "mp2", "mp3", NULL
+  };
+  int i;
+
+  for (i = 0; replace[i]; i++)
+    if (strcmp (replace[i], name) == 0)
+      return TRUE;
+  return FALSE;
+}
+
 static void
 gst_ffmpegmux_base_init (gpointer g_class)
 {
@@ -189,6 +203,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
   enum CodecID *video_ids = NULL, *audio_ids = NULL;
   gchar *longname, *description;
   const char *replacement;
+  gboolean is_formatter;
 
   in_plugin =
       (AVOutputFormat *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
@@ -197,19 +212,24 @@ gst_ffmpegmux_base_init (gpointer g_class)
 
   /* construct the element details struct */
   replacement = gst_ffmpegmux_get_replacement (in_plugin->name);
+  is_formatter = gst_ffmpegmux_is_formatter (in_plugin->name);
   if (replacement != NULL) {
     longname =
-        g_strdup_printf ("FFmpeg %s muxer (not recommended, use %s instead)",
-        in_plugin->long_name, replacement);
+        g_strdup_printf ("FFmpeg %s %s (not recommended, use %s instead)",
+        in_plugin->long_name, is_formatter ? "formatter" : "muxer",
+        replacement);
     description =
-        g_strdup_printf ("FFmpeg %s muxer (not recommended, use %s instead)",
-        in_plugin->long_name, replacement);
+        g_strdup_printf ("FFmpeg %s %s (not recommended, use %s instead)",
+        in_plugin->long_name, is_formatter ? "formatter" : "muxer",
+        replacement);
   } else {
-    longname = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
-    description = g_strdup_printf ("FFmpeg %s muxer", in_plugin->long_name);
+    longname = g_strdup_printf ("FFmpeg %s %s", in_plugin->long_name,
+        is_formatter ? "formatter" : "muxer");
+    description = g_strdup_printf ("FFmpeg %s %s", in_plugin->long_name,
+        is_formatter ? "formatter" : "muxer");
   }
-  gst_element_class_set_details_simple (element_class, longname, "Codec/Muxer",
-      description,
+  gst_element_class_set_details_simple (element_class, longname,
+      is_formatter ? "Formatter/Metadata" : "Codec/Muxer", description,
       "Wim Taymans <wim.taymans@chello.be>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   g_free (longname);
