@@ -52,7 +52,7 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute);
 
 static void
 ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
-    gint vpattern);
+    GESVideoTestPattern vpattern);
 
 static void
 ges_timeline_test_source_set_freq (GESTimelineTestSource * self, gdouble freq);
@@ -211,7 +211,7 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 
 static void
 ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
-    gint vpattern)
+    GESVideoTestPattern vpattern)
 {
   GList *tmp;
   GESTimelineObject *object = (GESTimelineObject *) self;

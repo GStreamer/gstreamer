@@ -58,10 +58,12 @@ ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
     font_desc);
 
 static void
-ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self, GESTextVAlign);
+ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
+    GESTextVAlign valign);
 
 static void
-ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self, GESTextHAlign);
+ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
+    GESTextHAlign halign);
 
 static GESTrackObject
     * ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,

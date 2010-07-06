@@ -69,10 +69,10 @@ struct _GESTrackVideoTestSourceClass {
 GType ges_track_video_test_source_get_type (void);
 
 GESTrackVideoTestSource* ges_track_video_test_source_new (void);
-void
 
-ges_track_video_test_source_set_pattern(GESTrackVideoTestSource *,
-    GESVideoTestPattern);
+void
+ges_track_video_test_source_set_pattern(GESTrackVideoTestSource *self,
+					GESVideoTestPattern pattern);
 
 G_END_DECLS
 

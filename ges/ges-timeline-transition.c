@@ -52,15 +52,11 @@ G_DEFINE_TYPE (GESTimelineTransition, ges_timeline_transition,
     GES_TYPE_TIMELINE_OBJECT);
 
 static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
-    *, GESTrack *);
+    * self, GESTrack * track);
 
-void
+static void
 ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
-    gint value);
-
-void
-ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
-    gint value)
+    GESVideoTransitionType value)
 {
   GList *tmp;
   GESTrackTransition *tr;

@@ -65,14 +65,15 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
     font_desc);
 
 static void
-ges_tl_title_src_set_valign (GESTimelineTitleSource * self, GESTextVAlign);
+ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
+    GESTextVAlign valign);
 
 static void
-ges_tl_title_src_set_halign (GESTimelineTitleSource * self, GESTextHAlign);
+ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
+    GESTextHAlign halign);
 
-static GESTrackObject
-    * ges_tl_title_src_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
+static GESTrackObject *ges_tl_title_src_create_track_object (GESTimelineObject *
+    obj, GESTrack * track);
 
 static void
 ges_tl_title_src_get_property (GObject * object, guint property_id,
