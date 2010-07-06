@@ -1,9 +1,6 @@
 # Italian translation for gstreamer package of GStreamer project.
-# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer team
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 GStreamer team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004, 2005, 2006, 2007, 2008, 2009.
-#
-#
 #
 # Alcune note (essenzialmente una traduzione) dopo una lettura non troppo
 # approfondita del manuale di GStreamer
@@ -104,19 +101,20 @@
 # Si passa da NULL a PLAYING attraverso i due stati intermedi.
 #
 # ----------------------------------------
+# Luca Ferretti <elle.uca@infinito.it>, 2004, 2005, 2006, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.24.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2009-09-17 23:20+0200\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-06-29 10:06+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 # --gst-version
 msgid "Print the GStreamer version"
@@ -124,7 +122,7 @@ msgstr "Stampa la versione di GStreamer"
 
 # --gst-fatal-warnings
 msgid "Make all warnings fatal"
-msgstr "Rende fatali tutti gli avvertimenti"
+msgstr "Rende critici tutti i warning"
 
 # --gst-debug-help
 msgid "Print available debug categories and exit"
@@ -191,9 +189,10 @@ msgid "Disable updating the registry"
 msgstr "Disabilita l'aggiornamento del registro"
 
 # --gst-disable-registry-fork
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Disabilita l'uso di fork() durante la scansione del registro"
+msgstr ""
+"Disabilita la generazione di un processo helper durante la scansione del "
+"registro"
 
 # intestazione categoria opzioni precendenti
 msgid "GStreamer Options"
@@ -207,7 +206,7 @@ msgid "Unknown option"
 msgstr "Opzione sconosciuta"
 
 msgid "GStreamer encountered a general core library error."
-msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
+msgstr "GStreamer ha incontrato un errore generico delle librerie di base."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
@@ -218,7 +217,6 @@ msgstr ""
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Errore interno di GStreamer: codice non implementato."
 
-# sarebbe da togliere personalizzazione di oggetto
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
@@ -262,7 +260,7 @@ msgstr ""
 "è stata disabilitata."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr "GStreamer ha incontrato un errore generale nelle librerie di supporto."
+msgstr "GStreamer ha incontrato un errore generico nelle librerie di supporto."
 
 msgid "Could not initialize supporting library."
 msgstr "Impossibile inizializzare la libreria di supporto."
@@ -274,7 +272,7 @@ msgid "Could not configure supporting library."
 msgstr "Impossibile configurare la libreria di supporto."
 
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer ha incontrato un errore generale di risorse."
+msgstr "GStreamer ha incontrato un errore generico di risorse."
 
 msgid "Resource not found."
 msgstr "Risorsa non trovata."
@@ -307,13 +305,13 @@ msgid "Could not synchronize on resource."
 msgstr "Impossibile sincronizzarsi sulla risorsa."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
+msgstr "Impossibile ottenere/regolare le impostazioni dalla/della risorsa."
 
 msgid "No space left on the resource."
 msgstr "Niente spazio sulla risorsa."
 
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer ha incontrato un errore generale di stream."
+msgstr "GStreamer ha incontrato un errore generico di stream."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
@@ -328,7 +326,7 @@ msgstr ""
 "Lo stream è di un tipo differente da quello gestito da questo elemento."
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Non vi è alcun codec presente che possa gestire questo tipo di stream."
+msgstr "Non è presente alcun codec che possa gestire questo tipo di stream."
 
 msgid "Could not decode stream."
 msgstr "Impossibile decodificare lo stream."
@@ -702,7 +700,7 @@ msgid "comma separated keywords describing the content"
 msgstr "le parole chiave separate da virgole che descrivono il contesto"
 
 msgid "geo location name"
-msgstr "nome geog. località"
+msgstr "nome località geog."
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
@@ -712,10 +710,10 @@ msgstr ""
 "è stato registrato o prodotto"
 
 msgid "geo location latitude"
-msgstr "latitudine geog. località"
+msgstr "latitudine località geog."
 
 # http://it.wikipedia.org/wiki/WGS84
-# World Geodetic System 1984 
+# World Geodetic System 1984
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
@@ -726,7 +724,7 @@ msgstr ""
 "(zero all'equatore, valori negativi per le latitudini a sud)"
 
 msgid "geo location longitude"
-msgstr "longitudine geog. località"
+msgstr "longitudine località geog."
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
@@ -738,7 +736,7 @@ msgstr ""
 "primo meridiano su Greenwich/UK, valori negativi per le longitudini a ovest)"
 
 msgid "geo location elevation"
-msgstr "elevazione geog. località"
+msgstr "elevazione località geog."
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
@@ -748,145 +746,152 @@ msgstr ""
 "stato registrato o prodotto, in metri secondo lo standard WGS84 (zero è il "
 "livello medio del mare)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "longitudine geog. località"
+msgstr "nazione località geog."
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"la descrizione comprensibile della località in cui il contenuto multimediale "
-"è stato registrato o prodotto"
+"nazione (nome inglese) in cui il contenuto multimediale è stato registrato o "
+"prodotto"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "latitudine geog. località"
+msgstr "città località geog."
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"la descrizione comprensibile della località in cui il contenuto multimediale "
-"è stato registrato o prodotto"
+"città (nome inglese) in cui il contenuto multimediale è stato registrato o "
+"prodotto"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "elevazione geog. località"
+msgstr "sub-località località geog."
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"una località all'interno di una città in cui il contenuto multimediale è "
+"stato registrato o prodotto (p.e. il quartiere)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "longitudine geog. località"
+msgstr "velocità movimento località geog."
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"la velocità di movimento del dispositivo di acquisizione durante "
+"l'acquisizione stessa in m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "elevazione geog. località"
+msgstr "direzione movimento località geog."
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indica la direzione di movimento del dispositivo nell'eseguire "
+"l'acquisizione di un contenuto multimediale; è rappresentato come gradi in "
+"notazione floating point, con 0 che indica il nord geografico e incrementi "
+"in sento orario"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "elevazione geog. località"
+msgstr "direzione di acquisizione località geog."
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indica la direzione del dispositivo nell'eseguire l'acquisizione di un "
+"contenuto multimediale; è rappresentato come gradi in notazione floating "
+"point, con 0 che indica il nord geografico e incrementi in sento orario"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "nome dello show"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
+"il nome dello show tv/podcast/serie da cui proviene il contenuto multimediale"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#, fuzzy
 msgid "show sortname"
-msgstr "nome ordinamento artista"
+msgstr "nome ordinamento dello show"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"il nome dello show tv/podcast/serie da cui proviene il contenuto "
+"multimediale, a scopo di ordinamento"
 
-#, fuzzy
 msgid "episode number"
-msgstr "numero del disco"
+msgstr "numero di episodio"
 
 msgid "The episode number in the season the media is part of"
 msgstr ""
+"il numero di episodio nella stagione di cui fa parte il contenuto "
+"multimediale"
 
-#, fuzzy
 msgid "season number"
-msgstr "numero del disco"
+msgstr "numero di stagione"
 
 msgid "The season number of the show the media is part of"
 msgstr ""
+"il numero di stagione dello show di cui fa parte il contenuto multimediale"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licenza"
+msgstr "testo"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "il testo del contenuto multimediale, tipicamente usato per le canzoni"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "nome ordinamento titolo"
+msgstr "nome ordinamento compositore"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr ""
-"la o le persone responsabili della registrazione a scopo di ordinamento"
+"la o le persone che hanno composto la registrazione, a scopo di ordinamento"
 
 msgid "grouping"
-msgstr ""
+msgstr "raggruppamento"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"raggruppa elementi multimediali correlati che si dividono su diverse tracce, "
+"come le diverse parti di un concerto; è un livello superiore rispetto alla "
+"traccia, ma inferiore rispetto all'album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "durata"
+msgstr "giudizio utente"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"giudizio attribuito da un utente; maggiore è il livello, più all'utente "
+"piace questo contenuto multimediale"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "produttore dispositivo"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "la versione dell'encoder usato per codificare questo stream"
+msgstr ""
+"il produttore del dispositivo usato per creare questo contenuto multimediale"
 
 msgid "device model"
-msgstr ""
+msgstr "modello dispositivo"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "la versione dell'encoder usato per codificare questo stream"
+msgstr ""
+"il modello del dispositivo usato per creare questo contenuto multimediale"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientamento immagine"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "come ruotare o capovolgere l'immagine prima di mostrarla"
 
 msgid ", "
 msgstr ", "
@@ -1028,16 +1033,15 @@ msgstr "Il file «%s» è un socket."
 msgid "Failed after iterations as requested."
 msgstr "Fallito dopo le iterazioni come richiesto."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Errore durante la scrittura sul file «%s»."
+msgstr "Errore durante la scritta sul file di scaricamento."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Nessuna directory temporanea specificata."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Impossibile ottenere informazioni su «%s»."
+msgstr "Impossibile creare il file temporaneo «%s»."
 
 msgid "caps"
 msgstr "caps"
@@ -1073,7 +1077,7 @@ msgid "controllable"
 msgstr "controllabile"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "File nella blacklist:"
 
 # Esempio:
 #    Total count: 23 plugins, 34 feature
@@ -1083,8 +1087,8 @@ msgstr "In totale: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d file nella blacklist"
+msgstr[1] "%d file nella blacklist"
 
 #, c-format
 msgid "%d plugin"
@@ -1095,8 +1099,8 @@ msgstr[1] "%d plugin"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d voce nella blacklist"
+msgstr[1] "%d voci nella blacklist"
 
 #, c-format
 msgid "%d feature"
@@ -1108,19 +1112,19 @@ msgstr[1] "%d funzionalità"
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 
+# -b, --print-blacklist
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Stampa l'elenco dei file nella blacklist"
 
 # --print-plugin-auto-install-info
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Stampa un elenco machine-parsable di funzionalità fornite dallo specifico "
-"plugin.\n"
+"Stampa un elenco machine-parsable di funzionalità fornite dal plugin "
+"specificato o da tutti i plugin.\n"
 "                                       Utile nelle connessioni con "
 "meccanismi esterni di installazione automatica dei plugin."
 
@@ -1249,7 +1253,7 @@ msgstr "Stampa i tag (anche noti come metadati)"
 msgid "Output status information and property notifications"
 msgstr "Stampa informazioni di stato e notifiche delle proprietà"
 
-# -q, --quiet 
+# -q, --quiet
 msgid "Do not print any progress information"
 msgstr "Non stampa alcuna informazione di avanzamento"
 
@@ -1275,10 +1279,8 @@ msgstr "FILE"
 msgid "Do not install a fault handler"
 msgstr "Non installa un gestore di fault"
 
-# -f, --no-fault
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Non installa un gestore di fault"
+msgstr "Non installa i gestori di segnale per SIGUSR1 e SIGUSR2"
 
 # -T, --trace
 msgid "Print alloc trace (if enabled at compile time)"

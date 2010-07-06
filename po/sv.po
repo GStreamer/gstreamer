@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-01-28 21:10+0100\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-06-07 18:16+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -107,7 +107,7 @@ msgid ""
 "proper error message with the reason for the failure."
 msgstr ""
 "GStreamer-fel: tillståndsändring misslyckades och några element misslyckades "
-"med att posta ett korrekt felmeddelande med anledningen till felet."
+"med att skicka ett korrekt felmeddelande med anledningen till felet."
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
@@ -621,34 +621,27 @@ msgstr ""
 "höjd i meter för geografisk plats där mediet har spelats in eller "
 "producerats enligt WGS84 (noll för genomsnittlig havsnivå)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "longitud för geografisk plats"
+msgstr "land för geografisk plats"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"mänskligt läslig beskrivande plats för var mediet har spelats in eller "
-"producerats"
+msgstr "land (engelskt namn) där mediet har spelats in eller producerats"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "latitud för geografisk plats"
+msgstr "stad för geografisk plats"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"mänskligt läslig beskrivande plats för var mediet har spelats in eller "
-"producerats"
+msgstr "stad (engelskt namn) där mediet har spelats in eller producerats"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "höjd för geografisk plats"
+msgstr "specifik plats för geografisk plats"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"en plats inom en stad där mediet har producerats eller skapats (t.ex. "
+"närområde)"
 
 #, fuzzy
 msgid "geo location movement speed"
@@ -729,14 +722,15 @@ msgstr ""
 "Grupprelaterade media som spänner över flera spår, såsom olika delar av en "
 "konsert. Det är en högre nivå än ett spår, men lägre än ett album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "varaktighet"
+msgstr "användarbetyg"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Betyg angivit av en användare. Desto högre ranking, desto mer gillar "
+"användaren detta media"
 
 msgid "device manufacturer"
 msgstr ""
@@ -894,9 +888,8 @@ msgstr "Filen \"%s\" är ett uttag."
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Fel vid skrivning till filen \"%s\"."
+msgstr "Fel vid skrivning till hämtningsfilen."
 
 msgid "No Temp directory specified."
 msgstr "Ingen temporärkatalog angiven."
@@ -1122,9 +1115,8 @@ msgstr "FIL"
 msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Installera inte en felhanterare"
+msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"

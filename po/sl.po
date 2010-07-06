@@ -1,615 +1,644 @@
-# Chinese (simplified) translation about gstreamer.
-# This file is put in the public domain.
-# Funda Wang <fundawang@linux.net.cn>, 2005.
-# Ji ZhengYu <zhengyuji@gmail.com>, 2008, 2009, 2010.
+# -*- mode:po; coding:utf-8; -*- Slovenian message catalogue for gstreamer.
+# This file is distributed under the same license as the gstreamer package.
+# Copyright (C) 2005 Free Software Foundation, Inc.
+#
+# Matej Urbančič <matej.urban@gmail.com>, 2010.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2010-07-06 20:30+0100\n"
-"PO-Revision-Date: 2010-02-02 18:58+0800\n"
-"Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
-"Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
-"Language: zh_CN\n"
+"PO-Revision-Date: 2010-07-02 21:09+0100\n"
+"Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
+"Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
+"Language: sl\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
+"%100==4 ? 3 : 0);\n"
+"X-Poedit-Language: Slovenian\n"
+"X-Poedit-Country: SLOVENIA\n"
+"X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Print the GStreamer version"
-msgstr "打印 GStreamer 版本"
+msgstr "Izpiši različico programa GStreamer"
 
 msgid "Make all warnings fatal"
-msgstr "将所有的警告也当作严重问题"
+msgstr "Izpiši vsa opozorila kot usodna"
 
 msgid "Print available debug categories and exit"
-msgstr "打印可用的调试类别并退出"
+msgstr "Izpiši razpoložljive kategorije razhroščevanja in končaj"
 
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "默认调试级别，从 1(仅有错误)到 5(所有内容)，0代表无输出"
+msgstr ""
 
 msgid "LEVEL"
-msgstr "级别"
+msgstr "RAVEN"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"逗号分隔的“类别名称:级别”列表用来为每个类别设置指定的调试级别。如:"
-"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
-msgstr "列表"
+msgstr "SEZNAM"
 
 msgid "Disable colored debugging output"
-msgstr "禁止彩色的调试信息输出"
+msgstr "Omogoči obarvani razhroščevalni odvod"
 
 msgid "Disable debugging"
-msgstr "禁止调试"
+msgstr "Onemogoči razhroščevanje"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "开启详细的插件载入分析"
+msgstr "Omogoči podrobno diagnostiko nalaganja vstavkov"
 
 msgid "Colon-separated paths containing plugins"
-msgstr "冒号分隔的包含插件的路径"
+msgstr ""
 
 msgid "PATHS"
-msgstr "路径"
+msgstr "POTI"
 
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"逗号分隔的预载入的插件列表，而且此列表被保存于环境变量 GST_PLUGIN_PATH 中"
 
 msgid "PLUGINS"
-msgstr "插件"
+msgstr "VSTAVKI"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "禁止跟踪装入插件时的段严重错误"
+msgstr ""
 
 msgid "Disable updating the registry"
-msgstr "禁止更新寄存器"
+msgstr "Onemogoči posodabljanje vpisnika"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "扫描寄存器时不可启用帮助"
+msgstr ""
 
 msgid "GStreamer Options"
-msgstr "GStreamer 选项"
+msgstr "Možnosti GStreamer"
 
 msgid "Show GStreamer Options"
-msgstr "显示 GStreamer 选项"
+msgstr "Pokaži možnosti GStreamer."
 
 msgid "Unknown option"
-msgstr "未知选项"
+msgstr "Neznana možnost"
 
 msgid "GStreamer encountered a general core library error."
-msgstr "GStreamer 遇到了常规核心库错误。"
+msgstr ""
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "GStreamer 开发者未对此错误指派错误代码。"
+msgstr ""
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr "GStreamer 内部错误：代码未实现。"
+msgstr ""
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
-"GStreamer 错误: 状态更改错误，而且某些组件无法对错误原因给出合适的错误信息。"
 
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "GStreamer 内部错误: 填充问题。"
+msgstr "Notranja GStreamer napaka: težave pladnja."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr "GStreamer 内部错误：线程问题。"
+msgstr "Notranja GStreamer napaka: težave z nitenjem."
 
 msgid "Internal GStreamer error: negotiation problem."
-msgstr "GStreamer 内部错误: 协商问题。"
+msgstr "Notranja GStreamer napaka: težave z pregovarjanjem."
 
 msgid "Internal GStreamer error: event problem."
-msgstr "GStreamer 内部错误：事件问题。"
+msgstr "Notranja GStreamer napaka: težave z dogodkom."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr "GStreamer 内部错误：搜索问题。"
+msgstr "Notranja GStreamer napaka: težave z iskanjem."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr "GStreamer 内部错误: 分析器问题。"
+msgstr "Notranja GStreamer napaka: težave z velikimi črkami."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr "GStreamer 内部错误：标签问题。"
+msgstr "Notranja GStreamer napaka: težave z oznako."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "您的 GStreamer 安装缺少插件。"
+msgstr ""
 
 msgid "Internal GStreamer error: clock problem."
-msgstr "GStreamer 内部错误：始终错误。"
+msgstr "Notranja GStreamer napaka: težave z uro."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
-msgstr "此程序正尝试使用已被禁用的 GStreamer 功能。"
+msgstr ""
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr "GStreamer 遇到了常规支持库错误。"
+msgstr ""
 
 msgid "Could not initialize supporting library."
-msgstr "无法初始化支持库。"
+msgstr "Ni mogoče začeti podporne knjižnice."
 
 msgid "Could not close supporting library."
-msgstr "无法关闭支持库。"
+msgstr "Ni mogoče zapreti podporne knjižnice."
 
 msgid "Could not configure supporting library."
-msgstr "无法配置支持库。"
+msgstr "Ni mogoče nastaviti podporne knjižnice."
 
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer 遇到了常规资源错误。"
+msgstr ""
 
 msgid "Resource not found."
-msgstr "资源未找到。"
+msgstr "Vira ni mogoče najti."
 
 msgid "Resource busy or not available."
-msgstr "资源忙或不可用。"
+msgstr "Vir je zaposlen ali pa ni na voljo."
 
 msgid "Could not open resource for reading."
-msgstr "无法打开资源读取。"
+msgstr "Ni mogoče odpreti vira za branje."
 
 msgid "Could not open resource for writing."
-msgstr "无法打开资源写入。"
+msgstr "Ni mogoče odpreti vira za pisanje."
 
 msgid "Could not open resource for reading and writing."
-msgstr "无法打开资源读取和写入。"
+msgstr ""
 
 msgid "Could not close resource."
-msgstr "无法关闭资源。"
+msgstr "Ni mogoče zapreti vira."
 
 msgid "Could not read from resource."
-msgstr "无法从资源阅读。"
+msgstr "Ni mogoče prebrati vira."
 
 msgid "Could not write to resource."
-msgstr "无法写入资源。"
+msgstr "Ni mogoče zapisati vira."
 
 msgid "Could not perform seek on resource."
-msgstr "无法在资源上执行搜索。"
+msgstr "Ni mogoče izvesti iskanja na viru."
 
 msgid "Could not synchronize on resource."
-msgstr "无法在资源上同步。"
+msgstr "Ni mogoče usklajevati z virom."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "无法从资源获得设置或在资源上设定设置。"
+msgstr ""
 
 msgid "No space left on the resource."
-msgstr "资源上无剩余空间。"
+msgstr "Ni prostora na viru."
 
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer 遇到了常规流错误。"
+msgstr ""
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "组件未实现对此流的处理。请提交错误报告。"
+msgstr ""
 
 msgid "Could not determine type of stream."
-msgstr "无法确定流类型。"
+msgstr "Ni mogoče določiti vrste pretoka."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr "此流的类型与此组件可处理的类型不符。"
+msgstr ""
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr "没有可处理此流类型的编解码器。"
+msgstr ""
 
 msgid "Could not decode stream."
-msgstr "无法解码流。"
+msgstr "Ni mogoče odkodirati pretoka."
 
 msgid "Could not encode stream."
-msgstr "无法编码流。"
+msgstr "Ni mogoče kodirati pretoka."
 
+#, fuzzy
 msgid "Could not demultiplex stream."
-msgstr "无法解码多工传送的流。"
+msgstr "Ni mogoče ustvariti pretoka: %s"
 
+#, fuzzy
 msgid "Could not multiplex stream."
-msgstr "无法编码多工传送的流。"
+msgstr "Ni mogoče ustvariti pretoka: %s"
 
 msgid "The stream is in the wrong format."
-msgstr "此流的格式错误。"
+msgstr "Pretok je v napačnem zapisu."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "此为加密流且不支持解密。"
+msgstr ""
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
-msgstr "此为加密流，而且由于未提供合适的密钥因此无法解密。"
+msgstr ""
 
 #, c-format
 msgid "No error message for domain %s."
-msgstr "域 %s 无错误信息。"
+msgstr "Ni sporočila napake za domeno %s."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "域 %s 和代码 %d 中无标准错误信息。"
+msgstr "Ni običajnega sporočila napake za domeno %s in kodo %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr "选中的时钟序列无法用在管道中。"
+msgstr ""
 
 msgid "title"
-msgstr "标题"
+msgstr "naslov"
 
+#, fuzzy
 msgid "commonly used title"
-msgstr "公用标题"
+msgstr "Odpri pogosto uporabljena mesta"
 
+#, fuzzy
 msgid "title sortname"
-msgstr "排序后的标题名"
+msgstr "Naslov apleta:"
 
 msgid "commonly used title for sorting purposes"
-msgstr "用于排序的公用标题"
+msgstr ""
 
 msgid "artist"
-msgstr "艺术家"
+msgstr "izvajalec"
 
+#, fuzzy
 msgid "person(s) responsible for the recording"
-msgstr "负责录制的个人"
+msgstr "Odgovornost za postavitev vira."
 
+#, fuzzy
 msgid "artist sortname"
-msgstr "排序后的艺术家"
+msgstr "Ime izvajalca"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "用于排序的负责录制的个人"
+msgstr ""
 
 msgid "album"
-msgstr "专辑"
+msgstr "album"
 
+#, fuzzy
 msgid "album containing this data"
-msgstr "包含此数据的专辑"
+msgstr "Pretok ne vsebuje podatkov."
 
+#, fuzzy
 msgid "album sortname"
-msgstr "排序后的专辑名"
+msgstr "Naslov albuma"
 
 msgid "album containing this data for sorting purposes"
-msgstr "用于排序的包含此数据的专辑"
+msgstr ""
 
 msgid "album artist"
-msgstr "专辑艺术家"
+msgstr "izvajalec albuma"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "所应当显示的整张专辑的艺术家"
+msgstr ""
 
+#, fuzzy
 msgid "album artist sortname"
-msgstr "专辑艺术家排序"
+msgstr "Začetnice izvajalca albuma"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "排序后的整张专辑艺术家"
+msgstr ""
 
 msgid "date"
-msgstr "日期"
+msgstr "datum"
 
 msgid "date the data was created (as a GDate structure)"
-msgstr "创建数据的日期(为 GDate 结构)"
+msgstr ""
 
 msgid "genre"
-msgstr "流派"
+msgstr "zvrst"
 
+#, fuzzy
 msgid "genre this data belongs to"
-msgstr "此数据所属的流派"
+msgstr "Dobi arhiv seznama, ki mu pripada to sporočilo"
 
 msgid "comment"
-msgstr "注释"
+msgstr "opomba"
 
+#, fuzzy
 msgid "free text commenting the data"
-msgstr "注释数据的任意文本"
+msgstr "Uporabniško določeno prosto besedilo."
 
 msgid "extended comment"
-msgstr "更多注释"
+msgstr "razširjena opomba"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "以“关键词＝值或 key[en]＝注释”这种形式注释数据的任意文本"
+msgstr ""
 
 msgid "track number"
-msgstr "音轨编号"
+msgstr "številka skladbe"
 
+#, fuzzy
 msgid "track number inside a collection"
-msgstr "收藏集中的音轨编号"
+msgstr "Število napak izven sledi"
 
 msgid "track count"
-msgstr "音轨数"
+msgstr "števec skladbe"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "此音轨所属的收藏集中的音轨数"
+msgstr ""
 
 msgid "disc number"
-msgstr "碟片编号"
+msgstr "številka diska"
 
+#, fuzzy
 msgid "disc number inside a collection"
-msgstr "收藏集中的碟片编号"
+msgstr "Število točk, ki naj bodo znotraj preloma"
 
 msgid "disc count"
-msgstr "碟片数"
+msgstr "število diskov"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "此碟所属的收藏集中的碟片数"
+msgstr ""
 
 msgid "location"
-msgstr "位置"
+msgstr "mesto"
 
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
-msgstr "媒体来源作为 URI 地址（原始文件或流所在的位置）"
+msgstr ""
 
 msgid "homepage"
-msgstr "主页"
+msgstr "spletna stran"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr "此媒体的主页（艺术家或电影等）"
+msgstr ""
 
 msgid "description"
-msgstr "描述"
+msgstr "opis"
 
 msgid "short text describing the content of the data"
-msgstr "描述数据内容的简要文本"
+msgstr ""
 
 msgid "version"
-msgstr "版本"
+msgstr "različica"
 
 msgid "version of this data"
-msgstr "此数据的版本"
+msgstr "različica podatkov"
 
+#, fuzzy
 msgid "ISRC"
 msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
 
 msgid "organization"
-msgstr "组织"
+msgstr "ustanova"
 
 msgid "copyright"
-msgstr "版权"
+msgstr "avtorske pravice"
 
+#, fuzzy
 msgid "copyright notice of the data"
-msgstr "数据的版权警告"
+msgstr "Vsako obvezno opozorilo avtorskih pravic."
 
+#, fuzzy
 msgid "copyright uri"
-msgstr "版权 uri"
+msgstr "Osnovni URI"
 
 msgid "URI to the copyright notice of the data"
-msgstr "数据的版权警告 URI"
+msgstr ""
 
 msgid "contact"
-msgstr "联系人"
+msgstr "stik"
 
 msgid "contact information"
-msgstr "联系人信息"
+msgstr "podatki o stiku"
 
 msgid "license"
-msgstr "许可证"
+msgstr "dovoljenje"
 
+#, fuzzy
 msgid "license of data"
-msgstr "数据许可证"
+msgstr "Različne podrobnosti"
 
 msgid "license uri"
-msgstr "许可证 uri"
+msgstr "naslov uri dovoljenja"
 
+#, fuzzy
 msgid "URI to the license of the data"
-msgstr "数据许可证的 URI"
+msgstr "Kazalnik na oddaljene podatke (%s)"
 
 msgid "performer"
-msgstr "演奏者"
+msgstr "izvajalec"
 
 msgid "person(s) performing"
-msgstr "演奏者"
+msgstr "osebe, ki so izvajalci posnetka"
 
 msgid "composer"
-msgstr "作曲人"
+msgstr "skladatelj"
 
 msgid "person(s) who composed the recording"
-msgstr "负责录制的人"
+msgstr "oseba, ki je skladatelj posnetka"
 
 msgid "duration"
-msgstr "时期"
+msgstr "trajanje"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "GStreamer 时间单位的长度(纳秒)"
+msgstr ""
 
 msgid "codec"
-msgstr "编码"
+msgstr "kodek"
 
 msgid "codec the data is stored in"
-msgstr "数据以...编码存储"
+msgstr "kodek v katerem so shranjeni podatki"
 
 msgid "video codec"
-msgstr "视频编码"
+msgstr "video kodek"
 
 msgid "codec the video data is stored in"
-msgstr "视频数据以...编码存储"
+msgstr "kodek v katerem so shranjeni video podatki"
 
 msgid "audio codec"
-msgstr "音频编码"
+msgstr "zvočni kodek"
 
 msgid "codec the audio data is stored in"
-msgstr "音频数据以...编码存储"
+msgstr ""
 
 msgid "subtitle codec"
-msgstr "字幕编码"
+msgstr "kodek podnapisov"
 
 msgid "codec the subtitle data is stored in"
-msgstr "字幕编码数据保存在"
+msgstr ""
 
+#, fuzzy
 msgid "container format"
-msgstr "内容格式"
+msgstr "Izbor vrste zapisa:"
 
 msgid "container format the data is stored in"
-msgstr "数据以...格式存储"
+msgstr ""
 
 msgid "bitrate"
-msgstr "比特率"
+msgstr "bitna hitrost"
 
 msgid "exact or average bitrate in bits/s"
-msgstr "精确或平均比特率(比特/秒)"
+msgstr ""
 
 msgid "nominal bitrate"
-msgstr "名义比特率"
+msgstr "nazivna bitna hitrost"
 
 msgid "nominal bitrate in bits/s"
-msgstr "名义比特率(比特/秒)"
+msgstr "nazivna bitna hitrost v bitih/s"
 
 msgid "minimum bitrate"
-msgstr "最小比特率"
+msgstr "najmanjša bitna hitrost"
 
 msgid "minimum bitrate in bits/s"
-msgstr "最小比特率(比特/秒)"
+msgstr "najmanjša bitna hitrost v bitih/s"
 
 msgid "maximum bitrate"
-msgstr "最大比特率"
+msgstr "največja bitna hitrost"
 
 msgid "maximum bitrate in bits/s"
-msgstr "最大比特率(比特/秒)"
+msgstr "največja bitna hitrost v bitih/s"
 
 msgid "encoder"
-msgstr "编码器"
+msgstr "kodirnik"
 
 msgid "encoder used to encode this stream"
-msgstr "用于编码此流的编码器"
+msgstr ""
 
 msgid "encoder version"
-msgstr "编码器版本"
+msgstr "različica kodirnika"
 
 msgid "version of the encoder used to encode this stream"
-msgstr "用于编码此流的编码器版本"
+msgstr ""
 
+#, fuzzy
 msgid "serial"
-msgstr "序列号"
+msgstr "<b>Serijska številka:</b>"
 
+#, fuzzy
 msgid "serial number of track"
-msgstr "音轨的序列号"
+msgstr "Število napak izven sledi"
 
+#, fuzzy
 msgid "replaygain track gain"
-msgstr "重放增益音轨增益"
+msgstr "Prilagoditev ojačitve sledi."
 
+#, fuzzy
 msgid "track gain in db"
-msgstr "音轨增益(db)"
+msgstr "Določilo celotne pridobitve v dB (-20 ... 20)."
 
+#, fuzzy
 msgid "replaygain track peak"
-msgstr "重放增益音轨峰值"
+msgstr "Ojačanje vrhov sledi"
 
+#, fuzzy
 msgid "peak of the track"
-msgstr "音轨峰值"
+msgstr "Vrh sledi"
 
+#, fuzzy
 msgid "replaygain album gain"
-msgstr "重放增益专辑增益"
+msgstr "Prilagoditev ojačitve za album."
 
+#, fuzzy
 msgid "album gain in db"
-msgstr "专辑增益(db)"
+msgstr "Določilo celotne pridobitve v dB (-20 ... 20)."
 
+#, fuzzy
 msgid "replaygain album peak"
-msgstr "回放增益专辑峰值"
+msgstr "Ojačanje vrha albuma."
 
+#, fuzzy
 msgid "peak of the album"
-msgstr "专辑峰值"
+msgstr "Ojačanje vrha albuma."
 
+#, fuzzy
 msgid "replaygain reference level"
-msgstr "回放增益参考级别"
+msgstr "Gradnik vrhnje ravni"
 
 msgid "reference level of track and album gain values"
-msgstr "音轨和专辑增益的参考级别值"
+msgstr ""
 
 msgid "language code"
-msgstr "语言代码"
+msgstr "jezikovna koda"
 
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr "此流的语言代码，遵从为 ISO-639-1"
+msgstr ""
 
 msgid "image"
-msgstr "图像"
+msgstr "slika"
 
+#, fuzzy
 msgid "image related to this stream"
-msgstr "有关此流的图像"
+msgstr "Napaka med pisanjem v slikovni pretok"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr "上一图像"
+msgstr "predogled slike"
 
 msgid "preview image related to this stream"
-msgstr "有关此流的上一图像"
+msgstr ""
 
 msgid "attachment"
-msgstr "附加信息"
+msgstr "priloga"
 
+#, fuzzy
 msgid "file attached to this stream"
-msgstr "有关此流的文件"
+msgstr "Modul omogoča zapisovanje prekodiranega pretoka v datoteko."
 
 msgid "beats per minute"
-msgstr "每分钟节拍数"
+msgstr "udarcev na minuto"
 
 msgid "number of beats per minute in audio"
-msgstr "音频中的每分钟节拍数"
+msgstr ""
 
 msgid "keywords"
-msgstr "简要文本"
+msgstr "ključne besede"
 
 msgid "comma separated keywords describing the content"
-msgstr "逗号分隔的描述数据内容的简要文本"
+msgstr ""
 
+#, fuzzy
 msgid "geo location name"
-msgstr "地理位置名称"
+msgstr "Ime mesta vsebine"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr ""
 
+#, fuzzy
 msgid "geo location latitude"
-msgstr "地理纬度"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
-"根据 WGS84（赤道为 0 度，南半球为负值）标准确定的地理纬度值（有关此媒体在哪里"
-"录制或产生的）"
 
+#, fuzzy
 msgid "geo location longitude"
-msgstr "地理经度"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
-"根据 WGS84（英国格林威治本初子午线上为 0 度，西半球为负值）标准确定的地理经度"
-"值（有关此媒体在哪里录制或产生的）"
 
+#, fuzzy
 msgid "geo location elevation"
-msgstr "地理海拔"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
-"根据 WGS84（平均海平面为 0 米）标准确定的地理海拔高度（有关此媒体在哪里录制或"
-"产生的）"
 
 #, fuzzy
 msgid "geo location country"
-msgstr "地理经度"
+msgstr "Posebno državno zaupno"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr ""
 
 #, fuzzy
 msgid "geo location city"
-msgstr "地理纬度"
+msgstr "Amerika/Mexico_City"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr "人们易理解的位置描述或是此媒体在哪里录制或是产生"
+msgstr ""
 
 #, fuzzy
 msgid "geo location sublocation"
-msgstr "地理海拔"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
@@ -618,7 +647,7 @@ msgstr ""
 
 #, fuzzy
 msgid "geo location movement speed"
-msgstr "地理经度"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
@@ -626,7 +655,7 @@ msgstr ""
 
 #, fuzzy
 msgid "geo location movement direction"
-msgstr "地理海拔"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -636,7 +665,7 @@ msgstr ""
 
 #, fuzzy
 msgid "geo location capture direction"
-msgstr "地理海拔"
+msgstr "Manjkajoče mesto vstavka %s"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -646,56 +675,57 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr "显示名称"
+msgstr "pokaži ime"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr "tv/podcast/series 的名称，此名称代表媒体来自何处"
+msgstr ""
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+#, fuzzy
 msgid "show sortname"
-msgstr "排名显示"
+msgstr "<u>pokaži podrobnosti</u>"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr "tv/podcast/series 名称代表此媒体来自何处（排名显示）"
+msgstr ""
 
 msgid "episode number"
-msgstr "场景编号"
+msgstr "epizoda"
 
 msgid "The episode number in the season the media is part of"
-msgstr "媒体是一季中的第几场景"
+msgstr ""
 
 msgid "season number"
-msgstr "季号"
+msgstr "sezona"
 
 msgid "The season number of the show the media is part of"
-msgstr "媒体是第几季"
+msgstr ""
 
 msgid "lyrics"
-msgstr "歌词"
+msgstr "besedilo"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr "媒体歌词，通常用于歌曲"
+msgstr ""
 
+#, fuzzy
 msgid "composer sortname"
-msgstr "排序后的作曲家"
+msgstr "Možnosti sestavljalnika"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "创作录音的人（排序显示）"
+msgstr ""
 
+#, fuzzy
 msgid "grouping"
-msgstr "媒体组"
+msgstr "združevanje"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
-"媒体组横跨多个音轨，就好像是一场音乐会的不同时段。这个概念范围比音轨高，但小"
-"于专辑"
 
 #, fuzzy
 msgid "user rating"
-msgstr "时期"
+msgstr "Najvišja ocena"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
@@ -705,16 +735,15 @@ msgstr ""
 msgid "device manufacturer"
 msgstr ""
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "用于编码此流的编码器版本"
-
-msgid "device model"
 msgstr ""
 
 #, fuzzy
+msgid "device model"
+msgstr "video kodek"
+
 msgid "Model of the device used to create this media"
-msgstr "用于编码此流的编码器版本"
+msgstr ""
 
 msgid "image orientation"
 msgstr ""
@@ -723,214 +752,236 @@ msgid "How the image should be rotated or flipped before display"
 msgstr ""
 
 msgid ", "
-msgstr ", "
+msgstr ","
 
-#, c-format
+#, fuzzy, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "错误：来自组件 %s：%s\n"
+msgstr "Napaka med sprejemanjem \"%s\" od %s"
 
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
-msgstr ""
-"额外的调试信息：\n"
-"%s\n"
+msgstr "omogoči podatke razhroščevanja"
 
-#, fuzzy, c-format
+#, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "不允许指定空储仓“%s”"
+msgstr ""
 
 #, fuzzy, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "找不到储仓“%s”，跳过"
+msgstr "Ni najdenih predmetov"
 
-#, c-format
+#, fuzzy, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "组件“%2$s”中找不到属性“%1$s”"
+msgstr "Ni atributa \"%s\" za element <%s>"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
+msgstr ""
 
-#, c-format
+#, fuzzy, c-format
 msgid "could not link %s to %s"
-msgstr "无法将 %s 链接到 %s"
+msgstr "Ni mogoče shraniti na `%s': %s"
 
-#, c-format
+#, fuzzy, c-format
 msgid "no element \"%s\""
-msgstr "无组件“%s”"
+msgstr "Ni atributa \"%s\" za element <%s>"
 
-#, c-format
+#, fuzzy, c-format
 msgid "could not parse caps \"%s\""
-msgstr "无法解析分析器“%s”"
+msgstr "Ni mogoče razčleniti naslova URL '%s'"
 
+#, fuzzy
 msgid "link without source element"
-msgstr "不带源组件的链接"
+msgstr "Predmeta %s ni mogoče povezati z %s"
 
+#, fuzzy
 msgid "link without sink element"
-msgstr "不带消音组件的链接"
+msgstr "Predmeta %s ni mogoče povezati z %s"
 
-#, c-format
+#, fuzzy, c-format
 msgid "no source element for URI \"%s\""
-msgstr "URI“%s”无源组件"
+msgstr "Ni veljavnega zaznamka za URI '%s'"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "无组件让 URI“%s”来连接"
+msgstr ""
 
-#, c-format
+#, fuzzy, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "URI“%s”上无消音组件"
+msgstr "Ni veljavnega zaznamka za URI '%s'"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "无法连接 URI“%s”的消音组件"
+msgstr ""
 
+#, fuzzy
 msgid "empty pipeline not allowed"
-msgstr "不允许空管道"
+msgstr "Cevovoda ni mogoče ustvariti"
 
+#, fuzzy
 msgid "Internal clock error."
-msgstr "内部时钟错误。"
+msgstr "Prišlo je do notranje napake"
 
+#, fuzzy
 msgid "Internal data flow error."
-msgstr "内部数据流错误。"
+msgstr "Notranja napaka pretoka podatkov."
 
 msgid "A lot of buffers are being dropped."
-msgstr "很多缓冲区正被丢弃。"
+msgstr ""
 
+#, fuzzy
 msgid "Internal data flow problem."
-msgstr "内部数据流问题。"
+msgstr "Puščica dejavnosti/toka podatkov"
 
+#, fuzzy
 msgid "Internal data stream error."
-msgstr "内部数据流错误。"
+msgstr "Notranja napaka pretoka podatkov."
 
+#, fuzzy
 msgid "Filter caps"
-msgstr "过滤分析器"
+msgstr "Upoštevaj velikost črk."
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
-"限制所允许的功能 (NULL 表示无限制)。此属性可以为所提供的 GstCaps 对象设置一个"
-"关联应用。"
 
 msgid "No file name specified for writing."
-msgstr "未指定写入的文件名。"
+msgstr ""
 
-#, c-format
+#, fuzzy, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "无法打开文件“%s”写入。"
+msgstr "Ni mogoče odpreti datoteke seje '%s' za pisanje: %s\n"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Error closing file \"%s\"."
-msgstr "关闭文件“%s”出错。"
+msgstr "Napaka: Napaka med zapiranjem datoteke: %s\n"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "在文件“%s”搜寻时出错。"
+msgstr "Napaka med branjem iz datoteke"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "写入文件“%s”时出错。"
+msgstr "Napaka med pisanjem v slikovno datoteko: %s"
 
 msgid "No file name specified for reading."
-msgstr "未指定读取的文件名。"
+msgstr ""
 
-#, c-format
+#, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "无法打开文件“%s”读取。"
+msgstr "Ni mogoče odpreti CD naprave za branje."
 
-#, c-format
+#, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "无法在“%s”上获得信息。"
+msgstr "Ni mogoče pridobiti podrobnosti datoteke"
 
-#, c-format
+#, fuzzy, c-format
 msgid "\"%s\" is a directory."
-msgstr "“%s”不是目录。"
+msgstr "%s je imenik."
 
-#, c-format
+#, fuzzy, c-format
 msgid "File \"%s\" is a socket."
-msgstr "文件“%s”是套接字。"
+msgstr "Datoteka je binarna"
 
 msgid "Failed after iterations as requested."
-msgstr "在完成所要求的迭代操作后出错。"
+msgstr ""
 
 #, fuzzy
 msgid "Error while writing to download file."
-msgstr "写入文件“%s”时出错。"
+msgstr "Prišlo je do napake med prenosom datoteke"
 
+#, fuzzy
 msgid "No Temp directory specified."
-msgstr "未指定临时目录。"
+msgstr "Ni določenega izvornega pogona"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "无法创建临时文件“%s”。"
+msgstr "Ni mogoče ustvariti datoteke predpomnilnika"
 
+#, fuzzy
 msgid "caps"
-msgstr "分析器"
+msgstr "Upoštevaj velikost črk."
 
+#, fuzzy
 msgid "detected capabilities in stream"
-msgstr "流中探测到的信息"
+msgstr "Napaka v protokolu pretoka: %s"
 
 msgid "minimum"
-msgstr "最小"
+msgstr "najmanj"
 
 msgid "maximum"
-msgstr "最大"
+msgstr "največ"
 
+#, fuzzy
 msgid "force caps"
-msgstr "强制分析"
+msgstr "Upoštevaj velikost črk."
 
 msgid "force caps without doing a typefind"
-msgstr "不做类型查找的强制分析"
+msgstr ""
 
+#, fuzzy
 msgid "Stream contains no data."
-msgstr "流中不含数据"
+msgstr "Pretok ne vsebuje podatkov."
 
+#, fuzzy
 msgid "Implemented Interfaces:\n"
-msgstr "实现的接口:\n"
+msgstr "Zahtevani vmesniki"
 
 msgid "readable"
-msgstr "可读"
+msgstr "berljivo"
 
 msgid "writable"
-msgstr "可写"
+msgstr "zapisljivo"
 
 msgid "controllable"
-msgstr "可控制"
+msgstr ""
 
 msgid "Blacklisted files:"
-msgstr "文件黑名单:"
+msgstr "Datoteke na črnem seznamu:"
 
 msgid "Total count: "
-msgstr "总数:"
+msgstr "Skupni števec:"
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] "%d 个黑名单文件"
+msgstr[0] "%d datotek na črnem seznamu"
+msgstr[1] "%d datoteka na črnem seznamu"
+msgstr[2] "%d datoteki na črnem seznamu"
+msgstr[3] "%d datoteke na črnem seznamu"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d 个插件"
+msgstr[0] "%d vstavkov"
+msgstr[1] "%d vstavek"
+msgstr[2] "%d vstavka"
+msgstr[3] "%d vstavki"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] "%d 个黑名单记录"
+msgstr[0] "%d vnosov na črnem seznamu"
+msgstr[1] "%d vnos na črnem seznamu"
+msgstr[2] "%d vnosa na črnem seznamu"
+msgstr[3] "%d vnosi na črnem seznamu"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "%d 个特性"
+msgstr[0] "%d zmožnosti"
+msgstr[1] "%d zmožnost"
+msgstr[2] "%d zmožnosti"
+msgstr[3] "%d zmožnosti"
 
 msgid "Print all elements"
-msgstr "打印全部组件"
+msgstr "Izpiši vse predmete"
 
 msgid "Print list of blacklisted files"
-msgstr "显示黑名单文件列表"
+msgstr "Izpiši datoteke na črnem seznamu"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -938,233 +989,216 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"显示机器可解析的指定插件或所有插件提供的特性列表。\n"
-"                                       与外部自动插件安装机制连接时有用"
 
+#, fuzzy
 msgid "List the plugin contents"
-msgstr "列出插件信息"
+msgstr "Izberite vstavek s seznama"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr "打印所支持的 URI 样式及它们的关联组件"
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "无法载入插件文件: %s\n"
+msgstr "Ni mogoče naložiti datoteke vstavka: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "没有那样的组件或插件‘%s’\n"
+msgstr "Ni takega predmeta ali datoteke '%s'\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "用法: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr ""
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "错误: xml 文件‘%s’解析失败。\n"
+msgstr "NAPAKA: razčlenjevanje datoteke XML '%s' je spodletelo.\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-msgstr "错误: 文件‘%s’中没有顶级管道组件。\n"
+msgstr ""
 
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "警告: 此时仅支持一个一级组件。\n"
+msgstr ""
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "错误: 无法解析命令行参数 %d: %s。\n"
+msgstr ""
 
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "警告: 组件名‘%s’未找到。\n"
+msgstr ""
 
-#, c-format
+#, fuzzy, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
+msgstr "%i sporočil upravljalnika paketov"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "从组件\"%2$s:%3$s\"(%4$s)中获取信息 #%1$u:"
+msgstr "%i sporočil upravljalnika paketov"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "从组件\"%2$s\"(%3$s)中获取信息 #%1$u:"
+msgstr "%i sporočil upravljalnika paketov"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Got message #%u (%s): "
-msgstr "获取信息 #%u (%s):"
+msgstr "Pričakovano eno nadzorno sporočilo, prejetih %d"
 
-#, c-format
+#, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "收到来自组件“%s”的 EOS 信号。\n"
+msgstr "%s: Dobil sem REQUEST iz prepovedanega gostitelja %s"
 
-#, c-format
+#, fuzzy, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "po oznaki Exif DatumČas "
 
 #, fuzzy, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "找到标识    :由组件“%s:%s”找到。\n"
+msgstr "po oznaki Exif DatumČas "
 
-#, c-format
+#, fuzzy, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "找到标识    :由组件“%s”找到。\n"
+msgstr "po oznaki Exif DatumČas "
 
+#, fuzzy
 msgid "FOUND TAG\n"
-msgstr "找到标识\n"
+msgstr "Oznaka objave:"
 
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
-msgstr ""
-"信息:\n"
-"%s\n"
+msgstr "INFO"
 
-#, c-format
+#, fuzzy, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "警告：来自组件 %s：%s\n"
+msgstr "Uredi element seznama stikov"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Prerolled，等待缓冲完成...\n"
+msgstr ""
 
 msgid "buffering..."
-msgstr "正在缓冲..."
+msgstr "polnjenje medpomnilnika ..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "缓冲完成，设置播放管道 ...\n"
+msgstr ""
 
+#, fuzzy
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "正在缓冲，设置暂停管道 ...\n"
+msgstr "Cevovod ni hotel biti zaustavljen."
 
+#, fuzzy
 msgid "Redistribute latency...\n"
-msgstr "重新分配延迟时间...\n"
+msgstr "Najnižja prikritost"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr "%2$s 发起请求时状态设置为 %1$s...\n"
+msgstr ""
 
+#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "中断: 中止管道 ...\n"
+msgstr "<b>Zagon in izklop</b>"
 
 msgid "Output tags (also known as metadata)"
-msgstr "输出标识(也可认为是元数据)"
+msgstr ""
 
 msgid "Output status information and property notifications"
-msgstr "输出状态信息和属性通告"
+msgstr ""
 
 msgid "Do not print any progress information"
-msgstr "不打印任何进度信息"
+msgstr ""
 
 msgid "Output messages"
-msgstr "输出信息"
+msgstr "Izhodna sporočila."
 
 msgid "Do not output status information of TYPE"
-msgstr "不输出类型的状态信息"
+msgstr ""
 
 msgid "TYPE1,TYPE2,..."
-msgstr "类型1，类型2，..."
+msgstr "VRSTA1,VRSTA2, ..."
 
 msgid "Save xml representation of pipeline to FILE and exit"
-msgstr "保存管道的 xml 描述符至文件并退出"
+msgstr ""
 
 msgid "FILE"
-msgstr "文件"
+msgstr "DATOTEKA"
 
 msgid "Do not install a fault handler"
-msgstr "不安装错误的处理程序"
+msgstr ""
 
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
-msgstr "打印分配记录(如果在编译时开启的话)"
+msgstr ""
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "Dogodka ni bilo mogoče izbrisati zaradi napake"
 
 #, fuzzy
-msgid "Force EOS on sources before shutting the pipeline down"
-msgstr "关闭管道前强制对源发出 EOS 信号"
-
-#, c-format
-msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "错误: 无法创建管道: %s。\n"
-
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "错误: 无法创建管道。\n"
+msgstr "Dogodka ni bilo mogoče izbrisati zaradi napake"
 
-#, c-format
+#, fuzzy, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "警告: 错误管道: %s\n"
+msgstr "Opozorilo za veljavnost gesla ..."
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "错误: 未找到‘管道’组件。\n"
+msgstr ""
 
+#, fuzzy
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "设置暂停管道 ...\n"
+msgstr "Cevovod ni hotel biti zaustavljen."
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "错误: 管道不想暂停。\n"
+msgstr ""
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "管道正在使用且不需要 PREROLL ...\n"
+msgstr ""
 
+#, fuzzy
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "管道正在 PREROLLING ...\n"
+msgstr "Datoteka je binarna"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "错误: 管道不需要 preroll.\n"
+msgstr ""
 
+#, fuzzy
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "管道被 PREROLLED ...\n"
+msgstr "Datoteka je binarna"
 
+#, fuzzy
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "设置播放管道 ...\n"
+msgstr "Zakasnitev med nastavljanjem cevovoda na NULL"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "错误: 管道不想播放。\n"
+msgstr ""
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "允许关闭时发出 EOS 信号 —— 强制对管道发出 EOS 信号\n"
+msgstr ""
 
+#, fuzzy
 msgid "Waiting for EOS...\n"
-msgstr "等待 EOS 信号...\n"
+msgstr "Čakanje na overitev"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr "收到 EOS 信号 - 中止管道 ...\n"
+msgstr ""
 
+#, fuzzy
 msgid "An error happened while waiting for EOS\n"
-msgstr "等待 EOS 信号时出现一个错误\n"
+msgstr "med čakanjem na podatke na vtiču je prišlo do napake"
 
 msgid "Execution ended after %"
-msgstr "在 % 后运行终止"
+msgstr "Izvajanje je bilo prekinjeno po %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "设置备用管道 ...\n"
+msgstr "Nastavljanje cevovoda na READY ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "设置 NULL 管道 ...\n"
+msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "释放管道资源 ...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "寄存器缓存写入 %s 时出错: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "重新扫描寄存器 %s 时出错: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "重新扫描寄存器 %s 时出错"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "GStreamer 内部错误：状态更改失败。"
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "写入文件描述符“%d”时出错。"
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "文件描述符“%d”无效。"
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "正在释放管道 ...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "文件原始位置作为 URI 地址"
+msgstr "Sproščanje cevovoda ...\n"

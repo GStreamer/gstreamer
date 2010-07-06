@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-04-26 21:24+0300\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-06-30 11:47+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "Language: fi\n"
@@ -638,33 +638,36 @@ msgid ""
 "the neighborhood)"
 msgstr "sijainti kaupungin sisällä, jossa media on nauhoitettu tai tuotettu"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "maantieteellisen sijainnin pituuspiiri"
+msgstr "maantieteellisen sijainnin liikenopeus"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "nauhoittavan laitteen liikenopeus nauhoitettaessa yksikössä m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "maantieteellisen sijainnin korkeustaso"
+msgstr "maantieteellisen sijainnin liikesuunta"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"ilmoittaa mediaa nauhoittavan laitteen liikesuunnan. Esitetään asteina\n"
+"liukulukumuodossa, jossa 0 tarkoittaa maantieteellistä pohjoista ja\n"
+"asteet kasvavat myötäpäivään"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "maantieteellisen sijainnin korkeustaso"
+msgstr "maantieteellisen sijainnin kuvaussuunta"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"ilmoittaa suunnan, johon mediaa nauhoittava laite osoittaa nauhoitettaessa. "
+"Esitetään asteina liukulukumuodossa, jossa 0 tarkoittaa maantieteellistä "
+"pohjoista ja asteet kasvavat myötäpäivään"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -729,24 +732,22 @@ msgstr ""
 "mediasta"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "laitevalmistaja"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "tämän virran koodaamiseen käytetyn koodaimen versio"
+msgstr "Tämän median luomiseen käytetyn laitteen valmistaja"
 
 msgid "device model"
-msgstr ""
+msgstr "laitemalli"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "tämän virran koodaamiseen käytetyn koodaimen versio"
+msgstr "Tämän median luomiseen käytetyn laitteen malli"
 
 msgid "image orientation"
-msgstr ""
+msgstr "kuvasuunta"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Kuinka kuva tulisi pyöräyttää tai kääntää ympäri ennen näyttämistä"
 
 msgid ", "
 msgstr ", "
@@ -1105,9 +1106,8 @@ msgstr "TIEDOSTO"
 msgid "Do not install a fault handler"
 msgstr "Älä asenna virheenkäsittelintä"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Älä asenna virheenkäsittelintä"
+msgstr "Älä asenna SIGUSR1- ja SIGUSR2-signaalinkäsittelijöitä"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"

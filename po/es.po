@@ -1,13 +1,14 @@
-# translation of gstreamer-0.10.26.2.po to Español
+# translation of gstreamer-0.10.28.2.po to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 # Jorge González González <aloriel@gmail.com>, 2009, 2010.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.26.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-02-25 08:12+0100\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-05-01 11:00+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -618,34 +619,27 @@ msgstr ""
 "elevación geográfica donde se ha grabado o producido el medio, en metros de "
 "acuerdo con WGS84 (cero es el nivel medio del mar)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "longitud de la geolocalización"
+msgstr "país de la geolocalización"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"descripción de la ubicación entendible por humanos de dónde se ha grabado o "
-"producido el medio"
+msgstr "país (nombre en inglés) donde se ha grabado o producido el medio"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "latitud de la geolocalización"
+msgstr "ciudad de la geolocalización"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"descripción de la ubicación entendible por humanos de dónde se ha grabado o "
-"producido el medio"
+msgstr "ciudad (nombre en inglés) donde se ha grabado o producido el medio"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "elevación de la geolocalización"
+msgstr "sububicación de la geolocalización"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"una ubicación en una ciudad donde se ha producido o creado el medio (ej. el "
+"barrio)"
 
 #, fuzzy
 msgid "geo location movement speed"
@@ -726,14 +720,15 @@ msgstr ""
 "partes de un concierto. Es un nivel más alto que el de una pista, pero más "
 "bajo que el de un álbum."
 
-#, fuzzy
 msgid "user rating"
-msgstr "duracio"
+msgstr "puntuación de usuario"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Puntuación atribuida por un usuario. Cuanto mayor sea la puntuación más le "
+"gustará al usuario."
 
 msgid "device manufacturer"
 msgstr ""
@@ -890,9 +885,8 @@ msgstr "El archivo «%s» es un socket."
 msgid "Failed after iterations as requested."
 msgstr "Falló después de las iteraciones, como se pidió."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Error al escribir al archivo «%s»."
+msgstr "Error al escribir para descargar el archivo."
 
 msgid "No Temp directory specified."
 msgstr "No se especificó un directorio temporal."
@@ -1120,9 +1114,8 @@ msgstr "ARCHIVO"
 msgid "Do not install a fault handler"
 msgstr "No instalar un manejador predeterminado"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "No instalar un manejador predeterminado"
+msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimir la traza de asignaciones (si se activó al compilar)"

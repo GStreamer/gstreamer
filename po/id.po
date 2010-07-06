@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-04-26 21:55+0700\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-06-29 21:55+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
@@ -539,17 +539,17 @@ msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "kode bahasa arus ini, mengubahnya ke ISO-639-1"
 
 msgid "image"
-msgstr "citra"
+msgstr "gambar"
 
 msgid "image related to this stream"
-msgstr "citra yang berhubungan dengan arus ini"
+msgstr "gambar yang berhubungan dengan arus ini"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr "citra pratayang"
+msgstr "gambar pratayang"
 
 msgid "preview image related to this stream"
-msgstr "citra pratayang yang berhubungan dengan arus ini"
+msgstr "gambar pratayang yang berhubungan dengan arus ini"
 
 msgid "attachment"
 msgstr "lampiran"
@@ -635,33 +635,37 @@ msgstr ""
 "lokasi di dalam kota tempat media dihasilkan atau dibuat (misalnya "
 "lingkungan)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "bujur lokasi geografis"
+msgstr "kecepatan gerak lokasi geografis"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"kecepatan gerak divais penangkap ketika melakukan penangkapan dalam m/d"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "ketinggian lokasi geografis"
+msgstr "arah gerak lokasi geografis"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"mengindikasikan arah gerak divais yang melakukan penangkapan media. Arah "
+"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
+"berarti utara geografis, dan meningkat searah jarum jam"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "ketinggian lokasi geografis"
+msgstr "arah penangkapan lokasi geografis"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"mengindikasikan arah divais menunjuk ketika menangkap media. Arah "
+"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
+"berarti utara geografis, dan meningkat searah jarum jam"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -725,24 +729,22 @@ msgstr ""
 "pengguna terhadap media ini"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "manufaktur divais"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "versi penyandi yang digunakan untuk menyandi arus ini"
+msgstr "Manufaktur divais yang digunakan untuk menangkap media"
 
 msgid "device model"
-msgstr ""
+msgstr "model divais"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "versi penyandi yang digunakan untuk menyandi arus ini"
+msgstr "Model divais yang digunakan untuk membuat media ini"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientasi gambar"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Bagaimana gambar harus diputar atau dibalik sebelum ditampilkan"
 
 msgid ", "
 msgstr ", "
@@ -1098,9 +1100,8 @@ msgstr "BERKAS"
 msgid "Do not install a fault handler"
 msgstr "Jangan instal penanganan galat"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Jangan instal penanganan galat"
+msgstr "Jangan instal penanganan sinyal untuk SIGUSR1 dan SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"

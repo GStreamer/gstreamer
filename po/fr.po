@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.25.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-01-30 21:23+0100\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-04-30 22:36+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -615,32 +615,27 @@ msgstr ""
 "altitude de l'endroit géographique où le média a été enregistré ou produit, "
 "en mètres, conformément à WGS84 (zéro au niveau moyen de la mer)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "longitude de l'emplacement"
+msgstr "pays de l'emplacement"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"description intelligible de l'endroit où le média a été enregistré ou produit"
+msgstr "pays (nom anglais) où le média a été enregistré ou produit"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "latitude de l'emplacement"
+msgstr "ville de l'emplacement"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"description intelligible de l'endroit où le média a été enregistré ou produit"
+msgstr "ville (nom anglais) où le média a été enregistré ou produit"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "altitude de l'emplacement"
+msgstr "zone locale de l'emplacement"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"un endroit de la localité où le média a été enregistré ou produit (par ex. "
+"le voisinage)"
 
 #, fuzzy
 msgid "geo location movement speed"
@@ -722,14 +717,15 @@ msgstr ""
 "différents morceaux d'un concerto. De plus haut niveau que la piste, mais de "
 "plus bas niveau que l'album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "durée"
+msgstr "évaluation par l'utilisateur"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Note attribuée par une personne. Plus la note est élevée, plus la personne "
+"apprécie ce média"
 
 msgid "device manufacturer"
 msgstr ""
@@ -886,9 +882,8 @@ msgstr "Le fichier « %s » est un connecteur."
 msgid "Failed after iterations as requested."
 msgstr "Échec suite aux itérations demandées."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Erreur d'écriture dans le fichier « %s »."
+msgstr "Erreur d'écriture dans le fichier de téléchargement."
 
 msgid "No Temp directory specified."
 msgstr "Aucun répertoire temporaire indiqué."
@@ -1116,9 +1111,8 @@ msgstr "FICHIER"
 msgid "Do not install a fault handler"
 msgstr "N'installe pas de gestionnaire de dysfonctionnement"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "N'installe pas de gestionnaire de dysfonctionnement"
+msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Affiche les traces d'allocations (si activées lors de la compilation)"

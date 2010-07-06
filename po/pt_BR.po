@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of GStreamer.
-# Copyright (C) 2008-2009 Free Software Foundation, Inc.
+# Copyright (C) 2008-2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2009.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2010.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.24.2\n"
+"Project-Id-Version: gstreamer-0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2009-11-05 01:18-0300\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-06-28 20:12-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "Language: pt_BR\n"
@@ -89,9 +89,9 @@ msgstr ""
 msgid "Disable updating the registry"
 msgstr "Desabilitar atualização do registro"
 
-#, fuzzy
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Desabilitar o uso de fork() durante a análise do registro"
+msgstr ""
+"Desabilitar a criação de um processo auxiliar durante a análise do registro"
 
 msgid "GStreamer Options"
 msgstr "Opções do GStreamer"
@@ -627,142 +627,139 @@ msgstr ""
 "elevação geográfica de onde a mídia foi gravada ou produzida em metros de "
 "acordo com WGS84 (zero é a média do nível do mar)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "longitude da localização geográfica"
+msgstr "localização geográfica do país"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"descrição legível da localização de onde a mídia foi gravada ou produzida"
+msgstr "país, em inglês, onde a mídia foi gravada ou produzida"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "latitude da localização geográfica"
+msgstr "localização geográfica da cidade"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"descrição legível da localização de onde a mídia foi gravada ou produzida"
+msgstr "cidade, em inglês, onde a mídia foi gravada ou produzida"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "elevação da localização geográfica"
+msgstr "sublocalização geográfica"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"localização numa cidade onde a mídia foi produzida ou criada (ex: bairro)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "longitude da localização geográfica"
+msgstr "velocidade de movimento na localização geográfica"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"velocidade de movimento do  dispositivo de captura ao realizar a captura, em "
+"m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "elevação da localização geográfica"
+msgstr "direção de movimento na localização geográfica"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indica a direção de movimento do dispositivo ao realizar a captura de uma "
+"mídia. É representado como graus em representação fracionária, 0 indica "
+"Norte e incrementa-se no sentido do relógio"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "elevação da localização geográfica"
+msgstr "direção de captura na localização geográfica"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indica a direção que o dispositivo estava apontando quando capturava uma "
+"mídia. É representado como graus em representação fracionária, 0 indica "
+"Norte e incrementa-se no sentido do relógio"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "nome do programa"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
+"Nome do programa de TV, do podcast ou da série de onde a mídia tem origem"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#, fuzzy
 msgid "show sortname"
-msgstr "artista para ordenação"
+msgstr "programa para ordenação"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Nome do programa de TV, do podcast ou da série de onde a mídia tem origem, "
+"para ordenação"
 
-#, fuzzy
 msgid "episode number"
-msgstr "número do disco"
+msgstr "número do episódio"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "O número do episódio da temporada que a mídia faz parte"
 
-#, fuzzy
 msgid "season number"
-msgstr "número do disco"
+msgstr "número da temporada"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "O número da temporada da série que a mídia faz parte"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "licença"
+msgstr "letras de música"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "As letras de música da mídia"
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "título para ordenação"
+msgstr "compositor para ordenação"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "pessoa(s) responsável(is) pela gravação, para ordenação"
+msgstr "pessoa(s) que compôs a gravação, para ordenação"
 
 msgid "grouping"
-msgstr ""
+msgstr "parte"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"Partes da mídia que se extende em várias faixas, como diferentes partes de "
+"um concerto. Tem um nível acima da faixa, mas abaixo do álbum"
 
-#, fuzzy
 msgid "user rating"
-msgstr "duração"
+msgstr "avaliação do usuário"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Avaliação atribuída pelo usuário. Quanto melhor a avaliação, mais o usuário "
+"gosta da mídia"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "fabricante do dispositivo"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "versão do codificador usado pelo fluxo"
+msgstr "Fabricante do dispositivo usado para criar esta mídia"
 
 msgid "device model"
-msgstr ""
+msgstr "modelo do dispositivo"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "versão do codificador usado pelo fluxo"
+msgstr "Modelo do dispositivo usado para criar esta mídia"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientação de imagem"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Como a imagem deveria ser rotacionada ou invertida antes da exibição"
 
 msgid ", "
 msgstr ", "
@@ -900,16 +897,15 @@ msgstr "O arquivo \"%s\" é um soquete."
 msgid "Failed after iterations as requested."
 msgstr "Falha após as interações requeridas."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Erro ao escrever no arquivo \"%s\"."
+msgstr "Erro ao escrever no arquivo baixado."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "Nenhum diretório temporário especificado."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Não foi possível obter informações em \"%s\"."
+msgstr "Não foi possível criar o arquivo temporário \"%s\"."
 
 msgid "caps"
 msgstr "Caps"
@@ -945,7 +941,7 @@ msgid "controllable"
 msgstr "controlável"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Arquivos colocados na lista negra:"
 
 msgid "Total count: "
 msgstr "Contagem total: "
@@ -953,8 +949,8 @@ msgstr "Contagem total: "
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d arquivo na lista negra"
+msgstr[1] "%d arquivos na lista negra"
 
 #, c-format
 msgid "%d plugin"
@@ -965,8 +961,8 @@ msgstr[1] "%d plug-ins"
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d entrada na lista negra"
+msgstr[1] "%d entradas na lista negra"
 
 #, c-format
 msgid "%d feature"
@@ -978,9 +974,8 @@ msgid "Print all elements"
 msgstr "Exibir todos elementos"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Exibir lista dos arquivos na lista negra"
 
-#, fuzzy
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
 "plugins provide.\n"
@@ -988,7 +983,7 @@ msgid ""
 "automatic plugin installation mechanisms"
 msgstr ""
 "Exibir uma lista, legível para máquina, de recursos que o plug-in "
-"especificado fornece.\n"
+"especificado ou todos os plug-ins fornecem.\n"
 "                                       Útil na conexão com mecanismos "
 "externos de instalação automática de plug-ins"
 
@@ -1123,7 +1118,7 @@ msgstr "TIPO1,TIPO2,..."
 
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr ""
-"Salvar representação como xml da fila de processamento para o ARQUIVO e sair"
+"Salvar representação da fila de processamento como xml para o ARQUIVO e sair"
 
 msgid "FILE"
 msgstr "ARQUIVO"
@@ -1131,9 +1126,8 @@ msgstr "ARQUIVO"
 msgid "Do not install a fault handler"
 msgstr "Não instale um manipulador de falhas"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Não instale um manipulador de falhas"
+msgstr "Não fixar manipuladores de sinal para SIGUSR1 e SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Exibir trilha de alocação (se habilitado na compilação)"

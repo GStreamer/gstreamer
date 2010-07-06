@@ -1,4 +1,4 @@
-# translation of gstreamer-0.10.26.2.po to Dutch
+# translation of gstreamer-0.10.28.2.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.26.2\n"
+"Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-02-21 15:19+0100\n"
+"POT-Creation-Date: 2010-07-06 20:30+0100\n"
+"PO-Revision-Date: 2010-04-30 15:45+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -619,34 +619,27 @@ msgstr ""
 "hoogte van de geografische locatie van waar het medium is opgenomen of "
 "geproduceerd in meters volgens WGS84 (nul op gemiddeld zeeniveau)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "breedtegraad van de geografische locatie"
+msgstr "geografische locatie van het land"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"leesbare beschrijving van de locatie waar het medium is opgenomen of "
-"geproduceerd"
+msgstr "land (Engelse naam) waar het medium is opgenomen of geproduceerd"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "lengtegraad van de geografische locatie"
+msgstr "geografische locatie van de stad"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"leesbare beschrijving van de locatie waar het medium is opgenomen of "
-"geproduceerd"
+msgstr "stad (Engelse naam) waar het medium is opgenomen of geproduceerd"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "hoogte van de geografische locatie"
+msgstr "geografische locatie van de sublocatie"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"een sublocatie in een stad waar het medium is opgenomen of geproduceerd "
+"(bijv. de buurt)"
 
 #, fuzzy
 msgid "geo location movement speed"
@@ -727,14 +720,15 @@ msgstr ""
 "verschillende delen van een concert. Het is een hoger niveau dan een track, "
 "maat lager dan een album"
 
-#, fuzzy
 msgid "user rating"
-msgstr "duur"
+msgstr "waardering van gebruiker"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Waardering toegekend door een gebruiker. Hoe hoger de waardering, hoe meer "
+"de gebruiker dit medium waardeert"
 
 msgid "device manufacturer"
 msgstr ""
@@ -891,9 +885,8 @@ msgstr "Bestand \"%s\" is een socket."
 msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Fout bij het schrijven naar bestand \"%s\"."
+msgstr "Fout bij het schrijven om bestand te downloaden."
 
 msgid "No Temp directory specified."
 msgstr "Geen tijdelijke map opgegeven."
@@ -1118,9 +1111,8 @@ msgstr "BESTAND"
 msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Geen foutafhandelaar installeren"
+msgstr ""
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
