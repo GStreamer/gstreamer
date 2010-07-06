@@ -1808,8 +1808,10 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink,
         gst_caps_ref (GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (sink)));
   }
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "src caps %" GST_PTR_FORMAT, srccaps);
-  GST_CAT_DEBUG (GST_CAT_CAPS, "sink caps %" GST_PTR_FORMAT, sinkcaps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, src, "src caps %" GST_PTR_FORMAT,
+      srccaps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, sink, "sink caps %" GST_PTR_FORMAT,
+      sinkcaps);
 
   /* if we have caps on both pads we can check the intersection. If one
    * of the caps is NULL, we return TRUE. */
