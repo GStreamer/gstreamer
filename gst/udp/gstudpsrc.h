@@ -63,6 +63,7 @@ struct _GstUDPSrc {
   int        sockfd;
   gboolean   closefd;
   gboolean   auto_multicast;
+  gboolean   reuse;
 
   /* our sockets */
   GstPollFD  sock;

@@ -145,6 +145,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define UDP_DEFAULT_CLOSEFD            TRUE
 #define UDP_DEFAULT_SOCK                -1
 #define UDP_DEFAULT_AUTO_MULTICAST     TRUE
+#define UDP_DEFAULT_REUSE              TRUE
 
 enum
 {
@@ -162,6 +163,7 @@ enum
   PROP_CLOSEFD,
   PROP_SOCK,
   PROP_AUTO_MULTICAST,
+  PROP_REUSE,
 
   PROP_LAST
 };
@@ -291,6 +293,9 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_boolean ("auto-multicast", "Auto Multicast",
           "Automatically join/leave multicast groups",
           UDP_DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_REUSE,
+      g_param_spec_boolean ("reuse", "Reuse", "Enable reuse of the port",
+          UDP_DEFAULT_REUSE, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -318,6 +323,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->externalfd = (udpsrc->sockfd != -1);
   udpsrc->auto_multicast = UDP_DEFAULT_AUTO_MULTICAST;
   udpsrc->sock.fd = UDP_DEFAULT_SOCK;
+  udpsrc->reuse = UDP_DEFAULT_REUSE;
 
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
@@ -693,6 +699,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_AUTO_MULTICAST:
       udpsrc->auto_multicast = g_value_get_boolean (value);
       break;
+    case PROP_REUSE:
+      udpsrc->reuse = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -741,6 +750,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_AUTO_MULTICAST:
       g_value_set_boolean (value, udpsrc->auto_multicast);
       break;
+    case PROP_REUSE:
+      g_value_set_boolean (value, udpsrc->reuse);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -782,7 +794,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
     GST_DEBUG_OBJECT (src, "got socket %d", src->sock.fd);
 
-    reuse = 1;
+    GST_DEBUG_OBJECT (src, "setting reuse %d", src->reuse);
+    reuse = src->reuse ? 1 : 0;
     if ((ret =
             setsockopt (src->sock.fd, SOL_SOCKET, SO_REUSEADDR, &reuse,
                 sizeof (reuse))) < 0)
