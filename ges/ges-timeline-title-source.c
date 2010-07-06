@@ -356,10 +356,6 @@ ges_tl_title_src_create_track_object (GESTimelineObject * obj, GESTrack * track)
       ges_track_object_set_active (res, FALSE);
   }
 
-  else {
-    res = NULL;
-  }
-
   return res;
 }
 

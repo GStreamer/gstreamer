@@ -317,10 +317,6 @@ ges_tl_text_overlay_create_track_object (GESTimelineObject * obj,
         tfs->valign);
   }
 
-  else {
-    res = NULL;
-  }
-
   return res;
 }
 
