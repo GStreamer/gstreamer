@@ -1441,7 +1441,7 @@ again:
   udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
-  g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
+  g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, "reuse", FALSE, NULL);
 
   ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -1492,7 +1492,7 @@ again:
   if (src->client_port_range.max > 0 && tmp_rtcp >= src->client_port_range.max)
     goto no_ports;
 
-  g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, NULL);
+  g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, "reuse", FALSE, NULL);
 
   GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
   ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
