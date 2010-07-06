@@ -1,4 +1,4 @@
-ext/gsettings/org.freedesktop.gstreamer.gschema.xml.in
+ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in
 ext/resindvd/resindvdsrc.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
