@@ -43,15 +43,19 @@ enum
 {
   ELEM_SRC = 0,
   ELEM_MIX,
-  SINKPAD_MIX,
   ELEM_PROC,
   ELEM_CONV,
   NUM_ELEM
 };
 
 static const gchar *factories[NUM_FLAVOURS][NUM_ELEM] = {
-  {"audiotestsrc", "adder", "sink%d", "volume", "audioconvert"},
-  {"videotestsrc", "videomixer", "sink_%d", "videoscale", "ffmpegcolorspace"}
+  {"audiotestsrc", "adder", "volume", "audioconvert"},
+  {"videotestsrc", "videomixer", "videoscale", "ffmpegcolorspace"}
+};
+
+static const gchar *sink_pads[NUM_FLAVOURS][NUM_ELEM] = {
+  {NULL, "sink%d", NULL, NULL},
+  {NULL, "sink_%d", NULL, NULL}
 };
 
 
@@ -103,7 +107,7 @@ create_nodes (GstBin * bin, GstElement * sink, gint depth, gint children,
 
   for (i = 0; i < children; i++) {
     if (depth > 0) {
-      if (!create_node (bin, sink, factories[flavour][SINKPAD_MIX], &new_sink,
+      if (!create_node (bin, sink, sink_pads[flavour][ELEM_MIX], &new_sink,
               children, flavour)) {
         return FALSE;
       }
@@ -118,7 +122,7 @@ create_nodes (GstBin * bin, GstElement * sink, gint depth, gint children,
       }
       gst_bin_add (bin, src);
       if (!gst_element_link_pads_full (src, "src", sink,
-              factories[flavour][SINKPAD_MIX], GST_PAD_LINK_CHECK_NOTHING)) {
+              sink_pads[flavour][ELEM_MIX], GST_PAD_LINK_CHECK_NOTHING)) {
         GST_WARNING ("can't link elements");
         return FALSE;
       }
