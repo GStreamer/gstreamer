@@ -434,6 +434,7 @@ GES_TYPE_TIMELINE_TEXT_OVERLAY
 GESTrackVideoTestSource
 GESTrackVideoTestSourceClass
 ges_track_video_test_source_new
+ges_track_video_test_source_set_pattern
 <SUBSECTION Standard>
 ges_track_video_test_source_get_type
 GES_IS_TRACK_VIDEO_TEST_SOURCE
