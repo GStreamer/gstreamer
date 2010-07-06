@@ -64,6 +64,7 @@ REGISTRY_CHECKS =				\
 	elements/multiqueue			\
 	elements/tee			  	\
 	libs/basesrc				\
+	libs/basesink				\
 	libs/controller				\
 	libs/typefindhelper			\
 	pipelines/stress			\
