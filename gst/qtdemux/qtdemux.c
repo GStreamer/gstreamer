@@ -5385,11 +5385,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 if (size < 12)
                   break;
 
-                max_bitrate = QT_UINT32 (avc_data + 0xc);
-                avg_bitrate = QT_UINT32 (avc_data + 0x10);
+                max_bitrate = QT_UINT32 (avc_data + 0x10);
+                avg_bitrate = QT_UINT32 (avc_data + 0xc);
 
                 if (!max_bitrate && !avg_bitrate)
                   break;
+
+                /* Some muxers seem to swap the average and maximum bitrates
+                 * (I'm looking at you, YouTube), so we swap for sanity. */
+                if (max_bitrate > 0 && max_bitrate < avg_bitrate) {
+                  guint temp = avg_bitrate;
+
+                  avg_bitrate = max_bitrate;
+                  max_bitrate = temp;
+                }
 
                 if (!list)
                   list = gst_tag_list_new ();
