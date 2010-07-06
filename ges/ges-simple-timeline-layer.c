@@ -26,11 +26,11 @@
  * API. Clients can add any type of GESTimelineObject to a
  * GESSimpleTimelineLayer, and the layer will automatically compute the
  * appropriate start times. 
- 
+ *
  * Users should be aware that GESTimelineTransition objects are considered to
  * have a negative duration for the purposes of positioning GESTimelineSource
  * objects (i.e., adding a GESTimelineTransition creates an overlap between
- * the two adjacent sources 
+ * the two adjacent sources.
  */
 
 #include "ges-internal.h"
