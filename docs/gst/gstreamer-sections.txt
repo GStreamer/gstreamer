@@ -410,6 +410,7 @@ gst_clock_set_calibration
 gst_clock_id_get_time
 gst_clock_id_wait
 gst_clock_id_wait_async
+gst_clock_id_wait_async_full
 gst_clock_id_unschedule
 gst_clock_id_compare_func
 gst_clock_id_ref
