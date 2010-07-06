@@ -311,6 +311,14 @@ ges_timeline_layer_resync_priorities (GESTimelineLayer * layer)
   return TRUE;
 }
 
+/**
+ * ges_timeline_layer_set_priority:
+ * @layer: a #GESTimelineLayer
+ * @priority: the priority to set
+ *
+ * Sets the layer to the given @priority. See the documentation of
+ * the "priority" property for more information.
+ */
 void
 ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
 {
