@@ -263,7 +263,6 @@ ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
 
   self->halign = halign;
 
-
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 

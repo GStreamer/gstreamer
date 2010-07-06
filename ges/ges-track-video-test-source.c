@@ -114,6 +114,7 @@ ges_track_video_test_source_create_element (GESTrackSource * self)
 
   ret = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (ret, "pattern", (gint) pattern, NULL);
+
   return ret;
 }
 
@@ -122,8 +123,10 @@ ges_track_video_test_source_set_pattern (GESTrackVideoTestSource
     * self, GESVideoTestPattern pattern)
 {
   GstElement *element;
+
   element = GES_TRACK_SOURCE (self)->element;
   self->pattern = pattern;
+
   if (element)
     g_object_set (element, "pattern", (gint) pattern, NULL);
 }
