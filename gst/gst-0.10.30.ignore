@@ -6,6 +6,8 @@ ignore
   gst_pad_link_full
   gst_element_link_pads_full
   gst_adapter_masked_scan_uint32_peek
+  gst_base_sink_set_last_buffer_enabled
+  gst_base_sink_is_last_buffer_enabled
 %%
 ignore-type
   GstPadLinkCheck

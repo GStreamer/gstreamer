@@ -283,6 +283,21 @@
   (caller-owns-return #t)
 )
 
+(define-method set_last_buffer_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_last_buffer_enabled")
+  (return-type "none")
+  (parameters
+   '("gboolean" "enable")
+  )
+)
+
+(define-method is_last_buffer_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_is_last_buffer_enabled")
+  (return-type "gboolean")
+)
+
 (define-method query_latency
   (of-object "GstBaseSink")
   (c-name "gst_base_sink_query_latency")
