@@ -240,9 +240,9 @@ ges_track_audio_transition_duration_changed (GESTrackTransition * object)
   GST_LOG ("updating controller: gnlobj (%p) acontroller(%p) bcontroller(%p)",
       gnlobj, self->a_controller, self->b_controller);
 
-  if (G_UNLIKELY ((gnlobj == NULL) || !self->a_controller
-          || !self->b_controller))
-    return;
+  if (G_UNLIKELY ((!gnlobj || !self->a_control_source ||
+              !self->b_control_source)));
+  return;
 
   GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
   g_value_init (&zero, G_TYPE_DOUBLE);
@@ -251,12 +251,6 @@ ges_track_audio_transition_duration_changed (GESTrackTransition * object)
   g_value_set_double (&one, 1.0);
 
   GST_LOG ("setting values on controller");
-
-  g_assert (GST_IS_CONTROLLER (self->a_controller));
-  g_assert (GST_IS_CONTROL_SOURCE (self->a_control_source));
-
-  g_assert (GST_IS_CONTROLLER (self->b_controller));
-  g_assert (GST_IS_CONTROL_SOURCE (self->b_control_source));
 
   gst_interpolation_control_source_unset_all (self->a_control_source);
   gst_interpolation_control_source_set (self->a_control_source, 0, &one);

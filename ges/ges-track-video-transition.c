@@ -243,9 +243,6 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
   GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
   GstPad *srcpad = gst_element_get_static_pad (element, "src");
 
-  g_assert (sinkpad);
-  g_assert (srcpad);
-
   gst_pad_link (srcpad, sinkpad);
   gst_object_unref (srcpad);
 
@@ -289,7 +286,7 @@ ges_track_video_transition_duration_changed (GESTrackTransition * object)
 
   GST_LOG ("updating controller");
 
-  if (G_UNLIKELY (!gnlobj || !self->controller))
+  if (G_UNLIKELY (!gnlobj || !self->control_source))
     return;
 
   GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
@@ -299,9 +296,6 @@ ges_track_video_transition_duration_changed (GESTrackTransition * object)
   g_value_set_double (&end_value, self->end_value);
 
   GST_LOG ("setting values on controller");
-
-  g_assert (GST_IS_CONTROLLER (self->controller));
-  g_assert (GST_IS_CONTROL_SOURCE (self->control_source));
 
   gst_interpolation_control_source_unset_all (self->control_source);
   gst_interpolation_control_source_set (self->control_source, 0, &start_value);
