@@ -925,6 +925,9 @@ gst_dshowvideodec_flush (GstDshowVideoDec * vdec)
   /* flush dshow decoder and reset timestamp */
   vdec->fakesrc->GetOutputPin()->Flush();
 
+  /* Reset the flow return state tracker */
+  vdec->last_ret = GST_FLOW_OK;
+
   return TRUE;
 }
 
