@@ -263,18 +263,9 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
   for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *priv = (TrackPrivate *) tmp->data;
     GESTrack *track = priv->track;
-    GESTrackObject *trobj;
 
     GST_LOG ("Trying with track %p", track);
-
-    if (G_UNLIKELY (!(trobj =
-                ges_timeline_object_create_track_object (object, track)))) {
-      GST_WARNING ("Couldn't create TrackObject for TimelineObject");
-      continue;
-    }
-
-    GST_LOG ("Got new TrackObject %p, adding it to track", trobj);
-    ges_track_add_object (track, trobj);
+    ges_timeline_object_create_track_objects (object, track);
   }
 }
 
