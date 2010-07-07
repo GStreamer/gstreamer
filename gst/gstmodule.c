@@ -300,6 +300,8 @@ init_gst (void)
 #if ((GST_VERSION_MICRO >= 30) || (GST_VERSION_MICRO == 29 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_DEVICE_MANUFACTURER",
       GST_TAG_DEVICE_MANUFACTURER);
+  PyModule_AddStringConstant (m, "TAG_IMAGE_ORIENTATION",
+      GST_TAG_IMAGE_ORIENTATION);
   PyModule_AddStringConstant (m, "TAG_DEVICE_MODEL", GST_TAG_DEVICE_MODEL);
   PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_MOVEMENT_SPEED",
       GST_TAG_GEO_LOCATION_MOVEMENT_SPEED);
