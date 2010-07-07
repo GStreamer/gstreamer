@@ -144,11 +144,3 @@ static void
 ges_track_transition_init (GESTrackTransition * self)
 {
 }
-
-GESTrackTransition *
-ges_track_transition_new (void)
-{
-  GESTrackTransition *ret = g_object_new (GES_TYPE_TRACK_TRANSITION, NULL);
-
-  return ret;
-}

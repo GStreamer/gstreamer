@@ -84,9 +84,3 @@ static void
 ges_timeline_overlay_init (GESTimelineOverlay * self)
 {
 }
-
-GESTimelineOverlay *
-ges_timeline_overlay_new (void)
-{
-  return g_object_new (GES_TYPE_TIMELINE_OVERLAY, NULL);
-}

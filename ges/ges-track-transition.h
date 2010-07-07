@@ -81,8 +81,6 @@ struct _GESTrackTransitionClass {
 
 GType ges_track_transition_get_type (void);
 
-GESTrackTransition *ges_track_transition_new (void);
-
 G_END_DECLS
 
 #endif

@@ -162,7 +162,8 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
   }
 
   else {
-    res = GES_TRACK_OBJECT (ges_track_transition_new ());
+    GST_WARNING ("Transitions don't handle this track type");
+    return NULL;
   }
 
   return res;

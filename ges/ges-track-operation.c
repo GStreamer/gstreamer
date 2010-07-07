@@ -110,9 +110,3 @@ static void
 ges_track_operation_init (GESTrackOperation * self)
 {
 }
-
-GESTrackOperation *
-ges_track_operation_new (void)
-{
-  return g_object_new (GES_TYPE_TRACK_OPERATION, NULL);
-}

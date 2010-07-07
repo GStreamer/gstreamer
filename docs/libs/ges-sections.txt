@@ -144,7 +144,6 @@ GES_TRACK_TRANSITION_CLASS
 GES_TRACK_TRANSITION_GET_CLASS
 GES_TYPE_TRACK_TRANSITION
 ges_track_transition_get_type
-ges_track_transition_new
 </SECTION>
 
 <SECTION>
@@ -316,7 +315,6 @@ GES_TYPE_TIMELINE_FILE_SOURCE
 <TITLE>GESTimelineOverlay</TITLE>
 GESTimelineOverlay
 GESTimelineOverlayClass
-ges_timeline_overlay_new
 <SUBSECTION Standard>
 ges_timeline_overlay_get_type
 GES_IS_TIMELINE_OVERLAY

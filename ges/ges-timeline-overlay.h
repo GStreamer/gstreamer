@@ -65,8 +65,6 @@ struct _GESTimelineOverlayClass {
 
 GType ges_timeline_overlay_get_type (void);
 
-GESTimelineOverlay* ges_timeline_overlay_new (void);
-
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_OVERLAY */
