@@ -139,7 +139,7 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 static void
 ges_timeline_transition_init (GESTimelineTransition * self)
 {
-  self->vtype = GES_VIDEO_TRANSITION_TYPE_CROSSFADE;
+  self->vtype = GES_VIDEO_TRANSITION_TYPE_NONE;
 }
 
 static GESTrackObject *

@@ -90,7 +90,7 @@ ges_track_video_transition_init (GESTrackVideoTransition * self)
   self->mixer = NULL;
   self->sinka = NULL;
   self->sinkb = NULL;
-  self->type = 0;
+  self->type = GES_VIDEO_TRANSITION_TYPE_NONE;
   self->start_value = 0.0;
   self->end_value = 0.0;
 }
