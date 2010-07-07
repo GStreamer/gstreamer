@@ -2005,6 +2005,19 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
                   "invalid audio header, ignoring stream");
               goto fail;
             }
+            /* some more sanity checks */
+            if (stream->is_vbr) {
+              if (stream->strf.auds->blockalign <= 4) {
+                /* that would mean (too) many frames per chunk,
+                 * so not likely set as expected */
+                GST_DEBUG_OBJECT (element,
+                    "suspicious blockalign %d for VBR audio; "
+                    "overriding to 1 frame per chunk",
+                    stream->strf.auds->blockalign);
+                /* this should top any likely value */
+                stream->strf.auds->blockalign = (1 << 12);
+              }
+            }
             break;
           case GST_RIFF_FCC_iavs:
             stream->is_vbr = TRUE;
