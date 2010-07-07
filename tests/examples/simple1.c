@@ -18,6 +18,7 @@
  */
 
 #include <ges/ges.h>
+#include <stdlib.h>
 
 int
 main (int argc, gchar ** argv)
