@@ -194,28 +194,9 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   }
 
   res = class->create_track_object (object, track);
-
-  if (res) {
-    GST_DEBUG
-        ("Got a TrackObject : %p , setting the timeline object as its creator",
-        res);
-    ges_track_object_set_timeline_object (res, object);
-
-    GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
-    /* We steal the initial reference */
-    object->trackobjects = g_list_append (object->trackobjects, res);
-
-    GST_DEBUG ("Setting properties on newly created TrackObject");
-
-    ges_track_object_set_start_internal (res, object->start);
-    ges_track_object_set_priority_internal (res, object->priority);
-    ges_track_object_set_duration_internal (res, object->duration);
-    ges_track_object_set_inpoint_internal (res, object->inpoint);
-  }
-
-  GST_DEBUG ("Returning res:%p", res);
-
+  ges_timeline_object_add_track_object (object, res);
   return res;
+
 }
 
 /**
@@ -260,6 +241,45 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
     return FALSE;
   }
   return ges_track_add_object (track, result);
+}
+
+/**
+ * ges_timeline_object_add_track_object:
+ * @object: a #GESTimelineObject
+ * @trobj: the GESTrackObject
+ * 
+ * Add a track object to the timeline object. Should only be called by
+ * subclasses implementing the create_track_objects (plural) vmethod.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ */
+
+gboolean
+ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
+    * trobj)
+{
+  GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
+      "creator", trobj);
+
+  if (!trobj)
+    return FALSE;
+
+  ges_track_object_set_timeline_object (trobj, object);
+
+  GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
+  /* We steal the initial reference */
+  object->trackobjects = g_list_append (object->trackobjects, trobj);
+
+  GST_DEBUG ("Setting properties on newly created TrackObject");
+
+  ges_track_object_set_start_internal (trobj, object->start);
+  ges_track_object_set_priority_internal (trobj, object->priority);
+  ges_track_object_set_duration_internal (trobj, object->duration);
+  ges_track_object_set_inpoint_internal (trobj, object->inpoint);
+
+  GST_DEBUG ("Returning trobj:%p", trobj);
+
+  return TRUE;
 }
 
 /**

@@ -258,6 +258,7 @@ ges_timeline_object_set_start
 ges_timeline_object_set_duration
 ges_timeline_object_find_track_object
 CreateTrackObjectsFunc
+ges_timeline_object_add_track_object
 <SUBSECTION Standard>
 ges_timeline_object_create_track_objects
 ges_timeline_object_create_track_object

@@ -86,7 +86,7 @@ typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
 /**
  * CreateTrackObjectFunc:
  * @object: a #GESTimelineObject
- * @track: a #GESTimelineTrack
+ * @track: a #GESTrack
  * 
  * Create all track objects this object handles for this type of track.
  *
@@ -202,6 +202,10 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
 GESTrackObject *
 ges_timeline_object_find_track_object (GESTimelineObject * object,
 				       GESTrack * track);
+
+gboolean
+ges_timeline_object_add_track_object (GESTimelineObject *object, GESTrackObject
+    *trobj);
 
 G_END_DECLS
 
