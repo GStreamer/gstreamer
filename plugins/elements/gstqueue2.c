@@ -493,9 +493,12 @@ debug_ranges (GstQueue2 * queue)
   GstQueue2Range *walk;
 
   for (walk = queue->ranges; walk; walk = walk->next) {
-    GST_DEBUG_OBJECT (queue, "range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
-        ", reading %" G_GUINT64_FORMAT, walk->offset, walk->writing_pos,
-        walk->reading_pos);
+    GST_DEBUG_OBJECT (queue,
+        "range [%" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT "] (rb [%"
+        G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT "]), reading %" G_GUINT64_FORMAT
+        " current range? %s", walk->offset, walk->writing_pos, walk->rb_offset,
+        walk->rb_writing_pos, walk->reading_pos,
+        walk == queue->current ? "**y**" : "  n  ");
   }
 }
 
@@ -1170,8 +1173,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
           /* we don't have the data but if we have a ring buffer that is full, we
            * need to read */
           GST_DEBUG_OBJECT (queue,
-              "ring buffer full, reading ring-buffer-max-size %d bytes",
-              rb_size);
+              "ring buffer full, reading ring-buffer-max-size %"
+              G_GUINT64_FORMAT " bytes", rb_size);
           read_length = rb_size;
         } else if (queue->is_eos) {
           /* won't get any more data so read any data we have */
@@ -1536,12 +1539,22 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
         guint64 range_data_start, range_data_end;
         GstQueue2Range *range_to_destroy = NULL;
 
-        /* we don't edit the current range here */
-        if (range == queue->current)
-          goto next_range;
-
         range_data_start = range->rb_offset;
         range_data_end = range->rb_writing_pos;
+
+        /* handle the special case where the range has no data in it */
+        if (range->writing_pos == range->offset) {
+          if (range != queue->current) {
+            GST_DEBUG_OBJECT (queue,
+                "Removing range: offset %" G_GUINT64_FORMAT ", wpos %"
+                G_GUINT64_FORMAT, range->offset, range->writing_pos);
+            /* remove range */
+            range_to_destroy = range;
+            if (prev)
+              prev->next = range->next;
+          }
+          goto next_range;
+        }
 
         if (range_data_end > range_data_start) {
           if (writing_pos >= range_data_end && new_writing_pos >= writing_pos)
