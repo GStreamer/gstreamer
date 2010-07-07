@@ -67,8 +67,11 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
  *
- * A function that will be called when the @object is added to a
- * #GESTimelineLayer.
+ * Creates the 'primary track object for this @object.
+ * 
+ * Implementors should override this function if they only need to create one
+ * track object per track. If the implementor wishes to create multiple track
+ * objects, they should override create_track_objects instead.
  *
  * The implementer of this function shall return the proper #GESTrackObject
  * that should be controlled by @object for the given @track.
@@ -140,7 +143,9 @@ struct _GESTimelineObject {
 /**
  * GESTimelineObjectClass:
  * @parent_class: object parent class
- * @create_track_object: method to create a #GESTrackObject for a given #GESTrack.
+ * @create_track_object: method to create a single #GESTrackObject for a given #GESTrack.
+ * @create_track_objects: method to crate multiple #GESTrackObjects for a
+ * #GESTrack.
  * @fill_track_object: method to fill an associated #GESTrackObject.
  * @need_fill_track: Set to TRUE if @fill_track_object needs to be called.
  *
@@ -150,6 +155,8 @@ struct _GESTimelineObjectClass {
   GObjectClass parent_class;
 
   CreateTrackObjectFunc create_track_object;
+  CreateTrackObjectsFunc create_track_objects;
+
   /* FIXME : might need a release_track_object */
   FillTrackObjectFunc	fill_track_object;
   gboolean need_fill_track;
@@ -168,6 +175,9 @@ void ges_timeline_object_set_layer (GESTimelineObject * object,
 GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
 					 GESTrack * track);
+
+gboolean ges_timeline_object_create_track_objects (GESTimelineObject *
+    object, GESTrack * track);
 
 gboolean
 ges_timeline_object_release_track_object (GESTimelineObject * object,
