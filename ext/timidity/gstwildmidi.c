@@ -489,11 +489,16 @@ gst_wildmidi_do_seek (GstWildmidi * wildmidi, GstEvent * event)
   sample = segment->last_stop;
 
   GST_OBJECT_LOCK (wildmidi);
+#ifdef HAVE_WILDMIDI_0_2_2
   if (accurate) {
     WildMidi_SampledSeek (wildmidi->song, &sample);
   } else {
     WildMidi_FastSeek (wildmidi->song, &sample);
   }
+#else
+  WildMidi_FastSeek (wildmidi->song, &sample);
+#endif
+
   GST_OBJECT_UNLOCK (wildmidi);
 
   segment->start = segment->time = segment->last_stop = sample;
@@ -669,12 +674,21 @@ gst_wildmidi_parse_song (GstWildmidi * wildmidi)
   if (!wildmidi->song)
     goto open_failed;
 
+#ifdef HAVE_WILDMIDI_0_2_2
   WildMidi_LoadSamples (wildmidi->song);
+#endif
 
+#ifdef HAVE_WILDMIDI_0_2_2
   WildMidi_SetOption (wildmidi->song, WM_MO_LINEAR_VOLUME,
       wildmidi->linear_volume);
   WildMidi_SetOption (wildmidi->song, WM_MO_EXPENSIVE_INTERPOLATION,
       wildmidi->high_quality);
+#else
+  WildMidi_SetOption (wildmidi->song, WM_MO_LOG_VOLUME,
+      !wildmidi->linear_volume);
+  WildMidi_SetOption (wildmidi->song, WM_MO_ENHANCED_RESAMPLING,
+      wildmidi->high_quality);
+#endif
 
   info = WildMidi_GetInfo (wildmidi->song);
   GST_OBJECT_UNLOCK (wildmidi);
@@ -901,16 +915,26 @@ gst_wildmidi_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (object);
       wildmidi->linear_volume = g_value_get_boolean (value);
       if (wildmidi->song)
+#ifdef HAVE_WILDMIDI_0_2_2
         WildMidi_SetOption (wildmidi->song, WM_MO_LINEAR_VOLUME,
             wildmidi->linear_volume);
+#else
+        WildMidi_SetOption (wildmidi->song, WM_MO_LOG_VOLUME,
+            !wildmidi->linear_volume);
+#endif
       GST_OBJECT_UNLOCK (object);
       break;
     case ARG_HIGH_QUALITY:
       GST_OBJECT_LOCK (object);
       wildmidi->high_quality = g_value_get_boolean (value);
       if (wildmidi->song)
+#ifdef HAVE_WILDMIDI_0_2_2
         WildMidi_SetOption (wildmidi->song, WM_MO_EXPENSIVE_INTERPOLATION,
             wildmidi->high_quality);
+#else
+        WildMidi_SetOption (wildmidi->song, WM_MO_ENHANCED_RESAMPLING,
+            wildmidi->high_quality);
+#endif
       GST_OBJECT_UNLOCK (object);
       break;
     default:

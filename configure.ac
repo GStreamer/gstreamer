@@ -1263,7 +1263,12 @@ AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
 dnl *** wildmidi ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WILDMIDI, true)
 AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
-  AC_CHECK_HEADER([wildmidi_lib.h],HAVE_WILDMIDI=yes, HAVE_WILDMIDI=no)
+  AG_GST_CHECK_LIBHEADER(WILDMIDI, WildMidi,
+                         WildMidi_Init, ,
+                         wildmidi_lib.h,
+                         WILDMIDI_LIBS="-lWildMidi")
+  AC_CHECK_LIB(WildMidi, WildMidi_LoadSamples, AC_DEFINE(HAVE_WILDMIDI_0_2_2, [1], [Have WildMidi 0.2.2 or earlier library]))
+
   if test "x$HAVE_WILDMIDI" = "xyes"; then
 	 WILDMIDI_CFLAGS=
 	 WILDMIDI_LIBS=-lWildMidi
