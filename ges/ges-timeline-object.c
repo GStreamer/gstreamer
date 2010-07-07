@@ -35,6 +35,9 @@ gboolean
 ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
     GESTrackObject * trackobj, GstElement * gnlobj);
 
+gboolean
+ges_timeline_object_create_track_objects_func (GESTimelineObject
+    * object, GESTrack * track);
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
 
@@ -116,6 +119,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->set_property = ges_timeline_object_set_property;
   object_class->dispose = ges_timeline_object_dispose;
   object_class->finalize = ges_timeline_object_finalize;
+  klass->create_track_objects = ges_timeline_object_create_track_objects_func;
 
   /**
    * GESTimelineObject:start
@@ -212,6 +216,50 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   GST_DEBUG ("Returning res:%p", res);
 
   return res;
+}
+
+/**
+ * ges_timeline_object_create_track_objects:
+ * @object: The origin #GESTimelineObject
+ * @track: The #GESTrack to create each #GESTrackObject for.
+ *
+ * Creates all #GESTrackObjects supported by this object and adds them to the
+ * provided track. The the track is responsible for calling
+ * #ges_timeline_release_track_object on these objects when it is finished
+ * with them.
+ *
+ * Returns: True if each track object was created successfully, or false if an
+ * error occured.
+ */
+
+gboolean
+ges_timeline_object_create_track_objects (GESTimelineObject * object,
+    GESTrack * track)
+{
+  GESTimelineObjectClass *klass;
+
+  klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+
+  if (!(klass->create_track_objects)) {
+    GST_INFO ("no create_track_objects implentation");
+    return FALSE;
+  }
+
+  return klass->create_track_objects (object, track);
+}
+
+gboolean
+ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
+    GESTrack * track)
+{
+  GESTrackObject *result;
+
+  result = ges_timeline_object_create_track_object (object, track);
+  if (!result) {
+    GST_WARNING ("couldn't create track object");
+    return FALSE;
+  }
+  return ges_track_add_object (track, result);
 }
 
 /**

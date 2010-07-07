@@ -69,9 +69,8 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  *
  * Creates the 'primary track object for this @object.
  * 
- * Implementors should override this function if they only need to create one
- * track object per track. If the implementor wishes to create multiple track
- * objects, they should override create_track_objects instead.
+ * Implementors should override this function if they only interested in
+ * creating a single custom track object per track.
  *
  * The implementer of this function shall return the proper #GESTrackObject
  * that should be controlled by @object for the given @track.
@@ -83,6 +82,18 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  */
 typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
 						  GESTrack * track);
+
+/**
+ * CreateTrackObjectFunc:
+ * @object: a #GESTimelineObject
+ * @track: a #GESTimelineTrack
+ * 
+ * Create all track objects this object handles for this type of track.
+ *
+ * Returns: %TRUE on success %FALSE on failure.
+ */
+typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
+                                            GESTrack *track);
 
 /**
  * GES_TIMELINE_OBJECT_START:

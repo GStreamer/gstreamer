@@ -265,7 +265,9 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
     GESTrack *track = priv->track;
 
     GST_LOG ("Trying with track %p", track);
-    ges_timeline_object_create_track_objects (object, track);
+    if (!ges_timeline_object_create_track_objects (object, track)) {
+      GST_WARNING ("error creating track objects");
+    }
   }
 }
 
