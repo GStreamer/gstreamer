@@ -709,7 +709,7 @@ main (int argc, char *argv[])
 #endif
     {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
-    {"no-sigusr-handler", 'p', 0, G_OPTION_ARG_NONE, &no_sigusr_handler,
+    {"no-sigusr-handler", '\0', 0, G_OPTION_ARG_NONE, &no_sigusr_handler,
         N_("Do not install signal handlers for SIGUSR1 and SIGUSR2"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},

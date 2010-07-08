@@ -50,7 +50,7 @@ Save XML representation of pipeline to FILE and exit (DEPRECATED, DO NOT USE)
 .B  \-f, \-\-no\-fault
 Do not install a fault handler
 .TP 8
-.B  \-p, \-\-no\-sigusr-handler
+.B  \-\-no\-sigusr-handler
 Do not install signal handlers for SIGUSR1 (play) and SIGUSR2 (stop)
 .TP 8
 .B  \-T, \-\-trace
