@@ -1090,6 +1090,10 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
  * guaranteed that linking the pads will work, though it should work in most
  * cases.
  *
+ * This function will first attempt to find a compatible unlinked ALWAYS pad,
+ * and if none can be found, it will request a compatible REQUEST pad by looking
+ * at the templates of @element.
+ *
  * Returns: the #GstPad to which a link can be made, or %NULL if one cannot be
  * found. gst_object_unref() after usage.
  */
