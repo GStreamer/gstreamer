@@ -401,7 +401,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
       /* running time changed, either with a PAUSED or a flush, we need to check
        * if there is a new clock & update the base time */
-      if (last_start_time != start_time) {
+      if (update_clock || last_start_time != start_time) {
         GST_DEBUG_OBJECT (pipeline, "Need to update start_time");
 
         /* when going to PLAYING, select a clock when needed. If we just got
@@ -559,6 +559,20 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
         reset_start_time (pipeline);
 
       break;
+    }
+    case GST_MESSAGE_CLOCK_LOST:
+    {
+      GstClock *clock;
+
+      gst_message_parse_clock_lost (message, &clock);
+
+      GST_OBJECT_LOCK (bin);
+      if (clock == GST_ELEMENT_CAST (bin)->clock) {
+        GST_DEBUG_OBJECT (bin, "Used clock '%s' got lost",
+            GST_OBJECT_NAME (clock));
+        pipeline->priv->update_clock = TRUE;
+      }
+      GST_OBJECT_UNLOCK (bin);
     }
     default:
       break;
