@@ -557,7 +557,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
         if (!strcmp (id_str, "Exif")) {
           const guint8 *exif_data = NULL;
-          guint exif_size = size - 2;
+          guint exif_size = size - 2 - 6;       /* 6 bytes for "Exif\0\0 id" */
           GstTagList *tags;
           GstBuffer *buf;
 
@@ -582,7 +582,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
               marker, id_str, size - 2);
         } else if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
           const guint8 *xmp_data = NULL;
-          guint xmp_size = size - 2 - 29;
+          guint xmp_size = size - 2 - 29;       /* 29 bytes for the id */
           GstTagList *tags;
           GstBuffer *buf;
 
