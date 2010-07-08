@@ -117,8 +117,14 @@ gst_wasapi_src_init (GstWasapiSrc * self, GstWasapiSrcClass * gclass)
   self->start_time = GST_CLOCK_TIME_NONE;
   self->next_time = GST_CLOCK_TIME_NONE;
 
+#if GST_CHECK_VERSION(0, 10, 31) || (GST_CHECK_VERSION(0, 10, 30) && GST_VERSION_NANO > 0)
+  self->clock = gst_audio_clock_new_full ("GstWasapiSrcClock",
+      gst_wasapi_src_get_time, gst_object_ref (self),
+      (GDestroyNotify) gst_object_unref);
+#else
   self->clock = gst_audio_clock_new ("GstWasapiSrcClock",
       gst_wasapi_src_get_time, self);
+#endif
 
   CoInitialize (NULL);
 }
