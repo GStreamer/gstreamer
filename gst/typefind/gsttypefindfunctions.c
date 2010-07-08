@@ -3905,7 +3905,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *bmp_exts[] = { "bmp", NULL };
   static const gchar *tiff_exts[] = { "tif", "tiff", NULL };
   static const gchar *matroska_exts[] = { "mkv", "mka", NULL };
-  static const gchar *webm_exts[] = { "webm", "weba", "webv", NULL };
+  static const gchar *webm_exts[] = { "webm", NULL };
   static const gchar *mve_exts[] = { "mve", NULL };
   static const gchar *dv_exts[] = { "dv", "dif", NULL };
   static const gchar *amr_exts[] = { "amr", NULL };
