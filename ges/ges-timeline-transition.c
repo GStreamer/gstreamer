@@ -59,11 +59,21 @@ ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
     GESVideoTransitionType value)
 {
   GList *tmp;
+  GESTimelineTransition *trself = (GESTimelineTransition *) self;
+  GESVideoTransitionType old;
+  old = trself->vtype;
 
-  for (tmp = self->trackobjects; tmp; tmp = g_list_next (tmp))
-    if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data))
-      ges_track_video_transition_set_type ((GESTrackVideoTransition *)
-          tmp->data, value);
+  for (tmp = self->trackobjects; tmp; tmp = g_list_next (tmp)) {
+    GESTrackVideoTransition *obj;
+    if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
+      obj = (GESTrackVideoTransition *) tmp->data;
+      if (!ges_track_video_transition_set_type (obj, value))
+        return;
+    }
+  }
+
+  trself->vtype = value;
+  return;
 }
 
 static void
@@ -73,7 +83,7 @@ ges_timeline_transition_get_property (GObject * object,
   GESTimelineTransition *self = GES_TIMELINE_TRANSITION (object);
   switch (property_id) {
     case PROP_VTYPE:
-      self->vtype = g_value_get_enum (value);
+      g_value_set_enum (value, self->vtype);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -85,12 +95,11 @@ ges_timeline_transition_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
   GESTimelineObject *self = GES_TIMELINE_OBJECT (object);
-  GESTimelineTransition *trself = GES_TIMELINE_TRANSITION (object);
 
   switch (property_id) {
     case PROP_VTYPE:
-      trself->vtype = g_value_get_enum (value);
-      ges_timeline_transition_update_vtype_internal (self, trself->vtype);
+      ges_timeline_transition_update_vtype_internal (self,
+          g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

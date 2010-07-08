@@ -86,8 +86,10 @@ struct _GESTrackVideoTransitionClass {
 
 GType ges_track_video_transition_get_type (void);
 
-void
-ges_track_video_transition_set_type (GESTrackVideoTransition * self, GESVideoTransitionType type);
+gboolean
+ges_track_video_transition_set_type (GESTrackVideoTransition * self,
+GESVideoTransitionType type);
+;
 
 GESTrackVideoTransition* ges_track_video_transition_new (void);
 

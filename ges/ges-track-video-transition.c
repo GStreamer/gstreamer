@@ -309,7 +309,7 @@ ges_track_video_transition_duration_changed (GESTrackObject * object,
   GST_LOG ("done updating controller");
 }
 
-void
+gboolean
 ges_track_video_transition_set_type (GESTrackVideoTransition * self,
     GESVideoTransitionType type)
 {
@@ -320,12 +320,13 @@ ges_track_video_transition_set_type (GESTrackVideoTransition * self,
           (self->type == GES_VIDEO_TRANSITION_TYPE_CROSSFADE))) {
     GST_WARNING
         ("Changing between 'crossfade' and other types is not supported");
-    return;
+    return FALSE;
   }
 
   self->type = type;
   if (self->smpte && (type != GES_VIDEO_TRANSITION_TYPE_CROSSFADE))
     g_object_set (self->smpte, "type", (gint) type, NULL);
+  return TRUE;
 }
 
 GESTrackVideoTransition *
