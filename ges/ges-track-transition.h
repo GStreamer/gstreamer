@@ -75,8 +75,6 @@ struct _GESTrackTransitionClass {
 
     /* <public> */
     GstElement* (*create_element) (GESTrackTransition *self);
-
-  void (*duration_changed) (GESTrackTransition *self);
 };
 
 GType ges_track_transition_get_type (void);
