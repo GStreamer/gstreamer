@@ -1988,6 +1988,10 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     }
     ref_str->segment_index--;
     seg = &ref_str->segments[ref_str->segment_index];
+    /* convert seg->media_start to mov format time for timestamp comparison */
+    seg_media_start_mov =
+        gst_util_uint64_scale (seg->media_start, ref_str->timescale,
+        GST_SECOND);
   }
   /* Calculate time position of the keyframe and where we should stop */
   k_pos =
