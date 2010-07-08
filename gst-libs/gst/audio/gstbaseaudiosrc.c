@@ -250,8 +250,9 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
    * value based on negotiated format. */
   GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
 
-  baseaudiosrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
-      (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
+  baseaudiosrc->clock = gst_audio_clock_new_full ("GstAudioSrcClock",
+      (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time,
+      gst_object_ref (baseaudiosrc), (GDestroyNotify) gst_object_unref);
 
   /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
