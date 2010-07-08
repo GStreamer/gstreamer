@@ -37,7 +37,7 @@ enum
 
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackTransition * self);
+ges_track_audio_transition_duration_changed (GESTrackObject * self, guint64);
 
 static GstElement *ges_track_audio_transition_create_element (GESTrackTransition
     * self);
@@ -56,9 +56,11 @@ static void
 ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
 {
   GObjectClass *object_class;
+  GESTrackObjectClass *toclass;
   GESTrackTransitionClass *pclass;
 
   object_class = G_OBJECT_CLASS (klass);
+  toclass = GES_TRACK_OBJECT_CLASS (klass);
   pclass = GES_TRACK_TRANSITION_CLASS (klass);
 
   object_class->get_property = ges_track_audio_transition_get_property;
@@ -66,8 +68,9 @@ ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
   object_class->dispose = ges_track_audio_transition_dispose;
   object_class->finalize = ges_track_audio_transition_finalize;
 
+  toclass->duration_changed = ges_track_audio_transition_duration_changed;
+
   pclass->create_element = ges_track_audio_transition_create_element;
-  pclass->duration_changed = ges_track_audio_transition_duration_changed;
 
 }
 
@@ -227,11 +230,12 @@ ges_track_audio_transition_create_element (GESTrackTransition * object)
 }
 
 static void
-ges_track_audio_transition_duration_changed (GESTrackTransition * object)
+ges_track_audio_transition_duration_changed (GESTrackObject * object,
+    guint64 duration)
 {
   GESTrackAudioTransition *self;
-  guint64 duration = GES_TRACK_OBJECT_DURATION (object);
-  GstElement *gnlobj = GES_TRACK_OBJECT (object)->gnlobject;
+  GstElement *gnlobj = object->gnlobject;
+
   GValue zero = { 0, };
   GValue one = { 0, };
 

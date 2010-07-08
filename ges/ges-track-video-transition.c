@@ -44,7 +44,8 @@ static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
     GstElement ** smpteref);
 
 static void
-ges_track_video_transition_duration_changed (GESTrackTransition * self);
+ges_track_video_transition_duration_changed (GESTrackObject * self,
+    guint64 duration);
 
 static GstElement *ges_track_video_transition_create_element (GESTrackTransition
     * self);
@@ -63,9 +64,11 @@ static void
 ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
 {
   GObjectClass *object_class;
+  GESTrackObjectClass *toclass;
   GESTrackTransitionClass *pclass;
 
   object_class = G_OBJECT_CLASS (klass);
+  toclass = GES_TRACK_OBJECT_CLASS (klass);
   pclass = GES_TRACK_TRANSITION_CLASS (klass);
 
   object_class->get_property = ges_track_video_transition_get_property;
@@ -73,8 +76,9 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   object_class->dispose = ges_track_video_transition_dispose;
   object_class->finalize = ges_track_video_transition_finalize;
 
+  toclass->duration_changed = ges_track_video_transition_duration_changed;
+
   pclass->create_element = ges_track_video_transition_create_element;
-  pclass->duration_changed = ges_track_video_transition_duration_changed;
 }
 
 static void
@@ -276,12 +280,12 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
 }
 
 static void
-ges_track_video_transition_duration_changed (GESTrackTransition * object)
+ges_track_video_transition_duration_changed (GESTrackObject * object,
+    guint64 duration)
 {
   GValue start_value = { 0, };
   GValue end_value = { 0, };
-  guint64 duration = GES_TRACK_OBJECT_DURATION (object);
-  GstElement *gnlobj = GES_TRACK_OBJECT (object)->gnlobject;
+  GstElement *gnlobj = object->gnlobject;
   GESTrackVideoTransition *self = GES_TRACK_VIDEO_TRANSITION (object);
 
   GST_LOG ("updating controller");
