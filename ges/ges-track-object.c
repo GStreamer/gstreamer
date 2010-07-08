@@ -316,6 +316,10 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
   guint64 start;
+  GESTrackObjectClass *klass;
+
+  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+
   g_object_get (gnlobject, "start", &start, NULL);
 
   GST_DEBUG ("gnlobject start : %" GST_TIME_FORMAT " current : %"
@@ -323,6 +327,8 @@ gnlobject_start_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
   if (start != obj->start) {
     obj->start = start;
+    if (klass->start_changed)
+      klass->start_changed (obj, start);
     /* FIXME : emit changed */
   }
 }
@@ -333,6 +339,10 @@ gnlobject_media_start_cb (GstElement * gnlobject,
     GParamSpec * arg G_GNUC_UNUSED, GESTrackObject * obj)
 {
   guint64 start;
+  GESTrackObjectClass *klass;
+
+  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+
   g_object_get (gnlobject, "media-start", &start, NULL);
 
   GST_DEBUG ("gnlobject in-point : %" GST_TIME_FORMAT " current : %"
@@ -340,6 +350,8 @@ gnlobject_media_start_cb (GstElement * gnlobject,
 
   if (start != obj->inpoint) {
     obj->inpoint = start;
+    if (klass->media_start_changed)
+      klass->media_start_changed (obj, start);
     /* FIXME : emit changed */
   }
 }
@@ -349,12 +361,18 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
   guint32 priority;
+  GESTrackObjectClass *klass;
+
+  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+
   g_object_get (gnlobject, "priority", &priority, NULL);
 
   GST_DEBUG ("gnlobject priority : %d current : %d", priority, obj->priority);
 
   if (priority != obj->priority) {
     obj->priority = priority;
+    if (klass->priority_changed)
+      klass->priority_changed (obj, priority);
     /* FIXME : emit changed */
   }
 }
@@ -364,6 +382,10 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
   guint64 duration;
+  GESTrackObjectClass *klass;
+
+  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+
   g_object_get (gnlobject, "duration", &duration, NULL);
 
   GST_DEBUG ("gnlobject duration : %" GST_TIME_FORMAT " current : %"
@@ -371,6 +393,8 @@ gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
   if (duration != obj->duration) {
     obj->duration = duration;
+    if (klass->duration_changed)
+      klass->duration_changed (obj, duration);
     /* FIXME : emit changed */
   }
 }
@@ -380,12 +404,18 @@ gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
     GESTrackObject * obj)
 {
   gboolean active;
+  GESTrackObjectClass *klass;
+
+  klass = GES_TRACK_OBJECT_GET_CLASS (obj);
+
   g_object_get (gnlobject, "active", &active, NULL);
 
   GST_DEBUG ("gnlobject active : %d current : %d", active, obj->active);
 
   if (active != obj->active) {
     obj->active = active;
+    if (klass->active_changed)
+      klass->active_changed (obj, active);
     /* FIXME : emit changed */
   }
 }

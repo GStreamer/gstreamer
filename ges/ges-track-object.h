@@ -122,6 +122,11 @@ struct _GESTrackObject {
  * GESTrackObjectClass:
  * @parent_class: parent class
  * @create_gnl_object: method to create the GNonLin container object.
+ * @start_changed: start property of gnlobject has changed
+ * @media_start_changed: media-start property of gnlobject has changed
+ * @duration_changed: duration property glnobject has changed
+ * @priority_changed: duration property glnobject has changed
+ * @active_changed: active property of gnlobject has changed
  *
  * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
@@ -136,6 +141,12 @@ struct _GESTrackObjectClass {
   /*< public >*/
   /* virtual methods for subclasses */
   gboolean (*create_gnl_object) (GESTrackObject * object);
+
+  void (*start_changed) (GESTrackObject *object, guint64 start);
+  void (*media_start_changed) (GESTrackObject *object, guint64 media_start);
+  void (*priority_changed) (GESTrackObject *object, guint priority);
+  void (*duration_changed) (GESTrackObject *object, guint64 duration);
+  void (*active_changed) (GESTrackObject *object, gboolean active);
 };
 
 GType ges_track_object_get_type (void);
