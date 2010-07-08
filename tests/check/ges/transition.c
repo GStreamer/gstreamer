@@ -161,6 +161,7 @@ GST_START_TEST (test_transition_properties)
   assert_equals_int (GES_TRACK_VIDEO_TRANSITION (trackobject)->type, 1);
   assert_equals_int (GES_TIMELINE_TRANSITION (object)->vtype, 1);
 
+  ges_timeline_object_release_track_object (object, trackobject);
   g_object_unref (object);
   g_object_unref (track);
 }
