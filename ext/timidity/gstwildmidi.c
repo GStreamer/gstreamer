@@ -69,9 +69,9 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_LINEAR_VOLUME,
-  ARG_HIGH_QUALITY,
+  PROP_0,
+  PROP_LINEAR_VOLUME,
+  PROP_HIGH_QUALITY,
   /* FILL ME */
 };
 
@@ -235,13 +235,13 @@ gst_wildmidi_class_init (GstWildmidiClass * klass)
   gobject_class->set_property = gst_wildmidi_set_property;
   gobject_class->get_property = gst_wildmidi_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LINEAR_VOLUME,
+  g_object_class_install_property (gobject_class, PROP_LINEAR_VOLUME,
       g_param_spec_boolean ("linear-volume", "Linear volume",
-          "Linear volume", TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Linear volume", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_HIGH_QUALITY,
+  g_object_class_install_property (gobject_class, PROP_HIGH_QUALITY,
       g_param_spec_boolean ("high-quality", "High Quality",
-          "High Quality", TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "High Quality", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_wildmidi_change_state;
 }
@@ -911,7 +911,7 @@ gst_wildmidi_set_property (GObject * object, guint prop_id,
   wildmidi = GST_WILDMIDI (object);
 
   switch (prop_id) {
-    case ARG_LINEAR_VOLUME:
+    case PROP_LINEAR_VOLUME:
       GST_OBJECT_LOCK (object);
       wildmidi->linear_volume = g_value_get_boolean (value);
       if (wildmidi->song)
@@ -924,7 +924,7 @@ gst_wildmidi_set_property (GObject * object, guint prop_id,
 #endif
       GST_OBJECT_UNLOCK (object);
       break;
-    case ARG_HIGH_QUALITY:
+    case PROP_HIGH_QUALITY:
       GST_OBJECT_LOCK (object);
       wildmidi->high_quality = g_value_get_boolean (value);
       if (wildmidi->song)
@@ -954,12 +954,12 @@ gst_wildmidi_get_property (GObject * object, guint prop_id,
   wildmidi = GST_WILDMIDI (object);
 
   switch (prop_id) {
-    case ARG_LINEAR_VOLUME:
+    case PROP_LINEAR_VOLUME:
       GST_OBJECT_LOCK (object);
       g_value_set_boolean (value, wildmidi->linear_volume);
       GST_OBJECT_UNLOCK (object);
       break;
-    case ARG_HIGH_QUALITY:
+    case PROP_HIGH_QUALITY:
       GST_OBJECT_LOCK (object);
       g_value_set_boolean (value, wildmidi->high_quality);
       GST_OBJECT_UNLOCK (object);
