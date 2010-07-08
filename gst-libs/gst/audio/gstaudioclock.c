@@ -45,6 +45,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_audio_clock_debug);
 static void gst_audio_clock_class_init (GstAudioClockClass * klass);
 static void gst_audio_clock_init (GstAudioClock * clock);
 
+static void gst_audio_clock_dispose (GObject * object);
+
 static GstClockTime gst_audio_clock_get_internal_time (GstClock * clock);
 
 static GstSystemClockClass *parent_class = NULL;
@@ -81,11 +83,14 @@ static void
 gst_audio_clock_class_init (GstAudioClockClass * klass)
 {
   GstClockClass *gstclock_class;
+  GObjectClass *gobject_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->dispose = gst_audio_clock_dispose;
   gstclock_class->get_internal_time = gst_audio_clock_get_internal_time;
 
   GST_DEBUG_CATEGORY_INIT (gst_audio_clock_debug, "audioclock", 0,
@@ -99,6 +104,19 @@ gst_audio_clock_init (GstAudioClock * clock)
   clock->last_time = 0;
   clock->abidata.ABI.time_offset = 0;
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
+}
+
+static void
+gst_audio_clock_dispose (GObject * object)
+{
+  GstAudioClock *clock = GST_AUDIO_CLOCK (object);
+
+  if (clock->abidata.ABI.destroy_notify && clock->user_data)
+    clock->abidata.ABI.destroy_notify (clock->user_data);
+  clock->abidata.ABI.destroy_notify = NULL;
+  clock->user_data = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**
@@ -122,6 +140,35 @@ gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
 
   aclock->func = func;
   aclock->user_data = user_data;
+
+  return (GstClock *) aclock;
+}
+
+/**
+ * gst_audio_clock_new_full:
+ * @name: the name of the clock
+ * @func: a function
+ * @user_data: user data
+ * @destroy_notify: #GDestroyNotify for @user_data
+ *
+ * Create a new #GstAudioClock instance. Whenever the clock time should be
+ * calculated it will call @func with @user_data. When @func returns
+ * #GST_CLOCK_TIME_NONE, the clock will return the last reported time.
+ *
+ * Returns: a new #GstAudioClock casted to a #GstClock.
+ *
+ * Since: 0.10.31
+ */
+GstClock *
+gst_audio_clock_new_full (const gchar * name, GstAudioClockGetTimeFunc func,
+    gpointer user_data, GDestroyNotify destroy_notify)
+{
+  GstAudioClock *aclock =
+      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, "name", name, NULL));
+
+  aclock->func = func;
+  aclock->user_data = user_data;
+  aclock->abidata.ABI.destroy_notify = destroy_notify;
 
   return (GstClock *) aclock;
 }
