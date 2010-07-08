@@ -48,6 +48,11 @@ ges_track_type_get_type (void)
 
 GEnumValue transition_types[] = {
   {
+        0,
+        "Transition has not been set",
+      "none"}
+  ,
+  {
         1,
         "A bar moves from left to right",
       "bar-wipe-lr"}

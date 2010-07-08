@@ -54,6 +54,7 @@ typedef enum {
 
 /**
  * GESVideoTransitionType:
+ * @GES_VIDEO_TRANSITION_TYPE_NONE: Transition type has not been set,
  * @GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR: A bar moves from left to right,
  * @GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_TB: A bar moves from top to bottom,
  * @GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TL: A box expands from the upper-left corner to the lower-right corner,
@@ -129,6 +130,7 @@ typedef enum {
  */
 
 typedef enum {
+  GES_VIDEO_TRANSITION_TYPE_NONE = 0,
   GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR = 1,
   GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_TB = 2,
   GES_VIDEO_TRANSITION_TYPE_BOX_WIPE_TL = 3,
