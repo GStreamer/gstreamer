@@ -118,6 +118,12 @@ GST_START_TEST (test_layer_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (object), 0);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
+  /* check priority offsets */
+  ges_track_object_set_priority_offset_internal (trackobject, 1);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 1, TRUE);
+  g_object_set (object, "priority", 5, NULL);
+  gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 6, TRUE);
+
   g_object_unref (trackobject);
   fail_unless (ges_timeline_layer_remove_object (layer, object));
   fail_unless (ges_timeline_remove_track (timeline, track));
