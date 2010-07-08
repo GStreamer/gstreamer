@@ -155,7 +155,7 @@ gst_ks_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details (element_class, "KsVideoSrc",
+  gst_element_class_set_details_simple (element_class, "KsVideoSrc",
       "Source/Video",
       "Stream data from a video capture device through Windows kernel streaming",
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>, "
