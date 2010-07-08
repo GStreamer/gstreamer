@@ -671,6 +671,8 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
      * again a valid syncpoint on the next one (28 bits) for certainty. We
      * require 4 kB, which is quite a lot, since frames are generally 200-400
      * bytes.
+     * LOAS has 2 possible syncwords, which are 11 bits and 16 bits long.
+     * The following stream syntax depends on which one is found.
      */
     if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
       break;
@@ -740,6 +742,45 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
 
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
         gst_caps_unref (caps);
+        break;
+      }
+
+      GST_DEBUG ("No next frame found... (should have been at 0x%x)", len);
+    } else if (G_UNLIKELY (((snc & 0xffe0) == 0x56e0) || (snc == 0x4de1))) {
+      /* LOAS frame */
+
+      GST_DEBUG ("Found one LOAS syncword at offset 0x%" G_GINT64_MODIFIER
+          "x, tracing next...", c.offset);
+
+      /* check length of frame for each type of detectable LOAS streams */
+      if (snc == 0x4de1) {
+        /* EPAudioSyncStream */
+        len = ((c.data[2] & 0x0f) << 9) | (c.data[3] << 1) |
+            ((c.data[4] & 0x80) >> 7);
+        /* add size of EP sync stream header */
+        len += 7;
+      } else {
+        /* AudioSyncStream */
+        len = ((c.data[1] & 0x1f) << 8) | c.data[2];
+        /* add size of sync stream header */
+        len += 3;
+      }
+
+      if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+        GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+        goto next;
+      }
+
+      /* check if there's a second LOAS frame */
+      snc = GST_READ_UINT16_BE (c.data + len);
+      if (((snc & 0xffe0) == 0x56e0) || (snc == 0x4de1)) {
+        GST_DEBUG ("Found second LOAS syncword at offset 0x%"
+            G_GINT64_MODIFIER "x, framelen %u", c.offset, len);
+
+        gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+            "framed", G_TYPE_BOOLEAN, FALSE,
+            "mpegversion", G_TYPE_INT, 4,
+            "stream-format", G_TYPE_STRING, "loas", NULL);
         break;
       }
 
@@ -3966,7 +4007,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *compress_exts[] = { "Z", NULL };
   static const gchar *m4a_exts[] = { "m4a", NULL };
   static const gchar *q3gp_exts[] = { "3gp", NULL };
-  static const gchar *aac_exts[] = { "aac", NULL };
+  static const gchar *aac_exts[] = { "aac", "adts", "adif", "loas", NULL };
   static const gchar *spc_exts[] = { "spc", NULL };
   static const gchar *wavpack_exts[] = { "wv", "wvp", NULL };
   static const gchar *wavpack_correction_exts[] = { "wvc", NULL };
@@ -4199,7 +4240,7 @@ plugin_init (GstPlugin * plugin)
       NULL, CMML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-executable",
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER (plugin, "adts_mpeg_stream", GST_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "aac", GST_RANK_SECONDARY,
       aac_type_find, aac_exts, AAC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-spc", GST_RANK_SECONDARY,
       spc_exts, "SNES-SPC700 Sound File Data", 27, GST_TYPE_FIND_MAXIMUM);
