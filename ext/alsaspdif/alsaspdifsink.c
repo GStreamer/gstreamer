@@ -187,7 +187,13 @@ static void
 alsaspdifsink_init (AlsaSPDIFSink * sink, AlsaSPDIFSinkClass * g_class)
 {
   /* Create the provided clock. */
+#if GST_CHECK_VERSION(0, 10, 31) || (GST_CHECK_VERSION(0, 10, 30) && GST_VERSION_NANO > 0)
+  sink->clock =
+      gst_audio_clock_new_full ("clock", alsaspdifsink_get_time,
+      gst_object_ref (sink), (GDestroyNotify) gst_object_unref);
+#else
   sink->clock = gst_audio_clock_new ("clock", alsaspdifsink_get_time, sink);
+#endif
 
   sink->card = 0;
   sink->device = g_strdup ("default");
