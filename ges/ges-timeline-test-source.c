@@ -309,16 +309,19 @@ GESTimelineTestSource *
 ges_timeline_test_source_new_for_nick (gchar * nick)
 {
   GEnumValue *value;
-  int i;
+  GEnumClass *klass;
+  GESTimelineTestSource *ret = NULL;
 
-  for (i = 0, value = &vpattern_enum_values[i]; value->value_nick;
-      value = &vpattern_enum_values[i++]) {
-    if (!strcmp (nick, value->value_nick)) {
-      return g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, "vpattern",
-          (gint) value->value, NULL);
-    }
-    value++;
+  klass = G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_TEST_PATTERN_TYPE));
+  if (!klass)
+    return NULL;
+
+  value = g_enum_get_value_by_nick (klass, nick);
+  if (value) {
+    ret = g_object_new (GES_TYPE_TIMELINE_TEST_SOURCE, "vpattern",
+        (gint) value->value, NULL);
   }
 
-  return NULL;
+  g_type_class_unref (klass);
+  return ret;
 }

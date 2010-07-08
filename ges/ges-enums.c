@@ -468,7 +468,7 @@ ges_text_halign_get_type (void)
 }
 
 /* table more-or-less copied from gstvideotestsrc.c */
-GEnumValue vpattern_enum_values[] = {
+static GEnumValue vpattern_enum_values[] = {
   {GES_VIDEO_TEST_PATTERN_SMPTE, "SMPTE 100% color bars", "smpte"}
   ,
   {GES_VIDEO_TEST_PATTERN_SNOW, "Random (television snow)", "snow"}

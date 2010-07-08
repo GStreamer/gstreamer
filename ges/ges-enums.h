@@ -292,8 +292,6 @@ typedef enum {
 #define GES_VIDEO_TEST_PATTERN_TYPE\
   ges_video_test_pattern_get_type()
 
-extern GEnumValue vpattern_enum_values[];
-
 GType ges_video_test_pattern_get_type (void);
 
 G_END_DECLS
