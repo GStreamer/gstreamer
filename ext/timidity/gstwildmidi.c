@@ -75,6 +75,9 @@ enum
   /* FILL ME */
 };
 
+#define DEFAULT_LINEAR_VOLUME    TRUE
+#define DEFAULT_HIGH_QUALITY     TRUE
+
 static void gst_wildmidi_finalize (GObject * object);
 
 static gboolean gst_wildmidi_sink_event (GstPad * pad, GstEvent * event);
@@ -237,11 +240,13 @@ gst_wildmidi_class_init (GstWildmidiClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LINEAR_VOLUME,
       g_param_spec_boolean ("linear-volume", "Linear volume",
-          "Linear volume", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Linear volume", DEFAULT_LINEAR_VOLUME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HIGH_QUALITY,
       g_param_spec_boolean ("high-quality", "High Quality",
-          "High Quality", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "High Quality", DEFAULT_HIGH_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_wildmidi_change_state;
 }
@@ -282,6 +287,9 @@ gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
   filter->adapter = gst_adapter_new ();
 
   filter->bytes_per_frame = WILDMIDI_BPS;
+
+  filter->high_quality = DEFAULT_HIGH_QUALITY;
+  filter->linear_volume = DEFAULT_LINEAR_VOLUME;
 }
 
 static void
