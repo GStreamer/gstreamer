@@ -200,11 +200,19 @@ GESTimelineTransition *
 ges_timeline_transition_new_for_nick (gchar * nick)
 {
   GEnumValue *value;
+  GEnumClass *klass;
+  GESTimelineTransition *ret = NULL;
 
-  for (value = &transition_types[0]; value->value_name; value++)
-    if (!strcmp (nick, value->value_nick))
-      return g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype",
-          (gint) value->value, NULL);
+  klass = G_ENUM_CLASS (g_type_class_ref (GES_VIDEO_TRANSITION_TYPE_TYPE));
+  if (!klass)
+    return NULL;
 
-  return NULL;
+  value = g_enum_get_value_by_nick (klass, nick);
+  if (value) {
+    ret = g_object_new (GES_TYPE_TIMELINE_TRANSITION, "vtype",
+        (gint) value->value, NULL);
+  }
+
+  g_type_class_unref (klass);
+  return ret;
 }
