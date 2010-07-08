@@ -57,6 +57,7 @@ enum
   PROP_INPOINT,
   PROP_DURATION,
   PROP_PRIORITY,
+  PROP_PRIORITY_OFFSET,
   PROP_ACTIVE
 };
 
@@ -99,6 +100,9 @@ ges_track_object_get_property (GObject * object, guint property_id,
     case PROP_PRIORITY:
       g_value_set_uint (value, tobj->base_priority);
       break;
+    case PROP_PRIORITY_OFFSET:
+      g_value_set_uint (value, tobj->priority_offset);
+      break;
     case PROP_ACTIVE:
       g_value_set_boolean (value, tobj->active);
       break;
@@ -125,6 +129,10 @@ ges_track_object_set_property (GObject * object, guint property_id,
       break;
     case PROP_PRIORITY:
       ges_track_object_set_priority_internal (tobj, g_value_get_uint (value));
+      break;
+    case PROP_PRIORITY_OFFSET:
+      ges_track_object_set_priority_offset_internal (tobj, g_value_get_uint
+          (value));
       break;
     case PROP_ACTIVE:
       ges_track_object_set_active (tobj, g_value_get_boolean (value));
@@ -204,6 +212,17 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
+  /**
+   * GESTrackObject:priority-offset
+   *
+   * A value added to the "priority" value. Needed for timeline objects
+   * that create multiple track objects per track.
+   */
+  g_object_class_install_property (object_class, PROP_PRIORITY_OFFSET,
+      g_param_spec_uint ("priority-offset", "Priority Offset",
+          "An offset from the base priority", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE));
 
   /**
    * GESTrackObject:active

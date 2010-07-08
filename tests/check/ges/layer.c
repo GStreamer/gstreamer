@@ -119,7 +119,7 @@ GST_START_TEST (test_layer_properties)
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
   /* check priority offsets */
-  ges_track_object_set_priority_offset_internal (trackobject, 1);
+  g_object_set (trackobject, "priority-offset", 1, NULL);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 1, TRUE);
   g_object_set (object, "priority", 5, NULL);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 6, TRUE);
