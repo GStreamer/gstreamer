@@ -641,7 +641,7 @@ camerabin_setup_view_elements (GstCameraBin * camera)
   /* Find the actual sink if using bin like autovideosink */
   if (GST_IS_BIN (camera->view_sink)) {
     GList *child = NULL, *children = GST_BIN_CHILDREN (camera->view_sink);
-    for (child = children; child != NULL; child = g_list_next (children)) {
+    for (child = children; child != NULL; child = g_list_next (child)) {
       GObject *ch = G_OBJECT (child->data);
       if (g_object_class_find_property (G_OBJECT_GET_CLASS (ch), "sync")) {
         g_object_set (G_OBJECT (ch), "sync", FALSE, "qos", FALSE, "async",
