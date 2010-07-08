@@ -272,8 +272,9 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
   baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
   baseaudiosink->priv->slave_method = DEFAULT_SLAVE_METHOD;
 
-  baseaudiosink->provided_clock = gst_audio_clock_new ("GstAudioSinkClock",
-      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
+  baseaudiosink->provided_clock = gst_audio_clock_new_full ("GstAudioSinkClock",
+      (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time,
+      gst_object_ref (baseaudiosink), (GDestroyNotify) gst_object_unref);
 
   GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
   GST_BASE_SINK (baseaudiosink)->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
