@@ -78,6 +78,8 @@ void gnlobject_duration_cb (GstElement * gnlobject, GParamSpec * arg
 void gnlobject_active_cb (GstElement * gnlobject, GParamSpec * arg
     G_GNUC_UNUSED, GESTrackObject * obj);
 
+static gboolean ges_track_object_update_priority (GESTrackObject * object);
+
 static void
 ges_track_object_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -95,7 +97,7 @@ ges_track_object_get_property (GObject * object, guint property_id,
       g_value_set_uint64 (value, tobj->duration);
       break;
     case PROP_PRIORITY:
-      g_value_set_uint (value, tobj->priority);
+      g_value_set_uint (value, tobj->base_priority);
       break;
     case PROP_ACTIVE:
       g_value_set_boolean (value, tobj->active);
@@ -223,7 +225,7 @@ ges_track_object_init (GESTrackObject * self)
   self->pending_start = 0;
   self->pending_inpoint = 0;
   self->pending_duration = GST_SECOND;
-  self->pending_priority = 1;
+  self->pending_gnl_priority = 1;
   self->pending_active = TRUE;
 }
 
@@ -279,19 +281,61 @@ ges_track_object_set_duration_internal (GESTrackObject * object,
   return TRUE;
 }
 
+/* NOTE: we handle priority differently than other properties! the gnlpriority
+ * is object->base_priority + object->priority_offset! A change to either one
+ * will trigger an update to the gnonlin priority and a subsequent property
+ * notification. 
+ */
+
 gboolean
 ges_track_object_set_priority_internal (GESTrackObject * object,
     guint32 priority)
 {
+  guint32 save;
+  save = object->base_priority;
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
+  object->base_priority = priority;
+  if (!ges_track_object_update_priority (object)) {
+    object->base_priority = save;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+gboolean
+ges_track_object_set_priority_offset_internal (GESTrackObject * object,
+    guint32 priority_offset)
+{
+  guint32 save;
+  save = object->priority_offset;
+  GST_DEBUG ("object:%p, offset:%d", priority_offset);
+
+  object->priority_offset = priority_offset;
+  if (!ges_track_object_update_priority (object)) {
+    object->base_priority = save;
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+ges_track_object_update_priority (GESTrackObject * object)
+{
+  guint32 priority, offset, gnl;
+  priority = object->base_priority;
+  offset = object->priority_offset;
+  gnl = priority + offset;
+  GST_DEBUG ("object:%p, base:%d, offset:%d: gnl:%d", object, priority, offset,
+      gnl);
+
   if (object->gnlobject != NULL) {
-    if (G_UNLIKELY (priority == object->priority))
+    if (G_UNLIKELY (gnl == object->gnl_priority))
       return FALSE;
 
-    g_object_set (object->gnlobject, "priority", priority, NULL);
+    g_object_set (object->gnlobject, "priority", gnl, NULL);
   } else
-    object->pending_priority = priority;
+    object->pending_gnl_priority = gnl;
   return TRUE;
 }
 
@@ -367,12 +411,13 @@ gnlobject_priority_cb (GstElement * gnlobject, GParamSpec * arg G_GNUC_UNUSED,
 
   g_object_get (gnlobject, "priority", &priority, NULL);
 
-  GST_DEBUG ("gnlobject priority : %d current : %d", priority, obj->priority);
+  GST_DEBUG ("gnlobject priority : %d current : %d", priority,
+      obj->gnl_priority);
 
-  if (priority != obj->priority) {
-    obj->priority = priority;
-    if (klass->priority_changed)
-      klass->priority_changed (obj, priority);
+  if (priority != obj->gnl_priority) {
+    obj->gnl_priority = priority;
+    if (klass->gnl_priority_changed)
+      klass->gnl_priority_changed (obj, priority);
     /* FIXME : emit changed */
   }
 }
@@ -486,7 +531,7 @@ ensure_gnl_object (GESTrackObject * object)
           "media-duration", object->pending_duration,
           "start", object->pending_start,
           "media-start", object->pending_inpoint,
-          "priority", object->pending_priority,
+          "priority", object->pending_gnl_priority,
           "active", object->pending_active, NULL);
 
     }

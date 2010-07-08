@@ -76,7 +76,7 @@ G_BEGIN_DECLS
  *
  * The priority of the object (in nanoseconds).
  */
-#define GES_TRACK_OBJECT_PRIORITY(obj) (((GESTrackObject*)obj)->priority)
+#define GES_TRACK_OBJECT_PRIORITY(obj) (((GESTrackObject*)obj)->base_priority)
 
 /**
  * GESTrackObject:
@@ -86,7 +86,9 @@ G_BEGIN_DECLS
  * @start: Position (in nanoseconds) of the object the track.
  * @inpoint: in-point (in nanoseconds) of the object in the track.
  * @duration: Duration of the object
- * @priority: Priority of the object in the track (0:top priority)
+ * @base_priority: base priority of the object in the track (0:top priority)
+ * @priority_offset: added to the track object (0:top priority)
+ * @gnl_priority: the cached gnl priority (base + offset)
  * @active: Whether the object is to be used or not.
  *
  * The GESTrackObject base class. Only sub-classes can access these fields.
@@ -104,16 +106,21 @@ struct _GESTrackObject {
   guint64 start;
   guint64 inpoint;
   guint64 duration;
-  guint32 priority;
+  guint32 gnl_priority;
   gboolean active;
+
+  /* cache the base priority and offset */
+  guint32 base_priority;
+  guint32 priority_offset;
 
   /*< private >*/
   /* These fields are only used before the gnlobject is available */
   guint64 pending_start;
   guint64 pending_inpoint;
   guint64 pending_duration;
-  guint32 pending_priority;
+  guint32 pending_gnl_priority;
   gboolean pending_active;
+
 
   GstElement *gnlobject;
 };
@@ -125,7 +132,7 @@ struct _GESTrackObject {
  * @start_changed: start property of gnlobject has changed
  * @media_start_changed: media-start property of gnlobject has changed
  * @duration_changed: duration property glnobject has changed
- * @priority_changed: duration property glnobject has changed
+ * @gnl_priority_changed: duration property glnobject has changed
  * @active_changed: active property of gnlobject has changed
  *
  * Subclasses can override the @create_gnl_object method to override what type
@@ -144,7 +151,7 @@ struct _GESTrackObjectClass {
 
   void (*start_changed) (GESTrackObject *object, guint64 start);
   void (*media_start_changed) (GESTrackObject *object, guint64 media_start);
-  void (*priority_changed) (GESTrackObject *object, guint priority);
+  void (*gnl_priority_changed) (GESTrackObject *object, guint priority);
   void (*duration_changed) (GESTrackObject *object, guint64 duration);
   void (*active_changed) (GESTrackObject *object, gboolean active);
 };
@@ -159,6 +166,9 @@ gboolean ges_track_object_set_start_internal (GESTrackObject * object, guint64 s
 gboolean ges_track_object_set_inpoint_internal (GESTrackObject * object, guint64 inpoint);
 gboolean ges_track_object_set_duration_internal (GESTrackObject * object, guint64 duration);
 gboolean ges_track_object_set_priority_internal (GESTrackObject * object, guint32 priority);
+gboolean ges_track_object_set_priority_offset_internal(GESTrackObject *
+    object, guint32 priority_offset);
+
 gboolean ges_track_object_set_active (GESTrackObject * object, gboolean active);
 G_END_DECLS
 
