@@ -204,8 +204,6 @@ typedef enum {
   GES_VIDEO_TRANSITION_TYPE_CROSSFADE = 512
 } GESVideoTransitionType;
 
-extern GEnumValue transition_types[];
-
 #define GES_VIDEO_TRANSITION_TYPE_TYPE \
     (ges_video_transition_type_get_type())
 

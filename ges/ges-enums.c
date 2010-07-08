@@ -46,7 +46,7 @@ ges_track_type_get_type (void)
   return id;
 }
 
-GEnumValue transition_types[] = {
+static GEnumValue transition_types[] = {
   {
         0,
         "Transition has not been set",
