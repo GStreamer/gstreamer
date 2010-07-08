@@ -363,7 +363,11 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
       continue;
 
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
+#if GLIB_CHECK_VERSION(2,25,0)
+      GStatBuf statbuf;
+#else
       struct stat statbuf;
+#endif
 
       if (g_stat (plugin->filename, &statbuf) < 0 ||
           plugin->file_mtime != statbuf.st_mtime ||

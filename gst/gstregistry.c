@@ -1106,7 +1106,11 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
     return FALSE;
 
   while ((dirent = g_dir_read_name (dir))) {
+#if GLIB_CHECK_VERSION(2,25,0)
+    GStatBuf file_status;
+#else
     struct stat file_status;
+#endif
 
     filename = g_build_filename (path, dirent, NULL);
     if (g_stat (filename, &file_status) < 0) {
