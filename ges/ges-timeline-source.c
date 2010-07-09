@@ -35,6 +35,10 @@ static GESTrackObject
     * ges_timeline_source_create_track_object (GESTimelineObject * obj,
     GESTrack * track);
 
+static gboolean
+ges_timeline_source_create_track_objects (GESTimelineObject * obj,
+    GESTrack * track);
+
 static void
 ges_timeline_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -79,6 +83,8 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
   object_class->finalize = ges_timeline_source_finalize;
 
   timobj_class->create_track_object = ges_timeline_source_create_track_object;
+
+  timobj_class->create_track_objects = ges_timeline_source_create_track_objects;
 }
 
 static void
@@ -99,4 +105,20 @@ ges_timeline_source_create_track_object (GESTimelineObject * obj,
   GST_DEBUG ("Creating a GESTrackSource");
   /* FIXME : Implement properly ! */
   return (GESTrackObject *) ges_track_source_new ();
+}
+
+static gboolean
+ges_timeline_source_create_track_objects (GESTimelineObject * obj,
+    GESTrack * track)
+{
+  GESTrackObject *primary;
+
+  /* calls add_track_object() for us. we already own this reference */
+  primary = ges_timeline_object_create_track_object (obj, track);
+  if (!primary) {
+    GST_WARNING ("couldn't create primary track object");
+    return FALSE;
+  }
+
+  return ges_track_add_object (track, primary);
 }
