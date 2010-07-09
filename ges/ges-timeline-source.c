@@ -27,6 +27,7 @@
 #include "ges-timeline-object.h"
 #include "ges-timeline-source.h"
 #include "ges-track-source.h"
+#include "ges-track-text-overlay.h"
 
 G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
     GES_TYPE_TIMELINE_OBJECT);
@@ -111,7 +112,8 @@ static gboolean
 ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     GESTrack * track)
 {
-  GESTrackObject *primary;
+  GESTrackObject *primary, *overlay;
+  gboolean success = FALSE;
 
   /* calls add_track_object() for us. we already own this reference */
   primary = ges_timeline_object_create_track_object (obj, track);
@@ -120,10 +122,29 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     return FALSE;
   }
 
+  success = ges_track_add_object (track, primary);
+
   /* create priority space for the text overlay. do this regardless of
    * wthether we create an overlay so that track objects have a consistent
    * priority between tracks. */
   g_object_set (primary, "priority-offset", (guint) 1, NULL);
 
-  return ges_track_add_object (track, primary);
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
+    overlay = (GESTrackObject *) ges_track_text_overlay_new ();
+    /* will check for null */
+    if (!ges_timeline_object_add_track_object (obj, overlay)) {
+      GST_ERROR ("couldn't add textoverlay");
+      return FALSE;
+    }
+
+    if (!ges_timeline_object_add_track_object (obj, overlay)) {
+      ges_timeline_object_release_track_object (obj, overlay);
+    }
+
+    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) overlay,
+        "test overlays in timeline sources");
+    success = ges_track_add_object (track, overlay);
+  }
+
+  return success;
 }
