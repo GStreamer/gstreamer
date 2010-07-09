@@ -119,10 +119,12 @@ GST_START_TEST (test_layer_properties)
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 0, TRUE);
 
   /* check priority offsets */
-  g_object_set (trackobject, "priority-offset", 1, NULL);
+  g_assert (GES_TIMELINE_OBJECT_HEIGHT (object) == 1);
+  g_object_set (trackobject, "priority-offset", (guint32) 1, NULL);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 1, TRUE);
   g_object_set (object, "priority", 5, NULL);
   gnl_object_check (trackobject->gnlobject, 42, 51, 12, 51, 6, TRUE);
+  g_assert (GES_TIMELINE_OBJECT_HEIGHT (object) == 2);
 
   g_object_unref (trackobject);
   fail_unless (ges_timeline_layer_remove_object (layer, object));
