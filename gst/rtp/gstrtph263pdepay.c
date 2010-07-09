@@ -40,7 +40,8 @@ static GstStaticPadTemplate gst_rtp_h263p_depay_sink_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"; "
+        "clock-rate = (int) [1, MAX], "
+        "encoding-name = (string) \"H263-1998\"; "
         /* optional params */
         /* NOTE all optional SDP params must be strings in the caps */
         /*
@@ -65,7 +66,8 @@ static GstStaticPadTemplate gst_rtp_h263p_depay_sink_template =
         "application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-2000\" "
+        "clock-rate = (int) [1, MAX], "
+        "encoding-name = (string) \"H263-2000\" "
         /* optional params */
         /* NOTE all optional SDP params must be strings in the caps */
         /*
