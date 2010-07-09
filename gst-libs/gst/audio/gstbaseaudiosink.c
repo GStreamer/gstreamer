@@ -1849,8 +1849,28 @@ gst_base_audio_sink_change_state (GstElement * element,
         /* sync rendering on eos needs running clock */
         gst_ring_buffer_start (sink->ringbuffer);
       }
+
+      /* Only post clock-provide messages if this is the clock that
+       * we've created. If the subclass has overriden it the subclass
+       * should post this messages whenever necessary */
+      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
+          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
+          (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time)
+        gst_element_post_message (element,
+            gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+                sink->provided_clock, TRUE));
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* Only post clock-lost messages if this is the clock that
+       * we've created. If the subclass has overriden it the subclass
+       * should post this messages whenever necessary */
+      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
+          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
+          (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time)
+        gst_element_post_message (element,
+            gst_message_new_clock_lost (GST_OBJECT_CAST (element),
+                sink->provided_clock));
+
       /* ringbuffer cannot start anymore */
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       gst_ring_buffer_pause (sink->ringbuffer);
