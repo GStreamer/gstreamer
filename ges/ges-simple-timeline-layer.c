@@ -47,6 +47,10 @@ static void
 ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
     GESTimelineObject * object);
 
+static void
+timeline_object_height_changed_cb (GESTimelineObject * object G_GNUC_UNUSED,
+    GParamSpec * arg G_GNUC_UNUSED, GESSimpleTimelineLayer * layer);
+
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
     GES_TYPE_TIMELINE_LAYER);
 
@@ -264,6 +268,9 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 
   layer->objects = g_list_insert (layer->objects, object, position);
 
+  g_signal_connect (G_OBJECT (object), "notify::height", G_CALLBACK
+      (timeline_object_height_changed_cb), layer);
+
   /* recalculate positions */
   gstl_recalculate (layer);
 
@@ -359,4 +366,12 @@ ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
   }
   g_signal_connect_swapped (object, "notify::duration",
       G_CALLBACK (gstl_recalculate), layer);
+}
+
+static void
+timeline_object_height_changed_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, GESSimpleTimelineLayer * layer)
+{
+  GST_LOG ("layer %p: notify height changed %p", layer, object);
+  gstl_recalculate (layer);
 }
