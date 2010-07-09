@@ -111,6 +111,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GstClockTime pos = 0;
   gint priority = 0;
   gint transition_priority = 0;
+  gint height;
   GESTimelineObject *prev_object = NULL;
   GESTimelineObject *prev_transition = NULL;
 
@@ -125,12 +126,13 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
     obj = (GESTimelineObject *) tmp->data;
     dur = GES_TIMELINE_OBJECT_DURATION (obj);
+    height = GES_TIMELINE_OBJECT_HEIGHT (obj);
 
-    GST_DEBUG ("obj: %p, %ld", obj, pos);
+    GST_DEBUG ("obj: %p, %ld, height: %d", obj, pos, height);
 
     if (GES_IS_TIMELINE_SOURCE (obj)) {
 
-      priority++;
+      priority += height;
 
       if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
         ges_timeline_object_set_start (obj, pos);
