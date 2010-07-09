@@ -120,5 +120,10 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     return FALSE;
   }
 
+  /* create priority space for the text overlay. do this regardless of
+   * wthether we create an overlay so that track objects have a consistent
+   * priority between tracks. */
+  g_object_set (primary, "priority-offset", (guint) 1, NULL);
+
   return ges_track_add_object (track, primary);
 }
