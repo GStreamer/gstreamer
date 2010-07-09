@@ -1080,9 +1080,28 @@ gst_base_audio_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (src, "PAUSED->PLAYING");
       gst_ring_buffer_may_start (src->ringbuffer, TRUE);
+
+      /* Only post clock-provide messages if this is the clock that
+       * we've created. If the subclass has overriden it the subclass
+       * should post this messages whenever necessary */
+      if (src->clock && GST_IS_AUDIO_CLOCK (src->clock) &&
+          GST_AUDIO_CLOCK_CAST (src->clock)->func ==
+          (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time)
+        gst_element_post_message (element,
+            gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+                src->clock, TRUE));
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_DEBUG_OBJECT (src, "PLAYING->PAUSED");
+      /* Only post clock-lost messages if this is the clock that
+       * we've created. If the subclass has overriden it the subclass
+       * should post this messages whenever necessary */
+      if (src->clock && GST_IS_AUDIO_CLOCK (src->clock) &&
+          GST_AUDIO_CLOCK_CAST (src->clock)->func ==
+          (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time)
+        gst_element_post_message (element,
+            gst_message_new_clock_lost (GST_OBJECT_CAST (element), src->clock));
+
       gst_ring_buffer_may_start (src->ringbuffer, FALSE);
       gst_ring_buffer_pause (src->ringbuffer);
       break;
