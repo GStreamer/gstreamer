@@ -39,6 +39,10 @@ gboolean
 ges_timeline_object_create_track_objects_func (GESTimelineObject
     * object, GESTrack * track);
 
+static void
+track_object_priority_offset_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * obj);
+
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
 
 enum
@@ -301,6 +305,9 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   GST_DEBUG ("Returning trobj:%p", trobj);
 
+  g_signal_connect (G_OBJECT (trobj), "notify::priority-offset", G_CALLBACK
+      (track_object_priority_offset_changed_cb), object);
+
   return TRUE;
 }
 
@@ -486,4 +493,23 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
   }
 
   return ret;
+}
+
+static void
+track_object_priority_offset_changed_cb (GESTrackObject * child,
+    GParamSpec * arg G_GNUC_UNUSED, GESTimelineObject * obj)
+{
+  guint new, old;
+
+  /* all track objects have height 1 */
+  new = GES_TRACK_OBJECT_PRIORITY_OFFSET (child) + 1;
+  old = GES_TIMELINE_OBJECT_HEIGHT (obj);
+
+  GST_LOG ("object %p, new=%d, old=%d", obj, new, old);
+
+  if (new > old) {
+    obj->height = new;
+    GST_LOG ("emitting notify signal");
+    g_object_notify ((GObject *) obj, "height");
+  }
 }
