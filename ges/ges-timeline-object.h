@@ -147,6 +147,7 @@ struct _GESTimelineObject {
   guint64 inpoint;	/* in-point */
   guint64 duration;	/* duration of the object used in the layer */
   guint32 priority;	/* priority of the object in the layer (0:top priority) */
+  guint32 height;       /* the span of priorities this object needs */
 
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
 };

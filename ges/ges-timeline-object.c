@@ -48,6 +48,7 @@ enum
   PROP_INPOINT,
   PROP_DURATION,
   PROP_PRIORITY,
+  PROP_HEIGHT,
 };
 
 static void
@@ -68,6 +69,8 @@ ges_timeline_object_get_property (GObject * object, guint property_id,
       break;
     case PROP_PRIORITY:
       g_value_set_uint (value, tobj->priority);
+    case PROP_HEIGHT:
+      g_value_set_uint (value, tobj->height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -163,6 +166,17 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
+  /**
+   * GESTimelineObject:height
+   *
+   * The span of layer priorities which this object occupies.
+   */
+
+  g_object_class_install_property (object_class, PROP_HEIGHT,
+      g_param_spec_uint ("height", "Height",
+          "The span of priorities this object occupies", 0, G_MAXUINT, 1,
+          G_PARAM_READABLE));
 
   klass->need_fill_track = TRUE;
 }
