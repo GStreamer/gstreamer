@@ -130,6 +130,8 @@ static void gst_dv1394src_get_property (GObject * object, guint prop_id,
 static void gst_dv1394src_dispose (GObject * object);
 
 static GstClock *gst_dv1394src_provide_clock (GstElement * element);
+static GstStateChangeReturn gst_dv1394_src_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_dv1394src_start (GstBaseSrc * bsrc);
 static gboolean gst_dv1394src_stop (GstBaseSrc * bsrc);
@@ -197,6 +199,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
   gobject_class->dispose = gst_dv1394src_dispose;
 
   gstelement_class->provide_clock = gst_dv1394src_provide_clock;
+  gstelement_class->change_state = gst_dv1394_src_change_state;
 
   gst_dv1394src_signals[SIGNAL_FRAME_DROPPED] =
       g_signal_new ("frame-dropped", G_TYPE_FROM_CLASS (klass),
@@ -379,6 +382,39 @@ gst_dv1394src_provide_clock (GstElement * element)
   GstDV1394Src *dv1394src = GST_DV1394SRC (element);
 
   return GST_CLOCK_CAST (gst_object_ref (dv1394src->provided_clock));
+}
+
+static GstStateChangeReturn
+gst_dv1394_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstDV1394Src *src = GST_DV1394SRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_element_post_message (element,
+          gst_message_new_clock_lost (GST_OBJECT_CAST (element),
+              GST_CLOCK_CAST (src->provided_clock)));
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      gst_element_post_message (element,
+          gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+              GST_CLOCK_CAST (src->provided_clock), TRUE));
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 #ifdef HAVE_LIBIEC61883
