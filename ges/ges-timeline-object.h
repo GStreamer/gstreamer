@@ -128,6 +128,14 @@ typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
 #define GES_TIMELINE_OBJECT_PRIORITY(obj) (((GESTimelineObject*)obj)->priority)
 
 /**
+ * GES_TIMELINE_OBJECT_HEIGHT:
+ * @obj: a #GESTimelineObject
+ *
+ * The span of priorities this object occupies.
+ */
+#define GES_TIMELINE_OBJECT_HEIGHT(obj) (((GESTimelineObject*)obj)->height)
+
+/**
  * GESTimelineObject:
  * @layer: the #GESTimelineLayer where this object is being used.
  *
