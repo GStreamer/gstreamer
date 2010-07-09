@@ -185,6 +185,7 @@ static void
 ges_timeline_object_init (GESTimelineObject * self)
 {
   self->duration = GST_SECOND;
+  self->height = 1;
 }
 
 /**
