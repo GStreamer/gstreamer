@@ -183,6 +183,17 @@ typedef struct AVExtFloat
   guint8 mantissa[8];
 } AVExtFloat;
 
+/* Courtesy http://www.devx.com/tips/Tip/42853 */
+static inline gint
+gst_aiff_mux_isinf (gdouble x)
+{
+  volatile gdouble temp = x;
+  if ((temp == x) && ((temp - x) != 0.0))
+    return (x < 0.0 ? -1 : 1);
+  else
+    return 0;
+}
+
 static void
 gst_aiff_mux_write_ext (GstByteWriter * writer, double d)
 {
@@ -202,7 +213,7 @@ gst_aiff_mux_write_ext (GstByteWriter * writer, double d)
   } else if (f != 0.0) {
     ext.exponent[0] = 0x7f;
     ext.exponent[1] = 0xff;
-    if (f != 1 / 0.0)
+    if (!gst_aiff_mux_isinf (f))
       ext.mantissa[0] = ~0;
   }
   if (d < 0)
