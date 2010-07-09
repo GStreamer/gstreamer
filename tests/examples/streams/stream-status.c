@@ -16,7 +16,17 @@ event_loop (GstBus * bus, GstElement * pipe)
         g_message ("received EOS");
         gst_message_unref (message);
         return;
-      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_WARNING:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_warning (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        gst_message_unref (message);
+        g_error_free (gerror);
+        g_free (debug);
+        break;
+      }
       case GST_MESSAGE_ERROR:{
         GError *gerror;
         gchar *debug;
