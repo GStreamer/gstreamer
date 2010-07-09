@@ -4405,12 +4405,16 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
         /* fetch stream from num */
         stream_num = gst_matroska_demux_stream_from_num (demux, num);
-        if (size < 3 || stream_num < 0 || stream_num >= demux->num_streams) {
-          gst_buffer_unref (buf);
-          buf = NULL;
-          GST_WARNING_OBJECT (demux, "Invalid stream %d or size %u", stream_num,
-              size);
+        if (G_UNLIKELY (size < 3)) {
+          GST_WARNING_OBJECT (demux, "Invalid size %u", size);
           ret = GST_FLOW_ERROR;
+          break;
+        } else if (G_UNLIKELY (stream_num < 0 ||
+                stream_num >= demux->num_streams)) {
+          /* let's not give up on a stray invalid track number */
+          GST_WARNING_OBJECT (demux,
+              "Invalid stream %d for track number %" G_GUINT64_FORMAT
+              "; ignoring block", stream_num);
           break;
         }
 
