@@ -74,9 +74,18 @@ G_BEGIN_DECLS
  * GES_TRACK_OBJECT_PRIORITY:
  * @obj: a #GESTrackObject
  *
- * The priority of the object (in nanoseconds).
+ * The base priority of the object.
  */
 #define GES_TRACK_OBJECT_PRIORITY(obj) (((GESTrackObject*)obj)->base_priority)
+
+/**
+ * GES_TRACK_OBJECT_PRIORITY_OFFSET:
+ * @obj: a #GESTrackObject
+ *
+ * The priority of the object relative to its parent timeline object.
+ */
+#define GES_TRACK_OBJECT_PRIORITY_OFFSET(obj)\
+    (((GESTrackObject*)obj)->priority_offset)
 
 /**
  * GESTrackObject:
@@ -85,9 +94,9 @@ G_BEGIN_DECLS
  * @valid: #TRUE if the content of the @gnlobject is valid.
  * @start: Position (in nanoseconds) of the object the track.
  * @inpoint: in-point (in nanoseconds) of the object in the track.
- * @duration: Duration of the object
+ * @duration: Duration of the object.
  * @base_priority: base priority of the object in the track (0:top priority)
- * @priority_offset: added to the track object (0:top priority)
+ * @priority_offset: priority relative to its parent timeline object.
  * @gnl_priority: the cached gnl priority (base + offset)
  * @active: Whether the object is to be used or not.
  *

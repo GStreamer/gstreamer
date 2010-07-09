@@ -216,8 +216,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   /**
    * GESTrackObject:priority-offset
    *
-   * A value added to the "priority" value. Needed for timeline objects
-   * that create multiple track objects per track.
+   * The priority of the object relative to its parent track object.
    */
   g_object_class_install_property (object_class, PROP_PRIORITY_OFFSET,
       g_param_spec_uint ("priority-offset", "Priority Offset",
