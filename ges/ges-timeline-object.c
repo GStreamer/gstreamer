@@ -153,6 +153,13 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION,
       g_param_spec_uint64 ("duration", "Duration", "The duration to use",
           0, G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE));
+
+  /**
+   * GESTimelineObject:priority
+   * 
+   * The layer priority of the timeline object.
+   */
+
   g_object_class_install_property (object_class, PROP_PRIORITY,
       g_param_spec_uint ("priority", "Priority",
           "The priority of the object", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
