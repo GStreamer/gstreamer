@@ -71,6 +71,7 @@ struct _GstVP8Enc
   gchar *multipass_cache_file;
   GByteArray *first_pass_cache_content;
   vpx_fixed_buf_t last_pass_cache_content;
+  gboolean auto_alt_ref_frames;
 
   /* state */
   gboolean force_keyframe;
