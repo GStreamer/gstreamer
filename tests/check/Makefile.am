@@ -100,6 +100,12 @@ else
 check_mimic=
 endif
 
+if USE_VP8
+check_vp8=elements/vp8enc
+else
+check_vp8=
+endif
+
 if HAVE_ORC
 check_orc = orc/cog
 else
@@ -150,6 +156,7 @@ check_PROGRAMS = \
 	$(check_metadata) \
 	$(check_mimic) \
 	elements/rtpmux \
+	$(check_vp8) \
 	$(check_orc) \
         pipelines/tagschecking
 
