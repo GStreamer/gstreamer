@@ -103,6 +103,10 @@ GST_START_TEST (test_encode_simple)
 
   g_object_set (vp8enc, "max-latency", 5, NULL);
 
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_new_segment (FALSE,
+              1.0, GST_FORMAT_TIME, 0, gst_util_uint64_scale (20, GST_SECOND,
+                  25), 0)));
+
   buffer = gst_buffer_new_and_alloc (320 * 240 + 2 * 160 * 120);
   memset (GST_BUFFER_DATA (buffer), 0, GST_BUFFER_SIZE (buffer));
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
@@ -110,7 +114,7 @@ GST_START_TEST (test_encode_simple)
   for (i = 0; i < 20; i++) {
     GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (i, GST_SECOND, 25);
     GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
-    gst_pad_push (srcpad, gst_buffer_ref (buffer));
+    fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
   }
 
   gst_buffer_unref (buffer);
@@ -118,7 +122,8 @@ GST_START_TEST (test_encode_simple)
   /* Only 5 buffers are allowed to be queued now */
   fail_unless (g_list_length (buffers) > 15);
 
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_eos ()));
+
 
   /* All buffers must be there now */
   fail_unless_equals_int (g_list_length (buffers), 20);
