@@ -889,6 +889,13 @@ _to_granulepos (guint64 frame_end_number, guint inv_count, guint keyframe_dist)
   return granulepos;
 }
 
+static void
+_gst_mini_object_unref0 (GstMiniObject * obj)
+{
+  if (obj)
+    gst_mini_object_unref (obj);
+}
+
 static GstFlowReturn
 gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
     GstVideoFrame * frame)
@@ -907,48 +914,48 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
 
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
-  buf = frame->src_buffer;
-  frame->src_buffer = NULL;
+  g_assert (hook != NULL);
 
-  if (hook) {
-    for (inv_count = 0, l = hook->invisible; l; inv_count++, l = l->next) {
-      buf = l->data;
+  for (inv_count = 0, l = hook->invisible; l; inv_count++, l = l->next) {
+    buf = l->data;
+    l->data = NULL;
 
-      if (l == hook->invisible && frame->is_sync_point) {
-        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-        encoder->keyframe_distance = 0;
-      } else {
-        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-        encoder->keyframe_distance++;
-      }
-
-      GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-          &base_video_encoder->segment, frame->presentation_frame_number);
-      GST_BUFFER_DURATION (buf) = 0;
-      GST_BUFFER_OFFSET_END (buf) =
-          _to_granulepos (frame->presentation_frame_number + 1,
-          inv_count, encoder->keyframe_distance);
-      GST_BUFFER_OFFSET (buf) =
-          gst_util_uint64_scale (frame->presentation_frame_number + 1,
-          GST_SECOND * state->fps_d, state->fps_n);
-
-      gst_buffer_set_caps (buf, base_video_encoder->caps);
-      ret =
-          gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
-
-      if (ret != GST_FLOW_OK) {
-        GST_WARNING_OBJECT (encoder, "flow error %d", ret);
-        goto done;
-      }
-    }
-
-    if (!hook->invisible && frame->is_sync_point) {
+    if (l == hook->invisible && frame->is_sync_point) {
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
       encoder->keyframe_distance = 0;
     } else {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
       encoder->keyframe_distance++;
     }
+
+    GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
+        &base_video_encoder->segment, frame->presentation_frame_number);
+    GST_BUFFER_DURATION (buf) = 0;
+    GST_BUFFER_OFFSET_END (buf) =
+        _to_granulepos (frame->presentation_frame_number + 1,
+        inv_count, encoder->keyframe_distance);
+    GST_BUFFER_OFFSET (buf) =
+        gst_util_uint64_scale (frame->presentation_frame_number + 1,
+        GST_SECOND * state->fps_d, state->fps_n);
+
+    gst_buffer_set_caps (buf, base_video_encoder->caps);
+    ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
+
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (encoder, "flow error %d", ret);
+      goto done;
+    }
+  }
+
+  buf = frame->src_buffer;
+  frame->src_buffer = NULL;
+
+  if (!hook->invisible && frame->is_sync_point) {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    encoder->keyframe_distance = 0;
+  } else {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    encoder->keyframe_distance++;
   }
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
@@ -972,7 +979,7 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
 
 done:
   if (hook) {
-    g_list_foreach (hook->invisible, (GFunc) gst_mini_object_unref, NULL);
+    g_list_foreach (hook->invisible, (GFunc) _gst_mini_object_unref0, NULL);
     g_list_free (hook->invisible);
     g_slice_free (GstVP8EncCoderHook, hook);
     frame->coder_hook = NULL;
