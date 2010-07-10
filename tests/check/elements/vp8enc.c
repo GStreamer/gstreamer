@@ -95,6 +95,7 @@ GST_START_TEST (test_encode_simple)
   GstBuffer *buffer;
   gint i;
   GList *l;
+  GstCaps *outcaps;
 
   vp8enc =
       setup_vp8enc
@@ -122,6 +123,10 @@ GST_START_TEST (test_encode_simple)
   /* All buffers must be there now */
   fail_unless_equals_int (g_list_length (buffers), 20);
 
+  outcaps =
+      gst_caps_from_string
+      ("video/x-vp8,width=(int)320,height=(int)240,framerate=(fraction)25/1");
+
   for (l = buffers, i = 0; l; l = l->next, i++) {
     buffer = l->data;
 
@@ -132,10 +137,13 @@ GST_START_TEST (test_encode_simple)
         gst_util_uint64_scale (i, GST_SECOND, 25));
     fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
         gst_util_uint64_scale (1, GST_SECOND, 25));
+
+    fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (buffer), outcaps));
   }
 
-  cleanup_vp8enc (vp8enc);
+  gst_caps_unref (outcaps);
 
+  cleanup_vp8enc (vp8enc);
 }
 
 GST_END_TEST;
