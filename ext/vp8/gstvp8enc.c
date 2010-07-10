@@ -75,6 +75,7 @@ typedef struct
 #define DEFAULT_THREADS 1
 #define DEFAULT_MULTIPASS_MODE VPX_RC_ONE_PASS
 #define DEFAULT_MULTIPASS_CACHE_FILE NULL
+#define DEFAULT_AUTO_ALT_REF_FRAMES FALSE
 
 enum
 {
@@ -88,7 +89,8 @@ enum
   PROP_SPEED,
   PROP_THREADS,
   PROP_MULTIPASS_MODE,
-  PROP_MULTIPASS_CACHE_FILE
+  PROP_MULTIPASS_CACHE_FILE,
+  PROP_AUTO_ALT_REF_FRAMES
 };
 
 #define GST_VP8_ENC_MODE_TYPE (gst_vp8_enc_mode_get_type())
@@ -287,6 +289,13 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           DEFAULT_MULTIPASS_CACHE_FILE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_AUTO_ALT_REF_FRAMES,
+      g_param_spec_boolean ("auto-alt-ref-frames", "Auto Alt Ref Frames",
+          "Automatically create alternative reference frames",
+          DEFAULT_AUTO_ALT_REF_FRAMES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+
   GST_DEBUG_CATEGORY_INIT (gst_vp8enc_debug, "vp8enc", 0, "VP8 Encoder");
 }
 
@@ -304,6 +313,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc, GstVP8EncClass * klass)
   gst_vp8_enc->max_keyframe_distance = DEFAULT_MAX_KEYFRAME_DISTANCE;
   gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
   gst_vp8_enc->multipass_cache_file = DEFAULT_MULTIPASS_CACHE_FILE;
+  gst_vp8_enc->auto_alt_ref_frames = DEFAULT_AUTO_ALT_REF_FRAMES;
 
   /* FIXME: Add sink/src event vmethods */
   gst_vp8_enc->base_sink_event_func =
@@ -372,6 +382,9 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
         g_free (gst_vp8_enc->multipass_cache_file);
       gst_vp8_enc->multipass_cache_file = g_value_dup_string (value);
       break;
+    case PROP_AUTO_ALT_REF_FRAMES:
+      gst_vp8_enc->auto_alt_ref_frames = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -416,6 +429,9 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MULTIPASS_CACHE_FILE:
       g_value_set_string (value, gst_vp8_enc->multipass_cache_file);
+      break;
+    case PROP_AUTO_ALT_REF_FRAMES:
+      g_value_set_boolean (value, gst_vp8_enc->auto_alt_ref_frames);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -789,6 +805,15 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
     if (status != VPX_CODEC_OK) {
       GST_WARNING_OBJECT (encoder, "Failed to set VP8E_SET_CPUUSED to 0: %s",
           gst_vpx_error_name (status));
+    }
+
+    status =
+        vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
+        (encoder->auto_alt_ref_frames ? 1 : 0));
+    if (status != VPX_CODEC_OK) {
+      GST_WARNING_OBJECT (encoder,
+          "Failed to set VP8E_ENABLEAUTOALTREF to %d: %s",
+          (encoder->auto_alt_ref_frames ? 1 : 0), gst_vpx_error_name (status));
     }
 
     gst_base_video_encoder_set_latency (base_video_encoder, 0,
