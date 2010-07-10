@@ -927,6 +927,9 @@ gst_base_video_decoder_change_state (GstElement * element,
       if (base_video_decoder_class->stop) {
         base_video_decoder_class->stop (base_video_decoder);
       }
+      g_list_foreach (base_video_decoder->timestamps, (GFunc) g_free, NULL);
+      g_list_free (base_video_decoder->timestamps);
+      base_video_decoder->timestamps = NULL;
       break;
     default:
       break;
