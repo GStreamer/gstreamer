@@ -431,6 +431,27 @@ GST_START_TEST (test_new_full)
 
 GST_END_TEST;
 
+GST_START_TEST (test_merge_strings_with_comma)
+{
+  GstTagList *tags;
+  gchar *artists = NULL;
+
+  tags = gst_tag_list_new ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Foo", NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Bar", NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "Yay", NULL);
+  gst_tag_list_get_string (tags, GST_TAG_ARTIST, &artists);
+  fail_unless (artists != NULL);
+  /* can't check for exact string since the comma separator is i18n-ed */
+  fail_unless (strstr (artists, "Foo") != NULL);
+  fail_unless (strstr (artists, "Bar") != NULL);
+  fail_unless (strstr (artists, "Yay") != NULL);
+  g_free (artists);
+  gst_tag_list_free (tags);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -441,6 +462,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_basics);
   tcase_add_test (tc_chain, test_add);
   tcase_add_test (tc_chain, test_merge);
+  tcase_add_test (tc_chain, test_merge_strings_with_comma);
   tcase_add_test (tc_chain, test_date_tags);
   tcase_add_test (tc_chain, test_type);
   tcase_add_test (tc_chain, test_set_non_utf8_string);
