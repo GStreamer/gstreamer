@@ -389,11 +389,10 @@ gst_tag_merge_strings_with_comma (GValue * dest, const GValue * src)
   count = gst_value_list_get_size (src);
   str = g_string_new (g_value_get_string (gst_value_list_get_value (src, 0)));
   for (i = 1; i < count; i++) {
-    /* seperator between two string */
-    str = g_string_append (str, _(", "));
-    str =
-        g_string_append (str, g_value_get_string (gst_value_list_get_value (src,
-                1)));
+    /* separator between two strings */
+    g_string_append (str, _(", "));
+    g_string_append (str,
+        g_value_get_string (gst_value_list_get_value (src, i)));
   }
 
   g_value_init (dest, G_TYPE_STRING);
