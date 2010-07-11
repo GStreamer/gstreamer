@@ -94,6 +94,27 @@ eos_cb (GstBus * bus, GstMessage * msg, GMainLoop * main_loop)
 }
 
 static void
+new_clock_cb (GstBus * bus, GstMessage * msg, gpointer nothing)
+{
+  GstClock *clock;
+
+  gst_message_parse_new_clock (msg, &clock);
+  g_print ("NEW CLOCK: %s\n", GST_OBJECT_NAME (clock));
+}
+
+static void
+clock_lost_cb (GstBus * bus, GstMessage * msg, GstElement * playbin)
+{
+  GstClock *clock;
+
+  gst_message_parse_clock_lost (msg, &clock);
+  g_print ("CLOCK LOST: %s\n", GST_OBJECT_NAME (clock));
+
+  gst_element_set_state (playbin, GST_STATE_PAUSED);
+  gst_element_set_state (playbin, GST_STATE_PLAYING);
+}
+
+static void
 about_to_finish_cb (GstElement * element, gchar * uri[])
 {
   if (arg_count < max_count) {
@@ -128,6 +149,9 @@ main (gint argc, gchar * argv[])
   g_signal_connect (bus, "message::eos", G_CALLBACK (eos_cb), loop);
   g_signal_connect (bus, "message::error", G_CALLBACK (error_cb), loop);
   g_signal_connect (bus, "message::warning", G_CALLBACK (warning_cb), NULL);
+  g_signal_connect (bus, "message::new-clock", G_CALLBACK (new_clock_cb), NULL);
+  g_signal_connect (bus, "message::clock-lost", G_CALLBACK (clock_lost_cb),
+      player);
 
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 

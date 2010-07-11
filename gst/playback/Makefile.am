@@ -22,7 +22,8 @@ libgstplaybin_la_SOURCES = \
 	gstscreenshot.c \
 	gststreaminfo.c \
 	gststreamselector.c \
-	gstsubtitleoverlay.c
+	gstsubtitleoverlay.c \
+	gststreamsynchronizer.c
 
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
@@ -63,7 +64,8 @@ noinst_HEADERS = \
 	gstscreenshot.h \
 	gststreamselector.h \
 	gstrawcaps.h \
-	gstsubtitleoverlay.h
+	gstsubtitleoverlay.h \
+	gststreamsynchronizer.h
 
 noinst_PROGRAMS = test decodetest test2 test3 test4 test5 test6 test7
 
