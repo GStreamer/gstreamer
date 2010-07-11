@@ -267,10 +267,6 @@ struct _GstSourceSelect
   GstPad *sinkpad;              /* the sinkpad of the sink when the selector
                                  * is linked
                                  */
-
-  gulong src_event_probe_id;
-  gulong sink_event_probe_id;
-  GstClockTime group_start_accum;
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
@@ -406,8 +402,6 @@ struct _GstPlayBin
     GstFormat format;
     gint64 duration;
   } duration[5];                /* cached durations */
-
-  GstSegment segments[3];       /* Video/Audio/Text segments */
 };
 
 struct _GstPlayBinClass
@@ -2327,118 +2321,6 @@ notify_tags_cb (GObject * object, GParamSpec * pspec, gpointer user_data)
         ntdata->stream_id);
 }
 
-typedef struct
-{
-  GstPlayBin *playbin;
-  GstSourceGroup *group;
-  GstPlaySinkType type;
-} PlaySinkEventProbeData;
-
-static gboolean
-_playsink_src_event_probe_cb (GstPad * pad, GstEvent * event,
-    PlaySinkEventProbeData * data)
-{
-  if (GST_EVENT_TYPE (event) == GST_EVENT_QOS) {
-    GstEvent *new_event;
-    GstStructure *s;
-    gdouble proportion;
-    GstClockTimeDiff diff;
-    GstClockTime group_start_accum =
-        data->group->selector[data->type].group_start_accum;
-    GstClockTime timestamp;
-
-    s = (GstStructure *) gst_event_get_structure (event);
-    if (gst_structure_has_field (s, "playbin2-adjusted-event"))
-      return TRUE;
-
-    /* If we have no group start accumulator yet, this is
-     * a QOS event for the previous group or this stream
-     * has a non-time segment.
-     */
-    if (!GST_CLOCK_TIME_IS_VALID (group_start_accum))
-      return FALSE;
-
-    /* If the group start accumulator is 0, this is the first
-     * group and we don't need to do everything below
-     */
-    if (group_start_accum == 0)
-      return TRUE;
-
-    gst_event_parse_qos (event, &proportion, &diff, &timestamp);
-
-    /* If the running time timestamp is smaller than the accumulator,
-     * the event is for a buffer from the previous group
-     */
-    if (timestamp >= group_start_accum)
-      timestamp -= group_start_accum;
-    else
-      return FALSE;
-
-    /* That case is invalid for QoS events, also it means that
-     * we have switched the group but receive QoS events of
-     * the previous group.
-     */
-    if (diff < 0 && -diff > timestamp)
-      return FALSE;
-
-    new_event = gst_event_new_qos (proportion, diff, timestamp);
-    s = (GstStructure *) gst_event_get_structure (new_event);
-    gst_structure_set (s, "playbin2-adjusted-event", G_TYPE_BOOLEAN, TRUE,
-        NULL);
-    gst_pad_send_event (pad, new_event);
-
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_playsink_sink_event_probe_cb (GstPad * pad, GstEvent * event,
-    PlaySinkEventProbeData * data)
-{
-  guint index;
-
-  if (data->type == GST_PLAY_SINK_TYPE_VIDEO
-      || data->type == GST_PLAY_SINK_TYPE_VIDEO_RAW)
-    index = 0;
-  else if (data->type == GST_PLAY_SINK_TYPE_AUDIO
-      || data->type == GST_PLAY_SINK_TYPE_AUDIO_RAW)
-    index = 1;
-  else if (data->type == GST_PLAY_SINK_TYPE_TEXT)
-    index = 2;
-  else
-    g_assert_not_reached ();
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
-    GstPlayBin *playbin = data->playbin;
-    GstSegment *segment;
-    gboolean update;
-    GstFormat format;
-    gdouble rate, applied_rate;
-    gint64 start, stop, pos;
-
-    segment = &playbin->segments[index];
-
-    gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-        &format, &start, &stop, &pos);
-    if (segment->format != format)
-      gst_segment_init (segment, format);
-    gst_segment_set_newsegment_full (segment, update, rate, applied_rate,
-        format, start, stop, pos);
-
-    if (format != GST_FORMAT_TIME)
-      data->group->selector[data->type].group_start_accum = GST_CLOCK_TIME_NONE;
-    else if (!GST_CLOCK_TIME_IS_VALID (data->group->selector[data->type].
-            group_start_accum))
-      data->group->selector[data->type].group_start_accum = segment->accum;
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    gst_segment_init (&data->playbin->segments[index], GST_FORMAT_UNDEFINED);
-  }
-
-  return TRUE;
-}
-
 /* this function is called when a new pad is added to decodebin. We check the
  * type of the pad and add it to the selector element of the group. 
  */
@@ -2514,8 +2396,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   }
 
   if (select->srcpad == NULL) {
-    PlaySinkEventProbeData *data = g_new (PlaySinkEventProbeData, 1);
-
     if (select->selector) {
       /* save source pad of the selector */
       select->srcpad = gst_element_get_static_pad (select->selector, "src");
@@ -2523,17 +2403,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       /* no selector, use the pad as the source pad then */
       select->srcpad = gst_object_ref (pad);
     }
-
-    /* Install an event probe */
-    data->playbin = playbin;
-    data->group = group;
-    data->type = select->type;
-    select->src_event_probe_id =
-        gst_pad_add_event_probe_full (select->srcpad,
-        G_CALLBACK (_playsink_src_event_probe_cb), data,
-        (GDestroyNotify) g_free);
-
-    select->group_start_accum = -1;
 
     /* block the selector srcpad. It's possible that multiple decodebins start
      * pushing data into the selectors before we have a chance to collect all
@@ -2749,20 +2618,9 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
      * and link it. We only do this if we have not yet requested the sinkpad
      * before. */
     if (select->srcpad && select->sinkpad == NULL) {
-      PlaySinkEventProbeData *data = g_new (PlaySinkEventProbeData, 1);
-
       GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", select->type);
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
-
-      /* Install an event probe */
-      data->playbin = playbin;
-      data->group = group;
-      data->type = select->type;
-      select->sink_event_probe_id =
-          gst_pad_add_event_probe_full (select->sinkpad,
-          G_CALLBACK (_playsink_sink_event_probe_cb), data,
-          (GDestroyNotify) g_free);
 
       res = gst_pad_link (select->srcpad, select->sinkpad);
       GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
@@ -3358,20 +3216,11 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
         GST_LOG_OBJECT (playbin, "unlinking from sink");
         gst_pad_unlink (select->srcpad, select->sinkpad);
 
-        if (select->sink_event_probe_id)
-          gst_pad_remove_event_probe (select->sinkpad,
-              select->sink_event_probe_id);
-        select->sink_event_probe_id = 0;
-
         /* release back */
         GST_LOG_OBJECT (playbin, "release sink pad");
         gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
         select->sinkpad = NULL;
       }
-
-      if (select->src_event_probe_id)
-        gst_pad_remove_event_probe (select->srcpad, select->src_event_probe_id);
-      select->src_event_probe_id = 0;
 
       gst_object_unref (select->srcpad);
       select->srcpad = NULL;
@@ -3544,22 +3393,16 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       g_mutex_unlock (playbin->elements_lock);
       memset (&playbin->duration, 0, sizeof (playbin->duration));
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:{
-      guint i;
-
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG_OBJECT (playbin, "clearing shutdown flag");
       memset (&playbin->duration, 0, sizeof (playbin->duration));
       g_atomic_int_set (&playbin->shutdown, 0);
-
-      for (i = 0; i < 3; i++)
-        gst_segment_init (&playbin->segments[i], GST_FORMAT_UNDEFINED);
 
       if (!setup_next_source (playbin, GST_STATE_READY)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto failure;
       }
       break;
-    }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* FIXME unlock our waiting groups */
       GST_LOG_OBJECT (playbin, "setting shutdown flag");
