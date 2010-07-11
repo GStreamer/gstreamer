@@ -68,7 +68,7 @@ struct _GstFrei0rMixerClass {
   gint n_properties;
 };
 
-gboolean gst_frei0r_mixer_register (GstPlugin *plugin, const f0r_plugin_info_t *info, const GstFrei0rFuncTable *ftable);
+GstFrei0rPluginRegisterReturn gst_frei0r_mixer_register (GstPlugin *plugin, const f0r_plugin_info_t *info, const GstFrei0rFuncTable *ftable);
 
 G_END_DECLS
 

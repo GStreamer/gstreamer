@@ -767,7 +767,7 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
 
 }
 
-gboolean
+GstFrei0rPluginRegisterReturn
 gst_frei0r_mixer_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
     const GstFrei0rFuncTable * ftable)
 {
@@ -785,10 +785,10 @@ gst_frei0r_mixer_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   GType type;
   gchar *type_name, *tmp;
   GstFrei0rMixerClassData *class_data;
-  gboolean ret = FALSE;
+  GstFrei0rPluginRegisterReturn ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED;
 
   if (ftable->update2 == NULL)
-    return FALSE;
+    return GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED;
 
   tmp = g_strdup_printf ("frei0r-mixer-%s", info->name);
   type_name = g_ascii_strdown (tmp, -1);
@@ -796,8 +796,8 @@ gst_frei0r_mixer_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
 
   if (g_type_from_name (type_name)) {
-    GST_WARNING ("Type '%s' already exists", type_name);
-    return FALSE;
+    GST_DEBUG ("Type '%s' already exists", type_name);
+    return GST_FREI0R_PLUGIN_REGISTER_RETURN_ALREADY_REGISTERED;
   }
 
   class_data = g_new0 (GstFrei0rMixerClassData, 1);
@@ -806,7 +806,8 @@ gst_frei0r_mixer_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   typeinfo.class_data = class_data;
 
   type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-  ret = gst_element_register (plugin, type_name, GST_RANK_NONE, type);
+  if (gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+    ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_OK;
 
   g_free (type_name);
   return ret;

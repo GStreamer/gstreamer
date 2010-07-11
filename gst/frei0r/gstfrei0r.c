@@ -460,7 +460,7 @@ static gboolean
 register_plugin (GstPlugin * plugin, const gchar * filename)
 {
   GModule *module;
-  gboolean ret = FALSE;
+  GstFrei0rPluginRegisterReturn ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED;
   GstFrei0rFuncTable ftable = { NULL, };
   gint i;
   f0r_plugin_info_t info = { NULL, };
@@ -560,10 +560,24 @@ register_plugin (GstPlugin * plugin, const gchar * filename)
       break;
   }
 
-  if (!ret)
-    goto invalid_frei0r_plugin;
+  switch (ret) {
+    case GST_FREI0R_PLUGIN_REGISTER_RETURN_OK:
+      return TRUE;
+    case GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED:
+      GST_ERROR ("Failed to register frei0r plugin");
+      ftable.deinit ();
+      g_module_close (module);
+      return FALSE;
+    case GST_FREI0R_PLUGIN_REGISTER_RETURN_ALREADY_REGISTERED:
+      GST_DEBUG ("frei0r plugin already registered");
+      ftable.deinit ();
+      g_module_close (module);
+      return TRUE;
+    default:
+      g_return_val_if_reached (FALSE);
+  }
 
-  return ret;
+  g_return_val_if_reached (FALSE);
 
 invalid_frei0r_plugin:
   GST_ERROR ("Invalid frei0r plugin");
@@ -620,13 +634,13 @@ plugin_init (GstPlugin * plugin)
       "/usr/lib/frei0r-1:/usr/local/lib/frei0r-1",
       NULL, GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
-  register_plugins (plugin, "/usr/lib/frei0r-1");
-  register_plugins (plugin, "/usr/local/lib/frei0r-1");
-
   homedir = g_get_home_dir ();
   path = g_build_filename (homedir, ".frei0r-1", NULL);
   register_plugins (plugin, path);
   g_free (path);
+
+  register_plugins (plugin, "/usr/local/lib/frei0r-1");
+  register_plugins (plugin, "/usr/lib/frei0r-1");
 
   return TRUE;
 }

@@ -75,6 +75,12 @@ struct _GstFrei0rFuncTable {
 		   uint32_t* outframe);
 };
 
+typedef enum {
+  GST_FREI0R_PLUGIN_REGISTER_RETURN_OK,
+  GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED,
+  GST_FREI0R_PLUGIN_REGISTER_RETURN_ALREADY_REGISTERED
+} GstFrei0rPluginRegisterReturn;
+
 void gst_frei0r_klass_install_properties (GObjectClass *gobject_class, GstFrei0rFuncTable *ftable, GstFrei0rProperty *properties, gint n_properties);
 
 f0r_instance_t * gst_frei0r_instance_construct (GstFrei0rFuncTable *ftable, GstFrei0rProperty *properties, gint n_properties, GstFrei0rPropertyValue *property_cache, gint width, gint height);

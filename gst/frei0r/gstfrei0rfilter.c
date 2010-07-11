@@ -226,7 +226,7 @@ gst_frei0r_filter_init (GstFrei0rFilter * self, GstFrei0rFilterClass * klass)
   gst_pad_use_fixed_caps (GST_BASE_TRANSFORM_SRC_PAD (self));
 }
 
-gboolean
+GstFrei0rPluginRegisterReturn
 gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
     const GstFrei0rFuncTable * ftable)
 {
@@ -244,7 +244,7 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   GType type;
   gchar *type_name, *tmp;
   GstFrei0rFilterClassData *class_data;
-  gboolean ret = FALSE;
+  GstFrei0rPluginRegisterReturn ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED;
 
   tmp = g_strdup_printf ("frei0r-filter-%s", info->name);
   type_name = g_ascii_strdown (tmp, -1);
@@ -252,8 +252,8 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
 
   if (g_type_from_name (type_name)) {
-    GST_WARNING ("Type '%s' already exists", type_name);
-    return FALSE;
+    GST_DEBUG ("Type '%s' already exists", type_name);
+    return GST_FREI0R_PLUGIN_REGISTER_RETURN_ALREADY_REGISTERED;
   }
 
   class_data = g_new0 (GstFrei0rFilterClassData, 1);
@@ -263,7 +263,8 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
 
   type =
       g_type_register_static (GST_TYPE_VIDEO_FILTER, type_name, &typeinfo, 0);
-  ret = gst_element_register (plugin, type_name, GST_RANK_NONE, type);
+  if (gst_element_register (plugin, type_name, GST_RANK_NONE, type))
+    ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_OK;
 
   g_free (type_name);
   return ret;

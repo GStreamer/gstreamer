@@ -58,7 +58,7 @@ struct _GstFrei0rFilterClass {
   gint n_properties;
 };
 
-gboolean gst_frei0r_filter_register (GstPlugin *plugin, const f0r_plugin_info_t *info, const GstFrei0rFuncTable *ftable);
+GstFrei0rPluginRegisterReturn gst_frei0r_filter_register (GstPlugin *plugin, const f0r_plugin_info_t *info, const GstFrei0rFuncTable *ftable);
 
 G_END_DECLS
 
