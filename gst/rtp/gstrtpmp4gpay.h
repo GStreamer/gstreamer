@@ -48,6 +48,7 @@ struct _GstRtpMP4GPay
   GstClockTime  first_timestamp;
   GstClockTime  first_duration;
   GstClockTime  duration;
+  guint64       offset;
 
   gint          rate;
   gchar        *params;
@@ -55,6 +56,7 @@ struct _GstRtpMP4GPay
   const gchar  *streamtype;
   const gchar  *mode;
   GstBuffer    *config;
+  guint         frame_len;
 };
 
 struct _GstRtpMP4GPayClass
