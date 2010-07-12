@@ -4344,6 +4344,40 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 }
 
 static GstFlowReturn
+gst_matroska_demux_check_aac (GstElement * element,
+    GstMatroskaTrackContext * stream, GstBuffer ** buf)
+{
+  const guint8 *data;
+  guint size;
+
+  data = GST_BUFFER_DATA (*buf);
+  size = GST_BUFFER_SIZE (*buf);
+
+  if (size > 2 && data[0] == 0xff && (data[1] >> 4 == 0x0f)) {
+    GstCaps *new_caps;
+    GstStructure *s;
+
+    /* tss, ADTS data, remove codec_data
+     * still assume it is at least parsed */
+    new_caps = gst_caps_copy (stream->caps);
+    s = gst_caps_get_structure (new_caps, 0);
+    g_assert (s);
+    gst_structure_remove_field (s, "codec_data");
+    gst_caps_replace (&stream->caps, new_caps);
+    gst_pad_set_caps (stream->pad, new_caps);
+    gst_buffer_set_caps (*buf, new_caps);
+    GST_DEBUG_OBJECT (element, "ADTS AAC audio data; removing codec-data, "
+        "new caps: %" GST_PTR_FORMAT, new_caps);
+    gst_caps_unref (new_caps);
+  }
+
+  /* disable subsequent checking */
+  stream->postprocess_frame = NULL;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     GstEbmlRead * ebml, guint64 cluster_time, guint64 cluster_offset,
     gboolean is_simpleblock)
@@ -6462,8 +6496,13 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         }
       } else {
         GST_WARNING ("Opaque A_AAC codec ID, but no codec private data");
+        /* this is pretty broken;
+         * maybe we need to make up some default private,
+         * or maybe ADTS data got dumped in.
+         * Let's set up some private data now, and check actual data later */
         /* just try this and see what happens ... */
         codec_id = GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4;
+        context->postprocess_frame = gst_matroska_demux_check_aac;
       }
     }
 
