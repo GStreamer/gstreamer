@@ -1,16 +1,19 @@
 <chapter id="chapter-dparams">
   <title>Dynamic Controllable Parameters</title>
-  <para>
-    The controller subsystem offers a lightweight way to adjust gobject
-    properties over stream-time.
-    It works by using time-stamped value pairs that are queued for
-    element-properties.
-    At run-time the elements continously pull value changes for the
-    current stream-time.
-  </para>
-
+  
   <sect1 id="section-dparams-getting-started">
     <title>Getting Started</title>
+    <para>
+      The controller subsystem offers a lightweight way to adjust gobject
+      properties over stream-time. Normaly these properties are changed using
+      <function>g_object_set()</function>. Timing those calls reliably so that
+      the changes affect certain stream times is close to imposible. The
+      controller takes time into account. It works by attaching control-sources
+      to properties. Control-sources can provide new values for the properties
+      for a given timestamp. At run-time the elements continously pull values
+      changes for the current stream-time. GStreamer includes a few different
+      control-sources, but applications can define their own by subclassing.
+    </para>
     <para>
       This subsystem is contained within the
       <filename>gstcontroller</filename> library.
@@ -49,33 +52,48 @@
   controller = gst_object_control_properties(object, "prop1", "prop2",...);
     </programlisting>
     <para>
-      Next we can select an interpolation mode. This mode controls how inbetween
-      values are determined.
-      The controller subsystem can e.g. fill gaps by smoothing parameter changes.
-      Each controllable GObject property can be
-      interpolated differently.      
+      Next we attach a control-source to each parameter. Lets use an 
+      interpolation control-source:
     </para>
     <programlisting>
-  gst_controller_set_interpolation_mode(controller,"prop1",mode);
+  csource = gst_interpolation_control_source_new ();
+  gst_interpolation_control_source_set_interpolation_mode(csource, GST_INTERPOLATE_LINEAR);
     </programlisting>
     <para>
-      Finally one needs to set control points. These are time-stamped GValues.
+      This control-source takes new property values from a list of time-stamped
+      parameter changes. The source can e.g. fill gaps by smoothing parameter
+      changes. This behaviour can be configured by setting the 
+      interpolation-mode.
+    </para>
+    <para>
+      Now we can set some control points. These are time-stamped GValues.
       The values become active when the timestamp is reached. They still stay
       in the list. If e.g. the pipeline runs a loop (using a segmented seek),
-      the control-curve gets repeated as well. 
+      the control-curve gets repeated as well. Other control-sources have
+      different functions to specify the control-changes over time.
     </para>
     <programlisting>
-  gst_controller_set (controller, "prop1" ,0 * GST_SECOND, value1);
-  gst_controller_set (controller, "prop1" ,1 * GST_SECOND, value2);
+  gst_interpolation_control_source_set (csource, 0 * GST_SECOND, value1);
+  gst_interpolation_control_source_set (csource, 1 * GST_SECOND, value2);
     </programlisting>
     <para>
-      The controller subsystem has a builtin live-mode. Even though a parameter
-      has timestamped control-values assigned one can change the GObject
-      property through <function>g_object_set()</function>.
+      Finally we need to assign the control-source to the gobject property. One 
+      control source can only be assigned to one property.
+    </para>
+    <programlisting>
+      gst_controller_set_control_source (controller, "prop1", csource);
+    </programlisting>
+    <para>
+      Now everything is ready to play. One final note - the controller subsystem
+      has a builtin live-mode. Even though a property has a control-source
+      assigned one can change the GObject property through the 
+      <function>g_object_set()</function>.
       This is highly useful when binding the GObject properties to GUI widgets.
       When the user adjusts the value with the widget, one can set the GObject
-      property and this remains active until the next timestamped value overrides.
-      This also works with smoothed parameters.  
+      property and this remains active until the next programmed control-source
+      value overrides it. This also works with smoothed parameters. It might not
+      work for control-sources that constantly update the property (e.g. the lfo
+      control-source).
     </para>
   </sect1>
   
