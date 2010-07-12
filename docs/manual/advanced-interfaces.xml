@@ -7,7 +7,9 @@
     interaction between applications and elements. This method suffices for
     the simple'n'straight settings, but fails for anything more complicated
     than a getter and setter. For the more complicated use cases, &GStreamer;
-    uses interfaces based on the Glib <classname>GInterface</classname> type.
+    uses interfaces based on the GObject <ulink type="http"
+      url="http://library.gnome.org/devel/gobject/stable/gtype-non-instantiable-classed.html"><classname>GTypeInterface</classname></ulink>
+    type.
   </para>
 
   <para>
@@ -70,11 +72,13 @@
       You should not use this interface for volume control in a playback
       application. Either use a <classname>volume</classname> element or use
       <classname>playbin</classname>'s <quote>volume</quote> property, or use
-      the audiosink's <quote>volume</quote> property (if it has one).
+      the <classname>audiosink</classname>'s <quote>volume</quote> property (if it has one).
     </para>
     <note>
       <para>
-        In order for the <classname>GstMixer</classname> interface to be
+	In order for the <ulink type="http"
+	  url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gst-plugins-base-libs-gstmixer.html"><classname>GstMixer</classname></ulink>
+	interface to be
         usable, the element implementing it needs to be in the right state,
         so that the underlying mixer device is open. This usually means the
         element needs to be at least in <classname>GST_STATE_READY</classname>
@@ -94,7 +98,7 @@
     </para>
     <para>
       Using this interface, it is possible to select one track from a list
-      of tracks supported by that tuner-element. The tuner will than select
+      of tracks supported by that tuner-element. The tuner will then select
       that track for media-processing internally. This can, for example, be
       used to switch inputs on a TV-card (e.g. from Composite to S-video).
     </para>
@@ -104,7 +108,9 @@
     </para>
     <note>
       <para>
-        In order for the <classname>GstTuner</classname> interface to be
+	In order for the <ulink type="http"
+	  url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gst-plugins-base-libs-gsttuner.html"><classname>GstTuner</classname></ulink>
+	interface to be
         usable, the element implementing it needs to be in the right state,
         so that the underlying device is open. This usually means the
         element needs to be at least in <classname>GST_STATE_READY</classname>
@@ -120,7 +126,7 @@
     <para>
       The colorbalance interface is a way to control video-related properties
       on an element, such as brightness, contrast and so on. It's sole
-      reason for existance is that, as far as its authors know, there's no
+      reason for existence is that, as far as its authors know, there's no
       way to dynamically register properties using
       <classname>GObject</classname>.
     </para>

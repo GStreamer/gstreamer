@@ -17,7 +17,7 @@
     <title>Metadata reading</title>
 
     <para>
-      Stream information can most easily be read by reading them from a
+      Stream information can most easily be read by reading it from a
       <classname>GstPad</classname>. This has already been discussed before
       in <xref linkend="section-caps-metadata"/>. Therefore, we will skip
       it here. Note that this requires access to all pads of which you
@@ -155,7 +155,8 @@ main (int argc, char ** argv)
     <title>Tag writing</title>
 
     <para>
-      Tag writing is done using the <classname>GstTagSetter</classname>
+      Tag writing is done using the <ulink type="http"
+	url="&URLAPI;GstTagSetter.html"><classname>GstTagSetter</classname></ulink>
       interface. All that's required is a tag-set-supporting element in
       your pipeline. In order to see if any of the elements in your
       pipeline supports tag writing, you can use the function

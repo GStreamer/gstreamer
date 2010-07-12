@@ -52,7 +52,7 @@
       need to start at 0. The pipeline, which contains the global clock that
       all elements in the pipeline will use, in addition has a <quote>base
       time</quote>, which is the clock time at the the point where media time
-      is starting from zero. This timestamp is subctracted from the clock
+      is starting from zero. This timestamp is subtracted from the clock
       time, and that value is returned by <function>_get_time ()</function>.
     </para>
     <para>

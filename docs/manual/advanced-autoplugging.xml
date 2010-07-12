@@ -29,7 +29,7 @@
   </para>
 
   <sect1 id="section-mime">
-    <title>MIME-types as a way to identity streams</title>
+    <title>MIME-types as a way to identify streams</title>
     <para>
       We have previously introduced the concept of capabilities as a way
       for elements (or, rather, pads) to agree on a media type when
@@ -513,7 +513,7 @@ cb_typefound (GstElement *typefind,
     <para>
       By doing all this, we will be able to make a simple autoplugger that
       can automatically setup a pipeline for any media type. In the example
-      below, we will do this for audio only. However, we can also do this
+      above, we did this for audio only. However, we can also do this
       for video to create a player that plays both audio and video.
     </para>
     <!-- example-begin dynamic.c d --><!--
@@ -615,7 +615,8 @@ main (gint   argc,
       shortest-path-finding to make sure the most optimal pipeline is chosen,
       and so on. Basically, the features that you implement in an autoplugger
       depend on what you want to use it for. For full-blown implementations,
-      see the <quote>playbin</quote> and <quote>decodebin</quote> elements.
+      see the <quote>playbin</quote> and <quote>decodebin</quote> elements in
+      <xref linkend="chapter-components"/>.
     </para>
   </sect1>
 </chapter>

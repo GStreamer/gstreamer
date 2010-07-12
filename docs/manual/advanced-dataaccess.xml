@@ -193,11 +193,13 @@ main (gint   argc,
       in your application.
     </para>
     <note><para>
-      New API is being developed at the moment to make data insertion and
-      extraction less painful for applications. It can be found as GstAppSrc
-      and GstAppSink in the gst-plugins-bad module. At the time of writing
-      (October 2007), this API is not quite stable and ready yet, even though
-      it may work fine for your purposes.
+	<ulink type="http"
+	  url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gstreamer-app.html">New
+	  API</ulink> was developed to make data insertion and extraction easy
+	for applications. It can be found as GstAppSrc and GstAppSink in the
+	<ulink type="http"
+	  url="http://gstreamer.freedesktop.org/modules/gst-plugins-base.html">
+	  gst-plugins-base</ulink> module.
     </para></note>
     <para>
       After all those disclaimers, let's start. There's three possible
@@ -210,7 +212,7 @@ main (gint   argc,
       pipeline, and how to set negotiation.
     </para>
     <para>
-      Those who're paying close attention, will notice that the purpose
+      Those who're paying close attention will notice that the purpose
       of identity is almost identical to that of probes. Indeed, this is
       true. Probes allow for the same purpose, and a bunch more, and
       with less overhead plus dynamic removing/adding of handlers, but
@@ -254,7 +256,7 @@ main (gint   argc,
         specifying a <classname>GstCaps</classname> as
         <quote>caps</quote> property on this element. It will then
         only allow types matching that specified capability set for
-        negotiation.
+	negotiation.  See also <xref linkend="section-caps-filter"/>.
       </para>
     </sect2>
 

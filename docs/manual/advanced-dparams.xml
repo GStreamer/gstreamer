@@ -1,16 +1,16 @@
 <chapter id="chapter-dparams">
   <title>Dynamic Controllable Parameters</title>
-  
-  <sect1 id="section-dparams-getting-started">
-    <title>Getting Started</title>
-    <para>
+  <para>
     The controller subsystem offers a lightweight way to adjust gobject
     properties over stream-time.
     It works by using time-stamped value pairs that are queued for
     element-properties.
-    At run-time the elements continously pull values changes for the
+    At run-time the elements continously pull value changes for the
     current stream-time.
-    </para>
+  </para>
+
+  <sect1 id="section-dparams-getting-started">
+    <title>Getting Started</title>
     <para>
       This subsystem is contained within the
       <filename>gstcontroller</filename> library.

@@ -69,7 +69,7 @@
       (if configured to do so) drop data.
     </para>
     <para>
-      To use a queues (and therefore force the use of two distinct threads
+      To use a queue (and therefore force the use of two distinct threads
       in the pipeline), one can simply create a <quote>queue</quote> element
       and put this in as part of the pipeline. &GStreamer; will take care of
       all threading details internally.

@@ -59,9 +59,9 @@
       through one or more <emphasis>sink pads</emphasis>. Source and sink
       elements have only source and sink pads, respectively. Data usually
       means buffers (described by the <ulink type="http"
-      url="&URLAPI;/gstreamer-GstBuffer.html"><classname>GstBuffer
+      url="&URLAPI;gstreamer-GstBuffer.html"><classname>GstBuffer
       </classname></ulink> object) and events (described by the <ulink
-      type="http" url="&URLAPI;/gstreamer-GstEvent.html"><classname>
+      type="http" url="&URLAPI;gstreamer-GstEvent.html"><classname>
       GstEvent</classname></ulink> object).
     </para>
   </sect1>

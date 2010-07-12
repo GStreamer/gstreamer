@@ -158,14 +158,14 @@
       <para>
         Some parts of this part will serve mostly as an explanation of
         how &GStreamer; works internally; they are not actually needed for
-        actual application development. This includes chapter such as the
+        actual application development. This includes chapters such as the
         ones covering scheduling, autoplugging and synchronization. Other
         chapters, however, discuss more advanced ways of
         pipeline-application interaction, and can turn out to be very useful
         for certain applications. This includes the chapters on metadata,
         querying and events, interfaces, dynamic parameters and pipeline
         data manipulation.
-      </para>      
+      </para>
     </partintro>
 
     &QUERYEVENTS;
