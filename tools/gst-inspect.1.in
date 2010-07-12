@@ -9,7 +9,7 @@ gst\-inspect - print info about a GStreamer plugin or element
 available \fIGStreamer\fP plugins, information about a particular
 plugin, or information about a particular element.  When executed
 with no PLUGIN or ELEMENT argument, \fIgst\-inspect\fP will print
-a list of all plugins and elements together with a sumary.
+a list of all plugins and elements together with a summary.
 When executed with a PLUGIN or ELEMENT argument,
 \fIgst\-inspect\fP will print information about that plug-in or
 element.
