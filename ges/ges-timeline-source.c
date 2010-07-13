@@ -137,10 +137,6 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
       return FALSE;
     }
 
-    if (!ges_timeline_object_add_track_object (obj, overlay)) {
-      ges_timeline_object_release_track_object (obj, overlay);
-    }
-
     ges_track_text_overlay_set_text ((GESTrackTextOverlay *) overlay,
         "test overlays in timeline sources");
     success = ges_track_add_object (track, overlay);
