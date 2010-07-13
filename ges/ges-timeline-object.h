@@ -84,7 +84,7 @@ typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
 						  GESTrack * track);
 
 /**
- * CreateTrackObjectFunc:
+ * CreateTrackObjectsFunc:
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
  * 
