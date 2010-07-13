@@ -286,7 +286,7 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink, GstV4l2SinkClass * klass)
 {
   v4l2sink->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2sink),
       V4L2_BUF_TYPE_VIDEO_OUTPUT, DEFAULT_PROP_DEVICE,
-      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
+      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
 
   /* same default value for video output device as is used for
    * v4l2src/capture is no good..  so lets set a saner default

@@ -111,12 +111,10 @@ gboolean        gst_v4l2_get_input              (GstV4l2Object * v4l2object,
                                                  gint * input);
 gboolean        gst_v4l2_set_input              (GstV4l2Object * v4l2object,
                                                  gint input);
-#if 0 /* output not handled by now */
 gboolean	gst_v4l2_get_output		(GstV4l2Object *v4l2object,
 						 gint           *output);
 gboolean	gst_v4l2_set_output		(GstV4l2Object *v4l2object,
 						 gint            output);
-#endif /* #if 0 - output not handled by now */
 
 /* frequency control */
 gboolean	gst_v4l2_get_frequency		(GstV4l2Object *v4l2object,
