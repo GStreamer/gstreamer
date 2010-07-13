@@ -419,6 +419,7 @@ GST_START_TEST (test_gsl_with_transitions)
 
   GST_DEBUG ("done removing transition");
 
+  g_object_unref (timeline);
 }
 
 GST_END_TEST;
