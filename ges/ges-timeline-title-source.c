@@ -241,7 +241,7 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE
           (trackobject), self->text);
   }
@@ -264,7 +264,7 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE
           (trackobject), self->font_desc);
   }
@@ -284,7 +284,7 @@ ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->halign);
   }
@@ -304,7 +304,7 @@ ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
+    if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->valign);
   }
