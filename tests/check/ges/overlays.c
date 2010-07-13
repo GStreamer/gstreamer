@@ -136,7 +136,8 @@ GST_START_TEST (test_overlay_in_layer)
   g_free (text);
 
   trobj =
-      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
+      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
+      G_TYPE_NONE);
 
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);

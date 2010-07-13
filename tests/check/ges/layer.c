@@ -90,7 +90,8 @@ GST_START_TEST (test_layer_properties)
   /* Add the object to the timeline */
   fail_unless (ges_timeline_layer_add_object (layer,
           GES_TIMELINE_OBJECT (object)));
-  trackobject = ges_timeline_object_find_track_object (object, track);
+  trackobject = ges_timeline_object_find_track_object (object, track,
+      G_TYPE_NONE);
   fail_unless (trackobject != NULL);
 
   /* This is not a SimpleLayer, therefore the properties shouldn't have changed */

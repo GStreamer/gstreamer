@@ -144,7 +144,8 @@ GST_START_TEST (test_test_source_in_layer)
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
 
   trobj =
-      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v);
+      ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
+      GES_TYPE_TRACK_VIDEO_TEST_SOURCE);
 
   ptrn = ((GESTrackVideoTestSource *) trobj)->pattern;
   assert_equals_int (ptrn, GES_VIDEO_TEST_PATTERN_WHITE);
@@ -153,7 +154,7 @@ GST_START_TEST (test_test_source_in_layer)
   /* test audio properties as well */
 
   trobj = ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source),
-      a);
+      a, GES_TYPE_TRACK_AUDIO_TEST_SOURCE);
   g_assert (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
   assert_equals_float (source->freq, 440);
   assert_equals_float (source->volume, 0);
