@@ -210,7 +210,8 @@ ges_timeline_object_fill_track_object (GESTimelineObject * object,
 
 GESTrackObject *
 ges_timeline_object_find_track_object (GESTimelineObject * object,
-				       GESTrack * track);
+				       GESTrack * track,
+                                       GType type);
 
 gboolean
 ges_timeline_object_add_track_object (GESTimelineObject *object, GESTrackObject

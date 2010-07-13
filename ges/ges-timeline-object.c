@@ -465,9 +465,12 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 /**
  * ges_timeline_object_find_track_object:
  * @object: a #GESTimelineObject
- * @track: a #GESTrack
+ * @track: a #GESTrack or NULL
+ * @type: a #GType indicating the type of track object you are looking
+ * for or %G_TYPE_NONE if you do not care about the track type.
  *
- * Finds the #GESTrackObject controlled by @object that is used in @track.
+ * Finds the #GESTrackObject controlled by @object that is used in @track. You
+ * may optionally specify a GType to further narrow search criteria.
  *
  * Note: The reference count of the returned #GESTrackObject will be increased,
  * unref when done with it.
@@ -477,7 +480,7 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 
 GESTrackObject *
 ges_timeline_object_find_track_object (GESTimelineObject * object,
-    GESTrack * track)
+    GESTrack * track, GType type)
 {
   GESTrackObject *ret = NULL;
 
@@ -486,6 +489,10 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
 
     for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
       if (GES_TRACK_OBJECT (tmp->data)->track == track) {
+        if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data,
+                type))
+          continue;
+
         ret = GES_TRACK_OBJECT (tmp->data);
         g_object_ref (ret);
         break;
