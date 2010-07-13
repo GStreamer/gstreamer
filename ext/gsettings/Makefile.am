@@ -3,7 +3,9 @@ gsettings_SCHEMAS = org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.
 org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.gschema.xml: org.freedesktop.gstreamer.default-elements.gschema.xml
 	cp org.freedesktop.gstreamer.default-elements.gschema.xml org.freedesktop.gstreamer-@GST_MAJORMINOR@.default-elements.gschema.xml
 
+if USE_GSETTINGS
 @GSETTINGS_RULES@
+endif
 
 plugin_LTLIBRARIES = libgstgsettingselements.la
 
