@@ -3969,25 +3969,22 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
 
-      /* iso files:
-       * calculate pixel-aspect-ratio using display width and height */
-      if (qtdemux->major_brand != FOURCC_qt__) {
-        GST_DEBUG_OBJECT (qtdemux,
-            "video size %dx%d, target display size %dx%d", stream->width,
-            stream->height, stream->display_width, stream->display_height);
+      /* calculate pixel-aspect-ratio using display width and height */
+      GST_DEBUG_OBJECT (qtdemux,
+          "video size %dx%d, target display size %dx%d", stream->width,
+          stream->height, stream->display_width, stream->display_height);
 
-        if (stream->display_width > 0 && stream->display_height > 0 &&
-            stream->width > 0 && stream->height > 0) {
-          gint n, d;
+      if (stream->display_width > 0 && stream->display_height > 0 &&
+          stream->width > 0 && stream->height > 0) {
+        gint n, d;
 
-          /* calculate the pixel aspect ratio using the display and pixel w/h */
-          n = stream->display_width * stream->height;
-          d = stream->display_height * stream->width;
-          if (n != d) {
-            GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
-            gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
-                GST_TYPE_FRACTION, n, d, NULL);
-          }
+        /* calculate the pixel aspect ratio using the display and pixel w/h */
+        n = stream->display_width * stream->height;
+        d = stream->display_height * stream->width;
+        if (n != d) {
+          GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
+          gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION, n, d, NULL);
         }
       }
 
