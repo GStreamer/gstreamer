@@ -3448,7 +3448,7 @@ setup_next_source (GstPlayBin * playbin, GstState target)
 
   /* first unlink the current source, if any */
   old_group = playbin->curr_group;
-  if (old_group && old_group->valid) {
+  if (old_group && old_group->valid && old_group->active) {
     gst_play_bin_update_cached_duration (playbin);
     /* unlink our pads with the sink */
     deactivate_group (playbin, old_group);
@@ -3573,30 +3573,12 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
       GST_PLAY_BIN_DYN_UNLOCK (playbin);
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:{
-      guint i;
-
+    case GST_STATE_CHANGE_READY_TO_NULL:
       memset (&playbin->duration, 0, sizeof (playbin->duration));
 
       /* unlock so that all groups go to NULL */
       groups_set_locked_state (playbin, FALSE);
-
-      for (i = 0; i < 2; i++) {
-        if (playbin->groups[i].uridecodebin) {
-          gst_element_set_state (playbin->groups[i].uridecodebin,
-              GST_STATE_NULL);
-          gst_object_unref (playbin->groups[i].uridecodebin);
-          playbin->groups[i].uridecodebin = NULL;
-        }
-        if (playbin->groups[i].suburidecodebin) {
-          gst_element_set_state (playbin->groups[i].suburidecodebin,
-              GST_STATE_NULL);
-          gst_object_unref (playbin->groups[i].suburidecodebin);
-          playbin->groups[i].suburidecodebin = NULL;
-        }
-      }
       break;
-    }
     default:
       break;
   }
@@ -3615,10 +3597,38 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       save_current_group (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+    {
+      guint i;
+
+      /* Deactive the groups, set the uridecodebins to NULL
+       * and unref them.
+       */
+      for (i = 0; i < 2; i++) {
+        if (playbin->groups[i].active && playbin->groups[i].valid) {
+          deactivate_group (playbin, &playbin->groups[i]);
+          playbin->groups[i].valid = FALSE;
+        }
+
+        if (playbin->groups[i].uridecodebin) {
+          gst_element_set_state (playbin->groups[i].uridecodebin,
+              GST_STATE_NULL);
+          gst_object_unref (playbin->groups[i].uridecodebin);
+          playbin->groups[i].uridecodebin = NULL;
+        }
+
+        if (playbin->groups[i].suburidecodebin) {
+          gst_element_set_state (playbin->groups[i].suburidecodebin,
+              GST_STATE_NULL);
+          gst_object_unref (playbin->groups[i].suburidecodebin);
+          playbin->groups[i].suburidecodebin = NULL;
+        }
+      }
+
       /* make sure the groups don't perform a state change anymore until we
        * enable them again */
       groups_set_locked_state (playbin, TRUE);
       break;
+    }
     default:
       break;
   }
@@ -3632,9 +3642,10 @@ failure:
       GstSourceGroup *curr_group;
 
       curr_group = playbin->curr_group;
-      if (curr_group && curr_group->valid) {
+      if (curr_group && curr_group->active && curr_group->valid) {
         /* unlink our pads with the sink */
         deactivate_group (playbin, curr_group);
+        curr_group->valid = FALSE;
       }
 
       /* Swap current and next group back */
