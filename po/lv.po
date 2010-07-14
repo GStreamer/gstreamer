@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
-# Rihards Prieditis <rprieditis@gmail.com>, 2010.
+# Rihards Priedītis <rprieditis@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.25.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
-"PO-Revision-Date: 2010-02-11 13:20+0000\n"
-"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2010-07-15 00:29+0100\n"
+"PO-Revision-Date: 2010-07-07 10:52+0100\n"
+"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
@@ -189,9 +189,9 @@ msgstr "Trūkst gan autovideosink, gan %s elementi."
 msgid "The autovideosink element is missing."
 msgstr "Trūkst autovideosink elements."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "autovideosink elements nedarbojas."
+msgstr "Konfigurētais videosink %s nestrādā."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -213,9 +213,9 @@ msgstr "Trūkst gan autoaudiosink, gan %s elementi."
 msgid "The autoaudiosink element is missing."
 msgstr "Trūkst autoaudiosink elements."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "autoaudiosink elements nedarbojas."
+msgstr "Konfigurētais audiosink %s nestrādā."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -224,9 +224,8 @@ msgstr "Nedarbojas autoaudiosink un %s elementi."
 msgid "The autoaudiosink element is not working."
 msgstr "autoaudiosink elements nedarbojas."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nevar atskaņot teksta failu bez video."
+msgstr "Nevar atskaņot teksta failu bez video vai vizualizācijas."
 
 #, c-format
 msgid "No decoder available for type '%s'."

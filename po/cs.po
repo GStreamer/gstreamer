@@ -1,15 +1,15 @@
 # Czech translations of gst-plugins-base.
-# Copyright (C) 2007, 2008, 2009 the author(s) of gst-plugins-base.
+# Copyright (C) 2007, 2008, 2009, 2010 the author(s) of gst-plugins-base.
 # Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>.
 # This file is put in the public domain.
 # Miloslav Trmac <mitr@volny.cz>, 2004.
-# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009.
+# Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base-0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
-"PO-Revision-Date: 2009-09-21 01:21+0200\n"
+"POT-Creation-Date: 2010-07-15 00:29+0100\n"
+"PO-Revision-Date: 2010-07-11 19:47+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Lokalize 1.0\n"
 
 msgid "Master"
 msgstr "Master"
@@ -188,9 +189,9 @@ msgstr "Schází jak prvek autovideosink, tak %s."
 msgid "The autovideosink element is missing."
 msgstr "Schází prvek autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Nefunguje prvek autovideosink."
+msgstr "Nefunguje prvek videosink %s."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -212,9 +213,9 @@ msgstr "Schází jak prvek autoaudiosink, tak %s."
 msgid "The autoaudiosink element is missing."
 msgstr "Schází prvek autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Nefunguje prvek autoaudiosink."
+msgstr "Nefunguje prvek audiosink %s."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -223,9 +224,8 @@ msgstr "Nefunguje ani prvek autoaudiosink, ani %s."
 msgid "The autoaudiosink element is not working."
 msgstr "Nefunguje prvek autoaudiosink."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Textový soubor nelze přehrát bez videa."
+msgstr "Textový soubor nelze přehrát bez videa nebo vizualizací."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -485,27 +485,3 @@ msgstr "Zařízení \"%s\" je již používáno."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Zařízení \"%s\" se nezdařilo otevřít ke čtení a k zápisu."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nezdařilo se vytvoření prvku \"decodebin2\"."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nezdařilo se vytvoření prvku \"queue2\"."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nezdařilo se vytvoření prvku \"typefind\"."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Textové titulky ani podřazené obrázky nelze zobrazit."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Nezadán žádný adresář Temp."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Nezdařilo se vytvoření dočasného souboru \"%s\"."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Vnitřní chyba datového toku."
