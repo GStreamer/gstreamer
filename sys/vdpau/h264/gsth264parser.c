@@ -18,16 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <string.h>
-#include <math.h>
-
-#ifndef HAVE_LOG2
-#define log2(x) (log(x)/log(2))
-#endif
 
 #include "gstnalreader.h"
 
@@ -615,7 +606,7 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
       gint i;
 
       READ_UE (&reader, pic->pic_size_in_map_units_minus1);
-      bits = ceil (log2 (pic->num_slice_groups_minus1 + 1));
+      bits = g_bit_storage (pic->num_slice_groups_minus1 + 1);
 
       pic->slice_group_id =
           g_new (guint8, pic->pic_size_in_map_units_minus1 + 1);
