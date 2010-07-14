@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.29 "It's a Trap"
+Release notes for GStreamer 0.10.30 "Safety First"
         
 
 
@@ -37,76 +37,115 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * improve plugin loading robustness: do not ever unload a plugin after calling into it: should fix mystery crashers during registry loading when a plugin init function returns FALSE (e.g. when some supporting library fails to initialise or a wrapper plugin found no features to wrap and wrongly returned FALSE)
-      * configurable memory alignment for GstBuffers
-      * add QoS message to inform apps of lost data, dropped frames etc.
-      * basesink, basetransform: add support for new QoS message
-      * basetransform: accept non-fixed caps suggestions
-      * basesrc: fix gst_base_src_new_seamless_segment()
-      * GstController fixes and optimisations
-      * set thread name for pad tasks on Linux
-      * pipeline, bin: fix refcount issue when removing elements during a state change
-      * queue2: implement seeking in download mode
-      * queue2: implement flushing in download buffering
-      * queue2: improve buffer level measurement in download mode
-      * fdsrc: allow specifying the size in bytes on the uri
-      * build fixes: better checks for uint128_t, inline assembly on OSX, compilation if HAVE_REGISTER_PRINTF_SPECIFIER is undefined, gobject-introspection
-      * two symbols were removed that had been exported but never been used or been declared in any header file: gst_element_default_error and gst_element_request_compatible_pad
+      * GLib requirement was bumped to 2.20, automake requirement to 1.10
+      * bin: unlock gst_element_get_state() on error, instead of hanging forever if no timeout is given
+      * clock: fix refcounting bug in gst_clock_set_master
+      * caps: make sure _normalize() is applied on all structures
+      * info: add new TRACE log level and move refcounting there from LOG level
+      * pad: don't check twice for changed caps per push
+      * pad: fix iterator aggregation of all pads in the internal links fallback
+      * tagsetter: protect tagsetter operations with a lock
+      * value: support short fourccs (esp. serialisation/deserialisation)
+      * adapter: fix _try_to_merge_up(); optimize progressive masked scans
+      * basesink: implement percentage position and duration queries
+      * basesink: fix segment query return value
+      * basetransform: add accept_caps vmethod
+      * basetransform: re-evaluate proxy_alloc when reconfigured
+      * basetransform: assume in_size equals out_size if there's no transform_size/get_unit_size vfunc
+      * fdsink, filesink: make sync property work correctly
+      * typefind: make sure buffers' metadata is writable before setting caps on them
+      * queue2: fix merging of ranges
+      * queue2: don't wait for data when EOS
+      * queue2: don't ignore failure to open the temporary file location
+      * tools: make gst-launch print things correctly to stderr/stdout and make --quiet work correctly
+      * introspection: add many more gobject-introspection annotations
+      * xml: serialisation/deserialisation to/from XML has been deprecated, since it's always been broken
+             for all but the most trivial pipelines, and will likely never be fixed
 
 Bugs fixed in this release
      
-      * 576234 : [basetransform] Suggesting non-fixed caps or no size doesn't work for upstream negotiation
-      * 520697 : [API] Add GST_TAG_USER_RATING
-      * 590718 : docs build failures with -jN: cp: cannot create regular file `build/image.entities': File exists
-      * 595958 : Position not updated after a backwards gst_event_new_step()
-      * 596832 : configurable buffer alignment
-      * 600718 : autoconf fails with gobject-introspection
-      * 600877 : [uridecodebin] Needs to disable download buffering for non-fast-start files
-      * 603710 : Can't compile with introspection support
-      * 603831 : build with libtool 1.x.y only works if --disable-shave is used
-      * 609046 : basetransform now ignores suggestions from capsfilter
-      * 609170 : basesrc pushes two newsegment
-      * 610256 : Use G_VALUE_COLLECT_INIT if available
-      * 611075 : Typo in debug_dump_pad function
-      * 611911 : Set thread names on pipeline threads
-      * 612370 : gstutils.c inline asm typo, compilation fails
-      * 612410 : [API][tags] add new geo tags
-      * 612733 : Build fails because HAVE_REGISTER_PRINTF_SPECIFIER is undefined
-      * 612881 : [utils] gst_pad_proxy_setcaps() doesn't handler iterator resyncs
-      * 613215 : delayed set in gst-launch are not recursive
-      * 613593 : git-update.sh script does not work on fresh git repository clones
-      * 614167 : gstinfo: no previous prototype for 'xxx' when buildign with --disable-gst-debug
-      * 614629 : utils: Use G_GNUC_CONST instead of G_GNUC_PURE for conversion functions
-      * 614767 : libgstreamer build failure on OS X x86_64
-      * 614833 : out of srcdir build fails for libs/gst/check
-      * 615698 :  " warning: cast increases required alignment of target type " with gcc 4.2.1 on arm
-      * 615756 : [bin] refcount issue when removing element in error
-      * 615880 : Add some more custom flow returns
-      * 615881 : [LFOControlSource] Use correct setter for double GValues
-      * 616846 : Crash in gst_interpolation_control_source_find_control_point_iter
+      * 623586 : gst/tagsetter check fails
+      * 463435 : Skip #include < libxml/parser.h > in gstconfig.h.in when  not needed
+      * 505770 : gst_element_get_state() should unblock if element posts an error
+      * 615820 : implement percentage position and duration queries
+      * 615941 : [tags] Add GST_TAG_DEVICE_MANUFACTURER and GST_TAG_DEVICE_MODEL
+      * 616586 : Use GObject's boxed type for GError
+      * 617223 : [tags] Add tags for direction of capture and movement
+      * 617625 : Commandline utility wrappers (gst-run) don't work on Windows
+      * 618644 : gst_pad_get_caps() Return pad template if parent element is in GST_STATE_NULL
+      * 619508 : [tag] Add image orientation tag
+      * 619815 : GST_PLUGIN_LOADING_WHITELIST env var for unit tests
+      * 619828 : [API] adapter: add masked_scan_uint32_peek
+      * 620460 : info: add new TRACE log level and move refcounting there from LOG level
+      * 620490 : [basesink] segment query unconditionally returns FALSE
+      * 621006 : Deprecate unused gst_object_{get|set}_name_prefix()
+      * 621282 : Display of short fourccs is in hex instead of text
+      * 621332 : BaseTransform should disable proxy alloc if downstream changes caps
+      * 621334 : GstBaseTransform should not require a transform_size function
+      * 621505 : Disable memory poisoning by default for releases
+      * 621527 : gstcaps: New gst_caps_steal_structure() method
+      * 621530 : filesink ignores sync=true
+      * 621595 : --quiet doesnt make gst-launch be completely quiet, also messages should not go to stdout
+      * 621773 : Add introspection annotations
+      * 621867 : gst-launch: rename new --no-play command line option
+      * 621896 : [API][taglist] Add gst_tag_list_peek_string_index
+      * 622504 : [GstPad] Provide more fine-grained linking methods
+      * 622546 : distcheck fails in docs/plugins/
+      * 622685 : [GstXml] Deprecate GstXml
+      * 622967 : [queue2] Problems with progressive downloading
+      * 623301 : gst_caps_normalize : doesn't normalize completely
+      * 623589 : Fix races/refcounting bugs with slave clocks
+      * 624113 : [tags] wrong behaviour in merge function for strings
+      * 622025 : Can't build gstreamer due to Gst-0.10.gir: error: Can't resolve type 'PadIntLinkFunction' for field Gst.Pad.intlinkfunc
 
 API changed in this release
      
 - API additions:
     
-* GST_MESSAGE_QOS
-* gst_message_new_qos()
-* gst_message_parse_qos()
-* gst_message_parse_qos_stats()
-* gst_message_parse_qos_values()
-* gst_message_set_qos_stats()
-* gst_message_set_qos_values()
-* GST_FLOW_CUSTOM_SUCCESS_1
-* GST_FLOW_CUSTOM_SUCCESS_2
-* GST_FLOW_CUSTOM_ERROR_1
-* GST_FLOW_CUSTOM_ERROR_2
-* GST_TAG_USER_RATING
-* GST_TAG_GEO_LOCATION_COUNTRY
-* GST_TAG_GEO_LOCATION_CITY
-* GST_TAG_GEO_LOCATION_SUBLOCATION
+* gst_caps_steal_structure()
+* gst_clock_id_wait_async_full()
+* gst_element_link_pads_full()
+* GstPadLinkCheck
+* gst_pad_link_check_get_type()
+* gst_pad_link_full()
+* gst_structure_fixate_field_string()
+* GST_TAG_DEVICE_MANUFACTURER
+* GST_TAG_DEVICE_MODEL
+* GST_TAG_IMAGE_ORIENTATION
+* GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION
+* GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION
+* GST_TAG_GEO_LOCATION_MOVEMENT_SPEED
+* gst_tag_list_peek_string_index()
+* GST_TRACE
+* GST_TRACE_OBJECT
+* GST_CAT_TRACE
+* GST_CAT_TRACE_OBJECT
+* GST_LEVEL_TRACE
+* gst_adapter_masked_scan_uint32_peek
+* GstBaseSink::enable-last-buffer
+* gst_base_sink_is_last_buffer_enabled()
+* gst_base_sink_set_last_buffer_enabled()
+* GstBaseTransform::accept_caps()
 - API deprecations:
     
-* gst_element_class_set_details()
+* gst_object_get_name_prefix()
+* gst_object_set_name_prefix()
+* gst_caps_load_thyself()
+* gst_caps_save_thyself()
+* gst_class_signal_emit_by_name()
+* gst_object_save_thyself()
+* gst_object_restore_thyself()
+* gst_pad_load_and_link()
+* gst_xml_get_element()
+* gst_xml_get_topelements()
+* gst_xml_get_type()
+* gst_xml_make_element()
+* gst_xml_new()
+* gst_xml_parse_doc()
+* gst_xml_parse_file()
+* gst_xml_parse_memory()
+* gst_xml_write()
+* gst_xml_write_file()
 
 Download
 
@@ -140,21 +179,24 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Alan Knowles
-      * André Dieb Martins
+      * Alessandro Decina
+      * Alexander Saprykin
+      * Benjamin Gaignard
       * Benjamin Otte
       * David Schleef
+      * Eduardo Dobay
       * Edward Hervey
-      * Jeremy Huddleston
-      * Jonas Holmberg
-      * Leo Singer
-      * Mart Raudsepp
-      * Philip Withnall
+      * Johan Dahlin
+      * Mark Nauwelaerts
+      * Martin Bisson
+      * Olivier Crête
       * Philippe Normand
-      * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
       * Tim-Philipp Müller
+      * Tristan Matthews
       * Wim Taymans
+      * Zaheer Abbas Merali
+      * Руслан Ижбулатов
  
