@@ -119,7 +119,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GESTimelineObject *prev_object = NULL;
   GESTimelineObject *prev_transition = NULL;
 
-  priority = GES_TIMELINE_LAYER (self)->min_gnl_priority;
+  priority = GES_TIMELINE_LAYER (self)->min_gnl_priority + 2;
 
   GST_DEBUG ("recalculating values");
 
@@ -132,11 +132,9 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
     dur = GES_TIMELINE_OBJECT_DURATION (obj);
     height = GES_TIMELINE_OBJECT_HEIGHT (obj);
 
-    GST_DEBUG ("obj: %p, %ld, height: %d", obj, pos, height);
-
     if (GES_IS_TIMELINE_SOURCE (obj)) {
 
-      priority += height;
+      GST_LOG ("%p obj: height: %d: priority %d", obj, height, priority);
 
       if (G_UNLIKELY (GES_TIMELINE_OBJECT_START (obj) != pos)) {
         ges_timeline_object_set_start (obj, pos);
@@ -146,15 +144,18 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
         ges_timeline_object_set_priority (obj, priority);
       }
 
+      transition_priority = MAX (0, priority - 1);
+      priority += height;
       pos += dur;
 
       g_assert (priority != -1);
 
     } else if (GES_IS_TIMELINE_TRANSITION (obj)) {
-      GST_LOG ("%p is transition\n", obj);
 
       pos -= dur;
-      transition_priority = MAX (0, priority - 1);
+
+      GST_LOG ("%p obj: height: %d: trans_priority %d", obj, height,
+          transition_priority);
 
       g_assert (transition_priority != -1);
 
@@ -193,9 +194,6 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       }
       prev_transition = obj;
     }
-
-    GST_LOG ("obj: %p, start: " GST_TIME_FORMAT " pri: %ld",
-        obj, GST_TIME_ARGS (pos), priority);
 
     prev_object = obj;
 
