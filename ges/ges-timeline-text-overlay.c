@@ -158,7 +158,7 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTextOverlay:font-dec
+   * GESTimelineTextOverlay:font-desc
    *
    * Pango font description string
    */
