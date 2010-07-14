@@ -146,7 +146,7 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
 
   g_object_class_install_property (object_class, PROP_TEXT,
       g_param_spec_string ("text", "Text", "The text to display",
-          "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
    * GESTimelineTextOverlay:font-desc
@@ -244,9 +244,15 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
 
     success = ges_track_add_object (track, overlay);
 
-    if (self->text)
+    if ((self->text) && *(self->text)) {
       ges_track_text_overlay_set_text ((GESTrackTextOverlay *) overlay,
           self->text);
+    }
+
+    else {
+      ges_track_object_set_active (overlay, FALSE);
+    }
+
     if (self->font_desc)
       ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) overlay,
           self->font_desc);
@@ -276,9 +282,12 @@ ges_timeline_source_set_text (GESTimelineSource * self, const gchar * text)
   for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
-    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject))
+    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject)) {
       ges_track_text_overlay_set_text ((GESTrackTextOverlay *)
           (trackobject), self->text);
+      ges_track_object_set_active (trackobject, (text && (*text)) ? TRUE :
+          FALSE);
+    }
   }
 }
 
