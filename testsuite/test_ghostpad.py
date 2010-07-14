@@ -177,5 +177,18 @@ class PipeTest(TestCase):
         gst.debug('received handoff on pad %r' % pad)
         self._handoffs += 1
 
+class TargetTest(TestCase):
+    def test_target(self):
+        src = gst.Pad("src", gst.PAD_SRC)
+
+        ghost = gst.GhostPad("ghost_src", src)
+        self.failUnless(ghost.get_target() is src)
+
+        ghost.set_target(None)
+        self.failUnless(ghost.get_target() is None)
+
+        ghost.set_target(src)
+        self.failUnless(ghost.get_target() is src)
+
 if __name__ == "__main__":
     unittest.main()

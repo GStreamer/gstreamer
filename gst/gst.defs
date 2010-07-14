@@ -2529,7 +2529,7 @@
   (c-name "gst_ghost_pad_set_target")
   (return-type "gboolean")
   (parameters
-    '("GstPad*" "newtarget")
+    '("GstPad*" "newtarget" (null-ok))
   )
 )
 
