@@ -481,14 +481,9 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         break;
       }
       case GST_MESSAGE_CLOCK_LOST:
-#if 0
-        /* disabled for now as it caused problems with rtspsrc. We need to fix
-         * rtspsrc first, then release -good before we can reenable this again
-         */
         PRINT ("Clock lost, selecting a new one\n");
         gst_element_set_state (pipeline, GST_STATE_PAUSED);
         gst_element_set_state (pipeline, GST_STATE_PLAYING);
-#endif
         break;
       case GST_MESSAGE_EOS:{
         waiting_eos = FALSE;
