@@ -29,6 +29,22 @@
 #include "ges-track-source.h"
 #include "ges-track-text-overlay.h"
 
+/* FIXME: really need to put this in a common header file */
+
+#define DEFAULT_PROP_TEXT ""
+#define DEFAULT_PROP_FONT_DESC "Serif 36"
+#define DEFAULT_PROP_VALIGNMENT GES_TEXT_VALIGN_BASELINE
+#define DEFAULT_PROP_HALIGNMENT GES_TEXT_HALIGN_CENTER
+#
+enum
+{
+  PROP_0,
+  PROP_TEXT,
+  PROP_FONT_DESC,
+  PROP_HALIGNMENT,
+  PROP_VALIGNMENT,
+};
+
 G_DEFINE_TYPE (GESTimelineSource, ges_timeline_source,
     GES_TYPE_TIMELINE_OBJECT);
 
@@ -41,10 +57,36 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     GESTrack * track);
 
 static void
+ges_timeline_source_set_text (GESTimelineSource * self, const gchar * text);
+
+static void
+ges_timeline_source_set_font_desc (GESTimelineSource * self, const gchar *
+    font_desc);
+
+static void
+ges_timeline_source_set_valign (GESTimelineSource * self, GESTextVAlign valign);
+
+static void
+ges_timeline_source_set_halign (GESTimelineSource * self, GESTextHAlign halign);
+
+static void
 ges_timeline_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
+  GESTimelineSource *ts = (GESTimelineSource *) object;
   switch (property_id) {
+    case PROP_TEXT:
+      g_value_set_string (value, ts->text);
+      break;
+    case PROP_FONT_DESC:
+      g_value_set_string (value, ts->font_desc);
+      break;
+    case PROP_HALIGNMENT:
+      g_value_set_enum (value, ts->halign);
+      break;
+    case PROP_VALIGNMENT:
+      g_value_set_enum (value, ts->valign);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -54,7 +96,20 @@ static void
 ges_timeline_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GESTimelineSource *ts = (GESTimelineSource *) object;
   switch (property_id) {
+    case PROP_TEXT:
+      ges_timeline_source_set_text (ts, g_value_get_string (value));
+      break;
+    case PROP_FONT_DESC:
+      ges_timeline_source_set_font_desc (ts, g_value_get_string (value));
+      break;
+    case PROP_HALIGNMENT:
+      ges_timeline_source_set_halign (ts, g_value_get_enum (value));
+      break;
+    case PROP_VALIGNMENT:
+      ges_timeline_source_set_valign (ts, g_value_get_enum (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -83,6 +138,51 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
   object_class->dispose = ges_timeline_source_dispose;
   object_class->finalize = ges_timeline_source_finalize;
 
+  /**
+   * GESTimelineTextOverlay:text
+   *
+   * The text to diplay
+   */
+
+  g_object_class_install_property (object_class, PROP_TEXT,
+      g_param_spec_string ("text", "Text", "The text to display",
+          "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTimelineTextOverlay:font-desc
+   *
+   * Pango font description string
+   */
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
+      g_param_spec_string ("font-desc", "font description",
+          "Pango font description of font to be used for rendering. "
+          "See documentation of pango_font_description_from_string "
+          "for syntax.", DEFAULT_PROP_FONT_DESC,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GESTimelineTextOverlay:valignment
+   *
+   * Vertical alignent of the text
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGNMENT,
+      g_param_spec_enum ("valignment", "vertical alignment",
+          "Vertical alignment of the text", GES_TEXT_VALIGN_TYPE,
+          DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
+  /**
+   * GESTimelineTextOverlay:halignment
+   *
+   * Horizontal alignment of the text
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGNMENT,
+      g_param_spec_enum ("halignment", "horizontal alignment",
+          "Horizontal alignment of the text",
+          GES_TEXT_HALIGN_TYPE, DEFAULT_PROP_HALIGNMENT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+
   timobj_class->create_track_object = ges_timeline_source_create_track_object;
 
   timobj_class->create_track_objects = ges_timeline_source_create_track_objects;
@@ -91,6 +191,8 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
 static void
 ges_timeline_source_init (GESTimelineSource * self)
 {
+  self->halign = DEFAULT_PROP_HALIGNMENT;
+  self->valign = DEFAULT_PROP_VALIGNMENT;
 }
 
 GESTimelineSource *
@@ -113,7 +215,10 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
     GESTrack * track)
 {
   GESTrackObject *primary, *overlay;
+  GESTimelineSource *self;
   gboolean success = FALSE;
+
+  self = (GESTimelineSource *) obj;
 
   /* calls add_track_object() for us. we already own this reference */
   primary = ges_timeline_object_create_track_object (obj, track);
@@ -137,10 +242,106 @@ ges_timeline_source_create_track_objects (GESTimelineObject * obj,
       return FALSE;
     }
 
-    ges_track_text_overlay_set_text ((GESTrackTextOverlay *) overlay,
-        "test overlays in timeline sources");
     success = ges_track_add_object (track, overlay);
+
+    if (self->text)
+      ges_track_text_overlay_set_text ((GESTrackTextOverlay *) overlay,
+          self->text);
+    if (self->font_desc)
+      ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *) overlay,
+          self->font_desc);
+    ges_track_text_overlay_set_halignment ((GESTrackTextOverlay *) overlay,
+        self->halign);
+    ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *) overlay,
+        self->valign);
+
   }
 
   return success;
+}
+
+static void
+ges_timeline_source_set_text (GESTimelineSource * self, const gchar * text)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, text:%s", self, text);
+
+  if (self->text)
+    g_free (self->text);
+
+  self->text = g_strdup (text);
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject))
+      ges_track_text_overlay_set_text ((GESTrackTextOverlay *)
+          (trackobject), self->text);
+  }
+}
+
+static void
+ges_timeline_source_set_font_desc (GESTimelineSource * self, const gchar *
+    font_desc)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
+
+  if (self->font_desc)
+    g_free (self->font_desc);
+
+  self->font_desc = g_strdup (font_desc);
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject))
+      ges_track_text_overlay_set_font_desc ((GESTrackTextOverlay *)
+          (trackobject), self->font_desc);
+  }
+
+}
+
+static void
+ges_timeline_source_set_halign (GESTimelineSource * self, GESTextHAlign halign)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, halign:%d", self, halign);
+
+  self->halign = halign;
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject))
+      ges_track_text_overlay_set_halignment ((GESTrackTextOverlay *)
+          (trackobject), self->halign);
+  }
+
+}
+
+static void
+ges_timeline_source_set_valign (GESTimelineSource * self, GESTextVAlign valign)
+{
+  GList *tmp;
+  GESTimelineObject *object = (GESTimelineObject *) self;
+
+  GST_DEBUG ("self:%p, valign:%d", self, valign);
+
+  self->valign = valign;
+
+  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+    GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
+
+    if (GES_IS_TRACK_TEXT_OVERLAY (trackobject))
+      ges_track_text_overlay_set_valignment ((GESTrackTextOverlay *)
+          (trackobject), self->valign);
+  }
+
 }

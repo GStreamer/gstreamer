@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-types.h>
 #include <ges/ges-timeline-object.h>
+#include <ges/ges-enums.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +52,13 @@ G_BEGIN_DECLS
 
 struct _GESTimelineSource {
   GESTimelineObject parent;
-  /*< public >*/
+
+  /*< private *>*/
+  gchar *text;
+  gchar *font_desc;
+  GESTextHAlign halign;
+  GESTextVAlign valign;
+ /*< public >*/
 };
 
 /**
