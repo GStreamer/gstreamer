@@ -127,12 +127,14 @@ ges_track_text_overlay_set_property (GObject * object,
 static GstElement *
 ges_track_text_overlay_create_element (GESTrackOperation * object)
 {
-  GstElement *ret, *text;
+  GstElement *ret, *text, *iconv, *oconv;
   GstPad *src_target, *sink_target;
   GstPad *src, *sink;
   GESTrackTextOverlay *self = GES_TRACK_TEXT_OVERLAY (object);
 
   text = gst_element_factory_make ("textoverlay", NULL);
+  iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  oconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
   self->text_el = text;
   g_object_ref (text);
 
@@ -145,10 +147,11 @@ ges_track_text_overlay_create_element (GESTrackOperation * object)
       (gint) self->valign, NULL);
 
   ret = gst_bin_new ("overlay-bin");
-  gst_bin_add (GST_BIN (ret), text);
+  gst_bin_add_many (GST_BIN (ret), text, iconv, oconv, NULL);
+  gst_element_link_many (iconv, text, oconv, NULL);
 
-  src_target = gst_element_get_static_pad (text, "src");
-  sink_target = gst_element_get_static_pad (text, "video_sink");
+  src_target = gst_element_get_static_pad (oconv, "src");
+  sink_target = gst_element_get_static_pad (iconv, "sink");
 
   src = gst_ghost_pad_new ("src", src_target);
   sink = gst_ghost_pad_new ("video_sink", sink_target);
