@@ -318,7 +318,7 @@ static GstSegment *
 gst_timidity_get_segment (GstTimidity * timidity, GstFormat format,
     gboolean update)
 {
-  gint64 start, stop, time;
+  gint64 start = 0, stop = 0, time = 0;
 
   GstSegment *segment = gst_segment_new ();
 
@@ -377,7 +377,7 @@ gst_timidity_src_event (GstPad * pad, GstEvent * event)
       GstFormat src_format, dst_format;
       GstSeekFlags flags;
       GstSeekType start_type, stop_type;
-      gint64 orig_start, start, stop;
+      gint64 orig_start, start = 0, stop = 0;
       gboolean flush, update;
 
       if (!timidity->song)
