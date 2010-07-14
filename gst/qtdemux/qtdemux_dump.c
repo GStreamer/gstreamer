@@ -37,14 +37,31 @@
 gboolean
 qtdemux_dump_mvhd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
+  guint32 version = 0;
+
   if (!qt_atom_parser_has_remaining (data, 100))
     return FALSE;
 
-  GST_LOG ("%*s  version/flags: %08x", depth, "", GET_UINT32 (data));
-  GST_LOG ("%*s  creation time: %u", depth, "", GET_UINT32 (data));
-  GST_LOG ("%*s  modify time:   %u", depth, "", GET_UINT32 (data));
-  GST_LOG ("%*s  time scale:    1/%u sec", depth, "", GET_UINT32 (data));
-  GST_LOG ("%*s  duration:      %u", depth, "", GET_UINT32 (data));
+  version = GET_UINT32 (data);
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  version = version >> 24;
+  if (version == 0) {
+    GST_LOG ("%*s  creation time: %u", depth, "", GET_UINT32 (data));
+    GST_LOG ("%*s  modify time:   %u", depth, "", GET_UINT32 (data));
+    GST_LOG ("%*s  time scale:    1/%u sec", depth, "", GET_UINT32 (data));
+    GST_LOG ("%*s  duration:      %u", depth, "", GET_UINT32 (data));
+  } else if (version == 1) {
+    GST_LOG ("%*s  creation time: %" G_GUINT64_FORMAT,
+        depth, "", GET_UINT64 (data));
+    GST_LOG ("%*s  modify time:   %" G_GUINT64_FORMAT,
+        depth, "", GET_UINT64 (data));
+    GST_LOG ("%*s  time scale:    1/%u sec", depth, "", GET_UINT32 (data));
+    GST_LOG ("%*s  duration:      %" G_GUINT64_FORMAT,
+        depth, "", GET_UINT64 (data));
+  } else
+    return FALSE;
+
   GST_LOG ("%*s  pref. rate:    %g", depth, "", GET_FP32 (data));
   GST_LOG ("%*s  pref. volume:  %g", depth, "", GET_FP16 (data));
   gst_byte_reader_skip (data, 46);
@@ -548,7 +565,7 @@ qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
   if (__gst_debug_min < GST_LEVEL_LOG)
     return TRUE;
 
-  g_node_traverse (qtdemux->moov_node, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+  g_node_traverse (node, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
       qtdemux_node_dump_foreach, qtdemux);
   return TRUE;
 }
