@@ -4,12 +4,13 @@
 #
 # Roland Illig <roland.illig@gmx.de>, 2004.
 # Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
-"PO-Revision-Date: 2010-04-26 23:23+0200\n"
+"POT-Creation-Date: 2010-07-14 17:46+0100\n"
+"PO-Revision-Date: 2010-07-09 01:12+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -654,33 +655,38 @@ msgstr ""
 "ein Ort innerhalb einer Stadt, in dem das Medium aufgezeichnet oder "
 "produziert wurde"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "geografischer Längengrad"
+msgstr "Geografische Bewegungsgeschwindigkeit"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"Bewegungsgeschwindigkeit des Aufzeichnungsgeräts während der Aufzeichnung "
+"mit m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "geografische Höhe"
+msgstr "Geografische Bewegungsrichtung"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"Zeigt die Bewegungsrichtung des Aufzeichnungsgeräts während der Aufzeichnung "
+"eines Mediums an. Die Darstellung erfolgt in Grad als Fließkommazahl. 0 "
+"entspricht dem geografischen Norden und die Zahl wächst im Uhrzeigersinn"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "geografische Höhe"
+msgstr "Geografische Aufzeichnungsrichtung"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"Zeigt die Richtung des Geräts während der Aufzeichnung eines Mediums an. Die "
+"Darstellung erfolgt in Grad als Fließkommazahl. 0 entspricht dem "
+"geografischen Norden und die Zahl wächst im Uhrzeigersinn"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -744,24 +750,22 @@ msgstr ""
 "das Medium beim Benutzer"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "Gerätehersteller"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "Version des Codierers für diesen Datenstrom"
+msgstr "Der Hersteller des Geräts zur Erstellung dieses Mediums"
 
 msgid "device model"
-msgstr ""
+msgstr "Gerätemodell"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "Version des Codierers für diesen Datenstrom"
+msgstr "Das Modell des Geräts zur Erstellung dieses Mediums"
 
 msgid "image orientation"
-msgstr ""
+msgstr "Bildorientierung"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Wie das Bild vor der Darstellung gedreht oder gespiegelt werden soll"
 
 msgid ", "
 msgstr ", "
@@ -1125,9 +1129,8 @@ msgstr "DATEI"
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Keine Routine zum Abfangen von Fehlern installieren"
+msgstr "Keine Routinen für SIGUSR1 und SIGUSR2 installieren"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
