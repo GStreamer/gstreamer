@@ -24,7 +24,7 @@
 #include "mpegutil.h"
 
 /* default intra quant matrix, in zig-zag order */
-static const guint8 default_intra_quantizer_matrix[64] = {
+const guint8 default_intra_quantizer_matrix[64] = {
   8,
   16, 16,
   19, 16, 19,
@@ -42,8 +42,7 @@ static const guint8 default_intra_quantizer_matrix[64] = {
   83
 };
 
-guint8 mpeg2_scan[64] = {
-  /* Zig-Zag scan pattern */
+const guint8 mpeg_zigzag_8x8[64] = {
   0, 1, 8, 16, 9, 2, 3, 10,
   17, 24, 32, 25, 18, 11, 4, 5,
   12, 19, 26, 33, 40, 48, 41, 34,
@@ -79,7 +78,7 @@ guint8 mpeg2_scan[64] = {
   if (!gst_bit_reader_get_bits_uint64 (reader, &val, nbits)) { \
     GST_WARNING ("failed to read uint32, nbits: %d", nbits); \
     goto error; \
-} \
+  } \
 }
 
 static void
@@ -214,7 +213,7 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, GstBuffer * buffer)
   if (load_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++)
-      READ_UINT8 (&reader, hdr->intra_quantizer_matrix[mpeg2_scan[i]], 8);
+      READ_UINT8 (&reader, hdr->intra_quantizer_matrix[mpeg_zigzag_8x8[i]], 8);
   } else
     memcpy (hdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
 
@@ -223,7 +222,8 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, GstBuffer * buffer)
   if (load_non_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++)
-      READ_UINT8 (&reader, hdr->non_intra_quantizer_matrix[mpeg2_scan[i]], 8);
+      READ_UINT8 (&reader, hdr->non_intra_quantizer_matrix[mpeg_zigzag_8x8[i]],
+          8);
   } else
     memset (hdr->non_intra_quantizer_matrix, 16, 64);
 
@@ -399,7 +399,7 @@ mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, GstBuffer * buffer)
   if (load_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&reader, qm->intra_quantizer_matrix[mpeg2_scan[i]], 8);
+      READ_UINT8 (&reader, qm->intra_quantizer_matrix[mpeg_zigzag_8x8[i]], 8);
     }
   } else
     memcpy (qm->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
@@ -409,7 +409,8 @@ mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, GstBuffer * buffer)
   if (load_non_intra_flag) {
     gint i;
     for (i = 0; i < 64; i++) {
-      READ_UINT8 (&reader, qm->non_intra_quantizer_matrix[mpeg2_scan[i]], 8);
+      READ_UINT8 (&reader, qm->non_intra_quantizer_matrix[mpeg_zigzag_8x8[i]],
+          8);
     }
   } else
     memset (qm->non_intra_quantizer_matrix, 16, 64);
