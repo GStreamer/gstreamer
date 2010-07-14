@@ -36,6 +36,8 @@ enum
 };
 
 
+#define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
+
 static void
 ges_track_audio_transition_duration_changed (GESTrackObject * self, guint64);
 
@@ -143,7 +145,10 @@ link_element_to_mixer_with_volume (GstBin * bin, GstElement * element,
   GstElement *volume = gst_element_factory_make ("volume", NULL);
   gst_bin_add (bin, volume);
 
-  gst_element_link_many (element, volume, mixer, NULL);
+  if (!fast_element_link (element, volume) ||
+      !gst_element_link_pads_full (volume, "src", mixer, "sink%d",
+          GST_PAD_LINK_CHECK_NOTHING))
+    GST_ERROR_OBJECT (bin, "Error linking volume to mixer");
 
   return G_OBJECT (volume);
 }
@@ -180,7 +185,7 @@ ges_track_audio_transition_create_element (GESTrackTransition * object)
 
   g_assert (atarget && btarget);
 
-  gst_element_link (mixer, oconv);
+  fast_element_link (mixer, oconv);
 
   sinka_target = gst_element_get_static_pad (iconva, "sink");
   sinkb_target = gst_element_get_static_pad (iconvb, "sink");

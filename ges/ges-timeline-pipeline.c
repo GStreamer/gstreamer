@@ -367,7 +367,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
   /* Linking pad to tee */
   sinkpad = gst_element_get_static_pad (chain->tee, "sink");
-  gst_pad_link (pad, sinkpad);
+  gst_pad_link_full (pad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (sinkpad);
 
   /* Connect playsink */
@@ -401,7 +401,8 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     }
 
     tmppad = gst_element_get_request_pad (chain->tee, "src%d");
-    if (G_UNLIKELY (gst_pad_link (tmppad, sinkpad) != GST_PAD_LINK_OK)) {
+    if (G_UNLIKELY (gst_pad_link_full (tmppad, sinkpad,
+                GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
       GST_ERROR_OBJECT (self, "Couldn't link track pad to playsink");
       gst_object_unref (tmppad);
       goto error;
@@ -441,8 +442,9 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     }
 
     tmppad = gst_element_get_request_pad (chain->tee, "src%d");
-    if (G_UNLIKELY (gst_pad_link (tmppad,
-                chain->encodebinpad) != GST_PAD_LINK_OK)) {
+    if (G_UNLIKELY (gst_pad_link_full (tmppad,
+                chain->encodebinpad,
+                GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK)) {
       GST_WARNING_OBJECT (self, "Couldn't link track pad to playsink");
       goto error;
     }
@@ -674,7 +676,8 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
       GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
       return FALSE;
     }
-    gst_element_link (pipeline->encodebin, pipeline->urisink);
+    gst_element_link_pads_full (pipeline->encodebin, "src", pipeline->urisink,
+        "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
 
   /* FIXUPS */

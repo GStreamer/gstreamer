@@ -36,6 +36,8 @@ enum
   PROP_0,
 };
 
+#define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
+
 static GObject *link_element_to_mixer (GstElement * element,
     GstElement * mixer);
 
@@ -205,7 +207,7 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
 
   self->mixer = gst_object_ref (mixer);
 
-  gst_element_link (mixer, oconv);
+  fast_element_link (mixer, oconv);
 
   sinka_target = gst_element_get_static_pad (iconva, "sink");
   sinkb_target = gst_element_get_static_pad (iconvb, "sink");
@@ -247,7 +249,7 @@ link_element_to_mixer (GstElement * element, GstElement * mixer)
   GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
   GstPad *srcpad = gst_element_get_static_pad (element, "src");
 
-  gst_pad_link (srcpad, sinkpad);
+  gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (srcpad);
 
   return G_OBJECT (sinkpad);
@@ -264,7 +266,7 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
       "type", (gint) type, "invert", (gboolean) TRUE, NULL);
   gst_bin_add (bin, smptealpha);
 
-  gst_element_link (element, smptealpha);
+  fast_element_link (element, smptealpha);
 
   /* crack */
   if (smpteref) {
@@ -273,7 +275,7 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
 
   srcpad = gst_element_get_static_pad (smptealpha, "src");
   sinkpad = gst_element_get_request_pad (mixer, "sink_%d");
-  gst_pad_link (srcpad, sinkpad);
+  gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
   gst_object_unref (srcpad);
 
   return G_OBJECT (sinkpad);
