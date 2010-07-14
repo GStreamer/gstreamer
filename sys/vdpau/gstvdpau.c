@@ -9,6 +9,7 @@
 
 #include "mpeg/gstvdpmpegdec.h"
 #include "h264/gstvdph264dec.h"
+#include "mpeg4/gstvdpmpeg4dec.h"
 #include "gstvdpvideopostprocess.h"
 #include "gstvdpsink.h"
 
@@ -23,6 +24,8 @@ vdpau_init (GstPlugin * vdpau_plugin)
       GST_RANK_NONE, GST_TYPE_VDP_MPEG_DEC);
   gst_element_register (vdpau_plugin, "vdpauh264dec",
       GST_RANK_NONE, GST_TYPE_VDP_H264_DEC);
+  gst_element_register (vdpau_plugin, "vdpaumpeg4dec",
+      GST_RANK_NONE, GST_TYPE_VDP_MPEG4_DEC);
   gst_element_register (vdpau_plugin, "vdpauvideopostprocess",
       GST_RANK_NONE, GST_TYPE_VDP_VIDEO_POST_PROCESS);
   gst_element_register (vdpau_plugin, "vdpausink",
