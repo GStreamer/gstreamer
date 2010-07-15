@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.10 "It's the bomb"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.11 "Feeding trolls is strictly forbidden"
         
 
 The GStreamer team is proud to announce a new release
@@ -34,27 +34,21 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Update to revision 21874 of ffmpeg (Feb 18th 2010)
-      * Various fixes for encoders
-      * Faster plugin/element creation
-      * Fix duration of out-of-order buffers
+      * Synced to FFmpeg 0.6 branch
+      * Add mappings for all new codecs
+      * encoders: proxy downstream width/height/framerate
+      * encoders: Fix timestamps
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 610613 : a vp6 flv file crashes totem and pitivi
-      * 330681 : [real] RV20 video garbled
-      * 361177 : Need WMS decoder
-      * 578160 : ffenc_h263 doesn't list the resolutions it actually supports
-      * 593647 : ffdec_flashsv doesn't work
-      * 593651 : buffer-size property of ffenc_* is a cop-out
-      * 601421 : [fixed upstream] WMA9 support
-      * 601501 : [ffdec_vc1] Fails to decode some VC1 streams that work with mplayer
-      * 603331 : Feature request: intel indeo 4 & 5 codec support
-      * 610469 : flv file doesn't play in totem
-      * 610481 : [ffmpegdec] wrong output timestamps when non-keyframe following flush
-      * 611398 : [regression] outgoing buffer durations aren't correct
-      * 611722 : [regression] No decoder for video/x-wmv, wmvversion=(int)3, format=(fourcc)WMVA
-      * 611782 : [regression] Segmentation fault in demuxers
+      * 566250 : [ffdec_aac] Crash in gst_ffmpegdec_audio_frame
+      * 613231 : [ffdec] Aspect ratio change is not detected
+      * 622736 : [ffdeinterlace] [PATCH] Set the 'interlaced' field to FALSE in the source pad's caps
+      * 622773 : Encourage people to not use ffmpeg muxers
+      * 623388 : [audio encoders] Wrong output timestamps when receiving big input buffers
+      * 623671 : Various klass/description/rank fixes
 
 Download
 
@@ -83,15 +77,21 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
+      * Albert Lee
+      * Andoni Morales Alastruey
+      * Benjamin Otte
+      * David Schleef
       * Edward Hervey
-      * Jan Schmidt
-      * Julien Moutte
       * Mark Nauwelaerts
       * Olivier Crête
+      * Raimo Järvi
       * Sebastian Dröge
-      * Sjoerd Simons
       * Stefan Kost
+      * Thiago Santos
+      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Wim Taymans
- 
+      * Zaheer Abbas Merali
+
+In addition to the above contributors, we would like to extend our
+thanks to the FFmpeg developers without which these plugins would have
+no reason to exist.

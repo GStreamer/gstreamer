@@ -1,7 +1,524 @@
+=== release 0.10.11 ===
+
+2010-07-15  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  releasing 0.10.11, "Feeding trolls is strictly forbidden"
+
+2010-07-07 12:41:24 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.10.5 pre-release
+
+2010-07-06 13:58:30 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: Use "Formatter/Metadata" klass when needed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623671
+
+2010-07-06 13:58:05 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: Add more replacements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623671
+
+2010-07-06 12:03:25 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Fix the caps of various mov/amr formats
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623671
+
+2010-07-06 11:58:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  gstffmpegmux: Set rank of blacklisted muxers to GST_RANK_NONE
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623671
+
+2010-07-05 15:48:06 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/libpostproc/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	  ext: Fix CFLAGS order
+	  We'd pick up system-wide ffmpeg headers otherwise
+
+2010-07-05 10:32:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: fix timestamp resyncing some more
+	  Convert bytes to samples in remaining occurrence.
+	  See #623388.
+
+2010-07-02 18:38:06 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Fix timestamp resyncing
+	  Properly convert bytes into time using sample size, sample rate
+	  and channels number, instead of sample rate only.
+	  This can cause huge timestamp discontinuities (even though the
+	  durations remain correct) and might cause problems to muxers.
+	  Fixes #623388
+
+2010-07-02 17:21:27 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: Add rtp to the blacklisted muxers
+
+2010-07-02 12:40:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Specify the quicktime variant for mov and mp4 formats
+
+2010-06-30 10:32:25 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.10.4 pre-release
+
+2010-06-28 17:13:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  Bump automake requirement to 1.10, autoconf to 2.60 and libtool to 1.5
+	  For maintainability reasons. These are the versions we require in
+	  other modules.
+
+2010-06-27 12:52:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  0.10.10.3 pre-release
+
+2010-06-27 12:49:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/ext/Makefile.am:
+	  gst-libs: Simplify make dist by a metric truckload
+	  Just use svn export instead of trying to be smart about which files
+	  we need.
+	  This makes the resulting gst-ffmpeg tarball a bit bigger, but at least
+	  we know we have everything needed to build gst-ffmpeg
+
+2010-06-27 10:51:48 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  0.10.10.2 pre-release
+
+2010-06-25 15:59:24 -0700  David Schleef <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: Add alternate element in description
+	  For muxers where there is a better GStreamer alternative, add
+	  "(not recommended, use alternate_element_name instead)" to
+	  the description.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=622773
+
+2010-06-25 15:57:45 -0700  David Schleef <ds@schleef.org>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  ffmpegmux: Disable raw muxers
+	  They are effectively identity elements.  Many are already
+	  disabled via blacklist.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=622773
+
+2010-06-25 16:26:00 +0200  Andoni Morales Alastruey <amorales@flumotion.com>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  ffdeinterlace: Set "interlaced=false" in the source pad's caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=622736
+
+2010-06-24 15:09:59 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 35617c2 to a519571
+
+2010-06-16 12:10:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/ext/Makefile.am:
+	  gst-libs: Fixup make distclean for new ffmpeg
+
+2010-06-16 11:55:40 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure: Disable doc/applicatoin building
+
+2010-06-16 11:46:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure: Use --enable-pic instead of --enabled-shared
+	  Not sure when that option was added, but it does what we want (i.e. produce
+	  PIC code in .a/.la that we can then link into a shared library)
+
+2010-06-16 10:53:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Switch to head of ffmpeg SVN as of Wed Jun 5th
+
+2010-06-15 19:50:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	  ffmpegrev: Fix checkout directory to prevent a new checkout every time autogen.sh runs
+
+2010-06-15 16:50:33 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9339ccc to 35617c2
+
+2010-06-15 16:54:55 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5adb1ca to 9339ccc
+
+2010-06-15 16:36:03 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 57c89b7 to 5adb1ca
+
+2010-06-15 15:50:24 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c804988 to 57c89b7
+
+2010-06-15 09:40:18 +0200  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  Fix build if ORC is not installed
+
+2010-06-14 15:31:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: Call orc_init() before trying to get target flags
+
+2010-06-14 14:38:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/libpostproc/Makefile.am:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/Makefile.am:
+	* ext/libswscale/gstffmpegscale.c:
+	  Use orc instead of liboil for CPU feature detection
+
+2010-06-14 13:28:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use GLIB_EXTRA_CFLAGS
+
+2010-06-14 13:05:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7a0fdf5 to c804988
+
+2010-06-14 11:35:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6da3bab to 7a0fdf5
+
+2010-06-12 08:29:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 733fca9 to 6da3bab
+
+2010-06-11 08:23:34 +0200  Albert Lee <trisk@forkgnu.org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Fix ATRAC1/3 caps
+
+2010-06-09 12:40:29 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fad145b to 733fca9
+
+2010-06-09 12:34:23 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47683c1 to fad145b
+
+2010-06-04 18:30:59 +0100  Zaheer Abbas Merali <zaheerabbas@merali.org>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: fix typo in comment
+
+2010-06-01 23:49:41 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 17f89e5 to 47683c1
+
+2010-06-01 22:55:28 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd7ca04 to 17f89e5
+
+2010-05-31 19:18:20 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: Execute ffmpeg's configure command from that directory
+	  Avoids stupid sed warnings
+
+2010-05-31 18:53:51 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: Don't build filters
+	  We don't use them
+
+2010-05-31 18:53:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ffmpegrev:
+	  ffmpegrev: Switch to head of 0.6 branch
+	  In preparation for ffmpeg 0.6 release
+
+2010-05-31 18:53:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: First round of type mapping wrapping : image formats
+
+2010-05-31 18:44:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegdec/enc: Blacklist more raw formats
+
+2010-05-26 11:56:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 357b0db to fd7ca04
+
+2010-05-25 14:01:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	* Makefile.am:
+	* autogen.sh:
+	  build: make autotools put .m4 files into m4/ instead of common/m4/
+	  We don't want generated/copied files in common.
+
+2010-05-25 13:56:49 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: avoid bash-ism
+
+2010-05-25 13:26:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Makefile.am:
+	  build: add cruft rules for common/shave*
+
+2010-05-25 12:55:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: sipro decoder should have higher rank than realaudiodec
+
+2010-05-17 19:42:41 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffmpegdec: Don't leak the GstDataPassThrough items
+
+2010-05-14 18:25:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4d67bd6 to 357b0db
+
+2009-03-06 13:47:05 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  gstffmpegenc: Make getcaps proxy the downstream height/width/framerate requirements
+	  See #577784.
+
+2009-03-05 21:35:46 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Respect the various h263 options
+	  See #577784.
+
+2009-03-05 19:12:18 -0500  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  gstffmpegcfg: Expose loop-filter flag
+	  See #577784.
+
+2010-05-08 13:24:47 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  ffmpegcodecmap: Add mapping for SIPR
+
+2010-04-20 17:24:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-ffmpeg.doap:
+	  doap: update repository info from cvs->git and maintainers
+
+2010-04-23 14:42:03 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From fc85867 to 4d67bd6
+
+2010-04-09 11:23:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c1d07dd to fc85867
+
+2010-03-24 18:55:48 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 55cd514 to c1d07dd
+
+2010-03-24 16:37:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	  postproc: Mark postproc filters table as const
+
+2010-03-24 13:15:18 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/generic/libavcodec-locking.c:
+	  tests: Fix compiler warning
+
+2010-03-24 12:36:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  ffmpeg: Fix some remaining compiler warnings
+
+2010-03-24 12:07:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcfg.c:
+	* ext/ffmpeg/gstffmpegcfg.h:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	  build: Add all kinds of compiler warning flags and fix the resulting warnings
+
+2010-03-24 11:53:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: $GST_CVS -> $GST_GIT
+
+2010-03-24 11:51:26 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	  ffmpeg: Use gst_element_set_details_simple()
+
+2010-03-23 18:53:24 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  gstffmpegcodecmap: Give a proper mapping for NSV format
+
+2010-03-18 14:08:51 +0100  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Update caps if the aspect ratio changes
+	  Fixes bug #613231.
+
+2010-03-12 14:00:10 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From e272f71 to 55cd514
+
+2010-03-11 10:13:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec: Make metadata writable before setting caps
+	  In case we haven't created the output buffer, we should make
+	  metadata writable before setting caps on it.
+	  Fixes check unit tests.
+
+2010-03-08 15:00:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  ffdec_aac: Do not parse raw format
+	  If the stream is 'raw' format, do not use parsers.
+	  Re-enables the aac decoder by putting it back to default
+	  ffdec rank.
+	  Fixes #566250
+
+2010-03-11 11:21:30 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From df8a7c8 to e272f71
+
+2010-03-10 22:10:08 +0100  Benjamin Otte <otte@redhat.com>
+
+	* configure.ac:
+	  Update for recent changes to common submodule
+	  This just replaces every "$ERROR_CFLAGS" usage with a usage of
+	  "$WARNING_CFLAGS $ERROR_CFLAGS" to get the same functionality as
+	  previously.
+	  Actually using that separation will happen later.
+
+2010-03-10 21:52:41 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9720a7d to df8a7c8
+
+2010-03-10 20:44:28 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 0b6e072 to 9720a7d
+
+2010-03-10 16:10:27 +0100  Benjamin Otte <otte@redhat.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7cc5eb4 to 0b6e072
+
+2010-03-10 10:06:46 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: And back to development we go...
+	  ... even if some people didn't pay attention :P
+
+2010-03-10 01:11:09 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7aa65b5 to 7cc5eb4
+
+2010-03-09 21:41:00 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 44ecce7 to 7aa65b5
+
+2010-02-26 15:48:43 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use automake 1.11 silent rules instead of shave if available
+	  This makes sure that we use something that is still maintained and
+	  also brings back libtool 1.5 support.
+
 === release 0.10.10 ===
 
-2010-03-06  Edward Hervey <bilboed@bilboed.com>
+2010-03-06 14:06:06 +0100  Edward Hervey <bilboed@bilboed.com>
 
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
 	* configure.ac:
 	  releasing 0.10.10, "It's the bomb"
 
