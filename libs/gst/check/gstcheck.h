@@ -72,11 +72,11 @@ void gst_check_message_error (GstMessage * message, GstMessageType type,
 GstElement *gst_check_setup_element (const gchar * factory);
 void gst_check_teardown_element (GstElement * element);
 GstPad *gst_check_setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps);
+    GstStaticPadTemplate * tmpl, GstCaps * caps);
 GstPad * gst_check_setup_src_pad_by_name (GstElement * element,
-          GstStaticPadTemplate * template, const gchar *name);
+          GstStaticPadTemplate * tmpl, const gchar *name);
 GstPad * gst_check_setup_sink_pad_by_name (GstElement * element, 
-          GstStaticPadTemplate * template, const gchar *name);
+          GstStaticPadTemplate * tmpl, const gchar *name);
 void gst_check_teardown_pad_by_name (GstElement * element, const gchar *name);
 void gst_check_teardown_src_pad (GstElement * element);
 void gst_check_drop_buffers (void);
@@ -86,7 +86,7 @@ void gst_check_element_push_buffer_list (const gchar * element_name,
 void gst_check_element_push_buffer (const gchar * element_name,
     GstBuffer * buffer_in, GstBuffer * buffer_out);
 GstPad *gst_check_setup_sink_pad (GstElement * element,
-    GstStaticPadTemplate * template, GstCaps * caps);
+    GstStaticPadTemplate * tmpl, GstCaps * caps);
 void gst_check_teardown_sink_pad (GstElement * element);
 void gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes);
 gint gst_check_run_suite (Suite * suite, const gchar * name,
