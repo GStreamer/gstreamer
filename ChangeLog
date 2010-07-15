@@ -1,9 +1,2035 @@
-=== release 0.10.29 ===
+=== release 0.10.30 ===
 
-2010-04-28  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-07-15  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.29, "Freaks"
+	  releasing 0.10.30, "Difficult Birth"
+
+2010-07-15 00:32:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/cs.po:
+	* po/lv.po:
+	  po: update translations
+
+2010-07-14 12:59:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Disconnect and destroy uridecodebins when going from READY to NULL
+	  Fixes spurious errors that happen after an error and playing a working
+	  stream afterwards or signals that are emitted for non-active groups.
+	  Fixes bug #624266.
+
+2010-07-08 14:51:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/design/Makefile.am:
+	  docs: dist more of the gst-plugin-base design docs
+
+2010-07-07 00:35:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.29.4 pre-release
+
+2010-07-07 00:24:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/LINGUAS:
+	* po/es.po:
+	* po/fr.po:
+	* po/it.po:
+	* po/nl.po:
+	* po/pt_BR.po:
+	* po/sl.po:
+	* po/sv.po:
+	  po: update translations
+
+2010-07-06 09:47:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  Revert "playbin2: Don't put "raw" subtitle types in the raw caps for decodebin2"
+	  This reverts commit 9d7538247ff1bf9841b53eeb71ddc47f2c662415.
+	  If the DVD subpicture caps are not part of the raw caps, uridecodebin
+	  doesn't qualify resindvdbin as raw source and plugs decodebins, which
+	  causes broken DVD playback because of bugs elsewhere.
+	  This change was originally added to only expose supported, raw subtitles,
+	  e.g. if the subtitle sink did not support DVD subpictures but a converter
+	  to some supported format exists. It's not very important right now because
+	  we have nothing (that is autoplugged) to convert from plaintext/pango-markup
+	  or DVD subpictures to something else.
+	  Fixes bug #623583.
+
+2010-07-04 17:27:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Use correct Y offset for YVYU -> RGB conversions
+	  Fixes bug #623530.
+
+2010-07-04 17:26:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Use correct Y offset for the YUY2 -> RGB conversions
+	  Fixes bug #623530.
+
+2010-07-04 14:55:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-ogg.xml:
+	  docs: update ogg introspection info after riff fourcc addition
+
+2010-07-02 20:09:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Fix conversion of packed 4:2:2 YUV to 8 bit grayscale
+	  The last pixel wasn't written before for odd widths.
+	  Fixes bug #623418.
+
+2010-07-02 14:56:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Fix conversion of packed 4:2:2 YUV to RGB
+	  The last pixel wasn't written before.
+	  Fixes bug #623384.
+
+2010-07-02 13:59:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Fix invalid memory accesses with odd widths/heights during subsampling
+	  Fixes bug #623375.
+
+2010-07-01 21:21:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: If setup of the source element fails in READY->PAUSED deactive the current group
+	  Otherwise the uridecodebin will be still a child of playbin2 and
+	  its signals will still be connected. In future state changes this
+	  will then emit unrelated signals that will confuse playbin2 or,
+	  even worse, cause crashes and assertions.
+	  Fixes bug #623318.
+
+2010-06-30 21:20:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: add FLV4 fourcc and map it to video/x-vp6-flash
+	  Fixes #623176.
+
+2010-06-30 15:13:10 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/netbuffer/gstnetbuffer.c:
+	  netbuffer: declare with G_DEFINE_TYPE for type safety
+	  Fixes #623233.
+
+2010-06-24 16:55:57 +0200  Fredrik Söderquist <fs@opera.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Handle errors from _get_next_page in _do_seek.
+	  If the source element failed here, oggdemux would crash.
+	  Fixes #623218.
+
+2010-06-30 11:00:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: keep things sorted alphabetically
+	  On special request. Because it's important, apparently.
+
+2010-06-29 18:48:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  0.10.29.3 pre-release
+
+2010-06-29 18:46:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: fix --disable-external
+
+2010-06-28 15:43:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  Bump automake requirement to 1.10
+	  For maintainability reasons and $(builddir).
+	  Fixes #622944.
+
+2010-06-27 10:43:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/examples/seek/jsseek.c:
+	* tests/examples/seek/seek.c:
+	  examples: Remove some #if GTK_CHECK_VERSION(2,12,0)
+	  We depend on GTK+ >= 2.14 already.
+
+2010-06-26 21:28:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videotestsrc/Makefile.am:
+	  videotestsrc: Explicitely link with $(LIBM)
+
+2010-06-26 21:27:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/Makefile.am:
+	  videoscale: Explicitely link with $(LIBM)
+
+2010-06-26 18:19:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/video-enumtypes.c:
+	  0.10.29.2 pre-release
+
+2010-06-26 18:19:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/adder/gstadderorc-dist.c:
+	* gst/adder/gstadderorc-dist.h:
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.h:
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.h:
+	* gst/volume/gstvolumeorc-dist.c:
+	* gst/volume/gstvolumeorc-dist.h:
+	  gst: update orc files
+
+2010-06-26 18:19:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
+
+2010-06-26 17:55:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Properly clean DecodeChain after errors.
+	  If an error happens, the PAUSED state will never be reached. If an
+	  application re-uses decodebin2 (like totem) where one would normally
+	  set to READY between each file, the cleanup that normally happens in
+	  the PAUSED=>READY codepath will never be called, resulting in the
+	  following file to re-use the previous demuxer/decoder/...
+	  https://bugzilla.gnome.org/show_bug.cgi?id=622807
+
+2010-06-26 12:39:34 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/design/design-orc-integration.txt:
+	  docs: fix a few typos
+
+2010-06-26 12:03:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  checks: simplify GstBus usage in videoscale unit test
+	  There's no need to run a main loop, add a bus watch and deal with
+	  helper structs here just to wait for an EOS message.
+
+2010-06-26 11:38:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  checks: speed up videoscale unit test a little
+	  Use new gst_element_link_pads_full() function to link elements,
+	  and disable all checks when linking (don't try this at home).
+	  Down to 18s from 3m20s. Scary.
+
+2010-06-25 17:18:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	  ringbuffer: check for ringbuffer state first
+	  Check for the state of the ringbuffer before doing the checks of the other
+	  buffer properties, when we're not started, we don't care about those values.
+
+2010-06-24 13:30:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: Use a more concise pad template
+	  Speeds up caps nego 2 fold
+	  https://bugzilla.gnome.org/show_bug.cgi?id=622696
+
+2010-06-24 15:31:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/icles/audio-trickplay.c:
+	  tests: make audio-trickplay test compile when the gst debugging system is disabled
+	  Fixes unused variable warning in that case.
+
+2010-06-24 15:13:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/typefindfunctions.c:
+	  tests: add test that runs all typefinders over random data
+
+2010-06-06 12:31:35 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: Mark ISO 14496-14 files as video/quicktime
+	  These are currently being marked as audio/x-m4a which is incorrect.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=620720
+
+2010-06-24 13:42:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	  .gitignore: add temporary orc test directory
+
+2010-06-24 13:30:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: add plugin loading whitelist to test environment
+	  Only want to load core/-base plugins here.
+
+2010-06-24 15:09:04 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 73ff93a to a519571
+
+2010-06-24 08:41:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gsttageditingprivate.c:
+	  tag: Fix printf format string
+	  Use %s for strings, not %d.
+
+2010-06-24 12:06:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: Fix resampling of ARGB scanlines
+	  Previously we would read behind the end of the source lines.
+
+2010-06-16 14:08:05 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	* tests/check/libs/tag.c:
+	  tag: xmp: Adds GST_TAG_IMAGE_ORIENTATION mapping
+	  Adds GST_TAG_IMAGE_ORIENTATION mapping to xmp helper lib.
+	  Tests included.
+
+2010-06-16 11:19:37 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/tag/gstexiftag.c:
+	* gst-libs/gst/tag/gsttageditingprivate.c:
+	* gst-libs/gst/tag/gsttageditingprivate.h:
+	* tests/check/libs/tag.c:
+	* win32/common/libgsttag.def:
+	  tag: exif: Adds mapping for GST_TAG_IMAGE_ORIENTATION
+	  Adds GST_TAG_IMAGE_ORIENTATION to the exif helper lib mapped tags.
+	  Tests included.
+
+2010-06-23 12:10:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: clear ts-offset pointer
+	  We need to clear the pointer to our ts-offset element when we destroy the video
+	  chain elements to make sure nobody derefs it to invalid memory afterwards.
+
+2010-06-23 10:16:07 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Reset ts_offset field when freeing chain
+	  Otherwise we would end up with a bogus ->audiochain->ts_offset field
+	  which would cause segfaults/assertions when trying to modify the
+	  'ts-offset' property in update_av_offset().
+	  Was easy to trigger when using a list of audio+video files mixed with
+	  video-only files in totem.
+
+2010-06-18 16:37:14 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/check/elements/adder.c:
+	* tests/check/elements/appsink.c:
+	* tests/check/elements/audiotestsrc.c:
+	* tests/check/elements/gdpdepay.c:
+	* tests/check/elements/gdppay.c:
+	* tests/check/elements/multifdsink.c:
+	* tests/check/elements/videotestsrc.c:
+	* tests/check/elements/vorbisdec.c:
+	  tests: use our own macros for the tests main function
+
+2010-06-18 14:17:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  tag: Use gst_tag_list_peek_string_index in vorbistag
+	  Use _peek_string_index instead of _get_string_index to avoid
+	  a string copy
+
+2010-06-14 12:27:02 +0200  Philippe Normand <pnormand@igalia.com>
+
+	* sys/ximage/ximagesink.c:
+	* sys/ximage/ximagesink.h:
+	  ximagesink: Ask pad peer to accept new caps once only
+	  In buffer_alloc, if the buffer caps are new, call
+	  gst_pad_peer_accept_caps once only, it's useless to call it in the
+	  cases where we know it will always fail.
+	  Fixes bug #621190
+
+2010-06-17 17:07:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Add YUY2/YVYU to all RGB formats conversions
+
+2010-06-17 16:57:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Fix Y42B to YUY2/YVYU/UYVY conversion for odd widths
+
+2010-06-17 16:54:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Fix YUY2/YVYU/UYVY to Y42B conversion for odd widths
+
+2010-06-17 16:06:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	  docs: update introspected plugin docs for gstdoc-scangobj and other changes
+	  Update common for latest gstdoc-scangobj and inspect xml files for
+	  escaping and pad template order changes. Update other gtk-doc files
+	  for API additions and object hierarchy changes.
+
+2010-06-16 19:15:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: improve autoplugging
+	  Use the pad caps when they are available to continue the autoplugging. If the
+	  pad caps are set, they are fixed and then we can directly continue autoplugging.
+
+2010-06-15 16:49:17 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9339ccc to 35617c2
+
+2010-06-15 16:53:49 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5adb1ca to 9339ccc
+
+2010-06-15 16:34:54 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 57c89b7 to 5adb1ca
+
+2010-06-15 15:32:34 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c804988 to 57c89b7
+
+2010-06-15 13:09:37 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/elements/audioresample.c:
+	  Revert "audioresample: set pads as negotiable"
+	  This reverts commit 5f74f3a82eb54f9a9517f99dffbe45ce4d474870.
+
+2010-06-15 13:09:29 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* tests/check/elements/audioconvert.c:
+	  Revert "audioconvert: set pads negotiable"
+	  This reverts commit bbd7dee8f604bd0373a82e6e5cc3eec8313806ac.
+
+2010-06-14 15:19:32 -0700  David Schleef <ds@schleef.org>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: Fix black horizontal line in image
+
+2010-06-14 15:05:16 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	  tag: xmp: Init char variable for gps coordinates
+	  Initialize char variable for gps coordinates deserialization to 0
+	  to identify when it couldn't be parsed/found and error out.
+	  Fixes #621509
+
+2010-06-14 18:10:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/audioconvert.c:
+	  audioconvert: set pads negotiable
+
+2010-06-14 17:48:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/audioresample.c:
+	  audioresample: set pads as negotiable
+
+2010-06-14 16:25:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Revert accidental downgrade of common revision.
+
+2010-06-14 16:07:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  videoscale: And only expect a single buffer in the unit test
+
+2010-06-14 16:02:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  videoscale: Only convert one buffer instead of five
+	  Should make the unit test a lot faster.
+
+2010-06-14 14:13:32 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: Fix unitialized variables
+	  yay macosx compilers :(
+
+2010-06-14 14:13:16 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/video/video.c:
+	  video: Fix unitialized variable.
+	  yay macosx compilers :(
+
+2010-06-14 13:27:01 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: Use Quarks for structure name/field checking
+
+2010-06-14 13:26:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: Speed up _remove_format_info
+	  Instead of copying full caps, use the fact that the provided caps only have
+	  one structure and only copy around structures.
+
+2010-06-14 13:24:06 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: Transfer structures instead of copying them
+	  Avoids many expensive structure copies
+
+2010-06-14 13:20:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use GLIB_EXTRA_CFLAGS
+
+2010-06-14 13:02:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7a0fdf5 to c804988
+
+2010-06-14 11:31:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6da3bab to 7a0fdf5
+
+2010-06-14 11:20:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/examples/seek/jsseek.c:
+	  jsseek: Don't use deprecated GLib API
+	  Fixes once again bug #605100.
+
+2010-06-14 11:16:45 +0200  Prahal <prahal at yahoo.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: use accumulator for autoplug-sort
+	  Use an accumulator for the autoplug-sort signal so that we can stop the emission
+	  when a signal handler produced a valid result. This avoids the object handler
+	  to overwrite the results from user signals.
+	  Fixes #621161
+
+2010-06-14 11:11:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: activate_chain must not be called with a NULL chain
+	  It will crash later and shouldn't really happen anyway unless
+	  something is really wrong.
+
+2010-06-14 11:08:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	  gnomevfssrc: Fix possible NULL pointer dereference
+	  It's always an error if gst_buffer_try_new_and_alloc() returns NULL
+
+2010-06-14 11:03:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Return FALSE from the seek handler if no seek callback was set
+
+2010-06-14 09:53:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/gio/gstgiostreamsrc.c:
+	  giostreamsrc: Fix copy&paste error in the docs
+
+2010-06-14 00:33:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  ogg: fix debug message printf format some more
+	  Just cast the pointer diff, so it works everywhere without
+	  warnings. Can't use %tu, because that modifier is C99. Warning
+	  was: "format '%li' expects type 'long int', but argument 8 has
+	  type 'int'".
+
+2010-06-13 22:17:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  videoscale: Add ffmpegcolorspace after videotestsrc for the unit test
+
+2010-06-13 20:57:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: ...and add Y16 case for the linear scaling
+
+2010-06-13 20:38:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Add Y16 case for 4-tap scaling
+
+2010-06-13 18:27:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: Fix linking of the tags test
+
+2010-06-13 08:20:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/video.h:
+	  video: Re-add (but deprecated) GST_VIDEO_{RED,GREEN,BLUE}_MASK_1[56]
+
+2010-06-12 21:04:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Use correct variables for debug output
+
+2010-06-12 16:51:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Fix Y16 from/to GRAY8 conversion
+
+2010-06-12 16:31:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/imgconvert.c:
+	  ffmpegcolorspace: Don't crash when doing gray YUV to GRAY conversion
+
+2010-06-12 16:23:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videoscale/gstvideoscaleorc-dist.h:
+	  videoscale: Update disted orc files
+
+2010-06-12 16:16:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Allow video/webm for progressive downloading
+
+2010-06-12 13:59:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Add support for more gray formats
+
+2010-06-01 16:45:34 +0000  Martin Bisson <martin.bisson@gmail.com>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video.{c,h}: Fix an endianness bug fix.
+	  This commit makes sure the endianness is ok for RGB/BGR 15/16 formats.
+
+2010-06-01 14:42:54 +0000  Martin Bisson <martin.bisson@gmail.com>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video.{c,h}: Add support for RGB and BGR with 15 and 16 bits.
+
+2010-06-12 13:35:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscale.h:
+	  videoscale: Use libgstvideo for caps parsing, etc
+
+2010-06-12 13:04:43 +0200  Philippe Normand <phil@base-art.net>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Fix format string compiler warning on OS X
+
+2010-06-12 13:00:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Use GST_VIDEO_CAPS_GRAY{8,16}
+
+2010-06-12 12:57:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscaleorc.orc:
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: Implement linear merging of Y16 scanlines with orc
+
+2010-06-12 08:26:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 733fca9 to 6da3bab
+
+2010-06-11 22:16:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/cdparanoia/Makefile.am:
+	  cdparanoia: check for cdparanoia with pkg-config first
+	  cdparanoia now has a .pc file in post-0.10.2 SVN, so use
+	  that to check for cdparanoia before we try all the other
+	  checks. Besides being generally nicer, this may help with
+	  correctly detecting cdparanoia on OSX some day (see #609918).
+
+2010-06-11 12:34:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: look for dts frames at non-zero offsets too
+	  Scan a bit into the data when checking for dts frames instead
+	  of expecting the frame sync to be right at the start of the
+	  data. This is needed for some dts-disguised-as-pcm-in-wav files.
+	  See #413942.
+
+2010-06-10 18:12:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: add typefinder for dts audio
+
+2010-06-11 15:23:14 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	  gstexiftag: Fix unitialized variables
+	  I hate thee macosx
+
+2010-06-11 08:47:27 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	  gstexiftag: Fix debug statements
+
+2010-06-11 08:47:17 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	  exiftag: Fix unitialized variable
+
+2010-06-10 20:45:42 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* win32/common/libgsttag.def:
+	  win32: update def file
+
+2010-06-10 20:36:32 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/tag.h:
+	  docs: fix gtk-doc warnings
+	  Variable names in function prototypes in the headers should match the doc-
+	  comment.
+
+2010-06-10 08:47:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: If the text-sink claims to support ANY caps assume it only support raw plaintext subtitles
+	  Fixes bug #621071.
+
+2010-06-10 08:46:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/icles/playbin-text.c:
+	  icles: Only accept plain subtitles in the playbin-text icles test
+
+2010-06-09 22:34:24 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Add support for VP6F (On2 VP6 Flash variant)
+
+2010-06-09 12:35:40 -0700  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	  Use the Orc m4 macro
+
+2010-06-09 12:40:00 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fad145b to 733fca9
+
+2010-06-09 12:33:51 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47683c1 to fad145b
+
+2010-06-09 15:58:32 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	  tag: exif: Refactor byte-order handling
+	  Only check for valid byte-order values when creating the
+	  exif readers and writers
+
+2010-05-10 14:01:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	* tests/check/libs/tag.c:
+	  tag: exif: Adds new geo-location tag mappings
+	  Adds mappings for:
+	  GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION
+	  GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION
+	  GST_TAG_GEO_LOCATION_MOVEMENT_SPEED
+	  GST_TAG_GEO_LOCATION_ELEVATION
+	  Does some refactoring in the code to reduce number of parameters
+	  passed to functions
+	  Tests included.
+
+2010-04-04 22:25:24 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* tests/check/libs/tag.c:
+	  tests: tag: Adds unit tests for exif helper lib
+	  Adds some simple unit tests for exif helper lib functions
+	  Fixes #614872
+
+2010-04-03 23:02:57 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/tag/gstexiftag.c:
+	* gst-libs/gst/tag/tag.h:
+	* win32/common/libgsttag.def:
+	  tag: Adds basic exif tags support
+	  Adds exif helper lib functions to parse exif buffers from/to
+	  taglists. Exif is tipically used in jpeg images, but it can
+	  also be embedded into TIFF, AVI and WAV formats.
+	  Adds a couple function to handle exif in tiff header structures, that is how
+	  exif is embedded in jpeg and (obviously) in tiff.
+	  API: gst_tag_list_to_exif_buffer
+	  API: gst_tag_list_to_exif_buffer_with_tiff_header
+	  API: gst_tag_list_from_exif_buffer
+	  API: gst_tag_list_from_exif_buffer_with_tiff_header
+	  Fixes #614872
+
+2010-06-09 17:02:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Handle SEEKING query in push mode too
+
+2010-06-09 16:38:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Update the total time from the Skeleton 4 indexes
+	  Fixes bug #620939, see bug #607945.
+
+2010-06-09 16:33:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: Implement latest version of the Skeleton 4.0 spec
+	  Fixes bug #620939.
+
+2010-06-09 16:59:10 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/volume/gstvolume.c:
+	  volume: make the orc codes available for testing.
+	  Add a USE_ORC define for now and switch 'this' to 'self'. Having orc enabled
+	  passes the test suite and various manual gst-launch pipelines.
+
+2010-06-08 13:34:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	  .gitignore: add orc-related temp files
+
+2010-06-08 13:26:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst/audioresample/Makefile.am:
+	* gst/audioresample/gstaudioresample.c:
+	  Fix build if orc is not installed
+	  Orc is not a hard requirement. Things should still compile and
+	  work without orc, but slow fallback code may be used in this
+	  case. Fix up configure to not error out if orc is not installed
+	  and wrap use of orc profiling in audioresample in #ifdefs.
+	  Fixes #620136 some more.
+
+2010-06-08 13:11:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Implement correct parsing of Skeleton 4.0 index packets
+
+2010-06-08 12:01:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: Add parsing of Skeleton 4.0 indexes
+
+2010-06-08 11:40:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Parse segment length and content offset from fishead
+	  And print them for debugging purposes. Not sure if we can do anything useful
+	  with this information.
+
+2010-06-08 11:31:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: Parse Skeleton stream major/minor version
+
+2010-06-08 11:26:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Use binary search for searching in the index
+
+2010-06-08 11:02:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/libs/video.c:
+	  video: Fix unit test, the Y800 checks were not used before and were not working
+
+2010-06-08 11:01:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: Return TRUE in gst_video_format_is_gray() for Y800 and Y16
+
+2010-06-08 00:33:31 -0700  David Schleef <ds@schleef.org>
+
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	  audioconvert, videotestsrc: Update generated Orc code
+	  Fixes compile errors with initialization of unions.
+
+2010-06-08 00:32:36 -0700  David Schleef <ds@schleef.org>
+
+	* REQUIREMENTS:
+	  requirements: change liboil to Orc
+
+2010-06-06 23:50:05 -0700  David Schleef <ds@schleef.org>
+
+	* gst/audioresample/Makefile.am:
+	* gst/audioresample/gstaudioresample.c:
+	  audioresample: convert from liboil to orc
+
+2010-06-06 23:48:35 -0700  David Schleef <ds@schleef.org>
+
+	* tests/check/Makefile.am:
+	  tests: Add orc tests
+
+2010-06-06 23:48:15 -0700  David Schleef <ds@schleef.org>
+
+	* gst/volume/Makefile.am:
+	* gst/volume/gstvolume.c:
+	* gst/volume/gstvolumeorc-dist.c:
+	* gst/volume/gstvolumeorc-dist.h:
+	* gst/volume/gstvolumeorc.orc:
+	  volume: convert from liboil to orc
+
+2010-06-06 23:47:53 -0700  David Schleef <ds@schleef.org>
+
+	* gst/videotestsrc/Makefile.am:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.h:
+	* gst/videotestsrc/gstvideotestsrcorc.orc:
+	* gst/videotestsrc/videotestsrc.c:
+	  videotestsrc: convert from liboil to orc
+
+2010-06-06 23:47:16 -0700  David Schleef <ds@schleef.org>
+
+	* gst/videoscale/Makefile.am:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videoscale/gstvideoscaleorc-dist.h:
+	* gst/videoscale/gstvideoscaleorc.orc:
+	* gst/videoscale/vs_4tap.c:
+	* gst/videoscale/vs_4tap.h:
+	* gst/videoscale/vs_image.h:
+	* gst/videoscale/vs_scanline.c:
+	* gst/videoscale/vs_scanline.h:
+	  videoscale: convert from liboil to orc
+
+2010-06-06 23:46:41 -0700  David Schleef <ds@schleef.org>
+
+	* gst/audioconvert/Makefile.am:
+	* gst/audioconvert/audioconvert.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.h:
+	* gst/audioconvert/gstaudioconvertorc.orc:
+	  audioconvert: convert from liboil to orc
+
+2010-06-06 23:45:58 -0700  David Schleef <ds@schleef.org>
+
+	* gst/adder/Makefile.am:
+	* gst/adder/gstadder.c:
+	* gst/adder/gstadder.h:
+	* gst/adder/gstadderorc-dist.c:
+	* gst/adder/gstadderorc-dist.h:
+	* gst/adder/gstadderorc.orc:
+	  adder: convert from liboil to orc
+
+2010-06-06 23:45:10 -0700  David Schleef <ds@schleef.org>
+
+	* docs/design/Makefile.am:
+	* docs/design/design-orc-integration.txt:
+	  docs: Add notes about Orc integration
+
+2010-06-06 23:34:39 -0700  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	  configure: convert liboil check to orc
+
+2010-06-08 07:34:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.c:
+	  oggmux: Start a new page for every CMML buffer
+
+2010-06-07 14:38:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstplaysink.h:
+	  playbin2: add av-offset property
+	  Add av-offset property to control the audio and video sync offset. This can be
+	  used to to manually correct badly synced streams.
+	  See #620529
+
+2010-06-07 08:31:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	  ffmpegcolorspace: Map "Y8  " and "GREY" to "Y800" and add it to the template caps
+
+2010-06-07 08:17:13 +0200  Martin Bisson <martin.bisson@gmail.com>
+
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	* gst/ffmpegcolorspace/imgconvert.c:
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  ffmpegcolorspace: Add support for Y800 and Y16
+	  Fixes bug #620441.
+
+2010-06-07 08:16:01 +0200  Martin Bisson <martin.bisson@gmail.com>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video: Add support for Y800 and Y16
+	  Fixes bug #620441.
+
+2010-06-06 16:46:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: fix log function printf format issue
+
+2010-06-05 18:14:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: stop jpeg typefinding once we found a SOF marker
+
+2010-06-05 18:05:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/gst/typefindfunctions.c:
+	  tests: fix memory leak in unit test
+
+2010-05-19 15:40:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: improve jpeg typefinder
+	  Make jpeg typefinder check more than just the first two bytes
+	  plus Exif or JFIF marker. This allows us to report MAXIMUM
+	  probability in cases where there's no Exif or JFIF marker,
+	  making typefinding stop early. Also extract width and height,
+	  because we can.
+
+2010-06-05 17:22:17 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/gst/typefindfunctions.c:
+	* tests/files/Makefile.am:
+	* tests/files/partialframe.mjpeg:
+	  tests: add small unit test for AC3 vs. JPEG typefinding issue
+
+2010-06-05 16:58:50 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: fix AC-3 typefinding so that it actually checks for a second frame
+	  Fix typo that made the AC-3 typefinder not actually check for a
+	  second frame, but rather compare the sync point found to itself,
+	  which resulted in the AC-3 typefinder reporting an overly optimistic
+	  MAXIMUM or VERY_LIKELY probability when it found a possible frame
+	  sync.
+
+2010-06-05 12:27:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstscreenshot.c:
+	  playbin2: improve screenshot code
+	  Use appsrc and appsink in the screenshot code to make things nicer.
+
+2010-06-05 11:28:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: fix documentation string
+
+2010-06-05 11:05:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: add convert-frame action signal
+	  Add a convert-frame action signal.
+	  Fixes #620279
+
+2010-06-05 11:02:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstscreenshot.c:
+	* gst/playback/gstscreenshot.h:
+	  playbin2: move marshaller to screenshot
+	  Move the marshaller for the convert_frame signal to the screenshot file in
+	  preparation for moving it to playsink.
+	  See #620279
+
+2010-06-05 10:42:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	* gst/playback/gstplaysink.h:
+	  playbin2: move convert_frame to playsink
+	  Move the convert_frame function to playsink and make it part of the API. This is
+	  in preparation to add the convert_frame signal to playsink.
+	  See #620279
+
+2010-06-05 10:31:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: add property to get the last frame
+	  Add a property to get the last video frame.
+	  See #620279
+
+2010-06-04 19:30:14 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Handle raw streams we don't want.
+	  If a file contains raw streams (not requiring a decoder) that we do
+	  not want (expose-all-streams == FALSE), we would previously consider
+	  those of unknown-type (missing a decoder) ... whereas in fact it was just
+	  because they don't need decoders.
+	  This only applies if expose-all-streams is FALSE.
+
+2010-06-03 13:44:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  Revert "baseaudiosink: Allocate and free the clock in NULL->READY and reverse"
+	  This reverts commit cea2644ed86097aadedc9e8731e78a22ffc6246b.
+	  Many audio sink assume that they can create a clock in
+	  the instance init function and it will be there forever
+	  and not be cleared by the state change functions.
+
+2010-06-02 12:19:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  baseaudiosink: Allocate and free the clock in NULL->READY and reverse
+
+2010-06-01 23:49:07 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 17f89e5 to 47683c1
+
+2010-06-01 22:54:33 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd7ca04 to 17f89e5
+
+2010-06-01 13:00:22 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* tests/examples/overlay/Makefile.am:
+	  examples: get the right Qt moc binary to use via pkg-config
+	  Should make us do the right thing in cases where both Qt3 and Qt4
+	  are installed.
+	  Fixes #620211.
+
+2010-05-31 19:28:45 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* ext/gio/gstgiobasesink.c:
+	  gio: map GIO NO_SPACE error to NO_SPACE_LEFT
+	  Fixes bug #620140.
+
+2010-05-28 08:27:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst-libs/gst/interfaces/streamvolume.c:
+	  configure: Remove (now) useless check for cbrt
+
+2009-12-02 22:16:22 -0800  David Schleef <ds@schleef.org>
+
+	* gst-libs/gst/interfaces/streamvolume.c:
+	  interfaces: Use pow() instead of cbrt() for MSVC
+
+2010-05-26 11:54:51 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 357b0db to fd7ca04
+
+2010-05-26 08:51:09 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/audiorate/gstaudiorate.c:
+	  audiorate: Fix buffer offset_end when within tolerance.
+	  This fixes issues if we then have downstream elements that operate
+	  on offset/offset_end.
+	  And add the expected timestamp in the debug logs
+
+2010-05-24 11:27:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/fft/kiss_fft_f32.c:
+	* gst-libs/gst/fft/kiss_fft_f32.h:
+	* gst-libs/gst/fft/kiss_fft_f64.c:
+	* gst-libs/gst/fft/kiss_fft_f64.h:
+	* gst-libs/gst/fft/kiss_fft_s16.c:
+	* gst-libs/gst/fft/kiss_fft_s16.h:
+	* gst-libs/gst/fft/kiss_fft_s32.c:
+	* gst-libs/gst/fft/kiss_fft_s32.h:
+	* gst-libs/gst/fft/kiss_fftr_f32.c:
+	* gst-libs/gst/fft/kiss_fftr_f64.c:
+	* gst-libs/gst/fft/kiss_fftr_s16.c:
+	* gst-libs/gst/fft/kiss_fftr_s32.c:
+	  fft: Merge kissfft 1.2.8
+	  This reduces memory footprint for the FFT and adds
+	  OpenMP support (but we don't use it).
+
+2010-05-22 10:05:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  videotestsrc: Fixate interlaced, chroma-site and color-matrix fields if necessary
+
+2010-05-22 10:02:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/videorate/gstvideorate.c:
+	  videorate: Use new string fixation function from core
+
+2010-05-22 09:48:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: Fixate color-matrix and chroma-site fields if necessary
+
+2010-05-22 09:39:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: Fixate the interlaced field if necessary
+	  Fixes bug #619310.
+
+2010-05-22 08:55:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: Add IVF typefinder
+
+2010-05-21 18:16:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: pass object to logging functions, use GST_DEBUG_FUNCPTR
+
+2010-05-20 15:14:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add basic descriptions for new WebM and VP8 types
+
+2010-05-20 14:21:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: Fix sizes again, this time for real
+
+2010-05-20 13:58:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Fix size checks
+
+2010-05-20 10:19:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Drop all other Ogg VP8 header packets and make VP8 mapping check a bit more strict
+
+2010-05-20 08:52:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	  ogg: Some more minor adjustments for the VP8 Ogg mapping
+
+2010-05-19 21:35:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	  ogg: Update to the latest VP8 mapping
+
+2010-05-10 05:53:22 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Detect WebM as video/webm
+	  Refactor matroska_type_find into ebml_check_header and a new
+	  matroska_type_find and webm_type_find.
+
+2010-05-14 13:31:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Fix granulepos->key granule calculation for Dirac
+
+2010-05-14 11:02:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: Add support for mapping specific granulepos to key granule mapping
+
+2010-05-05 13:59:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  ogg: Implement Ogg VP8 mapping
+
+2010-04-27 15:24:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Add support for On2 VP8
+
+2010-05-19 16:17:19 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: fix a typo introduced by 9d753824.
+	  video/x-raw-float => audio/x-raw-float. Fixes #619090.
+
+2010-05-18 08:45:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Don't put "raw" subtitle types in the raw caps for decodebin2
+	  We handle them from the autoplug-continue signal, where the caps supported
+	  by the subtitle sink or overlay are known already.
+
+2010-05-15 21:15:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use = instead of == in shell scripts for equality checks
+
+2010-05-14 18:23:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4d67bd6 to 357b0db
+
+2010-05-14 17:24:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Always take the object lock when accessing the caps
+	  Fixes bug #618625.
+
+2010-05-14 17:17:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Don't fail if subtitles are used but only audio is available and no visualizations
+	  Instead simply disable displaying of the subtitles for now, as was
+	  intended by that part of code...
+	  Fixes bug #610866.
+
+2010-05-14 17:13:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Fix deadlock caused from an additional lock instead of unlock
+	  Also improve debug output for the playsink lock.
+
+2010-05-13 12:16:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Use passthrough mode if width and height are not changed
+	  It doesn't matter if the PAR changes or not, processing of every pixel
+	  is only necessary when the width or height changes.
+
+2010-05-13 12:03:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: relax width and height constraints
+	  Increase the acceptable video sizes from [16,4096] to [1, MAX].
+	  See #618392
+
+2010-05-13 08:05:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	  video: Use simple fraction multiplication functions instead of going through GValues
+
+2010-05-10 17:09:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/videoscale.c:
+	  videoscale: Add a unit test for checking if the negotiation works as expected
+
+2010-05-10 17:09:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Try harder to keep the DAR if possible
+	  Fixes bug #371108.
+
+2010-05-10 15:13:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Log PAR and DAR of input and output caps when setting caps
+
+2010-05-10 14:52:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Set input width/height if the output caps don't have any width or height
+
+2010-05-10 13:01:44 +0200  Andoni Morales <ylatuya@gmail.com>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Try to keep DAR when scaling
+	  Fixes bug #371108.
+
+2010-05-10 19:09:28 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	  basertpaudiopayload: Add extra frame for non-complete frame lengths
+	  Some payloaders like rtpg729pay can add a shorter frame at the end of a
+	  RTP packet. We need to count it like a full frame for timestamps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=618324
+
+2010-05-10 18:53:29 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	  basertpaudiopayload: Set duration on buffers
+	  Set the duration of the buffers from their size
+
+2010-05-11 16:12:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  videotestsrc: Fixate PAR to 1/1 if possible
+
+2010-05-11 10:07:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Check for GTK+ 3.0 and if it's not available for GTK+ 2.0
+
+2010-05-10 12:44:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/ximage/ximagesink.c:
+	  ximagesink: Check if the X context is allocated before using it
+	  It should be allocated at these places already or the state changes
+	  would have failed... but better add an additional check here.
+
+2010-05-10 12:28:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/ximage/ximagesink.c:
+	  ximagesink: Post an error message on the bus if no supported pixmap formats can be found
+	  Might fix bug #615851.
+
+2010-05-07 19:49:57 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace : whooops
+
+2010-05-07 19:21:13 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: more minor cleanups
+
+2010-05-07 17:16:28 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	  ffmpegcolorspace: speedup caps transformation
+	  * don't re-create our possible caps every single time, just use the
+	  template caps.
+	  * don't intersect the caps against the template, basetransform has already
+	  done that for us.
+	  62% speedup of _transform_caps() (instruction calls, measured with callgrind)
+
+2010-05-07 12:19:25 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: add the 'expose-all-streams' property from decodebin2
+	  API: expose-all-streams
+	  https://bugzilla.gnome.org/show_bug.cgi?id=617868
+
+2010-05-06 18:50:51 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: Add a property to not expose/decode all streams
+	  API : expose-all-streams
+	  If disabled:
+	  * only the streams that CAN be decoded and match the final caps will have a
+	  decoder plugged in and be exposed.
+	  * the streams that COULD HAVE BEEN decoded but do not match the finals caps
+	  will not have a decoder plugged in and will not be exposed.
+	  If no decoder is available to decode a certain stream, then the missing element
+	  message will still be emitted regardless of the value of the property.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=617868
+
+2010-05-06 17:47:12 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: rename are_raw_caps to are_final_caps, correct comment
+	  https://bugzilla.gnome.org/show_bug.cgi?id=617868
+
+2010-05-07 17:16:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	  sdpmessage: add new TIAS bandwidth modifier
+	  Add TIAS modifier as specified in RFC 3890.
+	  Do some whitespace fixes.
+
+2010-05-07 00:10:22 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/audioconvert/audioconvert.c:
+	  audioconvert: disambigue comment due to popular demand
+	  Write "target depth" instead of "our depth" or previous ambigous "out depth".
+
+2010-05-06 15:40:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: disconnect signals in some more cleanup cases
+
+2010-05-06 13:10:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: don't seek when no current chain
+	  Avoid a crash when we try to seek when there is no current chain.
+
+2010-05-06 12:21:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: ignore the skeleton start time
+	  Ignore the skeleton start time as it is usually wrong for live streams
+	  and we have the needed logic to calculate it anyway.
+
+2010-05-06 12:06:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: wait for headers before exposing chains
+	  Wait until we have all the stream headers before we start exposing the streams
+	  of a chain.
+
+2010-05-06 10:56:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: use index to estimate bitrate
+	  When we have an index, use it to much more accurately estimate the total stream
+	  bitrate.
+
+2010-05-06 11:34:53 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/rtsp/gstrtsptransport.h:
+	  docs: be more firendly to gtk-doc limitted parsing capabilities
+
+2010-05-06 09:42:02 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* gst-libs/gst/rtsp/gstrtspdefs.c:
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	* gst-libs/gst/rtsp/gstrtsprange.c:
+	* gst-libs/gst/rtsp/gstrtsptransport.c:
+	* gst-libs/gst/rtsp/gstrtspurl.c:
+	  docs: fix wrong doc markup
+
+2010-05-06 09:17:33 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: use can_intersect to avoid a caps copy
+
+2010-05-06 09:14:25 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: trucate own caps, instead of copying and using the first only
+	  We got the caps from an intersect, it is our own, hence we can truncate it.
+	  Besides gst-indent has chooses to line-up all caps in one line again :/.
+
+2010-05-06 09:12:32 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/playback/gstdecodebin.c:
+	  decodebin: use can_intersect to avoid a caps copy
+
+2010-05-06 09:11:17 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/libvisual/visual.c:
+	  libvisual: trucate own caps, instead of copying and using the first only
+	  We got the caps from an intersect, it is our own, hence we can truncate it.
+
+2010-05-06 08:20:10 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisdec.h:
+	* ext/vorbis/gstvorbisdeclib.c:
+	* ext/vorbis/gstvorbisdeclib.h:
+	  vorbis: have a copy_sample func as a func pointer
+	  Make some more variants for copy_sample funcs and use them via function pointer.
+
+2010-05-06 08:16:45 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/audioconvert/audioconvert.c:
+	  audioconvert: fix typo in comment
+
+2010-05-06 08:15:16 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/xvimagesink.c:
+	  x(v)imagesink: use gst_caps_can_intersect() more
+	  In place where we just need to know whether caps intersect, we can use this
+	  quicker function.
+
+2010-04-15 13:09:45 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/icles/.gitignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/position-formats.c:
+	  examples: add a test for difference position formats
+	  The test runs position and duration queries on the pipeline in all formats.
+
+2010-04-15 13:08:39 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/icles/audio-trickplay.c:
+	  example: update status (adder is fixed now)
+
+2010-04-15 13:08:01 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/icles/playbin-text.c:
+	  example: make app static
+
+2010-05-05 13:25:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: printf format fixes
+
+2010-05-04 15:32:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: weekday and month names in RTSP date string should be in C locale
+	  Create date string using C locale weekday and month names.
+	  Fixes #617636.
+
+2010-05-04 17:54:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: add all qtdemux types to downloadable types
+	  Add all the media types that qtdemux can handle to the list of downloadable
+	  types.
+
+2010-05-04 17:38:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggdemux: handle corrupt indexes
+	  Make sure we handle and receover from corrupt indexes.
+
+2010-05-04 15:47:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: fix EOS check
+
+2010-05-04 13:51:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: avoild division by 0
+
+2010-05-04 13:50:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: cleanup unused defines
+
+2010-05-04 13:36:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: use the index in push mode when we can
+	  When seeking in push mode, try to use the index first before we use the bitrate
+	  estimation.
+
+2010-05-04 13:05:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: use skeleton duration when possible
+
+2010-05-04 13:02:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggstream: parse duration from 3.3 skeleton
+
+2010-03-02 11:16:39 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: more index parsing work
+
+2010-03-01 13:50:32 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: clean up fishead/fisbone parsing
+	  Remove some redundant code for parsing fishead streams. Actually use the data we
+	  parsed (mostly start_time).
+
+2010-05-04 11:19:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	  oggdemux: implement seek in push mode
+	  Refactor start time collection code.
+	  When we receive a flush_stop, resync to the new start time and push out a new
+	  segment event.
+
+2010-05-03 16:52:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: make event handling better
+	  Explicitly handle FLUSH events and resync on FLUSH_STOP.
+	  Make send_event return a boolean.
+	  Use more performant send_event function to forward events.
+
+2010-04-30 18:37:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: implement seeking in pushmode
+	  Convert seek requests to bytes using the bitrate and forward them upstream. Does
+	  not quite work because the flushing and resyncing is not implemented yet.
+
+2010-04-30 18:03:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: refactor for seeking in pushmode
+	  refactor the code a little to prepare for seeking in push mode
+
+2010-05-03 12:46:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	* tests/check/libs/tag.c:
+	  tag: xmp: Adds new geo-location mappings
+	  Adds GST_TAG_GEO_LOCATION_MOVEMENT_SPEED,
+	  GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION and
+	  GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION to xmp
+	  mappings.
+	  Tests included.
+
+2010-04-26 22:08:41 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	* tests/check/libs/tag.c:
+	  tag: xmp: Adds xmp mappings for device tags
+	  Adds xmp mappings for GST_TAG_DEVICE_MANUFACTURER and
+	  GST_TAG_DEVICE_MODEL. Also adds tests for it.
+
+2010-04-30 19:56:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspbase64.c:
+	* gst-libs/gst/rtsp/gstrtspbase64.h:
+	  rtsp: deprecate remaining base64 function now that we depend on GLib 2.20
+	  API: deprecate gst_rtsp_base64_decode_ip(), use g_base64_decode_inplace() instead
+
+2010-04-30 19:37:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	  basertpdepayload: ensure writable metadata
+
+2010-04-30 17:41:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	* ext/ogg/gstoggstream.c:
+	* ext/ogg/gstoggstream.h:
+	  oggdemux: use bitrate to estimate length in pushmode
+	  Parse the bitrate from the various streams.
+	  Use the bitrate and the upstream length in bytes to estimate the total stream
+	  duration in push mode.
+
+2010-04-30 14:07:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/gio/gstgiobasesrc.c:
+	  Bump GLib requirement to 2.20
+	  See http://gstreamer.freedesktop.org/wiki/ReleasePlanning/GLibRequirement
+
+2010-04-30 13:36:59 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: forward duration query duration during group switch if no cached duration
+	  ... such as during first group setup.
+	  Fixes #616396.
+
+2010-04-02 16:37:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	  oggdemux: only EOS when all streams are EOS
+
+2010-04-02 16:36:53 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: fix debug message
+
+2010-04-30 08:45:43 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* tests/icles/audio-trickplay.c:
+	  test: fix copy and paste error of variable name
+
+2010-04-18 20:46:37 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c:
+	  adder: only accept seek-types none and set
+	  Previously we were also acting on cur and end, but treating them like none.
+
+2010-04-14 23:31:20 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c:
+	* gst/adder/gstadder.h:
+	  adder: rework timestamping
+	  Adder was using always incrementing timestamps. Seeking was done by setting the
+	  position in the newsegment event. This was failing when doing segmented seeks
+	  with rate<0.0, as offset (and thus timestamp) would go below 0.
+	  Now we take both cur and end from the seek event. We construct newsegment events
+	  depending including cur and end from the seek event. We set position to the
+	  start of the segment. Timestamp is set to start or end of segment depending on
+	  rate. Offset is recalculated.
+
+2010-04-26 17:30:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Add support for deinterlacing
+	  This is disabled by default and can be enabled with the
+	  deinterlace flag.
+	  Fixes bug #547603.
+
+2010-04-26 11:12:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplay-enum.c:
+	* gst/playback/gstplay-enum.h:
+	  playbin2: Add flag for enabling/disabling automatic deinterlacing
+
+2010-04-26 11:11:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplay-enum.c:
+	  playbin: Use g_once_init_{enter,leave} instead of GOnce for enum/flag registration
+
+2010-04-23 17:01:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/Makefile.am:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.h:
+	  ffmpegcolorspace: Use GST_BOILERPLATE and use GstVideoFilter as base class
+	  This gives automatic QoS handling.
+
+2010-04-23 16:24:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Correctly reconfigure the video chain when switching from a subtitle to a non-subtitle file
+	  Fixes bug #616422.
+
+2010-04-23 16:08:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: If a text sink is provided, let subtitle parsing be done by decodebin2 if required
+	  This way subtitle sinks only get buffers in the format that they
+	  understand, i.e. raw parsed text in most cases.
+	  Fixes bug #614942.
+
+2010-04-23 15:30:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin2: Set subtitle encoding on the decodebins again
+
+2010-04-23 15:22:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/video.c:
+	* gst-libs/gst/video/video.h:
+	  video: API: Add GST_VIDEO_FORMAT_v308 for packed 4:4:4 YUV
+
+2010-04-23 15:14:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscale.h:
+	  videoscale: Some random cleanup
+
+2010-04-23 15:06:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Add support for Y444, Y42B and Y41B
+
+2010-04-23 14:42:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: Reorder template caps by the amount of information contained in the color formats
+
+2010-04-22 15:46:17 -0400  Joshua M. Doe <joshua.doe@us.army.mil>
+
+	* gst/videorate/gstvideorate.c:
+	  videorate: add support for video/x-raw-gray
+
+2010-04-29 15:05:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-decodebin2.xml:
+	* docs/plugins/inspect/plugin-playbin.xml:
+	  docs: remove references to and introspection data of plugins that no longer exist
+	  Some plugins (decodebin2, playbin) have been renamed or merged
+	  into different plugins (uridecodebin, playback).
+
+2010-04-29 15:02:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Back to development.
+
+=== release 0.10.29 ===
+
+2010-04-28 02:16:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-decodebin.xml:
+	* docs/plugins/inspect/plugin-ffmpegcolorspace.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-gnomevfs.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-uridecodebin.xml:
+	* docs/plugins/inspect/plugin-video4linux.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.10.29
 
 2010-04-28 01:34:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 

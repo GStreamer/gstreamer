@@ -1,4 +1,131 @@
-This is GStreamer Base Plug-ins 0.10.29, "Freaks"
+This is GStreamer Base Plug-ins 0.10.30, "Difficult Birth"
+
+Changes since 0.10.29:
+
+      * Use Orc (Optimized Inner Loops Runtime Compiler) for SIMD and
+        other optimisations, and remove liboil dependency. The main goal
+        for this release was to make the transition from liboil to liborc.
+        Performance improvements should not be expected and will be the
+        focus of future versions. liborc is an optional dependency for
+        the time being, to make it possible to test and develop the very
+        latest GStreamer versions on systems that don't have orc yet.
+        However, without orc slow unoptimised backup code will be used
+        for many performance critical code paths. Distributors are urged
+        to package and ship the latest version of liborc and compile
+        GStreamer modules with --enable-orc. Please do not distribute
+        GStreamer packages that are not orc enabled. More information on
+        the orc integration can be found in the docs/design/ directory.
+      * basertpaudiopayload: Set duration on buffers; add extra frame for non-complete frame lengths
+      * riff: add mappings for On2 VP8 and VP6F (On2 VP6 Flash variant)
+      * video: Add support for RGB/BGR with 15 and 16 bits, and Y800 and Y16
+      * xmp/exif tags: add mappings for new tags (device, geo location, image orientation)
+      * adder, audioconvert, audioresample, volume: convert from liboil to orc
+      * adder: rework timestamping; only accept seek-types SEEK_NONE and SEEK_SET
+      * decodebin2: add "expose-all-streams" property to not expose/decode all streams
+      * decodebin2: use accumulator for autoplug-sort
+      * ffmpegcolorspace: add YUY2/YVYU to all RGB formats conversions
+      * ffmpegcolorspace: fix conversion of packed 4:2:2 YUV to RGB and 8 bit grayscale
+      * ffmpegcolorspace: fix Y16 from/to GRAY8 conversion
+      * ffmpegcolorspace: fix Y42B from/to YUY2/YVYU/UYVY conversion for odd widths
+      * ffmpegcolorspace: Map "Y8  " and "GREY" to "Y800" and add it to the template caps
+      * ffmpegcolorspace: negotiation speed-ups
+      * oggdemux: implement seeking and duration estimates when operating in push mode (http etc.)
+      * oggdemux: parse Skeleton index packets for better seeking in push mode
+      * oggdemux: fix granulepos->key granule calculation for Dirac video
+      * oggdemux: fix EOS flow aggregation: only EOS when all streams are EOS
+      * oggmux: Start a new page for every CMML buffer
+      * ogg: Implement Ogg VP8 mapping
+      * playbin2: add "av-offset" property to adjust audio/video sync
+      * playbin2: add flag for enabling/disabling automatic deinterlacing
+      * playbin2: fix race when querying duration right after preroll, by forwarding duration
+        query duration during group switch if no cached duration exists
+      * playbin2: if a text sink is provided, let subtitle parsing be done by decodebin2 if required
+      * playbin2: set the subtitle encoding on the decodebins again
+      * playsink: also expose "convert-frame" action signal and "frame" property in playsink
+      * playsink: reconfigure the video chain correctly when switching from a subtitle to a non-subtitle file
+      * playsink: Don't fail if subtitles are used but only audio is available and no visualizations
+      * typefinding: add WebM typefinder (was in -good before)
+      * typefinding: add IVF and dts typefinders, improve AC-3 and jpeg typefinding
+      * typefinding: detect ISO 14496-14 files as video/quicktime not audio/x-m4a
+      * uridecodebin: add all qtdemux types to downloadable types
+      * uridecodebin: add the 'expose-all-streams' property from decodebin2
+      * uridecodebin: Allow video/webm for progressive downloading
+      * videorate, videotestsrc: fixate color-matrix, chroma-site and interlaced fields if necessary
+      * videoscale: Try to keep DAR when scaling
+      * videoscale: Add support for Y444, Y42B and Y41B and more gray formats
+      * videoscale: Fix resampling of ARGB scanlines
+      * videoscale: Try harder to keep the DAR if possible
+      * videoscale: Use passthrough mode if width and height are not changed
+
+Bugs fixed since 0.10.29:
+
+      * 621428 : [playbin2] ghostpad with arbitrary getcaps func leads to not working srt subtitles
+      * 371108 : videoscale sucks at basic mathematics when it comes to PAR
+      * 512740 : unit test failures if compiling against installed core with installed plugins-base also present
+      * 605100 : GNOME Goal: Remove deprecated glib symbols
+      * 610866 : [playbin2] Don't fail if there are subtitles and audio but no video
+      * 614872 : [tag] Add basic exif support
+      * 614942 : playbin2: " text-sink " is supposed to handle raw subtitle data?
+      * 615783 : reworked timestamping in adder
+      * 616396 : [playbin2] might fail a duration query immediately following PAUSED state
+      * 616422 : playsink might not handle reconfiguring after a text enabled file correctly
+      * 616557 : [videorate] Add support for video/x-raw-gray
+      * 617636 : [rtsp] uses unicode characters in date string
+      * 617855 : [oggdemux] Fails to play LAC2010 videos
+      * 617868 : [decodebin2] Option to not expose/decode all streams
+      * 618324 : rtp payloader don't put the duration on their output buffers
+      * 618392 : [avi-demux] Gstreamer does not support 1x1 or 1xN avi files
+      * 618625 : lock priv mutex in appsrc when setting caps
+      * 619090 : [uridecodebin] caps negociation fail
+      * 619102 : [PATCH] WebM typefinder
+      * 619310 : [videorate] negotiation issue, tries to set unfixed caps on pad
+      * 619396 : gstreamer does not seek http streams of Ogg Vorbis and Flac audio files.
+      * 620136 : Orc integration
+      * 620140 : [gio] report out-of-space errors
+      * 620211 : gst-plugins-base gets confused by dual-QT system
+      * 620279 : [playsink] expose 'frame' property and move 'convert-frame' action from playbin2
+      * 620342 : [baseaudiosink] Allocate and free the clock in state changes
+      * 620412 : [video] Incomplete support for 15 and 16 bit RGB and BGR formats
+      * 620441 : [video] Add support for Y800 and Y16 formats
+      * 620500 : totem won't do progressive download for flv videos
+      * 620720 : typefinding: Mark ISO 14496-14 files as video/quicktime
+      * 620939 : [oggdemux] No support for Skeleton 4.0 streams
+      * 621071 : [playbin2] no playback with fakesink instead of appsink as text-sink
+      * 621161 : autoplug-sort default callback is run last - overwrite user supplied callback result
+      * 621190 : video sink drops buffers if it's preceded by ffmpegcolorspace, videoscale and a capsfilter
+      * 621509 : [xmptag] Uses uninitialized variable
+      * 621572 : [videoscale] Adds horizontal green lines in bilinear mode
+      * 622696 : ffmpegcolorspace: Speed up caps nego by using simpler caps
+      * 622807 : [decodebin2] Doesn't recover properly after an error
+      * 622944 : Require automake 1.9 or newer for $(builddir)
+      * 623003 : Major problems with calls to gst_util_uint64_scale()
+      * 623176 : riff: matroska file with FLV4 FOURCC fails to play
+      * 623218 : oggdemux: Handle errors from _get_next_page in _do_seek.
+      * 623233 : GstNetBuffer initialization isn't thread safe.
+      * 623318 : [playbin2] If source setup fails the old uridecodebin is kept and breaks future playback
+      * 623375 : [ffmpegcolorspace] Invalid memory accesses with odd widths/height during subsampling
+      * 623384 : [ffmpegcolorspace] Doesn't write last pixel for odd widths in packed 4:2:2 YUV- > RGB conversion
+      * 623418 : [ffmpegcolorspace] Fix packed 4:2:2 YUV to 8 bit grayscale conversion for odd widths
+      * 623530 : [ffmpegcolorspace] Stripy pattern with videotestsrc ! ffmpegcolorspace ! ximagesink
+      * 623583 : [playbin2] regression: DVD playback broken
+      * 624266 : [playbin2] Internal uridecodebin are not properly removed in READY= > NULL
+      * 547603 : [playbin2] add deinterlacing support
+
+API added since 0.10.29:
+
+      * GST_VIDEO_FORMAT_v308
+      * GST_VIDEO_FORMAT_Y800
+      * GST_VIDEO_FORMAT_Y16
+      * GST_VIDEO_FORMAT_RGB16
+      * GST_VIDEO_FORMAT_BGR16
+      * GST_VIDEO_FORMAT_RGB15
+      * GST_VIDEO_FORMAT_BGR15
+      * gst_tag_image_orientation_to_exif_value ()
+      * gst_tag_image_orientation_from_exif_value ()
+      * gst_tag_list_to_exif_buffer ()
+      * gst_tag_list_to_exif_buffer_with_tiff_header ()
+      * gst_tag_list_from_exif_buffer ()
+      * gst_tag_list_from_exif_buffer_with_tiff_header ()
 
 Changes since 0.10.28:
 
