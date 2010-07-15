@@ -178,6 +178,8 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   if (!gst_element_link_pads (csp, "src", vscale, "sink"))
     goto link_failed;
 
+  /* TODO: only plug an encoder if caps aren't raw ? */
+
   GST_DEBUG ("linking vscale->encoder");
   if (!gst_element_link (vscale, encoder))
     goto link_failed;
