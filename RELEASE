@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.18 "A pigeon carrying a 500ton block"
+Release notes for GStreamer Python bindings 0.10.19 "Insert Casablanca quote here"
         
 
 
@@ -17,12 +17,17 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Updates to 0.10.26 core/base API addition
+      * Wrap new gstreamer API up to 0.10.30
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 592459 : info.print_info() uses info.tags.pop() to get values, but pop is destructive, so calling print_info twice can return different results
-      * 599818 : Import of pygst fails with Element missing
+      * 572766 : gst.Bus.set_sync_handler() leaks and can't be unset
+      * 589582 : Missing gst.Buffer.size setter in python bindings
+      * 590735 : [gst.GhostPad] can't unset target
+      * 617068 : Adding xmp functions to python
+      * 530417 : Add a nicer constructor for GstElements
 
 Download
 
@@ -51,13 +56,14 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
+      * Benjamin Otte
+      * David Schleef
       * Edward Hervey
-      * Jan Schmidt
-      * Luca Bruno
-      * Mark Nauwelaerts
+      * Emilio Pozuelo Monfort
+      * Olivier Aubert
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
       * Tim-Philipp Müller
-      * Zaheer Abbas Merali
  

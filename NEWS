@@ -1,4 +1,8 @@
-This is GStreamer Python Bindings 0.10.18, "A pigeon carrying a 500ton block"
+This is GStreamer Python Bindings 0.10.19, "Insert Casablanca quote here"
+
+Changes since 0.10.18:
+
+      * Updates to 0.10.29/0.10.30 core/base API addition
 
 Changes since 0.10.17:
 
