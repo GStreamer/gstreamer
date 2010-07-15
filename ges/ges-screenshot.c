@@ -19,9 +19,11 @@
  */
 
 #include <gst/gst.h>
+#include <gst/profile/gstfactorylists.h>
 #include <glib-object.h>
 #include <string.h>
 #include "ges-screenshot.h"
+#include "ges-internal.h"
 
 /* FIXME (merge into core): This code is duplicated from gstscreenshot.c and
  * gstplaysink.c, adapted to handle encoding the converted frame into
@@ -75,13 +77,50 @@ create_element (const gchar * factory_name, GstElement ** element,
 GstBuffer *
 gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
 {
-  GstElement *src, *csp, *vscale, *sink, *pipeline;
+  GstElement *src, *csp, *vscale, *sink, *encoder, *pipeline;
   GstMessage *msg;
   GstBuffer *result = NULL;
   GError *error = NULL;
   GstBus *bus;
   GstCaps *from_caps;
   GstFlowReturn ret;
+  GValueArray *encoders = NULL;
+  GValueArray *filtered = NULL;
+  GValue *factory_value = NULL;
+  GstElementFactory *factory = NULL;
+
+  encoders =
+      gst_factory_list_get_elements (GST_FACTORY_LIST_ENCODER |
+      GST_FACTORY_LIST_IMAGE, GST_RANK_NONE);
+
+  GST_INFO ("got factory list %p", encoders);
+  gst_factory_list_debug (encoders);
+  if (!(encoders && encoders->n_values))
+    goto no_encoder;
+
+  filtered = gst_factory_list_filter (encoders, to_caps, GST_PAD_SRC, FALSE);
+  GST_INFO ("got filtered list %p", filtered);
+  gst_factory_list_debug (filtered);
+  if (!(filtered && filtered->n_values))
+    goto no_encoder;
+
+  factory_value = g_value_array_get_nth (filtered, 0);
+  factory = (GstElementFactory *) g_value_get_object (factory_value);
+
+  GST_INFO ("got factory %p", factory);
+  if (!factory)
+    goto no_encoder;
+
+  g_value_array_free (filtered);
+  g_value_array_free (encoders);
+
+  encoder = gst_element_factory_create (factory, NULL);
+
+  GST_INFO ("created encoder element %p, %s", encoder,
+      gst_element_get_name (encoder));
+
+  if (!encoder)
+    goto no_encoder;
 
   from_caps = GST_BUFFER_CAPS (buf);
 
@@ -100,7 +139,7 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
     goto no_pipeline;
 
   GST_DEBUG ("adding elements");
-  gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, encoder, sink, NULL);
 
   /* set caps */
   g_object_set (src, "caps", from_caps, NULL);
@@ -115,8 +154,12 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   if (!gst_element_link_pads (csp, "src", vscale, "sink"))
     goto link_failed;
 
-  GST_DEBUG ("linking vscale->sink");
-  if (!gst_element_link_pads (vscale, "src", sink, "sink"))
+  GST_DEBUG ("linking vscale->encoder");
+  if (!gst_element_link (vscale, encoder))
+    goto link_failed;
+
+  GST_DEBUG ("linking encoder->sink");
+  if (!gst_element_link_pads (encoder, "src", sink, "sink"))
     goto link_failed;
 
   /* now set the pipeline to the paused state, after we push the buffer into
@@ -180,6 +223,15 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   return result;
 
   /* ERRORS */
+no_encoder:
+  {
+    g_warning ("could not find an encoder for provided caps");
+    if (encoders)
+      g_value_array_free (encoders);
+    if (filtered)
+      g_value_array_free (encoders);
+    return NULL;
+  }
 no_elements:
   {
     g_warning ("Could not take screenshot: %s", error->message);
