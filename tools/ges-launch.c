@@ -33,9 +33,6 @@
 static guint repeat = 0;
 GESTimelinePipeline *pipeline = NULL;
 
-/* create a table of a subset of the test patterns available from videotestsrc
- */
-
 gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
     * trobject, GstElement * gnlobj, gpointer user_data);
 
@@ -51,7 +48,20 @@ guint64 str_to_time (char *time);
 
 void print_pattern_list (void);
 
-/* and a function to get the pattern for the source */
+gboolean thumbnail_cb (gpointer pipeline);
+
+gboolean
+thumbnail_cb (gpointer pipeline)
+{
+  static int i = 0;
+  GESTimelinePipeline *p = (GESTimelinePipeline *) pipeline;
+  gchar *filename;
+
+  filename = g_strdup_printf ("thumbnail%d.jpg", i++);
+
+  return ges_timeline_pipeline_save_thumbnail (p, -1, -1,
+      (gchar *) "image/jpeg", filename);
+}
 
 gboolean
 pattern_source_fill_func (GESTimelineObject * object,
@@ -348,7 +358,10 @@ main (int argc, gchar ** argv)
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
   static gboolean list_patterns = FALSE;
+  static gdouble thumbinterval = 0;
   GOptionEntry options[] = {
+    {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
+        "Take thumbnails every n seconds (saved in current directory)", "N"},
     {"render", 'r', 0, G_OPTION_ARG_NONE, &render,
         "Render to outputuri", NULL},
     {"smartrender", 's', 0, G_OPTION_ARG_NONE, &smartrender,
@@ -443,6 +456,11 @@ main (int argc, gchar ** argv)
 
   /* Play the pipeline */
   mainloop = g_main_loop_new (NULL, FALSE);
+
+  if (thumbinterval != 0.0) {
+    g_print ("thumbnailing every %f seconds\n", thumbinterval);
+    g_timeout_add (1000 * thumbinterval, thumbnail_cb, pipeline);
+  }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
