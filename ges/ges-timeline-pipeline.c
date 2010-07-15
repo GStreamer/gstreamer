@@ -108,7 +108,8 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   /* Limit encodebin buffering to 1 buffer since we know the various
    * stream fed to it are decoupled already */
   g_object_set (self->encodebin, "queue-buffers-max", (guint32) 1,
-      "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0, NULL);
+      "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0,
+      "use-smartencoder", TRUE, NULL);
 
   if (G_UNLIKELY (self->playsink == NULL))
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
@@ -593,6 +594,8 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
 
   if (pipeline->profile)
     gst_encoding_profile_free (pipeline->profile);
+  g_object_set (pipeline->encodebin, "use-smartencoder",
+      !(!(pipeline->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
   g_object_set (pipeline->encodebin, "profile", profile, NULL);
   pipeline->profile = gst_encoding_profile_copy (profile);
 
@@ -676,6 +679,9 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
       GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
       return FALSE;
     }
+    g_object_set (pipeline->encodebin, "use-smartencoder",
+        !(!(mode & TIMELINE_MODE_SMART_RENDER)), NULL);
+
     gst_element_link_pads_full (pipeline->encodebin, "src", pipeline->urisink,
         "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
