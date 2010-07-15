@@ -228,6 +228,11 @@ AM_PROG_CC_C_O
 dnl find an assembler
 AM_PROG_AS
 
+dnl determine c++ compiler
+AC_PROG_CXX
+dnl determine if c++ is available on this system
+AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+
 dnl Perl is used in building documentation and in the version checks
 AC_PATH_PROG(PERL_PATH, perl, no)
 if test x$PERL_PATH = xno; then
@@ -647,7 +652,9 @@ AC_SUBST(DEPRECATED_CFLAGS)
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time via e.g.
 dnl make DEPRECATED_CFLAGS=''
 GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
+GST_OPTION_CXXFLAGS="\$(WARNING_CXXFLAGS) \$(ERROR_CXXFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
+AC_SUBST(GST_OPTION_CXXFLAGS)
 
 dnl GST_ALL_*
 dnl vars common to for all internal objects (core libs, elements, applications)
@@ -657,6 +664,7 @@ dnl - src and build dirs need to be added because every piece that gets built
 dnl   will need the GStreamer source and generated headers
 dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
 dnl       from LibXML except for in the core library
+GST_ALL_CXXFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS $XML_CFLAGS \$(GST_OPTION_CXXFLAGS) \$(ERROR_CXXFLAGS)"
 GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir)/libs -I\$(top_builddir) $GLIB_CFLAGS $GLIB_EXTRA_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS) \$(ERROR_CFLAGS)"
 
 dnl FIXME: check if LTLIBINTL is needed everywhere
@@ -668,6 +676,7 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
 
 AC_SUBST(GST_ALL_CFLAGS)
+AC_SUBST(GST_ALL_CXXFLAGS)
 AC_SUBST(GST_ALL_LIBS)
 AC_SUBST(GST_ALL_LDFLAGS)
 
@@ -681,8 +690,10 @@ dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstreamer
 dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
+GST_OBJ_CXXFLAGS="\$(GST_ALL_CXXFLAGS)"
 GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
 AC_SUBST(GST_OBJ_CFLAGS)
+AC_SUBST(GST_OBJ_CXXFLAGS)
 AC_SUBST(GST_OBJ_LIBS)
 
 dnl GST_PLUGIN_LDFLAGS

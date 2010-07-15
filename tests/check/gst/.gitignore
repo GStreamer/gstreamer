@@ -8,6 +8,7 @@ gstbus
 gstcaps
 gstchildproxy
 gstclock
+gstcpp
 gstdata
 gstdatetime
 gstelement

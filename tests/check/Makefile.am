@@ -89,6 +89,7 @@ check_PROGRAMS =				\
 	gst/gstbufferlist			\
 	gst/gstbus				\
 	gst/gstcaps     			\
+	gst/gstcpp			     	\
 	gst/gstdatetime     			\
 	gst/gstinfo		 		\
 	gst/gstiterator 			\
@@ -148,15 +149,17 @@ EXTRA_DIST = \
 	libs/test_transform.c
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
+AM_CXXFLAGS = $(GST_OBJ_CXXFLAGS)
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
+	
+gst_gstcpp_SOURCES = gst/gstcpp.cc
 
 gst_gstutils_LDADD = $(LDADD) $(GSL_LIBS) $(GMP_LIBS)
 
 libs_gdp_SOURCES = \
 	libs/gdp.c
-libs_gdp_CFLAGS = $(AM_CFLAGS)
 libs_gdp_LDADD = \
 	$(top_builddir)/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la \
 	$(LDADD)
