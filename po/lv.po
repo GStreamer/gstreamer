@@ -5,11 +5,11 @@
 # Rihards Prieditis <rprieditis@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 18:27+0100\n"
-"PO-Revision-Date: 2010-02-11 13:16+0000\n"
-"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2010-07-15 01:34+0100\n"
+"PO-Revision-Date: 2010-07-07 11:53+0100\n"
+"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
@@ -182,35 +182,35 @@ msgid "Could not open audio device for recording."
 msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
 
 msgid "Could not open audio device for mixer control handling."
-msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai."
+msgstr "Nevarēja atvērt audio ierīci miksera kontroles vadīšanai."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis elements "
-"neatbalsta šo Open Sound System versiju."
+"Nevar atvērt audio ierīci miksera kontrolas vadīšanai. Šī Atvertās Skaņas "
+"Sistemas versija neatbalsta šo elementu."
 
 msgid "Master"
 msgstr "Galvenais"
 
 msgid "Front"
-msgstr "Priekšpuse"
+msgstr "Priekšējais"
 
 msgid "Rear"
-msgstr "Aizmugure"
+msgstr "Sāni"
 
 msgid "Headphones"
 msgstr "Austiņas"
 
 msgid "Center"
-msgstr "Centrāls"
+msgstr "Centrs"
 
 msgid "LFE"
 msgstr "LFE"
 
 msgid "Surround"
-msgstr "Ieskaujošs"
+msgstr "Ieskaujošā"
 
 msgid "Side"
 msgstr "Puse"
@@ -231,10 +231,10 @@ msgid "3D Depth"
 msgstr "3D dziļums"
 
 msgid "3D Center"
-msgstr "3D centrēts"
+msgstr "3D centrs"
 
 msgid "3D Enhance"
-msgstr "3D aptverošs"
+msgstr "3D uzlabojums"
 
 msgid "Telephone"
 msgstr "Telefons"
@@ -243,7 +243,7 @@ msgid "Line Out"
 msgstr "Skaņas izeja"
 
 msgid "Line In"
-msgstr "Skaņas ieeja"
+msgstr "Līnijas ieeja"
 
 msgid "Internal CD"
 msgstr "Iekšējais CD"
@@ -258,31 +258,31 @@ msgid "AUX 2 In"
 msgstr "AUX 2 ieeja"
 
 msgid "AUX In"
-msgstr "AUX ieeja"
+msgstr "AUC ieeja"
 
 msgid "Record Gain"
-msgstr "Ierakstīšanas pieaugums"
+msgstr "Ierakstīta pieaugums"
 
 msgid "Output Gain"
-msgstr "Izvades pieaugums"
+msgstr "Izvada pieaugums"
 
 msgid "Microphone Boost"
 msgstr "Mikrofona pastiprinājums"
 
 msgid "Loopback"
-msgstr "Atkārtošana"
+msgstr "Atpakaļcikls"
 
 msgid "Diagnostic"
 msgstr "Diagnostika"
 
 msgid "Bass Boost"
-msgstr "Basu pastiprinājums"
+msgstr "Bassa pastiprinājums"
 
 msgid "Playback Ports"
 msgstr "Atskaņošanas porti"
 
 msgid "Input"
-msgstr "Ievade"
+msgstr "Ievads"
 
 msgid "Record Source"
 msgstr "Ierakstīšanas avots"
@@ -291,7 +291,7 @@ msgid "Monitor Source"
 msgstr "Monitora avots"
 
 msgid "Keyboard Beep"
-msgstr "Klaviatūras pīkstiens"
+msgstr "Klaviatūras pīkstieni"
 
 msgid "Simulate Stereo"
 msgstr "Simulēt stereo"
@@ -300,7 +300,7 @@ msgid "Stereo"
 msgstr "Stereo"
 
 msgid "Surround Sound"
-msgstr "Ieskaujoša skaņa"
+msgstr "Ieskaujošā skaņa"
 
 msgid "Microphone Gain"
 msgstr "Mikrofona pieaugums"
@@ -315,16 +315,16 @@ msgid "Jack"
 msgstr "Ligzda"
 
 msgid "Center / LFE"
-msgstr "Centrālais / LFE"
+msgstr "Centrs / LFE"
 
 msgid "Stereo Mix"
-msgstr "Stereo jaukšana"
+msgstr "Stereo mikseris"
 
 msgid "Mono Mix"
-msgstr "Mono jaukšana"
+msgstr "Mono miskeris"
 
 msgid "Input Mix"
-msgstr "Ievades jaukšana"
+msgstr "Ieejas mikseris"
 
 msgid "SPDIF In"
 msgstr "SPDIF ieeja"
@@ -348,16 +348,16 @@ msgid "HDMI"
 msgstr "HDMI"
 
 msgid "Modem"
-msgstr "Modems"
+msgstr "Modēms"
 
 msgid "Handset"
-msgstr "Papildierīce"
+msgstr "Klausule"
 
 msgid "Other"
 msgstr "Cits"
 
 msgid "None"
-msgstr "Nav"
+msgstr "Nekas"
 
 msgid "On"
 msgstr "Ieslēgts"
@@ -393,19 +393,19 @@ msgstr "Ļoti augsts"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr "Izstrāde"
+msgstr "Produkcija"
 
 msgid "Front Panel Microphone"
-msgstr "Priekšējā paneļa nikrofons"
+msgstr "Priekšējā paneļa mikrofons"
 
 msgid "Front Panel Line In"
-msgstr "Priekšējā paneļa skaņas ieeja"
+msgstr "Priekšējā paneļa ieejas līnija"
 
 msgid "Front Panel Headphones"
 msgstr "Priekšējā paneļa austiņas"
 
 msgid "Front Panel Line Out"
-msgstr "Priekšējā paneļa skaņas izeja"
+msgstr "Priekšējā paneļa līnijas izeja"
 
 msgid "Green Connector"
 msgstr "Zaļais savienotājs"
@@ -423,7 +423,7 @@ msgid "Black Connector"
 msgstr "Melnais savienotājs"
 
 msgid "Gray Connector"
-msgstr "Pelēkais savienotājs"
+msgstr "Pelākais savienotājs"
 
 msgid "Orange Connector"
 msgstr "Oranžais savienotājs"
@@ -432,7 +432,7 @@ msgid "Red Connector"
 msgstr "Sarkanais savienotājs"
 
 msgid "Yellow Connector"
-msgstr "Dzeltenais savienotājs"
+msgstr "Dzeltains savienotājs"
 
 msgid "Green Front Panel Connector"
 msgstr "Zaļais priekšējā paneļa savienotājs"
@@ -462,24 +462,24 @@ msgid "Yellow Front Panel Connector"
 msgstr "Dzeltenais priekšējā paneļa savienotājs"
 
 msgid "Spread Output"
-msgstr "Sadalīt izvadi"
+msgstr "Izplest izvadu"
 
 msgid "Downmix"
-msgstr "Pazeminātā jaukšana"
+msgstr "Lejupmiksēšana"
 
 msgid "Virtual Mixer Input"
-msgstr "Virtuālā jaucēja ievads"
+msgstr "Virtuālā miksera ievads"
 
 msgid "Virtual Mixer Output"
-msgstr "Virtuālā jaucēja izvads"
+msgstr "Virtuālā miksera izvads"
 
 msgid "Virtual Mixer Channels"
-msgstr "Virtuālā jaucēja kanāli"
+msgstr "Virtuālā miksera kanāli"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "%s funkcija"
+msgstr "%s %d funkcija"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -490,8 +490,8 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta šo "
-"Open Sound System versiju."
+"Nav iespējams atvērt audio ierīci atskaņošanai. Šī Atvērtās Skaņas Sistemas "
+"versija neatbalsta šo elementu."
 
 msgid "Playback is not supported by this audio device."
 msgstr "Šī audio ierīce neatbalsta atskaņošanu."
@@ -500,10 +500,10 @@ msgid "Audio playback error."
 msgstr "Audio atskaņošanas kļūda."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Šī audio ierīce neatbalsta ierakstīšanu."
+msgstr "Šī audio ierīce neatablsta ierkastīšanu."
 
 msgid "Error recording from audio device."
-msgstr "Radās kļūda ierakstot no audio ierīces."
+msgstr "Kļūda ierakstot no audio iekārtas."
 
 msgid "Gain"
 msgstr "Pieaugums"
