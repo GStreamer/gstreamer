@@ -108,6 +108,13 @@ gboolean ges_timeline_pipeline_set_render_settings (GESTimelinePipeline *pipelin
 gboolean ges_timeline_pipeline_set_mode (GESTimelinePipeline *pipeline,
 					 GESPipelineFlags mode);
 
+GstBuffer *
+ges_timeline_pipeline_get_thumbnail(GESTimelinePipeline *self, GstCaps *caps);
+
+GstBuffer *
+ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
+    gint width, gint height);
+
 G_END_DECLS
 
 #endif /* _GES_TIMELINE_PIPELINE */

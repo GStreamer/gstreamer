@@ -27,8 +27,10 @@
  * Its usage is inspired by the 'playbin' element from gst-plugins-base.
  */
 
+#include <gst/gst.h>
 #include "ges-internal.h"
 #include "ges-timeline-pipeline.h"
+#include "ges-screenshot.h"
 
 #define DEFAULT_TIMELINE_MODE  TIMELINE_MODE_PREVIEW
 
@@ -694,4 +696,75 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
   pipeline->mode = mode;
 
   return TRUE;
+}
+
+/**
+ * ges_timeline_pipeline_get_thumbnail
+ * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
+ * @caps: caps specifying current format. Use %GST_CAPS_ANY for native size.
+ *
+ * Returns a #GstBuffer with the currently playing in the format specified by
+ * caps. The caller should unref the #gst_buffer_unref when finished. If %ANY
+ * caps are specified, the information will be returned in the whatever format
+ * is currently used by the sink. This information can be retrieve from caps
+ * associated with the buffer.
+ *
+ * Returns: a #GstBuffer or %NULL
+ */
+
+GstBuffer *
+ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
+{
+  GstElement *sink;
+  GstBuffer *buf;
+
+  sink = self->playsink;
+  if (!sink) {
+    GST_WARNING ("thumbnailing can only be done if we have a playsink");
+    return NULL;
+  }
+
+  /* FIXME (merge into core): this should be replaced with the "convert-frame"
+   * action */
+  buf = gst_play_sink_convert_frame (sink, caps);
+
+  return buf;
+}
+
+/**
+ * ges_timeline_pipeline_get_thumbnail_rgb24
+ * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
+ * @width: the requested width or -1 for native size
+ * @height: the requested height or -1 for native size
+ *
+ * A convenience method for ges_timeline_pipeline_get_thumbnail_raw which
+ * returns a buffer in 24-bit RGB, optionally scaled to the specified width
+ * and height. If -1 is specified for either dimension, it will be left at
+ * native size. You can retreive this information from the caps associated
+ * with the buffer.
+ * 
+ * The caller is responsible for unreffing the returned buffer with
+ * #gst_buffer_unref.
+ *
+ * Returns: a #GstBuffer or %NULL
+ */
+
+GstBuffer *
+ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
+    gint width, gint height)
+{
+  GstBuffer *ret;
+  GstCaps *caps;
+
+  caps = gst_caps_from_string ("video/x-raw-rgb,bpp=(int)24," "depth=(int)24");
+
+  if (width != -1)
+    gst_caps_set_simple (caps, "width", (gint) width, NULL);
+
+  if (height != -1)
+    gst_caps_set_simple (caps, "height", (gint) height, NULL);
+
+  ret = ges_timeline_pipeline_get_thumbnail (self, caps);
+  gst_caps_unref (caps);
+  return ret;
 }
