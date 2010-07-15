@@ -2459,7 +2459,6 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
 seek_error:
   {
-    GST_OBJECT_UNLOCK (demux);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("Got a seek error"));
     return FALSE;
