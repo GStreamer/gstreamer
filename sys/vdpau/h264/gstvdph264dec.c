@@ -260,15 +260,31 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
 
   seq = slice->picture->sequence;
   if (seq != h264_dec->sequence) {
+    GstVideoState state;
     GstFlowReturn ret;
     GstVdpDevice *device;
 
-    gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER (h264_dec));
+    state =
+        gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (h264_dec));
+
+    state.width = (seq->pic_width_in_mbs_minus1 + 1) * 16 -
+        2 * seq->frame_crop_right_offset;
+
+    state.height = (2 - seq->frame_mbs_only_flag) *
+        (seq->pic_height_in_map_units_minus1 + 1) * 16;
+    if (seq->frame_mbs_only_flag)
+      state.height -= 2 * seq->frame_crop_bottom_offset;
+    else
+      state.height -= 4 * seq->frame_crop_bottom_offset;
+
+    /* FIXME: try to calculate framerate */
+
+    gst_base_video_decoder_set_state (GST_BASE_VIDEO_DECODER (h264_dec), state);
+
     ret = gst_vdp_decoder_get_device (GST_VDP_DECODER (h264_dec), &device,
         NULL);
 
     if (ret == GST_FLOW_OK) {
-      GstVideoState state;
       VdpDecoderProfile profile;
       VdpStatus status;
 
@@ -277,8 +293,6 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
         h264_dec->decoder = VDP_INVALID_HANDLE;
       }
 
-      state =
-          gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (h264_dec));
 
       switch (seq->profile_idc) {
         case 66:
