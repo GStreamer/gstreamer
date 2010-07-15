@@ -37,6 +37,8 @@ static gboolean
 create_element (const gchar * factory_name, GstElement ** element,
     GError ** err);
 
+static GstElement *get_encoder (GstCaps * caps);
+
 GstBuffer *
 gst_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 {
@@ -73,6 +75,61 @@ create_element (const gchar * factory_name, GstElement ** element,
   return FALSE;
 }
 
+GstElement *
+get_encoder (GstCaps * caps)
+{
+  GValueArray *encoders = NULL;
+  GValueArray *filtered = NULL;
+  GValue *factory_value = NULL;
+  GstElementFactory *factory = NULL;
+  GstElement *encoder;
+
+  encoders =
+      gst_factory_list_get_elements (GST_FACTORY_LIST_ENCODER |
+      GST_FACTORY_LIST_IMAGE, GST_RANK_NONE);
+
+  GST_INFO ("got factory list %p", encoders);
+  gst_factory_list_debug (encoders);
+  if (!(encoders && encoders->n_values))
+    goto fail;
+
+  filtered = gst_factory_list_filter (encoders, caps, GST_PAD_SRC, FALSE);
+  GST_INFO ("got filtered list %p", filtered);
+  gst_factory_list_debug (filtered);
+  if (!(filtered && filtered->n_values))
+    goto fail;
+
+  factory_value = g_value_array_get_nth (filtered, 0);
+  factory = (GstElementFactory *) g_value_get_object (factory_value);
+
+  GST_INFO ("got factory %p", factory);
+  if (!factory)
+    goto fail;
+  encoder = gst_element_factory_create (factory, NULL);
+
+  GST_INFO ("created encoder element %p, %s", encoder,
+      gst_element_get_name (encoder));
+
+  if (!encoder)
+    goto fail;
+
+  g_value_array_free (filtered);
+  g_value_array_free (encoders);
+  gst_object_unref (factory);
+
+  return encoder;
+
+fail:
+  if (encoders)
+    g_value_array_free (encoders);
+  if (filtered)
+    g_value_array_free (filtered);
+  if (factory)
+    gst_object_unref (factory);
+
+  return NULL;
+}
+
 /* takes ownership of the input buffer */
 GstBuffer *
 gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
@@ -84,41 +141,8 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   GstBus *bus;
   GstCaps *from_caps;
   GstFlowReturn ret;
-  GValueArray *encoders = NULL;
-  GValueArray *filtered = NULL;
-  GValue *factory_value = NULL;
-  GstElementFactory *factory = NULL;
 
-  encoders =
-      gst_factory_list_get_elements (GST_FACTORY_LIST_ENCODER |
-      GST_FACTORY_LIST_IMAGE, GST_RANK_NONE);
-
-  GST_INFO ("got factory list %p", encoders);
-  gst_factory_list_debug (encoders);
-  if (!(encoders && encoders->n_values))
-    goto no_encoder;
-
-  filtered = gst_factory_list_filter (encoders, to_caps, GST_PAD_SRC, FALSE);
-  GST_INFO ("got filtered list %p", filtered);
-  gst_factory_list_debug (filtered);
-  if (!(filtered && filtered->n_values))
-    goto no_encoder;
-
-  factory_value = g_value_array_get_nth (filtered, 0);
-  factory = (GstElementFactory *) g_value_get_object (factory_value);
-
-  GST_INFO ("got factory %p", factory);
-  if (!factory)
-    goto no_encoder;
-
-  g_value_array_free (filtered);
-  g_value_array_free (encoders);
-
-  encoder = gst_element_factory_create (factory, NULL);
-
-  GST_INFO ("created encoder element %p, %s", encoder,
-      gst_element_get_name (encoder));
-
+  encoder = get_encoder (to_caps);
   if (!encoder)
     goto no_encoder;
 
@@ -226,10 +250,6 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
 no_encoder:
   {
     g_warning ("could not find an encoder for provided caps");
-    if (encoders)
-      g_value_array_free (encoders);
-    if (filtered)
-      g_value_array_free (encoders);
     return NULL;
   }
 no_elements:
