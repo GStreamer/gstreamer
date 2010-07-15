@@ -1297,7 +1297,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   guint32 seqnum;
   GstEvent *tevent;
 
-  GST_DEBUG_OBJECT (src, "doing seek");
+  GST_DEBUG_OBJECT (src, "doing seek: %" GST_PTR_FORMAT, event);
 
   GST_OBJECT_LOCK (src);
   dest_format = src->segment.format;
