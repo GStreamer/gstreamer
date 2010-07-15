@@ -131,9 +131,7 @@ struct _GstPulseRingBufferClass
   GstRingBufferClass parent_class;
 };
 
-static void gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass);
-static void gst_pulseringbuffer_init (GstPulseRingBuffer * ringbuffer,
-    GstPulseRingBufferClass * klass);
+static GType gst_pulseringbuffer_get_type (void);
 static void gst_pulseringbuffer_finalize (GObject * object);
 
 static GstRingBufferClass *ring_parent_class = NULL;
@@ -151,32 +149,7 @@ static guint gst_pulseringbuffer_commit (GstRingBuffer * buf,
     guint64 * sample, guchar * data, gint in_samples, gint out_samples,
     gint * accum);
 
-/* ringbuffer abstract base class */
-static GType
-gst_pulseringbuffer_get_type (void)
-{
-  static GType ringbuffer_type = 0;
-
-  if (!ringbuffer_type) {
-    static const GTypeInfo ringbuffer_info = {
-      sizeof (GstPulseRingBufferClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_pulseringbuffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPulseRingBuffer),
-      0,
-      (GInstanceInitFunc) gst_pulseringbuffer_init,
-      NULL
-    };
-
-    ringbuffer_type =
-        g_type_register_static (GST_TYPE_RING_BUFFER, "GstPulseSinkRingBuffer",
-        &ringbuffer_info, 0);
-  }
-  return ringbuffer_type;
-}
+G_DEFINE_TYPE (GstPulseRingBuffer, gst_pulseringbuffer, GST_TYPE_RING_BUFFER);
 
 static void
 gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
@@ -207,15 +180,10 @@ gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_pulseringbuffer_clear);
 
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_commit);
-
-  /* ref class from a thread-safe context to work around missing bit of
-   * thread-safety in GObject */
-  g_type_class_ref (GST_TYPE_PULSERING_BUFFER);
 }
 
 static void
-gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf,
-    GstPulseRingBufferClass * g_class)
+gst_pulseringbuffer_init (GstPulseRingBuffer * pbuf)
 {
   pbuf->stream_name = NULL;
   pbuf->context = NULL;
