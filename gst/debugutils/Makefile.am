@@ -8,6 +8,7 @@ plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la
 
 noinst_HEADERS = \
 	efence.h \
+	gstcapsdebug.h \
 	gstcapssetter.h \
 	gstnavigationtest.h \
 	gstnavseek.h \
@@ -33,6 +34,7 @@ libgstnavigationtest_la_LIBTOOLFLAGS = --tag=disable-static
 libgstdebug_la_SOURCES = \
 	gstdebug.c \
 	breakmydata.c \
+	gstcapsdebug.c \
 	gstcapssetter.c \
 	gstnavseek.c \
 	gstpushfilesrc.c \
