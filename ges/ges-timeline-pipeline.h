@@ -109,11 +109,15 @@ gboolean ges_timeline_pipeline_set_mode (GESTimelinePipeline *pipeline,
 					 GESPipelineFlags mode);
 
 GstBuffer *
-ges_timeline_pipeline_get_thumbnail(GESTimelinePipeline *self, GstCaps *caps);
+ges_timeline_pipeline_get_thumbnail_buffer(GESTimelinePipeline *self, GstCaps *caps);
 
 GstBuffer *
 ges_timeline_pipeline_get_thumbnail_rgb24(GESTimelinePipeline *self,
     gint width, gint height);
+
+gboolean
+ges_timeline_pipeline_save_thumbnail(GESTimelinePipeline *self,
+    int width, int height, gchar *format, gchar *location);
 
 G_END_DECLS
 

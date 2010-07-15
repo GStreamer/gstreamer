@@ -28,6 +28,7 @@
  */
 
 #include <gst/gst.h>
+#include <stdio.h>
 #include "ges-internal.h"
 #include "ges-timeline-pipeline.h"
 #include "ges-screenshot.h"
@@ -713,7 +714,8 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
  */
 
 GstBuffer *
-ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
+ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
+    GstCaps * caps)
 {
   GstElement *sink;
   GstBuffer *buf;
@@ -729,6 +731,57 @@ ges_timeline_pipeline_get_thumbnail (GESTimelinePipeline * self, GstCaps * caps)
   buf = gst_play_sink_convert_frame (sink, caps);
 
   return buf;
+}
+
+/**
+ * ges_timeline_pipeline_save_thumbnail
+ * @self: a #GESTimelinePipeline in %GST_STATE_PLAYING or %GST_STATE_PAUSED
+ * @width: the requested width or -1 for native size
+ * @height: the requested height or -1 for native size
+ * @format: a string specifying the desired mime type (for example,
+ * image/jpeg)
+ * @location: the path to save the thumbnail
+ *
+ * A convenience method for ges_timeline_pipeline_get_thumbnail_raw which
+ * returns a buffer in 24-bit RGB, optionally scaled to the specified width
+ * and height. If -1 is specified for either dimension, it will be left at
+ * native size. You can retreive this information from the caps associated
+ * with the buffer.
+ * 
+ * The caller is responsible for unreffing the returned buffer with
+ * #gst_buffer_unref.
+ *
+ * Returns: a #GstBuffer or %NULL
+ */
+
+gboolean
+ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
+    height, gchar * format, gchar * location)
+{
+  GstBuffer *b;
+  FILE *fp;
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (format);
+
+  if (width > 1)
+    gst_caps_set_simple (caps, "width", width, NULL);
+
+  if (height > 1)
+    gst_caps_set_simple (caps, "height", height, NULL);
+
+  if (!(b = ges_timeline_pipeline_get_thumbnail_buffer (self, caps))) {
+    gst_caps_unref (caps);
+    return FALSE;
+  }
+
+  fp = fopen (location, "w+");
+  fwrite (GST_BUFFER_DATA (b), GST_BUFFER_SIZE (b), 1, fp);
+
+  fclose (fp);
+  gst_caps_unref (caps);
+  gst_buffer_unref (b);
+  return TRUE;
 }
 
 /**
@@ -764,7 +817,7 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   if (height != -1)
     gst_caps_set_simple (caps, "height", (gint) height, NULL);
 
-  ret = ges_timeline_pipeline_get_thumbnail (self, caps);
+  ret = ges_timeline_pipeline_get_thumbnail_buffer (self, caps);
   gst_caps_unref (caps);
   return ret;
 }
