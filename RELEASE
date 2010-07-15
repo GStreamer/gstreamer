@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.23 "Stylish Kids in Riot"
+Release notes for GStreamer Good Plug-ins 0.10.24 "Taking Liberties"
         
 
 
@@ -54,89 +54,108 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * alpha: add support for YUY2, YVYU, UYVY and YV12; YUV->RGB conversion fixes
-      * avimux, flvmux, matroskamux: don't crash if tags arrive on multiple input pads at the same time
-      * avimux, matroskamux: add support for On2 VP8
-      * capssetter: element moved from gst-plugins-bad
-      * deinterlace: add support for most YUV and RGB formats for some methods
-      * deinterlace: make automatic detection of interlacing the default
-      * gamma: add support for more YUV/RGB formats, make gamma property controllable
-      * jpegdec, jpegenc: support more colour spaces and pixel formats
-      * matroskademux: implement push mode seeking
-      * matroskademux: add support for WebM
-      * imagefreeze: plugin moved from gst-plugins-bad
-      * oss4: plugin moved from gst-plugins-bad
-      * osxvideosink: implement the xoverlay interface, allow switching views at runtime
-      * qcelpdepay: add a QCELP depayloader
-      * qtdemux: add support for VP8; push-mode seeking and ctts table parsing fixes
-      * rtph263depay: use Picture Start Code to detect packet loss and frame start
-      * rtph263pay: use found GOBs to apply Mode A payloading
-      * rtph264depay: DELTA_UNIT marking of output buffers
-      * rtph264pay: extract SPS and PPS from property provided parameter set
-      * rtph264pay: add config-interval property to re-send SPS/PPS in stream
-      * rtpmp4vpay: add config-interval property to re-insert config in stream
-      * rtptheoradepay: fix in-band configuration parsing
-      * rtptheorapay: add config-interval parameter to re-insert config in stream
-      * rtpvorbisdepay, rtptheoradepay: also accept in-line configuration
-      * rtsp: configure bandwidth properties in the session
-      * rtspsrc: fall back to SDP ports instead of server_port
-      * rtspsrc: use the SDP connection info in multicast
-      * rtspsrc: handle SEEKING queries
-      * smptealpha: add support for all 4 ARGB formats and YV12 (converted to AYUV)
-      * videobalance: add support for all RGB formats, Y41B, Y42B and Y444, YUY2, UYVY, AYUV and YVYU
-      * videobox: add support for Y444, Y42B, Y41B, YUY2, UYUV, and YVYU
-      * videobox: fix floating point to integer conversion for the alpha values
-      * videobox: handle ranges/lists of width or height when transforming caps
-      * videobox: translate navigation events to make sense again upstream
-      * videofilter: merge gamma, videobalance, and videoflip plugin into single plu
-      * videoflip: add support for all RGB formats and AYUV, Y41B, Y42B and Y444
-      * videoflip: also flip the pixel-aspect-ratio if width/height are exchanged
-      * videomixer: add support for Y444, Y42B, Y41B, YV12, YUY2, YVYU, UYVY
-      * webmmux: Add new webmmux element that only supports muxing of WebM
-      * y4menc: add 4:2:2, 4:1:1, and 4:4:4 output support
+      * Use Orc (Optimized Inner Loops Runtime Compiler) for SIMD and
+    other optimisations, and remove liboil dependency. The main goal
+    for this release was to make the transition from liboil to liborc.
+    Performance improvements should not be expected and will be the
+    focus of future versions. liborc is an optional dependency for
+    the time being, to make it possible to test and develop the very
+    latest GStreamer versions on systems that don't have orc yet.
+    However, without orc slow unoptimised backup code will be used
+    for many performance critical code paths. Distributors are urged
+    to package and ship the latest version of liborc and compile
+    GStreamer modules with --enable-orc. Please do not distribute
+    GStreamer packages that are not orc enabled. More information on
+    the orc integration can be found in the docs/design/ directory.
+    
+      * alpha: add "prefer-passthrough" property to allow passthrough mode
+      * avidemux: improve audio vbr detection
+      * cmmlenc: Remove hack to let oggmux start a new page for every CMML buffer
+      * deinterlace: add mmx implementations of greedyh for UYVY; orcify some deinterlacing methods
+      * dv1394: fix the internal clock even more
+      * flvmux: add "streamable" property
+      * flvmux: write duration at the correct position
+      * gdkpixbuf: Add a gdkpixbuf3 plugin that uses gdkpixbuf3
+      * jpegdec: improved parsing, and better buffer handling that minimises memcpys
+      * jpegdec, jpegenc: add grayscale support
+      * matroskademux: QoS fixes and improvements; reverse playback improvements
+      * matroskademux: handle zero-sized numbers correctly
+      * matroskamux: add "streamable" property; set streamheaders on output caps
+      * matroskamux: try harder to make sure clusters start with a key frame
+      * matroskamux: mark output buffers properly as keyframe or delta unit
+      * matroskamux: do some write caching to avoid newsegment events before each output buffer
+      * matroskamux: fix some timestamp drift caused by rounding errors
+      * pngenc: Support 8 bit grayscale
+      * pulsesink: optimize communication with PulseAudio using pa_stream_begin_write
+      * pulsesink: Post provide-clock message on the bus if the clock appears/disappears
+      * rtph264depay: consider SPS, PPS and IDR as keyframe, all others as DELTA_UNIT
+      * rtph264pay: handle short startcodes in the h264 bytestream
+      * rtpjitterbuffer: stop buffering and emit EOS at the end of a stream
+      * rtpmparobustdepay: add mpa-robust depayloader
+      * rtpmp4gdepay: calculate the frame duration correctly
+      * rtptheorapay: keep announcing the delivery-method in the capabilities, restores compatibility with older farsight versions again
+      * rtspsrc: respect aggregate control attributes; try all ranges from the sdp
+      * spectrum: support 24-bit width and arbitrary bit depth
+      * udp: make url parsing compatible with VLC syntax
+      * udpsrc: fix multicast support on windows
+      * v4l2sink: destroy buffer pool when changing state to NULL
+      * videobox: fix negotiation for I420/YV12
+      * videomixer: don't mix input with different pixel aspect ratios; negotiation fixes
+      * wavparse: proper closing segment construction when doing non-flushing seeks
+      * wavparse: use typefind functions to check if PCM data contains dts stream
 
 Bugs fixed in this release
      
+      * 619045 : [spectrum] Add support for 24-bit width and all depth combinations
+      * 555967 : [oss4] clarify some translation strings
+      * 570761 : [goom] crash in plugin_info_init allocating 260kB struct on stack
+      * 583047 : [jpegdec] optimise buffer handling when parsing frames
+      * 589997 : [rtp] need mpa-robust depayloader for helix-style MP3-DRAFT-00
+      * 595978 : [udpsrc] failed to play a multicast stream
+      * 597695 : [udpsrc] support VLC-style udp://239.255.11.11:1234 uri with bind address
+      * 611117 : [matroskademux] can't handle unknown cluster sizes
+      * 613066 : [flvmux] re-enable renamed/fixed is-live property
+      * 615461 : dv1394src clock continues to be broken
+      * 617339 : pulsesink doesn't make use of pa_stream_begin_write
+      * 618530 : [videomixer] Doesn't handle pixel-aspect-ratio correctly
+      * 618871 : 1394: remove useless last_time
+      * 618982 : [wavparse] wrong closing segment when doing non-flushing seek
+      * 619198 : [matroskademux] GstEbmlRead cleanup
+      * 619273 : [matroskamux] reduce downstream spam
+      * 619293 : [avimux] clean up avi header creation code
+      * 619531 : [rtspsrc] embedded asx streams' rtsp server doesn't like gstreamer request
+      * 619717 : unit tests fail if older -good plugins are present in system plugin directory
+      * 619824 : Use glib for checksumming
+      * 619848 : [deinterlace] can't switch properties on running pipeline
+      * 620148 : [videomixer] Doesn't negotiate format with downstream
+      * 620154 : [rtph264depay] Seeking with RTP payloaders corrupts images sometimes
+      * 620162 : [gdkpixbufdec] Bump rank to SECONDARY
+      * 620277 : [pulsesink] custom clock is still used after NULL state change
+      * 620358 : [matroskademux] Sorenson Squish WebM output seeking issues
+      * 620390 : rtph264pay doesn't understand short startcodes
+      * 620494 : [rtsp] stuttery audio with some h264/aac streams
+      * 620540 : [pulsesink] pa_stream_write() failed: Invalid argument
+      * 620591 : rtpceltpay doesn't handle stereo celt audio
+      * 620743 : matroskademux: refactor delta unit handling
+      * 620929 : Required libraw1394 version is not high enough
+      * 621510 : GNOME Goal: Remove deprecated glib symbols
+      * 621566 : [pulsesink] since upgrading plugins sound is garbled via Amarok
+      * 621723 : v4l2src crashes on PLAYING- > READY- > PLAYING
+      * 622498 : [avidemux] Doesn't reset all state when going back to READY
+      * 622500 : [v4l2sink] destroy open buffers when changing to NULL
+      * 622501 : [videobox] may negotiate input/output format combinations it can't actually handle
+      * 622816 : Make demos -DSEAL safe
+      * 623103 : matroskamux dispose error
+      * 623172 : [jpegdec] leak in unit test
+      * 623196 : rtpptdemux: don't send custom downstream event twice
+      * 623366 : [qtdemux] strip out bogus tags from XMP
+      * 623379 : [flvmux] Writing duration outside the allocated memory area in streaming mode
+      * 623585 : jpegdec: fails to skip extra 0xff markers at start
+      * 623654 : qtdemux: Fix order of bitrates in 'btrt' atom
+      * 619817 : [matroskademux] Reverse playback doesn't work
+      * 617512 : [alpha] should work in passthrough in all formats if alpha == 1.0
       * 619485 : matroskademux: skip buffers before a late keyframe (QoS)
-      * 576286 : [videomixer] Should accept/output non-alpha streams
-      * 618349 : osxvideosink: implement the XOverlay interface
-      * 574416 : rtp{theora,vorbis}depay should accept in-line configuration (too)
-      * 590662 : [pulse] Allocates and starts pulse main loops in instance_init
-      * 592270 : Cannot catch 'have-ns-view' on pipeline for playbin and playbin2
-      * 599585 : gstrtph263pay does not fragment frame with limited GOBs
-      * 600553 : [jpegdec] crashes on a fuzzed jpeg
-      * 606689 : Re-send codec data on GstForceKeyUnit
-      * 607452 : Failure to sync on rtpmp4vpay stream; sender;receiver mismatch
-      * 609405 : [qtdemux] Issues when seeking with file with lots of tracks and edit lists
-      * 609658 : [rtph264depay] doesn't mark output frames as keyframes correctly
-      * 610172 : inconsistent h263pay/h263depay behaviour
-      * 610902 : y4menc only supports 4:2:0
-      * 613786 : [PLUGIN-MOVE] Move imagefreeze to gst-plugins-good
-      * 614305 : [PLUGIN-MOVE] oss4 should be moved to good
-      * 614765 : racy stream status leave implementation
-      * 615798 : [smptealpha] Need ability to reverse transition direction
-      * 616516 : [qtdemux] h264 playback gets skippy after a seek
-      * 616700 : [rtspsrc] gst_query_new_seeking() fails on rtspsrc
-      * 617164 : [rtph264pay] SPS/PPS in provided sprop-parameter-sets never sent on timeout
-      * 617537 : rtspsrc always falls back to unicast instead of using the announced multicast
-      * 617733 : [wavparse] handle gst_pad_pull_range() returning less data than requested
-      * 617739 : [PLUGIN-MOVE] Move capssetter to gst-plugins-good
-      * 618305 : [flvmux] last timestamp is stored even if it's invalid
-      * 618351 : avimux crashes when fed from filesrc
-      * 618386 : rtptheoradepay: make delivery-method parameter optional
-      * 618419 : gstrtpbin-Description maybe exist error
-      * 618733 : [efence] Configure check is broken
-      * 618874 : [pulse] regression: broken mainloop locking
-      * 618940 : rtptheorapay/depay wrongly claims to do delivery-method=inline
-      * 619018 : Speex encoder latency should depend on rate
-      * 619103 : WebM demuxer
-      * 619105 : [qtdemux] misalignment between index and sample while looking for frame
-      * 619219 : [matroska] Move webm muxer into a separate element with restrictions
-      * 619835 : [videobox] Either makes video completely opaque or completely transparent
-      * 619943 : [jpegenc] Crash if playing - > setcaps - > ready - > setcaps
-      * 620002 : [flvdemux] Typo in position query handling makes all position queries fail
-      * 605231 : [deinterlace] Support AYUV, RGB colorspaces
-      * 619533 : [avimux, matroskamux, flvmux] crash when receiving tags on multiple pads at the same time
+      * 413942 : [wavparse] undetected dts-in-wav
 
 Download
 
@@ -166,26 +185,30 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Benjamin M. Schwartz
+      * Alexander Kojevnikov
+      * Andoni Morales Alastruey
+      * Andrzej K. Haczewski
+      * Arun Raghavan
       * Benjamin Otte
-      * Brian Cameron
-      * Christian Schaller
-      * Clive Wright
       * David Schleef
-      * Frederic Crozat
-      * Garrett D'Amore
-      * Jan Schmidt
-      * Jan Urbański
+      * Edward Hervey
+      * Guido Günther
+      * Havoc Pennington
       * Julien Moutte
+      * Keith Nicholson
+      * Marc-André Lureau
       * Mark Nauwelaerts
-      * Olivier Crête
-      * Philip
+      * Michael Grzeschik
       * Philip Jägenstedt
-      * Robert Swain
+      * Pierre-Louis Bossart
       * Sebastian Dröge
+      * Sjoerd Simons
       * Stefan Kost
       * Thiago Santos
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Tristan Matthews
       * Wim Taymans
+      * Xavier Queralt
+      * Zaheer Abbas Merali
  
