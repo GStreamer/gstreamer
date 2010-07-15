@@ -54,6 +54,7 @@
  * getrange based mode, the element starts its own task to figure out the
  * type of the stream.
  *
+ * Most of the actual implementation is in libs/gst/base/gsttypefindhelper.c.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -749,6 +750,8 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
+
+  GST_LOG_OBJECT (typefind, "handling buffer in mode %d", typefind->mode);
 
   switch (typefind->mode) {
     case MODE_ERROR:
