@@ -606,7 +606,7 @@ gst_h264_parser_parse_picture (GstH264Parser * parser, guint8 * data,
       gint i;
 
       READ_UE (&reader, pic->pic_size_in_map_units_minus1);
-      bits = g_bit_storage (pic->num_slice_groups_minus1 + 1);
+      bits = g_bit_storage (pic->num_slice_groups_minus1);
 
       pic->slice_group_id =
           g_new (guint8, pic->pic_size_in_map_units_minus1 + 1);
