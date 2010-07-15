@@ -207,7 +207,7 @@ typedef enum {
   GST_PAD_LINK_CHECK_NOTHING       = 0,
   GST_PAD_LINK_CHECK_HIERARCHY     = 1 << 0,
   GST_PAD_LINK_CHECK_TEMPLATE_CAPS = 1 << 1,
-  GST_PAD_LINK_CHECK_CAPS          = 1 << 2,
+  GST_PAD_LINK_CHECK_CAPS          = 1 << 2
 } GstPadLinkCheck;
 
 /**
