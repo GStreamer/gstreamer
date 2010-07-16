@@ -65,6 +65,7 @@ typedef struct
 
   gboolean wait;
   gboolean new_stream;
+  gboolean drop_discont;
 
   gint64 running_time_diff;
 } GstStream;
@@ -389,6 +390,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
                 GST_TIME_ARGS (stop_running_time));
           }
           stream->new_stream = FALSE;
+          stream->drop_discont = TRUE;
 
           if (stop_running_time < self->group_start_time) {
             gint64 diff = self->group_start_time - stop_running_time;
@@ -430,6 +432,10 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (pad, "Resetting segment for stream %d",
             stream->stream_number);
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+
+        stream->wait = FALSE;
+        stream->new_stream = FALSE;
+        stream->drop_discont = FALSE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
@@ -495,6 +501,12 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
+
+  if (stream && stream->drop_discont) {
+    buffer = gst_buffer_make_metadata_writable (buffer);
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
+    stream->drop_discont = FALSE;
+  }
 
   if (stream && stream->segment.format == GST_FORMAT_TIME
       && GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -709,10 +721,24 @@ gst_stream_synchronizer_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "State change PLAYING->PAUSED");
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      GList *l;
+
       GST_DEBUG_OBJECT (self, "State change PAUSED->READY");
       self->group_start_time = 0;
+
+      GST_STREAM_SYNCHRONIZER_LOCK (self);
+      for (l = self->streams; l; l = l->next) {
+        GstStream *stream = l->data;
+
+        gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+        stream->wait = FALSE;
+        stream->new_stream = FALSE;
+        stream->drop_discont = FALSE;
+      }
+      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:{
       GST_DEBUG_OBJECT (self, "State change READY->NULL");
       break;
