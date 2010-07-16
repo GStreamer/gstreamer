@@ -4447,7 +4447,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           /* let's not give up on a stray invalid track number */
           GST_WARNING_OBJECT (demux,
               "Invalid stream %d for track number %" G_GUINT64_FORMAT
-              "; ignoring block", stream_num);
+              "; ignoring block", stream_num, num);
           break;
         }
 
