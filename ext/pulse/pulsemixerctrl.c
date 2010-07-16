@@ -91,7 +91,7 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
   c->index = i->index;
   c->channel_map = i->channel_map;
   c->volume = i->volume;
-  c->muted = !!i->mute;
+  c->muted = ! !i->mute;
   c->type = GST_PULSEMIXER_SINK;
 
   if (c->track) {
@@ -141,7 +141,7 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
   c->index = i->index;
   c->channel_map = i->channel_map;
   c->volume = i->volume;
-  c->muted = !!i->mute;
+  c->muted = ! !i->mute;
   c->type = GST_PULSEMIXER_SOURCE;
 
   if (c->track) {
@@ -195,7 +195,7 @@ gst_pulsemixer_ctrl_success_cb (pa_context * context, int success,
 {
   GstPulseMixerCtrl *c = (GstPulseMixerCtrl *) userdata;
 
-  c->operation_success = !!success;
+  c->operation_success = ! !success;
   pa_threaded_mainloop_signal (c->mainloop, 0);
 }
 

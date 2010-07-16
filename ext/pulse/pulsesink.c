@@ -2503,10 +2503,16 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       /* override with a custom clock */
       if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
         gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+#if GST_CHECK_VERSION(0, 10, 31) || (GST_CHECK_VERSION(0, 10, 30) && GST_VERSION_NANO > 0)
       GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
           gst_audio_clock_new_full ("GstPulseSinkClock",
           (GstAudioClockGetTimeFunc) gst_pulsesink_get_time,
           gst_object_ref (pulsesink), (GDestroyNotify) gst_object_unref);
+#else
+      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
+          gst_audio_clock_new ("GstPulseSinkClock",
+          (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
+#endif
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_element_post_message (element,
