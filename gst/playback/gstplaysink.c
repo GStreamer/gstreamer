@@ -3078,36 +3078,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       do_async_start (playsink);
       ret = GST_STATE_CHANGE_ASYNC;
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:{
-      if (playsink->video_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
-            playsink->video_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->video_sinkpad_stream_synchronizer);
-        playsink->video_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->video_srcpad_stream_synchronizer);
-        playsink->video_srcpad_stream_synchronizer = NULL;
-      }
-      if (playsink->audio_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
-            playsink->audio_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->audio_sinkpad_stream_synchronizer);
-        playsink->audio_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
-        playsink->audio_srcpad_stream_synchronizer = NULL;
-      }
-      if (playsink->text_sinkpad_stream_synchronizer) {
-        gst_element_release_request_pad (GST_ELEMENT_CAST
-            (playsink->stream_synchronizer),
-            playsink->text_sinkpad_stream_synchronizer);
-        gst_object_unref (playsink->text_sinkpad_stream_synchronizer);
-        playsink->text_sinkpad_stream_synchronizer = NULL;
-        gst_object_unref (playsink->text_srcpad_stream_synchronizer);
-        playsink->text_srcpad_stream_synchronizer = NULL;
-      }
-    }
-      /* fall through */
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (playsink->audiochain && playsink->audiochain->sink_volume) {
         /* remove our links to the mute and volume elements when they were
@@ -3157,7 +3128,36 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       /* FIXME Release audio device when we implement that */
       playsink->need_async_start = TRUE;
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      if (playsink->video_sinkpad_stream_synchronizer) {
+        gst_element_release_request_pad (GST_ELEMENT_CAST
+            (playsink->stream_synchronizer),
+            playsink->video_sinkpad_stream_synchronizer);
+        gst_object_unref (playsink->video_sinkpad_stream_synchronizer);
+        playsink->video_sinkpad_stream_synchronizer = NULL;
+        gst_object_unref (playsink->video_srcpad_stream_synchronizer);
+        playsink->video_srcpad_stream_synchronizer = NULL;
+      }
+      if (playsink->audio_sinkpad_stream_synchronizer) {
+        gst_element_release_request_pad (GST_ELEMENT_CAST
+            (playsink->stream_synchronizer),
+            playsink->audio_sinkpad_stream_synchronizer);
+        gst_object_unref (playsink->audio_sinkpad_stream_synchronizer);
+        playsink->audio_sinkpad_stream_synchronizer = NULL;
+        gst_object_unref (playsink->audio_srcpad_stream_synchronizer);
+        playsink->audio_srcpad_stream_synchronizer = NULL;
+      }
+      if (playsink->text_sinkpad_stream_synchronizer) {
+        gst_element_release_request_pad (GST_ELEMENT_CAST
+            (playsink->stream_synchronizer),
+            playsink->text_sinkpad_stream_synchronizer);
+        gst_object_unref (playsink->text_sinkpad_stream_synchronizer);
+        playsink->text_sinkpad_stream_synchronizer = NULL;
+        gst_object_unref (playsink->text_srcpad_stream_synchronizer);
+        playsink->text_srcpad_stream_synchronizer = NULL;
+      }
+    }
+      /* fall through */
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* remove sinks we added */
       if (playsink->videodeinterlacechain) {

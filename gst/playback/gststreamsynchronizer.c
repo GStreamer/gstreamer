@@ -417,7 +417,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
             GST_TIME_ARGS (stream->segment.accum));
         stream->running_time_diff = stream->segment.accum;
       } else if (stream) {
-        GST_ERROR_OBJECT (pad, "Non-TIME segment");
+        GST_WARNING_OBJECT (pad, "Non-TIME segment: %s",
+            gst_format_get_name (format));
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -634,8 +635,8 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
   gst_pad_set_element_private (stream->srcpad, NULL);
   gst_pad_set_element_private (stream->sinkpad, NULL);
   gst_pad_set_active (stream->srcpad, FALSE);
-  gst_pad_set_active (stream->sinkpad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (self), stream->srcpad);
+  gst_pad_set_active (stream->sinkpad, FALSE);
   gst_element_remove_pad (GST_ELEMENT_CAST (self), stream->sinkpad);
 
   if (stream->segment.format == GST_FORMAT_TIME) {
@@ -689,21 +690,11 @@ gst_stream_synchronizer_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "State change READY->PAUSED");
+      self->group_start_time = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (self, "State change PAUSED->PLAYING");
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:{
-      GST_DEBUG_OBJECT (self, "State change READY->NULL");
-
-      GST_STREAM_SYNCHRONIZER_LOCK (self);
-      g_cond_broadcast (self->stream_finish_cond);
-      while (self->streams)
-        gst_stream_synchronizer_release_stream (self, self->streams->data);
-      self->current_stream_number = 0;
-      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
-      break;
-    }
     default:
       break;
   }
@@ -741,6 +732,13 @@ gst_stream_synchronizer_change_state (GstElement * element,
     }
     case GST_STATE_CHANGE_READY_TO_NULL:{
       GST_DEBUG_OBJECT (self, "State change READY->NULL");
+
+      GST_STREAM_SYNCHRONIZER_LOCK (self);
+      g_cond_broadcast (self->stream_finish_cond);
+      while (self->streams)
+        gst_stream_synchronizer_release_stream (self, self->streams->data);
+      self->current_stream_number = 0;
+      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
     }
     default:
