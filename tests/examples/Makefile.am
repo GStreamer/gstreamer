@@ -6,6 +6,7 @@ noinst_PROGRAMS = 	\
 	test3		\
 	test4		\
 	transition\
+	thumbnails\
 	overlays
 
 AM_CFLAGS =  -I$(top_srcdir) $(GST_PROFILE_CFLAGS) $(GST_DISCOVERER_CFLAGS) $(GST_CFLAGS)
