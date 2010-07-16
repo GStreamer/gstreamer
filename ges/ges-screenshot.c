@@ -39,6 +39,22 @@ create_element (const gchar * factory_name, GstElement ** element,
 
 static GstElement *get_encoder (GstCaps * caps);
 
+static gboolean caps_are_raw (GstCaps * caps);
+
+static gboolean
+caps_are_raw (GstCaps * caps)
+{
+  static GstCaps *raw_video = NULL;
+  static gsize once = 0;
+
+  if (g_once_init_enter (&once)) {
+    raw_video = gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb");
+    g_once_init_leave (&once, 1);
+  }
+
+  return gst_caps_can_intersect (caps, raw_video);
+}
+
 GstBuffer *
 gst_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 {
@@ -142,10 +158,6 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   GstCaps *from_caps;
   GstFlowReturn ret;
 
-  encoder = get_encoder (to_caps);
-  if (!encoder)
-    goto no_encoder;
-
   from_caps = GST_BUFFER_CAPS (buf);
 
   g_return_val_if_fail (from_caps != NULL, NULL);
@@ -163,7 +175,7 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
     goto no_pipeline;
 
   GST_DEBUG ("adding elements");
-  gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, encoder, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
 
   /* set caps */
   g_object_set (src, "caps", from_caps, NULL);
@@ -178,15 +190,27 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   if (!gst_element_link_pads (csp, "src", vscale, "sink"))
     goto link_failed;
 
-  /* TODO: only plug an encoder if caps aren't raw ? */
+  if (caps_are_raw (to_caps)) {
+    GST_DEBUG ("linking vscale->sink");
 
-  GST_DEBUG ("linking vscale->encoder");
-  if (!gst_element_link (vscale, encoder))
-    goto link_failed;
+    if (!gst_element_link_pads (vscale, "src", sink, "sink"))
+      goto link_failed;
+  }
 
-  GST_DEBUG ("linking encoder->sink");
-  if (!gst_element_link_pads (encoder, "src", sink, "sink"))
-    goto link_failed;
+  else {
+    encoder = get_encoder (to_caps);
+    if (!encoder)
+      goto no_encoder;
+    gst_bin_add (GST_BIN (pipeline), encoder);
+
+    GST_DEBUG ("linking vscale->encoder");
+    if (!gst_element_link (vscale, encoder))
+      goto link_failed;
+
+    GST_DEBUG ("linking encoder->sink");
+    if (!gst_element_link_pads (encoder, "src", sink, "sink"))
+      goto link_failed;
+  }
 
   /* now set the pipeline to the paused state, after we push the buffer into
    * appsrc, this should preroll the converted buffer in appsink */
