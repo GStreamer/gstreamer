@@ -313,6 +313,17 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   return ret;
 }
 
+static void
+gst_video_scale_setup_vs_image (VSImage * image, GstVideoFormat format,
+    gint component, gint width, gint height)
+{
+  image->width =
+      gst_video_format_get_component_width (format, component, width);
+  image->height =
+      gst_video_format_get_component_height (format, component, height);
+  image->stride = gst_video_format_get_row_stride (format, component, width);
+}
+
 static gboolean
 gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
@@ -337,29 +348,13 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   videoscale->dest_size = gst_video_format_get_size (videoscale->format,
       videoscale->to_width, videoscale->to_height);
 
-  videoscale->src.width =
-      gst_video_format_get_component_width (videoscale->format, 0,
-      videoscale->from_width);
-  videoscale->src.height =
-      gst_video_format_get_component_height (videoscale->format, 0,
-      videoscale->from_height);
-  videoscale->src.stride =
-      gst_video_format_get_row_stride (videoscale->format, 0,
-      videoscale->from_width);
-
-  videoscale->dest.width =
-      gst_video_format_get_component_width (videoscale->format, 0,
-      videoscale->to_width);
-  videoscale->dest.height =
-      gst_video_format_get_component_height (videoscale->format, 0,
-      videoscale->to_height);
-  videoscale->dest.stride =
-      gst_video_format_get_row_stride (videoscale->format, 0,
-      videoscale->to_width);
+  gst_video_scale_setup_vs_image (&videoscale->src, videoscale->format, 0,
+      videoscale->from_width, videoscale->from_height);
+  gst_video_scale_setup_vs_image (&videoscale->dest, videoscale->format, 0,
+      videoscale->to_width, videoscale->to_height);
 
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
-
   videoscale->tmp_buf =
       g_malloc (videoscale->dest.stride * 4 * (videoscale->interlaced ? 2 : 1));
 
@@ -832,22 +827,16 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
+      gst_video_scale_setup_vs_image (img_u, format, 1, img->width,
+          img->height);
+      gst_video_scale_setup_vs_image (img_v, format, 2, img->width,
+          img->height);
       img_u->pixels =
           GST_BUFFER_DATA (buf) + gst_video_format_get_component_offset (format,
           1, img->width, img->height);
       img_v->pixels =
           GST_BUFFER_DATA (buf) + gst_video_format_get_component_offset (format,
           2, img->width, img->height);
-      img_u->height =
-          gst_video_format_get_component_height (format, 1, img->height);
-      img_v->height =
-          gst_video_format_get_component_height (format, 2, img->height);
-      img_u->width =
-          gst_video_format_get_component_width (format, 1, img->width);
-      img_v->width =
-          gst_video_format_get_component_width (format, 2, img->width);
-      img_u->stride = gst_video_format_get_row_stride (format, 1, img->width);
-      img_v->stride = gst_video_format_get_row_stride (format, 2, img->width);
 
       if (interlaced && step == 1) {
         img_v->pixels += img_v->stride;
@@ -863,30 +852,6 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
         img_v->stride *= 2;
       }
 
-      break;
-      img_u->pixels =
-          GST_BUFFER_DATA (buf) + GST_ROUND_UP_4 (img->width) * img->height;
-      img_u->height = img->height;
-      img_u->width = GST_ROUND_UP_2 (img->width) / 2;
-      img_u->stride = GST_ROUND_UP_8 (img->width) / 2;
-      memcpy (img_v, img_u, sizeof (*img_v));
-      img_v->pixels =
-          GST_BUFFER_DATA (buf) + (GST_ROUND_UP_4 (img->width) +
-          (GST_ROUND_UP_8 (img->width) / 2)) * img->height;
-
-      if (interlaced && step == 1) {
-        img_v->pixels += img_v->stride;
-        img_u->pixels += img_u->stride;
-      }
-
-      if (interlaced) {
-        img_u->height = (img_u->height / 2) + ((step == 0
-                && img_u->height % 2 == 1) ? 1 : 0);
-        img_u->stride *= 2;
-        img_v->height = (img_v->height / 2) + ((step == 0
-                && img_v->height % 2 == 1) ? 1 : 0);
-        img_v->stride *= 2;
-      }
       break;
     default:
       break;
