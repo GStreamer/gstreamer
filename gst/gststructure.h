@@ -132,19 +132,19 @@ void                    gst_structure_id_set_valist         (GstStructure       
 							    GQuark                   fieldname,
 							    va_list varargs);
 
-gboolean                gst_structure_get_valist           (GstStructure            *structure,
+gboolean                gst_structure_get_valist           (const GstStructure      *structure,
                                                             const char              *first_fieldname,
                                                             va_list                  args);
 
-gboolean                gst_structure_get                  (GstStructure            *structure,
+gboolean                gst_structure_get                  (const GstStructure      *structure,
                                                             const char              *first_fieldname,
                                                             ...) G_GNUC_NULL_TERMINATED;
 
-gboolean                gst_structure_id_get_valist        (GstStructure            *structure,
+gboolean                gst_structure_id_get_valist        (const GstStructure      *structure,
                                                             GQuark                   first_field_id,
                                                             va_list                  args);
 
-gboolean                gst_structure_id_get               (GstStructure            *structure,
+gboolean                gst_structure_id_get               (const GstStructure      *structure,
                                                             GQuark                   first_field_id,
                                                             ...) G_GNUC_NULL_TERMINATED;
 

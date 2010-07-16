@@ -2533,7 +2533,7 @@ G_STMT_START {                                                                \
  * Since: 0.10.24
  */
 gboolean
-gst_structure_get_valist (GstStructure * structure,
+gst_structure_get_valist (const GstStructure * structure,
     const char *first_fieldname, va_list args)
 {
   const char *field_name;
@@ -2602,8 +2602,8 @@ wrong_type:
  * Since: 0.10.24
  */
 gboolean
-gst_structure_id_get_valist (GstStructure * structure, GQuark first_field_id,
-    va_list args)
+gst_structure_id_get_valist (const GstStructure * structure,
+    GQuark first_field_id, va_list args)
 {
   GQuark field_id;
   GType expected_type = G_TYPE_INVALID;
@@ -2680,7 +2680,8 @@ wrong_type:
  * Since: 0.10.24
  */
 gboolean
-gst_structure_get (GstStructure * structure, const char *first_fieldname, ...)
+gst_structure_get (const GstStructure * structure, const char *first_fieldname,
+    ...)
 {
   gboolean ret;
   va_list args;
@@ -2724,7 +2725,8 @@ gst_structure_get (GstStructure * structure, const char *first_fieldname, ...)
  * Since: 0.10.24
  */
 gboolean
-gst_structure_id_get (GstStructure * structure, GQuark first_field_id, ...)
+gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
+    ...)
 {
   gboolean ret;
   va_list args;
