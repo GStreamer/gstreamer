@@ -203,16 +203,23 @@ GST_START_TEST (test_gsl_with_transitions)
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source1),
       GST_SECOND);
+
+  /* make this source taller than the others, so we can check that
+   * gstlrecalculate handles this properly */
+
   source2 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
+  GES_TIMELINE_OBJECT (source2)->height = 4;
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source2),
       GST_SECOND);
+
   source3 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source3, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
+
   source4 = ges_custom_timeline_source_new (arbitrary_fill_track_func,
       (gpointer) ELEMENT);
   g_object_set (source4, "duration", GST_SECOND, "start", (guint64) 42, NULL);
@@ -252,10 +259,12 @@ GST_START_TEST (test_gsl_with_transitions)
   /* 3 [0--source1----][3-tr2--]                          */
   /* 4        [2---source2-----]                          */
   /* 5        [2---source2-----]                          */
-  /* 6                 [4---source3---]                   */
-  /* 7                 [4---source3---]                   */
-  /* 8                                [5---source4-----]  */
-  /* 9                                [5---source4-----]  */
+  /* 6        [2---source2-----]                          */
+  /* 7        [2---source2-----]                          */
+  /* 8                 [4---source3---]                   */
+  /* 9                 [4---source3---]                   */
+  /*10                                [5---source4-----]  */
+  /*11                                [5---source4-----]  */
 
   gstl = GES_SIMPLE_TIMELINE_LAYER (layer);
 
@@ -310,7 +319,7 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), SECOND (1.5));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 6);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 8);
 
   /* now add the second transition */
 
@@ -333,7 +342,7 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 6);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 8);
 
   /* fourth source */
 
@@ -356,11 +365,11 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source3),
       GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source3), GST_SECOND);
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 6);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source3), 8);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source4),
       GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source4), SECOND (2));
-  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source4), 8);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_PRIORITY (source4), 10);
 
   /* check that any insertion which might result in two adjacent transitions
    * will fail */
