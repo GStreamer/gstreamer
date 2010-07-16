@@ -77,7 +77,6 @@ struct _GstVideoScale {
   gint from_height;
   guint src_size;
   guint dest_size;
-  gboolean interlaced;
 
   VSImage src;
   VSImage dest;

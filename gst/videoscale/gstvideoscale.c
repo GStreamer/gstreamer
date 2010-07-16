@@ -338,7 +338,6 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   ret &=
       gst_video_format_parse_caps (out, NULL, &videoscale->to_width,
       &videoscale->to_height);
-  ret &= gst_video_format_parse_caps_interlaced (in, &videoscale->interlaced);
   if (!ret)
     goto done;
 
@@ -355,8 +354,7 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
-  videoscale->tmp_buf =
-      g_malloc (videoscale->dest.stride * 4 * (videoscale->interlaced ? 2 : 1));
+  videoscale->tmp_buf = g_malloc (videoscale->dest.stride * 4);
 
   if (!gst_video_parse_caps_pixel_aspect_ratio (in, &from_par_n, &from_par_d))
     from_par_n = from_par_d = 1;
@@ -816,8 +814,7 @@ done:
 
 static gboolean
 gst_video_scale_prepare_image (gint format, GstBuffer * buf,
-    VSImage * img, VSImage * img_u, VSImage * img_v, gint step,
-    gboolean interlaced)
+    VSImage * img, VSImage * img_u, VSImage * img_v)
 {
   gboolean res = TRUE;
 
@@ -837,21 +834,6 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
       img_v->pixels =
           GST_BUFFER_DATA (buf) + gst_video_format_get_component_offset (format,
           2, img->width, img->height);
-
-      if (interlaced && step == 1) {
-        img_v->pixels += img_v->stride;
-        img_u->pixels += img_u->stride;
-      }
-
-      if (interlaced) {
-        img_u->height = (img_u->height / 2) + ((step == 0
-                && img_u->height % 2 == 1) ? 1 : 0);
-        img_u->stride *= 2;
-        img_v->height = (img_v->height / 2) + ((step == 0
-                && img_v->height % 2 == 1) ? 1 : 0);
-        img_v->stride *= 2;
-      }
-
       break;
     default:
       break;
@@ -872,8 +854,6 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   VSImage src_u = { NULL, };
   VSImage src_v = { NULL, };
   gint method;
-  gint step;
-  gboolean interlaced = videoscale->interlaced;
 
   GST_OBJECT_LOCK (videoscale);
   method = videoscale->method;
@@ -882,212 +862,180 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   src.pixels = GST_BUFFER_DATA (in);
   dest.pixels = GST_BUFFER_DATA (out);
 
-  /* For interlaced content we have to run two times with half height
-   * and doubled stride */
-  if (interlaced) {
-    dest.height /= 2;
-    src.height /= 2;
-    dest.stride *= 2;
-    src.stride *= 2;
-  }
-
   if (src.height < 4 && method == GST_VIDEO_SCALE_4TAP)
     method = GST_VIDEO_SCALE_BILINEAR;
 
-  for (step = 0; step < (interlaced ? 2 : 1); step++) {
-    gst_video_scale_prepare_image (videoscale->format, in, &videoscale->src,
-        &src_u, &src_v, step, interlaced);
-    gst_video_scale_prepare_image (videoscale->format, out, &videoscale->dest,
-        &dest_u, &dest_v, step, interlaced);
+  gst_video_scale_prepare_image (videoscale->format, in, &videoscale->src,
+      &src_u, &src_v);
+  gst_video_scale_prepare_image (videoscale->format, out, &videoscale->dest,
+      &dest_u, &dest_v);
 
-    if (step == 0 && interlaced) {
-      if (videoscale->from_height % 2 == 1) {
-        src.height += 1;
+  switch (method) {
+    case GST_VIDEO_SCALE_NEAREST:
+      GST_LOG_OBJECT (videoscale, "doing nearest scaling");
+      switch (videoscale->format) {
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_AYUV:
+          vs_image_scale_nearest_RGBA (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+        case GST_VIDEO_FORMAT_v308:
+          vs_image_scale_nearest_RGB (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_YVYU:
+          vs_image_scale_nearest_YUYV (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_UYVY:
+          vs_image_scale_nearest_UYVY (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_Y800:
+        case GST_VIDEO_FORMAT_GRAY8:
+          vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_GRAY16_LE:
+        case GST_VIDEO_FORMAT_GRAY16_BE:
+        case GST_VIDEO_FORMAT_Y16:
+          vs_image_scale_nearest_Y16 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_Y444:
+        case GST_VIDEO_FORMAT_Y42B:
+        case GST_VIDEO_FORMAT_Y41B:
+          vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest_u, &src_u, videoscale->tmp_buf);
+          vs_image_scale_nearest_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB16:
+          vs_image_scale_nearest_RGB565 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB15:
+          vs_image_scale_nearest_RGB555 (&dest, &src, videoscale->tmp_buf);
+          break;
+        default:
+          goto unsupported;
       }
-
-      if (videoscale->to_height % 2 == 1) {
-        dest.height += 1;
+      break;
+    case GST_VIDEO_SCALE_BILINEAR:
+      GST_LOG_OBJECT (videoscale, "doing bilinear scaling");
+      switch (videoscale->format) {
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_AYUV:
+          vs_image_scale_linear_RGBA (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+        case GST_VIDEO_FORMAT_v308:
+          vs_image_scale_linear_RGB (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_YVYU:
+          vs_image_scale_linear_YUYV (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_UYVY:
+          vs_image_scale_linear_UYVY (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_Y800:
+        case GST_VIDEO_FORMAT_GRAY8:
+          vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_GRAY16_LE:
+        case GST_VIDEO_FORMAT_GRAY16_BE:
+        case GST_VIDEO_FORMAT_Y16:
+          vs_image_scale_linear_Y16 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_Y444:
+        case GST_VIDEO_FORMAT_Y42B:
+        case GST_VIDEO_FORMAT_Y41B:
+          vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest_u, &src_u, videoscale->tmp_buf);
+          vs_image_scale_linear_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB16:
+          vs_image_scale_linear_RGB565 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB15:
+          vs_image_scale_linear_RGB555 (&dest, &src, videoscale->tmp_buf);
+          break;
+        default:
+          goto unsupported;
       }
-    } else if (step == 1 && interlaced) {
-      if (videoscale->from_height % 2 == 1) {
-        src.height -= 1;
+      break;
+    case GST_VIDEO_SCALE_4TAP:
+      GST_LOG_OBJECT (videoscale, "doing 4tap scaling");
+
+      switch (videoscale->format) {
+        case GST_VIDEO_FORMAT_RGBx:
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_RGBA:
+        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_BGRA:
+        case GST_VIDEO_FORMAT_ABGR:
+        case GST_VIDEO_FORMAT_AYUV:
+          vs_image_scale_4tap_RGBA (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
+        case GST_VIDEO_FORMAT_v308:
+          vs_image_scale_4tap_RGB (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_YUY2:
+        case GST_VIDEO_FORMAT_YVYU:
+          vs_image_scale_4tap_YUYV (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_UYVY:
+          vs_image_scale_4tap_UYVY (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_Y800:
+        case GST_VIDEO_FORMAT_GRAY8:
+          vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_GRAY16_LE:
+        case GST_VIDEO_FORMAT_GRAY16_BE:
+        case GST_VIDEO_FORMAT_Y16:
+          vs_image_scale_4tap_Y16 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_I420:
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_Y444:
+        case GST_VIDEO_FORMAT_Y42B:
+        case GST_VIDEO_FORMAT_Y41B:
+          vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB16:
+          vs_image_scale_4tap_RGB565 (&dest, &src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_FORMAT_RGB15:
+          vs_image_scale_4tap_RGB555 (&dest, &src, videoscale->tmp_buf);
+          break;
+        default:
+          goto unsupported;
       }
-
-      if (videoscale->to_height % 2 == 1) {
-        dest.height -= 1;
-      }
-      src.pixels += (src.stride / 2);
-      dest.pixels += (dest.stride / 2);
-    }
-
-    switch (method) {
-      case GST_VIDEO_SCALE_NEAREST:
-        GST_LOG_OBJECT (videoscale, "doing nearest scaling");
-        switch (videoscale->format) {
-          case GST_VIDEO_FORMAT_RGBx:
-          case GST_VIDEO_FORMAT_xRGB:
-          case GST_VIDEO_FORMAT_BGRx:
-          case GST_VIDEO_FORMAT_xBGR:
-          case GST_VIDEO_FORMAT_RGBA:
-          case GST_VIDEO_FORMAT_ARGB:
-          case GST_VIDEO_FORMAT_BGRA:
-          case GST_VIDEO_FORMAT_ABGR:
-          case GST_VIDEO_FORMAT_AYUV:
-            vs_image_scale_nearest_RGBA (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB:
-          case GST_VIDEO_FORMAT_BGR:
-          case GST_VIDEO_FORMAT_v308:
-            vs_image_scale_nearest_RGB (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_YUY2:
-          case GST_VIDEO_FORMAT_YVYU:
-            vs_image_scale_nearest_YUYV (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_UYVY:
-            vs_image_scale_nearest_UYVY (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_Y800:
-          case GST_VIDEO_FORMAT_GRAY8:
-            vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_GRAY16_LE:
-          case GST_VIDEO_FORMAT_GRAY16_BE:
-          case GST_VIDEO_FORMAT_Y16:
-            vs_image_scale_nearest_Y16 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-          case GST_VIDEO_FORMAT_Y444:
-          case GST_VIDEO_FORMAT_Y42B:
-          case GST_VIDEO_FORMAT_Y41B:
-            vs_image_scale_nearest_Y (&dest, &src, videoscale->tmp_buf);
-            vs_image_scale_nearest_Y (&dest_u, &src_u, videoscale->tmp_buf);
-            vs_image_scale_nearest_Y (&dest_v, &src_v, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB16:
-            vs_image_scale_nearest_RGB565 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB15:
-            vs_image_scale_nearest_RGB555 (&dest, &src, videoscale->tmp_buf);
-            break;
-          default:
-            goto unsupported;
-        }
-        break;
-      case GST_VIDEO_SCALE_BILINEAR:
-        GST_LOG_OBJECT (videoscale, "doing bilinear scaling");
-        switch (videoscale->format) {
-          case GST_VIDEO_FORMAT_RGBx:
-          case GST_VIDEO_FORMAT_xRGB:
-          case GST_VIDEO_FORMAT_BGRx:
-          case GST_VIDEO_FORMAT_xBGR:
-          case GST_VIDEO_FORMAT_RGBA:
-          case GST_VIDEO_FORMAT_ARGB:
-          case GST_VIDEO_FORMAT_BGRA:
-          case GST_VIDEO_FORMAT_ABGR:
-          case GST_VIDEO_FORMAT_AYUV:
-            vs_image_scale_linear_RGBA (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB:
-          case GST_VIDEO_FORMAT_BGR:
-          case GST_VIDEO_FORMAT_v308:
-            vs_image_scale_linear_RGB (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_YUY2:
-          case GST_VIDEO_FORMAT_YVYU:
-            vs_image_scale_linear_YUYV (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_UYVY:
-            vs_image_scale_linear_UYVY (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_Y800:
-          case GST_VIDEO_FORMAT_GRAY8:
-            vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_GRAY16_LE:
-          case GST_VIDEO_FORMAT_GRAY16_BE:
-          case GST_VIDEO_FORMAT_Y16:
-            vs_image_scale_linear_Y16 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-          case GST_VIDEO_FORMAT_Y444:
-          case GST_VIDEO_FORMAT_Y42B:
-          case GST_VIDEO_FORMAT_Y41B:
-            vs_image_scale_linear_Y (&dest, &src, videoscale->tmp_buf);
-            vs_image_scale_linear_Y (&dest_u, &src_u, videoscale->tmp_buf);
-            vs_image_scale_linear_Y (&dest_v, &src_v, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB16:
-            vs_image_scale_linear_RGB565 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB15:
-            vs_image_scale_linear_RGB555 (&dest, &src, videoscale->tmp_buf);
-            break;
-          default:
-            goto unsupported;
-        }
-        break;
-      case GST_VIDEO_SCALE_4TAP:
-        GST_LOG_OBJECT (videoscale, "doing 4tap scaling");
-
-        switch (videoscale->format) {
-          case GST_VIDEO_FORMAT_RGBx:
-          case GST_VIDEO_FORMAT_xRGB:
-          case GST_VIDEO_FORMAT_BGRx:
-          case GST_VIDEO_FORMAT_xBGR:
-          case GST_VIDEO_FORMAT_RGBA:
-          case GST_VIDEO_FORMAT_ARGB:
-          case GST_VIDEO_FORMAT_BGRA:
-          case GST_VIDEO_FORMAT_ABGR:
-          case GST_VIDEO_FORMAT_AYUV:
-            vs_image_scale_4tap_RGBA (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB:
-          case GST_VIDEO_FORMAT_BGR:
-          case GST_VIDEO_FORMAT_v308:
-            vs_image_scale_4tap_RGB (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_YUY2:
-          case GST_VIDEO_FORMAT_YVYU:
-            vs_image_scale_4tap_YUYV (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_UYVY:
-            vs_image_scale_4tap_UYVY (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_Y800:
-          case GST_VIDEO_FORMAT_GRAY8:
-            vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_GRAY16_LE:
-          case GST_VIDEO_FORMAT_GRAY16_BE:
-          case GST_VIDEO_FORMAT_Y16:
-            vs_image_scale_4tap_Y16 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-          case GST_VIDEO_FORMAT_Y444:
-          case GST_VIDEO_FORMAT_Y42B:
-          case GST_VIDEO_FORMAT_Y41B:
-            vs_image_scale_4tap_Y (&dest, &src, videoscale->tmp_buf);
-            vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
-            vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB16:
-            vs_image_scale_4tap_RGB565 (&dest, &src, videoscale->tmp_buf);
-            break;
-          case GST_VIDEO_FORMAT_RGB15:
-            vs_image_scale_4tap_RGB555 (&dest, &src, videoscale->tmp_buf);
-            break;
-          default:
-            goto unsupported;
-        }
-        break;
-      default:
-        goto unknown_mode;
-    }
-
+      break;
+    default:
+      goto unknown_mode;
   }
 
   GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
