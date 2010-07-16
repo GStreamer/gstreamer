@@ -265,8 +265,6 @@ GObject
   GstCmmlTagClip
   GstColorBalanceChannel
   RTPSession
-  GstMixerTrack
-    GstMixerOptions
   GstTunerNorm
   GstTunerChannel
   GdkPixbuf
