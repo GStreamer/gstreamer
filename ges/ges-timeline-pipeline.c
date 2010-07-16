@@ -766,10 +766,10 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   caps = gst_caps_from_string (format);
 
   if (width > 1)
-    gst_caps_set_simple (caps, "width", width, NULL);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, width, NULL);
 
   if (height > 1)
-    gst_caps_set_simple (caps, "height", height, NULL);
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, height, NULL);
 
   if (!(b = ges_timeline_pipeline_get_thumbnail_buffer (self, caps))) {
     gst_caps_unref (caps);
@@ -815,10 +815,10 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   caps = gst_caps_from_string ("video/x-raw-rgb,bpp=(int)24," "depth=(int)24");
 
   if (width != -1)
-    gst_caps_set_simple (caps, "width", (gint) width, NULL);
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, (gint) width, NULL);
 
   if (height != -1)
-    gst_caps_set_simple (caps, "height", (gint) height, NULL);
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, (gint) height, NULL);
 
   ret = ges_timeline_pipeline_get_thumbnail_buffer (self, caps);
   gst_caps_unref (caps);
