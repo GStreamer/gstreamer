@@ -342,8 +342,25 @@ if test x$gst_cv_uint128_t = xyes; then
   AC_DEFINE(HAVE_UINT128_T, 1, [Have __uint128_t type])
 fi
 
+dnl *** checking for tm_gmtoff ***
+AC_MSG_CHECKING([for tm_gmtoff])
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
+	#include <time.h>
+	int main(void) {
+	  struct tm t;
+	  t.tm_gmtoff = 0;
+	  exit(0);
+	}]])],
+  [have_tm_gmtoff=yes
+   AC_DEFINE(HAVE_TM_GMTOFF,1,[Have tm_gmtoff field in struct tm])],
+  [have_tm_gmtoff=no],
+  [have_tm_gmtoff="no (cross compiling)"])
+AC_MSG_RESULT($have_tm_gmtoff)
+
+
 dnl *** checks for library functions ***
 
+AC_CHECK_FUNCS([gmtime_r])
 AC_CHECK_FUNCS([sigaction])
 
 dnl check for fseeko()

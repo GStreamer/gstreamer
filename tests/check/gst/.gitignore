@@ -9,6 +9,7 @@ gstcaps
 gstchildproxy
 gstclock
 gstdata
+gstdatetime
 gstelement
 gstevent
 gstghostpad

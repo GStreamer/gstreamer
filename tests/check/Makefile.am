@@ -77,6 +77,7 @@ check_PROGRAMS =				\
 	gst/gstbufferlist			\
 	gst/gstbus				\
 	gst/gstcaps     			\
+	gst/gstdatetime     			\
 	gst/gstinfo		 		\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\

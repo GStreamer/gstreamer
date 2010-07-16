@@ -2585,6 +2585,27 @@ gst_search_mode_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstdatetime</FILE>
+<TITLE>GstDateTime</TITLE>
+GstDateTime
+gst_date_time_get_day
+gst_date_time_get_month
+gst_date_time_get_hour
+gst_date_time_get_microsecond
+gst_date_time_get_minute
+gst_date_time_get_time_zone_offset
+gst_date_time_get_second
+gst_date_time_get_year
+gst_date_time_new
+gst_date_time_new_from_unix_epoch
+gst_date_time_new_local_time
+gst_date_time_new_now_local_time
+gst_date_time_new_now_utc
+gst_date_time_ref
+gst_date_time_unref
+</SECTION>
+
+<SECTION>
 <FILE>gstvalue</FILE>
 <TITLE>GstValue</TITLE>
 

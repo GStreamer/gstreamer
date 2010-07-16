@@ -228,6 +228,21 @@ EXPORTS
 	gst_core_error_get_type
 	gst_core_error_quark
 	gst_date_get_type
+	gst_date_time_get_day
+	gst_date_time_get_hour
+	gst_date_time_get_microsecond
+	gst_date_time_get_minute
+	gst_date_time_get_month
+	gst_date_time_get_second
+	gst_date_time_get_time_zone_offset
+	gst_date_time_get_year
+	gst_date_time_new
+	gst_date_time_new_from_unix_epoch
+	gst_date_time_new_local_time
+	gst_date_time_new_now_local_time
+	gst_date_time_new_now_utc
+	gst_date_time_ref
+	gst_date_time_unref
 	gst_debug_add_log_function
 	gst_debug_category_free
 	gst_debug_category_get_color
