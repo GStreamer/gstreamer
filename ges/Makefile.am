@@ -9,7 +9,7 @@ CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
 
 libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges.c					\
-	ges-enums.c					\
+	ges-enums.c				\
 	ges-custom-timeline-source.c		\
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
@@ -21,7 +21,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-timeline-transition.c		\
 	ges-timeline-test-source.c		\
 	ges-timeline-title-source.c		\
-	ges-timeline-overlay.c		\
+	ges-timeline-overlay.c			\
 	ges-timeline-text-overlay.c		\
 	ges-track.c				\
 	ges-track-object.c			\
@@ -29,20 +29,20 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-operation.c			\
 	ges-track-filesource.c			\
 	ges-track-transition.c			\
-	ges-track-audio-transition.c			\
-	ges-track-video-transition.c			\
-	ges-track-video-test-source.c			\
-	ges-track-audio-test-source.c			\
-	ges-track-title-source.c			\
-	ges-track-text-overlay.c			\
-	ges-screenshot.c				\
+	ges-track-audio-transition.c		\
+	ges-track-video-transition.c		\
+	ges-track-video-test-source.c		\
+	ges-track-audio-test-source.c		\
+	ges-track-title-source.c		\
+	ges-track-text-overlay.c		\
+	ges-screenshot.c			\
 	ges-utils.c
 
 libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
 libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-types.h				\
 	ges.h					\
-	ges-enums.h					\
+	ges-enums.h				\
 	ges-custom-timeline-source.h		\
 	ges-internal.h				\
 	ges-simple-timeline-layer.h		\
@@ -55,6 +55,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-timeline-transition.h		\
 	ges-timeline-test-source.h		\
 	ges-timeline-title-source.h		\
+	ges-timeline-overlay.h			\
 	ges-timeline-text-overlay.h		\
 	ges-track.h				\
 	ges-track-object.h			\
@@ -62,13 +63,13 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-track-operation.h			\
 	ges-track-filesource.h			\
 	ges-track-transition.h			\
-	ges-track-audio-transition.h			\
-	ges-track-video-transition.h			\
-	ges-track-video-test-source.h			\
-	ges-track-audio-test-source.h			\
-	ges-track-title-source.h			\
-	ges-track-text-overlay.h			\
-	ges-screenshot.h
+	ges-track-audio-transition.h		\
+	ges-track-video-transition.h		\
+	ges-track-video-test-source.h		\
+	ges-track-audio-test-source.h		\
+	ges-track-title-source.h		\
+	ges-track-text-overlay.h		\
+	ges-screenshot.h			\
 	ges-utils.h
 
 libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PROFILE_CFLAGS) $(GST_DISCOVERER_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
