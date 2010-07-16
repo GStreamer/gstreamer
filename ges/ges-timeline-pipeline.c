@@ -777,9 +777,9 @@ ges_timeline_pipeline_save_thumbnail (GESTimelinePipeline * self, int width, int
   }
 
   fp = fopen (location, "w+");
-  if (fwrite (GST_BUFFER_DATA (b), GST_BUFFER_SIZE (b), 1,
-          fp) != GST_BUFFER_SIZE (b))
+  if (!fwrite (GST_BUFFER_DATA (b), GST_BUFFER_SIZE (b), 1, fp) || ferror (fp)) {
     res = FALSE;
+  }
 
   fclose (fp);
   gst_caps_unref (caps);
