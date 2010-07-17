@@ -1362,6 +1362,23 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
     if (can_convert) {
       GST_DEBUG_OBJECT (trans, "reconfigure transform for current buffer");
+
+      /* subclass might want to add fields to the caps */
+      if (bclass->fixate_caps != NULL) {
+        newcaps = gst_caps_copy (newcaps);
+
+        GST_DEBUG_OBJECT (trans, "doing fixate %" GST_PTR_FORMAT
+            " using caps %" GST_PTR_FORMAT
+            " on pad %s:%s using fixate_caps vmethod", newcaps, incaps,
+            GST_DEBUG_PAD_NAME (trans->srcpad));
+        bclass->fixate_caps (trans, GST_PAD_SINK, incaps, newcaps);
+
+        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+        gst_buffer_set_caps (*out_buf, newcaps);
+        gst_caps_unref (newcaps);
+        newcaps = GST_BUFFER_CAPS (*out_buf);
+      }
+
       /* caps not empty, try to renegotiate to the new format */
       if (!gst_base_transform_configure_caps (trans, incaps, newcaps)) {
         /* not sure we need to fail hard here, we can simply continue our
