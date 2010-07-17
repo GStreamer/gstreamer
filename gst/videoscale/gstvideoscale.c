@@ -475,10 +475,12 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     gst_structure_get_int (ins, "width", &from_w);
     gst_structure_get_int (ins, "height", &from_h);
 
+    gst_structure_get_int (outs, "width", &w);
+    gst_structure_get_int (outs, "height", &h);
+
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
-    if (gst_structure_get_int (outs, "width", &w)
-        && gst_structure_get_int (outs, "height", &h)) {
+    if (w && h) {
       guint n, d;
 
       GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
