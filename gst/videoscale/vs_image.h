@@ -33,6 +33,11 @@
 typedef struct _VSImage VSImage;
 
 struct _VSImage {
+  uint8_t *real_pixels;
+  int real_width;
+  int real_height;
+  int border_left, border_right;
+  int border_top, border_bottom;
   uint8_t *pixels;
   int width;
   int height;

@@ -7,7 +7,8 @@ libgstvideoscale_la_SOURCES = \
 	gstvideoscale.c \
 	vs_image.c \
 	vs_scanline.c \
-	vs_4tap.c
+	vs_4tap.c \
+	vs_fill_borders.c
 
 nodist_libgstvideoscale_la_SOURCES = $(ORC_NODIST_SOURCES)
 
@@ -22,6 +23,6 @@ noinst_HEADERS = \
 	gstvideoscale.h \
 	vs_image.h \
 	vs_scanline.h \
-	vs_4tap.h
-
+	vs_4tap.h \
+	vs_fill_borders.h
 

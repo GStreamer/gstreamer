@@ -68,6 +68,7 @@ struct _GstVideoScale {
   GstVideoFilter element;
 
   GstVideoScaleMethod method;
+  gboolean add_borders;
 
   /* negotiated stuff */
   GstVideoFormat format;
@@ -78,9 +79,9 @@ struct _GstVideoScale {
   guint src_size;
   guint dest_size;
 
-  VSImage src;
-  VSImage dest;
-  
+  gint borders_h;
+  gint borders_w;
+
   /*< private >*/
   guint8 *tmp_buf;
 };
