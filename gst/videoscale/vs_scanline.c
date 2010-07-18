@@ -603,7 +603,7 @@ vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
   int quads = (n + 1) / 2;
   uint32_t value = x >> 8;
 
-  if (value == 4) {
+  if (value == 0) {
     memcpy (dest, src1, quads * 4);
   } else {
     orc_merge_linear_u8 (dest, src1, src2, 256 - value, value, quads * 4);
