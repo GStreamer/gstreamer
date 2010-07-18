@@ -732,15 +732,9 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
 
   frame = gst_base_video_decoder_get_current_frame (base_video_decoder);
 
-  /* does this mark the beginning of a new access unit */
-  if (nal_unit.type == GST_NAL_AU_DELIMITER) {
-    ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
-    gst_base_video_decoder_frame_start (base_video_decoder, buf);
-  }
-
   if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
     if (nal_unit.type == GST_NAL_SPS || nal_unit.type == GST_NAL_PPS ||
-        nal_unit.type == GST_NAL_SEI ||
+        nal_unit.type == GST_NAL_SEI || nal_unit.type == GST_NAL_AU_DELIMITER ||
         (nal_unit.type >= 14 && nal_unit.type <= 18)) {
       ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
       gst_base_video_decoder_frame_start (base_video_decoder, buf);
