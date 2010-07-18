@@ -1821,6 +1821,8 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
             (GST_MPEGTS_TYPEFIND_MIN_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
 #define GST_MPEGTS_TYPEFIND_MAX_SYNC \
             (GST_MPEGTS_TYPEFIND_MAX_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
+#define GST_MPEGTS_TYPEFIND_SCAN_LENGTH \
+            (GST_MPEGTS_TYPEFIND_MAX_SYNC * 4)
 
 #define MPEGTS_HDR_SIZE 4
 /* Check for sync byte, error_indicator == 0 and packet has payload */
@@ -1837,6 +1839,7 @@ mpeg_ts_probe_headers (GstTypeFind * tf, guint64 offset, gint packet_size)
   gint found = 1;
   guint8 *data = NULL;
 
+  GST_LOG ("looking for mpeg-ts packets of size %u", packet_size);
   while (found < GST_MPEGTS_TYPEFIND_MAX_HEADERS) {
     offset += packet_size;
 
@@ -1845,6 +1848,7 @@ mpeg_ts_probe_headers (GstTypeFind * tf, guint64 offset, gint packet_size)
       return found;
 
     found++;
+    GST_LOG ("mpeg-ts sync #%2d at offset %" G_GUINT64_FORMAT, found, offset);
   }
 
   return found;
@@ -1858,13 +1862,12 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
   /* TS packet sizes to test: normal, DVHS packet size and 
    * FEC with 16 or 20 byte codes packet size. */
   const gint pack_sizes[] = { 188, 192, 204, 208 };
-  const gint n_pack_sizes = sizeof (pack_sizes) / sizeof (gint);
 
   guint8 *data = NULL;
   guint size = 0;
   guint64 skipped = 0;
 
-  while (skipped < GST_MPEGTS_TYPEFIND_MAX_SYNC) {
+  while (skipped < GST_MPEGTS_TYPEFIND_SCAN_LENGTH) {
     if (size < MPEGTS_HDR_SIZE) {
       data = gst_type_find_peek (tf, skipped, GST_MPEGTS_TYPEFIND_SYNC_SIZE);
       if (!data)
@@ -1876,7 +1879,9 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
     if (IS_MPEGTS_HEADER (data)) {
       gint p;
 
-      for (p = 0; p < n_pack_sizes; p++) {
+      GST_LOG ("possible mpeg-ts sync at offset %" G_GUINT64_FORMAT, skipped);
+
+      for (p = 0; p < G_N_ELEMENTS (pack_sizes); p++) {
         gint found;
 
         /* Probe ahead at size pack_sizes[p] */
@@ -3874,7 +3879,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
   static const gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static const gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
-  static const gchar *mpeg_ts_exts[] = { "ts", NULL };
+  static const gchar *mpeg_ts_exts[] = { "ts", "mts", NULL };
   static const gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
   static const gchar *qt_exts[] = { "mov", NULL };
   static const gchar *qtif_exts[] = { "qif", "qtif", "qti", NULL };
