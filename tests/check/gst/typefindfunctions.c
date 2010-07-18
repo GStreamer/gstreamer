@@ -107,16 +107,16 @@ GST_START_TEST (test_broken_flac_in_ogg)
 
 GST_END_TEST;
 
-GST_START_TEST (test_jpeg_not_ac3)
+static GstCaps *
+typefind_test_file (const gchar * filename)
 {
-  const gchar *type;
   GstBuffer *buf;
   GError *err = NULL;
   GstCaps *caps = NULL;
   gchar *path, *data = NULL;
   gsize data_len;
 
-  path = g_build_filename (GST_TEST_FILES_PATH, "partialframe.mjpeg", NULL);
+  path = g_build_filename (GST_TEST_FILES_PATH, filename, NULL);
   GST_LOG ("reading file '%s'", path);
   if (!g_file_get_contents (path, &data, &data_len, &err)) {
     g_error ("error loading test file: %s", err->message);
@@ -131,13 +131,45 @@ GST_START_TEST (test_jpeg_not_ac3)
   fail_unless (caps != NULL);
   GST_LOG ("Found type: %" GST_PTR_FORMAT, caps);
 
+  gst_buffer_unref (buf);
+  g_free (data);
+  g_free (path);
+
+  return caps;
+}
+
+GST_START_TEST (test_jpeg_not_ac3)
+{
+  const gchar *type;
+  GstCaps *caps = NULL;
+
+  caps = typefind_test_file ("partialframe.mjpeg");
   type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
   fail_unless_equals_string (type, "image/jpeg");
 
-  gst_buffer_unref (buf);
   gst_caps_unref (caps);
-  g_free (data);
-  g_free (path);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_mpegts)
+{
+  GstStructure *s;
+  gboolean systemstream = FALSE;
+  GstCaps *caps = NULL;
+  gint packetsize = -1;
+
+  caps = typefind_test_file ("623663.mts");
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "video/mpegts"));
+  fail_unless (gst_structure_has_field (s, "systemstream"));
+  fail_unless (gst_structure_get_boolean (s, "systemstream", &systemstream));
+  fail_unless_equals_int (systemstream, TRUE);
+  fail_unless (gst_structure_has_field (s, "packetsize"));
+  fail_unless (gst_structure_get_int (s, "packetsize", &packetsize));
+  fail_unless_equals_int (packetsize, 192);
+
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -198,6 +230,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_quicktime_mpeg4video);
   tcase_add_test (tc_chain, test_broken_flac_in_ogg);
   tcase_add_test (tc_chain, test_jpeg_not_ac3);
+  tcase_add_test (tc_chain, test_mpegts);
   tcase_add_test (tc_chain, test_random_data);
 
   return s;
