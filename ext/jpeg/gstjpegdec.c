@@ -234,11 +234,29 @@ gst_jpeg_dec_init_source (j_decompress_ptr cinfo)
 static void
 gst_jpeg_dec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
 {
-  GST_DEBUG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "skip %ld bytes", num_bytes);
+  GstJpegDec *dec = CINFO_GET_JPEGDEC (cinfo);
+
+  GST_DEBUG_OBJECT (dec, "skip %ld bytes", num_bytes);
 
   if (num_bytes > 0 && cinfo->src->bytes_in_buffer >= num_bytes) {
     cinfo->src->next_input_byte += (size_t) num_bytes;
     cinfo->src->bytes_in_buffer -= (size_t) num_bytes;
+  } else if (num_bytes > 0) {
+    gint available;
+
+    num_bytes -= cinfo->src->bytes_in_buffer;
+    cinfo->src->next_input_byte += (size_t) cinfo->src->bytes_in_buffer;
+    cinfo->src->bytes_in_buffer = 0;
+
+    available = gst_adapter_available (dec->adapter);
+    if (available < num_bytes || available < dec->rem_img_len) {
+      GST_WARNING_OBJECT (dec, "Less bytes to skip than available in the "
+          "adapter or the remaining image length %ld < %d or %u",
+          num_bytes, available, dec->rem_img_len);
+    }
+    num_bytes = MIN (MIN (num_bytes, available), dec->rem_img_len);
+    gst_adapter_flush (dec->adapter, num_bytes);
+    dec->rem_img_len -= num_bytes;
   }
 }
 
