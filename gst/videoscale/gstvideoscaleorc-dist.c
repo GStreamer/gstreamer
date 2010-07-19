@@ -62,6 +62,8 @@ void orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1,
     const orc_uint8 * s2, int p1, int p2, int n);
 void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
     const orc_uint16 * s2, int p1, int p2, int n);
+void orc_splat_u16 (orc_uint16 * d1, int p1, int n);
+void orc_splat_u32 (orc_uint32 * d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -383,6 +385,166 @@ orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_P1] = p1;
   ex->params[ORC_VAR_P2] = p2;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_splat_u16 */
+#ifdef DISABLE_ORC
+void
+orc_splat_u16 (orc_uint16 * d1, int p1, int n)
+{
+  int i;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = p1;
+
+  ptr0 = (orc_int16 *) d1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: copyw */
+    var0 = var24;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+#else
+static void
+_backup_orc_splat_u16 (OrcExecutor * ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int16 var0;
+  orc_int16 *ptr0;
+  const int var24 = ex->params[24];
+
+  ptr0 = (orc_int16 *) ex->arrays[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: copyw */
+    var0 = var24;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+orc_splat_u16 (orc_uint16 * d1, int p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_splat_u16");
+      orc_program_set_backup_function (p, _backup_orc_splat_u16);
+      orc_program_add_destination (p, 2, "d1");
+      orc_program_add_parameter (p, 2, "p1");
+
+      orc_program_append (p, "copyw", ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_splat_u32 */
+#ifdef DISABLE_ORC
+void
+orc_splat_u32 (orc_uint32 * d1, int p1, int n)
+{
+  int i;
+  orc_union32 var0;
+  orc_union32 *ptr0;
+  const int var24 = p1;
+
+  ptr0 = (orc_union32 *) d1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: copyl */
+    var0.i = var24;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+#else
+static void
+_backup_orc_splat_u32 (OrcExecutor * ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 var0;
+  orc_union32 *ptr0;
+  const int var24 = ex->params[24];
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+
+  for (i = 0; i < n; i++) {
+    /* 0: copyl */
+    var0.i = var24;
+    *ptr0 = var0;
+    ptr0++;
+  }
+
+}
+
+void
+orc_splat_u32 (orc_uint32 * d1, int p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_splat_u32");
+      orc_program_set_backup_function (p, _backup_orc_splat_u32);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_parameter (p, 4, "p1");
+
+      orc_program_append (p, "copyl", ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = p->code_exec;
   func (ex);

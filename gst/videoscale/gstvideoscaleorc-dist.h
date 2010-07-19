@@ -53,6 +53,8 @@ typedef union { orc_int64 i; double f; } orc_union64;
 
 void orc_merge_linear_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2, int p1, int p2, int n);
 void orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1, const orc_uint16 * s2, int p1, int p2, int n);
+void orc_splat_u16 (orc_uint16 * d1, int p1, int n);
+void orc_splat_u32 (orc_uint32 * d1, int p1, int n);
 
 #ifdef __cplusplus
 }
