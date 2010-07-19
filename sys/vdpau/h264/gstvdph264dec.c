@@ -277,7 +277,19 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
     else
       state.height -= 4 * seq->frame_crop_bottom_offset;
 
-    /* FIXME: try to calculate framerate */
+    /* calculate framerate if we haven't got one */
+    if (state.fps_n == 0 && seq->vui_parameters_present_flag) {
+      GstH264VUIParameters *vui;
+
+      vui = &seq->vui_parameters;
+      if (vui->timing_info_present_flag && vui->fixed_frame_rate_flag) {
+        state.fps_n = vui->time_scale;
+        state.fps_d = vui->num_units_in_tick;
+
+        if (seq->frame_mbs_only_flag)
+          state.fps_d *= 2;
+      }
+    }
 
     gst_base_video_decoder_set_state (GST_BASE_VIDEO_DECODER (h264_dec), state);
 

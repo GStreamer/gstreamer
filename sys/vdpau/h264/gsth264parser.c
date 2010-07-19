@@ -235,7 +235,15 @@ gst_h264_parse_vui_parameters (GstH264VUIParameters * vui,
   READ_UINT8 (reader, vui->timing_info_present_flag, 1);
   if (vui->timing_info_present_flag) {
     READ_UINT32 (reader, vui->num_units_in_tick, 32);
+    if (vui->num_units_in_tick == 0)
+      GST_WARNING
+          ("num_units_in_tick = 0 detected in stream (incompliant to H.264 E.2.1).");
+
     READ_UINT32 (reader, vui->time_scale, 32);
+    if (vui->time_scale == 0)
+      GST_WARNING
+          ("time_scale = 0 detected in stream (incompliant to H.264 E.2.1).");
+
     READ_UINT8 (reader, vui->fixed_frame_rate_flag, 1);
   }
 
