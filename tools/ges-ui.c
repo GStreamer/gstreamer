@@ -1,5 +1,11 @@
 #include <gtk/gtk.h>
 
+void
+window_destroy_cb (GtkObject * window, gpointer user)
+{
+  gtk_main_quit ();
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -10,6 +16,7 @@ main (int argc, char *argv[])
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
   window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
+  gtk_builder_connect_signals (builder, NULL);
   g_object_unref (G_OBJECT (builder));
 
   gtk_widget_show (window);

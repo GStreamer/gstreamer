@@ -10,7 +10,8 @@
       <column type="guint64"/>
     </columns>
   </object>
-  <object class="GtkWindow" id="window1">
+  <object class="GtkWindow" id="window">
+    <signal name="destroy" handler="window_destroy_cb"/>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
@@ -152,70 +153,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkVBox" id="vbox2">
-            <property name="visible">True</property>
-            <child>
-              <object class="GtkHBox" id="hbox1">
-                <property name="visible">True</property>
-                <child>
-                  <object class="GtkRadioButton" id="radiobutton1">
-                    <property name="label" translatable="yes">radiobutton</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkComboBox" id="combobox1">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkHBox" id="hbox2">
-                <property name="visible">True</property>
-                <child>
-                  <object class="GtkRadioButton" id="radiobutton2">
-                    <property name="label" translatable="yes">radiobutton</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkComboBox" id="combobox2">
-                    <property name="visible">True</property>
-                  </object>
-                  <packing>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="position">1</property>
-          </packing>
+          <placeholder/>
         </child>
         <child>
           <object class="GtkScrolledWindow" id="scrolledwindow1">
