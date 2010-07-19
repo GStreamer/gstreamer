@@ -103,6 +103,9 @@ gst_play_frame_conv_convert (GstBuffer * buf, GstCaps * to_caps)
   if (pipeline == NULL)
     goto no_pipeline;
 
+  /* Add black borders if necessary to keep the DAR */
+  g_object_set (vscale, "add-borders", TRUE, NULL);
+
   GST_DEBUG ("adding elements");
   gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
 

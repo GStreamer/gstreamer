@@ -1266,6 +1266,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
           (_("Missing element '%s' - check your GStreamer installation."),
               "videoscale"), ("possibly a liboil version mismatch?"));
     } else {
+      /* Add black borders if necessary to keep the DAR */
+      g_object_set (chain->scale, "add-borders", TRUE, NULL);
       gst_bin_add (bin, chain->scale);
       if (prev) {
         if (!gst_element_link_pads (prev, "src", chain->scale, "sink"))
