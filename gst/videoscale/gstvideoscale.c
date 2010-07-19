@@ -243,7 +243,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ADD_BORDERS,
-      g_param_spec_boolean ("borders", "Add Borders",
+      g_param_spec_boolean ("add-borders", "Add Borders",
           "Add black borders if necessary to keep the display aspect ratio",
           DEFAULT_PROP_ADD_BORDERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
