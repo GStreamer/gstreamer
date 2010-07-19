@@ -147,6 +147,7 @@ gst_vdp_device_constructed (GObject * object)
       &device->vdp_get_proc_address);
   if (status != VDP_STATUS_OK) {
     GST_ERROR_OBJECT (device, "Could not create VDPAU device");
+    device->device = VDP_INVALID_HANDLE;
     XCloseDisplay (device->display);
     device->display = NULL;
 
