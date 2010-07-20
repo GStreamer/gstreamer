@@ -1158,6 +1158,10 @@ static GstStaticCaps ac3_caps = GST_STATIC_CAPS ("audio/x-ac3");
 
 #define AC3_CAPS (gst_static_caps_get(&ac3_caps))
 
+static GstStaticCaps eac3_caps = GST_STATIC_CAPS ("audio/x-eac3");
+
+#define EAC3_CAPS (gst_static_caps_get(&eac3_caps))
+
 struct ac3_frmsize
 {
   unsigned short bit_rate;
@@ -1219,37 +1223,68 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
       break;
 
     if (c.data[0] == 0x0b && c.data[1] == 0x77) {
-      guint fscod = (c.data[4] >> 6) & 0x03;
-      guint frmsizecod = c.data[4] & 0x3f;
+      guint bsid = (c.data[5] >> 3) & 0x1F;
 
-      if (fscod < 3 && frmsizecod < 38) {
+      if (bsid <= 8) {
+        /* ac3 */
+        guint fscod = (c.data[4] >> 6) & 0x03;
+        guint frmsizecod = c.data[4] & 0x3f;
+
+        if (fscod < 3 && frmsizecod < 38) {
+          DataScanCtx c_next = c;
+          guint frame_size;
+
+          frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
+          GST_LOG ("possible AC3 frame sync at offset %"
+              G_GUINT64_FORMAT ", size=%u", c.offset, frame_size);
+          if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
+            data_scan_ctx_advance (tf, &c_next, frame_size * 2);
+
+            if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
+              guint fscod2 = (c_next.data[4] >> 6) & 0x03;
+              guint frmsizecod2 = c_next.data[4] & 0x3f;
+
+              if (fscod == fscod2 && frmsizecod == frmsizecod2) {
+                GstTypeFindProbability prob;
+
+                GST_LOG ("found second AC3 frame, looks good");
+                if (c.offset == 0)
+                  prob = GST_TYPE_FIND_MAXIMUM;
+                else
+                  prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+
+                gst_type_find_suggest (tf, prob, AC3_CAPS);
+                return;
+              }
+            } else {
+              GST_LOG ("no second AC3 frame found, false sync");
+            }
+          }
+        }
+      } else {
+        /* eac3 */
         DataScanCtx c_next = c;
         guint frame_size;
 
-        frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
-        GST_LOG ("possible frame sync at offset %" G_GUINT64_FORMAT ", size=%u",
-            c.offset, frame_size);
+        frame_size = ((((c.data[2] & 0x07) << 8) +
+                (c.data[3] & 0xff)) + 1) << 1;
+        GST_LOG ("possible E-AC3 frame sync at offset %"
+            G_GUINT64_FORMAT ", size=%u", c.offset, frame_size);
         if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
           data_scan_ctx_advance (tf, &c_next, frame_size * 2);
 
           if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
-            guint fscod2 = (c_next.data[4] >> 6) & 0x03;
-            guint frmsizecod2 = c_next.data[4] & 0x3f;
+            GstTypeFindProbability prob;
 
-            if (fscod == fscod2 && frmsizecod == frmsizecod2) {
-              GstTypeFindProbability prob;
+            GST_LOG ("found second E-AC3 frame, looks good");
+            if (c.offset == 0)
+              prob = GST_TYPE_FIND_MAXIMUM;
+            else
+              prob = GST_TYPE_FIND_NEARLY_CERTAIN;
 
-              GST_LOG ("found second frame, looks good");
-              if (c.offset == 0)
-                prob = GST_TYPE_FIND_MAXIMUM;
-              else
-                prob = GST_TYPE_FIND_NEARLY_CERTAIN;
-
-              gst_type_find_suggest (tf, prob, AC3_CAPS);
-              return;
-            }
+            gst_type_find_suggest (tf, prob, EAC3_CAPS);
           } else {
-            GST_LOG ("no second frame found, false sync");
+            GST_LOG ("no second E-AC3 frame found, false sync");
           }
         }
       }
@@ -3873,7 +3908,7 @@ plugin_init (GstPlugin * plugin)
     "s3m", "stm", "stx", "ult", "xm", NULL
   };
   static const gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
-  static const gchar *ac3_exts[] = { "ac3", NULL };
+  static const gchar *ac3_exts[] = { "ac3", "eac3", NULL };
   static const gchar *dts_exts[] = { "dts", NULL };
   static const gchar *gsm_exts[] = { "gsm", NULL };
   static const gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
