@@ -6,6 +6,7 @@ typedef struct App
 {
   GESTimeline *timeline;
   GESTimelinePipeline *pipeline;
+  GESTimelineLayer *layer;
   GtkWidget *main_window;
 } App;
 
@@ -65,6 +66,12 @@ app_new (void)
   if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
     goto fail;
 
+  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
+    goto fail;
+
+  if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
+    goto fail;
+
   if (!(ret->main_window = create_ui (ret)))
     goto fail;
 
@@ -105,6 +112,7 @@ create_ui (App * app)
   g_object_unref (G_OBJECT (builder));
 
   gtk_widget_show (window);
+
   return window;
 }
 
