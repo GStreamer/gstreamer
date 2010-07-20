@@ -2,7 +2,7 @@
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkListStore" id="timeline">
+  <object class="GtkListStore" id="timeline_model">
     <columns>
       <!-- column-name Clip -->
       <column type="gchararray"/>
@@ -183,10 +183,10 @@
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkTreeView" id="treeview1">
+                  <object class="GtkTreeView" id="timeline_treeview">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="model">timeline</property>
+                    <property name="model">timeline_model</property>
                     <property name="search_column">0</property>
                     <property name="show_expanders">False</property>
                     <child>

@@ -28,6 +28,7 @@ typedef struct App
   GESTimelinePipeline *pipeline;
   GESTimelineLayer *layer;
   GtkWidget *main_window;
+  GtkListStore *model;
 } App;
 
 App *app_new (void);
@@ -44,7 +45,7 @@ void delete_item_activate_cb (GtkMenuItem * item, App * app);
 
 void add_file_item_activate_cb (GtkMenuItem * item, App * app);
 
-GtkWidget *create_ui (App * app);
+gboolean create_ui (App * app);
 
 /* signal handlers **********************************************************/
 
@@ -121,7 +122,7 @@ app_new (void)
   if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
     goto fail;
 
-  if (!(ret->main_window = create_ui (ret)))
+  if (!(create_ui (ret)))
     goto fail;
 
   return ret;
@@ -162,26 +163,35 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
 /* Layout *******************************************************************/
 
-GtkWidget *
+gboolean
 create_ui (App * app)
 {
   GtkBuilder *builder;
-  GtkWidget *window;
 
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
-  window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
+
+  app->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
+  app->model =
+      GTK_LIST_STORE (gtk_builder_get_object (builder, "timeline_model"));
+
+  if (!(app->main_window && app->model)) {
+    g_print ("Could not retrieve all widgets from the XML");
+    return FALSE;
+  }
+
   gtk_builder_connect_signals (builder, app);
+
   g_object_unref (G_OBJECT (builder));
 
-  gtk_widget_show (window);
+  gtk_widget_show (app->main_window);
 
   g_signal_connect (app->layer, "object-added",
       G_CALLBACK (layer_object_added_cb), app);
   g_signal_connect (app->layer, "object-removed",
       G_CALLBACK (layer_object_removed_cb), app);
 
-  return window;
+  return TRUE;
 }
 
 /* main *********************************************************************/
