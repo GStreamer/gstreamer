@@ -188,6 +188,16 @@ AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 AC_SUBST(GSTPB_PREFIX)
 
+dnl GTK is optional and only used in examples
+PKG_CHECK_MODULES(GTK, gtk+-3.0, HAVE_GTK=yes,
+    [PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.14.0, HAVE_GTK=yes, HAVE_GTK=no)])
+AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+
+dnl some examples need gtk+-x11
+PKG_CHECK_MODULES(GTK_X11, gtk+-x11-3.0, HAVE_GTK_X11=yes,
+    [PKG_CHECK_MODULES(GTK_X11, gtk+-x11-2.0 >= 2.14.0, HAVE_GTK_X11=yes, HAVE_GTK_X11=no)])
+AM_CONDITIONAL(HAVE_GTK_X11, test "x$HAVE_GTK_X11" = "xyes")
+
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
