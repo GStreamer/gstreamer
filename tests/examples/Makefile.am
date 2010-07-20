@@ -17,5 +17,5 @@ noinst_PROGRAMS = 	\
 	text_properties	\
 	$(graphical)
 
-AM_CFLAGS =  -I$(top_srcdir) $(GST_PROFILE_CFLAGS) $(GST_DISCOVERER_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS)
+AM_CFLAGS =  -I$(top_srcdir) $(GST_PROFILE_CFLAGS) $(GST_DISCOVERER_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS) -export-dynamic
 LDADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la -lges-@GST_MAJORMINOR@ -lgstdiscoverer-@GST_MAJORMINOR@ $(GST_DISCOVERER_LIBS) $(GST_LIBS) $(GTK_LIBS)
