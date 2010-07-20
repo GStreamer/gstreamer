@@ -6,6 +6,18 @@ window_destroy_cb (GtkObject * window, gpointer user)
   gtk_main_quit ();
 }
 
+void
+quit_item_activate_cb (GtkMenuItem * item, gpointer user)
+{
+  gtk_main_quit ();
+}
+
+void
+delete_item_activate_cb (GtkMenuItem * item, gpointer user)
+{
+  g_print ("beleted!");
+}
+
 int
 main (int argc, char *argv[])
 {
