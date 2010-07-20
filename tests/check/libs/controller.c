@@ -191,9 +191,10 @@ gst_test_mono_source_base_init (GstTestMonoSourceClass * klass)
 static GType
 gst_test_mono_source_get_type (void)
 {
-  static GType type = 0;
+  static volatile gsize test_mono_source_type = 0;
 
-  if (type == 0) {
+  if (g_once_init_enter (&test_mono_source_type)) {
+    GType type;
     static const GTypeInfo info = {
       (guint16) sizeof (GstTestMonoSourceClass),
       (GBaseInitFunc) gst_test_mono_source_base_init,   // base_init
@@ -209,8 +210,9 @@ gst_test_mono_source_get_type (void)
     type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstTestMonoSource", &info,
         0);
+    g_once_init_leave (&test_mono_source_type, type);
   }
-  return type;
+  return test_mono_source_type;
 }
 
 /* so we don't have to paste the gst_element_register into 50 places below */

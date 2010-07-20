@@ -42,15 +42,16 @@ struct _GstFakeObjectClass
   GstObjectClass parent_class;
 };
 
-static GType _gst_fake_object_type = 0;
-
 //static GstObjectClass *parent_class = NULL;
 //static guint gst_fake_object_signals[LAST_SIGNAL] = { 0 };
 
 static GType
 gst_fake_object_get_type (void)
 {
-  if (!_gst_fake_object_type) {
+  static volatile gsize fake_object_type = 0;
+
+  if (g_once_init_enter (&fake_object_type)) {
+    GType type;
     static const GTypeInfo fake_object_info = {
       sizeof (GstFakeObjectClass),
       NULL,                     //gst_fake_object_base_class_init,
@@ -64,10 +65,11 @@ gst_fake_object_get_type (void)
       NULL
     };
 
-    _gst_fake_object_type = g_type_register_static (GST_TYPE_OBJECT,
+    type = g_type_register_static (GST_TYPE_OBJECT,
         "GstFakeObject", &fake_object_info, 0);
+    g_once_init_leave (&fake_object_type, type);
   }
-  return _gst_fake_object_type;
+  return fake_object_type;
 }
 
 #ifndef HAVE_OSX
