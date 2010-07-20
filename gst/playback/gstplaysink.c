@@ -665,7 +665,8 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
   chain->vissrcpad = gst_element_get_static_pad (chain->vis, "src");
 
   /* link pads */
-  gst_pad_link (chain->blockpad, chain->vissinkpad);
+  gst_pad_link_full (chain->blockpad, chain->vissinkpad,
+      GST_PAD_LINK_CHECK_NOTHING);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->srcpad),
       chain->vissrcpad);
 
@@ -1099,7 +1100,8 @@ gen_video_deinterlace_chain (GstPlaySink * playsink)
   } else {
     gst_bin_add (bin, chain->deinterlace);
     if (prev) {
-      if (!gst_element_link_pads (prev, "src", chain->deinterlace, "sink"))
+      if (!gst_element_link_pads_full (prev, "src", chain->deinterlace, "sink",
+              GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
         goto link_failed;
     } else {
       head = chain->deinterlace;
@@ -1250,7 +1252,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
     } else {
       gst_bin_add (bin, chain->conv);
       if (prev) {
-        if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
+        if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
           goto link_failed;
       } else {
         head = chain->conv;
@@ -1270,7 +1273,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
       g_object_set (chain->scale, "add-borders", TRUE, NULL);
       gst_bin_add (bin, chain->scale);
       if (prev) {
-        if (!gst_element_link_pads (prev, "src", chain->scale, "sink"))
+        if (!gst_element_link_pads_full (prev, "src", chain->scale, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
           goto link_failed;
       } else {
         head = chain->scale;
@@ -1281,7 +1285,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
   if (prev) {
     GST_DEBUG_OBJECT (playsink, "linking to sink");
-    if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
+    if (!gst_element_link_pads_full (prev, "src", chain->sink, NULL,
+            GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
       goto link_failed;
   }
 
@@ -1485,8 +1490,8 @@ gen_text_chain (GstPlaySink * playsink)
               playsink->subtitle_encoding, NULL);
         }
 
-        gst_element_link_pads (chain->queue, "src", chain->overlay,
-            "video_sink");
+        gst_element_link_pads_full (chain->queue, "src", chain->overlay,
+            "video_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS);
 
         textsinkpad =
             gst_element_get_static_pad (chain->overlay, "subtitle_sink");
@@ -1697,7 +1702,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     } else {
       gst_bin_add (bin, chain->conv);
       if (prev) {
-        if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
+        if (!gst_element_link_pads_full (prev, "src", chain->conv, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
           goto link_failed;
       } else {
         head = chain->conv;
@@ -1715,7 +1721,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     } else {
       gst_bin_add (bin, chain->resample);
       if (prev) {
-        if (!gst_element_link_pads (prev, "src", chain->resample, "sink"))
+        if (!gst_element_link_pads_full (prev, "src", chain->resample, "sink",
+                GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
           goto link_failed;
       } else {
         head = chain->resample;
@@ -1749,7 +1756,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
         gst_bin_add (bin, chain->volume);
 
         if (prev) {
-          if (!gst_element_link_pads (prev, "src", chain->volume, "sink"))
+          if (!gst_element_link_pads_full (prev, "src", chain->volume, "sink",
+                  GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
             goto link_failed;
         } else {
           head = chain->volume;
@@ -1763,7 +1771,8 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     /* we only have to link to the previous element if we have something in
      * front of the sink */
     GST_DEBUG_OBJECT (playsink, "linking to sink");
-    if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
+    if (!gst_element_link_pads_full (prev, "src", chain->sink, NULL,
+            GST_PAD_LINK_CHECK_TEMPLATE_CAPS))
       goto link_failed;
   }
 
@@ -1966,9 +1975,14 @@ gen_vis_chain (GstPlaySink * playsink)
 
   gst_bin_add (bin, chain->vis);
 
-  res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
-  res &= gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
-  res &= gst_element_link_pads (chain->resample, "src", chain->vis, "sink");
+  res = gst_element_link_pads_full (chain->queue, "src", chain->conv, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  res &=
+      gst_element_link_pads_full (chain->conv, "src", chain->resample, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  res &=
+      gst_element_link_pads_full (chain->resample, "src", chain->vis, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
   if (!res)
     goto link_failed;
 
@@ -2177,8 +2191,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
         activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
 
-        gst_pad_link (playsink->video_srcpad_stream_synchronizer,
-            playsink->videodeinterlacechain->sinkpad);
+        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+            playsink->videodeinterlacechain->sinkpad,
+            GST_PAD_LINK_CHECK_NOTHING);
       }
     } else {
       if (playsink->videodeinterlacechain) {
@@ -2197,11 +2212,11 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
               || !playsink->text_pad)) {
         GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
         if (need_deinterlace)
-          gst_pad_link (playsink->videodeinterlacechain->srcpad,
-              playsink->videochain->sinkpad);
+          gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
+              playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
         else
-          gst_pad_link (playsink->video_srcpad_stream_synchronizer,
-              playsink->videochain->sinkpad);
+          gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+              playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
     }
   } else {
@@ -2330,10 +2345,11 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       }
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
-      gst_pad_link (playsink->audio_tee_asrc,
-          playsink->audio_sinkpad_stream_synchronizer);
-      gst_pad_link (playsink->audio_srcpad_stream_synchronizer,
-          playsink->audiochain->sinkpad);
+      gst_pad_link_full (playsink->audio_tee_asrc,
+          playsink->audio_sinkpad_stream_synchronizer,
+          GST_PAD_LINK_CHECK_NOTHING);
+      gst_pad_link_full (playsink->audio_srcpad_stream_synchronizer,
+          playsink->audiochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no audio needed");
@@ -2387,10 +2403,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         playsink->audio_tee_vissrc =
             gst_element_get_request_pad (playsink->audio_tee, "src%d");
       }
-      gst_pad_link (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
-      gst_pad_link (srcpad, playsink->video_sinkpad_stream_synchronizer);
-      gst_pad_link (playsink->video_srcpad_stream_synchronizer,
-          playsink->videochain->sinkpad);
+      gst_pad_link_full (playsink->audio_tee_vissrc,
+          playsink->vischain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+      gst_pad_link_full (srcpad, playsink->video_sinkpad_stream_synchronizer,
+          GST_PAD_LINK_CHECK_NOTHING);
+      gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+          playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (srcpad);
     }
   } else {
@@ -2436,8 +2454,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
           playsink->text_sinkpad_stream_synchronizer);
-      gst_pad_link (playsink->text_srcpad_stream_synchronizer,
-          playsink->textchain->textsinkpad);
+      gst_pad_link_full (playsink->text_srcpad_stream_synchronizer,
+          playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
 
       if (need_vis) {
         GstPad *srcpad;
@@ -2445,17 +2463,19 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         srcpad =
             gst_element_get_static_pad (playsink->vischain->chain.bin, "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
-        gst_pad_link (srcpad, playsink->textchain->videosinkpad);
+        gst_pad_link_full (srcpad, playsink->textchain->videosinkpad,
+            GST_PAD_LINK_CHECK_NOTHING);
         gst_object_unref (srcpad);
       } else {
         if (need_deinterlace)
-          gst_pad_link (playsink->videodeinterlacechain->srcpad,
-              playsink->textchain->videosinkpad);
+          gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
+              playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
         else
-          gst_pad_link (playsink->video_srcpad_stream_synchronizer,
-              playsink->textchain->videosinkpad);
+          gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+              playsink->textchain->videosinkpad, GST_PAD_LINK_CHECK_NOTHING);
       }
-      gst_pad_link (playsink->textchain->srcpad, playsink->videochain->sinkpad);
+      gst_pad_link_full (playsink->textchain->srcpad,
+          playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
 
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
     }
