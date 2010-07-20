@@ -89,12 +89,6 @@ app_dispose (App * app)
     if (app->pipeline)
       gst_object_unref (app->pipeline);
 
-    if (app->timeline)
-      g_object_unref (app->timeline);
-
-    if (app->main_window)
-      g_object_unref (app->main_window);
-
     g_free (app);
   }
 }
@@ -131,9 +125,10 @@ main (int argc, char *argv[])
   /* initialize UI */
   gtk_init (&argc, &argv);
 
-  app = app_new ();
-
-  gtk_main ();
+  if ((app = app_new ())) {
+    gtk_main ();
+    app_dispose (app);
+  }
 
   return 0;
 }
