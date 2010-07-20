@@ -13,36 +13,36 @@ App *app_new (void);
 
 void app_dispose (App * app);
 
-void window_destroy_cb (GtkObject * window, gpointer user);
+void window_destroy_cb (GtkObject * window, App * app);
 
-void quit_item_activate_cb (GtkMenuItem * item, gpointer user);
+void quit_item_activate_cb (GtkMenuItem * item, App * app);
 
-void delete_item_activate_cb (GtkMenuItem * item, gpointer user);
+void delete_item_activate_cb (GtkMenuItem * item, App * app);
 
-void add_file_item_activate_cb (GtkMenuItem * item, gpointer user);
+void add_file_item_activate_cb (GtkMenuItem * item, App * app);
 
 GtkWidget *create_ui (App * app);
 
 void
-window_destroy_cb (GtkObject * window, gpointer user)
+window_destroy_cb (GtkObject * window, App * app)
 {
   gtk_main_quit ();
 }
 
 void
-quit_item_activate_cb (GtkMenuItem * item, gpointer user)
+quit_item_activate_cb (GtkMenuItem * item, App * app)
 {
   gtk_main_quit ();
 }
 
 void
-delete_item_activate_cb (GtkMenuItem * item, gpointer user)
+delete_item_activate_cb (GtkMenuItem * item, App * app)
 {
   g_print ("beleted!");
 }
 
 void
-add_file_item_activate_cb (GtkMenuItem * item, gpointer user)
+add_file_item_activate_cb (GtkMenuItem * item, App * app)
 {
   g_print ("add file");
 }
@@ -93,7 +93,7 @@ app_dispose (App * app)
 }
 
 GtkWidget *
-create_ui (App * data)
+create_ui (App * app)
 {
   GtkBuilder *builder;
   GtkWidget *window;
@@ -101,7 +101,7 @@ create_ui (App * data)
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
   window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
-  gtk_builder_connect_signals (builder, NULL);
+  gtk_builder_connect_signals (builder, app);
   g_object_unref (G_OBJECT (builder));
 
   gtk_widget_show (window);
