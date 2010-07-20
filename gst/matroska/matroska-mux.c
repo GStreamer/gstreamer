@@ -2583,7 +2583,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_CLUSTERTIMECODE,
           gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
               mux->time_scale));
-      GST_WARNING_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
+      GST_LOG_OBJECT (mux, "cluster timestamp %" G_GUINT64_FORMAT,
           gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buf), 1,
               mux->time_scale));
       gst_ebml_write_flush_cache (ebml, TRUE);
