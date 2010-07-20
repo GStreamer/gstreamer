@@ -2,6 +2,17 @@
 #include <glib.h>
 #include <ges/ges.h>
 
+typedef struct App
+{
+  GESTimeline *timeline;
+  GESTimelinePipeline *pipeline;
+  GtkWidget *main_window;
+} App;
+
+App *app_new (void);
+
+void app_dispose (App * app);
+
 void window_destroy_cb (GtkObject * window, gpointer user);
 
 void quit_item_activate_cb (GtkMenuItem * item, gpointer user);
@@ -10,7 +21,7 @@ void delete_item_activate_cb (GtkMenuItem * item, gpointer user);
 
 void add_file_item_activate_cb (GtkMenuItem * item, gpointer user);
 
-GtkWidget *create_ui (void);
+GtkWidget *create_ui (App * app);
 
 void
 window_destroy_cb (GtkObject * window, gpointer user)
@@ -36,8 +47,53 @@ add_file_item_activate_cb (GtkMenuItem * item, gpointer user)
   g_print ("add file");
 }
 
+App *
+app_new (void)
+{
+  App *ret;
+  ret = g_new0 (App, 1);
+
+  if (!ret)
+    return NULL;
+
+  if (!(ret->timeline = ges_timeline_new_audio_video ()))
+    goto fail;
+
+  if (!(ret->pipeline = ges_timeline_pipeline_new ()))
+    goto fail;
+
+  if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
+    goto fail;
+
+  if (!(ret->main_window = create_ui (ret)))
+    goto fail;
+
+  return ret;
+
+fail:
+  app_dispose (ret);
+  return NULL;
+}
+
+void
+app_dispose (App * app)
+{
+  if (app) {
+    if (app->pipeline)
+      gst_object_unref (app->pipeline);
+
+    if (app->timeline)
+      g_object_unref (app->timeline);
+
+    if (app->main_window)
+      g_object_unref (app->main_window);
+
+    g_free (app);
+  }
+}
+
 GtkWidget *
-create_ui (void)
+create_ui (App * data)
 {
   GtkBuilder *builder;
   GtkWidget *window;
@@ -55,7 +111,7 @@ create_ui (void)
 int
 main (int argc, char *argv[])
 {
-  GtkWidget *main_window;
+  App *app;
 
   /* intialize GStreamer and GES */
   if (!g_thread_supported ())
@@ -67,8 +123,9 @@ main (int argc, char *argv[])
   /* initialize UI */
   gtk_init (&argc, &argv);
 
-  main_window = create_ui ();
+  app = app_new ();
 
   gtk_main ();
+
   return 0;
 }
