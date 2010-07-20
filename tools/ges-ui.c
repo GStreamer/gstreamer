@@ -18,6 +18,12 @@ delete_item_activate_cb (GtkMenuItem * item, gpointer user)
   g_print ("beleted!");
 }
 
+void
+add_file_item_activate_cb (GtkMenuItem * item, gpointer user)
+{
+  g_print ("add file");
+}
+
 int
 main (int argc, char *argv[])
 {
