@@ -142,6 +142,24 @@ app_dispose (App * app)
   }
 }
 
+/* Backend callbacks ********************************************************/
+
+static void
+layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
+    App * app)
+{
+  GST_INFO ("layer object added cb %p %p %p", layer, object, app);
+  g_print ("layer object added");
+}
+
+static void
+layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
+    App * app)
+{
+  GST_INFO ("layer object removed cb %p %p %p", layer, object, app);
+  g_print ("layer object removed");
+}
+
 /* Layout *******************************************************************/
 
 GtkWidget *
@@ -157,6 +175,11 @@ create_ui (App * app)
   g_object_unref (G_OBJECT (builder));
 
   gtk_widget_show (window);
+
+  g_signal_connect (app->layer, "object-added",
+      G_CALLBACK (layer_object_added_cb), app);
+  g_signal_connect (app->layer, "object-removed",
+      G_CALLBACK (layer_object_removed_cb), app);
 
   return window;
 }
