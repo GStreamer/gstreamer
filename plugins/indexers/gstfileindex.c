@@ -124,8 +124,6 @@ enum
   ARG_LOCATION,
 };
 
-static void gst_file_index_class_init (GstFileIndexClass * klass);
-static void gst_file_index_init (GstFileIndex * index);
 static void gst_file_index_dispose (GObject * object);
 
 static void
@@ -148,33 +146,7 @@ static GstIndexEntry *gst_file_index_get_assoc_entry (GstIndex * index, gint id,
 
 #define CLASS(file_index)  GST_FILE_INDEX_CLASS (G_OBJECT_GET_CLASS (file_index))
 
-static GstIndex *parent_class = NULL;
-
-static GType
-gst_file_index_get_type (void)
-{
-  static GType file_index_type = 0;
-
-  if (!file_index_type) {
-    static const GTypeInfo file_index_info = {
-      sizeof (GstFileIndexClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_file_index_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFileIndex),
-      1,
-      (GInstanceInitFunc) gst_file_index_init,
-      NULL
-    };
-
-    file_index_type =
-        g_type_register_static (GST_TYPE_INDEX, "GstFileIndex",
-        &file_index_info, 0);
-  }
-  return file_index_type;
-}
+G_DEFINE_TYPE (GstFileIndex, gst_file_index, GST_TYPE_INDEX);
 
 static void
 gst_file_index_class_init (GstFileIndexClass * klass)
@@ -184,8 +156,6 @@ gst_file_index_class_init (GstFileIndexClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstindex_class = (GstIndexClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_file_index_dispose;
   gobject_class->set_property = gst_file_index_set_property;
@@ -259,7 +229,7 @@ gst_file_index_dispose (GObject * object)
 
   gst_index_entry_free (index->ret_entry);      /* hack */
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_file_index_parent_class)->dispose (object);
 }
 
 struct fi_find_writer_context

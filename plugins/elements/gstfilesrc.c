@@ -486,52 +486,22 @@ struct _GstMmapBufferClass
   GstBufferClass buffer_class;
 };
 
-static void gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class);
-static void gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer);
-static GstBufferClass *mmap_buffer_parent_class = NULL;
 
-static GType
-gst_mmap_buffer_get_type (void)
-{
-  static GType _gst_mmap_buffer_type;
-
-  if (G_UNLIKELY (_gst_mmap_buffer_type == 0)) {
-    static const GTypeInfo mmap_buffer_info = {
-      sizeof (GstMmapBufferClass),
-      NULL,
-      NULL,
-      gst_mmap_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMmapBuffer),
-      0,
-      gst_mmap_buffer_init,
-      NULL
-    };
-
-    _gst_mmap_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstMmapBuffer", &mmap_buffer_info, 0);
-  }
-  return _gst_mmap_buffer_type;
-}
+G_DEFINE_TYPE (GstMmapBuffer, gst_mmap_buffer, GST_TYPE_BUFFER);
 
 static void
-gst_mmap_buffer_class_init (gpointer g_class, gpointer class_data)
+gst_mmap_buffer_class_init (GstMmapBufferClass * g_class)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  mmap_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize =
       (GstMiniObjectFinalizeFunction) gst_mmap_buffer_finalize;
 }
 
 static void
-gst_mmap_buffer_init (GTypeInstance * instance, gpointer g_class)
+gst_mmap_buffer_init (GstMmapBuffer * buf)
 {
-  GstBuffer *buf = (GstBuffer *) instance;
-
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
   /* before we re-enable this flag, we probably need to fix _copy()
    * _make_writable(), etc. in GstMiniObject/GstBuffer as well */
@@ -572,8 +542,8 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
   GST_LOG ("unmapped region %08lx+%08lx at %p",
       (gulong) offset, (gulong) size, data);
 
-  GST_MINI_OBJECT_CLASS (mmap_buffer_parent_class)->finalize (GST_MINI_OBJECT
-      (mmap_buffer));
+  GST_MINI_OBJECT_CLASS (gst_mmap_buffer_parent_class)->finalize
+      (GST_MINI_OBJECT (mmap_buffer));
 }
 
 static GstBuffer *

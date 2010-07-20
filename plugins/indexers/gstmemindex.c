@@ -107,8 +107,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_mem_index_class_init (GstMemIndexClass * klass);
-static void gst_mem_index_init (GstMemIndex * index);
 static void gst_mem_index_finalize (GObject * object);
 
 static void gst_mem_index_add_entry (GstIndex * index, GstIndexEntry * entry);
@@ -122,31 +120,7 @@ static GstIndex *parent_class = NULL;
 
 /*static guint gst_mem_index_signals[LAST_SIGNAL] = { 0 }; */
 
-static GType
-gst_mem_index_get_type (void)
-{
-  static GType mem_index_type = 0;
-
-  if (!mem_index_type) {
-    static const GTypeInfo mem_index_info = {
-      sizeof (GstMemIndexClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_mem_index_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMemIndex),
-      1,
-      (GInstanceInitFunc) gst_mem_index_init,
-      NULL
-    };
-
-    mem_index_type =
-        g_type_register_static (GST_TYPE_INDEX, "GstMemIndex", &mem_index_info,
-        0);
-  }
-  return mem_index_type;
-}
+G_DEFINE_TYPE (GstMemIndex, gst_mem_index, GST_TYPE_INDEX);
 
 static void
 gst_mem_index_class_init (GstMemIndexClass * klass)
