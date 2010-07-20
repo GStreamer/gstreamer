@@ -559,9 +559,11 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->x264param.p_log_private = encoder;
   encoder->x264param.i_log_level = X264_LOG_DEBUG;
 
+#if X264_BUILD >= 81
   /* setup appropriate timebase for gstreamer */
   encoder->x264param.i_timebase_num = 1;
   encoder->x264param.i_timebase_den = 1000000000;
+#endif
 
   gst_x264_enc_reset (encoder);
 }
