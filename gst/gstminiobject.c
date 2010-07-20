@@ -68,9 +68,10 @@ static void gst_mini_object_finalize (GstMiniObject * obj);
 GType
 gst_mini_object_get_type (void)
 {
-  static GType _gst_mini_object_type = 0;
+  static volatile GType _gst_mini_object_type = 0;
 
-  if (G_UNLIKELY (_gst_mini_object_type == 0)) {
+  if (g_once_init_enter (&_gst_mini_object_type)) {
+    GType _type;
     static const GTypeValueTable value_table = {
       gst_value_mini_object_init,
       gst_value_mini_object_free,
@@ -102,14 +103,14 @@ gst_mini_object_get_type (void)
           G_TYPE_FLAG_DERIVABLE | G_TYPE_FLAG_DEEP_DERIVABLE)
     };
 
-    _gst_mini_object_type = g_type_fundamental_next ();
-    g_type_register_fundamental (_gst_mini_object_type, "GstMiniObject",
+    _type = g_type_fundamental_next ();
+    g_type_register_fundamental (_type, "GstMiniObject",
         &mini_object_info, &mini_object_fundamental_info, G_TYPE_FLAG_ABSTRACT);
 
 #ifndef GST_DISABLE_TRACE
-    _gst_mini_object_trace =
-        gst_alloc_trace_register (g_type_name (_gst_mini_object_type));
+    _gst_mini_object_trace = gst_alloc_trace_register (g_type_name (_type));
 #endif
+    g_once_init_leave (&_gst_mini_object_type, _type);
   }
 
   return _gst_mini_object_type;

@@ -4178,13 +4178,15 @@ static GTypeFundamentalInfo _finfo = {
 #define FUNC_VALUE_GET_TYPE(type, name)                         \
 GType gst_ ## type ## _get_type (void)                          \
 {                                                               \
-  static GType gst_ ## type ## _type = 0;                       \
+  static volatile GType gst_ ## type ## _type = 0;                       \
                                                                 \
-  if (G_UNLIKELY (gst_ ## type ## _type == 0)) {		\
+  if (g_once_init_enter (&gst_ ## type ## _type)) {		\
+    GType _type;					\
     _info.value_table = & _gst_ ## type ## _value_table;        \
-    gst_ ## type ## _type = g_type_register_fundamental (       \
+    _type = g_type_register_fundamental (       \
         g_type_fundamental_next (),                             \
         name, &_info, &_finfo, 0);                              \
+    g_once_init_leave(&gst_ ## type ## _type, _type);	\
   }                                                             \
                                                                 \
   return gst_ ## type ## _type;                                 \

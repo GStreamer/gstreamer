@@ -165,7 +165,8 @@ struct _GstBufferListIterator
 };
 
 static GType _gst_buffer_list_type = 0;
-static GstMiniObjectClass *parent_class = NULL;
+
+G_DEFINE_TYPE (GstBufferList, gst_buffer_list, GST_TYPE_MINI_OBJECT);
 
 void
 _gst_buffer_list_initialize (void)
@@ -174,11 +175,8 @@ _gst_buffer_list_initialize (void)
 }
 
 static void
-gst_buffer_list_init (GTypeInstance * instance, gpointer g_class)
+gst_buffer_list_init (GstBufferList * list)
 {
-  GstBufferList *list;
-
-  list = (GstBufferList *) instance;
   list->buffers = NULL;
 
   GST_LOG ("init %p", list);
@@ -202,7 +200,8 @@ gst_buffer_list_finalize (GstBufferList * list)
   }
   g_list_free (list->buffers);
 
-  parent_class->finalize (GST_MINI_OBJECT_CAST (list));
+  GST_MINI_OBJECT_CLASS (gst_buffer_list_parent_class)->finalize
+      (GST_MINI_OBJECT_CAST (list));
 }
 
 static GstBufferList *
@@ -231,12 +230,8 @@ _gst_buffer_list_copy (GstBufferList * list)
 }
 
 static void
-gst_buffer_list_class_init (gpointer g_class, gpointer class_data)
+gst_buffer_list_class_init (GstBufferListClass * list_class)
 {
-  GstBufferListClass *list_class = GST_BUFFER_LIST_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
-
   list_class->mini_object_class.copy =
       (GstMiniObjectCopyFunction) _gst_buffer_list_copy;
   list_class->mini_object_class.finalize =
@@ -418,30 +413,6 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
     tmp = g_list_next (tmp);
   }
   return NULL;
-}
-
-GType
-gst_buffer_list_get_type (void)
-{
-  if (G_UNLIKELY (_gst_buffer_list_type == 0)) {
-    static const GTypeInfo buffer_list_info = {
-      sizeof (GstBufferListClass),
-      NULL,
-      NULL,
-      gst_buffer_list_class_init,
-      NULL,
-      NULL,
-      sizeof (GstBufferList),
-      0,
-      gst_buffer_list_init,
-      NULL
-    };
-
-    _gst_buffer_list_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstBufferList", &buffer_list_info, 0);
-  }
-
-  return _gst_buffer_list_type;
 }
 
 /**
