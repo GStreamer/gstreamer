@@ -34,6 +34,8 @@ App *app_new (void);
 
 void app_dispose (App * app);
 
+void app_add_file (App * app, gchar * filename);
+
 void window_destroy_cb (GtkObject * window, App * app);
 
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
@@ -67,11 +69,33 @@ delete_item_activate_cb (GtkMenuItem * item, App * app)
 void
 add_file_item_activate_cb (GtkMenuItem * item, App * app)
 {
-  g_print ("add file");
+  GST_DEBUG ("add file signal handler");
+
+  /* TODO: solicit this information from the user */
+  app_add_file (app, (gchar *) "/home/brandon/media/small-mvi_0008.avi");
 }
 
 /* application methods ******************************************************/
 
+void
+app_add_file (App * app, gchar * filename)
+{
+  gchar *uri;
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding file %s", filename);
+
+  if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+    /* TODO: error notification in UI */
+    return;
+  }
+  uri = g_strdup_printf ("file://%s", filename);
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+  g_free (uri);
+
+  ges_timeline_layer_add_object (app->layer, obj);
+}
 
 App *
 app_new (void)
