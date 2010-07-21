@@ -41,6 +41,11 @@
  * most players and settings, but in some cases (e.g. hardware platforms)
  * a more restricted profile/level may be necessary.
  *
+ * If a preset/tuning are specified then these will define the default values and
+ * the property defaults will be ignored. After this the option-string property is
+ * applied, followed by the user-set properties, fast first pass restrictions and
+ * finally the profile restrictions.
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
@@ -54,6 +59,13 @@
  *   matroskamux ! filesink location=videotestsrc.avi
  * ]| This example pipeline will encode a test video source to H264 using fixed
  * quantization, and muxes it in a Matroska container.
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! x264enc pass=5 quantizer=25 speed-preset=6 profile=1 ! \
+ *   qtmux ! filesink location=videotestsrc.mov
+ * ]| This example pipeline will encode a test video source to H264 using
+ * constant quality at around Q25 using the 'medium' speed/quality preset and
+ * restricting the options used so that the output is H.264 Baseline Profile
+ * compliant and finally multiplexing the output in Quicktime mov format.
  * </refsect2>
  */
 
@@ -128,6 +140,9 @@ enum
   ARG_INTERLACED,
   ARG_OPTION_STRING,
   ARG_PROFILE,
+  ARG_SPEED_PRESET,
+  ARG_PSY_TUNE,
+  ARG_TUNE,
 };
 
 #define ARG_THREADS_DEFAULT            1
@@ -167,6 +182,9 @@ enum
 #define ARG_PROFILE_DEFAULT            1        /* Main profile matches current defaults */
 #define ARG_OPTION_STRING_DEFAULT      ""
 static GString *x264enc_defaults;
+#define ARG_SPEED_PRESET_DEFAULT       0        /* no preset */
+#define ARG_PSY_TUNE_DEFAULT           0        /* no psy tuning */
+#define ARG_TUNE_DEFAULT               0        /* no tuning */
 
 enum
 {
@@ -280,6 +298,120 @@ gst_x264_enc_profile_get_type (void)
   profile_type = g_enum_register_static ("GstX264EncProfile", profile_types);
 
   return profile_type;
+}
+
+#define GST_X264_ENC_SPEED_PRESET_TYPE (gst_x264_enc_speed_preset_get_type())
+static GType
+gst_x264_enc_speed_preset_get_type (void)
+{
+  static GType speed_preset_type = 0;
+  static GEnumValue *speed_preset_types;
+  int n, i;
+
+  if (speed_preset_type != 0)
+    return speed_preset_type;
+
+  n = 0;
+  while (x264_preset_names[n] != NULL)
+    n++;
+
+  speed_preset_types = g_new0 (GEnumValue, n + 2);
+
+  speed_preset_types[0].value = 0;
+  speed_preset_types[0].value_name = "No preset";
+  speed_preset_types[0].value_nick = "None";
+
+  for (i = 1; i <= n; i++) {
+    speed_preset_types[i].value = i;
+    speed_preset_types[i].value_name = x264_preset_names[i - 1];
+    speed_preset_types[i].value_nick = x264_preset_names[i - 1];
+  }
+
+  speed_preset_type =
+      g_enum_register_static ("GstX264EncPreset", speed_preset_types);
+
+  return speed_preset_type;
+}
+
+static const GFlagsValue tune_types[] = {
+  {0x0, "No tuning", "none"},
+  {0x1, "Still image", "stillimage"},
+  {0x2, "Fast decode", "fastdecode"},
+  {0x4, "Zero latency", "zerolatency"},
+  {0, NULL, NULL},
+};
+
+#define GST_X264_ENC_TUNE_TYPE (gst_x264_enc_tune_get_type())
+static GType
+gst_x264_enc_tune_get_type (void)
+{
+  static GType tune_type = 0;
+
+  if (!tune_type) {
+    tune_type = g_flags_register_static ("GstX264EncTune", tune_types);
+  }
+  return tune_type;
+}
+
+enum
+{
+  GST_X264_ENC_TUNE_NONE,
+  GST_X264_ENC_TUNE_FILM,
+  GST_X264_ENC_TUNE_ANIMATION,
+  GST_X264_ENC_TUNE_GRAIN,
+  GST_X264_ENC_TUNE_PSNR,
+  GST_X264_ENC_TUNE_SSIM,
+  GST_X264_ENC_TUNE_LAST
+};
+
+static const GEnumValue psy_tune_types[] = {
+  {GST_X264_ENC_TUNE_NONE, "No tuning", "none"},
+  {GST_X264_ENC_TUNE_FILM, "Film", "film"},
+  {GST_X264_ENC_TUNE_ANIMATION, "Animation", "animation"},
+  {GST_X264_ENC_TUNE_GRAIN, "Grain", "grain"},
+  {GST_X264_ENC_TUNE_PSNR, "PSNR", "psnr"},
+  {GST_X264_ENC_TUNE_SSIM, "SSIM", "ssim"},
+  {0, NULL, NULL},
+};
+
+#define GST_X264_ENC_PSY_TUNE_TYPE (gst_x264_enc_psy_tune_get_type())
+static GType
+gst_x264_enc_psy_tune_get_type (void)
+{
+  static GType psy_tune_type = 0;
+
+  if (!psy_tune_type) {
+    psy_tune_type =
+        g_enum_register_static ("GstX264EncPsyTune", psy_tune_types);
+  }
+  return psy_tune_type;
+}
+
+static void
+gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
+{
+  int i = 1;
+
+  if (x264enc->tunings && x264enc->tunings->len)
+    g_string_free (x264enc->tunings, TRUE);
+
+  if (x264enc->psy_tune) {
+    x264enc->tunings =
+        g_string_new (psy_tune_types[x264enc->psy_tune].value_nick);
+  } else {
+    x264enc->tunings = g_string_new (NULL);
+  }
+
+  while (tune_types[i].value_name) {
+    if (x264enc->tune & (1 << (i - 1)))
+      g_string_append_printf (x264enc->tunings, "%s%s",
+          x264enc->tunings->len ? "," : "", tune_types[i].value_nick);
+    i++;
+  }
+
+  if (x264enc->tunings->len)
+    GST_DEBUG_OBJECT (x264enc, "Constructed tunings string: %s",
+        x264enc->tunings->str);
 }
 
 #endif
@@ -419,6 +551,20 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
 
 #ifdef X264_PRESETS
+  g_object_class_install_property (gobject_class, ARG_SPEED_PRESET,
+      g_param_spec_enum ("speed-preset", "Speed/quality preset",
+          "Preset name for speed/quality tradeoff options (can affect decode "
+          "compatibility - impose restrictions separately for your target decoder)",
+          GST_X264_ENC_SPEED_PRESET_TYPE, ARG_SPEED_PRESET_DEFAULT,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PSY_TUNE,
+      g_param_spec_enum ("psy-tune", "Psychovisual tuning preset",
+          "Preset name for psychovisual tuning options",
+          GST_X264_ENC_PSY_TUNE_TYPE, ARG_PSY_TUNE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_TUNE,
+      g_param_spec_flags ("tune", "Content tuning preset",
+          "Preset name for non-psychovisual tuning options",
+          GST_X264_ENC_TUNE_TYPE, ARG_TUNE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROFILE,
       g_param_spec_enum ("profile", "H.264 profile",
           "Apply restrictions to meet H.264 Profile constraints. This will "
@@ -700,6 +846,9 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->profile = ARG_PROFILE_DEFAULT;
   encoder->option_string = g_string_new (NULL);
   encoder->option_string_prop = g_string_new (ARG_OPTION_STRING_DEFAULT);
+  encoder->speed_preset = ARG_SPEED_PRESET_DEFAULT;
+  encoder->psy_tune = ARG_PSY_TUNE_DEFAULT;
+  encoder->tune = ARG_TUNE_DEFAULT;
 
   /* resources */
   encoder->delay = g_queue_new ();
@@ -740,6 +889,7 @@ gst_x264_enc_finalize (GObject * object)
   if (ptr) \
     ptr = (GString *)g_string_free (ptr, TRUE);
 
+  FREE_STRING (encoder->tunings);
   FREE_STRING (encoder->option_string);
   FREE_STRING (encoder->option_string_prop);
 
@@ -822,19 +972,48 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   GST_OBJECT_LOCK (encoder);
 
+#ifdef X264_PRESETS
+  gst_x264_enc_build_tunings_string (encoder);
+
+  /* set x264 parameters and use preset/tuning if present */
+  GST_DEBUG_OBJECT (encoder, "Applying defaults with preset %s, tunings %s",
+      encoder->speed_preset ? x264_preset_names[encoder->speed_preset - 1] : "",
+      encoder->tunings && encoder->tunings->len ? encoder->tunings->str : "");
+  x264_param_default_preset (&encoder->x264param,
+      encoder->speed_preset ? x264_preset_names[encoder->speed_preset -
+          1] : NULL, encoder->tunings
+      && encoder->tunings->len ? encoder->tunings->str : NULL);
+
+  /* log callback setup; part of parameters
+   * this needs to be done again after every *param_default* () call */
+  encoder->x264param.pf_log = gst_x264_enc_log_callback;
+  encoder->x264param.p_log_private = encoder;
+  encoder->x264param.i_log_level = X264_LOG_DEBUG;
+
+  /* if no preset nor tuning, use property defaults */
+  if (!encoder->speed_preset && !encoder->tunings->len) {
+#endif /* X264_PRESETS */
+    GST_DEBUG_OBJECT (encoder, "Applying x264enc_defaults");
+    if (x264enc_defaults->len
+        && gst_x264_enc_parse_options (encoder,
+            x264enc_defaults->str) == FALSE) {
+      GST_DEBUG_OBJECT (encoder,
+          "x264enc_defaults string contains errors. This is a bug.");
+      goto unlock_and_return;
+    }
+#ifdef X264_PRESETS
+  } else {
+    /* When using presets we need to respect the default output format */
+    encoder->x264param.b_aud = encoder->au_nalu;
+    encoder->x264param.b_annexb = encoder->byte_stream;
+  }
+#endif /* X264_PRESETS */
+
 #if X264_BUILD >= 81
   /* setup appropriate timebase for gstreamer */
   encoder->x264param.i_timebase_num = 1;
   encoder->x264param.i_timebase_den = 1000000000;
 #endif
-
-  GST_DEBUG_OBJECT (encoder, "Applying x264enc_defaults");
-  if (x264enc_defaults->len
-      && gst_x264_enc_parse_options (encoder, x264enc_defaults->str) == FALSE) {
-    GST_DEBUG_OBJECT (encoder,
-        "x264enc_defaults string contains errors. This is a bug.");
-    goto unlock_and_return;
-  }
 
   /* apply user set properties */
   if (encoder->option_string_prop && encoder->option_string_prop->len
@@ -1508,6 +1687,15 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     case ARG_VBV_BUF_CAPACITY:
       encoder->vbv_buf_capacity = g_value_get_uint (value);
       break;
+    case ARG_SPEED_PRESET:
+      encoder->speed_preset = g_value_get_enum (value);
+      break;
+    case ARG_PSY_TUNE:
+      encoder->psy_tune = g_value_get_enum (value);
+      break;
+    case ARG_TUNE:
+      encoder->tune = g_value_get_flags (value);
+      break;
     case ARG_PROFILE:
       encoder->profile = g_value_get_enum (value);
       break;
@@ -1789,6 +1977,15 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_INTERLACED:
       g_value_set_boolean (value, encoder->interlaced);
+      break;
+    case ARG_SPEED_PRESET:
+      g_value_set_enum (value, encoder->speed_preset);
+      break;
+    case ARG_PSY_TUNE:
+      g_value_set_enum (value, encoder->psy_tune);
+      break;
+    case ARG_TUNE:
+      g_value_set_flags (value, encoder->tune);
       break;
     case ARG_PROFILE:
       g_value_set_enum (value, encoder->profile);
