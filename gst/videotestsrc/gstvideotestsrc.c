@@ -50,6 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define DEFAULT_IS_LIVE            FALSE
 #define DEFAULT_PEER_ALLOC         TRUE
 #define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
+#define DEFAULT_SOLID_COLOR        0xff000000
 
 enum
 {
@@ -71,6 +72,7 @@ enum
   PROP_KT2,
   PROP_XOFFSET,
   PROP_YOFFSET,
+  PROP_SOLID_COLOR,
   PROP_LAST
 };
 
@@ -125,6 +127,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_GAMUT, "Gamut checkers", "gamut"},
     {GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE, "Chroma zone plate",
         "chroma-zone-plate"},
+    {GST_VIDEO_TEST_SRC_SOLID, "Solid color", "solid-color"},
     {0, NULL, NULL}
   };
 
@@ -257,6 +260,17 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       g_param_spec_int ("yoffset", "Zoneplate 2nd order products y offset",
           "Zoneplate 2nd order products y offset", G_MININT32, G_MAXINT32, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:solid-color
+   *
+   * Color to use for solid-color pattern.
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (gobject_class, PROP_SOLID_COLOR,
+      g_param_spec_uint ("solid-color", "Solid Color",
+          "Solid color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_SOLID_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
@@ -279,6 +293,7 @@ gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
   gst_video_test_src_set_pattern (src, DEFAULT_PATTERN);
 
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
+  src->solid_color = DEFAULT_SOLID_COLOR;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
@@ -368,6 +383,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     case GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE:
       videotestsrc->make_image = gst_video_test_src_chromazoneplate;
       break;
+    case GST_VIDEO_TEST_SRC_SOLID:
+      videotestsrc->make_image = gst_video_test_src_solid;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -431,6 +449,9 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_YOFFSET:
       src->yoffset = g_value_get_int (value);
       break;
+    case PROP_SOLID_COLOR:
+      src->solid_color = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -493,6 +514,9 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_YOFFSET:
       g_value_set_int (value, src->yoffset);
+      break;
+    case PROP_SOLID_COLOR:
+      g_value_set_uint (value, src->solid_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

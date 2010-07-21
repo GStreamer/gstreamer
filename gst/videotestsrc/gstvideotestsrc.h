@@ -93,7 +93,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_SMPTE75,
   GST_VIDEO_TEST_SRC_ZONE_PLATE,
   GST_VIDEO_TEST_SRC_GAMUT,
-  GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE
+  GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE,
+  GST_VIDEO_TEST_SRC_SOLID
 } GstVideoTestSrcPattern;
 
 /**
@@ -155,6 +156,9 @@ struct _GstVideoTestSrc {
   gint kt2;
   gint xoffset;
   gint yoffset;
+
+  /* solid color */
+  guint solid_color;
   
   void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
 };

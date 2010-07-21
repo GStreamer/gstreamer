@@ -30,10 +30,10 @@ enum {
 };
 
 struct vts_color_struct_yuv {
-  guint8 Y, U, V;
+  guint8 Y, U, V, A;
 };
 struct vts_color_struct_rgb {
-  guint8 R, G, B;
+  guint8 R, G, B, A;
 };
 struct vts_color_struct_gray {
   guint16 G;
@@ -101,6 +101,8 @@ void    gst_video_test_src_red          (GstVideoTestSrc * v,
 void    gst_video_test_src_green        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_blue         (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_solid        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_checkers1    (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
