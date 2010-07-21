@@ -29,6 +29,7 @@ typedef struct App
   GESTimelineLayer *layer;
   GtkWidget *main_window;
   GtkListStore *model;
+  GtkTreeSelection *selection;
 } App;
 
 App *app_new (void);
@@ -204,6 +205,11 @@ create_ui (App * app)
     g_print ("Could not retrieve all widgets from the XML");
     goto fail;
   }
+
+  app->selection = gtk_tree_view_get_selection (timeline);
+
+  if (!app->selection)
+    goto fail;
 
   gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
 
