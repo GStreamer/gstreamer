@@ -286,9 +286,11 @@
                           <object class="GtkHScale" id="in_point_scale">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="show_fill_level">True</property>
                             <property name="restrict_to_fill_level">False</property>
                             <property name="draw_value">False</property>
                             <property name="value_pos">bottom</property>
+                            <signal name="change_value" handler="in_point_scale_change_value_cb"/>
                           </object>
                           <packing>
                             <property name="position">1</property>

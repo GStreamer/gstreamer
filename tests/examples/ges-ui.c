@@ -34,6 +34,7 @@ typedef struct App
   GList *selected_objects;
   int n_selected;
   GtkHScale *duration;
+  GtkHScale *in_point;
 } App;
 
 App *app_new (void);
@@ -59,6 +60,9 @@ void add_file_item_activate_cb (GtkMenuItem * item, App * app);
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
 gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
+    unused, gdouble value, App * app);
+
+gboolean in_point_scale_change_value_cb (GtkRange * range, GtkScrollType
     unused, gdouble value, App * app);
 
 void duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
@@ -119,10 +123,26 @@ duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
   GList *i;
 
   for (i = app->selected_objects; i; i = i->next) {
-    /* this signal is called *before* the widget is updated. by returing TRUE
-     * we prevent further processing. the scale value is set in
-     * filesource_notify_duration_cb */
-    g_object_set (G_OBJECT (i->data), "duration", (guint64) value, NULL);
+    guint64 duration, maxduration;
+    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration;
+    duration = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
+    g_object_set (G_OBJECT (i->data), "duration", (guint64) duration, NULL);
+  }
+  return TRUE;
+}
+
+gboolean
+in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
+    gdouble value, App * app)
+{
+  GList *i;
+
+  for (i = app->selected_objects; i; i = i->next) {
+    guint64 in_point, maxduration;
+    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration -
+        GES_TIMELINE_OBJECT_DURATION (i->data);
+    in_point = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
+    g_object_set (G_OBJECT (i->data), "in-point", (guint64) in_point, NULL);
   }
   return TRUE;
 }
@@ -309,8 +329,16 @@ static void
 filesource_notify_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
-  gtk_range_set_value (GTK_RANGE (app->duration),
-      GES_TIMELINE_OBJECT_DURATION (object));
+  guint64 duration, max_inpoint;
+  duration = GES_TIMELINE_OBJECT_DURATION (object);
+  max_inpoint = GES_TIMELINE_FILE_SOURCE (object)->maxduration - duration;
+
+  gtk_range_set_value (GTK_RANGE (app->duration), duration);
+  gtk_range_set_fill_level (GTK_RANGE (app->in_point), max_inpoint);
+
+  if (max_inpoint < GES_TIMELINE_OBJECT_INPOINT (object))
+    g_object_set (object, "in-point", max_inpoint, NULL);
+
 }
 
 static void
@@ -319,6 +347,16 @@ filesource_notify_max_duration_cb (GESTimelineObject * object,
 {
   gtk_range_set_range (GTK_RANGE (app->duration),
       0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
+  gtk_range_set_range (GTK_RANGE (app->in_point),
+      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
+}
+
+static void
+filesource_notify_in_point_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+  gtk_range_set_value (GTK_RANGE (app->in_point),
+      GES_TIMELINE_OBJECT_INPOINT (object));
 }
 
 static gchar *
@@ -386,6 +424,10 @@ connect_to_filesource (GESTimelineObject * object, App * app)
   g_signal_connect (G_OBJECT (object), "notify::duration",
       G_CALLBACK (filesource_notify_duration_cb), app);
   filesource_notify_duration_cb (object, NULL, app);
+
+  g_signal_connect (G_OBJECT (object), "notify::in-point",
+      G_CALLBACK (filesource_notify_in_point_cb), app);
+  filesource_notify_in_point_cb (object, NULL, app);
 }
 
 void
@@ -418,6 +460,7 @@ create_ui (App * app)
   GET_WIDGET (app->properties, "properties", GTK_WIDGET);
   GET_WIDGET (app->main_window, "window", GTK_WIDGET);
   GET_WIDGET (app->duration, "duration_scale", GTK_HSCALE);
+  GET_WIDGET (app->in_point, "in_point_scale", GTK_HSCALE);
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
 
