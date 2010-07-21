@@ -62,6 +62,19 @@ gboolean create_ui (App * app);
 static gboolean find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
     GESTimelineObject * object);
 
+void timeline_object_notify_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app);
+
+void filesource_notify_duration_cb (GESTimelineObject * object, GParamSpec *
+    arg G_GNUC_UNUSED, App * app);
+
+void filesource_notify_max_duration_cb (GESTimelineObject * object, GParamSpec *
+    arg G_GNUC_UNUSED, App * app);
+
+void connect_to_filesource (GESTimelineObject * object, App * app);
+
+void disconnect_from_filesource (GESTimelineObject * object, App * app);
+
 /* signal handlers **********************************************************/
 
 void
@@ -297,12 +310,53 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   gtk_list_store_remove (app->model, &iter);
 }
 
-/* Layout *******************************************************************/
+void
+timeline_object_notify_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+
+}
+
+void
+filesource_notify_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+
+}
+
+void
+filesource_notify_max_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+
+}
+
+/* UI Configuration *********************************************************/
 
 #define GET_WIDGET(dest,name,type) {\
   if (!(dest =\
     type(gtk_builder_get_object(builder, name))))\
         goto fail;\
+}
+
+void
+connect_to_filesource (GESTimelineObject * object, App * app)
+{
+  g_signal_connect (G_OBJECT (object), "notify::duration",
+      G_CALLBACK (filesource_notify_duration_cb), app);
+
+  g_signal_connect (G_OBJECT (object), "notify::maxduration",
+      G_CALLBACK (filesource_notify_max_duration_cb), app);
+}
+
+void
+disconnect_from_filesource (GESTimelineObject * object, App * app)
+{
+  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+      filesource_notify_duration_cb, app);
+
+  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+      filesource_notify_max_duration_cb, app);
 }
 
 gboolean
