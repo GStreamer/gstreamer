@@ -600,7 +600,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 #endif
   g_object_class_install_property (gobject_class, ARG_STATS_FILE,
       g_param_spec_string ("stats-file", "Stats File",
-          "Filename for multipass statistics (deprecated, use multipass-stats-file)",
+          "Filename for multipass statistics (deprecated, use multipass-cache-file)",
           ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MULTIPASS_CACHE_FILE,
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
@@ -737,7 +737,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       ARG_RC_LOOKAHEAD_DEFAULT);
 #endif
   g_object_class_install_property (gobject_class, ARG_NR,
-      g_param_spec_uint ("noise-reduction", "Noise Reducation",
+      g_param_spec_uint ("noise-reduction", "Noise Reduction",
           "Noise reduction strength",
           0, 100000, ARG_NR_DEFAULT, G_PARAM_READWRITE));
   g_string_append_printf (x264enc_defaults, ":nr=%d", ARG_NR_DEFAULT);
