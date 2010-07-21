@@ -61,6 +61,9 @@ void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
     unused, gdouble value, App * app);
 
+void duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
+    GtkTreeModel * model, GtkTreeIter * iter, gpointer user);
+
 gboolean create_ui (App * app);
 
 void connect_to_filesource (GESTimelineObject * object, App * app);
@@ -122,6 +125,18 @@ duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
     g_object_set (G_OBJECT (i->data), "duration", (guint64) value, NULL);
   }
   return TRUE;
+}
+
+void
+duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
+    GtkTreeModel * model, GtkTreeIter * iter, gpointer user)
+{
+  gchar buf[30];
+  guint64 duration;
+
+  gtk_tree_model_get (model, iter, 1, &duration, -1);
+  g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
+  g_object_set (renderer, "text", &buf, NULL);
 }
 
 /* application methods ******************************************************/
@@ -388,6 +403,8 @@ create_ui (App * app)
 {
   GtkBuilder *builder;
   GtkTreeView *timeline;
+  GtkTreeViewColumn *duration_col;
+  GtkCellRenderer *duration_renderer;
 
   /* construct widget tree */
 
@@ -401,6 +418,8 @@ create_ui (App * app)
   GET_WIDGET (app->properties, "properties", GTK_WIDGET);
   GET_WIDGET (app->main_window, "window", GTK_WIDGET);
   GET_WIDGET (app->duration, "duration_scale", GTK_HSCALE);
+  GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
+  GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
 
   /* we care when the tree selection changes */
 
@@ -416,6 +435,11 @@ create_ui (App * app)
           gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT)))
     goto fail;
   gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
+
+  /* register custom cell data function */
+
+  gtk_tree_view_column_set_cell_data_func (duration_col, duration_renderer,
+      duration_cell_func, NULL, NULL);
 
   /* register callbacks on GES objects */
 

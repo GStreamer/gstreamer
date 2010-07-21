@@ -200,7 +200,7 @@
                         <property name="sizing">autosize</property>
                         <property name="title">Duration</property>
                         <child>
-                          <object class="GtkCellRendererText" id="cellrenderertext1"/>
+                          <object class="GtkCellRendererText" id="duration_renderer"/>
                           <attributes>
                             <attribute name="text">1</attribute>
                           </attributes>
