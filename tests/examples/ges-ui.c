@@ -364,13 +364,13 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 void
 connect_to_filesource (GESTimelineObject * object, App * app)
 {
-  g_signal_connect (G_OBJECT (object), "notify::duration",
-      G_CALLBACK (filesource_notify_duration_cb), app);
-  filesource_notify_duration_cb (object, NULL, app);
-
   g_signal_connect (G_OBJECT (object), "notify::max-duration",
       G_CALLBACK (filesource_notify_max_duration_cb), app);
   filesource_notify_max_duration_cb (object, NULL, app);
+
+  g_signal_connect (G_OBJECT (object), "notify::duration",
+      G_CALLBACK (filesource_notify_duration_cb), app);
+  filesource_notify_duration_cb (object, NULL, app);
 }
 
 void
