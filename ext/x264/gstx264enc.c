@@ -37,9 +37,9 @@
  * If #GstX264Enc:dct8x8 is enabled, then High profile is used.
  * Otherwise, if #GstX264Enc:cabac entropy coding is enabled or #GstX264Enc:bframes
  * are allowed, then Main Profile is in effect, and otherwise Baseline profile
- * applies.  As such, Main is presently the default profile, which is fine for
- * most players and settings, but in some cases (e.g. hardware platforms)
- * a more restricted profile/level may be necessary.
+ * applies.  No profile is imposed by default, which is fine for most software
+ * players and settings, but in some cases (e.g. hardware platforms) a more
+ * restricted profile/level may be necessary.
  *
  * If a preset/tuning are specified then these will define the default values and
  * the property defaults will be ignored. After this the option-string property is
@@ -145,7 +145,7 @@ enum
   ARG_TUNE,
 };
 
-#define ARG_THREADS_DEFAULT            1
+#define ARG_THREADS_DEFAULT            0        /* 0 means 'auto' which is 1.5x number of CPU cores */
 #define ARG_PASS_DEFAULT               0
 #define ARG_QUANTIZER_DEFAULT          21
 #define ARG_MULTIPASS_CACHE_FILE_DEFAULT "x264.log"
@@ -179,10 +179,10 @@ enum
 #define ARG_RC_MB_TREE_DEFAULT         TRUE
 #define ARG_RC_LOOKAHEAD_DEFAULT       40
 #define ARG_INTRA_REFRESH_DEFAULT      FALSE
-#define ARG_PROFILE_DEFAULT            1        /* Main profile matches current defaults */
+#define ARG_PROFILE_DEFAULT            2        /* 'Main Profile' - matches profile of property defaults */
 #define ARG_OPTION_STRING_DEFAULT      ""
 static GString *x264enc_defaults;
-#define ARG_SPEED_PRESET_DEFAULT       0        /* no preset */
+#define ARG_SPEED_PRESET_DEFAULT       6        /* 'medium' preset - matches x264 CLI default */
 #define ARG_PSY_TUNE_DEFAULT           0        /* no psy tuning */
 #define ARG_TUNE_DEFAULT               0        /* no tuning */
 
