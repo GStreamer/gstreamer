@@ -215,7 +215,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkFrame" id="frame1">
+              <object class="GtkFrame" id="properties">
                 <property name="visible">True</property>
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">none</property>
@@ -282,7 +282,7 @@
       </object>
     </child>
   </object>
-  <object class="GtkTreeSelection" id="treeselection1"/>
+  <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkImage" id="image1">
     <property name="visible">True</property>
     <property name="xpad">9</property>
