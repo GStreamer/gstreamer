@@ -79,6 +79,10 @@
 #define X264_INTRA_REFRESH
 #endif
 
+#if X264_BUILD >= 86
+#define X264_PRESETS
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -122,7 +126,8 @@ enum
   ARG_RC_LOOKAHEAD,
   ARG_NR,
   ARG_INTERLACED,
-  ARG_OPTION_STRING
+  ARG_OPTION_STRING,
+  ARG_PROFILE,
 };
 
 #define ARG_THREADS_DEFAULT            1
@@ -159,7 +164,7 @@ enum
 #define ARG_RC_MB_TREE_DEFAULT         TRUE
 #define ARG_RC_LOOKAHEAD_DEFAULT       40
 #define ARG_INTRA_REFRESH_DEFAULT      FALSE
-
+#define ARG_PROFILE_DEFAULT            1        /* Main profile matches current defaults */
 #define ARG_OPTION_STRING_DEFAULT      ""
 
 enum
@@ -232,6 +237,43 @@ gst_x264_enc_analyse_get_type (void)
   }
   return analyse_type;
 }
+
+#ifdef X264_PRESETS
+
+#define GST_X264_ENC_PROFILE_TYPE (gst_x264_enc_profile_get_type())
+static GType
+gst_x264_enc_profile_get_type (void)
+{
+  static GType profile_type = 0;
+  static GEnumValue *profile_types;
+  int n, i;
+
+  if (profile_type != 0)
+    return profile_type;
+
+  n = 0;
+  while (x264_profile_names[n] != NULL)
+    n++;
+
+  profile_types = g_new0 (GEnumValue, n + 2);
+
+  i = 0;
+  profile_types[i].value = i;
+  profile_types[i].value_name = "No profile";
+  profile_types[i].value_nick = "None";
+  for (i = 1; i <= n; i++) {
+    profile_types[i].value = i;
+    profile_types[i].value_name = x264_profile_names[i - 1];
+    profile_types[i].value_nick = x264_profile_names[i - 1];
+  }
+
+  profile_type = g_enum_register_static ("GstX264EncProfile", profile_types);
+
+  return profile_type;
+}
+
+#endif
+
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -321,6 +363,13 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_x264_enc_change_state);
 
+#ifdef X264_PRESETS
+  g_object_class_install_property (gobject_class, ARG_PROFILE,
+      g_param_spec_enum ("profile", "H.264 profile",
+          "Apply restrictions to meet H.264 Profile constraints. This will "
+          "override other properties if necessary.",
+          GST_X264_ENC_PROFILE_TYPE, ARG_PROFILE_DEFAULT, G_PARAM_READWRITE));
+#endif /* X264_PRESETS */
   g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
           "String of x264 options (overridden by element properties)",
@@ -554,6 +603,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->rc_lookahead = ARG_RC_LOOKAHEAD_DEFAULT;
   encoder->noise_reduction = ARG_NR_DEFAULT;
   encoder->interlaced = ARG_INTERLACED_DEFAULT;
+  encoder->profile = ARG_PROFILE_DEFAULT;
   encoder->option_string_prop = g_string_new (ARG_OPTION_STRING_DEFAULT);
 
   /* resources */
@@ -824,6 +874,15 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
   encoder->x264param.rc.psz_stat_in = encoder->mp_cache_file;
   encoder->x264param.rc.psz_stat_out = encoder->mp_cache_file;
+
+#ifdef X264_PRESETS
+  if (encoder->profile
+      && x264_param_apply_profile (&encoder->x264param,
+          x264_profile_names[encoder->profile - 1])) {
+    GST_WARNING_OBJECT (encoder, "Bad profile name: %s",
+        x264_profile_names[encoder->profile - 1]);
+  }
+#endif /* X264_PRESETS */
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -1370,6 +1429,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     goto wrong_state;
 
   switch (prop_id) {
+    case ARG_PROFILE:
+      encoder->profile = g_value_get_enum (value);
+      break;
     case ARG_OPTION_STRING:
       g_string_assign (encoder->option_string_prop, g_value_get_string (value));
       break;
@@ -1599,6 +1661,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_INTERLACED:
       g_value_set_boolean (value, encoder->interlaced);
+      break;
+    case ARG_PROFILE:
+      g_value_set_enum (value, encoder->profile);
       break;
     case ARG_OPTION_STRING:
       g_value_set_string (value, encoder->option_string_prop->str);

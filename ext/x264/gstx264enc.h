@@ -87,6 +87,7 @@ struct _GstX264Enc
   gint rc_lookahead;
   guint noise_reduction;
   gboolean interlaced;
+  gint profile;
   GString *option_string_prop; /* option-string property */
 
   /* input description */
