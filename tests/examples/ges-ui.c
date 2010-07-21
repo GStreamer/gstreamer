@@ -145,12 +145,34 @@ app_dispose (App * app)
 
 /* Backend callbacks ********************************************************/
 
+static gchar *
+desc_for_object (GESTimelineObject * object)
+{
+  gchar *uri;
+
+  /* there is only one type of object at the moment */
+
+  /* return the uri */
+  g_object_get (object, "uri", &uri, NULL);
+  return uri;
+}
+
 static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
 {
+  GtkTreeIter iter;
+  gchar *description;
+  guint64 duration = 0;
+
   GST_INFO ("layer object added cb %p %p %p", layer, object, app);
-  g_print ("layer object added");
+
+  description = desc_for_object (object);
+  g_object_get (object, "duration", &duration, NULL);
+
+  gtk_list_store_append (app->model, &iter);
+  gtk_list_store_set (app->model, &iter, 0, description, 1, duration,
+      2, object, -1);
 }
 
 static void
@@ -167,18 +189,23 @@ gboolean
 create_ui (App * app)
 {
   GtkBuilder *builder;
+  GtkTreeView *timeline;
 
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
 
+  timeline =
+      GTK_TREE_VIEW (gtk_builder_get_object (builder, "timeline_treeview"));
   app->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
   app->model =
-      GTK_LIST_STORE (gtk_builder_get_object (builder, "timeline_model"));
+      gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT);
 
-  if (!(app->main_window && app->model)) {
+  if (!(app->main_window && app->model && timeline)) {
     g_print ("Could not retrieve all widgets from the XML");
-    return FALSE;
+    goto fail;
   }
+
+  gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
 
   gtk_builder_connect_signals (builder, app);
 
@@ -192,6 +219,10 @@ create_ui (App * app)
       G_CALLBACK (layer_object_removed_cb), app);
 
   return TRUE;
+
+fail:
+  g_object_unref (G_OBJECT (builder));
+  return FALSE;
 }
 
 /* main *********************************************************************/
