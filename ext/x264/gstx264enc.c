@@ -852,16 +852,20 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_write = 0;
       break;
     case 1:
-      /* Turbo mode parameters. */
-      encoder->x264param.i_frame_reference = (encoder->ref + 1) >> 1;
-      encoder->x264param.analyse.i_subpel_refine =
-          CLAMP (encoder->subme - 1, 1, 3);
-      encoder->x264param.analyse.inter &= ~X264_ANALYSE_PSUB8x8;
-      encoder->x264param.analyse.inter &= ~X264_ANALYSE_BSUB16x16;
-      encoder->x264param.analyse.i_trellis = 0;
-
       encoder->x264param.rc.b_stat_read = 0;
       encoder->x264param.rc.b_stat_write = 1;
+#ifdef X264_PRESETS
+      x264_param_apply_fastfirstpass (&encoder->x264param);
+#else
+      encoder->x264param.i_frame_reference = 1;
+      encoder->x264param.analyse.b_transform_8x8 = 0;
+      encoder->x264param.analyse.inter = 0;
+      encoder->x264param.analyse.i_me_method = X264_ME_DIA;
+      encoder->x264param.analyse.i_subpel_refine =
+          MIN (2, encoder->x264param.analyse.i_subpel_refine);
+      encoder->x264param.analyse.i_trellis = 0;
+      encoder->x264param.analyse.b_fast_pskip = 1;
+#endif /* X264_PRESETS */
       break;
     case 2:
       encoder->x264param.rc.b_stat_read = 1;
