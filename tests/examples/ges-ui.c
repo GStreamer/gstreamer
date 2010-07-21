@@ -52,6 +52,9 @@ void add_file_item_activate_cb (GtkMenuItem * item, App * app);
 
 gboolean create_ui (App * app);
 
+static gboolean find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
+    GESTimelineObject * object);
+
 /* signal handlers **********************************************************/
 
 void
@@ -210,6 +213,25 @@ desc_for_object (GESTimelineObject * object)
   return uri;
 }
 
+static gboolean
+find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
+    GESTimelineObject * object)
+{
+  gtk_tree_model_get_iter_first ((GtkTreeModel *) model, ret);
+
+  while (gtk_list_store_iter_is_valid (model, ret)) {
+    GESTimelineObject *obj;
+    gtk_tree_model_get ((GtkTreeModel *) model, ret, 2, &obj, -1);
+    if (obj == object) {
+      g_object_unref (obj);
+      return TRUE;
+    }
+    g_object_unref (obj);
+    gtk_tree_model_iter_next ((GtkTreeModel *) model, ret);
+  }
+  return FALSE;
+}
+
 static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
@@ -232,8 +254,16 @@ static void
 layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
 {
+  GtkTreeIter iter;
+
   GST_INFO ("layer object removed cb %p %p %p", layer, object, app);
-  g_print ("layer object removed");
+
+  if (!find_row_for_object (GTK_LIST_STORE (app->model), &iter, object)) {
+    g_print ("object deleted but we don't own it");
+    return;
+  }
+
+  gtk_list_store_remove (app->model, &iter);
 }
 
 /* Layout *******************************************************************/
