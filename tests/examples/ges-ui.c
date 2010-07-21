@@ -281,54 +281,63 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
 /* Layout *******************************************************************/
 
+#define GET_WIDGET(dest,name,type) {\
+  if (!(dest =\
+    type(gtk_builder_get_object(builder, name))))\
+        goto fail;\
+}
+
 gboolean
 create_ui (App * app)
 {
   GtkBuilder *builder;
   GtkTreeView *timeline;
 
+  /* construct widget tree */
+
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
+  gtk_builder_connect_signals (builder, app);
 
-  timeline =
-      GTK_TREE_VIEW (gtk_builder_get_object (builder, "timeline_treeview"));
-  app->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
-  app->model =
-      gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT);
-  app->properties = GTK_WIDGET (gtk_builder_get_object (builder, "properties"));
+  /* get a bunch of widgets from the XML tree */
 
-  if (!(app->main_window && app->model && timeline && app->properties)) {
-    g_print ("Could not retrieve all widgets from the XML");
-    goto fail;
-  }
+  GET_WIDGET (timeline, "timeline_treeview", GTK_TREE_VIEW);
+  GET_WIDGET (app->properties, "properties", GTK_WIDGET);
+  GET_WIDGET (app->main_window, "window", GTK_WIDGET);
 
-  app->selection = gtk_tree_view_get_selection (timeline);
+  /* we care when the tree selection changes */
 
-  if (!app->selection)
+  if (!(app->selection = gtk_tree_view_get_selection (timeline)))
     goto fail;
 
   g_signal_connect (app->selection, "changed",
       G_CALLBACK (app_selection_changed_cb), app);
 
+  /* create the model for the treeview */
+
+  if (!(app->model =
+          gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT)))
+    goto fail;
   gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
 
-  gtk_builder_connect_signals (builder, app);
-
-  g_object_unref (G_OBJECT (builder));
-
-  gtk_widget_show (app->main_window);
+  /* register callbacks on GES objects */
 
   g_signal_connect (app->layer, "object-added",
       G_CALLBACK (layer_object_added_cb), app);
   g_signal_connect (app->layer, "object-removed",
       G_CALLBACK (layer_object_removed_cb), app);
 
+  /* success */
+
+  g_object_unref (G_OBJECT (builder));
   return TRUE;
 
 fail:
   g_object_unref (G_OBJECT (builder));
   return FALSE;
 }
+
+#undef GET_WIDGET
 
 /* main *********************************************************************/
 

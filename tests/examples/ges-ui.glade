@@ -3,6 +3,7 @@
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="window">
+    <property name="visible">True</property>
     <property name="default_width">540</property>
     <property name="default_height">450</property>
     <signal name="destroy" handler="window_destroy_cb"/>
