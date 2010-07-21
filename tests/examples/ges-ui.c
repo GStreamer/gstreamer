@@ -63,18 +63,6 @@ gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
 
 gboolean create_ui (App * app);
 
-static gboolean find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
-    GESTimelineObject * object);
-
-void timeline_object_notify_duration_cb (GESTimelineObject * object,
-    GParamSpec * arg G_GNUC_UNUSED, App * app);
-
-void filesource_notify_duration_cb (GESTimelineObject * object, GParamSpec *
-    arg G_GNUC_UNUSED, App * app);
-
-void filesource_notify_max_duration_cb (GESTimelineObject * object, GParamSpec *
-    arg G_GNUC_UNUSED, App * app);
-
 void connect_to_filesource (GESTimelineObject * object, App * app);
 
 void disconnect_from_filesource (GESTimelineObject * object, App * app);
@@ -266,18 +254,6 @@ app_dispose (App * app)
 
 /* Backend callbacks ********************************************************/
 
-static gchar *
-desc_for_object (GESTimelineObject * object)
-{
-  gchar *uri;
-
-  /* there is only one type of object at the moment */
-
-  /* return the uri */
-  g_object_get (object, "uri", &uri, NULL);
-  return uri;
-}
-
 static gboolean
 find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
     GESTimelineObject * object)
@@ -295,6 +271,51 @@ find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
     gtk_tree_model_iter_next ((GtkTreeModel *) model, ret);
   }
   return FALSE;
+}
+
+/* this callback is registered for every timeline object, and updates the
+ * corresponding duration cell in the model */
+static void
+timeline_object_notify_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+  GtkTreeIter iter;
+  guint64 duration = 0;
+
+  g_object_get (object, "duration", &duration, NULL);
+  find_row_for_object (app->model, &iter, object);
+  gtk_list_store_set (app->model, &iter, 1, duration, -1);
+}
+
+/* these guys are only connected to filesources that are the target of the
+ * current selection */
+
+static void
+filesource_notify_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+  gtk_range_set_value (GTK_RANGE (app->duration),
+      GES_TIMELINE_OBJECT_DURATION (object));
+}
+
+static void
+filesource_notify_max_duration_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+  gtk_range_set_range (GTK_RANGE (app->duration),
+      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
+}
+
+static gchar *
+desc_for_object (GESTimelineObject * object)
+{
+  gchar *uri;
+
+  /* there is only one type of object at the moment */
+
+  /* return the uri */
+  g_object_get (object, "uri", &uri, NULL);
+  return uri;
 }
 
 static void
@@ -330,40 +351,6 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   }
 
   gtk_list_store_remove (app->model, &iter);
-}
-
-/* this callback is registered for every timeline object, and updates the
- * corresponding duration cell in the model */
-void
-timeline_object_notify_duration_cb (GESTimelineObject * object,
-    GParamSpec * arg G_GNUC_UNUSED, App * app)
-{
-  GtkTreeIter iter;
-  guint64 duration = 0;
-
-  g_object_get (object, "duration", &duration, NULL);
-  find_row_for_object (app->model, &iter, object);
-  gtk_list_store_set (app->model, &iter, 1, duration, -1);
-}
-
-/* these guys are only connected to filesources that are the target of the
- * current selection */
-
-void
-filesource_notify_duration_cb (GESTimelineObject * object,
-    GParamSpec * arg G_GNUC_UNUSED, App * app)
-{
-  gtk_range_set_value (GTK_RANGE (app->duration),
-      GES_TIMELINE_OBJECT_DURATION (object));
-}
-
-void
-filesource_notify_max_duration_cb (GESTimelineObject * object,
-    GParamSpec * arg G_GNUC_UNUSED, App * app)
-{
-  g_print ("got here");
-  gtk_range_set_range (GTK_RANGE (app->duration),
-      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
 }
 
 /* UI Configuration *********************************************************/
