@@ -121,7 +121,8 @@ enum
   ARG_RC_MB_TREE,
   ARG_RC_LOOKAHEAD,
   ARG_NR,
-  ARG_INTERLACED
+  ARG_INTERLACED,
+  ARG_OPTION_STRING
 };
 
 #define ARG_THREADS_DEFAULT            1
@@ -158,6 +159,8 @@ enum
 #define ARG_RC_MB_TREE_DEFAULT         TRUE
 #define ARG_RC_LOOKAHEAD_DEFAULT       40
 #define ARG_INTRA_REFRESH_DEFAULT      FALSE
+
+#define ARG_OPTION_STRING_DEFAULT      ""
 
 enum
 {
@@ -317,6 +320,11 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_x264_enc_change_state);
+
+  g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
+      g_param_spec_string ("option-string", "Option string",
+          "String of x264 options (overridden by element properties)",
+          ARG_OPTION_STRING_DEFAULT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
@@ -546,6 +554,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->rc_lookahead = ARG_RC_LOOKAHEAD_DEFAULT;
   encoder->noise_reduction = ARG_NR_DEFAULT;
   encoder->interlaced = ARG_INTERLACED_DEFAULT;
+  encoder->option_string_prop = g_string_new (ARG_OPTION_STRING_DEFAULT);
 
   /* resources */
   encoder->delay = g_queue_new ();
@@ -588,6 +597,14 @@ gst_x264_enc_finalize (GObject * object)
 {
   GstX264Enc *encoder = GST_X264_ENC (object);
 
+#define FREE_STRING(ptr) \
+  if (ptr) \
+    ptr = (GString *)g_string_free (ptr, TRUE);
+
+  FREE_STRING (encoder->option_string_prop);
+
+#undef FREE_STRING
+
   g_free (encoder->mp_cache_file);
   encoder->mp_cache_file = NULL;
   g_free (encoder->buffer);
@@ -598,6 +615,54 @@ gst_x264_enc_finalize (GObject * object)
   gst_x264_enc_close_encoder (encoder);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+/*
+ * gst_x264_enc_parse_options
+ * @encoder: Encoder to which options are assigned
+ * @str: Option string
+ *
+ * Parse option string and assign to x264 parameters
+ *
+ */
+static gboolean
+gst_x264_enc_parse_options (GstX264Enc * encoder, const gchar * str)
+{
+  GStrv kvpairs;
+  guint npairs, i;
+  gint parse_result = 0, ret = 0;
+  gchar *options = (gchar *) str;
+
+  while (*options == ':')
+    options++;
+
+  kvpairs = g_strsplit (options, ":", 0);
+  npairs = g_strv_length (kvpairs);
+
+  for (i = 0; i < npairs; i++) {
+    GStrv key_val = g_strsplit (kvpairs[i], "=", 2);
+
+    parse_result =
+        x264_param_parse (&encoder->x264param, key_val[0], key_val[1]);
+
+    if (parse_result == X264_PARAM_BAD_NAME) {
+      GST_ERROR_OBJECT (encoder, "Bad name for option %s=%s",
+          key_val[0] ? key_val[0] : "", key_val[1] ? key_val[1] : "");
+    }
+    if (parse_result == X264_PARAM_BAD_VALUE) {
+      GST_ERROR_OBJECT (encoder,
+          "Bad value for option %s=%s (Note: a NULL value for a non-boolean triggers this)",
+          key_val[0] ? key_val[0] : "", key_val[1] ? key_val[1] : "");
+    }
+
+    g_strfreev (key_val);
+
+    if (parse_result)
+      ret++;
+  }
+
+  g_strfreev (kvpairs);
+  return !ret;
 }
 
 /*
@@ -623,6 +688,16 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.b_sliced_threads = encoder->sliced_threads;
   encoder->x264param.i_sync_lookahead = encoder->sync_lookahead;
 #endif
+
+  /* apply user set properties */
+  if (encoder->option_string_prop && encoder->option_string_prop->len
+      && gst_x264_enc_parse_options (encoder,
+          encoder->option_string_prop->str) == FALSE) {
+    GST_DEBUG_OBJECT (encoder, "Your option-string contains errors.");
+    goto unlock_and_return;
+  }
+
+  /* set up encoder parameters */
   encoder->x264param.i_fps_num = encoder->fps_num;
   encoder->x264param.i_fps_den = encoder->fps_den;
   encoder->x264param.i_width = encoder->width;
@@ -760,6 +835,10 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   return TRUE;
+
+unlock_and_return:
+  GST_OBJECT_UNLOCK (encoder);
+  return FALSE;
 }
 
 /* gst_x264_enc_close_encoder
@@ -1291,6 +1370,9 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     goto wrong_state;
 
   switch (prop_id) {
+    case ARG_OPTION_STRING:
+      g_string_assign (encoder->option_string_prop, g_value_get_string (value));
+      break;
     case ARG_THREADS:
       encoder->threads = g_value_get_uint (value);
       break;
@@ -1517,6 +1599,9 @@ gst_x264_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_INTERLACED:
       g_value_set_boolean (value, encoder->interlaced);
+      break;
+    case ARG_OPTION_STRING:
+      g_value_set_string (value, encoder->option_string_prop->str);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
