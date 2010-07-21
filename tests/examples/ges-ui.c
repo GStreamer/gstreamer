@@ -30,6 +30,7 @@ typedef struct App
   GtkWidget *main_window;
   GtkListStore *model;
   GtkTreeSelection *selection;
+  GtkWidget *properties;
 } App;
 
 App *app_new (void);
@@ -49,6 +50,8 @@ void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_item_activate_cb (GtkMenuItem * item, App * app);
 
 void add_file_item_activate_cb (GtkMenuItem * item, App * app);
+
+void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
 gboolean create_ui (App * app);
 
@@ -86,6 +89,16 @@ add_file_item_activate_cb (GtkMenuItem * item, App * app)
 
   /* TODO: solicit this information from the user */
   app_add_file (app, (gchar *) "/home/brandon/media/small-mvi_0008.avi");
+}
+
+void
+app_selection_changed_cb (GtkTreeSelection * selection, App * app)
+{
+  int n;
+  n = gtk_tree_selection_count_selected_rows (selection);
+
+  /* some widgets should be disabled when we have an empty selection */
+  gtk_widget_set_sensitive (app->properties, n > 0);
 }
 
 /* application methods ******************************************************/
@@ -282,8 +295,9 @@ create_ui (App * app)
   app->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
   app->model =
       gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT);
+  app->properties = GTK_WIDGET (gtk_builder_get_object (builder, "properties"));
 
-  if (!(app->main_window && app->model && timeline)) {
+  if (!(app->main_window && app->model && timeline && app->properties)) {
     g_print ("Could not retrieve all widgets from the XML");
     goto fail;
   }
@@ -292,6 +306,9 @@ create_ui (App * app)
 
   if (!app->selection)
     goto fail;
+
+  g_signal_connect (app->selection, "changed",
+      G_CALLBACK (app_selection_changed_cb), app);
 
   gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
 
