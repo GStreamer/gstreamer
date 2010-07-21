@@ -1751,8 +1751,10 @@ gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
       vpad->queued = 0;
       break;
     case GST_EVENT_NEWSEGMENT:
-      videomixer->sendseg = TRUE;
-      gst_videomixer_reset_qos (videomixer);
+      if (!videomixer->master || vpad == videomixer->master) {
+        videomixer->sendseg = TRUE;
+        gst_videomixer_reset_qos (videomixer);
+      }
       break;
     default:
       break;
