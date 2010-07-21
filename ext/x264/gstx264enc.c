@@ -166,6 +166,7 @@ enum
 #define ARG_INTRA_REFRESH_DEFAULT      FALSE
 #define ARG_PROFILE_DEFAULT            1        /* Main profile matches current defaults */
 #define ARG_OPTION_STRING_DEFAULT      ""
+static GString *x264enc_defaults;
 
 enum
 {
@@ -356,11 +357,39 @@ gst_x264_enc_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
 }
 
+/* don't forget to free the string after use */
+static const gchar *
+gst_x264_enc_build_partitions (gint analyse)
+{
+  GString *string;
+
+  if (!analyse)
+    return NULL;
+
+  string = g_string_new (NULL);
+  if (analyse & X264_ANALYSE_I4x4)
+    g_string_append (string, "i4x4");
+  if (analyse & X264_ANALYSE_I8x8)
+    g_string_append (string, ",i8x8");
+  if (analyse & X264_ANALYSE_PSUB16x16)
+    g_string_append (string, ",p8x8");
+  if (analyse & X264_ANALYSE_PSUB8x8)
+    g_string_append (string, ",p4x4");
+  if (analyse & X264_ANALYSE_BSUB16x16)
+    g_string_append (string, ",b8x8");
+
+  return (const gchar *) g_string_free (string, FALSE);
+}
+
 static void
 gst_x264_enc_class_init (GstX264EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+
+  const gchar *partitions = NULL;
+
+  x264enc_defaults = g_string_new ("");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -371,6 +400,23 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_x264_enc_change_state);
+
+  /* options for which we don't use string equivalents */
+  g_object_class_install_property (gobject_class, ARG_PASS,
+      g_param_spec_enum ("pass", "Encoding pass/type",
+          "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
+          ARG_PASS_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_QUANTIZER,
+      g_param_spec_uint ("quantizer", "Constant Quantizer",
+          "Constant quantizer or quality to apply",
+          1, 50, ARG_QUANTIZER_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BITRATE,
+      g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
+          100 * 1024, ARG_BITRATE_DEFAULT, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
+      g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
+          "Size of the VBV buffer in milliseconds",
+          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
 
 #ifdef X264_PRESETS
   g_object_class_install_property (gobject_class, ARG_PROFILE,
@@ -384,28 +430,28 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "String of x264 options (overridden by element properties)",
           ARG_OPTION_STRING_DEFAULT, G_PARAM_READWRITE));
 
+  /* options for which we _do_ use string equivalents */
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
           "Number of threads used by the codec (0 for automatic)",
           0, 4, ARG_THREADS_DEFAULT, G_PARAM_READWRITE));
+  /* NOTE: this first string append doesn't require the ':' delimiter but the
+   * rest do */
+  g_string_append_printf (x264enc_defaults, "threads=%d", ARG_THREADS_DEFAULT);
 #ifdef X264_ENH_THREADING
   g_object_class_install_property (gobject_class, ARG_SLICED_THREADS,
       g_param_spec_boolean ("sliced-threads", "Sliced Threads",
           "Low latency but lower efficiency threading",
           ARG_SLICED_THREADS_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":sliced-threads=%d",
+      ARG_SLICED_THREADS_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_SYNC_LOOKAHEAD,
       g_param_spec_int ("sync-lookahead", "Sync Lookahead",
           "Number of buffer frames for threaded lookahead (-1 for automatic)",
           -1, 250, ARG_SYNC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":sync-lookahead=%d",
+      ARG_SYNC_LOOKAHEAD_DEFAULT);
 #endif
-  g_object_class_install_property (gobject_class, ARG_PASS,
-      g_param_spec_enum ("pass", "Encoding pass/type",
-          "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
-          ARG_PASS_DEFAULT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_QUANTIZER,
-      g_param_spec_uint ("quantizer", "Constant Quantizer",
-          "Constant quantizer or quality to apply",
-          1, 50, ARG_QUANTIZER_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_STATS_FILE,
       g_param_spec_string ("stats-file", "Stats File",
           "Filename for multipass statistics (deprecated, use multipass-stats-file)",
@@ -414,112 +460,151 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
           "Filename for multipass cache file",
           ARG_MULTIPASS_CACHE_FILE_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":stats=%s",
+      ARG_MULTIPASS_CACHE_FILE_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_BYTE_STREAM,
       g_param_spec_boolean ("byte-stream", "Byte Stream",
-          "Generate byte stream format of NALU",
-          ARG_BYTE_STREAM_DEFAULT, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_BITRATE,
-      g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
-          100 * 1024, ARG_BITRATE_DEFAULT, G_PARAM_READWRITE));
+          "Generate byte stream format of NALU", ARG_BYTE_STREAM_DEFAULT,
+          G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":annexb=%d",
+      ARG_BYTE_STREAM_DEFAULT);
 #ifdef X264_INTRA_REFRESH
   g_object_class_install_property (gobject_class, ARG_INTRA_REFRESH,
       g_param_spec_boolean ("intra-refresh", "Intra Refresh",
           "Use Periodic Intra Refresh instead of IDR frames",
           ARG_INTRA_REFRESH_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":intra-refresh=%d",
+      ARG_INTRA_REFRESH_DEFAULT);
 #endif
-  g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
-      g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
-          "Size of the VBV buffer in milliseconds",
-          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_ME,
       g_param_spec_enum ("me", "Motion Estimation",
           "Integer pixel motion estimation method", GST_X264_ENC_ME_TYPE,
           ARG_ME_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":me=%s",
+      x264_motion_est_names[ARG_ME_DEFAULT]);
   g_object_class_install_property (gobject_class, ARG_SUBME,
       g_param_spec_uint ("subme", "Subpixel Motion Estimation",
           "Subpixel motion estimation and partition decision quality: 1=fast, 6=best",
           1, 6, ARG_SUBME_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":subme=%d", ARG_SUBME_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_ANALYSE,
       g_param_spec_flags ("analyse", "Analyse", "Partitions to consider",
           GST_X264_ENC_ANALYSE_TYPE, ARG_ANALYSE_DEFAULT, G_PARAM_READWRITE));
+  partitions = gst_x264_enc_build_partitions (ARG_ANALYSE_DEFAULT);
+  if (partitions) {
+    g_string_append_printf (x264enc_defaults, ":partitions=%s", partitions);
+    g_free ((gpointer) partitions);
+  }
   g_object_class_install_property (gobject_class, ARG_DCT8x8,
       g_param_spec_boolean ("dct8x8", "DCT8x8",
-          "Adaptive spatial transform size",
-          ARG_DCT8x8_DEFAULT, G_PARAM_READWRITE));
+          "Adaptive spatial transform size", ARG_DCT8x8_DEFAULT,
+          G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":8x8dct=%d", ARG_DCT8x8_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_REF,
       g_param_spec_uint ("ref", "Reference Frames",
           "Number of reference frames",
           1, 12, ARG_REF_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":ref=%d", ARG_REF_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_BFRAMES,
       g_param_spec_uint ("bframes", "B-Frames",
           "Number of B-frames between I and P",
           0, 4, ARG_BFRAMES_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":bframes=%d", ARG_BFRAMES_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_B_ADAPT,
       g_param_spec_boolean ("b-adapt", "B-Adapt",
           "Automatically decide how many B-frames to use",
           ARG_B_ADAPT_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":b-adapt=%d", ARG_B_ADAPT_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_B_PYRAMID,
       g_param_spec_boolean ("b-pyramid", "B-Pyramid",
           "Keep some B-frames as references", ARG_B_PYRAMID_DEFAULT,
           G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":b-pyramid=%d",
+      ARG_B_PYRAMID_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_WEIGHTB,
       g_param_spec_boolean ("weightb", "Weighted B-Frames",
           "Weighted prediction for B-frames", ARG_WEIGHTB_DEFAULT,
           G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":weightb=%d", ARG_WEIGHTB_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_SPS_ID,
       g_param_spec_uint ("sps-id", "SPS ID",
           "SPS and PPS ID number",
           0, 31, ARG_SPS_ID_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":sps-id=%d", ARG_SPS_ID_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_AU_NALU,
       g_param_spec_boolean ("aud", "AUD",
           "Use AU (Access Unit) delimiter", ARG_AU_NALU_DEFAULT,
           G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":aud=%d", ARG_AU_NALU_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_TRELLIS,
       g_param_spec_boolean ("trellis", "Trellis quantization",
           "Enable trellis searched quantization", ARG_TRELLIS_DEFAULT,
           G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":trellis=%d", ARG_TRELLIS_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_KEYINT_MAX,
       g_param_spec_uint ("key-int-max", "Key-frame maximal interval",
           "Maximal distance between two key-frames (0 for automatic)",
           0, G_MAXINT, ARG_KEYINT_MAX_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":keyint=%d",
+      ARG_KEYINT_MAX_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_CABAC,
-      g_param_spec_boolean ("cabac", "Use CABAC",
-          "Enable CABAC entropy coding", ARG_CABAC_DEFAULT, G_PARAM_READWRITE));
+      g_param_spec_boolean ("cabac", "Use CABAC", "Enable CABAC entropy coding",
+          ARG_CABAC_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":cabac=%d", ARG_CABAC_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MIN,
       g_param_spec_uint ("qp-min", "Minimum Quantizer",
           "Minimum quantizer", 1, 51, ARG_QP_MIN_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":qpmin=%d", ARG_QP_MIN_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MAX,
       g_param_spec_uint ("qp-max", "Maximum Quantizer",
           "Maximum quantizer", 1, 51, ARG_QP_MAX_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":qpmax=%d", ARG_QP_MAX_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_STEP,
       g_param_spec_uint ("qp-step", "Maximum Quantizer Difference",
           "Maximum quantizer difference between frames",
           1, 50, ARG_QP_STEP_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":qpstep=%d", ARG_QP_STEP_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_IP_FACTOR,
       g_param_spec_float ("ip-factor", "IP-Factor",
           "Quantizer factor between I- and P-frames",
           0, 2, ARG_IP_FACTOR_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":ip-factor=%f",
+      ARG_IP_FACTOR_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_PB_FACTOR,
       g_param_spec_float ("pb-factor", "PB-Factor",
-          "Quantizer factor between P- and B-frames",
-          0, 2, ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE));
+          "Quantizer factor between P- and B-frames", 0, 2,
+          ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":pb-factor=%f",
+      ARG_PB_FACTOR_DEFAULT);
 #ifdef X264_MB_RC
   g_object_class_install_property (gobject_class, ARG_RC_MB_TREE,
       g_param_spec_boolean ("mb-tree", "Macroblock Tree",
           "Macroblock-Tree ratecontrol",
           ARG_RC_MB_TREE_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":mbtree=%d",
+      ARG_RC_MB_TREE_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_RC_LOOKAHEAD,
       g_param_spec_int ("rc-lookahead", "Rate Control Lookahead",
-          "Number of frames for frametype lookahead",
-          0, 250, ARG_RC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+          "Number of frames for frametype lookahead", 0, 250,
+          ARG_RC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":rc-lookahead=%d",
+      ARG_RC_LOOKAHEAD_DEFAULT);
 #endif
   g_object_class_install_property (gobject_class, ARG_NR,
       g_param_spec_uint ("noise-reduction", "Noise Reducation",
           "Noise reduction strength",
           0, 100000, ARG_NR_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":nr=%d", ARG_NR_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_INTERLACED,
       g_param_spec_boolean ("interlaced", "Interlaced",
           "Interlaced material", ARG_INTERLACED_DEFAULT, G_PARAM_READWRITE));
+  g_string_append_printf (x264enc_defaults, ":interlaced=%d",
+      ARG_INTERLACED_DEFAULT);
+
+  /* append deblock parameters */
+  g_string_append_printf (x264enc_defaults, ":deblock=0,0");
+  /* append weighted prediction parameter */
+  g_string_append_printf (x264enc_defaults, ":weightp=0");
 }
 
 static void
@@ -613,6 +698,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->noise_reduction = ARG_NR_DEFAULT;
   encoder->interlaced = ARG_INTERLACED_DEFAULT;
   encoder->profile = ARG_PROFILE_DEFAULT;
+  encoder->option_string = g_string_new (NULL);
   encoder->option_string_prop = g_string_new (ARG_OPTION_STRING_DEFAULT);
 
   /* resources */
@@ -626,12 +712,6 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->x264param.pf_log = gst_x264_enc_log_callback;
   encoder->x264param.p_log_private = encoder;
   encoder->x264param.i_log_level = X264_LOG_DEBUG;
-
-#if X264_BUILD >= 81
-  /* setup appropriate timebase for gstreamer */
-  encoder->x264param.i_timebase_num = 1;
-  encoder->x264param.i_timebase_den = 1000000000;
-#endif
 
   gst_x264_enc_reset (encoder);
 }
@@ -660,6 +740,7 @@ gst_x264_enc_finalize (GObject * object)
   if (ptr) \
     ptr = (GString *)g_string_free (ptr, TRUE);
 
+  FREE_STRING (encoder->option_string);
   FREE_STRING (encoder->option_string_prop);
 
 #undef FREE_STRING
@@ -741,12 +822,19 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
   GST_OBJECT_LOCK (encoder);
 
-  /* set up encoder parameters */
-  encoder->x264param.i_threads = encoder->threads;
-#ifdef X264_ENH_THREADING
-  encoder->x264param.b_sliced_threads = encoder->sliced_threads;
-  encoder->x264param.i_sync_lookahead = encoder->sync_lookahead;
+#if X264_BUILD >= 81
+  /* setup appropriate timebase for gstreamer */
+  encoder->x264param.i_timebase_num = 1;
+  encoder->x264param.i_timebase_den = 1000000000;
 #endif
+
+  GST_DEBUG_OBJECT (encoder, "Applying x264enc_defaults");
+  if (x264enc_defaults->len
+      && gst_x264_enc_parse_options (encoder, x264enc_defaults->str) == FALSE) {
+    GST_DEBUG_OBJECT (encoder,
+        "x264enc_defaults string contains errors. This is a bug.");
+    goto unlock_and_return;
+  }
 
   /* apply user set properties */
   if (encoder->option_string_prop && encoder->option_string_prop->len
@@ -754,6 +842,17 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
           encoder->option_string_prop->str) == FALSE) {
     GST_DEBUG_OBJECT (encoder, "Your option-string contains errors.");
     goto unlock_and_return;
+  }
+  /* apply user-set options */
+  if (encoder->option_string && encoder->option_string->len) {
+    GST_DEBUG_OBJECT (encoder, "Applying user-set options: %s",
+        encoder->option_string->str);
+    if (gst_x264_enc_parse_options (encoder,
+            encoder->option_string->str) == FALSE) {
+      GST_DEBUG_OBJECT (encoder,
+          "Failed to parse internal option string. This could be due to use of an "
+          "old libx264 version.", encoder->option_string->str);
+    }
   }
 
   /* set up encoder parameters */
@@ -769,9 +868,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
    * (10s is x264 default) */
   encoder->x264param.i_keyint_max = encoder->keyint_max ? encoder->keyint_max :
       (2 * encoder->fps_num / encoder->fps_den);
-  encoder->x264param.b_cabac = encoder->cabac;
-  encoder->x264param.b_aud = encoder->au_nalu;
-  encoder->x264param.i_sps_id = encoder->sps_id;
+
   if ((((encoder->height == 576) && ((encoder->width == 720)
                   || (encoder->width == 704) || (encoder->width == 352)))
           || ((encoder->height == 288) && (encoder->width == 352)))
@@ -785,48 +882,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.vui.i_vidformat = 2;     /* NTSC */
   } else
     encoder->x264param.vui.i_vidformat = 5;     /* unspecified */
-  encoder->x264param.analyse.i_trellis = encoder->trellis ? 1 : 0;
+
   encoder->x264param.analyse.b_psnr = 0;
-  encoder->x264param.analyse.i_me_method = encoder->me;
-  encoder->x264param.analyse.i_subpel_refine = encoder->subme;
-  encoder->x264param.analyse.inter = encoder->analyse;
-  encoder->x264param.analyse.b_transform_8x8 = encoder->dct8x8;
-  encoder->x264param.analyse.b_weighted_bipred = encoder->weightb;
-#if X264_BUILD > 78
-  encoder->x264param.analyse.i_weighted_pred = 0;
-#endif
-  encoder->x264param.analyse.i_noise_reduction = encoder->noise_reduction;
-  encoder->x264param.i_frame_reference = encoder->ref;
-  encoder->x264param.i_bframe = encoder->bframes;
-#if X264_BUILD < 78
-  encoder->x264param.b_bframe_pyramid = encoder->b_pyramid;
-#else
-  encoder->x264param.i_bframe_pyramid =
-      encoder->b_pyramid ? X264_B_PYRAMID_NORMAL : X264_B_PYRAMID_NONE;
-#endif
-#if X264_BUILD < 63
-  encoder->x264param.b_bframe_adaptive = encoder->b_adapt;
-#else
-  encoder->x264param.i_bframe_adaptive =
-      encoder->b_adapt ? X264_B_ADAPT_FAST : X264_B_ADAPT_NONE;
-#endif
-  encoder->x264param.b_interlaced = encoder->interlaced;
-  encoder->x264param.b_deblocking_filter = 1;
-  encoder->x264param.i_deblocking_filter_alphac0 = 0;
-  encoder->x264param.i_deblocking_filter_beta = 0;
-  encoder->x264param.rc.f_ip_factor = encoder->ip_factor;
-  encoder->x264param.rc.f_pb_factor = encoder->pb_factor;
-#ifdef X264_MB_RC
-  encoder->x264param.rc.b_mb_tree = encoder->mb_tree;
-  encoder->x264param.rc.i_lookahead = encoder->rc_lookahead;
-  GST_DEBUG_OBJECT (encoder, "here %d", encoder->rc_lookahead);
-#endif
-#ifdef X264_ENC_NALS
-  encoder->x264param.b_annexb = encoder->byte_stream;
-#endif
-#ifdef X264_INTRA_REFRESH
-  encoder->x264param.b_intra_refresh = encoder->intra_refresh;
-#endif
 
   switch (encoder->pass) {
     case GST_X264_ENC_PASS_QUANT:
@@ -848,9 +905,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.i_vbv_buffer_size
           = encoder->x264param.rc.i_vbv_max_bitrate
           * encoder->vbv_buf_capacity / 1000;
-      encoder->x264param.rc.i_qp_min = encoder->qp_min;
-      encoder->x264param.rc.i_qp_max = encoder->qp_max;
-      encoder->x264param.rc.i_qp_step = encoder->qp_step;
       pass = encoder->pass & 0xF;
       break;
   }
@@ -885,8 +939,6 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_write = 1;
       break;
   }
-  encoder->x264param.rc.psz_stat_in = encoder->mp_cache_file;
-  encoder->x264param.rc.psz_stat_out = encoder->mp_cache_file;
 
 #ifdef X264_PRESETS
   if (encoder->profile
@@ -1432,6 +1484,8 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
   GstX264Enc *encoder;
   GstState state;
 
+  const gchar *partitions = NULL;
+
   encoder = GST_X264_ENC (object);
 
   GST_OBJECT_LOCK (encoder);
@@ -1442,6 +1496,18 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
     goto wrong_state;
 
   switch (prop_id) {
+    case ARG_PASS:
+      encoder->pass = g_value_get_enum (value);
+      break;
+    case ARG_QUANTIZER:
+      encoder->quantizer = g_value_get_uint (value);
+      break;
+    case ARG_BITRATE:
+      encoder->bitrate = g_value_get_uint (value);
+      break;
+    case ARG_VBV_BUF_CAPACITY:
+      encoder->vbv_buf_capacity = g_value_get_uint (value);
+      break;
     case ARG_PROFILE:
       encoder->profile = g_value_get_enum (value);
       break;
@@ -1450,105 +1516,154 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_THREADS:
       encoder->threads = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":threads=%d",
+          encoder->threads);
       break;
     case ARG_SLICED_THREADS:
       encoder->sliced_threads = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":sliced-threads=%d",
+          encoder->sliced_threads);
       break;
     case ARG_SYNC_LOOKAHEAD:
       encoder->sync_lookahead = g_value_get_int (value);
-      break;
-    case ARG_PASS:
-      encoder->pass = g_value_get_enum (value);
-      break;
-    case ARG_QUANTIZER:
-      encoder->quantizer = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":sync-lookahead=%d",
+          encoder->sync_lookahead);
       break;
     case ARG_STATS_FILE:
     case ARG_MULTIPASS_CACHE_FILE:
       if (encoder->mp_cache_file)
         g_free (encoder->mp_cache_file);
       encoder->mp_cache_file = g_value_dup_string (value);
+      g_string_append_printf (encoder->option_string, ":stats=%s",
+          encoder->mp_cache_file);
       break;
     case ARG_BYTE_STREAM:
       encoder->byte_stream = g_value_get_boolean (value);
-      break;
-    case ARG_BITRATE:
-      encoder->bitrate = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":annexb=%d",
+          encoder->byte_stream);
       break;
     case ARG_INTRA_REFRESH:
       encoder->intra_refresh = g_value_get_boolean (value);
-      break;
-    case ARG_VBV_BUF_CAPACITY:
-      encoder->vbv_buf_capacity = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":intra-refresh=%d",
+          encoder->intra_refresh);
       break;
     case ARG_ME:
       encoder->me = g_value_get_enum (value);
+      g_string_append_printf (encoder->option_string, ":me=%s",
+          x264_motion_est_names[encoder->me]);
       break;
     case ARG_SUBME:
       encoder->subme = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":subme=%d",
+          encoder->subme);
       break;
     case ARG_ANALYSE:
       encoder->analyse = g_value_get_flags (value);
+      partitions = gst_x264_enc_build_partitions (encoder->analyse);
+      if (partitions) {
+        g_string_append_printf (encoder->option_string, ":partitions=%s",
+            partitions);
+        g_free ((gpointer) partitions);
+      }
       break;
     case ARG_DCT8x8:
       encoder->dct8x8 = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":8x8dct=%d",
+          encoder->dct8x8);
       break;
     case ARG_REF:
       encoder->ref = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":ref=%d", encoder->ref);
       break;
     case ARG_BFRAMES:
       encoder->bframes = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":bframes=%d",
+          encoder->bframes);
       break;
     case ARG_B_ADAPT:
       encoder->b_adapt = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":b-adapt=%d",
+          encoder->b_adapt);
       break;
     case ARG_B_PYRAMID:
       encoder->b_pyramid = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":b-pyramid=%d",
+          encoder->b_pyramid);
       break;
     case ARG_WEIGHTB:
       encoder->weightb = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":weightb=%d",
+          encoder->weightb);
       break;
     case ARG_SPS_ID:
       encoder->sps_id = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":sps-id=%d",
+          encoder->sps_id);
       break;
     case ARG_AU_NALU:
       encoder->au_nalu = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":aud=%d",
+          encoder->au_nalu);
       break;
     case ARG_TRELLIS:
       encoder->trellis = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":trellis=%d",
+          encoder->trellis);
       break;
     case ARG_KEYINT_MAX:
       encoder->keyint_max = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":keyint=%d",
+          encoder->keyint_max);
       break;
     case ARG_CABAC:
       encoder->cabac = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":cabac=%d",
+          encoder->cabac);
       break;
     case ARG_QP_MIN:
       encoder->qp_min = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":qpmin=%d",
+          encoder->qp_min);
       break;
     case ARG_QP_MAX:
       encoder->qp_max = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":qpmax=%d",
+          encoder->qp_max);
       break;
     case ARG_QP_STEP:
       encoder->qp_step = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":qpstep=%d",
+          encoder->qp_step);
       break;
     case ARG_IP_FACTOR:
       encoder->ip_factor = g_value_get_float (value);
+      g_string_append_printf (encoder->option_string, ":ip-factor=%f",
+          encoder->ip_factor);
       break;
     case ARG_PB_FACTOR:
       encoder->pb_factor = g_value_get_float (value);
+      g_string_append_printf (encoder->option_string, ":pb-factor=%f",
+          encoder->pb_factor);
       break;
     case ARG_RC_MB_TREE:
       encoder->mb_tree = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":mbtree=%d",
+          encoder->mb_tree);
       break;
     case ARG_RC_LOOKAHEAD:
       encoder->rc_lookahead = g_value_get_int (value);
+      g_string_append_printf (encoder->option_string, ":rc-lookahead=%d",
+          encoder->rc_lookahead);
       break;
     case ARG_NR:
       encoder->noise_reduction = g_value_get_uint (value);
+      g_string_append_printf (encoder->option_string, ":nr=%d",
+          encoder->noise_reduction);
       break;
     case ARG_INTERLACED:
       encoder->interlaced = g_value_get_boolean (value);
+      g_string_append_printf (encoder->option_string, ":interlaced=%d",
+          encoder->interlaced);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
