@@ -204,17 +204,26 @@ static GType
 gst_x264_enc_me_get_type (void)
 {
   static GType me_type = 0;
-  static const GEnumValue me_types[] = {
-    {X264_ME_DIA, "diamond search, radius 1 (fast)", "dia"},
-    {X264_ME_HEX, "hexagonal search, radius 2", "hex"},
-    {X264_ME_UMH, "uneven multi-hexagon search", "umh"},
-    {X264_ME_ESA, "exhaustive search (slow)", "esa"},
-    {0, NULL, NULL}
-  };
+  static GEnumValue *me_types;
+  int n, i;
 
-  if (!me_type) {
-    me_type = g_enum_register_static ("GstX264EncMe", me_types);
+  if (me_type != 0)
+    return me_type;
+
+  n = 0;
+  while (x264_motion_est_names[n] != NULL)
+    n++;
+
+  me_types = g_new0 (GEnumValue, n + 1);
+
+  for (i = 0; i < n; i++) {
+    me_types[i].value = i;
+    me_types[i].value_name = x264_motion_est_names[i];
+    me_types[i].value_nick = x264_motion_est_names[i];
   }
+
+  me_type = g_enum_register_static ("GstX264EncMe", me_types);
+
   return me_type;
 }
 
