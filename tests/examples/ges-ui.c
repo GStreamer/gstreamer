@@ -31,6 +31,8 @@ typedef struct App
   GtkListStore *model;
   GtkTreeSelection *selection;
   GtkWidget *properties;
+  GList *selected_objects;
+  int n_selected;
 } App;
 
 App *app_new (void);
@@ -42,6 +44,8 @@ void app_add_file (App * app, gchar * filename);
 GList *app_get_selected_objects (App * app);
 
 void app_delete_objects (App * app, GList * objects);
+
+void app_update_selection (App * app);
 
 void window_destroy_cb (GtkObject * window, App * app);
 
@@ -94,17 +98,39 @@ add_file_item_activate_cb (GtkMenuItem * item, App * app)
 void
 app_selection_changed_cb (GtkTreeSelection * selection, App * app)
 {
-  int n;
-  n = gtk_tree_selection_count_selected_rows (selection);
+  app_update_selection (app);
 
   /* some widgets should be disabled when we have an empty selection */
-  gtk_widget_set_sensitive (app->properties, n > 0);
+  gtk_widget_set_sensitive (app->properties, app->n_selected > 0);
 }
 
 /* application methods ******************************************************/
 
 static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
     GtkTreeIter * iter, gpointer user);
+
+void
+app_update_selection (App * app)
+{
+  GList *cur;
+
+  /* clear old selection */
+  for (cur = app->selected_objects; cur; cur = cur->next) {
+    g_object_unref (cur->data);
+    cur->data = NULL;
+  }
+  g_list_free (app->selected_objects);
+  app->selected_objects = NULL;
+  app->n_selected = 0;
+
+  /* get new selection */
+  gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
+      selection_foreach, &app->selected_objects);
+
+  for (cur = app->selected_objects; cur; cur = cur->next) {
+    app->n_selected++;
+  }
+}
 
 static void
 selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
@@ -122,14 +148,7 @@ selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
 GList *
 app_get_selected_objects (App * app)
 {
-  GList *objects = NULL;
-
-  g_print ("selection: %p\n", app->selection);
-
-  gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
-      selection_foreach, &objects);
-
-  return objects;
+  return g_list_copy (app->selected_objects);
 }
 
 void
@@ -140,7 +159,6 @@ app_delete_objects (App * app, GList * objects)
   for (cur = objects; cur; cur = cur->next) {
     ges_timeline_layer_remove_object (app->layer,
         GES_TIMELINE_OBJECT (cur->data));
-    g_object_unref ((GObject *) cur->data);
     cur->data = NULL;
   }
 
