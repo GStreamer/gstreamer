@@ -247,6 +247,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="value_pos">bottom</property>
+                            <signal name="change_value" handler="duration_scale_change_value_cb"/>
                           </object>
                           <packing>
                             <property name="position">1</property>

@@ -33,6 +33,7 @@ typedef struct App
   GtkWidget *properties;
   GList *selected_objects;
   int n_selected;
+  GtkHScale *duration;
 } App;
 
 App *app_new (void);
@@ -57,6 +58,9 @@ void add_file_item_activate_cb (GtkMenuItem * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
+gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
+    unused, gdouble value, App * app);
+
 gboolean create_ui (App * app);
 
 static gboolean find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
@@ -75,7 +79,7 @@ void connect_to_filesource (GESTimelineObject * object, App * app);
 
 void disconnect_from_filesource (GESTimelineObject * object, App * app);
 
-/* signal handlers **********************************************************/
+/* UI callbacks  ************************************************************/
 
 void
 window_destroy_cb (GtkObject * window, App * app)
@@ -117,6 +121,21 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   gtk_widget_set_sensitive (app->properties, app->n_selected > 0);
 }
 
+gboolean
+duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
+    gdouble value, App * app)
+{
+  GList *i;
+
+  for (i = app->selected_objects; i; i = i->next) {
+    /* this signal is called *before* the widget is updated. by returing TRUE
+     * we prevent further processing. the scale value is set in
+     * filesource_notify_duration_cb */
+    g_object_set (G_OBJECT (i->data), "duration", (guint64) value, NULL);
+  }
+  return TRUE;
+}
+
 /* application methods ******************************************************/
 
 static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
@@ -129,6 +148,7 @@ app_update_selection (App * app)
 
   /* clear old selection */
   for (cur = app->selected_objects; cur; cur = cur->next) {
+    disconnect_from_filesource (cur->data, app);
     g_object_unref (cur->data);
     cur->data = NULL;
   }
@@ -141,6 +161,7 @@ app_update_selection (App * app)
       selection_foreach, &app->selected_objects);
 
   for (cur = app->selected_objects; cur; cur = cur->next) {
+    connect_to_filesource (cur->data, app);
     app->n_selected++;
   }
 }
@@ -282,16 +303,17 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 {
   GtkTreeIter iter;
   gchar *description;
-  guint64 duration = 0;
 
   GST_INFO ("layer object added cb %p %p %p", layer, object, app);
 
   description = desc_for_object (object);
-  g_object_get (object, "duration", &duration, NULL);
 
   gtk_list_store_append (app->model, &iter);
-  gtk_list_store_set (app->model, &iter, 0, description, 1, duration,
-      2, object, -1);
+  gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
+
+  g_signal_connect (G_OBJECT (object), "notify::duration",
+      G_CALLBACK (timeline_object_notify_duration_cb), app);
+  timeline_object_notify_duration_cb (object, NULL, app);
 }
 
 static void
@@ -310,25 +332,38 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   gtk_list_store_remove (app->model, &iter);
 }
 
+/* this callback is registered for every timeline object, and updates the
+ * corresponding duration cell in the model */
 void
 timeline_object_notify_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
+  GtkTreeIter iter;
+  guint64 duration = 0;
 
+  g_object_get (object, "duration", &duration, NULL);
+  find_row_for_object (app->model, &iter, object);
+  gtk_list_store_set (app->model, &iter, 1, duration, -1);
 }
+
+/* these guys are only connected to filesources that are the target of the
+ * current selection */
 
 void
 filesource_notify_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
-
+  gtk_range_set_value (GTK_RANGE (app->duration),
+      GES_TIMELINE_OBJECT_DURATION (object));
 }
 
 void
 filesource_notify_max_duration_cb (GESTimelineObject * object,
     GParamSpec * arg G_GNUC_UNUSED, App * app)
 {
-
+  g_print ("got here");
+  gtk_range_set_range (GTK_RANGE (app->duration),
+      0, (gdouble) GES_TIMELINE_FILE_SOURCE (object)->maxduration);
 }
 
 /* UI Configuration *********************************************************/
@@ -344,9 +379,11 @@ connect_to_filesource (GESTimelineObject * object, App * app)
 {
   g_signal_connect (G_OBJECT (object), "notify::duration",
       G_CALLBACK (filesource_notify_duration_cb), app);
+  filesource_notify_duration_cb (object, NULL, app);
 
-  g_signal_connect (G_OBJECT (object), "notify::maxduration",
+  g_signal_connect (G_OBJECT (object), "notify::max-duration",
       G_CALLBACK (filesource_notify_max_duration_cb), app);
+  filesource_notify_max_duration_cb (object, NULL, app);
 }
 
 void
@@ -376,6 +413,7 @@ create_ui (App * app)
   GET_WIDGET (timeline, "timeline_treeview", GTK_TREE_VIEW);
   GET_WIDGET (app->properties, "properties", GTK_WIDGET);
   GET_WIDGET (app->main_window, "window", GTK_WIDGET);
+  GET_WIDGET (app->duration, "duration_scale", GTK_HSCALE);
 
   /* we care when the tree selection changes */
 
