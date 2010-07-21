@@ -38,6 +38,10 @@ void app_dispose (App * app);
 
 void app_add_file (App * app, gchar * filename);
 
+GList *app_get_selected_objects (App * app);
+
+void app_delete_objects (App * app, GList * objects);
+
 void window_destroy_cb (GtkObject * window, App * app);
 
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
@@ -65,7 +69,11 @@ quit_item_activate_cb (GtkMenuItem * item, App * app)
 void
 delete_item_activate_cb (GtkMenuItem * item, App * app)
 {
-  g_print ("beleted!");
+  /* get a gslist of selected track objects */
+  GList *objects = NULL;
+
+  objects = app_get_selected_objects (app);
+  app_delete_objects (app, objects);
 }
 
 void
@@ -78,6 +86,50 @@ add_file_item_activate_cb (GtkMenuItem * item, App * app)
 }
 
 /* application methods ******************************************************/
+
+static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
+    GtkTreeIter * iter, gpointer user);
+
+static void
+selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
+    * iter, gpointer user)
+{
+  GList **ret = user;
+  GESTimelineObject *obj;
+
+  gtk_tree_model_get (model, iter, 2, &obj, -1);
+  *ret = g_list_append (*ret, obj);
+
+  return;
+}
+
+GList *
+app_get_selected_objects (App * app)
+{
+  GList *objects = NULL;
+
+  g_print ("selection: %p\n", app->selection);
+
+  gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
+      selection_foreach, &objects);
+
+  return objects;
+}
+
+void
+app_delete_objects (App * app, GList * objects)
+{
+  GList *cur;
+
+  for (cur = objects; cur; cur = cur->next) {
+    ges_timeline_layer_remove_object (app->layer,
+        GES_TIMELINE_OBJECT (cur->data));
+    g_object_unref ((GObject *) cur->data);
+    cur->data = NULL;
+  }
+
+  g_list_free (objects);
+}
 
 void
 app_add_file (App * app, gchar * filename)
