@@ -331,29 +331,34 @@ on_drawingMain_expose_event (GtkWidget * widget, GdkEventExpose * event,
     gpointer data)
 {
   GtkAllocation a;
-  gint w, h, x, y;
+  cairo_t *cr;
+  GdkRectangle rect;
 
   gtk_widget_get_allocation (widget, &a);
 
   if (draw_pixbuf == NULL)
     return FALSE;
 
-  w = gdk_pixbuf_get_width (draw_pixbuf);
-  h = gdk_pixbuf_get_height (draw_pixbuf);
+  rect.width = gdk_pixbuf_get_width (draw_pixbuf);
+  rect.height = gdk_pixbuf_get_height (draw_pixbuf);
 
   /* center image */
-  x = (a.width - w) / 2;
-  y = (a.height - h) / 2;
+  rect.x = (a.width - rect.width) / 2;
+  rect.y = (a.height - rect.height) / 2;
 
   /* sanity check, shouldn't happen */
-  if (x < 0)
-    x = 0;
-  if (y < 0)
-    y = 0;
+  if (rect.x < 0)
+    rect.x = 0;
+  if (rect.y < 0)
+    rect.y = 0;
 
-  gdk_draw_pixbuf (GDK_DRAWABLE (gtk_widget_get_window (widget)),
-      gtk_widget_get_style (widget)->black_gc,
-      draw_pixbuf, 0, 0, x, y, w, h, GDK_RGB_DITHER_NONE, 0, 0);
+  cr = gdk_cairo_create (event->window);
+
+  gdk_cairo_set_source_pixbuf (cr, draw_pixbuf, 0, 0);
+  gdk_cairo_rectangle (cr, &rect);
+  cairo_fill (cr);
+
+  cairo_destroy (cr);
 
   return TRUE; /* handled expose event */
 }
