@@ -54,9 +54,9 @@ void window_destroy_cb (GtkObject * window, App * app);
 
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 
-void delete_activate_cb (GtkMenuItem * item, App * app);
+void delete_activate_cb (GtkAction * item, App * app);
 
-void add_file_activate_cb (GtkMenuItem * item, App * app);
+void add_file_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
@@ -90,7 +90,7 @@ quit_item_activate_cb (GtkMenuItem * item, App * app)
 }
 
 void
-delete_activate_cb (GtkMenuItem * item, App * app)
+delete_activate_cb (GtkAction * item, App * app)
 {
   /* get a gslist of selected track objects */
   GList *objects = NULL;
@@ -100,7 +100,7 @@ delete_activate_cb (GtkMenuItem * item, App * app)
 }
 
 void
-add_file_activate_cb (GtkMenuItem * item, App * app)
+add_file_activate_cb (GtkAction * item, App * app)
 {
   GST_DEBUG ("add file signal handler");
 
