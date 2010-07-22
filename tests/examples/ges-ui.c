@@ -127,10 +127,23 @@ delete_activate_cb (GtkAction * item, App * app)
 void
 add_file_activate_cb (GtkAction * item, App * app)
 {
+  GtkFileChooserDialog *dlg;
+
   GST_DEBUG ("add file signal handler");
 
-  /* TODO: solicit this information from the user */
-  app_add_file (app, (gchar *) "/home/brandon/media/small-mvi_0008.avi");
+  dlg = (GtkFileChooserDialog *) gtk_file_chooser_dialog_new ("Add File...",
+      GTK_WINDOW (app->main_window),
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      GTK_STOCK_CANCEL,
+      GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+
+  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
+    gchar *filename;
+    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dlg));
+    app_add_file (app, filename);
+    g_free (filename);
+  }
+  gtk_widget_destroy ((GtkWidget *) dlg);
 }
 
 void
