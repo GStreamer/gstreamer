@@ -35,7 +35,7 @@ typedef struct App
   int n_selected;
   GtkHScale *duration;
   GtkHScale *in_point;
-  GtkMenuItem *delete_item;
+  GtkAction *delete;
   GstState state;
 } App;
 
@@ -128,7 +128,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   gtk_widget_set_sensitive (app->properties, app->n_selected == 1);
 
   /* delete will work for multiple items */
-  gtk_widget_set_sensitive (GTK_WIDGET (app->delete_item), app->n_selected > 0);
+  gtk_action_set_sensitive (app->delete, app->n_selected > 0);
 }
 
 gboolean
@@ -488,7 +488,7 @@ create_ui (App * app)
   GET_WIDGET (app->in_point, "in_point_scale", GTK_HSCALE);
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
-  GET_WIDGET (app->delete_item, "delete_item", GTK_MENU_ITEM);
+  GET_WIDGET (app->delete, "delete", GTK_ACTION);
 
   /* we care when the tree selection changes */
 
