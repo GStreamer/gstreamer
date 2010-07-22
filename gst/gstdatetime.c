@@ -557,3 +557,34 @@ gst_date_time_new_now_utc (void)
   gst_date_time_unref (now);
   return utc;
 }
+
+gint
+priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2)
+{
+  GstDateTime *a, *b;
+  gint res = 0;
+
+  a = gst_date_time_to_utc (dt1);
+  b = gst_date_time_to_utc (dt2);
+
+#define GST_DATE_TIME_COMPARE_VALUE(a,b,v)   \
+  if ((a)->v > (b)->v) {                     \
+    res = 1;                                 \
+    goto done;                               \
+  } else if ((a)->v < (b)->v) {              \
+    res = -1;                                \
+    goto done;                               \
+  }
+
+  GST_DATE_TIME_COMPARE_VALUE (a, b, year);
+  GST_DATE_TIME_COMPARE_VALUE (a, b, month);
+  GST_DATE_TIME_COMPARE_VALUE (a, b, day);
+  GST_DATE_TIME_COMPARE_VALUE (a, b, usec);
+
+#undef GST_DATE_TIME_COMPARE_VALUE
+
+done:
+  gst_date_time_unref (a);
+  gst_date_time_unref (b);
+  return res;
+}

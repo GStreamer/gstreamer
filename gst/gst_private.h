@@ -124,6 +124,9 @@ gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
     ((c) == '.'))
 
+/* This is only meant for internal uses */
+gint priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2);
+
 #ifndef GST_DISABLE_REGISTRY
 /* Secret variable to initialise gst without registry cache */
 extern gboolean _gst_disable_registry_cache;

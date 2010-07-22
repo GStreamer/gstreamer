@@ -176,6 +176,16 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_DATE(x)         (G_VALUE_HOLDS((x), gst_date_get_type ()))
 
 /**
+ * GST_VALUE_HOLDS_DATE_TIME:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_DATE_TIME value.
+ *
+ * Since: 0.10.31
+ */
+#define GST_VALUE_HOLDS_DATE_TIME(x)    (G_VALUE_HOLDS((x), gst_date_time_get_type ()))
+
+/**
  * GST_TYPE_FOURCC:
  *
  * a #GValue type that represents 4 byte identifier (e.g. used for codecs)
@@ -258,6 +268,17 @@ G_BEGIN_DECLS
  */
 
 #define GST_TYPE_DATE                    gst_date_get_type ()
+
+/**
+ * GST_TYPE_DATE_TIME:
+ *
+ * a boxed #GValue type for #GstDateTime that represents a date and time.
+ *
+ * Returns: the #GType of GstDateTime
+ * Since: 0.10.31
+ */
+
+#define GST_TYPE_DATE_TIME               gst_date_time_get_type ()
 
 /**
  * GST_VALUE_LESS_THAN:
@@ -403,6 +424,7 @@ GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
 
 GType gst_date_get_type (void);
+GType gst_date_time_get_type (void);
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,

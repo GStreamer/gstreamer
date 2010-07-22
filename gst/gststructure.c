@@ -1548,6 +1548,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       {"s", G_TYPE_STRING}
       ,
       {"structure", GST_TYPE_STRUCTURE}
+      ,
+      {"datetime", GST_TYPE_DATE_TIME}
     };
     _num = G_N_ELEMENTS (dyn_abbrs);
     /* permanently allocate and copy the array now */

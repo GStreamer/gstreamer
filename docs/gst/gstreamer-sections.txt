@@ -2588,6 +2588,7 @@ gst_search_mode_get_type
 <FILE>gstdatetime</FILE>
 <TITLE>GstDateTime</TITLE>
 GstDateTime
+GST_TYPE_DATE_TIME
 gst_date_time_get_day
 gst_date_time_get_month
 gst_date_time_get_hour
@@ -2667,6 +2668,9 @@ GST_TYPE_DATE
 gst_value_set_date
 gst_value_get_date
 
+<SUBSECTION datetime>
+GST_VALUE_HOLDS_DATE_TIME
+
 <SUBSECTION caps>
 GST_VALUE_HOLDS_CAPS
 gst_value_set_caps
@@ -2723,6 +2727,7 @@ gst_value_array_prepend_value
 
 <SUBSECTION Private>
 gst_date_get_type
+gst_date_time_get_type
 gst_double_range_get_type
 gst_fourcc_get_type
 gst_fraction_get_type

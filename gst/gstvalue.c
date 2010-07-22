@@ -4050,6 +4050,83 @@ gst_value_deserialize_date (GValue * dest, const gchar * s)
   return TRUE;
 }
 
+/*************
+ * GstDateTime *
+ *************/
+
+static gint
+gst_value_compare_date_time (const GValue * value1, const GValue * value2)
+{
+  const GstDateTime *date1 = (const GstDateTime *) g_value_get_boxed (value1);
+  const GstDateTime *date2 = (const GstDateTime *) g_value_get_boxed (value2);
+  gint ret;
+
+  if (date1 == date2)
+    return GST_VALUE_EQUAL;
+
+  if ((date1 == NULL) && (date2 != NULL)) {
+    return GST_VALUE_LESS_THAN;
+  }
+  if ((date2 == NULL) && (date1 != NULL)) {
+    return GST_VALUE_LESS_THAN;
+  }
+
+  ret = priv_gst_date_time_compare (date1, date2);
+
+  if (ret == 0)
+    return GST_VALUE_EQUAL;
+  else if (ret < 0)
+    return GST_VALUE_LESS_THAN;
+  else
+    return GST_VALUE_GREATER_THAN;
+}
+
+static gchar *
+gst_value_serialize_date_time (const GValue * val)
+{
+  const GstDateTime *date = (const GstDateTime *) g_value_get_boxed (val);
+  gint offset;
+
+  if (date == NULL)
+    return g_strdup ("null");
+
+  offset = gst_date_time_get_time_zone_offset (date);
+
+  return g_strdup_printf ("\"%04d-%02d-%02dT%02d:%02d:%02d.%06d"
+      "%c%02d%02d\"", gst_date_time_get_year (date),
+      gst_date_time_get_month (date), gst_date_time_get_day (date),
+      gst_date_time_get_hour (date), gst_date_time_get_minute (date),
+      gst_date_time_get_second (date), gst_date_time_get_microsecond (date),
+      offset >= 0 ? '+' : '-', (gint) ABS (offset) / 60,
+      (gint) ABS (offset) % 60);
+}
+
+static gboolean
+gst_value_deserialize_date_time (GValue * dest, const gchar * s)
+{
+  gint year, month, day, hour, minute, second, usecond;
+  gchar signal;
+  gint offset = 0;
+  gint ret;
+
+  if (!s || strcmp (s, "null") == 0) {
+    return FALSE;
+  }
+
+  ret = sscanf (s, "%04d-%02d-%02dT%02d:%02d:%02d.%06d%c%04d",
+      &year, &month, &day, &hour, &minute, &second, &usecond, &signal, &offset);
+  if (ret >= 9) {
+    offset = (offset / 100) * 60 + (offset % 100);
+    if (signal == '-')
+      offset = -offset;
+  } else
+    return FALSE;
+
+  g_value_take_boxed (dest, gst_date_time_new (year, month, day, hour,
+          minute, second, usecond, offset));
+  return TRUE;
+}
+
 static void
 gst_value_transform_date_string (const GValue * src_value, GValue * dest_value)
 {
@@ -4223,6 +4300,21 @@ gst_date_get_type (void)
   return gst_date_type;
 }
 
+GType
+gst_date_time_get_type (void)
+{
+  static GType gst_date_time_type = 0;
+
+  if (G_UNLIKELY (gst_date_time_type == 0)) {
+    gst_date_time_type = g_boxed_type_register_static ("GstDateTime",
+        (GBoxedCopyFunc) gst_date_time_ref,
+        (GBoxedFreeFunc) gst_date_time_unref);
+  }
+
+  return gst_date_time_type;
+}
+
+
 void
 _gst_value_initialize (void)
 {
@@ -4372,6 +4464,17 @@ _gst_value_initialize (void)
     };
 
     gst_value.type = gst_date_get_type ();
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      gst_value_compare_date_time,
+      gst_value_serialize_date_time,
+      gst_value_deserialize_date_time,
+    };
+
+    gst_value.type = gst_date_time_get_type ();
     gst_value_register (&gst_value);
   }
 
