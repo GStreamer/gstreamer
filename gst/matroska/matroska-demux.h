@@ -46,7 +46,8 @@ typedef enum {
   GST_MATROSKA_DEMUX_STATE_SEGMENT,
   GST_MATROSKA_DEMUX_STATE_HEADER,
   GST_MATROSKA_DEMUX_STATE_DATA,
-  GST_MATROSKA_DEMUX_STATE_SEEK
+  GST_MATROSKA_DEMUX_STATE_SEEK,
+  GST_MATROSKA_DEMUX_STATE_SCANNING
 } GstMatroskaDemuxState;
 
 typedef struct _GstMatroskaDemux {
@@ -112,6 +113,7 @@ typedef struct _GstMatroskaDemux {
   /* some state saving */
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
+  guint64                  first_cluster_offset;
 
   /* push based mode usual suspects */
   GstAdapter              *adapter;
