@@ -81,6 +81,15 @@ void connect_to_filesource (GESTimelineObject * object, App * app);
 
 void disconnect_from_filesource (GESTimelineObject * object, App * app);
 
+/* UI state functions *******************************************************/
+
+static void
+update_properties_sensitivity (App * app)
+{
+  gtk_widget_set_sensitive (app->properties,
+      (app->n_selected == 1) && (app->state != GST_STATE_PLAYING));
+}
+
 /* UI callbacks  ************************************************************/
 
 void
@@ -126,7 +135,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   app_update_selection (app);
 
   /* doesn't make sense to set properties on more than one item */
-  gtk_widget_set_sensitive (app->properties, app->n_selected == 1);
+  update_properties_sensitivity (app);
 
   /* delete will work for multiple items */
   gtk_action_set_sensitive (app->delete, app->n_selected > 0);
@@ -439,6 +448,8 @@ pipeline_state_changed_cb (App * app)
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PAUSE);
   else
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PLAY);
+
+  update_properties_sensitivity (app);
 }
 
 static void
