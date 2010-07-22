@@ -101,7 +101,6 @@
                         <property name="visible">True</property>
                         <property name="use_action_appearance">True</property>
                         <property name="related_action">delete</property>
-                        <property name="accel_path">Delete</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -130,6 +129,18 @@
                         <property name="use_action_appearance">True</property>
                         <property name="related_action">add_file</property>
                         <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem" id="menuitem1">
+                        <property name="visible">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem2">
+                        <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">play</property>
                       </object>
                     </child>
                   </object>
@@ -163,7 +174,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkToolbar" id="toolbar1">
+          <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <child>
               <object class="GtkToolButton" id="add_button">
@@ -185,7 +196,6 @@
                 <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">Delete</property>
                 <property name="use_underline">True</property>
-                <signal name="clicked" handler="delete_item_activate_cb"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -195,6 +205,19 @@
             <child>
               <object class="GtkSeparatorToolItem" id="toolbutton3">
                 <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="play_button">
+                <property name="visible">True</property>
+                <property name="related_action">play</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -389,5 +412,10 @@
     <property name="stock_id">gtk-add</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="add_file_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="play">
+    <property name="label">Play</property>
+    <property name="stock_id">gtk-media-play</property>
+    <property name="always_show_image">True</property>
   </object>
 </interface>
