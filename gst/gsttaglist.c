@@ -1702,6 +1702,71 @@ gst_tag_list_get_date_index (const GstTagList * list,
 }
 
 /**
+ * gst_tag_list_get_date_time:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @value: address of a #GstDateTime pointer variable to store the result into
+ *
+ * Copies the first datetime for the given tag in the taglist into the variable
+ * pointed to by @value. Unref the date with gst_date_time_unref() when
+ * it is no longer needed.
+ *
+ * Returns: TRUE, if a datetime was copied, FALSE if the tag didn't exist in the
+ *              given list or if it was #NULL.
+ * Since: 0.10.31
+ */
+gboolean
+gst_tag_list_get_date_time (const GstTagList * list, const gchar * tag,
+    GstDateTime ** value)
+{
+  GValue v = { 0, };
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if (!gst_tag_list_copy_value (&v, list, tag))
+    return FALSE;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_DATE_TIME (&v), FALSE);
+
+  *value = (GstDateTime *) g_value_dup_boxed (&v);
+  g_value_unset (&v);
+  return (*value != NULL);
+}
+
+/**
+ * gst_tag_list_get_date_time_index:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the datetime that is at the given index for the given tag in the given
+ * list and copies it into the variable pointed to by @value. Unref the datetime
+ * with gst_date_time_unref() when it is no longer needed.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *              given list or if it was #NULL.
+ * Since: 0.10.31
+ */
+gboolean
+gst_tag_list_get_date_time_index (const GstTagList * list,
+    const gchar * tag, guint index, GstDateTime ** value)
+{
+  const GValue *v;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
+    return FALSE;
+  *value = (GstDateTime *) g_value_dup_boxed (v);
+  return (*value != NULL);
+}
+
+/**
  * gst_tag_list_get_buffer:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out

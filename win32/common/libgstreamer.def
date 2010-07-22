@@ -980,6 +980,8 @@ EXPORTS
 	gst_tag_list_get_char_index
 	gst_tag_list_get_date
 	gst_tag_list_get_date_index
+	gst_tag_list_get_date_time
+	gst_tag_list_get_date_time_index
 	gst_tag_list_get_double
 	gst_tag_list_get_double_index
 	gst_tag_list_get_float

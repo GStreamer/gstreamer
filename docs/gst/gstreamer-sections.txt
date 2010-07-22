@@ -2268,6 +2268,8 @@ gst_tag_list_get_pointer
 gst_tag_list_get_pointer_index
 gst_tag_list_get_date
 gst_tag_list_get_date_index
+gst_tag_list_get_date_time
+gst_tag_list_get_date_time_index
 gst_tag_list_get_buffer
 gst_tag_list_get_buffer_index
 <SUBSECTION Standard>
