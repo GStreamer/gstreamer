@@ -90,6 +90,14 @@ update_properties_sensitivity (App * app)
       (app->n_selected == 1) && (app->state != GST_STATE_PLAYING));
 }
 
+static void
+update_delete_sensitivity (App * app)
+{
+  /* delete will work for multiple items */
+  gtk_action_set_sensitive (app->delete,
+      (app->n_selected > 0) && (app->state != GST_STATE_PLAYING));
+}
+
 /* UI callbacks  ************************************************************/
 
 void
@@ -136,9 +144,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
 
   /* doesn't make sense to set properties on more than one item */
   update_properties_sensitivity (app);
-
-  /* delete will work for multiple items */
-  gtk_action_set_sensitive (app->delete, app->n_selected > 0);
+  update_delete_sensitivity (app);
 }
 
 gboolean
@@ -450,6 +456,7 @@ pipeline_state_changed_cb (App * app)
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PLAY);
 
   update_properties_sensitivity (app);
+  update_delete_sensitivity (app);
 }
 
 static void
