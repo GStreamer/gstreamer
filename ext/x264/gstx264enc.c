@@ -1015,12 +1015,15 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_timebase_den = 1000000000;
 #endif
 
-  /* apply user set properties */
-  if (encoder->option_string_prop && encoder->option_string_prop->len
-      && gst_x264_enc_parse_options (encoder,
-          encoder->option_string_prop->str) == FALSE) {
-    GST_DEBUG_OBJECT (encoder, "Your option-string contains errors.");
-    goto unlock_and_return;
+  /* apply option-string property */
+  if (encoder->option_string_prop && encoder->option_string_prop->len) {
+    GST_DEBUG_OBJECT (encoder, "Applying option-string: %s",
+        encoder->option_string_prop->str);
+    if (gst_x264_enc_parse_options (encoder,
+            encoder->option_string_prop->str) == FALSE) {
+      GST_DEBUG_OBJECT (encoder, "Your option-string contains errors.");
+      goto unlock_and_return;
+    }
   }
   /* apply user-set options */
   if (encoder->option_string && encoder->option_string->len) {
