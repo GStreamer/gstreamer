@@ -103,6 +103,8 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_YPAD	25
 #define DEFAULT_PROP_DELTAX	0
 #define DEFAULT_PROP_DELTAY	0
+#define DEFAULT_PROP_XPOS       0.5
+#define DEFAULT_PROP_YPOS       0.5
 #define DEFAULT_PROP_WRAP_MODE  GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR
 #define DEFAULT_PROP_FONT_DESC	""
 #define DEFAULT_PROP_SILENT	FALSE
@@ -110,6 +112,7 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define DEFAULT_PROP_WAIT_TEXT	TRUE
 #define DEFAULT_PROP_AUTO_ADJUST_SIZE TRUE
 #define DEFAULT_PROP_VERTICAL_RENDER  FALSE
+#define DEFAULT_PROP_COLOR      0xffffffff
 
 /* make a property of me */
 #define DEFAULT_SHADING_VALUE    -80
@@ -165,6 +168,8 @@ enum
   PROP_YPAD,
   PROP_DELTAX,
   PROP_DELTAY,
+  PROP_XPOS,
+  PROP_YPOS,
   PROP_WRAP_MODE,
   PROP_FONT_DESC,
   PROP_SILENT,
@@ -172,6 +177,7 @@ enum
   PROP_WAIT_TEXT,
   PROP_AUTO_ADJUST_SIZE,
   PROP_VERTICAL_RENDER,
+  PROP_COLOR,
   PROP_LAST
 };
 
@@ -209,6 +215,7 @@ gst_text_overlay_valign_get_type (void)
     {GST_TEXT_OVERLAY_VALIGN_BASELINE, "baseline", "baseline"},
     {GST_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
     {GST_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
+    {GST_TEXT_OVERLAY_VALIGN_POS, "position", "position"},
     {0, NULL, NULL},
   };
 
@@ -228,6 +235,7 @@ gst_text_overlay_halign_get_type (void)
     {GST_TEXT_OVERLAY_HALIGN_LEFT, "left", "left"},
     {GST_TEXT_OVERLAY_HALIGN_CENTER, "center", "center"},
     {GST_TEXT_OVERLAY_HALIGN_RIGHT, "right", "right"},
+    {GST_TEXT_OVERLAY_HALIGN_POS, "position", "position"},
     {0, NULL, NULL},
   };
 
@@ -412,6 +420,28 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
       g_param_spec_int ("deltay", "Y position modifier",
           "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
           DEFAULT_PROP_DELTAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:xpos
+   *
+   * Horizontal position of the rendered text when using positioned alignment.
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPOS,
+      g_param_spec_double ("xpos", "horizontal position",
+          "Horizontal position when using position alignment", 0, 1.0,
+          DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:ypos
+   *
+   * Vertical position of the rendered text when using positioned alignment.
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPOS,
+      g_param_spec_double ("ypos", "vertical position",
+          "Vertical position when using position alignment", 0, 1.0,
+          DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
       g_param_spec_enum ("wrap-mode", "wrap mode",
           "Whether to wrap the text and if so how.",
@@ -423,6 +453,18 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC,
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTextOverlay:color
+   *
+   * Color of the rendered text.
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COLOR,
+      g_param_spec_uint ("color", "Color",
+          "Color to use for text (big-endian ARGB).", 0, G_MAXUINT32,
+          DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstTextOverlay:line-alignment
    *
@@ -564,12 +606,15 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
       (overlay)->pango_context);
   gst_text_overlay_adjust_values_with_fontdesc (overlay, desc);
 
+  overlay->color = DEFAULT_PROP_COLOR;
   overlay->halign = DEFAULT_PROP_HALIGNMENT;
   overlay->valign = DEFAULT_PROP_VALIGNMENT;
   overlay->xpad = DEFAULT_PROP_XPAD;
   overlay->ypad = DEFAULT_PROP_YPAD;
   overlay->deltax = DEFAULT_PROP_DELTAX;
   overlay->deltay = DEFAULT_PROP_DELTAY;
+  overlay->xpos = DEFAULT_PROP_XPOS;
+  overlay->ypos = DEFAULT_PROP_YPOS;
 
   overlay->wrap_mode = DEFAULT_PROP_WRAP_MODE;
 
@@ -726,6 +771,12 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_DELTAY:
       overlay->deltay = g_value_get_int (value);
       break;
+    case PROP_XPOS:
+      overlay->xpos = g_value_get_double (value);
+      break;
+    case PROP_YPOS:
+      overlay->ypos = g_value_get_double (value);
+      break;
     case PROP_HALIGN:{
       const gchar *s = g_value_get_string (value);
 
@@ -782,6 +833,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_COLOR:
+      overlay->color = g_value_get_uint (value);
+      break;
     case PROP_SILENT:
       overlay->silent = g_value_get_boolean (value);
       break;
@@ -838,6 +892,12 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
     case PROP_DELTAY:
       g_value_set_int (value, overlay->deltay);
       break;
+    case PROP_XPOS:
+      g_value_set_double (value, overlay->xpos);
+      break;
+    case PROP_YPOS:
+      g_value_set_double (value, overlay->ypos);
+      break;
     case PROP_VALIGNMENT:
       g_value_set_enum (value, overlay->valign);
       break;
@@ -861,6 +921,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VERTICAL_RENDER:
       g_value_set_boolean (value, overlay->use_vertical_render);
+      break;
+    case PROP_COLOR:
+      g_value_set_uint (value, overlay->color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1161,6 +1224,7 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   cairo_matrix_t cairo_matrix;
   int width, height;
   double scalef = 1.0;
+  double a, r, g, b;
 
   if (overlay->auto_adjust_size) {
     /* 640 pixel is default */
@@ -1271,9 +1335,14 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
   cairo_stroke (cr);
   cairo_restore (cr);
 
+  a = (overlay->color >> 24) & 0xff;
+  r = (overlay->color >> 16) & 0xff;
+  g = (overlay->color >> 8) & 0xff;
+  b = (overlay->color >> 0) & 0xff;
+
   /* draw text */
   cairo_save (cr);
-  cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+  cairo_set_source_rgba (cr, r / 255.0, g / 255.0, b / 255.0, a / 255.0);
   pango_cairo_show_layout (cr, overlay->layout);
   cairo_restore (cr);
 
@@ -1584,6 +1653,12 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
     case GST_TEXT_OVERLAY_HALIGN_RIGHT:
       xpos = overlay->width - width - overlay->xpad;
       break;
+    case GST_TEXT_OVERLAY_HALIGN_POS:
+      xpos = (gint) (overlay->width * overlay->xpos) - width / 2;
+      xpos = CLAMP (xpos, 0, overlay->width - width);
+      if (xpos < 0)
+        xpos = 0;
+      break;
     default:
       xpos = 0;
   }
@@ -1603,6 +1678,10 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
       break;
     case GST_TEXT_OVERLAY_VALIGN_TOP:
       ypos = overlay->ypad;
+      break;
+    case GST_TEXT_OVERLAY_VALIGN_POS:
+      ypos = (gint) (overlay->height * overlay->ypos) - height / 2;
+      ypos = CLAMP (ypos, 0, overlay->height - height);
       break;
     default:
       ypos = overlay->ypad;

@@ -33,7 +33,8 @@ typedef struct _GstTextOverlayClass GstTextOverlayClass;
 typedef enum {
     GST_TEXT_OVERLAY_VALIGN_BASELINE,
     GST_TEXT_OVERLAY_VALIGN_BOTTOM,
-    GST_TEXT_OVERLAY_VALIGN_TOP
+    GST_TEXT_OVERLAY_VALIGN_TOP,
+    GST_TEXT_OVERLAY_VALIGN_POS
 } GstTextOverlayVAlign;
 
 /**
@@ -47,7 +48,9 @@ typedef enum {
 typedef enum {
     GST_TEXT_OVERLAY_HALIGN_LEFT,
     GST_TEXT_OVERLAY_HALIGN_CENTER,
-    GST_TEXT_OVERLAY_HALIGN_RIGHT
+    GST_TEXT_OVERLAY_HALIGN_RIGHT,
+    GST_TEXT_OVERLAY_HALIGN_TOP,
+    GST_TEXT_OVERLAY_HALIGN_POS
 } GstTextOverlayHAlign;
 
 /**
@@ -121,10 +124,13 @@ struct _GstTextOverlay {
     gint                     ypad;
     gint                     deltax;
     gint                     deltay;
+    gdouble                  xpos;
+    gdouble                  ypos;
     gchar                   *default_text;
     gboolean                 want_shading;
     gboolean                 silent;
     gboolean                 wait_text;
+    guint                    color;
 
     PangoLayout             *layout;
     gdouble                  shadow_offset;
