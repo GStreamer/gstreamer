@@ -137,11 +137,15 @@ add_file_activate_cb (GtkAction * item, App * app)
       GTK_STOCK_CANCEL,
       GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
 
+  g_object_set (G_OBJECT (dlg), "select-multiple", TRUE, NULL);
+
   if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
-    gchar *filename;
-    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dlg));
-    app_add_file (app, filename);
-    g_free (filename);
+    GSList *uris;
+    GSList *cur;
+    uris = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (dlg));
+    for (cur = uris; cur; cur = cur->next)
+      app_add_file (app, cur->data);
+    g_slist_free (uris);
   }
   gtk_widget_destroy ((GtkWidget *) dlg);
 }
@@ -279,21 +283,13 @@ app_delete_objects (App * app, GList * objects)
 }
 
 void
-app_add_file (App * app, gchar * filename)
+app_add_file (App * app, gchar * uri)
 {
-  gchar *uri;
   GESTimelineObject *obj;
 
-  GST_DEBUG ("adding file %s", filename);
-
-  if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
-    /* TODO: error notification in UI */
-    return;
-  }
-  uri = g_strdup_printf ("file://%s", filename);
+  GST_DEBUG ("adding file %s", uri);
 
   obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
-  g_free (uri);
 
   ges_timeline_layer_add_object (app->layer, obj);
 }
