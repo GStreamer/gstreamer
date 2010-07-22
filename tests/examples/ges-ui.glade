@@ -98,11 +98,11 @@
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
-                        <property name="label">gtk-delete</property>
                         <property name="visible">True</property>
-                        <property name="use_underline">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">delete</property>
+                        <property name="accel_path">Delete</property>
                         <property name="use_stock">True</property>
-                        <signal name="activate" handler="delete_item_activate_cb"/>
                       </object>
                     </child>
                   </object>
@@ -126,11 +126,10 @@
                     <property name="visible">True</property>
                     <child>
                       <object class="GtkImageMenuItem" id="add_file_item">
-                        <property name="label" translatable="yes">Add file...</property>
                         <property name="visible">True</property>
-                        <property name="image">image1</property>
-                        <property name="use_stock">False</property>
-                        <signal name="activate" handler="add_file_item_activate_cb"/>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_file</property>
+                        <property name="use_stock">True</property>
                       </object>
                     </child>
                   </object>
@@ -161,6 +160,51 @@
           <packing>
             <property name="expand">False</property>
             <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToolbar" id="toolbar1">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkToolButton" id="add_button">
+                <property name="visible">True</property>
+                <property name="related_action">add_file</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="delete_button">
+                <property name="visible">True</property>
+                <property name="related_action">delete</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">Delete</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="delete_item_activate_cb"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton3">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -321,23 +365,29 @@
             </child>
           </object>
           <packing>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
     </child>
   </object>
   <object class="GtkTreeSelection" id="selection"/>
-  <object class="GtkImage" id="image1">
-    <property name="visible">True</property>
-    <property name="xpad">9</property>
-    <property name="stock">gtk-add</property>
-    <property name="icon-size">1</property>
-  </object>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label_duration"/>
       <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
     </widgets>
+  </object>
+  <object class="GtkAction" id="delete">
+    <property name="label">Delete</property>
+    <property name="stock_id">gtk-delete</property>
+    <property name="always_show_image">True</property>
+    <signal name="activate" handler="delete_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="add_file">
+    <property name="label">Add File</property>
+    <property name="stock_id">gtk-add</property>
+    <property name="always_show_image">True</property>
+    <signal name="activate" handler="add_file_activate_cb"/>
   </object>
 </interface>
