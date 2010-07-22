@@ -84,24 +84,121 @@ gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error)
   g_error_free (error);
 }
 
-GstFlowReturn
+static GstFlowReturn
 gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder,
-    GstVdpVideoBuffer ** video_buf, GError ** error)
+    GstVdpVideoBuffer ** video_buf)
 {
   GstVdpVideoSrcPad *vdp_pad;
 
+  GstFlowReturn ret;
+  GError *err = NULL;
+
   vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
-  return gst_vdp_video_src_pad_alloc_buffer (vdp_pad, video_buf, error);
+
+  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, video_buf, &err);
+  if (ret == GST_FLOW_ERROR)
+    gst_vdp_decoder_post_error (vdp_decoder, err);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder, GstVdpDevice ** device)
+{
+  GstVdpVideoSrcPad *vdp_pad;
+
+  GstFlowReturn ret;
+  GError *err = NULL;
+
+  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
+
+  ret = gst_vdp_video_src_pad_get_device (vdp_pad, device, &err);
+  if (ret == GST_FLOW_ERROR)
+    gst_vdp_decoder_post_error (vdp_decoder, err);
+
+  return ret;
 }
 
 GstFlowReturn
-gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder, GstVdpDevice ** device,
-    GError ** error)
+gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo * info,
+    guint n_bufs, VdpBitstreamBuffer * bufs, GstVdpVideoBuffer ** video_buf)
 {
-  GstVdpVideoSrcPad *vdp_pad;
+  GstFlowReturn ret;
 
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
-  return gst_vdp_video_src_pad_get_device (vdp_pad, device, error);
+  GstVdpDevice *device;
+  VdpVideoSurface surface;
+  VdpStatus status;
+
+  ret = gst_vdp_decoder_alloc_buffer (vdp_decoder, video_buf);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  device = (*video_buf)->device;
+  surface = (*video_buf)->surface;
+
+  status = device->vdp_decoder_render (vdp_decoder->decoder, surface,
+      info, n_bufs, bufs);
+  if (status != VDP_STATUS_OK)
+    goto decode_error;
+
+  return GST_FLOW_OK;
+
+decode_error:
+  GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, READ,
+      ("Could not decode"),
+      ("Error returned from vdpau was: %s",
+          device->vdp_get_error_string (status)));
+
+  gst_buffer_unref (GST_BUFFER_CAST (video_buf));
+
+  return GST_FLOW_ERROR;
+}
+
+GstFlowReturn
+gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
+    VdpDecoderProfile profile, guint32 max_references)
+{
+  GstFlowReturn ret;
+  GstVdpDevice *device;
+
+  VdpStatus status;
+  GstVideoState state;
+
+  ret = gst_vdp_decoder_get_device (vdp_decoder, &device);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (vdp_decoder->decoder != VDP_INVALID_HANDLE) {
+    status = device->vdp_decoder_destroy (vdp_decoder->decoder);
+    if (status != VDP_STATUS_OK)
+      goto destroy_decoder_error;
+  }
+
+  state =
+      gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (vdp_decoder));
+
+  status = device->vdp_decoder_create (device->device, profile,
+      state.width, state.height, max_references, &vdp_decoder->decoder);
+  if (status != VDP_STATUS_OK)
+    goto create_decoder_error;
+
+  return GST_FLOW_OK;
+
+destroy_decoder_error:
+  GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, READ,
+      ("Could not destroy vdpau decoder"),
+      ("Error returned from vdpau was: %s",
+          device->vdp_get_error_string (status)));
+
+  return GST_FLOW_ERROR;
+
+create_decoder_error:
+  GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, READ,
+      ("Could not create vdpau decoder"),
+      ("Error returned from vdpau was: %s",
+          device->vdp_get_error_string (status)));
+
+  return GST_FLOW_ERROR;
 }
 
 static void
@@ -158,6 +255,7 @@ gst_vdp_decoder_base_init (gpointer g_class)
 static void
 gst_vdp_decoder_init (GstVdpDecoder * decoder, GstVdpDecoderClass * klass)
 {
+  decoder->decoder = VDP_INVALID_HANDLE;
 }
 
 static void
