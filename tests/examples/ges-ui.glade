@@ -417,5 +417,6 @@
     <property name="label">Play</property>
     <property name="stock_id">gtk-media-play</property>
     <property name="always_show_image">True</property>
+    <signal name="activate" handler="play_activate_cb"/>
   </object>
 </interface>

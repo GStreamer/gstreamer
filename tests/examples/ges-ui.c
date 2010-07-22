@@ -36,6 +36,7 @@ typedef struct App
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkMenuItem *delete_item;
+  GstState state;
 } App;
 
 App *app_new (void);
@@ -56,9 +57,13 @@ void quit_item_activate_cb (GtkMenuItem * item, App * app);
 
 void delete_activate_cb (GtkAction * item, App * app);
 
+void play_activate_cb (GtkAction * item, App * app);
+
 void add_file_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
+
+void app_toggle_playback (App * app);
 
 gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
     unused, gdouble value, App * app);
@@ -106,6 +111,12 @@ add_file_activate_cb (GtkAction * item, App * app)
 
   /* TODO: solicit this information from the user */
   app_add_file (app, (gchar *) "/home/brandon/media/small-mvi_0008.avi");
+}
+
+void
+play_activate_cb (GtkAction * item, App * app)
+{
+  app_toggle_playback (app);
 }
 
 void
@@ -167,6 +178,16 @@ duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
 
 static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
     GtkTreeIter * iter, gpointer user);
+
+void
+app_toggle_playback (App * app)
+{
+  if (app->state != GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PLAYING);
+  } else {
+    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
+  }
+}
 
 void
 app_update_selection (App * app)
