@@ -1352,6 +1352,31 @@ gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
 }
 
 static void
+gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
+{
+  GstStructure *structure;
+  GValue array = { 0 };
+  GValue value = { 0 };
+  GstCaps *caps = GST_PAD_CAPS (mux->srcpad);
+
+  caps = gst_caps_copy (GST_PAD_CAPS (mux->srcpad));
+  structure = gst_caps_get_structure (caps, 0);
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  g_value_init (&value, GST_TYPE_BUFFER);
+  gst_value_take_buffer (&value, gst_buffer_ref (buf));
+  gst_value_array_append_value (&array, &value);
+  g_value_unset (&value);
+
+  gst_structure_set_value (structure, "streamheader", &array);
+  g_value_unset (&array);
+  gst_pad_set_caps (mux->srcpad, caps);
+  gst_caps_unref (caps);
+}
+
+static void
 gst_qt_mux_configure_moov (GstQTMux * qtmux, guint32 * _timescale)
 {
   gboolean large_file, fragmented;
@@ -1396,6 +1421,7 @@ gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset, gboolean mind_fast)
 
   buf = _gst_buffer_new_take_data (data, offset);
   GST_DEBUG_OBJECT (qtmux, "Pushing moov atoms");
+  gst_qt_mux_set_header_on_caps (qtmux, buf);
   ret = gst_qt_mux_send_buffer (qtmux, buf, _offset, mind_fast);
 
   return ret;
