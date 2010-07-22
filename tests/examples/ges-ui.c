@@ -35,6 +35,7 @@ typedef struct App
   int n_selected;
   GtkHScale *duration;
   GtkHScale *in_point;
+  GtkAction *add_file;
   GtkAction *delete;
   GtkAction *play;
   GstState state;
@@ -457,6 +458,8 @@ pipeline_state_changed_cb (App * app)
 
   update_properties_sensitivity (app);
   update_delete_sensitivity (app);
+
+  gtk_action_set_sensitive (app->add_file, app->state != GST_STATE_PLAYING);
 }
 
 static void
@@ -542,6 +545,7 @@ create_ui (App * app)
   GET_WIDGET (app->in_point, "in_point_scale", GTK_HSCALE);
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
+  GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
 
