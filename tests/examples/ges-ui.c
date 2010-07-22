@@ -36,6 +36,7 @@ typedef struct App
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkAction *delete;
+  GtkAction *play;
   GstState state;
 } App;
 
@@ -431,6 +432,40 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   gtk_list_store_remove (app->model, &iter);
 }
 
+static void
+pipeline_state_changed_cb (App * app)
+{
+  if (app->state == GST_STATE_PLAYING)
+    gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PAUSE);
+  else
+    gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PLAY);
+}
+
+static void
+bus_message_cb (GstBus * bus, GstMessage * message, App * app)
+{
+  const GstStructure *s;
+  s = gst_message_get_structure (message);
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      g_print ("ERROR\n");
+      break;
+    case GST_MESSAGE_EOS:
+      break;
+    case GST_MESSAGE_STATE_CHANGED:
+      if (s && GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (app->pipeline)) {
+        GstState old, new, pending;
+        gst_message_parse_state_changed (message, &old, &new, &pending);
+        app->state = new;
+        pipeline_state_changed_cb (app);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
 /* UI Configuration *********************************************************/
 
 #define GET_WIDGET(dest,name,type) {\
@@ -472,6 +507,7 @@ create_ui (App * app)
   GtkTreeView *timeline;
   GtkTreeViewColumn *duration_col;
   GtkCellRenderer *duration_renderer;
+  GstBus *bus;
 
   /* construct widget tree */
 
@@ -489,6 +525,7 @@ create_ui (App * app)
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
+  GET_WIDGET (app->play, "play", GTK_ACTION);
 
   /* we care when the tree selection changes */
 
@@ -516,6 +553,10 @@ create_ui (App * app)
       G_CALLBACK (layer_object_added_cb), app);
   g_signal_connect (app->layer, "object-removed",
       G_CALLBACK (layer_object_removed_cb), app);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), app);
 
   /* success */
 
