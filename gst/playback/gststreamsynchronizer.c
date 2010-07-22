@@ -350,6 +350,12 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
         }
       }
 
+      if (self->shutdown) {
+        GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+        gst_event_unref (event);
+        goto done;
+      }
+
       if (stream && format == GST_FORMAT_TIME) {
         if (stream->new_stream) {
           gint64 last_stop_running_time = 0;
@@ -451,6 +457,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
     gst_object_unref (opad);
   }
 
+done:
   gst_object_unref (self);
 
   return ret;
@@ -687,14 +694,23 @@ gst_stream_synchronizer_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       GST_DEBUG_OBJECT (self, "State change NULL->READY");
+      self->shutdown = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "State change READY->PAUSED");
       self->group_start_time = 0;
+      self->shutdown = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (self, "State change PAUSED->PLAYING");
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (self, "State change READY->NULL");
+
+      GST_STREAM_SYNCHRONIZER_LOCK (self);
+      g_cond_broadcast (self->stream_finish_cond);
+      self->shutdown = TRUE;
+      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
     default:
       break;
   }
@@ -734,7 +750,6 @@ gst_stream_synchronizer_change_state (GstElement * element,
       GST_DEBUG_OBJECT (self, "State change READY->NULL");
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
-      g_cond_broadcast (self->stream_finish_cond);
       while (self->streams)
         gst_stream_synchronizer_release_stream (self, self->streams->data);
       self->current_stream_number = 0;

@@ -47,6 +47,7 @@ struct _GstStreamSynchronizer
   /* < private > */
   GMutex *lock;
   GCond *stream_finish_cond;
+  gboolean shutdown;
 
   GList *streams;
   guint current_stream_number;
