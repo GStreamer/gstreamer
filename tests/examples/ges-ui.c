@@ -33,6 +33,7 @@ typedef struct App
   GtkWidget *properties;
   GList *selected_objects;
   int n_selected;
+  int n_objects;
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkAction *add_file;
@@ -414,6 +415,12 @@ desc_for_object (GESTimelineObject * object)
 }
 
 static void
+object_count_changed (App * app)
+{
+  gtk_action_set_sensitive (app->play, app->n_objects > 0);
+}
+
+static void
 layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
 {
@@ -430,6 +437,8 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   g_signal_connect (G_OBJECT (object), "notify::duration",
       G_CALLBACK (timeline_object_notify_duration_cb), app);
   timeline_object_notify_duration_cb (object, NULL, app);
+  app->n_objects++;
+  object_count_changed (app);
 }
 
 static void
@@ -444,6 +453,8 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     g_print ("object deleted but we don't own it");
     return;
   }
+  app->n_objects--;
+  object_count_changed (app);
 
   gtk_list_store_remove (app->model, &iter);
 }
