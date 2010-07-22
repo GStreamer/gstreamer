@@ -1269,6 +1269,8 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
         /* prepare generic newsegment event, for some reason our metadata
          * callback where we usually set this up is not being called in
          * push mode */
+        if (dec->start_segment)
+          gst_event_unref (dec->start_segment);
         dec->start_segment = gst_event_new_new_segment (FALSE, 1.0,
             GST_FORMAT_TIME, 0, -1, 0);
 
