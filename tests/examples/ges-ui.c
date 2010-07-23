@@ -100,6 +100,14 @@ void connect_to_filesource (GESTimelineObject * object, App * app);
 
 void disconnect_from_filesource (GESTimelineObject * object, App * app);
 
+void connect_to_object (GESTimelineObject * object, App * app);
+
+void disconnect_from_object (GESTimelineObject * object, App * app);
+
+void connect_to_title_source (GESTimelineObject * object, App * app);
+
+void disconnect_from_title_source (GESTimelineObject * object, App * app);
+
 /* UI state functions *******************************************************/
 
 static void
@@ -626,6 +634,41 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
 
   g_signal_handlers_disconnect_by_func (G_OBJECT (object),
       filesource_notify_max_duration_cb, app);
+}
+
+void
+connect_to_title_source (GESTimelineObject * object, App * app)
+{
+  GESTimelineTitleSource *obj;
+  obj = GES_TIMELINE_TITLE_SOURCE (object);
+  gtk_combo_box_set_active (app->halign, obj->halign);
+  gtk_combo_box_set_active (app->valign, obj->valign);
+  gtk_entry_set_text (app->text, obj->text);
+}
+
+void
+disconnect_from_title_source (GESTimelineObject * object, App * app)
+{
+}
+
+void
+connect_to_object (GESTimelineObject * object, App * app)
+{
+  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+    connect_to_filesource (object, app);
+  } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+    connect_to_title_source (object, app);
+  }
+}
+
+void
+disconnect_from_object (GESTimelineObject * object, App * app)
+{
+  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+    disconnect_from_filesource (object, app);
+  } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+    disconnect_from_title_source (object, app);
+  }
 }
 
 gboolean
