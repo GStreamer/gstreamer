@@ -369,7 +369,8 @@ app_add_file (App * app, gchar * uri)
 
   obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
 
-  ges_timeline_layer_add_object (app->layer, obj);
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      obj, -1);
 }
 
 void
