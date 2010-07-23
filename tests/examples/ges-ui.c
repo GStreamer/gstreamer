@@ -40,6 +40,7 @@ typedef struct App
   GtkAction *delete;
   GtkAction *play;
   GstState state;
+  GType selected_type;
 } App;
 
 App *app_new (void);
@@ -238,10 +239,11 @@ void
 app_update_selection (App * app)
 {
   GList *cur;
+  GType type;
 
   /* clear old selection */
   for (cur = app->selected_objects; cur; cur = cur->next) {
-    disconnect_from_filesource (cur->data, app);
+    disconnect_from_object (cur->data, app);
     g_object_unref (cur->data);
     cur->data = NULL;
   }
@@ -254,9 +256,17 @@ app_update_selection (App * app)
       selection_foreach, &app->selected_objects);
 
   for (cur = app->selected_objects; cur; cur = cur->next) {
-    connect_to_filesource (cur->data, app);
+    connect_to_object (cur->data, app);
     app->n_selected++;
   }
+
+  type = G_TYPE_NONE;
+  if (app->selected_objects) {
+    /* TODO: when we allow multiple selections, only set this if all values
+     * are the same */
+    type = G_TYPE_FROM_INSTANCE (app->selected_objects->data);
+  }
+  app->selected_type = type;
 }
 
 static void
@@ -323,6 +333,8 @@ app_new (void)
 {
   App *ret;
   ret = g_new0 (App, 1);
+
+  ret->selected_type = G_TYPE_NONE;
 
   if (!ret)
     return NULL;
