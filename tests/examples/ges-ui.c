@@ -31,6 +31,8 @@ typedef struct App
   GtkListStore *model;
   GtkTreeSelection *selection;
   GtkWidget *properties;
+  GtkWidget *filesource_properties;
+  GtkWidget *text_properties;
   GList *selected_objects;
   int n_selected;
   int n_objects;
@@ -39,6 +41,9 @@ typedef struct App
   GtkAction *add_file;
   GtkAction *delete;
   GtkAction *play;
+  GtkComboBox *halign;
+  GtkComboBox *valign;
+  GtkEntry *text;
   GstState state;
   GType selected_type;
 } App;
@@ -642,14 +647,24 @@ create_ui (App * app)
 
   GET_WIDGET (timeline, "timeline_treeview", GTK_TREE_VIEW);
   GET_WIDGET (app->properties, "properties", GTK_WIDGET);
+  GET_WIDGET (app->filesource_properties, "filesource_properties", GTK_WIDGET);
+  GET_WIDGET (app->text_properties, "text_properties", GTK_WIDGET);
   GET_WIDGET (app->main_window, "window", GTK_WIDGET);
   GET_WIDGET (app->duration, "duration_scale", GTK_HSCALE);
   GET_WIDGET (app->in_point, "in_point_scale", GTK_HSCALE);
+  GET_WIDGET (app->halign, "halign", GTK_COMBO_BOX);
+  GET_WIDGET (app->valign, "valign", GTK_COMBO_BOX);
+  GET_WIDGET (app->text, "text", GTK_ENTRY);
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
   GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
+
+  /* get text notifications */
+
+  g_signal_connect (app->text, "notify::text",
+      G_CALLBACK (text_notify_text_changed_cb), app);
 
   /* we care when the tree selection changes */
 
