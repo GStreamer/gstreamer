@@ -506,22 +506,24 @@ filesource_notify_in_point_cb (GESTimelineObject * object,
       GES_TIMELINE_OBJECT_INPOINT (object));
 }
 
-static gchar *
-desc_for_object (GESTimelineObject * object)
-{
-  gchar *uri;
-
-  /* there is only one type of object at the moment */
-
-  /* return the uri */
-  g_object_get (object, "uri", &uri, NULL);
-  return uri;
-}
-
 static void
 object_count_changed (App * app)
 {
   gtk_action_set_sensitive (app->play, app->n_objects > 0);
+}
+
+static void
+title_source_text_changed_cb (GESTimelineObject * object,
+    GParamSpec * arg G_GNUC_UNUSED, App * app)
+{
+  GtkTreeIter iter;
+  gchar *text;
+
+  g_object_get (object, "text", &text, NULL);
+  if (text) {
+    find_row_for_object (app->model, &iter, object);
+    gtk_list_store_set (app->model, &iter, 0, text, -1);
+  }
 }
 
 static void
@@ -533,14 +535,24 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
   GST_INFO ("layer object added cb %p %p %p", layer, object, app);
 
-  description = desc_for_object (object);
-
   gtk_list_store_append (app->model, &iter);
-  gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
+
+  if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
+    g_object_get (G_OBJECT (object), "uri", &description, NULL);
+    gtk_list_store_set (app->model, &iter, 0, description, 2, object, -1);
+  }
+
+  else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
+    gtk_list_store_set (app->model, &iter, 2, object, -1);
+    g_signal_connect (G_OBJECT (object), "notify::text",
+        G_CALLBACK (title_source_text_changed_cb), app);
+    title_source_text_changed_cb (object, NULL, app);
+  }
 
   g_signal_connect (G_OBJECT (object), "notify::duration",
       G_CALLBACK (timeline_object_notify_duration_cb), app);
   timeline_object_notify_duration_cb (object, NULL, app);
+
   app->n_objects++;
   object_count_changed (app);
 }
