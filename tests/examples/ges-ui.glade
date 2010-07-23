@@ -12,10 +12,10 @@
         <col id="0" translatable="yes">Left</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Right</col>
+        <col id="0" translatable="yes">Center</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Center</col>
+        <col id="0" translatable="yes">Right</col>
       </row>
     </data>
   </object>
@@ -29,10 +29,10 @@
         <col id="0" translatable="yes">Top</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Bottom</col>
+        <col id="0" translatable="yes">Baseline</col>
       </row>
       <row>
-        <col id="0" translatable="yes">Baseline</col>
+        <col id="0" translatable="yes">Bottom</col>
       </row>
     </data>
   </object>
@@ -133,8 +133,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">delete</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -159,24 +159,30 @@
                   <object class="GtkMenu" id="menu4">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkImageMenuItem" id="add_file_item">
+                      <object class="GtkMenuItem" id="add_file_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_file</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_action_appearance">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="menuitem4">
+                        <property name="visible">True</property>
+                        <property name="related_action">add_text</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkSeparatorMenuItem" id="menuitem1">
                         <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">play</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -221,6 +227,28 @@
                 <property name="related_action">add_file</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton2">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">add_text</property>
+                <property name="label" translatable="yes">toolbutton2</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton1">
+                <property name="visible">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -440,7 +468,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkEntry" id="entry1">
+                              <object class="GtkEntry" id="text">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">&#x25CF;</property>
@@ -475,6 +503,7 @@
                               <object class="GtkComboBox" id="halign">
                                 <property name="visible">True</property>
                                 <property name="model">liststore1</property>
+                                <signal name="changed" handler="halign_changed_cb"/>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext1"/>
                                   <attributes>
@@ -490,6 +519,7 @@
                               <object class="GtkComboBox" id="valign">
                                 <property name="visible">True</property>
                                 <property name="model">liststore2</property>
+                                <signal name="changed" handler="valign_changed_cb"/>
                                 <child>
                                   <object class="GtkCellRendererText" id="cellrenderertext3"/>
                                   <attributes>
@@ -556,7 +586,8 @@
   </object>
   <object class="GtkAction" id="add_file">
     <property name="label">Add File</property>
-    <property name="stock_id">gtk-add</property>
+    <property name="short_label">Add File</property>
+    <property name="icon_name">video-x-generic</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="add_file_activate_cb"/>
   </object>
@@ -567,4 +598,11 @@
     <property name="always_show_image">True</property>
     <signal name="activate" handler="play_activate_cb"/>
   </object>
+  <object class="GtkAction" id="add_text">
+    <property name="label">Add Text</property>
+    <property name="short_label">Add Text</property>
+    <property name="icon_name">font-x-generic</property>
+    <signal name="activate" handler="add_text_activate_cb"/>
+  </object>
+  <object class="GtkAccelGroup" id="accelgroup1"/>
 </interface>
