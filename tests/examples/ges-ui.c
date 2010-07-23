@@ -48,6 +48,8 @@ void app_dispose (App * app);
 
 void app_add_file (App * app, gchar * filename);
 
+void app_add_title (App * app);
+
 GList *app_get_selected_objects (App * app);
 
 void app_delete_objects (App * app, GList * objects);
@@ -63,6 +65,8 @@ void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
 
 void add_file_activate_cb (GtkAction * item, App * app);
+
+void add_text_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
@@ -148,6 +152,12 @@ add_file_activate_cb (GtkAction * item, App * app)
     g_slist_free (uris);
   }
   gtk_widget_destroy ((GtkWidget *) dlg);
+}
+
+void
+add_text_activate_cb (GtkAction * item, App * app)
+{
+  app_add_title (app);
 }
 
 void
@@ -292,6 +302,20 @@ app_add_file (App * app, gchar * uri)
   obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
 
   ges_timeline_layer_add_object (app->layer, obj);
+}
+
+void
+app_add_title (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding title");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      obj, -1);
 }
 
 App *
