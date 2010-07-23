@@ -82,6 +82,13 @@ gboolean in_point_scale_change_value_cb (GtkRange * range, GtkScrollType
 void duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
     GtkTreeModel * model, GtkTreeIter * iter, gpointer user);
 
+void halign_changed_cb (GtkComboBox * widget, App * app);
+
+void valign_changed_cb (GtkComboBox * widget, App * app);
+
+void text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App *
+    app);
+
 gboolean create_ui (App * app);
 
 void connect_to_filesource (GESTimelineObject * object, App * app);
@@ -218,6 +225,45 @@ duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
   gtk_tree_model_get (model, iter, 1, &duration, -1);
   g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
   g_object_set (renderer, "text", &buf, NULL);
+}
+
+void
+halign_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  int active;
+
+  active = gtk_combo_box_get_active (app->halign);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "halignment", active, NULL);
+  }
+}
+
+void
+valign_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  int active;
+
+  active = gtk_combo_box_get_active (app->valign);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "valignment", active, NULL);
+  }
+}
+
+void
+text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
+  }
 }
 
 /* application methods ******************************************************/
