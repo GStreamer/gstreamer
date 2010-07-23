@@ -152,7 +152,7 @@ ges_track_title_src_create_element (GESTrackSource * object)
 
   gst_bin_add_many (GST_BIN (topbin), background, text, NULL);
 
-  gst_element_link_pads_full (background, "src", text, "sink",
+  gst_element_link_pads_full (background, "src", text, "video_sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
   src = gst_ghost_pad_new ("src", gst_element_get_static_pad (text, "src"));
