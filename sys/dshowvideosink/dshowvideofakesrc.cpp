@@ -103,10 +103,6 @@ HRESULT VideoFakeSrcPin::DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROP
         properties.cbAlign, properties.cbBuffer, 
         properties.cbPrefix, properties.cBuffers);
 
-  /* Then actually allocate the buffers */
-  hres = pAlloc->Commit();
-  GST_DEBUG ("Allocator commit returned %x", hres);
-
   return S_OK;
 }
 

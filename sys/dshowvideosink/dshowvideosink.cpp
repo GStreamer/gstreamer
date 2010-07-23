@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2008 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ *               2010 FLUENDO S.A. <support@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,16 +26,18 @@
 #include "dshowvideofakesrc.h"
 
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include "windows.h"
 
-#define WM_GRAPH_NOTIFY WM_APP + 1
+#define WM_GRAPH_NOTIFY WM_APP + 1 /* Private message */
 
 GST_DEBUG_CATEGORY (dshowvideosink_debug);
 #define GST_CAT_DEFAULT dshowvideosink_debug
 
 static GstCaps * gst_directshow_media_type_to_caps (AM_MEDIA_TYPE *mediatype);
-static gboolean gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype);
+static gboolean gst_caps_to_directshow_media_type (GstDshowVideoSink * sink,
+  GstCaps *caps, AM_MEDIA_TYPE *mediatype);
 
 /* TODO: Support RGB! */
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -50,8 +53,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static void gst_dshowvideosink_init_interfaces (GType type);
 
-GST_BOILERPLATE_FULL (GstDshowVideoSink, gst_dshowvideosink, GstBaseSink,
-    GST_TYPE_BASE_SINK, gst_dshowvideosink_init_interfaces);
+GST_BOILERPLATE_FULL (GstDshowVideoSink, gst_dshowvideosink, GstVideoSink,
+    GST_TYPE_VIDEO_SINK, gst_dshowvideosink_init_interfaces);
 
 enum
 {
@@ -78,11 +81,10 @@ static gboolean gst_dshowvideosink_unlock (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_unlock_stop (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstCaps *gst_dshowvideosink_get_caps (GstBaseSink * bsink);
-static GstFlowReturn gst_dshowvideosink_render (GstBaseSink *sink, GstBuffer *buffer);
+static GstFlowReturn gst_dshowvideosink_show_frame (GstVideoSink *sink, GstBuffer *buffer);
 
-/* GstXOverlay methods */
-static void gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id);
-
+/* COM initialization/uninitialization thread */
+static void gst_dshowvideosink_com_thread (GstDshowVideoSink * sink);
 /* TODO: event, preroll, buffer_alloc? 
  * buffer_alloc won't generally be all that useful because the renderers require a 
  * different stride to GStreamer's implicit values. 
@@ -92,7 +94,7 @@ static gboolean
 gst_dshowvideosink_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  g_assert (type == GST_TYPE_X_OVERLAY);
+  g_assert (type == GST_TYPE_X_OVERLAY || type == GST_TYPE_NAVIGATION);
   return TRUE;
 }
 
@@ -102,11 +104,61 @@ gst_dshowvideosink_interface_init (GstImplementsInterfaceClass * klass)
   klass->supported = gst_dshowvideosink_interface_supported;
 }
 
+static void
+gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
+{
+  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
+  HWND videowindow = (HWND)window_id;
+
+  if (videowindow == sink->window_id) {
+    GST_DEBUG_OBJECT (sink, "Window already set");
+    return;
+  }
+
+  /* TODO: What if we already have a window? What if we're already playing? */
+  sink->window_id = videowindow;
+}
+
+static void
+gst_dshowvideosink_expose (GstXOverlay * overlay)
+{
+  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
+
+  if (sink->renderersupport) {
+    sink->renderersupport->PaintWindow ();
+  }
+}
 
 static void
 gst_dshowvideosink_xoverlay_interface_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_dshowvideosink_set_window_id;
+  iface->expose = gst_dshowvideosink_expose;
+}
+
+static void
+gst_dshowvideosink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (navigation);
+  GstEvent *event = NULL;
+  GstPad *pad = NULL;
+
+  event = gst_event_new_navigation (structure);
+
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sink));
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+    gst_pad_send_event (pad, event);
+
+    gst_object_unref (pad);
+  }
+}
+
+static void
+gst_dshowvideosink_navigation_interface_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_dshowvideosink_navigation_send_event;
 }
 
 static void
@@ -124,9 +176,16 @@ gst_dshowvideosink_init_interfaces (GType type)
     NULL,
   };
 
+  static const GInterfaceInfo navigation_info = {
+    (GInterfaceInitFunc) gst_dshowvideosink_navigation_interface_init,
+    NULL,
+    NULL,
+  };
+
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &iface_info);
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &navigation_info);
 
   GST_DEBUG_CATEGORY_INIT (dshowvideosink_debug, "dshowvideosink", 0, \
       "DirectShow video sink");
@@ -140,38 +199,39 @@ gst_dshowvideosink_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details_simple (element_class, "DirectShow video sink",
-      "Sink/Video",
-      "Display data using a DirectShow video renderer",
-      "Pioneers of the Inevitable <songbird@songbirdnest.com>");
+      "Sink/Video", "Display data using a DirectShow video renderer",
+      "Pioneers of the Inevitable <songbird@songbirdnest.com>, " \
+      "FLUENDO S.A. <support@fluendo.com>");
 }
 
 static void
 gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
+  GObjectClass *o_class;
+  GstElementClass *e_class;
+  GstBaseSinkClass *bs_class;
+  GstVideoSinkClass *vs_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
+  o_class = (GObjectClass *) klass;
+  e_class = (GstElementClass *) klass;
+  bs_class = (GstBaseSinkClass *) klass;
+  vs_class = (GstVideoSinkClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dshowvideosink_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_dshowvideosink_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_dshowvideosink_get_property);
+  o_class->finalize = gst_dshowvideosink_finalize;
+  o_class->set_property = gst_dshowvideosink_set_property;
+  o_class->get_property = gst_dshowvideosink_get_property;
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dshowvideosink_change_state);
+  e_class->change_state = GST_DEBUG_FUNCPTR (gst_dshowvideosink_change_state);
 
-  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosink_get_caps);
-  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosink_set_caps);
-  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_dshowvideosink_start);
-  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_dshowvideosink_stop);
-  gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_dshowvideosink_unlock);
-  gstbasesink_class->unlock_stop =
+  bs_class->get_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosink_get_caps);
+  bs_class->set_caps = GST_DEBUG_FUNCPTR (gst_dshowvideosink_set_caps);
+  bs_class->start = GST_DEBUG_FUNCPTR (gst_dshowvideosink_start);
+  bs_class->stop = GST_DEBUG_FUNCPTR (gst_dshowvideosink_stop);
+  bs_class->unlock = GST_DEBUG_FUNCPTR (gst_dshowvideosink_unlock);
+  bs_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_dshowvideosink_unlock_stop);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_dshowvideosink_render);
+
+  vs_class->show_frame = GST_DEBUG_FUNCPTR (gst_dshowvideosink_show_frame);
 
   /* Add properties */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -187,7 +247,7 @@ gst_dshowvideosink_class_init (GstDshowVideoSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_RENDERER, g_param_spec_string ("renderer", "Renderer", 
-      "Force usage of specific DirectShow renderer (VMR9 or VMR)",
+      "Force usage of specific DirectShow renderer (EVR, VMR9 or VMR7)",
       NULL, (GParamFlags)G_PARAM_READWRITE));
 }
 
@@ -204,25 +264,33 @@ gst_dshowvideosink_clear (GstDshowVideoSink *sink)
 
   sink->window_closed = FALSE;
   sink->window_id = NULL;
+  sink->is_new_window = FALSE;
 
   sink->connected = FALSE;
+  sink->graph_running = FALSE;
 }
 
 static void
 gst_dshowvideosink_init (GstDshowVideoSink * sink, GstDshowVideoSinkClass * klass)
 {
-  HRESULT hr;
-
   gst_dshowvideosink_clear (sink);
 
-  hr = CoInitialize (0);
-  if (SUCCEEDED(hr))
-    sink->comInitialized = TRUE;
+  sink->graph_lock = g_mutex_new();
+  sink->com_init_lock = g_mutex_new();
+  sink->com_deinit_lock = g_mutex_new();
+  sink->com_initialized = g_cond_new();
+  sink->com_uninitialize = g_cond_new();
+  sink->com_uninitialized = g_cond_new();
 
-  /* TODO: Copied from GstVideoSink; should we use that as base class? */
-  /* 20ms is more than enough, 80-130ms is noticable */
-  gst_base_sink_set_max_lateness (GST_BASE_SINK (sink), 20 * GST_MSECOND);
-  gst_base_sink_set_qos_enabled (GST_BASE_SINK (sink), TRUE);
+  g_mutex_lock (sink->com_init_lock);
+
+  /* create the COM initialization thread */
+  g_thread_create ((GThreadFunc)gst_dshowvideosink_com_thread,
+      sink, FALSE, NULL);
+
+  /* wait until the COM thread signals that COM has been initialized */
+  g_cond_wait (sink->com_initialized, sink->com_init_lock);
+  g_mutex_unlock (sink->com_init_lock);
 }
 
 static void
@@ -233,10 +301,21 @@ gst_dshowvideosink_finalize (GObject * gobject)
   if (sink->preferredrenderer)
     g_free (sink->preferredrenderer);
 
+  /* signal the COM thread that it sould uninitialize COM */
   if (sink->comInitialized) {
-    CoUninitialize ();
-    sink->comInitialized = FALSE;
+    g_mutex_lock (sink->com_deinit_lock);
+    g_cond_signal (sink->com_uninitialize);
+    g_cond_wait (sink->com_uninitialized, sink->com_deinit_lock);
+    g_mutex_unlock (sink->com_deinit_lock);
   }
+
+  g_mutex_free (sink->com_init_lock);
+  g_mutex_free (sink->com_deinit_lock);
+  g_cond_free (sink->com_initialized);
+  g_cond_free (sink->com_uninitialize);
+  g_cond_free (sink->com_uninitialized);
+
+  g_mutex_free (sink->graph_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -288,6 +367,43 @@ gst_dshowvideosink_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_dshowvideosink_com_thread (GstDshowVideoSink * sink)
+{
+  HRESULT res;
+
+  g_mutex_lock (sink->com_init_lock);
+
+  /* Initialize COM with a MTA for this process. This thread will
+   * be the first one to enter the apartement and the last one to leave
+   * it, unitializing COM properly */
+
+  res = CoInitializeEx (0, COINIT_MULTITHREADED);
+  if (res == S_FALSE)
+    GST_WARNING_OBJECT (sink, "COM has been already initialized in the same process");
+  else if (res == RPC_E_CHANGED_MODE)
+    GST_WARNING_OBJECT (sink, "The concurrency model of COM has changed.");
+  else
+    GST_INFO_OBJECT (sink, "COM intialized succesfully");
+
+  sink->comInitialized = TRUE;
+
+  /* Signal other threads waiting on this condition that COM was initialized */
+  g_cond_signal (sink->com_initialized);
+
+  g_mutex_unlock (sink->com_init_lock);
+
+  /* Wait until the unitialize condition is met to leave the COM apartement */
+  g_mutex_lock (sink->com_deinit_lock);
+  g_cond_wait (sink->com_uninitialize, sink->com_deinit_lock);
+
+  CoUninitialize ();
+  GST_INFO_OBJECT (sink, "COM unintialized succesfully");
+  sink->comInitialized = FALSE;
+  g_cond_signal (sink->com_uninitialized);
+  g_mutex_unlock (sink->com_deinit_lock);
 }
 
 static GstCaps *
@@ -478,6 +594,7 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CLOSE:
       sink->renderersupport->DestroyWindow ();
       sink->window_closed = TRUE;
+      PostQuitMessage (WM_QUIT);
       return 0;
   }
 
@@ -528,7 +645,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
         GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, ("Unknown media format"), (NULL));
         return NULL;
     }
-	
+
     /* rcTarget is the aspect-ratio-corrected size of the video. */
     width = vi->rcTarget.right + GetSystemMetrics (SM_CXSIZEFRAME) * 2;
     height = vi->rcTarget.bottom + GetSystemMetrics (SM_CYCAPTION) +
@@ -565,6 +682,8 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
     GST_ERROR_OBJECT (sink, "Failed to create window!");
     return NULL;
   }
+
+  sink->is_new_window = TRUE;
 
   SetWindowLongPtr (video_window, GWLP_USERDATA, (LONG)sink);
 
@@ -632,22 +751,15 @@ failed:
   return FALSE;
 }
 
-static void gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
+static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
 {
-  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
-  HWND videowindow = (HWND)window_id;
-
-  if (videowindow == sink->window_id) {
-    GST_DEBUG_OBJECT (sink, "Window already set");
+  WNDPROC prevWndProc = (WNDPROC)GetWindowLong (sink->window_id, GWL_WNDPROC);
+  if (prevWndProc == WndProcHook) {
+    /* The WndProc already points to our hook. Something has gone wrong
+     * somewhere else and this safety net prevents an infinite recursion */
     return;
   }
 
-  /* TODO: What if we already have a window? What if we're already playing? */
-  sink->window_id = videowindow;
-}
-
-static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
-{
   /* Application has requested a specific window ID */
   sink->prevWndProc = (WNDPROC) SetWindowLong (sink->window_id, GWL_WNDPROC, (LONG)WndProcHook);
   GST_DEBUG_OBJECT (sink, "Set wndproc to %p from %p", WndProcHook, sink->prevWndProc);
@@ -659,6 +771,7 @@ static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink)
     GST_WARNING_OBJECT (sink, "Failed to set HWND %x on renderer", sink->window_id);
     return;
   }
+  sink->is_new_window = FALSE;
 
   /* This tells the renderer where the window is located, needed to 
    * start drawing in the right place.  */
@@ -744,19 +857,6 @@ gst_dshowvideosink_start_graph (GstDshowVideoSink *sink)
   GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (sink, "Connecting and starting DirectShow graph");
-
-  if (!sink->connected) {
-    /* This is fine; this just means we haven't connected yet.
-     * That's normal for the first time this is called. 
-     * So, create a window (or start using an application-supplied
-     * one, then connect the graph */
-    gst_dshowvideosink_prepare_window (sink);
-    if (!gst_dshowvideosink_connect_graph (sink)) {
-      ret = GST_STATE_CHANGE_FAILURE;
-      goto done;
-    }
-    sink->connected = TRUE;
-  }
 
   hres = sink->filter_graph->QueryInterface(
           IID_IMediaControl, (void **) &control);
@@ -885,6 +985,7 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
       ret = gst_dshowvideosink_start_graph (sink);
       if (ret == GST_STATE_CHANGE_FAILURE)
         return ret;
+      sink->graph_running = TRUE;
       break;
   }
 
@@ -892,14 +993,20 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_DSHOWVIDEOSINK_GRAPH_LOCK(sink);
       rettmp = gst_dshowvideosink_pause_graph (sink);
       if (rettmp == GST_STATE_CHANGE_FAILURE)
         ret = rettmp;
+      sink->graph_running = FALSE;
+      GST_DSHOWVIDEOSINK_GRAPH_UNLOCK(sink);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DSHOWVIDEOSINK_GRAPH_LOCK(sink);
       rettmp = gst_dshowvideosink_stop_graph (sink);
       if (rettmp == GST_STATE_CHANGE_FAILURE)
         ret = rettmp;
+      sink->graph_running = FALSE;
+      GST_DSHOWVIDEOSINK_GRAPH_UNLOCK(sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_dshowvideosink_clear (sink);
@@ -908,6 +1015,142 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
 
   return ret;
 }
+
+class EVRSupport : public RendererSupport
+{
+private:
+  GstDshowVideoSink *sink;
+  IBaseFilter *filter;
+  IMFGetService *service;
+  IMFVideoDisplayControl *control;
+  HWND video_window;
+
+public:
+  EVRSupport (GstDshowVideoSink *sink) : 
+      sink(sink),
+      filter(NULL),
+      service(NULL),
+      control(NULL)
+  {
+  }
+
+  ~EVRSupport() {
+    if (control)
+      control->Release();
+    if (service)
+      service->Release();
+    if (filter)
+      filter->Release();
+  }
+
+  const char *GetName() {
+    return "EnhancedVideoRenderer";
+  }
+
+  IBaseFilter *GetFilter() {
+    return filter;
+  }
+
+  gboolean CheckOS () {
+    OSVERSIONINFO info;
+    info.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+    GetVersionEx (&info);
+
+    if (info.dwMajorVersion < 6) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+
+  gboolean Configure() {
+    HRESULT hres;
+
+    if (!this->CheckOS ()) {
+      GST_DEBUG_OBJECT (sink, "Windows Vista is required at least for EVR to work");
+      return FALSE;
+    }
+
+    hres = CoCreateInstance (CLSID_EnhancedVideoRenderer, NULL, CLSCTX_INPROC,
+        IID_IBaseFilter, (LPVOID *) &filter);
+    GST_DEBUG_OBJECT (sink, "cocreateinstance returned %d", hres);
+    if (FAILED (hres)) {
+      GST_ERROR_OBJECT (sink, 
+          "Can't create an instance of renderer (error=%x)",
+          hres);
+      return FALSE;
+    }
+
+    hres = filter->QueryInterface (IID_IMFGetService,
+          (void **) &service);
+    if (FAILED (hres)) {
+      GST_WARNING_OBJECT (sink, "EVR service interface missing: %x", hres);
+      return FALSE;
+    }
+
+    hres = service->GetService (MR_VIDEO_RENDER_SERVICE, 
+          IID_IMFVideoDisplayControl, (void **) &control);
+    if (FAILED (hres)) {
+      GST_WARNING_OBJECT (sink, "EVR control service missing: %x", hres);
+      return FALSE;
+    }
+
+    SetAspectRatioMode();
+    return TRUE;
+  }
+
+  void SetAspectRatioMode() {
+    if (sink->keep_aspect_ratio) {
+      control->SetAspectRatioMode(MFVideoARMode_PreservePicture);
+    }
+    else {
+      control->SetAspectRatioMode(MFVideoARMode_None);
+    }
+  }
+
+  gboolean SetRendererWindow(HWND window) {
+    video_window = window;
+    HRESULT hres = control->SetVideoWindow (video_window);
+    if (FAILED (hres)) {
+      GST_WARNING_OBJECT (sink, "Failed to set video clipping window on filter %p: %x", filter, hres);
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  void PaintWindow()
+  {
+    HRESULT hr;
+    PAINTSTRUCT ps;
+    HDC         hdc;
+    RECT        rcClient;
+
+    GetClientRect(video_window, &rcClient);
+    hdc = BeginPaint(video_window, &ps);
+
+    hr = control->RepaintVideo();
+
+    EndPaint(video_window, &ps);
+  }
+
+  void MoveWindow()
+  {
+    HRESULT hr;
+    RECT rect;
+
+    // Track the movement of the container window and resize as needed
+    GetClientRect(video_window, &rect);
+    hr = control->SetVideoPosition(NULL, &rect);
+  }
+
+  void DisplayModeChanged() {
+  }
+
+  void DestroyWindow() {
+    ::DestroyWindow (video_window);
+  }
+};
 
 class VMR9Support : public RendererSupport
 {
@@ -1168,12 +1411,16 @@ public:
 static gboolean 
 gst_dshowvideosink_create_renderer (GstDshowVideoSink *sink) 
 {
-  GST_DEBUG_OBJECT (sink, "Trying to create renderer '%s'", "VMR9");
+  GST_DEBUG_OBJECT (sink, "Trying to create renderer '%s'", "EVR");
 
   RendererSupport *support = NULL;
 
   if (sink->preferredrenderer) {
-    if (!strcmp (sink->preferredrenderer, "VMR9")) {
+    if (!strcmp (sink->preferredrenderer, "EVR")) {
+      GST_INFO_OBJECT (sink, "Forcing use of EVR");
+      support = new EVRSupport (sink);
+    }
+    else if (!strcmp (sink->preferredrenderer, "VMR9")) {
       GST_INFO_OBJECT (sink, "Forcing use of VMR9");
       support = new VMR9Support (sink);
     }
@@ -1194,15 +1441,20 @@ gst_dshowvideosink_create_renderer (GstDshowVideoSink *sink)
     goto done;
   }
 
-  support = new VMR9Support (sink);
-  if (!support->Configure()) {
-    GST_INFO_OBJECT (sink, "Failed to configure VMR9, trying VMR7");
+  support = new EVRSupport (sink);
+  if (!support->Configure ()) {
+    GST_INFO_OBJECT (sink, "Failed to configure EVR, trying VMR9");
     delete support;
-    support = new VMR7Support (sink);
+    support = new VMR9Support (sink);
     if (!support->Configure()) {
-      GST_ERROR_OBJECT (sink, "Failed to configure VMR9 or VMR7");
+      GST_INFO_OBJECT (sink, "Failed to configure VMR9, trying VMR7");
       delete support;
-      return FALSE;
+      support = new VMR7Support (sink);
+      if (!support->Configure()) {
+        GST_ERROR_OBJECT (sink, "Failed to configure VMR9 or VMR7");
+        delete support;
+        return FALSE;
+      }
     }
   }
 
@@ -1215,11 +1467,6 @@ static gboolean
 gst_dshowvideosink_build_filtergraph (GstDshowVideoSink *sink)
 {
   HRESULT hres;
-  gboolean comInit = FALSE;
-  
-  hres = CoInitialize(0);
-  if (SUCCEEDED (hres))
-    comInit = TRUE;
 
   /* Build our DirectShow FilterGraph, looking like: 
    *
@@ -1271,8 +1518,6 @@ gst_dshowvideosink_build_filtergraph (GstDshowVideoSink *sink)
     goto error;
   }
 
-  if (comInit)
-    CoUninitialize();
   return TRUE;
 
 error:
@@ -1290,9 +1535,6 @@ error:
     sink->filter_media_event->Release();
     sink->filter_media_event = NULL;
   }
-
-  if (comInit)
-    CoUninitialize();
 
   return FALSE;
 }
@@ -1313,13 +1555,15 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (bsink);
 
   if (sink->connected) {
-    /* Look at the DShow APIs for dynamically modifying the pipeline and see
-     * if we can make this work later... */
-    GST_WARNING_OBJECT (sink, "Changing caps at runtime is not yet supported");
-    return FALSE;
+      IPin *sinkpin;
+      sink->filter_graph->Disconnect(sink->fakesrc->GetOutputPin());
+      gst_dshow_get_pin_from_filter (sink->renderersupport->GetFilter(), PINDIR_INPUT, 
+          &sinkpin);
+      sink->filter_graph->Disconnect(sinkpin);
+      sinkpin->Release();
   }
 
-  if (!gst_caps_to_directshow_media_type (caps, &sink->mediatype)) {
+  if (!gst_caps_to_directshow_media_type (sink, caps, &sink->mediatype)) {
     GST_WARNING_OBJECT (sink, "Cannot convert caps to AM_MEDIA_TYPE, rejecting");
     return FALSE;
   }
@@ -1330,6 +1574,17 @@ gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
    */
   sink->fakesrc->GetOutputPin()->SetMediaType (&sink->mediatype);
   GST_DEBUG_OBJECT (sink, "Configured output pin media type");
+
+  /* We have configured the ouput pin media type.
+  * So, create a window (or start using an application-supplied
+  * one, then connect the graph */
+  gst_dshowvideosink_prepare_window (sink);
+  if (!gst_dshowvideosink_connect_graph (sink)) {
+    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION,
+          ("Failed to initialize DirectShow graph with the input caps"), (NULL));
+    return FALSE;
+  }
+  sink->connected = TRUE;
 
   return TRUE;
 }
@@ -1344,6 +1599,14 @@ gst_dshowvideosink_stop (GstBaseSink * bsink)
   if (!sink->filter_graph) {
     GST_WARNING_OBJECT (sink, "Cannot destroy filter graph; it doesn't exist");
     return TRUE;
+  }
+  
+  /* If we created a new window, send the close message and wait until 
+   * it's closed in the window thread */
+  if (sink->is_new_window) {
+    SendMessage (sink->window_id, WM_CLOSE, NULL, NULL);
+    while (!sink->window_closed);
+    sink->is_new_window = FALSE;
   }
 
   /* Release the renderer */
@@ -1372,19 +1635,32 @@ gst_dshowvideosink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
-static GstFlowReturn 
-gst_dshowvideosink_render (GstBaseSink *bsink, GstBuffer *buffer)
+static GstFlowReturn
+gst_dshowvideosink_show_frame (GstVideoSink *vsink, GstBuffer *buffer)
 {
-  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (bsink);
+  GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (vsink);
   GstFlowReturn ret;
+  GstStateChangeReturn retst;
 
   if (sink->window_closed) {
-    GST_WARNING_OBJECT (sink, "Window has been closed, stopping");
+    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, ("Output window was closed"), (NULL));
     return GST_FLOW_ERROR;
   }
 
   GST_DEBUG_OBJECT (sink, "Pushing buffer through fakesrc->renderer");
+  GST_DSHOWVIDEOSINK_GRAPH_LOCK(sink);
+  if (!sink->graph_running){
+    retst = gst_dshowvideosink_start_graph(sink);
+    if (retst == GST_STATE_CHANGE_FAILURE)
+      return GST_FLOW_WRONG_STATE;
+  }
   ret = sink->fakesrc->GetOutputPin()->PushBuffer (buffer);
+  if (!sink->graph_running){
+    retst = gst_dshowvideosink_pause_graph(sink);
+    if (retst == GST_STATE_CHANGE_FAILURE)
+      return GST_FLOW_WRONG_STATE;
+  }
+  GST_DSHOWVIDEOSINK_GRAPH_UNLOCK(sink);
   GST_DEBUG_OBJECT (sink, "Done pushing buffer through fakesrc->renderer: %s", gst_flow_get_name(ret));
 
   return ret;
@@ -1480,8 +1756,9 @@ gst_directshow_media_type_to_caps (AM_MEDIA_TYPE *mediatype)
   else if (IsEqualGUID (mediatype->majortype, MEDIATYPE_Audio))
     caps = audio_media_type_to_caps (mediatype);
   else {
-    GST_DEBUG ("Non audio/video media types not yet recognised, please add me: "
-            GUID_FORMAT, GUID_ARGS(mediatype->majortype));
+    GST_DEBUG ("Non audio/video media types not yet " \
+        "recognised, please add me: " GUID_FORMAT,
+        GUID_ARGS(mediatype->majortype));
   }
 
   if (caps) {
@@ -1504,33 +1781,34 @@ gst_directshow_media_type_to_caps (AM_MEDIA_TYPE *mediatype)
  * Only operates on simple (single structure) caps.
  */
 static gboolean
-gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype)
+gst_caps_to_directshow_media_type (GstDshowVideoSink * sink, GstCaps *caps,
+    AM_MEDIA_TYPE *mediatype)
 {
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *name = gst_structure_get_name (s);
 
   gchar *capsstring = gst_caps_to_string (caps);
-  GST_DEBUG ("Converting caps \"%s\" to AM_MEDIA_TYPE", capsstring);
+  GST_DEBUG_OBJECT (sink, "Converting caps \"%s\" to AM_MEDIA_TYPE", capsstring);
   g_free (capsstring);
 
   memset (mediatype, 0, sizeof (AM_MEDIA_TYPE));
 
   if (!strcmp (name, "video/x-raw-yuv")) {
     guint32 fourcc;
-	int width, height;
+    int width, height;
     int bpp;
 
     if (!gst_structure_get_fourcc (s, "format", &fourcc)) {
-      GST_WARNING ("Failed to convert caps, no fourcc");
+      GST_WARNING_OBJECT (sink, "Failed to convert caps, no fourcc");
       return FALSE;
     }
 
-	if (!gst_structure_get_int (s, "width", &width)) {
-      GST_WARNING ("Failed to convert caps, no width");
+    if (!gst_structure_get_int (s, "width", &width)) {
+      GST_WARNING_OBJECT (sink, "Failed to convert caps, no width");
       return FALSE;
     }
-	if (!gst_structure_get_int (s, "height", &height)) {
-      GST_WARNING ("Failed to convert caps, no height");
+    if (!gst_structure_get_int (s, "height", &height)) {
+      GST_WARNING_OBJECT (sink, "Failed to convert caps, no height");
       return FALSE;
     }
 
@@ -1553,7 +1831,7 @@ gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype)
         bpp = 12;
         break;
       default:
-        GST_WARNING ("Failed to convert caps, not a known fourcc");
+        GST_WARNING_OBJECT (sink, "Failed to convert caps, not a known fourcc");
         return FALSE;
     }
 
@@ -1571,7 +1849,8 @@ gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype)
 
       mediatype->lSampleSize = width * height * bpp / 8;
 
-      GST_INFO ("Set mediatype format: size %d, sample size %d", mediatype->cbFormat, mediatype->lSampleSize);
+      GST_INFO_OBJECT (sink, "Set mediatype format: size %d, sample size %d",
+          mediatype->cbFormat, mediatype->lSampleSize);
 
       vi->rcSource.top = 0;
       vi->rcSource.left = 0;
@@ -1580,16 +1859,17 @@ gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype)
 
       vi->rcTarget.top = 0;
       vi->rcTarget.left = 0;
-      if (gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d)) {
+      if (sink->keep_aspect_ratio &&
+          gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d)) {
         /* To handle non-square pixels, we set the target rectangle to a 
          * different size than the source rectangle.
          * There might be a better way, but this seems to work. */
         vi->rcTarget.bottom = height;
         vi->rcTarget.right = width * par_n / par_d;
-        GST_DEBUG ("Got PAR: set target right to %d from width %d", vi->rcTarget.right, width);
+        GST_DEBUG_OBJECT (sink, "Got PAR: set target right to %d from width %d",
+            vi->rcTarget.right, width);
       }
       else {
-        GST_DEBUG ("No PAR found");
         vi->rcTarget.bottom = height;
         vi->rcTarget.right = width;
       }
@@ -1609,11 +1889,11 @@ gst_caps_to_directshow_media_type (GstCaps *caps, AM_MEDIA_TYPE *mediatype)
       vi->bmiHeader.biClrImportant = 0;
     }
 
-    GST_DEBUG ("Successfully built AM_MEDIA_TYPE from caps");
+    GST_DEBUG_OBJECT (sink, "Successfully built AM_MEDIA_TYPE from caps");
     return TRUE;
   }
 
-  GST_WARNING ("Failed to convert caps, not a known caps type");
+  GST_WARNING_OBJECT (sink, "Failed to convert caps, not a known caps type");
   /* Only YUV supported so far */
 
   return FALSE;
