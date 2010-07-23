@@ -111,13 +111,6 @@ void disconnect_from_title_source (GESTimelineObject * object, App * app);
 /* UI state functions *******************************************************/
 
 static void
-update_properties_sensitivity (App * app)
-{
-  gtk_widget_set_sensitive (app->properties,
-      (app->n_selected == 1) && (app->state != GST_STATE_PLAYING));
-}
-
-static void
 update_delete_sensitivity (App * app)
 {
   /* delete will work for multiple items */
@@ -192,9 +185,15 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
 {
   app_update_selection (app);
 
-  /* doesn't make sense to set properties on more than one item */
-  update_properties_sensitivity (app);
   update_delete_sensitivity (app);
+
+  gtk_widget_set_visible (app->properties, app->n_selected > 0);
+
+  gtk_widget_set_visible (app->filesource_properties,
+      app->selected_type == GES_TYPE_TIMELINE_FILE_SOURCE);
+
+  gtk_widget_set_visible (app->text_properties,
+      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
 }
 
 gboolean
@@ -571,10 +570,10 @@ pipeline_state_changed_cb (App * app)
   else
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PLAY);
 
-  update_properties_sensitivity (app);
   update_delete_sensitivity (app);
 
   gtk_action_set_sensitive (app->add_file, app->state != GST_STATE_PLAYING);
+  gtk_widget_set_sensitive (app->properties, app->state != GST_STATE_PLAYING);
 }
 
 static void
