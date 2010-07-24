@@ -66,6 +66,7 @@ typedef struct
   gboolean wait;
   gboolean new_stream;
   gboolean drop_discont;
+  gboolean is_eos;
 
   gint64 running_time_diff;
 } GstStream;
@@ -447,6 +448,40 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
     }
+    case GST_EVENT_EOS:{
+      GstStream *stream;
+      GList *l;
+      gboolean all_eos = TRUE;
+
+      GST_STREAM_SYNCHRONIZER_LOCK (self);
+      stream = gst_pad_get_element_private (pad);
+      if (stream) {
+        GST_DEBUG_OBJECT (pad, "Have EOS for stream %d", stream->stream_number);
+        stream->is_eos = TRUE;
+      }
+
+      for (l = self->streams; l; l = l->next) {
+        GstStream *ostream = l->data;
+
+        all_eos = all_eos && ostream->is_eos;
+        if (!all_eos)
+          break;
+      }
+
+      if (all_eos) {
+        ret = TRUE;
+        GST_DEBUG_OBJECT (self, "All streams are EOS -- forwarding");
+        for (l = self->streams; l; l = l->next) {
+          GstStream *ostream = l->data;
+          ret = ret
+              && gst_pad_push_event (ostream->srcpad, gst_event_new_eos ());
+        }
+      }
+      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+
+      goto done;
+      break;
+    }
     default:
       break;
   }
@@ -533,6 +568,8 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_LOG_OBJECT (pad, "Push returned: %s", gst_flow_get_name (ret));
   if (ret == GST_FLOW_OK) {
+    GList *l;
+
     GST_STREAM_SYNCHRONIZER_LOCK (self);
     stream = gst_pad_get_element_private (pad);
     if (stream && stream->segment.format == GST_FORMAT_TIME
@@ -543,6 +580,43 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
           GST_TIME_ARGS (timestamp_end));
       gst_segment_set_last_stop (&stream->segment, GST_FORMAT_TIME,
           timestamp_end);
+    }
+
+    /* Advance EOS streams if necessary. For non-EOS
+     * streams the demuxers should already do this! */
+    for (l = self->streams; l; l = l->next) {
+      GstStream *ostream = l->data;
+      gint64 last_stop;
+
+      if (!ostream->is_eos || ostream->segment.format != GST_FORMAT_TIME)
+        continue;
+
+      if (ostream->segment.last_stop != -1)
+        last_stop = ostream->segment.last_stop;
+      else
+        last_stop = ostream->segment.start;
+
+      /* Is there a 1 second lag? */
+      if (last_stop != -1 && last_stop + GST_SECOND < timestamp_end) {
+        gint64 new_start;
+
+        new_start = timestamp_end - GST_SECOND;
+
+        GST_DEBUG_OBJECT (ostream->sinkpad,
+            "Advancing stream %d from %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, ostream->stream_number, last_stop, new_start);
+
+        gst_pad_push_event (ostream->srcpad,
+            gst_event_new_new_segment_full (TRUE, ostream->segment.rate,
+                ostream->segment.applied_rate, ostream->segment.format,
+                new_start, ostream->segment.stop, new_start));
+        gst_segment_set_newsegment_full (&ostream->segment, TRUE,
+            ostream->segment.rate, ostream->segment.applied_rate,
+            ostream->segment.format, new_start, ostream->segment.stop,
+            new_start);
+        gst_segment_set_last_stop (&ostream->segment, GST_FORMAT_TIME,
+            new_start);
+      }
     }
     GST_STREAM_SYNCHRONIZER_UNLOCK (self);
   }
@@ -666,6 +740,15 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
   }
 
   g_slice_free (GstStream, stream);
+
+  /* NOTE: In theory we have to check here if all streams
+   * are EOS but the one that was removed wasn't and then
+   * send EOS downstream. But due to the way how playsink
+   * works this is not necessary and will only cause problems
+   * for gapless playback. playsink will only add/remove pads
+   * when it's reconfigured, which happens when the streams
+   * change
+   */
 }
 
 static void
@@ -742,6 +825,7 @@ gst_stream_synchronizer_change_state (GstElement * element,
         stream->wait = FALSE;
         stream->new_stream = FALSE;
         stream->drop_discont = FALSE;
+        stream->is_eos = FALSE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
