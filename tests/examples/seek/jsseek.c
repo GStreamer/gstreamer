@@ -2463,11 +2463,14 @@ handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
   if (state < GST_STATE_PAUSED) {
     GtkAllocation allocation;
     GdkWindow *window = gtk_widget_get_window (widget);
-    GtkStyle *style = gtk_widget_get_style (widget);
+    cairo_t *cr;
 
     gtk_widget_get_allocation (widget, &allocation);
-    gdk_draw_rectangle (window, style->black_gc, TRUE, 0, 0,
-        allocation.width, allocation.height);
+    cr = gdk_cairo_create (window);
+    cairo_set_source_rgb (cr, 0, 0, 0);
+    cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
+    cairo_fill (cr);
+    cairo_destroy (cr);
   }
   return FALSE;
 }

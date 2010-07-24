@@ -45,29 +45,36 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
 static gulong embed_xid = 0;
-static GdkGC *trans_gc = NULL;
+static GdkColor trans_color;
+static gboolean trans_color_set = FALSE;
 
 static void
 redraw_overlay (GtkWidget * widget)
 {
   GtkAllocation allocation;
   GdkWindow *window = gtk_widget_get_window (widget);
-  GtkStyle *style = gtk_widget_get_style (widget);
+  cairo_t *cr;
 
+  cr = gdk_cairo_create (window);
   gtk_widget_get_allocation (widget, &allocation);
-  gdk_draw_rectangle (window, style->white_gc, TRUE, 0, 0,
-      allocation.width, allocation.height);
 
-  if (trans_gc) {
+  cairo_set_source_rgb (cr, 1, 1, 1);
+  cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
+  cairo_fill (cr);
+
+  if (trans_color_set) {
     guint x, y;
     guint h = allocation.height * 0.75;
 
-    gdk_draw_rectangle (window, trans_gc, TRUE, 0, 0, allocation.width, h);
+    gdk_cairo_set_source_color (cr, &trans_color);
+    cairo_rectangle (cr, 0, 0, allocation.width, h);
+    cairo_fill (cr);
 
     for (y = h; y < allocation.height; y++) {
       for (x = 0; x < allocation.width; x++) {
         if (((x & 1) || (y & 1)) && (x & 1) != (y & 1)) {
-          gdk_draw_point (window, trans_gc, x, y);
+          cairo_move_to (cr, x, y);
+          cairo_paint (cr);
         }
       }
     }
@@ -127,18 +134,14 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
     /* When state of the pipeline changes to paused or playing we start updating scale */
     switch (GST_STATE_TRANSITION (old, new)) {
       case GST_STATE_CHANGE_READY_TO_PAUSED:{
-        GdkWindow *window = gtk_widget_get_window (video_window);
-
         g_object_get (G_OBJECT (sink), "colorkey", &color, NULL);
         if (color != -1) {
-          GdkColor trans_color = { 0,
-            (color & 0xff0000) >> 8,
-            (color & 0xff00),
-            (color & 0xff) << 8
-          };
-
-          trans_gc = gdk_gc_new (window);
-          gdk_gc_set_rgb_fg_color (trans_gc, &trans_color);
+          trans_color.red = (color & 0xff0000) >> 8;
+          trans_color.green = (color & 0xff00);
+          trans_color.blue = (color & 0xff) << 8;
+          trans_color_set = TRUE;
+        } else {
+          trans_color_set = FALSE;
         }
         handle_resize_cb (video_window, NULL, NULL);
         break;
