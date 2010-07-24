@@ -35,6 +35,7 @@ GType gst_push_file_src_get_type (void);
 /*
 GType gst_gst_negotiation_get_type (void);
 */
+GType gst_cpu_report_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -57,7 +58,10 @@ plugin_init (GstPlugin * plugin)
       || !gst_element_register (plugin, "testsink", GST_RANK_NONE,
           gst_test_get_type ())
       || !gst_element_register (plugin, "capsdebug", GST_RANK_NONE,
-          gst_caps_debug_get_type ()))
+          gst_caps_debug_get_type ())
+      || !gst_element_register (plugin, "cpureport", GST_RANK_NONE,
+          gst_cpu_report_get_type ()))
+
     return FALSE;
 
   return TRUE;

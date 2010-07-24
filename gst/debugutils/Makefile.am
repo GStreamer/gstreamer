@@ -7,6 +7,7 @@ endif
 plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
 
 noinst_HEADERS = \
+	cpureport.h \
 	efence.h \
 	gstcapsdebug.h \
 	gstcapssetter.h \
@@ -42,6 +43,7 @@ libgstdebug_la_SOURCES = \
 	rndbuffersize.c \
 	progressreport.c \
 	tests.c \
+	cpureport.c \
 	testplugin.c
 
 # 	negotiation.c
