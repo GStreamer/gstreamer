@@ -67,18 +67,21 @@ draw_spectrum (gfloat * data)
 {
   gint i;
   GdkRectangle rect = { 0, 0, spect_bands, spect_height };
+  cairo_t *cr;
 
   if (!drawingarea)
     return;
 
   gdk_window_begin_paint_rect (gtk_widget_get_window (drawingarea), &rect);
-  gdk_draw_rectangle (gtk_widget_get_window (drawingarea),
-      gtk_widget_get_style (drawingarea)->black_gc,
-      TRUE, 0, 0, spect_bands, spect_height);
+  cr = gdk_cairo_create (gtk_widget_get_window (drawingarea));
+
+  cairo_set_source_rgb (cr, 0, 0, 0);
+  cairo_rectangle (cr, 0, 0, spect_bands, spect_height);
+  cairo_fill (cr);
   for (i = 0; i < spect_bands; i++) {
-    gdk_draw_rectangle (gtk_widget_get_window (drawingarea),
-        gtk_widget_get_style (drawingarea)->white_gc,
-        TRUE, i, -data[i], 1, spect_height + data[i]);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_rectangle (cr, i, -data[i], 1, spect_height + data[i]);
+    cairo_fill (cr);
   }
   gdk_window_end_paint (gtk_widget_get_window (drawingarea));
 }
