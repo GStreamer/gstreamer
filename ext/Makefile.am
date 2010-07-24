@@ -37,11 +37,7 @@ endif
 if USE_GDK_PIXBUF
 GDK_PIXBUF_DIR = gdk_pixbuf
 else
-if USE_GDK_PIXBUF3
-GDK_PIXBUF_DIR = gdk_pixbuf
-else
 GDK_PIXBUF_DIR =
-endif
 endif
 
 if USE_HAL
