@@ -323,6 +323,11 @@ AC_SUBST(GST_LICENSE)
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
+dnl set release date/time
+AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  ["${srcdir}/gst-plugins-base.doap"],
+  [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wformat-nonliteral - see ext/pango/gstclockoverlay.c and http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39438
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
