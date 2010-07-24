@@ -83,6 +83,8 @@ draw_spectrum (gfloat * data)
     cairo_rectangle (cr, i, -data[i], 1, spect_height + data[i]);
     cairo_fill (cr);
   }
+  cairo_destroy (cr);
+
   gdk_window_end_paint (gtk_widget_get_window (drawingarea));
 }
 
