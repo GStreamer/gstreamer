@@ -82,6 +82,7 @@ static gboolean gst_dshowvideosink_unlock_stop (GstBaseSink * bsink);
 static gboolean gst_dshowvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstCaps *gst_dshowvideosink_get_caps (GstBaseSink * bsink);
 static GstFlowReturn gst_dshowvideosink_show_frame (GstVideoSink *sink, GstBuffer *buffer);
+static void gst_dshowvideosink_set_window_for_renderer (GstDshowVideoSink *sink);
 
 /* COM initialization/uninitialization thread */
 static void gst_dshowvideosink_com_thread (GstDshowVideoSink * sink);
@@ -108,6 +109,7 @@ static void
 gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (overlay);
+  HWND previous_window = sink->window_id;
   HWND videowindow = (HWND)window_id;
 
   if (videowindow == sink->window_id) {
@@ -115,8 +117,21 @@ gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
     return;
   }
 
-  /* TODO: What if we already have a window? What if we're already playing? */
   sink->window_id = videowindow;
+
+  /* Update window if we're already playing. */
+  if (sink->connected && sink->filter_media_event) {
+    HRESULT hres;
+
+    /* Return control of application window */
+    SetWindowLongPtr (previous_window, GWL_WNDPROC, (LONG)sink->prevWndProc);
+    SetWindowPos (previous_window, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+    gst_dshowvideosink_set_window_for_renderer (sink);
+
+    hres = sink->filter_media_event->SetNotifyWindow ((OAHWND)sink->window_id, WM_GRAPH_NOTIFY, 0);
+    GST_DEBUG_OBJECT (sink, "SetNotifyWindow(%p) returned %x", sink->window_id, hres);
+  }
 }
 
 static void
@@ -535,6 +550,7 @@ LRESULT APIENTRY WndProcHook (HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
    * Then forward back to the original window.
    */
   GstDshowVideoSink *sink = (GstDshowVideoSink *)GetProp (hWnd, L"GstDShowVideoSink");
+  g_assert (sink != NULL);
 
   switch (message) {
     case WM_GRAPH_NOTIFY:
