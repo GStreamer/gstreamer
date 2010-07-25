@@ -44,6 +44,9 @@
 #endif
 #endif
 
+GST_DEBUG_CATEGORY_STATIC (gst_videomixer_blend_debug);
+#define GST_CAT_DEFAULT gst_videomixer_blend_debug
+
 /* Below are the implementations of everything */
 
 /* A32 is for AYUV, ARGB and BGRA */
@@ -760,6 +763,9 @@ gst_video_mixer_init_blend (void)
   orc_init ();
   cpu_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
 #endif
+
+  GST_DEBUG_CATEGORY_INIT (gst_videomixer_blend_debug, "videomixer_blend", 0,
+      "video mixer blending functions");
 
   gst_video_mixer_blend_argb = blend_argb_c;
   gst_video_mixer_blend_bgra = blend_bgra_c;
