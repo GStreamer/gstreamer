@@ -123,9 +123,16 @@ gst_dshowvideosink_set_window_id (GstXOverlay * overlay, ULONG window_id)
   if (sink->connected && sink->filter_media_event) {
     HRESULT hres;
 
-    /* Return control of application window */
-    SetWindowLongPtr (previous_window, GWL_WNDPROC, (LONG)sink->prevWndProc);
-    SetWindowPos (previous_window, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    if (sink->is_new_window) {
+      /* If we created a new window */
+      SendMessage (previous_window, WM_CLOSE, NULL, NULL);
+      sink->is_new_window = FALSE;
+      sink->window_closed = FALSE;
+    } else {
+      /* Return control of application window */
+      SetWindowLongPtr (previous_window, GWL_WNDPROC, (LONG)sink->prevWndProc);
+      SetWindowPos (previous_window, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    }
 
     gst_dshowvideosink_set_window_for_renderer (sink);
 
