@@ -212,6 +212,7 @@ struct _GstRTSPSrc {
   gchar            *user_id;
   gchar            *user_pw;
   gint              buffer_mode;
+  GstRTSPRange      client_port_range;
 
   /* state */
   GstRTSPState       state;
@@ -222,6 +223,7 @@ struct _GstRTSPSrc {
   gboolean           need_redirect;
   GstRTSPTimeRange  *range;
   gchar             *control;
+  guint              next_port_num;
 
   /* supported methods */
   gint               methods;

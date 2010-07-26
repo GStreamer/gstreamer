@@ -163,6 +163,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_USER_ID          NULL
 #define DEFAULT_USER_PW          NULL
 #define DEFAULT_BUFFER_MODE      1
+#define DEFAULT_PORT_RANGE       NULL
 
 enum
 {
@@ -182,6 +183,7 @@ enum
   PROP_USER_ID,
   PROP_USER_PW,
   PROP_BUFFER_MODE,
+  PROP_PORT_RANGE,
   PROP_LAST
 };
 
@@ -413,6 +415,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           GST_TYPE_RTSP_SRC_BUFFER_MODE, DEFAULT_BUFFER_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc::port-range:
+   *
+   * Configure the client port numbers that can be used to recieve RTP and
+   * RTCP.
+   *
+   * Since: 0.10.25
+   */
+  g_object_class_install_property (gobject_class, PROP_PORT_RANGE,
+      g_param_spec_string ("port-range", "Port range",
+          "Client port range that can be used to receive RTP and RTCP data, "
+          "eg. 3000-3005 (NULL = no restrictions)", DEFAULT_PORT_RANGE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -446,6 +462,8 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->user_id = g_strdup (DEFAULT_USER_ID);
   src->user_pw = g_strdup (DEFAULT_USER_PW);
   src->buffer_mode = DEFAULT_BUFFER_MODE;
+  src->client_port_range.min = 0;
+  src->client_port_range.max = 0;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -620,6 +638,20 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_BUFFER_MODE:
       rtspsrc->buffer_mode = g_value_get_enum (value);
       break;
+    case PROP_PORT_RANGE:
+    {
+      const gchar *str;
+
+      str = g_value_get_string (value);
+      if (str) {
+        sscanf (str, "%u-%u",
+            &rtspsrc->client_port_range.min, &rtspsrc->client_port_range.max);
+      } else {
+        rtspsrc->client_port_range.min = 0;
+        rtspsrc->client_port_range.max = 0;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -696,6 +728,19 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_BUFFER_MODE:
       g_value_set_enum (value, rtspsrc->buffer_mode);
       break;
+    case PROP_PORT_RANGE:
+    {
+      gchar *str;
+
+      if (rtspsrc->client_port_range.min != 0) {
+        str = g_strdup_printf ("%u-%u", rtspsrc->client_port_range.min,
+            rtspsrc->client_port_range.max);
+      } else {
+        str = NULL;
+      }
+      g_value_take_string (value, str);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1377,8 +1422,8 @@ gst_rtspsrc_alloc_udp_ports (GstRTSPStream * stream,
   udpsrc1 = NULL;
   count = 0;
 
-  /* Start with random port */
-  tmp_rtp = 0;
+  /* Start at next port */
+  tmp_rtp = src->next_port_num;
 
   if (stream->is_ipv6)
     host = "udp://[::0]";
@@ -1388,6 +1433,11 @@ gst_rtspsrc_alloc_udp_ports (GstRTSPStream * stream,
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
+
+  if (tmp_rtp != 0 && src->client_port_range.max > 0 &&
+      tmp_rtp >= src->client_port_range.max)
+    goto no_ports;
+
   udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL);
   if (udpsrc0 == NULL)
     goto no_udp_protocol;
@@ -1439,13 +1489,15 @@ again:
 
   /* set port */
   tmp_rtcp = tmp_rtp + 1;
+  if (src->client_port_range.max > 0 && tmp_rtcp >= src->client_port_range.max)
+    goto no_ports;
+
   g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, NULL);
 
   GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
   ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
   /* tmp_rtcp port is busy already : retry to make rtp/rtcp pair */
   if (ret == GST_STATE_CHANGE_FAILURE) {
-
     GST_DEBUG_OBJECT (src, "Unable to make udpsrc from RTCP port %d", tmp_rtcp);
 
     if (++count > src->retry)
@@ -1477,6 +1529,11 @@ again:
    * server told us to really use the UDP ports. */
   stream->udpsrc[0] = gst_object_ref (udpsrc0);
   stream->udpsrc[1] = gst_object_ref (udpsrc1);
+
+  /* keep track of next available port number when we have a range
+   * configured */
+  if (src->next_port_num != 0)
+    src->next_port_num = tmp_rtcp + 1;
 
   /* they are ours now */
   gst_object_sink (udpsrc0);
@@ -4662,6 +4719,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   src->free_channel = 0;
   src->interleaved = FALSE;
   src->need_activate = FALSE;
+  /* keep track of next port number, 0 is random */
+  src->next_port_num = src->client_port_range.min;
   rtpport = rtcpport = 0;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
