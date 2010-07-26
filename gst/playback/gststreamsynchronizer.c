@@ -603,8 +603,9 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
         new_start = timestamp_end - GST_SECOND;
 
         GST_DEBUG_OBJECT (ostream->sinkpad,
-            "Advancing stream %d from %" GST_TIME_FORMAT " to %"
-            GST_TIME_FORMAT, ostream->stream_number, last_stop, new_start);
+            "Advancing stream %u from %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, ostream->stream_number, GST_TIME_ARGS (last_stop),
+            GST_TIME_ARGS (new_start));
 
         gst_pad_push_event (ostream->srcpad,
             gst_event_new_new_segment_full (TRUE, ostream->segment.rate,
