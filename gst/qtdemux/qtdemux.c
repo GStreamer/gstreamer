@@ -3981,11 +3981,11 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         /* calculate the pixel aspect ratio using the display and pixel w/h */
         n = stream->display_width * stream->height;
         d = stream->display_height * stream->width;
-        if (n != d) {
-          GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
-          gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
-              GST_TYPE_FRACTION, n, d, NULL);
-        }
+        if (n == d)
+          n = d = 1;
+        GST_DEBUG_OBJECT (qtdemux, "setting PAR to %d/%d", n, d);
+        gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, n, d, NULL);
       }
 
       /* qt file might have pasp atom */
