@@ -427,8 +427,10 @@ void
 app_dispose (App * app)
 {
   if (app) {
-    if (app->pipeline)
+    if (app->pipeline) {
+      gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_NULL);
       gst_object_unref (app->pipeline);
+    }
 
     g_free (app);
   }
