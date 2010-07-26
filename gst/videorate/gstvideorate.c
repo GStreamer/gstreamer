@@ -352,6 +352,9 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
         gst_structure_fixate_field_string (structure, "color-matrix", "sdtv");
       if (gst_structure_has_field (structure, "chroma-site"))
         gst_structure_fixate_field_string (structure, "chroma-site", "mpeg2");
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
+        gst_structure_fixate_field_nearest_fraction (structure,
+            "pixel-aspect-ratio", 1, 1);
 
       gst_pad_set_caps (otherpad, caps);
       gst_caps_unref (caps);
