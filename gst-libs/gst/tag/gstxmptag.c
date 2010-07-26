@@ -877,7 +877,7 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
     }
     default:
       if (tag_type == GST_TYPE_DATE_TIME) {
-        GstDateTime *datetime;
+        GstDateTime *datetime = NULL;
         gint year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
         gint usecs = 0;
         gint gmt_offset_hour = -1, gmt_offset_min = -1, gmt_offset = -1;
