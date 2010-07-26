@@ -88,6 +88,51 @@ sink_gstobject (GObject * object)
   }
 }
 
+static PyObject *
+pygst_fraction_from_value (const GValue * value)
+{
+  PyObject *module, *dict, *fraction_type, *args, *fraction;
+  gint numerator, denominator;
+
+  numerator = gst_value_get_fraction_numerator (value);
+  denominator = gst_value_get_fraction_denominator (value);
+
+  module = PyImport_ImportModule ("gst");
+  dict = PyModule_GetDict (module);
+  fraction_type = PyMapping_GetItemString (dict, "Fraction");
+
+  args = Py_BuildValue ("(ii)", numerator, denominator);
+  fraction = PyObject_Call (fraction_type, args, NULL);
+  Py_DECREF (args);
+  Py_DECREF (fraction_type);
+  Py_DECREF (module);
+
+  return fraction;
+}
+
+static int
+pygst_fraction_to_value (GValue * value, PyObject * object)
+{
+  PyObject *numerator, *denominator;
+
+  numerator = PyObject_GetAttrString (object, "num");
+  if (numerator == NULL)
+    goto fail;
+
+  denominator = PyObject_GetAttrString (object, "denom");
+  if (denominator == NULL)
+    goto fail;
+
+  gst_value_set_fraction (value,
+      PyLong_AsLong (numerator), PyLong_AsLong (denominator));
+
+out:
+  return 0;
+
+fail:
+  return -1;
+}
+
 DL_EXPORT (void)
 init_gst (void)
 {
@@ -331,6 +376,9 @@ init_gst (void)
       (gchar *) g_quark_to_string (GST_CORE_ERROR));
   PyModule_AddStringConstant (m, "STREAM_ERROR",
       (gchar *) g_quark_to_string (GST_STREAM_ERROR));
+
+  pyg_register_gtype_custom (GST_TYPE_FRACTION,
+      pygst_fraction_from_value, pygst_fraction_to_value);
 
   if (PyErr_Occurred ()) {
     Py_FatalError ("can't initialize module gst");
