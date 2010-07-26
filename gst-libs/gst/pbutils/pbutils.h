@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 
+#include <gst/pbutils/gstpluginsbaseversion.h>
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/pbutils/install-plugins.h>

@@ -43,6 +43,7 @@ Makefile
 *.gir
 *.typelib
 
+gst-libs/gst/pbutils/gstpluginsbaseversion.h
 gst-libs/gst/tag/mklangtables
 
 tmp-orc.c

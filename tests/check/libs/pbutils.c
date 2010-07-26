@@ -704,6 +704,33 @@ GST_START_TEST (test_pb_utils_installer_details)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_versions)
+{
+  gchar *s;
+  guint maj, min, mic, nano;
+
+  gst_plugins_base_version (NULL, NULL, NULL, NULL);
+  gst_plugins_base_version (&maj, &min, &mic, &nano);
+  fail_unless_equals_int (maj, GST_PLUGINS_BASE_VERSION_MAJOR);
+  fail_unless_equals_int (min, GST_PLUGINS_BASE_VERSION_MINOR);
+  fail_unless_equals_int (mic, GST_PLUGINS_BASE_VERSION_MICRO);
+  fail_unless_equals_int (nano, GST_PLUGINS_BASE_VERSION_NANO);
+
+  s = gst_plugins_base_version_string ();
+  if (GST_PLUGINS_BASE_VERSION_NANO == 0) {
+    fail_if (strstr (s, "GIT") || strstr (s, "git") || strstr (s, "prerel"));
+  }
+  if (GST_PLUGINS_BASE_VERSION_NANO == 1) {
+    fail_unless (strstr (s, "GIT") || strstr (s, "git"));
+  }
+  if (GST_PLUGINS_BASE_VERSION_NANO >= 2) {
+    fail_unless (strstr (s, "Prerelease") || strstr (s, "prerelease"));
+  }
+  g_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 libgstpbutils_suite (void)
 {
@@ -717,6 +744,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_get_codec_description);
   tcase_add_test (tc_chain, test_pb_utils_install_plugins);
   tcase_add_test (tc_chain, test_pb_utils_installer_details);
+  tcase_add_test (tc_chain, test_pb_utils_versions);
   return s;
 }
 

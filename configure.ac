@@ -911,6 +911,7 @@ gst-libs/gst/rtsp/Makefile
 gst-libs/gst/sdp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/pbutils/Makefile
+gst-libs/gst/pbutils/gstpluginsbaseversion.h
 gst-libs/gst/video/Makefile
 tools/Makefile
 pkgconfig/Makefile

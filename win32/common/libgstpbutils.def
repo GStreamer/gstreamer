@@ -30,3 +30,5 @@ EXPORTS
 	gst_pb_utils_get_sink_description
 	gst_pb_utils_get_source_description
 	gst_pb_utils_init
+	gst_plugins_base_version
+	gst_plugins_base_version_string

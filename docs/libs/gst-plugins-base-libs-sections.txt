@@ -1729,6 +1729,14 @@ gst_tag_get_language_code_iso_639_2T
 <INCLUDE>gst/pbutils/pbutils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_init
+<SUBSECTION>
+GST_PLUGINS_BASE_VERSION_MAJOR
+GST_PLUGINS_BASE_VERSION_MINOR
+GST_PLUGINS_BASE_VERSION_MICRO
+GST_PLUGINS_BASE_VERSION_NANO
+GST_CHECK_PLUGINS_BASE_VERSION
+gst_plugins_base_version
+gst_plugins_base_version_string
 </SECTION>
 
 <SECTION>
