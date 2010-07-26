@@ -114,6 +114,7 @@ typedef struct _GstMatroskaDemux {
   GstClockTime             cluster_time;
   guint64                  cluster_offset;
   guint64                  first_cluster_offset;
+  guint64                  next_cluster_offset;
 
   /* push based mode usual suspects */
   GstAdapter              *adapter;

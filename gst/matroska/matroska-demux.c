@@ -424,6 +424,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->offset = 0;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
   demux->cluster_offset = 0;
+  demux->next_cluster_offset = 0;
   demux->index_offset = 0;
   demux->seekable = FALSE;
   demux->need_newsegment = FALSE;
@@ -5413,6 +5414,23 @@ gst_matroska_demux_check_read_size (GstMatroskaDemux * demux, guint64 bytes)
   }
 }
 
+/* returns TRUE if we truely are in error state, and should give up */
+static inline gboolean
+gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
+{
+  if (!demux->streaming && demux->next_cluster_offset > 0) {
+    /* just repositioning to where next cluster should be and try from there */
+    GST_WARNING_OBJECT (demux, "parse error, trying next cluster expected at %"
+        G_GUINT64_FORMAT, demux->next_cluster_offset);
+    demux->offset = demux->next_cluster_offset;
+    demux->next_cluster_offset = 0;
+    return FALSE;
+  } else {
+    /* nowhere to try next, give up */
+    return TRUE;
+  }
+}
+
 /* initializes @ebml with @bytes from input stream at current offset.
  * Returns UNEXPECTED if insufficient available,
  * ERROR if too much was attempted to read. */
@@ -5662,6 +5680,9 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
             demux->seek_block = 0;
           }
           demux->seek_first = FALSE;
+          /* record next cluster for recovery */
+          if (read != G_MAXUINT64)
+            demux->next_cluster_offset = demux->cluster_offset + read;
           /* eat cluster prefix */
           gst_matroska_demux_flush (demux, needed);
           break;
@@ -5845,8 +5866,12 @@ gst_matroska_demux_loop (GstPad * pad)
   ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
   if (ret == GST_FLOW_UNEXPECTED)
     goto eos;
-  if (ret != GST_FLOW_OK)
-    goto pause;
+  if (ret != GST_FLOW_OK) {
+    if (gst_matroska_demux_check_parse_error (demux))
+      goto pause;
+    else
+      return;
+  }
 
   GST_LOG_OBJECT (demux, "Offset %" G_GUINT64_FORMAT ", Element id 0x%x, "
       "size %" G_GUINT64_FORMAT ", needed %d", demux->offset, id,
