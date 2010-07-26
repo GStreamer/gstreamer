@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-14 17:46+0100\n"
+"POT-Creation-Date: 2010-07-26 17:44+0200\n"
 "PO-Revision-Date: 2010-07-09 01:12+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -313,6 +313,14 @@ msgid "date"
 msgstr "Datum"
 
 msgid "date the data was created (as a GDate structure)"
+msgstr "Datum, an dem die Daten erzeugt wurden (als GDate-Struktur)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "Datum"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "Datum, an dem die Daten erzeugt wurden (als GDate-Struktur)"
 
 msgid "genre"

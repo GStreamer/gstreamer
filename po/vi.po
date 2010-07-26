@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
+"POT-Creation-Date: 2010-07-26 17:44+0200\n"
 "PO-Revision-Date: 2010-04-27 22:59+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -293,6 +293,14 @@ msgid "date"
 msgstr "ngày"
 
 msgid "date the data was created (as a GDate structure)"
+msgstr "ngày tạo dữ liệu này (dạng cấu trúc GDate)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "ngày"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "ngày tạo dữ liệu này (dạng cấu trúc GDate)"
 
 msgid "genre"

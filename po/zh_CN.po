@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-14 17:46+0100\n"
+"POT-Creation-Date: 2010-07-26 17:44+0200\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -285,6 +285,14 @@ msgid "date"
 msgstr "日期"
 
 msgid "date the data was created (as a GDate structure)"
+msgstr "创建数据的日期(为 GDate 结构)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "日期"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "创建数据的日期(为 GDate 结构)"
 
 msgid "genre"

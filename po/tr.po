@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
+"POT-Creation-Date: 2010-07-26 17:44+0200\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -312,6 +312,14 @@ msgstr "tarih"
 
 #, fuzzy
 msgid "date the data was created (as a GDate structure)"
+msgstr "bu verinin oluşturulduğu tarih (Julian takvimi günleri olarak)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "tarih"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "bu verinin oluşturulduğu tarih (Julian takvimi günleri olarak)"
 
 msgid "genre"

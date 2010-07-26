@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 14:09+0100\n"
+"POT-Creation-Date: 2010-07-26 17:44+0200\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -288,6 +288,14 @@ msgid "date"
 msgstr "日付"
 
 msgid "date the data was created (as a GDate structure)"
+msgstr "データが作成された日付 (GData 構造体として)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "日付"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "データが作成された日付 (GData 構造体として)"
 
 msgid "genre"
