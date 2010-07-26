@@ -362,7 +362,7 @@ gst_init_get_option_group (void)
 
   /* Since GLib 2.23.2 calling g_thread_init() 'late' is allowed and is
    * automatically done as part of g_type_init() */
-  if (!glib_check_version (2, 23, 3)) {
+  if (glib_check_version (2, 23, 3)) {
     /* The GLib threading system must be initialised before calling any other
      * GLib function according to the documentation; if the application hasn't
      * called gst_init() yet or initialised the threading system otherwise, we
