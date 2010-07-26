@@ -18,6 +18,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
+import gobject
+gobject.threads_init()
 from common import gst, TestCase
 
 F = gst.Fraction
@@ -73,5 +75,26 @@ class TestFraction(TestCase):
     def testFloat(self):
         self.assertEquals(float(F(1, 2)), 0.5)
 
+    def testPropertyMarshalling(self):
+        try:
+            obj = gst.element_factory_make("videoparse")
+        except gst.ElementNotFoundError:
+            # no videoparse and I don't know of any elements in core or -base using
+            # fraction properties. Skip this test.
+            return
+        value = obj.props.framerate
+        self.failUnlessEqual(value.num, 25)
+        self.failUnlessEqual(value.denom, 1)
 
+        obj.props.framerate = gst.Fraction(2, 1)
+        value = obj.props.framerate
+        self.failUnlessEqual(value.num, 2)
+        self.failUnlessEqual(value.denom, 1)
 
+        def bad():
+            obj.props.framerate = 1
+        self.failUnlessRaises(TypeError, bad)
+
+        value = obj.props.framerate
+        self.failUnlessEqual(value.num, 2)
+        self.failUnlessEqual(value.denom, 1)
