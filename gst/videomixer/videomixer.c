@@ -85,6 +85,7 @@
 #endif
 
 #include "videomixer.h"
+#include "videomixer2.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
 #define GST_CAT_DEFAULT gst_videomixer_debug
@@ -1855,7 +1856,7 @@ plugin_init (GstPlugin * plugin)
   gst_video_mixer_init_blend ();
 
   return gst_element_register (plugin, "videomixer", GST_RANK_PRIMARY,
-      GST_TYPE_VIDEO_MIXER);
+      GST_TYPE_VIDEO_MIXER) && gst_videomixer2_register (plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
