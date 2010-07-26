@@ -2320,11 +2320,11 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
 static GstMatroskaIndex *
 gst_matroska_demux_search_pos (GstMatroskaDemux * demux, GstClockTime time)
 {
-  GstMatroskaIndex *entry;
+  GstMatroskaIndex *entry = NULL;
   GstMatroskaDemuxState current_state;
   GstClockTime otime, prev_cluster_time, current_cluster_time, cluster_time;
   gint64 opos, newpos, startpos = 0, current_offset;
-  gint64 prev_cluster_offset, current_cluster_offset, cluster_offset;
+  gint64 prev_cluster_offset = -1, current_cluster_offset, cluster_offset;
   const guint chunk = 64 * 1024;
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
@@ -2452,7 +2452,7 @@ retry:
   demux->offset = newpos;
   demux->cluster_time = cluster_time = GST_CLOCK_TIME_NONE;
   while (1) {
-    guint64 cluster_size;
+    guint64 cluster_size = 0;
 
     /* peek and parse some elements */
     ret = gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
