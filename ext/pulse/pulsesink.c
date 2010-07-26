@@ -51,6 +51,8 @@
 #include <gst/interfaces/streamvolume.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include <gst/pbutils/pbutils.h>        /* only used for GST_PLUGINS_BASE_VERSION_* */
+
 #include "pulsesink.h"
 #include "pulseutil.h"
 
@@ -2503,7 +2505,10 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
       /* override with a custom clock */
       if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
         gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
-#if GST_CHECK_VERSION(0, 10, 31) || (GST_CHECK_VERSION(0, 10, 30) && GST_VERSION_NANO > 0)
+
+/* FIXME: get rid once we can depend on core/base git again (>= 0.10.30.1)
+ * (and the pbutils include above as well) */
+#if defined(GST_PLUGINS_BASE_VERSION_MAJOR)
       GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
           gst_audio_clock_new_full ("GstPulseSinkClock",
           (GstAudioClockGetTimeFunc) gst_pulsesink_get_time,
