@@ -3215,6 +3215,7 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnection * conn,
       gst_rtsp_message_dump (&response);
 
     res = gst_rtspsrc_connection_send (src, conn, &response, NULL);
+    gst_rtsp_message_unset (&response);
     if (res < 0)
       goto send_error;
   } else if (res == GST_RTSP_EEOF)
