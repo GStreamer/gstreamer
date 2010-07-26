@@ -938,11 +938,12 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     levelcolor = levelcolormap[level];
 
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
-    g_fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+    fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
         pidcolor, pid, clear, g_thread_self (), levelcolor,
         gst_debug_level_get_name (level), clear, color,
         gst_debug_category_get_name (category), file, line, function, obj,
         clear, gst_debug_message_get (message));
+    fflush (log_file);
 #undef PRINT_FMT
     g_free (color);
 #else
@@ -951,37 +952,46 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
      * thing. */
     static GStaticMutex win_print_mutex = G_STATIC_MUTEX_INIT;
     const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-#define SET_COLOR(c) \
-  SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c));
+#define SET_COLOR(c) G_STMT_START { \
+  if (log_file == stderr) { \
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c)); \
+  } G_STMT_END
     g_static_mutex_lock (&win_print_mutex);
     /* timestamp */
-    g_fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
+    fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
+    fflush (log_file);
     /* pid */
     SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
-    g_fprintf (log_file, PID_FMT, pid);
+    fprintf (log_file, PID_FMT, pid);
+    fflush (log_file);
     /* thread */
     SET_COLOR (clear);
-    g_fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
+    fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
+    fflush (log_file);
     /* level */
     SET_COLOR (levelcolormap[level]);
-    g_fprintf (log_file, "%s ", gst_debug_level_get_name (level));
+    fprintf (log_file, "%s ", gst_debug_level_get_name (level));
+    fflush (log_file);
     /* category */
     SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
             (category)));
-    g_fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
+    fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
         file, line, function, obj);
+    fflush (log_file);
     /* message */
     SET_COLOR (clear);
-    g_fprintf (log_file, " %s\n", gst_debug_message_get (message));
+    fprintf (log_file, " %s\n", gst_debug_message_get (message));
+    fflush (log_file);
     g_static_mutex_unlock (&win_print_mutex);
 #endif
   } else {
     /* no color, all platforms */
 #define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
-    g_fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+    fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
         pid, g_thread_self (), gst_debug_level_get_name (level),
         gst_debug_category_get_name (category), file, line, function, obj,
         gst_debug_message_get (message));
+    fflush (log_file);
 #undef PRINT_FMT
   }
 
