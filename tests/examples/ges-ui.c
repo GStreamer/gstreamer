@@ -18,9 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <ges/ges.h>
+#include <regex.h>
 
 typedef struct App
 {
@@ -44,6 +48,8 @@ typedef struct App
   GtkComboBox *halign;
   GtkComboBox *valign;
   GtkEntry *text;
+  GtkEntry *seconds;
+  GtkWidget *generic_duration;
   GstState state;
   GType selected_type;
 } App;
@@ -107,6 +113,9 @@ void disconnect_from_object (GESTimelineObject * object, App * app);
 void connect_to_title_source (GESTimelineObject * object, App * app);
 
 void disconnect_from_title_source (GESTimelineObject * object, App * app);
+
+void seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
+    App * app);
 
 /* UI state functions *******************************************************/
 
@@ -194,6 +203,9 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
 
   gtk_widget_set_visible (app->text_properties,
       app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
+
+  gtk_widget_set_visible (app->generic_duration,
+      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
 }
 
 gboolean
@@ -275,6 +287,74 @@ text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
     g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
+  }
+}
+
+static gboolean
+check_time (const gchar * time)
+{
+  static regex_t re;
+  static gboolean compiled = FALSE;
+
+  if (!compiled) {
+    compiled = TRUE;
+    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
+        REG_EXTENDED | REG_NOSUB);
+  }
+
+  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+    return TRUE;
+  return FALSE;
+}
+
+static guint64
+str_to_time (const gchar * str)
+{
+  guint64 ret;
+  guint64 h, m;
+  gdouble s;
+  gchar buf[15];
+
+  buf[0] = str[0];
+  buf[1] = str[1];
+  buf[2] = '\0';
+
+  h = strtoull (buf, NULL, 10);
+
+  buf[0] = str[3];
+  buf[1] = str[4];
+  buf[2] = '\0';
+
+  m = strtoull (buf, NULL, 10);
+
+  strncpy (buf, &str[6], sizeof (buf));
+  s = strtod (buf, NULL);
+
+  ret = (h * 3600 * GST_SECOND) +
+      (m * 60 * GST_SECOND) + ((guint64) (s * GST_SECOND));
+
+  return ret;
+}
+
+void
+seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
+    App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (app->seconds);
+
+  if (!check_time (text)) {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_WARNING);
+  } else {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, NULL);
+    for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
+          (guint64) str_to_time (text), NULL);
+    }
   }
 }
 
@@ -653,11 +733,23 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
 void
 connect_to_title_source (GESTimelineObject * object, App * app)
 {
+  gdouble s;
+  guint64 duration;
+  gchar buf[30];
+
   GESTimelineTitleSource *obj;
   obj = GES_TIMELINE_TITLE_SOURCE (object);
   gtk_combo_box_set_active (app->halign, obj->halign);
   gtk_combo_box_set_active (app->valign, obj->valign);
   gtk_entry_set_text (app->text, obj->text);
+
+  duration = GES_TIMELINE_OBJECT_DURATION (object);
+
+  s = (duration / (float) GST_SECOND);
+
+  g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
+      GST_TIME_ARGS (duration));
+  gtk_entry_set_text (app->seconds, buf);
 }
 
 void
@@ -717,11 +809,16 @@ create_ui (App * app)
   GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
+  GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
+  GET_WIDGET (app->generic_duration, "generic_duration", GTK_WIDGET);
 
   /* get text notifications */
 
   g_signal_connect (app->text, "notify::text",
       G_CALLBACK (text_notify_text_changed_cb), app);
+
+  g_signal_connect (app->seconds, "notify::text",
+      G_CALLBACK (seconds_notify_text_changed_cb), app);
 
   /* we care when the tree selection changes */
 
