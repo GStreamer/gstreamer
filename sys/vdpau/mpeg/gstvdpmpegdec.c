@@ -381,18 +381,6 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  /* set buffer flags */
-  if (info->picture_coding_type == I_FRAME)
-    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-  else
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-  if (info->top_field_first)
-    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
-  else
-    GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
-
-
   frame->src_buffer = GST_BUFFER_CAST (outbuf);
 
   if (info->picture_coding_type == B_FRAME) {
