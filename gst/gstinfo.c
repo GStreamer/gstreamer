@@ -953,7 +953,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     static GStaticMutex win_print_mutex = G_STATIC_MUTEX_INIT;
     const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 #define SET_COLOR(c) G_STMT_START { \
-  if (log_file == stderr) { \
+  if (log_file == stderr) \
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c)); \
   } G_STMT_END
     g_static_mutex_lock (&win_print_mutex);
