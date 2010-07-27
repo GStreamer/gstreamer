@@ -589,7 +589,8 @@ gst_vdp_mpeg_dec_start (GstBaseVideoDecoder * base_video_decoder)
 
   memset (&mpeg_dec->stream_info, 0, sizeof (GstVdpMpegStreamInfo));
 
-  return TRUE;
+  return GST_BASE_VIDEO_DECODER_CLASS
+      (parent_class)->start (base_video_decoder);
 }
 
 static gboolean
@@ -604,7 +605,7 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 
   mpeg_dec->state = GST_VDP_MPEG_DEC_STATE_NEED_SEQUENCE;
 
-  return TRUE;
+  return GST_BASE_VIDEO_DECODER_CLASS (parent_class)->stop (base_video_decoder);
 }
 
 static void

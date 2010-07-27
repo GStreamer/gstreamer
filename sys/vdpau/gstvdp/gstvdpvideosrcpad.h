@@ -41,8 +41,6 @@ typedef struct _GstVdpVideoSrcPadClass GstVdpVideoSrcPadClass;
 GstFlowReturn gst_vdp_video_src_pad_push (GstVdpVideoSrcPad *vdp_pad, GstVdpVideoBuffer *video_buf);
 GstFlowReturn gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad *vdp_pad, GstVdpVideoBuffer **video_buf, GError ** error);
 
-GstFlowReturn gst_vdp_video_src_pad_get_device (GstVdpVideoSrcPad * vdp_pad, GstVdpDevice ** device, GError ** error);
-
 GstCaps *gst_vdp_video_src_pad_get_template_caps ();
 
 GstVdpVideoSrcPad * gst_vdp_video_src_pad_new (GstPadTemplate * templ, const gchar * name);

@@ -821,7 +821,8 @@ gst_vdp_h264_dec_start (GstBaseVideoDecoder * base_video_decoder)
   gst_h264_dpb_set_output_func (h264_dec->dpb, gst_vdp_h264_dec_output,
       h264_dec);
 
-  return TRUE;
+  return GST_BASE_VIDEO_DECODER_CLASS
+      (parent_class)->start (base_video_decoder);
 }
 
 static gboolean
@@ -832,7 +833,7 @@ gst_vdp_h264_dec_stop (GstBaseVideoDecoder * base_video_decoder)
   g_object_unref (h264_dec->parser);
   g_object_unref (h264_dec->dpb);
 
-  return TRUE;
+  return GST_BASE_VIDEO_DECODER_CLASS (parent_class)->stop (base_video_decoder);
 }
 
 static void

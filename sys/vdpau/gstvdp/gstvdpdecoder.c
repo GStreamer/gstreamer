@@ -102,23 +102,6 @@ gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder,
   return ret;
 }
 
-static GstFlowReturn
-gst_vdp_decoder_get_device (GstVdpDecoder * vdp_decoder, GstVdpDevice ** device)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-
-  GstFlowReturn ret;
-  GError *err = NULL;
-
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
-
-  ret = gst_vdp_video_src_pad_get_device (vdp_pad, device, &err);
-  if (ret == GST_FLOW_ERROR)
-    gst_vdp_decoder_post_error (vdp_decoder, err);
-
-  return ret;
-}
-
 GstFlowReturn
 gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo * info,
     guint n_bufs, VdpBitstreamBuffer * bufs, GstVdpVideoBuffer ** video_buf)
@@ -158,15 +141,12 @@ GstFlowReturn
 gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
     VdpDecoderProfile profile, guint32 max_references)
 {
-  GstFlowReturn ret;
   GstVdpDevice *device;
 
   VdpStatus status;
   GstVideoState state;
 
-  ret = gst_vdp_decoder_get_device (vdp_decoder, &device);
-  if (ret != GST_FLOW_OK)
-    return ret;
+  device = vdp_decoder->device;
 
   if (vdp_decoder->decoder != VDP_INVALID_HANDLE) {
     status = device->vdp_decoder_destroy (vdp_decoder->decoder);
@@ -201,6 +181,55 @@ create_decoder_error:
   return GST_FLOW_ERROR;
 }
 
+static gboolean
+gst_vdp_decoder_start (GstBaseVideoDecoder * base_video_decoder)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (base_video_decoder);
+
+  GstVdpVideoSrcPad *vdp_pad;
+
+  vdp_decoder->device = gst_vdp_get_device (vdp_decoder->display);
+  if (G_UNLIKELY (!vdp_decoder->device))
+    goto device_error;
+
+  vdp_pad =
+      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
+  g_object_set (G_OBJECT (vdp_pad), "device", vdp_decoder->device, NULL);
+
+  vdp_decoder->decoder = VDP_INVALID_HANDLE;
+
+  return TRUE;
+
+device_error:
+  GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, OPEN_READ,
+      ("Couldn't create GstVdpDevice"), (NULL));
+  return FALSE;
+}
+
+static gboolean
+gst_vdp_decoder_stop (GstBaseVideoDecoder * base_video_decoder)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (base_video_decoder);
+
+  if (vdp_decoder->decoder != VDP_INVALID_HANDLE) {
+    GstVdpDevice *device = vdp_decoder->device;
+    VdpStatus status;
+
+    status = device->vdp_decoder_destroy (vdp_decoder->decoder);
+    if (status != VDP_STATUS_OK) {
+      GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, READ,
+          ("Could not destroy vdpau decoder"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+      return FALSE;
+    }
+  }
+
+  g_object_unref (vdp_decoder->device);
+
+  return TRUE;
+}
+
 static void
 gst_vdp_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
@@ -209,10 +238,9 @@ gst_vdp_decoder_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
-      g_object_get_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder)), "display",
-          value);
+      g_value_set_string (value, vdp_decoder->display);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -227,14 +255,24 @@ gst_vdp_decoder_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
-      g_object_set_property
-          (G_OBJECT (GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder)), "display",
-          value);
+      g_free (vdp_decoder->display);
+      vdp_decoder->display = g_value_dup_string (value);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_vdp_decoder_finalize (GObject * object)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (object);
+
+  g_free (vdp_decoder->display);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -253,9 +291,9 @@ gst_vdp_decoder_base_init (gpointer g_class)
 }
 
 static void
-gst_vdp_decoder_init (GstVdpDecoder * decoder, GstVdpDecoderClass * klass)
+gst_vdp_decoder_init (GstVdpDecoder * vdp_decoder, GstVdpDecoderClass * klass)
 {
-  decoder->decoder = VDP_INVALID_HANDLE;
+  vdp_decoder->display = NULL;
 }
 
 static void
@@ -269,6 +307,10 @@ gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
 
   object_class->get_property = gst_vdp_decoder_get_property;
   object_class->set_property = gst_vdp_decoder_set_property;
+  object_class->finalize = gst_vdp_decoder_finalize;
+
+  base_video_decoder_class->start = gst_vdp_decoder_start;
+  base_video_decoder_class->stop = gst_vdp_decoder_stop;
 
   base_video_decoder_class->create_srcpad = gst_vdp_decoder_create_srcpad;
   base_video_decoder_class->shape_output = gst_vdp_decoder_shape_output;

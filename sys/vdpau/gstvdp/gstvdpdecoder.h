@@ -43,7 +43,11 @@ typedef struct _GstVdpDecoderClass GstVdpDecoderClass;
 struct _GstVdpDecoder {
   GstBaseVideoDecoder base_video_decoder;
 
+  GstVdpDevice *device;
   VdpDecoder decoder;
+
+  /* properties */
+  gchar *display;
 };
 
 struct _GstVdpDecoderClass {
