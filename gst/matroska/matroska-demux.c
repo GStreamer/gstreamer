@@ -570,12 +570,11 @@ static gint64
 gst_matroska_demux_get_length (GstMatroskaDemux * demux)
 {
   GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 end;
+  gint64 end = -1;
 
-  /* FIXME: what to do if we don't get the upstream length */
   if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &end) ||
       fmt != GST_FORMAT_BYTES || end < 0)
-    g_return_val_if_reached (0);
+    GST_DEBUG_OBJECT (demux, "no upstream length");
 
   return end;
 }
@@ -5290,6 +5289,11 @@ gst_matroska_demux_parse_contents_seekentry (GstMatroskaDemux * demux,
       /* remember */
       length = gst_matroska_demux_get_length (demux);
       before_pos = demux->offset;
+
+      if (length == (guint64) - 1) {
+        GST_DEBUG_OBJECT (demux, "no upstream length, skipping SeakHead entry");
+        break;
+      }
 
       /* check for validity */
       if (seek_pos + demux->ebml_segment_start + 12 >= length) {
