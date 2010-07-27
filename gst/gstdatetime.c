@@ -317,10 +317,11 @@ gst_date_time_new_from_unix_epoch (gint64 t)
 
   memset (&tm, 0, sizeof (tm));
   tt = (time_t) t;
+
 #ifdef HAVE_LOCALTIME_R
   localtime_r (&tt, &tm);
 #else
-  localtime (&tt, &tm);
+  memcpy (&tm, localtime (&tt), sizeof (struct tm));
 #endif
 
   dt = gst_date_time_new (tm.tm_year + 1900,
