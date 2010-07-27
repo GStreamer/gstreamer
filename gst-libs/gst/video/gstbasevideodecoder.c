@@ -284,6 +284,7 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (base_video_decoder);
       base_video_decoder->earliest_time = GST_CLOCK_TIME_NONE;
       base_video_decoder->proportion = 0.5;
+      gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
       GST_OBJECT_UNLOCK (base_video_decoder);
     }
     default:
@@ -927,6 +928,7 @@ gst_base_video_decoder_change_state (GstElement * element,
       if (base_video_decoder_class->stop) {
         base_video_decoder_class->stop (base_video_decoder);
       }
+      gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
       g_list_foreach (base_video_decoder->timestamps, (GFunc) g_free, NULL);
       g_list_free (base_video_decoder->timestamps);
       base_video_decoder->timestamps = NULL;
