@@ -95,10 +95,6 @@ typedef struct _PendingXmpTag PendingXmpTag;
  * of each GSList in the mapping.
  */
 static GHashTable *__xmp_tag_map;
-static GMutex *__xmp_tag_map_mutex;
-
-#define XMP_TAG_MAP_LOCK g_mutex_lock (__xmp_tag_map_mutex)
-#define XMP_TAG_MAP_UNLOCK g_mutex_unlock (__xmp_tag_map_mutex)
 
 static void
 _xmp_tag_add_mapping (const gchar * gst_tag, GPtrArray * array)
@@ -108,11 +104,9 @@ _xmp_tag_add_mapping (const gchar * gst_tag, GPtrArray * array)
 
   key = g_quark_from_string (gst_tag);
 
-  XMP_TAG_MAP_LOCK;
   list = g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
   list = g_slist_append (list, (gpointer) array);
   g_hash_table_insert (__xmp_tag_map, GUINT_TO_POINTER (key), list);
-  XMP_TAG_MAP_UNLOCK;
 }
 
 static void
@@ -145,9 +139,7 @@ _xmp_tag_get_mapping (const gchar * gst_tag)
   GSList *ret = NULL;
   GQuark key = g_quark_from_string (gst_tag);
 
-  XMP_TAG_MAP_LOCK;
   ret = (GSList *) g_hash_table_lookup (__xmp_tag_map, GUINT_TO_POINTER (key));
-  XMP_TAG_MAP_UNLOCK;
 
   return ret;
 }
@@ -162,7 +154,6 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
   GSList *walk;
   gint index;
 
-  XMP_TAG_MAP_LOCK;
 
   /* Iterate over the hashtable */
   g_hash_table_iter_init (&iter, __xmp_tag_map);
@@ -187,7 +178,6 @@ _xmp_tag_get_mapping_reverse (const gchar * xmp_tag, XmpTag ** _xmp_tag)
   }
 
 out:
-  XMP_TAG_MAP_UNLOCK;
   return ret;
 }
 
@@ -711,7 +701,6 @@ _init_xmp_tag_map ()
   GPtrArray *array;
   XmpTag *xmpinfo;
 
-  __xmp_tag_map_mutex = g_mutex_new ();
   __xmp_tag_map = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   /* add the maps */
