@@ -13,6 +13,7 @@ libgstvdp_@GST_MAJORMINOR@_la_SOURCES = \
 libgstvdp_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/vdpau
 libgstvdp_@GST_MAJORMINOR@include_HEADERS = \
 	gstvdpdevice.h \
+	gstvdputils.h \
 	gstvdpvideobuffer.h \
 	gstvdpoutputbuffer.h \
 	gstvdpvideosrcpad.h \
