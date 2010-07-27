@@ -917,7 +917,8 @@ gst_base_video_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_base_video_decoder_start (base_video_decoder);
+      if (!gst_base_video_decoder_start (base_video_decoder))
+        return GST_STATE_CHANGE_FAILURE;
       break;
 
     default:
@@ -928,7 +929,8 @@ gst_base_video_decoder_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_base_video_decoder_stop (base_video_decoder);
+      if (!gst_base_video_decoder_stop (base_video_decoder))
+        ret = GST_STATE_CHANGE_FAILURE;
       break;
 
     default:
