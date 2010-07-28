@@ -263,8 +263,8 @@ static GSList *__log_functions = NULL;
 #define PRETTY_TAGS_DEFAULT  TRUE
 static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
-static gint __default_level;
-static gint __use_color;
+static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
+static volatile gint G_GNUC_MAY_ALIAS __use_color;
 
 static FILE *log_file;
 
@@ -327,9 +327,6 @@ _gst_debug_init (void)
   } else {
     log_file = stderr;
   }
-
-  g_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
-  g_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
   _priv_gst_info_start_time = gst_util_get_timestamp ();
@@ -1163,6 +1160,8 @@ gst_debug_remove_log_function_by_data (gpointer data)
  * @colored: Whether to use colored output or not
  *
  * Sets or unsets the use of coloured debugging output.
+ *
+ * This function may be called before gst_init().
  */
 void
 gst_debug_set_colored (gboolean colored)
@@ -1222,6 +1221,8 @@ gst_debug_is_active (void)
  *
  * Sets the default threshold to the given level and updates all categories to
  * use this threshold.
+ *
+ * This function may be called before gst_init().
  */
 void
 gst_debug_set_default_threshold (GstDebugLevel level)
