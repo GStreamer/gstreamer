@@ -93,5 +93,32 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>tiger</name>
+      <longname>Kate stream renderer</longname>
+      <class>Mixer/Video/Overlay/Subtitle</class>
+      <description>Decodes and renders Kate streams on top of a video</description>
+      <author>Vincent Penquerc&apos;h &lt;ogg.k.ogg.k@googlemail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>subtitle_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>subtitle/x-kate; application/x-kate</details>
+        </caps>
+        <caps>
+          <name>video_sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

@@ -1,0 +1,34 @@
+<plugin>
+  <name>videomaxrate</name>
+  <description>Drop extra frames</description>
+  <filename>../../gst/videomaxrate/.libs/libgstvideomaxrate.so</filename>
+  <basename>libgstvideomaxrate.so</basename>
+  <version>0.10.19.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videomaxrate</name>
+      <longname>Video maximum rate adjuster</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Drops extra frames</description>
+      <author>Justin Karneges &lt;justin@affinix.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray; image/jpeg; image/png</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv; video/x-raw-rgb; video/x-raw-gray; image/jpeg; image/png</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

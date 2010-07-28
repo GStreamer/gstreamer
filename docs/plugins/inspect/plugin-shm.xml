@@ -1,0 +1,43 @@
+<plugin>
+  <name>shm</name>
+  <description>shared memory sink source</description>
+  <filename>../../sys/shm/.libs/libgstshm.so</filename>
+  <basename>libgstshm.so</basename>
+  <version>0.10.19.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>shmsink</name>
+      <longname>Shared Memory Sink</longname>
+      <class>Sink</class>
+      <description>Send data over shared memory to the matching source</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>shmsrc</name>
+      <longname>Shared Memory Source</longname>
+      <class>Source</class>
+      <description>Receive data from the sharem memory sink</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

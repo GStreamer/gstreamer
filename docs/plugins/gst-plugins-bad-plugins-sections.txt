@@ -126,6 +126,20 @@ GST_IS_AUTO_CONVERT_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-burn</FILE>
+<TITLE>burn</TITLE>
+GstBurn
+<SUBSECTION Standard>
+GstBurnClass
+GST_BURN
+GST_BURN_CLASS
+GST_IS_BURN
+GST_IS_BURN_CLASS
+GST_TYPE_BURN
+gst_burn_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-camerabin</FILE>
 <TITLE>camerabin</TITLE>
 GstCameraBin
@@ -166,6 +180,33 @@ GST_IS_CELT_ENC
 GST_IS_CELT_ENC_CLASS
 GST_TYPE_CELT_ENC
 gst_celt_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-chromium</FILE>
+<TITLE>chromium</TITLE>
+GstChromium
+<SUBSECTION Standard>
+GstChromiumClass
+GST_CHROMIUM
+GST_CHROMIUM_CLASS
+GST_IS_CHROMIUM
+GST_IS_CHROMIUM_CLASS
+GST_TYPE_CHROMIUM
+gst_chromium_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-circle</FILE>
+<TITLE>circle</TITLE>
+GstCircle
+<SUBSECTION Standard>
+GstCircleClass
+GST_CIRCLE
+GST_CIRCLE_CLASS
+GST_IS_CIRCLE
+GST_IS_CIRCLE_CLASS
+GST_TYPE_CIRCLE
 </SECTION>
 
 <SECTION>
@@ -274,6 +315,33 @@ gst_dfbsurface_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-diffuse</FILE>
+<TITLE>diffuse</TITLE>
+GstDiffuse
+<SUBSECTION Standard>
+GstDiffuseClass
+GST_DIFFUSE
+GST_DIFFUSE_CLASS
+GST_IS_DIFFUSE
+GST_IS_DIFFUSE_CLASS
+GST_TYPE_DIFFUSE
+</SECTION>
+
+<SECTION>
+<FILE>element-dilate</FILE>
+<TITLE>dilate</TITLE>
+GstDilate
+<SUBSECTION Standard>
+GstDilateClass
+GST_DILATE
+GST_DILATE_CLASS
+GST_IS_DILATE
+GST_IS_DILATE_CLASS
+GST_TYPE_DILATE
+gst_dilate_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-directdrawsink</FILE>
 <TITLE>directdrawsink</TITLE>
 GstDirectDrawSink
@@ -290,6 +358,20 @@ GST_DDRAWSURFACE
 GST_IS_DDRAWSURFACE
 GST_TYPE_DDRAWSURFACE
 DIRECTDRAW_VERSION
+</SECTION>
+
+<SECTION>
+<FILE>element-dodge</FILE>
+<TITLE>dodge</TITLE>
+GstDodge
+<SUBSECTION Standard>
+GstDodgeClass
+GST_DODGE
+GST_DODGE_CLASS
+GST_IS_DODGE
+GST_IS_DODGE_CLASS
+GST_TYPE_DODGE
+gst_dodge_get_type
 </SECTION>
 
 <SECTION>
@@ -388,6 +470,20 @@ SpuState
 DVD_SPU_LOCK
 DVD_SPU_UNLOCK
 SPU_STATE_FLAGS_MASK
+</SECTION>
+
+<SECTION>
+<FILE>element-exclusion</FILE>
+<TITLE>exclusion</TITLE>
+GstExclusion
+<SUBSECTION Standard>
+GstExclusionClass
+GST_EXCLUSION
+GST_EXCLUSION_CLASS
+GST_IS_EXCLUSION
+GST_IS_EXCLUSION_CLASS
+GST_TYPE_EXCLUSION
+gst_exclusion_get_type
 </SECTION>
 
 <SECTION>
@@ -499,6 +595,21 @@ GST_INPUT_SELECTOR_WAIT
 </SECTION>
 
 <SECTION>
+<FILE>element-ivfparse</FILE>
+<TITLE>ivfparse</TITLE>
+GstIvfParse
+<SUBSECTION Standard>
+GstIvfParseState
+GstIvfParseClass
+GST_IVF_PARSE
+GST_IVF_PARSE_CLASS
+GST_IS_IVF_PARSE
+GST_IS_IVF_PARSE_CLASS
+GST_TYPE_IVF_PARSE
+gst_ivf_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-jackaudiosrc</FILE>
 <TITLE>jackaudiosrc</TITLE>
 GstJackAudioSrc
@@ -572,6 +683,19 @@ GST_TYPE_LIVE_ADDER
 GstLiveAdderFormat
 GstLiveAdderFunction
 gst_live_adder_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-kaleidoscope</FILE>
+<TITLE>kaleidoscope</TITLE>
+GstKaleidoscope
+<SUBSECTION Standard>
+GstKaleidoscopeClass
+GST_KALEIDOSCOPE
+GST_KALEIDOSCOPE_CLASS
+GST_IS_KALEIDOSCOPE
+GST_IS_KALEIDOSCOPE_CLASS
+GST_TYPE_KALEIDOSCOPE
 </SECTION>
 
 <SECTION>
@@ -677,6 +801,19 @@ GST_BASE_METADATA_EXIF_ADAPTER
 GST_BASE_METADATA_IPTC_ADAPTER
 GST_BASE_METADATA_XMP_ADAPTER
 GST_BASE_METADATA_IMG_TYPE
+</SECTION>
+
+<SECTION>
+<FILE>element-marble</FILE>
+<TITLE>marble</TITLE>
+GstMarble
+<SUBSECTION Standard>
+GstMarbleClass
+GST_MARBLE
+GST_MARBLE_CLASS
+GST_IS_MARBLE
+GST_IS_MARBLE_CLASS
+GST_TYPE_MARBLE
 </SECTION>
 
 <SECTION>
@@ -874,6 +1011,19 @@ gst_pcap_parse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-pinch</FILE>
+<TITLE>pinch</TITLE>
+GstPinch
+<SUBSECTION Standard>
+GstPinchClass
+GST_PINCH
+GST_PINCH_CLASS
+GST_IS_PINCH
+GST_IS_PINCH_CLASS
+GST_TYPE_PINCH
+</SECTION>
+
+<SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
 GstRtpDTMFDepay
@@ -1003,6 +1153,48 @@ GST_SDP_STREAM_UNLOCK
 </SECTION>
 
 <SECTION>
+<FILE>element-shmsink</FILE>
+<TITLE>shmsink</TITLE>
+GstShmSink
+<SUBSECTION Standard>
+GstShmSinkClass
+GST_IS_SHM_SINK
+GST_IS_SHM_SINK_CLASS
+GST_SHM_SINK
+GST_SHM_SINK_CLASS
+GST_TYPE_SHM_SINK
+gst_shm_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-shmsrc</FILE>
+<TITLE>shmsrc</TITLE>
+GstShmSrc
+<SUBSECTION Standard>
+GstShmSrcClass
+GST_IS_SHM_SRC
+GST_IS_SHM_SRC_CLASS
+GST_SHM_SRC
+GST_SHM_SRC_CLASS
+GST_TYPE_SHM_SRC
+gst_shm_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-solarize</FILE>
+<TITLE>solarize</TITLE>
+GstSolarize
+<SUBSECTION Standard>
+GstSolarizeClass
+GST_SOLARIZE
+GST_SOLARIZE_CLASS
+GST_IS_SOLARIZE
+GST_IS_SOLARIZE_CLASS
+GST_TYPE_SOLARIZE
+gst_solarize_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-speed</FILE>
 <TITLE>speed</TITLE>
 GstSpeed
@@ -1015,6 +1207,19 @@ GST_IS_SPEED
 GST_IS_SPEED_CLASS
 GST_TYPE_SPEED
 gst_speed_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-sphere</FILE>
+<TITLE>sphere</TITLE>
+GstSphere
+<SUBSECTION Standard>
+GstSphereClass
+GST_SPHERE
+GST_SPHERE_CLASS
+GST_IS_SPHERE
+GST_IS_SPHERE_CLASS
+GST_TYPE_SPHERE
 </SECTION>
 
 <SECTION>
@@ -1070,6 +1275,19 @@ GST_IS_TRM
 GST_IS_TRM_CLASS
 GST_TYPE_TRM
 gst_trm_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-twirl</FILE>
+<TITLE>twirl</TITLE>
+GstTwirl
+<SUBSECTION Standard>
+GstTwirlClass
+GST_TWIRL
+GST_TWIRL_CLASS
+GST_IS_TWIRL
+GST_IS_TWIRL_CLASS
+GST_TYPE_TWIRL
 </SECTION>
 
 <SECTION>
@@ -1156,6 +1374,19 @@ GST_IS_VIDEO_PARSE
 GST_IS_VIDEO_PARSE_CLASS
 GST_TYPE_VIDEO_PARSE
 gst_video_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-waterripple</FILE>
+<TITLE>waterripple</TITLE>
+GstWaterRipple
+<SUBSECTION Standard>
+GstWaterRippleClass
+GST_WATER_RIPPLE
+GST_WATER_RIPPLE_CLASS
+GST_IS_WATER_RIPPLE
+GST_IS_WATER_RIPPLE_CLASS
+GST_TYPE_WATER_RIPPLE
 </SECTION>
 
 <SECTION>

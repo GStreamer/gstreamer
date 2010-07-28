@@ -146,9 +146,25 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
 	$(top_srcdir)/gst/freeze/gstfreeze.h \
+	$(top_srcdir)/gst/gaudieffects/gstburn.h \
+	$(top_srcdir)/gst/gaudieffects/gstchromium.h \
+	$(top_srcdir)/gst/gaudieffects/gstdilate.h \
+	$(top_srcdir)/gst/gaudieffects/gstdodge.h \
+	$(top_srcdir)/gst/gaudieffects/gstexclusion.h \
+	$(top_srcdir)/gst/gaudieffects/gstplugin.h \
+	$(top_srcdir)/gst/gaudieffects/gstsolarize.h \
+	$(top_srcdir)/gst/geometrictransform/gstcircle.h \
+	$(top_srcdir)/gst/geometrictransform/gstdiffuse.h \
+	$(top_srcdir)/gst/geometrictransform/gstkaleidoscope.h \
+	$(top_srcdir)/gst/geometrictransform/gstmarble.h \
+	$(top_srcdir)/gst/geometrictransform/gstpinch.h \
+	$(top_srcdir)/gst/geometrictransform/gstsphere.h \
+	$(top_srcdir)/gst/geometrictransform/gsttwirl.h \
+	$(top_srcdir)/gst/geometrictransform/gstwaterripple.h \
+	$(top_srcdir)/gst/ivfparse/gstivfparse.h \
+	$(top_srcdir)/gst/jpegformat/gstjpegparse.h \
 	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
 	$(top_srcdir)/gst/liveadder/liveadder.h \
-	$(top_srcdir)/gst/jpegformat/gstjpegparse.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
 	$(top_srcdir)/gst/mxf/mxfmux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
@@ -170,6 +186,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/valve/gstvalve.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h \
+	$(top_srcdir)/sys/shm/gstshmsink.h \
+	$(top_srcdir)/sys/shm/gstshmsrc.h \
 	$(top_srcdir)/gst-libs/gst/interfaces/photography.h
 
 # Images to copy into HTML directory.
