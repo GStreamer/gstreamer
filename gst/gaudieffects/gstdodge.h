@@ -56,18 +56,18 @@ G_BEGIN_DECLS
 #define GST_TYPE_DODGE \
   (gst_dodge_get_type())
 #define GST_DODGE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DODGE,Gstdodge))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DODGE,GstDodge))
 #define GST_DODGE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DODGE,GstdodgeClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DODGE,GstDodgeClass))
 #define GST_IS_DODGE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DODGE))
 #define GST_IS_DODGE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DODGE))
 
-typedef struct _Gstdodge      Gstdodge;
-typedef struct _GstdodgeClass GstdodgeClass;
+typedef struct _GstDodge      GstDodge;
+typedef struct _GstDodgeClass GstDodgeClass;
 
-struct _Gstdodge
+struct _GstDodge
 {
   GstVideoFilter videofilter;
 
@@ -78,7 +78,7 @@ struct _Gstdodge
   gboolean silent;
 };
 
-struct _GstdodgeClass 
+struct _GstDodgeClass
 {
   GstVideoFilterClass parent_class;
 };

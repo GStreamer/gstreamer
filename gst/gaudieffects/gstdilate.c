@@ -111,7 +111,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstdilate, gst_dilate, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+GST_BOILERPLATE (GstDilate, gst_dilate, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 static void gst_dilate_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -144,7 +144,7 @@ gst_dilate_base_init (gpointer gclass)
 
 /* Initialize the dilate's class. */
 static void
-gst_dilate_class_init (GstdilateClass * klass)
+gst_dilate_class_init (GstDilateClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -166,7 +166,7 @@ gst_dilate_class_init (GstdilateClass * klass)
  * initialize instance structure.
  */
 static void
-gst_dilate_init (Gstdilate * filter, GstdilateClass * gclass)
+gst_dilate_init (GstDilate * filter, GstDilateClass * gclass)
 {
   filter->silent = FALSE;
 }
@@ -175,7 +175,7 @@ static void
 gst_dilate_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstdilate *filter = GST_DILATE (object);
+  GstDilate *filter = GST_DILATE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -191,7 +191,7 @@ static void
 gst_dilate_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstdilate *filter = GST_DILATE (object);
+  GstDilate *filter = GST_DILATE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -210,7 +210,7 @@ static gboolean
 gst_dilate_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstdilate *filter = GST_DILATE (btrans);
+  GstDilate *filter = GST_DILATE (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -226,7 +226,7 @@ static GstFlowReturn
 gst_dilate_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstdilate *filter = GST_DILATE (btrans);
+  GstDilate *filter = GST_DILATE (btrans);
   gint video_size;
 
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);

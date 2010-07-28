@@ -110,7 +110,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstdodge, gst_dodge, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+GST_BOILERPLATE (GstDodge, gst_dodge, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 static void gst_dodge_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -143,7 +143,7 @@ gst_dodge_base_init (gpointer gclass)
 
 /* Initialize the dodge's class. */
 static void
-gst_dodge_class_init (GstdodgeClass * klass)
+gst_dodge_class_init (GstDodgeClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -165,7 +165,7 @@ gst_dodge_class_init (GstdodgeClass * klass)
  * initialize instance structure.
  */
 static void
-gst_dodge_init (Gstdodge * filter, GstdodgeClass * gclass)
+gst_dodge_init (GstDodge * filter, GstDodgeClass * gclass)
 {
   filter->silent = FALSE;
 }
@@ -174,7 +174,7 @@ static void
 gst_dodge_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstdodge *filter = GST_DODGE (object);
+  GstDodge *filter = GST_DODGE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -190,7 +190,7 @@ static void
 gst_dodge_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstdodge *filter = GST_DODGE (object);
+  GstDodge *filter = GST_DODGE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -209,7 +209,7 @@ static gboolean
 gst_dodge_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstdodge *filter = GST_DODGE (btrans);
+  GstDodge *filter = GST_DODGE (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -225,7 +225,7 @@ static GstFlowReturn
 gst_dodge_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstdodge *filter = GST_DODGE (btrans);
+  GstDodge *filter = GST_DODGE (btrans);
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);
   gint video_size;

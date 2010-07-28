@@ -56,18 +56,18 @@ G_BEGIN_DECLS
 #define GST_TYPE_DILATE \
   (gst_dilate_get_type())
 #define GST_DILATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DILATE,Gstdilate))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DILATE,GstDilate))
 #define GST_DILATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DILATE,GstdilateClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DILATE,GstDilateClass))
 #define GST_IS_DILATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DILATE))
 #define GST_IS_DILATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DILATE))
 
-typedef struct _Gstdilate      Gstdilate;
-typedef struct _GstdilateClass GstdilateClass;
+typedef struct _GstDilate      GstDilate;
+typedef struct _GstDilateClass GstDilateClass;
 
-struct _Gstdilate
+struct _GstDilate
 {
   GstVideoFilter videofilter;
 
@@ -78,7 +78,7 @@ struct _Gstdilate
   gboolean silent;
 };
 
-struct _GstdilateClass 
+struct _GstDilateClass
 {
   GstVideoFilterClass parent_class;
 };

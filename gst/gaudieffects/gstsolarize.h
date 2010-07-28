@@ -56,18 +56,18 @@ G_BEGIN_DECLS
 #define GST_TYPE_SOLARIZE \
   (gst_solarize_get_type())
 #define GST_SOLARIZE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOLARIZE,Gstsolarize))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SOLARIZE,GstSolarize))
 #define GST_SOLARIZE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOLARIZE,GstsolarizeClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SOLARIZE,GstSolarizeClass))
 #define GST_IS_SOLARIZE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SOLARIZE))
 #define GST_IS_SOLARIZE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SOLARIZE))
 
-typedef struct _Gstsolarize      Gstsolarize;
-typedef struct _GstsolarizeClass GstsolarizeClass;
+typedef struct _GstSolarize      GstSolarize;
+typedef struct _GstSolarizeClass GstSolarizeClass;
 
-struct _Gstsolarize
+struct _GstSolarize
 {
   GstVideoFilter videofilter;
 
@@ -78,7 +78,7 @@ struct _Gstsolarize
   gboolean silent;
 };
 
-struct _GstsolarizeClass 
+struct _GstSolarizeClass
 {
   GstVideoFilterClass parent_class;
 };

@@ -110,7 +110,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstsolarize, gst_solarize, GstVideoFilter,
+GST_BOILERPLATE (GstSolarize, gst_solarize, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
 static void gst_solarize_set_property (GObject * object, guint prop_id,
@@ -144,7 +144,7 @@ gst_solarize_base_init (gpointer gclass)
 
 /* Initialize the solarize's class. */
 static void
-gst_solarize_class_init (GstsolarizeClass * klass)
+gst_solarize_class_init (GstSolarizeClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -166,7 +166,7 @@ gst_solarize_class_init (GstsolarizeClass * klass)
  * initialize instance structure.
  */
 static void
-gst_solarize_init (Gstsolarize * filter, GstsolarizeClass * gclass)
+gst_solarize_init (GstSolarize * filter, GstSolarizeClass * gclass)
 {
   filter->silent = FALSE;
 }
@@ -175,7 +175,7 @@ static void
 gst_solarize_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstsolarize *filter = GST_SOLARIZE (object);
+  GstSolarize *filter = GST_SOLARIZE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -191,7 +191,7 @@ static void
 gst_solarize_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstsolarize *filter = GST_SOLARIZE (object);
+  GstSolarize *filter = GST_SOLARIZE (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -210,7 +210,7 @@ static gboolean
 gst_solarize_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstsolarize *filter = GST_SOLARIZE (btrans);
+  GstSolarize *filter = GST_SOLARIZE (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -226,7 +226,7 @@ static GstFlowReturn
 gst_solarize_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstsolarize *filter = GST_SOLARIZE (btrans);
+  GstSolarize *filter = GST_SOLARIZE (btrans);
   gint video_size;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);

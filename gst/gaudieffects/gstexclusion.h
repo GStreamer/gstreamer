@@ -56,18 +56,18 @@ G_BEGIN_DECLS
 #define GST_TYPE_EXCLUSION \
   (gst_exclusion_get_type())
 #define GST_EXCLUSION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EXCLUSION,Gstexclusion))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_EXCLUSION,GstExclusion))
 #define GST_EXCLUSION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXCLUSION,GstexclusionClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_EXCLUSION,GstExclusionClass))
 #define GST_IS_EXCLUSION(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EXCLUSION))
 #define GST_IS_EXCLUSION_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EXCLUSION))
 
-typedef struct _Gstexclusion      Gstexclusion;
-typedef struct _GstexclusionClass GstexclusionClass;
+typedef struct _GstExclusion      GstExclusion;
+typedef struct _GstExclusionClass GstExclusionClass;
 
-struct _Gstexclusion
+struct _GstExclusion
 {
   GstVideoFilter videofilter;
 
@@ -78,7 +78,7 @@ struct _Gstexclusion
   gboolean silent;
 };
 
-struct _GstexclusionClass 
+struct _GstExclusionClass
 {
   GstVideoFilterClass parent_class;
 };

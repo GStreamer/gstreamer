@@ -122,7 +122,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstchromium, gst_chromium, GstVideoFilter,
+GST_BOILERPLATE (GstChromium, gst_chromium, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
 static void gst_chromium_set_property (GObject * object, guint prop_id,
@@ -156,7 +156,7 @@ gst_chromium_base_init (gpointer gclass)
 
 /* Initialize the chromium's class. */
 static void
-gst_chromium_class_init (GstchromiumClass * klass)
+gst_chromium_class_init (GstChromiumClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -178,7 +178,7 @@ gst_chromium_class_init (GstchromiumClass * klass)
  * initialize instance structure.
  */
 static void
-gst_chromium_init (Gstchromium * filter, GstchromiumClass * gclass)
+gst_chromium_init (GstChromium * filter, GstChromiumClass * gclass)
 {
   filter->silent = FALSE;
 
@@ -189,7 +189,7 @@ static void
 gst_chromium_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstchromium *filter = GST_CHROMIUM (object);
+  GstChromium *filter = GST_CHROMIUM (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -205,7 +205,7 @@ static void
 gst_chromium_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstchromium *filter = GST_CHROMIUM (object);
+  GstChromium *filter = GST_CHROMIUM (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -224,7 +224,7 @@ static gboolean
 gst_chromium_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstchromium *filter = GST_CHROMIUM (btrans);
+  GstChromium *filter = GST_CHROMIUM (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -241,7 +241,7 @@ static GstFlowReturn
 gst_chromium_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstchromium *filter = GST_CHROMIUM (btrans);
+  GstChromium *filter = GST_CHROMIUM (btrans);
   gint video_size;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);

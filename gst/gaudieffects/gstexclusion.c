@@ -110,7 +110,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstexclusion, gst_exclusion, GstVideoFilter,
+GST_BOILERPLATE (GstExclusion, gst_exclusion, GstVideoFilter,
     GST_TYPE_VIDEO_FILTER);
 
 static void gst_exclusion_set_property (GObject * object, guint prop_id,
@@ -144,7 +144,7 @@ gst_exclusion_base_init (gpointer gclass)
 
 /* Initialize the exclusion's class. */
 static void
-gst_exclusion_class_init (GstexclusionClass * klass)
+gst_exclusion_class_init (GstExclusionClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -166,7 +166,7 @@ gst_exclusion_class_init (GstexclusionClass * klass)
  * initialize instance structure.
  */
 static void
-gst_exclusion_init (Gstexclusion * filter, GstexclusionClass * gclass)
+gst_exclusion_init (GstExclusion * filter, GstExclusionClass * gclass)
 {
   filter->silent = FALSE;
 }
@@ -175,7 +175,7 @@ static void
 gst_exclusion_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstexclusion *filter = GST_EXCLUSION (object);
+  GstExclusion *filter = GST_EXCLUSION (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -191,7 +191,7 @@ static void
 gst_exclusion_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstexclusion *filter = GST_EXCLUSION (object);
+  GstExclusion *filter = GST_EXCLUSION (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -210,7 +210,7 @@ static gboolean
 gst_exclusion_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstexclusion *filter = GST_EXCLUSION (btrans);
+  GstExclusion *filter = GST_EXCLUSION (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -226,7 +226,7 @@ static GstFlowReturn
 gst_exclusion_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstexclusion *filter = GST_EXCLUSION (btrans);
+  GstExclusion *filter = GST_EXCLUSION (btrans);
   gint video_size;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);

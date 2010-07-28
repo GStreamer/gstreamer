@@ -109,7 +109,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (CAPS_STR)
     );
 
-GST_BOILERPLATE (Gstburn, gst_burn, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
+GST_BOILERPLATE (GstBurn, gst_burn, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 static void gst_burn_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -142,7 +142,7 @@ gst_burn_base_init (gpointer gclass)
 
 /* Initialize the burn's class. */
 static void
-gst_burn_class_init (GstburnClass * klass)
+gst_burn_class_init (GstBurnClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *trans_class = (GstBaseTransformClass *) klass;
@@ -164,7 +164,7 @@ gst_burn_class_init (GstburnClass * klass)
  * initialize instance structure.
  */
 static void
-gst_burn_init (Gstburn * filter, GstburnClass * gclass)
+gst_burn_init (GstBurn * filter, GstBurnClass * gclass)
 {
   filter->silent = FALSE;
 }
@@ -173,7 +173,7 @@ static void
 gst_burn_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstburn *filter = GST_BURN (object);
+  GstBurn *filter = GST_BURN (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -189,7 +189,7 @@ static void
 gst_burn_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstburn *filter = GST_BURN (object);
+  GstBurn *filter = GST_BURN (object);
 
   switch (prop_id) {
     case PROP_SILENT:
@@ -208,7 +208,7 @@ static gboolean
 gst_burn_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  Gstburn *filter = GST_BURN (btrans);
+  GstBurn *filter = GST_BURN (btrans);
   GstStructure *structure;
   gboolean ret = TRUE;
 
@@ -225,7 +225,7 @@ static GstFlowReturn
 gst_burn_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  Gstburn *filter = GST_BURN (btrans);
+  GstBurn *filter = GST_BURN (btrans);
   gint video_size;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);
