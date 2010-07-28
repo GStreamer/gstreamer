@@ -363,23 +363,6 @@ gst_vdp_vpp_post_error (GstVdpVideoPostProcess * vpp, GError * error)
 }
 
 static GstFlowReturn
-gst_vdp_vpp_open_device (GstVdpVideoPostProcess * vpp)
-{
-  GstFlowReturn ret;
-  GError *err = NULL;
-
-  GST_DEBUG ("open_device");
-
-  ret =
-      gst_vdp_output_src_pad_get_device (GST_VDP_OUTPUT_SRC_PAD (vpp->srcpad),
-      &vpp->device, &err);
-  if (ret == GST_FLOW_ERROR)
-    gst_vdp_vpp_post_error (vpp, err);
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp)
 {
 #define VDP_NUM_MIXER_PARAMETER 3
@@ -413,8 +396,6 @@ gst_vdp_vpp_create_mixer (GstVdpVideoPostProcess * vpp)
   if (vpp->inverse_telecine)
     features[n_features++] = VDP_VIDEO_MIXER_FEATURE_INVERSE_TELECINE;
 
-  if (G_UNLIKELY (!vpp->device))
-    gst_vdp_vpp_open_device (vpp);
   device = vpp->device;
 
   status =
@@ -569,7 +550,7 @@ gst_vdp_vpp_flush (GstVdpVideoPostProcess * vpp)
   vpp->n_past_pictures = 0;
 }
 
-static void
+static gboolean
 gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
 {
   gint i;
@@ -589,15 +570,41 @@ gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
   }
   vpp->n_future_pictures = 0;
   vpp->n_past_pictures = 0;
+
+  vpp->device = gst_vdp_get_device (vpp->display);
+  if (G_UNLIKELY (!vpp->device))
+    goto device_error;
+
+  g_object_set (G_OBJECT (vpp->srcpad), "device", vpp->device, NULL);
+
+  return TRUE;
+
+device_error:
+  GST_ELEMENT_ERROR (vpp, RESOURCE, OPEN_READ,
+      ("Couldn't create GstVdpDevice"), (NULL));
+  return FALSE;
 }
 
-static void
+static gboolean
 gst_vdp_vpp_stop (GstVdpVideoPostProcess * vpp)
 {
-  if (vpp->mixer != VDP_INVALID_HANDLE)
-    vpp->device->vdp_video_mixer_destroy (vpp->mixer);
-
   gst_vdp_vpp_flush (vpp);
+
+  if (vpp->mixer != VDP_INVALID_HANDLE) {
+    GstVdpDevice *device = vpp->device;
+    VdpStatus status;
+
+    status = device->vdp_video_mixer_destroy (vpp->mixer);
+    if (status != VDP_STATUS_OK) {
+      GST_ELEMENT_ERROR (vpp, RESOURCE, READ,
+          ("Could not destroy vdpau decoder"),
+          ("Error returned from vdpau was: %s",
+              device->vdp_get_error_string (status)));
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -783,9 +790,6 @@ no_qos:
   if (!vpp->native_input) {
     GstVdpVideoBuffer *video_buf;
 
-    if (G_UNLIKELY (!vpp->device))
-      gst_vdp_vpp_open_device (vpp);
-
     video_buf = gst_vdp_video_buffer_new (vpp->device, vpp->chroma_type,
         vpp->width, vpp->height);
     if (G_UNLIKELY (!video_buf))
@@ -871,12 +875,6 @@ gst_vdp_vpp_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
   if (gst_structure_has_name (structure, "video/x-vdpau-video")) {
     gint width, height;
     VdpChromaType chroma_type;
-
-    if (G_UNLIKELY (!vpp->device)) {
-      ret = gst_vdp_vpp_open_device (vpp);
-      if (ret != GST_FLOW_OK)
-        return ret;
-    }
 
     if (!gst_structure_get_int (structure, "width", &width) ||
         !gst_structure_get_int (structure, "height", &height) ||
@@ -1002,7 +1000,8 @@ gst_vdp_vpp_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_vdp_vpp_start (vpp);
+      if (!gst_vdp_vpp_start (vpp))
+        return GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -1012,7 +1011,8 @@ gst_vdp_vpp_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_vdp_vpp_stop (vpp);
+      if (!gst_vdp_vpp_stop (vpp))
+        ret = GST_STATE_CHANGE_FAILURE;
       break;
     default:
       break;
@@ -1030,26 +1030,33 @@ gst_vdp_vpp_get_property (GObject * object, guint property_id, GValue * value,
 
   switch (property_id) {
     case PROP_DISPLAY:
-      g_object_get_property (G_OBJECT (vpp->srcpad), "display", value);
+      g_value_set_string (value, vpp->display);
       break;
+
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, vpp->force_aspect_ratio);
       break;
+
     case PROP_DEINTERLACE_MODE:
       g_value_set_enum (value, vpp->mode);
       break;
+
     case PROP_DEINTERLACE_METHOD:
       g_value_set_enum (value, vpp->method);
       break;
+
     case PROP_NOISE_REDUCTION:
       g_value_set_float (value, vpp->noise_reduction);
       break;
+
     case PROP_SHARPENING:
       g_value_set_float (value, vpp->sharpening);
       break;
+
     case PROP_INVERSE_TELECINE:
       g_value_set_boolean (value, vpp->inverse_telecine);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -1065,14 +1072,18 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_DISPLAY:
-      g_object_set_property (G_OBJECT (vpp->srcpad), "display", value);
+      g_free (vpp->display);
+      vpp->display = g_value_dup_string (value);
       break;
+
     case PROP_FORCE_ASPECT_RATIO:
       vpp->force_aspect_ratio = g_value_get_boolean (value);
       break;
+
     case PROP_DEINTERLACE_MODE:
       vpp->mode = g_value_get_enum (value);
       break;
+
     case PROP_DEINTERLACE_METHOD:
     {
       GstVdpDeinterlaceMethods oldvalue;
@@ -1091,6 +1102,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       }
       break;
     }
+
     case PROP_NOISE_REDUCTION:
     {
       gfloat old_value;
@@ -1115,6 +1127,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       }
       break;
     }
+
     case PROP_SHARPENING:
     {
       gfloat old_value;
@@ -1138,6 +1151,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       }
       break;
     }
+
     case PROP_INVERSE_TELECINE:
     {
       vpp->inverse_telecine = g_value_get_boolean (value);
@@ -1148,6 +1162,7 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
       }
       break;
     }
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;

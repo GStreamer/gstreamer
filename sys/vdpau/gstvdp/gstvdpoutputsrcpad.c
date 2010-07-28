@@ -29,7 +29,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdp_output_src_pad_debug);
 enum
 {
   PROP_0,
-  PROP_DISPLAY,
+  PROP_DEVICE,
   PROP_TEMPL_CAPS
 };
 
@@ -46,7 +46,6 @@ struct _GstVdpOutputSrcPad
   GstPad pad;
 
   GstCaps *caps;
-  GstVdpDevice *device;
 
   GstCaps *input_caps;
   GstVdpOutputSrcPadFormat output_format;
@@ -54,7 +53,7 @@ struct _GstVdpOutputSrcPad
   gint width, height;
 
   /* properties */
-  gchar *display;
+  GstVdpDevice *device;
   GstCaps *templ_caps;
 };
 
@@ -123,25 +122,6 @@ gst_vdp_output_src_pad_push (GstVdpOutputSrcPad * vdp_pad,
   return gst_pad_push (pad, outbuf);
 }
 
-static void
-gst_vdp_output_src_pad_update_caps (GstVdpOutputSrcPad * vdp_pad)
-{
-  GstCaps *allowed_caps;
-
-  allowed_caps = gst_vdp_output_buffer_get_allowed_caps (vdp_pad->device);
-
-  if (vdp_pad->caps)
-    gst_caps_unref (vdp_pad->caps);
-
-  if (vdp_pad->templ_caps) {
-    vdp_pad->caps = gst_caps_intersect (allowed_caps, vdp_pad->templ_caps);
-    gst_caps_unref (allowed_caps);
-  } else
-    vdp_pad->caps = allowed_caps;
-
-  GST_DEBUG_OBJECT (vdp_pad, "allowed caps: %" GST_PTR_FORMAT, vdp_pad->caps);
-}
-
 static GstFlowReturn
 gst_vdp_output_src_pad_create_buffer (GstVdpOutputSrcPad * vdp_pad,
     GstVdpOutputBuffer ** output_buf, GError ** error)
@@ -201,26 +181,6 @@ output_buf_error:
 
 }
 
-static gboolean
-gst_vdp_output_src_pad_open_device (GstVdpOutputSrcPad * vdp_pad,
-    GError ** error)
-{
-  GstVdpDevice *device;
-
-  vdp_pad->device = device = gst_vdp_get_device (vdp_pad->display);
-  if (G_UNLIKELY (!vdp_pad->device))
-    goto device_error;
-
-  gst_vdp_output_src_pad_update_caps (vdp_pad);
-
-  return TRUE;
-
-device_error:
-  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
-      "Couldn't create GstVdpDevice");
-  return FALSE;
-}
-
 static GstFlowReturn
 gst_vdp_output_src_pad_alloc_with_caps (GstVdpOutputSrcPad * vdp_pad,
     GstCaps * caps, GstVdpOutputBuffer ** output_buf, GError ** error)
@@ -260,11 +220,6 @@ gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad * vdp_pad,
   switch (vdp_pad->output_format) {
     case GST_VDP_OUTPUT_SRC_PAD_FORMAT_RGB:
     {
-      if (G_UNLIKELY (!vdp_pad->device)) {
-        if (!gst_vdp_output_src_pad_open_device (vdp_pad, error))
-          return GST_FLOW_ERROR;
-      }
-
       ret = gst_vdp_output_src_pad_create_buffer (vdp_pad, output_buf, error);
       if (ret != GST_FLOW_OK)
         return ret;
@@ -278,13 +233,6 @@ gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad * vdp_pad,
           error);
       if (ret != GST_FLOW_OK)
         return ret;
-
-      if (G_UNLIKELY (!vdp_pad->device)) {
-        vdp_pad->device =
-            g_object_ref (GST_VDP_VIDEO_BUFFER (*output_buf)->device);
-
-        gst_vdp_output_src_pad_update_caps (vdp_pad);
-      }
 
       break;
     }
@@ -365,54 +313,6 @@ not_negotiated:
   return FALSE;
 }
 
-GstFlowReturn
-gst_vdp_output_src_pad_get_device (GstVdpOutputSrcPad * vdp_pad,
-    GstVdpDevice ** device, GError ** error)
-{
-  g_return_val_if_fail (GST_IS_VDP_OUTPUT_SRC_PAD (vdp_pad), FALSE);
-
-  if (G_UNLIKELY (!vdp_pad->device)) {
-    GstCaps *src_caps;
-    GstStructure *structure;
-
-    src_caps = gst_pad_get_allowed_caps (GST_PAD (vdp_pad));
-
-    if (gst_caps_is_empty (src_caps)) {
-      gst_caps_unref (src_caps);
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-    gst_pad_fixate_caps (GST_PAD (vdp_pad), src_caps);
-
-    structure = gst_caps_get_structure (src_caps, 0);
-    if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-      if (!gst_vdp_output_src_pad_open_device (vdp_pad, error)) {
-        gst_caps_unref (src_caps);
-        return GST_FLOW_ERROR;
-      }
-    }
-
-    else {
-      GstFlowReturn ret;
-      GstVdpOutputBuffer *buf;
-
-      ret = gst_vdp_output_src_pad_alloc_with_caps (vdp_pad, src_caps,
-          &buf, error);
-      if (ret != GST_FLOW_OK) {
-        gst_caps_unref (src_caps);
-        return ret;
-      }
-
-      vdp_pad->device = g_object_ref (buf->device);
-      gst_buffer_unref (GST_BUFFER (buf));
-    }
-
-    gst_caps_unref (src_caps);
-  }
-
-  *device = vdp_pad->device;
-  return GST_FLOW_OK;
-}
-
 static GstCaps *
 gst_vdp_output_src_pad_getcaps (GstPad * pad)
 {
@@ -430,13 +330,13 @@ gst_vdp_output_src_pad_activate_push (GstPad * pad, gboolean active)
   GstVdpOutputSrcPad *vdp_pad = GST_VDP_OUTPUT_SRC_PAD (pad);
 
   if (!active) {
-    if (vdp_pad->device)
-      g_object_unref (vdp_pad->device);
-    vdp_pad->device = NULL;
-
     if (vdp_pad->caps)
       gst_caps_unref (vdp_pad->caps);
     vdp_pad->caps = NULL;
+
+    if (vdp_pad->device)
+      gst_object_unref (vdp_pad->device);
+    vdp_pad->device = NULL;
   }
 
   return TRUE;
@@ -450,18 +350,39 @@ gst_vdp_output_src_pad_new (GstCaps * templ_caps)
 }
 
 static void
+gst_vdp_output_src_pad_update_caps (GstVdpOutputSrcPad * vdp_pad)
+{
+  GstCaps *allowed_caps;
+
+  allowed_caps = gst_vdp_output_buffer_get_allowed_caps (vdp_pad->device);
+
+  if (vdp_pad->caps)
+    gst_caps_unref (vdp_pad->caps);
+
+  if (vdp_pad->templ_caps) {
+    vdp_pad->caps = gst_caps_intersect (allowed_caps, vdp_pad->templ_caps);
+    gst_caps_unref (allowed_caps);
+  } else
+    vdp_pad->caps = allowed_caps;
+
+  GST_DEBUG_OBJECT (vdp_pad, "allowed caps: %" GST_PTR_FORMAT, vdp_pad->caps);
+}
+
+static void
 gst_vdp_output_src_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVdpOutputSrcPad *vdp_pad = (GstVdpOutputSrcPad *) object;
 
   switch (prop_id) {
-    case PROP_DISPLAY:
-      g_value_set_string (value, vdp_pad->display);
+    case PROP_DEVICE:
+      g_value_set_object (value, vdp_pad->device);
       break;
+
     case PROP_TEMPL_CAPS:
       gst_value_set_caps (value, vdp_pad->templ_caps);
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -475,14 +396,19 @@ gst_vdp_output_src_pad_set_property (GObject * object, guint prop_id,
   GstVdpOutputSrcPad *vdp_pad = (GstVdpOutputSrcPad *) object;
 
   switch (prop_id) {
-    case PROP_DISPLAY:
-      vdp_pad->display = g_value_dup_string (value);
+    case PROP_DEVICE:
+      if (vdp_pad->device)
+        g_object_unref (vdp_pad->device);
+      vdp_pad->device = g_value_dup_object (value);
+      gst_vdp_output_src_pad_update_caps (vdp_pad);
       break;
+
     case PROP_TEMPL_CAPS:
       if (vdp_pad->templ_caps)
         gst_caps_unref (vdp_pad->templ_caps);
       vdp_pad->templ_caps = gst_caps_copy (gst_value_get_caps (value));
       break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -497,8 +423,6 @@ gst_vdp_output_src_pad_finalize (GObject * object)
   if (vdp_pad->templ_caps)
     gst_caps_unref (vdp_pad->templ_caps);
 
-  g_free (vdp_pad->display);
-
   G_OBJECT_CLASS (gst_vdp_output_src_pad_parent_class)->finalize (object);
 }
 
@@ -507,10 +431,9 @@ gst_vdp_output_src_pad_init (GstVdpOutputSrcPad * vdp_pad)
 {
   GstPad *pad = GST_PAD (vdp_pad);
 
-  vdp_pad->device = NULL;
   vdp_pad->caps = NULL;
 
-  vdp_pad->display = NULL;
+  vdp_pad->device = NULL;
   vdp_pad->templ_caps = NULL;
 
   gst_pad_set_getcaps_function (pad,
@@ -528,9 +451,18 @@ gst_vdp_output_src_pad_class_init (GstVdpOutputSrcPadClass * klass)
   object_class->set_property = gst_vdp_output_src_pad_set_property;
   object_class->finalize = gst_vdp_output_src_pad_finalize;
 
-  g_object_class_install_property (object_class, PROP_DISPLAY,
-      g_param_spec_string ("display", "Display", "X Display name",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  /**
+   * GstVdpVideoSrcPad:device:
+   *
+   * The #GstVdpDevice this pool is bound to.
+   */
+  g_object_class_install_property
+      (object_class,
+      PROP_DEVICE,
+      g_param_spec_object ("device",
+          "Device",
+          "The GstVdpDevice the pad should use",
+          GST_TYPE_VDP_DEVICE, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class, PROP_TEMPL_CAPS,
       g_param_spec_boxed ("template-caps", "Template caps",
