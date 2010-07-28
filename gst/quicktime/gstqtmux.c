@@ -2318,6 +2318,11 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-h264") == 0) {
     entry.fourcc = FOURCC_avc1;
     qtpad->is_out_of_order = TRUE;
+    if (qtpad->avg_bitrate == 0) {
+      gint avg_bitrate = 0;
+      gst_structure_get_int (structure, "bitrate", &avg_bitrate);
+      qtpad->avg_bitrate = avg_bitrate;
+    }
     ext_atom = build_btrt_extension (0, qtpad->avg_bitrate, qtpad->max_bitrate);
     if (ext_atom != NULL)
       ext_atom_list = g_list_prepend (ext_atom_list, ext_atom);
