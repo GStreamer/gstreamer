@@ -29,8 +29,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdp_output_src_pad_debug);
 enum
 {
   PROP_0,
-  PROP_DEVICE,
-  PROP_TEMPL_CAPS
+  PROP_DEVICE
 };
 
 typedef enum _GstVdpOutputSrcPadFormat GstVdpOutputSrcPadFormat;
@@ -54,7 +53,6 @@ struct _GstVdpOutputSrcPad
 
   /* properties */
   GstVdpDevice *device;
-  GstCaps *templ_caps;
 };
 
 struct _GstVdpOutputSrcPadClass
@@ -318,10 +316,15 @@ gst_vdp_output_src_pad_getcaps (GstPad * pad)
 {
   GstVdpOutputSrcPad *vdp_pad = (GstVdpOutputSrcPad *) pad;
 
+  const GstCaps *templ_caps;
+
   if (vdp_pad->caps)
     return gst_caps_ref (vdp_pad->caps);
 
-  return gst_caps_ref (vdp_pad->templ_caps);
+  else if ((templ_caps = gst_pad_get_pad_template_caps (pad)))
+    return gst_caps_copy (templ_caps);
+
+  return NULL;
 }
 
 static gboolean
@@ -343,29 +346,28 @@ gst_vdp_output_src_pad_activate_push (GstPad * pad, gboolean active)
 }
 
 GstVdpOutputSrcPad *
-gst_vdp_output_src_pad_new (GstCaps * templ_caps)
+gst_vdp_output_src_pad_new (GstPadTemplate * templ, const gchar * name)
 {
-  return g_object_new (GST_TYPE_VDP_OUTPUT_SRC_PAD, "template-caps", templ_caps,
-      "direction", GST_PAD_SRC, NULL);
+  return g_object_new (GST_TYPE_VDP_OUTPUT_SRC_PAD, "name", name,
+      "template", templ, "direction", GST_PAD_SRC, NULL);
 }
 
 static void
 gst_vdp_output_src_pad_update_caps (GstVdpOutputSrcPad * vdp_pad)
 {
-  GstCaps *allowed_caps;
-
-  allowed_caps = gst_vdp_output_buffer_get_allowed_caps (vdp_pad->device);
+  GstCaps *caps;
+  const GstCaps *templ_caps;
 
   if (vdp_pad->caps)
     gst_caps_unref (vdp_pad->caps);
 
-  if (vdp_pad->templ_caps) {
-    vdp_pad->caps = gst_caps_intersect (allowed_caps, vdp_pad->templ_caps);
-    gst_caps_unref (allowed_caps);
-  } else
-    vdp_pad->caps = allowed_caps;
+  caps = gst_vdp_output_buffer_get_allowed_caps (vdp_pad->device);
 
-  GST_DEBUG_OBJECT (vdp_pad, "allowed caps: %" GST_PTR_FORMAT, vdp_pad->caps);
+  if ((templ_caps = gst_pad_get_pad_template_caps (GST_PAD (vdp_pad)))) {
+    vdp_pad->caps = gst_caps_intersect (caps, templ_caps);
+    gst_caps_unref (caps);
+  } else
+    vdp_pad->caps = caps;
 }
 
 static void
@@ -377,10 +379,6 @@ gst_vdp_output_src_pad_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
       g_value_set_object (value, vdp_pad->device);
-      break;
-
-    case PROP_TEMPL_CAPS:
-      gst_value_set_caps (value, vdp_pad->templ_caps);
       break;
 
     default:
@@ -403,27 +401,10 @@ gst_vdp_output_src_pad_set_property (GObject * object, guint prop_id,
       gst_vdp_output_src_pad_update_caps (vdp_pad);
       break;
 
-    case PROP_TEMPL_CAPS:
-      if (vdp_pad->templ_caps)
-        gst_caps_unref (vdp_pad->templ_caps);
-      vdp_pad->templ_caps = gst_caps_copy (gst_value_get_caps (value));
-      break;
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static void
-gst_vdp_output_src_pad_finalize (GObject * object)
-{
-  GstVdpOutputSrcPad *vdp_pad = (GstVdpOutputSrcPad *) object;
-
-  if (vdp_pad->templ_caps)
-    gst_caps_unref (vdp_pad->templ_caps);
-
-  G_OBJECT_CLASS (gst_vdp_output_src_pad_parent_class)->finalize (object);
 }
 
 static void
@@ -434,7 +415,6 @@ gst_vdp_output_src_pad_init (GstVdpOutputSrcPad * vdp_pad)
   vdp_pad->caps = NULL;
 
   vdp_pad->device = NULL;
-  vdp_pad->templ_caps = NULL;
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_getcaps));
@@ -449,7 +429,6 @@ gst_vdp_output_src_pad_class_init (GstVdpOutputSrcPadClass * klass)
 
   object_class->get_property = gst_vdp_output_src_pad_get_property;
   object_class->set_property = gst_vdp_output_src_pad_set_property;
-  object_class->finalize = gst_vdp_output_src_pad_finalize;
 
   /**
    * GstVdpVideoSrcPad:device:
@@ -463,10 +442,4 @@ gst_vdp_output_src_pad_class_init (GstVdpOutputSrcPadClass * klass)
           "Device",
           "The GstVdpDevice the pad should use",
           GST_TYPE_VDP_DEVICE, G_PARAM_READWRITE));
-
-  g_object_class_install_property (object_class, PROP_TEMPL_CAPS,
-      g_param_spec_boxed ("template-caps", "Template caps",
-          "Template caps", GST_TYPE_CAPS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
 }

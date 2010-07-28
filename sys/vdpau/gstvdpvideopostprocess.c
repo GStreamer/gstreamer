@@ -1273,9 +1273,7 @@ gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
   src_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (gclass), "src");
 
-  vpp->srcpad =
-      GST_PAD (gst_vdp_output_src_pad_new (gst_pad_template_get_caps
-          (src_template)));
+  vpp->srcpad = GST_PAD (gst_vdp_output_src_pad_new (src_template, "src"));
   gst_element_add_pad (GST_ELEMENT (vpp), vpp->srcpad);
 
   gst_pad_set_event_function (vpp->srcpad,

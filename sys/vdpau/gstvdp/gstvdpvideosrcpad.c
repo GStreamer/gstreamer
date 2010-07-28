@@ -238,7 +238,7 @@ gst_vdp_video_src_pad_getcaps (GstPad * pad)
   const GstCaps *templ_caps;
 
   if (vdp_pad->caps)
-    return gst_caps_copy (vdp_pad->caps);
+    return gst_caps_ref (vdp_pad->caps);
 
   else if ((templ_caps = gst_pad_get_pad_template_caps (pad)))
     return gst_caps_copy (templ_caps);
