@@ -3137,8 +3137,8 @@ build_btrt_extension (guint32 buffer_size_db, guint32 avg_bitrate,
   buf = gst_buffer_new_and_alloc (12);
 
   GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), buffer_size_db);
-  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 4, avg_bitrate);
-  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 8, max_bitrate);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 4, max_bitrate);
+  GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf) + 8, avg_bitrate);
 
   atom_data =
       atom_data_new_from_gst_buffer (GST_MAKE_FOURCC ('b', 't', 'r', 't'), buf);
