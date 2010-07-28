@@ -5401,8 +5401,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 if (size < 12)
                   break;
 
-                max_bitrate = QT_UINT32 (avc_data + 0x10);
-                avg_bitrate = QT_UINT32 (avc_data + 0xc);
+                max_bitrate = QT_UINT32 (avc_data + 0xc);
+                avg_bitrate = QT_UINT32 (avc_data + 0x10);
 
                 if (!max_bitrate && !avg_bitrate)
                   break;
