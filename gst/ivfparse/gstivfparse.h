@@ -19,28 +19,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_IVFPARSE_H__
-#define __GST_IVFPARSE_H__
+#ifndef __GST_IVF_PARSE_H__
+#define __GST_IVF_PARSE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_IVFPARSE \
-  (gst_ivfparse_get_type())
-#define GST_IVFPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IVFPARSE,GstIvfParse))
-#define GST_IVFPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IVFPARSE,GstIvfParseClass))
-#define GST_IS_IVFPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IVFPARSE))
-#define GST_IS_IVFPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IVFPARSE))
+#define GST_TYPE_IVF_PARSE \
+  (gst_ivf_parse_get_type())
+#define GST_IVF_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IVF_PARSE,GstIvfParse))
+#define GST_IVF_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IVF_PARSE,GstIvfParseClass))
+#define GST_IS_IVF_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IVF_PARSE))
+#define GST_IS_IVF_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IVF_PARSE))
 
 typedef enum {
-  GST_IVFPARSE_START,
-  GST_IVFPARSE_DATA
+  GST_IVF_PARSE_START,
+  GST_IVF_PARSE_DATA
 } GstIvfParseState;
 
 typedef struct _GstIvfParse GstIvfParse;
@@ -66,8 +66,8 @@ struct _GstIvfParseClass
   GstElementClass parent_class;
 };
 
-GType gst_ivfparse_get_type (void);
+GType gst_ivf_parse_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_IVFPARSE_H__ */
+#endif /* __GST_IVF_PARSE_H__ */

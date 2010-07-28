@@ -51,8 +51,8 @@
 
 #include "gstivfparse.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_ivfparse_debug);
-#define GST_CAT_DEFAULT gst_ivfparse_debug
+GST_DEBUG_CATEGORY_STATIC (gst_ivf_parse_debug);
+#define GST_CAT_DEFAULT gst_ivf_parse_debug
 
 /* sink and src pad templates */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -67,15 +67,15 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-GST_BOILERPLATE (GstIvfParse, gst_ivfparse, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstIvfParse, gst_ivf_parse, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_ivfparse_dispose (GObject * object);
-static GstFlowReturn gst_ivfparse_chain (GstPad * pad, GstBuffer * buf);
+static void gst_ivf_parse_dispose (GObject * object);
+static GstFlowReturn gst_ivf_parse_chain (GstPad * pad, GstBuffer * buf);
 
 /* GObject vmethod implementations */
 
 static void
-gst_ivfparse_base_init (gpointer gclass)
+gst_ivf_parse_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -92,7 +92,7 @@ gst_ivfparse_base_init (gpointer gclass)
 
 /* initialize the ivfparse's class */
 static void
-gst_ivfparse_class_init (GstIvfParseClass * klass)
+gst_ivf_parse_class_init (GstIvfParseClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -100,18 +100,18 @@ gst_ivfparse_class_init (GstIvfParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->dispose = gst_ivfparse_dispose;
+  gobject_class->dispose = gst_ivf_parse_dispose;
 }
 
 static void
-gst_ivfparse_reset (GstIvfParse * ivf)
+gst_ivf_parse_reset (GstIvfParse * ivf)
 {
   if (ivf->adapter) {
     gst_adapter_clear (ivf->adapter);
     g_object_unref (ivf->adapter);
     ivf->adapter = NULL;
   }
-  ivf->state = GST_IVFPARSE_START;
+  ivf->state = GST_IVF_PARSE_START;
   ivf->rate_num = 0;
   ivf->rate_den = 0;
 }
@@ -122,12 +122,12 @@ gst_ivfparse_reset (GstIvfParse * ivf)
  * initialize instance structure
  */
 static void
-gst_ivfparse_init (GstIvfParse * ivf, GstIvfParseClass * gclass)
+gst_ivf_parse_init (GstIvfParse * ivf, GstIvfParseClass * gclass)
 {
   /* sink pad */
   ivf->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_chain_function (ivf->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_ivfparse_chain));
+      GST_DEBUG_FUNCPTR (gst_ivf_parse_chain));
 
   /* src pad */
   ivf->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
@@ -137,16 +137,16 @@ gst_ivfparse_init (GstIvfParse * ivf, GstIvfParseClass * gclass)
   gst_element_add_pad (GST_ELEMENT (ivf), ivf->srcpad);
 
   /* reset */
-  gst_ivfparse_reset (ivf);
+  gst_ivf_parse_reset (ivf);
 }
 
 static void
-gst_ivfparse_dispose (GObject * object)
+gst_ivf_parse_dispose (GObject * object)
 {
-  GstIvfParse *ivf = GST_IVFPARSE (object);
+  GstIvfParse *ivf = GST_IVF_PARSE (object);
 
   GST_DEBUG_OBJECT (ivf, "disposing");
-  gst_ivfparse_reset (ivf);
+  gst_ivf_parse_reset (ivf);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -157,9 +157,9 @@ gst_ivfparse_dispose (GObject * object)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
+gst_ivf_parse_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstIvfParse *ivf = GST_IVFPARSE (GST_OBJECT_PARENT (pad));
+  GstIvfParse *ivf = GST_IVF_PARSE (GST_OBJECT_PARENT (pad));
   gboolean res;
 
   /* lazy creation of the adapter */
@@ -175,7 +175,7 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
   res = GST_FLOW_OK;
 
   switch (ivf->state) {
-    case GST_IVFPARSE_START:
+    case GST_IVF_PARSE_START:
       if (gst_adapter_available (ivf->adapter) >= 32) {
         GstCaps *caps;
 
@@ -222,7 +222,7 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
                 GST_FORMAT_TIME, 0, -1, 0));
 
         /* move along */
-        ivf->state = GST_IVFPARSE_DATA;
+        ivf->state = GST_IVF_PARSE_DATA;
       } else {
         GST_LOG_OBJECT (ivf, "Header data not yet available.");
         break;
@@ -230,7 +230,7 @@ gst_ivfparse_chain (GstPad * pad, GstBuffer * buf)
 
       /* fall through */
 
-    case GST_IVFPARSE_DATA:
+    case GST_IVF_PARSE_DATA:
       while (gst_adapter_available (ivf->adapter) > 12) {
         const guint8 *data = gst_adapter_peek (ivf->adapter, 12);
         guint32 frame_size = GST_READ_UINT32_LE (data);
@@ -284,11 +284,11 @@ static gboolean
 ivfparse_init (GstPlugin * ivfparse)
 {
   /* debug category for filtering log messages */
-  GST_DEBUG_CATEGORY_INIT (gst_ivfparse_debug, "ivfparse", 0, "IVF parser");
+  GST_DEBUG_CATEGORY_INIT (gst_ivf_parse_debug, "ivfparse", 0, "IVF parser");
 
   /* register parser element */
   if (!gst_element_register (ivfparse, "ivfparse", GST_RANK_PRIMARY,
-          GST_TYPE_IVFPARSE))
+          GST_TYPE_IVF_PARSE))
     return FALSE;
 
   return TRUE;
