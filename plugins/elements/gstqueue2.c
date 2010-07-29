@@ -244,6 +244,9 @@ static GstStateChangeReturn gst_queue2_change_state (GstElement * element,
 static gboolean gst_queue2_is_empty (GstQueue2 * queue);
 static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
+static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
+
+
 /* static guint gst_queue2_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
@@ -648,6 +651,12 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment)
       G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
 
   if (format == GST_FORMAT_BYTES) {
+    if (QUEUE_IS_USING_TEMP_FILE (queue)) {
+      /* start is where we'll be getting from and as such writing next */
+      queue->current = add_range (queue, start);
+      /* update the stats for this range */
+      update_cur_level (queue, queue->current);
+    }
   }
 
   /* now configure the values, we use these to track timestamps on the
@@ -1012,11 +1021,6 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
 
-  if (res) {
-    queue->current = add_range (queue, offset);
-    /* update the stats for this range */
-    update_cur_level (queue, queue->current);
-  }
   return res;
 }
 
