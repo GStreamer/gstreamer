@@ -75,6 +75,10 @@
 
 #include "gstx264enc.h"
 
+#if X264_BUILD >= 71
+#define X264_DELAYED_FRAMES_API
+#endif
+
 #if X264_BUILD >= 76
 #define X264_ENC_NALS 1
 #endif
@@ -1628,7 +1632,13 @@ gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
   if (encoder->x264enc)
     do {
       flow_ret = gst_x264_enc_encode_frame (encoder, NULL, &i_nal, send);
+#ifdef X264_DELAYED_FRAMES_API
+    } while (flow_ret == GST_FLOW_OK
+        && x264_encoder_delayed_frames (encoder->x264enc) > 0);
+#else
+      /* note that this doesn't flush all frames for > 1 delayed frame */
     } while (flow_ret == GST_FLOW_OK && i_nal > 0);
+#endif
 
   /* in any case, make sure the delay queue is emptied */
   while (!g_queue_is_empty (encoder->delay))
