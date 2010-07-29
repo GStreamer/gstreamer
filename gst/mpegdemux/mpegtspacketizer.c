@@ -2074,8 +2074,7 @@ mpegts_try_discover_packet_size (MpegTSPacketizer * packetizer)
   };
   /* wait for 3 sync bytes */
   /* so first return if there is not enough data for 4 * max packetsize */
-  if (gst_adapter_available_fast (packetizer->adapter) <
-      MPEGTS_MAX_PACKETSIZE * 4)
+  if (gst_adapter_available (packetizer->adapter) < MPEGTS_MAX_PACKETSIZE * 4)
     return;
   /* check for sync bytes */
   dest = g_malloc (MPEGTS_MAX_PACKETSIZE * 4);
