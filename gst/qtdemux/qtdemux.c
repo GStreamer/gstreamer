@@ -625,7 +625,7 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
   *duration = GST_CLOCK_TIME_NONE;
 
   if (qtdemux->duration != 0) {
-    if (qtdemux->duration != G_MAXINT32 && qtdemux->timescale != 0) {
+    if (qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
       *duration = gst_util_uint64_scale (qtdemux->duration,
           GST_SECOND, qtdemux->timescale);
     }
@@ -5216,7 +5216,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (G_UNLIKELY (stream->timescale == 0 || qtdemux->timescale == 0))
     goto corrupt_file;
 
-  if (qtdemux->duration != G_MAXINT32 && stream->duration != G_MAXINT32) {
+  if (qtdemux->duration != G_MAXINT64 && stream->duration != G_MAXINT32) {
     guint64 tdur1, tdur2;
 
     /* don't overflow */
@@ -5230,7 +5230,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     if (tdur1 != 0 && (tdur2 * 10 / tdur1) < 2) {
       GST_WARNING_OBJECT (qtdemux,
           "Track shorter than 20%% (%" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT
-          " vs. %" G_GUINT32_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
+          " vs. %" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
           "found, assuming preview image or something; skipping track",
           stream->duration, stream->timescale, qtdemux->duration,
           qtdemux->timescale);
@@ -7230,6 +7230,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *trak;
   GNode *udta;
   gint64 duration;
+  gint version;
 
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
   if (mvhd == NULL) {
@@ -7237,11 +7238,20 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     return qtdemux_parse_redirects (qtdemux);
   }
 
-  qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
-  qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
+  version = QT_UINT8 ((guint8 *) mvhd->data + 8);
+  if (version == 1) {
+    qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 28);
+    qtdemux->duration = QT_UINT64 ((guint8 *) mvhd->data + 32);
+  } else if (version == 0) {
+    qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
+    qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
+  } else {
+    GST_WARNING_OBJECT (qtdemux, "Unhandled mvhd version %d", version);
+    return FALSE;
+  }
 
   GST_INFO_OBJECT (qtdemux, "timescale: %u", qtdemux->timescale);
-  GST_INFO_OBJECT (qtdemux, "duration: %u", qtdemux->duration);
+  GST_INFO_OBJECT (qtdemux, "duration: %" G_GUINT64_FORMAT, qtdemux->duration);
 
   /* set duration in the segment info */
   gst_qtdemux_get_duration (qtdemux, &duration);

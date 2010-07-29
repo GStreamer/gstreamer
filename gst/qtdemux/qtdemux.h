@@ -70,7 +70,7 @@ struct _GstQTDemux {
   GNode *moov_node_compressed;
 
   guint32 timescale;
-  guint32 duration;
+  guint64 duration;
 
   gint state;
 
