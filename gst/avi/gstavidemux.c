@@ -2769,7 +2769,7 @@ gst_avi_demux_stream_index_push (GstAviDemux * avi)
   GST_DEBUG ("will parse index chunk size %u for tag %"
       GST_FOURCC_FORMAT, GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
 
-  avi->offset = avi->first_movi_offset - 8;
+  avi->offset = avi->first_movi_offset;
   gst_avi_demux_parse_index (avi, buf);
 
 #ifndef GST_DISABLE_GST_DEBUG
