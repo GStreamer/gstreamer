@@ -19,6 +19,7 @@
  */
 
 #include "gstvdpvideobuffer.h"
+#include "gstvdpvideobufferpool.h"
 
 #include "gstvdpvideosrcpad.h"
 
@@ -35,6 +36,7 @@ struct _GstVdpVideoSrcPad
 {
   GstPad pad;
 
+  GstVdpBufferPool *bpool;
   GstCaps *caps;
 
   gboolean yuv_output;
@@ -133,44 +135,11 @@ gst_vdp_video_src_pad_push (GstVdpVideoSrcPad * vdp_pad,
   return gst_pad_push (pad, out_buf);
 }
 
-static GstFlowReturn
-gst_vdp_video_src_pad_alloc_with_caps (GstVdpVideoSrcPad * vdp_pad,
-    GstCaps * caps, GstVdpVideoBuffer ** video_buf, GError ** error)
-{
-  GstFlowReturn ret;
-
-  ret = gst_pad_alloc_buffer ((GstPad *) vdp_pad, 0, 0, caps,
-      (GstBuffer **) video_buf);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (!gst_caps_is_equal_fixed (caps, GST_BUFFER_CAPS (*video_buf)))
-    goto wrong_caps;
-
-  if (!GST_IS_VDP_VIDEO_BUFFER (*video_buf))
-    goto invalid_buf;
-
-  return GST_FLOW_OK;
-
-wrong_caps:
-  gst_buffer_unref (GST_BUFFER (*video_buf));
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element returned buffer with wrong caps");
-  return GST_FLOW_ERROR;
-
-invalid_buf:
-  gst_buffer_unref (GST_BUFFER (*video_buf));
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element returned buffer of wrong type");
-  return GST_FLOW_ERROR;
-}
-
 GstFlowReturn
 gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpVideoBuffer ** video_buf, GError ** error)
 {
   GstCaps *caps;
-  GstFlowReturn ret;
 
   g_return_val_if_fail (GST_IS_VDP_VIDEO_SRC_PAD (vdp_pad), GST_FLOW_ERROR);
 
@@ -178,27 +147,13 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
   if (!caps)
     return GST_FLOW_NOT_NEGOTIATED;
 
-  if (vdp_pad->yuv_output) {
-    GstVdpDevice *device = vdp_pad->device;
-
-    *video_buf = gst_vdp_video_buffer_new (device, VDP_CHROMA_TYPE_420,
-        vdp_pad->width, vdp_pad->height, NULL);
-    if (!*video_buf)
-      goto video_buf_error;
-
-  } else {
-    ret = gst_vdp_video_src_pad_alloc_with_caps (vdp_pad, caps, video_buf,
-        error);
-    if (ret != GST_FLOW_OK)
-      return ret;
-  }
+  *video_buf =
+      (GstVdpVideoBuffer *) gst_vdp_buffer_pool_get_buffer (vdp_pad->bpool,
+      error);
+  if (!*video_buf)
+    return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
-
-video_buf_error:
-  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-      "Couldn't create a GstVdpVideoBuffer");
-  return GST_FLOW_ERROR;
 }
 
 static gboolean
@@ -206,6 +161,9 @@ gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVdpVideoSrcPad *vdp_pad = GST_VDP_VIDEO_SRC_PAD (pad);
   const GstStructure *structure;
+
+  VdpChromaType chroma_type;
+  GstCaps *video_caps;
 
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
@@ -216,16 +174,27 @@ gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_structure_get_fourcc (structure, "format", &vdp_pad->fourcc))
       return FALSE;
 
+    chroma_type = VDP_CHROMA_TYPE_420;
+
     vdp_pad->yuv_output = TRUE;
   } else if (gst_structure_has_name (structure, "video/x-vdpau-video")) {
     if (!gst_structure_get_int (structure, "width", &vdp_pad->width))
       return FALSE;
     if (!gst_structure_get_int (structure, "height", &vdp_pad->height))
       return FALSE;
+    if (!gst_structure_get_int (structure, "chroma-type",
+            (gint *) & chroma_type))
+      return FALSE;
 
     vdp_pad->yuv_output = FALSE;
   } else
     return FALSE;
+
+  video_caps = gst_caps_new_simple ("video/x-vdpau-video",
+      "chroma-type", G_TYPE_INT, (gint) chroma_type,
+      "width", G_TYPE_INT, vdp_pad->width,
+      "height", G_TYPE_INT, vdp_pad->height, NULL);
+  gst_vdp_buffer_pool_set_caps (vdp_pad->bpool, video_caps);
 
   return TRUE;
 }
@@ -265,15 +234,25 @@ gst_vdp_video_src_pad_activate_push (GstPad * pad, gboolean active)
 }
 
 static void
-gst_vdp_video_src_pad_update_caps (GstVdpVideoSrcPad * vdp_pad)
+gst_vdp_video_src_pad_set_device (GstVdpVideoSrcPad * vdp_pad,
+    GstVdpDevice * device)
 {
   GstCaps *caps;
   const GstCaps *templ_caps;
 
+  if (vdp_pad->bpool)
+    g_object_unref (vdp_pad->bpool);
+  if (vdp_pad->device)
+    g_object_unref (vdp_pad->device);
+
+  vdp_pad->device = device;
+  vdp_pad->bpool = gst_vdp_video_buffer_pool_new (device);
+
+  /* update caps */
   if (vdp_pad->caps)
     gst_caps_unref (vdp_pad->caps);
 
-  caps = gst_vdp_video_buffer_get_allowed_caps (vdp_pad->device);
+  caps = gst_vdp_video_buffer_get_allowed_caps (device);
 
   if ((templ_caps = gst_pad_get_pad_template_caps (GST_PAD (vdp_pad)))) {
     vdp_pad->caps = gst_caps_intersect (caps, templ_caps);
@@ -307,10 +286,7 @@ gst_vdp_video_src_pad_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      if (vdp_pad->device)
-        g_object_unref (vdp_pad->device);
-      vdp_pad->device = g_value_dup_object (value);
-      gst_vdp_video_src_pad_update_caps (vdp_pad);
+      gst_vdp_video_src_pad_set_device (vdp_pad, g_value_dup_object (value));
       break;
 
     default:
