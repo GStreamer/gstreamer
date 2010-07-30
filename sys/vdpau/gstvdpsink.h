@@ -99,6 +99,7 @@ struct _VdpSink {
   char *display_name;
 
   GstVdpDevice *device;
+  GstVdpBufferPool *bpool;
   GstCaps *caps;
   
   GstVdpWindow *window;

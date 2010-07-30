@@ -30,6 +30,7 @@
 #include <gst/gstinfo.h>
 
 #include "gstvdp/gstvdpoutputbuffer.h"
+#include "gstvdp/gstvdpoutputbufferpool.h"
 
 /* Object header */
 #include "gstvdpsink.h"
@@ -568,14 +569,16 @@ gst_vdp_sink_get_allowed_caps (GstVdpDevice * device, GValue * par)
   return caps;
 }
 
-static GstVdpDevice *
-gst_vdp_sink_setup_device (VdpSink * vdp_sink)
+static gboolean
+gst_vdp_sink_open_device (VdpSink * vdp_sink)
 {
   GstVdpDevice *device;
 
-  device = gst_vdp_get_device (vdp_sink->display_name);
-  if (!device)
-    return NULL;
+  vdp_sink->device = device = gst_vdp_get_device (vdp_sink->display_name);
+  if (!vdp_sink->device)
+    return FALSE;
+
+  vdp_sink->bpool = gst_vdp_output_buffer_pool_new (device);
 
   vdp_sink->caps = gst_vdp_sink_get_allowed_caps (device, vdp_sink->par);
   GST_DEBUG ("runtime calculated caps: %" GST_PTR_FORMAT, vdp_sink->caps);
@@ -590,7 +593,7 @@ gst_vdp_sink_setup_device (VdpSink * vdp_sink)
   vdp_sink->event_thread = g_thread_create (
       (GThreadFunc) gst_vdp_sink_event_thread, vdp_sink, TRUE, NULL);
 
-  return device;
+  return TRUE;
 }
 
 static gboolean
@@ -608,10 +611,8 @@ gst_vdp_sink_start (GstBaseSink * bsink)
   vdp_sink->fps_d = 1;
 
   GST_OBJECT_LOCK (vdp_sink);
-  if (!vdp_sink->device) {
-    if (!(vdp_sink->device = gst_vdp_sink_setup_device (vdp_sink)))
-      res = FALSE;
-  }
+  if (!vdp_sink->device)
+    res = gst_vdp_sink_open_device (vdp_sink);
   GST_OBJECT_UNLOCK (vdp_sink);
 
   return res;
@@ -631,6 +632,7 @@ gst_vdp_device_clear (VdpSink * vdp_sink)
 
   g_mutex_lock (vdp_sink->x_lock);
 
+  g_object_unref (vdp_sink->bpool);
   g_object_unref (vdp_sink->device);
   vdp_sink->device = NULL;
 
@@ -731,6 +733,8 @@ gst_vdp_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_VIDEO_SINK_HEIGHT (vdp_sink) = new_height;
   vdp_sink->fps_n = gst_value_get_fraction_numerator (fps);
   vdp_sink->fps_d = gst_value_get_fraction_denominator (fps);
+
+  gst_vdp_buffer_pool_set_caps (vdp_sink->bpool, caps);
 
   /* Notify application to set xwindow id now */
   g_mutex_lock (vdp_sink->flow_lock);
@@ -894,32 +898,14 @@ gst_vdp_sink_event (GstBaseSink * sink, GstEvent * event)
     return TRUE;
 }
 
-static GstFlowReturn
-gst_vdp_sink_get_output_buffer (VdpSink * vdp_sink, GstCaps * caps,
-    GstBuffer ** buf)
+static void
+gst_vdp_sink_post_error (VdpSink * vdp_sink, GError * error)
 {
-  GstStructure *structure;
-  gint width, height;
-  gint rgba_format;
+  GstMessage *message;
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) ||
-      !gst_structure_get_int (structure, "rgba-format", &rgba_format)) {
-    GST_WARNING_OBJECT (vdp_sink, "invalid caps for buffer allocation %"
-        GST_PTR_FORMAT, caps);
-    return GST_FLOW_ERROR;
-  }
-
-  *buf = GST_BUFFER (gst_vdp_output_buffer_new (vdp_sink->device,
-          rgba_format, width, height, NULL));
-  if (*buf == NULL) {
-    return GST_FLOW_ERROR;
-  }
-
-  gst_buffer_set_caps (*buf, caps);
-
-  return GST_FLOW_OK;
+  message = gst_message_new_error (GST_OBJECT (vdp_sink), error, NULL);
+  gst_element_post_message (GST_ELEMENT (vdp_sink), message);
+  g_error_free (error);
 }
 
 /* Buffer management
@@ -939,22 +925,16 @@ gst_vdp_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   VdpSink *vdp_sink;
   GstStructure *structure = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCaps *alloc_caps;
-  gboolean alloc_unref = FALSE;
   gint width, height;
+  GstCaps *alloc_caps;
   gint w_width, w_height;
+  GError *err;
 
   vdp_sink = GST_VDP_SINK (bsink);
 
   GST_LOG_OBJECT (vdp_sink,
       "a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
       " and offset %" G_GUINT64_FORMAT, size, caps, offset);
-
-  /* assume we're going to alloc what was requested, keep track of
-   * wheter we need to unref or not. When we suggest a new format 
-   * upstream we will create a new caps that we need to unref. */
-  alloc_caps = caps;
-  alloc_unref = FALSE;
 
   /* get struct to see what is requested */
   structure = gst_caps_get_structure (caps, 0);
@@ -965,6 +945,8 @@ gst_vdp_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
+
+  alloc_caps = gst_caps_ref (caps);
 
   /* We take the flow_lock because the window might go away */
   g_mutex_lock (vdp_sink->flow_lock);
@@ -1007,26 +989,30 @@ gst_vdp_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (vdp_sink), desired_caps)) {
       /* we will not alloc a buffer of the new suggested caps. Make sure
        * we also unref this new caps after we set it on the buffer. */
-      alloc_caps = desired_caps;
-      alloc_unref = TRUE;
-      width = w_width;
-      height = w_height;
       GST_DEBUG ("peer pad accepts our desired caps %" GST_PTR_FORMAT,
           desired_caps);
+      gst_caps_unref (alloc_caps);
+      alloc_caps = desired_caps;
     } else {
       GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,
           desired_caps);
       /* we alloc a buffer with the original incomming caps already in the
        * width and height variables */
+      gst_caps_unref (desired_caps);
     }
   }
 
 alloc:
-  ret = gst_vdp_sink_get_output_buffer (vdp_sink, alloc_caps, buf);
+  gst_vdp_buffer_pool_set_caps (vdp_sink->bpool, alloc_caps);
+  gst_caps_unref (alloc_caps);
 
-  /* could be our new reffed suggestion or the original unreffed caps */
-  if (alloc_unref)
-    gst_caps_unref (alloc_caps);
+  err = NULL;
+  *buf =
+      GST_BUFFER_CAST (gst_vdp_buffer_pool_get_buffer (vdp_sink->bpool, &err));
+  if (!*buf) {
+    gst_vdp_sink_post_error (vdp_sink, err);
+    return GST_FLOW_ERROR;
+  }
 
 beach:
   return ret;
@@ -1121,8 +1107,7 @@ gst_vdp_sink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   }
 
   /* If the element has not initialized the X11 context try to do so */
-  if (!vdp_sink->device
-      && !(vdp_sink->device = gst_vdp_sink_setup_device (vdp_sink))) {
+  if (!vdp_sink->device && !gst_vdp_sink_open_device (vdp_sink)) {
     g_mutex_unlock (vdp_sink->flow_lock);
     /* we have thrown a GST_ELEMENT_ERROR now */
     return;
