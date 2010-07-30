@@ -161,6 +161,10 @@ void       gst_base_audio_sink_set_slave_method       (GstBaseAudioSink *sink,
 GstBaseAudioSinkSlaveMethod
            gst_base_audio_sink_get_slave_method       (GstBaseAudioSink *sink);
 
+void       gst_base_audio_sink_set_drift_tolerance    (GstBaseAudioSink *sink,
+                                                       gint64 drift_tolerance);
+gint64     gst_base_audio_sink_get_drift_tolerance    (GstBaseAudioSink *sink);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_AUDIO_SINK_H__ */

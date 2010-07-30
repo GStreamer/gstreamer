@@ -610,6 +610,47 @@ gst_base_audio_sink_get_slave_method (GstBaseAudioSink * sink)
   return result;
 }
 
+
+/**
+ * gst_base_audio_sink_set_drift_tolerance:
+ * @sink: a #GstBaseAudioSink
+ * @drift_tolerance: the new drift tolerance in microseconds
+ *
+ * Controls the sink's drift tolerance. 
+ */
+void
+gst_base_audio_sink_set_drift_tolerance (GstBaseAudioSink * sink,
+    gint64 drift_tolerance)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->drift_tolerance = drift_tolerance;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_drift_tolerance
+ * @sink: a #GstBaseAudioSink
+ *
+ * Get the current drift tolerance, in microseconds, used by @sink.
+ *
+ * Returns: The current drift tolerance used by @sink.
+ */
+gint64
+gst_base_audio_sink_get_drift_tolerance (GstBaseAudioSink * sink)
+{
+  gint64 result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), -1);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->priv->drift_tolerance;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
 static void
 gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -635,7 +676,7 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
       GST_BASE_SINK (sink)->can_activate_pull = g_value_get_boolean (value);
       break;
     case PROP_DRIFT_TOLERANCE:
-      sink->priv->drift_tolerance = g_value_get_int64 (value);
+      gst_base_audio_sink_set_drift_tolerance (sink, g_value_get_int64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -668,7 +709,7 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_pull);
       break;
     case PROP_DRIFT_TOLERANCE:
-      g_value_set_int64 (value, sink->priv->drift_tolerance);
+      g_value_set_int64 (value, gst_base_audio_sink_get_drift_tolerance (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
