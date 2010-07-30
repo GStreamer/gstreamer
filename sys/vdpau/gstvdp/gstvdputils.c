@@ -58,7 +58,7 @@ gst_vdp_video_to_output_caps (GstCaps * caps)
     gst_vdp_video_remove_pixel_aspect_ratio (structure);
 
     gst_structure_set_name (rgb_structure, "video/x-raw-rgb");
-    gst_structure_remove_field (structure, "chroma-type");
+    gst_structure_remove_field (rgb_structure, "chroma-type");
     gst_vdp_video_remove_pixel_aspect_ratio (rgb_structure);
     gst_caps_append_structure (result, rgb_structure);
   }
