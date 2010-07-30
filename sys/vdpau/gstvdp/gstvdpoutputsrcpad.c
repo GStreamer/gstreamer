@@ -53,6 +53,7 @@ struct _GstVdpOutputSrcPad
   gint width, height;
 
   GstVdpBufferPool *bpool;
+  gboolean lock_caps;
 
   /* properties */
   GstVdpDevice *device;
@@ -87,14 +88,20 @@ gst_vdp_output_src_pad_push (GstVdpOutputSrcPad * vdp_pad,
   switch (vdp_pad->output_format) {
     case GST_VDP_OUTPUT_SRC_PAD_FORMAT_RGB:
     {
+      GstFlowReturn ret;
       guint size;
 
       gst_vdp_output_buffer_calculate_size (output_buf, &size);
 
-      /* FIXME: we don't do pad_alloc here since we really want a buffer of
-       * the specified size */
-      outbuf = gst_buffer_new_and_alloc (size);
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (vdp_pad));
+      vdp_pad->lock_caps = TRUE;
+      ret = gst_pad_alloc_buffer (pad, 0, size, GST_PAD_CAPS (vdp_pad),
+          &outbuf);
+      vdp_pad->lock_caps = FALSE;
+
+      if (ret != GST_FLOW_OK) {
+        gst_buffer_unref (GST_BUFFER_CAST (output_buf));
+        return ret;
+      }
 
       if (!gst_vdp_output_buffer_download (output_buf, outbuf, error)) {
         gst_buffer_unref (GST_BUFFER_CAST (output_buf));
@@ -208,6 +215,17 @@ gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad * vdp_pad,
 
   return GST_FLOW_OK;
 
+}
+
+static gboolean
+gst_vdp_output_src_pad_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  GstVdpOutputSrcPad *vdp_pad = GST_VDP_OUTPUT_SRC_PAD (pad);
+
+  if (!vdp_pad->lock_caps)
+    return TRUE;
+
+  return gst_caps_is_equal_fixed (caps, GST_PAD_CAPS (pad));
 }
 
 static gboolean
@@ -373,10 +391,15 @@ gst_vdp_output_src_pad_init (GstVdpOutputSrcPad * vdp_pad)
   vdp_pad->bpool = NULL;
   vdp_pad->device = NULL;
 
+  vdp_pad->lock_caps = FALSE;
+
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_getcaps));
   gst_pad_set_setcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_setcaps));
+  gst_pad_set_acceptcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_acceptcaps));
+
   gst_pad_set_activatepush_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_activate_push));
 }
