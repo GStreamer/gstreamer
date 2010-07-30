@@ -482,7 +482,7 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_structure_get_fourcc (structure, "format", &vpp->fourcc))
       goto done;
     vpp->native_input = FALSE;
-    video_caps = gst_vdp_video_buffer_parse_yuv_caps (caps);
+    video_caps = gst_vdp_yuv_to_video_caps (caps);
     if (!video_caps)
       goto done;
 
@@ -493,7 +493,7 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   } else {
     vpp->native_input = TRUE;
-    video_caps = gst_caps_copy (caps);
+    video_caps = gst_caps_ref (caps);
 
     if (vpp->vpool) {
       g_object_unref (vpp->vpool);

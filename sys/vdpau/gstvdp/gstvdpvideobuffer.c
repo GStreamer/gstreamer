@@ -279,65 +279,6 @@ gst_vdp_video_buffer_calculate_size (guint32 fourcc, gint width, gint height,
   return TRUE;
 }
 
-GstCaps *
-gst_vdp_video_buffer_parse_yuv_caps (GstCaps * yuv_caps)
-{
-
-  GstCaps *video_caps;
-  gint i;
-
-  g_return_val_if_fail (GST_IS_CAPS (yuv_caps), NULL);
-
-  video_caps = gst_caps_copy (yuv_caps);
-  for (i = 0; i < gst_caps_get_size (video_caps); i++) {
-    GstStructure *structure;
-    guint32 fourcc;
-    VdpChromaType chroma_type;
-
-    structure = gst_caps_get_structure (video_caps, i);
-    if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
-      goto not_yuv_error;
-
-    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
-      goto no_format_error;
-
-    chroma_type = -1;
-    for (i = 0; i < G_N_ELEMENTS (formats); i++) {
-      if (formats[i].fourcc == fourcc) {
-        chroma_type = formats[i].chroma_type;
-        break;
-      }
-    }
-
-    if (chroma_type == -1)
-      goto no_chroma_error;
-
-    /* now we transform the caps */
-    gst_structure_set_name (structure, "video/x-vdpau-video");
-    gst_structure_remove_field (structure, "format");
-    gst_structure_set (structure, "chroma-type", G_TYPE_INT, chroma_type, NULL);
-  }
-
-  return video_caps;
-
-error:
-  gst_caps_unref (video_caps);
-  return NULL;
-
-not_yuv_error:
-  GST_WARNING ("The caps weren't of type \"video/x-raw-yuv\"");
-  goto error;
-
-no_format_error:
-  GST_WARNING ("The caps didn't have a \"fourcc\" field");
-  goto error;
-
-no_chroma_error:
-  GST_WARNING ("The caps had an invalid \"fourcc\" field");
-  goto error;
-
-}
-
 gboolean
 gst_vdp_video_buffer_download (GstVdpVideoBuffer * video_buf,
     GstBuffer * outbuf, guint32 fourcc, gint width, gint height)
