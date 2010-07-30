@@ -328,7 +328,7 @@ gst_rtmp_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     } else {
       todo = 0;
     }
-    GST_LOG ("  got size %" G_GUINT64_FORMAT, read);
+    GST_LOG ("  got size %d", read);
   }
 
   if (src->discont) {
