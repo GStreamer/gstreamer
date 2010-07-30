@@ -32,19 +32,19 @@ GST_DEBUG_CATEGORY_INIT (gst_vdp_video_buffer_debug, "vdpvideobuffer", 0, "VDPAU
 
 GstVdpVideoBuffer *
 gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
-    gint width, gint height)
+    gint width, gint height, GError ** error)
 {
   GstVdpVideoBuffer *buffer;
   VdpStatus status;
   VdpVideoSurface surface;
 
+  g_return_val_if_fail (GST_IS_VDP_DEVICE (device), NULL);
+
+
   status = device->vdp_video_surface_create (device->device, chroma_type, width,
       height, &surface);
-  if (status != VDP_STATUS_OK) {
-    GST_ERROR ("Couldn't create a VdpVideoSurface, error returned was: %s",
-        device->vdp_get_error_string (status));
-    return NULL;
-  }
+  if (status != VDP_STATUS_OK)
+    goto create_error;
 
   buffer =
       (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDP_VIDEO_BUFFER);
@@ -53,6 +53,12 @@ gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
   buffer->surface = surface;
 
   return buffer;
+
+create_error:
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+      "Couldn't create a VdpVideoSurface, error returned from vdpau was: %s",
+      device->vdp_get_error_string (status));
+  return NULL;
 }
 
 static GObjectClass *gst_vdp_video_buffer_parent_class;
@@ -62,6 +68,9 @@ gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
 {
   GstVdpDevice *device;
   VdpStatus status;
+
+  if (gst_vdp_buffer_revive (GST_VDP_BUFFER_CAST (buffer)))
+    return;
 
   device = buffer->device;
 
@@ -114,7 +123,7 @@ gst_vdp_video_buffer_get_type (void)
       (GInstanceInitFunc) gst_vdp_video_buffer_init,
       NULL
     };
-    _gst_vdp_video_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+    _gst_vdp_video_buffer_type = g_type_register_static (GST_TYPE_VDP_BUFFER,
         "GstVdpVideoBuffer", &info, 0);
   }
   return _gst_vdp_video_buffer_type;

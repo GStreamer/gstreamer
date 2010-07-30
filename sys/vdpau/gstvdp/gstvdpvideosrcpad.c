@@ -182,7 +182,7 @@ gst_vdp_video_src_pad_alloc_buffer (GstVdpVideoSrcPad * vdp_pad,
     GstVdpDevice *device = vdp_pad->device;
 
     *video_buf = gst_vdp_video_buffer_new (device, VDP_CHROMA_TYPE_420,
-        vdp_pad->width, vdp_pad->height);
+        vdp_pad->width, vdp_pad->height, NULL);
     if (!*video_buf)
       goto video_buf_error;
 

@@ -24,9 +24,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include "gstvdpbuffer.h"
 #include "gstvdpdevice.h"
-
-#include "gstvdpvideobuffer.h"
 
 typedef struct _GstVdpVideoBuffer GstVdpVideoBuffer;
 
@@ -36,7 +35,7 @@ typedef struct _GstVdpVideoBuffer GstVdpVideoBuffer;
 #define GST_VDP_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_VIDEO_BUFFER, GstVdpVideoBuffer))
 
 struct _GstVdpVideoBuffer {
-  GstBuffer buffer;
+  GstVdpBuffer vdp_buffer;
 
   GstVdpDevice *device;
   VdpVideoSurface surface;
@@ -92,8 +91,7 @@ static const GstVdpVideoBufferFormats formats[] = {
 
 GType gst_vdp_video_buffer_get_type (void);
 
-GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height);
-void gst_vdp_video_buffer_add_reference (GstVdpVideoBuffer *buffer, GstVdpVideoBuffer *buf);
+GstVdpVideoBuffer *gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height, GError **error);
 
 GstCaps *gst_vdp_video_buffer_get_caps (gboolean filter, VdpChromaType chroma_type);
 GstCaps *gst_vdp_video_buffer_get_allowed_caps (GstVdpDevice * device);

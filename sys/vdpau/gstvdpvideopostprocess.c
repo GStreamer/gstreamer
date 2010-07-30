@@ -791,7 +791,7 @@ no_qos:
     GstVdpVideoBuffer *video_buf;
 
     video_buf = gst_vdp_video_buffer_new (vpp->device, vpp->chroma_type,
-        vpp->width, vpp->height);
+        vpp->width, vpp->height, NULL);
     if (G_UNLIKELY (!video_buf))
       goto video_buf_error;
 
@@ -884,7 +884,7 @@ gst_vdp_vpp_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
 
     *buf =
         GST_BUFFER (gst_vdp_video_buffer_new (vpp->device, chroma_type, width,
-            height));
+            height, NULL));
 
     if (*buf == NULL)
       goto video_buffer_error;
