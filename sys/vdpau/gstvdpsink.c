@@ -569,14 +569,26 @@ gst_vdp_sink_get_allowed_caps (GstVdpDevice * device, GValue * par)
   return caps;
 }
 
+static void
+gst_vdp_sink_post_error (VdpSink * vdp_sink, GError * error)
+{
+  GstMessage *message;
+
+  message = gst_message_new_error (GST_OBJECT (vdp_sink), error, NULL);
+  gst_element_post_message (GST_ELEMENT (vdp_sink), message);
+  g_error_free (error);
+}
+
 static gboolean
 gst_vdp_sink_open_device (VdpSink * vdp_sink)
 {
   GstVdpDevice *device;
+  GError *err;
 
-  vdp_sink->device = device = gst_vdp_get_device (vdp_sink->display_name);
-  if (!vdp_sink->device)
-    return FALSE;
+  err = NULL;
+  vdp_sink->device = device = gst_vdp_get_device (vdp_sink->display_name, &err);
+  if (!device)
+    goto device_error;
 
   vdp_sink->bpool = gst_vdp_output_buffer_pool_new (device);
 
@@ -594,6 +606,10 @@ gst_vdp_sink_open_device (VdpSink * vdp_sink)
       (GThreadFunc) gst_vdp_sink_event_thread, vdp_sink, TRUE, NULL);
 
   return TRUE;
+
+device_error:
+  gst_vdp_sink_post_error (vdp_sink, err);
+  return FALSE;
 }
 
 static gboolean
@@ -896,16 +912,6 @@ gst_vdp_sink_event (GstBaseSink * sink, GstEvent * event)
     return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
   else
     return TRUE;
-}
-
-static void
-gst_vdp_sink_post_error (VdpSink * vdp_sink, GError * error)
-{
-  GstMessage *message;
-
-  message = gst_message_new_error (GST_OBJECT (vdp_sink), error, NULL);
-  gst_element_post_message (GST_ELEMENT (vdp_sink), message);
-  g_error_free (error);
 }
 
 /* Buffer management

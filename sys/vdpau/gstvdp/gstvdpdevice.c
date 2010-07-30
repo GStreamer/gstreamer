@@ -37,39 +37,9 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstVdpDevice, gst_vdp_device, G_TYPE_OBJECT,
     DEBUG_INIT ());
 
-static void
-gst_vdp_device_init (GstVdpDevice * device)
+static gboolean
+gst_vdp_device_open (GstVdpDevice * device, GError ** error)
 {
-  device->display_name = NULL;
-  device->display = NULL;
-  device->device = VDP_INVALID_HANDLE;
-
-  device->constructed = FALSE;
-}
-
-static void
-gst_vdp_device_finalize (GObject * object)
-{
-  GstVdpDevice *device = (GstVdpDevice *) object;
-
-  if (device->device != VDP_INVALID_HANDLE) {
-    device->vdp_device_destroy (device->device);
-    device->device = VDP_INVALID_HANDLE;
-  }
-  if (device->display) {
-    XCloseDisplay (device->display);
-    device->display = NULL;
-  }
-  g_free (device->display_name);
-  device->display_name = NULL;
-
-  G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
-}
-
-static void
-gst_vdp_device_constructed (GObject * object)
-{
-  GstVdpDevice *device = (GstVdpDevice *) object;
   gint screen;
   VdpStatus status;
   gint i;
@@ -135,55 +105,96 @@ gst_vdp_device_constructed (GObject * object)
   };
 
   device->display = XOpenDisplay (device->display_name);
-  if (!device->display) {
-    GST_ERROR_OBJECT (device, "Could not open X display with name: %s",
-        device->display_name);
-    return;
-  }
+  if (!device->display)
+    goto create_display_error;
 
   screen = DefaultScreen (device->display);
   status =
       vdp_device_create_x11 (device->display, screen, &device->device,
       &device->vdp_get_proc_address);
-  if (status != VDP_STATUS_OK) {
-    GST_ERROR_OBJECT (device, "Could not create VDPAU device");
-    device->device = VDP_INVALID_HANDLE;
-    XCloseDisplay (device->display);
-    device->display = NULL;
-
-    return;
-  }
+  if (status != VDP_STATUS_OK)
+    goto create_device_error;
 
   status = device->vdp_get_proc_address (device->device,
       VDP_FUNC_ID_GET_ERROR_STRING, (void **) &device->vdp_get_error_string);
-  if (status != VDP_STATUS_OK) {
-    GST_ERROR_OBJECT (device,
-        "Could not get vdp_get_error_string function pointer from VDPAU");
-    goto error;
-  }
+  if (status != VDP_STATUS_OK)
+    goto get_error_string_error;
 
   for (i = 0; i < G_N_ELEMENTS (vdp_function); i++) {
     status = device->vdp_get_proc_address (device->device,
         vdp_function[i].id, vdp_function[i].func);
 
-    if (status != VDP_STATUS_OK) {
-      GST_ERROR_OBJECT (device, "Could not get function pointer from VDPAU,"
-          " error returned was: %s", device->vdp_get_error_string (status));
-      goto error;
-    }
+    if (status != VDP_STATUS_OK)
+      goto function_error;
   }
 
-  device->constructed = TRUE;
-  return;
+  return TRUE;
 
-error:
+create_display_error:
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+      "Could not open X display with name: %s", device->display_name);
+  return FALSE;
+
+create_device_error:
   XCloseDisplay (device->display);
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+      "Could not create VDPAU device for display: %s", device->display_name);
+  return FALSE;
+
+get_error_string_error:
+  XCloseDisplay (device->display);
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+      "Could not get vdp_get_error_string function pointer from VDPAU");
+  return FALSE;
+
+function_error:
+  XCloseDisplay (device->display);
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+      "Could not get function pointer from VDPAU, error returned was: %s",
+      device->vdp_get_error_string (status));
+  return FALSE;
+}
+
+static GstVdpDevice *
+gst_vdp_device_new (const gchar * display_name, GError ** error)
+{
+  GstVdpDevice *device;
+
+  device = g_object_new (GST_TYPE_VDP_DEVICE, "display", display_name, NULL);
+
+  if (!gst_vdp_device_open (device, error)) {
+    g_object_unref (device);
+    return NULL;
+  }
+
+  return device;
+}
+
+static void
+gst_vdp_device_init (GstVdpDevice * device)
+{
+  device->display_name = NULL;
   device->display = NULL;
+  device->device = VDP_INVALID_HANDLE;
+}
+
+static void
+gst_vdp_device_finalize (GObject * object)
+{
+  GstVdpDevice *device = (GstVdpDevice *) object;
 
   if (device->device != VDP_INVALID_HANDLE) {
     device->vdp_device_destroy (device->device);
     device->device = VDP_INVALID_HANDLE;
   }
+  if (device->display) {
+    XCloseDisplay (device->display);
+    device->display = NULL;
+  }
+  g_free (device->display_name);
+  device->display_name = NULL;
+
+  G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
 }
 
 static void
@@ -231,7 +242,6 @@ gst_vdp_device_class_init (GstVdpDeviceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->constructed = gst_vdp_device_constructed;
   object_class->finalize = gst_vdp_device_finalize;
   object_class->get_property = gst_vdp_device_get_property;
   object_class->set_property = gst_vdp_device_set_property;
@@ -242,21 +252,6 @@ gst_vdp_device_class_init (GstVdpDeviceClass * klass)
           "Display",
           "X Display Name",
           "", G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-}
-
-static GstVdpDevice *
-gst_vdp_device_new (const gchar * display_name)
-{
-  GstVdpDevice *device;
-
-  device = g_object_new (GST_TYPE_VDP_DEVICE, "display", display_name, NULL);
-
-  if (!device->constructed) {
-    g_object_unref (device);
-    return NULL;
-  }
-
-  return device;
 }
 
 typedef struct
@@ -288,7 +283,7 @@ device_destroyed_cb (gpointer data, GObject * object)
 }
 
 GstVdpDevice *
-gst_vdp_get_device (const gchar * display_name)
+gst_vdp_get_device (const gchar * display_name, GError ** error)
 {
   static gsize once = 0;
   static GstVdpDeviceCache device_cache;
@@ -310,7 +305,7 @@ gst_vdp_get_device (const gchar * display_name)
     device = g_hash_table_lookup (device_cache.hash_table, "");
 
   if (!device) {
-    device = gst_vdp_device_new (display_name);
+    device = gst_vdp_device_new (display_name, error);
     if (device) {
       g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, &device_cache);
       if (display_name)

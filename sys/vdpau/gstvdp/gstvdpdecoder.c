@@ -186,9 +186,11 @@ gst_vdp_decoder_start (GstBaseVideoDecoder * base_video_decoder)
 {
   GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (base_video_decoder);
 
+  GError *err;
   GstVdpVideoSrcPad *vdp_pad;
 
-  vdp_decoder->device = gst_vdp_get_device (vdp_decoder->display);
+  err = NULL;
+  vdp_decoder->device = gst_vdp_get_device (vdp_decoder->display, &err);
   if (G_UNLIKELY (!vdp_decoder->device))
     goto device_error;
 
@@ -201,8 +203,7 @@ gst_vdp_decoder_start (GstBaseVideoDecoder * base_video_decoder)
   return TRUE;
 
 device_error:
-  GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, OPEN_READ,
-      ("Couldn't create GstVdpDevice"), (NULL));
+  gst_vdp_decoder_post_error (vdp_decoder, err);
   return FALSE;
 }
 

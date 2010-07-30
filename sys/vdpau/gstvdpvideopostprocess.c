@@ -596,6 +596,7 @@ static gboolean
 gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
 {
   gint i;
+  GError *err;
 
   vpp->interlaced = FALSE;
   vpp->field_duration = GST_CLOCK_TIME_NONE;
@@ -613,7 +614,8 @@ gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
   vpp->n_future_pictures = 0;
   vpp->n_past_pictures = 0;
 
-  vpp->device = gst_vdp_get_device (vpp->display);
+  err = NULL;
+  vpp->device = gst_vdp_get_device (vpp->display, &err);
   if (G_UNLIKELY (!vpp->device))
     goto device_error;
 
@@ -622,8 +624,7 @@ gst_vdp_vpp_start (GstVdpVideoPostProcess * vpp)
   return TRUE;
 
 device_error:
-  GST_ELEMENT_ERROR (vpp, RESOURCE, OPEN_READ,
-      ("Couldn't create GstVdpDevice"), (NULL));
+  gst_vdp_vpp_post_error (vpp, err);
   return FALSE;
 }
 

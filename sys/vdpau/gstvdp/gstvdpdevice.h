@@ -96,7 +96,7 @@ struct _GstVdpDevice
 
 GType gst_vdp_device_get_type (void);
 
-GstVdpDevice *gst_vdp_get_device (const gchar *display_name);
+GstVdpDevice *gst_vdp_get_device (const gchar *display_name, GError **error);
 
 G_END_DECLS
 
