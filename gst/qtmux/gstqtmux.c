@@ -105,6 +105,7 @@ enum
   PROP_0,
   PROP_LARGE_FILE,
   PROP_MOVIE_TIMESCALE,
+  PROP_TRAK_TIMESCALE,
   PROP_DO_CTTS,
   PROP_FLAVOR,
   PROP_FAST_START,
@@ -120,6 +121,7 @@ enum
 
 #define DEFAULT_LARGE_FILE              FALSE
 #define DEFAULT_MOVIE_TIMESCALE         1000
+#define DEFAULT_TRAK_TIMESCALE          0
 #define DEFAULT_DO_CTTS                 FALSE
 #define DEFAULT_FAST_START              FALSE
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
@@ -222,6 +224,11 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
       g_param_spec_uint ("movie-timescale", "Movie timescale",
           "Timescale to use in the movie (units per second)",
           1, G_MAXUINT32, DEFAULT_MOVIE_TIMESCALE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TRAK_TIMESCALE,
+      g_param_spec_uint ("trak-timescale", "Track timescale",
+          "Timescale to use for the tracks (units per second, 0 is automatic)",
+          0, G_MAXUINT32, DEFAULT_TRAK_TIMESCALE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_CTTS,
       g_param_spec_boolean ("presentation-time",
@@ -2542,7 +2549,8 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   qtpad->fourcc = entry.fourcc;
   qtpad->sample_size = constant_size;
   atom_trak_set_audio_type (qtpad->trak, qtmux->context, &entry,
-      entry.sample_rate, ext_atom, constant_size);
+      qtmux->trak_timescale ? qtmux->trak_timescale : entry.sample_rate,
+      ext_atom, constant_size);
 
   gst_object_unref (qtmux);
   return TRUE;
@@ -2656,7 +2664,8 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   /* bring frame numerator into a range that ensures both reasonable resolution
    * as well as a fair duration */
-  rate = adjust_rate (framerate_num);
+  rate = qtmux->trak_timescale ?
+      qtmux->trak_timescale : adjust_rate (framerate_num);
   GST_DEBUG_OBJECT (qtmux, "Rate of video track selected: %" G_GUINT32_FORMAT,
       rate);
 
@@ -3051,6 +3060,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_MOVIE_TIMESCALE:
       g_value_set_uint (value, qtmux->timescale);
       break;
+    case PROP_TRAK_TIMESCALE:
+      g_value_set_uint (value, qtmux->trak_timescale);
+      break;
     case PROP_DO_CTTS:
       g_value_set_boolean (value, qtmux->guess_pts);
       break;
@@ -3102,6 +3114,9 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_MOVIE_TIMESCALE:
       qtmux->timescale = g_value_get_uint (value);
+      break;
+    case PROP_TRAK_TIMESCALE:
+      qtmux->trak_timescale = g_value_get_uint (value);
       break;
     case PROP_DO_CTTS:
       qtmux->guess_pts = g_value_get_boolean (value);

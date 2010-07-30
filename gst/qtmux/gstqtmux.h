@@ -170,6 +170,7 @@ struct _GstQTMux
 
   /* properties */
   guint32 timescale;
+  guint32 trak_timescale;
   AtomsTreeFlavor flavor;
   gboolean fast_start;
   gboolean large_file;
