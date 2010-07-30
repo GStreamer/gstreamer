@@ -20,6 +20,7 @@
 
 #include "gstvdputils.h"
 #include "gstvdpvideobuffer.h"
+#include "gstvdpoutputbufferpool.h"
 
 #include "gstvdpoutputsrcpad.h"
 
@@ -46,10 +47,12 @@ struct _GstVdpOutputSrcPad
 
   GstCaps *caps;
 
-  GstCaps *input_caps;
+  GstCaps *output_caps;
   GstVdpOutputSrcPadFormat output_format;
   VdpRGBAFormat rgba_format;
   gint width, height;
+
+  GstVdpBufferPool *bpool;
 
   /* properties */
   GstVdpDevice *device;
@@ -126,57 +129,20 @@ gst_vdp_output_src_pad_create_buffer (GstVdpOutputSrcPad * vdp_pad,
 {
   GstFlowReturn ret;
   GstBuffer *neg_buf;
-  GstStructure *structure;
 
   /* negotiate */
   ret = gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (vdp_pad),
       GST_BUFFER_OFFSET_NONE, 0, GST_PAD_CAPS (vdp_pad), &neg_buf);
-
-  if (ret == GST_FLOW_OK) {
-    gint new_width, new_height;
-
-    structure = gst_caps_get_structure (GST_BUFFER_CAPS (neg_buf), 0);
-    if (!gst_structure_get_int (structure, "width", &new_width) ||
-        !gst_structure_get_int (structure, "height", &new_height))
-      goto invalid_caps;
-
-    if (new_width != vdp_pad->width || new_height != vdp_pad->height) {
-      GST_DEBUG_OBJECT (vdp_pad, "new dimensions: %dx%d", new_width,
-          new_height);
-
-      vdp_pad->width = new_width;
-      vdp_pad->height = new_height;
-
-      gst_caps_set_simple (vdp_pad->input_caps,
-          "width", G_TYPE_INT, new_width,
-          "height", G_TYPE_INT, new_height, NULL);
-    }
-
+  if (ret == GST_FLOW_OK)
     gst_buffer_unref (neg_buf);
-  }
 
-  *output_buf = gst_vdp_output_buffer_new (vdp_pad->device,
-      vdp_pad->rgba_format, vdp_pad->width, vdp_pad->height, NULL);
+  *output_buf =
+      (GstVdpOutputBuffer *) gst_vdp_buffer_pool_get_buffer (vdp_pad->bpool,
+      error);
   if (!*output_buf)
-    goto output_buf_error;
-
-  gst_buffer_set_caps (GST_BUFFER_CAST (*output_buf), vdp_pad->input_caps);
+    return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
-
-invalid_caps:
-  gst_buffer_unref (neg_buf);
-
-  g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-      "Sink element allocated buffer with invalid caps");
-  return GST_FLOW_ERROR;
-
-output_buf_error:
-  gst_buffer_unref (neg_buf);
-  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-      "Couldn't create a GstVdpOutputBuffer");
-  return GST_FLOW_ERROR;
-
 }
 
 static GstFlowReturn
@@ -185,7 +151,7 @@ gst_vdp_output_src_pad_alloc_with_caps (GstVdpOutputSrcPad * vdp_pad,
 {
   GstFlowReturn ret;
 
-  ret = gst_pad_alloc_buffer ((GstPad *) vdp_pad, 0, 0, caps,
+  ret = gst_pad_alloc_buffer_and_set_caps ((GstPad *) vdp_pad, 0, 0, caps,
       (GstBuffer **) output_buf);
   if (ret != GST_FLOW_OK)
     return ret;
@@ -244,41 +210,35 @@ gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad * vdp_pad,
 
 }
 
-gboolean
-gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad * vdp_pad,
-    GstCaps * video_caps)
+static gboolean
+gst_vdp_output_src_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstCaps *allowed_caps, *output_caps, *src_caps;
+  GstVdpOutputSrcPad *vdp_pad = GST_VDP_OUTPUT_SRC_PAD (pad);
   const GstStructure *structure;
 
-  g_return_val_if_fail (GST_IS_VDP_OUTPUT_SRC_PAD (vdp_pad), FALSE);
-  g_return_val_if_fail (GST_IS_CAPS (video_caps), FALSE);
+  structure = gst_caps_get_structure (caps, 0);
 
-  allowed_caps = gst_pad_get_allowed_caps (GST_PAD_CAST (vdp_pad));
-  if (G_UNLIKELY (!allowed_caps))
-    goto allowed_caps_error;
-  if (G_UNLIKELY (gst_caps_is_empty (allowed_caps))) {
-    gst_caps_unref (allowed_caps);
-    goto allowed_caps_error;
-  }
-  GST_DEBUG ("allowed_caps: %" GST_PTR_FORMAT, allowed_caps);
+  if (!gst_structure_get_int (structure, "width", &vdp_pad->width))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "height", &vdp_pad->height))
+    return FALSE;
 
-  output_caps = gst_vdp_video_to_output_caps (video_caps);
-  src_caps = gst_caps_intersect (output_caps, allowed_caps);
-  gst_caps_unref (output_caps);
-  gst_caps_unref (allowed_caps);
-
-  if (gst_caps_is_empty (src_caps))
-    goto not_negotiated;
-
-  gst_pad_fixate_caps (GST_PAD_CAST (vdp_pad), src_caps);
-
-  GST_DEBUG ("src_caps: %" GST_PTR_FORMAT, src_caps);
-
-  structure = gst_caps_get_structure (src_caps, 0);
   if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-    if (!gst_vdp_caps_to_rgba_format (src_caps, &vdp_pad->rgba_format))
+    if (!gst_vdp_caps_to_rgba_format (caps, &vdp_pad->rgba_format))
       return FALSE;
+
+    /* create buffer pool if we dont't have one */
+    if (!vdp_pad->bpool)
+      vdp_pad->bpool = gst_vdp_output_buffer_pool_new (vdp_pad->device);
+
+    if (vdp_pad->output_caps)
+      gst_caps_unref (vdp_pad->output_caps);
+
+    vdp_pad->output_caps = gst_caps_new_simple ("video/x-vdpau-output",
+        "rgba-format", G_TYPE_INT, vdp_pad->rgba_format,
+        "width", G_TYPE_INT, vdp_pad->width, "height", G_TYPE_INT,
+        vdp_pad->height, NULL);
+    gst_vdp_buffer_pool_set_caps (vdp_pad->bpool, vdp_pad->output_caps);
 
     vdp_pad->output_format = GST_VDP_OUTPUT_SRC_PAD_FORMAT_RGB;
   } else if (gst_structure_has_name (structure, "video/x-vdpau-output")) {
@@ -286,29 +246,17 @@ gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad * vdp_pad,
             (gint *) & vdp_pad->rgba_format))
       return FALSE;
 
+    /* don't need the buffer pool */
+    if (vdp_pad->bpool) {
+      gst_object_unref (vdp_pad->bpool);
+      vdp_pad->bpool = NULL;
+    }
+
     vdp_pad->output_format = GST_VDP_OUTPUT_SRC_PAD_FORMAT_VDPAU;
   } else
     return FALSE;
 
-  if (!gst_structure_get_int (structure, "width", &vdp_pad->width))
-    return FALSE;
-  if (!gst_structure_get_int (structure, "height", &vdp_pad->height))
-    return FALSE;
-
-  if (gst_pad_set_caps (GST_PAD (vdp_pad), src_caps)) {
-    vdp_pad->input_caps = gst_caps_copy (video_caps);
-    return TRUE;
-  }
-  return FALSE;
-
-allowed_caps_error:
-  GST_ERROR_OBJECT (vdp_pad, "Got invalid allowed caps");
-  return FALSE;
-
-not_negotiated:
-  gst_caps_unref (src_caps);
-  GST_ERROR_OBJECT (vdp_pad, "Couldn't find suitable output format");
-  return FALSE;
+  return TRUE;
 }
 
 static GstCaps *
@@ -337,8 +285,16 @@ gst_vdp_output_src_pad_activate_push (GstPad * pad, gboolean active)
       gst_caps_unref (vdp_pad->caps);
     vdp_pad->caps = NULL;
 
+    if (vdp_pad->output_caps)
+      gst_caps_unref (vdp_pad->output_caps);
+    vdp_pad->output_caps = NULL;
+
+    if (vdp_pad->bpool)
+      g_object_unref (vdp_pad->bpool);
+    vdp_pad->bpool = NULL;
+
     if (vdp_pad->device)
-      gst_object_unref (vdp_pad->device);
+      g_object_unref (vdp_pad->device);
     vdp_pad->device = NULL;
   }
 
@@ -413,11 +369,14 @@ gst_vdp_output_src_pad_init (GstVdpOutputSrcPad * vdp_pad)
   GstPad *pad = GST_PAD (vdp_pad);
 
   vdp_pad->caps = NULL;
-
+  vdp_pad->output_caps = NULL;
+  vdp_pad->bpool = NULL;
   vdp_pad->device = NULL;
 
   gst_pad_set_getcaps_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_getcaps));
+  gst_pad_set_setcaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_setcaps));
   gst_pad_set_activatepush_function (pad,
       GST_DEBUG_FUNCPTR (gst_vdp_output_src_pad_activate_push));
 }

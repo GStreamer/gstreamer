@@ -43,8 +43,6 @@ GstFlowReturn gst_vdp_output_src_pad_alloc_buffer (GstVdpOutputSrcPad *vdp_pad, 
 
 GstFlowReturn gst_vdp_output_src_pad_get_device (GstVdpOutputSrcPad *vdp_pad, GstVdpDevice **device, GError **error);
 
-gboolean gst_vdp_output_src_pad_negotiate_output (GstVdpOutputSrcPad *vdp_pad, GstCaps *video_caps);
-
 GstVdpOutputSrcPad *gst_vdp_output_src_pad_new (GstPadTemplate *templ, const gchar *name);
 GType gst_vdp_output_src_pad_get_type (void);
 

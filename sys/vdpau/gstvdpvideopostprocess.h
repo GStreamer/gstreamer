@@ -25,6 +25,7 @@
 
 #include "gstvdp/gstvdpdevice.h"
 #include "gstvdp/gstvdpvideobuffer.h"
+#include "gstvdp/gstvdpvideobufferpool.h"
 
 G_BEGIN_DECLS
 
@@ -72,6 +73,7 @@ struct _GstVdpVideoPostProcess
   VdpChromaType chroma_type;
   gint width, height;
   guint32 fourcc;
+  GstVdpBufferPool *vpool;
 
   gboolean got_par;
   gint par_n, par_d;
