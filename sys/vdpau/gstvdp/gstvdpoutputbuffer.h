@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 
+#include "gstvdpbuffer.h"
 #include "gstvdpdevice.h"
 
 typedef struct _GstVdpOutputBuffer GstVdpOutputBuffer;
@@ -32,7 +33,7 @@ typedef struct _GstVdpOutputBuffer GstVdpOutputBuffer;
 #define GST_VDP_OUTPUT_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_OUTPUT_BUFFER, GstVdpOutputBuffer))
 
 struct _GstVdpOutputBuffer {
-  GstBuffer buffer;
+  GstVdpBuffer vdp_buffer;
 
   GstVdpDevice *device;
   VdpRGBAFormat rgba_format;
@@ -43,7 +44,7 @@ struct _GstVdpOutputBuffer {
 
 GType gst_vdp_output_buffer_get_type (void);
 
-GstVdpOutputBuffer* gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format, gint width, gint height);
+GstVdpOutputBuffer* gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format, gint width, gint height, GError **error);
 
 GstCaps *gst_vdp_output_buffer_get_template_caps (void);
 GstCaps *gst_vdp_output_buffer_get_allowed_caps (GstVdpDevice *device);

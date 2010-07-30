@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_INIT (gst_vdp_output_buffer_debug, "vdpoutputbuffer", 0, "VDP
 
 GstVdpOutputBuffer *
 gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format,
-    gint width, gint height)
+    gint width, gint height, GError ** error)
 {
   GstVdpOutputBuffer *buffer;
   VdpStatus status;
@@ -41,12 +41,8 @@ gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format,
   status =
       device->vdp_output_surface_create (device->device, rgba_format, width,
       height, &surface);
-  if (status != VDP_STATUS_OK) {
-    GST_ERROR ("Couldn't create a VdpOutputSurface, error returned was: %s",
-        device->vdp_get_error_string (status));
-    return NULL;
-  }
-
+  if (status != VDP_STATUS_OK)
+    goto create_error;
 
   buffer =
       (GstVdpOutputBuffer *) gst_mini_object_new (GST_TYPE_VDP_OUTPUT_BUFFER);
@@ -59,6 +55,12 @@ gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format,
   buffer->surface = surface;
 
   return buffer;
+
+create_error:
+  g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
+      "Couldn't create a VdpOutputSurface, error returned from vdpau was: %s",
+      device->vdp_get_error_string (status));
+  return NULL;
 }
 
 static GObjectClass *gst_vdp_output_buffer_parent_class;
@@ -68,6 +70,9 @@ gst_vdp_output_buffer_finalize (GstVdpOutputBuffer * buffer)
 {
   GstVdpDevice *device;
   VdpStatus status;
+
+  if (gst_vdp_buffer_revive (GST_VDP_BUFFER_CAST (buffer)))
+    return;
 
   device = buffer->device;
 
@@ -120,7 +125,7 @@ gst_vdp_output_buffer_get_type (void)
       (GInstanceInitFunc) gst_vdp_output_buffer_init,
       NULL
     };
-    _gst_vdp_output_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+    _gst_vdp_output_buffer_type = g_type_register_static (GST_TYPE_VDP_BUFFER,
         "GstVdpOutputBuffer", &info, 0);
 
     DEBUG_INIT ();

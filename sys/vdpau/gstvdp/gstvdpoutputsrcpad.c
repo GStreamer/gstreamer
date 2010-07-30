@@ -156,7 +156,7 @@ gst_vdp_output_src_pad_create_buffer (GstVdpOutputSrcPad * vdp_pad,
   }
 
   *output_buf = gst_vdp_output_buffer_new (vdp_pad->device,
-      vdp_pad->rgba_format, vdp_pad->width, vdp_pad->height);
+      vdp_pad->rgba_format, vdp_pad->width, vdp_pad->height, NULL);
   if (!*output_buf)
     goto output_buf_error;
 

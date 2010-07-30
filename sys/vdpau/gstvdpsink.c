@@ -912,7 +912,7 @@ gst_vdp_sink_get_output_buffer (VdpSink * vdp_sink, GstCaps * caps,
   }
 
   *buf = GST_BUFFER (gst_vdp_output_buffer_new (vdp_sink->device,
-          rgba_format, width, height));
+          rgba_format, width, height, NULL));
   if (*buf == NULL) {
     return GST_FLOW_ERROR;
   }

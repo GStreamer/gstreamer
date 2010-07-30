@@ -8,6 +8,7 @@ libgstvdp_@GST_MAJORMINOR@_la_SOURCES = \
 	gstvdpvideobuffer.c \
 	gstvdpvideobufferpool.c \
 	gstvdpoutputbuffer.c \
+	gstvdpoutputbufferpool.c \
 	gstvdpvideosrcpad.c \
 	gstvdpoutputsrcpad.c \
 	gstvdpdecoder.c \
@@ -22,6 +23,7 @@ libgstvdp_@GST_MAJORMINOR@include_HEADERS = \
 	gstvdpvideobuffer.h \
 	gstvdpvideobufferpool.h \
 	gstvdpoutputbuffer.h \
+	gstvdpoutputbufferpool.h \
 	gstvdpvideosrcpad.h \
 	gstvdpoutputsrcpad.h \
 	gstvdpdecoder.h \
