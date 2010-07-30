@@ -1180,7 +1180,7 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder,
   gst_base_video_decoder_get_timestamp_at_offset (base_video_decoder,
       base_video_decoder->frame_offset, &timestamp, &duration);
 
-  frame->presentation_duration = timestamp;
+  frame->presentation_timestamp = timestamp;
   frame->presentation_duration = duration;
 
   if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_VIDEO_FRAME_FLAG_SYNC_POINT))
