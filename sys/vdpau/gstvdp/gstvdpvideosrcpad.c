@@ -20,6 +20,7 @@
 
 #include "gstvdpvideobuffer.h"
 #include "gstvdpvideobufferpool.h"
+#include "gstvdputils.h"
 
 #include "gstvdpvideosrcpad.h"
 
@@ -162,7 +163,6 @@ gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstVdpVideoSrcPad *vdp_pad = GST_VDP_VIDEO_SRC_PAD (pad);
   const GstStructure *structure;
 
-  VdpChromaType chroma_type;
   GstCaps *video_caps;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -174,27 +174,21 @@ gst_vdp_video_src_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_structure_get_fourcc (structure, "format", &vdp_pad->fourcc))
       return FALSE;
 
-    chroma_type = VDP_CHROMA_TYPE_420;
-
+    video_caps = gst_vdp_yuv_to_video_caps (caps);
     vdp_pad->yuv_output = TRUE;
   } else if (gst_structure_has_name (structure, "video/x-vdpau-video")) {
     if (!gst_structure_get_int (structure, "width", &vdp_pad->width))
       return FALSE;
     if (!gst_structure_get_int (structure, "height", &vdp_pad->height))
       return FALSE;
-    if (!gst_structure_get_int (structure, "chroma-type",
-            (gint *) & chroma_type))
-      return FALSE;
 
+    video_caps = gst_caps_ref (caps);
     vdp_pad->yuv_output = FALSE;
   } else
     return FALSE;
 
-  video_caps = gst_caps_new_simple ("video/x-vdpau-video",
-      "chroma-type", G_TYPE_INT, (gint) chroma_type,
-      "width", G_TYPE_INT, vdp_pad->width,
-      "height", G_TYPE_INT, vdp_pad->height, NULL);
   gst_vdp_buffer_pool_set_caps (vdp_pad->bpool, video_caps);
+  gst_caps_unref (video_caps);
 
   return TRUE;
 }
