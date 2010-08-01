@@ -2478,6 +2478,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     }
 
     if (STRNCMP (&data[4], "ftypisom", 8) == 0 ||
+        STRNCMP (&data[4], "ftypavc1", 8) == 0 ||
         STRNCMP (&data[4], "ftypmp42", 8) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
       variant = "iso";
