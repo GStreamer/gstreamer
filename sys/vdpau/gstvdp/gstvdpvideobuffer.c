@@ -125,6 +125,8 @@ gst_vdp_video_buffer_get_type (void)
     };
     _gst_vdp_video_buffer_type = g_type_register_static (GST_TYPE_VDP_BUFFER,
         "GstVdpVideoBuffer", &info, 0);
+
+    DEBUG_INIT ();
   }
   return _gst_vdp_video_buffer_type;
 }
