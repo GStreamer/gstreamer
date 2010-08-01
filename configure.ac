@@ -1677,6 +1677,7 @@ gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
 gst/cdxaparse/Makefile
+gst/coloreffects/Makefile
 gst/dataurisrc/Makefile
 gst/dccp/Makefile
 gst/debugutils/Makefile
