@@ -50,12 +50,13 @@
 
 G_BEGIN_DECLS
 
-gboolean gst_burn_plugin_init (GstPlugin * chromium);
-gboolean gst_chromium_plugin_init (GstPlugin * chromium);
-gboolean gst_dilate_plugin_init (GstPlugin * chromium);
-gboolean gst_dodge_plugin_init (GstPlugin * chromium);
-gboolean gst_exclusion_plugin_init (GstPlugin * chromium);
-gboolean gst_solarize_plugin_init (GstPlugin * chromium);
+gboolean gst_burn_plugin_init (GstPlugin *plugin);
+gboolean gst_chromium_plugin_init (GstPlugin *plugin);
+gboolean gst_dilate_plugin_init (GstPlugin *plugin);
+gboolean gst_dodge_plugin_init (GstPlugin *plugin);
+gboolean gst_exclusion_plugin_init (GstPlugin *plugin);
+gboolean gst_gauss_blur_plugin_init (GstPlugin *plugin);
+gboolean gst_solarize_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS
 

@@ -71,6 +71,7 @@ plugin_init (GstPlugin * plugin)
   ret &= gst_dodge_plugin_init (plugin);
   ret &= gst_exclusion_plugin_init (plugin);
   ret &= gst_solarize_plugin_init (plugin);
+  ret &= gst_gauss_blur_plugin_init (plugin);
 
   return ret;
 }

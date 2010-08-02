@@ -115,6 +115,27 @@
       </pads>
     </element>
     <element>
+      <name>gaussianblur</name>
+      <longname>GaussBlur</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Perform Gaussian blur/sharpen on a video</description>
+      <author>Jan Schmidt &lt;thaytan@noraisin.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)AYUV, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>solarize</name>
       <longname>Solarize</longname>
       <class>Filter/Effect/Video</class>
