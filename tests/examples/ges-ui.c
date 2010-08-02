@@ -217,7 +217,11 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
       app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
 
   gtk_widget_set_visible (app->generic_duration,
-      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
+      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE ||
+      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
+
+  gtk_widget_set_visible (app->background_properties,
+      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
 }
 
 gboolean
