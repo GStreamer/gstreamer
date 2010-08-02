@@ -1092,8 +1092,7 @@ static gboolean
 gst_rtp_h264_pay_handle_event (GstPad * pad, GstEvent * event)
 {
   const GstStructure *s;
-  GstRtpH264Pay *rtph264pay =
-      GST_RTP_H264_PAY (gst_pad_get_parent_element (pad));
+  GstRtpH264Pay *rtph264pay = GST_RTP_H264_PAY (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:
