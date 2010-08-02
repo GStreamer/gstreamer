@@ -11,7 +11,8 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gstpinch.c \
                                       gstsphere.c \
                                       gsttwirl.c \
-                                      gstwaterripple.c
+                                      gstwaterripple.c \
+                                      gststretch.c
 
 libgstgeometrictransform_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 			    $(GST_PLUGINS_BASE_CFLAGS) \
@@ -35,4 +36,5 @@ noinst_HEADERS = gstgeometrictransform.h \
                  gstpinch.h \
                  gstsphere.h \
                  gsttwirl.h \
-                 gstwaterripple.h
+                 gstwaterripple.h \
+                 gststretch.h

@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * Copyright (C) 2010 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,30 +41,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * Thanks to Jerry Huxtable <http://www.jhlabs.com> work on its java
- * image editor and filters. The algorithms here were extracted from
- * his code.
- */
-
-#ifndef __GEOMETRIC_MATH_H__
-#define __GEOMETRIC_MATH_H__
+#ifndef __GST_STRETCH_H__
+#define __GST_STRETCH_H__
 
 #include <gst/gst.h>
+#include "gstcirclegeometrictransform.h"
 
 G_BEGIN_DECLS
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_STRETCH \
+  (gst_stretch_get_type())
+#define GST_STRETCH(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STRETCH,GstStretch))
+#define GST_STRETCH_CAST(obj) \
+  ((GstStretch *)(obj))
+#define GST_STRETCH_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STRETCH,GstStretchClass))
+#define GST_IS_STRETCH(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STRETCH))
+#define GST_IS_STRETCH_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STRETCH))
+typedef struct _GstStretch GstStretch;
+typedef struct _GstStretchClass GstStretchClass;
 
-typedef struct _Noise Noise;
+struct _GstStretch
+{
+  GstCircleGeometricTransform element;
+};
 
-Noise * noise_new (void);
-void noise_free (Noise * noise);
-gdouble noise_2 (Noise * noise, gdouble x, gdouble y);
+struct _GstStretchClass
+{
+  GstCircleGeometricTransformClass parent_class;
+};
 
-gdouble mod_float (gdouble a, gdouble b);
-gdouble geometric_math_triangle (gdouble x);
+GType gst_stretch_get_type (void);
 
-gdouble smoothstep (gdouble edge0, gdouble edge1, gdouble x);
+gboolean gst_stretch_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
-#endif /* __GEOMETRIC_MATH_H__ */
+#endif /* __GST_STRETCH_H__ */

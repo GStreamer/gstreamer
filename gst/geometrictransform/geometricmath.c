@@ -189,3 +189,13 @@ geometric_math_triangle (gdouble x)
 
   return 2.0 * (r < 0.5 ? r : 1 - r);
 }
+
+/**
+ * Hermite interpolation
+ */
+gdouble
+smoothstep (gdouble edge0, gdouble edge1, gdouble x)
+{
+  gdouble t = CLAMP ((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+  return t * t * (3.0 - 2.0 * t);
+}
