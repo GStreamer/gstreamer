@@ -46,10 +46,10 @@ typedef struct
   ChainCodec codec;
 } ChainState;
 
+#if (defined (HAVE_THEORA) || defined (HAVE_VORBIS))
 static ogg_sync_state oggsync;
 static GHashTable *eos_chain_states;
 static gulong probe_id;
-
 
 static ChainCodec
 get_page_codec (ogg_page * page)
@@ -75,15 +75,6 @@ get_page_codec (ogg_page * page)
   ogg_stream_clear (&state);
 
   return codec;
-}
-
-static gboolean
-check_chain_final_state (gpointer key, ChainState * state, gpointer data)
-{
-  fail_unless (state->eos, "missing EOS flag on chain %u", state->serialno);
-
-  /* return TRUE to empty the chain table */
-  return TRUE;
 }
 
 static void
@@ -157,6 +148,14 @@ is_video (gpointer key, ChainState * state, gpointer data)
     *((gboolean *) data) = TRUE;
 }
 
+static gboolean
+check_chain_final_state (gpointer key, ChainState * state, gpointer data)
+{
+  fail_unless (state->eos, "missing EOS flag on chain %u", state->serialno);
+
+  /* return TRUE to empty the chain table */
+  return TRUE;
+}
 
 static gboolean
 eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
@@ -309,6 +308,7 @@ test_pipeline (const char *pipeline)
   gst_object_unref (pad);
   gst_object_unref (bin);
 }
+#endif
 
 #ifdef HAVE_VORBIS
 GST_START_TEST (test_vorbis)
