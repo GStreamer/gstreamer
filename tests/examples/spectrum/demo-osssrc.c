@@ -78,8 +78,8 @@ draw_spectrum (gfloat * data)
   cairo_set_source_rgb (cr, 0, 0, 0);
   cairo_rectangle (cr, 0, 0, spect_bands, spect_height);
   cairo_fill (cr);
+  cairo_set_source_rgb (cr, 1, 1, 1);
   for (i = 0; i < spect_bands; i++) {
-    cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_rectangle (cr, i, -data[i], 1, spect_height + data[i]);
     cairo_fill (cr);
   }
