@@ -52,6 +52,8 @@ typedef struct App
   GtkWidget *generic_duration;
   GstState state;
   GType selected_type;
+  GtkWidget *background_properties;
+  GtkComboBox *background_type;
 } App;
 
 App *app_new (void);
@@ -811,6 +813,8 @@ create_ui (App * app)
   GET_WIDGET (app->play, "play", GTK_ACTION);
   GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
   GET_WIDGET (app->generic_duration, "generic_duration", GTK_WIDGET);
+  GET_WIDGET (app->background_type, "background_type", GTK_COMBO_BOX);
+  GET_WIDGET (app->background_properties, "background_properties", GTK_WIDGET);
 
   /* get text notifications */
 
