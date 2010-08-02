@@ -22,11 +22,11 @@ vdpau_init (GstPlugin * vdpau_plugin)
   gst_element_register (vdpau_plugin, "vdpaumpegdec",
       GST_RANK_NONE, GST_TYPE_VDP_MPEG_DEC);
   gst_element_register (vdpau_plugin, "vdpauh264dec",
-      GST_RANK_PRIMARY, GST_TYPE_VDP_H264_DEC);
+      GST_RANK_NONE, GST_TYPE_VDP_H264_DEC);
   gst_element_register (vdpau_plugin, "vdpauvideopostprocess",
-      GST_RANK_PRIMARY, GST_TYPE_VDP_VIDEO_POST_PROCESS);
+      GST_RANK_NONE, GST_TYPE_VDP_VIDEO_POST_PROCESS);
   gst_element_register (vdpau_plugin, "vdpausink",
-      GST_RANK_PRIMARY, GST_TYPE_VDP_SINK);
+      GST_RANK_NONE, GST_TYPE_VDP_SINK);
 
   return TRUE;
 }
