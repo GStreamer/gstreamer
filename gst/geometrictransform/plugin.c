@@ -32,6 +32,7 @@
 #include "gststretch.h"
 #include "gstbulge.h"
 #include "gsttunnel.h"
+#include "gstsquare.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -67,6 +68,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_tunnel_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_square_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
