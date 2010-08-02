@@ -64,6 +64,8 @@ void app_add_file (App * app, gchar * filename);
 
 void app_add_title (App * app);
 
+void app_add_test (App * app);
+
 GList *app_get_selected_objects (App * app);
 
 void app_delete_objects (App * app, GList * objects);
@@ -81,6 +83,8 @@ void play_activate_cb (GtkAction * item, App * app);
 void add_file_activate_cb (GtkAction * item, App * app);
 
 void add_text_activate_cb (GtkAction * item, App * app);
+
+void add_test_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
@@ -183,6 +187,12 @@ void
 add_text_activate_cb (GtkAction * item, App * app)
 {
   app_add_title (app);
+}
+
+void
+add_test_activate_cb (GtkAction * item, App * app)
+{
+  app_add_test (app);
 }
 
 void
@@ -469,6 +479,20 @@ app_add_title (App * app)
       obj, -1);
 }
 
+void
+app_add_test (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding test");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
+      (app->layer), obj, -1);
+}
+
 App *
 app_new (void)
 {
@@ -631,6 +655,10 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     g_signal_connect (G_OBJECT (object), "notify::text",
         G_CALLBACK (title_source_text_changed_cb), app);
     title_source_text_changed_cb (object, NULL, app);
+  }
+
+  else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+    gtk_list_store_set (app->model, &iter, 2, object, 0, "Test Source", -1);
   }
 
   g_signal_connect (G_OBJECT (object), "notify::duration",
