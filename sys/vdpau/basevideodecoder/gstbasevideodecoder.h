@@ -114,7 +114,9 @@ struct _GstBaseVideoDecoder
   GstClockTime earliest_time;
 
   guint64 input_offset;
-  guint64 frame_offset;
+  guint64 current_buf_offset;
+  guint64 prev_buf_offset;
+  
   GstClockTime last_timestamp;
 
   guint64 base_picture_number;
@@ -178,12 +180,9 @@ GstFlowReturn gst_base_video_decoder_finish_frame (GstBaseVideoDecoder *base_vid
 void gst_base_video_decoder_skip_frame (GstBaseVideoDecoder * base_video_decoder,
     GstVideoFrame * frame);
 
-void
-gst_base_video_decoder_frame_start (GstBaseVideoDecoder *base_video_decoder,
-    GstBuffer *buf);
 GstFlowReturn
 gst_base_video_decoder_have_frame (GstBaseVideoDecoder *base_video_decoder,
-    GstVideoFrame **new_frame);
+    gboolean include_current_buf, GstVideoFrame **new_frame);
 
 GstVideoState gst_base_video_decoder_get_state (GstBaseVideoDecoder *base_video_decoder);
 void gst_base_video_decoder_set_state (GstBaseVideoDecoder *base_video_decoder,

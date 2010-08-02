@@ -432,11 +432,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     case MPEG_PACKET_SEQUENCE:
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
 
-      if (mpeg_dec->prev_packet != -1) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
+      if (mpeg_dec->prev_packet != -1)
+        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
             (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
-      }
 
       mpeg_frame->seq = buf;
       break;
@@ -445,11 +443,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
 
       if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE &&
-          mpeg_dec->prev_packet != MPEG_PACKET_GOP) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
+          mpeg_dec->prev_packet != MPEG_PACKET_GOP)
+        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
             (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
-      }
 
       mpeg_frame->pic = buf;
       break;
@@ -457,11 +453,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     case MPEG_PACKET_GOP:
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");
 
-      if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE) {
-        ret = gst_base_video_decoder_have_frame (base_video_decoder,
+      if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE)
+        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
             (GstVideoFrame **) & mpeg_frame);
-        gst_base_video_decoder_frame_start (base_video_decoder, buf);
-      }
 
       mpeg_frame->gop = buf;
       break;

@@ -701,10 +701,9 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
     if (nal_unit.type == GST_NAL_SPS || nal_unit.type == GST_NAL_PPS ||
         nal_unit.type == GST_NAL_SEI || nal_unit.type == GST_NAL_AU_DELIMITER ||
-        (nal_unit.type >= 14 && nal_unit.type <= 18)) {
-      ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
-      gst_base_video_decoder_frame_start (base_video_decoder, buf);
-    }
+        (nal_unit.type >= 14 && nal_unit.type <= 18))
+      ret =
+          gst_base_video_decoder_have_frame (base_video_decoder, FALSE, &frame);
   }
 
   if (nal_unit.type >= GST_NAL_SLICE && nal_unit.type <= GST_NAL_SLICE_IDR) {
@@ -749,10 +748,11 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
                 p_slice->delta_pic_order_cnt[1]))
           finish_frame = TRUE;
 
-        if (finish_frame) {
-          ret = gst_base_video_decoder_have_frame (base_video_decoder, &frame);
-          gst_base_video_decoder_frame_start (base_video_decoder, buf);
-        }
+        if (finish_frame)
+          ret =
+              gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
+              &frame);
+
       }
 
       if (!GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
