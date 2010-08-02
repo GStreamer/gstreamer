@@ -811,6 +811,37 @@ disconnect_from_object (GESTimelineObject * object, App * app)
   }
 }
 
+static GtkListStore *
+get_video_patterns (void)
+{
+  GEnumClass *enum_class;
+  GESTimelineTestSource *tr;
+  GESTimelineTestSourceClass *klass;
+  GParamSpec *pspec;
+  GEnumValue *v;
+  GtkListStore *m;
+  GtkTreeIter i;
+
+  m = gtk_list_store_new (1, G_TYPE_STRING);
+
+  tr = ges_timeline_test_source_new ();
+  klass = GES_TIMELINE_TEST_SOURCE_GET_CLASS (tr);
+
+  pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern");
+
+  enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+
+  for (v = enum_class->values; v->value_nick != NULL; v++) {
+    gtk_list_store_append (m, &i);
+    gtk_list_store_set (m, &i, 0, v->value_name, -1);
+  }
+
+  g_type_class_unref (enum_class);
+  g_object_unref (tr);
+
+  return m;
+}
+
 gboolean
 create_ui (App * app)
 {
@@ -818,6 +849,8 @@ create_ui (App * app)
   GtkTreeView *timeline;
   GtkTreeViewColumn *duration_col;
   GtkCellRenderer *duration_renderer;
+  GtkCellRenderer *background_type_renderer;
+  GtkListStore *backgrounds;
   GstBus *bus;
 
   /* construct widget tree */
@@ -869,12 +902,30 @@ create_ui (App * app)
   if (!(app->model =
           gtk_list_store_new (3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_OBJECT)))
     goto fail;
+
   gtk_tree_view_set_model (timeline, GTK_TREE_MODEL (app->model));
 
   /* register custom cell data function */
 
   gtk_tree_view_column_set_cell_data_func (duration_col, duration_renderer,
       duration_cell_func, NULL, NULL);
+
+  /* initialize combo boxes */
+
+  if (!(backgrounds = get_video_patterns ()))
+    goto fail;
+
+  if (!(background_type_renderer = gtk_cell_renderer_text_new ()))
+    goto fail;
+
+  gtk_combo_box_set_model (app->background_type, (GtkTreeModel *)
+      backgrounds);
+
+  gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (app->background_type),
+      background_type_renderer, FALSE);
+
+  gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (app->background_type),
+      background_type_renderer, "text", 0);
 
   /* register callbacks on GES objects */
 
