@@ -321,6 +321,8 @@ rtp_pipeline_run (rtp_pipeline * p)
 static void
 rtp_pipeline_enable_lists (rtp_pipeline * p, guint mtu_size)
 {
+  GstPad *pad;
+
   /* use buffer lists */
   g_object_set (p->rtppay, "buffer-list", TRUE, NULL);
 
@@ -330,8 +332,10 @@ rtp_pipeline_enable_lists (rtp_pipeline * p, guint mtu_size)
   }
 
   /* Add chain list function for the buffer list tests */
-  gst_pad_set_chain_list_function (gst_element_get_static_pad (p->rtpdepay,
-          "sink"), GST_DEBUG_FUNCPTR (rtp_pipeline_chain_list));
+  pad = gst_element_get_static_pad (p->rtpdepay, "sink");
+  gst_pad_set_chain_list_function (pad,
+      GST_DEBUG_FUNCPTR (rtp_pipeline_chain_list));
+  gst_object_unref (pad);
 }
 
 /*
