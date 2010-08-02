@@ -43,6 +43,10 @@ typedef struct _GstRTPG729PayClass GstRTPG729PayClass;
 struct _GstRTPG729Pay
 {
   GstBaseRTPAudioPayload audiopayload;
+
+  GstAdapter *adapter;
+  GstClockTime next_ts;
+  gboolean discont;
 };
 
 struct _GstRTPG729PayClass
