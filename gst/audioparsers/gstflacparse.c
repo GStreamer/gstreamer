@@ -1106,6 +1106,7 @@ gst_flac_parse_handle_headers (GstFlacParse * flacparse)
 
   caps = gst_caps_new_simple ("audio/x-flac",
       "channels", G_TYPE_INT, flacparse->channels,
+      "framed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, flacparse->samplerate, NULL);
 
   if (!flacparse->headers)
