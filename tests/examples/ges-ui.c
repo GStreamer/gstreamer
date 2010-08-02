@@ -123,6 +123,8 @@ void disconnect_from_title_source (GESTimelineObject * object, App * app);
 void seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
     App * app);
 
+void background_type_changed_cb (GtkComboBox * widget, App * app);
+
 /* UI state functions *******************************************************/
 
 static void
@@ -371,6 +373,18 @@ seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
       g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
           (guint64) str_to_time (text), NULL);
     }
+  }
+}
+
+void
+background_type_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  gint p;
+  p = gtk_combo_box_get_active (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "vpattern", (gint) p, NULL);
   }
 }
 
@@ -767,7 +781,6 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
 void
 connect_to_title_source (GESTimelineObject * object, App * app)
 {
-  gdouble s;
   guint64 duration;
   gchar buf[30];
 
@@ -779,8 +792,6 @@ connect_to_title_source (GESTimelineObject * object, App * app)
 
   duration = GES_TIMELINE_OBJECT_DURATION (object);
 
-  s = (duration / (float) GST_SECOND);
-
   g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
       GST_TIME_ARGS (duration));
   gtk_entry_set_text (app->seconds, buf);
@@ -791,6 +802,23 @@ disconnect_from_title_source (GESTimelineObject * object, App * app)
 {
 }
 
+static void
+connect_to_test_source (GESTimelineObject * object, App * app)
+{
+  gchar buf[30];
+  guint64 duration;
+
+  GESTimelineTestSource *obj;
+  obj = GES_TIMELINE_TEST_SOURCE (object);
+  gtk_combo_box_set_active (app->background_type, obj->vpattern);
+
+  duration = GES_TIMELINE_OBJECT_DURATION (object);
+
+  g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
+      GST_TIME_ARGS (duration));
+  gtk_entry_set_text (app->seconds, buf);
+}
+
 void
 connect_to_object (GESTimelineObject * object, App * app)
 {
@@ -798,6 +826,8 @@ connect_to_object (GESTimelineObject * object, App * app)
     connect_to_filesource (object, app);
   } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
     connect_to_title_source (object, app);
+  } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+    connect_to_test_source (object, app);
   }
 }
 
