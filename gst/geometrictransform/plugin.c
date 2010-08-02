@@ -34,6 +34,7 @@
 #include "gsttunnel.h"
 #include "gstsquare.h"
 #include "gstmirror.h"
+#include "gstfisheye.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -75,6 +76,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_mirror_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_fisheye_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
