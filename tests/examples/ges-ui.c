@@ -489,10 +489,6 @@ app_update_selection (App * app)
   app->selected_objects = info.objects;
   app->n_selected = info.n;
 
-  for (cur = app->selected_objects; cur; cur = cur->next) {
-    connect_to_object (cur->data, app);
-  }
-
   type = G_TYPE_NONE;
   if (app->selected_objects) {
     type = G_TYPE_FROM_INSTANCE (app->selected_objects->data);
@@ -503,6 +499,13 @@ app_update_selection (App * app)
       }
     }
   }
+
+  if (type != G_TYPE_NONE) {
+    for (cur = app->selected_objects; cur; cur = cur->next) {
+      connect_to_object (cur->data, app);
+    }
+  }
+
   app->selected_type = type;
 }
 
