@@ -825,5 +825,6 @@
     <property name="label">Add Transtion</property>
     <property name="short_label">Add Transition</property>
     <property name="icon_name">media-playlist-shuffle</property>
+    <signal name="activate" handler="add_transition_activate_cb"/>
   </object>
 </interface>

@@ -72,6 +72,8 @@ void app_add_title (App * app);
 
 void app_add_test (App * app);
 
+void app_add_transition (App * app);
+
 GList *app_get_selected_objects (App * app);
 
 void app_delete_objects (App * app, GList * objects);
@@ -91,6 +93,8 @@ void add_file_activate_cb (GtkAction * item, App * app);
 void add_text_activate_cb (GtkAction * item, App * app);
 
 void add_test_activate_cb (GtkAction * item, App * app);
+
+void add_transition_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 
@@ -150,7 +154,8 @@ static void
 update_add_transition_sensitivity (App * app)
 {
   gtk_action_set_sensitive (app->add_transition,
-      (app->can_add_transition) && (app->state != GST_STATE_PLAYING));
+      (app->can_add_transition) &&
+      (app->state != GST_STATE_PLAYING) && (app->n_objects));
 }
 
 /* UI callbacks  ************************************************************/
@@ -213,6 +218,12 @@ void
 add_test_activate_cb (GtkAction * item, App * app)
 {
   app_add_test (app);
+}
+
+void
+add_transition_activate_cb (GtkAction * item, App * app)
+{
+  app_add_transition (app);
 }
 
 void
@@ -570,6 +581,21 @@ app_add_test (App * app)
       (app->layer), obj, -1);
 }
 
+void
+app_add_transition (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding transition");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new
+      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
+      (app->layer), obj, -1);
+}
+
 App *
 app_new (void)
 {
@@ -738,12 +764,19 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     gtk_list_store_set (app->model, &iter, 2, object, 0, "Test Source", -1);
   }
 
+  else if (GES_IS_TIMELINE_TRANSITION (object)) {
+    gtk_list_store_set (app->model, &iter, 2, object, 0, "Transition", -1);
+  }
+
   g_signal_connect (G_OBJECT (object), "notify::duration",
       G_CALLBACK (timeline_object_notify_duration_cb), app);
   timeline_object_notify_duration_cb (object, NULL, app);
 
   app->n_objects++;
   object_count_changed (app);
+
+  app->can_add_transition = !GES_IS_TIMELINE_TRANSITION (object);
+  update_add_transition_sensitivity (app);
 }
 
 static void
@@ -751,6 +784,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
 {
   GtkTreeIter iter;
+  GList *tmp;
 
   GST_INFO ("layer object removed cb %p %p %p", layer, object, app);
 
@@ -762,6 +796,11 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   object_count_changed (app);
 
   gtk_list_store_remove (app->model, &iter);
+  tmp = g_list_last (GES_SIMPLE_TIMELINE_LAYER (app->layer)->objects);
+  if (tmp) {
+    app->can_add_transition = !GES_IS_TIMELINE_TRANSITION (tmp->data);
+  }
+  update_add_transition_sensitivity (app);
 }
 
 static void
