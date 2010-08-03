@@ -54,6 +54,8 @@ typedef struct App
   GType selected_type;
   GtkWidget *background_properties;
   GtkComboBox *background_type;
+  GtkSpinButton *frequency;
+  GtkHScale *volume;
 } App;
 
 App *app_new (void);
@@ -910,6 +912,8 @@ create_ui (App * app)
   GET_WIDGET (app->generic_duration, "generic_duration", GTK_WIDGET);
   GET_WIDGET (app->background_type, "background_type", GTK_COMBO_BOX);
   GET_WIDGET (app->background_properties, "background_properties", GTK_WIDGET);
+  GET_WIDGET (app->frequency, "frequency", GTK_SPIN_BUTTON);
+  GET_WIDGET (app->volume, "volume", GTK_HSCALE);
 
   /* get text notifications */
 
