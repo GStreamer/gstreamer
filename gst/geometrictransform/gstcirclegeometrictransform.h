@@ -76,6 +76,7 @@ struct _GstCircleGeometricTransform
 
   gdouble precalc_x_center;
   gdouble precalc_y_center;
+  gdouble precalc_radius;
   gdouble precalc_radius2;
 };
 

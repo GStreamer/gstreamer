@@ -155,7 +155,8 @@ twirl_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     *in_y = y;
   } else {
     gdouble d = sqrt (distance);
-    gdouble a = atan2 (dy, dx) + twirl->angle * (cgt->radius - d) / cgt->radius;
+    gdouble a = atan2 (dy,
+        dx) + twirl->angle * (cgt->precalc_radius - d) / cgt->precalc_radius;
 
     *in_x = cgt->precalc_x_center + d * cos (a);
     *in_y = cgt->precalc_y_center + d * sin (a);

@@ -180,8 +180,8 @@ kaleidoscope_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
   theta = geometric_math_triangle (theta / G_PI * kaleidoscope->sides * 0.5);
 
-  if (cgt->radius != 0) {
-    gdouble radiusc = cgt->radius / cos (theta);
+  if (cgt->precalc_radius != 0) {
+    gdouble radiusc = cgt->precalc_radius / cos (theta);
 
     distance = radiusc * geometric_math_triangle (distance / radiusc);
   }

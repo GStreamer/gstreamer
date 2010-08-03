@@ -72,7 +72,7 @@ enum
 
 #define DEFAULT_X_CENTER 0.5
 #define DEFAULT_Y_CENTER 0.5
-#define DEFAULT_RADIUS 100
+#define DEFAULT_RADIUS 0.35
 
 static void
 gst_circle_geometric_transform_set_property (GObject * object, guint prop_id,
@@ -155,7 +155,10 @@ circle_geometric_transform_precalc (GstGeometricTransform * gt)
 
   cgt->precalc_x_center = cgt->x_center * gt->width;
   cgt->precalc_y_center = cgt->y_center * gt->height;
-  cgt->precalc_radius2 = cgt->radius * cgt->radius;
+  cgt->precalc_radius =
+      cgt->radius * 0.5 * sqrt (gt->width * gt->width +
+      gt->height * gt->height);
+  cgt->precalc_radius2 = cgt->precalc_radius * cgt->precalc_radius;
 
   return TRUE;
 }
@@ -195,7 +198,7 @@ gst_circle_geometric_transform_class_init (GstCircleGeometricTransformClass *
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RADIUS,
       g_param_spec_double ("radius", "radius",
-          "radius of the circle_geometric_transform effect", 0.0, G_MAXDOUBLE,
+          "radius of the circle_geometric_transform effect", 0.0, 1.0,
           DEFAULT_RADIUS,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

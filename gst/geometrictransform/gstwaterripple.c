@@ -183,7 +183,7 @@ water_ripple_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
         water->amplitude * sin (d / water->wavelength * G_PI * 2 -
         water->phase);
 
-    amount *= (cgt->radius - d) / cgt->radius;
+    amount *= (cgt->precalc_radius - d) / cgt->precalc_radius;
     if (d != 0)
       amount *= water->wavelength / d;
     *in_x = x + dx * amount;
