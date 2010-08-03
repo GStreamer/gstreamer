@@ -182,6 +182,14 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkImageMenuItem" id="imagemenuitem1">
+                        <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_transition</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem" id="menuitem1">
                         <property name="visible">True</property>
                         <property name="use_action_appearance">True</property>
@@ -261,6 +269,19 @@
                 <property name="use_action_appearance">True</property>
                 <property name="related_action">add_test</property>
                 <property name="label" translatable="yes">toolbutton4</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton5">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">add_transition</property>
+                <property name="label" translatable="yes">toolbutton5</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
@@ -799,5 +820,10 @@
     <property name="short_label">Add test Source</property>
     <property name="icon_name">utilities-system-monitor</property>
     <signal name="activate" handler="add_test_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="add_transition">
+    <property name="label">Add Transtion</property>
+    <property name="short_label">Add Transition</property>
+    <property name="icon_name">media-playlist-shuffle</property>
   </object>
 </interface>
