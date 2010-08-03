@@ -449,11 +449,18 @@ app_toggle_playback (App * app)
   }
 }
 
+typedef struct
+{
+  GList *objects;
+  guint n;
+} select_info;
+
 void
 app_update_selection (App * app)
 {
   GList *cur;
   GType type;
+  select_info info = { NULL, 0 };
 
   /* clear old selection */
   for (cur = app->selected_objects; cur; cur = cur->next) {
@@ -467,11 +474,12 @@ app_update_selection (App * app)
 
   /* get new selection */
   gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
-      selection_foreach, &app->selected_objects);
+      selection_foreach, &info);
+  app->selected_objects = info.objects;
+  app->n_selected = info.n;
 
   for (cur = app->selected_objects; cur; cur = cur->next) {
     connect_to_object (cur->data, app);
-    app->n_selected++;
   }
 
   type = G_TYPE_NONE;
@@ -491,12 +499,13 @@ static void
 selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
     * iter, gpointer user)
 {
-  GList **ret = user;
+  select_info *info = (select_info *) user;
   GESTimelineObject *obj;
 
   gtk_tree_model_get (model, iter, 2, &obj, -1);
-  *ret = g_list_append (*ret, obj);
+  info->objects = g_list_append (info->objects, obj);
 
+  info->n++;
   return;
 }
 
