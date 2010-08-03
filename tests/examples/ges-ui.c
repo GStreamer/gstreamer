@@ -398,6 +398,14 @@ background_type_changed_cb (GtkComboBox * widget, App * app)
 void
 frequency_value_changed_cb (GtkSpinButton * widget, App * app)
 {
+  GList *tmp;
+  gdouble value;
+
+  value = gtk_spin_button_get_value (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "freq", (gdouble) value, NULL);
+  }
 }
 
 gboolean
