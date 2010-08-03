@@ -26340,7 +26340,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>8.20074e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26380,7 +26380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.63015e-299</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26390,7 +26390,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.63015e-299</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26440,7 +26440,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.74861e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26470,7 +26470,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>9.33458e-15</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26480,7 +26480,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>9.33458e-15</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26490,7 +26490,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.37068e-21</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26820,7 +26820,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.80716e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27010,7 +27010,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>6.09249e+247</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27020,7 +27020,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>7.7486e-304</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27200,7 +27200,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>2.07274e-314</DEFAULT>
+<DEFAULT>9.27715e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45965,7 +45965,7 @@
 
 <ARG>
 <NAME>GstGSettingsAudioSink::profile</NAME>
-<TYPE>GstGSettingsProfile</TYPE>
+<TYPE>GstGSettingsAudioSinkProfile</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Profile</NICK>
@@ -46091,5 +46091,15 @@
 <NICK>Silent</NICK>
 <BLURB>Produce verbose output ?.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GaussBlur::sigma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-20,20]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sigma</NICK>
+<BLURB>Sigma value for gaussian blur (negative for sharpen).</BLURB>
+<DEFAULT>1.2</DEFAULT>
 </ARG>
 

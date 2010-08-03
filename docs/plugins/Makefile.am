@@ -151,14 +151,21 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/gaudieffects/gstdilate.h \
 	$(top_srcdir)/gst/gaudieffects/gstdodge.h \
 	$(top_srcdir)/gst/gaudieffects/gstexclusion.h \
+	$(top_srcdir)/gst/gaudieffects/gstgaussblur.h \
 	$(top_srcdir)/gst/gaudieffects/gstplugin.h \
 	$(top_srcdir)/gst/gaudieffects/gstsolarize.h \
+	$(top_srcdir)/gst/geometrictransform/gstbulge.h \
 	$(top_srcdir)/gst/geometrictransform/gstcircle.h \
 	$(top_srcdir)/gst/geometrictransform/gstdiffuse.h \
+	$(top_srcdir)/gst/geometrictransform/gstfisheye.h \
 	$(top_srcdir)/gst/geometrictransform/gstkaleidoscope.h \
 	$(top_srcdir)/gst/geometrictransform/gstmarble.h \
+	$(top_srcdir)/gst/geometrictransform/gstmirror.h \
 	$(top_srcdir)/gst/geometrictransform/gstpinch.h \
 	$(top_srcdir)/gst/geometrictransform/gstsphere.h \
+	$(top_srcdir)/gst/geometrictransform/gstsquare.h \
+	$(top_srcdir)/gst/geometrictransform/gststretch.h \
+	$(top_srcdir)/gst/geometrictransform/gsttunnel.h \
 	$(top_srcdir)/gst/geometrictransform/gsttwirl.h \
 	$(top_srcdir)/gst/geometrictransform/gstwaterripple.h \
 	$(top_srcdir)/gst/ivfparse/gstivfparse.h \

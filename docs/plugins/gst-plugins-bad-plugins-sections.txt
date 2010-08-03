@@ -126,6 +126,22 @@ GST_IS_AUTO_CONVERT_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-bulge</FILE>
+<TITLE>bulge</TITLE>
+GstBulge
+<SUBSECTION Standard>
+GstBulgeClass
+GST_BULGE
+GST_BULGE_CAST
+GST_BULGE_CLASS
+GST_IS_BULGE
+GST_IS_BULGE_CLASS
+GST_TYPE_BULGE
+gst_bulge_get_type
+gst_bulge_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-burn</FILE>
 <TITLE>burn</TITLE>
 GstBurn
@@ -137,6 +153,7 @@ GST_IS_BURN
 GST_IS_BURN_CLASS
 GST_TYPE_BURN
 gst_burn_get_type
+gst_burn_plugin_init
 </SECTION>
 
 <SECTION>
@@ -194,6 +211,7 @@ GST_IS_CHROMIUM
 GST_IS_CHROMIUM_CLASS
 GST_TYPE_CHROMIUM
 gst_chromium_get_type
+gst_chromium_plugin_init
 </SECTION>
 
 <SECTION>
@@ -203,10 +221,13 @@ GstCircle
 <SUBSECTION Standard>
 GstCircleClass
 GST_CIRCLE
+GST_CIRCLE_CAST
 GST_CIRCLE_CLASS
 GST_IS_CIRCLE
 GST_IS_CIRCLE_CLASS
 GST_TYPE_CIRCLE
+gst_circle_get_type
+gst_circle_plugin_init
 </SECTION>
 
 <SECTION>
@@ -321,10 +342,13 @@ GstDiffuse
 <SUBSECTION Standard>
 GstDiffuseClass
 GST_DIFFUSE
+GST_DIFFUSE_CAST
 GST_DIFFUSE_CLASS
 GST_IS_DIFFUSE
 GST_IS_DIFFUSE_CLASS
 GST_TYPE_DIFFUSE
+gst_diffuse_get_type
+gst_diffuse_plugin_init
 </SECTION>
 
 <SECTION>
@@ -339,6 +363,7 @@ GST_IS_DILATE
 GST_IS_DILATE_CLASS
 GST_TYPE_DILATE
 gst_dilate_get_type
+gst_dilate_plugin_init
 </SECTION>
 
 <SECTION>
@@ -372,6 +397,7 @@ GST_IS_DODGE
 GST_IS_DODGE_CLASS
 GST_TYPE_DODGE
 gst_dodge_get_type
+gst_dodge_plugin_init
 </SECTION>
 
 <SECTION>
@@ -484,6 +510,7 @@ GST_IS_EXCLUSION
 GST_IS_EXCLUSION_CLASS
 GST_TYPE_EXCLUSION
 gst_exclusion_get_type
+gst_exclusion_plugin_init
 </SECTION>
 
 <SECTION>
@@ -533,6 +560,22 @@ FESTIVAL_DEFAULT_TEXT_MODE
 </SECTION>
 
 <SECTION>
+<FILE>element-fisheye</FILE>
+<TITLE>fisheye</TITLE>
+GstFisheye
+<SUBSECTION Standard>
+GstFisheyeClass
+GST_FISHEYE
+GST_FISHEYE_CAST
+GST_FISHEYE_CLASS
+GST_IS_FISHEYE
+GST_IS_FISHEYE_CLASS
+GST_TYPE_FISHEYE
+gst_fisheye_get_type
+gst_fisheye_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-flacparse</FILE>
 <TITLE>flacparse</TITLE>
 GstFlacParse
@@ -572,6 +615,18 @@ GST_IS_FREEZE
 GST_IS_FREEZE_CLASS
 GST_TYPE_FREEZE
 gst_freeze_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gaussianblur</FILE>
+<TITLE>gaussianblur</TITLE>
+GaussBlur
+<SUBSECTION Standard>
+GaussBlurClass
+GAUSS_BLUR
+GST_TYPE_GAUSS_BLUR
+gauss_blur_get_type
+gst_gauss_blur_plugin_init
 </SECTION>
 
 <SECTION>
@@ -692,10 +747,13 @@ GstKaleidoscope
 <SUBSECTION Standard>
 GstKaleidoscopeClass
 GST_KALEIDOSCOPE
+GST_KALEIDOSCOPE_CAST
 GST_KALEIDOSCOPE_CLASS
 GST_IS_KALEIDOSCOPE
 GST_IS_KALEIDOSCOPE_CLASS
 GST_TYPE_KALEIDOSCOPE
+gst_kaleidoscope_get_type
+gst_kaleidoscope_plugin_init
 </SECTION>
 
 <SECTION>
@@ -810,10 +868,13 @@ GstMarble
 <SUBSECTION Standard>
 GstMarbleClass
 GST_MARBLE
+GST_MARBLE_CAST
 GST_MARBLE_CLASS
 GST_IS_MARBLE
 GST_IS_MARBLE_CLASS
 GST_TYPE_MARBLE
+gst_marble_get_type
+gst_marble_plugin_init
 </SECTION>
 
 <SECTION>
@@ -870,6 +931,22 @@ GST_MIMENC
 GST_MIMENC_CLASS
 GST_TYPE_MIMENC
 gst_mimenc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mirror</FILE>
+<TITLE>mirror</TITLE>
+GstMirror
+<SUBSECTION Standard>
+GstMirrorClass
+GST_MIRROR
+GST_MIRROR_CAST
+GST_MIRROR_CLASS
+GST_IS_MIRROR
+GST_IS_MIRROR_CLASS
+GST_TYPE_MIRROR
+gst_mirror_get_type
+gst_mirror_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1017,10 +1094,13 @@ GstPinch
 <SUBSECTION Standard>
 GstPinchClass
 GST_PINCH
+GST_PINCH_CAST
 GST_PINCH_CLASS
 GST_IS_PINCH
 GST_IS_PINCH_CLASS
 GST_TYPE_PINCH
+gst_pinch_get_type
+gst_pinch_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1192,6 +1272,7 @@ GST_IS_SOLARIZE
 GST_IS_SOLARIZE_CLASS
 GST_TYPE_SOLARIZE
 gst_solarize_get_type
+gst_solarize_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1216,10 +1297,29 @@ GstSphere
 <SUBSECTION Standard>
 GstSphereClass
 GST_SPHERE
+GST_SPHERE_CAST
 GST_SPHERE_CLASS
 GST_IS_SPHERE
 GST_IS_SPHERE_CLASS
 GST_TYPE_SPHERE
+gst_sphere_get_type
+gst_sphere_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-square</FILE>
+<TITLE>square</TITLE>
+GstSquare
+<SUBSECTION Standard>
+GstSquareClass
+GST_SQUARE
+GST_SQUARE_CAST
+GST_SQUARE_CLASS
+GST_IS_SQUARE
+GST_IS_SQUARE_CLASS
+GST_TYPE_SQUARE
+gst_square_get_type
+gst_square_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1234,6 +1334,22 @@ GST_IS_STEREO
 GST_IS_STEREO_CLASS
 GST_TYPE_STEREO
 gst_stereo_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-stretch</FILE>
+<TITLE>stretch</TITLE>
+GstStretch
+<SUBSECTION Standard>
+GstStretchClass
+GST_STRETCH
+GST_STRETCH_CAST
+GST_STRETCH_CLASS
+GST_IS_STRETCH
+GST_IS_STRETCH_CLASS
+GST_TYPE_STRETCH
+gst_stretch_get_type
+gst_stretch_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1278,16 +1394,35 @@ gst_trm_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-tunnel</FILE>
+<TITLE>tunnel</TITLE>
+GstTunnel
+<SUBSECTION Standard>
+GstTunnelClass
+GST_TUNNEL
+GST_TUNNEL_CAST
+GST_TUNNEL_CLASS
+GST_IS_TUNNEL
+GST_IS_TUNNEL_CLASS
+GST_TYPE_TUNNEL
+gst_tunnel_get_type
+gst_tunnel_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-twirl</FILE>
 <TITLE>twirl</TITLE>
 GstTwirl
 <SUBSECTION Standard>
 GstTwirlClass
 GST_TWIRL
+GST_TWIRL_CAST
 GST_TWIRL_CLASS
 GST_IS_TWIRL
 GST_IS_TWIRL_CLASS
 GST_TYPE_TWIRL
+gst_twirl_get_type
+gst_twirl_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1383,10 +1518,13 @@ GstWaterRipple
 <SUBSECTION Standard>
 GstWaterRippleClass
 GST_WATER_RIPPLE
+GST_WATER_RIPPLE_CAST
 GST_WATER_RIPPLE_CLASS
 GST_IS_WATER_RIPPLE
 GST_IS_WATER_RIPPLE_CLASS
 GST_TYPE_WATER_RIPPLE
+gst_water_ripple_get_type
+gst_water_ripple_plugin_init
 </SECTION>
 
 <SECTION>

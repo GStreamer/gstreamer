@@ -2,18 +2,22 @@ GstBin GstChildProxy
 GstPipeline GstChildProxy
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter GstPhotography
 GstQTMoovRecover GstChildProxy
+RsnDvdBin GstChildProxy GstURIHandler
 GstGSettingsSwitchSink GstChildProxy
 GstGSettingsAudioSink GstChildProxy
-RsnDvdBin GstChildProxy GstURIHandler
+GstGSettingsVideoSink GstChildProxy
+GstGSettingsSwitchSrc GstChildProxy
+GstGSettingsAudioSrc GstChildProxy
+GstGSettingsVideoSrc GstChildProxy
 DvbBaseBin GstChildProxy GstURIHandler
-GstRtpBin GstChildProxy
 GstFPSDisplaySink GstChildProxy
 GstAutoConvert GstChildProxy
 GstSDPDemux GstChildProxy
-GstVP8Enc GstTagSetter GstPreset
-GstDiracEnc GstPreset
+GstRtpBin GstChildProxy
 GstMetadataMux GstTagSetter
 GstXvidEnc GstPreset
+GstVP8Enc GstTagSetter GstPreset
+GstDiracEnc GstPreset
 GstCDAudio GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
@@ -29,7 +33,6 @@ GstDataURISrc GstURIHandler
 GstFaac GstPreset
 GstKateEnc GstTagSetter
 GstKateTag GstTagSetter
-GstCeltEnc GstTagSetter GstPreset
 GstQTMux GstTagSetter
 GstMP4Mux GstTagSetter
 GstGPPMux GstTagSetter
