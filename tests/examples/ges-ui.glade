@@ -133,8 +133,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">delete</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -161,22 +161,22 @@
                     <child>
                       <object class="GtkMenuItem" id="add_file_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_file</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="menuitem4">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_text</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem5">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_test</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -184,8 +184,9 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_transition</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -198,8 +199,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">play</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -764,27 +765,28 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label6"/>
-      <widget name="label5"/>
       <widget name="label4"/>
-      <widget name="label3"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
       <widget name="label2"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
+      <widget name="label3"/>
       <widget name="label4"/>
+      <widget name="label5"/>
+      <widget name="label6"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
     <property name="label">Delete</property>
     <property name="stock_id">gtk-delete</property>
+    <property name="is_important">True</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="delete_activate_cb"/>
   </object>
   <object class="GtkAction" id="add_file">
-    <property name="label">Add File</property>
-    <property name="short_label">Add File</property>
+    <property name="label">Add File...</property>
+    <property name="short_label">File</property>
     <property name="icon_name">video-x-generic</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="add_file_activate_cb"/>
@@ -792,14 +794,16 @@
   <object class="GtkAction" id="play">
     <property name="label">Play</property>
     <property name="stock_id">gtk-media-play</property>
+    <property name="is_important">True</property>
     <property name="sensitive">False</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="play_activate_cb"/>
   </object>
   <object class="GtkAction" id="add_text">
     <property name="label">Add Text</property>
-    <property name="short_label">Add Text</property>
-    <property name="icon_name">font-x-generic</property>
+    <property name="short_label">Title</property>
+    <property name="icon_name">insert-text</property>
+    <property name="always_show_image">True</property>
     <signal name="activate" handler="add_text_activate_cb"/>
   </object>
   <object class="GtkAccelGroup" id="accelgroup1"/>
@@ -817,14 +821,16 @@
   </object>
   <object class="GtkAction" id="add_test">
     <property name="label">Add Test Source</property>
-    <property name="short_label">Add test Source</property>
+    <property name="short_label">Test Source</property>
     <property name="icon_name">utilities-system-monitor</property>
+    <property name="always_show_image">True</property>
     <signal name="activate" handler="add_test_activate_cb"/>
   </object>
   <object class="GtkAction" id="add_transition">
-    <property name="label">Add Transtion</property>
-    <property name="short_label">Add Transition</property>
+    <property name="label">Add Transition</property>
+    <property name="short_label">Transition</property>
     <property name="icon_name">media-playlist-shuffle</property>
+    <property name="always_show_image">True</property>
     <signal name="activate" handler="add_transition_activate_cb"/>
   </object>
 </interface>
