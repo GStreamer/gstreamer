@@ -862,9 +862,14 @@ connect_to_test_source (GESTimelineObject * object, App * app)
   test_source_notify_volume_changed_cb (object, NULL, app);
 
   klass = G_OBJECT_GET_CLASS (G_OBJECT (object));
-  pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "volume"));
 
+  pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "volume"));
   gtk_range_set_range (GTK_RANGE (app->volume), pspec->minimum, pspec->maximum);
+
+  pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "freq"));
+  gtk_spin_button_set_range (app->frequency, pspec->minimum, pspec->maximum);
+  gtk_spin_button_set_value (app->frequency,
+      GES_TIMELINE_TEST_SOURCE (object)->freq);
 }
 
 static void
