@@ -76,6 +76,8 @@ struct _GstColorEffects
   gint width;
   gint height;
   gint size;
+
+  void (*process) (GstColorEffects *filter, guint8 *data);
 };
 
 struct _GstColorEffectsClass

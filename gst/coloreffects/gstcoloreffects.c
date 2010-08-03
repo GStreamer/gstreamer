@@ -55,7 +55,8 @@ GST_BOILERPLATE (GstColorEffects, gst_color_effects, GstVideoFilter,
   GST_VIDEO_CAPS_ABGR ";" GST_VIDEO_CAPS_RGBA ";"\
   GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_RGBx ";"\
   GST_VIDEO_CAPS_xBGR ";" GST_VIDEO_CAPS_BGRx ";"\
-  GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
+  GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";" \
+  GST_VIDEO_CAPS_YUV ("AYUV") ";"
 
 static GstStaticPadTemplate gst_color_effects_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -251,57 +252,29 @@ static const guint8 xpro_table[768] =
     "\376\365\377\377\365\377\377\366\377\377\366\377\377\366\377\377\367\377"
     "\377\367\377\377\367\377\377\370";
 
-static gboolean
-gst_color_effects_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
-    GstCaps * outcaps)
+static const int cog_ycbcr_to_rgb_matrix_8bit_sdtv[] = {
+  298, 0, 409, -57068,
+  298, -100, -208, 34707,
+  298, 516, 0, -70870,
+};
+
+static const gint cog_rgb_to_ycbcr_matrix_8bit_sdtv[] = {
+  66, 129, 25, 4096,
+  -38, -74, 112, 32768,
+  112, -94, -18, 32768,
+};
+
+#define APPLY_MATRIX(m,o,v1,v2,v3) ((m[o*4] * v1 + m[o*4+1] * v2 + m[o*4+2] * v3 + m[o*4+3]) >> 8)
+
+static void
+gst_color_effects_transform_rgb (GstColorEffects * filter, guint8 * data)
 {
-  GstColorEffects *filter = GST_COLOR_EFFECTS (btrans);
-
-  GST_DEBUG_OBJECT (filter,
-      "in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
-
-  if (!gst_video_format_parse_caps (incaps, &filter->format,
-          &filter->width, &filter->height))
-    goto invalid_caps;
-
-  GST_OBJECT_LOCK (filter);
-
-  filter->size =
-      gst_video_format_get_size (filter->format, filter->width, filter->height);
-
-  GST_OBJECT_UNLOCK (filter);
-
-  return TRUE;
-
-invalid_caps:
-  GST_ERROR_OBJECT (filter, "Invalid caps: %" GST_PTR_FORMAT, incaps);
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_color_effects_transform_ip (GstBaseTransform * trans, GstBuffer * out)
-{
-  GstColorEffects *filter = GST_COLOR_EFFECTS (trans);
-  guint8 *data;
   gint i, j;
-  gint size;
   gint width, height;
   gint pixel_stride, row_stride, row_wrap;
   guint32 r, g, b;
   guint32 luma;
   gint offsets[3];
-
-  data = GST_BUFFER_DATA (out);
-  size = GST_BUFFER_SIZE (out);
-
-  if (size != filter->size)
-    goto wrong_size;
-
-  /* do nothing if there is no table ("none" preset) */
-  if (filter->table == NULL)
-    return GST_FLOW_OK;
-
-  GST_OBJECT_LOCK (filter);
 
   /* videoformat fun copied from videobalance */
 
@@ -352,7 +325,159 @@ gst_color_effects_transform_ip (GstBaseTransform * trans, GstBuffer * out)
     }
     data += row_wrap;
   }
+}
 
+static void
+gst_color_effects_transform_ayuv (GstColorEffects * filter, guint8 * data)
+{
+  gint i, j;
+  gint width, height;
+  gint pixel_stride, row_stride, row_wrap;
+  gint r, g, b;
+  gint y, u, v;
+  gint offsets[3];
+
+  /* videoformat fun copied from videobalance */
+
+  offsets[0] = gst_video_format_get_component_offset (filter->format, 0,
+      filter->width, filter->height);
+  offsets[1] = gst_video_format_get_component_offset (filter->format, 1,
+      filter->width, filter->height);
+  offsets[2] = gst_video_format_get_component_offset (filter->format, 2,
+      filter->width, filter->height);
+
+  width =
+      gst_video_format_get_component_width (filter->format, 0, filter->width);
+  height =
+      gst_video_format_get_component_height (filter->format, 0, filter->height);
+  row_stride =
+      gst_video_format_get_row_stride (filter->format, 0, filter->width);
+  pixel_stride = gst_video_format_get_pixel_stride (filter->format, 0);
+  row_wrap = row_stride - pixel_stride * width;
+
+  for (i = 0; i < height; i++) {
+    for (j = 0; j < width; j++) {
+      y = data[offsets[0]];
+      u = data[offsets[1]];
+      v = data[offsets[2]];
+
+      if (filter->map_luma) {
+        /* map luma to lookup table */
+        /* src.luma |-> table[luma].rgb */
+        y *= 3;
+        r = filter->table[y];
+        g = filter->table[y + 1];
+        b = filter->table[y + 2];
+
+        y = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 0, r, g, b);
+        u = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 1, r, g, b);
+        v = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 2, r, g, b);
+
+        data[offsets[0]] = CLAMP (y, 0, 255);
+        data[offsets[1]] = CLAMP (u, 0, 255);
+        data[offsets[2]] = CLAMP (v, 0, 255);
+      } else {
+        r = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 0, y, u, v);
+        g = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 1, y, u, v);
+        b = APPLY_MATRIX (cog_ycbcr_to_rgb_matrix_8bit_sdtv, 2, y, u, v);
+
+        r = CLAMP (r, 0, 255);
+        g = CLAMP (g, 0, 255);
+        b = CLAMP (b, 0, 255);
+
+        /* map each color component to the correspondent lut color */
+        /* src.r |-> table[r].r */
+        /* src.g |-> table[g].g */
+        /* src.b |-> table[b].b */
+        r = filter->table[r * 3];
+        g = filter->table[g * 3 + 1];
+        b = filter->table[b * 3 + 2];
+
+        y = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 0, r, g, b);
+        u = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 1, r, g, b);
+        v = APPLY_MATRIX (cog_rgb_to_ycbcr_matrix_8bit_sdtv, 2, r, g, b);
+
+        data[offsets[0]] = CLAMP (y, 0, 255);
+        data[offsets[1]] = CLAMP (u, 0, 255);
+        data[offsets[2]] = CLAMP (v, 0, 255);
+      }
+      data += pixel_stride;
+    }
+    data += row_wrap;
+  }
+}
+
+static gboolean
+gst_color_effects_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstColorEffects *filter = GST_COLOR_EFFECTS (btrans);
+
+  GST_DEBUG_OBJECT (filter,
+      "in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
+
+  filter->process = NULL;
+
+  if (!gst_video_format_parse_caps (incaps, &filter->format,
+          &filter->width, &filter->height))
+    goto invalid_caps;
+
+  GST_OBJECT_LOCK (filter);
+
+  filter->size =
+      gst_video_format_get_size (filter->format, filter->width, filter->height);
+
+  switch (filter->format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      filter->process = gst_color_effects_transform_ayuv;
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      filter->process = gst_color_effects_transform_rgb;
+      break;
+    default:
+      break;
+  }
+
+  GST_OBJECT_UNLOCK (filter);
+
+  return filter->process != NULL;
+
+invalid_caps:
+  GST_ERROR_OBJECT (filter, "Invalid caps: %" GST_PTR_FORMAT, incaps);
+  return FALSE;
+}
+
+static GstFlowReturn
+gst_color_effects_transform_ip (GstBaseTransform * trans, GstBuffer * out)
+{
+  GstColorEffects *filter = GST_COLOR_EFFECTS (trans);
+  guint8 *data;
+  gint size;
+
+  if (!filter->process)
+    goto not_negotiated;
+
+  data = GST_BUFFER_DATA (out);
+  size = GST_BUFFER_SIZE (out);
+
+  if (size != filter->size)
+    goto wrong_size;
+
+  /* do nothing if there is no table ("none" preset) */
+  if (filter->table == NULL)
+    return GST_FLOW_OK;
+
+  GST_OBJECT_LOCK (filter);
+  filter->process (filter, data);
   GST_OBJECT_UNLOCK (filter);
 
   return GST_FLOW_OK;
@@ -363,6 +488,9 @@ wrong_size:
         (NULL), ("Invalid buffer size %d, expected %d", size, filter->size));
     return GST_FLOW_ERROR;
   }
+not_negotiated:
+  GST_ERROR_OBJECT (filter, "Not negotiated yet");
+  return GST_FLOW_NOT_NEGOTIATED;
 }
 
 static void
