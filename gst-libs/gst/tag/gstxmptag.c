@@ -861,7 +861,7 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
   /* add gstreamer tag depending on type */
   switch (tag_type) {
     case G_TYPE_STRING:{
-      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, v, NULL);
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, tag, v, NULL);
       break;
     }
     default:
