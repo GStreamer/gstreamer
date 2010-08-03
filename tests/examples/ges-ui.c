@@ -45,6 +45,7 @@ typedef struct App
   GtkAction *add_file;
   GtkAction *add_test;
   GtkAction *add_title;
+  GtkAction *add_transition;
   GtkAction *delete;
   GtkAction *play;
   GtkComboBox *halign;
@@ -985,6 +986,7 @@ create_ui (App * app)
   GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
   GET_WIDGET (app->add_title, "add_text", GTK_ACTION);
   GET_WIDGET (app->add_test, "add_test", GTK_ACTION);
+  GET_WIDGET (app->add_transition, "add_transition", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
   GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
