@@ -805,10 +805,23 @@ disconnect_from_title_source (GESTimelineObject * object, App * app)
 }
 
 static void
+test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
+    unused G_GNUC_UNUSED, App * app)
+{
+  gdouble volume;
+
+  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
+
+  gtk_range_set_value (GTK_RANGE (app->volume), volume);
+}
+
+static void
 connect_to_test_source (GESTimelineObject * object, App * app)
 {
   gchar buf[30];
   guint64 duration;
+  GObjectClass *klass;
+  GParamSpecDouble *pspec;
 
   GESTimelineTestSource *obj;
   obj = GES_TIMELINE_TEST_SOURCE (object);
@@ -819,6 +832,22 @@ connect_to_test_source (GESTimelineObject * object, App * app)
   g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
       GST_TIME_ARGS (duration));
   gtk_entry_set_text (app->seconds, buf);
+
+  g_signal_connect (G_OBJECT (object), "notify::volume",
+      G_CALLBACK (test_source_notify_volume_changed_cb), app);
+  test_source_notify_volume_changed_cb (object, NULL, app);
+
+  klass = G_OBJECT_GET_CLASS (G_OBJECT (object));
+  pspec = G_PARAM_SPEC_DOUBLE (g_object_class_find_property (klass, "volume"));
+
+  gtk_range_set_range (GTK_RANGE (app->volume), pspec->minimum, pspec->maximum);
+}
+
+static void
+disconnect_from_test_source (GESTimelineObject * object, App * app)
+{
+  g_signal_handlers_disconnect_by_func (G_OBJECT (object),
+      test_source_notify_volume_changed_cb, app);
 }
 
 void
@@ -840,6 +869,8 @@ disconnect_from_object (GESTimelineObject * object, App * app)
     disconnect_from_filesource (object, app);
   } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
     disconnect_from_title_source (object, app);
+  } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
+    disconnect_from_test_source (object, app);
   }
 }
 
