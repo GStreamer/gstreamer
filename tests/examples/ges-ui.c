@@ -40,6 +40,7 @@ typedef struct App
   GList *selected_objects;
   int n_selected;
   int n_objects;
+  gboolean can_add_transition;
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkAction *add_file;
@@ -145,6 +146,13 @@ update_delete_sensitivity (App * app)
       (app->n_selected > 0) && (app->state != GST_STATE_PLAYING));
 }
 
+static void
+update_add_transition_sensitivity (App * app)
+{
+  gtk_action_set_sensitive (app->add_transition,
+      (app->can_add_transition) && (app->state != GST_STATE_PLAYING));
+}
+
 /* UI callbacks  ************************************************************/
 
 void
@@ -219,6 +227,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
   app_update_selection (app);
 
   update_delete_sensitivity (app);
+  update_add_transition_sensitivity (app);
 
   gtk_widget_set_visible (app->properties, app->n_selected > 0);
 
@@ -755,6 +764,7 @@ pipeline_state_changed_cb (App * app)
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PLAY);
 
   update_delete_sensitivity (app);
+  update_add_transition_sensitivity (app);
 
   gtk_action_set_sensitive (app->add_file, app->state != GST_STATE_PLAYING);
   gtk_action_set_sensitive (app->add_title, app->state != GST_STATE_PLAYING);
