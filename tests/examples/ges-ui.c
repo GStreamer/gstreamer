@@ -43,6 +43,8 @@ typedef struct App
   GtkHScale *duration;
   GtkHScale *in_point;
   GtkAction *add_file;
+  GtkAction *add_test;
+  GtkAction *add_title;
   GtkAction *delete;
   GtkAction *play;
   GtkComboBox *halign;
@@ -750,6 +752,8 @@ pipeline_state_changed_cb (App * app)
   update_delete_sensitivity (app);
 
   gtk_action_set_sensitive (app->add_file, app->state != GST_STATE_PLAYING);
+  gtk_action_set_sensitive (app->add_title, app->state != GST_STATE_PLAYING);
+  gtk_action_set_sensitive (app->add_test, app->state != GST_STATE_PLAYING);
   gtk_widget_set_sensitive (app->properties, app->state != GST_STATE_PLAYING);
 }
 
@@ -974,6 +978,8 @@ create_ui (App * app)
   GET_WIDGET (duration_col, "duration_column", GTK_TREE_VIEW_COLUMN);
   GET_WIDGET (duration_renderer, "duration_renderer", GTK_CELL_RENDERER);
   GET_WIDGET (app->add_file, "add_file", GTK_ACTION);
+  GET_WIDGET (app->add_title, "add_text", GTK_ACTION);
+  GET_WIDGET (app->add_test, "add_test", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
   GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
