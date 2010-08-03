@@ -26,18 +26,19 @@
     </columns>
     <data>
       <row>
-        <col id="0" translatable="yes">Top</col>
-      </row>
-      <row>
         <col id="0" translatable="yes">Baseline</col>
       </row>
       <row>
         <col id="0" translatable="yes">Bottom</col>
       </row>
+      <row>
+        <col id="0" translatable="yes">Top</col>
+      </row>
     </data>
   </object>
   <object class="GtkWindow" id="window">
     <property name="visible">True</property>
+    <property name="title" translatable="yes">GES Demo</property>
     <property name="default_width">540</property>
     <property name="default_height">450</property>
     <signal name="destroy" handler="window_destroy_cb"/>
@@ -765,16 +766,16 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label4"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
-      <widget name="label2"/>
-      <widget name="label3"/>
-      <widget name="label4"/>
-      <widget name="label5"/>
       <widget name="label6"/>
+      <widget name="label5"/>
+      <widget name="label4"/>
+      <widget name="label3"/>
+      <widget name="label2"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
+      <widget name="label4"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
