@@ -466,9 +466,13 @@ app_update_selection (App * app)
 
   type = G_TYPE_NONE;
   if (app->selected_objects) {
-    /* TODO: when we allow multiple selections, only set this if all values
-     * are the same */
     type = G_TYPE_FROM_INSTANCE (app->selected_objects->data);
+    for (cur = app->selected_objects; cur; cur = cur->next) {
+      if (type != G_TYPE_FROM_INSTANCE (cur->data)) {
+        type = G_TYPE_NONE;
+        break;
+      }
+    }
   }
   app->selected_type = type;
 }
@@ -1002,6 +1006,8 @@ create_ui (App * app)
 
   if (!(app->selection = gtk_tree_view_get_selection (timeline)))
     goto fail;
+
+  gtk_tree_selection_set_mode (app->selection, GTK_SELECTION_MULTIPLE);
 
   g_signal_connect (app->selection, "changed",
       G_CALLBACK (app_selection_changed_cb), app);
