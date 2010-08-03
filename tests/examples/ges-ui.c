@@ -98,6 +98,9 @@ gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
 gboolean in_point_scale_change_value_cb (GtkRange * range, GtkScrollType
     unused, gdouble value, App * app);
 
+gboolean volume_change_value_cb (GtkRange * range, GtkScrollType unused,
+    gdouble value, App * app);
+
 void duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
     GtkTreeModel * model, GtkTreeIter * iter, gpointer user);
 
@@ -126,6 +129,8 @@ void seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
     App * app);
 
 void background_type_changed_cb (GtkComboBox * widget, App * app);
+
+void frequency_value_changed_cb (GtkSpinButton * widget, App * app);
 
 /* UI state functions *******************************************************/
 
@@ -388,6 +393,25 @@ background_type_changed_cb (GtkComboBox * widget, App * app)
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
     g_object_set (G_OBJECT (tmp->data), "vpattern", (gint) p, NULL);
   }
+}
+
+void
+frequency_value_changed_cb (GtkSpinButton * widget, App * app)
+{
+}
+
+gboolean
+volume_change_value_cb (GtkRange * widget, GtkScrollType unused, gdouble
+    value, App * app)
+{
+  GList *tmp;
+
+  value = value >= 0 ? (value <= 2.0 ? value : 2.0) : 0;
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "volume", (gdouble) value, NULL);
+  }
+  return TRUE;
 }
 
 /* application methods ******************************************************/
