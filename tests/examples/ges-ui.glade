@@ -177,6 +177,7 @@
                         <property name="visible">True</property>
                         <property name="use_action_appearance">True</property>
                         <property name="related_action">add_test</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -231,8 +232,8 @@
             <child>
               <object class="GtkToolButton" id="add_button">
                 <property name="visible">True</property>
-                <property name="related_action">add_file</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_file</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -244,8 +245,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton2">
                 <property name="visible">True</property>
-                <property name="related_action">add_text</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_text</property>
                 <property name="label" translatable="yes">toolbutton2</property>
                 <property name="use_underline">True</property>
               </object>
@@ -257,8 +258,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton4">
                 <property name="visible">True</property>
-                <property name="related_action">add_test</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">add_test</property>
                 <property name="label" translatable="yes">toolbutton4</property>
                 <property name="use_underline">True</property>
               </object>
@@ -279,8 +280,8 @@
             <child>
               <object class="GtkToolButton" id="delete_button">
                 <property name="visible">True</property>
-                <property name="related_action">delete</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">delete</property>
                 <property name="label" translatable="yes">Delete</property>
                 <property name="use_underline">True</property>
               </object>
@@ -301,8 +302,8 @@
             <child>
               <object class="GtkToolButton" id="play_button">
                 <property name="visible">True</property>
-                <property name="related_action">play</property>
                 <property name="use_action_appearance">True</property>
+                <property name="related_action">play</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -526,6 +527,7 @@
                             <child>
                               <object class="GtkComboBox" id="background_type">
                                 <property name="visible">True</property>
+                                <signal name="changed" handler="background_type_changed_cb"/>
                               </object>
                               <packing>
                                 <property name="position">1</property>
@@ -567,11 +569,12 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSpinButton" id="spinbutton1">
+                              <object class="GtkSpinButton" id="frequency">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">&#x25CF;</property>
                                 <property name="adjustment">adjustment2</property>
+                                <signal name="value_changed" handler="frequency_value_changed_cb"/>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -591,11 +594,13 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkHScale" id="hscale1">
+                              <object class="GtkHScale" id="volume">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="adjustment">adjustment1</property>
+                                <property name="lower_stepper_sensitivity">off</property>
+                                <property name="restrict_to_fill_level">False</property>
                                 <property name="draw_value">False</property>
+                                <signal name="change_value" handler="volume_change_value_cb"/>
                               </object>
                               <packing>
                                 <property name="position">4</property>
@@ -738,16 +743,16 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label4"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
-      <widget name="label2"/>
-      <widget name="label3"/>
-      <widget name="label4"/>
-      <widget name="label5"/>
       <widget name="label6"/>
+      <widget name="label5"/>
+      <widget name="label4"/>
+      <widget name="label3"/>
+      <widget name="label2"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
+      <widget name="label4"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
@@ -778,10 +783,10 @@
   </object>
   <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkAdjustment" id="adjustment1">
-    <property name="upper">1</property>
+    <property name="upper">2</property>
     <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-    <property name="page_size">10</property>
+    <property name="page_increment">0.10000000000000001</property>
+    <property name="page_size">0.10000000000000001</property>
   </object>
   <object class="GtkAdjustment" id="adjustment2">
     <property name="value">440</property>
