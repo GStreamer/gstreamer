@@ -768,6 +768,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
       g_print ("ERROR\n");
       break;
     case GST_MESSAGE_EOS:
+      gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_READY);
       break;
     case GST_MESSAGE_STATE_CHANGED:
       if (s && GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (app->pipeline)) {
