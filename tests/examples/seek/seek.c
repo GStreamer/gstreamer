@@ -2402,9 +2402,10 @@ static void
 msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
 {
   g_print ("clock lost! PAUSE and PLAY to select a new clock\n");
-
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (state == GST_STATE_PLAYING) {
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  }
 }
 
 #ifdef HAVE_X
