@@ -75,24 +75,6 @@ typedef struct App
   GtkSpinButton *frequency;
 } App;
 
-App *app_new (void);
-
-void app_dispose (App * app);
-
-void app_add_file (App * app, gchar * filename);
-
-void app_add_title (App * app);
-
-void app_add_test (App * app);
-
-void app_add_transition (App * app);
-
-GList *app_get_selected_objects (App * app);
-
-void app_delete_objects (App * app, GList * objects);
-
-void app_update_selection (App * app);
-
 void window_destroy_cb (GtkObject * window, App * app);
 
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
@@ -110,8 +92,6 @@ void add_test_activate_cb (GtkAction * item, App * app);
 void add_transition_activate_cb (GtkAction * item, App * app);
 
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
-
-void app_toggle_playback (App * app);
 
 gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
     unused, gdouble value, App * app);
@@ -131,20 +111,6 @@ void valign_changed_cb (GtkComboBox * widget, App * app);
 
 void text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App *
     app);
-
-gboolean create_ui (App * app);
-
-void connect_to_filesource (GESTimelineObject * object, App * app);
-
-void disconnect_from_filesource (GESTimelineObject * object, App * app);
-
-void connect_to_object (GESTimelineObject * object, App * app);
-
-void disconnect_from_object (GESTimelineObject * object, App * app);
-
-void connect_to_title_source (GESTimelineObject * object, App * app);
-
-void disconnect_from_title_source (GESTimelineObject * object, App * app);
 
 void seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
     App * app);
@@ -169,209 +135,6 @@ update_add_transition_sensitivity (App * app)
   gtk_action_set_sensitive (app->add_transition,
       (app->can_add_transition) &&
       (app->state != GST_STATE_PLAYING) && (app->n_objects));
-}
-
-/* application methods ******************************************************/
-
-static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
-    GtkTreeIter * iter, gpointer user);
-
-void
-app_toggle_playback (App * app)
-{
-  if (app->state != GST_STATE_PLAYING) {
-    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PLAYING);
-  } else {
-    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
-  }
-}
-
-typedef struct
-{
-  GList *objects;
-  guint n;
-} select_info;
-
-void
-app_update_selection (App * app)
-{
-  GList *cur;
-  GType type;
-  select_info info = { NULL, 0 };
-
-  /* clear old selection */
-  for (cur = app->selected_objects; cur; cur = cur->next) {
-    disconnect_from_object (cur->data, app);
-    g_object_unref (cur->data);
-    cur->data = NULL;
-  }
-  g_list_free (app->selected_objects);
-  app->selected_objects = NULL;
-  app->n_selected = 0;
-
-  /* get new selection */
-  gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
-      selection_foreach, &info);
-  app->selected_objects = info.objects;
-  app->n_selected = info.n;
-
-  type = G_TYPE_NONE;
-  if (app->selected_objects) {
-    type = G_TYPE_FROM_INSTANCE (app->selected_objects->data);
-    for (cur = app->selected_objects; cur; cur = cur->next) {
-      if (type != G_TYPE_FROM_INSTANCE (cur->data)) {
-        type = G_TYPE_NONE;
-        break;
-      }
-    }
-  }
-
-  if (type != G_TYPE_NONE) {
-    for (cur = app->selected_objects; cur; cur = cur->next) {
-      connect_to_object (cur->data, app);
-    }
-  }
-
-  app->selected_type = type;
-}
-
-static void
-selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
-    * iter, gpointer user)
-{
-  select_info *info = (select_info *) user;
-  GESTimelineObject *obj;
-
-  gtk_tree_model_get (model, iter, 2, &obj, -1);
-  info->objects = g_list_append (info->objects, obj);
-
-  info->n++;
-  return;
-}
-
-GList *
-app_get_selected_objects (App * app)
-{
-  return g_list_copy (app->selected_objects);
-}
-
-void
-app_delete_objects (App * app, GList * objects)
-{
-  GList *cur;
-
-  for (cur = objects; cur; cur = cur->next) {
-    ges_timeline_layer_remove_object (app->layer,
-        GES_TIMELINE_OBJECT (cur->data));
-    cur->data = NULL;
-  }
-
-  g_list_free (objects);
-}
-
-void
-app_add_file (App * app, gchar * uri)
-{
-  GESTimelineObject *obj;
-
-  GST_DEBUG ("adding file %s", uri);
-
-  obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
-
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      obj, -1);
-}
-
-void
-app_add_title (App * app)
-{
-  GESTimelineObject *obj;
-
-  GST_DEBUG ("adding title");
-
-  obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
-
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      obj, -1);
-}
-
-void
-app_add_test (App * app)
-{
-  GESTimelineObject *obj;
-
-  GST_DEBUG ("adding test");
-
-  obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
-
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), obj, -1);
-}
-
-void
-app_add_transition (App * app)
-{
-  GESTimelineObject *obj;
-
-  GST_DEBUG ("adding transition");
-
-  obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new
-      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
-  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
-
-  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
-      (app->layer), obj, -1);
-}
-
-App *
-app_new (void)
-{
-  App *ret;
-  ret = g_new0 (App, 1);
-
-  ret->selected_type = G_TYPE_NONE;
-
-  if (!ret)
-    return NULL;
-
-  if (!(ret->timeline = ges_timeline_new_audio_video ()))
-    goto fail;
-
-  if (!(ret->pipeline = ges_timeline_pipeline_new ()))
-    goto fail;
-
-  if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
-    goto fail;
-
-  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
-    goto fail;
-
-  if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
-    goto fail;
-
-  if (!(create_ui (ret)))
-    goto fail;
-
-  return ret;
-
-fail:
-  app_dispose (ret);
-  return NULL;
-}
-
-void
-app_dispose (App * app)
-{
-  if (app) {
-    if (app->pipeline) {
-      gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_NULL);
-      gst_object_unref (app->pipeline);
-    }
-
-    g_free (app);
-  }
 }
 
 /* Backend callbacks ********************************************************/
@@ -583,7 +346,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
         goto fail;\
 }
 
-void
+static void
 connect_to_filesource (GESTimelineObject * object, App * app)
 {
   g_signal_connect (G_OBJECT (object), "notify::max-duration",
@@ -599,7 +362,7 @@ connect_to_filesource (GESTimelineObject * object, App * app)
   filesource_notify_in_point_cb (object, NULL, app);
 }
 
-void
+static void
 disconnect_from_filesource (GESTimelineObject * object, App * app)
 {
   g_signal_handlers_disconnect_by_func (G_OBJECT (object),
@@ -609,7 +372,7 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
       filesource_notify_max_duration_cb, app);
 }
 
-void
+static void
 connect_to_title_source (GESTimelineObject * object, App * app)
 {
   guint64 duration;
@@ -628,7 +391,7 @@ connect_to_title_source (GESTimelineObject * object, App * app)
   gtk_entry_set_text (app->seconds, buf);
 }
 
-void
+static void
 disconnect_from_title_source (GESTimelineObject * object, App * app)
 {
 }
@@ -684,7 +447,7 @@ disconnect_from_test_source (GESTimelineObject * object, App * app)
       test_source_notify_volume_changed_cb, app);
 }
 
-void
+static void
 connect_to_object (GESTimelineObject * object, App * app)
 {
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
@@ -696,7 +459,7 @@ connect_to_object (GESTimelineObject * object, App * app)
   }
 }
 
-void
+static void
 disconnect_from_object (GESTimelineObject * object, App * app)
 {
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
@@ -739,7 +502,7 @@ get_video_patterns (void)
   return m;
 }
 
-gboolean
+static gboolean
 create_ui (App * app)
 {
   GtkBuilder *builder;
@@ -853,6 +616,210 @@ fail:
 }
 
 #undef GET_WIDGET
+
+
+/* application methods ******************************************************/
+
+static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
+    GtkTreeIter * iter, gpointer user);
+
+static void
+app_toggle_playback (App * app)
+{
+  if (app->state != GST_STATE_PLAYING) {
+    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PLAYING);
+  } else {
+    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
+  }
+}
+
+typedef struct
+{
+  GList *objects;
+  guint n;
+} select_info;
+
+static void
+app_update_selection (App * app)
+{
+  GList *cur;
+  GType type;
+  select_info info = { NULL, 0 };
+
+  /* clear old selection */
+  for (cur = app->selected_objects; cur; cur = cur->next) {
+    disconnect_from_object (cur->data, app);
+    g_object_unref (cur->data);
+    cur->data = NULL;
+  }
+  g_list_free (app->selected_objects);
+  app->selected_objects = NULL;
+  app->n_selected = 0;
+
+  /* get new selection */
+  gtk_tree_selection_selected_foreach (GTK_TREE_SELECTION (app->selection),
+      selection_foreach, &info);
+  app->selected_objects = info.objects;
+  app->n_selected = info.n;
+
+  type = G_TYPE_NONE;
+  if (app->selected_objects) {
+    type = G_TYPE_FROM_INSTANCE (app->selected_objects->data);
+    for (cur = app->selected_objects; cur; cur = cur->next) {
+      if (type != G_TYPE_FROM_INSTANCE (cur->data)) {
+        type = G_TYPE_NONE;
+        break;
+      }
+    }
+  }
+
+  if (type != G_TYPE_NONE) {
+    for (cur = app->selected_objects; cur; cur = cur->next) {
+      connect_to_object (cur->data, app);
+    }
+  }
+
+  app->selected_type = type;
+}
+
+static void
+selection_foreach (GtkTreeModel * model, GtkTreePath * path, GtkTreeIter
+    * iter, gpointer user)
+{
+  select_info *info = (select_info *) user;
+  GESTimelineObject *obj;
+
+  gtk_tree_model_get (model, iter, 2, &obj, -1);
+  info->objects = g_list_append (info->objects, obj);
+
+  info->n++;
+  return;
+}
+
+static GList *
+app_get_selected_objects (App * app)
+{
+  return g_list_copy (app->selected_objects);
+}
+
+static void
+app_delete_objects (App * app, GList * objects)
+{
+  GList *cur;
+
+  for (cur = objects; cur; cur = cur->next) {
+    ges_timeline_layer_remove_object (app->layer,
+        GES_TIMELINE_OBJECT (cur->data));
+    cur->data = NULL;
+  }
+
+  g_list_free (objects);
+}
+
+static void
+app_add_file (App * app, gchar * uri)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding file %s", uri);
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      obj, -1);
+}
+
+static void
+app_add_title (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding title");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_title_source_new ());
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      obj, -1);
+}
+
+static void
+app_add_test (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding test");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
+      (app->layer), obj, -1);
+}
+
+static void
+app_add_transition (App * app)
+{
+  GESTimelineObject *obj;
+
+  GST_DEBUG ("adding transition");
+
+  obj = GES_TIMELINE_OBJECT (ges_timeline_transition_new
+      (GES_VIDEO_TRANSITION_TYPE_CROSSFADE));
+  g_object_set (G_OBJECT (obj), "duration", GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
+      (app->layer), obj, -1);
+}
+
+static void
+app_dispose (App * app)
+{
+  if (app) {
+    if (app->pipeline) {
+      gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_NULL);
+      gst_object_unref (app->pipeline);
+    }
+
+    g_free (app);
+  }
+}
+
+static App *
+app_new (void)
+{
+  App *ret;
+  ret = g_new0 (App, 1);
+
+  ret->selected_type = G_TYPE_NONE;
+
+  if (!ret)
+    return NULL;
+
+  if (!(ret->timeline = ges_timeline_new_audio_video ()))
+    goto fail;
+
+  if (!(ret->pipeline = ges_timeline_pipeline_new ()))
+    goto fail;
+
+  if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
+    goto fail;
+
+  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
+    goto fail;
+
+  if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
+    goto fail;
+
+  if (!(create_ui (ret)))
+    goto fail;
+
+  return ret;
+
+fail:
+  app_dispose (ret);
+  return NULL;
+}
 
 /* UI callbacks  ************************************************************/
 
