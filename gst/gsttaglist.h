@@ -960,6 +960,14 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_DEVICE_MODEL                      "device-model"
 /**
+ * GST_TAG_APPLICATION_NAME:
+ *
+ * Name of the application used to create the media (string)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_APPLICATION_NAME                  "application-name"
+/**
  * GST_TAG_IMAGE_ORIENTATION:
  *
  * Represents the 'Orientation' tag from EXIF. Defines how the image
