@@ -46,6 +46,8 @@ typedef struct App
   int n_selected;
   GList *selected_objects;
   GType selected_type;
+  gboolean first_selected;
+  gboolean last_selected;
 
   gboolean can_add_transition;
   GstState state;
@@ -150,8 +152,8 @@ update_move_up_down_sensitivity (App * app)
   can_move = (app->n_selected == 1) &&
       (app->state != GST_STATE_PLAYING) && (app->state != GST_STATE_PAUSED);
 
-  gtk_action_set_sensitive (app->move_up, can_move);
-  gtk_action_set_sensitive (app->move_down, can_move);
+  gtk_action_set_sensitive (app->move_up, can_move && (!app->first_selected));
+  gtk_action_set_sensitive (app->move_down, can_move && (!app->last_selected));
 }
 
 /* Backend callbacks ********************************************************/
@@ -227,8 +229,27 @@ filesource_notify_in_point_cb (GESTimelineObject * object,
 }
 
 static void
+app_update_first_last_selected (App * app)
+{
+  GtkTreePath *path;
+
+  /* keep track of whether the first or last items are selected */
+  path = gtk_tree_path_new_from_indices (0, -1);
+  app->first_selected =
+      gtk_tree_selection_path_is_selected (app->selection, path);
+  gtk_tree_path_free (path);
+
+  path = gtk_tree_path_new_from_indices (app->n_objects - 1, -1);
+  app->last_selected =
+      gtk_tree_selection_path_is_selected (app->selection, path);
+  gtk_tree_path_free (path);
+}
+
+static void
 object_count_changed (App * app)
 {
+  app_update_first_last_selected (app);
+  update_move_up_down_sensitivity (app);
   gtk_action_set_sensitive (app->play, app->n_objects > 0);
 }
 
@@ -808,6 +829,7 @@ app_update_selection (App * app)
   }
 
   app->selected_type = type;
+  app_update_first_last_selected (app);
 }
 
 static void
