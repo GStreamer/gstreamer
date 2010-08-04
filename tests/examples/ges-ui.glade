@@ -134,8 +134,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
                         <property name="visible">True</property>
-                        <property name="related_action">delete</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">delete</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -162,22 +162,22 @@
                     <child>
                       <object class="GtkMenuItem" id="add_file_item">
                         <property name="visible">True</property>
-                        <property name="related_action">add_file</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_file</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="menuitem4">
                         <property name="visible">True</property>
-                        <property name="related_action">add_text</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_text</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem5">
                         <property name="visible">True</property>
-                        <property name="related_action">add_test</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_test</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -185,8 +185,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="visible">True</property>
-                        <property name="related_action">add_transition</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">add_transition</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -200,9 +200,17 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="related_action">play</property>
                         <property name="use_action_appearance">True</property>
+                        <property name="related_action">play</property>
                         <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem6">
+                        <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">stop</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -328,6 +336,19 @@
                 <property name="use_action_appearance">True</property>
                 <property name="related_action">play</property>
                 <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton6">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">stop</property>
+                <property name="label" translatable="yes">toolbutton6</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
@@ -766,16 +787,16 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label6"/>
-      <widget name="label5"/>
       <widget name="label4"/>
-      <widget name="label3"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
       <widget name="label2"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
+      <widget name="label3"/>
       <widget name="label4"/>
+      <widget name="label5"/>
+      <widget name="label6"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
@@ -833,5 +854,10 @@
     <property name="icon_name">media-playlist-shuffle</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="add_transition_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="stop">
+    <property name="label">Stop</property>
+    <property name="short_label">Stop</property>
+    <property name="stock_id">gtk-media-stop</property>
   </object>
 </interface>

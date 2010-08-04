@@ -71,6 +71,7 @@ typedef struct App
   GtkAction *add_transition;
   GtkAction *delete;
   GtkAction *play;
+  GtkAction *stop;
 
   GtkComboBox *halign;
   GtkComboBox *valign;
@@ -633,6 +634,7 @@ create_ui (App * app)
   GET_WIDGET (app->add_transition, "add_transition", GTK_ACTION);
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
+  GET_WIDGET (app->stop, "stop", GTK_ACTION);
   GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
   GET_WIDGET (app->generic_duration, "generic_duration", GTK_WIDGET);
   GET_WIDGET (app->background_type, "background_type", GTK_COMBO_BOX);
