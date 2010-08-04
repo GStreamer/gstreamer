@@ -171,293 +171,6 @@ update_add_transition_sensitivity (App * app)
       (app->state != GST_STATE_PLAYING) && (app->n_objects));
 }
 
-/* UI callbacks  ************************************************************/
-
-void
-window_destroy_cb (GtkObject * window, App * app)
-{
-  gtk_main_quit ();
-}
-
-void
-quit_item_activate_cb (GtkMenuItem * item, App * app)
-{
-  gtk_main_quit ();
-}
-
-void
-delete_activate_cb (GtkAction * item, App * app)
-{
-  /* get a gslist of selected track objects */
-  GList *objects = NULL;
-
-  objects = app_get_selected_objects (app);
-  app_delete_objects (app, objects);
-}
-
-void
-add_file_activate_cb (GtkAction * item, App * app)
-{
-  GtkFileChooserDialog *dlg;
-
-  GST_DEBUG ("add file signal handler");
-
-  dlg = (GtkFileChooserDialog *) gtk_file_chooser_dialog_new ("Add File...",
-      GTK_WINDOW (app->main_window),
-      GTK_FILE_CHOOSER_ACTION_OPEN,
-      GTK_STOCK_CANCEL,
-      GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
-
-  g_object_set (G_OBJECT (dlg), "select-multiple", TRUE, NULL);
-
-  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
-    GSList *uris;
-    GSList *cur;
-    uris = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (dlg));
-    for (cur = uris; cur; cur = cur->next)
-      app_add_file (app, cur->data);
-    g_slist_free (uris);
-  }
-  gtk_widget_destroy ((GtkWidget *) dlg);
-}
-
-void
-add_text_activate_cb (GtkAction * item, App * app)
-{
-  app_add_title (app);
-}
-
-void
-add_test_activate_cb (GtkAction * item, App * app)
-{
-  app_add_test (app);
-}
-
-void
-add_transition_activate_cb (GtkAction * item, App * app)
-{
-  app_add_transition (app);
-}
-
-void
-play_activate_cb (GtkAction * item, App * app)
-{
-  app_toggle_playback (app);
-}
-
-void
-app_selection_changed_cb (GtkTreeSelection * selection, App * app)
-{
-  app_update_selection (app);
-
-  update_delete_sensitivity (app);
-  update_add_transition_sensitivity (app);
-
-  gtk_widget_set_visible (app->properties, app->n_selected > 0);
-
-  gtk_widget_set_visible (app->filesource_properties,
-      app->selected_type == GES_TYPE_TIMELINE_FILE_SOURCE);
-
-  gtk_widget_set_visible (app->text_properties,
-      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
-
-  gtk_widget_set_visible (app->generic_duration,
-      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE ||
-      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
-
-  gtk_widget_set_visible (app->background_properties,
-      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
-}
-
-gboolean
-duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
-    gdouble value, App * app)
-{
-  GList *i;
-
-  for (i = app->selected_objects; i; i = i->next) {
-    guint64 duration, maxduration;
-    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration;
-    duration = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
-    g_object_set (G_OBJECT (i->data), "duration", (guint64) duration, NULL);
-  }
-  return TRUE;
-}
-
-gboolean
-in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
-    gdouble value, App * app)
-{
-  GList *i;
-
-  for (i = app->selected_objects; i; i = i->next) {
-    guint64 in_point, maxduration;
-    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration -
-        GES_TIMELINE_OBJECT_DURATION (i->data);
-    in_point = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
-    g_object_set (G_OBJECT (i->data), "in-point", (guint64) in_point, NULL);
-  }
-  return TRUE;
-}
-
-void
-duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
-    GtkTreeModel * model, GtkTreeIter * iter, gpointer user)
-{
-  gchar buf[30];
-  guint64 duration;
-
-  gtk_tree_model_get (model, iter, 1, &duration, -1);
-  g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
-  g_object_set (renderer, "text", &buf, NULL);
-}
-
-void
-halign_changed_cb (GtkComboBox * widget, App * app)
-{
-  GList *tmp;
-  int active;
-
-  active = gtk_combo_box_get_active (app->halign);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "halignment", active, NULL);
-  }
-}
-
-void
-valign_changed_cb (GtkComboBox * widget, App * app)
-{
-  GList *tmp;
-  int active;
-
-  active = gtk_combo_box_get_active (app->valign);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "valignment", active, NULL);
-  }
-}
-
-void
-text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
-{
-  GList *tmp;
-  const gchar *text;
-
-  text = gtk_entry_get_text (widget);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
-  }
-}
-
-static gboolean
-check_time (const gchar * time)
-{
-  static regex_t re;
-  static gboolean compiled = FALSE;
-
-  if (!compiled) {
-    compiled = TRUE;
-    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
-        REG_EXTENDED | REG_NOSUB);
-  }
-
-  if (!regexec (&re, time, (size_t) 0, NULL, 0))
-    return TRUE;
-  return FALSE;
-}
-
-static guint64
-str_to_time (const gchar * str)
-{
-  guint64 ret;
-  guint64 h, m;
-  gdouble s;
-  gchar buf[15];
-
-  buf[0] = str[0];
-  buf[1] = str[1];
-  buf[2] = '\0';
-
-  h = strtoull (buf, NULL, 10);
-
-  buf[0] = str[3];
-  buf[1] = str[4];
-  buf[2] = '\0';
-
-  m = strtoull (buf, NULL, 10);
-
-  strncpy (buf, &str[6], sizeof (buf));
-  s = strtod (buf, NULL);
-
-  ret = (h * 3600 * GST_SECOND) +
-      (m * 60 * GST_SECOND) + ((guint64) (s * GST_SECOND));
-
-  return ret;
-}
-
-void
-seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
-    App * app)
-{
-  GList *tmp;
-  const gchar *text;
-
-  text = gtk_entry_get_text (app->seconds);
-
-  if (!check_time (text)) {
-    gtk_entry_set_icon_from_stock (app->seconds,
-        GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_WARNING);
-  } else {
-    gtk_entry_set_icon_from_stock (app->seconds,
-        GTK_ENTRY_ICON_SECONDARY, NULL);
-    for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
-          (guint64) str_to_time (text), NULL);
-    }
-  }
-}
-
-void
-background_type_changed_cb (GtkComboBox * widget, App * app)
-{
-  GList *tmp;
-  gint p;
-  p = gtk_combo_box_get_active (widget);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "vpattern", (gint) p, NULL);
-  }
-}
-
-void
-frequency_value_changed_cb (GtkSpinButton * widget, App * app)
-{
-  GList *tmp;
-  gdouble value;
-
-  value = gtk_spin_button_get_value (widget);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "freq", (gdouble) value, NULL);
-  }
-}
-
-gboolean
-volume_change_value_cb (GtkRange * widget, GtkScrollType unused, gdouble
-    value, App * app)
-{
-  GList *tmp;
-
-  value = value >= 0 ? (value <= 2.0 ? value : 2.0) : 0;
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "volume", (gdouble) value, NULL);
-  }
-  return TRUE;
-}
-
 /* application methods ******************************************************/
 
 static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
@@ -1140,6 +853,293 @@ fail:
 }
 
 #undef GET_WIDGET
+
+/* UI callbacks  ************************************************************/
+
+void
+window_destroy_cb (GtkObject * window, App * app)
+{
+  gtk_main_quit ();
+}
+
+void
+quit_item_activate_cb (GtkMenuItem * item, App * app)
+{
+  gtk_main_quit ();
+}
+
+void
+delete_activate_cb (GtkAction * item, App * app)
+{
+  /* get a gslist of selected track objects */
+  GList *objects = NULL;
+
+  objects = app_get_selected_objects (app);
+  app_delete_objects (app, objects);
+}
+
+void
+add_file_activate_cb (GtkAction * item, App * app)
+{
+  GtkFileChooserDialog *dlg;
+
+  GST_DEBUG ("add file signal handler");
+
+  dlg = (GtkFileChooserDialog *) gtk_file_chooser_dialog_new ("Add File...",
+      GTK_WINDOW (app->main_window),
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      GTK_STOCK_CANCEL,
+      GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+
+  g_object_set (G_OBJECT (dlg), "select-multiple", TRUE, NULL);
+
+  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
+    GSList *uris;
+    GSList *cur;
+    uris = gtk_file_chooser_get_uris (GTK_FILE_CHOOSER (dlg));
+    for (cur = uris; cur; cur = cur->next)
+      app_add_file (app, cur->data);
+    g_slist_free (uris);
+  }
+  gtk_widget_destroy ((GtkWidget *) dlg);
+}
+
+void
+add_text_activate_cb (GtkAction * item, App * app)
+{
+  app_add_title (app);
+}
+
+void
+add_test_activate_cb (GtkAction * item, App * app)
+{
+  app_add_test (app);
+}
+
+void
+add_transition_activate_cb (GtkAction * item, App * app)
+{
+  app_add_transition (app);
+}
+
+void
+play_activate_cb (GtkAction * item, App * app)
+{
+  app_toggle_playback (app);
+}
+
+void
+app_selection_changed_cb (GtkTreeSelection * selection, App * app)
+{
+  app_update_selection (app);
+
+  update_delete_sensitivity (app);
+  update_add_transition_sensitivity (app);
+
+  gtk_widget_set_visible (app->properties, app->n_selected > 0);
+
+  gtk_widget_set_visible (app->filesource_properties,
+      app->selected_type == GES_TYPE_TIMELINE_FILE_SOURCE);
+
+  gtk_widget_set_visible (app->text_properties,
+      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
+
+  gtk_widget_set_visible (app->generic_duration,
+      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE ||
+      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
+
+  gtk_widget_set_visible (app->background_properties,
+      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
+}
+
+gboolean
+duration_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
+    gdouble value, App * app)
+{
+  GList *i;
+
+  for (i = app->selected_objects; i; i = i->next) {
+    guint64 duration, maxduration;
+    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration;
+    duration = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
+    g_object_set (G_OBJECT (i->data), "duration", (guint64) duration, NULL);
+  }
+  return TRUE;
+}
+
+gboolean
+in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
+    gdouble value, App * app)
+{
+  GList *i;
+
+  for (i = app->selected_objects; i; i = i->next) {
+    guint64 in_point, maxduration;
+    maxduration = GES_TIMELINE_FILE_SOURCE (i->data)->maxduration -
+        GES_TIMELINE_OBJECT_DURATION (i->data);
+    in_point = (value < maxduration ? (value > 0 ? value : 0) : maxduration);
+    g_object_set (G_OBJECT (i->data), "in-point", (guint64) in_point, NULL);
+  }
+  return TRUE;
+}
+
+void
+duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
+    GtkTreeModel * model, GtkTreeIter * iter, gpointer user)
+{
+  gchar buf[30];
+  guint64 duration;
+
+  gtk_tree_model_get (model, iter, 1, &duration, -1);
+  g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
+  g_object_set (renderer, "text", &buf, NULL);
+}
+
+void
+halign_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  int active;
+
+  active = gtk_combo_box_get_active (app->halign);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "halignment", active, NULL);
+  }
+}
+
+void
+valign_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  int active;
+
+  active = gtk_combo_box_get_active (app->valign);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "valignment", active, NULL);
+  }
+}
+
+void
+text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
+  }
+}
+
+static gboolean
+check_time (const gchar * time)
+{
+  static regex_t re;
+  static gboolean compiled = FALSE;
+
+  if (!compiled) {
+    compiled = TRUE;
+    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
+        REG_EXTENDED | REG_NOSUB);
+  }
+
+  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+    return TRUE;
+  return FALSE;
+}
+
+static guint64
+str_to_time (const gchar * str)
+{
+  guint64 ret;
+  guint64 h, m;
+  gdouble s;
+  gchar buf[15];
+
+  buf[0] = str[0];
+  buf[1] = str[1];
+  buf[2] = '\0';
+
+  h = strtoull (buf, NULL, 10);
+
+  buf[0] = str[3];
+  buf[1] = str[4];
+  buf[2] = '\0';
+
+  m = strtoull (buf, NULL, 10);
+
+  strncpy (buf, &str[6], sizeof (buf));
+  s = strtod (buf, NULL);
+
+  ret = (h * 3600 * GST_SECOND) +
+      (m * 60 * GST_SECOND) + ((guint64) (s * GST_SECOND));
+
+  return ret;
+}
+
+void
+seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
+    App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (app->seconds);
+
+  if (!check_time (text)) {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_WARNING);
+  } else {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, NULL);
+    for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
+          (guint64) str_to_time (text), NULL);
+    }
+  }
+}
+
+void
+background_type_changed_cb (GtkComboBox * widget, App * app)
+{
+  GList *tmp;
+  gint p;
+  p = gtk_combo_box_get_active (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "vpattern", (gint) p, NULL);
+  }
+}
+
+void
+frequency_value_changed_cb (GtkSpinButton * widget, App * app)
+{
+  GList *tmp;
+  gdouble value;
+
+  value = gtk_spin_button_get_value (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "freq", (gdouble) value, NULL);
+  }
+}
+
+gboolean
+volume_change_value_cb (GtkRange * widget, GtkScrollType unused, gdouble
+    value, App * app)
+{
+  GList *tmp;
+
+  value = value >= 0 ? (value <= 2.0 ? value : 2.0) : 0;
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "volume", (gdouble) value, NULL);
+  }
+  return TRUE;
+}
 
 /* main *********************************************************************/
 
