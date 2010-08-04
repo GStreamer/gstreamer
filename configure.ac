@@ -218,6 +218,7 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AC_PROG_CC_STDC
 
 dnl check if the compiler supports '-c' and '-o' options
 AM_PROG_CC_C_O
