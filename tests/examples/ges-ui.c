@@ -127,7 +127,8 @@ update_delete_sensitivity (App * app)
 {
   /* delete will work for multiple items */
   gtk_action_set_sensitive (app->delete,
-      (app->n_selected > 0) && (app->state != GST_STATE_PLAYING));
+      (app->n_selected > 0) && (app->state != GST_STATE_PLAYING)
+      && (app->state != GST_STATE_PAUSED));
 }
 
 static void
@@ -135,7 +136,8 @@ update_add_transition_sensitivity (App * app)
 {
   gtk_action_set_sensitive (app->add_transition,
       (app->can_add_transition) &&
-      (app->state != GST_STATE_PLAYING) && (app->n_objects));
+      (app->state != GST_STATE_PLAYING) &&
+      (app->state != GST_STATE_PAUSED) && (app->n_objects));
 }
 
 /* Backend callbacks ********************************************************/
@@ -299,6 +301,8 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 static void
 pipeline_state_changed_cb (App * app)
 {
+  gboolean playing_or_paused;
+
   if (app->state == GST_STATE_PLAYING)
     gtk_action_set_stock_id (app->play, GTK_STOCK_MEDIA_PAUSE);
   else
@@ -307,10 +311,13 @@ pipeline_state_changed_cb (App * app)
   update_delete_sensitivity (app);
   update_add_transition_sensitivity (app);
 
-  gtk_action_set_sensitive (app->add_file, app->state != GST_STATE_PLAYING);
-  gtk_action_set_sensitive (app->add_title, app->state != GST_STATE_PLAYING);
-  gtk_action_set_sensitive (app->add_test, app->state != GST_STATE_PLAYING);
-  gtk_widget_set_sensitive (app->properties, app->state != GST_STATE_PLAYING);
+  playing_or_paused = (app->state == GST_STATE_PLAYING) ||
+      (app->state == GST_STATE_PAUSED);
+
+  gtk_action_set_sensitive (app->add_file, !playing_or_paused);
+  gtk_action_set_sensitive (app->add_title, !playing_or_paused);
+  gtk_action_set_sensitive (app->add_test, !playing_or_paused);
+  gtk_widget_set_sensitive (app->properties, !playing_or_paused);
 }
 
 static void
