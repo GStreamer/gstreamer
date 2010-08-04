@@ -192,6 +192,27 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkSeparatorMenuItem" id="menuitem7">
+                        <property name="visible">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem8">
+                        <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">move_up</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkImageMenuItem" id="menuitem9">
+                        <property name="visible">True</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="related_action">move_down</property>
+                        <property name="use_stock">True</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem" id="menuitem1">
                         <property name="visible">True</property>
                         <property name="use_action_appearance">True</property>
@@ -349,6 +370,41 @@
                 <property name="use_action_appearance">True</property>
                 <property name="related_action">add_transition</property>
                 <property name="label" translatable="yes">toolbutton5</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton7">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton8">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">move_up</property>
+                <property name="label" translatable="yes">toolbutton8</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton9">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">move_down</property>
+                <property name="label" translatable="yes">toolbutton9</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
@@ -860,5 +916,15 @@
     <property name="short_label">Stop</property>
     <property name="stock_id">gtk-media-stop</property>
     <signal name="activate" handler="stop_activate_cb"/>
+  </object>
+  <object class="GtkAction" id="move_up">
+    <property name="label">Move Selected Up</property>
+    <property name="short_label">Move Up</property>
+    <property name="stock_id">gtk-go-up</property>
+  </object>
+  <object class="GtkAction" id="move_down">
+    <property name="label">Move Selected Down</property>
+    <property name="short_label">Move Down</property>
+    <property name="stock_id">gtk-go-down</property>
   </object>
 </interface>
