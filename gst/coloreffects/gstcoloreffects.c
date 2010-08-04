@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:element-color-lut
+ * SECTION:element-coloreffects
  *
  * Map colors of the video input to a lookup table
  *
