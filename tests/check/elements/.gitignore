@@ -11,6 +11,7 @@ faac
 faad
 gdpdepay
 gdppay
+id3mux
 interleave
 jifmux
 jpegparse
@@ -31,3 +32,5 @@ selector
 spectrum
 timidity
 y4menc
+vp8dec
+vp8enc
