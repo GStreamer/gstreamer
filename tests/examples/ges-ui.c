@@ -98,6 +98,8 @@ void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
 void stop_activate_cb (GtkAction * item, App * app);
+void move_up_activate_cb (GtkAction * item, App * app);
+void move_down_activate_cb (GtkAction * item, App * app);
 void add_file_activate_cb (GtkAction * item, App * app);
 void add_text_activate_cb (GtkAction * item, App * app);
 void add_test_activate_cb (GtkAction * item, App * app);
@@ -1049,6 +1051,16 @@ void
 stop_activate_cb (GtkAction * item, App * app)
 {
   app_stop_playback (app);
+}
+
+void
+move_up_activate_cb (GtkAction * item, App * app)
+{
+}
+
+void
+move_down_activate_cb (GtkAction * item, App * app)
+{
 }
 
 void

@@ -134,8 +134,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">delete</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -162,22 +162,22 @@
                     <child>
                       <object class="GtkMenuItem" id="add_file_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_file</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="menuitem4">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_text</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem5">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_test</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -185,8 +185,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_transition</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -199,16 +199,18 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem8">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">move_up</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem9">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">move_down</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -221,8 +223,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">play</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -230,8 +232,9 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem6">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">stop</property>
+                        <property name="use_action_appearance">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -271,8 +274,8 @@
             <child>
               <object class="GtkToolButton" id="play_button">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">play</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -284,8 +287,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton6">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">stop</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton6</property>
                 <property name="use_underline">True</property>
               </object>
@@ -306,8 +309,8 @@
             <child>
               <object class="GtkToolButton" id="delete_button">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">delete</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">Delete</property>
                 <property name="use_underline">True</property>
               </object>
@@ -328,8 +331,8 @@
             <child>
               <object class="GtkToolButton" id="add_button">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">add_file</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton1</property>
                 <property name="use_underline">True</property>
               </object>
@@ -341,8 +344,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton2">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">add_text</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton2</property>
                 <property name="use_underline">True</property>
               </object>
@@ -354,8 +357,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton4">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">add_test</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton4</property>
                 <property name="use_underline">True</property>
               </object>
@@ -367,8 +370,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton5">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">add_transition</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton5</property>
                 <property name="use_underline">True</property>
               </object>
@@ -389,8 +392,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton8">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">move_up</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton8</property>
                 <property name="use_underline">True</property>
               </object>
@@ -402,8 +405,8 @@
             <child>
               <object class="GtkToolButton" id="toolbutton9">
                 <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
                 <property name="related_action">move_down</property>
+                <property name="use_action_appearance">True</property>
                 <property name="label" translatable="yes">toolbutton9</property>
                 <property name="use_underline">True</property>
               </object>
@@ -843,16 +846,16 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label4"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
-      <widget name="label2"/>
-      <widget name="label3"/>
-      <widget name="label4"/>
-      <widget name="label5"/>
       <widget name="label6"/>
+      <widget name="label5"/>
+      <widget name="label4"/>
+      <widget name="label3"/>
+      <widget name="label2"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
+      <widget name="label4"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
@@ -921,10 +924,12 @@
     <property name="label">Move Selected Up</property>
     <property name="short_label">Move Up</property>
     <property name="stock_id">gtk-go-up</property>
+    <signal name="activate" handler="move_up_activate_cb"/>
   </object>
   <object class="GtkAction" id="move_down">
     <property name="label">Move Selected Down</property>
     <property name="short_label">Move Down</property>
     <property name="stock_id">gtk-go-down</property>
+    <signal name="activate" handler="move_down_activate_cb"/>
   </object>
 </interface>
