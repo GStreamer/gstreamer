@@ -248,6 +248,63 @@
           <object class="GtkToolbar" id="toolbar">
             <property name="visible">True</property>
             <child>
+              <object class="GtkToolButton" id="play_button">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">play</property>
+                <property name="label" translatable="yes">toolbutton1</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="toolbutton6">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">stop</property>
+                <property name="label" translatable="yes">toolbutton6</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton3">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="delete_button">
+                <property name="visible">True</property>
+                <property name="use_action_appearance">True</property>
+                <property name="related_action">delete</property>
+                <property name="label" translatable="yes">Delete</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton1">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkToolButton" id="add_button">
                 <property name="visible">True</property>
                 <property name="use_action_appearance">True</property>
@@ -292,63 +349,6 @@
                 <property name="use_action_appearance">True</property>
                 <property name="related_action">add_transition</property>
                 <property name="label" translatable="yes">toolbutton5</property>
-                <property name="use_underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem" id="toolbutton1">
-                <property name="visible">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="delete_button">
-                <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
-                <property name="related_action">delete</property>
-                <property name="label" translatable="yes">Delete</property>
-                <property name="use_underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem" id="toolbutton3">
-                <property name="visible">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="play_button">
-                <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
-                <property name="related_action">play</property>
-                <property name="label" translatable="yes">toolbutton1</property>
-                <property name="use_underline">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="toolbutton6">
-                <property name="visible">True</property>
-                <property name="use_action_appearance">True</property>
-                <property name="related_action">stop</property>
-                <property name="label" translatable="yes">toolbutton6</property>
                 <property name="use_underline">True</property>
               </object>
               <packing>
