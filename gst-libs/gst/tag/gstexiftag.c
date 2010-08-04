@@ -166,6 +166,7 @@ static gint deserialize_speed (GstExifReader * exif_reader,
 
 #define EXIF_IFD_TAG 0x8769
 #define EXIF_GPS_IFD_TAG 0x8825
+#define EXIF_VERSION_TAG 0x9000
 
 /* useful macros for speed tag */
 #define METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR (3.6)
@@ -184,6 +185,7 @@ static const GstExifTagMatch tag_map_ifd0[] = {
   {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {NULL, EXIF_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
   {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
+  {NULL, EXIF_VERSION_TAG, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
@@ -402,6 +404,27 @@ gst_exif_writer_write_short_tag (GstExifWriter * writer, guint16 tag,
 
   gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_SHORT,
       1, offset, TRUE);
+}
+
+static void
+write_exif_undefined_tag (GstExifWriter * writer, guint16 tag,
+    const guint8 * data, gint size)
+{
+  guint32 offset;
+
+  if (size > 4) {
+    /* we only use the data offset here, later we add up the
+     * resulting tag headers offset and the base offset */
+    offset = gst_byte_writer_get_size (&writer->datawriter);
+    gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_UNDEFINED,
+        size, offset, FALSE);
+    gst_byte_writer_put_data (&writer->datawriter, data, size);
+  } else {
+    /* small enough to go in the offset */
+    memcpy ((guint8 *) & offset, data, size);
+    gst_exif_writer_write_tag_header (writer, tag, EXIF_TYPE_UNDEFINED,
+        size, offset, TRUE);
+  }
 }
 
 static void
@@ -768,6 +791,10 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
         inner_tag_map = tag_map_gps;
       } else if (tag_map[i].exif_tag == EXIF_IFD_TAG) {
         inner_tag_map = tag_map_exif;
+      } else if (tag_map[i].exif_tag == EXIF_VERSION_TAG) {
+        /* special case where we write the exif version */
+        write_exif_undefined_tag (&writer, EXIF_VERSION_TAG, (guint8 *) "0230",
+            4);
       }
 
       if (inner_tag_map) {
@@ -903,6 +930,10 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
       i += parse_exif_ifd (exif_reader,
           tagdata.offset - exif_reader->base_offset, tag_map_exif);
 
+      continue;
+    }
+    if (tagdata.tag == EXIF_VERSION_TAG) {
+      /* skip */
       continue;
     }
 
