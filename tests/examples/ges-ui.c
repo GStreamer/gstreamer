@@ -72,6 +72,8 @@ typedef struct App
   GtkAction *delete;
   GtkAction *play;
   GtkAction *stop;
+  GtkAction *move_up;
+  GtkAction *move_down;
 
   GtkComboBox *halign;
   GtkComboBox *valign;
@@ -138,6 +140,18 @@ update_add_transition_sensitivity (App * app)
       (app->can_add_transition) &&
       (app->state != GST_STATE_PLAYING) &&
       (app->state != GST_STATE_PAUSED) && (app->n_objects));
+}
+
+static void
+update_move_up_down_sensitivity (App * app)
+{
+  gboolean can_move;
+
+  can_move = (app->n_selected == 1) &&
+      (app->state != GST_STATE_PLAYING) && (app->state != GST_STATE_PAUSED);
+
+  gtk_action_set_sensitive (app->move_up, can_move);
+  gtk_action_set_sensitive (app->move_down, can_move);
 }
 
 /* Backend callbacks ********************************************************/
@@ -310,6 +324,7 @@ pipeline_state_changed_cb (App * app)
 
   update_delete_sensitivity (app);
   update_add_transition_sensitivity (app);
+  update_move_up_down_sensitivity (app);
 
   playing_or_paused = (app->state == GST_STATE_PLAYING) ||
       (app->state == GST_STATE_PAUSED);
@@ -643,6 +658,8 @@ create_ui (App * app)
   GET_WIDGET (app->delete, "delete", GTK_ACTION);
   GET_WIDGET (app->play, "play", GTK_ACTION);
   GET_WIDGET (app->stop, "stop", GTK_ACTION);
+  GET_WIDGET (app->move_up, "move_up", GTK_ACTION);
+  GET_WIDGET (app->move_down, "move_down", GTK_ACTION);
   GET_WIDGET (app->seconds, "seconds", GTK_ENTRY);
   GET_WIDGET (app->generic_duration, "generic_duration", GTK_WIDGET);
   GET_WIDGET (app->background_type, "background_type", GTK_COMBO_BOX);
@@ -1019,6 +1036,7 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
 
   update_delete_sensitivity (app);
   update_add_transition_sensitivity (app);
+  update_move_up_down_sensitivity (app);
 
   gtk_widget_set_visible (app->properties, app->n_selected > 0);
 
