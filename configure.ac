@@ -103,6 +103,7 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AC_PROG_CC_STDC
 
 dnl determine c++ compiler
 AC_PROG_CXX
