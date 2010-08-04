@@ -868,6 +868,35 @@ app_delete_objects (App * app, GList * objects)
   g_list_free (objects);
 }
 
+/* the following two methods assume exactly one clip is selected and that the
+ * requested action is valid */
+
+static void
+app_move_selected_up (App * app)
+{
+  GESSimpleTimelineLayer *layer;
+  gint pos;
+
+  layer = GES_SIMPLE_TIMELINE_LAYER (app->layer);
+  pos = g_list_index (layer->objects, app->selected_objects->data);
+
+  ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+}
+
+static void
+app_move_selected_down (App * app)
+{
+  GESSimpleTimelineLayer *layer;
+  gint pos;
+
+  layer = GES_SIMPLE_TIMELINE_LAYER (app->layer);
+  pos = g_list_index (layer->objects, app->selected_objects->data);
+
+  ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
+      GES_TIMELINE_OBJECT (app->selected_objects->data), pos + 2);
+}
+
 static void
 app_add_file (App * app, gchar * uri)
 {
@@ -1056,11 +1085,13 @@ stop_activate_cb (GtkAction * item, App * app)
 void
 move_up_activate_cb (GtkAction * item, App * app)
 {
+  app_move_selected_up (app);
 }
 
 void
 move_down_activate_cb (GtkAction * item, App * app)
 {
+  app_move_selected_down (app);
 }
 
 void
