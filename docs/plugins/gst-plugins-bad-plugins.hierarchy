@@ -22,107 +22,10 @@ GObject
           GstGSettingsAudioSrc
           GstGSettingsVideoSrc
         DvbBaseBin
+        GstRtpBin
         GstFPSDisplaySink
         GstAutoConvert
         GstSDPDemux
-        GstRtpBin
-      GstBaseTransform
-        GstVideoFilter
-          GstColorEffects
-          GstGeometricTransform
-            GstCircleGeometricTransform
-              GstCircle
-              GstKaleidoscope
-              GstPinch
-              GstSphere
-              GstTwirl
-              GstWaterRipple
-              GstStretch
-              GstBulge
-              GstTunnel
-            GstDiffuse
-            GstMarble
-            GstSquare
-            GstMirror
-            GstFisheye
-          GstZBar
-          GstBurn
-          GstChromium
-          GstDilate
-          GstDodge
-          GstExclusion
-          GstSolarize
-          GaussBlur
-          frei0r-filter-transparency
-          frei0r-filter-invert0r
-          frei0r-filter-letterb0xed
-          frei0r-filter-gamma
-          frei0r-filter-delay0r
-          frei0r-filter-r
-          frei0r-filter-squareblur
-          frei0r-filter-curves
-          frei0r-filter-b
-          frei0r-filter-vectorscope
-          frei0r-filter-mask0mate
-          frei0r-filter-vertigo
-          frei0r-filter-color-distance
-          frei0r-filter-distort0r
-          frei0r-filter-threshold0r
-          frei0r-filter-lens-correction
-          frei0r-filter-nosync0r
-          frei0r-filter-luminance
-          frei0r-filter-rgb-parade
-          frei0r-filter-3-point-color-balance
-          frei0r-filter-bw0r
-          frei0r-filter-threelay0r
-          frei0r-filter-bluescreen0r
-          frei0r-filter-sobel
-          frei0r-filter-glow
-          frei0r-filter-tint0r
-          frei0r-filter-levels
-          frei0r-filter-hueshift0r
-          frei0r-filter-pixeliz0r
-          frei0r-filter-primaries
-          frei0r-filter-nervous
-          frei0r-filter-saturat0r
-          frei0r-filter-white-balance
-          frei0r-filter-cartoon
-          frei0r-filter-twolay0r
-          frei0r-filter-scanline0r
-          frei0r-filter-water
-          frei0r-filter-perspective
-          frei0r-filter-k-means-clustering
-          frei0r-filter-edgeglow
-          frei0r-filter-baltan
-          frei0r-filter-g
-          frei0r-filter-tehroxx0r
-          frei0r-filter-equaliz0r
-          frei0r-filter-scale0tilt
-          frei0r-filter-brightness
-          frei0r-filter-flippo
-          frei0r-filter-3dflippo
-          frei0r-filter-contrast0r
-          frei0r-filter-dealygrab
-          GstVideoAnalyse
-          GstVideoDetect
-          GstVideoMark
-        GstAudioFilter
-          GstOFA
-          GstBPMDetect
-          GstStereo
-        GstCogdownsample
-        GstCogcolorspace
-        GstCogScale
-        GstColorconvert
-        GstLogoinsert
-        GstDtmfDetect
-        GstBayer2RGB
-        GstRGB2Bayer
-        GstVideoMaxRate
-        GstScaletempo
-        GstLegacyresample
-        GstMeasureCollector
-        GstHDVParse
       GstSignalProcessor
         invadarecords-com-plugins-lv2-compressor-mono
         invadarecords-com-plugins-lv2-compressor-stereo
@@ -375,6 +278,103 @@ GObject
         GstDTMFSrc
         GstRTPDTMFSrc
         GstDataURISrc
+      GstBaseTransform
+        GstAudioFilter
+          GstOFA
+          GstBPMDetect
+          GstStereo
+        GstCogdownsample
+        GstCogcolorspace
+        GstCogScale
+        GstColorconvert
+        GstLogoinsert
+        GstVideoFilter
+          GstZBar
+          GstBurn
+          GstChromium
+          GstDilate
+          GstDodge
+          GstExclusion
+          GstSolarize
+          GaussBlur
+          frei0r-filter-transparency
+          frei0r-filter-invert0r
+          frei0r-filter-letterb0xed
+          frei0r-filter-gamma
+          frei0r-filter-delay0r
+          frei0r-filter-r
+          frei0r-filter-squareblur
+          frei0r-filter-curves
+          frei0r-filter-b
+          frei0r-filter-vectorscope
+          frei0r-filter-mask0mate
+          frei0r-filter-vertigo
+          frei0r-filter-color-distance
+          frei0r-filter-distort0r
+          frei0r-filter-threshold0r
+          frei0r-filter-lens-correction
+          frei0r-filter-nosync0r
+          frei0r-filter-luminance
+          frei0r-filter-rgb-parade
+          frei0r-filter-3-point-color-balance
+          frei0r-filter-bw0r
+          frei0r-filter-threelay0r
+          frei0r-filter-bluescreen0r
+          frei0r-filter-sobel
+          frei0r-filter-glow
+          frei0r-filter-tint0r
+          frei0r-filter-levels
+          frei0r-filter-hueshift0r
+          frei0r-filter-pixeliz0r
+          frei0r-filter-primaries
+          frei0r-filter-nervous
+          frei0r-filter-saturat0r
+          frei0r-filter-white-balance
+          frei0r-filter-cartoon
+          frei0r-filter-twolay0r
+          frei0r-filter-scanline0r
+          frei0r-filter-water
+          frei0r-filter-perspective
+          frei0r-filter-k-means-clustering
+          frei0r-filter-edgeglow
+          frei0r-filter-baltan
+          frei0r-filter-g
+          frei0r-filter-tehroxx0r
+          frei0r-filter-equaliz0r
+          frei0r-filter-scale0tilt
+          frei0r-filter-brightness
+          frei0r-filter-flippo
+          frei0r-filter-3dflippo
+          frei0r-filter-contrast0r
+          frei0r-filter-dealygrab
+          GstVideoAnalyse
+          GstVideoDetect
+          GstVideoMark
+          GstColorEffects
+          GstGeometricTransform
+            GstCircleGeometricTransform
+              GstCircle
+              GstKaleidoscope
+              GstPinch
+              GstSphere
+              GstTwirl
+              GstWaterRipple
+              GstStretch
+              GstBulge
+              GstTunnel
+            GstDiffuse
+            GstMarble
+            GstSquare
+            GstMirror
+            GstFisheye
+        GstDtmfDetect
+        GstBayer2RGB
+        GstRGB2Bayer
+        GstVideoMaxRate
+        GstScaletempo
+        GstLegacyresample
+        GstMeasureCollector
+        GstHDVParse
       GstDtsDec
       GstRsvgDec
       GstFaac
@@ -400,6 +400,10 @@ GObject
       GstMveMux
       GstBaseRTPDepayload
         GstRtpDTMFDepay
+      GstRtpJitterBuffer
+      GstRtpPtDemux
+      GstRtpSession
+      GstRtpSsrcDemux
       GstMpegPSDemux
       GstMpegTSDemux
       MpegTSParse
@@ -495,10 +499,6 @@ GObject
       GstSirenEnc
       GstPcapParse
       MpegPsMux
-      GstRtpJitterBuffer
-      GstRtpPtDemux
-      GstRtpSession
-      GstRtpSsrcDemux
     GstBus
     GstTask
     GstTaskPool
@@ -513,9 +513,9 @@ GObject
       GstJackAudioSinkRingBuffer
   GstSignalObject
   GstVdpDevice
-  RTPSession
   MpegTsPatInfo
   MpegTsPmtInfo
+  RTPSession
   GstColorBalanceChannel
 GInterface
   GTypePlugin

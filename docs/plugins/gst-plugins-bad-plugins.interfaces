@@ -10,10 +10,10 @@ GstGSettingsSwitchSrc GstChildProxy
 GstGSettingsAudioSrc GstChildProxy
 GstGSettingsVideoSrc GstChildProxy
 DvbBaseBin GstChildProxy GstURIHandler
+GstRtpBin GstChildProxy
 GstFPSDisplaySink GstChildProxy
 GstAutoConvert GstChildProxy
 GstSDPDemux GstChildProxy
-GstRtpBin GstChildProxy
 GstMetadataMux GstTagSetter
 GstXvidEnc GstPreset
 GstVP8Enc GstTagSetter GstPreset
