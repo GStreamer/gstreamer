@@ -75,7 +75,7 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
-AM_PROG_CC_STDC
+AC_PROG_CC_STDC
 
 # FIXME: is this line needed?
 AS="${CC}"
