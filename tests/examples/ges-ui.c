@@ -26,6 +26,13 @@
 #include <ges/ges.h>
 #include <regex.h>
 
+/* Application Data ********************************************************/
+
+/**
+ * Contains most of the application data so that signal handlers
+ * and other callbacks have easy access.
+ */
+
 typedef struct App
 {
   /* back-end objects */
@@ -75,51 +82,43 @@ typedef struct App
   GtkSpinButton *frequency;
 } App;
 
+/* Prototypes for auto-connected signal handlers ***************************/
+
+/**
+ * These are declared non-static for signal auto-connection
+ */
+
 void window_destroy_cb (GtkObject * window, App * app);
-
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
-
 void delete_activate_cb (GtkAction * item, App * app);
-
 void play_activate_cb (GtkAction * item, App * app);
-
 void add_file_activate_cb (GtkAction * item, App * app);
-
 void add_text_activate_cb (GtkAction * item, App * app);
-
 void add_test_activate_cb (GtkAction * item, App * app);
-
 void add_transition_activate_cb (GtkAction * item, App * app);
-
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
-
-gboolean duration_scale_change_value_cb (GtkRange * range, GtkScrollType
-    unused, gdouble value, App * app);
-
-gboolean in_point_scale_change_value_cb (GtkRange * range, GtkScrollType
-    unused, gdouble value, App * app);
-
-gboolean volume_change_value_cb (GtkRange * range, GtkScrollType unused,
-    gdouble value, App * app);
-
-void duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
-    GtkTreeModel * model, GtkTreeIter * iter, gpointer user);
-
 void halign_changed_cb (GtkComboBox * widget, App * app);
-
 void valign_changed_cb (GtkComboBox * widget, App * app);
-
-void text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App *
-    app);
-
-void seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
-    App * app);
-
 void background_type_changed_cb (GtkComboBox * widget, App * app);
-
 void frequency_value_changed_cb (GtkSpinButton * widget, App * app);
 
+gboolean
+duration_scale_change_value_cb (GtkRange * range,
+    GtkScrollType unused, gdouble value, App * app);
+
+gboolean
+in_point_scale_change_value_cb (GtkRange * range,
+    GtkScrollType unused, gdouble value, App * app);
+
+gboolean
+volume_change_value_cb (GtkRange * range,
+    GtkScrollType unused, gdouble value, App * app);
+
 /* UI state functions *******************************************************/
+
+/**
+ * Update properties of UI elements that depend on more than one thing.
+ */
 
 static void
 update_delete_sensitivity (App * app)
@@ -338,13 +337,113 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
   }
 }
 
-/* UI Configuration *********************************************************/
+/* Static UI Callbacks ******************************************************/
 
-#define GET_WIDGET(dest,name,type) {\
-  if (!(dest =\
-    type(gtk_builder_get_object(builder, name))))\
-        goto fail;\
+static void
+test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
+    unused G_GNUC_UNUSED, App * app)
+{
+  gdouble volume;
+
+  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
+
+  gtk_range_set_value (GTK_RANGE (app->volume), volume);
 }
+
+static gboolean
+check_time (const gchar * time)
+{
+  static regex_t re;
+  static gboolean compiled = FALSE;
+
+  if (!compiled) {
+    compiled = TRUE;
+    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
+        REG_EXTENDED | REG_NOSUB);
+  }
+
+  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+    return TRUE;
+  return FALSE;
+}
+
+static guint64
+str_to_time (const gchar * str)
+{
+  guint64 ret;
+  guint64 h, m;
+  gdouble s;
+  gchar buf[15];
+
+  buf[0] = str[0];
+  buf[1] = str[1];
+  buf[2] = '\0';
+
+  h = strtoull (buf, NULL, 10);
+
+  buf[0] = str[3];
+  buf[1] = str[4];
+  buf[2] = '\0';
+
+  m = strtoull (buf, NULL, 10);
+
+  strncpy (buf, &str[6], sizeof (buf));
+  s = strtod (buf, NULL);
+
+  ret = (h * 3600 * GST_SECOND) +
+      (m * 60 * GST_SECOND) + ((guint64) (s * GST_SECOND));
+
+  return ret;
+}
+
+static void
+text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (widget);
+
+  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+    g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
+  }
+}
+
+static void
+seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
+    App * app)
+{
+  GList *tmp;
+  const gchar *text;
+
+  text = gtk_entry_get_text (app->seconds);
+
+  if (!check_time (text)) {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_WARNING);
+  } else {
+    gtk_entry_set_icon_from_stock (app->seconds,
+        GTK_ENTRY_ICON_SECONDARY, NULL);
+    for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
+      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
+          (guint64) str_to_time (text), NULL);
+    }
+  }
+}
+
+static void
+duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
+    GtkTreeModel * model, GtkTreeIter * iter, gpointer user)
+{
+  gchar buf[30];
+  guint64 duration;
+
+  gtk_tree_model_get (model, iter, 1, &duration, -1);
+  g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
+  g_object_set (renderer, "text", &buf, NULL);
+}
+
+/* UI Initialization ********************************************************/
 
 static void
 connect_to_filesource (GESTimelineObject * object, App * app)
@@ -394,17 +493,6 @@ connect_to_title_source (GESTimelineObject * object, App * app)
 static void
 disconnect_from_title_source (GESTimelineObject * object, App * app)
 {
-}
-
-static void
-test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
-    unused G_GNUC_UNUSED, App * app)
-{
-  gdouble volume;
-
-  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
-
-  gtk_range_set_value (GTK_RANGE (app->volume), volume);
 }
 
 static void
@@ -500,6 +588,12 @@ get_video_patterns (void)
   g_object_unref (tr);
 
   return m;
+}
+
+#define GET_WIDGET(dest,name,type) {\
+  if (!(dest =\
+    type(gtk_builder_get_object(builder, name))))\
+        goto fail;\
 }
 
 static gboolean
@@ -616,7 +710,6 @@ fail:
 }
 
 #undef GET_WIDGET
-
 
 /* application methods ******************************************************/
 
@@ -951,18 +1044,6 @@ in_point_scale_change_value_cb (GtkRange * range, GtkScrollType unused,
 }
 
 void
-duration_cell_func (GtkTreeViewColumn * column, GtkCellRenderer * renderer,
-    GtkTreeModel * model, GtkTreeIter * iter, gpointer user)
-{
-  gchar buf[30];
-  guint64 duration;
-
-  gtk_tree_model_get (model, iter, 1, &duration, -1);
-  g_snprintf (buf, sizeof (buf), "%u:%02u:%02u.%09u", GST_TIME_ARGS (duration));
-  g_object_set (renderer, "text", &buf, NULL);
-}
-
-void
 halign_changed_cb (GtkComboBox * widget, App * app)
 {
   GList *tmp;
@@ -985,87 +1066,6 @@ valign_changed_cb (GtkComboBox * widget, App * app)
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
     g_object_set (G_OBJECT (tmp->data), "valignment", active, NULL);
-  }
-}
-
-void
-text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
-{
-  GList *tmp;
-  const gchar *text;
-
-  text = gtk_entry_get_text (widget);
-
-  for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-    g_object_set (G_OBJECT (tmp->data), "text", text, NULL);
-  }
-}
-
-static gboolean
-check_time (const gchar * time)
-{
-  static regex_t re;
-  static gboolean compiled = FALSE;
-
-  if (!compiled) {
-    compiled = TRUE;
-    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
-        REG_EXTENDED | REG_NOSUB);
-  }
-
-  if (!regexec (&re, time, (size_t) 0, NULL, 0))
-    return TRUE;
-  return FALSE;
-}
-
-static guint64
-str_to_time (const gchar * str)
-{
-  guint64 ret;
-  guint64 h, m;
-  gdouble s;
-  gchar buf[15];
-
-  buf[0] = str[0];
-  buf[1] = str[1];
-  buf[2] = '\0';
-
-  h = strtoull (buf, NULL, 10);
-
-  buf[0] = str[3];
-  buf[1] = str[4];
-  buf[2] = '\0';
-
-  m = strtoull (buf, NULL, 10);
-
-  strncpy (buf, &str[6], sizeof (buf));
-  s = strtod (buf, NULL);
-
-  ret = (h * 3600 * GST_SECOND) +
-      (m * 60 * GST_SECOND) + ((guint64) (s * GST_SECOND));
-
-  return ret;
-}
-
-void
-seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
-    App * app)
-{
-  GList *tmp;
-  const gchar *text;
-
-  text = gtk_entry_get_text (app->seconds);
-
-  if (!check_time (text)) {
-    gtk_entry_set_icon_from_stock (app->seconds,
-        GTK_ENTRY_ICON_SECONDARY, GTK_STOCK_DIALOG_WARNING);
-  } else {
-    gtk_entry_set_icon_from_stock (app->seconds,
-        GTK_ENTRY_ICON_SECONDARY, NULL);
-    for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
-      g_object_set (GES_TIMELINE_OBJECT (tmp->data), "duration",
-          (guint64) str_to_time (text), NULL);
-    }
   }
 }
 
