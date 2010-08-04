@@ -2519,7 +2519,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
           (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
 #endif
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
               GST_BASE_AUDIO_SINK (pulsesink)->provided_clock, TRUE));
@@ -2531,7 +2531,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_element_post_message (element,
           gst_message_new_clock_lost (GST_OBJECT_CAST (element),
               GST_BASE_AUDIO_SINK (pulsesink)->provided_clock));
