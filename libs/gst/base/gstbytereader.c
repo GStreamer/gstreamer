@@ -271,7 +271,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint8 to store the result
  *
- * Read a signed 8 bit integer into @val but keep the current position.
+ * Read an unsigned 8 bit integer into @val but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
  * 
@@ -321,7 +321,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint16 to store the result
  *
- * Read a signed 16 bit little endian integer into @val
+ * Read an unsigned 16 bit little endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -373,7 +373,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint16 to store the result
  *
- * Read a signed 16 bit big endian integer into @val
+ * Read an unsigned 16 bit big endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -425,7 +425,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint32 to store the result
  *
- * Read a signed 24 bit little endian integer into @val
+ * Read an unsigned 24 bit little endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -477,7 +477,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint32 to store the result
  *
- * Read a signed 24 bit big endian integer into @val
+ * Read an unsigned 24 bit big endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -530,7 +530,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint32 to store the result
  *
- * Read a signed 32 bit little endian integer into @val
+ * Read an unsigned 32 bit little endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -582,7 +582,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint32 to store the result
  *
- * Read a signed 32 bit big endian integer into @val
+ * Read an unsigned 32 bit big endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -634,7 +634,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint64 to store the result
  *
- * Read a signed 64 bit little endian integer into @val
+ * Read an unsigned 64 bit little endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
@@ -686,7 +686,7 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
  * @reader: a #GstByteReader instance
  * @val: Pointer to a #guint64 to store the result
  *
- * Read a signed 64 bit big endian integer into @val
+ * Read an unsigned 64 bit big endian integer into @val
  * but keep the current position.
  *
  * Returns: %TRUE if successful, %FALSE otherwise.
