@@ -1835,6 +1835,16 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->priv->eos_rendering = 0;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
+
+      /* Only post clock-provide messages if this is the clock that
+       * we've created. If the subclass has overriden it the subclass
+       * should post this messages whenever necessary */
+      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
+          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
+          (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time)
+        gst_element_post_message (element,
+            gst_message_new_clock_provide (GST_OBJECT_CAST (element),
+                sink->provided_clock, TRUE));
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_OBJECT_LOCK (sink);
@@ -1849,18 +1859,17 @@ gst_base_audio_sink_change_state (GstElement * element,
         /* sync rendering on eos needs running clock */
         gst_ring_buffer_start (sink->ringbuffer);
       }
-
-      /* Only post clock-provide messages if this is the clock that
-       * we've created. If the subclass has overriden it the subclass
-       * should post this messages whenever necessary */
-      if (sink->provided_clock && GST_IS_AUDIO_CLOCK (sink->provided_clock) &&
-          GST_AUDIO_CLOCK_CAST (sink->provided_clock)->func ==
-          (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time)
-        gst_element_post_message (element,
-            gst_message_new_clock_provide (GST_OBJECT_CAST (element),
-                sink->provided_clock, TRUE));
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* ringbuffer cannot start anymore */
+      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
+      gst_ring_buffer_pause (sink->ringbuffer);
+
+      GST_OBJECT_LOCK (sink);
+      sink->priv->sync_latency = FALSE;
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* Only post clock-lost messages if this is the clock that
        * we've created. If the subclass has overriden it the subclass
        * should post this messages whenever necessary */
@@ -1871,15 +1880,6 @@ gst_base_audio_sink_change_state (GstElement * element,
             gst_message_new_clock_lost (GST_OBJECT_CAST (element),
                 sink->provided_clock));
 
-      /* ringbuffer cannot start anymore */
-      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
-      gst_ring_buffer_pause (sink->ringbuffer);
-
-      GST_OBJECT_LOCK (sink);
-      sink->priv->sync_latency = FALSE;
-      GST_OBJECT_UNLOCK (sink);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* make sure we unblock before calling the parent state change
        * so it can grab the STREAM_LOCK */
       gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
