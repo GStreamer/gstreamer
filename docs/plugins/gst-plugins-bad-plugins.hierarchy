@@ -28,6 +28,7 @@ GObject
         GstRtpBin
       GstBaseTransform
         GstVideoFilter
+          GstColorEffects
           GstGeometricTransform
             GstCircleGeometricTransform
               GstCircle
