@@ -28,38 +28,51 @@
 
 typedef struct App
 {
+  /* back-end objects */
   GESTimeline *timeline;
   GESTimelinePipeline *pipeline;
   GESTimelineLayer *layer;
-  GtkWidget *main_window;
+
+  /* application state */
+  int n_objects;
+
+  int n_selected;
+  GList *selected_objects;
+  GType selected_type;
+
+  gboolean can_add_transition;
+  GstState state;
+
   GtkListStore *model;
   GtkTreeSelection *selection;
+
+  /* widgets */
+  GtkWidget *main_window;
   GtkWidget *properties;
   GtkWidget *filesource_properties;
   GtkWidget *text_properties;
-  GList *selected_objects;
-  int n_selected;
-  int n_objects;
-  gboolean can_add_transition;
+  GtkWidget *generic_duration;
+  GtkWidget *background_properties;
+
   GtkHScale *duration;
   GtkHScale *in_point;
+  GtkHScale *volume;
+
   GtkAction *add_file;
   GtkAction *add_test;
   GtkAction *add_title;
   GtkAction *add_transition;
   GtkAction *delete;
   GtkAction *play;
+
   GtkComboBox *halign;
   GtkComboBox *valign;
+  GtkComboBox *background_type;
+
   GtkEntry *text;
   GtkEntry *seconds;
-  GtkWidget *generic_duration;
-  GstState state;
-  GType selected_type;
-  GtkWidget *background_properties;
-  GtkComboBox *background_type;
+
   GtkSpinButton *frequency;
-  GtkHScale *volume;
 } App;
 
 App *app_new (void);
