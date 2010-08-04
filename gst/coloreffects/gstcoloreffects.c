@@ -583,7 +583,7 @@ gst_color_effects_class_init (GstColorEffectsClass * klass)
   gobject_class->get_property = gst_color_effects_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PRESET,
-      g_param_spec_enum ("preset", "preset", "preset",
+      g_param_spec_enum ("preset", "Preset", "Color effect preset to use",
           GST_TYPE_COLOR_EFFECTS_PRESET, DEFAULT_PROP_PRESET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
