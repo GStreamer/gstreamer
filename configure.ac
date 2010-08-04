@@ -132,6 +132,7 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AC_PROG_CC_STDC
 AC_PROG_CXX
 
 dnl determine if c++ is available on this system
