@@ -859,5 +859,6 @@
     <property name="label">Stop</property>
     <property name="short_label">Stop</property>
     <property name="stock_id">gtk-media-stop</property>
+    <signal name="activate" handler="stop_activate_cb"/>
   </object>
 </interface>

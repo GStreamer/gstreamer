@@ -93,6 +93,7 @@ void window_destroy_cb (GtkObject * window, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
+void stop_activate_cb (GtkAction * item, App * app);
 void add_file_activate_cb (GtkAction * item, App * app);
 void add_text_activate_cb (GtkAction * item, App * app);
 void add_test_activate_cb (GtkAction * item, App * app);
@@ -719,12 +720,20 @@ static void selection_foreach (GtkTreeModel * model, GtkTreePath * path,
     GtkTreeIter * iter, gpointer user);
 
 static void
-app_toggle_playback (App * app)
+app_toggle_playpause (App * app)
 {
   if (app->state != GST_STATE_PLAYING) {
     gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PLAYING);
   } else {
     gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_PAUSED);
+  }
+}
+
+static void
+app_stop_playback (App * app)
+{
+  if ((app->state != GST_STATE_NULL) && (app->state != GST_STATE_READY)) {
+    gst_element_set_state (GST_ELEMENT (app->pipeline), GST_STATE_READY);
   }
 }
 
@@ -987,7 +996,13 @@ add_transition_activate_cb (GtkAction * item, App * app)
 void
 play_activate_cb (GtkAction * item, App * app)
 {
-  app_toggle_playback (app);
+  app_toggle_playpause (app);
+}
+
+void
+stop_activate_cb (GtkAction * item, App * app)
+{
+  app_stop_playback (app);
 }
 
 void
