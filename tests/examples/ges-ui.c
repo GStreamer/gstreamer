@@ -49,7 +49,6 @@ typedef struct App
   gboolean first_selected;
   gboolean last_selected;
 
-  gboolean can_add_transition;
   gboolean ignore_input;
   GstState state;
 
@@ -142,9 +141,7 @@ static void
 update_add_transition_sensitivity (App * app)
 {
   gtk_action_set_sensitive (app->add_transition,
-      (app->can_add_transition) &&
-      (app->state != GST_STATE_PLAYING) &&
-      (app->state != GST_STATE_PAUSED) && (app->n_objects));
+      (app->state != GST_STATE_PLAYING) && (app->state != GST_STATE_PAUSED));
 }
 
 static void
@@ -335,9 +332,6 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
   app->n_objects++;
   object_count_changed (app);
-
-  app->can_add_transition = !GES_IS_TIMELINE_TRANSITION (object);
-  update_add_transition_sensitivity (app);
 }
 
 static void
@@ -345,7 +339,6 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     App * app)
 {
   GtkTreeIter iter;
-  GList *tmp;
 
   GST_INFO ("layer object removed cb %p %p %p", layer, object, app);
 
@@ -357,11 +350,6 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   object_count_changed (app);
 
   gtk_list_store_remove (app->model, &iter);
-  tmp = g_list_last (GES_SIMPLE_TIMELINE_LAYER (app->layer)->objects);
-  if (tmp) {
-    app->can_add_transition = !GES_IS_TIMELINE_TRANSITION (tmp->data);
-  }
-  update_add_transition_sensitivity (app);
 }
 
 static void
