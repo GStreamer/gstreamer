@@ -38,6 +38,7 @@
 #include "ges-timeline-object.h"
 #include "ges-timeline-source.h"
 #include "ges-timeline-transition.h"
+#include "gesmarshal.h"
 
 static void
 ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
@@ -53,6 +54,14 @@ timeline_object_height_changed_cb (GESTimelineObject * object G_GNUC_UNUSED,
 
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
     GES_TYPE_TIMELINE_LAYER);
+
+enum
+{
+  OBJECT_MOVED,
+  LAST_SIGNAL,
+};
+
+static guint gstl_signals[LAST_SIGNAL] = { 0 };
 
 static void
 ges_simple_timeline_layer_get_property (GObject * object,
@@ -100,6 +109,14 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
   /* Be informed when objects are being added/removed from elsewhere */
   layer_class->object_removed = ges_simple_timeline_layer_object_removed;
   layer_class->object_added = ges_simple_timeline_layer_object_added;
+
+  gstl_signals[OBJECT_MOVED] =
+      g_signal_new ("object-moved", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESSimpleTimelineLayerClass,
+          object_moved),
+      NULL, NULL,
+      ges_marshal_VOID__OBJECT_INT_INT, G_TYPE_NONE, 3,
+      GES_TYPE_TIMELINE_OBJECT, G_TYPE_INT, G_TYPE_INT);
 }
 
 static void
@@ -317,12 +334,17 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
   /* pop it off the list */
   layer->objects = g_list_remove (layer->objects, object);
 
+  newposition = (newposition >= 0 && newposition < idx) ? newposition :
+      newposition - 1;
+
   /* re-add it at the proper position */
-  layer->objects = g_list_insert (layer->objects, object, (newposition >= 0
-          && newposition < idx) ? newposition : newposition - 1);
+  layer->objects = g_list_insert (layer->objects, object, newposition);
 
   /* recalculate positions */
   gstl_recalculate (layer);
+
+  g_signal_emit (layer, gstl_signals[OBJECT_MOVED], 0, object, idx,
+      newposition);
 
   return TRUE;
 }

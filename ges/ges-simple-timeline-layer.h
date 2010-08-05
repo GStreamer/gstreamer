@@ -67,6 +67,10 @@ struct _GESSimpleTimelineLayer {
 
 struct _GESSimpleTimelineLayerClass {
   GESTimelineLayerClass parent_class;
+  /*< signals >*/
+
+  void (*object_moved) (GESTimelineLayer * layer, GESTimelineObject * object,
+      gint old_position, gint new_position);
   /*< private >*/
 };
 
