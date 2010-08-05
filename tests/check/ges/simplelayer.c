@@ -91,12 +91,29 @@ GST_START_TEST (test_gsl_add)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gint new;
+  gint old;
+} siginfo;
+
+static void
+object_moved_cb (GESSimpleTimelineLayer * layer,
+    GESTimelineObject * object, gint old, gint new, gpointer user)
+{
+  siginfo *info;
+  info = (siginfo *) user;
+  info->new = new;
+  info->old = old;
+}
+
 GST_START_TEST (test_gsl_move_simple)
 {
   GESTimeline *timeline;
   GESTimelineLayer *layer;
   GESTrack *track;
   GESCustomTimelineSource *source1, *source2;
+  siginfo info = { 0, 0 };
 
   ges_init ();
 
@@ -106,6 +123,8 @@ GST_START_TEST (test_gsl_move_simple)
   fail_unless (ges_timeline_add_layer (timeline, layer));
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
   fail_unless (ges_timeline_add_track (timeline, track));
+  g_signal_connect (G_OBJECT (layer), "object-moved", G_CALLBACK
+      (object_moved_cb), &info);
 
   /* Create two 1s sources */
   source1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
@@ -135,12 +154,16 @@ GST_START_TEST (test_gsl_move_simple)
           (layer), GES_TIMELINE_OBJECT (source2), 0));
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
+  fail_unless_equals_int (info.new, 0);
+  fail_unless_equals_int (info.old, 1);
 
   /* Move source2 to end (newpos:-1) */
   fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source2), -1));
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), GST_SECOND);
+  fail_unless_equals_int (info.new, -1);
+  fail_unless_equals_int (info.old, 0);
 
   /* remove source1, source2 should be moved to the beginning */
   g_object_ref (source1);
