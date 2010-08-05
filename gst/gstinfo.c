@@ -914,14 +914,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   pid = getpid ();
   is_colored = gst_debug_is_colored ();
 
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
-      gst_util_get_timestamp ());
-
   if (object) {
     obj = gst_debug_print_object (object);
   } else {
     obj = g_strdup ("");
   }
+
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
+      gst_util_get_timestamp ());
 
   if (is_colored) {
 #ifndef G_OS_WIN32
