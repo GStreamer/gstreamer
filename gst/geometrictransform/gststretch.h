@@ -67,6 +67,8 @@ typedef struct _GstStretchClass GstStretchClass;
 struct _GstStretch
 {
   GstCircleGeometricTransform element;
+
+  gdouble intensity;
 };
 
 struct _GstStretchClass

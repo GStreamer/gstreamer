@@ -54,8 +54,62 @@
 GST_DEBUG_CATEGORY_STATIC (gst_stretch_debug);
 #define GST_CAT_DEFAULT gst_stretch_debug
 
+enum
+{
+  PROP_0,
+  PROP_INTENSITY
+};
+
+#define DEFAULT_INTENSITY 0.5
+#define MAX_SHRINK_AMOUNT 3.0
+
 GST_BOILERPLATE (GstStretch, gst_stretch, GstCircleGeometricTransform,
     GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+
+static void
+gst_stretch_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstStretch *stretch;
+  GstGeometricTransform *gt;
+  gdouble v;
+
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+  stretch = GST_STRETCH_CAST (object);
+
+  GST_OBJECT_LOCK (gt);
+  switch (prop_id) {
+    case PROP_INTENSITY:
+      v = g_value_get_double (value);
+      if (v != stretch->intensity) {
+        stretch->intensity = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (gt);
+}
+
+static void
+gst_stretch_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstStretch *stretch;
+
+  stretch = GST_STRETCH_CAST (object);
+
+  switch (prop_id) {
+    case PROP_INTENSITY:
+      g_value_set_double (value, stretch->intensity);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 /* Clean up */
 static void
@@ -90,6 +144,7 @@ stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
   gdouble width = gt->width;
   gdouble height = gt->height;
+  gdouble a, b;
 
   /* normalize in ((-1.0, -1.0), (1.0, 1.0) and traslate the center */
   norm_x = 2.0 * (x / width - cgt->x_center);
@@ -102,9 +157,17 @@ stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
    * really does is shrink the center and gradually return to normal
    * size while r increases. The shrink thing drags pixels giving
    * stretching the image around the center */
-  /* 2.0 is the shrink amount. Make it customizable? */
-  norm_x *= 2.0 - smoothstep (0.0, cgt->radius, r);
-  norm_y *= 2.0 - smoothstep (0.0, cgt->radius, r);
+
+  /* a is the current maximum shrink amount, it goes from 1.0 to
+   * MAX_SHRINK_AMOUNT * intensity */
+  /* smoothstep goes from 0.0 when r == 0 to b when r == radius */
+  /* total shrink factor is MAX_SHRINK_AMOUNT at center and gradually
+   * decreases while r goes to radius */
+  a = 1.0 + (MAX_SHRINK_AMOUNT - 1.0) * stretch->intensity;
+  b = a - 1.0;
+
+  norm_x *= a - b * smoothstep (0.0, cgt->radius, r);
+  norm_y *= a - b * smoothstep (0.0, cgt->radius, r);
 
   /* unnormalize */
   *in_x = (0.5 * norm_x + cgt->x_center) * width;
@@ -127,6 +190,16 @@ gst_stretch_class_init (GstStretchClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_stretch_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_stretch_get_property);
+
+
+  g_object_class_install_property (gobject_class, PROP_INTENSITY,
+      g_param_spec_double ("intensity", "intensity",
+          "Intensity of the stretch effect",
+          0.0, 1.0, DEFAULT_INTENSITY,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_stretch_finalize);
 
   gstgt_class->map_func = stretch_map;
@@ -137,6 +210,7 @@ gst_stretch_init (GstStretch * filter, GstStretchClass * gclass)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
+  filter->intensity = DEFAULT_INTENSITY;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
 }
 
