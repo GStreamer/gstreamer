@@ -1117,8 +1117,16 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   g_return_val_if_fail (GST_PAD_PEER (pad) == NULL, NULL);
 
   done = FALSE;
+
   /* try to get an existing unlinked pad */
-  pads = gst_element_iterate_pads (element);
+  if (GST_PAD_IS_SRC (pad)) {
+    pads = gst_element_iterate_sink_pads (element);
+  } else if (GST_PAD_IS_SINK (pad)) {
+    pads = gst_element_iterate_src_pads (element);
+  } else {
+    pads = gst_element_iterate_pads (element);
+  }
+
   while (!done) {
     gpointer padptr;
 
