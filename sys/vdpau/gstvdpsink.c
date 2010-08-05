@@ -582,8 +582,15 @@ gst_vdp_sink_post_error (VdpSink * vdp_sink, GError * error)
 static gboolean
 gst_vdp_sink_open_device (VdpSink * vdp_sink)
 {
+  gboolean res;
   GstVdpDevice *device;
   GError *err;
+
+  g_mutex_lock (vdp_sink->device_lock);
+  if (vdp_sink->device) {
+    res = TRUE;
+    goto done;
+  }
 
   err = NULL;
   vdp_sink->device = device = gst_vdp_get_device (vdp_sink->display_name, &err);
@@ -605,11 +612,16 @@ gst_vdp_sink_open_device (VdpSink * vdp_sink)
   vdp_sink->event_thread = g_thread_create (
       (GThreadFunc) gst_vdp_sink_event_thread, vdp_sink, TRUE, NULL);
 
-  return TRUE;
+  res = TRUE;
+
+done:
+  g_mutex_unlock (vdp_sink->device_lock);
+  return res;
 
 device_error:
   gst_vdp_sink_post_error (vdp_sink, err);
-  return FALSE;
+  res = FALSE;
+  goto done;
 }
 
 static gboolean
@@ -626,10 +638,7 @@ gst_vdp_sink_start (GstBaseSink * bsink)
   vdp_sink->fps_n = 0;
   vdp_sink->fps_d = 1;
 
-  GST_OBJECT_LOCK (vdp_sink);
-  if (!vdp_sink->device)
-    res = gst_vdp_sink_open_device (vdp_sink);
-  GST_OBJECT_UNLOCK (vdp_sink);
+  res = gst_vdp_sink_open_device (vdp_sink);
 
   return res;
 }
@@ -1113,7 +1122,7 @@ gst_vdp_sink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   }
 
   /* If the element has not initialized the X11 context try to do so */
-  if (!vdp_sink->device && !gst_vdp_sink_open_device (vdp_sink)) {
+  if (!gst_vdp_sink_open_device (vdp_sink)) {
     g_mutex_unlock (vdp_sink->flow_lock);
     /* we have thrown a GST_ELEMENT_ERROR now */
     return;
@@ -1320,6 +1329,10 @@ gst_vdp_sink_finalize (GObject * object)
     g_free (vdp_sink->par);
     vdp_sink->par = NULL;
   }
+  if (vdp_sink->device_lock) {
+    g_mutex_free (vdp_sink->device_lock);
+    vdp_sink->device_lock = NULL;
+  }
   if (vdp_sink->x_lock) {
     g_mutex_free (vdp_sink->x_lock);
     vdp_sink->x_lock = NULL;
@@ -1342,6 +1355,7 @@ gst_vdp_sink_init (VdpSink * vdp_sink)
   vdp_sink->display_name = NULL;
   vdp_sink->par = NULL;
 
+  vdp_sink->device_lock = g_mutex_new ();
   vdp_sink->x_lock = g_mutex_new ();
   vdp_sink->flow_lock = g_mutex_new ();
 
