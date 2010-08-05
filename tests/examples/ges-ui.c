@@ -172,6 +172,17 @@ update_play_sensitivity (App * app)
 /* Backend callbacks ********************************************************/
 
 static void
+test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
+    unused G_GNUC_UNUSED, App * app)
+{
+  gdouble volume;
+
+  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
+
+  gtk_range_set_value (GTK_RANGE (app->volume), volume);
+}
+
+static void
 layer_notify_valid_changed_cb (GObject * object, GParamSpec * unused
     G_GNUC_UNUSED, App * app)
 {
@@ -427,17 +438,6 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
 }
 
 /* Static UI Callbacks ******************************************************/
-
-static void
-test_source_notify_volume_changed_cb (GESTimelineObject * object, GParamSpec *
-    unused G_GNUC_UNUSED, App * app)
-{
-  gdouble volume;
-
-  g_object_get (G_OBJECT (object), "volume", &volume, NULL);
-
-  gtk_range_set_value (GTK_RANGE (app->volume), volume);
-}
 
 static gboolean
 check_time (const gchar * time)
