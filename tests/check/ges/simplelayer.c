@@ -162,7 +162,8 @@ GST_START_TEST (test_gsl_move_simple)
           (layer), GES_TIMELINE_OBJECT (source2), -1));
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), GST_SECOND);
-  fail_unless_equals_int (info.new, -1);
+  /* position will be decremented, this is expected */
+  fail_unless_equals_int (info.new, -2);
   fail_unless_equals_int (info.old, 0);
 
   /* remove source1, source2 should be moved to the beginning */
@@ -194,6 +195,12 @@ GST_START_TEST (test_gsl_move_simple)
 
 GST_END_TEST;
 
+static void
+valid_notify_cb (GObject * obj, GParamSpec * unused G_GNUC_UNUSED, gint * count)
+{
+  (*count)++;
+}
+
 GST_START_TEST (test_gsl_with_transitions)
 {
   GESTimeline *timeline;
@@ -202,12 +209,18 @@ GST_START_TEST (test_gsl_with_transitions)
   GESCustomTimelineSource *source1, *source2, *source3, *source4;
   GESTimelineTransition *tr1, *tr2, *tr3, *tr4, *tr5;
   GESSimpleTimelineLayer *gstl;
+  gboolean valid;
+  gint count = 0;
 
   ges_init ();
 
   /* Timeline and 1 Layer */
   timeline = ges_timeline_new ();
   layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+
+  g_signal_connect (G_OBJECT (layer), "notify::valid",
+      G_CALLBACK (valid_notify_cb), &count);
+
   fail_unless (ges_timeline_add_layer (timeline, layer));
   ges_timeline_layer_set_priority (layer, 0);
 
@@ -420,21 +433,35 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr5), 0));
 
-  /* check that removals which result in two or more adjacent transitions at
-   * least print a warning. */
+  /* at this point the layer should still be valid */
+  g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
+  fail_unless (valid);
+  fail_unless_equals_int (count, 1);
 
-  /* FIXME: this needs to be checked manually in the console output */
+  /* removals which result in two or more adjacent transitions will also
+   * print a warning on the console. This is expected */
 
   GST_DEBUG ("Removing sources");
 
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source1)));
-  fail_unless (ges_timeline_layer_remove_object (layer,
+
+  /* transition should now be invalid */
+
+  g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
+  fail_unless (!valid);
+  fail_unless_equals_int (count, 2)
+
+      fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source2)));
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source3)));
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source4)));
+
+  g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
+  fail_unless (!valid);
+  fail_unless_equals_int (count, 2);
 
   GST_DEBUG ("Removing transitions");
 

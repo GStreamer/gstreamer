@@ -61,13 +61,26 @@ enum
   LAST_SIGNAL,
 };
 
+enum
+{
+  PROP_0,
+  PROP_VALID,
+  LAST_PROP,
+};
+
 static guint gstl_signals[LAST_SIGNAL] = { 0 };
 
 static void
 ges_simple_timeline_layer_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec)
 {
+  GESSimpleTimelineLayer *self;
+  self = GES_SIMPLE_TIMELINE_LAYER (object);
+
   switch (property_id) {
+    case PROP_VALID:
+      g_value_set_boolean (value, self->valid);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -111,6 +124,17 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
   layer_class->object_added = ges_simple_timeline_layer_object_added;
 
   /**
+   * GESSimpleTimelineLayer:valid:
+   *
+   * FALSE when the arrangement of objects in the layer would cause errors or
+   * unexpected output during playback. Do not set the containing pipeline
+   * state to PLAYING when this property is FALSE.
+   */
+  g_object_class_install_property (object_class, PROP_VALID,
+      g_param_spec_boolean ("valid", "Valid",
+          "Layer is in a valid configuration", FALSE, G_PARAM_READABLE));
+
+  /**
    * GESSimpleTimelineLayer::object-moved
    * @layer: the #GESSimpleTimelineLayer
    * @object: the #GESTimelineObject that was added
@@ -145,6 +169,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   gint height;
   GESTimelineObject *prev_object = NULL;
   GESTimelineObject *prev_transition = NULL;
+  gboolean valid = TRUE;
 
   priority = GES_TIMELINE_LAYER (self)->min_gnl_priority + 2;
 
@@ -199,14 +224,17 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
       if (GES_IS_TIMELINE_TRANSITION (prev_object)) {
         GST_ERROR ("two transitions in sequence!");
+        valid = FALSE;
       }
 
       if (prev_object && (GES_TIMELINE_OBJECT_DURATION (prev_object) < dur)) {
         GST_ERROR ("transition duration exceeds that of previous neighbor!");
+        valid = FALSE;
       }
 
       if (l_next && (GES_TIMELINE_OBJECT_DURATION (l_next->data) < dur)) {
         GST_ERROR ("transition duration exceeds that of next neighbor!");
+        valid = FALSE;
       }
 
       if (prev_transition) {
@@ -216,8 +244,10 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
         start = pos;
 
-        if (end > start)
+        if (end > start) {
           GST_ERROR ("%d, %d: overlapping transitions!", start, end);
+          valid = FALSE;
+        }
       }
       prev_transition = obj;
     }
@@ -230,6 +260,11 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       GST_TIME_ARGS (pos));
 
   GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;
+
+  if (valid != self->valid) {
+    self->valid = valid;
+    g_object_notify (G_OBJECT (self), "valid");
+  }
 }
 
 /**

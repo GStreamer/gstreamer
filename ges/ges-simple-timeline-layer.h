@@ -57,6 +57,7 @@ struct _GESSimpleTimelineLayer {
   GList *objects;
 
   gboolean adding_object;
+  gboolean valid;
 };
 
 /**
