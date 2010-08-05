@@ -1992,6 +1992,8 @@ gst_base_transform_src_eventfunc (GstBaseTransform * trans, GstEvent * event)
 {
   gboolean ret;
 
+  GST_DEBUG_OBJECT (trans, "handling event %p %" GST_PTR_FORMAT, event, event);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       break;

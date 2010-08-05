@@ -3233,8 +3233,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-  GST_DEBUG_OBJECT (basesink, "event %p (%s)", event,
-      GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (basesink, "reveived event %p %" GST_PTR_FORMAT, event,
+      event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -4279,6 +4279,9 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
 
   /* only push UPSTREAM events upstream */
   forward = GST_EVENT_IS_UPSTREAM (event);
+
+  GST_DEBUG_OBJECT (basesink, "handling event %p %" GST_PTR_FORMAT, event,
+      event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_LATENCY:

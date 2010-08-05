@@ -1522,7 +1522,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 
   src = GST_BASE_SRC (element);
 
-  GST_DEBUG_OBJECT (src, "reveived %s event", GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (src, "handling event %p %" GST_PTR_FORMAT, event, event);
 
   switch (GST_EVENT_TYPE (event)) {
       /* bidirectional events */
@@ -1697,6 +1697,8 @@ static gboolean
 gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
 {
   gboolean result;
+
+  GST_DEBUG_OBJECT (src, "handle event %" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -2715,8 +2717,9 @@ gst_base_src_start (GstBaseSrc * basesrc)
   }
 
   GST_DEBUG_OBJECT (basesrc,
-      "format: %d, have size: %d, size: %" G_GUINT64_FORMAT ", duration: %"
-      G_GINT64_FORMAT, format, result, size, basesrc->segment.duration);
+      "format: %s, have size: %d, size: %" G_GUINT64_FORMAT ", duration: %"
+      G_GINT64_FORMAT, gst_format_get_name (format), result, size,
+      basesrc->segment.duration);
 
   seekable = gst_base_src_seekable (basesrc);
   GST_DEBUG_OBJECT (basesrc, "is seekable: %d", seekable);
