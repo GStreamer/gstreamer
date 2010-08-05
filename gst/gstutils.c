@@ -2745,9 +2745,11 @@ gst_pad_proxy_getcaps (GstPad * pad)
       case GST_ITERATOR_DONE:
         /* all pads iterated, return collected value */
         goto done;
+      case GST_ITERATOR_OK:
+        /* premature exit (happens if caps intersection is empty) */
+        goto done;
       default:
-        /* iterator returned _ERROR or premature end with _OK,
-         * mark an error and exit */
+        /* iterator returned _ERROR, mark an error and exit */
         if ((caps = g_value_get_pointer (&ret)))
           gst_caps_unref (caps);
         g_value_set_pointer (&ret, NULL);
