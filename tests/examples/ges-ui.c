@@ -158,7 +158,24 @@ update_move_up_down_sensitivity (App * app)
   gtk_action_set_sensitive (app->move_down, can_move && (!app->last_selected));
 }
 
+static void
+update_play_sensitivity (App * app)
+{
+  gboolean valid;
+
+  g_object_get (app->layer, "valid", &valid, NULL);
+
+  gtk_action_set_sensitive (app->play, (app->n_objects && valid));
+}
+
 /* Backend callbacks ********************************************************/
+
+static void
+layer_notify_valid_changed_cb (GObject * object, GParamSpec * unused
+    G_GNUC_UNUSED, App * app)
+{
+  update_play_sensitivity (app);
+}
 
 static gboolean
 find_row_for_object (GtkListStore * model, GtkTreeIter * ret,
@@ -252,7 +269,7 @@ object_count_changed (App * app)
 {
   app_update_first_last_selected (app);
   update_move_up_down_sensitivity (app);
-  gtk_action_set_sensitive (app->play, app->n_objects > 0);
+  update_play_sensitivity (app);
 }
 
 static void
@@ -770,6 +787,8 @@ create_ui (App * app)
       G_CALLBACK (layer_object_removed_cb), app);
   g_signal_connect (app->layer, "object-moved",
       G_CALLBACK (layer_object_moved_cb), app);
+  g_signal_connect (app->layer, "notify::valid",
+      G_CALLBACK (layer_notify_valid_changed_cb), app);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
   gst_bus_add_signal_watch (bus);
