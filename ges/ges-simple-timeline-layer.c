@@ -175,6 +175,10 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
   GST_DEBUG ("recalculating values");
 
+  if (self->objects && GES_IS_TIMELINE_TRANSITION (self->objects->data)) {
+    valid = FALSE;
+  }
+
   for (tmp = self->objects; tmp; tmp = tmp->next) {
     GESTimelineObject *obj;
     guint64 dur;
@@ -254,6 +258,10 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
     prev_object = obj;
 
+  }
+
+  if (prev_object && GES_IS_TIMELINE_TRANSITION (prev_object)) {
+    valid = FALSE;
   }
 
   GST_DEBUG ("Finished recalculating: final start pos is: " GST_TIME_FORMAT,

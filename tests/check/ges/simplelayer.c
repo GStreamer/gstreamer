@@ -427,16 +427,16 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr3), 5));
 
+  /* at this point the layer should still be valid */
+  g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
+  fail_unless (valid);
+  fail_unless_equals_int (count, 3);
+
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr4), -1));
 
   fail_unless (ges_simple_timeline_layer_add_object (gstl,
           GES_TIMELINE_OBJECT (tr5), 0));
-
-  /* at this point the layer should still be valid */
-  g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
-  fail_unless (valid);
-  fail_unless_equals_int (count, 1);
 
   /* removals which result in two or more adjacent transitions will also
    * print a warning on the console. This is expected */
@@ -446,11 +446,11 @@ GST_START_TEST (test_gsl_with_transitions)
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source1)));
 
-  /* transition should now be invalid */
+  /* layer should now be invalid */
 
   g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
   fail_unless (!valid);
-  fail_unless_equals_int (count, 2)
+  fail_unless_equals_int (count, 4)
 
       fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source2)));
@@ -461,7 +461,7 @@ GST_START_TEST (test_gsl_with_transitions)
 
   g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
   fail_unless (!valid);
-  fail_unless_equals_int (count, 2);
+  fail_unless_equals_int (count, 4);
 
   GST_DEBUG ("Removing transitions");
 
