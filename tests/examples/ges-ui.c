@@ -94,7 +94,7 @@ typedef struct App
  * These are declared non-static for signal auto-connection
  */
 
-void window_destroy_cb (GtkObject * window, App * app);
+gboolean window_delete_event_cb (GtkObject * window, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -1060,10 +1060,11 @@ fail:
 
 /* UI callbacks  ************************************************************/
 
-void
-window_destroy_cb (GtkObject * window, App * app)
+gboolean
+window_delete_event_cb (GtkObject * window, App * app)
 {
   gtk_main_quit ();
+  return TRUE;
 }
 
 void

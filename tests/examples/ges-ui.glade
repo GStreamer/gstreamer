@@ -41,7 +41,7 @@
     <property name="title" translatable="yes">GES Demo</property>
     <property name="default_width">540</property>
     <property name="default_height">450</property>
-    <signal name="destroy" handler="window_destroy_cb"/>
+    <signal name="delete_event" handler="window_delete_event_cb"/>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
