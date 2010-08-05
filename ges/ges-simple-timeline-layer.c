@@ -110,6 +110,16 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
   layer_class->object_removed = ges_simple_timeline_layer_object_removed;
   layer_class->object_added = ges_simple_timeline_layer_object_added;
 
+  /**
+   * GESSimpleTimelineLayer::object-moved
+   * @layer: the #GESSimpleTimelineLayer
+   * @object: the #GESTimelineObject that was added
+   * @old: the previous position of the object
+   * @new: the new position of the object
+   *
+   * Will be emitted when an object is moved with
+   * #ges_simple_timeline_layer_move_object.
+   */
   gstl_signals[OBJECT_MOVED] =
       g_signal_new ("object-moved", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESSimpleTimelineLayerClass,
