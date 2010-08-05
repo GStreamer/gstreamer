@@ -95,24 +95,16 @@ stretch_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   norm_x = 2.0 * (x / width - cgt->x_center);
   norm_y = 2.0 * (y / height - cgt->y_center);
 
-  r = sqrt (norm_x * norm_x + norm_y * norm_y);
-
-  /* TODO: make it customizable, 0.7 is the radius of the stretch
-   * ellipse, with current way of setting radius (absolute value) it
-   * would be sqrt(hw*hw + hh*hh)/radius*radius but currently I prefer
-   * leaving it hardcoded because I don't think absolute radius makes
-   * any sense: the user either knows the video size and can easily
-   * calculate the fractional radius and set that or doesn't know the
-   * size a priori and wants to obtain the same effect no matter of
-   * the video dimensions */
+  /* calculate radius, normalize to 1 for future convenience */
+  r = sqrt (0.5 * (norm_x * norm_x + norm_y * norm_y));
 
   /* actually "stretch" name is a bit misleading, what the transform
    * really does is shrink the center and gradually return to normal
    * size while r increases. The shrink thing drags pixels giving
    * stretching the image around the center */
   /* 2.0 is the shrink amount. Make it customizable? */
-  norm_x *= 2.0 - smoothstep (0.0, 0.7, r);
-  norm_y *= 2.0 - smoothstep (0.0, 0.7, r);
+  norm_x *= 2.0 - smoothstep (0.0, cgt->radius, r);
+  norm_y *= 2.0 - smoothstep (0.0, cgt->radius, r);
 
   /* unnormalize */
   *in_x = (0.5 * norm_x + cgt->x_center) * width;
