@@ -1,5 +1,5 @@
 built_header_make = gesmarshal.h
-build_source_make = gesmarshal.c
+built_source_make = gesmarshal.c
 
 lib_LTLIBRARIES = libges-@GST_MAJORMINOR@.la
 
