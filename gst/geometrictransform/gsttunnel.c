@@ -96,14 +96,13 @@ tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   norm_x = 2.0 * (x - cgt->x_center * width) / MAX (width, height);
   norm_y = 2.0 * (y - cgt->y_center * height) / MAX (width, height);
 
-  r = sqrt (norm_x * norm_x + norm_y * norm_y);
+  /* calculate radius, normalize to 1 for future convenience */
+  r = sqrt (0.5 * (norm_x * norm_x + norm_y * norm_y));
 
-  /* do nothing if r < 0.5 */
+  /* do nothing if r < radius */
   /* zoom otherwise */
-  /* the second edge is the tunnel radius, see gststretch.c for
-   * comments about its customizability */
-  norm_x *= CLAMP (r, 0.0, 0.5) / r;
-  norm_y *= CLAMP (r, 0.0, 0.5) / r;
+  norm_x *= CLAMP (r, 0.0, cgt->radius) / r;
+  norm_y *= CLAMP (r, 0.0, cgt->radius) / r;
 
   /* unnormalize */
   *in_x = 0.5 * (norm_x) * MAX (width, height) + cgt->x_center * width;
