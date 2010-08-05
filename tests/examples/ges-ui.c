@@ -447,7 +447,7 @@ check_time (const gchar * time)
 
   if (!compiled) {
     compiled = TRUE;
-    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](.[0-9]+)?$",
+    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?$",
         REG_EXTENDED | REG_NOSUB);
   }
 
