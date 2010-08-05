@@ -336,6 +336,30 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 }
 
 static void
+layer_object_moved_cb (GESTimelineObject * layer, GESTimelineObject * object,
+    gint old, gint new, App * app)
+{
+  GtkTreeIter a, b;
+  GtkTreePath *path;
+
+  /* we can take the old position as given, but the new position might have to
+   * be adjusted. */
+  new = new < 0 ? (app->n_objects - 1) : new;
+
+  path = gtk_tree_path_new_from_indices (old, -1);
+  gtk_tree_model_get_iter (GTK_TREE_MODEL (app->model), &a, path);
+  gtk_tree_path_free (path);
+
+  path = gtk_tree_path_new_from_indices (new, -1);
+  gtk_tree_model_get_iter (GTK_TREE_MODEL (app->model), &b, path);
+  gtk_tree_path_free (path);
+
+  gtk_list_store_swap (app->model, &a, &b);
+  app_selection_changed_cb (app->selection, app);
+  update_move_up_down_sensitivity (app);
+}
+
+static void
 pipeline_state_changed_cb (App * app)
 {
   gboolean playing_or_paused;
@@ -744,6 +768,8 @@ create_ui (App * app)
       G_CALLBACK (layer_object_added_cb), app);
   g_signal_connect (app->layer, "object-removed",
       G_CALLBACK (layer_object_removed_cb), app);
+  g_signal_connect (app->layer, "object-moved",
+      G_CALLBACK (layer_object_moved_cb), app);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
   gst_bus_add_signal_watch (bus);
