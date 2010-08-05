@@ -569,20 +569,11 @@ disconnect_from_filesource (GESTimelineObject * object, App * app)
 static void
 connect_to_title_source (GESTimelineObject * object, App * app)
 {
-  guint64 duration;
-  gchar buf[30];
-
   GESTimelineTitleSource *obj;
   obj = GES_TIMELINE_TITLE_SOURCE (object);
   gtk_combo_box_set_active (app->halign, obj->halign);
   gtk_combo_box_set_active (app->valign, obj->valign);
   gtk_entry_set_text (app->text, obj->text);
-
-  duration = GES_TIMELINE_OBJECT_DURATION (object);
-
-  g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
-      GST_TIME_ARGS (duration));
-  gtk_entry_set_text (app->seconds, buf);
 }
 
 static void
@@ -593,20 +584,12 @@ disconnect_from_title_source (GESTimelineObject * object, App * app)
 static void
 connect_to_test_source (GESTimelineObject * object, App * app)
 {
-  gchar buf[30];
-  guint64 duration;
   GObjectClass *klass;
   GParamSpecDouble *pspec;
 
   GESTimelineTestSource *obj;
   obj = GES_TIMELINE_TEST_SOURCE (object);
   gtk_combo_box_set_active (app->background_type, obj->vpattern);
-
-  duration = GES_TIMELINE_OBJECT_DURATION (object);
-
-  g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
-      GST_TIME_ARGS (duration));
-  gtk_entry_set_text (app->seconds, buf);
 
   g_signal_connect (G_OBJECT (object), "notify::volume",
       G_CALLBACK (test_source_notify_volume_changed_cb), app);
@@ -633,7 +616,15 @@ disconnect_from_test_source (GESTimelineObject * object, App * app)
 static void
 connect_to_object (GESTimelineObject * object, App * app)
 {
+  gchar buf[30];
+  guint64 duration;
+
   app->ignore_input = TRUE;
+
+  duration = GES_TIMELINE_OBJECT_DURATION (object);
+  g_snprintf (buf, sizeof (buf), "%02u:%02u:%02u.%09u",
+      GST_TIME_ARGS (duration));
+  gtk_entry_set_text (app->seconds, buf);
 
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
     connect_to_filesource (object, app);
@@ -1169,8 +1160,8 @@ app_selection_changed_cb (GtkTreeSelection * selection, App * app)
       app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE);
 
   gtk_widget_set_visible (app->generic_duration,
-      app->selected_type == GES_TYPE_TIMELINE_TITLE_SOURCE ||
-      app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
+      app->selected_type != G_TYPE_NONE &&
+      app->selected_type != G_TYPE_INVALID);
 
   gtk_widget_set_visible (app->background_properties,
       app->selected_type == GES_TYPE_TIMELINE_TEST_SOURCE);
