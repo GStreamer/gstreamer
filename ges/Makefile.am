@@ -8,6 +8,7 @@ EXTRA_libges_@GST_MAJORMINOR@_la_SOURCES = gesmarshal.list
 CLEANFILES = $(BUILT_SOURCES) $(built_header_make) $(built_source_make)
 
 libges_@GST_MAJORMINOR@_la_SOURCES = 		\
+	$(built_source_make)			\
 	ges.c					\
 	ges-enums.c				\
 	ges-custom-timeline-source.c		\
@@ -40,6 +41,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 
 libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
 libges_@GST_MAJORMINOR@include_HEADERS = 	\
+	$(built_header_make)			\
 	ges-types.h				\
 	ges.h					\
 	ges-enums.h				\
