@@ -50,6 +50,7 @@ typedef struct App
   gboolean last_selected;
 
   gboolean can_add_transition;
+  gboolean ignore_input;
   GstState state;
 
   GtkListStore *model;
@@ -490,6 +491,9 @@ text_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused, App * app)
   GList *tmp;
   const gchar *text;
 
+  if (app->ignore_input)
+    return;
+
   text = gtk_entry_get_text (widget);
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
@@ -503,6 +507,9 @@ seconds_notify_text_changed_cb (GtkEntry * widget, GParamSpec * unused,
 {
   GList *tmp;
   const gchar *text;
+
+  if (app->ignore_input)
+    return;
 
   text = gtk_entry_get_text (app->seconds);
 
@@ -626,6 +633,8 @@ disconnect_from_test_source (GESTimelineObject * object, App * app)
 static void
 connect_to_object (GESTimelineObject * object, App * app)
 {
+  app->ignore_input = TRUE;
+
   if (GES_IS_TIMELINE_FILE_SOURCE (object)) {
     connect_to_filesource (object, app);
   } else if (GES_IS_TIMELINE_TITLE_SOURCE (object)) {
@@ -633,6 +642,8 @@ connect_to_object (GESTimelineObject * object, App * app)
   } else if (GES_IS_TIMELINE_TEST_SOURCE (object)) {
     connect_to_test_source (object, app);
   }
+
+  app->ignore_input = FALSE;
 }
 
 static void
@@ -1201,6 +1212,9 @@ halign_changed_cb (GtkComboBox * widget, App * app)
   GList *tmp;
   int active;
 
+  if (app->ignore_input)
+    return;
+
   active = gtk_combo_box_get_active (app->halign);
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
@@ -1214,6 +1228,9 @@ valign_changed_cb (GtkComboBox * widget, App * app)
   GList *tmp;
   int active;
 
+  if (app->ignore_input)
+    return;
+
   active = gtk_combo_box_get_active (app->valign);
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
@@ -1226,6 +1243,10 @@ background_type_changed_cb (GtkComboBox * widget, App * app)
 {
   GList *tmp;
   gint p;
+
+  if (app->ignore_input)
+    return;
+
   p = gtk_combo_box_get_active (widget);
 
   for (tmp = app->selected_objects; tmp; tmp = tmp->next) {
@@ -1238,6 +1259,9 @@ frequency_value_changed_cb (GtkSpinButton * widget, App * app)
 {
   GList *tmp;
   gdouble value;
+
+  if (app->ignore_input)
+    return;
 
   value = gtk_spin_button_get_value (widget);
 
