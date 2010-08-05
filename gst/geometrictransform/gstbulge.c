@@ -95,16 +95,15 @@ bulge_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   norm_x = 2.0 * (x / width - cgt->x_center);
   norm_y = 2.0 * (y / height - cgt->y_center);
 
-  r = sqrt (norm_x * norm_x + norm_y * norm_y);
+  /* calculate radius, normalize to 1 for future convenience */
+  r = sqrt (0.5 * (norm_x * norm_x + norm_y * norm_y));
 
   /* maps r to r^2 in the step region */
   /* interpolating from negative values limits the amount of zoom at
    * the center so the first edge could be used as intensity
    * parameter */
-  /* the second edge is the bulge radius, see gststretch.c for
-   * comments about its customizability */
-  norm_x *= smoothstep (-0.15, 0.6, r);
-  norm_y *= smoothstep (-0.15, 0.6, r);
+  norm_x *= smoothstep (-0.15, cgt->radius, r);
+  norm_y *= smoothstep (-0.15, cgt->radius, r);
 
   /* unnormalize */
   *in_x = (0.5 * norm_x + cgt->x_center) * width;
