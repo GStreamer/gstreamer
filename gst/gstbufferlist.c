@@ -200,8 +200,9 @@ gst_buffer_list_finalize (GstBufferList * list)
   }
   g_list_free (list->buffers);
 
+/* Not chaining up because GstMiniObject::finalize() does nothing
   GST_MINI_OBJECT_CLASS (gst_buffer_list_parent_class)->finalize
-      (GST_MINI_OBJECT_CAST (list));
+      (GST_MINI_OBJECT_CAST (list));*/
 }
 
 static GstBufferList *
