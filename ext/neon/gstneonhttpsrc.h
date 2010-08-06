@@ -77,6 +77,10 @@ struct _GstNeonhttpSrc {
 
   gint64 read_position;
   gboolean seekable;
+
+  /* seconds before timing out when connecting or reading to/from a socket */
+  guint connect_timeout;
+  guint read_timeout;
 };
 
 struct _GstNeonhttpSrcClass {
