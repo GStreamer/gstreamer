@@ -2143,12 +2143,16 @@ again:
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
-      && GST_BUFFER_TIMESTAMP (*buf) == -1)
+      && GST_BUFFER_TIMESTAMP (*buf) == -1) {
+    *buf = gst_buffer_make_metadata_writable (*buf);
     GST_BUFFER_TIMESTAMP (*buf) = 0;
+  }
 
   /* set pad caps on the buffer if the buffer had no caps */
-  if (GST_BUFFER_CAPS (*buf) == NULL)
+  if (GST_BUFFER_CAPS (*buf) == NULL) {
+    *buf = gst_buffer_make_metadata_writable (*buf);
     gst_buffer_set_caps (*buf, GST_PAD_CAPS (src->srcpad));
+  }
 
   /* now sync before pushing the buffer */
   status = gst_base_src_do_sync (src, *buf);
