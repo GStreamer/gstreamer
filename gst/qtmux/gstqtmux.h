@@ -177,6 +177,7 @@ struct _GstQTMux
   gchar *fast_start_file_path;
   gchar *moov_recov_file_path;
   guint32 fragment_duration;
+  gboolean streamable;
 
   /* for collect pads event handling function */
   GstPadEventFunction collect_event;

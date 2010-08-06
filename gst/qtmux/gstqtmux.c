@@ -110,7 +110,8 @@ enum
   PROP_FAST_START,
   PROP_FAST_START_TEMP_FILE,
   PROP_MOOV_RECOV_FILE,
-  PROP_FRAGMENT_DURATION
+  PROP_FRAGMENT_DURATION,
+  PROP_STREAMABLE
 };
 
 /* some spare for header size as well */
@@ -124,6 +125,7 @@ enum
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
 #define DEFAULT_MOOV_RECOV_FILE         NULL
 #define DEFAULT_FRAGMENT_DURATION       0
+#define DEFAULT_STREAMABLE              FALSE
 
 
 static void gst_qt_mux_finalize (GObject * object);
@@ -250,6 +252,12 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
       g_param_spec_uint ("fragment-duration", "Fragment duration",
           "Fragment durations in ms (produce a fragmented file if > 0)",
           0, G_MAXUINT32, DEFAULT_FRAGMENT_DURATION,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_STREAMABLE,
+      g_param_spec_boolean ("streamable", "Streamable",
+          "If set to true, the output should be as if it is to be streamed "
+          "and hence no indexes written or duration written.",
+          DEFAULT_STREAMABLE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
@@ -1548,7 +1556,8 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       if (ret != GST_FLOW_OK)
         return ret;
       /* prepare index */
-      qtmux->mfra = atom_mfra_new (qtmux->context);
+      if (!qtmux->streamable)
+        qtmux->mfra = atom_mfra_new (qtmux->context);
     } else {
       /* extended to ensure some spare space */
       ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
@@ -1617,7 +1626,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       ret = gst_qt_mux_send_buffer (qtmux, buf, NULL, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
+    } else {
+      /* must have been streamable; no need to write duration */
+      GST_DEBUG_OBJECT (qtmux, "streamable file; nothing to stop");
+      return GST_FLOW_OK;
     }
+
 
     timescale = qtmux->timescale;
     /* only mvex duration is updated,
@@ -3022,6 +3036,9 @@ gst_qt_mux_get_property (GObject * object,
     case PROP_FRAGMENT_DURATION:
       g_value_set_uint (value, qtmux->fragment_duration);
       break;
+    case PROP_STREAMABLE:
+      g_value_set_boolean (value, qtmux->streamable);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3076,6 +3093,9 @@ gst_qt_mux_set_property (GObject * object,
       break;
     case PROP_FRAGMENT_DURATION:
       qtmux->fragment_duration = g_value_get_uint (value);
+      break;
+    case PROP_STREAMABLE:
+      qtmux->streamable = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
