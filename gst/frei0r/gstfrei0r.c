@@ -631,7 +631,9 @@ plugin_init (GstPlugin * plugin)
 
   gst_plugin_add_dependency_simple (plugin,
       "HOME/.frei0r-1/lib",
-      "/usr/lib/frei0r-1:/usr/local/lib/frei0r-1",
+      "/usr/lib/frei0r-1:/usr/local/lib/frei0r-1:"
+      "/usr/lib32/frei0r-1:/usr/local/lib32/frei0r-1:"
+      "/usr/lib64/frei0r-1:/usr/local/lib64/frei0r-1",
       NULL, GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
   homedir = g_get_home_dir ();
@@ -641,6 +643,10 @@ plugin_init (GstPlugin * plugin)
 
   register_plugins (plugin, "/usr/local/lib/frei0r-1");
   register_plugins (plugin, "/usr/lib/frei0r-1");
+  register_plugins (plugin, "/usr/local/lib32/frei0r-1");
+  register_plugins (plugin, "/usr/lib32/frei0r-1");
+  register_plugins (plugin, "/usr/local/lib64/frei0r-1");
+  register_plugins (plugin, "/usr/lib64/frei0r-1");
 
   return TRUE;
 }
