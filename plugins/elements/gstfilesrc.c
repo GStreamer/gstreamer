@@ -488,6 +488,8 @@ struct _GstMmapBufferClass
 
 static void gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer);
 
+GType gst_mmap_buffer_get_type (void);
+
 G_DEFINE_TYPE (GstMmapBuffer, gst_mmap_buffer, GST_TYPE_BUFFER);
 
 static void

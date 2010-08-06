@@ -146,6 +146,8 @@ static GstIndexEntry *gst_file_index_get_assoc_entry (GstIndex * index, gint id,
 
 #define CLASS(file_index)  GST_FILE_INDEX_CLASS (G_OBJECT_GET_CLASS (file_index))
 
+GType gst_file_index_get_type (void);
+
 G_DEFINE_TYPE (GstFileIndex, gst_file_index, GST_TYPE_INDEX);
 
 static void
