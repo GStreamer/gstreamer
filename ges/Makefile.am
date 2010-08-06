@@ -29,6 +29,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-source.c			\
 	ges-track-operation.c			\
 	ges-track-filesource.c			\
+	ges-track-image-source.c		\
 	ges-track-transition.c			\
 	ges-track-audio-transition.c		\
 	ges-track-video-transition.c		\
@@ -64,6 +65,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-track-source.h			\
 	ges-track-operation.h			\
 	ges-track-filesource.h			\
+	ges-track-image-source.h		\
 	ges-track-transition.h			\
 	ges-track-audio-transition.h		\
 	ges-track-video-transition.h		\

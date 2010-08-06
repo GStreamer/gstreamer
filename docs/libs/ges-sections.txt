@@ -132,6 +132,22 @@ ges_track_filesource_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ges-track-image-source</FILE>
+<TITLE>GESTrackImageSource</TITLE>
+GESTrackImageSource
+GESTrackImageSourceClass
+<SUBSECTION Standard>
+GES_IS_TRACK_IMAGE_SOURCE
+GES_IS_TRACK_IMAGE_SOURCE_CLASS
+GES_TRACK_IMAGE_SOURCE
+GES_TRACK_IMAGE_SOURCE_CLASS
+GES_TRACK_IMAGE_SOURCE_GET_CLASS
+GES_TYPE_TRACK_IMAGE_SOURCE
+ges_track_image_source_get_type
+ges_track_image_source_new
+</SECTION>
+
+<SECTION>
 <FILE>ges-track-transition</FILE>
 <TITLE>GESTrackTransition</TITLE>
 GESTrackTransition
