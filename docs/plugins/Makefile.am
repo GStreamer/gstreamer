@@ -54,7 +54,7 @@ MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,m
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
-	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html
+	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html \
 	--extra-dir=$(GSTPB_PREFIX)/share/gtk-doc/html
 
 # Used for dependencies.
