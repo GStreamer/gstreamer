@@ -864,8 +864,8 @@ format_cmp_func (gconstpointer a, gconstpointer b)
   if (fa->pixelformat == fb->pixelformat)
     return 0;
 
-  return gst_v4l2_object_format_get_rank (fa) -
-      gst_v4l2_object_format_get_rank (fb);
+  return gst_v4l2_object_format_get_rank (fb) -
+      gst_v4l2_object_format_get_rank (fa);
 }
 
 /******************************************************
