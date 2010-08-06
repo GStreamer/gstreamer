@@ -91,6 +91,25 @@ enum
   ARG_DVBSRC_STATS_REPORTING_INTERVAL
 };
 
+#define DEFAULT_ADAPTER 0
+#define DEFAULT_FRONTEND 0
+#define DEFAULT_DISEQC_SRC -1   /* disabled */
+#define DEFAULT_FREQUENCY 0
+#define DEFAULT_POLARITY "H"
+#define DEFAULT_PIDS "8192"
+#define DEFAULT_SYMBOL_RATE 0
+#define DEFAULT_BANDWIDTH BANDWIDTH_7_MHZ
+#define DEFAULT_CODE_RATE_HP FEC_AUTO
+#define DEFAULT_CODE_RATE_LP FEC_1_2
+#define DEFAULT_GUARD GUARD_INTERVAL_1_16
+#define DEFAULT_MODULATION QAM_16
+#define DEFAULT_TRANSMISSION_MODE TRANSMISSION_MODE_8K
+#define DEFAULT_HIERARCHY HIERARCHY_1
+#define DEFAULT_INVERSION INVERSION_ON
+#define DEFAULT_STATS_REPORTING_INTERVAL 100
+
+#define DEFAULT_BUFFER_SIZE 8192        /* not a property */
+
 static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
 
 #define GST_TYPE_DVBSRC_CODE_RATE (gst_dvbsrc_code_rate_get_type ())
@@ -330,33 +349,30 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_dvbsrc_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_dvbsrc_get_size);
 
-  gstpushsrc_class->create = gst_dvbsrc_create;
+  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dvbsrc_create);
+
   g_object_class_install_property (gobject_class, ARG_DVBSRC_ADAPTER,
-      g_param_spec_int ("adapter",
-          "The adapter device number",
-          "The adapter device number (eg. 0 for adapter0)", 0, 16, 0,
-          G_PARAM_READWRITE));
+      g_param_spec_int ("adapter", "The adapter device number",
+          "The adapter device number (eg. 0 for adapter0)",
+          0, 16, DEFAULT_ADAPTER, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FRONTEND,
-      g_param_spec_int ("frontend",
-          "The frontend device number",
-          "The frontend device number (eg. 0 for frontend0)", 0, 16, 0,
-          G_PARAM_READWRITE));
+      g_param_spec_int ("frontend", "The frontend device number",
+          "The frontend device number (eg. 0 for frontend0)",
+          0, 16, DEFAULT_FRONTEND, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FREQUENCY,
-      g_param_spec_uint ("frequency",
-          "frequency", "Frequency", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
+      g_param_spec_uint ("frequency", "frequency", "Frequency",
+          0, G_MAXUINT, DEFAULT_FREQUENCY, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_POLARITY,
-      g_param_spec_string ("polarity",
-          "polarity", "Polarity [vhHV] (DVB-S)", "h", G_PARAM_READWRITE));
-
+      g_param_spec_string ("polarity", "polarity", "Polarity [vhHV] (DVB-S)",
+          DEFAULT_POLARITY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_PIDS,
-      g_param_spec_string ("pids",
-          "pids",
+      g_param_spec_string ("pids", "pids",
           "Colon seperated list of pids (eg. 110:120)",
-          "8192", G_PARAM_WRITABLE));
+          DEFAULT_PIDS, G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_SYM_RATE,
       g_param_spec_uint ("symbol-rate",
@@ -379,57 +395,56 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
       g_param_spec_enum ("bandwidth",
           "bandwidth",
-          "Bandwidth (DVB-T)", GST_TYPE_DVBSRC_BANDWIDTH, 1,
+          "Bandwidth (DVB-T)", GST_TYPE_DVBSRC_BANDWIDTH, DEFAULT_BANDWIDTH,
           G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
           "High Priority Code Rate (DVB-T, DVB-S and DVB-C)",
-          GST_TYPE_DVBSRC_CODE_RATE, FEC_AUTO, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_HP, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
       g_param_spec_enum ("code-rate-lp",
           "code-rate-lp",
           "Low Priority Code Rate (DVB-T)",
-          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_CODE_RATE, DEFAULT_CODE_RATE_LP, G_PARAM_READWRITE));
 
+  /* FIXME: should the property be called 'guard-interval' then? */
   g_object_class_install_property (gobject_class, ARG_DVBSRC_GUARD,
       g_param_spec_enum ("guard",
           "guard",
           "Guard Interval (DVB-T)",
-          GST_TYPE_DVBSRC_GUARD, 1, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_GUARD, DEFAULT_GUARD, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
-      g_param_spec_enum ("modulation",
-          "modulation",
+      g_param_spec_enum ("modulation", "modulation",
           "Modulation (DVB-T and DVB-C)",
-          GST_TYPE_DVBSRC_MODULATION, 1, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_MODULATION, DEFAULT_MODULATION, G_PARAM_READWRITE));
 
+  /* FIXME: property should be named 'transmission-mode' */
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_TRANSMISSION_MODE,
-      g_param_spec_enum ("trans-mode",
-          "trans-mode",
-          "Transmission Mode (DVB-T)",
-          GST_TYPE_DVBSRC_TRANSMISSION_MODE, 1, G_PARAM_READWRITE));
+      g_param_spec_enum ("trans-mode", "trans-mode",
+          "Transmission Mode (DVB-T)", GST_TYPE_DVBSRC_TRANSMISSION_MODE,
+          DEFAULT_TRANSMISSION_MODE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_HIERARCHY_INF,
-      g_param_spec_enum ("hierarchy",
-          "hierarchy",
+      g_param_spec_enum ("hierarchy", "hierarchy",
           "Hierarchy Information (DVB-T)",
-          GST_TYPE_DVBSRC_HIERARCHY, 1, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_HIERARCHY, DEFAULT_HIERARCHY, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class, ARG_DVBSRC_INVERSION,
-      g_param_spec_enum ("inversion",
-          "inversion",
+      g_param_spec_enum ("inversion", "inversion",
           "Inversion Information (DVB-T and DVB-C)",
-          GST_TYPE_DVBSRC_INVERSION, 1, G_PARAM_READWRITE));
+          GST_TYPE_DVBSRC_INVERSION, DEFAULT_INVERSION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_STATS_REPORTING_INTERVAL,
       g_param_spec_uint ("stats-reporting-interval",
           "stats-reporting-interval",
           "The number of reads before reporting frontend stats",
-          0, G_MAXUINT, 100, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_STATS_REPORTING_INTERVAL, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -457,12 +472,22 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
   /* Pid 8192 on DVB gets the whole transport stream */
   object->pids[0] = 8192;
 
-  object->adapter_number = 0;
-  object->frontend_number = 0;
-  object->sym_rate = DEFAULT_SYMBOL_RATE;
+  object->adapter_number = DEFAULT_ADAPTER;
+  object->frontend_number = DEFAULT_FRONTEND;
   object->diseqc_src = DEFAULT_DISEQC_SRC;
-  object->send_diseqc = FALSE;
-  object->code_rate_hp = FEC_AUTO;
+  object->send_diseqc = (DEFAULT_DISEQC_SRC != -1);
+  /* object->pol = DVB_POL_H; *//* set via G_PARAM_CONSTRUCT */
+  object->sym_rate = DEFAULT_SYMBOL_RATE;
+  object->bandwidth = DEFAULT_BANDWIDTH;
+  object->code_rate_hp = DEFAULT_CODE_RATE_HP;
+  object->code_rate_lp = DEFAULT_CODE_RATE_LP;
+  object->guard_interval = DEFAULT_GUARD;
+  object->modulation = DEFAULT_MODULATION;
+  object->transmission_mode = DEFAULT_TRANSMISSION_MODE;
+  object->hierarchy_information = DEFAULT_HIERARCHY;
+  object->inversion = DEFAULT_INVERSION;
+  object->stats_interval = DEFAULT_STATS_REPORTING_INTERVAL;
+
   object->tune_mutex = g_mutex_new ();
 }
 

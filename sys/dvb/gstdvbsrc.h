@@ -19,14 +19,8 @@ G_BEGIN_DECLS
 #define TS_SIZE 188
 #define IN_SIZE TS_SIZE*10
 
-#define DEFAULT_DEVICE "/dev/dvb/adapter0"
-#define DEFAULT_SYMBOL_RATE 0
-#define DEFAULT_BUFFER_SIZE  8192
-#define DEFAULT_DISEQC_SRC -1   /* disabled */
-
 #define MAX_FILTERS 32
 
-/* #define's don't like whitespacey bits */
 #define GST_TYPE_DVBSRC \
   (gst_dvbsrc_get_type())
 #define GST_DVBSRC(obj) \
