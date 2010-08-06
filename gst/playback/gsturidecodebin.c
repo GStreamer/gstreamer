@@ -34,7 +34,6 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/missing-plugins.h>
 
-#include "gstfactorylists.h"
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 #include "gstrawcaps.h"
@@ -71,7 +70,7 @@ struct _GstURIDecodeBin
 
   GMutex *factories_lock;
   guint32 factories_cookie;
-  GValueArray *factories;       /* factories we can use for selecting elements */
+  GList *factories;             /* factories we can use for selecting elements */
 
   gchar *uri;
   guint connection_speed;
@@ -267,8 +266,10 @@ gst_uri_decode_bin_update_factories_list (GstURIDecodeBin * dec)
       dec->factories_cookie !=
       gst_default_registry_get_feature_list_cookie ()) {
     if (dec->factories)
-      g_value_array_free (dec->factories);
-    dec->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+      gst_plugin_feature_list_free (dec->factories);
+    dec->factories =
+        gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
     dec->factories_cookie = gst_default_registry_get_feature_list_cookie ();
   }
 }
@@ -277,6 +278,7 @@ static GValueArray *
 gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
+  GList *list, *tmp;
   GValueArray *result;
   GstURIDecodeBin *dec = GST_URI_DECODE_BIN_CAST (element);
 
@@ -285,8 +287,22 @@ gst_uri_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   /* return all compatible factories for caps */
   g_mutex_lock (dec->factories_lock);
   gst_uri_decode_bin_update_factories_list (dec);
-  result = gst_factory_list_filter (dec->factories, caps);
+  list =
+      gst_element_factory_list_filter (dec->factories, caps, GST_PAD_SINK,
+      FALSE);
   g_mutex_unlock (dec->factories_lock);
+
+  result = g_value_array_new (g_list_length (list));
+  for (tmp = list; tmp; tmp = tmp->next) {
+    GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+    GValue val = { 0, };
+
+    g_value_init (&val, G_TYPE_OBJECT);
+    g_value_set_object (&val, factory);
+    g_value_array_append (result, &val);
+    g_value_unset (&val);
+  }
+  gst_plugin_feature_list_free (list);
 
   GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
 
@@ -557,7 +573,7 @@ gst_uri_decode_bin_finalize (GObject * obj)
   g_free (dec->uri);
   g_free (dec->encoding);
   if (dec->factories)
-    g_value_array_free (dec->factories);
+    gst_plugin_feature_list_free (dec->factories);
   if (dec->caps)
     gst_caps_unref (dec->caps);
 

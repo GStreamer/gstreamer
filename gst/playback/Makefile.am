@@ -17,7 +17,6 @@ libgstplaybin_la_SOURCES = \
 	gstplaysink.c \
 	gstplaybasebin.c \
 	gstplay-enum.c \
-	gstfactorylists.c \
 	gstinputselector.c \
 	gstscreenshot.c \
 	gststreaminfo.c \
@@ -44,7 +43,7 @@ libgstdecodebin_la_LIBADD = \
 	$(GST_LIBS)
 libgstdecodebin_la_LIBTOOLFLAGS = --tag=disable-static
 
-libgstdecodebin2_la_SOURCES = gstdecodebin2.c gsturidecodebin.c gstfactorylists.c gstplay-enum.c
+libgstdecodebin2_la_SOURCES = gstdecodebin2.c gsturidecodebin.c gstplay-enum.c
 nodist_libgstdecodebin2_la_SOURCES = $(built_sources)
 libgstdecodebin2_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstdecodebin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -58,7 +57,6 @@ noinst_HEADERS = \
 	gstplaybasebin.h \
 	gstplaysink.h \
 	gststreaminfo.h \
-	gstfactorylists.h \
 	gstinputselector.h \
 	gstplay-enum.h \
 	gstscreenshot.h \

@@ -231,7 +231,6 @@
 #include "gstplay-marshal.h"
 #include "gstplayback.h"
 #include "gstplaysink.h"
-#include "gstfactorylists.h"
 #include "gstscreenshot.h"
 #include "gstinputselector.h"
 #include "gstsubtitleoverlay.h"
@@ -386,7 +385,7 @@ struct _GstPlayBin
 
   GMutex *elements_lock;
   guint32 elements_cookie;
-  GValueArray *elements;        /* factories we can use for selecting elements */
+  GList *elements;              /* factories we can use for selecting elements */
 
   gboolean have_selector;       /* set to FALSE when we fail to create an
                                  * input-selector, so that we only post a
@@ -1135,14 +1134,22 @@ notify_mute_cb (GObject * selector, GParamSpec * pspec, GstPlayBin * playbin)
 static void
 gst_play_bin_update_elements_list (GstPlayBin * playbin)
 {
+  GList *res, *tmp;
+
   if (!playbin->elements ||
       playbin->elements_cookie !=
       gst_default_registry_get_feature_list_cookie ()) {
     if (playbin->elements)
-      g_value_array_free (playbin->elements);
+      gst_plugin_feature_list_free (playbin->elements);
+    res =
+        gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
+    tmp =
+        gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_AUDIOVIDEO_SINKS, GST_RANK_MARGINAL);
+    playbin->elements = g_list_concat (res, tmp);
     playbin->elements =
-        gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER |
-        GST_FACTORY_LIST_SINK);
+        g_list_sort (playbin->elements, gst_plugin_feature_rank_compare_func);
     playbin->elements_cookie = gst_default_registry_get_feature_list_cookie ();
   }
 }
@@ -1204,7 +1211,7 @@ gst_play_bin_finalize (GObject * object)
     gst_object_unref (playbin->text_sink);
 
   if (playbin->elements)
-    g_value_array_free (playbin->elements);
+    gst_plugin_feature_list_free (playbin->elements);
   g_mutex_free (playbin->lock);
   g_mutex_free (playbin->dyn_lock);
   g_mutex_free (playbin->elements_lock);
@@ -2812,6 +2819,7 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstSourceGroup * group)
 {
   GstPlayBin *playbin;
+  GList *mylist, *tmp;
   GValueArray *result;
 
   playbin = group->playbin;
@@ -2822,11 +2830,26 @@ autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
   /* filter out the elements based on the caps. */
   g_mutex_lock (playbin->elements_lock);
   gst_play_bin_update_elements_list (playbin);
-  result = gst_factory_list_filter (playbin->elements, caps);
+  mylist =
+      gst_element_factory_list_filter (playbin->elements, caps, GST_PAD_SINK,
+      FALSE);
   g_mutex_unlock (playbin->elements_lock);
 
-  GST_DEBUG_OBJECT (playbin, "found factories %p", result);
-  GST_FACTORY_LIST_DEBUG (result);
+  GST_DEBUG_OBJECT (playbin, "found factories %p", mylist);
+  GST_PLUGIN_FEATURE_LIST_DEBUG (mylist);
+
+  result = g_value_array_new (g_list_length (mylist));
+
+  for (tmp = mylist; tmp; tmp = tmp->next) {
+    GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+    GValue val = { 0, };
+
+    g_value_init (&val, G_TYPE_OBJECT);
+    g_value_set_object (&val, factory);
+    g_value_array_append (result, &val);
+    g_value_unset (&val);
+  }
+  gst_plugin_feature_list_free (mylist);
 
   return result;
 }
@@ -2847,8 +2870,8 @@ autoplug_continue_cb (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPad *text_sinkpad = NULL;
 
   text_sink =
-      (group->playbin->text_sink) ? gst_object_ref (group->
-      playbin->text_sink) : NULL;
+      (group->playbin->text_sink) ? gst_object_ref (group->playbin->
+      text_sink) : NULL;
   if (text_sink)
     text_sinkpad = gst_element_get_static_pad (text_sink, "sink");
 
@@ -2904,7 +2927,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
       GST_PLUGIN_FEATURE_NAME (factory));
 
   /* if it's not a sink, we just make decodebin try it */
-  if (!gst_factory_list_is_type (factory, GST_FACTORY_LIST_SINK))
+  if (!gst_element_factory_list_is_type (factory,
+          GST_ELEMENT_FACTORY_TYPE_SINK))
     return GST_AUTOPLUG_SELECT_TRY;
 
   /* it's a sink, see if an instance of it actually works */

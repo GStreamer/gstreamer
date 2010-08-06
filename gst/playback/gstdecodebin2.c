@@ -90,7 +90,6 @@
 #include "gstplay-marshal.h"
 #include "gstplay-enum.h"
 #include "gstplayback.h"
-#include "gstfactorylists.h"
 #include "gstrawcaps.h"
 
 /* generic templates */
@@ -153,7 +152,7 @@ struct _GstDecodeBin
 
   GMutex *factories_lock;
   guint32 factories_cookie;     /* Cookie from last time when factories was updated */
-  GValueArray *factories;       /* factories we can use for selecting elements */
+  GList *factories;             /* factories we can use for selecting elements */
 
   GMutex *subtitle_lock;        /* Protects changes to subtitles and encoding */
   GList *subtitles;             /* List of elements with subtitle-encoding,
@@ -902,8 +901,10 @@ gst_decode_bin_update_factories_list (GstDecodeBin * dbin)
       || dbin->factories_cookie !=
       gst_default_registry_get_feature_list_cookie ()) {
     if (dbin->factories)
-      g_value_array_free (dbin->factories);
-    dbin->factories = gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
+      gst_plugin_feature_list_free (dbin->factories);
+    dbin->factories =
+        gst_element_factory_list_get_elements
+        (GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
     dbin->factories_cookie = gst_default_registry_get_feature_list_cookie ();
   }
 }
@@ -976,7 +977,7 @@ gst_decode_bin_dispose (GObject * object)
   decode_bin = GST_DECODE_BIN (object);
 
   if (decode_bin->factories)
-    g_value_array_free (decode_bin->factories);
+    gst_plugin_feature_list_free (decode_bin->factories);
   decode_bin->factories = NULL;
 
   if (decode_bin->decode_chain)
@@ -1232,6 +1233,7 @@ static GValueArray *
 gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
+  GList *list, *tmp;
   GValueArray *result;
   GstDecodeBin *dbin = GST_DECODE_BIN_CAST (element);
 
@@ -1240,8 +1242,22 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   /* return all compatible factories for caps */
   g_mutex_lock (dbin->factories_lock);
   gst_decode_bin_update_factories_list (dbin);
-  result = gst_factory_list_filter (dbin->factories, caps);
+  list =
+      gst_element_factory_list_filter (dbin->factories, caps, GST_PAD_SINK,
+      FALSE);
   g_mutex_unlock (dbin->factories_lock);
+
+  result = g_value_array_new (g_list_length (list));
+  for (tmp = list; tmp; tmp = tmp->next) {
+    GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (tmp->data);
+    GValue val = { 0, };
+
+    g_value_init (&val, G_TYPE_OBJECT);
+    g_value_set_object (&val, factory);
+    g_value_array_append (result, &val);
+    g_value_unset (&val);
+  }
+  gst_plugin_feature_list_free (list);
 
   GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
 
