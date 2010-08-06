@@ -912,7 +912,20 @@ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object)
         (GCompareFunc) format_cmp_func);
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "got %d format(s)", n);
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    GSList *l;
+
+    GST_INFO_OBJECT (v4l2object->element, "got %d format(s):", n);
+    for (l = v4l2object->formats; l != NULL; l = l->next) {
+      format = l->data;
+
+      GST_INFO_OBJECT (v4l2object->element,
+          "  %" GST_FOURCC_FORMAT "%s", GST_FOURCC_ARGS (format->pixelformat),
+          ((format->flags & V4L2_FMT_FLAG_EMULATED)) ? " (emulated)" : "");
+    }
+  }
+#endif
 
   return TRUE;
 
