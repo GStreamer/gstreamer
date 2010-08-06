@@ -52,6 +52,7 @@ struct _GstNeonhttpSrc {
   gchar *query_string;
   ne_uri proxy;
   gchar *user_agent;
+  gchar **cookies;
 
   guint64 content_size;
 

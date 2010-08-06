@@ -66,6 +66,7 @@ enum
   PROP_LOCATION,
   PROP_PROXY,
   PROP_USER_AGENT,
+  PROP_COOKIES,
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
@@ -173,6 +174,17 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Value of the User-Agent HTTP request header field",
           "GStreamer neonhttpsrc", G_PARAM_READWRITE));
 
+  /**
+   * GstNeonhttpSrc:cookies
+   *
+   * HTTP request cookies
+   *
+   * Since: 0.10.20
+   */
+  g_object_class_install_property (gobject_class, PROP_COOKIES,
+      g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
+          G_TYPE_STRV, G_PARAM_READWRITE));
+
   g_object_class_install_property
       (gobject_class, PROP_IRADIO_MODE,
       g_param_spec_boolean ("iradio-mode", "iradio-mode",
@@ -242,6 +254,7 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
   src->automatic_redirect = DEFAULT_AUTOMATIC_REDIRECT;
   src->accept_self_signed = DEFAULT_ACCEPT_SELF_SIGNED;
 
+  src->cookies = NULL;
   src->session = NULL;
   src->request = NULL;
   memset (&src->uri, 0, sizeof (src->uri));
@@ -273,6 +286,11 @@ gst_neonhttp_src_dispose (GObject * gobject)
   g_free (src->iradio_name);
   g_free (src->iradio_genre);
   g_free (src->iradio_url);
+
+  if (src->cookies) {
+    g_strfreev (src->cookies);
+    src->cookies = NULL;
+  }
 
   if (src->icy_caps) {
     gst_caps_unref (src->icy_caps);
@@ -344,6 +362,11 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         g_free (src->user_agent);
       src->user_agent = g_strdup (g_value_get_string (value));
       break;
+    case PROP_COOKIES:
+      if (src->cookies)
+        g_strfreev (src->cookies);
+      src->cookies = (gchar **) g_value_dup_boxed (value);
+      break;
     case PROP_IRADIO_MODE:
       src->iradio_mode = g_value_get_boolean (value);
       break;
@@ -405,6 +428,9 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
     }
     case PROP_USER_AGENT:
       g_value_set_string (value, neonhttpsrc->user_agent);
+      break;
+    case PROP_COOKIES:
+      g_value_set_boxed (value, neonhttpsrc->cookies);
       break;
     case PROP_IRADIO_MODE:
       g_value_set_boolean (value, neonhttpsrc->iradio_mode);
@@ -823,6 +849,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
 {
   ne_session *session = NULL;
   ne_request *request = NULL;
+  gchar **c;
   gint res;
   gint http_status = 0;
   guint request_count = 0;
@@ -847,6 +874,11 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
 
     if (src->user_agent) {
       ne_add_request_header (request, "User-Agent", src->user_agent);
+    }
+
+    for (c = src->cookies; c != NULL && *c != NULL; ++c) {
+      GST_INFO ("Adding header Cookie : %s", *c);
+      ne_add_request_header (request, "Cookies", *c);
     }
 
     if (src->iradio_mode) {
