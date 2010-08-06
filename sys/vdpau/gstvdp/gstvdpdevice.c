@@ -136,19 +136,16 @@ create_display_error:
   return FALSE;
 
 create_device_error:
-  XCloseDisplay (device->display);
   g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
       "Could not create VDPAU device for display: %s", device->display_name);
   return FALSE;
 
 get_error_string_error:
-  XCloseDisplay (device->display);
   g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
       "Could not get vdp_get_error_string function pointer from VDPAU");
   return FALSE;
 
 function_error:
-  XCloseDisplay (device->display);
   g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
       "Could not get function pointer from VDPAU, error returned was: %s",
       device->vdp_get_error_string (status));
@@ -176,6 +173,7 @@ gst_vdp_device_init (GstVdpDevice * device)
   device->display_name = NULL;
   device->display = NULL;
   device->device = VDP_INVALID_HANDLE;
+  device->vdp_decoder_destroy = NULL;
 }
 
 static void
@@ -183,14 +181,16 @@ gst_vdp_device_finalize (GObject * object)
 {
   GstVdpDevice *device = (GstVdpDevice *) object;
 
-  if (device->device != VDP_INVALID_HANDLE) {
+  if (device->device != VDP_INVALID_HANDLE && device->vdp_decoder_destroy) {
     device->vdp_device_destroy (device->device);
     device->device = VDP_INVALID_HANDLE;
   }
+
   if (device->display) {
     XCloseDisplay (device->display);
     device->display = NULL;
   }
+
   g_free (device->display_name);
   device->display_name = NULL;
 
