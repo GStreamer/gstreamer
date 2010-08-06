@@ -530,7 +530,6 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
   /* first filter out the interesting element factories */
   dec->factories_lock = g_mutex_new ();
-  gst_uri_decode_bin_update_factories_list (dec);
 
   dec->lock = g_mutex_new ();
 
@@ -2199,11 +2198,6 @@ gst_uri_decode_bin_change_state (GstElement * element,
   decoder = GST_URI_DECODE_BIN (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      g_mutex_lock (decoder->factories_lock);
-      gst_uri_decode_bin_update_factories_list (decoder);
-      g_mutex_unlock (decoder->factories_lock);
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!setup_source (decoder))
         goto source_failed;

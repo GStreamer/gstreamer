@@ -913,7 +913,6 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
   /* first filter out the interesting element factories */
   decode_bin->factories_lock = g_mutex_new ();
-  gst_decode_bin_update_factories_list (decode_bin);
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -3496,9 +3495,6 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (dbin->typefind == NULL)
         goto missing_typefind;
-      g_mutex_lock (dbin->factories_lock);
-      gst_decode_bin_update_factories_list (dbin);
-      g_mutex_unlock (dbin->factories_lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Make sure we've cleared all existing chains */

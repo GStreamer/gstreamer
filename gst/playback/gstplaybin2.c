@@ -1164,8 +1164,6 @@ gst_play_bin_init (GstPlayBin * playbin)
 
   /* first filter out the interesting element factories */
   playbin->elements_lock = g_mutex_new ();
-  gst_play_bin_update_elements_list (playbin);
-  GST_FACTORY_LIST_DEBUG (playbin->elements);
 
   /* add sink */
   playbin->playsink = g_object_new (GST_TYPE_PLAY_SINK, NULL);
@@ -1205,7 +1203,8 @@ gst_play_bin_finalize (GObject * object)
   if (playbin->text_sink)
     gst_object_unref (playbin->text_sink);
 
-  g_value_array_free (playbin->elements);
+  if (playbin->elements)
+    g_value_array_free (playbin->elements);
   g_mutex_free (playbin->lock);
   g_mutex_free (playbin->dyn_lock);
   g_mutex_free (playbin->elements_lock);
@@ -3415,9 +3414,6 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      g_mutex_lock (playbin->elements_lock);
-      gst_play_bin_update_elements_list (playbin);
-      g_mutex_unlock (playbin->elements_lock);
       memset (&playbin->duration, 0, sizeof (playbin->duration));
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
