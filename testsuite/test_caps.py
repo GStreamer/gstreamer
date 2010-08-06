@@ -180,6 +180,17 @@ class CapsTest(TestCase):
             gst.Caps ("some/mime, _double = (double) 1.0; other/mime, _int = { 1, 2 }"),
             gst.Caps ("some/mime, _double = (double) 1.0"))
 
+    def testNoneValue(self):
+        caps = gst.Caps("foo")
         
+        def invalid_assignment():
+            caps[0]["bar"] = None
+        self.assertRaises(TypeError, invalid_assignment)
+
+        def invalid_set_value():
+            caps[0].set_value("bar", None)
+        self.assertRaises(TypeError, invalid_set_value)
+
+
 if __name__ == "__main__":
     unittest.main()

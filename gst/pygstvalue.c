@@ -154,6 +154,11 @@ pygst_value_init_for_pyobject (GValue * value, PyObject * obj)
 {
   GType t;
 
+  if (obj == Py_None) {
+    PyErr_SetString (PyExc_TypeError, "value can't be None");
+    return FALSE;
+  }
+
   if (!(t = pyg_type_from_object ((PyObject *) obj->ob_type))) {
     if (PyObject_IsInstance (obj, gstvalue_class)) {
       PyErr_Clear ();

@@ -110,8 +110,10 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
                     "invalid type name");
                 return NULL;
             }
+        } else if (py_value == Py_None) {
+            PyErr_SetString(PyExc_TypeError, "value can't be None");
+            return NULL;
         } else {
-            /* Let PyGTK guess a GType for the object. */
             type = pyg_type_from_object((PyObject *) py_value->ob_type);
         }
 
