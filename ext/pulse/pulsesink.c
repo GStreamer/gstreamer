@@ -1304,14 +1304,17 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
             pbuf->m_writable);
       }
 
-      GST_LOG_OBJECT (psink, "requesting %u bytes of shared memory",
-          pbuf->m_writable);
+      GST_LOG_OBJECT (psink, "requesting %" G_GSIZE_FORMAT " bytes of "
+          "shared memory", pbuf->m_writable);
+
       if (pa_stream_begin_write (pbuf->stream, &pbuf->m_data,
               &pbuf->m_writable) < 0) {
         GST_LOG_OBJECT (psink, "pa_stream_begin_write() failed");
         goto writable_size_failed;
       }
-      GST_LOG_OBJECT (psink, "got %u bytes of shared memory", pbuf->m_writable);
+
+      GST_LOG_OBJECT (psink, "got %" G_GSIZE_FORMAT " bytes of shared memory",
+          pbuf->m_writable);
 
       /* Just to make sure that we didn't get more than requested */
       if (pbuf->m_writable > buf->spec.segsize) {
