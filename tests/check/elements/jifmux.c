@@ -298,31 +298,25 @@ GST_START_TEST (test_jifmux_tags)
 
 GST_END_TEST;
 
+#define HAVE_ELEMENT(name) \
+  gst_default_registry_check_feature_version (name,\
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)
+
 static Suite *
-asfmux_suite (void)
+jifmux_suite (void)
 {
   Suite *s = suite_create ("jifmux");
   TCase *tc_chain = tcase_create ("general");
-  tcase_add_test (tc_chain, test_jifmux_tags);
+
+  if (HAVE_ELEMENT ("taginject") && HAVE_ELEMENT ("jpegenc")) {
+    tcase_add_test (tc_chain, test_jifmux_tags);
+  } else {
+    GST_WARNING ("jpegenc or taginject element not available, skipping tests");
+  }
 
   suite_add_tcase (s, tc_chain);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = asfmux_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (jifmux);
