@@ -50,8 +50,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.29.1
-GSTPB_REQ=0.10.29.1
+GST_REQ=0.10.30
+GSTPB_REQ=0.10.30
 
 dnl *** autotools stuff ****
 
