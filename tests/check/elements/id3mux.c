@@ -546,25 +546,16 @@ id3mux_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_id3mux_v2_3);
-  tcase_add_test (tc_chain, test_id3mux_v2_4);
+
+  if (gst_default_registry_check_feature_version ("id3demux",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+    tcase_add_test (tc_chain, test_id3mux_v2_3);
+    tcase_add_test (tc_chain, test_id3mux_v2_4);
+  } else {
+    GST_WARNING ("id3demux element not available, skipping tests");
+  }
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = id3mux_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (id3mux);
