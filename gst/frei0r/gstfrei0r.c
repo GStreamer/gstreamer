@@ -594,7 +594,7 @@ register_plugins (GstPlugin * plugin, GHashTable * plugin_names,
   GDir *dir;
   gchar *filename;
   const gchar *entry_name;
-  gboolean ret = FALSE, this_ret;
+  gboolean ret = FALSE;
 
   GST_DEBUG ("Scanning director '%s' for frei0r plugins", path);
 
@@ -603,8 +603,6 @@ register_plugins (GstPlugin * plugin, GHashTable * plugin_names,
     return FALSE;
 
   while ((entry_name = g_dir_read_name (dir))) {
-    this_ret = FALSE;
-
     if (g_hash_table_lookup_extended (plugin_names, entry_name, NULL, NULL))
       continue;
 
@@ -614,13 +612,16 @@ register_plugins (GstPlugin * plugin, GHashTable * plugin_names,
             || g_str_has_suffix (filename, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) && g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+      gboolean this_ret;
+
       this_ret = register_plugin (plugin, filename);
+      if (this_ret)
+        g_hash_table_insert (plugin_names, g_strdup (entry_name), NULL);
+
+      ret = ret && this_ret;
     } else if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
-      this_ret = register_plugins (plugin, plugin_names, filename);
+      ret = ret && register_plugins (plugin, plugin_names, filename);
     }
-    if (this_ret)
-      g_hash_table_insert (plugin_names, g_strdup (entry_name), NULL);
-    ret = ret && this_ret;
     g_free (filename);
   }
   g_dir_close (dir);
