@@ -1035,9 +1035,9 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
         encoder->option_string->str);
     if (gst_x264_enc_parse_options (encoder,
             encoder->option_string->str) == FALSE) {
-      GST_DEBUG_OBJECT (encoder,
-          "Failed to parse internal option string. This could be due to use of an "
-          "old libx264 version.", encoder->option_string->str);
+      GST_DEBUG_OBJECT (encoder, "Failed to parse internal option string. "
+          "This could be due to use of an old libx264 version. Option string "
+          "was: %s", encoder->option_string->str);
     }
   }
 
