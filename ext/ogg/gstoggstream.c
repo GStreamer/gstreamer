@@ -78,7 +78,7 @@ struct _GstOggMap
   GstOggMapGranuleposToKeyGranuleFunc granulepos_to_key_granule_func;
 };
 
-static const GstOggMap mappers[];
+extern const GstOggMap mappers[];
 
 GstClockTime
 gst_ogg_stream_get_packet_start_time (GstOggStream * pad, ogg_packet * packet)
@@ -1557,7 +1557,7 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
 
 /* *INDENT-OFF* */
 /* indent hates our freedoms */
-static const GstOggMap mappers[] = {
+const GstOggMap mappers[] = {
   {
     "\200theora", 7, 42,
     "video/x-theora",
