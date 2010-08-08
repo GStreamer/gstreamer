@@ -1,8 +1,8 @@
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst-libs/gst
-includedir=${pcfiledir}/../gst-libs
-pluginsdir=${pcfiledir}/..
+libdir=@abs_top_builddir@/gst-libs/gst
+includedir=@abs_top_builddir@/gst-libs
+pluginsdir=@abs_top_builddir@
 
 Name: GStreamer Good Plugins, Uninstalled
 Description: Streaming media framework, good plugins, uninstalled
