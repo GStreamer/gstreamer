@@ -588,12 +588,13 @@ invalid_frei0r_plugin:
 }
 
 static gboolean
-register_plugins (GstPlugin * plugin, const gchar * path)
+register_plugins (GstPlugin * plugin, GHashTable * plugin_names,
+    const gchar * path)
 {
   GDir *dir;
   gchar *filename;
   const gchar *entry_name;
-  gboolean ret = FALSE;
+  gboolean ret = FALSE, this_ret;
 
   GST_DEBUG ("Scanning director '%s' for frei0r plugins", path);
 
@@ -602,16 +603,24 @@ register_plugins (GstPlugin * plugin, const gchar * path)
     return FALSE;
 
   while ((entry_name = g_dir_read_name (dir))) {
+    this_ret = FALSE;
+
+    if (g_hash_table_lookup_extended (plugin_names, entry_name, NULL, NULL))
+      continue;
+
     filename = g_build_filename (path, entry_name, NULL);
     if ((g_str_has_suffix (filename, G_MODULE_SUFFIX)
 #ifdef GST_EXTRA_MODULE_SUFFIX
             || g_str_has_suffix (filename, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) && g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
-      ret |= register_plugin (plugin, filename);
+      this_ret = register_plugin (plugin, filename);
     } else if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
-      ret |= register_plugins (plugin, filename);
+      this_ret = register_plugins (plugin, plugin_names, filename);
     }
+    if (this_ret)
+      g_hash_table_insert (plugin_names, g_strdup (entry_name), NULL);
+    ret = ret && this_ret;
     g_free (filename);
   }
   g_dir_close (dir);
@@ -624,6 +633,7 @@ plugin_init (GstPlugin * plugin)
 {
   const gchar *homedir;
   gchar *path;
+  GHashTable *plugin_names;
 
   GST_DEBUG_CATEGORY_INIT (frei0r_debug, "frei0r", 0, "frei0r");
 
@@ -636,17 +646,23 @@ plugin_init (GstPlugin * plugin)
       "/usr/lib64/frei0r-1:/usr/local/lib64/frei0r-1",
       NULL, GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
 
+  plugin_names =
+      g_hash_table_new_full ((GHashFunc) g_str_hash, (GEqualFunc) g_str_equal,
+      (GDestroyNotify) g_free, NULL);
+
   homedir = g_get_home_dir ();
   path = g_build_filename (homedir, ".frei0r-1", NULL);
-  register_plugins (plugin, path);
+  register_plugins (plugin, plugin_names, path);
   g_free (path);
 
-  register_plugins (plugin, "/usr/local/lib/frei0r-1");
-  register_plugins (plugin, "/usr/lib/frei0r-1");
-  register_plugins (plugin, "/usr/local/lib32/frei0r-1");
-  register_plugins (plugin, "/usr/lib32/frei0r-1");
-  register_plugins (plugin, "/usr/local/lib64/frei0r-1");
-  register_plugins (plugin, "/usr/lib64/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/local/lib/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/lib/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/local/lib32/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/lib32/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/local/lib64/frei0r-1");
+  register_plugins (plugin, plugin_names, "/usr/lib64/frei0r-1");
+
+  g_hash_table_unref (plugin_names);
 
   return TRUE;
 }
