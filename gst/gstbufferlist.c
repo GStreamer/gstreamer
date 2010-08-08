@@ -171,7 +171,10 @@ G_DEFINE_TYPE (GstBufferList, gst_buffer_list, GST_TYPE_MINI_OBJECT);
 void
 _gst_buffer_list_initialize (void)
 {
-  g_type_class_ref (gst_buffer_list_get_type ());
+  GType type = gst_buffer_list_get_type ();
+
+  g_type_class_ref (type);
+  _gst_buffer_list_type = type;
 }
 
 static void
