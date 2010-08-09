@@ -67,6 +67,8 @@ typedef struct _GstBulgeClass GstBulgeClass;
 struct _GstBulge
 {
   GstCircleGeometricTransform element;
+
+  gdouble zoom;
 };
 
 struct _GstBulgeClass

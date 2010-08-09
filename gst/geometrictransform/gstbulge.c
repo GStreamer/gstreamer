@@ -54,8 +54,61 @@
 GST_DEBUG_CATEGORY_STATIC (gst_bulge_debug);
 #define GST_CAT_DEFAULT gst_bulge_debug
 
+enum
+{
+  PROP_0,
+  PROP_ZOOM
+};
+
+#define DEFAULT_ZOOM 3.0
+
 GST_BOILERPLATE (GstBulge, gst_bulge, GstCircleGeometricTransform,
     GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
+
+static void
+gst_bulge_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstBulge *bulge;
+  GstGeometricTransform *gt;
+  gdouble v;
+
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+  bulge = GST_BULGE_CAST (object);
+
+  GST_OBJECT_LOCK (gt);
+  switch (prop_id) {
+    case PROP_ZOOM:
+      v = g_value_get_double (value);
+      if (v != bulge->zoom) {
+        bulge->zoom = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (gt);
+}
+
+static void
+gst_bulge_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstBulge *bulge;
+
+  bulge = GST_BULGE_CAST (object);
+
+  switch (prop_id) {
+    case PROP_ZOOM:
+      g_value_set_double (value, bulge->zoom);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 /* Clean up */
 static void
@@ -87,6 +140,7 @@ bulge_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
   gdouble norm_x, norm_y;
   gdouble r;
+  gdouble scale;
 
   gdouble width = gt->width;
   gdouble height = gt->height;
@@ -98,12 +152,20 @@ bulge_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   /* calculate radius, normalize to 1 for future convenience */
   r = sqrt (0.5 * (norm_x * norm_x + norm_y * norm_y));
 
-  /* maps r to r^2 in the step region */
-  /* interpolating from negative values limits the amount of zoom at
-   * the center so the first edge could be used as intensity
-   * parameter */
-  norm_x *= smoothstep (-0.15, cgt->radius, r);
-  norm_y *= smoothstep (-0.15, cgt->radius, r);
+  /* zoom in the center region and smoothly get back to no zoom while
+   * r increases */
+
+  /* the scale factor goes from bulge->zoom when r == 0 to 1.0
+   * when r == cgt->radius using Hermite interpolation */
+  /* scale is inverted because we're doing an inverse transform so
+   * zoom is achieved dividing */
+
+  scale =
+      1.0 / (bulge->zoom + ((1.0 - bulge->zoom) * smoothstep (0, cgt->radius,
+              r)));
+
+  norm_x *= scale;
+  norm_y *= scale;
 
   /* unnormalize */
   *in_x = (0.5 * norm_x + cgt->x_center) * width;
@@ -126,6 +188,16 @@ gst_bulge_class_init (GstBulgeClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bulge_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bulge_get_property);
+
+
+  g_object_class_install_property (gobject_class, PROP_ZOOM,
+      g_param_spec_double ("zoom", "zoom",
+          "Zoom of the bulge effect",
+          1.0, 100.0, DEFAULT_ZOOM,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_bulge_finalize);
 
   gstgt_class->map_func = bulge_map;
@@ -136,6 +208,7 @@ gst_bulge_init (GstBulge * filter, GstBulgeClass * gclass)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
+  filter->zoom = DEFAULT_ZOOM;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
 }
 
