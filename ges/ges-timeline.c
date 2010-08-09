@@ -357,9 +357,12 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
       if (sinf->streamtype == GST_STREAM_AUDIO)
         tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
-      else if ((sinf->streamtype == GST_STREAM_VIDEO) ||
-          (sinf->streamtype == GST_STREAM_IMAGE))
+      else if (sinf->streamtype == GST_STREAM_VIDEO)
         tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
+      else if (sinf->streamtype == GST_STREAM_IMAGE) {
+        tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
+        g_object_set (G_OBJECT (tfs), "is-image", (gboolean) TRUE, NULL);
+      }
     }
 
     g_object_set (tfs, "max-duration", info->duration, NULL);
