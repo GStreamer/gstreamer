@@ -58,10 +58,12 @@ enum
   PROP_0,
   PROP_WIDTH,
   PROP_HEIGHT,
+  PROP_ZOOM
 };
 
 #define DEFAULT_WIDTH 0.5
 #define DEFAULT_HEIGHT 0.5
+#define DEFAULT_ZOOM 2.0
 
 GST_BOILERPLATE (GstSquare, gst_square, GstGeometricTransform,
     GST_TYPE_GEOMETRIC_TRANSFORM);
@@ -95,6 +97,13 @@ gst_square_set_property (GObject * object, guint prop_id,
         gst_geometric_transform_set_need_remap (gt);
       }
       break;
+    case PROP_ZOOM:
+      v = g_value_get_double (value);
+      if (v != square->zoom) {
+        square->zoom = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -118,6 +127,9 @@ gst_square_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HEIGHT:
       g_value_set_double (value, square->height);
+      break;
+    case PROP_ZOOM:
+      g_value_set_double (value, square->zoom);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -156,10 +168,12 @@ square_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   /* transform */
   /* zoom at the center, smoothstep around half quadrant and get back to normal */
   norm_x *=
-      0.5 * (1.0 + smoothstep (square->width - 0.125, square->width + 0.125,
+      (1.0 / square->zoom) * (1.0 + (square->zoom -
+          1.0) * smoothstep (square->width - 0.125, square->width + 0.125,
           ABS (norm_x)));
   norm_y *=
-      0.5 * (1.0 + smoothstep (square->height - 0.125, square->height + 0.125,
+      (1.0 / square->zoom) * (1.0 + (square->zoom -
+          1.0) * smoothstep (square->height - 0.125, square->height + 0.125,
           ABS (norm_y)));
 
   /* unnormalize */
@@ -195,6 +209,11 @@ gst_square_class_init (GstSquareClass * klass)
           "Height of the square, relative to the frame height",
           0.0, 1.0, DEFAULT_HEIGHT,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ZOOM,
+      g_param_spec_double ("zoom", "Zoom",
+          "Zoom amount in the center region",
+          1.0, 100.0, DEFAULT_ZOOM,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = square_map;
 }
@@ -206,6 +225,7 @@ gst_square_init (GstSquare * filter, GstSquareClass * gclass)
 
   filter->width = DEFAULT_WIDTH;
   filter->height = DEFAULT_HEIGHT;
+  filter->zoom = DEFAULT_ZOOM;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
 }
 

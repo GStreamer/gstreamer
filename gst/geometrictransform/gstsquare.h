@@ -70,6 +70,7 @@ struct _GstSquare
   GstGeometricTransform element;
 
   gdouble width, height;
+  gdouble zoom;
 };
 
 struct _GstSquareClass
