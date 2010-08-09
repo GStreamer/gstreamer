@@ -511,26 +511,46 @@ tagdata_copy (GstExifTagData * to, const GstExifTagData * from)
 }
 
 static void
-gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
+gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
+    guint32 offset, gint num_tags, GstByteWriter * inner_ifds_data)
 {
-  guint32 offset;
+  GstByteReader *reader;
+  gint i;
+  guint16 aux = -1;
 
   GST_LOG ("Rewriting tag entries offsets");
 
-  offset = gst_byte_writer_get_size (&writer->tagwriter);
-  while (gst_byte_writer_get_pos (&writer->tagwriter) <
-      gst_byte_writer_get_size (&writer->tagwriter)) {
+  reader = (GstByteReader *) writer;
+
+  if (num_tags == -1) {
+    if (byte_order == G_LITTLE_ENDIAN) {
+      gst_byte_reader_get_uint16_le (reader, &aux);
+    } else {
+      gst_byte_reader_get_uint16_be (reader, &aux);
+    }
+    if (aux == -1) {
+      GST_WARNING ("Failed to read number of tags, won't rewrite offsets");
+      return;
+    }
+    num_tags = (gint) aux;
+  }
+
+  g_return_if_fail (num_tags != -1);
+
+  GST_DEBUG ("number of tags %d", num_tags);
+
+  for (i = 0; i < num_tags; i++) {
     guint16 type = 0;
     guint32 cur_offset = 0;
-    GstByteReader *reader;
     gint byte_size = 0;
     guint32 count = 0;
     guint16 tag_id = 0;
 
-    reader = (GstByteReader *) & writer->tagwriter;
+    g_assert (gst_byte_writer_get_pos (writer) <
+        gst_byte_writer_get_size (writer));
 
     /* read the type */
-    if (writer->byte_order == G_LITTLE_ENDIAN) {
+    if (byte_order == G_LITTLE_ENDIAN) {
       if (!gst_byte_reader_get_uint16_le (reader, &tag_id))
         break;
       if (!gst_byte_reader_get_uint16_le (reader, &type))
@@ -545,6 +565,8 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
       if (!gst_byte_reader_get_uint32_be (reader, &count))
         break;
     }
+
+    GST_LOG ("Parsed tag %x of type %u and count %u", tag_id, type, count);
 
     switch (type) {
       case EXIF_TYPE_BYTE:
@@ -570,25 +592,36 @@ gst_exif_tag_rewrite_offsets (GstExifWriter * writer, guint32 base_offset)
 
     /* adjust the offset if needed */
     if (byte_size > 4 || tag_id == EXIF_GPS_IFD_TAG || tag_id == EXIF_IFD_TAG) {
-      if (writer->byte_order == G_LITTLE_ENDIAN) {
+      if (byte_order == G_LITTLE_ENDIAN) {
         if (gst_byte_reader_peek_uint32_le (reader, &cur_offset)) {
-          gst_byte_writer_put_uint32_le (&writer->tagwriter,
-              cur_offset + offset + base_offset);
+          gst_byte_writer_put_uint32_le (writer, cur_offset + offset);
         }
       } else {
         if (gst_byte_reader_peek_uint32_be (reader, &cur_offset)) {
-          gst_byte_writer_put_uint32_be (&writer->tagwriter,
-              cur_offset + offset + base_offset);
+          gst_byte_writer_put_uint32_be (writer, cur_offset + offset);
         }
       }
-      GST_DEBUG ("Rewriting tag offset from %u to (%u + %u + %u) %u",
-          cur_offset, cur_offset, offset, base_offset,
-          cur_offset + offset + base_offset);
+      GST_DEBUG ("Rewriting tag offset from %u to (%u + %u) %u",
+          cur_offset, cur_offset, offset, cur_offset + offset);
+
+      if ((tag_id == EXIF_GPS_IFD_TAG || tag_id == EXIF_IFD_TAG) &&
+          inner_ifds_data != NULL) {
+        /* needs special handling */
+        if (!gst_byte_writer_set_pos (inner_ifds_data, cur_offset)) {
+          GST_WARNING ("Failed to position writer to rewrite inner ifd "
+              "offsets");
+          continue;
+        }
+
+        gst_exif_tag_rewrite_offsets (inner_ifds_data, byte_order, offset, -1,
+            NULL);
+      }
     } else {
       gst_byte_reader_skip (reader, 4);
       GST_DEBUG ("No need to rewrite tag offset");
     }
   }
+  GST_LOG ("Done rewriting offsets");
 }
 
 static void
@@ -738,17 +771,9 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
       }
 
       if (inner_tag_map) {
-        /* The base offset for this inner ifd is the sum of:
-         * - the current base offset
-         * - the total tag data of current this ifd
-         * - the total data of the current ifd
-         * - its own tag entry length still to be writen (12)
-         * - 4 bytes for the next ifd entry still to be writen
-         */
-        inner_ifd = write_exif_ifd (taglist, byte_order, base_offset +
-            gst_byte_writer_get_size (&writer.tagwriter) +
-            gst_byte_writer_get_size (&writer.datawriter) + 12 + 4,
-            inner_tag_map);
+        /* base offset and tagheader size are added when rewriting offset */
+        inner_ifd = write_exif_ifd (taglist, byte_order,
+            gst_byte_writer_get_size (&writer.datawriter), inner_tag_map);
       }
 
       if (inner_ifd) {
@@ -782,8 +807,12 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
   else
     gst_byte_writer_put_uint16_be (&writer.tagwriter, writer.tags_total);
 
+  GST_DEBUG ("Number of tags rewriten to %d", writer.tags_total);
+
   /* now that we know the tag headers size, we can add the offsets */
-  gst_exif_tag_rewrite_offsets (&writer, base_offset);
+  gst_exif_tag_rewrite_offsets (&writer.tagwriter, writer.byte_order,
+      base_offset + gst_byte_writer_get_size (&writer.tagwriter),
+      writer.tags_total, &writer.datawriter);
 
   return gst_exif_writer_reset_and_get_buffer (&writer);
 }
@@ -853,9 +882,9 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
     if (!parse_exif_tag_header (&reader, exif_reader->byte_order, &tagdata))
       goto read_error;
 
-    GST_DEBUG ("Parsed tag: id 0x%x, type %u, count %u, offset %u (0x%x)",
-        tagdata.tag, tagdata.tag_type, tagdata.count, tagdata.offset,
-        tagdata.offset);
+    GST_DEBUG ("Parsed tag: id 0x%x, type %u, count %u, offset %u (0x%x)"
+        ", buf size: %u", tagdata.tag, tagdata.tag_type, tagdata.count,
+        tagdata.offset, tagdata.offset, gst_byte_reader_get_size (&reader));
 
     map_index = exif_tag_map_find_reverse (tagdata.tag, tag_map, TRUE);
     if (map_index == -1) {
