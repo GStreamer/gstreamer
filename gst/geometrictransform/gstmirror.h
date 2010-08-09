@@ -65,9 +65,28 @@ G_BEGIN_DECLS
 typedef struct _GstMirror GstMirror;
 typedef struct _GstMirrorClass GstMirrorClass;
 
+/**
+ * GstColorEffectsPreset:
+ * @GST_MIRROR_MODE_LEFT: Split horizontally and reflect left into right
+ * @GST_MIRROR_MODE_RIGHT: Split horizontally and reflect right into left
+ * @GST_MIRROR_MODE_TOP: Split horizontally and reflect top into bottom
+ * @GST_MIRROR_MODE_BOTTOM: Split horizontally and reflect bottom into top
+ *
+ * How to split the video frame and which side reflect
+ */
+typedef enum
+{
+  GST_MIRROR_MODE_LEFT,
+  GST_MIRROR_MODE_RIGHT,
+  GST_MIRROR_MODE_TOP,
+  GST_MIRROR_MODE_BOTTOM
+} GstMirrorMode;
+
 struct _GstMirror
 {
   GstGeometricTransform element;
+
+  GstMirrorMode mode;
 };
 
 struct _GstMirrorClass

@@ -53,10 +53,75 @@
 GST_DEBUG_CATEGORY_STATIC (gst_mirror_debug);
 #define GST_CAT_DEFAULT gst_mirror_debug
 
+enum
+{
+  PROP_0,
+  PROP_MODE
+};
+
+#define DEFAULT_PROP_MODE GST_MIRROR_MODE_LEFT
+
 GST_BOILERPLATE (GstMirror, gst_mirror, GstGeometricTransform,
     GST_TYPE_GEOMETRIC_TRANSFORM);
 
-/* GObject vmethod implementations */
+#define GST_TYPE_MIRROR_MODE (gst_mirror_mode_get_type())
+static GType
+gst_mirror_mode_get_type (void)
+{
+  static GType mode_type = 0;
+
+  static const GEnumValue modes[] = {
+    {GST_MIRROR_MODE_LEFT, "Split horizontally and reflect left into right",
+        "left"},
+    {GST_MIRROR_MODE_RIGHT, "Split horizontally and reflect right into left",
+        "right"},
+    {GST_MIRROR_MODE_TOP, "Split vertically and reflect top into bottom",
+        "top"},
+    {GST_MIRROR_MODE_BOTTOM, "Split vertically and reflect bottom into top",
+        "bottom"},
+    {0, NULL, NULL},
+  };
+
+  if (!mode_type) {
+    mode_type = g_enum_register_static ("GstMirrorMode", modes);
+  }
+  return mode_type;
+}
+
+
+static void
+gst_mirror_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMirror *filter = GST_MIRROR_CAST (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      GST_OBJECT_LOCK (filter);
+      filter->mode = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (filter);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mirror_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMirror *filter = GST_MIRROR_CAST (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, filter->mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mirror_base_init (gpointer gclass)
@@ -76,19 +141,41 @@ mirror_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 {
   GstMirror *mirror = GST_MIRROR_CAST (gt);
 
-  gdouble hw = gt->width / 2.0;
+  gdouble hw = gt->width / 2.0 - 1.0;
+  gdouble hh = gt->height / 2.0 - 1.0;
 
-  /* possible parameters:
-     - split horizontal/vertical
-     - reflect left half into right half or viceversa
-     - reflect top half into bottom half or viceversa
-   */
-  if (x > hw)
-    *in_x = gt->width - 1 - x;
-  else
-    *in_x = x;
-
-  *in_y = y;
+  switch (mirror->mode) {
+    case GST_MIRROR_MODE_LEFT:
+      if (x > hw)
+        *in_x = gt->width - 1.0 - x;
+      else
+        *in_x = x;
+      *in_y = y;
+      break;
+    case GST_MIRROR_MODE_RIGHT:
+      if (x > hw)
+        *in_x = x;
+      else
+        *in_x = gt->width - 1.0 - x;
+      *in_y = y;
+      break;
+    case GST_MIRROR_MODE_TOP:
+      if (y > hh)
+        *in_y = gt->height - 1.0 - y;
+      else
+        *in_y = y;
+      *in_x = x;
+      break;
+    case GST_MIRROR_MODE_BOTTOM:
+      if (y > hh)
+        *in_y = y;
+      else
+        *in_y = gt->height - 1.0 - y;
+      *in_x = x;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
 
   GST_DEBUG_OBJECT (mirror, "Inversely mapped %d %d into %lf %lf",
       x, y, *in_x, *in_y);
@@ -105,6 +192,15 @@ gst_mirror_class_init (GstMirrorClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
+  gobject_class->set_property = gst_mirror_set_property;
+  gobject_class->get_property = gst_mirror_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mirror Mode",
+          "How to split the video frame and which side reflect",
+          GST_TYPE_MIRROR_MODE, DEFAULT_PROP_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   parent_class = g_type_class_peek_parent (klass);
 
   gstgt_class->map_func = mirror_map;
@@ -115,6 +211,7 @@ gst_mirror_init (GstMirror * filter, GstMirrorClass * gclass)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
+  filter->mode = DEFAULT_PROP_MODE;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
 }
 
