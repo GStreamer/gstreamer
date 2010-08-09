@@ -147,6 +147,43 @@ GST_START_TEST (test_filesource_properties)
 
 GST_END_TEST;
 
+GST_START_TEST (test_filesource_images)
+{
+  GESTrackObject *trobj;
+  GESTimelineObject *tlobj;
+  GESTimelineFileSource *tfs;
+  GESTrack *a, *v;
+
+  ges_init ();
+
+  tfs = ges_timeline_filesource_new ((gchar *) TEST_URI);
+  tlobj = GES_TIMELINE_OBJECT (tfs);
+
+  a = ges_track_audio_raw_new ();
+  v = ges_track_video_raw_new ();
+
+  /* set the is_image property to true then create a video track object. */
+  g_object_set (G_OBJECT (tfs), "is-image", TRUE, NULL);
+
+  /* the returned track object should be an image source */
+  trobj = ges_timeline_object_create_track_object (tlobj, v);
+  fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
+
+  ges_track_remove_object (v, trobj);
+  ges_timeline_object_release_track_object (tlobj, trobj);
+
+  /* the timeline object should not create an audio source with is-image set
+   * to true */
+
+  trobj = ges_timeline_object_create_track_object (tlobj, a);
+  fail_if (trobj);
+
+  g_object_unref (a);
+  g_object_unref (v);
+  g_object_unref (tlobj);
+}
+
+GST_END_TEST;
 
 
 static Suite *
@@ -158,6 +195,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_filesource_basic);
+  tcase_add_test (tc_chain, test_filesource_images);
   tcase_add_test (tc_chain, test_filesource_properties);
 
   return s;
