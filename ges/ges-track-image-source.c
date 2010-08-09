@@ -88,21 +88,66 @@ ges_track_image_source_finalize (GObject * object)
   G_OBJECT_CLASS (ges_track_image_source_parent_class)->finalize (object);
 }
 
-static gboolean
-ges_track_image_source_create_gnl_object (GESTrackObject * object)
+static void
+pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 {
-  object->gnlobject = gst_element_factory_make ("gnlurisource", NULL);
-  g_object_set (object->gnlobject, "uri", ((GESTrackImageSource *) object)->uri,
-      NULL);
+  GstPad *sinkpad;
+  GstPadLinkReturn ret;
 
-  return TRUE;
+  sinkpad = gst_element_get_static_pad (scale, "sink");
+  if (sinkpad) {
+    GST_DEBUG ("got sink pad, trying to link");
+
+    ret = gst_pad_link (pad, sinkpad);
+    if GST_PAD_LINK_SUCCESSFUL
+      (ret) {
+      GST_DEBUG ("linked ok, returning");
+      gst_object_unref (sinkpad);
+      return;
+      }
+  }
+
+  GST_DEBUG ("pad failed to link properly");
+}
+
+static GstElement *
+ges_track_image_source_create_element (GESTrackSource * object)
+{
+  GstElement *bin, *source, *scale, *freeze, *csp;
+  GstPad *src, *target;
+
+  bin = GST_ELEMENT (gst_bin_new ("still-image-bin"));
+  source = gst_element_factory_make ("uridecodebin", NULL);
+  scale = gst_element_factory_make ("videoscale", NULL);
+  freeze = gst_element_factory_make ("imagefreeze", NULL);
+  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
+
+  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, csp, NULL);
+
+  gst_element_link_pads_full (scale, "src", csp, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (csp, "src", freeze, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+
+  target = gst_element_get_static_pad (freeze, "src");
+
+  src = gst_ghost_pad_new ("src", target);
+  gst_element_add_pad (bin, src);
+  gst_object_unref (target);
+
+  g_object_set (source, "uri", ((GESTrackImageSource *) object)->uri, NULL);
+
+  g_signal_connect (G_OBJECT (source), "pad-added",
+      G_CALLBACK (pad_added_cb), scale);
+
+  return bin;
 }
 
 static void
 ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
+  GESTrackSourceClass *source_class = GES_TRACK_SOURCE_CLASS (klass);
 
   object_class->get_property = ges_track_image_source_get_property;
   object_class->set_property = ges_track_image_source_set_property;
@@ -117,7 +162,7 @@ ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
   g_object_class_install_property (object_class, PROP_URI,
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-  track_class->create_gnl_object = ges_track_image_source_create_gnl_object;
+  source_class->create_element = ges_track_image_source_create_element;
 }
 
 static void
