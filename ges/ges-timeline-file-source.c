@@ -31,6 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-filesource.h"
 #include "ges-track-image-source.h"
+#include "ges-track-audio-test-source.h"
 
 G_DEFINE_TYPE (GESTimelineFileSource, ges_tl_filesource,
     GES_TYPE_TIMELINE_SOURCE);
@@ -246,12 +247,12 @@ ges_tl_filesource_create_track_object (GESTimelineObject * obj,
 
   if (tfs->is_image) {
     if (track->type != GES_TRACK_TYPE_VIDEO) {
-      GST_DEBUG ("Object is still image, not creating non-video tracks");
-      return NULL;
+      GST_DEBUG ("Object is still image, creating silent audio source");
+      res = (GESTrackObject *) ges_track_audio_test_source_new ();
+    } else {
+      GST_DEBUG ("Creating a GESTrackImageSource");
+      res = (GESTrackObject *) ges_track_image_source_new (tfs->uri);
     }
-
-    GST_DEBUG ("Creating a GESTrackImageSource");
-    res = (GESTrackObject *) ges_track_image_source_new (tfs->uri);
   }
 
   else {

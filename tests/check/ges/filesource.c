@@ -174,11 +174,11 @@ GST_START_TEST (test_filesource_images)
   ges_track_remove_object (v, trobj);
   ges_timeline_object_release_track_object (tlobj, trobj);
 
-  /* the timeline object should not create an audio source when is-image is set
-   * to true */
+  /* the timeline object should create an audio test source when the is_image
+   * property is set true */
 
   trobj = ges_timeline_object_create_track_object (tlobj, a);
-  fail_if (trobj);
+  fail_unless (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
 
   g_object_unref (a);
   g_object_unref (v);
