@@ -157,6 +157,8 @@ GST_START_TEST (test_filesource_images)
   ges_init ();
 
   tfs = ges_timeline_filesource_new ((gchar *) TEST_URI);
+  g_object_set (G_OBJECT (tfs), "supported-formats",
+      (GESTrackType) GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO, NULL);
   tlobj = GES_TIMELINE_OBJECT (tfs);
 
   a = ges_track_audio_raw_new ();
@@ -172,7 +174,7 @@ GST_START_TEST (test_filesource_images)
   ges_track_remove_object (v, trobj);
   ges_timeline_object_release_track_object (tlobj, trobj);
 
-  /* the timeline object should not create an audio source with is-image set
+  /* the timeline object should not create an audio source when is-image is set
    * to true */
 
   trobj = ges_timeline_object_create_track_object (tlobj, a);
