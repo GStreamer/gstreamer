@@ -53,10 +53,77 @@
 GST_DEBUG_CATEGORY_STATIC (gst_square_debug);
 #define GST_CAT_DEFAULT gst_square_debug
 
+enum
+{
+  PROP_0,
+  PROP_WIDTH,
+  PROP_HEIGHT,
+};
+
+#define DEFAULT_WIDTH 0.5
+#define DEFAULT_HEIGHT 0.5
+
 GST_BOILERPLATE (GstSquare, gst_square, GstGeometricTransform,
     GST_TYPE_GEOMETRIC_TRANSFORM);
 
 /* GObject vmethod implementations */
+
+static void
+gst_square_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstSquare *square;
+  GstGeometricTransform *gt;
+  gdouble v;
+
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+  square = GST_SQUARE_CAST (gt);
+
+  GST_OBJECT_LOCK (square);
+  switch (prop_id) {
+    case PROP_WIDTH:
+      v = g_value_get_double (value);
+      if (v != square->width) {
+        square->width = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
+      break;
+    case PROP_HEIGHT:
+      v = g_value_get_double (value);
+      if (v != square->height) {
+        square->height = v;
+        gst_geometric_transform_set_need_remap (gt);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (square);
+}
+
+static void
+gst_square_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSquare *square;
+  GstGeometricTransform *gt;
+
+  gt = GST_GEOMETRIC_TRANSFORM_CAST (object);
+  square = GST_SQUARE_CAST (gt);
+
+  switch (prop_id) {
+    case PROP_WIDTH:
+      g_value_set_double (value, square->width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_double (value, square->height);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_square_base_init (gpointer gclass)
@@ -78,6 +145,7 @@ square_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
   gdouble norm_x;
   gdouble norm_y;
 
+  /* frame size */
   gdouble width = gt->width;
   gdouble height = gt->height;
 
@@ -87,8 +155,12 @@ square_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 
   /* transform */
   /* zoom at the center, smoothstep around half quadrant and get back to normal */
-  norm_x *= 0.5 * (1.0 + smoothstep (0.375, 0.625, ABS (norm_x)));
-  norm_y *= 0.5 * (1.0 + smoothstep (0.375, 0.625, ABS (norm_y)));
+  norm_x *=
+      0.5 * (1.0 + smoothstep (square->width - 0.125, square->width + 0.125,
+          ABS (norm_x)));
+  norm_y *=
+      0.5 * (1.0 + smoothstep (square->height - 0.125, square->height + 0.125,
+          ABS (norm_y)));
 
   /* unnormalize */
   *in_x = 0.5 * (norm_x + 1.0) * width;
@@ -110,6 +182,19 @@ gst_square_class_init (GstSquareClass * klass)
   gstgt_class = (GstGeometricTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_square_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_square_get_property);
+
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
+      g_param_spec_double ("width", "Width",
+          "Width of the square, relative to the frame width",
+          0.0, 1.0, DEFAULT_WIDTH,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
+      g_param_spec_double ("height", "Height",
+          "Height of the square, relative to the frame height",
+          0.0, 1.0, DEFAULT_HEIGHT,
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstgt_class->map_func = square_map;
 }
@@ -119,6 +204,8 @@ gst_square_init (GstSquare * filter, GstSquareClass * gclass)
 {
   GstGeometricTransform *gt = GST_GEOMETRIC_TRANSFORM (filter);
 
+  filter->width = DEFAULT_WIDTH;
+  filter->height = DEFAULT_HEIGHT;
   gt->off_edge_pixels = GST_GT_OFF_EDGES_PIXELS_CLAMP;
 }
 

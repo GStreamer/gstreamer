@@ -68,6 +68,8 @@ typedef struct _GstSquareClass GstSquareClass;
 struct _GstSquare
 {
   GstGeometricTransform element;
+
+  gdouble width, height;
 };
 
 struct _GstSquareClass
