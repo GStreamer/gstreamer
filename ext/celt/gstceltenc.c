@@ -95,11 +95,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) [ 1, 2 ], " "frame-size = (int) [ 64, 512 ]")
     );
 
-#define DEFAULT_BITRATE         64
+#define DEFAULT_BITRATE         64000
 #define DEFAULT_FRAMESIZE       480
 #define DEFAULT_CBR             TRUE
 #define DEFAULT_COMPLEXITY      9
-#define DEFAULT_MAX_BITRATE     64
+#define DEFAULT_MAX_BITRATE     64000
 #define DEFAULT_PREDICTION      0
 #define DEFAULT_START_BAND      0
 
@@ -180,8 +180,8 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
-          "Specify an encoding bit-rate (in Kbps).",
-          10, 320, DEFAULT_BITRATE,
+          "Specify an encoding bit-rate (in bps).",
+          10000, 320000, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FRAMESIZE,
       g_param_spec_int ("framesize", "Frame Size",
@@ -197,8 +197,8 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_BITRATE,
       g_param_spec_int ("max-bitrate", "Maximum Encoding Bit-rate",
-          "Specify a maximum encoding bit rate (in Kbps) for variable bit rate encoding.",
-          10, 320, DEFAULT_MAX_BITRATE,
+          "Specify a maximum encoding bit rate (in bps) for variable bit rate encoding.",
+          10000, 320000, DEFAULT_MAX_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREDICTION,
       g_param_spec_enum ("prediction", "Interframe Prediction",
@@ -655,7 +655,7 @@ gst_celt_enc_setup (GstCeltEnc * enc)
 
 #ifdef CELT_SET_VBR_RATE
   if (!enc->cbr) {
-    celt_encoder_ctl (enc->state, CELT_SET_VBR_RATE (enc->bitrate), 0);
+    celt_encoder_ctl (enc->state, CELT_SET_VBR_RATE (enc->bitrate / 1000), 0);
   }
 #endif
 #ifdef CELT_SET_COMPLEXITY
@@ -803,11 +803,9 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
   gint bytes_per_packet;
 
   if (enc->cbr) {
-    bytes_per_packet =
-        (enc->bitrate * 1000 * enc->frame_size / enc->rate + 4) / 8;
+    bytes_per_packet = (enc->bitrate * enc->frame_size / enc->rate + 4) / 8;
   } else {
-    bytes_per_packet =
-        (enc->max_bitrate * 1000 * enc->frame_size / enc->rate + 4) / 8;
+    bytes_per_packet = (enc->max_bitrate * enc->frame_size / enc->rate + 4) / 8;
   }
 
   if (flush && gst_adapter_available (enc->adapter) % bytes != 0) {
