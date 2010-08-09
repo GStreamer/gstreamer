@@ -964,6 +964,8 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
       &value);
   do_simple_xmp_tag_serialization_deserialization (GST_TAG_DEVICE_MODEL,
       &value);
+  do_simple_xmp_tag_serialization_deserialization (GST_TAG_APPLICATION_NAME,
+      &value);
 
   g_value_set_static_string (&value, "rotate-0");
   do_simple_xmp_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION,
@@ -1247,6 +1249,9 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   do_simple_exif_tag_serialization_deserialization (GST_TAG_COPYRIGHT, &value);
   g_value_set_static_string (&value, "ty");
   do_simple_exif_tag_serialization_deserialization (GST_TAG_ARTIST, &value);
+  g_value_set_static_string (&value, "Company Software 1.2b (info)");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_NAME,
+      &value);
 
   /* image orientation tests */
   g_value_set_static_string (&value, "rotate-0");

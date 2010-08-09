@@ -827,6 +827,8 @@ _init_xmp_tag_map ()
       NULL);
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_DEVICE_MODEL,
       "tiff:Model", GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
+  _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_APPLICATION_NAME,
+      "tiff:Software", GST_XMP_TAG_TYPE_SIMPLE, NULL, NULL);
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_IMAGE_ORIENTATION,
       "tiff:Orientation", GST_XMP_TAG_TYPE_SIMPLE, serialize_tiff_orientation,
       deserialize_tiff_orientation);
