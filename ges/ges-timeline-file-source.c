@@ -40,7 +40,8 @@ enum
   PROP_URI,
   PROP_MAX_DURATION,
   PROP_MUTE,
-  PROP_SUPPORTED_FORMATS
+  PROP_SUPPORTED_FORMATS,
+  PROP_IS_IMAGE,
 };
 
 static void
@@ -72,6 +73,9 @@ ges_tl_filesource_get_property (GObject * object, guint property_id,
     case PROP_SUPPORTED_FORMATS:
       g_value_set_flags (value, tfs->supportedformats);
       break;
+    case PROP_IS_IMAGE:
+      g_value_set_boolean (value, tfs->is_image);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -95,6 +99,9 @@ ges_tl_filesource_set_property (GObject * object, guint property_id,
       break;
     case PROP_SUPPORTED_FORMATS:
       tfs->supportedformats = g_value_get_flags (value);
+      break;
+    case PROP_IS_IMAGE:
+      tfs->is_image = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -169,6 +176,17 @@ ges_tl_filesource_class_init (GESTimelineFileSourceClass * klass)
       g_param_spec_flags ("supported-formats", "Supported formats",
           "Formats supported by the file", GES_TYPE_TRACK_TYPE,
           GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTimelineFileSource:is-image:
+   *
+   * Whether this filesource represents a still image or not. This must be set
+   * before create_track_objects is called.
+   */
+  g_object_class_install_property (object_class, PROP_IS_IMAGE,
+      g_param_spec_boolean ("is-image", "Is still image",
+          "Whether the timeline object represents a still image or not",
+          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   timobj_class->create_track_object = ges_tl_filesource_create_track_object;
   timobj_class->need_fill_track = FALSE;

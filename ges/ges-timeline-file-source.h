@@ -57,6 +57,7 @@ struct _GESTimelineFileSource {
   gchar *uri;
 
   gboolean mute;
+  gboolean is_image;
 
   guint64 maxduration;
 
