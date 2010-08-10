@@ -56,6 +56,8 @@ static gboolean gst_image_freeze_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_image_freeze_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_image_freeze_sink_getcaps (GstPad * pad);
 static gboolean gst_image_freeze_sink_query (GstPad * pad, GstQuery * query);
+static GstFlowReturn gst_image_freeze_sink_bufferalloc (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_image_freeze_src_loop (GstPad * pad);
 static gboolean gst_image_freeze_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_image_freeze_src_query (GstPad * pad, GstQuery * query);
@@ -119,6 +121,8 @@ gst_image_freeze_init (GstImageFreeze * self, GstImageFreezeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_image_freeze_sink_setcaps));
   gst_pad_set_getcaps_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_image_freeze_sink_getcaps));
+  gst_pad_set_bufferalloc_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_image_freeze_sink_bufferalloc));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_pad_template, "src");
@@ -302,6 +306,38 @@ gst_image_freeze_sink_query (GstPad * pad, GstQuery * query)
   }
 
   gst_object_unref (self);
+  return ret;
+}
+
+static GstFlowReturn
+gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstImageFreeze *self = GST_IMAGE_FREEZE (gst_pad_get_parent (pad));
+  GstFlowReturn ret;
+  gboolean do_alloc;
+
+  GST_LOG_OBJECT (pad, "Allocating buffer with offset 0x%" G_GINT64_MODIFIER
+      "x and size %u with caps: %" GST_PTR_FORMAT, offset, size, caps);
+
+  *buf = NULL;
+
+  GST_OBJECT_LOCK (self);
+  do_alloc = self->buffer == NULL;
+  GST_OBJECT_UNLOCK (self);
+
+  if (do_alloc) {
+    ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      GST_ERROR_OBJECT (pad, "Allocating buffer failed: %s",
+          gst_flow_get_name (ret));
+  } else {
+    /* In this case GstPad will allocate a buffer for us */
+    ret = GST_FLOW_OK;
+  }
+
+  gst_object_unref (self);
+
   return ret;
 }
 
