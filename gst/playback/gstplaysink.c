@@ -1217,7 +1217,8 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  if (queue) {
+  /* NOTE streamsynchronizer needs streams decoupled */
+  if (TRUE) {
     /* decouple decoder from sink, this improves playback quite a lot since the
      * decoder can continue while the sink blocks for synchronisation. We don't
      * need a lot of buffers as this consumes a lot of memory and we don't want
@@ -1427,17 +1428,34 @@ gen_text_chain (GstPlaySink * playsink)
       if (elem) {
         /* make sure the sparse subtitles don't participate in the preroll */
         g_object_set (elem, "async", FALSE, NULL);
+        GST_DEBUG_OBJECT (playsink, "adding custom text sink");
+        gst_bin_add (bin, chain->sink);
+        /* NOTE streamsynchronizer needs streams decoupled */
+        /* make a little queue */
+        chain->queue = gst_element_factory_make ("queue", "subqueue");
+        if (chain->queue == NULL) {
+          post_missing_element_message (playsink, "queue");
+          GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+              (_("Missing element '%s' - check your GStreamer installation."),
+                  "queue"), ("rendering might be suboptimal"));
+        } else {
+          g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+              "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+          gst_bin_add (bin, chain->queue);
+        }
         /* we have a custom sink, this will be our textsinkpad */
-        textsinkpad = gst_element_get_static_pad (chain->sink, "sink");
-        if (textsinkpad) {
+        if (gst_element_link_pads_full (chain->queue, "src", chain->sink,
+                "sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS)) {
           /* we're all fine now and we can add the sink to the chain */
-          GST_DEBUG_OBJECT (playsink, "adding custom text sink");
-          gst_bin_add (bin, chain->sink);
+          GST_DEBUG_OBJECT (playsink, "using custom text sink");
+          textsinkpad = gst_element_get_static_pad (chain->queue, "sink");
         } else {
           GST_WARNING_OBJECT (playsink,
               "can't find a sink pad on custom text sink");
-          gst_object_unref (chain->sink);
+          gst_bin_remove (bin, chain->sink);
+          gst_bin_remove (bin, chain->queue);
           chain->sink = NULL;
+          chain->queue = NULL;
         }
         /* try to set sync to true but it's no biggie when we can't */
         if ((elem =
@@ -1621,7 +1639,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  if (queue) {
+  /* NOTE streamsynchronizer always need a queue to decouple its EOS sending
+   * (which might otherwise hang in downstream prerolling on EOS) */
+  if (TRUE) {
     /* we have to add a queue when we need to decouple for the video sink in
      * visualisations */
     GST_DEBUG_OBJECT (playsink, "adding audio queue");
@@ -2125,6 +2145,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   GST_DEBUG_OBJECT (playsink, "audio:%d, video:%d, vis:%d, text:%d", need_audio,
       need_video, need_vis, need_text);
+
+  /* NOTE although there is some nifty heuristic regarding whether or not to
+   * include a queue in some chain, streamsynchronizer mechanics need
+   * subsequent streams decoupled to prevent hangs */
 
   /* set up video pipeline */
   if (need_video) {
