@@ -113,23 +113,26 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 static GstElement *
 ges_track_image_source_create_element (GESTrackSource * object)
 {
-  GstElement *bin, *source, *scale, *freeze, *csp;
+  GstElement *bin, *source, *scale, *freeze, *iconv, *oconv;
   GstPad *src, *target;
 
   bin = GST_ELEMENT (gst_bin_new ("still-image-bin"));
   source = gst_element_factory_make ("uridecodebin", NULL);
   scale = gst_element_factory_make ("videoscale", NULL);
   freeze = gst_element_factory_make ("imagefreeze", NULL);
-  csp = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  oconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
 
-  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, csp, NULL);
+  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, iconv, oconv, NULL);
 
-  gst_element_link_pads_full (scale, "src", csp, "sink",
+  gst_element_link_pads_full (scale, "src", iconv, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link_pads_full (csp, "src", freeze, "sink",
+  gst_element_link_pads_full (iconv, "src", freeze, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (freeze, "src", oconv, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
-  target = gst_element_get_static_pad (freeze, "src");
+  target = gst_element_get_static_pad (oconv, "src");
 
   src = gst_ghost_pad_new ("src", target);
   gst_element_add_pad (bin, src);
