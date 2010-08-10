@@ -1176,7 +1176,6 @@ deserialize_orientation (GstExifReader * exif_reader,
     GstByteReader * reader, const GstExifTagMatch * exiftag,
     GstExifTagData * tagdata)
 {
-  gint ret = 1;
   const gchar *str = NULL;
   gint value;
 
@@ -1186,7 +1185,7 @@ deserialize_orientation (GstExifReader * exif_reader,
   /* validate tag */
   if (tagdata->tag_type != EXIF_TYPE_SHORT || tagdata->count != 1) {
     GST_WARNING ("Orientation tag has unexpected type/count");
-    return ret;
+    return 0;
   }
 
   if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
@@ -1198,12 +1197,12 @@ deserialize_orientation (GstExifReader * exif_reader,
   str = gst_tag_image_orientation_from_exif_value (value);
   if (str == NULL) {
     GST_WARNING ("Invalid value for exif orientation tag: %d", value);
-    return ret;
+    return 0;
   }
   gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
       exiftag->gst_tag, str, NULL);
 
-  return ret;
+  return 0;
 }
 
 static void
