@@ -454,6 +454,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GstStream *stream;
       GList *l;
       gboolean all_eos = TRUE;
+      GSList *pads = NULL;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -471,16 +472,31 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       }
 
       if (all_eos) {
-        ret = TRUE;
         GST_DEBUG_OBJECT (self, "All streams are EOS -- forwarding");
         for (l = self->streams; l; l = l->next) {
           GstStream *ostream = l->data;
-          ret = ret
-              && gst_pad_push_event (ostream->srcpad, gst_event_new_eos ());
+          /* local snapshot of current pads */
+          gst_object_ref (ostream->srcpad);
+          pads = g_slist_prepend (pads, ostream->srcpad);
         }
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+      /* drop lock when sending eos, which may block in e.g. preroll */
+      if (pads) {
+        GstPad *pad;
+        GSList *epad;
 
+        ret = TRUE;
+        epad = pads;
+        while (epad) {
+          pad = epad->data;
+          GST_DEBUG_OBJECT (pad, "Pushing EOS");
+          ret = ret && gst_pad_push_event (pad, gst_event_new_eos ());
+          gst_object_unref (pad);
+          epad = g_slist_next (epad);
+        }
+        g_slist_free (pads);
+      }
       goto done;
       break;
     }
