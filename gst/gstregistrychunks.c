@@ -289,6 +289,12 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     gst_registry_chunks_save_const_string (list, factory->details.description);
     gst_registry_chunks_save_const_string (list, factory->details.klass);
     gst_registry_chunks_save_const_string (list, factory->details.longname);
+    if (factory->meta_data) {
+      gst_registry_chunks_save_string (list,
+          gst_structure_to_string (factory->meta_data));
+    } else {
+      gst_registry_chunks_save_const_string (list, "");
+    }
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstRegistryChunkTypeFindFactory *tff;
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
@@ -567,6 +573,8 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     GstRegistryChunkElementFactory *ef;
     guint n;
     GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (feature);
+    gchar *str;
+    const gchar *meta_data_str;
 
     align (*in);
     GST_LOG ("Reading/casting for GstRegistryChunkElementFactory at address %p",
@@ -575,6 +583,16 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
     pf = (GstRegistryChunkPluginFeature *) ef;
 
     /* unpack element factory strings */
+    unpack_string_nocopy (*in, meta_data_str, end, fail);
+    if (meta_data_str && *meta_data_str) {
+      factory->meta_data = gst_structure_from_string (meta_data_str, NULL);
+      if (!factory->meta_data) {
+        GST_ERROR
+            ("Error when trying to deserialize structure for metadata '%s'",
+            str);
+        goto fail;
+      }
+    }
     unpack_string (*in, factory->details.longname, end, fail);
     unpack_string (*in, factory->details.klass, end, fail);
     unpack_string (*in, factory->details.description, end, fail);

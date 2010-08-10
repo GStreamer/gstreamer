@@ -198,6 +198,20 @@ get_rank_name (char *s, gint rank)
   return s;
 }
 
+static gboolean
+print_factory_details_meta_data (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  gchar *val = g_strdup_value_contents (value);
+  gchar *key = g_strdup (g_quark_to_string (field_id));
+
+  key[0] = g_ascii_toupper (key[0]);
+  n_print ("  %s:\t\t%s\n", key, val);
+  g_free (val);
+  g_free (key);
+  return TRUE;
+}
+
 static void
 print_factory_details_info (GstElementFactory * factory)
 {
@@ -211,6 +225,8 @@ print_factory_details_info (GstElementFactory * factory)
   n_print ("  Rank:\t\t%s (%d)\n",
       get_rank_name (s, GST_PLUGIN_FEATURE (factory)->rank),
       GST_PLUGIN_FEATURE (factory)->rank);
+  gst_structure_foreach ((GstStructure *) factory->meta_data,
+      print_factory_details_meta_data, NULL);
   n_print ("\n");
 }
 

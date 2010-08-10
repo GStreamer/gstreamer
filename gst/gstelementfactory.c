@@ -154,6 +154,10 @@ gst_element_factory_cleanup (GstElementFactory * factory)
   GList *item;
 
   __gst_element_details_clear (&factory->details);
+  if (factory->meta_data) {
+    gst_structure_free ((GstStructure *) factory->meta_data);
+    factory->meta_data = NULL;
+  }
   if (factory->type) {
     factory->type = G_TYPE_INVALID;
   }
@@ -255,6 +259,11 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   factory->type = type;
   __gst_element_details_copy (&factory->details, &klass->details);
+  if (klass->meta_data) {
+    factory->meta_data = gst_structure_copy ((GstStructure *) klass->meta_data);
+  } else {
+    factory->meta_data = NULL;
+  }
   for (item = klass->padtemplates; item; item = item->next) {
     GstPadTemplate *templ = item->data;
     GstStaticPadTemplate *newt;
@@ -553,6 +562,48 @@ gst_element_factory_get_author (GstElementFactory * factory)
   g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
 
   return factory->details.author;
+}
+
+static G_CONST_RETURN gchar *
+gst_element_factory_get_meta_data (GstElementFactory * factory,
+    const gchar * key)
+{
+  /* FIXME: do we want to support other types? */
+  return gst_structure_get_string ((GstStructure *) factory->meta_data, key);
+}
+
+/**
+ * gst_element_factory_get_documentation_uri:
+ * @factory: a #GstElementFactory
+ *
+ * Gets documentation uri for this factory if set.
+ *
+ * Since: 0.10.31
+ *
+ * Returns: the documentation uri
+ */
+G_CONST_RETURN gchar *
+gst_element_factory_get_documentation_uri (GstElementFactory * factory)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
+  return gst_element_factory_get_meta_data (factory, "doc-uri");
+}
+
+/**
+ * gst_element_factory_get_documentation_uri:
+ * @factory: a #GstElementFactory
+ *
+ * Gets icon name for this factory if set.
+ *
+ * Since: 0.10.31
+ *
+ * Returns: the icon name
+ */
+G_CONST_RETURN gchar *
+gst_element_factory_get_icon_name (GstElementFactory * factory)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
+  return gst_element_factory_get_meta_data (factory, "icon-name");
 }
 
 /**

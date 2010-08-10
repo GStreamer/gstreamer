@@ -268,6 +268,7 @@ gst_element_base_class_init (gpointer g_class)
    * See http://bugzilla.gnome.org/show_bug.cgi?id=491501
    */
   memset (&element_class->details, 0, sizeof (GstElementDetails));
+  element_class->meta_data = NULL;
   element_class->padtemplates = NULL;
 
   /* set the factory, see gst_element_register() */
@@ -286,6 +287,10 @@ gst_element_base_class_finalize (gpointer g_class)
   g_list_foreach (klass->padtemplates, (GFunc) gst_object_unref, NULL);
   g_list_free (klass->padtemplates);
   __gst_element_details_clear (&klass->details);
+  if (klass->meta_data) {
+    gst_structure_free (klass->meta_data);
+    klass->meta_data = NULL;
+  }
 }
 
 static void
@@ -1214,6 +1219,58 @@ gst_element_class_add_pad_template (GstElementClass * klass,
   klass->numpadtemplates++;
 }
 
+static void
+gst_element_class_add_meta_data (GstElementClass * klass,
+    const gchar * key, const gchar * value)
+{
+  if (!klass->meta_data) {
+    /* FIXME: use a quark for "metadata" */
+    klass->meta_data = gst_structure_empty_new ("metadata");
+  }
+
+  gst_structure_set ((GstStructure *) klass->meta_data,
+      key, G_TYPE_STRING, value, NULL);
+}
+
+/**
+ * gst_element_class_set_documentation_uri:
+ * @klass: class to set details for
+ * @uri: uri of element documentation
+ *
+ * Set uri pointing to user documentation. Applications can use this to show
+ * help for e.g. effects to users.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_element_class_set_documentation_uri (GstElementClass * klass,
+    const gchar * uri)
+{
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  gst_element_class_add_meta_data (klass, "doc-uri", uri);
+}
+
+/**
+ * gst_element_class_set_icon_name:
+ * @klass: class to set details for
+ * @uri: name of an icon
+ *
+ * Elements that bridge to certain other products can include an icon of that
+ * used product. Application can show the icon in menus/selectors to help
+ * identifying specific elements.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_element_class_set_icon_name (GstElementClass * klass, const gchar * name)
+{
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  gst_element_class_add_meta_data (klass, "icon-name", name);
+}
+
+/* FIXME-0.11: deprecate and remove gst_element_class_set_details*() */
 /**
  * gst_element_class_set_details:
  * @klass: class to set details for

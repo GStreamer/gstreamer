@@ -117,6 +117,7 @@ struct _GstElementFactory {
 
   GType                 type;                   /* unique GType of element or 0 if not loaded */
 
+  /* FIXME-0.11: deprecate this in favour of meta_data */
   GstElementDetails     details;
 
   GList *               staticpadtemplates;
@@ -128,7 +129,10 @@ struct _GstElementFactory {
 
   GList *               interfaces;             /* interfaces this element implements */
 
-  gpointer _gst_reserved[GST_PADDING];
+  /*< private >*/
+  /* FIXME-0.11: move up and replace details */
+  gpointer		meta_data;
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstElementFactoryClass {
@@ -146,6 +150,8 @@ G_CONST_RETURN gchar *  gst_element_factory_get_longname        (GstElementFacto
 G_CONST_RETURN gchar *  gst_element_factory_get_klass           (GstElementFactory *factory);
 G_CONST_RETURN gchar *  gst_element_factory_get_description     (GstElementFactory *factory);
 G_CONST_RETURN gchar *  gst_element_factory_get_author          (GstElementFactory *factory);
+G_CONST_RETURN gchar *  gst_element_factory_get_documentation_uri (GstElementFactory *factory);
+G_CONST_RETURN gchar *  gst_element_factory_get_icon_name       (GstElementFactory *factory);
 guint                   gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 G_CONST_RETURN GList *  gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 gint                    gst_element_factory_get_uri_type        (GstElementFactory *factory);

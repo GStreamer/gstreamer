@@ -609,6 +609,7 @@ struct _GstElementClass
 
   /*< public >*/
   /* the element details */
+  /* FIXME-0.11: deprecate this in favour of meta_data */
   GstElementDetails      details;
 
   /* factory that the element was created from */
@@ -656,13 +657,20 @@ struct _GstElementClass
   gboolean              (*query)                (GstElement *element, GstQuery *query);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /* FIXME-0.11: move up and replace details */
+  gpointer		meta_data;
+
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 /* element class pad templates */
 void                    gst_element_class_add_pad_template      (GstElementClass *klass, GstPadTemplate *templ);
 GstPadTemplate*         gst_element_class_get_pad_template      (GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list (GstElementClass *element_class);
+
+/* element class meta data */
+void                    gst_element_class_set_documentation_uri (GstElementClass * klass, const gchar *uri);
+void                    gst_element_class_set_icon_name         (GstElementClass * klass, const gchar *name);
 #ifndef GST_DISABLE_DEPRECATED
 void                    gst_element_class_set_details           (GstElementClass *klass, const GstElementDetails *details);
 #endif
