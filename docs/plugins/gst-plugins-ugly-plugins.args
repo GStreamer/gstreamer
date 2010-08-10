@@ -895,7 +895,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Motion Estimation</NICK>
 <BLURB>Integer pixel motion estimation method.</BLURB>
-<DEFAULT>hexagonal search, radius 2</DEFAULT>
+<DEFAULT>hex</DEFAULT>
 </ARG>
 
 <ARG>
@@ -913,7 +913,7 @@
 <TYPE>guint</TYPE>
 <RANGE><= 100000</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Noise Reducation</NICK>
+<NICK>Noise Reduction</NICK>
 <BLURB>Noise reduction strength.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -1004,7 +1004,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Stats File</NICK>
-<BLURB>Filename for multipass statistics (deprecated, use multipass-stats-file).</BLURB>
+<BLURB>Filename for multipass statistics (deprecated, use multipass-cache-file).</BLURB>
 <DEFAULT>"x264.log"</DEFAULT>
 </ARG>
 
@@ -1025,7 +1025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Threads</NICK>
 <BLURB>Number of threads used by the codec (0 for automatic).</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1106,6 +1106,56 @@
 <NICK>Sync Lookahead</NICK>
 <BLURB>Number of buffer frames for threaded lookahead (-1 for automatic).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::option-string</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Option string</NICK>
+<BLURB>String of x264 options (overridden by element properties).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::profile</NAME>
+<TYPE>GstX264EncProfile</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>H.264 profile</NICK>
+<BLURB>Apply restrictions to meet H.264 Profile constraints. This will override other properties if necessary.</BLURB>
+<DEFAULT>main</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::psy-tune</NAME>
+<TYPE>GstX264EncPsyTune</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Psychovisual tuning preset</NICK>
+<BLURB>Preset name for psychovisual tuning options.</BLURB>
+<DEFAULT>No tuning</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::speed-preset</NAME>
+<TYPE>GstX264EncPreset</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Speed/quality preset</NICK>
+<BLURB>Preset name for speed/quality tradeoff options (can affect decode compatibility - impose restrictions separately for your target decoder).</BLURB>
+<DEFAULT>medium</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstX264Enc::tune</NAME>
+<TYPE>GstX264EncTune</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Content tuning preset</NICK>
+<BLURB>Preset name for non-psychovisual tuning options.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
