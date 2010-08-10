@@ -39,13 +39,6 @@
 
 #include "gstsynaesthesia.h"
 
-/* signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 static GstStaticPadTemplate gst_synaesthesia_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -263,7 +256,7 @@ gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       synaesthesia->fps_n, synaesthesia->fps_d);
 
-  GST_DEBUG ("final caps are %" GST_PTR_FORMAT, target);
+  GST_DEBUG_OBJECT (synaesthesia, "final caps are %" GST_PTR_FORMAT, target);
 
   gst_pad_set_caps (synaesthesia->srcpad, target);
   gst_caps_unref (target);
@@ -334,7 +327,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
-  GST_LOG ("chainfunc called");
+  GST_LOG_OBJECT (synaesthesia, "chainfunc called");
 
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
