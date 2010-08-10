@@ -88,6 +88,19 @@ typedef gint (*GstExifDeserializationFunc) (GstExifReader * exif_reader,
     GstByteReader * reader, const GstExifTagMatch * exiftag,
     GstExifTagData * tagdata);
 
+#define EXIF_SERIALIZATION_FUNC(name) \
+static void serialize_ ## name (GstExifWriter * writer, \
+    const GstTagList * taglist, const GstExifTagMatch * exiftag)
+
+#define EXIF_DESERIALIZATION_FUNC(name) \
+static gint deserialize_ ## name (GstExifReader * exif_reader, \
+    GstByteReader * reader, const GstExifTagMatch * exiftag, \
+    GstExifTagData * tagdata)
+
+#define EXIF_SERIALIZATION_DESERIALIZATION_FUNC(name) \
+  EXIF_SERIALIZATION_FUNC (name); \
+  EXIF_DESERIALIZATION_FUNC (name)
+
 struct _GstExifTagMatch
 {
   const gchar *gst_tag;
@@ -130,36 +143,11 @@ struct _GstExifReader
   gint byte_order;
 };
 
-static void serialize_orientation (GstExifWriter * writer,
-    const GstTagList * taglist, const GstExifTagMatch * exiftag);
-static gint deserialize_orientation (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata);
-
-static void serialize_geo_coordinate (GstExifWriter * writer,
-    const GstTagList * taglist, const GstExifTagMatch * exiftag);
-static gint deserialize_geo_coordinate (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata);
-
-static void serialize_geo_direction (GstExifWriter * writer,
-    const GstTagList * taglist, const GstExifTagMatch * exiftag);
-static gint deserialize_geo_direction (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata);
-
-static void serialize_geo_elevation (GstExifWriter * writer,
-    const GstTagList * taglist, const GstExifTagMatch * exiftag);
-static gint deserialize_geo_elevation (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata);
-
-static void serialize_speed (GstExifWriter * writer,
-    const GstTagList * taglist, const GstExifTagMatch * exiftag);
-static gint deserialize_speed (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata);
-
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (orientation);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_coordinate);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_direction);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_elevation);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (speed);
 
 /* FIXME copyright tag has a weird "artist\0editor\0" format that is
  * not yet handled */
@@ -1672,3 +1660,7 @@ reader_fail:
   GST_WARNING ("Failed to read fields from buffer (too short?)");
   return ret;
 }
+
+#undef EXIF_SERIALIZATION_FUNC
+#undef EXIF_DESERIALIZATION_FUNC
+#undef EXIF_SERIALIZATION_DESERIALIZATION_FUNC
