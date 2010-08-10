@@ -540,7 +540,7 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
 {
   GstByteReader *reader;
   gint i;
-  guint16 aux = -1;
+  guint16 aux = G_MAXUINT16;
 
   GST_LOG ("Rewriting tag entries offsets");
 
@@ -552,7 +552,7 @@ gst_exif_tag_rewrite_offsets (GstByteWriter * writer, gint byte_order,
     } else {
       gst_byte_reader_get_uint16_be (reader, &aux);
     }
-    if (aux == -1) {
+    if (aux == G_MAXUINT16) {
       GST_WARNING ("Failed to read number of tags, won't rewrite offsets");
       return;
     }
