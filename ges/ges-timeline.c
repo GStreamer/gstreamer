@@ -330,6 +330,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 {
   GList *tmp;
   gboolean found = FALSE;
+  gboolean is_image = FALSE;
   GESTimelineFileSource *tfs = NULL;
 
   GST_DEBUG ("Discovered uri %s", info->uri);
@@ -361,11 +362,18 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
         tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
       else if (sinf->streamtype == GST_STREAM_IMAGE) {
         tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
-        g_object_set (G_OBJECT (tfs), "is-image", (gboolean) TRUE, NULL);
+        is_image = TRUE;
       }
     }
 
-    g_object_set (tfs, "max-duration", info->duration, NULL);
+    if (is_image) {
+      /* don't set max-duration on still images */
+      g_object_set (tfs, "is_image", (gboolean) TRUE, NULL);
+    }
+
+    else {
+      g_object_set (tfs, "max-duration", (guint64) info->duration, NULL);
+    }
 
     /* Continue the processing on tfs */
     add_object_to_tracks (timeline, GES_TIMELINE_OBJECT (tfs));
