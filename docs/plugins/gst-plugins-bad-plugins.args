@@ -639,6 +639,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstNeonhttpSrc::connect-timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>connect-timeout</NICK>
+<BLURB>Value in seconds to timeout a blocking connection (0 = default).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::cookies</NAME>
+<TYPE>GStrv*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cookies</NICK>
+<BLURB>HTTP request cookies.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::read-timeout</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>read-timeout</NICK>
+<BLURB>Value in seconds to timeout a blocking read (0 = default).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstTRM::proxy-address</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -1722,10 +1752,10 @@
 <NAME>GstDvbSrc::polarity</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>polarity</NICK>
 <BLURB>Polarity [vhHV] (DVB-S).</BLURB>
-<DEFAULT>"h"</DEFAULT>
+<DEFAULT>"H"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17902,10 +17932,10 @@
 <NAME>DvbBaseBin::polarity</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>polarity</NICK>
 <BLURB>Polarity [vhHV] (DVB-S).</BLURB>
-<DEFAULT>"h"</DEFAULT>
+<DEFAULT>"H"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26340,7 +26370,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>-6.17056e+303</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26390,7 +26420,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>8.20075e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26420,7 +26450,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26430,7 +26460,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.3852e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26470,7 +26500,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>2.24208e-44</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26490,7 +26520,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>2.22632e-38</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26820,7 +26850,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>5.33591e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26840,7 +26870,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.34037e-317</DEFAULT>
+<DEFAULT>1.36347e+161</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27010,7 +27040,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>3.99727e+252</DEFAULT>
+<DEFAULT>-5.83036e+303</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27200,7 +27230,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>7.60523e-311</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46111,5 +46141,65 @@
 <NICK>Preset</NICK>
 <BLURB>Color effect preset to use.</BLURB>
 <DEFAULT>Do nothing preset</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstStretch::intensity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>intensity</NICK>
+<BLURB>Intensity of the stretch effect.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSquare::height</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Height</NICK>
+<BLURB>Height of the square, relative to the frame height.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSquare::width</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Width</NICK>
+<BLURB>Width of the square, relative to the frame width.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSquare::zoom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Zoom</NICK>
+<BLURB>Zoom amount in the center region.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMirror::mode</NAME>
+<TYPE>GstMirrorMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mirror Mode</NICK>
+<BLURB>How to split the video frame and which side reflect.</BLURB>
+<DEFAULT>Split horizontally and reflect left into right</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBulge::zoom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>zoom</NICK>
+<BLURB>Zoom of the bulge effect.</BLURB>
+<DEFAULT>3</DEFAULT>
 </ARG>
 

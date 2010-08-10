@@ -3,7 +3,7 @@
   <description>Various elements utilizing VDPAU</description>
   <filename>../../sys/vdpau/.libs/libgstvdpau.so</filename>
   <basename>libgstvdpau.so</basename>
-  <version>0.10.19.1</version>
+  <version>0.10.19.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
@@ -21,6 +21,27 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-h264, interlaced=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-vdpau-video, chroma-type=(int)0, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)YV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]; video/x-raw-yuv, format=(fourcc)NV12, width=(int)[ 1, 4096 ], height=(int)[ 1, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>vdpaumpeg4dec</name>
+      <longname>VDPAU Mpeg4 Decoder</longname>
+      <class>Decoder</class>
+      <description>Decode mpeg4 stream with vdpau</description>
+      <author>Carl-Anton Ingmarsson &lt;ca.ingmarsson@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx, divxversion=(int)[ 4, 5 ]; video/x-xvid</details>
         </caps>
         <caps>
           <name>src</name>

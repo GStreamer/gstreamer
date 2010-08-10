@@ -2503,7 +2503,7 @@ orc_splat_u8_ns (orc_uint8 * d1, int p1, int n)
   int i;
   orc_int8 var0;
   orc_int8 *ptr0;
-  const orc_int8 var24 = p1;
+  const int var24 = p1;
 
   ptr0 = (orc_int8 *) d1;
 
@@ -2524,7 +2524,7 @@ _backup_orc_splat_u8_ns (OrcExecutor * ex)
   int n = ex->n;
   orc_int8 var0;
   orc_int8 *ptr0;
-  const orc_int8 var24 = ex->params[24];
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_int8 *) ex->arrays[0];
 
@@ -2583,7 +2583,7 @@ orc_splat_s16_ns (gint16 * d1, int p1, int n)
   int i;
   orc_int16 var0;
   orc_int16 *ptr0;
-  const orc_int16 var24 = p1;
+  const int var24 = p1;
 
   ptr0 = (orc_int16 *) d1;
 
@@ -2604,7 +2604,7 @@ _backup_orc_splat_s16_ns (OrcExecutor * ex)
   int n = ex->n;
   orc_int16 var0;
   orc_int16 *ptr0;
-  const orc_int16 var24 = ex->params[24];
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_int16 *) ex->arrays[0];
 
@@ -2669,9 +2669,9 @@ orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
   orc_int8 var5;
   const orc_int8 *ptr5;
   const orc_int16 var16 = 6;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -2724,9 +2724,9 @@ _backup_orc_matrix2_u8 (OrcExecutor * ex)
   orc_int8 var5;
   const orc_int8 *ptr5;
   const orc_int16 var16 = 6;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -2840,8 +2840,8 @@ orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
   const orc_int16 var17 = 128;
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 8;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
+  const int var24 = p1;
+  const int var25 = p2;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -2909,8 +2909,8 @@ _backup_orc_matrix2_11_u8 (OrcExecutor * ex)
   const orc_int16 var17 = 128;
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 8;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3043,8 +3043,8 @@ orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
   const orc_int16 var17 = 128;
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 8;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
+  const int var24 = p1;
+  const int var25 = p2;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3115,8 +3115,8 @@ _backup_orc_matrix2_12_u8 (OrcExecutor * ex)
   const orc_int16 var17 = 128;
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 8;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3252,10 +3252,10 @@ orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
   orc_int8 var6;
   const orc_int8 *ptr6;
   const orc_int16 var16 = 6;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
-  const orc_int16 var27 = p4;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
+  const int var27 = p4;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3322,10 +3322,10 @@ _backup_orc_matrix3_u8 (OrcExecutor * ex)
   orc_int8 var6;
   const orc_int8 *ptr6;
   const orc_int16 var16 = 6;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
-  const orc_int16 var27 = ex->params[27];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
+  const int var27 = ex->params[27];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3461,9 +3461,9 @@ orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 128;
   const orc_int16 var20 = 8;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3546,9 +3546,9 @@ _backup_orc_matrix3_100_u8 (OrcExecutor * ex)
   const orc_int16 var18 = 128;
   const orc_int16 var19 = 128;
   const orc_int16 var20 = 8;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3698,11 +3698,11 @@ orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
-  const orc_int16 var27 = p4;
-  const orc_int16 var28 = p5;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
+  const int var27 = p4;
+  const int var28 = p5;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3771,11 +3771,11 @@ _backup_orc_matrix3_100_offset_u8 (OrcExecutor * ex)
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
-  const orc_int16 var27 = ex->params[27];
-  const orc_int16 var28 = ex->params[28];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
+  const int var27 = ex->params[27];
+  const int var28 = ex->params[28];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3912,11 +3912,11 @@ orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
-  const orc_int16 var27 = p4;
-  const orc_int16 var28 = p5;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
+  const int var27 = p4;
+  const int var28 = p5;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -3982,11 +3982,11 @@ _backup_orc_matrix3_000_u8 (OrcExecutor * ex)
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
-  const orc_int16 var27 = ex->params[27];
-  const orc_int16 var28 = ex->params[28];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
+  const int var27 = ex->params[27];
+  const int var28 = ex->params[28];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -4118,7 +4118,7 @@ orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int8 var24 = p1;
+  const int var24 = p1;
   orc_int16 var32;
   orc_int16 var33;
 
@@ -4160,7 +4160,7 @@ _backup_orc_pack_123x (OrcExecutor * ex)
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int8 var24 = ex->params[24];
+  const int var24 = ex->params[24];
   orc_int16 var32;
   orc_int16 var33;
 
@@ -4252,7 +4252,7 @@ orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int8 var24 = p1;
+  const int var24 = p1;
   orc_int16 var32;
   orc_int16 var33;
 
@@ -4294,7 +4294,7 @@ _backup_orc_pack_x123 (OrcExecutor * ex)
   const orc_int8 *ptr5;
   orc_int8 var6;
   const orc_int8 *ptr6;
-  const orc_int8 var24 = ex->params[24];
+  const int var24 = ex->params[24];
   orc_int16 var32;
   orc_int16 var33;
 
@@ -4385,8 +4385,8 @@ cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   orc_int8 var5;
   const orc_int8 *ptr5;
   const orc_int16 var16 = 8;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
+  const int var24 = p1;
+  const int var25 = p2;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -4436,8 +4436,8 @@ _backup_cogorc_combine2_u8 (OrcExecutor * ex)
   orc_int8 var5;
   const orc_int8 *ptr5;
   const orc_int16 var16 = 8;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -4548,10 +4548,10 @@ cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
   const orc_int8 *ptr7;
   const orc_int16 var16 = 32;
   const orc_int16 var17 = 6;
-  const orc_int16 var24 = p1;
-  const orc_int16 var25 = p2;
-  const orc_int16 var26 = p3;
-  const orc_int16 var27 = p4;
+  const int var24 = p1;
+  const int var25 = p2;
+  const int var26 = p3;
+  const int var27 = p4;
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
@@ -4633,10 +4633,10 @@ _backup_cogorc_combine4_u8 (OrcExecutor * ex)
   const orc_int8 *ptr7;
   const orc_int16 var16 = 32;
   const orc_int16 var17 = 6;
-  const orc_int16 var24 = ex->params[24];
-  const orc_int16 var25 = ex->params[25];
-  const orc_int16 var26 = ex->params[26];
-  const orc_int16 var27 = ex->params[27];
+  const int var24 = ex->params[24];
+  const int var25 = ex->params[25];
+  const int var26 = ex->params[26];
+  const int var27 = ex->params[27];
   orc_int16 var32;
   orc_int16 var33;
   orc_int16 var34;
