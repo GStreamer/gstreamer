@@ -3,10 +3,10 @@
   <description>elements for testing and debugging</description>
   <filename>../../gst/debugutils/.libs/libgstdebug.so</filename>
   <basename>libgstdebug.so</basename>
-  <version>0.10.24.1</version>
+  <version>0.10.24.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -31,11 +31,53 @@
       </pads>
     </element>
     <element>
+      <name>capsdebug</name>
+      <longname>Caps debug</longname>
+      <class>Generic</class>
+      <description>Debug caps negotiation</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>capssetter</name>
       <longname>CapsSetter</longname>
       <class>Generic</class>
       <description>Set/merge caps on stream</description>
       <author>Mark Nauwelaerts &lt;mnauw@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cpureport</name>
+      <longname>CPU report</longname>
+      <class>Testing</class>
+      <description>Post cpu usage information every buffer</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

@@ -3,6 +3,7 @@ GstPipeline GstChildProxy
 GstSwitchSink GstChildProxy
 GstGConfVideoSink GstChildProxy
 GstGConfAudioSink GstChildProxy
+GstSwitchSrc GstChildProxy
 GstGConfVideoSrc GstChildProxy
 GstGConfAudioSrc GstChildProxy
 GstHalAudioSink GstChildProxy

@@ -529,6 +529,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::reuse</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reuse</NICK>
+<BLURB>Enable reuse of the port.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -736,6 +746,16 @@
 <NICK>Buffer Mode</NICK>
 <BLURB>Control the buffering algorithm in use.</BLURB>
 <DEFAULT>Slave receiver to sender clock</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::port-range</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port range</NICK>
+<BLURB>Client port range that can be used to receive RTP and RTCP data, eg. 3000-3005 (NULL = no restrictions).</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
