@@ -33,8 +33,10 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 	gstglwindow.h \
 	gstgldisplay.h \
 	gstglbuffer.h \
+	gstgles2.h \
 	gstglfilter.h \
 	gstglmixer.h \
+	gstglmixerpad.h \
 	gstglshader.h
 
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
