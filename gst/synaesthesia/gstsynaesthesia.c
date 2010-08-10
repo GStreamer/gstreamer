@@ -60,10 +60,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS)
     );
 
-
-static void gst_synaesthesia_base_init (gpointer g_class);
-static void gst_synaesthesia_class_init (GstSynaesthesiaClass * klass);
-static void gst_synaesthesia_init (GstSynaesthesia * synaesthesia);
 static void gst_synaesthesia_finalize (GObject * object);
 static void gst_synaesthesia_dispose (GObject * object);
 
@@ -76,31 +72,8 @@ static gboolean gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia);
 static gboolean gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_synaesthesia_get_type (void)
-{
-  static GType type = 0;
-
-  if (!type) {
-    static const GTypeInfo info = {
-      sizeof (GstSynaesthesiaClass),
-      gst_synaesthesia_base_init,
-      NULL,
-      (GClassInitFunc) gst_synaesthesia_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSynaesthesia),
-      0,
-      (GInstanceInitFunc) gst_synaesthesia_init,
-    };
-
-    type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstSynaesthesia", &info, 0);
-  }
-  return type;
-}
+GST_BOILERPLATE (GstSynaesthesia, gst_synaesthesia, GstElement,
+    GST_TYPE_ELEMENT);
 
 static void
 gst_synaesthesia_base_init (gpointer g_class)
@@ -139,7 +112,8 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
 }
 
 static void
-gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
+gst_synaesthesia_init (GstSynaesthesia * synaesthesia,
+    GstSynaesthesiaClass * g_class)
 {
   /* create the sink and src pads */
   synaesthesia->sinkpad =
