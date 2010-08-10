@@ -1333,6 +1333,8 @@ link_failed:
   {
     GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the video sink."));
+    /* checking sink made it READY */
+    gst_element_set_state (chain->sink, GST_STATE_NULL);
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -1826,6 +1828,8 @@ link_failed:
   {
     GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the audio sink."));
+    /* checking sink made it READY */
+    gst_element_set_state (chain->sink, GST_STATE_NULL);
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -2040,6 +2044,8 @@ link_failed:
   {
     GST_ELEMENT_ERROR (playsink, CORE, PAD,
         (NULL), ("Failed to configure the visualisation element."));
+    /* element made it to READY */
+    gst_element_set_state (chain->vis, GST_STATE_NULL);
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
