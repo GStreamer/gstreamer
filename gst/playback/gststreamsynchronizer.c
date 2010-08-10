@@ -283,6 +283,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
 
           GST_DEBUG_OBJECT (pad, "Stream %d changed", stream->stream_number);
 
+          stream->is_eos = FALSE;
           stream->wait = TRUE;
           stream->new_stream = TRUE;
 
@@ -441,6 +442,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
             stream->stream_number);
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
 
+        stream->is_eos = FALSE;
         stream->wait = FALSE;
         stream->new_stream = FALSE;
         stream->drop_discont = FALSE;
