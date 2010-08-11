@@ -405,9 +405,9 @@ gst_spectrum_start (GstBaseTransform * trans)
 static gboolean
 gst_spectrum_stop (GstBaseTransform * trans)
 {
-  GstSpectrum *filter = GST_SPECTRUM (trans);
+  GstSpectrum *spectrum = GST_SPECTRUM (trans);
 
-  gst_spectrum_reset_state (filter);
+  gst_spectrum_reset_state (spectrum);
 
   return TRUE;
 }
@@ -509,6 +509,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   GstFFTF32 *fft_ctx;
   const guint8 *data = GST_BUFFER_DATA (buffer);
   guint size = GST_BUFFER_SIZE (buffer);
+  gboolean have_full_interval;
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
 
@@ -521,12 +522,15 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
    * changes) get one and allocate memory for everything
    */
   if (spectrum->fft_ctx == NULL) {
+    GST_DEBUG_OBJECT (spectrum, "allocating for bands %u", bands);
+
+    spectrum->fft_ctx = gst_fft_f32_new (nfft, FALSE);
     spectrum->input = g_new0 (gfloat, nfft);
     spectrum->input_tmp = g_new0 (gfloat, nfft);
     spectrum->freqdata = g_new0 (GstFFTF32Complex, bands);
     spectrum->spect_magnitude = g_new0 (gfloat, bands);
     spectrum->spect_phase = g_new0 (gfloat, bands);
-    spectrum->fft_ctx = gst_fft_f32_new (nfft, FALSE);
+
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
     spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
@@ -597,17 +601,19 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     spectrum->input_pos = (spectrum->input_pos + 1) % nfft;
     spectrum->num_frames++;
 
+    have_full_interval = (
+        (spectrum->accumulated_error < GST_SECOND
+            && spectrum->num_frames == spectrum->frames_per_interval) ||
+        (spectrum->accumulated_error >= GST_SECOND
+            && spectrum->num_frames - 1 == spectrum->frames_per_interval)
+        );
+
     /* If we have enough frames for an FFT or we
      * have all frames required for the interval run
      * an FFT. In the last case we probably take the
      * FFT of frames that we already handled.
      */
-    if (spectrum->num_frames % nfft == 0 ||
-        ((spectrum->accumulated_error < GST_SECOND
-                && spectrum->num_frames == spectrum->frames_per_interval)
-            || (spectrum->accumulated_error >= GST_SECOND
-                && spectrum->num_frames - 1 ==
-                spectrum->frames_per_interval))) {
+    if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
 
       for (i = 0; i < nfft; i++)
         input_tmp[i] = input[(spectrum->input_pos + i) % nfft];
@@ -635,10 +641,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
 
     /* Do we have the FFTs for one interval? */
-    if ((spectrum->accumulated_error < GST_SECOND
-            && spectrum->num_frames == spectrum->frames_per_interval)
-        || (spectrum->accumulated_error >= GST_SECOND
-            && spectrum->num_frames - 1 == spectrum->frames_per_interval)) {
+    if (have_full_interval) {
+
+      GST_INFO ("nfft: %u num_frames: %" G_GUINT64_FORMAT " fpi: %"
+          G_GUINT64_FORMAT " error: %" GST_TIME_FORMAT, nfft,
+          spectrum->num_frames, spectrum->frames_per_interval,
+          GST_TIME_ARGS (spectrum->accumulated_error));
 
       if (spectrum->accumulated_error >= GST_SECOND)
         spectrum->accumulated_error -= GST_SECOND;
@@ -659,12 +667,14 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
         gst_element_post_message (GST_ELEMENT (spectrum), m);
       }
-      memset (spect_magnitude, 0, bands * sizeof (gfloat));
-      memset (spect_phase, 0, bands * sizeof (gfloat));
 
       if (GST_CLOCK_TIME_IS_VALID (spectrum->message_ts))
         spectrum->message_ts +=
             gst_util_uint64_scale (spectrum->num_frames, GST_SECOND, rate);
+
+      /* reset spectrum accumulators */
+      memset (spect_magnitude, 0, bands * sizeof (gfloat));
+      memset (spect_phase, 0, bands * sizeof (gfloat));
       spectrum->num_frames = 0;
       spectrum->num_fft = 0;
     }
