@@ -1,0 +1,49 @@
+<plugin>
+  <name>gsettings</name>
+  <description>GSettings plugin</description>
+  <filename>../../ext/gsettings/.libs/libgstgsettingselements.so</filename>
+  <basename>libgstgsettingselements.so</basename>
+  <version>0.10.19.3</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>gsettingsaudiosink</name>
+      <longname>GSettings audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Audio sink embedding the GSettings preferences for audio output</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>gsettingsaudiosrc</name>
+      <longname>GSettings audio src</longname>
+      <class>Src/Audio</class>
+      <description>Audio src embedding the GSettings preferences for audio input</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>gsettingsvideosink</name>
+      <longname>GSettings video sink</longname>
+      <class>Sink/Video</class>
+      <description>Video sink embedding the GSettings preferences for video input</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+    <element>
+      <name>gsettingsvideosrc</name>
+      <longname>GSettings video src</longname>
+      <class>Src/Video</class>
+      <description>Video src embedding the GSettings preferences for video input</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+      </pads>
+    </element>
+  </elements>
+</plugin>

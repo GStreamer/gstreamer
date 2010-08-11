@@ -21954,6 +21954,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstCeltEnc::prediction</NAME>
+<TYPE>GstCeltEncPrediction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interframe Prediction</NICK>
+<BLURB>Controls the use of interframe prediction.</BLURB>
+<DEFAULT>Independent frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCeltEnc::start-band</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Band</NICK>
+<BLURB>Controls the start band that should be used.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstJackAudioSrc::connect</NAME>
 <TYPE>GstJackConnect</TYPE>
 <RANGE></RANGE>
@@ -26370,7 +26390,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26410,7 +26430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>7.74861e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26470,7 +26490,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26500,7 +26520,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>2.24208e-44</DEFAULT>
+<DEFAULT>2.33349e-09</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26510,7 +26530,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>5.42746e-14</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26520,7 +26540,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color-R</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>2.22632e-38</DEFAULT>
+<DEFAULT>8.89504e-15</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26850,7 +26870,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>5.33591e-322</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26870,7 +26890,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.36347e+161</DEFAULT>
+<DEFAULT>1.34037e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27040,7 +27060,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>-5.83036e+303</DEFAULT>
+<DEFAULT>4.74303e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27230,7 +27250,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>7.60523e-311</DEFAULT>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>

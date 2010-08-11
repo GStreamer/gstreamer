@@ -44,4 +44,6 @@ tmp-orc.c
 gst*orc.h
 /tests/check/orc
 
-ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
+/ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
+/ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.valid
+/ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.xml

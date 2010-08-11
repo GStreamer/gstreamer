@@ -178,6 +178,12 @@ GObject
         DvbBaseBin
         GstAutoConvert
         GstFPSDisplaySink
+        GstGSettingsSwitchSink
+          GstGSettingsAudioSink
+          GstGSettingsVideoSink
+        GstGSettingsSwitchSrc
+          GstGSettingsAudioSrc
+          GstGSettingsVideoSrc
         GstPipeline
           GstCameraBin
           GstQTMoovRecover
@@ -187,6 +193,8 @@ GObject
       GstBz2enc
       GstCDAudio
       GstCDXAParse
+      GstCeltDec
+      GstCeltEnc
       GstDVDSpu
       GstDtsDec
       GstFaac
