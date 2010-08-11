@@ -501,6 +501,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   guint bands = spectrum->bands;
   guint nfft = 2 * bands - 2;
   gint threshold = spectrum->threshold;
+  guint input_pos;
   gfloat *input;
   gfloat *input_tmp;
   GstFFTF32Complex *freqdata;
@@ -552,28 +553,29 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   spect_phase = spectrum->spect_phase;
   fft_ctx = spectrum->fft_ctx;
 
+  input_pos = spectrum->input_pos;
+
   while (size >= width * channels) {
 
     /* Move the current frame into our ringbuffer and
      * take the average of all channels
      */
-    spectrum->input[spectrum->input_pos] = 0.0;
+    input[input_pos] = 0.0;
     if (fp && width == 4) {
       gfloat *in = (gfloat *) data;
       for (i = 0; i < channels; i++)
-        spectrum->input[spectrum->input_pos] += in[i];
+        input[input_pos] += in[i];
     } else if (fp && width == 8) {
       gdouble *in = (gdouble *) data;
       for (i = 0; i < channels; i++)
-        spectrum->input[spectrum->input_pos] += in[i];
+        input[input_pos] += in[i];
     } else if (!fp && width == 4) {
       gint32 *in = (gint32 *) data;
       for (i = 0; i < channels; i++)
         /* max_value will be 0 when depth is 1, interpret -1 and 0
          * as -1 and +1 if that's the case.
          */
-        spectrum->input[spectrum->input_pos] +=
-            max_value ? in[i] / max_value : in[i] * 2 + 1;
+        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
     } else if (!fp && width == 3) {
       for (i = 0; i < channels; i++) {
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -583,22 +585,20 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 #endif
         if (value & 0x00800000)
           value |= 0xff000000;
-        spectrum->input[spectrum->input_pos] +=
-            max_value ? value / max_value : value * 2 + 1;
+        input[input_pos] += max_value ? value / max_value : value * 2 + 1;
       }
     } else if (!fp && width == 2) {
       gint16 *in = (gint16 *) data;
       for (i = 0; i < channels; i++)
-        spectrum->input[spectrum->input_pos] +=
-            max_value ? in[i] / max_value : in[i] * 2 + 1;
+        input[input_pos] += max_value ? in[i] / max_value : in[i] * 2 + 1;
     } else {
       g_assert_not_reached ();
     }
-    spectrum->input[spectrum->input_pos] /= channels;
+    input[input_pos] /= channels;
 
     data += width * channels;
     size -= width * channels;
-    spectrum->input_pos = (spectrum->input_pos + 1) % nfft;
+    input_pos = (input_pos + 1) % nfft;
     spectrum->num_frames++;
 
     have_full_interval = (
@@ -616,7 +616,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     if ((spectrum->num_frames % nfft == 0) || have_full_interval) {
 
       for (i = 0; i < nfft; i++)
-        input_tmp[i] = input[(spectrum->input_pos + i) % nfft];
+        input_tmp[i] = input[(input_pos + i) % nfft];
 
       gst_fft_f32_window (fft_ctx, input_tmp, GST_FFT_WINDOW_HAMMING);
 
@@ -679,6 +679,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       spectrum->num_fft = 0;
     }
   }
+
+  spectrum->input_pos = input_pos;
 
   g_assert (size == 0);
 
