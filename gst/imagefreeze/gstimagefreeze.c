@@ -332,8 +332,8 @@ gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
       GST_ERROR_OBJECT (pad, "Allocating buffer failed: %s",
           gst_flow_get_name (ret));
   } else {
-    /* In this case GstPad will allocate a buffer for us */
-    ret = GST_FLOW_OK;
+    /* Let upstream go EOS if we already have a buffer */
+    ret = GST_FLOW_UNEXPECTED;
   }
 
   gst_object_unref (self);
@@ -687,14 +687,13 @@ static GstFlowReturn
 gst_image_freeze_sink_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (GST_PAD_PARENT (pad));
-  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_OBJECT_LOCK (self);
   if (self->buffer) {
     GST_DEBUG_OBJECT (pad, "Already have a buffer, dropping");
     gst_buffer_unref (buffer);
     GST_OBJECT_UNLOCK (self);
-    return ret;
+    return GST_FLOW_UNEXPECTED;
   }
 
   self->buffer = buffer;
@@ -702,7 +701,7 @@ gst_image_freeze_sink_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_pad_start_task (self->srcpad, (GstTaskFunction) gst_image_freeze_src_loop,
       self->srcpad);
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static void
