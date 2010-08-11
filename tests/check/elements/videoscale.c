@@ -379,6 +379,9 @@ _test_negotiation (const gchar * src_templ, const gchar * sink_templ,
   TestNegotiationData data = { 0, 0, 0, 0, FALSE, NULL };
   GstPad *pad;
 
+  GST_DEBUG ("Running test for src templ caps '%s' and sink templ caps '%s'",
+      src_templ, sink_templ);
+
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   fail_unless (pipeline != NULL);
 
