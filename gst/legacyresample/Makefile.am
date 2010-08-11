@@ -16,7 +16,7 @@ noinst_HEADERS = \
 
 libgstlegacyresample_la_SOURCES = gstlegacyresample.c $(resample_SOURCES)
 libgstlegacyresample_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstlegacyresample_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
+libgstlegacyresample_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstlegacyresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstlegacyresample_la_LIBTOOLFLAGS = --tag=disable-static
 
