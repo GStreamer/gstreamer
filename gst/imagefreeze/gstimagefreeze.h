@@ -55,6 +55,9 @@ struct _GstImageFreeze
   GstEvent *close_segment;
 
   guint64 offset;
+
+  /* TRUE if currently doing a flushing seek */
+  gint seeking;
 };
 
 struct _GstImageFreezeClass

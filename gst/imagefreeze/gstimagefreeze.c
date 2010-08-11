@@ -163,6 +163,8 @@ gst_image_freeze_reset (GstImageFreeze * self)
   self->fps_n = self->fps_d = 0;
   self->offset = 0;
   GST_OBJECT_UNLOCK (self);
+
+  g_atomic_int_set (&self->seeking, 0);
 }
 
 static gboolean
@@ -327,7 +329,10 @@ gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
   GST_OBJECT_UNLOCK (self);
 
   if (do_alloc) {
-    ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
+    do {
+      ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
+    } while (ret == GST_FLOW_WRONG_STATE && g_atomic_int_get (&self->seeking));
+
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       GST_ERROR_OBJECT (pad, "Allocating buffer failed: %s",
           gst_flow_get_name (ret));
@@ -609,6 +614,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
       if (flush) {
         GstEvent *e;
 
+        g_atomic_int_set (&self->seeking, 1);
         e = gst_event_new_flush_start ();
         gst_pad_push_event (self->srcpad, e);
       } else {
@@ -651,6 +657,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
 
         e = gst_event_new_flush_stop ();
         gst_pad_push_event (self->srcpad, e);
+        g_atomic_int_set (&self->seeking, 0);
       }
 
       if (flags & GST_SEEK_FLAG_SEGMENT) {
