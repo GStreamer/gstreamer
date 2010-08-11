@@ -332,6 +332,10 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   /* this function is always called with a simple caps */
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
+  GST_DEBUG_OBJECT (trans,
+      "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
+      (direction == GST_PAD_SINK) ? "sink" : "src");
+
   ret = gst_caps_copy (caps);
   structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
 
@@ -341,12 +345,10 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 
   /* if pixel aspect ratio, make a range of it */
   if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-    gst_structure_set (structure,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
-        NULL);
+    gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE,
+        1, G_MAXINT, G_MAXINT, 1, NULL);
   }
-  gst_caps_merge_structure (ret, gst_structure_copy (structure));
-  gst_structure_free (structure);
+  gst_caps_append_structure (ret, structure);
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
@@ -487,9 +489,6 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
       g_value_init (&tpar, GST_TYPE_FRACTION_RANGE);
       gst_value_set_fraction_range_full (&tpar, 1, G_MAXINT, G_MAXINT, 1);
       to_par = &tpar;
-
-      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1,
-          G_MAXINT, G_MAXINT, 1, NULL);
     }
   } else {
     if (!to_par) {
@@ -540,7 +539,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
           if (gst_structure_has_field (outs, "pixel-aspect-ratio"))
             gst_structure_fixate_field_nearest_fraction (outs,
                 "pixel-aspect-ratio", n, d);
-          else
+          else if (n != d)
             gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
                 n, d, NULL);
         }
@@ -607,6 +606,9 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         gst_structure_free (tmp);
         goto done;
       }
+
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -615,9 +617,11 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       /* Check if the adjusted PAR is accepted */
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
-        gst_structure_set (outs, "width", G_TYPE_INT, set_w,
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
-            NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "width", G_TYPE_INT, set_w,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
         goto done;
       }
 
@@ -633,8 +637,10 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       w = (guint) gst_util_uint64_scale_int (h, num, den);
       gst_structure_fixate_field_nearest_int (outs, "width", w);
-      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          set_par_n, set_par_d, NULL);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
 
       goto done;
     } else if (w) {
@@ -682,6 +688,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         gst_structure_free (tmp);
         goto done;
       }
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -690,9 +698,11 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       /* Check if the adjusted PAR is accepted */
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
-        gst_structure_set (outs, "height", G_TYPE_INT, set_h,
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
-            NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "height", G_TYPE_INT, set_h,
+              "pixel-aspect-ratio", GST_TYPE_FRACTION, set_par_n, set_par_d,
+              NULL);
         goto done;
       }
 
@@ -708,8 +718,10 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       h = (guint) gst_util_uint64_scale_int (w, den, num);
       gst_structure_fixate_field_nearest_int (outs, "height", h);
-      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          set_par_n, set_par_d, NULL);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
 
       goto done;
     } else if (gst_value_is_fixed (to_par)) {
@@ -796,6 +808,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         goto done;
       }
 
+      if (!gst_structure_has_field (tmp, "pixel-aspect-ratio"))
+        gst_structure_set_value (tmp, "pixel-aspect-ratio", to_par);
       gst_structure_fixate_field_nearest_fraction (tmp, "pixel-aspect-ratio",
           to_par_n, to_par_d);
       gst_structure_get_fraction (tmp, "pixel-aspect-ratio", &set_par_n,
@@ -804,8 +818,12 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       if (set_par_n == to_par_n && set_par_d == to_par_d) {
         gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, set_h, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+            G_TYPE_INT, set_h, NULL);
+
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
         goto done;
       }
 
@@ -826,8 +844,11 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       if (tmp2 == w) {
         gst_structure_set (outs, "width", G_TYPE_INT, tmp2, "height",
-            G_TYPE_INT, set_h, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+            G_TYPE_INT, set_h, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
         goto done;
       }
 
@@ -840,16 +861,22 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       if (tmp2 == h) {
         gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-            G_TYPE_INT, tmp2, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-            set_par_n, set_par_d, NULL);
+            G_TYPE_INT, tmp2, NULL);
+        if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+            set_par_n != set_par_d)
+          gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+              set_par_n, set_par_d, NULL);
         goto done;
       }
 
       /* If all fails we can't keep the DAR and take the nearest values
        * for everything from the first try */
       gst_structure_set (outs, "width", G_TYPE_INT, set_w, "height",
-          G_TYPE_INT, set_h, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          set_par_n, set_par_d, NULL);
+          G_TYPE_INT, set_h, NULL);
+      if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
+          set_par_n != set_par_d)
+        gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            set_par_n, set_par_d, NULL);
     }
   }
 
