@@ -623,21 +623,25 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       gst_fft_f32_fft (fft_ctx, input_tmp, freqdata);
       spectrum->num_fft++;
 
-      /* Calculate magnitude in db */
-      for (i = 0; i < bands; i++) {
-        gdouble val = 0.0;
-        val = freqdata[i].r * freqdata[i].r;
-        val += freqdata[i].i * freqdata[i].i;
-        val /= nfft * nfft;
-        val = 10.0 * log10 (val);
-        if (val < threshold)
-          val = threshold;
-        spect_magnitude[i] += val;
+      if (spectrum->message_magnitude) {
+        gdouble val;
+        /* Calculate magnitude in db */
+        for (i = 0; i < bands; i++) {
+          val = freqdata[i].r * freqdata[i].r;
+          val += freqdata[i].i * freqdata[i].i;
+          val /= nfft * nfft;
+          val = 10.0 * log10 (val);
+          if (val < threshold)
+            val = threshold;
+          spect_magnitude[i] += val;
+        }
       }
 
-      /* Calculate phase */
-      for (i = 0; i < bands; i++)
-        spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
+      if (spectrum->message_phase) {
+        /* Calculate phase */
+        for (i = 0; i < bands; i++)
+          spect_phase[i] += atan2 (freqdata[i].i, freqdata[i].r);
+      }
     }
 
     /* Do we have the FFTs for one interval? */
