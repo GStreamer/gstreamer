@@ -1498,6 +1498,8 @@ gen_text_chain (GstPlaySink * playsink)
             (_("Missing element '%s' - check your GStreamer installation."),
                 "subtitleoverlay"), ("subtitle rendering disabled"));
       } else {
+        GstElement *element;
+
         gst_bin_add (bin, chain->overlay);
 
         g_object_set (G_OBJECT (chain->overlay), "silent", FALSE, NULL);
@@ -1513,9 +1515,22 @@ gen_text_chain (GstPlaySink * playsink)
         gst_element_link_pads_full (chain->queue, "src", chain->overlay,
             "video_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS);
 
-        textsinkpad =
-            gst_element_get_static_pad (chain->overlay, "subtitle_sink");
-        srcpad = gst_element_get_static_pad (chain->overlay, "src");
+        /* make another little queue to decouple streams */
+        element = gst_element_factory_make ("queue", "subqueue");
+        if (element == NULL) {
+          post_missing_element_message (playsink, "queue");
+          GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+              (_("Missing element '%s' - check your GStreamer installation."),
+                  "queue"), ("rendering might be suboptimal"));
+        } else {
+          g_object_set (G_OBJECT (element), "max-size-buffers", 3,
+              "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+          gst_bin_add (bin, element);
+          gst_element_link_pads_full (element, "src", chain->overlay,
+              "subtitle_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS);
+          textsinkpad = gst_element_get_static_pad (element, "sink");
+          srcpad = gst_element_get_static_pad (chain->overlay, "src");
+        }
       }
     }
   }

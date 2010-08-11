@@ -2691,10 +2691,9 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
-      /* Wait for stream-changed messages on all selectors except
-       * the text selector because of the sparse nature of text streams.
-       */
-      if (select->sinkpad && select->type != GST_PLAY_SINK_TYPE_TEXT) {
+      /* All streamsynchronizer streams should see stream-changed message,
+       * to arrange for blocking unblocking. */
+      if (select->sinkpad) {
         GstStructure *s;
         GstMessage *msg;
         GstEvent *event;
