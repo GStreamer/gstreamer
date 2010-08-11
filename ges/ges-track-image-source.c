@@ -113,7 +113,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
 static GstElement *
 ges_track_image_source_create_element (GESTrackSource * object)
 {
-  GstElement *bin, *source, *scale, *freeze, *iconv, *oconv;
+  GstElement *bin, *source, *scale, *freeze, *iconv;
   GstPad *src, *target;
 
   bin = GST_ELEMENT (gst_bin_new ("still-image-bin"));
@@ -121,18 +121,17 @@ ges_track_image_source_create_element (GESTrackSource * object)
   scale = gst_element_factory_make ("videoscale", NULL);
   freeze = gst_element_factory_make ("imagefreeze", NULL);
   iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
-  oconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
 
-  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, iconv, oconv, NULL);
+  gst_bin_add_many (GST_BIN (bin), source, scale, freeze, iconv, NULL);
 
   gst_element_link_pads_full (scale, "src", iconv, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
   gst_element_link_pads_full (iconv, "src", freeze, "sink",
       GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link_pads_full (freeze, "src", oconv, "sink",
-      GST_PAD_LINK_CHECK_NOTHING);
 
-  target = gst_element_get_static_pad (oconv, "src");
+  /* FIXME: add capsfilter here with sink caps (see 626518) */
+
+  target = gst_element_get_static_pad (freeze, "src");
 
   src = gst_ghost_pad_new ("src", target);
   gst_element_add_pad (bin, src);
