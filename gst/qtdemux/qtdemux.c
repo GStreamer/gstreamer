@@ -5435,8 +5435,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                 break;
             }
 
-            len -= QT_UINT32 (avc_data);
-            avc_data += QT_UINT32 (avc_data);
+            len -= size + 8;
+            avc_data += size + 8;
           }
 
           break;
