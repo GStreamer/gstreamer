@@ -9,7 +9,8 @@ libgstinvtelecine_la_CFLAGS = \
 
 libgstinvtelecine_la_LIBADD = \
 	$(GST_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
+	$(LIBM)
 
 libgstinvtelecine_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstinvtelecine_la_LIBTOOLFLAGS = --tag=disable-static
