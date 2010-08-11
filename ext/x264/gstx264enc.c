@@ -87,6 +87,11 @@
 #define X264_MB_RC
 #endif
 
+#if X264_BUILD >= 78
+/* b-pyramid was available before but was changed from boolean here */
+#define X264_B_PYRAMID
+#endif
+
 #if X264_BUILD >= 80
 #define X264_ENH_THREADING
 #endif
@@ -669,8 +674,13 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       g_param_spec_boolean ("b-pyramid", "B-Pyramid",
           "Keep some B-frames as references", ARG_B_PYRAMID_DEFAULT,
           G_PARAM_READWRITE));
+#ifdef X264_B_PYRAMID
+  g_string_append_printf (x264enc_defaults, ":b-pyramid=%s",
+      x264_b_pyramid_names[ARG_B_PYRAMID_DEFAULT]);
+#else
   g_string_append_printf (x264enc_defaults, ":b-pyramid=%d",
       ARG_B_PYRAMID_DEFAULT);
+#endif /* X264_B_PYRAMID */
   g_object_class_install_property (gobject_class, ARG_WEIGHTB,
       g_param_spec_boolean ("weightb", "Weighted B-Frames",
           "Weighted prediction for B-frames", ARG_WEIGHTB_DEFAULT,
@@ -1788,8 +1798,13 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_B_PYRAMID:
       encoder->b_pyramid = g_value_get_boolean (value);
+#ifdef X264_B_PYRAMID
+      g_string_append_printf (encoder->option_string, ":b-pyramid=%s",
+          x264_b_pyramid_names[encoder->b_pyramid]);
+#else
       g_string_append_printf (encoder->option_string, ":b-pyramid=%d",
           encoder->b_pyramid);
+#endif /* X264_B_PYRAMID */
       break;
     case ARG_WEIGHTB:
       encoder->weightb = g_value_get_boolean (value);
