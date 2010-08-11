@@ -59,8 +59,8 @@ struct _GstSpectrum
   guint input_pos;
   gfloat *input_tmp;
   GstFFTF32Complex *freqdata;
-  gfloat *spect_magnitude;
-  gfloat *spect_phase;
+  gfloat *spect_magnitude;      /* accumulated mangitude and phase */
+  gfloat *spect_phase;          /* will be scaled by num_fft before sending */
   GstFFTF32 *fft_ctx;
 
   guint64 error_per_interval;

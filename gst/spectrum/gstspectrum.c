@@ -513,8 +513,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     gst_spectrum_reset_state (spectrum);
   }
 
-  /* If we don't have a FFT context yet get one and
-   * allocate memory for everything
+  /* If we don't have a FFT context yet (or it was reset due to parameter
+   * changes) get one and allocate memory for everything
    */
   if (spectrum->fft_ctx == NULL) {
     spectrum->input = g_new0 (gfloat, nfft);
