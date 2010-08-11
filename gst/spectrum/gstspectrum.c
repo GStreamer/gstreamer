@@ -331,31 +331,28 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
     case PROP_MESSAGE_PHASE:
       filter->message_phase = g_value_get_boolean (value);
       break;
-    case PROP_INTERVAL:
-      GST_BASE_TRANSFORM_LOCK (filter);
-      filter->interval = g_value_get_uint64 (value);
-      gst_spectrum_reset_state (filter);
-      GST_BASE_TRANSFORM_UNLOCK (filter);
-      break;
-    case PROP_BANDS:
-      GST_BASE_TRANSFORM_LOCK (filter);
-
-      if (filter->bands == g_value_get_uint (value)) {
+    case PROP_INTERVAL:{
+      guint64 interval = g_value_get_uint64 (value);
+      if (filter->interval != interval) {
+        GST_BASE_TRANSFORM_LOCK (filter);
+        filter->interval = g_value_get_uint64 (value);
+        gst_spectrum_reset_state (filter);
         GST_BASE_TRANSFORM_UNLOCK (filter);
-        break;
       }
-
-      filter->bands = g_value_get_uint (value);
-
-      gst_spectrum_reset_state (filter);
-
-      GST_BASE_TRANSFORM_UNLOCK (filter);
+    }
+      break;
+    case PROP_BANDS:{
+      guint bands = g_value_get_uint (value);
+      if (filter->bands != bands) {
+        GST_BASE_TRANSFORM_LOCK (filter);
+        filter->bands = bands;
+        gst_spectrum_reset_state (filter);
+        GST_BASE_TRANSFORM_UNLOCK (filter);
+      }
+    }
       break;
     case PROP_THRESHOLD:
-      GST_BASE_TRANSFORM_LOCK (filter);
       filter->threshold = g_value_get_int (value);
-      gst_spectrum_reset_state (filter);
-      GST_BASE_TRANSFORM_UNLOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
