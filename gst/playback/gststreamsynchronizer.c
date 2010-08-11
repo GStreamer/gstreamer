@@ -750,6 +750,11 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
   }
   g_assert (l != NULL);
 
+  /* we can drop the lock, since stream exists now only local.
+   * Moreover, we should drop, to prevent deadlock with STREAM_LOCK
+   * (due to reverse lock order) when deactivating pads */
+  GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+
   gst_pad_set_element_private (stream->srcpad, NULL);
   gst_pad_set_element_private (stream->sinkpad, NULL);
   gst_pad_set_active (stream->srcpad, FALSE);
@@ -786,6 +791,9 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
    * when it's reconfigured, which happens when the streams
    * change
    */
+
+  /* lock for good measure, since the caller had it */
+  GST_STREAM_SYNCHRONIZER_LOCK (self);
 }
 
 static void
