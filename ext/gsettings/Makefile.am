@@ -37,3 +37,5 @@ noinst_HEADERS = \
 	gstgsettings.h
 
 EXTRA_DIST = org.freedesktop.gstreamer.default-elements.gschema.xml
+
+CLEANFILES = $(gsettings_SCHEMAS)
