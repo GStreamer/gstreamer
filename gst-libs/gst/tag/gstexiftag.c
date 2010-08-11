@@ -909,15 +909,18 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
       continue;
     }
 
-    /* inner ifd tags handling */
+    /*
+     * inner ifd tags handling, errors processing those are being ignored
+     * and we try to continue the parsing
+     */
     if (tagdata.tag == EXIF_GPS_IFD_TAG) {
-      i += parse_exif_ifd (exif_reader,
+      parse_exif_ifd (exif_reader,
           tagdata.offset - exif_reader->base_offset, tag_map_gps);
 
       continue;
     }
     if (tagdata.tag == EXIF_IFD_TAG) {
-      i += parse_exif_ifd (exif_reader,
+      parse_exif_ifd (exif_reader,
           tagdata.offset - exif_reader->base_offset, tag_map_exif);
 
       continue;
