@@ -541,10 +541,13 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
       gint64 start, stop;
       gint64 last_stop;
       gboolean start_task;
+      gboolean flush;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
       gst_event_unref (event);
+
+      flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
 
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
         GST_ERROR_OBJECT (pad, "Seek in invalid format: %s",
@@ -567,7 +570,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
         }
       }
 
-      if ((flags & GST_SEEK_FLAG_FLUSH)) {
+      if (flush) {
         GstEvent *e;
 
         e = gst_event_new_flush_start ();
@@ -580,21 +583,23 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
 
       GST_OBJECT_LOCK (self);
       gst_event_replace (&self->close_segment, NULL);
-      if (self->segment.rate >= 0) {
-        self->close_segment =
-            gst_event_new_new_segment_full (TRUE, self->segment.rate,
-            self->segment.applied_rate, self->segment.format,
-            self->segment.start, self->segment.last_stop, self->segment.time);
-      } else {
-        gint64 stop;
+      if (!flush) {
+        if (!self->need_segment && self->segment.rate >= 0) {
+          self->close_segment =
+              gst_event_new_new_segment_full (TRUE, self->segment.rate,
+              self->segment.applied_rate, self->segment.format,
+              self->segment.start, self->segment.last_stop, self->segment.time);
+        } else if (!self->need_segment) {
+          gint64 stop;
 
-        if ((stop = self->segment.stop) == -1)
-          stop = self->segment.duration;
+          if ((stop = self->segment.stop) == -1)
+            stop = self->segment.duration;
 
-        self->close_segment =
-            gst_event_new_new_segment_full (TRUE, self->segment.rate,
-            self->segment.applied_rate, self->segment.format,
-            self->segment.last_stop, stop, self->segment.last_stop);
+          self->close_segment =
+              gst_event_new_new_segment_full (TRUE, self->segment.rate,
+              self->segment.applied_rate, self->segment.format,
+              self->segment.last_stop, stop, self->segment.last_stop);
+        }
       }
 
       gst_segment_set_seek (&self->segment, rate, format, flags, start_type,
@@ -605,7 +610,7 @@ gst_image_freeze_src_event (GstPad * pad, GstEvent * event)
       start_task = self->buffer != NULL;
       GST_OBJECT_UNLOCK (self);
 
-      if ((flags & GST_SEEK_FLAG_FLUSH)) {
+      if (flush) {
         GstEvent *e;
 
         e = gst_event_new_flush_stop ();
