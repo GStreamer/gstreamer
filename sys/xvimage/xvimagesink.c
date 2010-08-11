@@ -2588,13 +2588,6 @@ reuse_last_caps:
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink, intersection);
-    if (xvimage && xvimage->size < size) {
-      /* This image is unusable. Destroying... */
-      GST_LOG_OBJECT (xvimagesink, "Discarding allocated buffer as unsuitable. "
-          "Falling back to normal buffer");
-      gst_xvimage_buffer_free (xvimage);
-      xvimage = NULL;
-    }
   }
   g_mutex_unlock (xvimagesink->pool_lock);
 
