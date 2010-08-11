@@ -573,20 +573,23 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_CELT, true)
 AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
   PKG_CHECK_MODULES(CELT, celt >= 0.5.0, [
           AC_DEFINE([HAVE_CELT], 1, [Define if libcelt 0.5 is installed])
+          HAVE_CELT="yes"
   ], [
-          AC_MSG_RESULT(no)
+          HAVE_CELT="no"
   ])
 
   PKG_CHECK_MODULES(CELT_0_7, celt >= 0.7.0, [
           AC_DEFINE([HAVE_CELT_0_7], 1, [Define if libcelt 0.7 is installed])
   ], [
-          AC_MSG_RESULT(no)
+          dnl to prevent an error
+          true
   ])
 
   PKG_CHECK_MODULES(CELT_0_8, celt >= 0.8.0, [
           AC_DEFINE([HAVE_CELT_0_8], 1, [Define if libcelt 0.8 is installed])
   ], [
-          AC_MSG_RESULT(no)
+          dnl to prevent an error
+          true
   ])
   AC_SUBST(CELT_CFLAGS)
   AC_SUBST(CELT_LIBS)
