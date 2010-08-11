@@ -105,7 +105,7 @@ gint cosTable[2 * 512];
 static gint gate_int (gint value, gint min, gint max);
 void setup_cos_table (void);
 static gint cos_from_table (int angle);
-inline int abs_int (int val);
+static inline int abs_int (int val);
 static void transform (guint32 * src, guint32 * dest, gint video_area);
 
 /* The capabilities of the inputs and outputs. */
@@ -280,7 +280,7 @@ setup_cos_table (void)
 }
 
 /* Keep the values absolute. */
-inline int
+static inline int
 abs_int (int val)
 {
   if (val > 0) {

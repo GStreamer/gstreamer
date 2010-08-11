@@ -95,7 +95,7 @@ enum
 
 static void transform (guint32 * src, guint32 * dest, gint video_area,
     gint width, gint height);
-inline guint32 get_luminance (guint32 in);
+static inline guint32 get_luminance (guint32 in);
 
 /* The capabilities of the inputs and outputs. */
 
@@ -254,7 +254,7 @@ gst_dilate_plugin_init (GstPlugin * dilate)
 /*** Now the image processing work.... ***/
 
 /* Return luminance of the color */
-inline guint32
+static inline guint32
 get_luminance (guint32 in)
 {
   guint32 red, green, blue, luminance;
