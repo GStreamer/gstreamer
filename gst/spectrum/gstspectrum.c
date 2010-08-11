@@ -273,8 +273,19 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 }
 
 static void
+gst_spectrum_flush (GstSpectrum * spectrum)
+{
+  spectrum->num_frames = 0;
+  spectrum->num_fft = 0;
+
+  spectrum->accumulated_error = 0;
+}
+
+static void
 gst_spectrum_reset_state (GstSpectrum * spectrum)
 {
+  GST_DEBUG_OBJECT (spectrum, "resetting state");
+
   if (spectrum->fft_ctx)
     gst_fft_f32_free (spectrum->fft_ctx);
   g_free (spectrum->input);
@@ -286,14 +297,11 @@ gst_spectrum_reset_state (GstSpectrum * spectrum)
   spectrum->fft_ctx = NULL;
   spectrum->input = NULL;
   spectrum->input_tmp = NULL;
+  spectrum->freqdata = NULL;
   spectrum->spect_magnitude = NULL;
   spectrum->spect_phase = NULL;
-  spectrum->freqdata = NULL;
 
-  spectrum->num_frames = 0;
-  spectrum->num_fft = 0;
-
-  spectrum->accumulated_error = 0;
+  gst_spectrum_flush (spectrum);
 }
 
 static void
@@ -390,10 +398,9 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_spectrum_start (GstBaseTransform * trans)
 {
-  GstSpectrum *filter = GST_SPECTRUM (trans);
+  GstSpectrum *spectrum = GST_SPECTRUM (trans);
 
-  filter->num_frames = 0;
-  filter->num_fft = 0;
+  gst_spectrum_reset_state (spectrum);
 
   return TRUE;
 }
@@ -509,8 +516,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
-    GST_DEBUG_OBJECT (spectrum, "Discontinuity detected -- resetting state");
-    gst_spectrum_reset_state (spectrum);
+    GST_DEBUG_OBJECT (spectrum, "Discontinuity detected -- flushing");
+    gst_spectrum_flush (spectrum);
   }
 
   /* If we don't have a FFT context yet (or it was reset due to parameter
@@ -528,9 +535,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
     if (spectrum->frames_per_interval == 0)
       spectrum->frames_per_interval = 1;
-    spectrum->num_frames = 0;
-    spectrum->num_fft = 0;
-    spectrum->accumulated_error = 0;
+
+    spectrum->input_pos = 0;
+
+    gst_spectrum_flush (spectrum);
   }
 
   if (spectrum->num_frames == 0)
