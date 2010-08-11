@@ -2452,6 +2452,54 @@ gst_xvimagesink_event (GstBaseSink * sink, GstEvent * event)
 
 /* Buffer management */
 
+static GstCaps *
+gst_xvimage_sink_different_size_suggestion (GstXvImageSink * xvimagesink,
+    GstCaps * caps)
+{
+  GstCaps *intersection;
+  GstCaps *new_caps;
+  GstStructure *s;
+  gint width, height;
+  gint par_n = 1, par_d = 1;
+  gint dar_n, dar_d;
+  gint w, h;
+
+  new_caps = gst_caps_copy (caps);
+
+  s = gst_caps_get_structure (new_caps, 0);
+
+  gst_structure_get_int (s, "width", &width);
+  gst_structure_get_int (s, "height", &height);
+  gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
+
+  gst_structure_remove_field (s, "width");
+  gst_structure_remove_field (s, "height");
+  gst_structure_remove_field (s, "pixel-aspect-ratio");
+
+  intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+  gst_caps_unref (new_caps);
+
+  if (gst_caps_is_empty (intersection))
+    return intersection;
+
+  s = gst_caps_get_structure (intersection, 0);
+
+  gst_util_fraction_multiply (width, height, par_n, par_d, &dar_n, &dar_d);
+
+  /* xvimagesink supports all PARs */
+
+  gst_structure_fixate_field_nearest_int (s, "width", width);
+  gst_structure_fixate_field_nearest_int (s, "height", height);
+  gst_structure_get_int (s, "width", &w);
+  gst_structure_get_int (s, "height", &h);
+
+  gst_util_fraction_multiply (h, w, dar_n, dar_d, &par_n, &par_d);
+  gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+      NULL);
+
+  return intersection;
+}
+
 static GstFlowReturn
 gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -2462,7 +2510,6 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   GstCaps *intersection = NULL;
   GstStructure *structure = NULL;
   gint width, height, image_format;
-  GstCaps *new_caps;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
@@ -2496,25 +2543,47 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       GST_PTR_FORMAT, intersection);
 
   if (gst_caps_is_empty (intersection)) {
+    GstCaps *new_caps;
+
+    gst_caps_unref (intersection);
+
     /* So we don't support this kind of buffer, let's define one we'd like */
     new_caps = gst_caps_copy (caps);
 
     structure = gst_caps_get_structure (new_caps, 0);
+    if (!gst_structure_has_field (structure, "width") ||
+        !gst_structure_has_field (structure, "height")) {
+      gst_caps_unref (new_caps);
+      goto invalid;
+    }
 
-    /* Try with YUV first */
-    gst_structure_set_name (structure, "video/x-raw-yuv");
-    gst_structure_remove_field (structure, "format");
-    gst_structure_remove_field (structure, "endianness");
-    gst_structure_remove_field (structure, "depth");
-    gst_structure_remove_field (structure, "bpp");
-    gst_structure_remove_field (structure, "red_mask");
-    gst_structure_remove_field (structure, "green_mask");
-    gst_structure_remove_field (structure, "blue_mask");
-    gst_structure_remove_field (structure, "alpha_mask");
+    /* Try different dimensions */
+    intersection =
+        gst_xvimage_sink_different_size_suggestion (xvimagesink, new_caps);
 
-    /* Reuse intersection with Xcontext */
-    gst_caps_unref (intersection);
-    intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+    if (gst_caps_is_empty (intersection)) {
+      /* Try with different YUV formats first */
+      gst_structure_set_name (structure, "video/x-raw-yuv");
+
+      /* Remove format specific fields */
+      gst_structure_remove_field (structure, "format");
+      gst_structure_remove_field (structure, "endianness");
+      gst_structure_remove_field (structure, "depth");
+      gst_structure_remove_field (structure, "bpp");
+      gst_structure_remove_field (structure, "red_mask");
+      gst_structure_remove_field (structure, "green_mask");
+      gst_structure_remove_field (structure, "blue_mask");
+      gst_structure_remove_field (structure, "alpha_mask");
+
+      /* Reuse intersection with Xcontext */
+      intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+    }
+
+    if (gst_caps_is_empty (intersection)) {
+      /* Try with different dimensions and YUV formats */
+      intersection =
+          gst_xvimage_sink_different_size_suggestion (xvimagesink, new_caps);
+    }
 
     if (gst_caps_is_empty (intersection)) {
       /* Now try with RGB */
@@ -2522,19 +2591,24 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       /* And interset again */
       gst_caps_unref (intersection);
       intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+    }
 
-      if (gst_caps_is_empty (intersection))
-        goto incompatible;
+    if (gst_caps_is_empty (intersection)) {
+      /* Try with different dimensions and RGB formats */
+      intersection =
+          gst_xvimage_sink_different_size_suggestion (xvimagesink, new_caps);
     }
 
     /* Clean this copy */
     gst_caps_unref (new_caps);
-    /* We want fixed caps */
-    gst_caps_truncate (intersection);
 
-    GST_DEBUG_OBJECT (xvimagesink, "allocating a buffer with caps %"
-        GST_PTR_FORMAT, intersection);
-  } else if (gst_caps_is_equal (intersection, caps)) {
+    if (gst_caps_is_empty (intersection))
+      goto incompatible;
+  }
+
+  GST_DEBUG_OBJECT (xvimagesink, "allocating a buffer with caps %"
+      GST_PTR_FORMAT, intersection);
+  if (gst_caps_is_equal (intersection, caps)) {
     /* Things work better if we return a buffer with the same caps ptr
      * as was asked for when we can */
     gst_caps_replace (&intersection, caps);
@@ -2618,9 +2692,8 @@ incompatible:
   {
     GST_WARNING_OBJECT (xvimagesink, "we were requested a buffer with "
         "caps %" GST_PTR_FORMAT ", but our xcontext caps %" GST_PTR_FORMAT
-        " are completely incompatible with those caps", new_caps,
+        " are completely incompatible with those caps", caps,
         xvimagesink->xcontext->caps);
-    gst_caps_unref (new_caps);
     ret = GST_FLOW_NOT_NEGOTIATED;
     g_mutex_unlock (xvimagesink->pool_lock);
     goto beach;
