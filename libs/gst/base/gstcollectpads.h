@@ -130,8 +130,8 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
  * @data: #GList of #GstCollectData managed by this #GstCollectPads.
  *
  * Collectpads object.
- * Note that @data doesn't contain the complete #GstCollectData list
- * at all times and should not be used for iterating them.
+ * Note that @data is only reliable for iterating the list of #GstCollectData
+ * when inside the #GstCollectPadsFunction callback.
  */
 struct _GstCollectPads {
   GstObject      object;
