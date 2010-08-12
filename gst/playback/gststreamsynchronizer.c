@@ -67,6 +67,7 @@ typedef struct
   gboolean new_stream;
   gboolean drop_discont;
   gboolean is_eos;
+  gboolean seen_data;
 
   gint64 running_time_diff;
 } GstStream;
@@ -446,6 +447,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
         stream->wait = FALSE;
         stream->new_stream = FALSE;
         stream->drop_discont = FALSE;
+        stream->seen_data = FALSE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
@@ -454,7 +456,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GstStream *stream;
       GList *l;
       gboolean all_eos = TRUE;
+      gboolean seen_data;
       GSList *pads = NULL;
+      GstPad *srcpad;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -462,6 +466,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (pad, "Have EOS for stream %d", stream->stream_number);
         stream->is_eos = TRUE;
       }
+
+      seen_data = stream->seen_data;
+      srcpad = gst_object_ref (stream->srcpad);
 
       for (l = self->streams; l; l = l->next) {
         GstStream *ostream = l->data;
@@ -496,7 +503,17 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
           epad = g_slist_next (epad);
         }
         g_slist_free (pads);
+      } else {
+        /* if EOS, but no data has passed, then send something to replace EOS
+         * for preroll purposes */
+        if (!seen_data) {
+          GstBuffer *buf = gst_buffer_new ();
+
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_PREROLL);
+          gst_pad_push (srcpad, buf);
+        }
       }
+      gst_object_unref (srcpad);
       goto done;
       break;
     }
@@ -563,6 +580,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
   GST_STREAM_SYNCHRONIZER_LOCK (self);
   stream = gst_pad_get_element_private (pad);
 
+  stream->seen_data = TRUE;
   if (stream && stream->drop_discont) {
     buffer = gst_buffer_make_metadata_writable (buffer);
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
