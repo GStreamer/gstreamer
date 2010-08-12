@@ -271,7 +271,7 @@ gst_app_src_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc element");
 
   gst_element_class_set_details_simple (element_class, "AppSrc",
-      "Generic/Src", "Allow the application to feed buffers to a pipeline",
+      "Generic/Source", "Allow the application to feed buffers to a pipeline",
       "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
