@@ -1040,7 +1040,7 @@ gst_debug_level_get_name (GstDebugLevel level)
  * @data: user data
  *
  * Adds the logging function to the list of logging functions.
- * Be sure to use G_GNUC_NO_INSTRUMENT on that function, it is needed.
+ * Be sure to use #G_GNUC_NO_INSTRUMENT on that function, it is needed.
  */
 void
 gst_debug_add_log_function (GstLogFunction func, gpointer data)
