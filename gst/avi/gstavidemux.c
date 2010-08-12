@@ -289,6 +289,10 @@ gst_avi_demux_reset (GstAviDemux * avi)
     gst_object_unref (avi->element_index);
   avi->element_index = NULL;
 
+  if (avi->close_seg_event) {
+    gst_event_unref (avi->close_seg_event);
+    avi->close_seg_event = NULL;
+  }
   if (avi->seg_event) {
     gst_event_unref (avi->seg_event);
     avi->seg_event = NULL;
@@ -3932,7 +3936,7 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstAviStream *stream;
 
   seek_time = segment->last_stop;
-  keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   GST_DEBUG_OBJECT (avi, "seek to: %" GST_TIME_FORMAT
       " keyframe seeking:%d", GST_TIME_ARGS (seek_time), keyframe);
@@ -4077,6 +4081,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
    * actually never fails. */
   gst_avi_demux_do_seek (avi, &seeksegment);
 
+  gst_event_replace (&avi->close_seg_event, NULL);
   if (flush) {
     GstEvent *fevent = gst_event_new_flush_stop ();
 
@@ -4084,16 +4089,13 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     gst_avi_demux_push_event (avi, gst_event_ref (fevent));
     gst_pad_push_event (avi->sinkpad, fevent);
   } else if (avi->segment_running) {
-    GstEvent *seg;
-
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (avi, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, avi->segment.start, avi->segment.last_stop);
-    seg = gst_event_new_new_segment_full (TRUE,
+    avi->close_seg_event = gst_event_new_new_segment_full (TRUE,
         avi->segment.rate, avi->segment.applied_rate, avi->segment.format,
         avi->segment.start, avi->segment.last_stop, avi->segment.time);
-    gst_avi_demux_push_event (avi, seg);
   }
 
   /* now update the real segment info */
@@ -4200,7 +4202,7 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gst_segment_set_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   cur = seeksegment.last_stop;
 
   GST_DEBUG_OBJECT (avi,
@@ -5078,6 +5080,10 @@ gst_avi_demux_loop (GstPad * pad)
       avi->state = GST_AVI_DEMUX_MOVI;
       break;
     case GST_AVI_DEMUX_MOVI:
+      if (G_UNLIKELY (avi->close_seg_event)) {
+        gst_avi_demux_push_event (avi, avi->close_seg_event);
+        avi->close_seg_event = NULL;
+      }
       if (G_UNLIKELY (avi->seg_event)) {
         gst_avi_demux_push_event (avi, avi->seg_event);
         avi->seg_event = NULL;
@@ -5177,6 +5183,10 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       }
       break;
     case GST_AVI_DEMUX_MOVI:
+      if (G_UNLIKELY (avi->close_seg_event)) {
+        gst_avi_demux_push_event (avi, avi->close_seg_event);
+        avi->close_seg_event = NULL;
+      }
       if (G_UNLIKELY (avi->seg_event)) {
         gst_avi_demux_push_event (avi, avi->seg_event);
         avi->seg_event = NULL;

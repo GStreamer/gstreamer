@@ -178,6 +178,7 @@ typedef struct _GstAviDemux {
 
   /* pending tags/events */
   GstEvent      *seg_event;
+  GstEvent      *close_seg_event;
   GstTagList	*globaltags;
   gboolean	 got_tags;
 
