@@ -122,6 +122,8 @@ ges_track_image_source_create_element (GESTrackSource * object)
   freeze = gst_element_factory_make ("imagefreeze", NULL);
   iconv = gst_element_factory_make ("ffmpegcolorspace", NULL);
 
+  g_object_set (scale, "add-borders", TRUE, NULL);
+
   gst_bin_add_many (GST_BIN (bin), source, scale, freeze, iconv, NULL);
 
   gst_element_link_pads_full (scale, "src", iconv, "sink",
