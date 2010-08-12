@@ -109,6 +109,7 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 
   rgbst = gst_structure_copy (yuvst);
   gst_structure_set_name (rgbst, "video/x-raw-rgb");
+  gst_structure_remove_fields (rgbst, "color-matrix", "chroma-site", NULL);
 
   grayst = gst_structure_copy (rgbst);
   gst_structure_set_name (grayst, "video/x-raw-gray");
