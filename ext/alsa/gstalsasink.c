@@ -319,7 +319,7 @@ static int
 set_hwparams (GstAlsaSink * alsa)
 {
   guint rrate;
-  gint err, dir;
+  gint err;
   snd_pcm_hw_params_t *params;
   guint period_time, buffer_time;
 
@@ -363,34 +363,36 @@ retry:
   if (rrate != alsa->rate)
     goto rate_match;
 
+#ifndef GST_DISABLE_GST_DEBUG
   /* get and dump some limits */
   {
     guint min, max;
 
-    snd_pcm_hw_params_get_buffer_time_min (params, &min, &dir);
-    snd_pcm_hw_params_get_buffer_time_max (params, &max, &dir);
+    snd_pcm_hw_params_get_buffer_time_min (params, &min, NULL);
+    snd_pcm_hw_params_get_buffer_time_max (params, &max, NULL);
 
     GST_DEBUG_OBJECT (alsa, "buffer time %u, min %u, max %u",
         alsa->buffer_time, min, max);
 
-    snd_pcm_hw_params_get_period_time_min (params, &min, &dir);
-    snd_pcm_hw_params_get_period_time_max (params, &max, &dir);
+    snd_pcm_hw_params_get_period_time_min (params, &min, NULL);
+    snd_pcm_hw_params_get_period_time_max (params, &max, NULL);
 
     GST_DEBUG_OBJECT (alsa, "period time %u, min %u, max %u",
         alsa->period_time, min, max);
 
-    snd_pcm_hw_params_get_periods_min (params, &min, &dir);
-    snd_pcm_hw_params_get_periods_max (params, &max, &dir);
+    snd_pcm_hw_params_get_periods_min (params, &min, NULL);
+    snd_pcm_hw_params_get_periods_max (params, &max, NULL);
 
     GST_DEBUG_OBJECT (alsa, "periods min %u, max %u", min, max);
   }
+#endif
 
   /* now try to configure the buffer time and period time, if one
    * of those fail, we fall back to the defaults and emit a warning. */
   if (buffer_time != -1 && !alsa->iec958) {
     /* set the buffer time */
     if ((err = snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
-                &buffer_time, &dir)) < 0) {
+                &buffer_time, NULL)) < 0) {
       GST_ELEMENT_WARNING (alsa, RESOURCE, SETTINGS, (NULL),
           ("Unable to set buffer time %i for playback: %s",
               buffer_time, snd_strerror (err)));
@@ -403,7 +405,7 @@ retry:
   if (period_time != -1 && !alsa->iec958) {
     /* set the period time */
     if ((err = snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
-                &period_time, &dir)) < 0) {
+                &period_time, NULL)) < 0) {
       GST_ELEMENT_WARNING (alsa, RESOURCE, SETTINGS, (NULL),
           ("Unable to set period time %i for playback: %s",
               period_time, snd_strerror (err)));
@@ -431,7 +433,7 @@ retry:
   /* now get the configured values */
   CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
       buffer_size);
-  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
+  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, NULL),
       period_size);
 
   GST_DEBUG_OBJECT (alsa, "buffer size %lu, period size %lu", alsa->buffer_size,

@@ -331,7 +331,7 @@ static int
 set_hwparams (GstAlsaSrc * alsa)
 {
   guint rrate;
-  gint err, dir;
+  gint err;
   snd_pcm_hw_params_t *params;
 
   snd_pcm_hw_params_malloc (&params);
@@ -357,12 +357,12 @@ set_hwparams (GstAlsaSrc * alsa)
   if (alsa->buffer_time != -1) {
     /* set the buffer time */
     CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
-            &alsa->buffer_time, &dir), buffer_time);
+            &alsa->buffer_time, NULL), buffer_time);
   }
   if (alsa->period_time != -1) {
     /* set the period time */
     CHECK (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
-            &alsa->period_time, &dir), period_time);
+            &alsa->period_time, NULL), period_time);
   }
 
   /* write the parameters to device */
@@ -371,7 +371,7 @@ set_hwparams (GstAlsaSrc * alsa)
   CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
       buffer_size);
 
-  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
+  CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, NULL),
       period_size);
 
   snd_pcm_hw_params_free (params);
