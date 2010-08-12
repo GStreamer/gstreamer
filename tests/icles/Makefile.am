@@ -1,3 +1,6 @@
+SUBDIRS = playback
+DIST_SUBDIRS = playback
+
 if USE_X
 X_TESTS = stress-xoverlay
 

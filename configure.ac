@@ -953,13 +953,13 @@ tests/examples/app/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
-tests/examples/playback/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
 tests/examples/volume/Makefile
 tests/examples/v4l/Makefile
 tests/files/Makefile
 tests/icles/Makefile
+tests/icles/playback/Makefile
 docs/Makefile
 docs/design/Makefile
 docs/libs/Makefile
