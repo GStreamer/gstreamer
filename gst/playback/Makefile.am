@@ -66,6 +66,8 @@ noinst_HEADERS = \
 	gstrawcaps.h \
 	gstsubtitleoverlay.h \
 	gststreamsynchronizer.h
+	
+BUILT_SOURCES = $(built_headers) $(built_sources)
 
 EXTRA_DIST = gstplay-marshal.list
 
