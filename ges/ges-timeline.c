@@ -361,7 +361,7 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
       else if (sinf->streamtype == GST_STREAM_VIDEO)
         tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
       else if (sinf->streamtype == GST_STREAM_IMAGE) {
-        tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
+        tfs->supportedformats |= GES_TRACK_TYPE_VIDEO | GES_TRACK_TYPE_AUDIO;
         is_image = TRUE;
       }
     }
