@@ -165,6 +165,10 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       guint8 *data;
       guint size;
       gint i;
+      guint sr_idx;
+      static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000,
+        44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000
+      };
 
       buffer = gst_value_get_buffer (&v);
       gst_buffer_ref (buffer);
@@ -205,6 +209,15 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       size -= 2;
       for (i = 0; i < size; i++) {
         data[i] = ((data[i + 1] & 1) << 7) | ((data[i + 2] & 0xfe) >> 1);
+      }
+
+      /* grab and set sampling rate */
+      sr_idx = ((data[0] & 0x07) << 1) | ((data[1] & 0x80) >> 7);
+      if (sr_idx < G_N_ELEMENTS (aac_sample_rates)) {
+        gst_caps_set_simple (srccaps,
+            "rate", G_TYPE_INT, (gint) aac_sample_rates[sr_idx], NULL);
+      } else {
+        GST_WARNING ("Invalid sample rate index %u", sr_idx);
       }
 
       /* ignore remaining bit, we're only interested in full bytes */
