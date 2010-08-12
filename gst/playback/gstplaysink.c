@@ -1153,8 +1153,7 @@ link_failed:
  *
  */
 static GstPlayVideoChain *
-gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
-    gboolean queue)
+gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 {
   GstPlayVideoChain *chain;
   GstBin *bin;
@@ -1217,29 +1216,23 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  /* NOTE streamsynchronizer needs streams decoupled */
-  if (TRUE) {
-    /* decouple decoder from sink, this improves playback quite a lot since the
-     * decoder can continue while the sink blocks for synchronisation. We don't
-     * need a lot of buffers as this consumes a lot of memory and we don't want
-     * too little because else we would be context switching too quickly. */
-    chain->queue = gst_element_factory_make ("queue", "vqueue");
-    if (chain->queue == NULL) {
-      post_missing_element_message (playsink, "queue");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "queue"), ("video rendering might be suboptimal"));
-      head = chain->sink;
-      prev = NULL;
-    } else {
-      g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-          "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
-      gst_bin_add (bin, chain->queue);
-      head = prev = chain->queue;
-    }
-  } else {
+  /* decouple decoder from sink, this improves playback quite a lot since the
+   * decoder can continue while the sink blocks for synchronisation. We don't
+   * need a lot of buffers as this consumes a lot of memory and we don't want
+   * too little because else we would be context switching too quickly. */
+  chain->queue = gst_element_factory_make ("queue", "vqueue");
+  if (chain->queue == NULL) {
+    post_missing_element_message (playsink, "queue");
+    GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "queue"), ("video rendering might be suboptimal"));
     head = chain->sink;
     prev = NULL;
+  } else {
+    g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+        "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+    gst_bin_add (bin, chain->queue);
+    head = prev = chain->queue;
   }
 
   if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
@@ -1342,8 +1335,7 @@ link_failed:
 }
 
 static gboolean
-setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
-    gboolean queue)
+setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 {
   GstElement *elem;
   GstPlayVideoChain *chain;
@@ -1612,7 +1604,7 @@ notify_mute_cb (GObject * object, GParamSpec * pspec, GstPlaySink * playsink)
  *  +-------------------------------------------------------------+
  */
 static GstPlayAudioChain *
-gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
+gen_audio_chain (GstPlaySink * playsink, gboolean raw)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
@@ -1654,27 +1646,20 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   gst_object_ref_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  /* NOTE streamsynchronizer always need a queue to decouple its EOS sending
-   * (which might otherwise hang in downstream prerolling on EOS) */
-  if (TRUE) {
-    /* we have to add a queue when we need to decouple for the video sink in
-     * visualisations */
-    GST_DEBUG_OBJECT (playsink, "adding audio queue");
-    chain->queue = gst_element_factory_make ("queue", "aqueue");
-    if (chain->queue == NULL) {
-      post_missing_element_message (playsink, "queue");
-      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
-          (_("Missing element '%s' - check your GStreamer installation."),
-              "queue"), ("audio playback and visualizations might not work"));
-      head = chain->sink;
-      prev = NULL;
-    } else {
-      gst_bin_add (bin, chain->queue);
-      prev = head = chain->queue;
-    }
-  } else {
+  /* we have to add a queue when we need to decouple for the video sink in
+   * visualisations */
+  GST_DEBUG_OBJECT (playsink, "adding audio queue");
+  chain->queue = gst_element_factory_make ("queue", "aqueue");
+  if (chain->queue == NULL) {
+    post_missing_element_message (playsink, "queue");
+    GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "queue"), ("audio playback and visualizations might not work"));
     head = chain->sink;
     prev = NULL;
+  } else {
+    gst_bin_add (bin, chain->queue);
+    prev = head = chain->queue;
   }
 
   /* find ts-offset element */
@@ -1871,7 +1856,7 @@ link_failed:
 }
 
 static gboolean
-setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
+setup_audio_chain (GstPlaySink * playsink, gboolean raw)
 {
   GstElement *elem;
   GstPlayAudioChain *chain;
@@ -2161,13 +2146,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_DEBUG_OBJECT (playsink, "audio:%d, video:%d, vis:%d, text:%d", need_audio,
       need_video, need_vis, need_text);
 
-  /* NOTE although there is some nifty heuristic regarding whether or not to
-   * include a queue in some chain, streamsynchronizer mechanics need
-   * subsequent streams decoupled to prevent hangs */
-
   /* set up video pipeline */
   if (need_video) {
-    gboolean raw, async, queue;
+    gboolean raw, async;
 
     /* we need a raw sink when we do vis or when we have a raw pad */
     raw = need_vis ? TRUE : playsink->video_pad_raw;
@@ -2175,15 +2156,12 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
      * avoid a queue in the audio chain. */
     async = !need_vis;
 
-    /* If subtitles are requested there already is a queue in the video chain */
-    queue = (need_text == FALSE);
-
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
 
     if (playsink->videochain) {
       /* try to reactivate the chain */
-      if (!setup_video_chain (playsink, raw, async, queue)) {
+      if (!setup_video_chain (playsink, raw, async)) {
         if (playsink->video_sinkpad_stream_synchronizer) {
           gst_element_release_request_pad (GST_ELEMENT_CAST
               (playsink->stream_synchronizer),
@@ -2202,7 +2180,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     }
 
     if (!playsink->videochain)
-      playsink->videochain = gen_video_chain (playsink, raw, async, queue);
+      playsink->videochain = gen_video_chain (playsink, raw, async);
 
     if (!playsink->video_sinkpad_stream_synchronizer) {
       GstIterator *it;
@@ -2311,27 +2289,16 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   }
 
   if (need_audio) {
-    gboolean raw, queue;
+    gboolean raw;
 
     GST_DEBUG_OBJECT (playsink, "adding audio");
 
     /* get a raw sink if we are asked for a raw pad */
     raw = playsink->audio_pad_raw;
-    if (need_vis && playsink->videochain) {
-      /* If we are dealing with visualisations, we need to add a queue to
-       * decouple the audio from the video part. We only have to do this when
-       * the video part is async=true */
-      queue = ((GstPlayVideoChain *) playsink->videochain)->async;
-      GST_DEBUG_OBJECT (playsink, "need audio queue for vis: %d", queue);
-    } else {
-      /* no vis, we can avoid a queue */
-      GST_DEBUG_OBJECT (playsink, "don't need audio queue");
-      queue = FALSE;
-    }
 
     if (playsink->audiochain) {
       /* try to reactivate the chain */
-      if (!setup_audio_chain (playsink, raw, queue)) {
+      if (!setup_audio_chain (playsink, raw)) {
         GST_DEBUG_OBJECT (playsink, "removing current audio chain");
         if (playsink->audio_tee_asrc) {
           gst_element_release_request_pad (playsink->audio_tee,
@@ -2364,7 +2331,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
     if (!playsink->audiochain) {
       GST_DEBUG_OBJECT (playsink, "creating new audio chain");
-      playsink->audiochain = gen_audio_chain (playsink, raw, queue);
+      playsink->audiochain = gen_audio_chain (playsink, raw);
     }
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
