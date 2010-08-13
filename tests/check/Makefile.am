@@ -106,6 +106,7 @@ check_PROGRAMS = \
 	elements/audiotestsrc \
 	elements/decodebin \
 	elements/decodebin2 \
+	elements/encodebin \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
@@ -297,6 +298,9 @@ elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_encodebin_LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(GST_BASE_LIBS) $(LDADD)
+elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)

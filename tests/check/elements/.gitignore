@@ -9,6 +9,7 @@ audioresample
 audiotestsrc
 decodebin
 decodebin2
+encodebin
 gdpdepay
 gdppay
 gnomevfssink

@@ -8,6 +8,7 @@ GstPlaySink GstChildProxy
 GstSubtitleOverlay GstChildProxy
 GstDecodeBin2 GstChildProxy
 GstURIDecodeBin GstChildProxy
+GstEncodeBin GstChildProxy
 GstCddaBaseSrc GstURIHandler
 GstCdParanoiaSrc GstURIHandler
 GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe

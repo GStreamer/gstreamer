@@ -159,6 +159,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstXvImageSink::window-height</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>window-height</NICK>
+<BLURB>Height of the window.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::window-width</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>window-width</NICK>
+<BLURB>Width of the window.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXImageSink::display</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -216,6 +236,26 @@
 <NICK>Handle expose</NICK>
 <BLURB>When enabled, the current frame will always be drawn in response to X Expose events.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::window-height</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>window-height</NICK>
+<BLURB>Height of the window.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::window-width</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>window-width</NICK>
+<BLURB>Width of the window.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3376,5 +3416,65 @@
 <NICK>subtitle encoding</NICK>
 <BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::audio-jitter-tolerance</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Audio jitter tolerance</NICK>
+<BLURB>Amount of timestamp jitter/imperfection to allow on audio streams before inserting/dropping samples (ns).</BLURB>
+<DEFAULT>20000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::avoid-reencoding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Avoid re-encoding</NICK>
+<BLURB>Whether to re-encode portions of compatible video streams that lay on segment boundaries.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::profile</NAME>
+<TYPE>GstEncodingProfile*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile</NICK>
+<BLURB>The GstEncodingProfile to use.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::queue-buffers-max</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::queue-bytes-max</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
+<DEFAULT>10485760</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEncodeBin::queue-time-max</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
+<DEFAULT>1000000000</DEFAULT>
 </ARG>
 

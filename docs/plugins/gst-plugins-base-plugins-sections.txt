@@ -248,6 +248,22 @@ GstDecodeBin2
 </SECTION>
 
 <SECTION>
+<FILE>element-encodebin</FILE>
+<TITLE>encodebin</TITLE>
+GstEncodeBin
+<SUBSECTION Standard>
+GST_ENCODE_BIN
+GST_ENCODE_BIN_CLASS
+GST_IS_ENCODE_BIN
+GST_IS_ENCODE_BIN_CLASS
+GST_TYPE_ENCODE_BIN
+GstEncodeBinClass
+gst_encode_bin_get_type
+</SECTION>
+
+
+
+<SECTION>
 <FILE>element-ffmpegcolorspace</FILE>
 <TITLE>ffmpegcolorspace</TITLE>
 GstFFMpegCsp
