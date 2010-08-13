@@ -666,7 +666,9 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           memmove (&data[pos], &data[pos + size],
               GST_BUFFER_SIZE (buffer) - (pos + size));
           GST_BUFFER_SIZE (buffer) -= size;
-          reader.size -= size;
+
+          if (!gst_byte_reader_set_pos (&reader, pos - size))
+            goto error;
 #else
           if (!gst_byte_reader_get_uint16_be (&reader, &size))
             goto error;
