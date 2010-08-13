@@ -188,7 +188,10 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 static void
 gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
 {
+  GstBaseVideoDecoder *decoder = (GstBaseVideoDecoder *) gst_vp8_dec;
+
   GST_DEBUG_OBJECT (gst_vp8_dec, "gst_vp8_dec_init");
+  decoder->packetized = TRUE;
   gst_vp8_dec->post_processing = DEFAULT_POST_PROCESSING;
   gst_vp8_dec->post_processing_flags = DEFAULT_POST_PROCESSING_FLAGS;
   gst_vp8_dec->deblocking_level = DEFAULT_DEBLOCKING_LEVEL;
@@ -271,7 +274,6 @@ gst_vp8_dec_start (GstBaseVideoDecoder * decoder)
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (decoder);
 
   GST_DEBUG_OBJECT (gst_vp8_dec, "start");
-  decoder->packetized = TRUE;
   gst_vp8_dec->decoder_inited = FALSE;
 
   return TRUE;
