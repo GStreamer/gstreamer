@@ -4,6 +4,8 @@ headers_pbutils = \
 	pbutils.h         \
 	codec-utils.h     \
 	descriptions.h    \
+	encoding-profile.h	\
+	encoding-target.h	\
 	install-plugins.h \
 	missing-plugins.h \
 	gstdiscoverer.h
@@ -22,6 +24,8 @@ libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	pbutils.c         \
 	codec-utils.c     \
 	descriptions.c    \
+	encoding-profile.c	\
+	encoding-target.c	\
 	install-plugins.c \
 	missing-plugins.c \
 	gstdiscoverer.c   \

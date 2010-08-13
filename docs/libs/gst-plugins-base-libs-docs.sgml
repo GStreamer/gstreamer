@@ -206,6 +206,7 @@
       <xi:include href="xml/gstpbutilsmissingplugins.xml" />
       <xi:include href="xml/gstpbutilsinstallplugins.xml" />
       <xi:include href="xml/gstdiscoverer.xml" />
+      <xi:include href="xml/encoding-profile.xml" />
     </chapter>
 
     <chapter id="gstreamer-video">
