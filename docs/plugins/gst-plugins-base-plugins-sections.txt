@@ -79,8 +79,8 @@ GST_IS_APP_SINK_CLASS
 
 <SECTION>
 <FILE>element-alsamixer</FILE>
-GstAlsaMixerElement
 <TITLE>alsamixer</TITLE>
+GstAlsaMixerElement
 <SUBSECTION Standard>
 GstAlsaMixerElementClass
 GST_ALSA_MIXER_ELEMENT
@@ -93,8 +93,8 @@ GST_IS_ALSA_MIXER_ELEMENT_CLASS
 
 <SECTION>
 <FILE>element-alsasink</FILE>
-GstAlsaSink
 <TITLE>alsasink</TITLE>
+GstAlsaSink
 <SUBSECTION Standard>
 GstAlsaSinkClass
 GST_ALSA_SINK
@@ -111,8 +111,8 @@ gst_alsasink_get_type
 
 <SECTION>
 <FILE>element-alsasrc</FILE>
-GstAlsaSrc
 <TITLE>alsasrc</TITLE>
+GstAlsaSrc
 <SUBSECTION Standard>
 GstAlsaSrcClass
 GST_ALSA_SRC
@@ -262,8 +262,8 @@ GstFFMpegCspClass
 
 <SECTION>
 <FILE>element-gdpdepay</FILE>
-GstGDPDepay
 <TITLE>gdpdepay</TITLE>
+GstGDPDepay
 <SUBSECTION Standard>
 GstGDPDepayClass
 GstGDPDepayState
@@ -277,8 +277,8 @@ gst_gdp_depay_plugin_init
 
 <SECTION>
 <FILE>element-gdppay</FILE>
-GstGDPPay
 <TITLE>gdppay</TITLE>
+GstGDPPay
 <SUBSECTION Standard>
 GstGDPPayClass
 GST_GDP_PAY
@@ -291,8 +291,8 @@ gst_gdp_pay_plugin_init
 
 <SECTION>
 <FILE>element-giosink</FILE>
-GstGioSink
 <TITLE>giosink</TITLE>
+GstGioSink
 <SUBSECTION Standard>
 GstGioSinkClass
 GST_GIO_SINK
@@ -305,8 +305,8 @@ gst_gio_sink_get_type
 
 <SECTION>
 <FILE>element-giosrc</FILE>
-GstGioSrc
 <TITLE>giosrc</TITLE>
+GstGioSrc
 <SUBSECTION Standard>
 GstGioSrcClass
 GST_GIO_SRC
@@ -319,8 +319,8 @@ gst_gio_src_get_type
 
 <SECTION>
 <FILE>element-giostreamsink</FILE>
-GstGioStreamSink
 <TITLE>giostreamsink</TITLE>
+GstGioStreamSink
 <SUBSECTION Standard>
 GstGioStreamSinkClass
 GST_GIO_STREAM_SINK
@@ -333,8 +333,8 @@ gst_gio_stream_sink_get_type
 
 <SECTION>
 <FILE>element-giostreamsrc</FILE>
-GstGioStreamSrc
 <TITLE>giostreamsrc</TITLE>
+GstGioStreamSrc
 <SUBSECTION Standard>
 GstGioStreamSrcClass
 GST_GIO_STREAM_SRC
@@ -516,7 +516,6 @@ gst_tcp_client_sink_get_type
 GST_IS_TCP_CLIENT_SINK_CLASS
 GST_IS_TCP_CLIENT_SINK
 </SECTION>
-
 
 <SECTION>
 <FILE>element-tcpserversrc</FILE>
@@ -721,8 +720,8 @@ gst_volume_get_type
 
 <SECTION>
 <FILE>element-vorbisdec</FILE>
-GstVorbisDec
 <TITLE>vorbisdec</TITLE>
+GstVorbisDec
 <SUBSECTION Standard>
 GstVorbisDecClass
 GST_VORBIS_DEC
