@@ -628,6 +628,44 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
   return TRUE;
 }
 
+static inline gchar *
+get_utf8_from_data (const guint8 * data, guint16 size)
+{
+  const gchar *env_vars[] = { "GST_JPEG_TAG_ENCODING",
+    "GST_TAG_ENCODING", NULL
+  };
+  const char *str = (gchar *) data;
+
+  return gst_tag_freeform_string_to_utf8 (str, size, env_vars);
+}
+
+/* read comment and post as tag */
+static inline gboolean
+gst_jpeg_parse_com (GstJpegParse * parse, GstByteReader * reader)
+{
+  const guint8 *data = NULL;
+  guint16 size = 0;
+  gchar *comment;
+
+  if (!gst_byte_reader_get_uint16_be (reader, &size))
+    return FALSE;
+
+  size -= 2;
+  if (!gst_byte_reader_get_data (reader, size, &data))
+    return FALSE;
+
+  comment = get_utf8_from_data (data, size);
+
+  if (comment) {
+    GstTagList *taglist = get_tag_list (parse);
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_COMMENT, comment, NULL);
+    g_free (comment);
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
@@ -660,30 +698,10 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           goto error;
         break;
 
-      case COM:{               /* read comment and post as tag */
-        const guint8 *comment = NULL;
-        gchar *comm;
-        const gchar *env_vars[] = { "GST_JPEG_TAG_ENCODING",
-          "GST_TAG_ENCODING", NULL
-        };
-
-        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+      case COM:
+        if (!gst_jpeg_parse_com (parse, &reader))
           goto error;
-        if (!gst_byte_reader_get_data (&reader, size - 2, &comment))
-          goto error;
-
-        comm = (gchar *) comment;
-        comm = gst_tag_freeform_string_to_utf8 (comm, size - 2, env_vars);
-
-        if (comm) {
-          if (!parse->priv->tags)
-            parse->priv->tags = gst_tag_list_new ();
-          gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
-              GST_TAG_COMMENT, comm, NULL);
-          g_free (comm);
-        }
         break;
-      }
 
       case APP1:
         if (!gst_jpeg_parse_app1 (parse, &reader))
