@@ -2682,8 +2682,10 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         /* open the temp file now */
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
-        queue->ring_buffer = malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
+        result = !!queue->ring_buffer;
+      } else {
+        result = TRUE;
       }
 
       GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2738,10 +2740,10 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
             ret = GST_STATE_CHANGE_FAILURE;
         } else {
           if (queue->ring_buffer) {
-            free (queue->ring_buffer);
+            g_free (queue->ring_buffer);
             queue->ring_buffer = NULL;
           }
-          if (!(queue->ring_buffer = malloc (queue->ring_buffer_max_size)))
+          if (!(queue->ring_buffer = g_malloc (queue->ring_buffer_max_size)))
             ret = GST_STATE_CHANGE_FAILURE;
         }
         init_ranges (queue);
@@ -2773,7 +2775,7 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
         if (QUEUE_IS_USING_TEMP_FILE (queue)) {
           gst_queue2_close_temp_location_file (queue);
         } else if (queue->ring_buffer) {
-          free (queue->ring_buffer);
+          g_free (queue->ring_buffer);
           queue->ring_buffer = NULL;
         }
       }
@@ -2884,7 +2886,7 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       queue->ring_buffer_max_size = g_value_get_uint64 (value);
-      queue->use_ring_buffer = ! !queue->ring_buffer_max_size;
+      queue->use_ring_buffer = !!queue->ring_buffer_max_size;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
