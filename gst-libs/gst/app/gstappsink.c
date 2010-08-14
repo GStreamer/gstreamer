@@ -346,7 +346,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * "emit-signals" property is %TRUE. 
    *
    * The new buffer can be retrieved with the "pull-buffer-list" action
-   * signal or gst_app_sink_pull_buffe_listr() either from this signal callback
+   * signal or gst_app_sink_pull_buffer_list() either from this signal callback
    * or from any other thread.
    *
    * Note that this signal is only emited when the "emit-signals" property is
