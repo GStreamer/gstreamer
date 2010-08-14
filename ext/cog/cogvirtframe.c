@@ -630,19 +630,14 @@ cog_virt_frame_render_resample_horiz_1tap (CogFrame * frame, void *_dest,
 {
   uint8_t *dest = _dest;
   uint8_t *src;
-  int j;
   int n_src;
   int scale = frame->param1;
-  int acc;
 
   n_src = frame->virt_frame1->components[component].width;
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
 
-  acc = 0;
-  for (j = 0; j < frame->components[component].width; j++) {
-    dest[j] = src[(acc >> 8)];
-    acc += scale;
-  }
+  cogorc_resample_horiz_1tap (dest, src, 0, scale,
+      frame->components[component].width);
 }
 
 static void
@@ -651,45 +646,14 @@ cog_virt_frame_render_resample_horiz_2tap (CogFrame * frame, void *_dest,
 {
   uint8_t *dest = _dest;
   uint8_t *src;
-  int j;
   int n_src;
   int scale = frame->param1;
-  int acc;
 
   n_src = frame->virt_frame1->components[component].width;
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
 
-  acc = 0;
-  for (j = 0; j < frame->components[component].width - 2; j++) {
-    int src_i;
-    int y;
-    int z;
-
-    src_i = acc >> 8;
-    y = acc & 255;
-
-    z = 128;
-    z += (256 - y) * src[src_i + 0];
-    z += y * src[src_i + 1];
-    z >>= 8;
-    dest[j] = CLAMP (z, 0, 255);
-    acc += scale;
-  }
-  for (; j < frame->components[component].width; j++) {
-    int src_i;
-    int y;
-    int z;
-
-    src_i = acc >> 8;
-    y = acc & 255;
-
-    z = 128;
-    z += (256 - y) * src[CLAMP (src_i + 0, 0, n_src - 1)];
-    z += y * src[CLAMP (src_i + 1, 0, n_src - 1)];
-    z >>= 8;
-    dest[j] = CLAMP (z, 0, 255);
-    acc += scale;
-  }
+  cogorc_resample_horiz_2tap (dest, src, 0, scale,
+      frame->components[component].width);
 }
 
 static void
@@ -712,8 +676,8 @@ cog_virt_frame_render_resample_horiz_4tap (CogFrame * frame, void *_dest,
     int y;
     int z;
 
-    src_i = acc >> 8;
-    y = acc & 255;
+    src_i = acc >> 16;
+    y = (acc >> 8) & 255;
 
     z = 32;
     z += cog_resample_table_4tap[y][0] * src[CLAMP (src_i - 1, 0, n_src - 1)];
@@ -729,8 +693,8 @@ cog_virt_frame_render_resample_horiz_4tap (CogFrame * frame, void *_dest,
     int y;
     int z;
 
-    src_i = acc >> 8;
-    y = acc & 255;
+    src_i = acc >> 16;
+    y = (acc >> 8) & 255;
 
     z = 32;
     z += cog_resample_table_4tap[y][0] * src[src_i - 1];
@@ -746,8 +710,8 @@ cog_virt_frame_render_resample_horiz_4tap (CogFrame * frame, void *_dest,
     int y;
     int z;
 
-    src_i = acc >> 8;
-    y = acc & 255;
+    src_i = acc >> 16;
+    y = (acc >> 8) & 255;
 
     z = 32;
     z += cog_resample_table_4tap[y][0] * src[CLAMP (src_i - 1, 0, n_src - 1)];
@@ -775,7 +739,7 @@ cog_virt_frame_new_horiz_resample (CogFrame * vf, int width, int n_taps)
     virt_frame->render_line = cog_virt_frame_render_resample_horiz_4tap;
   }
 
-  virt_frame->param1 = 256 * vf->width / width;
+  virt_frame->param1 = 65536 * vf->width / width;
 
   return virt_frame;
 }
@@ -1429,7 +1393,6 @@ cog_virt_frame_new_color_matrix_YCbCr_to_RGB (CogFrame * vf,
     CogColorMatrix color_matrix, int bits)
 {
   CogFrame *virt_frame;
-  //int *matrix = frame->virt_priv2;
 
   virt_frame = cog_frame_new_virtual (NULL, COG_FRAME_FORMAT_U8_444,
       vf->width, vf->height);
