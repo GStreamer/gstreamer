@@ -1,14 +1,14 @@
 #!/bin/sh
 
-class=basetransform
+class=element
 
-GST_IS_REPLACE=MY_IS_EXAMPLE
-GST_REPLACE=MY_EXAMPLE
-GST_TYPE_REPLACE=MY_TYPE_EXAMPLE
-GstReplace=MyExample
-gst_replace=my_example
-gstreplace=myexample
-replace=example
+GST_IS_REPLACE=GST_IS_CAPS_DEBUG
+GST_REPLACE=GST_CAPS_DEBUG
+GST_TYPE_REPLACE=GST_TYPE_CAPS_DEBUG
+GstReplace=GstCapsDebug
+gst_replace=gst_caps_debug
+gstreplace=gstcapsdebug
+replace=capsdebug
 
 source=gst$class.c
 pkg=`grep -A 10000 '^% pkg-config' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
