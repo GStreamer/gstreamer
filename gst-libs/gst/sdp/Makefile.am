@@ -19,7 +19,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstsdp_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstsdpinclude_HEADERS))
 
 GstSdp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstSdp \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \

@@ -89,6 +89,8 @@ AG_GST_ARG_WITH_PKG_CONFIG_PATH
 AG_GST_ARG_WITH_PACKAGE_NAME
 AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
+AG_GST_PKG_CONFIG_PATH
+
 dnl let distro override plugin install helper path
 AC_ARG_WITH(install-plugins-helper,
   AC_HELP_STRING([--with-install-plugins-helper],

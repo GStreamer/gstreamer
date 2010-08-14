@@ -40,7 +40,7 @@ gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstapp_@GST_MAJORMINOR@_la_
 gir_cincludes=$(patsubst %,--c-include='gst/app/%',$(libgstapp_@GST_MAJORMINOR@include_HEADERS))
 
 GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstApp \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \

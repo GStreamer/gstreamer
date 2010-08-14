@@ -52,7 +52,7 @@ gir_sources=$(patsubst %,$(srcdir)/%, $(libgstfft_@GST_MAJORMINOR@_la_SOURCES))
 gir_cincludes=$(patsubst %,--c-include='gst/fft/%',$(libgstfft_@GST_MAJORMINOR@_include_HEADERS))
 
 GstFft-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstfft-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstFft \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
