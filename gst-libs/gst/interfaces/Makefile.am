@@ -81,7 +81,7 @@ gir_cincludes=$(patsubst %,--c-include='gst/interfaces/%',$(libgstinterfacesincl
 gir_cincludes+=$(patsubst %,--c-include='gst/interfaces/%',$(nodist_libgstinterfacesinclude_HEADERS))
 
 GstInterfaces-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstinterfaces-@GST_MAJORMINOR@.la
-	$(AM_V_GEN)PKG_CONFIG_PATH="$(PKG_CONFIG_PATH):$(top_builddir)/pkgconfig" \
+	$(AM_V_GEN)PKG_CONFIG_PATH="$(top_builddir)/pkgconfig:$(PKG_CONFIG_PATH)" \
 		$(INTROSPECTION_SCANNER) -v --namespace GstInterfaces \
 		--nsversion=@GST_MAJORMINOR@ \
 		--strip-prefix=Gst \
