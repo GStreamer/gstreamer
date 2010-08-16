@@ -45,6 +45,7 @@ struct _GstRtpJPEGDepay
   GstBaseRTPDepayload depayload;
 
   GstAdapter *adapter;
+  gboolean    discont;
 
   /* cached quant tables */
   guint8 * qtables[255];

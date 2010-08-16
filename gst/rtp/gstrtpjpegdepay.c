@@ -71,6 +71,9 @@ GST_BOILERPLATE (GstRtpJPEGDepay, gst_rtp_jpeg_depay, GstBaseRTPDepayload,
 
 static void gst_rtp_jpeg_depay_finalize (GObject * object);
 
+static GstStateChangeReturn gst_rtp_jpeg_depay_change_state (GstElement *
+    element, GstStateChange transition);
+
 static gboolean gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload,
@@ -96,12 +99,16 @@ static void
 gst_rtp_jpeg_depay_class_init (GstRtpJPEGDepayClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gobject_class->finalize = gst_rtp_jpeg_depay_finalize;
+
+  gstelement_class->change_state = gst_rtp_jpeg_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_jpeg_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_jpeg_depay_process;
@@ -118,11 +125,34 @@ gst_rtp_jpeg_depay_init (GstRtpJPEGDepay * rtpjpegdepay,
 }
 
 static void
+gst_rtp_jpeg_depay_reset (GstRtpJPEGDepay * depay)
+{
+  gint i;
+
+  depay->width = 0;
+  depay->height = 0;
+  depay->media_width = 0;
+  depay->media_height = 0;
+  depay->frate_num = 0;
+  depay->frate_denom = 1;
+  depay->discont = TRUE;
+
+  for (i = 0; i < 255; i++) {
+    g_free (depay->qtables[i]);
+    depay->qtables[i] = NULL;
+  }
+
+  gst_adapter_clear (depay->adapter);
+}
+
+static void
 gst_rtp_jpeg_depay_finalize (GObject * object)
 {
   GstRtpJPEGDepay *rtpjpegdepay;
 
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (object);
+
+  gst_rtp_jpeg_depay_reset (rtpjpegdepay);
 
   g_object_unref (rtpjpegdepay->adapter);
   rtpjpegdepay->adapter = NULL;
@@ -461,6 +491,7 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
     gst_adapter_clear (rtpjpegdepay->adapter);
+    rtpjpegdepay->discont = TRUE;
   }
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
@@ -652,6 +683,11 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
     outbuf = gst_adapter_take_buffer (rtpjpegdepay->adapter, avail);
 
+    if (rtpjpegdepay->discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      rtpjpegdepay->discont = FALSE;
+    }
+
     GST_DEBUG_OBJECT (rtpjpegdepay, "returning %u bytes", avail);
   }
 
@@ -676,6 +712,36 @@ no_qtable:
     return NULL;
   }
 }
+
+
+static GstStateChangeReturn
+gst_rtp_jpeg_depay_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstRtpJPEGDepay *rtpjpegdepay;
+  GstStateChangeReturn ret;
+
+  rtpjpegdepay = GST_RTP_JPEG_DEPAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_jpeg_depay_reset (rtpjpegdepay);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 gboolean
 gst_rtp_jpeg_depay_plugin_init (GstPlugin * plugin)
