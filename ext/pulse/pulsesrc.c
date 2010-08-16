@@ -347,31 +347,6 @@ gst_pulsesrc_is_dead (GstPulseSrc * pulsesrc)
   return FALSE;
 }
 
-
-static void
-gst_pulsesrc_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-
-  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
-
-  switch (prop_id) {
-    case PROP_SERVER:
-      g_free (pulsesrc->server);
-      pulsesrc->server = g_value_dup_string (value);
-      if (pulsesrc->probe)
-        gst_pulseprobe_set_server (pulsesrc->probe, pulsesrc->server);
-      break;
-    case PROP_DEVICE:
-      g_free (pulsesrc->device);
-      pulsesrc->device = g_value_dup_string (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static void
 gst_pulsesrc_source_info_cb (pa_context * c, const pa_source_info * i, int eol,
     void *userdata)
@@ -437,6 +412,30 @@ no_mainloop:
   {
     GST_DEBUG_OBJECT (pulsesrc, "have no mainloop");
     return NULL;
+  }
+}
+
+static void
+gst_pulsesrc_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+
+  GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (object);
+
+  switch (prop_id) {
+    case PROP_SERVER:
+      g_free (pulsesrc->server);
+      pulsesrc->server = g_value_dup_string (value);
+      if (pulsesrc->probe)
+        gst_pulseprobe_set_server (pulsesrc->probe, pulsesrc->server);
+      break;
+    case PROP_DEVICE:
+      g_free (pulsesrc->device);
+      pulsesrc->device = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
