@@ -24,6 +24,13 @@
  *
  * The element does not modify data as such, but can enforce limitations on the
  * data format.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch videotestsrc ! video/x-raw-gray ! ffmpegcolorspace ! autovideosink
+ * ]| Limits acceptable video from videotestsrc to be grayscale.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

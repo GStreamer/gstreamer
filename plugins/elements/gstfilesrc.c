@@ -24,6 +24,13 @@
  * @see_also: #GstFileSrc
  *
  * Read data from a file in the local file system.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch filesrc location=song.ogg ! decodebin2 ! autoaudiosink
+ * ]| Play a song.ogg from local dir.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

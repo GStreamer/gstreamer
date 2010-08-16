@@ -25,7 +25,22 @@
  * SECTION:element-tee
  * @see_also: #GstIdentity
  *
- * Split data to multiple pads.
+ * Split data to multiple pads. Branching the data flow is useful when e.g.
+ * capturing a video where the video is shown on the screen and also encoded and
+ * written to a file. Another example is playing music and hooking up a
+ * visualisation module.
+ *
+ * One needs to use separate queue elements (or a multiqueue) in each branch to
+ * provide separate threads for each branch. Otherwise a blocked dataflow in one
+ * branch would stall the other branches.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch filesrc location=song.ogg ! decodebin2 ! tee name=t ! queue ! autoaudiosink t. ! queue ! audioconvert ! goom ! ffmpegcolorspace ! autovideosink
+ * ]| Play a song.ogg from local dir and render visualisations using the goom
+ * element.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
