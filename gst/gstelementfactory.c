@@ -669,3 +669,199 @@ gst_element_factory_has_interface (GstElementFactory * factory,
   }
   return FALSE;
 }
+
+
+typedef struct
+{
+  GstElementFactoryListType type;
+  GstRank minrank;
+} FilterData;
+
+
+/**
+ * gst_element_factory_list_is_type:
+ * @factory: a #GstElementFactory
+ * @type: a #GstElementFactoryListType
+ *
+ * Check if @factory if of the given types.
+ *
+ * Returns: %TRUE if @factory is of @type.
+ *
+ * Since: 0.10.31
+ */
+gboolean
+gst_element_factory_list_is_type (GstElementFactory * factory,
+    GstElementFactoryListType type)
+{
+  gboolean res = FALSE;
+  const gchar *klass;
+
+  klass = gst_element_factory_get_klass (factory);
+
+  /* Filter by element type first, as soon as it matches
+   * one type, we skip all other tests */
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_SINK))
+    res = (strstr (klass, "Sink") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_SRC))
+    res = (strstr (klass, "Source") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_DECODER))
+    res = (strstr (klass, "Decoder") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_ENCODER))
+    res = (strstr (klass, "Encoder") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_MUXER))
+    res = (strstr (klass, "Muxer") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_DEMUXER))
+    res = (strstr (klass, "Demux") != NULL);
+
+  /* FIXME : We're actually parsing two Classes here... */
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_PARSER))
+    res = ((strstr (klass, "Parser") != NULL)
+        && (strstr (klass, "Codec") != NULL));
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER))
+    res = (strstr (klass, "Depayloader") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_PAYLOADER))
+    res = (strstr (klass, "Payloader") != NULL);
+
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_FORMATTER))
+    res = (strstr (klass, "Formatter") != NULL);
+
+  /* Filter by media type now, we only test if it
+   * matched any of the types above. */
+  if (res
+      && (type & (GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO |
+              GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO |
+              GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)))
+    res = ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO)
+        && (strstr (klass, "Audio") != NULL))
+        || ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO)
+        && (strstr (klass, "Video") != NULL))
+        || ((type & GST_ELEMENT_FACTORY_TYPE_MEDIA_IMAGE)
+        && (strstr (klass, "Image") != NULL));
+
+  return res;
+}
+
+static gboolean
+element_filter (GstPluginFeature * feature, FilterData * data)
+{
+  gboolean res;
+
+  /* we only care about element factories */
+  if (G_UNLIKELY (!GST_IS_ELEMENT_FACTORY (feature)))
+    return FALSE;
+
+  res = (gst_plugin_feature_get_rank (feature) >= data->minrank) &&
+      gst_element_factory_list_is_type (GST_ELEMENT_FACTORY_CAST (feature),
+      data->type);
+
+  return res;
+}
+
+/**
+ * gst_element_factory_list_get_elements:
+ * @type: a #GstElementFactoryListType
+ * @minrank: Minimum rank
+ *
+ * Get a list of factories that match the given @type. Only elements
+ * with a rank greater or equal to @minrank will be returned.
+ * The list of factories is returned by decreasing rank.
+ *
+ * Returns: a #GList of #GstElementFactory elements. Use
+ * gst_plugin_feature_list_free() after usage.
+ *
+ * Since: 0.10.31
+ */
+GList *
+gst_element_factory_list_get_elements (GstElementFactoryListType type,
+    GstRank minrank)
+{
+  GList *result;
+  FilterData data;
+
+  /* prepare type */
+  data.type = type;
+  data.minrank = minrank;
+
+  /* get the feature list using the filter */
+  result = gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+      element_filter, FALSE, &data);
+
+  /* sort on rank and name */
+  result = g_list_sort (result, gst_plugin_feature_rank_compare_func);
+
+  return result;
+}
+
+/**
+ * gst_element_factory_list_filter:
+ * @list: a #GList of #GstElementFactory to filter
+ * @caps: a #GstCaps
+ * @direction: a #GstPadDirection to filter on
+ * @subsetonly: whether to filter on caps subsets or not.
+ *
+ * Filter out all the elementfactories in @list that can handle @caps in
+ * the given direction.
+ *
+ * If @subsetonly is %TRUE, then only the elements whose pads templates
+ * are a complete superset of @caps will be returned. Else any element
+ * whose pad templates caps can intersect with @caps will be returned.
+ *
+ * Returns: a #GList of #GstElementFactory elements that match the
+ * given requisits. Use #gst_plugin_feature_list_free after usage.
+ *
+ * Since: 0.10.31
+ */
+GList *
+gst_element_factory_list_filter (GList * list,
+    const GstCaps * caps, GstPadDirection direction, gboolean subsetonly)
+{
+  GList *result = NULL;
+
+  GST_DEBUG ("finding factories");
+
+  /* loop over all the factories */
+  for (; list; list = list->next) {
+    GstElementFactory *factory;
+    const GList *templates;
+    GList *walk;
+
+    factory = (GstElementFactory *) list->data;
+
+    GST_DEBUG ("Trying %s",
+        gst_plugin_feature_get_name ((GstPluginFeature *) factory));
+
+    /* get the templates from the element factory */
+    templates = gst_element_factory_get_static_pad_templates (factory);
+    for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
+      GstStaticPadTemplate *templ = walk->data;
+
+      /* we only care about the sink templates */
+      if (templ->direction == direction) {
+        GstCaps *tmpl_caps;
+
+        /* try to intersect the caps with the caps of the template */
+        tmpl_caps = gst_static_caps_get (&templ->static_caps);
+
+        /* FIXME, intersect is not the right method, we ideally want to check
+         * for a subset here */
+
+        /* check if the intersection is empty */
+        if ((subsetonly && gst_caps_is_subset (caps, tmpl_caps)) ||
+            (!subsetonly && gst_caps_can_intersect (caps, tmpl_caps))) {
+          /* non empty intersection, we can use this element */
+          result = g_list_prepend (result, gst_object_ref (factory));
+          break;
+        }
+        gst_caps_unref (tmpl_caps);
+      }
+    }
+  }
+  return g_list_reverse (result);
+}

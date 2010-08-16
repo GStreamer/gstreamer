@@ -138,11 +138,20 @@ G_CONST_RETURN gchar *gst_plugin_feature_get_name       (GstPluginFeature *featu
 
 void            gst_plugin_feature_list_free            (GList *list);
 GList          *gst_plugin_feature_list_copy            (GList *list);
+void            gst_plugin_feature_list_debug           (GList *list);
+
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_PLUGIN_FEATURE_LIST_DEBUG(list) gst_plugin_feature_list_debug(list)
+#else
+#define GST_PLUGIN_FEATURE_LIST_DEBUG(list)
+#endif
 
 gboolean        gst_plugin_feature_check_version        (GstPluginFeature *feature,
                                                          guint             min_major,
                                                          guint             min_minor,
                                                          guint             min_micro);
+gint            gst_plugin_feature_rank_compare_func    (gconstpointer p1,
+							 gconstpointer p2);
 
 G_END_DECLS
 

@@ -296,6 +296,26 @@ gst_plugin_feature_list_copy (GList * list)
 }
 
 /**
+ * gst_plugin_feature_list_debug:
+ * @list: a #GList of plugin features
+ *
+ * Debug the plugin feature names in @list.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_plugin_feature_list_debug (GList * list)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  while (list) {
+    GST_DEBUG ("%s",
+        gst_plugin_feature_get_name ((GstPluginFeature *) list->data));
+    list = list->next;
+  }
+#endif
+}
+
+/**
  * gst_plugin_feature_check_version:
  * @feature: a feature
  * @min_major: minimum required major version
@@ -367,4 +387,37 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
   }
 
   return ret;
+}
+
+/**
+ * gst_plugin_feature_rank_compare_func:
+ * @p1: a #GstPluginFeature
+ * @p2: a #GstPluginFeature
+ *
+ * Compares the two given #GstPluginFeature instances. This function can be
+ * used as a #GCompareFunc when sorting by rank and then by name.
+ *
+ * Returns: negative value if the rank of p1 > the rank of p2 or the ranks are
+ * equal but the name of p1 comes before the name of p2; zero if the rank
+ * and names are equal; positive value if the rank of p1 < the rank of p2 or the
+ * ranks are equal but the name of p2 comes after the name of p1
+ *
+ * Since: 0.10.31
+ */
+gint
+gst_plugin_feature_rank_compare_func (gconstpointer p1, gconstpointer p2)
+{
+  GstPluginFeature *f1, *f2;
+  gint diff;
+
+  f1 = (GstPluginFeature *) p1;
+  f2 = (GstPluginFeature *) p2;
+
+  diff = f2->rank - f1->rank;
+  if (diff != 0)
+    return diff;
+
+  diff = strcmp (f2->name, f1->name);
+
+  return diff;
 }
