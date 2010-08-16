@@ -421,6 +421,7 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   int ret, sockfd;
   struct addrinfo hints;
   struct addrinfo *result, *rp;
+  struct linger linger;
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
@@ -476,6 +477,14 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
           (void *) &ret, sizeof (ret)) < 0)
     goto keepalive_failed;
 
+  /* make sure socket is reset immediately after close. This ensure that we can
+   * reuse the socket quickly. */
+  linger.l_onoff = 1;
+  linger.l_linger = 0;
+  if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_LINGER,
+          (void *) &linger, sizeof (linger)) < 0)
+    goto linger_failed;
+
   /* set the server socket to nonblocking */
   fcntl (server->server_sock.fd, F_SETFL, O_NONBLOCK);
 
@@ -505,29 +514,30 @@ no_socket:
   }
 reuse_failed:
   {
-    if (server->server_sock.fd >= 0) {
-      close (server->server_sock.fd);
-      server->server_sock.fd = -1;
-    }
     GST_ERROR_OBJECT (server, "failed to reuse socket: %s", g_strerror (errno));
-    return FALSE;
+    goto close_error;
   }
 keepalive_failed:
   {
-    if (server->server_sock.fd >= 0) {
-      close (server->server_sock.fd);
-      server->server_sock.fd = -1;
-    }
     GST_ERROR_OBJECT (server, "failed to configure keepalive socket: %s", g_strerror (errno));
-    return FALSE;
+    goto close_error;
+  }
+linger_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to no linger socket: %s", g_strerror (errno));
+    goto close_error;
   }
 listen_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to listen on socket: %s", g_strerror (errno));
+    goto close_error;
+  }
+close_error:
   {
     if (server->server_sock.fd >= 0) {
       close (server->server_sock.fd);
       server->server_sock.fd = -1;
     }
-    GST_ERROR_OBJECT (server, "failed to listen on socket: %s", g_strerror (errno));
     return FALSE;
   }
 }
