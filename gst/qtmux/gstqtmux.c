@@ -1545,6 +1545,14 @@ ftyp_error:
   }
 }
 
+/* check whether @a differs from @b by order of @magn */
+static gboolean inline
+gst_qtmux_check_difference (GstQTMux * qtmux, GstClockTime a,
+    GstClockTime b, GstClockTime magn)
+{
+  return ((a - b >= (magn >> 1)) || (b - a >= (magn >> 1)));
+}
+
 /*
  * Here we push the buffer and update the tables in the track atoms
  */
@@ -1585,14 +1593,42 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   } else
     gst_buffer_ref (last_buf);
 
-  /* fall back to duration if:
-   * - last bufer
-   * - the buffers are out of order,
-   * - lack of valid time forces fall back */
-  if (buf == NULL ||
-      !GST_BUFFER_TIMESTAMP_IS_VALID (last_buf) ||
-      !GST_BUFFER_TIMESTAMP_IS_VALID (buf) ||
-      GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf)) {
+  /* nasty heuristic mess to guestimate dealing with DTS/PTS,
+   * while also trying to stay close to input ts to preserve sync, so:
+   * - prefer using input ts where possible
+   * - if those detected out-of-order (*), and input duration available,
+   *   mark as out-of-order and fallback to duration
+   * - if in out-of-order, need to preserve sync between streams, and adding
+   *   durations might drift, so try to resync when we expect
+   *   input ts == (sum of durations), which is at some keyframe input frame.
+   *
+   * (*) if input ts out-of-order, or if ts differs from (sum of durations)
+   *     by an (approx) order-of-duration magnitude
+   */
+  if (G_LIKELY (buf) && !pad->is_out_of_order) {
+    if (G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (last_buf) &&
+            GST_BUFFER_TIMESTAMP_IS_VALID (buf))) {
+      if ((GST_BUFFER_TIMESTAMP (buf) < GST_BUFFER_TIMESTAMP (last_buf)) ||
+          (!GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
+              GST_BUFFER_DURATION_IS_VALID (last_buf) &&
+              gst_qtmux_check_difference (qtmux,
+                  GST_BUFFER_TIMESTAMP (last_buf) +
+                  GST_BUFFER_DURATION (last_buf), GST_BUFFER_TIMESTAMP (buf),
+                  GST_BUFFER_DURATION (last_buf)))) {
+        GST_DEBUG_OBJECT (qtmux, "detected out-of-order input");
+        pad->is_out_of_order = TRUE;
+      }
+    } else {
+      /* this is pretty bad */
+      GST_WARNING_OBJECT (qtmux, "missing input timestamp");
+      /* fall back to durations */
+      pad->is_out_of_order = TRUE;
+    }
+  }
+
+  /* fall back to duration if last buffer or
+   * out-of-order (determined previously), otherwise use input ts */
+  if (buf == NULL || pad->is_out_of_order) {
     if (!GST_BUFFER_DURATION_IS_VALID (last_buf)) {
       /* be forgiving for some possibly last upstream flushed buffer */
       if (buf)
@@ -1602,6 +1638,18 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       duration = 0;
     } else {
       duration = GST_BUFFER_DURATION (last_buf);
+      /* avoid drift in sum timestamps,
+       * so use input timestamp for suitable keyframe */
+      if (buf && !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) &&
+          GST_BUFFER_TIMESTAMP (buf) >= pad->last_dts &&
+          !gst_qtmux_check_difference (qtmux, pad->last_dts + duration,
+              GST_BUFFER_TIMESTAMP (buf), duration)) {
+        GST_DEBUG_OBJECT (qtmux, "resyncing out-of-order input to ts; "
+            "replacing %" GST_TIME_FORMAT " by %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (pad->last_dts + duration),
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+        duration = GST_BUFFER_TIMESTAMP (buf) - pad->last_dts;
+      }
     }
   } else {
     duration = GST_BUFFER_TIMESTAMP (buf) - GST_BUFFER_TIMESTAMP (last_buf);
@@ -2317,7 +2365,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     }
   } else if (strcmp (mimetype, "video/x-h264") == 0) {
     entry.fourcc = FOURCC_avc1;
-    qtpad->is_out_of_order = TRUE;
     if (qtpad->avg_bitrate == 0) {
       gint avg_bitrate = 0;
       gst_structure_get_int (structure, "bitrate", &avg_bitrate);
@@ -2342,7 +2389,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
       entry.fourcc = FOURCC_SVQ3;
       entry.version = 3;
       entry.depth = 32;
-      qtpad->is_out_of_order = TRUE;
 
       seqh_value = gst_structure_get_value (structure, "seqh");
       if (seqh_value) {
@@ -2441,14 +2487,12 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
 
     gst_structure_get_fourcc (structure, "format", &fourcc);
     entry.fourcc = fourcc;
-    qtpad->is_out_of_order = TRUE;
     qtpad->have_dts = TRUE;
   } else if (strcmp (mimetype, "video/x-mp4-part") == 0) {
     guint32 fourcc;
 
     gst_structure_get_fourcc (structure, "format", &fourcc);
     entry.fourcc = fourcc;
-    qtpad->is_out_of_order = TRUE;
     qtpad->have_dts = TRUE;
   }
 
