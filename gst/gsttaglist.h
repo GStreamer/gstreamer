@@ -968,6 +968,17 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_APPLICATION_NAME                  "application-name"
 /**
+ * GST_TAG_APPLICATION_DATA:
+ *
+ * Arbitrary application data (buffer)
+ *
+ * Some formats allow application's to add their own arbitrary data
+ * into files. This data is application's dependent.
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_APPLICATION_DATA          "application-data"
+/**
  * GST_TAG_IMAGE_ORIENTATION:
  *
  * Represents the 'Orientation' tag from EXIF. Defines how the image
