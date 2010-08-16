@@ -61,6 +61,7 @@ enum
   PROP_SERVER,
   PROP_DEVICE,
   PROP_DEVICE_NAME,
+  PROP_STREAM_PROPERTIES,
   PROP_LAST
 };
 
@@ -244,6 +245,29 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPulseSrc:stream-properties
+   *
+   * List of pulseaudio stream properties. A list of defined properties can be
+   * found in the <ulink href="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
+   *
+   * Below is an example for registering as a music application to pulseaudio.
+   * |[
+   * GstStructure *props;
+   *
+   * props = gst_structure_from_string ("props,media.role=music", NULL);
+   * g_object_set (pulse, "stream-properties", props, NULL);
+   * gst_structure_free (props);
+   * ]|
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_STREAM_PROPERTIES,
+      g_param_spec_boxed ("stream-properties", "stream properties",
+          "list of pulseaudio stream properties",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -272,6 +296,9 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
   pulsesrc->in_read = FALSE;
 
   pulsesrc->mixer = NULL;
+
+  pulsesrc->properties = NULL;
+  pulsesrc->proplist = NULL;
 
   pulsesrc->probe = gst_pulseprobe_new (G_OBJECT (pulsesrc), G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->server, FALSE, TRUE);        /* FALSE for sinks, TRUE for sources */
 
@@ -313,6 +340,11 @@ gst_pulsesrc_finalize (GObject * object)
 
   g_free (pulsesrc->server);
   g_free (pulsesrc->device);
+
+  if (pulsesrc->properties)
+    gst_structure_free (pulsesrc->properties);
+  if (pulsesrc->proplist)
+    pa_proplist_free (pulsesrc->proplist);
 
   if (pulsesrc->mixer) {
     gst_pulsemixer_ctrl_free (pulsesrc->mixer);
@@ -432,6 +464,15 @@ gst_pulsesrc_set_property (GObject * object,
       g_free (pulsesrc->device);
       pulsesrc->device = g_value_dup_string (value);
       break;
+    case PROP_STREAM_PROPERTIES:
+      if (pulsesrc->properties)
+        gst_structure_free (pulsesrc->properties);
+      pulsesrc->properties =
+          gst_structure_copy (gst_value_get_structure (value));
+      if (pulsesrc->proplist)
+        pa_proplist_free (pulsesrc->proplist);
+      pulsesrc->proplist = gst_pulse_make_proplist (pulsesrc->properties);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -454,6 +495,9 @@ gst_pulsesrc_get_property (GObject * object,
       break;
     case PROP_DEVICE_NAME:
       g_value_take_string (value, gst_pulsesrc_device_description (pulsesrc));
+      break;
+    case PROP_STREAM_PROPERTIES:
+      gst_value_set_structure (value, pulsesrc->properties);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -797,6 +841,7 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
   GstStructure *s;
   gboolean need_channel_layout = FALSE;
   GstRingBufferSpec spec;
+  const gchar *name;
 
   memset (&spec, 0, sizeof (GstRingBufferSpec));
   spec.latency_time = GST_SECOND;
@@ -832,9 +877,19 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
       need_channel_layout = TRUE;
   }
 
-  if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
-              "Record Stream",
-              &pulsesrc->sample_spec,
+  name = "Record Stream";
+  if (pulsesrc->proplist) {
+    if (!(pulsesrc->stream = pa_stream_new_with_proplist (pulsesrc->context,
+                name, &pulsesrc->sample_spec,
+                (need_channel_layout) ? NULL : &channel_map,
+                pulsesrc->proplist))) {
+      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+          ("Failed to create stream: %s",
+              pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+      goto unlock_and_fail;
+    }
+  } else if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
+              name, &pulsesrc->sample_spec,
               (need_channel_layout) ? NULL : &channel_map))) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
         ("Failed to create stream: %s",

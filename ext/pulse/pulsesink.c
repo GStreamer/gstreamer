@@ -80,6 +80,7 @@ enum
   PROP_VOLUME,
   PROP_MUTE,
   PROP_CLIENT,
+  PROP_STREAM_PROPERTIES,
   PROP_LAST
 };
 
@@ -770,7 +771,11 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* create a stream */
   GST_LOG_OBJECT (psink, "creating stream with name %s", name);
-  if (!(pbuf->stream = pa_stream_new (pctx->context,
+  if (psink->proplist) {
+    if (!(pbuf->stream = pa_stream_new_with_proplist (pctx->context,
+                name, &pbuf->sample_spec, &channel_map, psink->proplist)))
+      goto stream_failed;
+  } else if (!(pbuf->stream = pa_stream_new (pctx->context,
               name, &pbuf->sample_spec, &channel_map)))
     goto stream_failed;
 
@@ -1853,7 +1858,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   /**
    * GstPulseSink:client
    *
-   * The PulseAudio client name to use
+   * The PulseAudio client name to use.
    *
    * Since: 0.10.25
    */
@@ -1863,6 +1868,29 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           "The PulseAudio client name to use", gst_pulse_client_name (),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  /**
+   * GstPulseSink:stream-properties
+   *
+   * List of pulseaudio stream properties. A list of defined properties can be
+   * found in the <ulink href="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
+   *
+   * Below is an example for registering as a music application to pulseaudio.
+   * |[
+   * GstStructure *props;
+   *
+   * props = gst_structure_from_string ("props,media.role=music", NULL);
+   * g_object_set (pulse, "stream-properties", props, NULL);
+   * gst_structure_free
+   * ]|
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_STREAM_PROPERTIES,
+      g_param_spec_boxed ("stream-properties", "stream properties",
+          "list of pulseaudio stream properties",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* returns the current time of the sink ringbuffer */
@@ -1926,6 +1954,9 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   /* needed for conditional execution */
   pulsesink->pa_version = pa_get_library_version ();
 
+  pulsesink->properties = NULL;
+  pulsesink->proplist = NULL;
+
   GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
       pulsesink->pa_version);
 
@@ -1944,6 +1975,11 @@ gst_pulsesink_finalize (GObject * object)
   g_free (pulsesink->device);
   g_free (pulsesink->device_description);
   g_free (pulsesink->client_name);
+
+  if (pulsesink->properties)
+    gst_structure_free (pulsesink->properties);
+  if (pulsesink->proplist)
+    pa_proplist_free (pulsesink->proplist);
 
   if (pulsesink->probe) {
     gst_pulseprobe_free (pulsesink->probe);
@@ -2385,6 +2421,15 @@ gst_pulsesink_set_property (GObject * object,
       } else
         pulsesink->client_name = g_value_dup_string (value);
       break;
+    case PROP_STREAM_PROPERTIES:
+      if (pulsesink->properties)
+        gst_structure_free (pulsesink->properties);
+      pulsesink->properties =
+          gst_structure_copy (gst_value_get_structure (value));
+      if (pulsesink->proplist)
+        pa_proplist_free (pulsesink->proplist);
+      pulsesink->proplist = gst_pulse_make_proplist (pulsesink->properties);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2418,6 +2463,9 @@ gst_pulsesink_get_property (GObject * object,
 #endif
     case PROP_CLIENT:
       g_value_set_string (value, pulsesink->client_name);
+      break;
+    case PROP_STREAM_PROPERTIES:
+      gst_value_set_structure (value, pulsesink->properties);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -216,3 +216,36 @@ gst_pulse_cvolume_from_linear (pa_cvolume * v, unsigned channels,
 {
   pa_cvolume_set (v, channels, pa_sw_volume_from_linear (volume));
 }
+
+static gboolean
+make_proplist_item (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  pa_proplist *p = (pa_proplist *) user_data;
+  gchar *prop_id = (gchar *) g_quark_to_string (field_id);
+
+  /* http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html */
+
+  /* match prop id */
+
+  /* check type */
+  switch (G_VALUE_TYPE (value)) {
+    case G_TYPE_STRING:
+      pa_proplist_sets (p, prop_id, g_value_get_string (value));
+      break;
+    default:
+      GST_WARNING ("unmapped property type %s", G_VALUE_TYPE_NAME (value));
+      break;
+  }
+
+  return TRUE;
+}
+
+pa_proplist *
+gst_pulse_make_proplist (const GstStructure * properties)
+{
+  pa_proplist *proplist = pa_proplist_new ();
+
+  /* iterate the structure and fill the proplist */
+  gst_structure_foreach (properties, make_proplist_item, proplist);
+  return proplist;
+}

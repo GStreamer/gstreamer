@@ -37,7 +37,9 @@ pa_channel_map *gst_pulse_gst_to_channel_map (pa_channel_map * map,
 GstRingBufferSpec *gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     GstRingBufferSpec * spec);
 
-void gst_pulse_cvolume_from_linear(pa_cvolume *v, unsigned channels, gdouble volume);
+void gst_pulse_cvolume_from_linear (pa_cvolume *v, unsigned channels, gdouble volume);
+
+pa_proplist *gst_pulse_make_proplist (const GstStructure *properties);
 
 #if !HAVE_PULSE_0_9_11
 static inline int PA_CONTEXT_IS_GOOD(pa_context_state_t x) {

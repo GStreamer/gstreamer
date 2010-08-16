@@ -72,6 +72,8 @@ struct _GstPulseSink
 
   const gchar *pa_version;
 
+  GstStructure *properties;
+  pa_proplist *proplist;
 };
 
 struct _GstPulseSinkClass

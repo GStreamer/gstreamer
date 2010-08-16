@@ -76,6 +76,9 @@ struct _GstPulseSrc
   gboolean operation_success:1;
   gboolean paused:1;
   gboolean in_read:1;
+
+  GstStructure *properties;
+  pa_proplist *proplist;
 };
 
 struct _GstPulseSrcClass
