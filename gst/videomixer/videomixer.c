@@ -28,7 +28,6 @@
  * All sink pads must be either AYUV, ARGB or BGRA, but a mixture of them is not 
  * supported. The src pad will have the same colorspace as the sinks. 
  * No colorspace conversion is done. 
- * 
  *
  * Individual parameters for each input stream can be configured on the
  * #GstVideoMixerPad.
@@ -65,6 +64,9 @@
  *   videotestsrc ! \
  *   video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to test I420
+ * |[
+ * gst-launch videotestsrc pattern="snow" ! video/x-raw-yuv, framerate=\(fraction\)10/1, width=200, height=150 ! videomixer name=mix sink_1::xpos=20 sink_1::ypos=20 sink_1::alpha=0.5 ! ffmpegcolorspace ! xvimagesink videotestsrc ! video/x-raw-yuv, framerate=\(fraction\)10/1, width=640, height=360 ! mix.
+ * ]| Set position and alpha on the mixer using #GstVideoMixerPad properties.
  * </refsect2>
  */
 
