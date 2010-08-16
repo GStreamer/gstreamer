@@ -161,6 +161,10 @@ can build simple server applications with it.
  a test signal will be streamed to the client. The full example code can be
  found in the examples/test-readme.c file.
 
+ Note that by default the factory will create a new pipeline for each client. If
+ you want to share a pipeline between clients, use
+ gst_rtsp_media_factory_set_shared().
+
 
 * more on GstRTSPMediaFactory
 
