@@ -4511,10 +4511,6 @@ done2:
         GST_LOG_OBJECT (qtdemux, "block %d, %u timestamps, duration %u",
             i, stream->stts_samples, stream->stts_duration);
 
-        /* take first duration for fps */
-        if (G_UNLIKELY (stream->min_duration == 0))
-          stream->min_duration = stream->stts_duration;
-
         stream->stts_sample_index = 0;
       }
 
@@ -5091,6 +5087,15 @@ avc_get_profile_and_level_string (const guint8 * avc_data, gint size,
     /* Fourth byte is the level indication */
     *level = avc_level_idc_to_string (QT_UINT8 (avc_data + 3),
         QT_UINT8 (avc_data + 2));
+}
+
+
+static gint
+less_than (gconstpointer a, gconstpointer b)
+{
+  const guint32 *av = a, *bv = b;
+
+  return *av - *bv;
 }
 
 /* parse the traks.
@@ -6084,15 +6089,27 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || !qtdemux_parse_samples (qtdemux, stream, 0))
     goto samples_failed;
 
-  /* look for non-zero min_duration as it is used to set the frame rate cap */
+  /* parse number of initial sample to set frame rate cap */
   if (G_UNLIKELY (stream->min_duration == 0)) {
     guint32 sample_num = 1;
+    const guint samples = 20;
+    GArray *durations;
 
-    while (sample_num < stream->n_samples && stream->min_duration == 0) {
+    while (sample_num < stream->n_samples && sample_num < samples) {
       if (!qtdemux_parse_samples (qtdemux, stream, sample_num))
         goto samples_failed;
       ++sample_num;
     }
+    /* collect and sort durations */
+    durations = g_array_sized_new (FALSE, FALSE, sizeof (guint32), samples);
+    sample_num = 0;
+    while (sample_num <= stream->stbl_index) {
+      g_array_append_val (durations, stream->samples[sample_num].duration);
+      sample_num++;
+    }
+    g_array_sort (durations, less_than);
+    stream->min_duration = g_array_index (durations, guint32, samples / 2);
+    g_array_unref (durations);
   }
   /* configure segments */
   if (!qtdemux_parse_segments (qtdemux, stream, trak))
