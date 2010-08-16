@@ -4654,8 +4654,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if (!is_simpleblock) {
-      if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
-        break;
+      if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK) {
+        goto data_error;
+      }
     } else {
       id = GST_MATROSKA_ID_SIMPLEBLOCK;
     }
@@ -4681,13 +4682,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         size = GST_BUFFER_SIZE (buf);
 
         /* first byte(s): blocknum */
-        if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
-          GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("Data error"));
-          gst_buffer_unref (buf);
-          buf = NULL;
-          ret = GST_FLOW_ERROR;
-          break;
-        }
+        if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0)
+          goto data_error;
         data += n;
         size -= n;
 
@@ -4695,15 +4691,16 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         stream_num = gst_matroska_demux_stream_from_num (demux, num);
         if (G_UNLIKELY (size < 3)) {
           GST_WARNING_OBJECT (demux, "Invalid size %u", size);
-          ret = GST_FLOW_ERROR;
-          break;
+          /* non-fatal, try next block(group) */
+          ret = GST_FLOW_OK;
+          goto done;
         } else if (G_UNLIKELY (stream_num < 0 ||
                 stream_num >= demux->num_streams)) {
           /* let's not give up on a stray invalid track number */
           GST_WARNING_OBJECT (demux,
               "Invalid stream %d for track number %" G_GUINT64_FORMAT
               "; ignoring block", stream_num, num);
-          break;
+          goto done;
         }
 
         stream = g_ptr_array_index (demux->src, stream_num);
@@ -4729,12 +4726,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           case 0x1:            /* xiph lacing */
           case 0x2:            /* fixed-size lacing */
           case 0x3:            /* EBML lacing */
-            if (size == 0) {
-              GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-                  ("Invalid lacing size"));
-              ret = GST_FLOW_ERROR;
-              break;
-            }
+            if (size == 0)
+              goto invalid_lacing;
             laces = GST_READ_UINT8 (data) + 1;
             data += 1;
             size -= 1;
@@ -4746,12 +4739,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
                 for (n = 0; ret == GST_FLOW_OK && n < laces - 1; n++) {
                   while (1) {
-                    if (size == 0) {
-                      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-                          ("Invalid lacing size"));
-                      ret = GST_FLOW_ERROR;
-                      break;
-                    }
+                    if (size == 0)
+                      goto invalid_lacing;
                     temp = GST_READ_UINT8 (data);
                     lace_size[n] += temp;
                     data += 1;
@@ -4773,12 +4762,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
               case 0x3:        /* EBML lacing */  {
                 guint total;
 
-                if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0) {
-                  GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-                      ("Data error"));
-                  ret = GST_FLOW_ERROR;
-                  break;
-                }
+                if ((n = gst_matroska_ebmlnum_uint (data, size, &num)) < 0)
+                  goto data_error;
                 data += n;
                 size -= n;
                 total = lace_size[0] = num;
@@ -4786,12 +4771,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
                   gint64 snum;
                   gint r;
 
-                  if ((r = gst_matroska_ebmlnum_sint (data, size, &snum)) < 0) {
-                    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-                        ("Data error"));
-                    ret = GST_FLOW_ERROR;
-                    break;
-                  }
+                  if ((r = gst_matroska_ebmlnum_sint (data, size, &snum)) < 0)
+                    goto data_error;
                   data += r;
                   size -= r;
                   lace_size[n] = lace_size[n - 1] + snum;
@@ -4899,6 +4880,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     if (is_simpleblock)
       break;
   }
+
+  /* reading a number or so could have failed */
+  if (ret != GST_FLOW_OK)
+    goto data_error;
 
   if (ret == GST_FLOW_OK && readblock) {
     guint64 duration = 0;
@@ -5201,6 +5186,20 @@ eos:
     ret = gst_matroska_demux_combine_flows (demux, stream, ret);
     goto done;
   }
+invalid_lacing:
+  {
+    GST_ELEMENT_WARNING (demux, STREAM, DEMUX, (NULL), ("Invalid lacing size"));
+    /* non-fatal, try next block(group) */
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+data_error:
+  {
+    GST_ELEMENT_WARNING (demux, STREAM, DEMUX, (NULL), ("Data error"));
+    /* non-fatal, try next block(group) */
+    ret = GST_FLOW_OK;
+    goto done;
+  }
 }
 
 /* return FALSE if block(group) should be skipped (due to a seek) */
@@ -5399,16 +5398,26 @@ gst_matroska_demux_parse_contents (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   return ret;
 }
 
+#define GST_FLOW_OVERFLOW   GST_FLOW_CUSTOM_ERROR
+
 static inline GstFlowReturn
 gst_matroska_demux_check_read_size (GstMatroskaDemux * demux, guint64 bytes)
 {
   if (G_UNLIKELY (bytes > 10 * 1024 * 1024)) {
     /* only a few blocks are expected/allowed to be large,
      * and will be recursed into, whereas others will be read and must fit */
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-        ("reading large block of size %" G_GUINT64_FORMAT " not supported; "
-            "file might be corrupt.", bytes));
-    return GST_FLOW_ERROR;
+    if (demux->streaming) {
+      /* fatal in streaming case, as we can't step over easily */
+      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+          ("reading large block of size %" G_GUINT64_FORMAT " not supported; "
+              "file might be corrupt.", bytes));
+      return GST_FLOW_ERROR;
+    } else {
+      /* indicate higher level to quietly give up */
+      GST_DEBUG_OBJECT (demux,
+          "too large block of size %" G_GUINT64_FORMAT, bytes);
+      return GST_FLOW_ERROR;
+    }
   } else {
     return GST_FLOW_OK;
   }
@@ -5431,37 +5440,6 @@ gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
   }
 }
 
-/* initializes @ebml with @bytes from input stream at current offset.
- * Returns UNEXPECTED if insufficient available,
- * ERROR if too much was attempted to read. */
-static inline GstFlowReturn
-gst_matroska_demux_take (GstMatroskaDemux * demux, guint64 bytes,
-    GstEbmlRead * ebml)
-{
-  GstBuffer *buffer = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_LOG_OBJECT (demux, "taking %" G_GUINT64_FORMAT " bytes for parsing",
-      bytes);
-  ret = gst_matroska_demux_check_read_size (demux, bytes);
-  if (ret != GST_FLOW_OK)
-    goto exit;
-  if (demux->streaming) {
-    if (gst_adapter_available (demux->adapter) >= bytes)
-      buffer = gst_adapter_take_buffer (demux->adapter, bytes);
-    else
-      ret = GST_FLOW_UNEXPECTED;
-  } else
-    ret = gst_matroska_demux_peek_bytes (demux, demux->offset, bytes, &buffer,
-        NULL);
-  if (G_LIKELY (buffer)) {
-    gst_ebml_read_init (ebml, GST_ELEMENT_CAST (demux), buffer, demux->offset);
-    demux->offset += bytes;
-  }
-exit:
-  return ret;
-}
-
 static inline GstFlowReturn
 gst_matroska_demux_flush (GstMatroskaDemux * demux, guint flush)
 {
@@ -5480,6 +5458,46 @@ gst_matroska_demux_flush (GstMatroskaDemux * demux, guint flush)
       return GST_FLOW_UNEXPECTED;
   }
   return GST_FLOW_OK;
+}
+
+/* initializes @ebml with @bytes from input stream at current offset.
+ * Returns UNEXPECTED if insufficient available,
+ * ERROR if too much was attempted to read. */
+static inline GstFlowReturn
+gst_matroska_demux_take (GstMatroskaDemux * demux, guint64 bytes,
+    GstEbmlRead * ebml)
+{
+  GstBuffer *buffer = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  GST_LOG_OBJECT (demux, "taking %" G_GUINT64_FORMAT " bytes for parsing",
+      bytes);
+  ret = gst_matroska_demux_check_read_size (demux, bytes);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    if (!demux->streaming) {
+      /* in pull mode, we can skip */
+      if ((ret = gst_matroska_demux_flush (demux, bytes)) == GST_FLOW_OK)
+        ret = GST_FLOW_OVERFLOW;
+    } else {
+      /* otherwise fatal */
+      ret = GST_FLOW_ERROR;
+    }
+    goto exit;
+  }
+  if (demux->streaming) {
+    if (gst_adapter_available (demux->adapter) >= bytes)
+      buffer = gst_adapter_take_buffer (demux->adapter, bytes);
+    else
+      ret = GST_FLOW_UNEXPECTED;
+  } else
+    ret = gst_matroska_demux_peek_bytes (demux, demux->offset, bytes, &buffer,
+        NULL);
+  if (G_LIKELY (buffer)) {
+    gst_ebml_read_init (ebml, GST_ELEMENT_CAST (demux), buffer, demux->offset);
+    demux->offset += bytes;
+  }
+exit:
+  return ret;
 }
 
 static void
@@ -5567,8 +5585,12 @@ gst_matroska_demux_find_tracks (GstMatroskaDemux * demux)
 
 #define GST_READ_CHECK(stmt)  \
 G_STMT_START { \
-  if (G_UNLIKELY ((ret = (stmt)) != GST_FLOW_OK)) \
+  if (G_UNLIKELY ((ret = (stmt)) != GST_FLOW_OK)) { \
+    if (ret == GST_FLOW_OVERFLOW) { \
+      ret = GST_FLOW_OK; \
+    } \
     goto read_error; \
+  } \
 } G_STMT_END
 
 static GstFlowReturn
@@ -5578,6 +5600,9 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
   GstEbmlRead ebml = { 0, };
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 read;
+
+  GST_LOG_OBJECT (demux, "Parsing Element id 0x%x, "
+      "size %" G_GUINT64_FORMAT ", prefix %d", id, length, needed);
 
   /* if we plan to read and parse this element, we need prefix (id + length)
    * and the contents */
