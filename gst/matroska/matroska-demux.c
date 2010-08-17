@@ -2315,6 +2315,92 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
   return TRUE;
 }
 
+/* searches for a cluster start from @pos,
+ * return GST_FLOW_OK and cluster position in @pos if found */
+static GstFlowReturn
+gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
+{
+  gint64 newpos = *pos;
+  gint64 orig_offset;
+  GstFlowReturn ret = GST_FLOW_OK;
+  const guint chunk = 64 * 1024;
+  GstBuffer *buf = NULL;
+  guint64 length;
+  guint32 id;
+  guint needed;
+
+  orig_offset = demux->offset;
+
+  /* read in at newpos and scan for ebml cluster id */
+  while (1) {
+    GstByteReader reader;
+    gint cluster_pos;
+
+    ret = gst_pad_pull_range (demux->sinkpad, newpos, chunk, &buf);
+    if (ret != GST_FLOW_OK)
+      break;
+    GST_DEBUG_OBJECT (demux, "read buffer size %d at offset %" G_GINT64_FORMAT,
+        GST_BUFFER_SIZE (buf), newpos);
+    gst_byte_reader_init_from_buffer (&reader, buf);
+    cluster_pos = 0;
+  resume:
+    cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
+        GST_MATROSKA_ID_CLUSTER, cluster_pos,
+        GST_BUFFER_SIZE (buf) - cluster_pos);
+    if (cluster_pos >= 0) {
+      newpos += cluster_pos;
+      GST_DEBUG_OBJECT (demux,
+          "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
+      gst_buffer_unref (buf);
+      buf = NULL;
+      /* extra checks whether we really sync'ed to a cluster:
+       * - either it is the first and only cluster
+       * - either there is a cluster after this one
+       * - either cluster length is undefined
+       */
+      /* ok if first cluster (there may not a subsequent one) */
+      if (newpos == demux->first_cluster_offset) {
+        GST_DEBUG_OBJECT (demux, "cluster is first cluster -> OK");
+        break;
+      }
+      demux->offset = newpos;
+      ret =
+          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      if (ret != GST_FLOW_OK)
+        goto resume;
+      g_assert (id == GST_MATROSKA_ID_CLUSTER);
+      GST_DEBUG_OBJECT (demux, "cluster size %" G_GUINT64_FORMAT ", prefix %d",
+          length, needed);
+      /* ok if undefined length or first cluster */
+      if (length == G_MAXUINT64) {
+        GST_DEBUG_OBJECT (demux, "cluster has undefined length -> OK");
+        break;
+      }
+      /* skip cluster */
+      demux->offset += length + needed;
+      ret =
+          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
+      if (ret != GST_FLOW_OK)
+        goto resume;
+      GST_DEBUG_OBJECT (demux, "next element is %scluster",
+          id == GST_MATROSKA_ID_CLUSTER ? "" : "not ");
+      if (id == GST_MATROSKA_ID_CLUSTER)
+        break;
+      /* not ok, resume */
+      goto resume;
+    } else {
+      /* partial cluster id may have been in tail of buffer */
+      newpos += MAX (GST_BUFFER_SIZE (buf), 4) - 3;
+      gst_buffer_unref (buf);
+      buf = NULL;
+    }
+  }
+
+  demux->offset = orig_offset;
+  *pos = newpos;
+  return ret;
+}
+
 /* bisect and scan through file for cluster starting before @time,
  * returns fake index entry with corresponding info on cluster */
 static GstMatroskaIndex *
@@ -2375,10 +2461,8 @@ retry:
   /* read in at newpos and scan for ebml cluster id */
   startpos = newpos;
   while (1) {
-    GstByteReader reader;
-    gint cluster_pos;
 
-    ret = gst_pad_pull_range (demux->sinkpad, newpos, chunk, &buf);
+    ret = gst_matroska_demux_search_cluster (demux, &newpos);
     if (ret == GST_FLOW_UNEXPECTED) {
       /* heuristic HACK */
       newpos = startpos * 80 / 100;
@@ -2389,61 +2473,8 @@ retry:
       continue;
     } else if (ret != GST_FLOW_OK) {
       goto exit;
-    }
-    GST_DEBUG_OBJECT (demux, "read buffer size %d at offset %" G_GINT64_FORMAT,
-        GST_BUFFER_SIZE (buf), newpos);
-    gst_byte_reader_init_from_buffer (&reader, buf);
-    cluster_pos = 0;
-  resume:
-    cluster_pos = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        GST_MATROSKA_ID_CLUSTER, cluster_pos,
-        GST_BUFFER_SIZE (buf) - cluster_pos);
-    if (cluster_pos >= 0) {
-      newpos += cluster_pos;
-      GST_DEBUG_OBJECT (demux,
-          "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
-      gst_buffer_unref (buf);
-      buf = NULL;
-      /* extra checks whether we really sync'ed to a cluster:
-       * - either it is the first and only cluster
-       * - either there is a cluster after this one
-       * - either cluster length is undefined
-       */
-      /* ok if first cluster (there may not a subsequent one) */
-      if (newpos == demux->first_cluster_offset) {
-        GST_DEBUG_OBJECT (demux, "cluster is first cluster -> OK");
-        break;
-      }
-      demux->offset = newpos;
-      ret =
-          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
-      if (ret != GST_FLOW_OK)
-        goto resume;
-      g_assert (id == GST_MATROSKA_ID_CLUSTER);
-      GST_DEBUG_OBJECT (demux, "cluster size %" G_GUINT64_FORMAT ", prefix %d",
-          length, needed);
-      /* ok if undefined length or first cluster */
-      if (length == G_MAXUINT64) {
-        GST_DEBUG_OBJECT (demux, "cluster has undefined length -> OK");
-        break;
-      }
-      /* skip cluster */
-      demux->offset += length + needed;
-      ret =
-          gst_matroska_demux_peek_id_length_pull (demux, &id, &length, &needed);
-      if (ret != GST_FLOW_OK)
-        goto resume;
-      GST_DEBUG_OBJECT (demux, "next element is %scluster",
-          id == GST_MATROSKA_ID_CLUSTER ? "" : "not ");
-      if (id == GST_MATROSKA_ID_CLUSTER)
-        break;
-      /* not ok, resume */
-      goto resume;
     } else {
-      /* partial cluster id may have been in tail of buffer */
-      newpos += MAX (GST_BUFFER_SIZE (buf), 4) - 3;
-      gst_buffer_unref (buf);
-      buf = NULL;
+      break;
     }
   }
 
@@ -5435,8 +5466,21 @@ gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
     demux->next_cluster_offset = 0;
     return FALSE;
   } else {
-    /* nowhere to try next, give up */
-    return TRUE;
+    gint64 pos;
+
+    /* sigh, one last attempt above and beyond call of duty ...;
+     * search for cluster mark following current pos */
+    pos = demux->offset;
+    GST_WARNING_OBJECT (demux, "parse error, looking for next cluster");
+    if (gst_matroska_demux_search_cluster (demux, &pos) != GST_FLOW_OK) {
+      /* did not work, give up */
+      return TRUE;
+    } else {
+      GST_DEBUG_OBJECT (demux, "... found at  %" G_GUINT64_FORMAT, pos);
+      /* try that position */
+      demux->offset = pos;
+      return FALSE;
+    }
   }
 }
 
