@@ -106,6 +106,36 @@ gst_tag_register_tags_internal (gpointer unused)
       G_TYPE_INT, _("capturing iso speed"),
       _("The ISO speed used when capturing an image"), NULL);
 
+  gst_tag_register (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing exposure program"),
+      _("The exposure program used when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_EXPOSURE_MODE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing exposure mode"),
+      _("The exposure mode used when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing scene capture type"),
+      _("The scene capture mode used when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing gain adjustment"),
+      _("The overall gain adjustment applied on an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_WHITE_BALANCE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing white balance"),
+      _("The white balance mode set when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_CONTRAST, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing contrast"),
+      _("The direction of contrast processing applied "
+          "when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_SATURATION, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing saturation"),
+      _("The direction of saturation processing applied when "
+          "capturing an image"), NULL);
+
   return NULL;
 }
 

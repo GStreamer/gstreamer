@@ -168,6 +168,118 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_CAPTURING_ISO_SPEED           "capturing-iso-speed"
 
+/**
+ * GST_TAG_CAPTURING_EXPOSURE_PROGRAM:
+ *
+ * Type of exposure control used when capturing an image. (string)
+ *
+ * The allowed values are:
+ *   "undefined"
+ *   "manual"
+ *   "normal" - automatically controlled
+ *   "aperture-priority" - user selects aperture value
+ *   "shutter-priority" - user selects shutter speed
+ *   "creative" - biased towards depth of field
+ *   "action" - biased towards fast shutter speed
+ *   "portrait" - closeup, leaving background out of focus
+ *   "landscape" - landscape photos, background in focus
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_EXPOSURE_PROGRAM     "capturing-exposure-program"
+
+/**
+ * GST_TAG_CAPTURING_EXPOSURE_MODE:
+ *
+ * Exposure mode used when capturing an image. (string)
+ *
+ * The allowed values are:
+ *   "auto-exposure"
+ *   "manual-exposure"
+ *   "auto-bracket"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_EXPOSURE_MODE       "capturing-exposure-mode"
+
+/**
+ * GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE:
+ *
+ * Scene mode used when capturing an image. (string)
+ *
+ * The allowed values are:
+ *   "standard"
+ *   "landscape"
+ *   "portrait"
+ *   "night-scene"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE  "capturing-scene-capture-type"
+
+/**
+ * GST_TAG_CAPTURING_GAIN_ADJUSTMENT:
+ *
+ * Gain adjustment applied to an image. (string)
+ *
+ * The allowed values are:
+ *   "none"
+ *   "low-gain-up"
+ *   "high-gain-up"
+ *   "low-gain-down"
+ *   "high-gain-down"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_GAIN_ADJUSTMENT     "capturing-gain-adjustment"
+
+/**
+ * GST_TAG_CAPTURING_WHITE_BALANCE:
+ *
+ * White balance mode used when capturing an image. (string)
+ *
+ * The allowed values are:
+ *   "auto"
+ *   "manual"
+ *   "daylight"
+ *   "cloudy"
+ *   "tungsten"
+ *   "fluorescent"
+ *   "fluorescent h" (newer daylight-calibrated fluorescents)
+ *   "flash"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_WHITE_BALANCE       "capturing-white-balance"
+
+/**
+ * GST_TAG_CAPTURING_CONTRAST:
+ *
+ * Direction of contrast processing applied when capturing an image. (string)
+ *
+ * The allowed values are:
+ *  "normal"
+ *  "soft"
+ *  "hard"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_CONTRAST            "capturing-contrast"
+
+/**
+ * GST_TAG_CAPTURING_SATURATION:
+ *
+ * Direction of saturation processing applied when capturing an image. (string)
+ *
+ * The allowed values are:
+ *  "normal"
+ *  "low-saturation"
+ *  "high-saturation"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_SATURATION          "capturing-saturation"
+
 
 /* additional information for image tags */
 
