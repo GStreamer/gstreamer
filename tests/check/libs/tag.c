@@ -1243,6 +1243,8 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
 {
   GValue value = { 0 };
   GstDateTime *datetime = NULL;
+  GstBuffer *buf = NULL;
+  gint i;
 
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
@@ -1333,6 +1335,16 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_boxed (&value, datetime);
   gst_date_time_unref (datetime);
   do_simple_exif_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, GST_TYPE_BUFFER);
+  buf = gst_buffer_new_and_alloc (1024);
+  for (i = 0; i < 1024; i++)
+    GST_BUFFER_DATA (buf)[i] = i % 255;
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_DATA,
+      &value);
   g_value_unset (&value);
 }
 

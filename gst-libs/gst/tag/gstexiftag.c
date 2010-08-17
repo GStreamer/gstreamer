@@ -181,6 +181,7 @@ static const GstExifTagMatch tag_map_ifd0[] = {
 static const GstExifTagMatch tag_map_exif[] = {
   {NULL, EXIF_VERSION_TAG, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
   {GST_TAG_DATE_TIME, 0x9003, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_APPLICATION_DATA, 0x927C, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
@@ -493,6 +494,47 @@ write_exif_ascii_tag_from_taglist (GstExifWriter * writer,
 }
 
 static void
+write_exif_undefined_tag_from_taglist (GstExifWriter * writer,
+    const GstTagList * taglist, const GstExifTagMatch * exiftag)
+{
+  const GValue *value;
+  const guint8 *data = NULL;
+  gint size = 0;
+  gint tag_size = gst_tag_list_get_tag_size (taglist, exiftag->gst_tag);
+
+  if (tag_size != 1) {
+    GST_WARNING ("Only the first item in the taglist will be serialized");
+    return;
+  }
+
+  value = gst_tag_list_get_value_index (taglist, exiftag->gst_tag, 0);
+
+  /* do some conversion if needed */
+  switch (G_VALUE_TYPE (value)) {
+    case G_TYPE_STRING:
+      data = (guint8 *) g_value_get_string (value);
+      size = strlen ((gchar *) data);   /* no need to +1, undefined doesn't require it */
+      break;
+    default:
+      if (G_VALUE_TYPE (value) == GST_TYPE_BUFFER) {
+        GstBuffer *buf = gst_value_get_buffer (value);
+
+        data = GST_BUFFER_DATA (buf);
+        size = GST_BUFFER_SIZE (buf);
+      } else {
+        GST_WARNING ("Conversion from %s to raw data not supported",
+            G_VALUE_TYPE_NAME (value));
+      }
+      break;
+  }
+
+  if (size == 0)
+    return;
+
+  write_exif_undefined_tag (writer, exiftag->exif_tag, data, size);
+}
+
+static void
 write_exif_tag_from_taglist (GstExifWriter * writer, const GstTagList * taglist,
     const GstExifTagMatch * exiftag)
 {
@@ -507,6 +549,9 @@ write_exif_tag_from_taglist (GstExifWriter * writer, const GstTagList * taglist,
   switch (exiftag->exif_type) {
     case EXIF_TYPE_ASCII:
       write_exif_ascii_tag_from_taglist (writer, taglist, exiftag);
+      break;
+    case EXIF_TYPE_UNDEFINED:
+      write_exif_undefined_tag_from_taglist (writer, taglist, exiftag);
       break;
     default:
       GST_WARNING ("Unhandled tag type %d", exiftag->exif_type);
@@ -686,6 +731,58 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
         tag->gst_tag);
   }
   g_free (str);
+}
+
+static void
+parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
+    guint32 count, guint32 offset, const guint8 * offset_as_data)
+{
+  GType tagtype;
+  guint8 *data;
+  guint32 real_offset;
+
+  if (count > 4) {
+    if (offset < reader->base_offset) {
+      GST_WARNING ("Offset is smaller (%u) than base offset (%u)", offset,
+          reader->base_offset);
+      return;
+    }
+
+    real_offset = offset - reader->base_offset;
+    if (real_offset >= GST_BUFFER_SIZE (reader->buffer)) {
+      GST_WARNING ("Invalid offset %u for buffer of size %u, not adding tag %s",
+          real_offset, GST_BUFFER_SIZE (reader->buffer), tag->gst_tag);
+      return;
+    }
+
+    /* +1 because it could be a string without the \0 */
+    data = malloc (sizeof (guint8) * count + 1);
+    memcpy (data, GST_BUFFER_DATA (reader->buffer) + real_offset, count);
+    data[count] = 0;
+  } else {
+    data = malloc (sizeof (guint8) * count + 1);
+    memcpy (data, (guint8 *) offset_as_data, count);
+    data[count] = 0;
+  }
+
+  tagtype = gst_tag_get_type (tag->gst_tag);
+  if (tagtype == GST_TYPE_BUFFER) {
+    GstBuffer *buf = gst_buffer_new ();
+    gst_buffer_set_data (buf, data, count);
+    data = NULL;
+
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_APPEND, tag->gst_tag,
+        buf, NULL);
+
+    gst_buffer_unref (buf);
+  } else if (tagtype == G_TYPE_STRING) {
+    gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
+        data, NULL);
+  } else {
+    GST_WARNING ("No parsing function associated to %x(%s)", tag->exif_tag,
+        tag->gst_tag);
+  }
+  g_free (data);
 }
 
 static void
@@ -946,6 +1043,9 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
         parse_exif_rational_tag (exif_reader, tag_map[map_index].gst_tag,
             tagdata.count, tagdata.offset, 1);
         break;
+      case EXIF_TYPE_UNDEFINED:
+        parse_exif_undefined_tag (exif_reader, &tag_map[map_index],
+            tagdata.count, tagdata.offset, tagdata.offset_as_data);
       default:
         GST_WARNING ("Unhandled tag type: %u", tagdata.tag_type);
         break;
