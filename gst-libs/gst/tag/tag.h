@@ -120,6 +120,53 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL  "musicbrainz-discid-full"
 
+/**
+ * GST_TAG_CAPTURING_SHUTTER_SPEED:
+ *
+ * Shutter speed used when capturing an image, in seconds. (fraction)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_SHUTTER_SPEED        "capturing-shutter-speed"
+
+/**
+ * GST_TAG_CAPTURING_FOCAL_RATIO:
+ *
+ * Focal ratio (f-number) used when capturing an image. (double)
+ *
+ * The value stored is the denominator of the focal ratio (f-number).
+ * For example, if this tag value is 2, the focal ratio is f/2.
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_FOCAL_RATIO          "capturing-focal-ratio"
+
+/**
+ * GST_TAG_CAPTURING_FOCAL_LENGTH:
+ *
+ * Focal length used when capturing an image, in mm. (double)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_FOCAL_LENGTH         "capturing-focal-length"
+
+/**
+ * GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO:
+ *
+ * Digital zoom ratio used when capturing an image. (double)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO   "capturing-digital-zoom-ratio"
+
+/**
+ * GST_TAG_CAPTURING_ISO_SPEED:
+ *
+ * ISO speed used when capturing an image. (integer)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_ISO_SPEED           "capturing-iso-speed"
 
 
 /* additional information for image tags */

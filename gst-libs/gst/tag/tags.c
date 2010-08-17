@@ -85,6 +85,27 @@ gst_tag_register_tags_internal (gpointer unused)
       "Musicbrainz discid for metadata retrieval (full)",
       gst_tag_merge_use_first);
 
+  /* photography tags */
+  gst_tag_register (GST_TAG_CAPTURING_SHUTTER_SPEED, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, _("capturing shutter speed"),
+      _("Shutter speed used when capturing an image, in seconds"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_FOCAL_RATIO, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("capturing focal ratio"),
+      _("Focal ratio (f-number) used when capturing the image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_FOCAL_LENGTH, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("capturing focal length"),
+      _("Focal length of the lens used capturing the image, in mm"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("capturing digital zoom ratio"),
+      _("Digital zoom ratio used when capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_ISO_SPEED, GST_TAG_FLAG_META,
+      G_TYPE_INT, _("capturing iso speed"),
+      _("The ISO speed used when capturing an image"), NULL);
+
   return NULL;
 }
 
