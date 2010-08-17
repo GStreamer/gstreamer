@@ -114,6 +114,9 @@ struct _GstJpegParsePrivate
   /* video state */
   gint framerate_numerator;
   gint framerate_denominator;
+
+  /* tags */
+  GstTagList *tags;
 };
 
 static void gst_jpeg_parse_dispose (GObject * object);
@@ -549,7 +552,6 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         break;
 
       case COM:{               /* read comment and post as tag */
-        GstTagList *tags;
         const guint8 *comment = NULL;
 
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
@@ -557,11 +559,10 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         if (!gst_byte_reader_get_data (&reader, size - 2, &comment))
           goto error;
 
-        tags = gst_tag_list_new ();
-        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+        if (!parse->priv->tags)
+          parse->priv->tags = gst_tag_list_new ();
+        gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
             GST_TAG_COMMENT, comment, NULL);
-        gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
-            parse->priv->srcpad, tags);
         break;
       }
 
@@ -590,11 +591,16 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           GST_BUFFER_SIZE (buf) = exif_size;
           tags = gst_tag_list_from_exif_buffer_with_tiff_header (buf);
           gst_buffer_unref (buf);
+
           if (tags) {
-            GST_INFO_OBJECT (parse, "post exif metadata");
-            gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
-                parse->priv->srcpad, tags);
+            GST_INFO_OBJECT (parse, "got exif metadata");
+            if (!parse->priv->tags)
+              parse->priv->tags = gst_tag_list_new ();
+            gst_tag_list_insert (parse->priv->tags, tags,
+                GST_TAG_MERGE_REPLACE);
+            gst_tag_list_free (tags);
           }
+
           GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
               marker, id_str, size - 2);
         } else if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
@@ -612,11 +618,16 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           GST_BUFFER_SIZE (buf) = xmp_size;
           tags = gst_tag_list_from_xmp_buffer (buf);
           gst_buffer_unref (buf);
+
           if (tags) {
-            GST_INFO_OBJECT (parse, "post xmp metadata");
-            gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
-                parse->priv->srcpad, tags);
+            GST_INFO_OBJECT (parse, "got xmp metadata");
+            if (!parse->priv->tags)
+              parse->priv->tags = gst_tag_list_new ();
+            gst_tag_list_insert (parse->priv->tags, tags,
+                GST_TAG_MERGE_REPLACE);
+            gst_tag_list_free (tags);
           }
+
           GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
               marker, id_str, size - 2);
         } else {
@@ -788,12 +799,20 @@ gst_jpeg_parse_push_buffer (GstJpegParse * parse, guint len)
       return GST_FLOW_ERROR;
     }
 
+    if (parse->priv->tags) {
+      GST_DEBUG_OBJECT (parse, "Pushing tags");
+      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
+          parse->priv->srcpad, parse->priv->tags);
+      parse->priv->tags = NULL;
+    }
+
     parse->priv->new_segment = FALSE;
     parse->priv->caps_width = parse->priv->width;
     parse->priv->caps_height = parse->priv->height;
     parse->priv->caps_framerate_numerator = parse->priv->framerate_numerator;
     parse->priv->caps_framerate_denominator =
         parse->priv->framerate_denominator;
+    parse->priv->tags = NULL;
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) = parse->priv->next_ts;
@@ -887,6 +906,19 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (parse->priv->srcpad, event);
       parse->priv->new_segment = TRUE;
       break;
+    case GST_EVENT_TAG:{
+      GstTagList *taglist = NULL;
+      gst_event_parse_tag (event, &taglist);
+      if (!parse->priv->new_segment)
+        res = gst_pad_event_default (pad, event);
+      else {
+        /* Hold on to the tags till the srcpad caps are definitely set */
+        if (!parse->priv->tags)
+          parse->priv->tags = gst_tag_list_new ();
+        gst_tag_list_insert (parse->priv->tags, taglist, GST_TAG_MERGE_REPLACE);
+      }
+      break;
+    }
     default:
       res = gst_pad_event_default (pad, event);
       break;
@@ -924,6 +956,8 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
       parse->priv->last_offset = 0;
       parse->priv->last_entropy_len = 0;
       parse->priv->last_resync = FALSE;
+
+      parse->priv->tags = NULL;
     default:
       break;
   }
@@ -935,6 +969,8 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (parse->priv->adapter);
+      if (parse->priv->tags)
+        gst_tag_list_free (parse->priv->tags);
       break;
     default:
       break;
