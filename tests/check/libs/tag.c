@@ -1246,6 +1246,8 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   GstBuffer *buf = NULL;
   gint i;
 
+  gst_tag_register_musicbrainz_tags ();
+
   g_value_init (&value, G_TYPE_STRING);
   g_value_set_static_string (&value, "my string");
   do_simple_exif_tag_serialization_deserialization (GST_TAG_COPYRIGHT, &value);
@@ -1328,6 +1330,39 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, 100 / 3.6);
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, &value);
+
+  g_value_set_double (&value, 0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, &value);
+  g_value_set_double (&value, 2.5);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, &value);
+  g_value_set_double (&value, 8.75);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, &value);
+
+  g_value_set_double (&value, 20.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_FOCAL_LENGTH, &value);
+  g_value_set_double (&value, 5.5);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_FOCAL_LENGTH, &value);
+
+  g_value_set_double (&value, 16);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_FOCAL_RATIO, &value);
+  g_value_set_double (&value, 2.7);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_FOCAL_LENGTH, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, G_TYPE_INT);
+  g_value_set_int (&value, 400);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_ISO_SPEED, &value);
+  g_value_set_int (&value, 1600);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_ISO_SPEED, &value);
   g_value_unset (&value);
 
   g_value_init (&value, GST_TYPE_DATE_TIME);
@@ -1345,6 +1380,21 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   gst_buffer_unref (buf);
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_DATA,
       &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value, 1, 1);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SHUTTER_SPEED, &value);
+  gst_value_set_fraction (&value, 1, 30);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SHUTTER_SPEED, &value);
+  gst_value_set_fraction (&value, 1, 200);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SHUTTER_SPEED, &value);
+  gst_value_set_fraction (&value, 1, 8000);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SHUTTER_SPEED, &value);
   g_value_unset (&value);
 }
 
