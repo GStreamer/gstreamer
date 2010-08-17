@@ -2501,6 +2501,15 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
+  /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
+  if (ret == GST_STATE_CHANGE_FAILURE
+      && transition == GST_STATE_CHANGE_NULL_TO_READY) {
+    g_assert (pulsesink->mainloop);
+    pa_threaded_mainloop_stop (pulsesink->mainloop);
+    pa_threaded_mainloop_free (pulsesink->mainloop);
+    pulsesink->mainloop = NULL;
+  }
+
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_element_post_message (element,
