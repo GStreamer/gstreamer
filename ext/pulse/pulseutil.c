@@ -26,6 +26,13 @@
 #include "pulseutil.h"
 #include <gst/audio/multichannel.h>
 
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>            /* getpid on UNIX */
+#endif
+#ifdef HAVE_PROCESS_H
+# include <process.h>           /* getpid on win32 */
+#endif
+
 static const pa_channel_position_t gst_pos_to_pa[GST_AUDIO_CHANNEL_POSITION_NUM]
     = {
   [GST_AUDIO_CHANNEL_POSITION_FRONT_MONO] = PA_CHANNEL_POSITION_MONO,
@@ -125,7 +132,7 @@ gst_pulse_client_name (void)
   else if (pa_get_binary_name (buf, sizeof (buf)))
     return g_strdup (buf);
   else
-    return g_strdup ("GStreamer");
+    return g_strdup_printf ("GStreamer-pid-%lu", (gulong) getpid ());
 }
 
 pa_channel_map *

@@ -255,6 +255,9 @@
 /* Define to enable OSX video (used by osxvideosink). */
 #undef HAVE_OSX_VIDEO
 
+/* Define to 1 if you have the <process.h> header file. */
+#define HAVE_PROCESS_H 1
+
 /* Define to enable pulseaudio plug-in (used by pulseaudio). */
 #undef HAVE_PULSE
 

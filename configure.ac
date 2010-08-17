@@ -780,6 +780,10 @@ AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
 dnl *** pulseaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PULSE, true)
 AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
+
+  dnl used in ext/pulse/pulseutil.c
+  AC_CHECK_HEADERS([process.h])
+
   AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.10)
   AG_GST_PKG_CHECK_MODULES(PULSE_0_9_11, libpulse >= 0.9.11)
   if test x$HAVE_PULSE_0_9_11 = xyes; then
