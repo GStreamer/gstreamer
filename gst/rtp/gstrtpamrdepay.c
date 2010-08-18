@@ -267,7 +267,7 @@ static gint nb_frame_size[16] = {
 
 static gint wb_frame_size[16] = {
   17, 23, 32, 36, 40, 46, 50, 58,
-  60, -1, -1, -1, -1, -1, -1, 0
+  60, 5, -1, -1, -1, -1, -1, 0
 };
 
 static GstBuffer *
