@@ -53,12 +53,15 @@
 
 #define DEFAULT_PROP_DEVICE		"default"
 #define DEFAULT_PROP_DEVICE_NAME	""
+#define DEFAULT_PROP_CARD_NAME	        ""
 
 enum
 {
   PROP_0,
   PROP_DEVICE,
   PROP_DEVICE_NAME,
+  PROP_CARD_NAME,
+  PROP_LAST
 };
 
 static void gst_alsasrc_init_interfaces (GType type);
@@ -226,6 +229,11 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device",
           DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_CARD_NAME,
+      g_param_spec_string ("card-name", "Card name",
+          "Human-readable name of the sound card",
+          DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -266,6 +274,11 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
       g_value_take_string (value,
           gst_alsa_find_device_name (GST_OBJECT_CAST (src),
               src->device, src->handle, SND_PCM_STREAM_CAPTURE));
+      break;
+    case PROP_CARD_NAME:
+      g_value_take_string (value,
+          gst_alsa_find_card_name (GST_OBJECT_CAST (src),
+              src->device, SND_PCM_STREAM_CAPTURE));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
