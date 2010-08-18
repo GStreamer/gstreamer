@@ -28,6 +28,7 @@
  * gst-launch videotestsrc ! fpsdisplaysink
  * gst-launch videotestsrc ! fpsdisplaysink text-overlay=false
  * gst-launch filesrc location=video.avi ! decodebin2 name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
+ * gst-launch playbin2 uri=file:///path/to/video.avi video-sink="fpsdisplaysink" audio-sink=fakesink
  * ]|
  * </refsect2>
  */
@@ -52,7 +53,7 @@
 
 #define DEFAULT_SIGNAL_FPS_MEASUREMENTS FALSE
 #define DEFAULT_FPS_UPDATE_INTERVAL_MS 500      /* 500 ms */
-#define DEFAULT_FONT "Sans 20"
+#define DEFAULT_FONT "Sans 15"
 
 /* generic templates */
 static GstStaticPadTemplate fps_display_sink_template =
