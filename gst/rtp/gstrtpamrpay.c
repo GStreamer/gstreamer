@@ -262,11 +262,10 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-  /* FIXME: when we do more than one AMR frame per packet, fix this */
   if (duration != GST_CLOCK_TIME_NONE)
     GST_BUFFER_DURATION (outbuf) = duration;
   else {
-    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
   }
 
   if (GST_BUFFER_IS_DISCONT (buffer)) {
