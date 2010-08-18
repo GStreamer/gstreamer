@@ -63,6 +63,7 @@ REGISTRY_CHECKS =				\
 	elements/identity			\
 	elements/multiqueue			\
 	elements/tee			  	\
+	elements/queue                          \
 	libs/basesrc				\
 	libs/basesink				\
 	libs/controller				\
@@ -108,11 +109,9 @@ check_PROGRAMS =				\
 	libs/transform1				
 
 # failing tests
-# queue : tests is unstable (race conditions)
 noinst_PROGRAMS =				\
 	gst/gstpipeline				\
-	libs/collectpads			\
-	elements/queue
+	libs/collectpads			
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =
