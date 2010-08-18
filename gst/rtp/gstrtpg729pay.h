@@ -46,6 +46,9 @@ struct _GstRTPG729Pay
 
   GstAdapter *adapter;
   GstClockTime next_ts;
+  guint32 next_rtp_time;
+  GstClockTime first_ts;
+  guint32 first_rtp_time;
   gboolean discont;
 };
 

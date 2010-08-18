@@ -136,6 +136,9 @@ gst_rtp_g729_pay_reset (GstRTPG729Pay * pay)
 {
   gst_adapter_clear (pay->adapter);
   pay->discont = FALSE;
+  pay->next_rtp_time = 0;
+  pay->first_ts = GST_CLOCK_TIME_NONE;
+  pay->first_rtp_time = 0;
 }
 
 static gboolean
@@ -159,10 +162,11 @@ gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 
 static GstFlowReturn
 gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
-    const guint8 * data, guint payload_len, GstClockTime timestamp,
-    GstClockTime duration)
+    const guint8 * data, guint payload_len)
 {
   GstBaseRTPPayload *basepayload;
+  GstClockTime duration;
+  guint frames;
   GstBuffer *outbuf;
   guint8 *payload;
   GstFlowReturn ret;
@@ -170,7 +174,7 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   basepayload = GST_BASE_RTP_PAYLOAD (rtpg729pay);
 
   GST_DEBUG_OBJECT (rtpg729pay, "Pushing %d bytes ts %" GST_TIME_FORMAT,
-      payload_len, GST_TIME_ARGS (timestamp));
+      payload_len, GST_TIME_ARGS (rtpg729pay->next_ts));
 
   /* create buffer to hold the payload */
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
@@ -180,8 +184,14 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   memcpy (payload, data, payload_len);
 
   /* set metadata */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  frames =
+      (payload_len / G729_FRAME_SIZE) + ((payload_len % G729_FRAME_SIZE) >> 1);
+  duration = frames * G729_FRAME_DURATION;
+  GST_BUFFER_TIMESTAMP (outbuf) = rtpg729pay->next_ts;
   GST_BUFFER_DURATION (outbuf) = duration;
+  GST_BUFFER_OFFSET (outbuf) = rtpg729pay->next_rtp_time;
+  rtpg729pay->next_ts += duration;
+  rtpg729pay->next_rtp_time += frames * 80;
 
   if (G_UNLIKELY (rtpg729pay->discont)) {
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
@@ -193,6 +203,24 @@ gst_rtp_g729_pay_push (GstRTPG729Pay * rtpg729pay,
   ret = gst_basertppayload_push (basepayload, outbuf);
 
   return ret;
+}
+
+static void
+gst_rtp_g729_pay_recalc_rtp_time (GstRTPG729Pay * rtpg729pay, GstClockTime time)
+{
+  if (GST_CLOCK_TIME_IS_VALID (rtpg729pay->first_ts)
+      && GST_CLOCK_TIME_IS_VALID (time) && time >= rtpg729pay->first_ts) {
+    GstClockTime diff;
+    guint32 rtpdiff;
+
+    diff = time - rtpg729pay->first_ts;
+    rtpdiff = (diff / GST_MSECOND) * 8;
+    rtpg729pay->next_rtp_time = rtpg729pay->first_rtp_time + rtpdiff;
+    GST_DEBUG_OBJECT (rtpg729pay,
+        "elapsed time %" GST_TIME_FORMAT ", rtp %d, "
+        "new offset %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
+        rtpg729pay->next_rtp_time);
+  }
 }
 
 static GstFlowReturn
@@ -271,34 +299,49 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
       "Calculated min_payload_len %u and max_payload_len %u",
       min_payload_len, max_payload_len);
 
-  if (GST_BUFFER_IS_DISCONT (buf))
-    rtpg729pay->discont = TRUE;
-
   adapter = rtpg729pay->adapter;
+  available = gst_adapter_available (adapter);
+
+  /* resync rtp time on discont or a discontinuous cn packet */
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* flush remainder */
+    if (available > 0) {
+      gst_rtp_g729_pay_push (rtpg729pay,
+          gst_adapter_take (adapter, available), available);
+      available = 0;
+    }
+    rtpg729pay->discont = TRUE;
+    gst_rtp_g729_pay_recalc_rtp_time (rtpg729pay, GST_BUFFER_TIMESTAMP (buf));
+  }
+
+  if (GST_BUFFER_SIZE (buf) < G729_FRAME_SIZE)
+    gst_rtp_g729_pay_recalc_rtp_time (rtpg729pay, GST_BUFFER_TIMESTAMP (buf));
+
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (rtpg729pay->first_ts))) {
+    rtpg729pay->first_ts = GST_BUFFER_TIMESTAMP (buf);
+    rtpg729pay->first_rtp_time = rtpg729pay->next_rtp_time;
+  }
 
   /* let's reset the base timestamp when the adapter is empty */
-  if (gst_adapter_available (adapter) == 0)
+  if (available == 0)
     rtpg729pay->next_ts = GST_BUFFER_TIMESTAMP (buf);
 
-  if (gst_adapter_available (adapter) == 0 &&
+  if (available == 0 &&
       GST_BUFFER_SIZE (buf) >= min_payload_len &&
       GST_BUFFER_SIZE (buf) <= max_payload_len) {
     ret = gst_rtp_g729_pay_push (rtpg729pay,
-        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-        GST_BUFFER_TIMESTAMP (buf), GST_BUFFER_DURATION (buf));
+        GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
     gst_buffer_unref (buf);
     return ret;
   }
 
   gst_adapter_push (adapter, buf);
-
   available = gst_adapter_available (adapter);
+
   /* as long as we have full frames */
   /* this loop will push all available buffers till the last frame */
   while (available >= min_payload_len ||
       available % G729_FRAME_SIZE == G729B_CN_FRAME_SIZE) {
-    GstClockTime duration;
-
     /* We send as much as we can */
     if (available <= max_payload_len) {
       payload_len = available;
@@ -307,14 +350,9 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
           (available / G729_FRAME_SIZE) * G729_FRAME_SIZE);
     }
 
-    duration = (payload_len / G729_FRAME_SIZE) * G729_FRAME_DURATION;
-    rtpg729pay->next_ts += duration;
-
     ret = gst_rtp_g729_pay_push (rtpg729pay,
-        gst_adapter_take (adapter, payload_len), payload_len,
-        rtpg729pay->next_ts, duration);
-
-    available = gst_adapter_available (adapter);
+        gst_adapter_take (adapter, payload_len), payload_len);
+    available -= payload_len;
   }
 
   return ret;
