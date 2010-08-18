@@ -79,6 +79,7 @@ enum
   PROP_DEVICE_NAME,
   PROP_VOLUME,
   PROP_MUTE,
+  PROP_CLIENT,
   PROP_LAST
 };
 
@@ -436,7 +437,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
 
   g_assert (!pbuf->stream);
 
-  pbuf->context_name = g_strdup_printf ("%s@%s", gst_pulse_client_name (),
+  g_assert (psink->client_name);
+  pbuf->context_name = g_strdup_printf ("%s@%s", psink->client_name,
       GST_STR_NULL (psink->server));
 
   pa_threaded_mainloop_lock (psink->mainloop);
@@ -470,8 +472,6 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     if (pa_context_connect (pctx->context, psink->server,
             PA_CONTEXT_NOAUTOSPAWN, NULL) < 0)
       goto connect_failed;
-
-
   } else {
     GST_LOG_OBJECT (psink, "reusing shared pulseaudio context with name %s",
         GST_STR_NULL (pbuf->context_name));
@@ -1838,6 +1838,13 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           "Mute state of this stream", DEFAULT_MUTE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
+
+  g_object_class_install_property (gobject_class,
+      PROP_CLIENT,
+      g_param_spec_string ("client", "Client",
+          "The PulseAudio client name to use", gst_pulse_client_name (),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 }
 
 /* returns the current time of the sink ringbuffer */
@@ -1888,6 +1895,7 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->server = NULL;
   pulsesink->device = NULL;
   pulsesink->device_description = NULL;
+  pulsesink->client_name = gst_pulse_client_name ();
 
   pulsesink->volume = DEFAULT_VOLUME;
   pulsesink->volume_set = FALSE;
@@ -1917,6 +1925,7 @@ gst_pulsesink_finalize (GObject * object)
   g_free (pulsesink->server);
   g_free (pulsesink->device);
   g_free (pulsesink->device_description);
+  g_free (pulsesink->client_name);
 
   if (pulsesink->probe) {
     gst_pulseprobe_free (pulsesink->probe);
@@ -2349,6 +2358,15 @@ gst_pulsesink_set_property (GObject * object,
       gst_pulsesink_set_mute (pulsesink, g_value_get_boolean (value));
       break;
 #endif
+    case PROP_CLIENT:
+      g_free (pulsesink->client_name);
+      if (!g_value_get_string (value)) {
+        GST_WARNING_OBJECT (pulsesink,
+            "Empty PulseAudio client name not allowed. Resetting to default value");
+        pulsesink->client_name = gst_pulse_client_name ();
+      } else
+        pulsesink->client_name = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2380,6 +2398,9 @@ gst_pulsesink_get_property (GObject * object,
       g_value_set_boolean (value, gst_pulsesink_get_mute (pulsesink));
       break;
 #endif
+    case PROP_CLIENT:
+      g_value_set_string (value, pulsesink->client_name);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

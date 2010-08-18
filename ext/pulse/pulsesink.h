@@ -54,7 +54,7 @@ struct _GstPulseSink
 {
   GstBaseAudioSink sink;
 
-  gchar *server, *device, *stream_name;
+  gchar *server, *device, *stream_name, *client_name;
   gchar *device_description;
 
   pa_threaded_mainloop *mainloop;
