@@ -52,4 +52,9 @@ gchar   * gst_alsa_find_device_name (GstObject        * obj,
                                      snd_pcm_t        * handle,
                                      snd_pcm_stream_t   stream);
 
+gchar *   gst_alsa_find_card_name   (GstObject        * obj,
+                                     const gchar      * devcard,
+                                     snd_pcm_stream_t   stream);
+
+
 #endif /* __GST_ALSA_H__ */

@@ -462,6 +462,7 @@ subroutine_error:
   }
 }
 
+/* returns the card name when the device number is unknown or -1 */
 static gchar *
 gst_alsa_find_device_name_no_handle (GstObject * obj, const gchar * devcard,
     gint device_num, snd_pcm_stream_t stream)
@@ -480,27 +481,29 @@ gst_alsa_find_device_name_no_handle (GstObject * obj, const gchar * devcard,
   if (snd_ctl_card_info (ctl, info) < 0)
     goto done;
 
-  while (snd_ctl_pcm_next_device (ctl, &dev) == 0 && dev >= 0) {
-    if (dev == device_num) {
-      snd_pcm_info_t *pcminfo;
+  if (device_num != -1) {
+    while (snd_ctl_pcm_next_device (ctl, &dev) == 0 && dev >= 0) {
+      if (dev == device_num) {
+        snd_pcm_info_t *pcminfo;
 
-      snd_pcm_info_malloc (&pcminfo);
-      snd_pcm_info_set_device (pcminfo, dev);
-      snd_pcm_info_set_subdevice (pcminfo, 0);
-      snd_pcm_info_set_stream (pcminfo, stream);
-      if (snd_ctl_pcm_info (ctl, pcminfo) < 0) {
+        snd_pcm_info_malloc (&pcminfo);
+        snd_pcm_info_set_device (pcminfo, dev);
+        snd_pcm_info_set_subdevice (pcminfo, 0);
+        snd_pcm_info_set_stream (pcminfo, stream);
+        if (snd_ctl_pcm_info (ctl, pcminfo) < 0) {
+          snd_pcm_info_free (pcminfo);
+          break;
+        }
+
+        ret = (gchar *) snd_pcm_info_get_name (pcminfo);
+        if (ret) {
+          ret = g_strdup (ret);
+          GST_LOG_OBJECT (obj, "name from pcminfo: %s", ret);
+        }
         snd_pcm_info_free (pcminfo);
-        break;
+        if (ret)
+          break;
       }
-
-      ret = (gchar *) snd_pcm_info_get_name (pcminfo);
-      if (ret) {
-        ret = g_strdup (ret);
-        GST_LOG_OBJECT (obj, "name from pcminfo: %s", ret);
-      }
-      snd_pcm_info_free (pcminfo);
-      if (ret)
-        break;
     }
   }
 
@@ -508,7 +511,7 @@ gst_alsa_find_device_name_no_handle (GstObject * obj, const gchar * devcard,
     char *name = NULL;
     gint card;
 
-    GST_LOG_OBJECT (obj, "no luck so far, trying backup");
+    GST_LOG_OBJECT (obj, "trying card name");
     card = snd_ctl_card_info_get_card (info);
     snd_card_get_name (card, &name);
     ret = g_strdup (name);
@@ -520,6 +523,13 @@ done:
   snd_ctl_close (ctl);
 
   return ret;
+}
+
+gchar *
+gst_alsa_find_card_name (GstObject * obj, const gchar * devcard,
+    snd_pcm_stream_t stream)
+{
+  return gst_alsa_find_device_name_no_handle (obj, devcard, -1, stream);
 }
 
 gchar *
