@@ -51,6 +51,9 @@ struct _GstRtpAMRPay
   GstBaseRTPPayload payload;
 
   GstRtpAMRPayMode mode;
+  GstClockTime first_ts;
+  guint32 first_rtp_time;
+  guint32 next_rtp_time;
 };
 
 struct _GstRtpAMRPayClass

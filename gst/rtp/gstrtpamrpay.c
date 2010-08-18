@@ -90,6 +90,9 @@ static gboolean gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload,
 static GstFlowReturn gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
 
+static GstStateChangeReturn
+gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition);
+
 GST_BOILERPLATE (GstRtpAMRPay, gst_rtp_amr_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
 
@@ -113,6 +116,10 @@ static void
 gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 {
   GstBaseRTPPayloadClass *gstbasertppayload_class;
+  GstElementClass *gstelement_class;
+
+  gstelement_class = (GstElementClass *) klass;
+  gstelement_class->change_state = gst_rtp_amr_pay_change_state;
 
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
@@ -127,6 +134,14 @@ static void
 gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay, GstRtpAMRPayClass * klass)
 {
   /* needed because of GST_BOILERPLATE */
+}
+
+static void
+gst_rtp_amr_pay_reset (GstRtpAMRPay * pay)
+{
+  pay->next_rtp_time = 0;
+  pay->first_ts = GST_CLOCK_TIME_NONE;
+  pay->first_rtp_time = 0;
 }
 
 static gboolean
@@ -178,6 +193,29 @@ wrong_type:
   }
 }
 
+static void
+gst_rtp_amr_pay_recalc_rtp_time (GstRtpAMRPay * rtpamrpay,
+    GstClockTime timestamp)
+{
+  /* re-sync rtp time */
+  if (GST_CLOCK_TIME_IS_VALID (rtpamrpay->first_ts) &&
+      GST_CLOCK_TIME_IS_VALID (timestamp) && timestamp >= rtpamrpay->first_ts) {
+    GstClockTime diff;
+    guint32 rtpdiff;
+
+    /* interpolate to reproduce gap from start, rather than intermediate
+     * intervals to avoid roundup accumulation errors */
+    diff = timestamp - rtpamrpay->first_ts;
+    rtpdiff = ((diff / GST_MSECOND) * 8) <<
+        (rtpamrpay->mode == GST_RTP_AMR_P_MODE_WB);
+    rtpamrpay->next_rtp_time = rtpamrpay->first_rtp_time + rtpdiff;
+    GST_DEBUG_OBJECT (rtpamrpay,
+        "elapsed time %" GST_TIME_FORMAT ", rtp %d, "
+        "new offset %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
+        rtpamrpay->next_rtp_time);
+  }
+}
+
 /* -1 is invalid */
 static gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
@@ -203,6 +241,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
   gint *frame_size;
+  gboolean sid = FALSE;
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
@@ -234,10 +273,13 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     FT = (data[i] & 0x78) >> 3;
 
     fr_size = frame_size[FT];
-    GST_DEBUG_OBJECT (basepayload, "frame size %d", fr_size);
+    GST_DEBUG_OBJECT (basepayload, "frame type %d, frame size %d", FT, fr_size);
     /* FIXME, we don't handle this yet.. */
     if (fr_size <= 0)
       goto wrong_size;
+
+    if (fr_size == 5)
+      sid = TRUE;
 
     amr_len += fr_size;
     num_nonempty_packets++;
@@ -272,7 +314,21 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     gst_rtp_buffer_set_marker (outbuf, TRUE);
+    gst_rtp_amr_pay_recalc_rtp_time (rtpamrpay, timestamp);
   }
+
+  if (G_UNLIKELY (sid)) {
+    gst_rtp_amr_pay_recalc_rtp_time (rtpamrpay, timestamp);
+  }
+
+  /* perfect rtptime */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (rtpamrpay->first_ts))) {
+    rtpamrpay->first_ts = timestamp;
+    rtpamrpay->first_rtp_time = rtpamrpay->next_rtp_time;
+  }
+  GST_BUFFER_OFFSET (outbuf) = rtpamrpay->next_rtp_time;
+  rtpamrpay->next_rtp_time +=
+      (num_packets * 160) << (rtpamrpay->mode == GST_RTP_AMR_P_MODE_WB);
 
   /* get payload, this is now writable */
   payload = gst_rtp_buffer_get_payload (outbuf);
@@ -348,6 +404,31 @@ too_big:
 
     return GST_FLOW_ERROR;
   }
+}
+
+static GstStateChangeReturn
+gst_rtp_amr_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  /* handle upwards state changes here */
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  /* handle downwards state changes */
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_amr_pay_reset (GST_RTP_AMR_PAY (element));
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 gboolean
