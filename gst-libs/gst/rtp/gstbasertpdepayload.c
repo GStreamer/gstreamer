@@ -278,7 +278,8 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   if (G_UNLIKELY (!gst_rtp_buffer_validate (in)))
     goto invalid_buffer;
 
-  priv->discont = GST_BUFFER_IS_DISCONT (in);
+  if (!priv->discont)
+    priv->discont = GST_BUFFER_IS_DISCONT (in);
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
   /* convert to running_time and save the timestamp, this is the timestamp
@@ -642,6 +643,7 @@ gst_base_rtp_depayload_change_state (GstElement * element,
       priv->play_scale = 1.0;
       priv->next_seqnum = -1;
       priv->negotiated = FALSE;
+      priv->discont = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
