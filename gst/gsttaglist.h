@@ -580,6 +580,19 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_COPYRIGHT_URI          "copyright-uri"
 /**
+ * GST_TAG_ENCODED_BY:
+ *
+ * name of the person or organisation that encoded the file. May contain a
+ * copyright message if the person or organisation also holds the copyright
+ * (string)
+ *
+ * Note: do not use this field to describe the encoding application. Use
+ * #GST_TAG_APPLICATION_NAME or #GST_TAG_COMMENT for that.
+ *
+ * Since: 0.10.33
+ */
+#define GST_TAG_ENCODED_BY             "encoded-by"
+/**
  * GST_TAG_CONTACT:
  *
  * contact information (string)
