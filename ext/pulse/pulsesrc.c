@@ -65,7 +65,6 @@ enum
 };
 
 static void gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc);
-
 static void gst_pulsesrc_destroy_context (GstPulseSrc * pulsesrc);
 
 static void gst_pulsesrc_set_property (GObject * object, guint prop_id,
@@ -564,6 +563,8 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
   g_assert (!pulsesrc->context);
   g_assert (!pulsesrc->stream);
 
+  GST_DEBUG_OBJECT (pulsesrc, "opening device");
+
   if (!(pulsesrc->context =
           pa_context_new (pa_threaded_mainloop_get_api (pulsesrc->mainloop),
               name))) {
@@ -574,6 +575,9 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
 
   pa_context_set_state_callback (pulsesrc->context,
       gst_pulsesrc_context_state_cb, pulsesrc);
+
+  GST_DEBUG_OBJECT (pulsesrc, "connect to server %s",
+      GST_STR_NULL (pulsesrc->server));
 
   if (pa_context_connect (pulsesrc->context, pulsesrc->server, 0, NULL) < 0) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Failed to connect: %s",
@@ -598,6 +602,7 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
     /* Wait until the context is ready */
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
+  GST_DEBUG_OBJECT (pulsesrc, "connected");
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
@@ -882,14 +887,14 @@ gst_pulsesrc_negotiate (GstBaseSrc * basesrc)
   gboolean result = FALSE;
 
   /* first see what is possible on our source pad */
-  thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
+  thiscaps = gst_pad_get_caps_reffed (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   /* nothing or anything is allowed, we're done */
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
     goto no_nego_needed;
 
   /* get the peer caps */
-  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  peercaps = gst_pad_peer_get_caps_reffed (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     /* get intersection */
@@ -1027,7 +1032,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = ! !success;
+  pulsesrc->operation_success = !!success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 
