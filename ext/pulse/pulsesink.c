@@ -306,6 +306,7 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
       pa_context_unref (pctx->context);
       g_hash_table_remove (gst_pulse_shared_contexts, pbuf->context_name);
       g_free (pbuf->context_name);
+      g_slice_free (GstPulseContext, pctx);
     }
   }
   g_mutex_unlock (pa_ring_buffer_mutex);
