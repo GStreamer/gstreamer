@@ -22,6 +22,7 @@
 gst_init
 gst_init_check
 gst_init_get_option_group
+gst_is_initialized
 gst_deinit
 gst_version
 gst_version_string

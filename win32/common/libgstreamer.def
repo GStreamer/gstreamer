@@ -465,6 +465,7 @@ EXPORTS
 	gst_init_check
 	gst_init_get_option_group
 	gst_int_range_get_type
+	gst_is_initialized
 	gst_is_tag_list
 	gst_iterator_filter
 	gst_iterator_find_custom

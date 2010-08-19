@@ -500,6 +500,22 @@ gst_init (int *argc, char **argv[])
   }
 }
 
+/**
+ * gst_is_initialized:
+ *
+ * Use this function to check if GStreamer has been initialized with gst_init()
+ * or gst_init_check().
+ *
+ * Returns: TRUE if initialization has been done, FALSE otherwise.
+ *
+ * Since: 0.10.31
+ */
+gboolean
+gst_is_initialized (void)
+{
+  return gst_initialized;
+}
+
 #ifndef GST_DISABLE_REGISTRY
 static void
 add_path_func (gpointer data, gpointer user_data)
