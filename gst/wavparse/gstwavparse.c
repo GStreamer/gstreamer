@@ -2045,6 +2045,11 @@ pause:
           wav->first = FALSE;
           gst_wavparse_add_src_pad (wav, NULL);
         }
+
+        if (wav->state == GST_WAVPARSE_START)
+          GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE,
+              ("No valid input found before end of stream"), (NULL));
+
         /* perform EOS logic */
         if (wav->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           GstClockTime stop;
@@ -2244,6 +2249,11 @@ gst_wavparse_sink_event (GstPad * pad, GstEvent * event)
         /* stream leftover data in current segment */
         gst_wavparse_flush_data (wav);
       }
+
+      if (wav->state == GST_WAVPARSE_START)
+        GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE,
+            ("No valid input found before end of stream"), (NULL));
+
       /* fall-through */
     case GST_EVENT_FLUSH_STOP:
       gst_adapter_clear (wav->adapter);
