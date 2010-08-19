@@ -43,6 +43,8 @@ static GMutex *underrun_mutex;
 static GCond *underrun_cond;
 static gint underrun_count;
 
+static GList *events;
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -69,6 +71,24 @@ queue_underrun (GstElement * queue, gpointer user_data)
   UNDERRUN_UNLOCK ();
 }
 
+static gboolean
+event_func (GstPad * pad, GstEvent * event)
+{
+  GST_DEBUG ("%s event", gst_event_type_get_name (GST_EVENT_TYPE (event)));
+  events = g_list_append (events, event);
+
+  return TRUE;
+}
+
+static void
+drop_events (void)
+{
+  while (events != NULL) {
+    gst_event_unref (GST_EVENT (events->data));
+    events = g_list_delete_link (events, events);
+  }
+}
+
 static void
 setup (void)
 {
@@ -80,11 +100,15 @@ setup (void)
   mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
 
+  mysinkpad = NULL;
+
   overrun_count = 0;
 
   underrun_mutex = g_mutex_new ();
   underrun_cond = g_cond_new ();
   underrun_count = 0;
+
+  events = NULL;
 }
 
 static void
@@ -94,10 +118,17 @@ cleanup (void)
 
   gst_check_drop_buffers ();
 
+  drop_events ();
+
   g_cond_free (underrun_cond);
   underrun_cond = NULL;
   g_mutex_free (underrun_mutex);
   underrun_mutex = NULL;
+
+  if (mysinkpad != NULL) {
+    gst_pad_set_active (mysinkpad, FALSE);
+    gst_check_teardown_sink_pad (queue);
+  }
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_check_teardown_src_pad (queue);
@@ -120,6 +151,7 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * tmpl)
   srcpad = gst_element_get_static_pad (element, "src");
   fail_if (srcpad == NULL);
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
+  gst_pad_set_event_function (sinkpad, event_func);
   gst_pad_set_active (sinkpad, TRUE);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
@@ -153,10 +185,6 @@ GST_START_TEST (test_non_leaky_underrun)
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
-
-  /* cleanup */
-  gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_sink_pad (queue);
 }
 
 GST_END_TEST;
@@ -251,10 +279,6 @@ GST_START_TEST (test_non_leaky_overrun)
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
-
-  /* cleanup */
-  gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_sink_pad (queue);
 }
 
 GST_END_TEST;
@@ -332,10 +356,6 @@ GST_START_TEST (test_leaky_upstream)
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
-
-  /* cleanup */
-  gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_sink_pad (queue);
 }
 
 GST_END_TEST;
@@ -413,10 +433,6 @@ GST_START_TEST (test_leaky_downstream)
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
-
-  /* cleanup */
-  gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_sink_pad (queue);
 }
 
 GST_END_TEST;
@@ -517,10 +533,130 @@ GST_START_TEST (test_time_level)
   GST_DEBUG ("stopping");
   fail_unless (gst_element_set_state (queue,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+}
 
-  /* cleanup */
-  gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_sink_pad (queue);
+GST_END_TEST;
+
+static gboolean
+event_equals_newsegment (GstEvent * event, gboolean update, gdouble rate,
+    GstFormat format, gint64 start, gint64 stop, gint64 position)
+{
+  gboolean ns_update;
+  gdouble ns_rate;
+  GstFormat ns_format;
+  gint64 ns_start;
+  gint64 ns_stop;
+  gint64 ns_position;
+
+  if (GST_EVENT_TYPE (event) != GST_EVENT_NEWSEGMENT) {
+    return FALSE;
+  }
+
+  gst_event_parse_new_segment (event, &ns_update, &ns_rate, &ns_format,
+      &ns_start, &ns_stop, &ns_position);
+
+  GST_DEBUG ("update %d, rate %lf, format %s, start %" GST_TIME_FORMAT
+      ", stop %" GST_TIME_FORMAT ", position %" GST_TIME_FORMAT, ns_update,
+      ns_rate, gst_format_get_name (ns_format), GST_TIME_ARGS (ns_start),
+      GST_TIME_ARGS (ns_stop), GST_TIME_ARGS (ns_position));
+
+  return (ns_update == update && ns_rate == rate && ns_format == format &&
+      ns_start == start && ns_stop == stop && ns_position == position);
+}
+
+GST_START_TEST (test_newsegment)
+{
+  GstEvent *event;
+  GstBuffer *buffer1;
+  GstBuffer *buffer2;
+  GstBuffer *buffer;
+
+  g_signal_connect (queue, "overrun", G_CALLBACK (queue_overrun), NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 1, "max-size-time", 0,
+      "leaky", 2, NULL);
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  event = gst_event_new_new_segment (FALSE, 2.0, GST_FORMAT_TIME, 0,
+      2 * GST_SECOND, 0);
+  gst_pad_push_event (mysrcpad, event);
+
+  GST_DEBUG ("added 1st newsegment");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0,
+      3 * GST_SECOND, 0);
+  gst_pad_push_event (mysrcpad, event);
+
+  GST_DEBUG ("added 2nd newsegment");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+      4 * GST_SECOND, 5 * GST_SECOND, 4 * GST_SECOND);
+  gst_pad_push_event (mysrcpad, event);
+
+  GST_DEBUG ("added 3rd newsegment");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer1 = gst_buffer_new_and_alloc (4);
+  /* buffer1 will be leaked, keep a ref so refcount can be checked below */
+  gst_buffer_ref (buffer1);
+  /* pushing gives away one reference */
+  gst_pad_push (mysrcpad, buffer1);
+
+  GST_DEBUG ("added 1st buffer");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer2 = gst_buffer_new_and_alloc (4);
+  /* next push will cause overrun and leak all newsegment events and buffer1 */
+  gst_pad_push (mysrcpad, buffer2);
+
+  GST_DEBUG ("added 2nd buffer");
+  /* it still triggers overrun when leaking */
+  fail_unless (overrun_count == 1);
+  fail_unless (underrun_count == 0);
+
+  /* wait for underrun and check that we got one accumulated newsegment event,
+   * one real newsegment event and buffer2 only */
+  UNDERRUN_LOCK ();
+  mysinkpad = setup_sink_pad (queue, &sinktemplate);
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  fail_unless (overrun_count == 1);
+  fail_unless (underrun_count == 1);
+
+  fail_unless (g_list_length (events) == 2);
+
+  event = g_list_nth (events, 0)->data;
+  fail_unless (event_equals_newsegment (event, FALSE, 1.0, GST_FORMAT_TIME, 0,
+          4 * GST_SECOND, 0));
+
+  event = g_list_nth (events, 1)->data;
+  fail_unless (event_equals_newsegment (event, FALSE, 1.0, GST_FORMAT_TIME,
+          4 * GST_SECOND, 5 * GST_SECOND, 4 * GST_SECOND));
+
+  fail_unless (g_list_length (buffers) == 1);
+
+  ASSERT_BUFFER_REFCOUNT (buffer1, "buffer", 1);
+  gst_buffer_unref (buffer1);
+
+  buffer = g_list_nth (buffers, 0)->data;
+  fail_unless (buffer == buffer2);
+
+  GST_DEBUG ("stopping");
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 }
 
 GST_END_TEST;
@@ -538,6 +674,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_leaky_upstream);
   tcase_add_test (tc_chain, test_leaky_downstream);
   tcase_add_test (tc_chain, test_time_level);
+  tcase_add_test (tc_chain, test_newsegment);
 
   return s;
 }
