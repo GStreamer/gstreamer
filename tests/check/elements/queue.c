@@ -215,8 +215,8 @@ GST_START_TEST (test_non_leaky_overrun)
   /* lock the check_mutex to block the first buffer pushed to mysinkpad */
   g_mutex_lock (check_mutex);
   /* the next call to gst_pad_push will emit the overrun signal. The signal
-   * handler queue_overrun() (above) increases overrun_count, links and
-   * activates mysinkpad. The queue task then dequeues a buffer and
+   * handler queue_overrun_link_and_activate() (above) increases overrun_count,
+   * activates and links mysinkpad. The queue task then dequeues a buffer and
    * gst_pad_push() will return. */
   gst_pad_push (mysrcpad, buffer3);
 
@@ -507,8 +507,8 @@ GST_START_TEST (test_time_level)
   buffer = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (buffer) = 8 * GST_SECOND;
   /* the next call to gst_pad_push will emit the overrun signal. The signal
-   * handler queue_overrun() (above) increases overrun_count, links and
-   * activates mysinkpad. The queue task then dequeues a buffer and
+   * handler queue_overrun_link_and_activate() (above) increases overrun_count,
+   * activates and links mysinkpad. The queue task then dequeues a buffer and
    * gst_pad_push() will return. */
   gst_pad_push (mysrcpad, buffer);
 
