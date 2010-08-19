@@ -1,4 +1,6 @@
 
+.init gst_volume_orc_init
+
 .function orc_scalarmultiply_f32_ns
 .dest 4 d1 float
 .source 4 s1 float

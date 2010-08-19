@@ -79,6 +79,7 @@
 #include <gst/video/video.h>
 
 #include "gstvideoscale.h"
+#include "gstvideoscaleorc.h"
 #include "vs_image.h"
 #include "vs_4tap.h"
 #include "vs_fill_borders.h"
@@ -1289,6 +1290,8 @@ gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_videoscale_orc_init ();
+
   if (!gst_element_register (plugin, "videoscale", GST_RANK_NONE,
           GST_TYPE_VIDEO_SCALE))
     return FALSE;

@@ -1,4 +1,6 @@
 
+.init gst_adder_orc_init
+
 .function add_int32
 .dest 4 d1 gint32
 .source 4 s1 gint32
