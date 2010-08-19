@@ -480,7 +480,7 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   /* make sure socket is reset immediately after close. This ensure that we can
    * reuse the socket quickly. */
   linger.l_onoff = 1;
-  linger.l_linger = 0;
+  linger.l_linger = 5;
   if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_LINGER,
           (void *) &linger, sizeof (linger)) < 0)
     goto linger_failed;
