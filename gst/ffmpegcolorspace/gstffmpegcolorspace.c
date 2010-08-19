@@ -60,6 +60,10 @@ GST_DEBUG_CATEGORY (ffmpegcolorspace_performance);
   GST_VIDEO_CAPS_ABGR";"						\
   GST_VIDEO_CAPS_RGB_16";"						\
   GST_VIDEO_CAPS_RGB_15";"						\
+  "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
+      "width = "GST_VIDEO_SIZE_RANGE" , "		                \
+      "height = " GST_VIDEO_SIZE_RANGE ", "                             \
+      "framerate = "GST_VIDEO_FPS_RANGE ";"                             \
   GST_VIDEO_CAPS_GRAY8";"						\
   GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
   GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"
