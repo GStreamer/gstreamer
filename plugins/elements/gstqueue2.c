@@ -1020,7 +1020,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
       perform_seek_to_offset (queue, range->writing_pos);
     }
 
-    GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
+    GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     /* we have a range for offset */
@@ -1179,7 +1179,8 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
         } else if (queue->is_eos) {
           /* won't get any more data so read any data we have */
           if (level) {
-            GST_DEBUG_OBJECT (queue, "EOS hit but read %u bytes that we have",
+            GST_DEBUG_OBJECT (queue,
+                "EOS hit but read %" G_GUINT64_FORMAT " bytes that we have",
                 level);
             read_length = level;
           } else {
@@ -1715,7 +1716,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     /* update the buffering status */
     update_buffering (queue);
 
-    GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %u)",
+    GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
 
     GST_QUEUE2_SIGNAL_ADD (queue);
