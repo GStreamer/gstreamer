@@ -110,6 +110,20 @@ guint32         gst_rtp_buffer_default_clock_rate    (guint8 payload_type);
 gint            gst_rtp_buffer_compare_seqnum        (guint16 seqnum1, guint16 seqnum2);
 guint64         gst_rtp_buffer_ext_timestamp         (guint64 *exttimestamp, guint32 timestamp);
 
+gboolean        gst_rtp_buffer_get_extension_onebyte_header (GstBuffer * buffer,
+                                                             guint8 id,
+                                                             guint nth,
+                                                             gpointer * data,
+                                                             guint * size);
+gboolean        gst_rtp_buffer_get_extension_twobytes_header (GstBuffer * buffer,
+                                                              guint8 * appbits,
+                                                              guint8 id,
+                                                              guint nth,
+                                                              gpointer * data,
+                                                              guint * size);
+
+
+
 G_END_DECLS
 
 #endif /* __GST_RTPBUFFER_H__ */

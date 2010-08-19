@@ -1386,3 +1386,159 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
 
   return result;
 }
+
+/**
+ * gst_rtp_buffer_get_extension_onebyte_header:
+ * @buffer: the buffer
+ * @id: The ID of the header extension to be read (between 1 and 14).
+ * @nth: Read the nth extension packet with the requested ID
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Parses RFC 5285 style header extensions with a one byte header. It will
+ * return the nth extension with the requested id.
+ *
+ * Returns: TRUE if @buffer had the requested header extension
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_get_extension_onebyte_header (GstBuffer * buffer, guint8 id,
+    guint nth, gpointer * data, guint * size)
+{
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen;
+  gulong offset = 0;
+  guint count = 0;
+
+  g_return_val_if_fail (id > 0 && id < 15, FALSE);
+
+  if (!gst_rtp_buffer_get_extension_data (buffer, &bits, (gpointer) & pdata,
+          &wordlen))
+    return FALSE;
+
+  if (bits != 0xBEDE)
+    return FALSE;
+
+  for (;;) {
+    guint8 read_id, read_len;
+
+    if (offset + 1 >= wordlen * 4)
+      break;
+
+    read_id = GST_READ_UINT8 (pdata + offset) >> 4;
+    read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
+    offset += 1;
+
+    /* ID 0 means its padding, skip */
+    if (read_id == 0)
+      continue;
+
+    /* ID 15 is special and means we should stop parsing */
+    if (read_id == 15)
+      break;
+
+    /* Ignore extension headers where the size does not fit */
+    if (offset + read_len > wordlen * 4)
+      break;
+
+    /* If we have the right one */
+    if (id == read_id) {
+      if (nth == count) {
+        if (data)
+          *data = pdata + offset;
+        if (size)
+          *size = read_len;
+
+        return TRUE;
+      }
+
+      count++;
+    }
+    offset += read_len;
+
+    if (offset >= wordlen * 4)
+      break;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_rtp_buffer_get_extension_twobytes_header:
+ * @buffer: the buffer
+ * @appbits: Application specific bits
+ * @id: The ID of the header extension to be read (between 1 and 14).
+ * @nth: Read the nth extension packet with the requested ID
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Parses RFC 5285 style header extensions with a two bytes header. It will
+ * return the nth extension with the requested id.
+ *
+ * Returns: TRUE if @buffer had the requested header extension
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_get_extension_twobytes_header (GstBuffer * buffer,
+    guint8 * appbits, guint8 id, guint nth, gpointer * data, guint * size)
+{
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen;
+  guint bytelen;
+  gulong offset = 0;
+  guint count = 0;
+
+  if (!gst_rtp_buffer_get_extension_data (buffer, &bits, (gpointer) & pdata,
+          &wordlen))
+    return FALSE;
+
+  if (bits >> 4 != 0x100)
+    return FALSE;
+
+  bytelen = wordlen * 4;
+
+  for (;;) {
+    guint8 read_id, read_len;
+
+    if (offset + 2 >= bytelen)
+      break;
+
+    read_id = GST_READ_UINT8 (pdata + offset);
+    offset += 1;
+
+    if (read_id == 0)
+      continue;
+
+    read_len = GST_READ_UINT8 (pdata + offset);
+    offset += 1;
+
+    /* Ignore extension headers where the size does not fit */
+    if (offset + read_len > bytelen)
+      break;
+
+    /* If we have the right one, return it */
+    if (id == read_id) {
+      if (nth == count) {
+        if (data)
+          *data = pdata + offset;
+        if (size)
+          *size = read_len;
+        if (appbits)
+          *appbits = bits;
+
+        return TRUE;
+      }
+
+      count++;
+    }
+    offset += read_len;
+  }
+
+  return FALSE;
+}
