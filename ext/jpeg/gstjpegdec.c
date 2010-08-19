@@ -211,6 +211,11 @@ gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
   GST_DEBUG_OBJECT (dec, "fill_input_buffer: fast av=%u, remaining=%u", av,
       dec->rem_img_len);
 
+  if (av == 0) {
+    GST_DEBUG_OBJECT (dec, "Out of data");
+    return FALSE;
+  }
+
   if (dec->rem_img_len < av)
     av = dec->rem_img_len;
   dec->rem_img_len -= av;
