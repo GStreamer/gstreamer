@@ -438,8 +438,12 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   g_assert (!pbuf->stream);
 
   g_assert (psink->client_name);
-  pbuf->context_name = g_strdup_printf ("%s@%s", psink->client_name,
-      GST_STR_NULL (psink->server));
+
+  if (psink->server)
+    pbuf->context_name = g_strdup_printf ("%s@%s", psink->client_name,
+        psink->server);
+  else
+    pbuf->context_name = g_strdup (psink->client_name);
 
   pa_threaded_mainloop_lock (psink->mainloop);
   g_mutex_lock (pa_ring_buffer_mutex);
