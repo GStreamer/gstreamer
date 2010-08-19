@@ -1061,7 +1061,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
     switch (msg->status_code) {
       case SOUP_STATUS_CANT_RESOLVE:
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            ("\"%s\": %s", src->location, msg->reason_phrase),
+            ("%s: %s", msg->reason_phrase, src->location),
             ("libsoup status code %d", msg->status_code));
         src->ret = GST_FLOW_ERROR;
         break;
@@ -1075,14 +1075,14 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
       case SOUP_STATUS_CANT_CONNECT_PROXY:
       case SOUP_STATUS_SSL_FAILED:
         GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-            ("\"%s\": %s", src->location, msg->reason_phrase),
+            ("%s: %s", msg->reason_phrase, src->location),
             ("libsoup status code %d", msg->status_code));
         src->ret = GST_FLOW_ERROR;
         break;
       case SOUP_STATUS_IO_ERROR:
       case SOUP_STATUS_MALFORMED:
         GST_ELEMENT_ERROR (src, RESOURCE, READ,
-            ("\"%s\": %s", src->location, msg->reason_phrase),
+            ("%s: %s", msg->reason_phrase, src->location),
             ("libsoup status code %d", msg->status_code));
         src->ret = GST_FLOW_ERROR;
         break;
@@ -1095,7 +1095,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
       SOUP_STATUS_IS_SERVER_ERROR (msg->status_code)) {
     /* Report HTTP error. */
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        ("\"%s\": %s", src->location, msg->reason_phrase),
+        ("%s: %s", msg->reason_phrase, src->location),
         ("%d %s", msg->status_code, msg->reason_phrase));
     src->ret = GST_FLOW_ERROR;
   }
