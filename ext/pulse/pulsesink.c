@@ -2616,6 +2616,10 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
   /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
   if (ret == GST_STATE_CHANGE_FAILURE
       && transition == GST_STATE_CHANGE_NULL_TO_READY) {
+    if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
+      gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+    GST_BASE_AUDIO_SINK (pulsesink)->provided_clock = NULL;
+
     g_assert (pulsesink->mainloop);
     pa_threaded_mainloop_stop (pulsesink->mainloop);
     pa_threaded_mainloop_free (pulsesink->mainloop);
