@@ -35,9 +35,29 @@ struct _GstTagEntryMatch {
 
 GType gst_vorbis_tag_get_type (void);
 
-gint gst_tag_image_orientation_to_exif_value (const gchar * str);
-const gchar * gst_tag_image_orientation_from_exif_value (gint value);
+gint __exif_tag_image_orientation_to_exif_value (const gchar * str);
+const gchar * __exif_tag_image_orientation_from_exif_value (gint value);
 
+gint __exif_tag_capturing_exposure_program_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_exposure_program_from_exif_value (gint value);
+
+gint __exif_tag_capturing_exposure_mode_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_exposure_mode_from_exif_value (gint value);
+
+gint __exif_tag_capturing_scene_capture_type_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_scene_capture_type_from_exif_value (gint value);
+
+gint __exif_tag_capturing_gain_adjustment_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_gain_adjustment_from_exif_value (gint value);
+
+gint __exif_tag_capturing_white_balance_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_white_balance_from_exif_value (gint value);
+
+gint __exif_tag_capturing_contrast_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_contrast_from_exif_value (gint value);
+
+gint __exif_tag_capturing_saturation_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_saturation_from_exif_value (gint value);
 
 G_END_DECLS
 

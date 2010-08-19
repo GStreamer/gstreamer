@@ -22,7 +22,7 @@
 #include <string.h>
 
 gint
-gst_tag_image_orientation_to_exif_value (const gchar * str)
+__exif_tag_image_orientation_to_exif_value (const gchar * str)
 {
   if (str == NULL)
     goto end;
@@ -50,7 +50,7 @@ end:
 }
 
 const gchar *
-gst_tag_image_orientation_from_exif_value (gint value)
+__exif_tag_image_orientation_from_exif_value (gint value)
 {
   switch (value) {
     case 1:
@@ -71,6 +71,276 @@ gst_tag_image_orientation_from_exif_value (gint value)
       return "rotate-270";
     default:
       GST_WARNING ("Invalid tiff orientation tag value: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_exposure_program_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "undefined") == 0)
+    return 0;
+  else if (strcmp (str, "manual") == 0)
+    return 1;
+  else if (strcmp (str, "normal") == 0)
+    return 2;
+  else if (strcmp (str, "aperture-priority") == 0)
+    return 3;
+  else if (strcmp (str, "shutter-priority") == 0)
+    return 4;
+  else if (strcmp (str, "creative") == 0)
+    return 5;
+  else if (strcmp (str, "action") == 0)
+    return 6;
+  else if (strcmp (str, "portrait") == 0)
+    return 7;
+  else if (strcmp (str, "landscape") == 0)
+    return 8;
+
+end:
+  GST_WARNING ("Invalid capturing exposure program tag: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_exposure_program_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "undefined";
+    case 1:
+      return "manual";
+    case 2:
+      return "normal";
+    case 3:
+      return "aperture-priority";
+    case 4:
+      return "shutter-priority";
+    case 5:
+      return "creative";
+    case 6:
+      return "action";
+    case 7:
+      return "portrait";
+    case 8:
+      return "landscape";
+    default:
+      GST_WARNING ("Invalid exif exposure program: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_exposure_mode_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "auto-exposure") == 0)
+    return 0;
+  else if (strcmp (str, "manual-exposure") == 0)
+    return 1;
+  else if (strcmp (str, "auto-bracket") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid capturing exposure mode tag: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_exposure_mode_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "auto-exposure";
+    case 1:
+      return "manual-exposure";
+    case 2:
+      return "auto-bracket";
+    default:
+      GST_WARNING ("Invalid exif exposure mode: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_scene_capture_type_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "standard") == 0)
+    return 0;
+  else if (strcmp (str, "landscape") == 0)
+    return 1;
+  else if (strcmp (str, "portrait") == 0)
+    return 2;
+  else if (strcmp (str, "night-scene") == 0)
+    return 3;
+
+end:
+  GST_WARNING ("Invalid capturing scene capture type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_scene_capture_type_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "standard";
+    case 1:
+      return "landscape";
+    case 2:
+      return "portrait";
+    case 3:
+      return "night-scene";
+    default:
+      GST_WARNING ("Invalid exif scene capture type: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_gain_adjustment_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "none") == 0)
+    return 0;
+  else if (strcmp (str, "low-gain-up") == 0)
+    return 1;
+  else if (strcmp (str, "high-gain-up") == 0)
+    return 2;
+  else if (strcmp (str, "low-gain-down") == 0)
+    return 3;
+  else if (strcmp (str, "high-gain-down") == 0)
+    return 4;
+
+end:
+  GST_WARNING ("Invalid capturing gain adjustment type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_gain_adjustment_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "none";
+    case 1:
+      return "low-gain-up";
+    case 2:
+      return "high-gain-up";
+    case 3:
+      return "low-gain-down";
+    case 4:
+      return "high-gain-down";
+    default:
+      GST_WARNING ("Invalid exif gain control type: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_white_balance_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "auto") == 0)
+    return 0;
+  else                          /* everything else is just manual */
+    return 1;
+
+end:
+  GST_WARNING ("Invalid white balance: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_white_balance_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "auto";
+    case 1:
+      return "manual";
+    default:
+      GST_WARNING ("Invalid white balance type: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_contrast_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "normal") == 0)
+    return 0;
+  else if (strcmp (str, "soft") == 0)
+    return 1;
+  else if (strcmp (str, "hard") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid contrast type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_contrast_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "normal";
+    case 1:
+      return "soft";
+    case 2:
+      return "hard";
+    default:
+      GST_WARNING ("Invalid contrast type: %d", value);
+      return NULL;
+  }
+}
+
+gint
+__exif_tag_capturing_saturation_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "normal") == 0)
+    return 0;
+  else if (strcmp (str, "low-saturation") == 0)
+    return 1;
+  else if (strcmp (str, "high-saturation") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid saturation type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_saturation_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "normal";
+    case 1:
+      return "low-saturation";
+    case 2:
+      return "high-saturation";
+    default:
+      GST_WARNING ("Invalid saturation type: %d", value);
       return NULL;
   }
 }

@@ -102,6 +102,84 @@ static gint deserialize_ ## name (GstExifReader * exif_reader, \
   EXIF_SERIALIZATION_FUNC (name); \
   EXIF_DESERIALIZATION_FUNC (name)
 
+/*
+ * A common case among serialization/deserialization routines is that
+ * the gstreamer tag is a string (with a predefined set of allowed values)
+ * and exif is an int. These macros cover these cases
+ */
+#define EXIF_SERIALIZATION_MAP_STRING_TO_INT_FUNC(name,funcname) \
+static void \
+serialize_ ## name (GstExifWriter * writer, const GstTagList * taglist, \
+    const GstExifTagMatch * exiftag) \
+{ \
+  gchar *str = NULL; \
+  gint exif_value; \
+\
+  if (!gst_tag_list_get_string_index (taglist, exiftag->gst_tag, 0, &str)) { \
+    GST_WARNING ("No %s tag present in taglist", exiftag->gst_tag); \
+    return; \
+  } \
+\
+  exif_value = __exif_tag_ ## funcname ## _to_exif_value (str); \
+  if (exif_value == -1) { \
+    g_free (str); \
+    return; \
+  } \
+  g_free (str); \
+\
+  switch (exiftag->exif_type) { \
+    case EXIF_TYPE_SHORT: \
+      gst_exif_writer_write_short_tag (writer, exiftag->exif_tag, exif_value); \
+      break; \
+    case EXIF_TYPE_LONG: \
+      gst_exif_writer_write_long_tag (writer, exiftag->exif_tag, exif_value); \
+      break; \
+    default: \
+      g_assert_not_reached (); \
+      GST_WARNING ("Unmapped serialization for type %d", exiftag->exif_type); \
+      break; \
+   } \
+}
+
+#define EXIF_DESERIALIZATION_MAP_STRING_TO_INT_FUNC(name,funcname) \
+static gint \
+deserialize_ ## name (GstExifReader * exif_reader, \
+    GstByteReader * reader, const GstExifTagMatch * exiftag, \
+    GstExifTagData * tagdata) \
+{ \
+  const gchar *str = NULL; \
+  gint value; \
+\
+  GST_LOG ("Starting to parse %s tag in exif 0x%x", exiftag->gst_tag, \
+      exiftag->exif_tag); \
+\
+  /* validate tag */ \
+  if (tagdata->tag_type != EXIF_TYPE_SHORT || tagdata->count != 1) { \
+    GST_WARNING ("0x%X has unexpected type/count", tagdata->tag); \
+    return 0; \
+  } \
+\
+  if (exif_reader->byte_order == G_LITTLE_ENDIAN) { \
+    value = GST_READ_UINT16_LE (tagdata->offset_as_data); \
+  } else { \
+    value = GST_READ_UINT16_BE (tagdata->offset_as_data); \
+  } \
+\
+  str = __exif_tag_## funcname ## _from_exif_value (value); \
+  if (str == NULL) { \
+    GST_WARNING ("Invalid value for tag 0x%X: %d", tagdata->tag, value); \
+    return 0; \
+  } \
+  gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE, \
+      exiftag->gst_tag, str, NULL); \
+\
+  return 0; \
+}
+
+#define EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC(name,funcname) \
+  EXIF_SERIALIZATION_MAP_STRING_TO_INT_FUNC(name,funcname); \
+  EXIF_DESERIALIZATION_MAP_STRING_TO_INT_FUNC(name,funcname);
+
 struct _GstExifTagMatch
 {
   const gchar *gst_tag;
@@ -147,14 +225,22 @@ struct _GstExifReader
   GSList *pending_tags;
 };
 
-EXIF_SERIALIZATION_DESERIALIZATION_FUNC (orientation);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (aperture_value);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (contrast);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (exposure_program);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (exposure_mode);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (gain_control);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_coordinate);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_direction);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_elevation);
-EXIF_SERIALIZATION_DESERIALIZATION_FUNC (shutter_speed);
-EXIF_SERIALIZATION_DESERIALIZATION_FUNC (aperture_value);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (orientation);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (saturation);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (scene_capture_type);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (sensitivity_type);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (shutter_speed);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (speed);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (white_balance);
+
 EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 
 /* FIXME copyright tag has a weird "artist\0editor\0" format that is
@@ -183,6 +269,7 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_COPYRIGHT 0x8298
 #define EXIF_TAG_EXPOSURE_TIME 0x829A
 #define EXIF_TAG_F_NUMBER 0x829D
+#define EXIF_TAG_EXPOSURE_PROGRAM 0x8822
 #define EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY 0x8827
 #define EXIF_TAG_SENSITIVITY_TYPE 0x8830
 #define EXIF_TAG_ISO_SPEED 0x8833
@@ -192,7 +279,13 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_APERTURE_VALUE 0x9202
 #define EXIF_TAG_FOCAL_LENGTH 0x920A
 #define EXIF_TAG_MAKER_NOTE 0x927C
+#define EXIF_TAG_EXPOSURE_MODE 0xA402
+#define EXIF_TAG_WHITE_BALANCE 0xA403
 #define EXIF_TAG_DIGITAL_ZOOM_RATIO 0xA404
+#define EXIF_TAG_SCENE_CAPTURE_TYPE 0xA406
+#define EXIF_TAG_GAIN_CONTROL 0xA407
+#define EXIF_TAG_CONTRAST 0xA408
+#define EXIF_TAG_SATURATION 0xA409
 
 /* IFD pointer tags */
 #define EXIF_IFD_TAG 0x8769
@@ -229,6 +322,9 @@ static const GstExifTagMatch tag_map_ifd0[] = {
   {GST_TAG_CAPTURING_FOCAL_RATIO, EXIF_TAG_F_NUMBER, EXIF_TYPE_RATIONAL, 0,
         NULL,
       NULL},
+  {GST_TAG_CAPTURING_EXPOSURE_PROGRAM, EXIF_TAG_EXPOSURE_PROGRAM,
+        EXIF_TYPE_SHORT, 0, serialize_exposure_program,
+      deserialize_exposure_program},
 
   /* don't need the serializer as we always write the iso speed alone */
   {GST_TAG_CAPTURING_ISO_SPEED, EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY,
@@ -258,9 +354,23 @@ static const GstExifTagMatch tag_map_exif[] = {
       NULL, NULL},
   {GST_TAG_APPLICATION_DATA, EXIF_TAG_MAKER_NOTE, EXIF_TYPE_UNDEFINED, 0, NULL,
       NULL},
+  {GST_TAG_CAPTURING_EXPOSURE_MODE, EXIF_TAG_EXPOSURE_MODE, EXIF_TYPE_SHORT,
+      0, serialize_exposure_mode, deserialize_exposure_mode},
+  {GST_TAG_CAPTURING_WHITE_BALANCE, EXIF_TAG_WHITE_BALANCE, EXIF_TYPE_SHORT,
+      0, serialize_white_balance, deserialize_white_balance},
   {GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, EXIF_TAG_DIGITAL_ZOOM_RATIO,
         EXIF_TYPE_RATIONAL, 0, NULL,
       NULL},
+  {GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, EXIF_TAG_SCENE_CAPTURE_TYPE,
+        EXIF_TYPE_SHORT, 0, serialize_scene_capture_type,
+      deserialize_scene_capture_type},
+  {GST_TAG_CAPTURING_GAIN_ADJUSTMENT, EXIF_TAG_GAIN_CONTROL,
+        EXIF_TYPE_SHORT, 0, serialize_gain_control,
+      deserialize_gain_control},
+  {GST_TAG_CAPTURING_CONTRAST, EXIF_TAG_CONTRAST, EXIF_TYPE_SHORT, 0,
+      serialize_contrast, deserialize_contrast},
+  {GST_TAG_CAPTURING_SATURATION, EXIF_TAG_SATURATION, EXIF_TYPE_SHORT, 0,
+      serialize_saturation, deserialize_saturation},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
@@ -1586,63 +1696,22 @@ byte_reader_fail:
 }
 
 /* special serialization functions */
-static void
-serialize_orientation (GstExifWriter * writer, const GstTagList * taglist,
-    const GstExifTagMatch * exiftag)
-{
-  gchar *str = NULL;
-  gint exif_value;
-
-  if (!gst_tag_list_get_string_index (taglist, GST_TAG_IMAGE_ORIENTATION, 0,
-          &str)) {
-    GST_WARNING ("No image orientation tag present in taglist");
-    return;
-  }
-
-  exif_value = gst_tag_image_orientation_to_exif_value (str);
-  if (exif_value == -1) {
-    GST_WARNING ("Invalid image orientation value: %s", str);
-    g_free (str);
-    return;
-  }
-  g_free (str);
-
-  gst_exif_writer_write_short_tag (writer, exiftag->exif_tag, exif_value);
-}
-
-static gint
-deserialize_orientation (GstExifReader * exif_reader,
-    GstByteReader * reader, const GstExifTagMatch * exiftag,
-    GstExifTagData * tagdata)
-{
-  const gchar *str = NULL;
-  gint value;
-
-  GST_LOG ("Starting to parse %s tag in exif 0x%x", exiftag->gst_tag,
-      exiftag->exif_tag);
-
-  /* validate tag */
-  if (tagdata->tag_type != EXIF_TYPE_SHORT || tagdata->count != 1) {
-    GST_WARNING ("Orientation tag has unexpected type/count");
-    return 0;
-  }
-
-  if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
-    value = GST_READ_UINT16_LE (tagdata->offset_as_data);
-  } else {
-    value = GST_READ_UINT16_BE (tagdata->offset_as_data);
-  }
-
-  str = gst_tag_image_orientation_from_exif_value (value);
-  if (str == NULL) {
-    GST_WARNING ("Invalid value for exif orientation tag: %d", value);
-    return 0;
-  }
-  gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
-      exiftag->gst_tag, str, NULL);
-
-  return 0;
-}
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (contrast,
+    capturing_contrast);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (exposure_mode,
+    capturing_exposure_mode);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (exposure_program,
+    capturing_exposure_program);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (gain_control,
+    capturing_gain_adjustment);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (orientation,
+    image_orientation);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (saturation,
+    capturing_saturation);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (scene_capture_type,
+    capturing_scene_capture_type);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (white_balance,
+    capturing_white_balance);
 
 static void
 serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,

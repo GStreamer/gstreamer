@@ -1282,6 +1282,103 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_static_string (&value, "rotate-270");
   do_simple_exif_tag_serialization_deserialization (GST_TAG_IMAGE_ORIENTATION,
       &value);
+
+  /* exposure program */
+  g_value_set_static_string (&value, "undefined");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "manual");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "normal");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "aperture-priority");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "shutter-priority");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "creative");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "action");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "portrait");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+  g_value_set_static_string (&value, "landscape");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_PROGRAM, &value);
+
+  /* exposure mode */
+  g_value_set_static_string (&value, "auto-exposure");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_MODE, &value);
+  g_value_set_static_string (&value, "manual-exposure");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_MODE, &value);
+  g_value_set_static_string (&value, "auto-bracket");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_EXPOSURE_MODE, &value);
+
+  /* scene capture type */
+  g_value_set_static_string (&value, "standard");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, &value);
+  g_value_set_static_string (&value, "portrait");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, &value);
+  g_value_set_static_string (&value, "landscape");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, &value);
+  g_value_set_static_string (&value, "night-scene");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, &value);
+
+  g_value_set_static_string (&value, "none");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, &value);
+  g_value_set_static_string (&value, "high-gain-up");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, &value);
+  g_value_set_static_string (&value, "low-gain-up");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, &value);
+  g_value_set_static_string (&value, "high-gain-down");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, &value);
+  g_value_set_static_string (&value, "low-gain-down");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_GAIN_ADJUSTMENT, &value);
+
+  g_value_set_static_string (&value, "auto");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_WHITE_BALANCE, &value);
+  g_value_set_static_string (&value, "manual");
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_WHITE_BALANCE, &value);
+
+  g_value_set_static_string (&value, "normal");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_CONTRAST,
+      &value);
+  g_value_set_static_string (&value, "hard");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_CONTRAST,
+      &value);
+  g_value_set_static_string (&value, "soft");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_CONTRAST,
+      &value);
+
+  g_value_set_static_string (&value, "normal");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
+      &value);
+  g_value_set_static_string (&value, "low-saturation");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
+      &value);
+  g_value_set_static_string (&value, "high-saturation");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
+      &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);

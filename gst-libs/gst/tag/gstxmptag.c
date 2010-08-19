@@ -747,7 +747,7 @@ serialize_tiff_orientation (const GValue * value)
     return NULL;
   }
 
-  num = gst_tag_image_orientation_to_exif_value (str);
+  num = __exif_tag_image_orientation_to_exif_value (str);
   if (num == -1)
     return NULL;
 
@@ -773,7 +773,7 @@ deserialize_tiff_orientation (XmpTag * xmptag, GstTagList * taglist,
     return;
   }
 
-  orientation = gst_tag_image_orientation_from_exif_value (value);
+  orientation = __exif_tag_image_orientation_from_exif_value (value);
   if (orientation == NULL)
     return;
   gst_tag_list_add (taglist, xmp_tag_get_merge_mode (xmptag), gst_tag,
