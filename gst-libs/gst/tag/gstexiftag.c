@@ -160,6 +160,41 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 /* FIXME copyright tag has a weird "artist\0editor\0" format that is
  * not yet handled */
 
+/* exif tag numbers */
+#define EXIF_TAG_GPS_LATITUDE_REF 0x1
+#define EXIF_TAG_GPS_LATITUDE 0x2
+#define EXIF_TAG_GPS_LONGITUDE_REF 0x3
+#define EXIF_TAG_GPS_LONGITUDE 0x4
+#define EXIF_TAG_GPS_ALTITUDE_REF 0x5
+#define EXIF_TAG_GPS_ALTITUDE 0x6
+#define EXIF_TAG_GPS_SPEED_REF 0xC
+#define EXIF_TAG_GPS_SPEED 0xD
+#define EXIF_TAG_GPS_TRACK_REF 0xE
+#define EXIF_TAG_GPS_TRACK 0xF
+#define EXIF_TAG_GPS_IMAGE_DIRECTION_REF 0x10
+#define EXIF_TAG_GPS_IMAGE_DIRECTION 0x11
+#define EXIF_TAG_IMAGE_DESCRIPTION 0x10E
+#define EXIF_TAG_MAKE 0x10F
+#define EXIF_TAG_MODEL 0x110
+#define EXIF_TAG_ORIENTATION 0x112
+#define EXIF_TAG_SOFTWARE 0x131
+#define EXIF_TAG_DATE_TIME 0x132
+#define EXIF_TAG_ARTIST 0x13B
+#define EXIF_TAG_COPYRIGHT 0x8298
+#define EXIF_TAG_EXPOSURE_TIME 0x829A
+#define EXIF_TAG_F_NUMBER 0x829D
+#define EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY 0x8827
+#define EXIF_TAG_SENSITIVITY_TYPE 0x8830
+#define EXIF_TAG_ISO_SPEED 0x8833
+#define EXIF_TAG_DATE_TIME_ORIGINAL 0x9003
+#define EXIF_TAG_DATE_TIME_DIGITIZED 0x9004
+#define EXIF_TAG_SHUTTER_SPEED_VALUE 0x9201
+#define EXIF_TAG_APERTURE_VALUE 0x9202
+#define EXIF_TAG_FOCAL_LENGTH 0x920A
+#define EXIF_TAG_MAKER_NOTE 0x927C
+#define EXIF_TAG_DIGITAL_ZOOM_RATIO 0xA404
+
+/* IFD pointer tags */
 #define EXIF_IFD_TAG 0x8769
 #define EXIF_GPS_IFD_TAG 0x8825
 #define EXIF_VERSION_TAG 0x9000
@@ -170,27 +205,40 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define MILES_PER_HOUR_TO_METERS_PER_SECOND (0.44704)
 #define KNOTS_TO_METERS_PER_SECOND (0.514444)
 
-/* Should be kept in ascending id order */
+/*
+ * Should be kept in ascending id order
+ *
+ * {gst-tag, exif-tag, exig-type, complementary-exif-tag, serialization-func,
+ *     deserialization-func}
+ */
 static const GstExifTagMatch tag_map_ifd0[] = {
-  {GST_TAG_DESCRIPTION, 0x10E, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_DEVICE_MANUFACTURER, 0x10F, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_DEVICE_MODEL, 0x110, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_IMAGE_ORIENTATION, 0x112, EXIF_TYPE_SHORT, 0, serialize_orientation,
+  {GST_TAG_DESCRIPTION, EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII, 0, NULL,
+      NULL},
+  {GST_TAG_DEVICE_MANUFACTURER, EXIF_TAG_MAKE, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_DEVICE_MODEL, EXIF_TAG_MODEL, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_IMAGE_ORIENTATION, EXIF_TAG_ORIENTATION, EXIF_TYPE_SHORT, 0,
+        serialize_orientation,
       deserialize_orientation},
-  {GST_TAG_APPLICATION_NAME, 0x131, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_DATE_TIME, 0x132, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_ARTIST, 0x13B, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_COPYRIGHT, 0x8298, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_CAPTURING_SHUTTER_SPEED, 0x829A, EXIF_TYPE_RATIONAL, 0, NULL, NULL},
-  {GST_TAG_CAPTURING_FOCAL_RATIO, 0x829D, EXIF_TYPE_RATIONAL, 0, NULL, NULL},
+  {GST_TAG_APPLICATION_NAME, EXIF_TAG_SOFTWARE, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_DATE_TIME, EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_ARTIST, EXIF_TAG_ARTIST, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_COPYRIGHT, EXIF_TAG_COPYRIGHT, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {GST_TAG_CAPTURING_SHUTTER_SPEED, EXIF_TAG_EXPOSURE_TIME, EXIF_TYPE_RATIONAL,
+        0,
+      NULL, NULL},
+  {GST_TAG_CAPTURING_FOCAL_RATIO, EXIF_TAG_F_NUMBER, EXIF_TYPE_RATIONAL, 0,
+        NULL,
+      NULL},
 
   /* don't need the serializer as we always write the iso speed alone */
-  {GST_TAG_CAPTURING_ISO_SPEED, 0x8827, EXIF_TYPE_SHORT, 0, NULL,
+  {GST_TAG_CAPTURING_ISO_SPEED, EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY,
+        EXIF_TYPE_SHORT, 0, NULL,
       deserialize_add_to_pending_tags},
 
-  {GST_TAG_CAPTURING_ISO_SPEED, 0x8830, EXIF_TYPE_SHORT, 0,
+  {GST_TAG_CAPTURING_ISO_SPEED, EXIF_TAG_SENSITIVITY_TYPE, EXIF_TYPE_SHORT, 0,
       serialize_sensitivity_type, deserialize_sensitivity_type},
-  {GST_TAG_CAPTURING_ISO_SPEED, 0x8833, EXIF_TYPE_LONG, 0, NULL, NULL},
+  {GST_TAG_CAPTURING_ISO_SPEED, EXIF_TAG_ISO_SPEED, EXIF_TYPE_LONG, 0, NULL,
+      NULL},
   {NULL, EXIF_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
   {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
   {NULL, 0, 0, 0, NULL, NULL}
@@ -198,30 +246,42 @@ static const GstExifTagMatch tag_map_ifd0[] = {
 
 static const GstExifTagMatch tag_map_exif[] = {
   {NULL, EXIF_VERSION_TAG, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
-  {GST_TAG_DATE_TIME, 0x9003, EXIF_TYPE_ASCII, 0, NULL, NULL},
-  {GST_TAG_CAPTURING_SHUTTER_SPEED, 0x9201, EXIF_TYPE_SRATIONAL, 0,
+  {GST_TAG_DATE_TIME, EXIF_TAG_DATE_TIME_ORIGINAL, EXIF_TYPE_ASCII, 0, NULL,
+      NULL},
+  {GST_TAG_CAPTURING_SHUTTER_SPEED, EXIF_TAG_SHUTTER_SPEED_VALUE,
+        EXIF_TYPE_SRATIONAL, 0,
       serialize_shutter_speed, deserialize_shutter_speed},
-  {GST_TAG_CAPTURING_FOCAL_RATIO, 0x9202, EXIF_TYPE_RATIONAL, 0,
+  {GST_TAG_CAPTURING_FOCAL_RATIO, EXIF_TAG_APERTURE_VALUE, EXIF_TYPE_RATIONAL,
+        0,
       serialize_aperture_value, deserialize_aperture_value},
-  {GST_TAG_CAPTURING_FOCAL_LENGTH, 0x920A, EXIF_TYPE_RATIONAL, 0, NULL, NULL},
-  {GST_TAG_APPLICATION_DATA, 0x927C, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
-  {GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, 0xA404, EXIF_TYPE_RATIONAL, 0, NULL,
+  {GST_TAG_CAPTURING_FOCAL_LENGTH, EXIF_TAG_FOCAL_LENGTH, EXIF_TYPE_RATIONAL, 0,
+      NULL, NULL},
+  {GST_TAG_APPLICATION_DATA, EXIF_TAG_MAKER_NOTE, EXIF_TYPE_UNDEFINED, 0, NULL,
+      NULL},
+  {GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, EXIF_TAG_DIGITAL_ZOOM_RATIO,
+        EXIF_TYPE_RATIONAL, 0, NULL,
       NULL},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
 static const GstExifTagMatch tag_map_gps[] = {
-  {GST_TAG_GEO_LOCATION_LATITUDE, 0x2, EXIF_TYPE_RATIONAL, 0x1,
+  {GST_TAG_GEO_LOCATION_LATITUDE, EXIF_TAG_GPS_LATITUDE, EXIF_TYPE_RATIONAL,
+        EXIF_TAG_GPS_LATITUDE_REF,
       serialize_geo_coordinate, deserialize_geo_coordinate},
-  {GST_TAG_GEO_LOCATION_LONGITUDE, 0x4, EXIF_TYPE_RATIONAL, 0x3,
+  {GST_TAG_GEO_LOCATION_LONGITUDE, EXIF_TAG_GPS_LONGITUDE, EXIF_TYPE_RATIONAL,
+        EXIF_TAG_GPS_LONGITUDE_REF,
       serialize_geo_coordinate, deserialize_geo_coordinate},
-  {GST_TAG_GEO_LOCATION_ELEVATION, 0x6, EXIF_TYPE_RATIONAL, 0x5,
+  {GST_TAG_GEO_LOCATION_ELEVATION, EXIF_TAG_GPS_ALTITUDE, EXIF_TYPE_RATIONAL,
+        EXIF_TAG_GPS_ALTITUDE_REF,
       serialize_geo_elevation, deserialize_geo_elevation},
-  {GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, 0xD, EXIF_TYPE_RATIONAL, 0xC,
+  {GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, EXIF_TAG_GPS_SPEED, EXIF_TYPE_RATIONAL,
+        EXIF_TAG_GPS_SPEED_REF,
       serialize_speed, deserialize_speed},
-  {GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, 0xF, EXIF_TYPE_RATIONAL, 0xE,
+  {GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, EXIF_TAG_GPS_TRACK,
+        EXIF_TYPE_RATIONAL, EXIF_TAG_GPS_TRACK_REF,
       serialize_geo_direction, deserialize_geo_direction},
-  {GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, 0x11, EXIF_TYPE_RATIONAL, 0x10,
+  {GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, EXIF_TAG_GPS_IMAGE_DIRECTION,
+        EXIF_TYPE_RATIONAL, EXIF_TAG_GPS_IMAGE_DIRECTION_REF,
       serialize_geo_direction, deserialize_geo_direction},
   {NULL, 0, 0, 0, NULL, NULL}
 };
@@ -1595,7 +1655,7 @@ serialize_geo_coordinate (GstExifWriter * writer, const GstTagList * taglist,
   gint seconds;
   guint32 offset;
 
-  latitude = exiftag->exif_tag == 0x2;  /* exif tag for latitude */
+  latitude = exiftag->exif_tag == EXIF_TAG_GPS_LATITUDE;        /* exif tag for latitude */
   if (!gst_tag_list_get_double (taglist, exiftag->gst_tag, &value)) {
     GST_WARNING ("Failed to get double from tag list for tag: %s",
         exiftag->gst_tag);
@@ -2173,7 +2233,9 @@ deserialize_sensitivity_type (GstExifReader * exif_reader,
   }
 
   /* check the pending tags for the PhotographicSensitivity tag */
-  sensitivity = gst_exif_reader_get_pending_tag (exif_reader, 0x8827);
+  sensitivity =
+      gst_exif_reader_get_pending_tag (exif_reader,
+      EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY);
   if (sensitivity == NULL) {
     GST_WARNING ("PhotographicSensitivity tag not found");
     return 0;
