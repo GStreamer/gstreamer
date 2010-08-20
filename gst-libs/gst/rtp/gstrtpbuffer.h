@@ -122,6 +122,10 @@ gboolean        gst_rtp_buffer_get_extension_twobytes_header (GstBuffer * buffer
                                                               gpointer * data,
                                                               guint * size);
 
+gboolean       gst_rtp_buffer_add_extension_onebyte_header (GstBuffer * buffer,
+                                                            guint8 id,
+                                                            gpointer data,
+                                                            guint size);
 
 
 G_END_DECLS
