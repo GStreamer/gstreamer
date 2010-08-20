@@ -470,6 +470,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
         (const guint8 *) &jfif_data, FALSE);
     /* insert into self->markers list */
     self->priv->markers = g_list_insert (self->priv->markers, m, 1);
+    app0_jfif = g_list_nth (self->priv->markers, 1);
   }
   /* else */
   /* remove JFIF if exists */
