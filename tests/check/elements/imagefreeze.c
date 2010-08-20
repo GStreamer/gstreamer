@@ -152,7 +152,7 @@ GST_START_TEST (test_imagefreeze_0_1)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -221,7 +221,7 @@ GST_START_TEST (test_imagefreeze_25_1_0ms_400ms)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -291,7 +291,7 @@ GST_START_TEST (test_imagefreeze_25_1_200ms_400ms)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -361,7 +361,7 @@ GST_START_TEST (test_imagefreeze_25_1_400ms_0ms)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -442,7 +442,7 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -538,7 +538,62 @@ GST_START_TEST (test_imagefreeze_bufferalloc)
   gst_buffer_unref (test_buffer);
   test_buffer = NULL;
 
-  g_object_unref (pipeline);
+  gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_imagefreeze_eos)
+{
+  GstElement *pipeline;
+  GstElement *src;
+  GstCaps *caps1, *caps2;
+  GstBus *bus;
+  GMainLoop *loop;
+  GstFormat fmt = GST_FORMAT_TIME;
+  gint64 position;
+
+  caps1 =
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
+  caps2 =
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
+
+  pipeline = setup_imagefreeze (caps1, caps2, NULL, NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  fail_unless (src != NULL);
+  g_object_set (src, "num-buffers", 100, NULL);
+
+  loop = g_main_loop_new (NULL, TRUE);
+  fail_unless (loop != NULL);
+
+  bus = gst_element_get_bus (pipeline);
+  fail_unless (bus != NULL);
+  gst_bus_add_watch (bus, bus_handler, loop);
+  gst_object_unref (bus);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (gst_element_seek (pipeline, 1.0, GST_FORMAT_TIME,
+          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET,
+          400 * GST_MSECOND));
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  g_main_loop_run (loop);
+
+  fail_unless (gst_element_query_position (src, &fmt, &position));
+  fail_unless_equals_uint64 (position, 40 * GST_MSECOND);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (src);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop);
   gst_caps_unref (caps1);
   gst_caps_unref (caps2);
@@ -563,6 +618,7 @@ imagefreeze_suite (void)
   tcase_add_test (tc_chain, test_imagefreeze_25_1_220ms_380ms);
 
   tcase_add_test (tc_chain, test_imagefreeze_bufferalloc);
+  tcase_add_test (tc_chain, test_imagefreeze_eos);
 
   return s;
 }
