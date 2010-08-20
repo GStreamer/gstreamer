@@ -439,7 +439,7 @@ gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
 
 /* flush the oldest buffer */
 static GstFlowReturn
-gst_video_rate_flush_prev (GstVideoRate * videorate)
+gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate)
 {
   GstFlowReturn res;
   GstBuffer *outbuf;
@@ -460,6 +460,11 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
     videorate->discont = FALSE;
   } else
     GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+  if (duplicate)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
+  else
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_GAP);
 
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
@@ -546,7 +551,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
                     videorate->next_ts - videorate->segment.accum
                     < videorate->segment.stop)
                 || count < 1)) {
-          gst_video_rate_flush_prev (videorate);
+          gst_video_rate_flush_prev (videorate, count > 0);
           count++;
         }
         if (count > 1) {
@@ -575,7 +580,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       /* flush last queued frame */
       GST_DEBUG_OBJECT (videorate, "Got EOS");
-      gst_video_rate_flush_prev (videorate);
+      gst_video_rate_flush_prev (videorate, FALSE);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* also resets the segment */
@@ -771,7 +776,9 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
         count++;
 
         /* on error the _flush function posted a warning already */
-        if ((res = gst_video_rate_flush_prev (videorate)) != GST_FLOW_OK) {
+        if ((res =
+                gst_video_rate_flush_prev (videorate,
+                    count > 1)) != GST_FLOW_OK) {
           gst_buffer_unref (buffer);
           goto done;
         }
