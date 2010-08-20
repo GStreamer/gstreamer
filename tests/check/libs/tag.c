@@ -1245,6 +1245,7 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   GstDateTime *datetime = NULL;
   GstBuffer *buf = NULL;
   gint i;
+  GstTagList *taglist;
 
   gst_tag_register_musicbrainz_tags ();
 
@@ -1493,6 +1494,28 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_SHUTTER_SPEED, &value);
   g_value_unset (&value);
+
+  /* flash is a little bit more tricky, because 2 tags are merged into 1 in
+   * exif */
+  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
+      GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
+  do_exif_tag_serialization_deserialization (taglist);
+  gst_tag_list_free (taglist);
+
+  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
+      GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
+  do_exif_tag_serialization_deserialization (taglist);
+  gst_tag_list_free (taglist);
+
+  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
+      GST_TAG_CAPTURING_FLASH_MODE, "never", NULL);
+  do_exif_tag_serialization_deserialization (taglist);
+  gst_tag_list_free (taglist);
+
+  taglist = gst_tag_list_new_full (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
+      GST_TAG_CAPTURING_FLASH_MODE, "always", NULL);
+  do_exif_tag_serialization_deserialization (taglist);
+  gst_tag_list_free (taglist);
 }
 
 GST_END_TEST;

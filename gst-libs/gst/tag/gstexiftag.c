@@ -229,6 +229,7 @@ EXIF_SERIALIZATION_DESERIALIZATION_FUNC (aperture_value);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (contrast);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (exposure_program);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (exposure_mode);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (flash);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (gain_control);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_coordinate);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (geo_direction);
@@ -277,6 +278,7 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_DATE_TIME_DIGITIZED 0x9004
 #define EXIF_TAG_SHUTTER_SPEED_VALUE 0x9201
 #define EXIF_TAG_APERTURE_VALUE 0x9202
+#define EXIF_TAG_FLASH 0x9209
 #define EXIF_TAG_FOCAL_LENGTH 0x920A
 #define EXIF_TAG_MAKER_NOTE 0x927C
 #define EXIF_TAG_EXPOSURE_MODE 0xA402
@@ -350,6 +352,8 @@ static const GstExifTagMatch tag_map_exif[] = {
   {GST_TAG_CAPTURING_FOCAL_RATIO, EXIF_TAG_APERTURE_VALUE, EXIF_TYPE_RATIONAL,
         0,
       serialize_aperture_value, deserialize_aperture_value},
+  {GST_TAG_CAPTURING_FLASH_FIRED, EXIF_TAG_FLASH, EXIF_TYPE_SHORT, 0,
+      serialize_flash, deserialize_flash},
   {GST_TAG_CAPTURING_FOCAL_LENGTH, EXIF_TAG_FOCAL_LENGTH, EXIF_TYPE_RATIONAL, 0,
       NULL, NULL},
   {GST_TAG_APPLICATION_DATA, EXIF_TAG_MAKER_NOTE, EXIF_TYPE_UNDEFINED, 0, NULL,
@@ -2315,6 +2319,85 @@ deserialize_sensitivity_type (GstExifReader * exif_reader,
 
   gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_KEEP,
       GST_TAG_CAPTURING_ISO_SPEED, sensitivity->offset_as_data, NULL);
+
+  return 0;
+}
+
+static void
+serialize_flash (GstExifWriter * writer, const GstTagList * taglist,
+    const GstExifTagMatch * exiftag)
+{
+  gboolean flash_fired;
+  const gchar *flash_mode;
+  guint16 tagvalue = 0;
+
+  if (!gst_tag_list_get_boolean_index (taglist, exiftag->gst_tag, 0,
+          &flash_fired)) {
+    GST_WARNING ("Failed to get flash fired from from tag list");
+    return;
+  }
+
+  if (flash_fired)
+    tagvalue = 1;
+
+  if (gst_tag_list_peek_string_index (taglist, GST_TAG_CAPTURING_FLASH_MODE, 0,
+          &flash_mode)) {
+    guint16 mode = 0;
+    if (strcmp (flash_mode, "auto") == 0) {
+      mode = 3;
+    } else if (strcmp (flash_mode, "always") == 0) {
+      mode = 1;
+    } else if (strcmp (flash_mode, "never") == 0) {
+      mode = 2;
+    }
+
+    tagvalue = tagvalue | (mode << 3);
+  } else {
+    GST_DEBUG ("flash-mode not available");
+  }
+
+  gst_exif_writer_write_short_tag (writer, exiftag->exif_tag, tagvalue);
+}
+
+static gint
+deserialize_flash (GstExifReader * exif_reader,
+    GstByteReader * reader, const GstExifTagMatch * exiftag,
+    GstExifTagData * tagdata)
+{
+  guint16 value = 0;
+  guint mode = 0;
+  const gchar *mode_str = NULL;
+
+  GST_LOG ("Starting to parse %s tag in exif 0x%x", exiftag->gst_tag,
+      exiftag->exif_tag);
+
+  if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
+    value = GST_READ_UINT16_LE (tagdata->offset_as_data);
+  } else {
+    value = GST_READ_UINT16_BE (tagdata->offset_as_data);
+  }
+
+  /* check flash fired */
+  if (value & 0x1) {
+    gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CAPTURING_FLASH_FIRED, TRUE, NULL);
+  } else {
+    gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CAPTURING_FLASH_FIRED, FALSE, NULL);
+  }
+
+  mode = (value >> 3) & 0x3;
+  if (mode == 1) {
+    mode_str = "always";
+  } else if (mode == 2) {
+    mode_str = "never";
+  } else if (mode == 3) {
+    mode_str = "auto";
+  }
+
+  if (mode_str)
+    gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CAPTURING_FLASH_MODE, mode_str, NULL);
 
   return 0;
 }
