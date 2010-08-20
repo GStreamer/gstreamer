@@ -18,7 +18,7 @@
  */
 
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/gstprofile.h>
 
 GstEncodingProfile *make_ogg_vorbis_profile (void);
 

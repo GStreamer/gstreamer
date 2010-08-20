@@ -26,7 +26,7 @@
 #include <string.h>
 #include <glib.h>
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/gstprofile.h>
 #include <regex.h>
 
 /* GLOBAL VARIABLE */

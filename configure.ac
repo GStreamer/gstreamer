@@ -156,13 +156,13 @@ GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-dnl check for gstreamer-profile
-PKG_CHECK_MODULES(GST_PROFILE, gstreamer-profile-$GST_MAJORMINOR, HAVE_GST_PROFILE="yes", HAVE_GST_PROFILE="no")
-if test "x$HAVE_GST_PROFILE" != "xyes"; then
-  AC_ERROR([gst-profile is required for rendering support])
+dnl check for gstreamer-pbutils
+PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_MAJORMINOR, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
+if test "x$HAVE_GST_PBUTILS" != "xyes"; then
+  AC_ERROR([gst-pbutils is required for rendering support])
 fi
-AC_SUBST(GST_PROFILE_LIBS)
-AC_SUBST(GST_PROFILE_CFLAGS)
+AC_SUBST(GST_PBUTILS_LIBS)
+AC_SUBST(GST_PBUTILS_CFLAGS)
 
 dnl check for gstreamer-discoverer
 PKG_CHECK_MODULES(GST_DISCOVERER, gstreamer-discoverer-$GST_MAJORMINOR, HAVE_GST_DISCOVERER="yes", HAVE_GST_DISCOVERER="no")

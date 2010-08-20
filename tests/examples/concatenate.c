@@ -18,7 +18,7 @@
  */
 
 #include <ges/ges.h>
-#include <gst/profile/gstprofile.h>
+#include <gst/pbutils/gstprofile.h>
 #include <gst/discoverer/gstdiscoverer.h>
 
 GstDiscovererInformation *get_info_for_file (GstDiscoverer * disco,

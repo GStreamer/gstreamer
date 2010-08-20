@@ -19,7 +19,6 @@
  */
 
 #include <gst/gst.h>
-#include <gst/profile/gstfactorylists.h>
 #include <glib-object.h>
 #include <string.h>
 #include "ges-screenshot.h"
@@ -94,56 +93,44 @@ create_element (const gchar * factory_name, GstElement ** element,
 GstElement *
 get_encoder (GstCaps * caps)
 {
-  GValueArray *encoders = NULL;
-  GValueArray *filtered = NULL;
-  GValue *factory_value = NULL;
+  GList *encoders = NULL;
+  GList *filtered = NULL;
   GstElementFactory *factory = NULL;
-  GstElement *encoder;
+  GstElement *encoder = NULL;
 
   encoders =
-      gst_factory_list_get_elements (GST_FACTORY_LIST_ENCODER |
-      GST_FACTORY_LIST_IMAGE, GST_RANK_NONE);
+      gst_element_factory_list_get_elements (GST_ELEMENT_FACTORY_LIST_ENCODER |
+      GST_ELEMENT_FACTORY_LIST_MEDIA_IMAGE, GST_RANK_NONE);
 
   GST_INFO ("got factory list %p", encoders);
-  gst_factory_list_debug (encoders);
-  if (!(encoders && encoders->n_values))
-    goto fail;
+  gst_plugin_feature_list_debug (encoders);
+  if (encoders == NULL)
+    goto beach;
 
-  filtered = gst_factory_list_filter (encoders, caps, GST_PAD_SRC, FALSE);
+  filtered =
+      gst_element_factory_list_filter (encoders, caps, GST_PAD_SRC, FALSE);
   GST_INFO ("got filtered list %p", filtered);
-  gst_factory_list_debug (filtered);
-  if (!(filtered && filtered->n_values))
-    goto fail;
+  gst_plugin_feature_list_debug (filtered);
+  if (filtered == NULL)
+    goto beach;
 
-  factory_value = g_value_array_get_nth (filtered, 0);
-  factory = (GstElementFactory *) g_value_get_object (factory_value);
+  factory = (GstElementFactory *) filtered->data;
 
   GST_INFO ("got factory %p", factory);
   if (!factory)
-    goto fail;
+    goto beach;
   encoder = gst_element_factory_create (factory, NULL);
 
   GST_INFO ("created encoder element %p, %s", encoder,
       gst_element_get_name (encoder));
 
-  if (!encoder)
-    goto fail;
-
-  g_value_array_free (filtered);
-  g_value_array_free (encoders);
-  gst_object_unref (factory);
+beach:
+  if (filtered)
+    gst_plugin_feature_list_free (filtered);
+  if (encoders)
+    gst_plugin_feature_list_free (encoders);
 
   return encoder;
-
-fail:
-  if (encoders)
-    g_value_array_free (encoders);
-  if (filtered)
-    g_value_array_free (filtered);
-  if (factory)
-    gst_object_unref (factory);
-
-  return NULL;
 }
 
 /* takes ownership of the input buffer */
