@@ -56,7 +56,8 @@ struct _GstImageFreeze
 
   guint64 offset;
 
-  /* TRUE if currently doing a flushing seek */
+  /* TRUE if currently doing a flushing seek, protected
+   * by srcpad's stream lock */
   gint seeking;
 };
 

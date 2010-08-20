@@ -329,9 +329,16 @@ gst_image_freeze_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
   GST_OBJECT_UNLOCK (self);
 
   if (do_alloc) {
+    gboolean seeking = FALSE;
+
     do {
+      GST_PAD_STREAM_LOCK (self->srcpad);
       ret = gst_pad_alloc_buffer (self->srcpad, offset, size, caps, buf);
-    } while (ret == GST_FLOW_WRONG_STATE && g_atomic_int_get (&self->seeking));
+
+      seeking = ret == GST_FLOW_WRONG_STATE
+          && g_atomic_int_get (&self->seeking);
+      GST_PAD_STREAM_UNLOCK (self->srcpad);
+    } while (seeking);
 
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       GST_ERROR_OBJECT (pad, "Allocating buffer failed: %s",
