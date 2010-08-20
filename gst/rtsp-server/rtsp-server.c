@@ -27,6 +27,11 @@
 #define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
 
+/* Define to use the SO_LINGER option so that the server sockets can be resused
+ * sooner. Disabled for now because it is not very well implemented by various
+ * OSes and it causes clients to fail to read the TEARDOWN response. */
+#undef USE_SOLINGER
+
 enum
 {
   PROP_0,
@@ -421,7 +426,9 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   int ret, sockfd;
   struct addrinfo hints;
   struct addrinfo *result, *rp;
+#ifdef USE_SOLINGER
   struct linger linger;
+#endif
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;     /* Allow IPv4 or IPv6 */
@@ -477,13 +484,16 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
           (void *) &ret, sizeof (ret)) < 0)
     goto keepalive_failed;
 
-  /* make sure socket is reset immediately after close. This ensure that we can
-   * reuse the socket quickly. */
+#ifdef USE_SOLINGER
+  /* make sure socket is reset 5 seconds after close. This ensure that we can
+   * reuse the socket quickly while still having a chance to send data to the
+   * client. */
   linger.l_onoff = 1;
   linger.l_linger = 5;
   if (setsockopt (server->server_sock.fd, SOL_SOCKET, SO_LINGER,
           (void *) &linger, sizeof (linger)) < 0)
     goto linger_failed;
+#endif
 
   /* set the server socket to nonblocking */
   fcntl (server->server_sock.fd, F_SETFL, O_NONBLOCK);
@@ -522,11 +532,13 @@ keepalive_failed:
     GST_ERROR_OBJECT (server, "failed to configure keepalive socket: %s", g_strerror (errno));
     goto close_error;
   }
+#ifdef USE_SOLINGER
 linger_failed:
   {
     GST_ERROR_OBJECT (server, "failed to no linger socket: %s", g_strerror (errno));
     goto close_error;
   }
+#endif
 listen_failed:
   {
     GST_ERROR_OBJECT (server, "failed to listen on socket: %s", g_strerror (errno));
