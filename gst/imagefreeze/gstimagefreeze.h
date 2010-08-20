@@ -47,6 +47,7 @@ struct _GstImageFreeze
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  GMutex *lock;
   GstBuffer *buffer;
   gint fps_n, fps_d;
 
