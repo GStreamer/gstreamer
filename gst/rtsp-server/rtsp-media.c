@@ -1527,6 +1527,89 @@ default_unprepare (GstRTSPMedia * media)
   return TRUE;
 }
 
+typedef struct {
+  gint count;
+  gchar *dest;
+  gint min, max;
+} RTSPDestination;
+
+
+static gint
+dest_compare (RTSPDestination * a, RTSPDestination * b)
+{
+  if ((a->min == b->min) && (a->max == b->max) && (strcmp (a->dest, b->dest) == 0))
+    return 0;
+
+  return 1;
+}
+
+/* FIXME, udpsink should do this for us */
+static void
+add_udp_destination (GstRTSPMedia *media, GstRTSPMediaStream *stream,
+    gchar *dest, gint min, gint max)
+{
+  RTSPDestination fdest;
+  RTSPDestination *ndest;
+  GList *find;
+
+  fdest.dest = dest;
+  fdest.min = min;
+  fdest.max = max;
+
+  /* first see if we already added this destination */
+  find = g_list_find_custom (stream->destinations, &fdest, (GCompareFunc) dest_compare);
+  if (find) {
+    ndest = (RTSPDestination *) find->data;
+
+    GST_INFO ("already streaming to %s:%d-%d with %d clients", dest, min, max, ndest->count);
+    ndest->count++;
+  } else {
+    GST_INFO ("adding %s:%d-%d", dest, min, max);
+
+    g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
+    g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
+
+    ndest = g_slice_new (RTSPDestination);
+    ndest->count = 1;
+    ndest->dest = g_strdup (dest);
+    ndest->min = min;
+    ndest->max = max;
+
+    stream->destinations = g_list_prepend (stream->destinations, ndest);
+  }
+}
+
+static void
+remove_udp_destination (GstRTSPMedia *media, GstRTSPMediaStream *stream,
+    gchar *dest, gint min, gint max)
+{
+  RTSPDestination fdest;
+  RTSPDestination *ndest;
+  GList *find;
+
+  fdest.dest = dest;
+  fdest.min = min;
+  fdest.max = max;
+
+  /* first see if we already added this destination */
+  find = g_list_find_custom (stream->destinations, &fdest, (GCompareFunc) dest_compare);
+  if (!find)
+    return;
+
+  ndest = (RTSPDestination *) find->data;
+  if (--ndest->count == 0) {
+    GST_INFO ("removing %s:%d-%d", dest, min, max);
+    g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
+    g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
+
+    stream->destinations = g_list_delete_link (stream->destinations, find);
+    g_free (ndest->dest);
+    g_slice_free (RTSPDestination, ndest);
+  } else {
+    GST_INFO ("still streaming to %s:%d-%d with %d clients", dest, min, max, ndest->count);
+  }
+}
+
 /**
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
@@ -1610,16 +1693,12 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
         }
 
         if (add && !tr->active) {
-          GST_INFO ("adding %s:%d-%d", dest, min, max);
-          g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
-          g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
+          add_udp_destination (media, stream, dest, min, max);
           stream->transports = g_list_prepend (stream->transports, tr);
           tr->active = TRUE;
           media->active++;
         } else if (remove && tr->active) {
-          GST_INFO ("removing %s:%d-%d", dest, min, max);
-          g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
-          g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
+          remove_udp_destination (media, stream, dest, min, max);
           stream->transports = g_list_remove (stream->transports, tr);
           tr->active = FALSE;
           media->active--;

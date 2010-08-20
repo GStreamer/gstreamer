@@ -137,6 +137,7 @@ struct _GstRTSPMediaStream {
 
   /* transports we stream to */
   GList        *transports;
+  GList        *destinations;
 };
 
 /**
