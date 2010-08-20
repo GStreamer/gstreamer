@@ -38,6 +38,8 @@ typedef struct _GstMultiUDPSink GstMultiUDPSink;
 typedef struct _GstMultiUDPSinkClass GstMultiUDPSinkClass;
 
 typedef struct {
+  gint refcount;
+
   int *sock;
 
   struct sockaddr_storage theiraddr;
@@ -76,6 +78,8 @@ struct _GstMultiUDPSink {
   gboolean       loop;
   gint           qos_dscp;
   guint16        ss_family;
+
+  gboolean       send_duplicates;
 };
 
 struct _GstMultiUDPSinkClass {
