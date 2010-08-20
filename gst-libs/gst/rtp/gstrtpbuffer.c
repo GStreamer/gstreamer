@@ -1651,3 +1651,112 @@ gst_rtp_buffer_add_extension_onebyte_header (GstBuffer * buffer, guint8 id,
 
   return TRUE;
 }
+
+/**
+ * gst_rtp_buffer_add_extension_twobytes_header:
+ * @buffer: the buffer
+ * @appbits: Application specific bits
+ * @id: The ID of the header extension
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Adds a RFC 5285 header extension with a two bytes header to the end of the
+ * RTP header. If there is already a RFC 5285 header extension with a two bytes
+ * header, the new extension will be appended.
+ * It will not work if there is already a header extension that does not follow
+ * the mecanism described in RFC 5285 or if there is a header extension with
+ * a one byte header as described in RFC 5285. In that case, use
+ * gst_rtp_buffer_add_extension_onebyte_header()
+ *
+ * Returns: %TRUE if header extension could be added
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_add_extension_twobytes_header (GstBuffer * buffer,
+    guint8 appbits, guint8 id, gpointer data, guint size)
+{
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen;
+  gboolean has_bit;
+  guint bytelen;
+
+  g_return_val_if_fail ((appbits & 0xF0) == 0, FALSE);
+  g_return_val_if_fail (size < 256, FALSE);
+  g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+
+  has_bit = gst_rtp_buffer_get_extension_data (buffer, &bits,
+      (gpointer) & pdata, &wordlen);
+
+  bytelen = wordlen * 4;
+
+  if (has_bit) {
+    gulong offset = 0;
+    guint8 *nextext;
+    guint extlen;
+
+    if (bits != ((0x100 << 4) | (appbits & 0x0f)))
+      return FALSE;
+
+    while (offset + 2 < bytelen) {
+      guint8 read_id, read_len;
+
+      read_id = GST_READ_UINT8 (pdata + offset);
+      offset += 1;
+
+      /* ID 0 means its padding, skip */
+      if (read_id == 0)
+        continue;
+
+      read_len = GST_READ_UINT8 (pdata + offset);
+      offset += 1;
+
+      /* Ignore extension headers where the size does not fit */
+      if (offset + read_len > bytelen)
+        return FALSE;
+
+      offset += read_len;
+    }
+
+    nextext = pdata + offset;
+
+    offset = nextext - GST_BUFFER_DATA (buffer);
+
+    /* Don't add extra header if there isn't enough space */
+    if (GST_BUFFER_SIZE (buffer) < offset + size + 2)
+      return FALSE;
+
+    nextext[0] = id;
+    nextext[1] = size;
+    memcpy (nextext + 2, data, size);
+
+    extlen = nextext - pdata + size + 2;
+    if (extlen % 4) {
+      wordlen = extlen / 4 + 1;
+      memset (nextext + size + 2, 0, 4 - extlen % 4);
+    } else {
+      wordlen = extlen / 4;
+    }
+
+    gst_rtp_buffer_set_extension_data (buffer, (0x100 << 4) | (appbits & 0x0F),
+        wordlen);
+  } else {
+    wordlen = (size + 1) / 4 + (((size + 1) % 4) ? 1 : 0);
+
+    gst_rtp_buffer_set_extension_data (buffer, (0x100 << 4) | (appbits & 0x0F),
+        wordlen);
+
+    gst_rtp_buffer_get_extension_data (buffer, &bits,
+        (gpointer) & pdata, &wordlen);
+
+    pdata[0] = id;
+    pdata[1] = size;
+    memcpy (pdata + 2, data, size);
+    if ((size + 2) % 4)
+      memset (pdata + size + 2, 0, 4 - ((size + 2) % 4));
+  }
+
+  return TRUE;
+}
