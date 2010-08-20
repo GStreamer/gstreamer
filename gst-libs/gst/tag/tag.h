@@ -280,6 +280,31 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_CAPTURING_SATURATION          "capturing-saturation"
 
+/**
+ * GST_TAG_CAPTURING_FLASH_FIRED:
+ *
+ * If flash was fired during the capture of an image. (boolean)
+ *
+ * Note that if this tag isn't present, it should not be assumed that
+ * the flash did not fire. It should be treated as unknown.
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_FLASH_FIRED         "capturing-flash-fired"
+
+/**
+ * GST_TAG_CAPTURING_FLASH_MODE:
+ *
+ * The flash mode selected during the capture of an image. (string)
+ *
+ * The allowed values are:
+ *  "auto"
+ *  "always"
+ *  "never"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_FLASH_MODE         "capturing-flash-mode"
 
 /* additional information for image tags */
 

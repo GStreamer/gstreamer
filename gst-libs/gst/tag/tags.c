@@ -136,6 +136,14 @@ gst_tag_register_tags_internal (gpointer unused)
       _("The direction of saturation processing applied when "
           "capturing an image"), NULL);
 
+  gst_tag_register (GST_TAG_CAPTURING_FLASH_FIRED, GST_TAG_FLAG_META,
+      G_TYPE_BOOLEAN, _("capturing flash fired"),
+      _("If the flash fired while capturing and image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_FLASH_MODE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing flash mode"),
+      _("The selected flash mode while capturing and image"), NULL);
+
   return NULL;
 }
 
