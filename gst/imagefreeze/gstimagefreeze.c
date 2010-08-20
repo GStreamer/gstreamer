@@ -717,7 +717,7 @@ gst_image_freeze_src_loop (GstPad * pad)
   GstImageFreeze *self = GST_IMAGE_FREEZE (GST_PAD_PARENT (pad));
   GstBuffer *buffer;
   guint64 offset;
-  GstClockTime timestamp, duration;
+  GstClockTime timestamp, timestamp_end, duration;
   gint64 cstart, cstop;
   gboolean in_seg, eos;
 
@@ -770,24 +770,28 @@ gst_image_freeze_src_loop (GstPad * pad)
   if (self->fps_n != 0) {
     timestamp =
         gst_util_uint64_scale (offset, self->fps_d * GST_SECOND, self->fps_n);
-    duration = gst_util_uint64_scale_int (GST_SECOND, self->fps_d, self->fps_n);
+    timestamp_end =
+        gst_util_uint64_scale (offset + 1, self->fps_d * GST_SECOND,
+        self->fps_n);
+    duration = timestamp_end - timestamp;
   } else {
     timestamp = self->segment.start;
+    timestamp_end = GST_CLOCK_TIME_NONE;
     duration = GST_CLOCK_TIME_NONE;
   }
+
   eos = (self->fps_n == 0 && offset > 0) ||
       (self->segment.rate >= 0 && self->segment.stop != -1
       && timestamp > self->segment.stop) || (self->segment.rate < 0
       && offset == 0) || (self->segment.rate < 0
-      && self->segment.start != -1
-      && timestamp + duration < self->segment.start);
+      && self->segment.start != -1 && timestamp_end < self->segment.start);
 
   if (self->fps_n == 0 && offset > 0)
     in_seg = FALSE;
   else
     in_seg =
         gst_segment_clip (&self->segment, GST_FORMAT_TIME, timestamp,
-        timestamp + duration, &cstart, &cstop);
+        timestamp_end, &cstart, &cstop);
 
   if (in_seg)
     gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME, cstart);
