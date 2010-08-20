@@ -21,12 +21,14 @@
 
 #define DEFAULT_LAUNCH         NULL
 #define DEFAULT_SHARED         FALSE
+#define DEFAULT_EOS_SHUTDOWN   FALSE
 
 enum
 {
   PROP_0,
   PROP_LAUNCH,
   PROP_SHARED,
+  PROP_EOS_SHUTDOWN,
   PROP_LAST
 };
 
@@ -82,6 +84,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
       g_param_spec_boolean ("shared", "Shared", "If media from this factory is shared",
           DEFAULT_SHARED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
+      g_param_spec_boolean ("eos-shutdown", "EOS Shutdown",
+        "Send EOS down the pipeline before shutting down",
+          DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   klass->gen_key = default_gen_key;
   klass->get_element = default_get_element;
   klass->construct = default_construct;
@@ -96,6 +103,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
 {
   factory->launch = g_strdup (DEFAULT_LAUNCH);
   factory->shared = DEFAULT_SHARED;
+  factory->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
 
   factory->lock = g_mutex_new ();
   factory->medias_lock = g_mutex_new ();
@@ -129,6 +137,9 @@ gst_rtsp_media_factory_get_property (GObject *object, guint propid,
     case PROP_SHARED:
       g_value_set_boolean (value, gst_rtsp_media_factory_is_shared (factory));
       break;
+    case PROP_EOS_SHUTDOWN:
+      g_value_set_boolean (value, gst_rtsp_media_factory_is_eos_shutdown (factory));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -146,6 +157,9 @@ gst_rtsp_media_factory_set_property (GObject *object, guint propid,
       break;
     case PROP_SHARED:
       gst_rtsp_media_factory_set_shared (factory, g_value_get_boolean (value));
+      break;
+    case PROP_EOS_SHUTDOWN:
+      gst_rtsp_media_factory_set_eos_shutdown (factory, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -255,6 +269,48 @@ gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory *factory)
 
   g_mutex_lock (factory->lock);
   result = factory->shared;
+  g_mutex_unlock (factory->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_eos_shutdown:
+ * @factory: a #GstRTSPMediaFactory
+ * @eos_shutdown: the new value
+ *
+ * Configure if media created from this factory will have an EOS sent to the
+ * pipeline before shutdown.
+ */
+void
+gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory *factory,
+    gboolean eos_shutdown)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  g_mutex_lock (factory->lock);
+  factory->eos_shutdown = eos_shutdown;
+  g_mutex_unlock (factory->lock);
+}
+
+/**
+ * gst_rtsp_media_factory_is_eos_shutdown:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get if media created from this factory will have an EOS event sent to the
+ * pipeline before shutdown.
+ *
+ * Returns: %TRUE if the media will receive EOS before shutdown.
+ */
+gboolean
+gst_rtsp_media_factory_is_eos_shutdown (GstRTSPMediaFactory *factory)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
+
+  g_mutex_lock (factory->lock);
+  result = factory->eos_shutdown;
   g_mutex_unlock (factory->lock);
 
   return result;
@@ -536,12 +592,14 @@ no_element:
 static void
 default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media)
 {
-  gboolean shared;
+  gboolean shared, eos_shutdown;
 
   /* configure the sharedness */
   g_mutex_lock (factory->lock);
   shared = factory->shared;
+  eos_shutdown = factory->eos_shutdown;
   g_mutex_unlock (factory->lock);
 
   gst_rtsp_media_set_shared (media, shared);
+  gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
 }

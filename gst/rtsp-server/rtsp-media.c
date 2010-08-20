@@ -29,6 +29,7 @@
 #define DEFAULT_REUSABLE       FALSE
 #define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 //#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
+#define DEFAULT_EOS_SHUTDOWN   FALSE
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -39,6 +40,7 @@ enum
   PROP_SHARED,
   PROP_REUSABLE,
   PROP_PROTOCOLS,
+  PROP_EOS_SHUTDOWN,
   PROP_LAST
 };
 
@@ -96,6 +98,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
           DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
+      g_param_spec_boolean ("eos-shutdown", "EOS Shutdown",
+          "Send an EOS event to the pipeline before unpreparing",
+          DEFAULT_EOS_SHUTDOWN, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_UNPREPARED] =
       g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
@@ -124,6 +131,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->shared = DEFAULT_SHARED;
   media->reusable = DEFAULT_REUSABLE;
   media->protocols = DEFAULT_PROTOCOLS;
+  media->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
 }
 
 /* FIXME. this should be done in multiudpsink */
@@ -245,6 +253,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_PROTOCOLS:
       g_value_set_flags (value, gst_rtsp_media_get_protocols (media));
       break;
+    case PROP_EOS_SHUTDOWN:
+      g_value_set_boolean (value, gst_rtsp_media_is_eos_shutdown (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -265,6 +276,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_PROTOCOLS:
       gst_rtsp_media_set_protocols (media, g_value_get_flags (value));
+      break;
+    case PROP_EOS_SHUTDOWN:
+      gst_rtsp_media_set_eos_shutdown (media, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -442,6 +456,39 @@ gst_rtsp_media_get_protocols (GstRTSPMedia * media)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_RTSP_LOWER_TRANS_UNKNOWN);
 
   return media->protocols;
+}
+
+/**
+ * gst_rtsp_media_set_eos_shutdown:
+ * @media: a #GstRTSPMedia
+ * @eos_shutdown: the new value
+ *
+ * Set or unset if an EOS event will be sent to the pipeline for @media before
+ * it is unprepared.
+ */
+void
+gst_rtsp_media_set_eos_shutdown (GstRTSPMedia *media, gboolean eos_shutdown)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->eos_shutdown = eos_shutdown;
+}
+
+/**
+ * gst_rtsp_media_is_eos_shutdown:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media will send an EOS down the pipeline before
+ * unpreparing.
+ *
+ * Returns: %TRUE if the media will send EOS before unpreparing.
+ */
+gboolean
+gst_rtsp_media_is_eos_shutdown (GstRTSPMedia *media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  return media->eos_shutdown;
 }
 
 /**
@@ -1328,6 +1375,15 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
 
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       break;
+    case GST_MESSAGE_EOS:
+      GST_INFO ("%p: got EOS", media);
+      if (media->eos_pending) {
+        GST_DEBUG ("shutting down after EOS");
+        gst_element_set_state (media->pipeline, GST_STATE_NULL);
+        media->eos_pending = FALSE;
+        g_object_unref (media);
+      }
+      break;
     default:
       GST_INFO ("%p: got message type %s", media,
           gst_message_type_get_name (type));
@@ -1572,8 +1628,19 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
 static gboolean
 default_unprepare (GstRTSPMedia * media)
 {
-  gst_element_set_state (media->pipeline, GST_STATE_NULL);
-
+  if (media->eos_shutdown) {
+    GST_DEBUG ("sending EOS for shutdown");
+    /* ref so that we don't disappear */
+    g_object_ref (media);
+    media->eos_pending = TRUE;
+    gst_element_send_event (media->pipeline, gst_event_new_eos());
+    /* we need to go to playing again for the EOS to propagate, normally in this
+     * state, nothing is receiving data from us anymore so this is ok. */
+    gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
+  } else {
+    GST_DEBUG ("shutting down");
+    gst_element_set_state (media->pipeline, GST_STATE_NULL);
+  }
   return TRUE;
 }
 

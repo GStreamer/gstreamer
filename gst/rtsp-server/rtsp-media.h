@@ -200,12 +200,14 @@ struct _GstRTSPMedia {
   GstRTSPLowerTrans  protocols;
   gboolean           reused;
   gboolean           is_ipv6;
+  gboolean           eos_shutdown;
 
   GstElement        *element;
   GArray            *streams;
   GList             *dynamic;
   GstRTSPMediaStatus status;
   gint               active;
+  gboolean           eos_pending;
 
   /* the pipeline for the media */
   GstElement        *pipeline;
@@ -264,6 +266,9 @@ gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_protocols    (GstRTSPMedia *media, GstRTSPLowerTrans protocols);
 GstRTSPLowerTrans     gst_rtsp_media_get_protocols    (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_eos_shutdown (GstRTSPMedia *media, gboolean eos_shutdown);
+gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);

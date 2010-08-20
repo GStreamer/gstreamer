@@ -57,6 +57,7 @@ struct _GstRTSPMediaFactory {
   GMutex       *lock;
   gchar        *launch;
   gboolean      shared;
+  gboolean      eos_shutdown;
 
   GMutex       *medias_lock;
   GHashTable   *medias;
@@ -106,6 +107,10 @@ gchar *               gst_rtsp_media_factory_get_launch   (GstRTSPMediaFactory *
 void                  gst_rtsp_media_factory_set_shared   (GstRTSPMediaFactory *factory,
                                                            gboolean shared);
 gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *factory);
+
+void                  gst_rtsp_media_factory_set_eos_shutdown   (GstRTSPMediaFactory *factory,
+                                                                 gboolean eos_shutdown);
+gboolean              gst_rtsp_media_factory_is_eos_shutdown    (GstRTSPMediaFactory *factory);
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
