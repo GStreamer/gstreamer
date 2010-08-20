@@ -298,6 +298,40 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
           goto error;
         if (!gst_byte_reader_get_data (&reader, size - 2, &data))
           goto error;
+
+        if (marker == APP14) {
+          gboolean valid = FALSE;
+
+          /* check if this contains RGB and reject it */
+          /*
+           * This marker should have:
+           * - 'Adobe\0'
+           * - 2 bytes DCTEncodeVersion
+           * - 2 bytes flags0
+           * - 2 bytes flags1
+           * - 1 byte  ColorTransform
+           *             - 0 means unknown (RGB or CMYK)
+           *             - 1 YCbCr
+           *             - 2 YCCK
+           */
+
+          if (size >= 14) {
+            if (strncmp ((gchar *) data, "Adobe\0", 6) == 0) {
+              valid = TRUE;
+
+              if (data[11] == 0) {
+                /* this is either RGB or CMYK, reject it */
+                goto not_yuv;
+              }
+
+            }
+          }
+          if (!valid) {
+            GST_WARNING_OBJECT (self, "Not checking suspicious APP14 "
+                "marker of size due to its size (%u) or name string", size);
+          }
+        }
+
         m = gst_jif_mux_new_marker (marker, size - 2, data, FALSE);
         self->priv->markers = g_list_prepend (self->priv->markers, m);
 
@@ -330,6 +364,10 @@ error:
   GST_WARNING_OBJECT (self,
       "Error parsing image header (need more that %u bytes available)",
       gst_byte_reader_get_remaining (&reader));
+  return FALSE;
+not_yuv:
+  GST_WARNING_OBJECT (self,
+      "This image is in RGB/CMYK format and JFIF only allows YCbCr");
   return FALSE;
 }
 
