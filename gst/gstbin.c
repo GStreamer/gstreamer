@@ -1641,10 +1641,11 @@ bin_element_is_src (GstElement * child, GstBin * bin)
   gboolean is_src = FALSE;
 
   /* we lock the child here for the remainder of the function to
-   * get its name and flag safely. */
+   * get its name and other info safely. */
   GST_OBJECT_LOCK (child);
-  if (!GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK) &&
-      !child->numsinkpads) {
+  if (child->numsinkpads == 0) {
+    /* rough check.. We could improve this by checking if there are no sinkpad
+     * templates available. */
     is_src = TRUE;
   }
 
