@@ -292,7 +292,10 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 /* IFD pointer tags */
 #define EXIF_IFD_TAG 0x8769
 #define EXIF_GPS_IFD_TAG 0x8825
+
+/* version tags */
 #define EXIF_VERSION_TAG 0x9000
+#define EXIF_FLASHPIX_VERSION_TAG 0xA000
 
 /* useful macros for speed tag */
 #define METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR (3.6)
@@ -358,6 +361,7 @@ static const GstExifTagMatch tag_map_exif[] = {
       NULL, NULL},
   {GST_TAG_APPLICATION_DATA, EXIF_TAG_MAKER_NOTE, EXIF_TYPE_UNDEFINED, 0, NULL,
       NULL},
+  {NULL, EXIF_FLASHPIX_VERSION_TAG, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
   {GST_TAG_CAPTURING_EXPOSURE_MODE, EXIF_TAG_EXPOSURE_MODE, EXIF_TYPE_SHORT,
       0, serialize_exposure_mode, deserialize_exposure_mode},
   {GST_TAG_CAPTURING_WHITE_BALANCE, EXIF_TAG_WHITE_BALANCE, EXIF_TYPE_SHORT,
@@ -1340,6 +1344,10 @@ write_exif_ifd (const GstTagList * taglist, gboolean byte_order,
         /* special case where we write the exif version */
         write_exif_undefined_tag (&writer, EXIF_VERSION_TAG, (guint8 *) "0230",
             4);
+      } else if (tag_map[i].exif_tag == EXIF_FLASHPIX_VERSION_TAG) {
+        /* special case where we write the flashpix version */
+        write_exif_undefined_tag (&writer, EXIF_FLASHPIX_VERSION_TAG,
+            (guint8 *) "0100", 4);
       }
 
       if (inner_tag_map) {
@@ -1480,7 +1488,8 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
 
       continue;
     }
-    if (tagdata.tag == EXIF_VERSION_TAG) {
+    if (tagdata.tag == EXIF_VERSION_TAG ||
+        tagdata.tag == EXIF_FLASHPIX_VERSION_TAG) {
       /* skip */
       continue;
     }
