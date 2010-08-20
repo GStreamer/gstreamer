@@ -340,9 +340,26 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
     }
 
     if (marker == SOS) {
+      gint eoi_pos = -1;
+      gint i;
+
+      /* search the last 5 bytes for the EOI marker */
+      g_assert (GST_BUFFER_SIZE (buf) >= 5);
+      for (i = 5; i >= 2; i--) {
+        if (GST_BUFFER_DATA (buf)[GST_BUFFER_SIZE (buf) - i] == 0xFF &&
+            GST_BUFFER_DATA (buf)[GST_BUFFER_SIZE (buf) - i + 1] == EOI) {
+          eoi_pos = GST_BUFFER_SIZE (buf) - i;
+          break;
+        }
+      }
+
+      if (eoi_pos == -1) {
+        GST_WARNING_OBJECT (self, "Couldn't find an EOI marker");
+        eoi_pos = GST_BUFFER_SIZE (buf);
+      }
+
       /* remaining size except EOI is scan data */
-      self->priv->scan_size = GST_BUFFER_SIZE (buf) - 4 -
-          gst_byte_reader_get_pos (&reader);
+      self->priv->scan_size = eoi_pos - gst_byte_reader_get_pos (&reader);
       if (!gst_byte_reader_get_data (&reader, self->priv->scan_size,
               &self->priv->scan_data))
         goto error;
