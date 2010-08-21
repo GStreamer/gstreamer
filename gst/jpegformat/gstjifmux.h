@@ -39,6 +39,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JIF_MUX))
 #define GST_IS_JIF_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JIF_MUX))
+#define GST_JIF_MUX_CAST(obj) ((GstJifMux *) (obj))
 
 typedef struct _GstJifMux           GstJifMux;
 typedef struct _GstJifMuxPrivate    GstJifMuxPrivate;

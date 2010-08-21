@@ -182,6 +182,7 @@ gst_jif_mux_finalize (GObject * object)
 static gboolean
 gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
+  GstJifMux *self = GST_JIF_MUX_CAST (GST_PAD_PARENT (pad));
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *variant;
 
@@ -191,7 +192,7 @@ gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps)
     /* FIXME: do we want to switch it like this or use a gobject property ? */
   }
 
-  return TRUE;
+  return gst_pad_set_caps (self->priv->srcpad, caps);
 }
 
 static gboolean
