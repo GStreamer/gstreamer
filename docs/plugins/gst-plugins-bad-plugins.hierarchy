@@ -1,5 +1,7 @@
 GObject
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
@@ -46,6 +48,7 @@ GObject
       GstBaseSrc
         GstDTMFSrc
         GstDataURISrc
+        GstFliteTestSrc
         GstPushSrc
           GstBaseAudioSrc
             GstJackAudioSrc
@@ -56,6 +59,7 @@ GObject
           GstMMS
           GstMythtvSrc
           GstNeonhttpSrc
+          GstRTMPSrc
           GstRfbSrc
           GstShmSrc
           GstVCDSrc
@@ -204,6 +208,7 @@ GObject
       GstGPPMux
       GstGSMDec
       GstGSMEnc
+      GstGmeDec
       GstH264Parse
       GstId3BaseMux
         GstId3Mux
@@ -216,7 +221,6 @@ GObject
       GstKateEnc
       GstKateParse
         GstKateTag
-      GstKateTiger
       GstLiveAdder
       GstMJ2Mux
       GstMP4Mux
@@ -226,11 +230,9 @@ GObject
       GstMimDec
       GstMimEnc
       GstModPlug
-      GstMpeg2enc
       GstMpeg4VParse
       GstMpegPSDemux
       GstMpegTSDemux
-      GstMplex
       GstMusepackDec
       GstMveDemux
       GstMveMux
@@ -255,6 +257,38 @@ GObject
         GstAudioSegmentClip
         GstVideoSegmentClip
       GstSignalProcessor
+        invadarecords-com-plugins-lv2-compressor-mono
+        invadarecords-com-plugins-lv2-compressor-stereo
+        invadarecords-com-plugins-lv2-delay-mono
+        invadarecords-com-plugins-lv2-delay-sum
+        invadarecords-com-plugins-lv2-erreverb-mono
+        invadarecords-com-plugins-lv2-erreverb-sum
+        invadarecords-com-plugins-lv2-filter-hpf-mono
+        invadarecords-com-plugins-lv2-filter-hpf-stereo
+        invadarecords-com-plugins-lv2-filter-lpf-mono
+        invadarecords-com-plugins-lv2-filter-lpf-stereo
+        invadarecords-com-plugins-lv2-input
+        invadarecords-com-plugins-lv2-meter
+        invadarecords-com-plugins-lv2-phaser-mono
+        invadarecords-com-plugins-lv2-phaser-stereo
+        invadarecords-com-plugins-lv2-phaser-sum
+        invadarecords-com-plugins-lv2-testtone
+        invadarecords-com-plugins-lv2-tube-mono
+        invadarecords-com-plugins-lv2-tube-stereo
+        ladspa-Ambisonics-11-cube-decoder
+        ladspa-Ambisonics-11-hexagon-decoder
+        ladspa-Ambisonics-11-mono-panner
+        ladspa-Ambisonics-11-rotator
+        ladspa-Ambisonics-11-square-decoder
+        ladspa-Ambisonics-11-stereo-panner
+        ladspa-Ambisonics-21-panner
+        ladspa-Ambisonics-21-rotator
+        ladspa-Ambisonics-22-panner
+        ladspa-Ambisonics-22-rotator
+        ladspa-Ambisonics-31-panner
+        ladspa-Ambisonics-31-rotator
+        ladspa-Ambisonics-33-panner
+        ladspa-Ambisonics-33-rotator
         ladspa-Chorus1
         ladspa-Chorus2
         ladspa-G2reverb
@@ -263,8 +297,14 @@ GObject
         ladspa-Mvclpf-2
         ladspa-Mvclpf-3
         ladspa-Mvclpf-4
+        ladspa-Parametric1
         ladspa-Phaser1
         ladspa-Phaser1+LFO
+        ladspa-Pulse-VCO
+        ladspa-Rec-VCO
+        ladspa-Saw-VCO
+        ladspa-Tricardioid-to-AMB
+        ladspa-Virtualmic
         ladspa-alias
         ladspa-allpass-c
         ladspa-allpass-l
