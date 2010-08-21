@@ -756,6 +756,72 @@ convert_Y444_AYUV (CogFrame * dest, CogFrame * src)
       src->components[2].stride, dest->width, dest->height);
 }
 
+static void
+convert_AYUV_ARGB (CogFrame * dest, CogFrame * src)
+{
+  cogorc_convert_AYUV_ARGB (dest->components[0].data,
+      dest->components[0].stride, src->components[0].data,
+      src->components[0].stride, dest->width, dest->height);
+}
+
+static void
+convert_AYUV_BGRA (CogFrame * dest, CogFrame * src)
+{
+  cogorc_convert_AYUV_BGRA (dest->components[0].data,
+      dest->components[0].stride, src->components[0].data,
+      src->components[0].stride, dest->width, dest->height);
+}
+
+static void
+convert_AYUV_ABGR (CogFrame * dest, CogFrame * src)
+{
+  cogorc_convert_AYUV_ABGR (dest->components[0].data,
+      dest->components[0].stride, src->components[0].data,
+      src->components[0].stride, dest->width, dest->height);
+}
+
+static void
+convert_AYUV_RGBA (CogFrame * dest, CogFrame * src)
+{
+  cogorc_convert_AYUV_RGBA (dest->components[0].data,
+      dest->components[0].stride, src->components[0].data,
+      src->components[0].stride, dest->width, dest->height);
+}
+
+static void
+convert_I420_BGRA (CogFrame * dest, CogFrame * src)
+{
+  int i;
+  int quality = 0;
+
+  if (quality > 3) {
+    for (i = 0; i < dest->height; i++) {
+      if (i & 1) {
+        cogorc_convert_I420_BGRA_avg (COG_FRAME_DATA_GET_LINE (dest->components
+                + 0, i), COG_FRAME_DATA_GET_LINE (src->components + 0, i),
+            COG_FRAME_DATA_GET_LINE (src->components + 1, i >> 1),
+            COG_FRAME_DATA_GET_LINE (src->components + 1, (i >> 1) + 1),
+            COG_FRAME_DATA_GET_LINE (src->components + 2, i >> 1),
+            COG_FRAME_DATA_GET_LINE (src->components + 2, (i >> 1) + 1),
+            dest->width);
+      } else {
+        cogorc_convert_I420_BGRA (COG_FRAME_DATA_GET_LINE (dest->components + 0,
+                i), COG_FRAME_DATA_GET_LINE (src->components + 0, i),
+            COG_FRAME_DATA_GET_LINE (src->components + 1, i >> 1),
+            COG_FRAME_DATA_GET_LINE (src->components + 2, i >> 1), dest->width);
+      }
+    }
+  } else {
+    for (i = 0; i < dest->height; i++) {
+      cogorc_convert_I420_BGRA (COG_FRAME_DATA_GET_LINE (dest->components + 0,
+              i), COG_FRAME_DATA_GET_LINE (src->components + 0, i),
+          COG_FRAME_DATA_GET_LINE (src->components + 1, i >> 1),
+          COG_FRAME_DATA_GET_LINE (src->components + 2, i >> 1), dest->width);
+    }
+  }
+}
+
+
 
 
 
@@ -801,6 +867,17 @@ static CogColorspaceTransform transforms[] = {
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, convert_Y444_UYVY},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, convert_Y444_AYUV},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, convert_Y444_Y42B},
+
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, convert_AYUV_ARGB},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRA, convert_AYUV_BGRA},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xRGB, convert_AYUV_ARGB},    /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRx, convert_AYUV_BGRA},    /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ABGR, convert_AYUV_ABGR},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBA, convert_AYUV_RGBA},
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xBGR, convert_AYUV_ABGR},    /* alias */
+  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBx, convert_AYUV_RGBA},    /* alias */
+
+  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRA, convert_I420_BGRA},
 };
 
 static GstFlowReturn
@@ -860,7 +937,7 @@ gst_cogcolorspace_transform (GstBaseTransform * base_transform,
       }
     }
 
-    GST_ERROR ("no match");
+    GST_DEBUG ("no fastpath match %d %d", in_format, out_format);
   }
 
   switch (out_format) {
