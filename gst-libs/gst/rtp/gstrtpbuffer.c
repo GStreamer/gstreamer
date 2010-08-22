@@ -1760,3 +1760,70 @@ gst_rtp_buffer_add_extension_twobytes_header (GstBuffer * buffer,
 
   return TRUE;
 }
+
+/**
+ * gst_rtp_buffer_list_get_extension_onebyte_header:
+ * @bufferlist: the bufferlist
+ * @group_idx: The index of the group in the #GstBufferList
+ * @id: The ID of the header extension to be read (between 1 and 14).
+ * @nth: Read the nth extension packet with the requested ID
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Parses RFC 5285 style header extensions with a one byte header. It will
+ * return the nth extension with the requested id.
+ *
+ * Returns: TRUE if @buffer had the requested header extension
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_list_get_extension_onebyte_header (GstBufferList * bufferlist,
+    guint group_idx, guint8 id, guint nth, gpointer * data, guint * size)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_list_get (bufferlist, group_idx, 0);
+
+  if (!buffer)
+    return FALSE;
+
+  return gst_rtp_buffer_get_extension_onebyte_header (buffer, id, nth, data,
+      size);
+}
+
+
+/**
+ * gst_rtp_buffer_list_get_extension_twobytes_header:
+ * @bufferlist: the bufferlist
+ * @group_idx: The index of the group in the #GstBufferList
+ * @appbits: Application specific bits
+ * @id: The ID of the header extension to be read (between 1 and 14).
+ * @nth: Read the nth extension packet with the requested ID
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Parses RFC 5285 style header extensions with a two bytes header. It will
+ * return the nth extension with the requested id.
+ *
+ * Returns: TRUE if @buffer had the requested header extension
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_list_get_extension_twobytes_header (GstBufferList * bufferlist,
+    guint group_idx, guint8 * appbits, guint8 id, guint nth,
+    gpointer * data, guint * size)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_list_get (bufferlist, group_idx, 0);
+
+  if (!buffer)
+    return FALSE;
+
+  return gst_rtp_buffer_get_extension_twobytes_header (buffer, appbits, id,
+      nth, data, size);
+}

@@ -131,6 +131,21 @@ gboolean       gst_rtp_buffer_add_extension_twobytes_header (GstBuffer * buffer,
                                                              guint8 id,
                                                              gpointer data,
                                                              guint size);
+
+gboolean       gst_rtp_buffer_list_get_extension_onebyte_header (GstBufferList * bufferlist,
+                                                                 guint group_idx,
+                                                                 guint8 id,
+                                                                 guint nth,
+                                                                 gpointer * data,
+                                                                 guint * size);
+gboolean       gst_rtp_buffer_list_get_extension_twobytes_header (GstBufferList * bufferlist,
+                                                                  guint group_idx,
+                                                                  guint8 * appbits,
+                                                                  guint8 id,
+                                                                  guint nth,
+                                                                  gpointer * data,
+                                                                  guint * size);
+
 G_END_DECLS
 
 #endif /* __GST_RTPBUFFER_H__ */
