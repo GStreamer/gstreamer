@@ -1543,6 +1543,43 @@ gst_rtp_buffer_get_extension_twobytes_header (GstBuffer * buffer,
   return FALSE;
 }
 
+static guint
+get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
+{
+  guint offset = 0;
+  guint bytelen = wordlen * 4;
+  guint paddingcount = 0;
+
+  while (offset + 1 < bytelen) {
+    guint8 read_id, read_len;
+
+    read_id = GST_READ_UINT8 (pdata + offset) >> 4;
+    read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
+    offset += 1;
+
+    /* ID 0 means its padding, skip */
+    if (read_id == 0) {
+      paddingcount++;
+      continue;
+    }
+
+    paddingcount = 0;
+
+    /* ID 15 is special and means we should stop parsing */
+    /* It also means we can't add an extra packet */
+    if (read_id == 15)
+      return 0;
+
+    /* Ignore extension headers where the size does not fit */
+    if (offset + read_len > bytelen)
+      return 0;
+
+    offset += read_len;
+  }
+
+  return offset - paddingcount;
+}
+
 /**
  * gst_rtp_buffer_add_extension_onebyte_header:
  * @buffer: the buffer
@@ -1590,32 +1627,11 @@ gst_rtp_buffer_add_extension_onebyte_header (GstBuffer * buffer, guint8 id,
     if (bits != 0xBEDE)
       return FALSE;
 
-    while (offset + 1 < bytelen) {
-      guint8 read_id, read_len;
-
-      read_id = GST_READ_UINT8 (pdata + offset) >> 4;
-      read_len = (GST_READ_UINT8 (pdata + offset) & 0x0F) + 1;
-      offset += 1;
-
-      /* ID 0 means its padding, skip */
-      if (read_id == 0)
-        continue;
-
-      /* ID 15 is special and means we should stop parsing */
-      /* It also means we can't add an extra packet */
-      if (read_id == 15)
-        return FALSE;
-
-      /* Ignore extension headers where the size does not fit */
-      if (offset + read_len > bytelen)
-        return FALSE;
-
-      offset += read_len;
-
-    }
+    offset = get_onebyte_header_end_offset (pdata, wordlen);
+    if (offset == 0)
+      return FALSE;
 
     nextext = pdata + offset;
-
     offset = nextext - GST_BUFFER_DATA (buffer);
 
     /* Don't add extra header if there isn't enough space */
@@ -1650,6 +1666,41 @@ gst_rtp_buffer_add_extension_onebyte_header (GstBuffer * buffer, guint8 id,
   }
 
   return TRUE;
+}
+
+
+static guint
+get_twobytes_header_end_offset (guint8 * pdata, guint wordlen)
+{
+  guint offset = 0;
+  guint bytelen = wordlen * 4;
+  guint paddingcount = 0;
+
+  while (offset + 2 < bytelen) {
+    guint8 read_id, read_len;
+
+    read_id = GST_READ_UINT8 (pdata + offset);
+    offset += 1;
+
+    /* ID 0 means its padding, skip */
+    if (read_id == 0) {
+      paddingcount++;
+      continue;
+    }
+
+    paddingcount = 0;
+
+    read_len = GST_READ_UINT8 (pdata + offset);
+    offset += 1;
+
+    /* Ignore extension headers where the size does not fit */
+    if (offset + read_len > bytelen)
+      return 0;
+
+    offset += read_len;
+  }
+
+  return offset - paddingcount;
 }
 
 /**
@@ -1700,25 +1751,7 @@ gst_rtp_buffer_add_extension_twobytes_header (GstBuffer * buffer,
     if (bits != ((0x100 << 4) | (appbits & 0x0f)))
       return FALSE;
 
-    while (offset + 2 < bytelen) {
-      guint8 read_id, read_len;
-
-      read_id = GST_READ_UINT8 (pdata + offset);
-      offset += 1;
-
-      /* ID 0 means its padding, skip */
-      if (read_id == 0)
-        continue;
-
-      read_len = GST_READ_UINT8 (pdata + offset);
-      offset += 1;
-
-      /* Ignore extension headers where the size does not fit */
-      if (offset + read_len > bytelen)
-        return FALSE;
-
-      offset += read_len;
-    }
+    offset = get_twobytes_header_end_offset (pdata, wordlen);
 
     nextext = pdata + offset;
 
@@ -1826,4 +1859,166 @@ gst_rtp_buffer_list_get_extension_twobytes_header (GstBufferList * bufferlist,
 
   return gst_rtp_buffer_get_extension_twobytes_header (buffer, appbits, id,
       nth, data, size);
+}
+
+/**
+ * gst_rtp_buffer_list_add_extension_onebyte_header:
+ * @it: a #GstBufferListIterator pointing right after the #GstBuffer where
+ * the header extension should be added
+ * @id: The ID of the header extension (between 1 and 14).
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Adds a RFC 5285 header extension with a one byte header to the end of the
+ * RTP header. If there is already a RFC 5285 header extension with a one byte
+ * header, the new extension will be appended.
+ * It will not work if there is already a header extension that does not follow
+ * the mecanism described in RFC 5285 or if there is a header extension with
+ * a two bytes header as described in RFC 5285. In that case, use
+ * gst_rtp_buffer_list_add_extension_twobytes_header()
+ *
+ * This function will not modify the data section of the RTP buffer, only
+ * the header.
+ *
+ * Returns: %TRUE if header extension could be added
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_list_add_extension_onebyte_header (GstBufferListIterator * it,
+    guint8 id, gpointer data, guint size)
+{
+  GstBuffer *buffer;
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen;
+  gboolean retval;
+  guint endoffset = 0;
+
+  g_return_val_if_fail (gst_buffer_list_iterator_n_buffers (it) == 1, FALSE);
+  g_return_val_if_fail (id > 0 && id < 15, FALSE);
+  g_return_val_if_fail (size >= 1 && size <= 16, FALSE);
+
+  buffer = gst_buffer_list_iterator_steal (it);
+
+  if (GST_RTP_HEADER_EXTENSION (GST_BUFFER_DATA (buffer))) {
+    gst_rtp_buffer_get_extension_data (buffer, &bits, (gpointer) & pdata,
+        &wordlen);
+
+    if (bits != 0xBEDE)
+      return FALSE;
+
+    endoffset = get_onebyte_header_end_offset (pdata, wordlen);
+    if (endoffset == 0)
+      return FALSE;
+    endoffset += pdata - GST_BUFFER_DATA (buffer);
+  } else {
+    endoffset = GST_BUFFER_SIZE (buffer) + 4;
+  }
+
+  if (endoffset + size + 1 > GST_BUFFER_SIZE (buffer)) {
+    guint newsize;
+    GstBuffer *newbuffer;
+
+    newsize = endoffset + size + 1;
+    if (newsize % 4)
+      newsize += 4 - (newsize % 4);
+    newbuffer = gst_buffer_new_and_alloc (newsize);
+    memcpy (GST_BUFFER_DATA (newbuffer), GST_BUFFER_DATA (buffer),
+        GST_BUFFER_SIZE (buffer));
+    gst_buffer_copy_metadata (newbuffer, buffer, GST_BUFFER_COPY_ALL);
+    gst_buffer_unref (buffer);
+    buffer = newbuffer;
+  } else {
+    buffer = gst_buffer_make_writable (buffer);
+  }
+
+  retval = gst_rtp_buffer_add_extension_onebyte_header (buffer, id, data, size);
+
+  gst_buffer_list_iterator_take (it, buffer);
+
+  return retval;
+}
+
+/**
+ * gst_rtp_buffer_list_add_extension_twobytes_header:
+ * @it: a #GstBufferListIterator pointing right after the #GstBuffer where
+ * the header extension should be added
+ * @appbits: Application specific bits
+ * @id: The ID of the header extension
+ * @data: location for data
+ * @size: the size of the data in bytes
+ *
+ * Adds a RFC 5285 header extension with a two bytes header to the end of the
+ * RTP header. If there is already a RFC 5285 header extension with a two bytes
+ * header, the new extension will be appended.
+ * It will not work if there is already a header extension that does not follow
+ * the mecanism described in RFC 5285 or if there is a header extension with
+ * a one byte header as described in RFC 5285. In that case, use
+ * gst_rtp_buffer_add_extension_onebyte_header()
+ *
+ * This function will not modify the data section of the RTP buffer, only
+ * the header.
+ *
+ * Returns: %TRUE if header extension could be added
+ *
+ * Since: 0.10.31
+ */
+
+gboolean
+gst_rtp_buffer_list_add_extension_twobytes_header (GstBufferListIterator * it,
+    guint8 appbits, guint8 id, gpointer data, guint size)
+{
+  GstBuffer *buffer;
+  guint16 bits;
+  guint8 *pdata;
+  guint wordlen;
+  gboolean retval;
+  guint endoffset;
+
+  g_return_val_if_fail ((appbits & 0xF0) == 0, FALSE);
+  g_return_val_if_fail (size < 256, FALSE);
+  g_return_val_if_fail (gst_buffer_list_iterator_n_buffers (it) == 1, FALSE);
+
+  buffer = gst_buffer_list_iterator_steal (it);
+
+  if (GST_RTP_HEADER_EXTENSION (GST_BUFFER_DATA (buffer))) {
+    gst_rtp_buffer_get_extension_data (buffer, &bits, (gpointer) & pdata,
+        &wordlen);
+
+    if (bits != ((0x100 << 4) | (appbits & 0x0f)))
+      return FALSE;
+
+    endoffset = get_twobytes_header_end_offset (pdata, wordlen);
+    if (endoffset == 0)
+      return FALSE;
+    endoffset += pdata - GST_BUFFER_DATA (buffer);
+  } else {
+    endoffset = GST_BUFFER_SIZE (buffer) + 4;
+  }
+
+  if (endoffset + size + 2 > GST_BUFFER_SIZE (buffer)) {
+    guint newsize;
+    GstBuffer *newbuffer;
+
+    newsize = endoffset + size + 2;
+    if (newsize % 4)
+      newsize += 4 - newsize % 4;
+    newbuffer = gst_buffer_new_and_alloc (newsize);
+    memcpy (GST_BUFFER_DATA (newbuffer), GST_BUFFER_DATA (buffer),
+        GST_BUFFER_SIZE (buffer));
+    gst_buffer_copy_metadata (newbuffer, buffer, GST_BUFFER_COPY_ALL);
+    gst_buffer_unref (buffer);
+    buffer = newbuffer;
+  } else {
+    buffer = gst_buffer_make_writable (buffer);
+  }
+
+  retval = gst_rtp_buffer_add_extension_twobytes_header (buffer, appbits, id,
+      data, size);
+
+  gst_buffer_list_iterator_take (it, buffer);
+
+  return retval;
 }
