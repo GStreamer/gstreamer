@@ -36,7 +36,14 @@
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch videotestsrc pattern=1 ! video/x-raw-yuv,format=\(fourcc\)AYUV, framerate=\(fraction\)10/1, width=100, height=100 ! videobox border-alpha=0 alpha=0.5 top=-70 bottom=-70 right=-220 ! videomixer name=mix ! ffmpegcolorspace ! xvimagesink videotestsrc ! video/x-raw-yuv, format=\(fourcc\)AYUV, framerate=\(fraction\)5/1, width=320, height=240 ! alpha alpha=0.7 ! mix.
+ * gst-launch-0.10 \
+ *   videotestsrc pattern=1 ! \
+ *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)10/1,width=100,height=100 ! \
+ *   videobox border-alpha=0 top=-70 bottom=-70 right=-220 ! \
+ *   videomixer name=mix sink_0::alpha=0.7 sink_1::alpha=0.5 ! \
+ *   ffmpegcolorspace ! xvimagesink \
+ *   videotestsrc ! \
+ *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)5/1,width=320,height=240 ! mix.
  * ]| A pipeline to demonstrate videomixer used together with videobox.
  * This should show a 320x240 pixels video test source with some transparency
  * showing the background checker pattern. Another video test source with just
@@ -45,10 +52,18 @@
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.
  * |[
- * gst-launch videotestsrc pattern=1 ! video/x-raw-rgb, framerate=\(fraction\)10/1, width=100, height=100 ! videomixer name=mix ! ffmpegcolorspace ! ximagesink videotestsrc ! video/x-raw-rgb, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * gst-launch videotestsrc pattern=1 ! \
+ *   video/x-raw-rgb, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer name=mix ! ffmpegcolorspace ! ximagesink \
+ *   videotestsrc !  \
+ *   video/x-raw-rgb, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending). 
  * |[
- * gst-launch   videotestsrc pattern=1 ! video/x-raw-yuv,format =\(fourcc\)I420, framerate=\(fraction\)10/1, width=100, height=100 ! videomixer name=mix ! ffmpegcolorspace ! ximagesink videotestsrc ! video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * gst-launch videotestsrc pattern=1 ! \
+ *   video/x-raw-yuv,format =\(fourcc\)I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer name=mix ! ffmpegcolorspace ! ximagesink \
+ *   videotestsrc ! \
+ *   video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to test I420
  * </refsect2>
  */
