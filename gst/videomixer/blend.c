@@ -701,6 +701,18 @@ BLEND_A32 (argb_mmx, _blend_loop_argb_mmx);
 BLEND_A32 (bgra_mmx, _blend_loop_bgra_mmx);
 #endif
 
+static void
+_blend_loop_argb_orc (guint8 * dest, const guint8 * src, gint src_height,
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha)
+{
+  s_alpha = MIN (255, s_alpha);
+  gst_videomixer_orc_blend_ayuv (dest, dest_stride, src, src_stride,
+      s_alpha, src_width, src_height);
+}
+
+BLEND_A32 (argb_orc, _blend_loop_argb_orc);
+
+
 /* Init function */
 BlendFunction gst_video_mixer_blend_argb;
 BlendFunction gst_video_mixer_blend_bgra;
@@ -815,4 +827,6 @@ gst_video_mixer_init_blend (void)
     gst_video_mixer_blend_bgra = blend_bgra_mmx;
   }
 #endif
+
+  gst_video_mixer_blend_argb = blend_argb_orc;
 }
