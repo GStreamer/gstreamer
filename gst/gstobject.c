@@ -645,6 +645,7 @@ gst_object_set_name_default (GstObject * object)
 
 had_parent:
   {
+    g_free (name);
     GST_WARNING ("parented objects can't be renamed");
     GST_OBJECT_UNLOCK (object);
     return FALSE;
