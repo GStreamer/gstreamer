@@ -13,4 +13,4 @@ libgstvideomixer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideomixer_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
-noinst_HEADERS = videomixer.h videomixerpad.h blend.h blend_mmx.h
+noinst_HEADERS = videomixer.h videomixerpad.h blend.h

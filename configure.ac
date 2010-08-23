@@ -208,7 +208,7 @@ dnl GLib is required
 AG_GST_GLIB_CHECK([2.18])
 
 dnl Orc
-ORC_CHECK([0.4.5])
+ORC_CHECK([0.4.7])
 
 
 dnl checks for gstreamer

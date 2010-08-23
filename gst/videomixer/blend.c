@@ -38,12 +38,6 @@
 
 #define BLEND(D,S,alpha) (((D) * (256 - (alpha)) + (S) * (alpha)) >> 8)
 
-#ifdef HAVE_GCC_ASM
-#if defined(HAVE_ORC) && (defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64))
-#define BUILD_X86_ASM
-#endif
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (gst_videomixer_blend_debug);
 #define GST_CAT_DEFAULT gst_videomixer_blend_debug
 
@@ -92,34 +86,26 @@ blend_##name (const guint8 * src, gint xpos, gint ypos, \
   LOOP (dest, src, src_height, src_width, src_stride, dest_stride, s_alpha); \
 }
 
-#define BLEND_A32_LOOP_C(name, A, C1, C2, C3) \
+#define BLEND_A32_LOOP(name) \
 static inline void \
-_blend_loop_##name##_c (guint8 *dest, const guint8 *src, gint src_height, gint src_width, gint src_stride, gint dest_stride, guint s_alpha) { \
-  gint i, j; \
-  gint alpha; \
-  gint src_add = src_stride - (4 * src_width); \
-  gint dest_add = dest_stride - (4 * src_width); \
-  \
-  for (i = 0; i < src_height; i++) { \
-    for (j = 0; j < src_width; j++) { \
-      alpha = (src[A] * s_alpha) >> 8; \
-      dest[A] = 0xff; \
-      dest[C1] = BLEND(dest[C1], src[C1], alpha); \
-      dest[C2] = BLEND(dest[C2], src[C2], alpha); \
-      dest[C3] = BLEND(dest[C3], src[C3], alpha); \
-      \
-      src += 4; \
-      dest += 4; \
-    } \
-    src += src_add; \
-    dest += dest_add; \
-  } \
+_blend_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
+    gint src_width, gint src_stride, gint dest_stride, guint s_alpha) \
+{ \
+  s_alpha = MIN (255, s_alpha); \
+  orc_blend_##name (dest, dest_stride, src, src_stride, \
+      s_alpha, src_width, src_height); \
 }
 
-BLEND_A32_LOOP_C (argb, 0, 1, 2, 3);
-BLEND_A32_LOOP_C (bgra, 3, 2, 1, 0);
-BLEND_A32 (argb_c, _blend_loop_argb_c);
-BLEND_A32 (bgra_c, _blend_loop_bgra_c);
+BLEND_A32_LOOP (argb);
+BLEND_A32_LOOP (bgra);
+
+#if G_BYTE_ORDER == LITTLE_ENDIAN
+BLEND_A32 (argb, _blend_loop_argb);
+BLEND_A32 (bgra, _blend_loop_bgra);
+#else
+BLEND_A32 (argb, _blend_loop_bgra);
+BLEND_A32 (bgra, _blend_loop_argb);
+#endif
 
 #define A32_CHECKER_C(name, RGB, A, C1, C2, C3) \
 static void \
@@ -680,39 +666,6 @@ PACKED_422_FILL_COLOR (yuy2, 24, 16, 8, 0);
 PACKED_422_FILL_COLOR (yvyu, 24, 0, 8, 16);
 PACKED_422_FILL_COLOR (uyvy, 16, 24, 0, 8);
 
-/* MMX Implementations */
-#ifdef BUILD_X86_ASM
-
-#define A32
-#define NAME_BLEND _blend_loop_argb_mmx
-#define A_OFF 0
-#include "blend_mmx.h"
-#undef NAME_BLEND
-#undef A_OFF
-
-#define NAME_BLEND _blend_loop_bgra_mmx
-#define A_OFF 24
-#include "blend_mmx.h"
-#undef NAME_BLEND
-#undef A_OFF
-#undef A32
-
-BLEND_A32 (argb_mmx, _blend_loop_argb_mmx);
-BLEND_A32 (bgra_mmx, _blend_loop_bgra_mmx);
-#endif
-
-static void
-_blend_loop_argb_orc (guint8 * dest, const guint8 * src, gint src_height,
-    gint src_width, gint src_stride, gint dest_stride, guint s_alpha)
-{
-  s_alpha = MIN (255, s_alpha);
-  gst_videomixer_orc_blend_ayuv (dest, dest_stride, src, src_stride,
-      s_alpha, src_width, src_height);
-}
-
-BLEND_A32 (argb_orc, _blend_loop_argb_orc);
-
-
 /* Init function */
 BlendFunction gst_video_mixer_blend_argb;
 BlendFunction gst_video_mixer_blend_bgra;
@@ -769,18 +722,13 @@ FillColorFunction gst_video_mixer_fill_color_uyvy;
 void
 gst_video_mixer_init_blend (void)
 {
-#ifdef BUILD_X86_ASM
-  guint cpu_flags;
-
   orc_init ();
-  cpu_flags = orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-#endif
 
   GST_DEBUG_CATEGORY_INIT (gst_videomixer_blend_debug, "videomixer_blend", 0,
       "video mixer blending functions");
 
-  gst_video_mixer_blend_argb = blend_argb_c;
-  gst_video_mixer_blend_bgra = blend_bgra_c;
+  gst_video_mixer_blend_argb = blend_argb;
+  gst_video_mixer_blend_bgra = blend_bgra;
   gst_video_mixer_blend_i420 = blend_i420;
   gst_video_mixer_blend_y444 = blend_y444;
   gst_video_mixer_blend_y42b = blend_y42b;
@@ -820,13 +768,4 @@ gst_video_mixer_init_blend (void)
   gst_video_mixer_fill_color_yuy2 = fill_color_yuy2;
   gst_video_mixer_fill_color_yvyu = fill_color_yvyu;
   gst_video_mixer_fill_color_uyvy = fill_color_uyvy;
-
-#ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMX) {
-    gst_video_mixer_blend_argb = blend_argb_mmx;
-    gst_video_mixer_blend_bgra = blend_bgra_mmx;
-  }
-#endif
-
-  gst_video_mixer_blend_argb = blend_argb_orc;
 }

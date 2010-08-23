@@ -72,12 +72,6 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_GCC_ASM
-#if defined(HAVE_CPU_I386) || defined(HAVE_CPU_X86_64)
-#define BUILD_X86_ASM
-#endif
-#endif
-
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/controller/gstcontroller.h>
