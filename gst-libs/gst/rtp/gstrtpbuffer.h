@@ -45,6 +45,9 @@ GstBuffer*      gst_rtp_buffer_new_copy_data         (gpointer data, guint len);
 GstBuffer*      gst_rtp_buffer_new_allocate          (guint payload_len, guint8 pad_len, guint8 csrc_count);
 GstBuffer*      gst_rtp_buffer_new_allocate_len      (guint packet_len, guint8 pad_len, guint8 csrc_count);
 
+GstBufferList*  gst_rtp_buffer_list_from_buffer      (GstBuffer * buffer);
+
+
 guint           gst_rtp_buffer_calc_header_len       (guint8 csrc_count);
 guint           gst_rtp_buffer_calc_packet_len       (guint payload_len, guint8 pad_len, guint8 csrc_count);
 guint           gst_rtp_buffer_calc_payload_len      (guint packet_len, guint8 pad_len, guint8 csrc_count);

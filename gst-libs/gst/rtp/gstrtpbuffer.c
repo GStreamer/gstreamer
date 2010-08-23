@@ -2022,3 +2022,38 @@ gst_rtp_buffer_list_add_extension_twobytes_header (GstBufferListIterator * it,
 
   return retval;
 }
+
+/**
+ * gst_rtp_buffer_list_from_buffer:
+ * @buffer: a #GstBuffer containing a RTP packet
+ *
+ * Splits a #GstBuffer into a #GstBufferList containing separate
+ * buffers for the header and data sections.
+ *
+ * Returns: a #GstBufferList
+ */
+
+GstBufferList *
+gst_rtp_buffer_list_from_buffer (GstBuffer * buffer)
+{
+  GstBufferList *bufferlist;
+  GstBuffer *sub;
+  GstBufferListIterator *it;
+  guint8 *payload;
+
+  bufferlist = gst_buffer_list_new ();
+
+  it = gst_buffer_list_iterate (bufferlist);
+  gst_buffer_list_iterator_add_group (it);
+
+  payload = gst_rtp_buffer_get_payload (buffer);
+  sub = gst_buffer_create_sub (buffer, 0, payload - GST_BUFFER_DATA (buffer));
+  gst_buffer_list_iterator_add (it, sub);
+
+  sub = gst_rtp_buffer_get_payload_buffer (buffer);
+  gst_buffer_list_iterator_add (it, sub);
+
+  gst_buffer_list_iterator_free (it);
+
+  return bufferlist;
+}

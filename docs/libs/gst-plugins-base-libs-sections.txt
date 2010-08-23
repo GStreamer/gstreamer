@@ -1288,6 +1288,7 @@ gst_rtp_buffer_new_take_data
 gst_rtp_buffer_new_copy_data
 gst_rtp_buffer_new_allocate
 gst_rtp_buffer_new_allocate_len
+gst_rtp_buffer_list_from_buffer
 
 gst_rtp_buffer_calc_header_len
 gst_rtp_buffer_calc_packet_len
