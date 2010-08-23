@@ -180,8 +180,8 @@ elements_camerabin_LDADD = \
          -lgstinterfaces-@GST_MAJORMINOR@
 elements_camerabin_SOURCES = elements/camerabin.c
 
-elements_jifmux_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(AM_CFLAGS) $(EXIF_CFLAGS)
-elements_jifmux_LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS) $(EXIF_LIBS) $(LDADD)
+elements_jifmux_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) $(GST_OPTION_CFLAGS) $(AM_CFLAGS) $(EXIF_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+elements_jifmux_LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS) $(EXIF_LIBS) $(LDADD) $(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR)
 elements_jifmux_SOURCES = elements/jifmux.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
