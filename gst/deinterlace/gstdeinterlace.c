@@ -805,15 +805,15 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
 
   if (field_layout == GST_DEINTERLACE_LAYOUT_TFF) {
     GST_DEBUG_OBJECT (self, "Top field first");
-    field1 = gst_buffer_ref (buffer);
+    field1 = gst_buffer_make_metadata_writable (gst_buffer_ref (buffer));
     field1_flags = PICTURE_INTERLACED_TOP;
-    field2 = gst_buffer_ref (buffer);
+    field2 = gst_buffer_make_metadata_writable (gst_buffer_ref (buffer));
     field2_flags = PICTURE_INTERLACED_BOTTOM;
   } else {
     GST_DEBUG_OBJECT (self, "Bottom field first");
-    field1 = gst_buffer_ref (buffer);
+    field1 = gst_buffer_make_metadata_writable (gst_buffer_ref (buffer));
     field1_flags = PICTURE_INTERLACED_BOTTOM;
-    field2 = gst_buffer_ref (buffer);
+    field2 = gst_buffer_make_metadata_writable (gst_buffer_ref (buffer));
     field2_flags = PICTURE_INTERLACED_TOP;
   }
 
