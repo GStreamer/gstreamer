@@ -96,9 +96,7 @@ deinterlace_scanline_linear_blend2_c (GstDeinterlaceSimpleMethod * self,
     guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
     gint size)
 {
-  while (size--) {
-    *out++ = (*t1++ + *b1++ + (*m0++ << 1)) >> 2;
-  }
+  deinterlace_line_linear_blend (out, t1, b1, m0, size);
 }
 
 static void
@@ -133,178 +131,6 @@ deinterlace_scanline_linear_blend2_planar_v_c (GstDeinterlaceSimpleMethod *
       scanlines->b1, self->parent.row_stride[2]);
 }
 
-#ifdef BUILD_X86_ASM
-#include "mmx.h"
-static inline void
-deinterlace_scanline_linear_blend_mmx (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const guint8 * t0, const guint8 * b0, const guint8 * m1,
-    gint size)
-{
-  gint i;
-
-  i = size / 8;
-  size -= i * 8;
-
-  pxor_r2r (mm7, mm7);
-  while (i--) {
-    movd_m2r (*t0, mm0);
-    movd_m2r (*b0, mm1);
-    movd_m2r (*m1, mm2);
-
-    movd_m2r (*(t0 + 4), mm3);
-    movd_m2r (*(b0 + 4), mm4);
-    movd_m2r (*(m1 + 4), mm5);
-
-    punpcklbw_r2r (mm7, mm0);
-    punpcklbw_r2r (mm7, mm1);
-    punpcklbw_r2r (mm7, mm2);
-
-    punpcklbw_r2r (mm7, mm3);
-    punpcklbw_r2r (mm7, mm4);
-    punpcklbw_r2r (mm7, mm5);
-
-    psllw_i2r (1, mm2);
-    psllw_i2r (1, mm5);
-    paddw_r2r (mm0, mm2);
-    paddw_r2r (mm3, mm5);
-    paddw_r2r (mm1, mm2);
-    paddw_r2r (mm4, mm5);
-    psrlw_i2r (2, mm2);
-    psrlw_i2r (2, mm5);
-    packuswb_r2r (mm2, mm2);
-    packuswb_r2r (mm5, mm5);
-
-    movd_r2m (mm2, *out);
-    movd_r2m (mm5, *(out + 4));
-    out += 8;
-    t0 += 8;
-    b0 += 8;
-    m1 += 8;
-  }
-  emms ();
-  while (size--) {
-    *out++ = (*t0++ + *b0++ + (*m1++ << 1)) >> 2;
-  }
-}
-
-static void
-deinterlace_scanline_linear_blend_packed_mmx (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
-      scanlines->b0, scanlines->m1, self->parent.row_stride[0]);
-}
-
-static void
-deinterlace_scanline_linear_blend_planar_y_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
-      scanlines->b0, scanlines->m1, self->parent.row_stride[0]);
-}
-
-static void
-deinterlace_scanline_linear_blend_planar_u_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
-      scanlines->b0, scanlines->m1, self->parent.row_stride[1]);
-}
-
-static void
-deinterlace_scanline_linear_blend_planar_v_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend_mmx (self, out, scanlines->t0,
-      scanlines->b0, scanlines->m1, self->parent.row_stride[2]);
-}
-
-static inline void
-deinterlace_scanline_linear_blend2_mmx (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const guint8 * m0, const guint8 * t1, const guint8 * b1,
-    gint size)
-{
-  gint i;
-
-  i = size / 8;
-  size -= i * 8;
-
-  pxor_r2r (mm7, mm7);
-  while (i--) {
-    movd_m2r (*t1, mm0);
-    movd_m2r (*b1, mm1);
-    movd_m2r (*m0, mm2);
-
-    movd_m2r (*(t1 + 4), mm3);
-    movd_m2r (*(b1 + 4), mm4);
-    movd_m2r (*(m0 + 4), mm5);
-
-    punpcklbw_r2r (mm7, mm0);
-    punpcklbw_r2r (mm7, mm1);
-    punpcklbw_r2r (mm7, mm2);
-
-    punpcklbw_r2r (mm7, mm3);
-    punpcklbw_r2r (mm7, mm4);
-    punpcklbw_r2r (mm7, mm5);
-
-    psllw_i2r (1, mm2);
-    psllw_i2r (1, mm5);
-    paddw_r2r (mm0, mm2);
-    paddw_r2r (mm3, mm5);
-    paddw_r2r (mm1, mm2);
-    paddw_r2r (mm4, mm5);
-    psrlw_i2r (2, mm2);
-    psrlw_i2r (2, mm5);
-    packuswb_r2r (mm2, mm2);
-    packuswb_r2r (mm5, mm5);
-
-    movd_r2m (mm2, *out);
-    movd_r2m (mm5, *(out + 4));
-    out += 8;
-    t1 += 8;
-    b1 += 8;
-    m0 += 8;
-  }
-  emms ();
-
-  while (size--) {
-    *out++ = (*t1++ + *b1++ + (*m0++ << 1)) >> 2;
-  }
-}
-
-static void
-deinterlace_scanline_linear_blend2_packed_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
-      scanlines->t1, scanlines->b1, self->parent.row_stride[0]);
-}
-
-static void
-deinterlace_scanline_linear_blend2_planar_y_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
-      scanlines->t1, scanlines->b1, self->parent.row_stride[0]);
-}
-
-static void
-deinterlace_scanline_linear_blend2_planar_u_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
-      scanlines->t1, scanlines->b1, self->parent.row_stride[1]);
-}
-
-static void
-deinterlace_scanline_linear_blend2_planar_v_mmx (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
-{
-  deinterlace_scanline_linear_blend2_mmx (self, out, scanlines->m0,
-      scanlines->t1, scanlines->b1, self->parent.row_stride[2]);
-}
-#endif
-
 G_DEFINE_TYPE (GstDeinterlaceMethodLinearBlend,
     gst_deinterlace_method_linear_blend, GST_TYPE_DEINTERLACE_SIMPLE_METHOD);
 
@@ -315,10 +141,6 @@ static void
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GstDeinterlaceSimpleMethodClass *dism_class =
       (GstDeinterlaceSimpleMethodClass *) klass;
-#ifdef BUILD_X86_ASM
-  guint cpu_flags =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-#endif
 
   dim_class->fields_required = 2;
   dim_class->name = "Blur: Temporal";
@@ -371,66 +193,6 @@ static void
   dism_class->copy_scanline_planar_v =
       deinterlace_scanline_linear_blend2_planar_v_c;
 
-#ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMX) {
-    dism_class->interpolate_scanline_yuy2 =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_yvyu =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_uyvy =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_ayuv =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_argb =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_rgba =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_abgr =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_bgra =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_rgb =
-        deinterlace_scanline_linear_blend_packed_mmx;
-    dism_class->interpolate_scanline_bgr =
-        deinterlace_scanline_linear_blend_packed_mmx;
-
-
-    dism_class->interpolate_scanline_planar_y =
-        deinterlace_scanline_linear_blend_planar_y_mmx;
-    dism_class->interpolate_scanline_planar_u =
-        deinterlace_scanline_linear_blend_planar_u_mmx;
-    dism_class->interpolate_scanline_planar_v =
-        deinterlace_scanline_linear_blend_planar_v_mmx;
-
-    dism_class->copy_scanline_ayuv =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_yuy2 =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_yvyu =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_uyvy =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_argb =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_abgr =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_rgba =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_bgra =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_rgb =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-    dism_class->copy_scanline_bgr =
-        deinterlace_scanline_linear_blend2_packed_mmx;
-
-    dism_class->copy_scanline_planar_y =
-        deinterlace_scanline_linear_blend2_planar_y_mmx;
-    dism_class->copy_scanline_planar_u =
-        deinterlace_scanline_linear_blend2_planar_u_mmx;
-    dism_class->copy_scanline_planar_v =
-        deinterlace_scanline_linear_blend2_planar_v_mmx;
-  }
-#endif
 }
 
 static void
