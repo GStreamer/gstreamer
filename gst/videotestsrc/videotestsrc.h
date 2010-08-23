@@ -29,15 +29,12 @@ enum {
   VTS_BAYER
 };
 
-struct vts_color_struct_yuv {
+struct vts_color_struct {
   guint8 Y, U, V, A;
+  guint8 R, G, B;
+  guint16 gray;
 };
-struct vts_color_struct_rgb {
-  guint8 R, G, B, A;
-};
-struct vts_color_struct_gray {
-  guint16 G;
-};
+
 
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
@@ -52,12 +49,8 @@ struct paintinfo_struct
   int vstride;
   int width;
   int height;
-  const struct vts_color_struct_rgb *rgb_colors;
-  const struct vts_color_struct_yuv *yuv_colors;
-  const struct vts_color_struct_gray *gray_colors;
-  const struct vts_color_struct_rgb *rgb_color;
-  const struct vts_color_struct_yuv *yuv_color;
-  const struct vts_color_struct_gray *gray_color;
+  const struct vts_color_struct *colors;
+  const struct vts_color_struct *color;
   /*  const struct vts_color_struct *color; */
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
 };
