@@ -572,8 +572,8 @@ GST_START_TEST (test_newsegment)
   GstBuffer *buffer;
 
   g_signal_connect (queue, "overrun", G_CALLBACK (queue_overrun), NULL);
-  g_object_set (G_OBJECT (queue), "max-size-buffers", 1, "max-size-time", 0,
-      "leaky", 2, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 1, "max-size-time",
+      (guint64) 0, "leaky", 2, NULL);
 
   GST_DEBUG ("starting");
 
