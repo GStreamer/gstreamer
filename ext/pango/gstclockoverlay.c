@@ -117,17 +117,22 @@ static gchar *
 gst_clock_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 {
   gchar *time_str, *txt, *ret;
-
-  overlay->need_render = TRUE;
+  GstClockOverlay *clock_overlay = GST_CLOCK_OVERLAY (overlay);
 
   txt = g_strdup (overlay->default_text);
 
-  time_str = gst_clock_overlay_render_time (GST_CLOCK_OVERLAY (overlay));
+  time_str = gst_clock_overlay_render_time (clock_overlay);
   if (txt != NULL && *txt != '\0') {
     ret = g_strdup_printf ("%s %s", txt, time_str);
   } else {
     ret = time_str;
     time_str = NULL;
+  }
+
+  if (g_strcmp0 (ret, clock_overlay->text)) {
+    overlay->need_render = TRUE;
+    g_free (clock_overlay->text);
+    clock_overlay->text = g_strdup (ret);
   }
 
   g_free (txt);
@@ -164,6 +169,7 @@ gst_clock_overlay_finalize (GObject * object)
   GstClockOverlay *overlay = GST_CLOCK_OVERLAY (object);
 
   g_free (overlay->format);
+  g_free (overlay->text);
   overlay->format = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
