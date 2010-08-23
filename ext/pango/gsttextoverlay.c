@@ -187,7 +187,7 @@ static GstStaticPadTemplate src_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("UYVY"))
+        GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12}"))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
@@ -196,7 +196,7 @@ static GstStaticPadTemplate video_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_YUV ("I420") ";" GST_VIDEO_CAPS_YUV ("UYVY"))
+        GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12}"))
     );
 
 static GstStaticPadTemplate text_sink_template_factory =
@@ -1120,7 +1120,7 @@ gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest, gint xpos,
 static inline void
 gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
     guchar * destcb, guchar * destcr, gint xpos, gint ypos, guchar * text_image,
-    guint destcb_stride, guint destcr_stride)
+    guint destcb_stride, guint destcr_stride, guint pix_stride)
 {
   gint i, j;
   gint x, cb, cr;
@@ -1130,6 +1130,8 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
   guchar *pcb, *pcr;
   gint width = overlay->image_width - 2;
   gint height = overlay->image_height - 2;
+
+  xpos *= pix_stride;
 
   if (xpos < 0) {
     xpos = 0;
@@ -1199,17 +1201,20 @@ gst_text_overlay_blit_sub2x2cbcr (GstTextOverlay * overlay,
       a /= 4;
 
       if (a == 0) {
-        pcb++;
-        pcr++;
+        pcb += pix_stride;
+        pcr += pix_stride;
         continue;
       }
       COMP_U (cb, r, g, b);
       COMP_V (cr, r, g, b);
 
       x = *pcb;
-      BLEND (*pcb++, a, cb, x);
+      BLEND (*pcb, a, cb, x);
       x = *pcr;
-      BLEND (*pcr++, a, cr, x);
+      BLEND (*pcr, a, cr, x);
+
+      pcb += pix_stride;
+      pcr += pix_stride;
     }
   }
 }
@@ -1440,6 +1445,30 @@ gst_text_overlay_shade_xRGB (GstTextOverlay * overlay, guchar * dest,
  */
 
 static inline void
+gst_text_overlay_blit_NV12 (GstTextOverlay * overlay,
+    guint8 * yuv_pixels, gint xpos, gint ypos)
+{
+  int y_stride, uv_stride;
+  int u_offset, v_offset;
+  int h, w;
+
+  w = overlay->width;
+  h = overlay->height;
+
+  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_NV12, 0, w);
+  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_NV12, 1, w);
+  u_offset =
+      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_NV12, 1, w, h);
+  v_offset = u_offset + 1;
+
+  gst_text_overlay_blit_1 (overlay, yuv_pixels, xpos, ypos, overlay->text_image,
+      y_stride);
+  gst_text_overlay_blit_sub2x2cbcr (overlay, yuv_pixels + u_offset,
+      yuv_pixels + v_offset, xpos, ypos, overlay->text_image, uv_stride,
+      uv_stride, 2);
+}
+
+static inline void
 gst_text_overlay_blit_I420 (GstTextOverlay * overlay,
     guint8 * yuv_pixels, gint xpos, gint ypos)
 {
@@ -1462,7 +1491,7 @@ gst_text_overlay_blit_I420 (GstTextOverlay * overlay,
       y_stride);
   gst_text_overlay_blit_sub2x2cbcr (overlay, yuv_pixels + u_offset,
       yuv_pixels + v_offset, xpos, ypos, overlay->text_image, u_stride,
-      v_stride);
+      v_stride, 1);
 }
 
 static inline void
@@ -1693,6 +1722,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   if (overlay->want_shading) {
     switch (overlay->format) {
       case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_NV12:
+        /* NV12 is similar enough for same function to cope */
         gst_text_overlay_shade_I420_y (overlay,
             GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
@@ -1724,6 +1755,10 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
     switch (overlay->format) {
       case GST_VIDEO_FORMAT_I420:
         gst_text_overlay_blit_I420 (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        gst_text_overlay_blit_NV12 (overlay,
             GST_BUFFER_DATA (video_frame), xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_UYVY:
