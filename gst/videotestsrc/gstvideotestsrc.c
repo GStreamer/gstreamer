@@ -129,6 +129,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE, "Chroma zone plate",
         "chroma-zone-plate"},
     {GST_VIDEO_TEST_SRC_SOLID, "Solid color", "solid-color"},
+    {GST_VIDEO_TEST_SRC_BALL, "Moving ball", "ball"},
     {0, NULL, NULL}
   };
 
@@ -386,6 +387,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_SOLID:
       videotestsrc->make_image = gst_video_test_src_solid;
+      break;
+    case GST_VIDEO_TEST_SRC_BALL:
+      videotestsrc->make_image = gst_video_test_src_ball;
       break;
     default:
       g_assert_not_reached ();

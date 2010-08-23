@@ -56,6 +56,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_ZONE_PLATE: Zone plate
  * @GST_VIDEO_TEST_SRC_GAMUT: Gamut checking pattern
  * @GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE: Chroma zone plate
+ * @GST_VIDEO_TEST_SRC_BALL: Moving ball
  *
  * The test pattern to produce.
  *
@@ -94,7 +95,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_ZONE_PLATE,
   GST_VIDEO_TEST_SRC_GAMUT,
   GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE,
-  GST_VIDEO_TEST_SRC_SOLID
+  GST_VIDEO_TEST_SRC_SOLID,
+  GST_VIDEO_TEST_SRC_BALL
 } GstVideoTestSrcPattern;
 
 /**

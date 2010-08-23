@@ -1793,6 +1793,116 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
   }
 }
 
+void
+gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+{
+  int i;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+  struct vts_color_struct_yuv yuv_primary = { 0 };
+  struct vts_color_struct_yuv yuv_secondary = { 0 };
+  struct vts_color_struct_rgb rgb_primary = { 0 };
+  struct vts_color_struct_rgb rgb_secondary = { 0 };
+  struct vts_color_struct_gray gray_primary = { 0 };
+  struct vts_color_struct_gray gray_secondary = { 0 };
+  static int t = 0;
+  double x, y;
+  int radius = 20;
+
+  p->rgb_colors = vts_colors_rgb;
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->yuv_colors = vts_colors_bt601_ycbcr_100;
+  } else {
+    p->yuv_colors = vts_colors_bt709_ycbcr_100;
+  }
+  p->gray_colors = vts_colors_gray_100;
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  rgb_primary = p->rgb_colors[COLOR_WHITE];
+  gray_primary = p->gray_colors[COLOR_WHITE];
+  yuv_primary = p->yuv_colors[COLOR_WHITE];
+
+  rgb_secondary = p->rgb_colors[COLOR_RED];
+  gray_secondary = p->gray_colors[COLOR_RED];
+  yuv_secondary = p->yuv_colors[COLOR_RED];
+
+
+  x = radius + (0.5 + 0.5 * sin (2 * M_PI * t / 200)) * (w - 2 * radius);
+  y = radius + (0.5 + 0.5 * sin (2 * M_PI * sqrt (2) * t / 200)) * (h -
+      2 * radius);
+
+  for (i = 0; i < h; i++) {
+    if (i < y - radius || i > y + radius) {
+      p->rgb_color = &rgb_primary;
+      p->yuv_color = &yuv_primary;
+      p->gray_color = &gray_primary;
+      p->paint_hline (p, 0, i, w);
+    } else {
+      int r = rint (sqrt (radius * radius - (i - y) * (i - y)));
+      int x1, x2;
+      int j;
+
+      p->rgb_color = &rgb_primary;
+      p->yuv_color = &yuv_primary;
+      p->gray_color = &gray_primary;
+      x1 = 0;
+      x2 = MAX (0, x - r);
+      p->paint_hline (p, x1, i, x2 - x1);
+
+      x1 = MAX (0, x - r);
+      x2 = MIN (w, x + r + 1);
+      for (j = x1; j < x2; j++) {
+        double rr = radius - sqrt ((j - x) * (j - x) + (i - y) * (i - y));
+        struct vts_color_struct_yuv yuv;
+        struct vts_color_struct_rgb rgb;
+        struct vts_color_struct_gray gray;
+
+        rr *= 0.5;
+        if (rr < 0) {
+          p->rgb_color = &rgb_primary;
+          p->yuv_color = &yuv_primary;
+          p->gray_color = &gray_primary;
+        } else if (rr > 1) {
+          p->rgb_color = &rgb_secondary;
+          p->yuv_color = &yuv_secondary;
+          p->gray_color = &gray_secondary;
+        } else {
+#define BLEND(a,b,x) (rint((a)*(1-x) + (b)*(x)))
+          yuv.Y = BLEND (yuv_primary.Y, yuv_secondary.Y, rr);
+          yuv.U = BLEND (yuv_primary.U, yuv_secondary.U, rr);
+          yuv.V = BLEND (yuv_primary.V, yuv_secondary.V, rr);
+          rgb.R = BLEND (rgb_primary.R, rgb_secondary.R, rr);
+          rgb.G = BLEND (rgb_primary.G, rgb_secondary.G, rr);
+          rgb.B = BLEND (rgb_primary.B, rgb_secondary.B, rr);
+          gray.G = BLEND (gray_primary.G, gray_secondary.G, rr);
+          p->yuv_color = &yuv;
+          p->rgb_color = &rgb;
+          p->gray_color = &gray;
+        }
+
+        p->paint_hline (p, j, i, 1);
+      }
+
+      p->rgb_color = &rgb_primary;
+      p->yuv_color = &yuv_primary;
+      p->gray_color = &gray_primary;
+      x1 = MIN (w, x + r + 1);
+      x2 = w;
+      p->paint_hline (p, x1, i, x2 - x1);
+    }
+  }
+  t++;
+}
+
+
 static void
 paint_setup_I420 (paintinfo * p, unsigned char *dest)
 {
