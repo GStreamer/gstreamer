@@ -57,8 +57,9 @@ private void RemoveStructureReference (Structure s) {
 
 private void RemoveStructureReferences () {
   foreach (Structure s in structures.Values) {
-    RemoveStructureReference (s);
+    s.CreateNativeCopy ();
   }
+  structures.Clear ();
 }
 
 [DllImport ("libgstreamer-0.10.dll") ]

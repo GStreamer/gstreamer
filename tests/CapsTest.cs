@@ -10,6 +10,7 @@
 using System;
 using NUnit.Framework;
 using Gst;
+using Gst.Video;
 
 [TestFixture]
 public class CapsTest {
@@ -90,5 +91,17 @@ public class CapsTest {
                                   "format=(fourcc)I420, " +
                                   "height=(int)480");
     Assert.IsTrue (caps3.IsEqual (caps4));
+  }
+
+  [Test]
+  public void TestManagedReferences() {
+    Caps tmp = VideoUtil.FormatToTemplateCaps(Gst.Video.VideoFormat.RGBX);
+    Caps caps = tmp.Copy();
+    caps[0]["width"] = 640;
+    caps[0]["height"] = 480;
+    
+    caps.Append(tmp);
+    Caps any = Caps.NewAny();
+    caps.Merge(any);
   }
 }
