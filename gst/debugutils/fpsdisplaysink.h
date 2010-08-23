@@ -48,15 +48,14 @@ struct _GstFPSDisplaySink
   /* gstreamer components */
   GstElement *text_overlay;
   GstElement *video_sink;
-  GstQuery *query;
   GstPad *ghost_pad;
 
   /* statistics */
   guint64 frames_rendered, last_frames_rendered;
   guint64 frames_dropped, last_frames_dropped;
-  GstClockTime last_ts;
-  GstClockTime next_ts;
 
+  GstClockTime start_ts;
+  GstClockTime last_ts;
   guint timeout_id;
   guint data_probe_id;
 

@@ -94,6 +94,8 @@ static void fps_display_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void fps_display_sink_dispose (GObject * object);
 
+static gboolean display_current_fps (gpointer data);
+
 static guint fpsdisplaysink_signals[LAST_SIGNAL] = { 0 };
 
 static void
@@ -213,11 +215,17 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
       GstClockTime ts;
 
       gst_event_parse_qos (ev, NULL, &diff, &ts);
-      self->next_ts = ts + diff;
       if (diff <= 0.0) {
         self->frames_rendered++;
       } else {
         self->frames_dropped++;
+      }
+
+      if (G_UNLIKELY (!self->timeout_id)) {
+        self->last_ts = self->start_ts = gst_util_get_timestamp ();
+        self->timeout_id =
+            g_timeout_add (self->fps_update_interval, display_current_fps,
+            (gpointer) self);
       }
     }
   }
@@ -309,71 +317,75 @@ fps_display_sink_init (GstFPSDisplaySink * self,
 
   self->ghost_pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (self), self->ghost_pad);
-
-  self->query = gst_query_new_position (GST_FORMAT_TIME);
 }
 
 static gboolean
 display_current_fps (gpointer data)
 {
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (data);
-  gint64 current_ts;
+  guint64 frames_rendered, frames_dropped;
+  gdouble rr, dr, average_fps;
+  gchar fps_message[256];
+  gdouble time_diff, time_elapsed;
+  GstClockTime current_ts = gst_util_get_timestamp ();
 
-  /* if query failed try again on next timer tick */
-  if (!gst_element_query (self->video_sink, self->query)) {
-    GST_DEBUG_OBJECT (self, "Failed to query position, skipping measurement");
+  frames_rendered = self->frames_rendered;
+  frames_dropped = self->frames_dropped;
+
+  if ((frames_rendered + frames_dropped) == 0) {
+    /* in case timer fired and we didn't yet get any QOS events */
     return TRUE;
   }
 
-  gst_query_parse_position (self->query, NULL, &current_ts);
-  GST_LOG_OBJECT (self, "Received position %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (current_ts));
+  time_diff = (gdouble) (current_ts - self->last_ts) / GST_SECOND;
+  time_elapsed = (gdouble) (current_ts - self->start_ts) / GST_SECOND;
 
-  if (GST_CLOCK_TIME_IS_VALID (self->last_ts)) {
-    gdouble rr, dr, average_fps;
-    gchar fps_message[256];
-    gdouble time_diff = (gdouble) (current_ts - self->last_ts) / GST_SECOND;
+  rr = (gdouble) (frames_rendered - self->last_frames_rendered) / time_diff;
+  dr = (gdouble) (frames_dropped - self->last_frames_dropped) / time_diff;
 
-    rr = (gdouble) (self->frames_rendered -
-        self->last_frames_rendered) / time_diff;
-    dr = (gdouble) (self->frames_dropped -
-        self->last_frames_dropped) / time_diff;
+  average_fps = (gdouble) frames_rendered / time_elapsed;
 
-    average_fps = self->frames_rendered / (gdouble) (current_ts / GST_SECOND);
-
-    if (self->max_fps == -1 || rr > self->max_fps) {
-      self->max_fps = rr;
-      GST_DEBUG_OBJECT (self, "Updated max-fps to %f", rr);
-    }
-    if (self->min_fps == -1 || rr < self->min_fps) {
-      self->min_fps = rr;
-      GST_DEBUG_OBJECT (self, "Updated min-fps to %f", rr);
-    }
-
-    if (self->signal_measurements) {
-      GST_LOG_OBJECT (self, "Signaling measurements: fps:%f droprate:%f "
-          "avg-fps:%f", rr, dr, average_fps);
-      g_signal_emit (G_OBJECT (self),
-          fpsdisplaysink_signals[SIGNAL_FPS_MEASUREMENTS], 0, rr, dr,
-          average_fps);
-    }
-
-    if (dr == 0.0) {
-      g_snprintf (fps_message, 255, "current: %.2f\naverage: %.2f", rr,
-          average_fps);
-    } else {
-      g_snprintf (fps_message, 255, "fps: %.2f\ndrop rate: %.2f", rr, dr);
-    }
-
-    if (self->use_text_overlay) {
-      g_object_set (self->text_overlay, "text", fps_message, NULL);
-    } else {
-      g_print ("%s\n", fps_message);
-    }
+  if (self->max_fps == -1 || rr > self->max_fps) {
+    self->max_fps = rr;
+    GST_DEBUG_OBJECT (self, "Updated max-fps to %f", rr);
+  }
+  if (self->min_fps == -1 || rr < self->min_fps) {
+    self->min_fps = rr;
+    GST_DEBUG_OBJECT (self, "Updated min-fps to %f", rr);
   }
 
-  self->last_frames_rendered = self->frames_rendered;
-  self->last_frames_dropped = self->frames_dropped;
+  if (self->signal_measurements) {
+    GST_LOG_OBJECT (self, "Signaling measurements: fps:%f droprate:%f "
+        "avg-fps:%f", rr, dr, average_fps);
+    g_signal_emit (G_OBJECT (self),
+        fpsdisplaysink_signals[SIGNAL_FPS_MEASUREMENTS], 0, rr, dr,
+        average_fps);
+  }
+
+  /* Display on a single line to make it easier to read and import
+   * into, for example, excel..  note: it would be nice to show
+   * timestamp too.. need to check if there is a sane way to log
+   * timestamp of last rendered buffer, so we could correlate dips
+   * in framerate to certain positions in the stream.
+   */
+  if (dr == 0.0) {
+    g_snprintf (fps_message, 255,
+        "rendered: %llu\t dropped: %llu\t current: %.2f\t average: %.2f",
+        frames_rendered, frames_dropped, rr, average_fps);
+  } else {
+    g_snprintf (fps_message, 255,
+        "rendered: %llu\t dropped: %llu\t fps: %.2f\t drop rate: %.2f",
+        frames_rendered, frames_dropped, rr, dr);
+  }
+
+  if (self->use_text_overlay) {
+    g_object_set (self->text_overlay, "text", fps_message, NULL);
+  } else {
+    g_print ("%s\n", fps_message);
+  }
+
+  self->last_frames_rendered = frames_rendered;
+  self->last_frames_dropped = frames_dropped;
   self->last_ts = current_ts;
 
   return TRUE;
@@ -385,8 +397,6 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   GstPad *target_pad = NULL;
 
   /* Init counters */
-  self->next_ts = GST_CLOCK_TIME_NONE;
-  self->last_ts = GST_CLOCK_TIME_NONE;
   self->frames_rendered = G_GUINT64_CONSTANT (0);
   self->frames_dropped = G_GUINT64_CONSTANT (0);
   self->max_fps = -1;
@@ -429,9 +439,6 @@ no_text_overlay:
   /* Set a timeout for the fps display */
   GST_DEBUG_OBJECT (self, "setting a timeout with a %dms interval",
       self->fps_update_interval);
-  self->timeout_id =
-      g_timeout_add (self->fps_update_interval, display_current_fps,
-      (gpointer) self);
 }
 
 static void
@@ -458,11 +465,6 @@ static void
 fps_display_sink_dispose (GObject * object)
 {
   GstFPSDisplaySink *self = GST_FPS_DISPLAY_SINK (object);
-
-  if (self->query) {
-    gst_query_unref (self->query);
-    self->query = NULL;
-  }
 
   if (self->video_sink) {
     gst_object_unref (self->video_sink);
