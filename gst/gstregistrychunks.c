@@ -774,7 +774,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
 
   /* unpack plugin element strings */
   unpack_const_string (*in, plugin->desc.name, end, fail);
-  unpack_string (*in, plugin->desc.description, end, fail);
+  unpack_const_string (*in, plugin->desc.description, end, fail);
   unpack_string (*in, plugin->filename, end, fail);
   unpack_const_string (*in, plugin->desc.version, end, fail);
   unpack_const_string (*in, plugin->desc.license, end, fail);
