@@ -442,6 +442,13 @@ Specifies a list of plugins that are always loaded by default.  If not set,
 this defaults to the system-installed path, and the plugins installed in the
 user's home directory
 .TP
+\fBORC_CODE\fR
+Useful Orc environment variable. Set ORC_CODE=debug to enable debuggers
+such as gdb to create useful backtraces from Orc-generated code.  Set
+ORC_CODE=backup or ORC_CODE=emulate if you suspect Orc's SIMD code
+generator is producing incorrect code.  (Quite a few important
+GStreamer plugins like videotestsrc, audioconvert or audioresample use Orc).
+.TP
 \fBG_DEBUG\fR
 Useful GLib environment variable. Set G_DEBUG=fatal_warnings to make
 GStreamer programs abort when a critical warning such as an assertion failure
