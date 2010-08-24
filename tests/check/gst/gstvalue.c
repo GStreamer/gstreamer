@@ -1103,6 +1103,281 @@ GST_START_TEST (test_value_subtract_int)
 
 GST_END_TEST;
 
+GST_START_TEST (test_value_subtract_int64)
+{
+  GValue dest = { 0 };
+  GValue src1 = { 0 };
+  GValue src2 = { 0 };
+  const GValue *tmp;
+  gboolean ret;
+
+  /*  int64 <-> int64
+   */
+  g_value_init (&src1, G_TYPE_INT64);
+  g_value_set_int64 (&src1, 10);
+  g_value_init (&src2, G_TYPE_INT64);
+  g_value_set_int64 (&src2, 20);
+  /* subtract as in sets, result is 10 */
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (gst_value_compare (&dest, &src1) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* same values, yields empty set */
+  ret = gst_value_subtract (&dest, &src1, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /*  int64 <-> int64_range
+   */
+
+  /* would yield an empty set */
+  g_value_init (&src1, G_TYPE_INT64);
+  g_value_set_int64 (&src1, 10);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 0, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+
+  /* and the other way around, should create a list of two ranges. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 0);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 9);
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 11);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 20);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* border case 1, empty set */
+  g_value_init (&src1, G_TYPE_INT64);
+  g_value_set_int64 (&src1, 10);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 10, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+
+  /* and the other way around, should create a new range. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 11);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 20);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* border case 2, empty set */
+  g_value_init (&src1, G_TYPE_INT64);
+  g_value_set_int64 (&src1, 20);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 10, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+
+  /* and the other way around, should create a new range. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 10);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 19);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* case 3, valid set */
+  g_value_init (&src1, G_TYPE_INT64);
+  g_value_set_int64 (&src1, 0);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 10, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (G_VALUE_HOLDS_INT64 (&dest) == TRUE);
+  fail_unless (gst_value_compare (&dest, &src1) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* and the other way around, should keep the range. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 10);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 20);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /*  int64_range <-> int64_range
+   */
+
+  /* same range, empty set */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 20);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 10, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* non overlapping ranges */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 20);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 30, 40);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 10);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 20);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 30);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 40);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* completely overlapping ranges */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 20);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 10, 30);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 21);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 30);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* partially overlapping ranges */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 20);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 15, 30);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 10);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 14);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (&dest) == 21);
+  fail_unless (gst_value_get_int64_range_max (&dest) == 30);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* create a hole { int64_range, int64_range } */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 30);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 15, 20);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 10);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 14);
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 21);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 30);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* create a hole, { int64, int64 } */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 30);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 11, 29);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (G_VALUE_HOLDS_INT64 (tmp) == TRUE);
+  fail_unless (g_value_get_int64 (tmp) == 10);
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (G_VALUE_HOLDS_INT64 (tmp) == TRUE);
+  fail_unless (g_value_get_int64 (tmp) == 30);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* create a hole, { int64, int64_range } */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 30);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 11, 28);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (G_VALUE_HOLDS_INT64 (tmp) == TRUE);
+  fail_unless (g_value_get_int64 (tmp) == 10);
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 29);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 30);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* create a hole, { int64_range, int64 } */
+  g_value_init (&src1, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src1, 10, 30);
+  g_value_init (&src2, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&src2, 12, 29);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (tmp) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (tmp) == 10);
+  fail_unless (gst_value_get_int64_range_max (tmp) == 11);
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (G_VALUE_HOLDS_INT64 (tmp) == TRUE);
+  fail_unless (g_value_get_int64 (tmp) == 30);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_value_subtract_double)
 {
   GValue dest = { 0 };
@@ -2043,7 +2318,234 @@ GST_START_TEST (test_serialize_deserialize_caps)
 
 GST_END_TEST;
 
-static Suite *
+GST_START_TEST (test_int_range)
+{
+  GValue range = { 0, };
+  GValue start = { 0, };
+  GValue end = { 0, };
+  GValue src = { 0, };
+  GValue dest = { 0, };
+  GValue range2 = { 0, };
+
+  g_value_init (&range, GST_TYPE_INT_RANGE);
+  g_value_init (&range2, GST_TYPE_INT_RANGE);
+  g_value_init (&start, G_TYPE_INT);
+  g_value_init (&end, G_TYPE_INT);
+  g_value_init (&src, G_TYPE_INT);
+
+  g_value_set_int (&src, 2);
+
+  /* Check that a intersection of int & range = int */
+  gst_value_set_int_range (&range, 1, 5);
+
+  fail_unless (gst_value_intersect (&dest, &src, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == G_TYPE_INT);
+  fail_unless (gst_value_compare (&dest, &src) == GST_VALUE_EQUAL);
+
+  /* Check that a intersection selects the overlapping range */
+  gst_value_set_int_range (&range2, 2, 3);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_INT_RANGE);
+
+  fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+
+  /* Check that non intersection ranges don't intersect */
+  gst_value_set_int_range (&range2, 6, 7);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == FALSE);
+
+  g_value_unset (&start);
+  g_value_unset (&end);
+  g_value_unset (&range);
+  g_value_unset (&range2);
+  g_value_unset (&src);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_int64_range)
+{
+  GValue range = { 0, };
+  GValue start = { 0, };
+  GValue end = { 0, };
+  GValue src = { 0, };
+  GValue dest = { 0, };
+  GValue range2 = { 0, };
+
+  g_value_init (&range, GST_TYPE_INT64_RANGE);
+  g_value_init (&range2, GST_TYPE_INT64_RANGE);
+  g_value_init (&start, G_TYPE_INT64);
+  g_value_init (&end, G_TYPE_INT64);
+  g_value_init (&src, G_TYPE_INT64);
+
+  g_value_set_int64 (&src, 2);
+
+  /* Check that a intersection of int64 & range = int64 */
+  gst_value_set_int64_range (&range, 1, 5);
+
+  fail_unless (gst_value_intersect (&dest, &src, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == G_TYPE_INT64);
+  fail_unless (gst_value_compare (&dest, &src) == GST_VALUE_EQUAL);
+
+  /* Check that a intersection selects the overlapping range */
+  gst_value_set_int64_range (&range2, 2, 3);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_INT64_RANGE);
+
+  fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+
+  /* Check that non intersection ranges don't intersect */
+  gst_value_set_int64_range (&range2, 6, 7);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == FALSE);
+
+  g_value_unset (&start);
+  g_value_unset (&end);
+  g_value_unset (&range);
+  g_value_unset (&range2);
+  g_value_unset (&src);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_serialize_int64_range)
+{
+  int i = 0;
+
+  gint64 int64_ranges[] = {
+    0, 5,
+    0, G_MAXINT,
+    5, G_MAXINT32,
+    5, G_MAXINT64,
+  };
+  gint int64_ranges_size = sizeof (int64_ranges) / sizeof (int64_ranges[0]) / 2;
+
+  gchar *int64_range_strings[] = {
+    g_strdup ("[ 0, 5 ]"),
+    g_strdup_printf ("[ 0, %" G_GINT64_FORMAT " ]", (gint64) G_MAXINT),
+    g_strdup_printf ("[ 5, %" G_GINT64_FORMAT " ]", (gint64) G_MAXINT32),
+    g_strdup_printf ("[ 5, %" G_GINT64_FORMAT " ]", G_MAXINT64),
+  };
+  gint int64_range_strings_size =
+      sizeof (int64_range_strings) / sizeof (int64_range_strings[0]);
+
+  fail_unless (int64_ranges_size == int64_range_strings_size);
+
+  while (i < (int64_ranges_size * 2)) {
+    if ((i + 1) % 2) {
+      gchar *str;
+      gchar *str2;
+      GValue value = { 0 };
+      const GValue *deserialized_value;
+      int idx = i / 2;
+      GstStructure *s;
+
+      g_value_init (&value, GST_TYPE_INT64_RANGE);
+
+      /* check serialization */
+      gst_value_set_int64_range (&value, int64_ranges[i], int64_ranges[i + 1]);
+      str = gst_value_serialize (&value);
+      fail_unless (strcmp (str, int64_range_strings[idx]) == 0);
+      g_free (int64_range_strings[idx]);
+
+      /* now deserialize again to an int64 range */
+      s = gst_structure_new ("foo/bar", "range", GST_TYPE_INT64_RANGE,
+          int64_ranges[i], int64_ranges[i + 1], NULL);
+      deserialized_value = gst_structure_get_value (s, "range");
+      fail_unless (GST_VALUE_HOLDS_INT64_RANGE (deserialized_value) == TRUE);
+      str2 = gst_value_serialize (deserialized_value);
+
+      fail_unless (gst_value_get_int64_range_min (deserialized_value) ==
+          int64_ranges[i]);
+      fail_unless (gst_value_get_int64_range_max (deserialized_value) ==
+          int64_ranges[i + 1]);
+
+      gst_structure_free (s);
+      g_free (str);
+      g_free (str2);
+    }
+    i++;
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_int_range)
+{
+  GstStructure *s;
+  gchar *str;
+  gchar *end = NULL;
+  const GValue *deserialized_value;
+
+  /* check a valid int_range deserialization */
+  str = g_strdup_printf ("foo/bar, range=[ 1, %d ];", G_MAXINT);
+  s = gst_structure_from_string (str, &end);
+  fail_unless (*end == '\0');
+  deserialized_value = gst_structure_get_value (s, "range");
+  fail_unless (GST_VALUE_HOLDS_INT_RANGE (deserialized_value) == TRUE);
+  fail_unless (gst_value_get_int_range_min (deserialized_value) == 1);
+  fail_unless (gst_value_get_int_range_max (deserialized_value) == G_MAXINT);
+  gst_structure_free (s);
+  end = NULL;
+  g_free (str);
+
+  /* check invalid int_range deserialization */
+  str =
+      g_strdup_printf ("foo/bar, range=[ 1, %" G_GINT64_FORMAT " ];",
+      (gint64) G_MAXINT + 1);
+  ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
+  g_free (str);
+  str =
+      g_strdup_printf ("foo/bar, range=[ %" G_GINT64_FORMAT ", %"
+      G_GINT64_FORMAT " ];", (gint64) G_MAXINT, (gint64) G_MAXINT + 1);
+  ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
+  end = NULL;
+  g_free (str);
+
+  /* check a valid int64_range deserialization. Those ranges need to
+   * be explicit about their storage type. */
+  str = g_strdup_printf ("foo/bar, range=(gint64)[ 1, %d ];", G_MAXINT);
+  s = gst_structure_from_string (str, &end);
+  fail_unless (*end == '\0');
+  deserialized_value = gst_structure_get_value (s, "range");
+  fail_unless (GST_VALUE_HOLDS_INT64_RANGE (deserialized_value) == TRUE);
+  fail_unless (gst_value_get_int64_range_min (deserialized_value) == 1);
+  fail_unless (gst_value_get_int64_range_max (deserialized_value) == G_MAXINT);
+  fail_unless (strcmp (str, gst_structure_to_string (s)) == 0);
+  gst_structure_free (s);
+  end = NULL;
+  g_free (str);
+
+  /* check invalid int64_range (starting with a gint) deserialization */
+  str =
+      g_strdup_printf ("foo/bar, range=(gint64)[ 1, %" G_GUINT64_FORMAT " ];",
+      (guint64) G_MAXINT64 + 1);
+  ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
+  fail_unless (*end == '\0');
+  gst_structure_free (s);
+  end = NULL;
+  g_free (str);
+
+  /* check invalid int64_range deserialization into a int64_range */
+  str =
+      g_strdup_printf ("foo/bar, range=(gint64)[ %" G_GINT64_FORMAT ", %"
+      G_GUINT64_FORMAT " ];", (gint64) G_MAXINT, (guint64) G_MAXINT64 + 1);
+  ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
+  g_free (str);
+
+  /* check invalid int64_range deserialization into a int_range */
+  str =
+      g_strdup_printf ("foo/bar, range=[ %" G_GINT64_FORMAT ", %"
+      G_GUINT64_FORMAT " ];", (gint64) G_MAXINT, (guint64) G_MAXINT64 + 1);
+  s = gst_structure_from_string (str, &end);
+  fail_unless (s == NULL);
+  fail_unless (end == NULL);
+  g_free (str);
+}
+
+GST_END_TEST static Suite *
 gst_value_suite (void)
 {
   Suite *s = suite_create ("GstValue");
@@ -2069,6 +2571,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_compare);
   tcase_add_test (tc_chain, test_value_intersect);
   tcase_add_test (tc_chain, test_value_subtract_int);
+  tcase_add_test (tc_chain, test_value_subtract_int64);
   tcase_add_test (tc_chain, test_value_subtract_double);
   tcase_add_test (tc_chain, test_value_subtract_fraction);
   tcase_add_test (tc_chain, test_value_subtract_fraction_range);
@@ -2077,6 +2580,10 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_date_time);
   tcase_add_test (tc_chain, test_fraction_range);
   tcase_add_test (tc_chain, test_serialize_deserialize_caps);
+  tcase_add_test (tc_chain, test_int_range);
+  tcase_add_test (tc_chain, test_int64_range);
+  tcase_add_test (tc_chain, test_serialize_int64_range);
+  tcase_add_test (tc_chain, test_deserialize_int_range);
 
   return s;
 }

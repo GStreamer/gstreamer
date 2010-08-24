@@ -2636,6 +2636,13 @@ gst_value_set_int_range
 gst_value_get_int_range_min
 gst_value_get_int_range_max
 
+<SUBSECTION int64range>
+GST_VALUE_HOLDS_INT64_RANGE
+GST_TYPE_INT64_RANGE
+gst_value_set_int64_range
+gst_value_get_int64_range_min
+gst_value_get_int64_range_max
+
 <SUBSECTION doublerange>
 GST_VALUE_HOLDS_DOUBLE_RANGE
 GST_TYPE_DOUBLE_RANGE
@@ -2742,6 +2749,7 @@ gst_fourcc_get_type
 gst_fraction_get_type
 gst_fraction_range_get_type
 gst_int_range_get_type
+gst_int64_range_get_type
 gst_value_array_get_type
 gst_value_list_get_type
 </SECTION>

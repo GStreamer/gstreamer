@@ -464,6 +464,7 @@ EXPORTS
 	gst_init
 	gst_init_check
 	gst_init_get_option_group
+	gst_int64_range_get_type
 	gst_int_range_get_type
 	gst_is_initialized
 	gst_is_tag_list
@@ -1131,6 +1132,8 @@ EXPORTS
 	gst_value_get_fraction_numerator
 	gst_value_get_fraction_range_max
 	gst_value_get_fraction_range_min
+	gst_value_get_int64_range_max
+	gst_value_get_int64_range_min
 	gst_value_get_int_range_max
 	gst_value_get_int_range_min
 	gst_value_get_mini_object
@@ -1156,6 +1159,7 @@ EXPORTS
 	gst_value_set_fraction
 	gst_value_set_fraction_range
 	gst_value_set_fraction_range_full
+	gst_value_set_int64_range
 	gst_value_set_int_range
 	gst_value_set_mini_object
 	gst_value_set_structure

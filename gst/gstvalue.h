@@ -102,6 +102,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS((x), gst_int_range_get_type ()))
 
 /**
+ * GST_VALUE_HOLDS_INT64_RANGE:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_INT64_RANGE value.
+ */
+#define GST_VALUE_HOLDS_INT64_RANGE(x)    (G_VALUE_HOLDS((x), gst_int64_range_get_type ()))
+
+/**
  * GST_VALUE_HOLDS_DOUBLE_RANGE:
  * @x: the #GValue to check
  *
@@ -202,6 +210,15 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstIntRange
  */
 #define GST_TYPE_INT_RANGE               gst_int_range_get_type ()
+
+/**
+ * GST_TYPE_INT64_RANGE:
+ *
+ * a #GValue type that represents an #gint64 range
+ *
+ * Returns: the #GType of GstInt64Range
+ */
+#define GST_TYPE_INT64_RANGE             gst_int64_range_get_type ()
 
 /**
  * GST_TYPE_DOUBLE_RANGE:
@@ -416,6 +433,7 @@ struct _GstValueTable {
 };
 
 GType gst_int_range_get_type (void);
+GType gst_int64_range_get_type (void);
 GType gst_double_range_get_type (void);
 GType gst_fraction_range_get_type (void);
 GType gst_fourcc_get_type (void);
@@ -468,6 +486,13 @@ void		gst_value_set_int_range		(GValue		*value,
 						 gint		end);
 gint		gst_value_get_int_range_min	(const GValue	*value);
 gint		gst_value_get_int_range_max	(const GValue	*value);
+
+/* int64 range */
+void		gst_value_set_int64_range      	(GValue		*value,
+						 gint64		start,
+						 gint64		end);
+gint64		gst_value_get_int64_range_min	(const GValue	*value);
+gint64		gst_value_get_int64_range_max	(const GValue	*value);
 
 /* double range */
 void		gst_value_set_double_range	(GValue		*value,

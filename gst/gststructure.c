@@ -1663,6 +1663,8 @@ gst_structure_value_get_generic_type (GValue * val)
     }
   } else if (G_VALUE_TYPE (val) == GST_TYPE_INT_RANGE) {
     return G_TYPE_INT;
+  } else if (G_VALUE_TYPE (val) == GST_TYPE_INT64_RANGE) {
+    return G_TYPE_INT64;
   } else if (G_VALUE_TYPE (val) == GST_TYPE_DOUBLE_RANGE) {
     return G_TYPE_DOUBLE;
   } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
@@ -1850,6 +1852,11 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
     g_value_init (value, range_type);
     gst_value_set_int_range (value, gst_g_value_get_int_unchecked (&value1),
         gst_g_value_get_int_unchecked (&value2));
+  } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT64) {
+    range_type = GST_TYPE_INT64_RANGE;
+    g_value_init (value, range_type);
+    gst_value_set_int64_range (value, gst_g_value_get_int64_unchecked (&value1),
+        gst_g_value_get_int64_unchecked (&value2));
   } else if (G_VALUE_TYPE (&value1) == GST_TYPE_FRACTION) {
     range_type = GST_TYPE_FRACTION_RANGE;
     g_value_init (value, range_type);
