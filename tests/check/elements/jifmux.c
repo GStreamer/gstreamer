@@ -36,7 +36,7 @@ typedef struct
 {
   gboolean result;
   const GstTagList *taglist;
-  const gchar *gst_tag;
+  gint map_index;
 } ExifTagCheckData;
 
 /* taken from the exif helper lib in -base */
@@ -109,7 +109,6 @@ struct _GstExifTagMatch
   const gchar *gst_tag;
   guint16 exif_tag;
   guint16 exif_type;
-  guint16 complementary_tag;
   CompareFunc compare_func;
 };
 
@@ -340,20 +339,6 @@ GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
     (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, capture_scene_capture_type);
 
 static void
-compare_sensitivity_type (ExifEntry * entry, ExifTagCheckData * testdata)
-{
-  gint exif_value;
-
-  exif_value = (gint) exif_get_short (entry->data,
-      exif_data_get_byte_order (entry->parent->parent));
-  if (exif_value != 3) {
-    GST_WARNING ("Gstreamer should always write SensitivityType=3 for now");
-    fail ();
-  }
-  testdata->result = TRUE;
-}
-
-static void
 compare_date_time (ExifEntry * entry, ExifTagCheckData * testdata)
 {
   gint year = 0, month = 1, day = 1, hour = 0, minute = 0, second = 0;
@@ -397,9 +382,10 @@ compare_date_time (ExifEntry * entry, ExifTagCheckData * testdata)
 static void
 compare_shutter_speed (ExifEntry * entry, ExifTagCheckData * testdata)
 {
-  gdouble gst_value, exif_value;
+  gdouble gst_num, exif_num;
   ExifSRational rational;
-  GValue value = { 0 };
+  GValue exif_value = { 0 };
+  const GValue *gst_value = NULL;
 
   gst_value = gst_tag_list_get_value_index (testdata->taglist,
       GST_TAG_CAPTURING_SHUTTER_SPEED, 0);
@@ -411,15 +397,20 @@ compare_shutter_speed (ExifEntry * entry, ExifTagCheckData * testdata)
   rational = exif_get_srational (entry->data,
       exif_data_get_byte_order (entry->parent->parent));
 
-  g_value_init (&value, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&value, rational.numerator, rational.denominator);
-  gst_util_fraction_to_double (gst_value_get_fraction_numerator (&value),
-      gst_value_get_fraction_denominator (&value), &exif_value);
-  g_value_unset (&value);
+  g_value_init (&exif_value, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&exif_value, rational.numerator,
+      rational.denominator);
+  gst_util_fraction_to_double (gst_value_get_fraction_numerator (&exif_value),
+      gst_value_get_fraction_denominator (&exif_value), &exif_num);
+  g_value_unset (&exif_value);
 
-  exif_value = -pow (2, -exif_value);
+  gst_util_fraction_to_double (gst_value_get_fraction_numerator (gst_value),
+      gst_value_get_fraction_denominator (gst_value), &gst_num);
 
-  fail_unless (gst_value == exif_value);
+  exif_num = pow (2, -exif_num);
+
+  GST_LOG ("Shutter speed in gst=%lf and in exif=%lf", gst_num, exif_num);
+  fail_unless (ABS (gst_num - exif_num) < 0.001);
   testdata->result = TRUE;
 }
 
@@ -445,9 +436,10 @@ compare_aperture_value (ExifEntry * entry, ExifTagCheckData * testdata)
       gst_value_get_fraction_denominator (&value), &exif_value);
   g_value_unset (&value);
 
-  exif_value = -pow (2, exif_value / 2);
+  exif_value = pow (2, exif_value / 2);
 
-  fail_unless (gst_value == exif_value);
+  GST_LOG ("Aperture value in gst=%lf and in exif=%lf", gst_value, exif_value);
+  fail_unless (ABS (gst_value - exif_value) < 0.001);
   testdata->result = TRUE;
 }
 
@@ -490,16 +482,16 @@ compare_flash (ExifEntry * entry, ExifTagCheckData * testdata)
 }
 
 static const GstExifTagMatch tag_map[] = {
-  {GST_TAG_DESCRIPTION, GST_EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII, 0,
+  {GST_TAG_DESCRIPTION, GST_EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DEVICE_MANUFACTURER, GST_EXIF_TAG_MAKE, EXIF_TYPE_ASCII, 0,
+  {GST_TAG_DEVICE_MANUFACTURER, GST_EXIF_TAG_MAKE, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DEVICE_MODEL, GST_EXIF_TAG_MODEL, EXIF_TYPE_ASCII, 0, NULL},
-  {GST_TAG_IMAGE_ORIENTATION, GST_EXIF_TAG_ORIENTATION, EXIF_TYPE_SHORT, 0,
+  {GST_TAG_DEVICE_MODEL, GST_EXIF_TAG_MODEL, EXIF_TYPE_ASCII, NULL},
+  {GST_TAG_IMAGE_ORIENTATION, GST_EXIF_TAG_ORIENTATION, EXIF_TYPE_SHORT,
       compare_image_orientation},
-  {GST_TAG_APPLICATION_NAME, GST_EXIF_TAG_SOFTWARE, EXIF_TYPE_ASCII, 0,
+  {GST_TAG_APPLICATION_NAME, GST_EXIF_TAG_SOFTWARE, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DATE_TIME, GST_EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII, 0,
+  {GST_TAG_DATE_TIME, GST_EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII,
       compare_date_time},
   {GST_TAG_ARTIST, EXIF_TAG_ARTIST, EXIF_TYPE_ASCII, NULL},
   {GST_TAG_COPYRIGHT, EXIF_TAG_COPYRIGHT, EXIF_TYPE_ASCII, NULL},
@@ -574,19 +566,6 @@ static const GstExifTagMatch tag_map[] = {
  */
 };
 
-static gint
-get_tag_id_from_gst_tag (const gchar * gst_tag)
-{
-  gint i;
-
-  for (i = 0; i < G_N_ELEMENTS (tag_map); i++) {
-    if (strcmp (gst_tag, tag_map[i].gst_tag) == 0)
-      return i;
-  }
-
-  return -1;
-}
-
 static void
 check_content (ExifContent * content, void *user_data)
 {
@@ -595,17 +574,18 @@ check_content (ExifContent * content, void *user_data)
   ExifEntry *entry;
   GType gst_tag_type;
 
-  tagindex = get_tag_id_from_gst_tag (test_data->gst_tag);
-
-  GST_DEBUG ("Got tagindex %u for gsttag %s", tagindex, test_data->gst_tag);
-  fail_if (tagindex == (guint16) - 1);
-
+  tagindex = test_data->map_index;
   gst_tag_type = gst_tag_get_type (tag_map[tagindex].gst_tag);
 
+  GST_DEBUG ("Got tagindex %u for gsttag %s with type %s", tagindex,
+      tag_map[tagindex].gst_tag, g_type_name (gst_tag_type));
+
+  /* search for the entry */
   entry = exif_content_get_entry (content, tag_map[tagindex].exif_tag);
-  GST_DEBUG ("Entry is at %p", entry);
+  GST_DEBUG ("Entry found at %p", entry);
   if (entry == NULL)
     return;
+
   fail_unless (entry->format == tag_map[tagindex].exif_type);
 
   if (tag_map[tagindex].compare_func) {
@@ -710,16 +690,18 @@ check_content (ExifContent * content, void *user_data)
   }
 }
 
+/*
+ * Iterates over the exif data searching for the mapping pointed by index
+ */
 static void
-libexif_check_tag_exists (const GstTagList * taglist, const gchar * gst_tag,
-    gpointer data)
+libexif_check_tag_exists (const GstTagList * taglist, gint index, gpointer data)
 {
   ExifData *exif_data = (ExifData *) data;
   ExifTagCheckData test_data;
 
   test_data.result = FALSE;
   test_data.taglist = taglist;
-  test_data.gst_tag = gst_tag;
+  test_data.map_index = index;
 
   exif_data_foreach_content (exif_data, check_content, &test_data);
 
@@ -779,12 +761,19 @@ static void
 libexif_check_tags_from_taglist (GstTagList * taglist, const gchar * filepath)
 {
   ExifData *exif_data;
+  gint i;
 
   fail_unless (taglist != NULL);
-
   exif_data = exif_data_new_from_file (filepath);
 
-  gst_tag_list_foreach (taglist, libexif_check_tag_exists, exif_data);
+  /* iterate over our tag mapping */
+  for (i = 0; i < G_N_ELEMENTS (tag_map); i++) {
+    if (gst_structure_has_field ((GstStructure *) taglist, tag_map[i].gst_tag)) {
+      /* we have added this field to the taglist, check if it was writen in
+       * exif */
+      libexif_check_tag_exists (taglist, i, exif_data);
+    }
+  }
 
   exif_data_unref (exif_data);
 }
@@ -817,9 +806,6 @@ GST_START_TEST (test_jifmux_tags)
   tmpfile = g_build_filename (g_get_tmp_dir (), tmp, NULL);
   g_free (tmp);
 
-/*
-  GST_TAG_CAPTURE_FLASH_FIRED
-*/
   datetime = gst_date_time_new_local_time (2000, 10, 5, 8, 45, 13, 0);
   buffer = gst_buffer_new_and_alloc (100);
   for (i = 0; i < 100; i++) {
