@@ -383,8 +383,10 @@ gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 
   GST_PAD_LOCK (demux);
   dpad = find_demux_pad_for_ssrc (demux, ssrc);
-  if (dpad == NULL)
+  if (dpad == NULL) {
+    GST_PAD_UNLOCK (demux);
     goto unknown_pad;
+  }
 
   GST_DEBUG_OBJECT (demux, "clearing pad for SSRC %08x", ssrc);
 
@@ -408,7 +410,7 @@ gst_rtp_ssrc_demux_clear_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   /* ERRORS */
 unknown_pad:
   {
-    g_warning ("unknown SSRC %08x", ssrc);
+    GST_WARNING_OBJECT (demux, "unknown SSRC %08x", ssrc);
     return;
   }
 }
