@@ -186,8 +186,7 @@ static GstStaticPadTemplate src_template_factory =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12}"))
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12, NV21}"))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
@@ -195,8 +194,7 @@ static GstStaticPadTemplate video_sink_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";"
-        GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12}"))
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_YUV ("{I420, UYUV, NV12, NV21}"))
     );
 
 static GstStaticPadTemplate text_sink_template_factory =
@@ -1362,12 +1360,12 @@ gst_text_overlay_render_pangocairo (GstTextOverlay * overlay,
 #define BOX_YPAD         6
 
 static inline void
-gst_text_overlay_shade_I420_y (GstTextOverlay * overlay, guchar * dest,
+gst_text_overlay_shade_Y (GstTextOverlay * overlay, guchar * dest,
     gint x0, gint x1, gint y0, gint y1)
 {
   gint i, j, dest_stride;
 
-  dest_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 0,
+  dest_stride = gst_video_format_get_row_stride (overlay->format, 0,
       overlay->width);
 
   x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
@@ -1445,7 +1443,7 @@ gst_text_overlay_shade_xRGB (GstTextOverlay * overlay, guchar * dest,
  */
 
 static inline void
-gst_text_overlay_blit_NV12 (GstTextOverlay * overlay,
+gst_text_overlay_blit_NV12_NV21 (GstTextOverlay * overlay,
     guint8 * yuv_pixels, gint xpos, gint ypos)
 {
   int y_stride, uv_stride;
@@ -1455,11 +1453,10 @@ gst_text_overlay_blit_NV12 (GstTextOverlay * overlay,
   w = overlay->width;
   h = overlay->height;
 
-  y_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_NV12, 0, w);
-  uv_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_NV12, 1, w);
-  u_offset =
-      gst_video_format_get_component_offset (GST_VIDEO_FORMAT_NV12, 1, w, h);
-  v_offset = u_offset + 1;
+  y_stride = gst_video_format_get_row_stride (overlay->format, 0, w);
+  uv_stride = gst_video_format_get_row_stride (overlay->format, 1, w);
+  u_offset = gst_video_format_get_component_offset (overlay->format, 1, w, h);
+  v_offset = gst_video_format_get_component_offset (overlay->format, 2, w, h);
 
   gst_text_overlay_blit_1 (overlay, yuv_pixels, xpos, ypos, overlay->text_image,
       y_stride);
@@ -1723,8 +1720,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
     switch (overlay->format) {
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_NV12:
-        /* NV12 is similar enough for same function to cope */
-        gst_text_overlay_shade_I420_y (overlay,
+      case GST_VIDEO_FORMAT_NV21:
+        gst_text_overlay_shade_Y (overlay,
             GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->image_width,
             ypos, ypos + overlay->image_height);
         break;
@@ -1758,7 +1755,8 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
             GST_BUFFER_DATA (video_frame), xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_NV12:
-        gst_text_overlay_blit_NV12 (overlay,
+      case GST_VIDEO_FORMAT_NV21:
+        gst_text_overlay_blit_NV12_NV21 (overlay,
             GST_BUFFER_DATA (video_frame), xpos, ypos);
         break;
       case GST_VIDEO_FORMAT_UYVY:
