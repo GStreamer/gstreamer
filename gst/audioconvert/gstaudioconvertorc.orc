@@ -113,7 +113,51 @@ xorl d1, t1, c1
 swapl t1, s1
 shll d1, t1, p1
 
+.function orc_audio_convert_unpack_float_s32
+.source 4 s1 gfloat
+.dest 4 d1 guint32
+.temp 4 t1
+.temp 4 t2
+.temp 4 t3
+.temp 4 t4
 
+loadl t1, s1
+# multiply with 2147483647.0
+mulf t1, t1, 0x4F000000
+# add 0.5 for rounding
+addf t1, t1, 0x3F000000
+convfl t2, t1
+# if overflow, t3 = ~0
+cmpeql t3, t2, -2147483648
+# if negative, t4 = ~0
+shrsl t4, t1, 31
+# if overflow and !negative, t4 = ~0
+andnl t4, t4, t3
+# 0x80000000 + ~0 = 0x7fffffff
+addl d1, t2, t4
+
+.function orc_audio_convert_unpack_float_s32_swap
+.source 4 s1 gfloat
+.dest 4 d1 guint32
+.temp 4 t1
+.temp 4 t2
+.temp 4 t3
+.temp 4 t4
+
+swapl t1, s1
+# multiply with 2147483647.0
+mulf t1, t1, 0x4F000000
+# add 0.5 for rounding
+addf t1, t1, 0x3F000000
+convfl t2, t1
+# if overflow, t3 = ~0
+cmpeql t3, t2, -2147483648
+# if negative, t4 = ~0
+shrsl t4, t1, 31
+# if overflow and !negative, t4 = ~0
+andnl t4, t4, t3
+# 0x80000000 + ~0 = 0x7fffffff
+addl d1, t2, t4
 
 .function orc_audio_convert_pack_u8
 .dest 1 d1 guint8
@@ -231,4 +275,23 @@ swapl d1, t1
 shrsl t1, s1, p1
 swapl d1, t1
 
+.function orc_audio_convert_pack_s32_float
+.dest 4 d1 gfloat
+.source 4 s1 gint32
+.temp 4 t1
+
+convlf t1, s1
+# divide by 2147483647.0
+divf t1, t1, 0x4F000000
+storel d1, t1
+
+.function orc_audio_convert_pack_s32_float_swap
+.dest 4 d1 gfloat
+.source 4 s1 gint32
+.temp 4 t1
+
+convlf t1, s1
+# divide by 2147483647.0
+divf t1, t1, 0x4F000000
+swapl d1, t1
 

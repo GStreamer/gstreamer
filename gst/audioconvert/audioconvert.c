@@ -41,6 +41,8 @@
 #define orc_audio_convert_unpack_u32_be orc_audio_convert_unpack_u32_swap
 #define orc_audio_convert_unpack_s32_le orc_audio_convert_unpack_s32
 #define orc_audio_convert_unpack_s32_be orc_audio_convert_unpack_s32_swap
+#define orc_audio_convert_unpack_float_le orc_audio_convert_unpack_float_s32
+#define orc_audio_convert_unpack_float_be orc_audio_convert_unpack_float_s32_swap
 #define orc_audio_convert_pack_u16_le orc_audio_convert_pack_u16
 #define orc_audio_convert_pack_u16_be orc_audio_convert_pack_u16_swap
 #define orc_audio_convert_pack_s16_le orc_audio_convert_pack_s16
@@ -49,6 +51,8 @@
 #define orc_audio_convert_pack_u32_be orc_audio_convert_pack_u32_swap
 #define orc_audio_convert_pack_s32_le orc_audio_convert_pack_s32
 #define orc_audio_convert_pack_s32_be orc_audio_convert_pack_s32_swap
+#define orc_audio_convert_pack_float_le orc_audio_convert_pack_s32_float
+#define orc_audio_convert_pack_float_be orc_audio_convert_pack_s32_float_swap
 #else
 #define orc_audio_convert_unpack_u16_be orc_audio_convert_unpack_u16
 #define orc_audio_convert_unpack_u16_le orc_audio_convert_unpack_u16_swap
@@ -58,6 +62,8 @@
 #define orc_audio_convert_unpack_u32_le orc_audio_convert_unpack_u32_swap
 #define orc_audio_convert_unpack_s32_be orc_audio_convert_unpack_s32
 #define orc_audio_convert_unpack_s32_le orc_audio_convert_unpack_s32_swap
+#define orc_audio_convert_unpack_float_be orc_audio_convert_unpack_float_s32
+#define orc_audio_convert_unpack_float_le orc_audio_convert_unpack_float_s32_swap
 #define orc_audio_convert_pack_u16_be orc_audio_convert_pack_u16
 #define orc_audio_convert_pack_u16_le orc_audio_convert_pack_u16_swap
 #define orc_audio_convert_pack_s16_be orc_audio_convert_pack_s16
@@ -66,6 +72,8 @@
 #define orc_audio_convert_pack_u32_le orc_audio_convert_pack_u32_swap
 #define orc_audio_convert_pack_s32_be orc_audio_convert_pack_s32
 #define orc_audio_convert_pack_s32_le orc_audio_convert_pack_s32_swap
+#define orc_audio_convert_pack_float_be orc_audio_convert_pack_s32_float
+#define orc_audio_convert_pack_float_le orc_audio_convert_pack_s32_float_swap
 #endif
 
 /* sign bit in the intermediate format */
@@ -112,6 +120,14 @@ MAKE_UNPACK_FUNC_NAME (name) (type * src, gint32 * dst, gint s, gint count)   \
     temp = floor ((READ_FUNC (*src++) * 2147483647.0) + 0.5);                 \
     *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);                   \
   }                                                                           \
+}
+
+/* unpack from float to signed integer 32 with orc */
+#define MAKE_UNPACK_FUNC_ORC_FI(name, type, READ_FUNC)                        \
+static void                                                                   \
+MAKE_UNPACK_FUNC_NAME (name) (type * src, gint32 * dst, gint s, gint count)   \
+{                                                                             \
+  MAKE_ORC_UNPACK_FUNC_NAME (name) ((guint32 *) dst, src, count);                         \
 }
 
 /* unpack from float to float 64 (double) */
@@ -162,8 +178,8 @@ MAKE_UNPACK_FUNC_ORC_II (u32_le, 4, SIGNED, READ32_FROM_LE);
 MAKE_UNPACK_FUNC_ORC_II (s32_le, 4, 0, READ32_FROM_LE);
 MAKE_UNPACK_FUNC_ORC_II (u32_be, 4, SIGNED, READ32_FROM_BE);
 MAKE_UNPACK_FUNC_ORC_II (s32_be, 4, 0, READ32_FROM_BE);
-MAKE_UNPACK_FUNC_FI (float_le, gfloat, GFLOAT_FROM_LE);
-MAKE_UNPACK_FUNC_FI (float_be, gfloat, GFLOAT_FROM_BE);
+MAKE_UNPACK_FUNC_ORC_FI (float_le, gfloat, GFLOAT_FROM_LE);
+MAKE_UNPACK_FUNC_ORC_FI (float_be, gfloat, GFLOAT_FROM_BE);
 MAKE_UNPACK_FUNC_FI (double_le, gdouble, GDOUBLE_FROM_LE);
 MAKE_UNPACK_FUNC_FI (double_be, gdouble, GDOUBLE_FROM_BE);
 MAKE_UNPACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_FROM_LE);
@@ -229,6 +245,15 @@ MAKE_PACK_FUNC_NAME (name) (gint32 *src, guint8 * dst,                  \
     WRITE_FUNC (dst, tmp);                                              \
     dst += stride;                                                      \
   }                                                                     \
+}
+
+/* pack from signed integer 32 to float using orc */
+#define MAKE_PACK_FUNC_ORC_IF(name, type, FUNC)                         \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gint32 * src, type * dst, gint scale,       \
+    gint count)                                                         \
+{                                                                       \
+  MAKE_PACK_FUNC_NAME_ORC (name) (dst, src, count);                     \
 }
 
 /* pack from signed integer 32 to float */
@@ -309,8 +334,8 @@ MAKE_PACK_FUNC_ORC_II (u32_le, 4, SIGNED, WRITE32_TO_LE);
 MAKE_PACK_FUNC_ORC_II (s32_le, 4, 0, WRITE32_TO_LE);
 MAKE_PACK_FUNC_ORC_II (u32_be, 4, SIGNED, WRITE32_TO_BE);
 MAKE_PACK_FUNC_ORC_II (s32_be, 4, 0, WRITE32_TO_BE);
-MAKE_PACK_FUNC_IF (float_le, gfloat, GFLOAT_TO_LE);
-MAKE_PACK_FUNC_IF (float_be, gfloat, GFLOAT_TO_BE);
+MAKE_PACK_FUNC_ORC_IF (float_le, gfloat, GFLOAT_TO_LE);
+MAKE_PACK_FUNC_ORC_IF (float_be, gfloat, GFLOAT_TO_BE);
 MAKE_PACK_FUNC_IF (double_le, gdouble, GDOUBLE_TO_LE);
 MAKE_PACK_FUNC_IF (double_be, gdouble, GDOUBLE_TO_BE);
 MAKE_PACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_TO_LE);
