@@ -381,7 +381,8 @@ static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
 static void paint_setup_bayer (paintinfo * p, unsigned char *dest);
 
 static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
-static void paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w);
+static void paint_hline_NV12 (paintinfo * p, int x, int y, int w);
+static void paint_hline_NV21 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y41B (paintinfo * p, int x, int y, int w);
@@ -453,9 +454,9 @@ struct fourcc_list_struct fourcc_list[] = {
   /* I420 */
   {VTS_YUV, "I420", "I420", 12, paint_setup_I420, paint_hline_I420},
   /* NV12 */
-  {VTS_YUV, "NV12", "NV12", 12, paint_setup_NV12, paint_hline_NV12_NV21},
+  {VTS_YUV, "NV12", "NV12", 12, paint_setup_NV12, paint_hline_NV12},
   /* NV21 */
-  {VTS_YUV, "NV21", "NV21", 12, paint_setup_NV21, paint_hline_NV12_NV21},
+  {VTS_YUV, "NV21", "NV21", 12, paint_setup_NV21, paint_hline_NV21},
 #if 0
   /* IMC1 */
   {VTS_YUV, "IMC1", "IMC1", 16, paint_setup_IMC1, paint_hline_IMC1},
@@ -1844,7 +1845,7 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
 }
 
 static void
-paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
+paint_hline_NV12 (paintinfo * p, int x, int y, int w)
 {
   int x1 = x / 2;
   int x2 = (x + w) / 2;
@@ -1862,6 +1863,28 @@ paint_hline_NV12_NV21 (paintinfo * p, int x, int y, int w)
 
   if (uvlength) {
     gst_orc_splat_u16 (p->up + offsetuv, value, uvlength);
+  }
+}
+
+static void
+paint_hline_NV21 (paintinfo * p, int x, int y, int w)
+{
+  int x1 = x / 2;
+  int x2 = (x + w) / 2;
+  int offset = y * p->ystride;
+  int offsetuv = (y / 2) * p->ustride + (x & ~0x01);
+  int uvlength = x2 - x1 + 1;
+  guint16 value;
+
+  gst_orc_splat_u8 (p->yp + offset + x, p->yuv_color->Y, w);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  value = (p->yuv_color->U << 8) | (p->yuv_color->V << 0);
+#else
+  value = (p->yuv_color->U << 0) | (p->yuv_color->V << 8);
+#endif
+
+  if (uvlength) {
+    gst_orc_splat_u16 (p->vp + offsetuv, value, uvlength);
   }
 }
 
