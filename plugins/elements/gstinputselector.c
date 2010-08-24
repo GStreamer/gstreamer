@@ -679,10 +679,6 @@ flushing:
   }
 }
 
-static void gst_input_selector_init (GstInputSelector * sel);
-static void gst_input_selector_base_init (GstInputSelectorClass * klass);
-static void gst_input_selector_class_init (GstInputSelectorClass * klass);
-
 static void gst_input_selector_dispose (GObject * object);
 
 static void gst_input_selector_set_property (GObject * object,
@@ -704,39 +700,17 @@ static gint64 gst_input_selector_block (GstInputSelector * self);
 static void gst_input_selector_switch (GstInputSelector * self,
     GstPad * pad, gint64 stop_time, gint64 start_time);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_input_selector_get_type (void)
-{
-  static GType input_selector_type = 0;
-
-  if (!input_selector_type) {
-    static const GTypeInfo input_selector_info = {
-      sizeof (GstInputSelectorClass),
-      (GBaseInitFunc) gst_input_selector_base_init,
-      NULL,
-      (GClassInitFunc) gst_input_selector_class_init,
-      NULL,
-      NULL,
-      sizeof (GstInputSelector),
-      0,
-      (GInstanceInitFunc) gst_input_selector_init,
-    };
-    input_selector_type =
-        g_type_register_static (GST_TYPE_ELEMENT,
-        "GstInputSelector", &input_selector_info, 0);
-    GST_DEBUG_CATEGORY_INIT (input_selector_debug,
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (input_selector_debug, \
         "input-selector", 0, "An input stream selector element");
-  }
 
-  return input_selector_type;
-}
+GST_BOILERPLATE_FULL (GstInputSelector, gst_input_selector, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void
-gst_input_selector_base_init (GstInputSelectorClass * klass)
+gst_input_selector_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class, "Input selector",
       "Generic", "N-to-1 input stream selectoring",
@@ -849,7 +823,8 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
 }
 
 static void
-gst_input_selector_init (GstInputSelector * sel)
+gst_input_selector_init (GstInputSelector * sel,
+    GstInputSelectorClass * g_class)
 {
   sel->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_pad_set_iterate_internal_links_function (sel->srcpad,
