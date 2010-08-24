@@ -1313,6 +1313,8 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_v210:
     case GST_VIDEO_FORMAT_v216:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
       if (component == 0) {
         return width;
       } else {
@@ -1341,8 +1343,6 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_BGR15:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_v308:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
