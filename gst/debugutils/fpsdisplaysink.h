@@ -56,14 +56,14 @@ struct _GstFPSDisplaySink
 
   GstClockTime start_ts;
   GstClockTime last_ts;
-  guint timeout_id;
+  GstClockTime interval_ts;
   guint data_probe_id;
 
   /* properties */
   gboolean sync;
   gboolean use_text_overlay;
   gboolean signal_measurements;
-  gint fps_update_interval;
+  GstClockTime fps_update_interval;
   gdouble max_fps;
   gdouble min_fps;
 };

@@ -222,11 +222,13 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
         self->frames_dropped++;
       }
 
-      if (G_UNLIKELY (!self->timeout_id)) {
-        self->last_ts = self->start_ts = gst_util_get_timestamp ();
-        self->timeout_id =
-            g_timeout_add (self->fps_update_interval, display_current_fps,
-            (gpointer) self);
+      ts = gst_util_get_timestamp ();
+      if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (self->start_ts))) {
+        self->last_ts = self->start_ts = ts;
+      }
+      if (GST_CLOCK_DIFF (self->interval_ts, ts) > self->fps_update_interval) {
+        display_current_fps (self);
+        self->interval_ts = ts;
       }
     }
   }
@@ -311,7 +313,7 @@ fps_display_sink_init (GstFPSDisplaySink * self,
   self->sync = FALSE;
   self->signal_measurements = DEFAULT_SIGNAL_FPS_MEASUREMENTS;
   self->use_text_overlay = TRUE;
-  self->fps_update_interval = DEFAULT_FPS_UPDATE_INTERVAL_MS;
+  self->fps_update_interval = GST_MSECOND * DEFAULT_FPS_UPDATE_INTERVAL_MS;
   self->video_sink = NULL;
   self->max_fps = -1;
   self->min_fps = -1;
@@ -403,6 +405,9 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   self->max_fps = -1;
   self->min_fps = -1;
 
+  /* init time stamps */
+  self->last_ts = self->start_ts = self->interval_ts = GST_CLOCK_TIME_NONE;
+
   GST_DEBUG_OBJECT (self, "Use text-overlay? %d", self->use_text_overlay);
 
   if (self->use_text_overlay) {
@@ -436,21 +441,11 @@ no_text_overlay:
   }
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->ghost_pad), target_pad);
   gst_object_unref (target_pad);
-
-  /* Set a timeout for the fps display */
-  GST_DEBUG_OBJECT (self, "setting a timeout with a %dms interval",
-      self->fps_update_interval);
 }
 
 static void
 fps_display_sink_stop (GstFPSDisplaySink * self)
 {
-  /* remove the timeout */
-  if (self->timeout_id) {
-    g_source_remove (self->timeout_id);
-    self->timeout_id = 0;
-  }
-
   if (self->text_overlay) {
     gst_element_unlink (self->text_overlay, self->video_sink);
     gst_bin_remove (GST_BIN (self), self->text_overlay);
@@ -516,7 +511,8 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
       update_video_sink (self, (GstElement *) g_value_get_object (value));
       break;
     case ARG_FPS_UPDATE_INTERVAL:
-      self->fps_update_interval = g_value_get_int (value);
+      self->fps_update_interval =
+          GST_MSECOND * (GstClockTime) g_value_get_int (value);
       break;
     case ARG_SIGNAL_FPS_MEASUREMENTS:
       self->signal_measurements = g_value_get_boolean (value);
@@ -544,7 +540,7 @@ fps_display_sink_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, self->video_sink);
       break;
     case ARG_FPS_UPDATE_INTERVAL:
-      g_value_set_int (value, self->fps_update_interval);
+      g_value_set_int (value, (gint) (self->fps_update_interval / GST_MSECOND));
       break;
     case ARG_MAX_FPS:
       g_value_set_double (value, self->max_fps);
