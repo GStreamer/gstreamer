@@ -48,13 +48,22 @@ typedef unsigned long orc_uint64;
 #endif
 typedef union
 {
+  orc_int16 i;
+  orc_int8 x2[2];
+} orc_union16;
+typedef union
+{
   orc_int32 i;
   float f;
+  orc_int16 x2[2];
+  orc_int8 x4[4];
 } orc_union32;
 typedef union
 {
   orc_int64 i;
   double f;
+  orc_int32 x2[2];
+  orc_int16 x4[4];
 } orc_union64;
 #endif
 
@@ -78,6 +87,10 @@ void orc_audio_convert_unpack_u32_swap (gint32 * d1, const guint8 * s1, int p1,
     int n);
 void orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1,
     int n);
+void orc_audio_convert_unpack_float_s32 (guint32 * d1, const gfloat * s1,
+    int n);
+void orc_audio_convert_unpack_float_s32_swap (guint32 * d1, const gfloat * s1,
+    int n);
 void orc_audio_convert_pack_u8 (guint8 * d1, const gint32 * s1, int p1, int n);
 void orc_audio_convert_pack_s8 (guint8 * d1, const gint32 * s1, int p1, int n);
 void orc_audio_convert_pack_u16 (guint8 * d1, const gint32 * s1, int p1, int n);
@@ -91,6 +104,9 @@ void orc_audio_convert_pack_s32 (guint8 * d1, const gint32 * s1, int p1, int n);
 void orc_audio_convert_pack_u32_swap (guint8 * d1, const gint32 * s1, int p1,
     int n);
 void orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1,
+    int n);
+void orc_audio_convert_pack_s32_float (gfloat * d1, const gint32 * s1, int n);
+void orc_audio_convert_pack_s32_float_swap (gfloat * d1, const gint32 * s1,
     int n);
 
 
@@ -120,6 +136,17 @@ void orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1,
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
+#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
+#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
+#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
+#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
 /* end Orc C target preamble */
 
 
@@ -130,68 +157,70 @@ void
 orc_audio_convert_unpack_u8 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int8 var4;
-  const orc_int8 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_int16 var32;
-  orc_union32 var33;
-  orc_union32 var34;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convubw */
-    var32 = (orc_uint8) var4;
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var34.i = var33.i << var24;
-    /* 3: xorl */
-    var0.i = var34.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadb */
+    var34 = ptr4[i];
+    /* 1: convubw */
+    var37.i = (orc_uint8) var34;
+    /* 2: convuwl */
+    var38.i = (orc_uint16) var37.i;
+    /* 3: shll */
+    var39.i = var38.i << p1;
+    /* 4: loadpl */
+    var35.i = 0x80000000;
+    /* 5: xorl */
+    var36.i = var39.i ^ var35.i;
+    /* 6: storel */
+    ptr0[i] = var36;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_u8 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int8 var4;
-  const orc_int8 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_int16 var32;
-  orc_union32 var33;
-  orc_union32 var34;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convubw */
-    var32 = (orc_uint8) var4;
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var34.i = var33.i << var24;
-    /* 3: xorl */
-    var0.i = var34.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadb */
+    var34 = ptr4[i];
+    /* 1: convubw */
+    var37.i = (orc_uint8) var34;
+    /* 2: convuwl */
+    var38.i = (orc_uint16) var37.i;
+    /* 3: shll */
+    var39.i = var38.i << ex->params[24];
+    /* 4: loadpl */
+    var35.i = 0x80000000;
+    /* 5: xorl */
+    var36.i = var39.i ^ var35.i;
+    /* 6: storel */
+    ptr0[i] = var36;
   }
 
 }
@@ -219,10 +248,14 @@ orc_audio_convert_unpack_u8 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append (p, "convubw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "convuwl", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1);
-      orc_program_append (p, "xorl", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_C1);
+      orc_program_append_2 (p, "convubw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -248,60 +281,58 @@ void
 orc_audio_convert_unpack_s8 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int8 var4;
-  const orc_int8 *ptr4;
-  const int var24 = p1;
-  orc_int16 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_int8 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convubw */
-    var32 = (orc_uint8) var4;
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var0.i = var33.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadb */
+    var34 = ptr4[i];
+    /* 1: convubw */
+    var36.i = (orc_uint8) var34;
+    /* 2: convuwl */
+    var37.i = (orc_uint16) var36.i;
+    /* 3: shll */
+    var35.i = var37.i << p1;
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_s8 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_s8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int8 var4;
-  const orc_int8 *ptr4;
-  const int var24 = ex->params[24];
-  orc_int16 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  orc_int8 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_int8 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convubw */
-    var32 = (orc_uint8) var4;
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var0.i = var33.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadb */
+    var34 = ptr4[i];
+    /* 1: convubw */
+    var36.i = (orc_uint8) var34;
+    /* 2: convuwl */
+    var37.i = (orc_uint16) var36.i;
+    /* 3: shll */
+    var35.i = var37.i << ex->params[24];
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -328,9 +359,12 @@ orc_audio_convert_unpack_s8 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append (p, "convubw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "convuwl", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_P1);
+      orc_program_append_2 (p, "convubw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -356,62 +390,64 @@ void
 orc_audio_convert_unpack_u16 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_int16 *) s1;
+  ptr4 = (orc_union16 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convuwl */
-    var32.i = (orc_uint16) var4;
-    /* 1: shll */
-    var33.i = var32.i << var24;
-    /* 2: xorl */
-    var0.i = var33.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var33 = ptr4[i];
+    /* 1: convuwl */
+    var36.i = (orc_uint16) var33.i;
+    /* 2: shll */
+    var37.i = var36.i << p1;
+    /* 3: loadpl */
+    var34.i = 0x80000000;
+    /* 4: xorl */
+    var35.i = var37.i ^ var34.i;
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_u16 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr4 = (orc_union16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convuwl */
-    var32.i = (orc_uint16) var4;
-    /* 1: shll */
-    var33.i = var32.i << var24;
-    /* 2: xorl */
-    var0.i = var33.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var33 = ptr4[i];
+    /* 1: convuwl */
+    var36.i = (orc_uint16) var33.i;
+    /* 2: shll */
+    var37.i = var36.i << ex->params[24];
+    /* 3: loadpl */
+    var34.i = 0x80000000;
+    /* 4: xorl */
+    var35.i = var37.i ^ var34.i;
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -438,9 +474,12 @@ orc_audio_convert_unpack_u16 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "convuwl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "xorl", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -466,54 +505,52 @@ void
 orc_audio_convert_unpack_s16 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_int16 *) s1;
+  ptr4 = (orc_union16 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convuwl */
-    var32.i = (orc_uint16) var4;
-    /* 1: shll */
-    var0.i = var32.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var33 = ptr4[i];
+    /* 1: convuwl */
+    var35.i = (orc_uint16) var33.i;
+    /* 2: shll */
+    var34.i = var35.i << p1;
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_s16 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_s16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr4 = (orc_union16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: convuwl */
-    var32.i = (orc_uint16) var4;
-    /* 1: shll */
-    var0.i = var32.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var33 = ptr4[i];
+    /* 1: convuwl */
+    var35.i = (orc_uint16) var33.i;
+    /* 2: shll */
+    var34.i = var35.i << ex->params[24];
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
@@ -539,8 +576,10 @@ orc_audio_convert_unpack_s16 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "convuwl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -567,68 +606,70 @@ orc_audio_convert_unpack_u16_swap (gint32 * d1, const guint8 * s1, int p1,
     int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_int16 var32;
-  orc_union32 var33;
-  orc_union32 var34;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_int16 *) s1;
+  ptr4 = (orc_union16 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapw */
-    var32 = ORC_SWAP_W (var4);
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var34.i = var33.i << var24;
-    /* 3: xorl */
-    var0.i = var34.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var34 = ptr4[i];
+    /* 1: swapw */
+    var37.i = ORC_SWAP_W (var34.i);
+    /* 2: convuwl */
+    var38.i = (orc_uint16) var37.i;
+    /* 3: shll */
+    var39.i = var38.i << p1;
+    /* 4: loadpl */
+    var35.i = 0x80000000;
+    /* 5: xorl */
+    var36.i = var39.i ^ var35.i;
+    /* 6: storel */
+    ptr0[i] = var36;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_u16_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_int16 var32;
-  orc_union32 var33;
-  orc_union32 var34;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union32 var39;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr4 = (orc_union16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapw */
-    var32 = ORC_SWAP_W (var4);
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var34.i = var33.i << var24;
-    /* 3: xorl */
-    var0.i = var34.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var34 = ptr4[i];
+    /* 1: swapw */
+    var37.i = ORC_SWAP_W (var34.i);
+    /* 2: convuwl */
+    var38.i = (orc_uint16) var37.i;
+    /* 3: shll */
+    var39.i = var38.i << ex->params[24];
+    /* 4: loadpl */
+    var35.i = 0x80000000;
+    /* 5: xorl */
+    var36.i = var39.i ^ var35.i;
+    /* 6: storel */
+    ptr0[i] = var36;
   }
 
 }
@@ -658,10 +699,14 @@ orc_audio_convert_unpack_u16_swap (gint32 * d1, const guint8 * s1, int p1,
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append (p, "swapw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "convuwl", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1);
-      orc_program_append (p, "xorl", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_C1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -688,60 +733,58 @@ orc_audio_convert_unpack_s16_swap (gint32 * d1, const guint8 * s1, int p1,
     int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const int var24 = p1;
-  orc_int16 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_int16 *) s1;
+  ptr4 = (orc_union16 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapw */
-    var32 = ORC_SWAP_W (var4);
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var0.i = var33.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var34 = ptr4[i];
+    /* 1: swapw */
+    var36.i = ORC_SWAP_W (var34.i);
+    /* 2: convuwl */
+    var37.i = (orc_uint16) var36.i;
+    /* 3: shll */
+    var35.i = var37.i << p1;
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_s16_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_int16 var4;
-  const orc_int16 *ptr4;
-  const int var24 = ex->params[24];
-  orc_int16 var32;
-  orc_union32 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union16 *ORC_RESTRICT ptr4;
+  orc_union16 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_int16 *) ex->arrays[4];
+  ptr4 = (orc_union16 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapw */
-    var32 = ORC_SWAP_W (var4);
-    /* 1: convuwl */
-    var33.i = (orc_uint16) var32;
-    /* 2: shll */
-    var0.i = var33.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadw */
+    var34 = ptr4[i];
+    /* 1: swapw */
+    var36.i = ORC_SWAP_W (var34.i);
+    /* 2: convuwl */
+    var37.i = (orc_uint16) var36.i;
+    /* 3: shll */
+    var35.i = var37.i << ex->params[24];
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -770,9 +813,12 @@ orc_audio_convert_unpack_s16_swap (gint32 * d1, const guint8 * s1, int p1,
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
 
-      orc_program_append (p, "swapw", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "convuwl", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_P1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convuwl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -798,56 +844,58 @@ void
 orc_audio_convert_unpack_u32 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shll */
-    var32.i = var4.i << var24;
-    /* 1: xorl */
-    var0.i = var32.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shll */
+    var36.i = var33.i << p1;
+    /* 2: loadpl */
+    var34.i = 0x80000000;
+    /* 3: xorl */
+    var35.i = var36.i ^ var34.i;
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_u32 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shll */
-    var32.i = var4.i << var24;
-    /* 1: xorl */
-    var0.i = var32.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shll */
+    var36.i = var33.i << ex->params[24];
+    /* 2: loadpl */
+    var34.i = 0x80000000;
+    /* 3: xorl */
+    var35.i = var36.i ^ var34.i;
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -874,8 +922,10 @@ orc_audio_convert_unpack_u32 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "shll", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
-      orc_program_append (p, "xorl", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -901,48 +951,46 @@ void
 orc_audio_convert_unpack_s32 (gint32 * d1, const guint8 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union32 var33;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shll */
-    var0.i = var4.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: shll */
+    var33.i = var32.i << p1;
+    /* 2: storel */
+    ptr0[i] = var33;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_s32 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_s32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union32 var33;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shll */
-    var0.i = var4.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: shll */
+    var33.i = var32.i << ex->params[24];
+    /* 2: storel */
+    ptr0[i] = var33;
   }
 
 }
@@ -967,7 +1015,8 @@ orc_audio_convert_unpack_s32 (gint32 * d1, const guint8 * s1, int p1, int n)
       orc_program_add_source (p, 4, "s1");
       orc_program_add_parameter (p, 4, "p1");
 
-      orc_program_append (p, "shll", ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -994,62 +1043,64 @@ orc_audio_convert_unpack_u32_swap (gint32 * d1, const guint8 * s1, int p1,
     int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapl */
-    var32.i = ORC_SWAP_L (var4.i);
-    /* 1: shll */
-    var33.i = var32.i << var24;
-    /* 2: xorl */
-    var0.i = var33.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: swapl */
+    var36.i = ORC_SWAP_L (var33.i);
+    /* 2: shll */
+    var37.i = var36.i << p1;
+    /* 3: loadpl */
+    var34.i = 0x80000000;
+    /* 4: xorl */
+    var35.i = var37.i ^ var34.i;
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_u32_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapl */
-    var32.i = ORC_SWAP_L (var4.i);
-    /* 1: shll */
-    var33.i = var32.i << var24;
-    /* 2: xorl */
-    var0.i = var33.i ^ var16.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: swapl */
+    var36.i = ORC_SWAP_L (var33.i);
+    /* 2: shll */
+    var37.i = var36.i << ex->params[24];
+    /* 3: loadpl */
+    var34.i = 0x80000000;
+    /* 4: xorl */
+    var35.i = var37.i ^ var34.i;
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -1078,9 +1129,12 @@ orc_audio_convert_unpack_u32_swap (gint32 * d1, const guint8 * s1, int p1,
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "swapl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "xorl", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1);
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1107,54 +1161,52 @@ orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1,
     int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapl */
-    var32.i = ORC_SWAP_L (var4.i);
-    /* 1: shll */
-    var0.i = var32.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: swapl */
+    var35.i = ORC_SWAP_L (var33.i);
+    /* 2: shll */
+    var34.i = var35.i << p1;
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_unpack_s32_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: swapl */
-    var32.i = ORC_SWAP_L (var4.i);
-    /* 1: shll */
-    var0.i = var32.i << var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: swapl */
+    var35.i = ORC_SWAP_L (var33.i);
+    /* 2: shll */
+    var34.i = var35.i << ex->params[24];
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
@@ -1182,8 +1234,10 @@ orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1,
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "swapl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1);
-      orc_program_append (p, "shll", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1);
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1203,74 +1257,414 @@ orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1,
 #endif
 
 
-/* orc_audio_convert_pack_u8 */
+/* orc_audio_convert_unpack_float_s32 */
 #ifdef DISABLE_ORC
 void
-orc_audio_convert_pack_u8 (guint8 * d1, const gint32 * s1, int p1, int n)
+orc_audio_convert_unpack_float_s32 (guint32 * d1, const gfloat * s1, int n)
 {
   int i;
-  orc_int8 var0;
-  orc_int8 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
-  orc_int16 var33;
-  orc_union32 var34;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
 
-  ptr0 = (orc_int8 *) d1;
+  ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var34.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var33 = var34.i;
-    /* 3: convwb */
-    var0 = var33;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var40 = ptr4[i];
+    /* 1: loadpl */
+    var36.i = 1325400064;
+    /* 2: mulf */
+    var41.f = ORC_DENORMAL (ORC_DENORMAL (var40.f) * ORC_DENORMAL (var36.f));
+    /* 3: loadpl */
+    var37.i = 1056964608;
+    /* 4: addf */
+    var42.f = ORC_DENORMAL (ORC_DENORMAL (var41.f) + ORC_DENORMAL (var37.f));
+    /* 5: convfl */
+    var43.i = (int) var42.f;
+    /* 6: loadpl */
+    var38.i = 0x80000000;
+    /* 7: cmpeql */
+    var44.i = (var43.i == var38.i) ? (~0) : 0;
+    /* 8: shrsl */
+    var45.i = var42.i >> 31;
+    /* 9: andnl */
+    var46.i = (~var45.i) & var44.i;
+    /* 10: addl */
+    var39.i = var43.i + var46.i;
+    /* 11: storel */
+    ptr0[i] = var39;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_u8 (OrcExecutor * ex)
+_backup_orc_audio_convert_unpack_float_s32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 var0;
-  orc_int8 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var40 = ptr4[i];
+    /* 1: loadpl */
+    var36.i = 1325400064;
+    /* 2: mulf */
+    var41.f = ORC_DENORMAL (ORC_DENORMAL (var40.f) * ORC_DENORMAL (var36.f));
+    /* 3: loadpl */
+    var37.i = 1056964608;
+    /* 4: addf */
+    var42.f = ORC_DENORMAL (ORC_DENORMAL (var41.f) + ORC_DENORMAL (var37.f));
+    /* 5: convfl */
+    var43.i = (int) var42.f;
+    /* 6: loadpl */
+    var38.i = 0x80000000;
+    /* 7: cmpeql */
+    var44.i = (var43.i == var38.i) ? (~0) : 0;
+    /* 8: shrsl */
+    var45.i = var42.i >> 31;
+    /* 9: andnl */
+    var46.i = (~var45.i) & var44.i;
+    /* 10: addl */
+    var39.i = var43.i + var46.i;
+    /* 11: storel */
+    ptr0[i] = var39;
+  }
+
+}
+
+void
+orc_audio_convert_unpack_float_s32 (guint32 * d1, const gfloat * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_audio_convert_unpack_float_s32");
+      orc_program_set_backup_function (p,
+          _backup_orc_audio_convert_unpack_float_s32);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 2, 0x4f000000, "c1");
+      orc_program_add_constant (p, 2, 0x3f000000, "c2");
+      orc_program_add_constant (p, 2, 0x80000000, "c3");
+      orc_program_add_constant (p, 2, 0x0000001f, "c4");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 4, "t3");
+      orc_program_add_temporary (p, 4, "t4");
+
+      orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convfl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "cmpeql", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_C3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T4, ORC_VAR_T1, ORC_VAR_C4,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andnl", 0, ORC_VAR_T4, ORC_VAR_T4, ORC_VAR_T3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_T4,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_audio_convert_unpack_float_s32_swap */
+#ifdef DISABLE_ORC
+void
+orc_audio_convert_unpack_float_s32_swap (guint32 * d1, const gfloat * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var36 = ptr4[i];
+    /* 1: swapl */
+    var41.i = ORC_SWAP_L (var36.i);
+    /* 2: loadpl */
+    var37.i = 1325400064;
+    /* 3: mulf */
+    var42.f = ORC_DENORMAL (ORC_DENORMAL (var41.f) * ORC_DENORMAL (var37.f));
+    /* 4: loadpl */
+    var38.i = 1056964608;
+    /* 5: addf */
+    var43.f = ORC_DENORMAL (ORC_DENORMAL (var42.f) + ORC_DENORMAL (var38.f));
+    /* 6: convfl */
+    var44.i = (int) var43.f;
+    /* 7: loadpl */
+    var39.i = 0x80000000;
+    /* 8: cmpeql */
+    var45.i = (var44.i == var39.i) ? (~0) : 0;
+    /* 9: shrsl */
+    var46.i = var43.i >> 31;
+    /* 10: andnl */
+    var47.i = (~var46.i) & var45.i;
+    /* 11: addl */
+    var40.i = var44.i + var47.i;
+    /* 12: storel */
+    ptr0[i] = var40;
+  }
+
+}
+
+#else
+static void
+_backup_orc_audio_convert_unpack_float_s32_swap (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union32 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var36 = ptr4[i];
+    /* 1: swapl */
+    var41.i = ORC_SWAP_L (var36.i);
+    /* 2: loadpl */
+    var37.i = 1325400064;
+    /* 3: mulf */
+    var42.f = ORC_DENORMAL (ORC_DENORMAL (var41.f) * ORC_DENORMAL (var37.f));
+    /* 4: loadpl */
+    var38.i = 1056964608;
+    /* 5: addf */
+    var43.f = ORC_DENORMAL (ORC_DENORMAL (var42.f) + ORC_DENORMAL (var38.f));
+    /* 6: convfl */
+    var44.i = (int) var43.f;
+    /* 7: loadpl */
+    var39.i = 0x80000000;
+    /* 8: cmpeql */
+    var45.i = (var44.i == var39.i) ? (~0) : 0;
+    /* 9: shrsl */
+    var46.i = var43.i >> 31;
+    /* 10: andnl */
+    var47.i = (~var46.i) & var45.i;
+    /* 11: addl */
+    var40.i = var44.i + var47.i;
+    /* 12: storel */
+    ptr0[i] = var40;
+  }
+
+}
+
+void
+orc_audio_convert_unpack_float_s32_swap (guint32 * d1, const gfloat * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_audio_convert_unpack_float_s32_swap");
+      orc_program_set_backup_function (p,
+          _backup_orc_audio_convert_unpack_float_s32_swap);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 2, 0x4f000000, "c1");
+      orc_program_add_constant (p, 2, 0x3f000000, "c2");
+      orc_program_add_constant (p, 2, 0x80000000, "c3");
+      orc_program_add_constant (p, 2, 0x0000001f, "c4");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 4, "t3");
+      orc_program_add_temporary (p, 4, "t4");
+
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mulf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convfl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "cmpeql", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_C3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T4, ORC_VAR_T1, ORC_VAR_C4,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andnl", 0, ORC_VAR_T4, ORC_VAR_T4, ORC_VAR_T3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addl", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_T4,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_audio_convert_pack_u8 */
+#ifdef DISABLE_ORC
+void
+orc_audio_convert_pack_u8 (guint8 * d1, const gint32 * s1, int p1, int n)
+{
+  int i;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+  orc_union32 var35;
+  orc_int8 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union16 var39;
+
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: loadpl */
+    var35.i = 0x80000000;
+    /* 2: xorl */
+    var37.i = var34.i ^ var35.i;
+    /* 3: shrul */
+    var38.i = ((orc_uint32) var37.i) >> p1;
+    /* 4: convlw */
+    var39.i = var38.i;
+    /* 5: convwb */
+    var36 = var39.i;
+    /* 6: storeb */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_orc_audio_convert_pack_u8 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_int8 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union16 var39;
 
   ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var34.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var33 = var34.i;
-    /* 3: convwb */
-    var0 = var33;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: loadpl */
+    var35.i = 0x80000000;
+    /* 2: xorl */
+    var37.i = var34.i ^ var35.i;
+    /* 3: shrul */
+    var38.i = ((orc_uint32) var37.i) >> ex->params[24];
+    /* 4: convlw */
+    var39.i = var38.i;
+    /* 5: convwb */
+    var36 = var39.i;
+    /* 6: storeb */
+    ptr0[i] = var36;
   }
 
 }
@@ -1298,10 +1692,14 @@ orc_audio_convert_pack_u8 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
-      orc_program_append (p, "xorl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1);
-      orc_program_append (p, "shrul", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "convwb", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1327,60 +1725,58 @@ void
 orc_audio_convert_pack_s8 (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_int8 var0;
-  orc_int8 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var34;
+  orc_int8 var35;
+  orc_union32 var36;
+  orc_union16 var37;
 
   ptr0 = (orc_int8 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var33 = var32.i;
-    /* 2: convwb */
-    var0 = var33;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: shrsl */
+    var36.i = var34.i >> p1;
+    /* 2: convlw */
+    var37.i = var36.i;
+    /* 3: convwb */
+    var35 = var37.i;
+    /* 4: storeb */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_s8 (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_s8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 var0;
-  orc_int8 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var34;
+  orc_int8 var35;
+  orc_union32 var36;
+  orc_union16 var37;
 
   ptr0 = (orc_int8 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var33 = var32.i;
-    /* 2: convwb */
-    var0 = var33;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: shrsl */
+    var36.i = var34.i >> ex->params[24];
+    /* 2: convlw */
+    var37.i = var36.i;
+    /* 3: convwb */
+    var35 = var37.i;
+    /* 4: storeb */
+    ptr0[i] = var35;
   }
 
 }
@@ -1407,9 +1803,12 @@ orc_audio_convert_pack_s8 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
-      orc_program_append (p, "shrsl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "convwb", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1435,62 +1834,64 @@ void
 orc_audio_convert_pack_u16 (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
-  ptr0 = (orc_int16 *) d1;
+  ptr0 = (orc_union16 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var33.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var0 = var33.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var37.i = ((orc_uint32) var36.i) >> p1;
+    /* 4: convlw */
+    var35.i = var37.i;
+    /* 5: storew */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_u16 (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_u16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
-  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr0 = (orc_union16 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var33.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var0 = var33.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var37.i = ((orc_uint32) var36.i) >> ex->params[24];
+    /* 4: convlw */
+    var35.i = var37.i;
+    /* 5: storew */
+    ptr0[i] = var35;
   }
 
 }
@@ -1517,9 +1918,12 @@ orc_audio_convert_pack_u16 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "xorl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1);
-      orc_program_append (p, "shrul", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1545,54 +1949,52 @@ void
 orc_audio_convert_pack_s16 (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union16 var34;
+  orc_union32 var35;
 
-  ptr0 = (orc_int16 *) d1;
+  ptr0 = (orc_union16 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var0 = var32.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shrsl */
+    var35.i = var33.i >> p1;
+    /* 2: convlw */
+    var34.i = var35.i;
+    /* 3: storew */
+    ptr0[i] = var34;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_s16 (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_s16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union16 var34;
+  orc_union32 var35;
 
-  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr0 = (orc_union16 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var0 = var32.i;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shrsl */
+    var35.i = var33.i >> ex->params[24];
+    /* 2: convlw */
+    var34.i = var35.i;
+    /* 3: storew */
+    ptr0[i] = var34;
   }
 
 }
@@ -1618,8 +2020,10 @@ orc_audio_convert_pack_s16 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "shrsl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1645,68 +2049,70 @@ void
 orc_audio_convert_pack_u16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union16 var39;
 
-  ptr0 = (orc_int16 *) d1;
+  ptr0 = (orc_union16 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var34.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var33 = var34.i;
-    /* 3: swapw */
-    var0 = ORC_SWAP_W (var33);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: loadpl */
+    var35.i = 0x80000000;
+    /* 2: xorl */
+    var37.i = var34.i ^ var35.i;
+    /* 3: shrul */
+    var38.i = ((orc_uint32) var37.i) >> p1;
+    /* 4: convlw */
+    var39.i = var38.i;
+    /* 5: swapw */
+    var36.i = ORC_SWAP_W (var39.i);
+    /* 6: storew */
+    ptr0[i] = var36;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_u16_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var34;
+  orc_union32 var35;
+  orc_union16 var36;
+  orc_union32 var37;
+  orc_union32 var38;
+  orc_union16 var39;
 
-  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr0 = (orc_union16 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var34.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: convlw */
-    var33 = var34.i;
-    /* 3: swapw */
-    var0 = ORC_SWAP_W (var33);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: loadpl */
+    var35.i = 0x80000000;
+    /* 2: xorl */
+    var37.i = var34.i ^ var35.i;
+    /* 3: shrul */
+    var38.i = ((orc_uint32) var37.i) >> ex->params[24];
+    /* 4: convlw */
+    var39.i = var38.i;
+    /* 5: swapw */
+    var36.i = ORC_SWAP_W (var39.i);
+    /* 6: storew */
+    ptr0[i] = var36;
   }
 
 }
@@ -1735,10 +2141,14 @@ orc_audio_convert_pack_u16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
-      orc_program_append (p, "xorl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1);
-      orc_program_append (p, "shrul", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "swapw", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1764,60 +2174,58 @@ void
 orc_audio_convert_pack_s16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
 
-  ptr0 = (orc_int16 *) d1;
+  ptr0 = (orc_union16 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var33 = var32.i;
-    /* 2: swapw */
-    var0 = ORC_SWAP_W (var33);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: shrsl */
+    var36.i = var34.i >> p1;
+    /* 2: convlw */
+    var37.i = var36.i;
+    /* 3: swapw */
+    var35.i = ORC_SWAP_W (var37.i);
+    /* 4: storew */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_s16_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int16 var0;
-  orc_int16 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
-  orc_int16 var33;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var34;
+  orc_union16 var35;
+  orc_union32 var36;
+  orc_union16 var37;
 
-  ptr0 = (orc_int16 *) ex->arrays[0];
+  ptr0 = (orc_union16 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: convlw */
-    var33 = var32.i;
-    /* 2: swapw */
-    var0 = ORC_SWAP_W (var33);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var34 = ptr4[i];
+    /* 1: shrsl */
+    var36.i = var34.i >> ex->params[24];
+    /* 2: convlw */
+    var37.i = var36.i;
+    /* 3: swapw */
+    var35.i = ORC_SWAP_W (var37.i);
+    /* 4: storew */
+    ptr0[i] = var35;
   }
 
 }
@@ -1845,9 +2253,12 @@ orc_audio_convert_pack_s16_swap (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
-      orc_program_append (p, "shrsl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
-      orc_program_append (p, "convlw", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1);
-      orc_program_append (p, "swapw", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapw", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1873,56 +2284,58 @@ void
 orc_audio_convert_pack_u32 (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var0.i = ((orc_uint32) var32.i) >> var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var35.i = ((orc_uint32) var36.i) >> p1;
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_u32 (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var0.i = ((orc_uint32) var32.i) >> var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var35.i = ((orc_uint32) var36.i) >> ex->params[24];
+    /* 4: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -1949,8 +2362,10 @@ orc_audio_convert_pack_u32 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "xorl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1);
-      orc_program_append (p, "shrul", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -1976,48 +2391,46 @@ void
 orc_audio_convert_pack_s32 (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union32 var33;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var0.i = var4.i >> var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: shrsl */
+    var33.i = var32.i >> p1;
+    /* 2: storel */
+    ptr0[i] = var33;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_s32 (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_s32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var32;
+  orc_union32 var33;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var0.i = var4.i >> var24;
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var32 = ptr4[i];
+    /* 1: shrsl */
+    var33.i = var32.i >> ex->params[24];
+    /* 2: storel */
+    ptr0[i] = var33;
   }
 
 }
@@ -2042,7 +2455,8 @@ orc_audio_convert_pack_s32 (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_source (p, 4, "s1");
       orc_program_add_parameter (p, 4, "p1");
 
-      orc_program_append (p, "shrsl", ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -2068,62 +2482,64 @@ void
 orc_audio_convert_pack_u32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var33.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: swapl */
-    var0.i = ORC_SWAP_L (var33.i);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var37.i = ((orc_uint32) var36.i) >> p1;
+    /* 4: swapl */
+    var35.i = ORC_SWAP_L (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_u32_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const orc_union32 var16 = { 0x80000000 };
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: xorl */
-    var32.i = var4.i ^ var16.i;
-    /* 1: shrul */
-    var33.i = ((orc_uint32) var32.i) >> var24;
-    /* 2: swapl */
-    var0.i = ORC_SWAP_L (var33.i);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: loadpl */
+    var34.i = 0x80000000;
+    /* 2: xorl */
+    var36.i = var33.i ^ var34.i;
+    /* 3: shrul */
+    var37.i = ((orc_uint32) var36.i) >> ex->params[24];
+    /* 4: swapl */
+    var35.i = ORC_SWAP_L (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
   }
 
 }
@@ -2151,9 +2567,12 @@ orc_audio_convert_pack_u32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "xorl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1);
-      orc_program_append (p, "shrul", ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1);
-      orc_program_append (p, "swapl", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
+      orc_program_append_2 (p, "xorl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -2179,54 +2598,52 @@ void
 orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
 {
   int i;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = p1;
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: swapl */
-    var0.i = ORC_SWAP_L (var32.i);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shrsl */
+    var35.i = var33.i >> p1;
+    /* 2: swapl */
+    var34.i = ORC_SWAP_L (var35.i);
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
 
 #else
 static void
-_backup_orc_audio_convert_pack_s32_swap (OrcExecutor * ex)
+_backup_orc_audio_convert_pack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 var0;
-  orc_union32 *ptr0;
-  orc_union32 var4;
-  const orc_union32 *ptr4;
-  const int var24 = ex->params[24];
-  orc_union32 var32;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
   for (i = 0; i < n; i++) {
-    var4 = *ptr4;
-    ptr4++;
-    /* 0: shrsl */
-    var32.i = var4.i >> var24;
-    /* 1: swapl */
-    var0.i = ORC_SWAP_L (var32.i);
-    *ptr0 = var0;
-    ptr0++;
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: shrsl */
+    var35.i = var33.i >> ex->params[24];
+    /* 2: swapl */
+    var34.i = ORC_SWAP_L (var35.i);
+    /* 3: storel */
+    ptr0[i] = var34;
   }
 
 }
@@ -2253,8 +2670,10 @@ orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_temporary (p, 4, "t1");
 
-      orc_program_append (p, "shrsl", ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1);
-      orc_program_append (p, "swapl", ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1);
+      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
@@ -2267,6 +2686,228 @@ orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1, int n)
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_audio_convert_pack_s32_float */
+#ifdef DISABLE_ORC
+void
+orc_audio_convert_pack_s32_float (gfloat * d1, const gint32 * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convlf */
+    var35.f = var33.i;
+    /* 2: loadpl */
+    var34.i = 1325400064;
+    /* 3: divf */
+    var36.f = ORC_DENORMAL (ORC_DENORMAL (var35.f) / ORC_DENORMAL (var34.f));
+    /* 4: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_orc_audio_convert_pack_s32_float (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convlf */
+    var35.f = var33.i;
+    /* 2: loadpl */
+    var34.i = 1325400064;
+    /* 3: divf */
+    var36.f = ORC_DENORMAL (ORC_DENORMAL (var35.f) / ORC_DENORMAL (var34.f));
+    /* 4: storel */
+    ptr0[i] = var36;
+  }
+
+}
+
+void
+orc_audio_convert_pack_s32_float (gfloat * d1, const gint32 * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_audio_convert_pack_s32_float");
+      orc_program_set_backup_function (p,
+          _backup_orc_audio_convert_pack_s32_float);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 2, 0x4f000000, "c1");
+      orc_program_add_temporary (p, 4, "t1");
+
+      orc_program_append_2 (p, "convlf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "divf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_audio_convert_pack_s32_float_swap */
+#ifdef DISABLE_ORC
+void
+orc_audio_convert_pack_s32_float_swap (gfloat * d1, const gint32 * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convlf */
+    var36.f = var33.i;
+    /* 2: loadpl */
+    var34.i = 1325400064;
+    /* 3: divf */
+    var37.f = ORC_DENORMAL (ORC_DENORMAL (var36.f) / ORC_DENORMAL (var34.f));
+    /* 4: swapl */
+    var35.i = ORC_SWAP_L (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+#else
+static void
+_backup_orc_audio_convert_pack_s32_float_swap (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+  orc_union32 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convlf */
+    var36.f = var33.i;
+    /* 2: loadpl */
+    var34.i = 1325400064;
+    /* 3: divf */
+    var37.f = ORC_DENORMAL (ORC_DENORMAL (var36.f) / ORC_DENORMAL (var34.f));
+    /* 4: swapl */
+    var35.i = ORC_SWAP_L (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+void
+orc_audio_convert_pack_s32_float_swap (gfloat * d1, const gint32 * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "orc_audio_convert_pack_s32_float_swap");
+      orc_program_set_backup_function (p,
+          _backup_orc_audio_convert_pack_s32_float_swap);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 2, 0x4f000000, "c1");
+      orc_program_add_temporary (p, 4, "t1");
+
+      orc_program_append_2 (p, "convlf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "divf", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "swapl", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
 
   func = p->code_exec;
   func (ex);
