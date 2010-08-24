@@ -114,6 +114,8 @@
 GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define GST_CAT_DEFAULT level_debug
 
+#define EPSILON 1e-35f
+
 static GstStaticPadTemplate sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -676,10 +678,10 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
             "message: last_peak: %f, decay_peak: %f",
             filter->last_peak[i], filter->decay_peak[i]);
         /* RMS values are calculated in amplitude, so 20 * log 10 */
-        RMSdB = 20 * log10 (RMS);
+        RMSdB = 20 * log10 (RMS + EPSILON);
         /* peak values are square sums, ie. power, so 10 * log 10 */
-        lastdB = 10 * log10 (filter->last_peak[i]);
-        decaydB = 10 * log10 (filter->decay_peak[i]);
+        lastdB = 10 * log10 (filter->last_peak[i] + EPSILON);
+        decaydB = 10 * log10 (filter->decay_peak[i] + EPSILON);
 
         if (filter->decay_peak[i] < filter->last_peak[i]) {
           /* this can happen in certain cases, for example when
