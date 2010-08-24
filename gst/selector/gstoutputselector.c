@@ -55,8 +55,12 @@ enum
   PROP_LAST
 };
 
-GST_BOILERPLATE (GstOutputSelector, gst_output_selector, GstElement,
-    GST_TYPE_ELEMENT);
+#define _do_init(bla) \
+GST_DEBUG_CATEGORY_INIT (output_selector_debug, \
+        "output-selector", 0, "An output stream selector element");
+
+GST_BOILERPLATE_FULL (GstOutputSelector, gst_output_selector, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void gst_output_selector_dispose (GObject * object);
 static void gst_output_selector_set_property (GObject * object,
@@ -119,9 +123,6 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
       GST_DEBUG_FUNCPTR (gst_output_selector_release_pad);
 
   gstelement_class->change_state = gst_output_selector_change_state;
-
-  GST_DEBUG_CATEGORY_INIT (output_selector_debug,
-      "output-selector", 0, "An output stream selector element");
 }
 
 static void
