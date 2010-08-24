@@ -288,6 +288,8 @@ gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstS
 
 void                  gst_rtsp_media_remove_elements  (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_trans_cleanup    (GstRTSPMediaTrans *trans);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_MEDIA_H__ */

@@ -171,6 +171,19 @@ free_destination (RTSPDestination *dest)
   g_slice_free (RTSPDestination, dest);
 }
 
+void
+gst_rtsp_media_trans_cleanup (GstRTSPMediaTrans *trans)
+{
+  if (trans->transport) {
+    gst_rtsp_transport_free (trans->transport);
+    trans->transport = NULL;
+  }
+  if (trans->rtpsource) {
+    g_object_set_qdata (trans->rtpsource, ssrc_stream_map_key, NULL);
+    trans->rtpsource = NULL;
+  }
+}
+
 static void
 gst_rtsp_media_stream_free (GstRTSPMediaStream * stream)
 {
@@ -855,6 +868,7 @@ cleanup:
   }
 }
 
+/* executed from streaming thread */
 static void
 caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 {
@@ -1408,6 +1422,7 @@ bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
   return ret;
 }
 
+/* called from streaming threads */
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
