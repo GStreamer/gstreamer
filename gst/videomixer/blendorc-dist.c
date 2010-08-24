@@ -62,6 +62,10 @@ void orc_splat_u32 (guint32 * d1, int p1, int n);
 void orc_memcpy_u32 (guint32 * d1, const guint32 * s1, int n);
 void orc_blend_u8 (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
     int p1, int n, int m);
+void orc_blend_argb (guint8 * d1, int d1_stride, const guint8 * s1,
+    int s1_stride, int p1, int n, int m);
+void orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1,
+    int s1_stride, int p1, int n, int m);
 
 
 /* begin Orc C target preamble */
@@ -401,6 +405,670 @@ orc_blend_u8 (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
       orc_program_append (p, "addw", ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T2);
       orc_program_append (p, "shruw", ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1);
       orc_program_append (p, "convsuswb", ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_blend_argb */
+#ifdef DISABLE_ORC
+void
+orc_blend_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
+    int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_int8 var43;
+  orc_union32 var44;
+  orc_union64 var45;
+  orc_union64 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union32 var49;
+  orc_union64 var50;
+  orc_union64 var51;
+  orc_union64 var52;
+  orc_union64 var53;
+  orc_union64 var54;
+  orc_union32 var55;
+  orc_union32 var56;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadl */
+      var41 = ptr4[i];
+      /* 1: convlw */
+      var42.i = var41.i;
+      /* 2: convwb */
+      var43 = var42.i;
+      /* 3: splatbl */
+      var44.i =
+          ((var43 & 0xff) << 24) | ((var43 & 0xff) << 16) | ((var43 & 0xff) <<
+          8) | (var43 & 0xff);
+      /* 4: convubw */
+      var45.x4[0] = (orc_uint8) var44.x4[0];
+      var45.x4[1] = (orc_uint8) var44.x4[1];
+      var45.x4[2] = (orc_uint8) var44.x4[2];
+      var45.x4[3] = (orc_uint8) var44.x4[3];
+      /* 5: loadpw */
+      var39.x4[0] = p1;
+      var39.x4[1] = p1;
+      var39.x4[2] = p1;
+      var39.x4[3] = p1;
+      /* 6: mullw */
+      var46.x4[0] = (var45.x4[0] * var39.x4[0]) & 0xffff;
+      var46.x4[1] = (var45.x4[1] * var39.x4[1]) & 0xffff;
+      var46.x4[2] = (var45.x4[2] * var39.x4[2]) & 0xffff;
+      var46.x4[3] = (var45.x4[3] * var39.x4[3]) & 0xffff;
+      /* 7: shruw */
+      var47.x4[0] = ((orc_uint16) var46.x4[0]) >> 8;
+      var47.x4[1] = ((orc_uint16) var46.x4[1]) >> 8;
+      var47.x4[2] = ((orc_uint16) var46.x4[2]) >> 8;
+      var47.x4[3] = ((orc_uint16) var46.x4[3]) >> 8;
+      /* 8: convubw */
+      var48.x4[0] = (orc_uint8) var41.x4[0];
+      var48.x4[1] = (orc_uint8) var41.x4[1];
+      var48.x4[2] = (orc_uint8) var41.x4[2];
+      var48.x4[3] = (orc_uint8) var41.x4[3];
+      /* 9: loadl */
+      var49 = ptr0[i];
+      /* 10: convubw */
+      var50.x4[0] = (orc_uint8) var49.x4[0];
+      var50.x4[1] = (orc_uint8) var49.x4[1];
+      var50.x4[2] = (orc_uint8) var49.x4[2];
+      var50.x4[3] = (orc_uint8) var49.x4[3];
+      /* 11: subw */
+      var51.x4[0] = var48.x4[0] - var50.x4[0];
+      var51.x4[1] = var48.x4[1] - var50.x4[1];
+      var51.x4[2] = var48.x4[2] - var50.x4[2];
+      var51.x4[3] = var48.x4[3] - var50.x4[3];
+      /* 12: mullw */
+      var52.x4[0] = (var51.x4[0] * var47.x4[0]) & 0xffff;
+      var52.x4[1] = (var51.x4[1] * var47.x4[1]) & 0xffff;
+      var52.x4[2] = (var51.x4[2] * var47.x4[2]) & 0xffff;
+      var52.x4[3] = (var51.x4[3] * var47.x4[3]) & 0xffff;
+      /* 13: div255w */
+      var53.x4[0] =
+          ((uint16_t) (((orc_uint16) (var52.x4[0] + 128)) +
+              (((orc_uint16) (var52.x4[0] + 128)) >> 8))) >> 8;
+      var53.x4[1] =
+          ((uint16_t) (((orc_uint16) (var52.x4[1] + 128)) +
+              (((orc_uint16) (var52.x4[1] + 128)) >> 8))) >> 8;
+      var53.x4[2] =
+          ((uint16_t) (((orc_uint16) (var52.x4[2] + 128)) +
+              (((orc_uint16) (var52.x4[2] + 128)) >> 8))) >> 8;
+      var53.x4[3] =
+          ((uint16_t) (((orc_uint16) (var52.x4[3] + 128)) +
+              (((orc_uint16) (var52.x4[3] + 128)) >> 8))) >> 8;
+      /* 14: addw */
+      var54.x4[0] = var50.x4[0] + var53.x4[0];
+      var54.x4[1] = var50.x4[1] + var53.x4[1];
+      var54.x4[2] = var50.x4[2] + var53.x4[2];
+      var54.x4[3] = var50.x4[3] + var53.x4[3];
+      /* 15: convwb */
+      var55.x4[0] = var54.x4[0];
+      var55.x4[1] = var54.x4[1];
+      var55.x4[2] = var54.x4[2];
+      var55.x4[3] = var54.x4[3];
+      /* 16: loadpl */
+      var40.i = 255;
+      /* 17: orl */
+      var56.i = var55.i | var40.i;
+      /* 18: storel */
+      ptr0[i] = var56;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_orc_blend_argb (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_int8 var43;
+  orc_union32 var44;
+  orc_union64 var45;
+  orc_union64 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union32 var49;
+  orc_union64 var50;
+  orc_union64 var51;
+  orc_union64 var52;
+  orc_union64 var53;
+  orc_union64 var54;
+  orc_union32 var55;
+  orc_union32 var56;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadl */
+      var41 = ptr4[i];
+      /* 1: convlw */
+      var42.i = var41.i;
+      /* 2: convwb */
+      var43 = var42.i;
+      /* 3: splatbl */
+      var44.i =
+          ((var43 & 0xff) << 24) | ((var43 & 0xff) << 16) | ((var43 & 0xff) <<
+          8) | (var43 & 0xff);
+      /* 4: convubw */
+      var45.x4[0] = (orc_uint8) var44.x4[0];
+      var45.x4[1] = (orc_uint8) var44.x4[1];
+      var45.x4[2] = (orc_uint8) var44.x4[2];
+      var45.x4[3] = (orc_uint8) var44.x4[3];
+      /* 5: loadpw */
+      var39.x4[0] = ex->params[24];
+      var39.x4[1] = ex->params[24];
+      var39.x4[2] = ex->params[24];
+      var39.x4[3] = ex->params[24];
+      /* 6: mullw */
+      var46.x4[0] = (var45.x4[0] * var39.x4[0]) & 0xffff;
+      var46.x4[1] = (var45.x4[1] * var39.x4[1]) & 0xffff;
+      var46.x4[2] = (var45.x4[2] * var39.x4[2]) & 0xffff;
+      var46.x4[3] = (var45.x4[3] * var39.x4[3]) & 0xffff;
+      /* 7: shruw */
+      var47.x4[0] = ((orc_uint16) var46.x4[0]) >> 8;
+      var47.x4[1] = ((orc_uint16) var46.x4[1]) >> 8;
+      var47.x4[2] = ((orc_uint16) var46.x4[2]) >> 8;
+      var47.x4[3] = ((orc_uint16) var46.x4[3]) >> 8;
+      /* 8: convubw */
+      var48.x4[0] = (orc_uint8) var41.x4[0];
+      var48.x4[1] = (orc_uint8) var41.x4[1];
+      var48.x4[2] = (orc_uint8) var41.x4[2];
+      var48.x4[3] = (orc_uint8) var41.x4[3];
+      /* 9: loadl */
+      var49 = ptr0[i];
+      /* 10: convubw */
+      var50.x4[0] = (orc_uint8) var49.x4[0];
+      var50.x4[1] = (orc_uint8) var49.x4[1];
+      var50.x4[2] = (orc_uint8) var49.x4[2];
+      var50.x4[3] = (orc_uint8) var49.x4[3];
+      /* 11: subw */
+      var51.x4[0] = var48.x4[0] - var50.x4[0];
+      var51.x4[1] = var48.x4[1] - var50.x4[1];
+      var51.x4[2] = var48.x4[2] - var50.x4[2];
+      var51.x4[3] = var48.x4[3] - var50.x4[3];
+      /* 12: mullw */
+      var52.x4[0] = (var51.x4[0] * var47.x4[0]) & 0xffff;
+      var52.x4[1] = (var51.x4[1] * var47.x4[1]) & 0xffff;
+      var52.x4[2] = (var51.x4[2] * var47.x4[2]) & 0xffff;
+      var52.x4[3] = (var51.x4[3] * var47.x4[3]) & 0xffff;
+      /* 13: div255w */
+      var53.x4[0] =
+          ((uint16_t) (((orc_uint16) (var52.x4[0] + 128)) +
+              (((orc_uint16) (var52.x4[0] + 128)) >> 8))) >> 8;
+      var53.x4[1] =
+          ((uint16_t) (((orc_uint16) (var52.x4[1] + 128)) +
+              (((orc_uint16) (var52.x4[1] + 128)) >> 8))) >> 8;
+      var53.x4[2] =
+          ((uint16_t) (((orc_uint16) (var52.x4[2] + 128)) +
+              (((orc_uint16) (var52.x4[2] + 128)) >> 8))) >> 8;
+      var53.x4[3] =
+          ((uint16_t) (((orc_uint16) (var52.x4[3] + 128)) +
+              (((orc_uint16) (var52.x4[3] + 128)) >> 8))) >> 8;
+      /* 14: addw */
+      var54.x4[0] = var50.x4[0] + var53.x4[0];
+      var54.x4[1] = var50.x4[1] + var53.x4[1];
+      var54.x4[2] = var50.x4[2] + var53.x4[2];
+      var54.x4[3] = var50.x4[3] + var53.x4[3];
+      /* 15: convwb */
+      var55.x4[0] = var54.x4[0];
+      var55.x4[1] = var54.x4[1];
+      var55.x4[2] = var54.x4[2];
+      var55.x4[3] = var54.x4[3];
+      /* 16: loadpl */
+      var40.i = 255;
+      /* 17: orl */
+      var56.i = var55.i | var40.i;
+      /* 18: storel */
+      ptr0[i] = var56;
+    }
+  }
+
+}
+
+void
+orc_blend_argb (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
+    int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "orc_blend_argb");
+      orc_program_set_backup_function (p, _backup_orc_blend_argb);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 4, 0x000000ff, "c1");
+      orc_program_add_constant (p, 2, 0x00000008, "c2");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 2, "t2");
+      orc_program_add_temporary (p, 1, "t3");
+      orc_program_add_temporary (p, 4, "t4");
+      orc_program_add_temporary (p, 8, "t5");
+      orc_program_add_temporary (p, 8, "t6");
+      orc_program_add_temporary (p, 8, "t7");
+
+      orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "splatbl", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T7, ORC_VAR_T4, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mullw", 2, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shruw", 2, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_C2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T6, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T5, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subw", 2, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mullw", 2, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_T7,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "div255w", 2, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addw", 2, ORC_VAR_T5, ORC_VAR_T5, ORC_VAR_T6,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 2, ORC_VAR_T1, ORC_VAR_T5, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "orl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ORC_EXECUTOR_M (ex) = m;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_D1] = d1_stride;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->params[ORC_VAR_S1] = s1_stride;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_blend_bgra */
+#ifdef DISABLE_ORC
+void
+orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
+    int p1, int n, int m)
+{
+  int i;
+  int j;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union16 var44;
+  orc_int8 var45;
+  orc_union32 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union64 var49;
+  orc_union64 var50;
+  orc_union32 var51;
+  orc_union64 var52;
+  orc_union64 var53;
+  orc_union64 var54;
+  orc_union64 var55;
+  orc_union64 var56;
+  orc_union32 var57;
+  orc_union32 var58;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (d1, d1_stride * j);
+    ptr4 = ORC_PTR_OFFSET (s1, s1_stride * j);
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadl */
+      var42 = ptr4[i];
+      /* 1: shrul */
+      var43.i = ((orc_uint32) var42.i) >> 24;
+      /* 2: convlw */
+      var44.i = var43.i;
+      /* 3: convwb */
+      var45 = var44.i;
+      /* 4: splatbl */
+      var46.i =
+          ((var45 & 0xff) << 24) | ((var45 & 0xff) << 16) | ((var45 & 0xff) <<
+          8) | (var45 & 0xff);
+      /* 5: convubw */
+      var47.x4[0] = (orc_uint8) var46.x4[0];
+      var47.x4[1] = (orc_uint8) var46.x4[1];
+      var47.x4[2] = (orc_uint8) var46.x4[2];
+      var47.x4[3] = (orc_uint8) var46.x4[3];
+      /* 6: loadpw */
+      var40.x4[0] = p1;
+      var40.x4[1] = p1;
+      var40.x4[2] = p1;
+      var40.x4[3] = p1;
+      /* 7: mullw */
+      var48.x4[0] = (var47.x4[0] * var40.x4[0]) & 0xffff;
+      var48.x4[1] = (var47.x4[1] * var40.x4[1]) & 0xffff;
+      var48.x4[2] = (var47.x4[2] * var40.x4[2]) & 0xffff;
+      var48.x4[3] = (var47.x4[3] * var40.x4[3]) & 0xffff;
+      /* 8: shruw */
+      var49.x4[0] = ((orc_uint16) var48.x4[0]) >> 8;
+      var49.x4[1] = ((orc_uint16) var48.x4[1]) >> 8;
+      var49.x4[2] = ((orc_uint16) var48.x4[2]) >> 8;
+      var49.x4[3] = ((orc_uint16) var48.x4[3]) >> 8;
+      /* 9: convubw */
+      var50.x4[0] = (orc_uint8) var42.x4[0];
+      var50.x4[1] = (orc_uint8) var42.x4[1];
+      var50.x4[2] = (orc_uint8) var42.x4[2];
+      var50.x4[3] = (orc_uint8) var42.x4[3];
+      /* 10: loadl */
+      var51 = ptr0[i];
+      /* 11: convubw */
+      var52.x4[0] = (orc_uint8) var51.x4[0];
+      var52.x4[1] = (orc_uint8) var51.x4[1];
+      var52.x4[2] = (orc_uint8) var51.x4[2];
+      var52.x4[3] = (orc_uint8) var51.x4[3];
+      /* 12: subw */
+      var53.x4[0] = var50.x4[0] - var52.x4[0];
+      var53.x4[1] = var50.x4[1] - var52.x4[1];
+      var53.x4[2] = var50.x4[2] - var52.x4[2];
+      var53.x4[3] = var50.x4[3] - var52.x4[3];
+      /* 13: mullw */
+      var54.x4[0] = (var53.x4[0] * var49.x4[0]) & 0xffff;
+      var54.x4[1] = (var53.x4[1] * var49.x4[1]) & 0xffff;
+      var54.x4[2] = (var53.x4[2] * var49.x4[2]) & 0xffff;
+      var54.x4[3] = (var53.x4[3] * var49.x4[3]) & 0xffff;
+      /* 14: div255w */
+      var55.x4[0] =
+          ((uint16_t) (((orc_uint16) (var54.x4[0] + 128)) +
+              (((orc_uint16) (var54.x4[0] + 128)) >> 8))) >> 8;
+      var55.x4[1] =
+          ((uint16_t) (((orc_uint16) (var54.x4[1] + 128)) +
+              (((orc_uint16) (var54.x4[1] + 128)) >> 8))) >> 8;
+      var55.x4[2] =
+          ((uint16_t) (((orc_uint16) (var54.x4[2] + 128)) +
+              (((orc_uint16) (var54.x4[2] + 128)) >> 8))) >> 8;
+      var55.x4[3] =
+          ((uint16_t) (((orc_uint16) (var54.x4[3] + 128)) +
+              (((orc_uint16) (var54.x4[3] + 128)) >> 8))) >> 8;
+      /* 15: addw */
+      var56.x4[0] = var52.x4[0] + var55.x4[0];
+      var56.x4[1] = var52.x4[1] + var55.x4[1];
+      var56.x4[2] = var52.x4[2] + var55.x4[2];
+      var56.x4[3] = var52.x4[3] + var55.x4[3];
+      /* 16: convwb */
+      var57.x4[0] = var56.x4[0];
+      var57.x4[1] = var56.x4[1];
+      var57.x4[2] = var56.x4[2];
+      var57.x4[3] = var56.x4[3];
+      /* 17: loadpl */
+      var41.i = -16777216;
+      /* 18: orl */
+      var58.i = var57.i | var41.i;
+      /* 19: storel */
+      ptr0[i] = var58;
+    }
+  }
+
+}
+
+#else
+static void
+_backup_orc_blend_bgra (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int j;
+  int n = ex->n;
+  int m = ex->params[ORC_VAR_A1];
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union32 var42;
+  orc_union32 var43;
+  orc_union16 var44;
+  orc_int8 var45;
+  orc_union32 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union64 var49;
+  orc_union64 var50;
+  orc_union32 var51;
+  orc_union64 var52;
+  orc_union64 var53;
+  orc_union64 var54;
+  orc_union64 var55;
+  orc_union64 var56;
+  orc_union32 var57;
+  orc_union32 var58;
+
+  for (j = 0; j < m; j++) {
+    ptr0 = ORC_PTR_OFFSET (ex->arrays[0], ex->params[0] * j);
+    ptr4 = ORC_PTR_OFFSET (ex->arrays[4], ex->params[4] * j);
+
+    for (i = 0; i < n; i++) {
+      /* 0: loadl */
+      var42 = ptr4[i];
+      /* 1: shrul */
+      var43.i = ((orc_uint32) var42.i) >> 24;
+      /* 2: convlw */
+      var44.i = var43.i;
+      /* 3: convwb */
+      var45 = var44.i;
+      /* 4: splatbl */
+      var46.i =
+          ((var45 & 0xff) << 24) | ((var45 & 0xff) << 16) | ((var45 & 0xff) <<
+          8) | (var45 & 0xff);
+      /* 5: convubw */
+      var47.x4[0] = (orc_uint8) var46.x4[0];
+      var47.x4[1] = (orc_uint8) var46.x4[1];
+      var47.x4[2] = (orc_uint8) var46.x4[2];
+      var47.x4[3] = (orc_uint8) var46.x4[3];
+      /* 6: loadpw */
+      var40.x4[0] = ex->params[24];
+      var40.x4[1] = ex->params[24];
+      var40.x4[2] = ex->params[24];
+      var40.x4[3] = ex->params[24];
+      /* 7: mullw */
+      var48.x4[0] = (var47.x4[0] * var40.x4[0]) & 0xffff;
+      var48.x4[1] = (var47.x4[1] * var40.x4[1]) & 0xffff;
+      var48.x4[2] = (var47.x4[2] * var40.x4[2]) & 0xffff;
+      var48.x4[3] = (var47.x4[3] * var40.x4[3]) & 0xffff;
+      /* 8: shruw */
+      var49.x4[0] = ((orc_uint16) var48.x4[0]) >> 8;
+      var49.x4[1] = ((orc_uint16) var48.x4[1]) >> 8;
+      var49.x4[2] = ((orc_uint16) var48.x4[2]) >> 8;
+      var49.x4[3] = ((orc_uint16) var48.x4[3]) >> 8;
+      /* 9: convubw */
+      var50.x4[0] = (orc_uint8) var42.x4[0];
+      var50.x4[1] = (orc_uint8) var42.x4[1];
+      var50.x4[2] = (orc_uint8) var42.x4[2];
+      var50.x4[3] = (orc_uint8) var42.x4[3];
+      /* 10: loadl */
+      var51 = ptr0[i];
+      /* 11: convubw */
+      var52.x4[0] = (orc_uint8) var51.x4[0];
+      var52.x4[1] = (orc_uint8) var51.x4[1];
+      var52.x4[2] = (orc_uint8) var51.x4[2];
+      var52.x4[3] = (orc_uint8) var51.x4[3];
+      /* 12: subw */
+      var53.x4[0] = var50.x4[0] - var52.x4[0];
+      var53.x4[1] = var50.x4[1] - var52.x4[1];
+      var53.x4[2] = var50.x4[2] - var52.x4[2];
+      var53.x4[3] = var50.x4[3] - var52.x4[3];
+      /* 13: mullw */
+      var54.x4[0] = (var53.x4[0] * var49.x4[0]) & 0xffff;
+      var54.x4[1] = (var53.x4[1] * var49.x4[1]) & 0xffff;
+      var54.x4[2] = (var53.x4[2] * var49.x4[2]) & 0xffff;
+      var54.x4[3] = (var53.x4[3] * var49.x4[3]) & 0xffff;
+      /* 14: div255w */
+      var55.x4[0] =
+          ((uint16_t) (((orc_uint16) (var54.x4[0] + 128)) +
+              (((orc_uint16) (var54.x4[0] + 128)) >> 8))) >> 8;
+      var55.x4[1] =
+          ((uint16_t) (((orc_uint16) (var54.x4[1] + 128)) +
+              (((orc_uint16) (var54.x4[1] + 128)) >> 8))) >> 8;
+      var55.x4[2] =
+          ((uint16_t) (((orc_uint16) (var54.x4[2] + 128)) +
+              (((orc_uint16) (var54.x4[2] + 128)) >> 8))) >> 8;
+      var55.x4[3] =
+          ((uint16_t) (((orc_uint16) (var54.x4[3] + 128)) +
+              (((orc_uint16) (var54.x4[3] + 128)) >> 8))) >> 8;
+      /* 15: addw */
+      var56.x4[0] = var52.x4[0] + var55.x4[0];
+      var56.x4[1] = var52.x4[1] + var55.x4[1];
+      var56.x4[2] = var52.x4[2] + var55.x4[2];
+      var56.x4[3] = var52.x4[3] + var55.x4[3];
+      /* 16: convwb */
+      var57.x4[0] = var56.x4[0];
+      var57.x4[1] = var56.x4[1];
+      var57.x4[2] = var56.x4[2];
+      var57.x4[3] = var56.x4[3];
+      /* 17: loadpl */
+      var41.i = -16777216;
+      /* 18: orl */
+      var58.i = var57.i | var41.i;
+      /* 19: storel */
+      ptr0[i] = var58;
+    }
+  }
+
+}
+
+void
+orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
+    int p1, int n, int m)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_2d (p);
+      orc_program_set_name (p, "orc_blend_bgra");
+      orc_program_set_backup_function (p, _backup_orc_blend_bgra);
+      orc_program_add_destination (p, 4, "d1");
+      orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 4, 0xff000000, "c1");
+      orc_program_add_constant (p, 2, 0x00000018, "c2");
+      orc_program_add_constant (p, 2, 0x00000008, "c3");
+      orc_program_add_parameter (p, 2, "p1");
+      orc_program_add_temporary (p, 4, "t1");
+      orc_program_add_temporary (p, 4, "t2");
+      orc_program_add_temporary (p, 2, "t3");
+      orc_program_add_temporary (p, 1, "t4");
+      orc_program_add_temporary (p, 4, "t5");
+      orc_program_add_temporary (p, 8, "t6");
+      orc_program_add_temporary (p, 8, "t7");
+      orc_program_add_temporary (p, 8, "t8");
+
+      orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shrul", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_C2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convlw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "splatbl", 0, ORC_VAR_T5, ORC_VAR_T4, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T8, ORC_VAR_T5, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mullw", 2, ORC_VAR_T8, ORC_VAR_T8, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "shruw", 2, ORC_VAR_T8, ORC_VAR_T8, ORC_VAR_C3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T7, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convubw", 2, ORC_VAR_T6, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subw", 2, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_T6,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "mullw", 2, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_T8,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "div255w", 2, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addw", 2, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_T7,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "convwb", 2, ORC_VAR_T1, ORC_VAR_T6, ORC_VAR_D1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "orl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "storel", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+          ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }
