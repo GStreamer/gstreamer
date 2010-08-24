@@ -50,57 +50,6 @@ typedef struct
 #define EXIF_TYPE_SLONG      9
 #define EXIF_TYPE_SRATIONAL 10
 
-/* exif tags */
-#define GST_EXIF_TAG_GPS_LATITUDE_REF 0x1
-#define GST_EXIF_TAG_GPS_LATITUDE 0x2
-#define GST_EXIF_TAG_GPS_LONGITUDE_REF 0x3
-#define GST_EXIF_TAG_GPS_LONGITUDE 0x4
-#define GST_EXIF_TAG_GPS_ALTITUDE_REF 0x5
-#define GST_EXIF_TAG_GPS_ALTITUDE 0x6
-#define GST_EXIF_TAG_GPS_SPEED_REF 0xC
-#define GST_EXIF_TAG_GPS_SPEED 0xD
-#define GST_EXIF_TAG_GPS_TRACK_REF 0xE
-#define GST_EXIF_TAG_GPS_TRACK 0xF
-#define GST_EXIF_TAG_GPS_IMAGE_DIRECTION_REF 0x10
-#define GST_EXIF_TAG_GPS_IMAGE_DIRECTION 0x11
-#define GST_EXIF_TAG_IMAGE_DESCRIPTION 0x10E
-#define GST_EXIF_TAG_MAKE 0x10F
-#define GST_EXIF_TAG_MODEL 0x110
-#define GST_EXIF_TAG_ORIENTATION 0x112
-#define GST_EXIF_TAG_SOFTWARE 0x131
-#define GST_EXIF_TAG_DATE_TIME 0x132
-#define GST_EXIF_TAG_ARTIST 0x13B
-#define GST_EXIF_TAG_COPYRIGHT 0x8298
-#define GST_EXIF_TAG_EXPOSURE_TIME 0x829A
-#define GST_EXIF_TAG_F_NUMBER 0x829D
-#define GST_EXIF_TAG_EXPOSURE_PROGRAM 0x8822
-#define GST_EXIF_TAG_PHOTOGRAPHIC_SENSITIVITY 0x8827
-#define GST_EXIF_TAG_SENSITIVITY_TYPE 0x8830
-#define GST_EXIF_TAG_ISO_SPEED 0x8833
-#define GST_EXIF_TAG_DATE_TIME_ORIGINAL 0x9003
-#define GST_EXIF_TAG_DATE_TIME_DIGITIZED 0x9004
-#define GST_EXIF_TAG_SHUTTER_SPEED_VALUE 0x9201
-#define GST_EXIF_TAG_APERTURE_VALUE 0x9202
-#define GST_EXIF_TAG_FLASH 0x9209
-#define GST_EXIF_TAG_FOCAL_LENGTH 0x920A
-#define GST_EXIF_TAG_MAKER_NOTE 0x927C
-#define GST_EXIF_TAG_EXPOSURE_MODE 0xA402
-#define GST_EXIF_TAG_WHITE_BALANCE 0xA403
-#define GST_EXIF_TAG_DIGITAL_ZOOM_RATIO 0xA404
-#define GST_EXIF_TAG_SCENE_CAPTURE_TYPE 0xA406
-#define GST_EXIF_TAG_GAIN_CONTROL 0xA407
-#define GST_EXIF_TAG_CONTRAST 0xA408
-#define GST_EXIF_TAG_SATURATION 0xA409
-
-/* IFD pointer tags */
-#define EXIF_IFD_TAG 0x8769
-#define EXIF_GPS_IFD_TAG 0x8825
-
-/* version tags */
-#define EXIF_VERSION_TAG 0x9000
-#define EXIF_FLASHPIX_VERSION_TAG 0xA000
-
-
 typedef struct _GstExifTagMatch GstExifTagMatch;
 typedef void (*CompareFunc) (ExifEntry * entry, ExifTagCheckData * testdata);
 
@@ -481,17 +430,98 @@ compare_flash (ExifEntry * entry, ExifTagCheckData * testdata)
   testdata->result = TRUE;
 }
 
+static void
+compare_geo_elevation (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble altitude = 0, gst_value;
+  ExifRational rational;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist,
+          GST_TAG_GEO_LOCATION_ELEVATION, 0, &gst_value));
+
+  fail_unless (entry->components == 1);
+
+  rational = exif_get_rational (entry->data,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator,
+      &altitude);
+
+  gst_value = ABS (gst_value);
+  fail_unless (ABS (gst_value - altitude) < 0.001);
+  testdata->result = TRUE;
+}
+
+static void
+compare_geo_elevation_ref (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble gst_value;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist,
+          GST_TAG_GEO_LOCATION_ELEVATION, 0, &gst_value));
+
+  fail_unless (entry->components == 1);
+
+  if (gst_value >= 0) {
+    fail_unless (entry->data[0] == 0);
+  } else {
+    fail_unless (entry->data[0] == 1);
+  }
+  testdata->result = TRUE;
+}
+
+static void
+compare_speed (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble speed = 0, gst_value;
+  ExifRational rational;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist,
+          GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, 0, &gst_value));
+
+  fail_unless (entry->components == 1);
+
+  rational = exif_get_rational (entry->data,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator,
+      &speed);
+
+  speed = speed / 3.6;
+
+  fail_unless (ABS (gst_value - speed) < 0.001);
+  testdata->result = TRUE;
+}
+
+static void
+compare_speed_ref (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  fail_unless (entry->components == 2);
+  fail_unless (entry->data[0] == 'K');
+  testdata->result = TRUE;
+}
+
+static void
+compare_geo_coordinate (ExifEntry * entry, ExifTagCheckData * testdata);
+
+static void
+compare_geo_coordinate_ref (ExifEntry * entry, ExifTagCheckData * testdata);
+
+static void
+compare_geo_direction (ExifEntry * entry, ExifTagCheckData * testdata);
+
+static void
+compare_geo_direction_ref (ExifEntry * entry, ExifTagCheckData * testdata);
+
 static const GstExifTagMatch tag_map[] = {
-  {GST_TAG_DESCRIPTION, GST_EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII,
+  {GST_TAG_DESCRIPTION, EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DEVICE_MANUFACTURER, GST_EXIF_TAG_MAKE, EXIF_TYPE_ASCII,
+  {GST_TAG_DEVICE_MANUFACTURER, EXIF_TAG_MAKE, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DEVICE_MODEL, GST_EXIF_TAG_MODEL, EXIF_TYPE_ASCII, NULL},
-  {GST_TAG_IMAGE_ORIENTATION, GST_EXIF_TAG_ORIENTATION, EXIF_TYPE_SHORT,
+  {GST_TAG_DEVICE_MODEL, EXIF_TAG_MODEL, EXIF_TYPE_ASCII, NULL},
+  {GST_TAG_IMAGE_ORIENTATION, EXIF_TAG_ORIENTATION, EXIF_TYPE_SHORT,
       compare_image_orientation},
-  {GST_TAG_APPLICATION_NAME, GST_EXIF_TAG_SOFTWARE, EXIF_TYPE_ASCII,
+  {GST_TAG_APPLICATION_NAME, EXIF_TAG_SOFTWARE, EXIF_TYPE_ASCII,
       NULL},
-  {GST_TAG_DATE_TIME, GST_EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII,
+  {GST_TAG_DATE_TIME, EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII,
       compare_date_time},
   {GST_TAG_ARTIST, EXIF_TAG_ARTIST, EXIF_TYPE_ASCII, NULL},
   {GST_TAG_COPYRIGHT, EXIF_TAG_COPYRIGHT, EXIF_TYPE_ASCII, NULL},
@@ -565,6 +595,94 @@ static const GstExifTagMatch tag_map[] = {
  *     EXIF_TYPE_SHORT, compare_sensitivity_type},
  */
 };
+
+static void
+compare_geo_coordinate (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble coordinate = 0, aux, gst_value;
+  ExifRational rational;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist,
+          tag_map[testdata->map_index].gst_tag, 0, &gst_value));
+
+  fail_unless (entry->components == 3);
+
+  rational = exif_get_rational (entry->data,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator, &aux);
+  coordinate += aux;
+
+  rational = exif_get_rational (entry->data + 8,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator, &aux);
+  coordinate += aux / 60.0;
+
+  rational = exif_get_rational (entry->data + 16,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator, &aux);
+  coordinate += aux / 3600.0;
+
+  gst_value = ABS (gst_value);
+  fail_unless (ABS (gst_value - coordinate) < 0.001);
+  testdata->result = TRUE;
+}
+
+static void
+compare_geo_coordinate_ref (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble gst_value;
+  const gchar *tag;
+
+  tag = tag_map[testdata->map_index].gst_tag;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist, tag, 0,
+          &gst_value));
+
+  fail_unless (entry->components == 2);
+
+  if (strcmp (tag, GST_TAG_GEO_LOCATION_LATITUDE) == 0) {
+    if (gst_value >= 0) {
+      fail_unless (entry->data[0] == 'N');
+    } else {
+      fail_unless (entry->data[0] == 'S');
+    }
+  } else {
+    if (gst_value >= 0) {
+      fail_unless (entry->data[0] == 'E');
+    } else {
+      fail_unless (entry->data[0] == 'W');
+    }
+  }
+  testdata->result = TRUE;
+}
+
+static void
+compare_geo_direction (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  gdouble direction = 0, gst_value;
+  ExifRational rational;
+
+  fail_unless (gst_tag_list_get_double_index (testdata->taglist,
+          tag_map[testdata->map_index].gst_tag, 0, &gst_value));
+
+  fail_unless (entry->components == 1);
+
+  rational = exif_get_rational (entry->data,
+      exif_data_get_byte_order (entry->parent->parent));
+  gst_util_fraction_to_double (rational.numerator, rational.denominator,
+      &direction);
+
+  fail_unless (ABS (gst_value - direction) < 0.001);
+  testdata->result = TRUE;
+}
+
+static void
+compare_geo_direction_ref (ExifEntry * entry, ExifTagCheckData * testdata)
+{
+  fail_unless (entry->components == 2);
+  fail_unless (entry->data[0] == 'T');
+  testdata->result = TRUE;
+}
 
 static void
 check_content (ExifContent * content, void *user_data)
@@ -824,7 +942,13 @@ GST_START_TEST (test_jifmux_tags)
       GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, 5.25,
       GST_TAG_APPLICATION_DATA, buffer,
       GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
-      GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
+      GST_TAG_CAPTURING_FLASH_MODE, "auto",
+      GST_TAG_GEO_LOCATION_LATITUDE, -32.375,
+      GST_TAG_GEO_LOCATION_LONGITUDE, 76.0125,
+      GST_TAG_GEO_LOCATION_ELEVATION, 300.85,
+      GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, 3.6,
+      GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION, 35.4,
+      GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION, 12.345, NULL);
   gst_date_time_unref (datetime);
   gst_buffer_unref (buffer);
   generate_jif_file_with_tags_from_taglist (taglist, tmpfile);
