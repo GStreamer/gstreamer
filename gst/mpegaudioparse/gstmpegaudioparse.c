@@ -1527,7 +1527,7 @@ gst_mp3parse_handle_data (GstMPEGAudioParse * mp3parse, gboolean at_eos)
     if (!mp3parse->skip) {
       mp3parse->resyncing = FALSE;
       flow = gst_mp3parse_emit_frame (mp3parse, bpf, mode, crc);
-      if (GST_FLOW_IS_FATAL (flow))
+      if (flow != GST_FLOW_OK)
         break;
     } else {
       GST_DEBUG_OBJECT (mp3parse, "skipping buffer of %d bytes", bpf);
