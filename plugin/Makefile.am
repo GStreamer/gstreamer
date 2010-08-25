@@ -7,4 +7,4 @@ INCLUDES = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS)\
 
 libgstpython_la_SOURCES = gstpythonplugin.c
 libgstpython_la_LDFLAGS = -module -avoid-version
-libgstpython_la_LIBADD = $(GST_LIBS) $(PYTHON_LIBS)
+libgstpython_la_LIBADD = $(GST_LIBS)
