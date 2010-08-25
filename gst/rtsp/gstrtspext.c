@@ -202,6 +202,8 @@ gst_rtsp_ext_list_configure_stream (GstRTSPExtensionList * ext, GstCaps * caps)
     GstRTSPExtension *elem = (GstRTSPExtension *) walk->data;
 
     res = gst_rtsp_extension_configure_stream (elem, caps);
+    if (!res)
+      break;
   }
   return res;
 }
