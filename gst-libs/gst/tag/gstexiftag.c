@@ -2210,7 +2210,11 @@ serialize_shutter_speed (GstExifWriter * writer, const GstTagList * taglist,
   gst_util_fraction_to_double (gst_value_get_fraction_numerator (value),
       gst_value_get_fraction_denominator (value), &num);
 
+#ifdef HAVE_LOG2
   num = -log2 (num);
+#else
+  num = -log (num) / M_LN2;
+#endif
 
   /* now the value */
   gst_exif_writer_write_signed_rational_tag_from_double (writer,
@@ -2256,7 +2260,11 @@ serialize_aperture_value (GstExifWriter * writer, const GstTagList * taglist,
     GST_WARNING ("Failed to get focal ratio from from tag list");
     return;
   }
+#ifdef HAVE_LOG2
   num = 2 * log2 (num);
+#else
+  num = 2 * (log (num) / M_LN2);
+#endif
 
   /* now the value */
   gst_exif_writer_write_rational_tag_from_double (writer,
