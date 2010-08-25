@@ -536,15 +536,7 @@ volume_process_float (GstVolume * self, gpointer bytes, guint n_bytes)
   gfloat *data = (gfloat *) bytes;
   guint num_samples = n_bytes / sizeof (gfloat);
 
-#ifndef broken
-  int i;
-  for (i = 0; i < num_samples; i++) {
-    *data++ *= self->current_volume;
-  }
-#else
-  /* FIXME compiler doesn't set the float parameter correctly */
   orc_scalarmultiply_f32_ns (data, data, self->current_volume, num_samples);
-#endif
 }
 
 static void
