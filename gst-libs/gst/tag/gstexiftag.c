@@ -321,6 +321,12 @@ static const GstExifTagMatch tag_map_ifd0[] = {
   {GST_TAG_DATE_TIME, EXIF_TAG_DATE_TIME, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_ARTIST, EXIF_TAG_ARTIST, EXIF_TYPE_ASCII, 0, NULL, NULL},
   {GST_TAG_COPYRIGHT, EXIF_TAG_COPYRIGHT, EXIF_TYPE_ASCII, 0, NULL, NULL},
+  {NULL, EXIF_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
+  {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
+  {NULL, 0, 0, 0, NULL, NULL}
+};
+
+static const GstExifTagMatch tag_map_exif[] = {
   {GST_TAG_CAPTURING_SHUTTER_SPEED, EXIF_TAG_EXPOSURE_TIME, EXIF_TYPE_RATIONAL,
         0,
       NULL, NULL},
@@ -340,12 +346,6 @@ static const GstExifTagMatch tag_map_ifd0[] = {
       serialize_sensitivity_type, deserialize_sensitivity_type},
   {GST_TAG_CAPTURING_ISO_SPEED, EXIF_TAG_ISO_SPEED, EXIF_TYPE_LONG, 0, NULL,
       NULL},
-  {NULL, EXIF_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
-  {NULL, EXIF_GPS_IFD_TAG, EXIF_TYPE_LONG, 0, NULL, NULL},
-  {NULL, 0, 0, 0, NULL, NULL}
-};
-
-static const GstExifTagMatch tag_map_exif[] = {
   {NULL, EXIF_VERSION_TAG, EXIF_TYPE_UNDEFINED, 0, NULL, NULL},
   {GST_TAG_DATE_TIME, EXIF_TAG_DATE_TIME_ORIGINAL, EXIF_TYPE_ASCII, 0, NULL,
       NULL},
