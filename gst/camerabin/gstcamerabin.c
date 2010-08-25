@@ -3234,6 +3234,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->src_out_sel = NULL;
 
   camera->app_video_filter = NULL;
+  camera->app_vid_src = NULL;
 
   camera->active_bin = NULL;
 }
