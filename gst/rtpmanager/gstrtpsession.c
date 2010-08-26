@@ -198,6 +198,7 @@ enum
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
+#define DEFAULT_USE_PIPELINE_CLOCK   FALSE
 
 enum
 {
@@ -211,6 +212,7 @@ enum
   PROP_NUM_SOURCES,
   PROP_NUM_ACTIVE_SOURCES,
   PROP_INTERNAL_SESSION,
+  PROP_USE_PIPELINE_CLOCK,
   PROP_LAST
 };
 
@@ -238,6 +240,7 @@ struct _GstRtpSessionPrivate
 
   /* NTP base time */
   guint64 ntpnsbase;
+  gboolean use_pipeline_clock;
 };
 
 /* callbacks to handle actions from the session manager */
@@ -572,6 +575,11 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           "The internal RTPSession object", RTP_TYPE_SESSION,
           G_PARAM_READABLE));
 
+  g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
+      g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
+          "Use the pipeline clock to set the NTP time in the RTCP SR messages",
+          DEFAULT_USE_PIPELINE_CLOCK, G_PARAM_READWRITE));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -592,6 +600,7 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
   rtpsession->priv->lock = g_mutex_new ();
   rtpsession->priv->sysclock = gst_system_clock_obtain ();
   rtpsession->priv->session = rtp_session_new ();
+  rtpsession->priv->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
 
   /* configure callbacks */
   rtp_session_set_callbacks (rtpsession->priv->session, &callbacks, rtpsession);
@@ -682,6 +691,9 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_SDES:
       rtp_session_set_sdes_struct (priv->session, g_value_get_boxed (value));
       break;
+    case PROP_USE_PIPELINE_CLOCK:
+      priv->use_pipeline_clock = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -731,6 +743,9 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_INTERNAL_SESSION:
       g_value_set_object (value, priv->session);
       break;
+    case PROP_USE_PIPELINE_CLOCK:
+      g_value_set_boolean (value, priv->use_pipeline_clock);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -744,7 +759,6 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
   guint64 ntpns;
   GstClock *clock;
   GstClockTime base_time, rt;
-  GTimeVal current;
 
   GST_OBJECT_LOCK (rtpsession);
   if ((clock = GST_ELEMENT_CLOCK (rtpsession))) {
@@ -752,9 +766,15 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     gst_object_ref (clock);
     GST_OBJECT_UNLOCK (rtpsession);
 
-    /* get current NTP time */
-    g_get_current_time (&current);
-    ntpns = GST_TIMEVAL_TO_TIME (current);
+    if (rtpsession->priv->use_pipeline_clock) {
+      ntpns = gst_clock_get_time (clock);
+    } else {
+      GTimeVal current;
+
+      /* get current NTP time */
+      g_get_current_time (&current);
+      ntpns = GST_TIMEVAL_TO_TIME (current);
+    }
 
     /* add constant to convert from 1970 based time to 1900 based time */
     ntpns += (2208988800LL * GST_SECOND);

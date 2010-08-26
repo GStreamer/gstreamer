@@ -232,12 +232,13 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LATENCY_MS	     200
+#define DEFAULT_LATENCY_MS           200
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_DO_LOST              FALSE
 #define DEFAULT_IGNORE_PT            FALSE
 #define DEFAULT_AUTOREMOVE           FALSE
 #define DEFAULT_BUFFER_MODE          RTP_JITTER_BUFFER_MODE_SLAVE
+#define DEFAULT_USE_PIPELINE_CLOCK   FALSE
 
 enum
 {
@@ -248,6 +249,7 @@ enum
   PROP_IGNORE_PT,
   PROP_AUTOREMOVE,
   PROP_BUFFER_MODE,
+  PROP_USE_PIPELINE_CLOCK,
   PROP_LAST
 };
 
@@ -529,7 +531,8 @@ create_session (GstRtpBin * rtpbin, gint id)
 
   /* configure SDES items */
   GST_OBJECT_LOCK (rtpbin);
-  g_object_set (session, "sdes", rtpbin->sdes, NULL);
+  g_object_set (session, "sdes", rtpbin->sdes, "use-pipeline-clock",
+      rtpbin->use_pipeline_clock, NULL);
   GST_OBJECT_UNLOCK (rtpbin);
 
   /* provide clock_rate to the session manager when needed */
@@ -1530,7 +1533,6 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-
   g_object_class_install_property (gobject_class, PROP_AUTOREMOVE,
       g_param_spec_boolean ("autoremove", "Auto Remove",
           "Automatically remove timed out sources", DEFAULT_AUTOREMOVE,
@@ -1540,6 +1542,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       g_param_spec_boolean ("ignore_pt", "Ignore PT",
           "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
           G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
+      g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
+          "Use the pipeline clock to set the NTP time in the RTCP SR messages",
+          DEFAULT_AUTOREMOVE, G_PARAM_READWRITE));
+
   /**
    * GstRtpBin::buffer-mode:
    *
@@ -1582,6 +1590,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
   rtpbin->priv->autoremove = DEFAULT_AUTOREMOVE;
   rtpbin->buffer_mode = DEFAULT_BUFFER_MODE;
+  rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
 
   /* some default SDES entries */
   str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
@@ -1695,6 +1704,19 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_AUTOREMOVE:
       rtpbin->priv->autoremove = g_value_get_boolean (value);
       break;
+    case PROP_USE_PIPELINE_CLOCK:
+    {
+      GSList *sessions;
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->use_pipeline_clock = g_value_get_boolean (value);
+      for (sessions = rtpbin->sessions; sessions;
+          sessions = g_slist_next (sessions)) {
+        g_object_set (G_OBJECT (sessions->data), "use-pipeline-clock",
+            rtpbin->use_pipeline_clock, NULL);
+      }
+      GST_RTP_BIN_UNLOCK (rtpbin);
+    }
+      break;
     case PROP_BUFFER_MODE:
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->buffer_mode = g_value_get_enum (value);
@@ -1738,6 +1760,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BUFFER_MODE:
       g_value_set_enum (value, rtpbin->buffer_mode);
+      break;
+    case PROP_USE_PIPELINE_CLOCK:
+      g_value_set_boolean (value, rtpbin->use_pipeline_clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
