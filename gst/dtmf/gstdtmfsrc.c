@@ -223,6 +223,7 @@ static void gst_dtmf_src_set_property (GObject * object, guint prop_id,
 static void gst_dtmf_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event);
+static gboolean gst_dtmf_src_send_event (GstElement * src, GstEvent * event);
 static GstStateChangeReturn gst_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
 static GstFlowReturn gst_dtmf_src_create (GstBaseSrc * basesrc,
@@ -275,6 +276,7 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_change_state);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_dtmf_src_send_event);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_dtmf_src_unlock);
   gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_dtmf_src_unlock_stop);
 
@@ -401,6 +403,17 @@ gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event)
   }
 
   return result;
+}
+
+
+static gboolean
+gst_dtmf_src_send_event (GstElement * element, GstEvent * event)
+{
+
+  if (gst_dtmf_src_handle_event (GST_BASE_SRC (element), event))
+    return TRUE;
+
+  return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
 static void
