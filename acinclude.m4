@@ -71,19 +71,42 @@ dnl function also defines PYTHON_LIBS
 AC_DEFUN([AM_CHECK_PYTHON_LIBS],
 [AC_REQUIRE([AM_CHECK_PYTHON_HEADERS])
 AC_MSG_CHECKING(for libraries required to embed python)
+
 dnl deduce PYTHON_LIBS
-py_exec_prefix=`$PYTHON -c "import sys; print sys.exec_prefix"`
 if $PYTHON-config --help 2>/dev/null; then
   PYTHON_LIBS=`$PYTHON-config --ldflags 2>/dev/null`
   PYTHON_LIB=`$PYTHON -c "import distutils.sysconfig as s; print s.get_python_lib(standard_lib=1)"`
-  PYTHON_LIB_LOC=$PYTHON_LIB/config
+  if echo "$host_os" | grep darwin >/dev/null 2>&1; then
+    dnl OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
+    dnl so we hardcode that. Other systems can use --with-libpython-dir to
+    dnl overrid this.
+    PYTHON_LIB_LOC=/usr/lib
+  else
+    PYTHON_LIB_LOC=$PYTHON_LIB/config
+  fi
 else
   asd
   PYTHON_LIBS="-L${py_prefix}/lib -lpython${PYTHON_VERSION}"
   PYTHON_LIB_LOC="${py_prefix}/lib"
 fi
+
+AC_ARG_WITH([libpython-dir],
+  AS_HELP_STRING([--with-libpython-dir], [the directory containing libpython${PYTHON_VERSION}]),
+  [
+    PYTHON_LIB_LOC=`echo "$withval" | sed -e 's/\/$//g'`
+  ]
+)
+
+if echo "$host_os" | grep darwin >/dev/null 2>&1; then
+  dnl workaround libtool brokenness under OSX
+  PYTHON_LIB_SUFFIX=\\\"dylib\\\"
+else
+  PYTHON_LIB_SUFFIX=G_MODULE_SUFFIX
+fi
+
 AC_SUBST(PYTHON_LIBS)
 AC_SUBST(PYTHON_LIB_LOC)
+AC_SUBST(PYTHON_LIB_SUFFIX)
 dnl check if the headers exist:
 save_LIBS="$LIBS"
 LIBS="$LIBS $PYTHON_LIBS"

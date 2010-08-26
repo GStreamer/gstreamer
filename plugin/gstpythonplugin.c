@@ -349,7 +349,7 @@ plugin_init (GstPlugin * plugin)
     GST_LOG ("loading libpython");
     libpython =
         g_module_open (PY_LIB_LOC "/libpython" PYTHON_VERSION "."
-        G_MODULE_SUFFIX, 0);
+        PY_LIB_SUFFIX, 0);
     if (!libpython) {
       GST_WARNING ("Couldn't g_module_open libpython. Reason: %s",
           g_module_error ());
