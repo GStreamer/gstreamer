@@ -1218,6 +1218,10 @@ gst_rtcp_packet_fb_set_sender_ssrc
 gst_rtcp_packet_fb_get_media_ssrc
 gst_rtcp_packet_fb_set_media_ssrc
 
+gst_rtcp_packet_fb_get_fci_length
+gst_rtcp_packet_fb_set_fci_length
+gst_rtcp_packet_fb_get_fci
+
 gst_rtcp_ntp_to_unix
 gst_rtcp_unix_to_ntp
 

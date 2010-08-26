@@ -1943,3 +1943,89 @@ gst_rtcp_sdes_name_to_type (const gchar * name)
 
   return GST_RTCP_SDES_PRIV;
 }
+
+/**
+ * gst_rtcp_packet_fb_get_fci_length:
+ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
+ *
+ * Get the length of the Feedback Control Information attached to a
+ * RTPFB or PSFB @packet.
+ *
+ * Returns: The length of the FCI in 32-bit words.
+ *
+ * Since: 0.10.31
+ */
+guint16
+gst_rtcp_packet_fb_get_fci_length (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
+      packet->type == GST_RTCP_TYPE_PSFB, 0);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), 0);
+
+  data = GST_BUFFER_DATA (packet->buffer) + packet->offset + 2;
+
+  return GST_READ_UINT16_BE (data) - 2;
+}
+
+/**
+ * gst_rtcp_packet_fb_set_fci_length:
+ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
+ * @wordlen: Length of the FCI in 32-bit words
+ *
+ * Set the length of the Feedback Control Information attached to a
+ * RTPFB or PSFB @packet.
+ *
+ * Returns: %TRUE if there was enough space in the packet to add this much FCI
+ *
+ * Since: 0.10.31
+ */
+gboolean
+gst_rtcp_packet_fb_set_fci_length (GstRTCPPacket * packet, guint16 wordlen)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
+      packet->type == GST_RTCP_TYPE_PSFB, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
+
+  if (GST_BUFFER_SIZE (packet->buffer) < packet->offset + ((wordlen + 3) * 4))
+    return FALSE;
+
+  data = GST_BUFFER_DATA (packet->buffer) + packet->offset + 2;
+  wordlen += 2;
+  GST_WRITE_UINT16_BE (data, wordlen);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_fb_get_fci:
+ * @packet: a valid RTPFB or PSFB #GstRTCPPacket
+ *
+ * Get the Feedback Control Information attached to a RTPFB or PSFB @packet.
+ *
+ * Returns: a pointer to the FCI
+ *
+ * Since: 0.10.31
+ */
+guint8 *
+gst_rtcp_packet_fb_get_fci (GstRTCPPacket * packet)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (packet != NULL, NULL);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_RTPFB ||
+      packet->type == GST_RTCP_TYPE_PSFB, NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), NULL);
+
+  data = GST_BUFFER_DATA (packet->buffer) + packet->offset;
+
+  if (GST_READ_UINT16_BE (data + 2) <= 2)
+    return NULL;
+
+  return data + 12;
+}

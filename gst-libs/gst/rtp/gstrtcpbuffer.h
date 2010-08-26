@@ -269,6 +269,9 @@ guint32         gst_rtcp_packet_fb_get_media_ssrc     (GstRTCPPacket *packet);
 void            gst_rtcp_packet_fb_set_media_ssrc     (GstRTCPPacket *packet, guint32 ssrc);
 GstRTCPFBType   gst_rtcp_packet_fb_get_type           (GstRTCPPacket *packet);
 void            gst_rtcp_packet_fb_set_type           (GstRTCPPacket *packet, GstRTCPFBType type);
+guint16         gst_rtcp_packet_fb_get_fci_length     (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_fb_set_fci_length     (GstRTCPPacket *packet, guint16 wordlen);
+guint8 *        gst_rtcp_packet_fb_get_fci            (GstRTCPPacket *packet);
 
 /* helper functions */
 guint64         gst_rtcp_ntp_to_unix                  (guint64 ntptime);
