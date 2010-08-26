@@ -27,9 +27,7 @@
 #include <gst/gst.h>
 #include <Python.h>
 
-PyTypeObject *_PyGstElement_Type;
-#define PyGstElement_Type (*_PyGstElement_Type)
-
+void *_PyGstElement_Type;
 
 GST_DEBUG_CATEGORY_STATIC (pyplugindebug);
 #define GST_CAT_DEFAULT pyplugindebug
@@ -134,7 +132,7 @@ gst_python_plugin_load_file (GstPlugin * plugin, const char *name)
   }
 
   if (!PyType_Check (class)
-      || !(PyObject_IsSubclass (class, (PyObject *) & PyGstElement_Type))) {
+      || !(PyObject_IsSubclass (class, (PyObject *) _PyGstElement_Type))) {
     GST_WARNING ("the class provided isn't a subclass of gst.Element");
     PyErr_Print ();
     PyErr_Clear ();
@@ -307,7 +305,7 @@ pygst_require (gchar * version)
     g_unsetenv ("GST_REGISTRY_UPDATE");
 
 #define IMPORT(x, y) \
-    _PyGst##x##_Type = (PyTypeObject *)PyObject_GetAttrString(gst, y); \
+    _PyGst##x##_Type = (void *)PyObject_GetAttrString(gst, y); \
 	if (_PyGst##x##_Type == NULL) { \
 		PyErr_Print(); \
 		return NULL; \
