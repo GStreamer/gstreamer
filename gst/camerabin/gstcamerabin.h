@@ -130,6 +130,9 @@ struct _GstCameraBin
   GCond *cond;
   gboolean capturing;
   gboolean eos_handled;
+  /* everytime a new capture is started this is incremented, when it is
+   * finished/fails it is decremented. Used to know if camerabin is idle */
+  gint processing_counter;
 
   /* pad names for output and input selectors */
   GstPad *pad_src_view;

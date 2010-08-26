@@ -224,6 +224,31 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define PREVIEW_MESSAGE_NAME "preview-image"
 #define IMG_CAPTURED_MESSAGE_NAME "image-captured"
 
+#define CAMERABIN_PROCESSING_INC_UNLOCKED(c)  \
+  (c)->processing_counter += 1;               \
+  GST_DEBUG_OBJECT ((c), "Processing counter incremented to: %d", \
+      (c)->processing_counter);               \
+  if ((c)->processing_counter == 1)           \
+    g_object_notify (G_OBJECT (c), "idle");            \
+
+#define CAMERABIN_PROCESSING_DEC_UNLOCKED(c)  \
+  (c)->processing_counter -= 1;               \
+  GST_DEBUG_OBJECT ((c), "Processing counter decremented to: %d", \
+      (c)->processing_counter);               \
+  g_assert ((c)->processing_counter >= 0);    \
+  if ((c)->processing_counter == 0)           \
+    g_object_notify (G_OBJECT (c), "idle");            \
+
+#define CAMERABIN_PROCESSING_INC(c)           \
+  g_mutex_lock ((c)->capture_mutex);          \
+  CAMERABIN_PROCESSING_INC_UNLOCKED ((c));    \
+  g_mutex_unlock ((c)->capture_mutex);        \
+
+#define CAMERABIN_PROCESSING_DEC(c)           \
+  g_mutex_lock ((c)->capture_mutex);          \
+  CAMERABIN_PROCESSING_DEC_UNLOCKED ((c));    \
+  g_mutex_unlock ((c)->capture_mutex);        \
+
 /*
  * static helper functions declaration
  */
@@ -1540,6 +1565,7 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
   }
 
   if (!ret) {
+    CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
     GST_WARNING_OBJECT (camera, "starting image capture failed");
   }
 }
@@ -1644,6 +1670,8 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
     GST_WARNING_OBJECT (camera, "videobin state change failed");
     gst_element_set_state (camera->vidbin, GST_STATE_NULL);
     gst_camerabin_reset_to_view_finder (camera);
+
+    CAMERABIN_PROCESSING_DEC (camera);
   }
 }
 
@@ -1772,6 +1800,7 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstMiniObject * obj,
     if (g_str_equal (camera->filename->str, "")) {
       GST_DEBUG_OBJECT (camera, "filename not set, dropping buffer");
       ret = FALSE;
+      CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
       goto done;
     }
 
@@ -3071,6 +3100,21 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstCameraBin:idle:
+   *
+   * When TRUE no capturing/encoding/saving is running and it is safe to set
+   * camerabin to NULL to release resources without losing data.
+   *
+   * In case of errors, this property is made unreliable. Set the pipeline
+   * back to READY or NULL to make it reliable again.
+   */
+  g_object_class_install_property (gobject_class, ARG_IDLE,
+      g_param_spec_boolean ("idle",
+          "Indicates if data is being processed (recording/capturing/saving)",
+          "Indicates if data is being processed (recording/capturing/saving)",
+          TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
    *
@@ -3244,6 +3288,7 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   /* concurrency control */
   camera->capture_mutex = g_mutex_new ();
   camera->cond = g_cond_new ();
+  camera->processing_counter = 0;
 
   /* pad names for output and input selectors */
   camera->pad_src_view = NULL;
@@ -3723,6 +3768,9 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
     case ARG_VIDEO_CAPTURE_FRAMERATE:
       gst_value_set_fraction (value, camera->app_fps_n, camera->app_fps_d);
       break;
+    case ARG_IDLE:
+      g_value_set_boolean (value, camera->processing_counter == 0);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3788,6 +3836,11 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
         gst_camerabin_reset_to_view_finder (camera);
         g_cond_signal (camera->cond);
       }
+
+      /* reset processing counter */
+      GST_DEBUG_OBJECT (camera, "Reset processing counter to 0");
+      camera->processing_counter = 0;
+      g_object_notify (G_OBJECT (camera), "idle");
       g_mutex_unlock (camera->capture_mutex);
 
       /* unblock the viewfinder, but keep the property as is */
@@ -3835,6 +3888,7 @@ gst_camerabin_imgbin_finished (gpointer u_data)
   /* Close the file of saved image */
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
   GST_DEBUG_OBJECT (camera, "Image pipeline set to READY");
+  CAMERABIN_PROCESSING_DEC (camera);
 
   /* Send image-done signal */
   gst_camerabin_image_capture_continue (camera, filename);
@@ -3871,6 +3925,8 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
         g_mutex_lock (camera->capture_mutex);
         camera->capturing = FALSE;
         g_cond_signal (camera->cond);
+
+        CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
         g_mutex_unlock (camera->capture_mutex);
       } else if (GST_MESSAGE_SRC (msg) == GST_OBJECT (camera->imgbin)) {
         /* Image eos */
@@ -3889,6 +3945,16 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
         camera->capturing = FALSE;
         g_cond_signal (camera->cond);
       }
+
+      /* Ideally we should check what error was and only decrement the
+       * counter if the error means that a 'processing' operation failed,
+       * instead of a setting up error. But this can be quite tricky to do
+       * and we expect the app to set the whole pipeline to READY/NULL
+       * when an error happens. For now we just mention that the
+       * processing counter and the 'idle' property are unreliable */
+      GST_DEBUG_OBJECT (camera, "An error makes the processing counter "
+          "unreliable");
+
       g_mutex_unlock (camera->capture_mutex);
       break;
     default:
@@ -3935,6 +4001,7 @@ gst_camerabin_capture_start (GstCameraBin * camera)
     g_mutex_unlock (camera->capture_mutex);
     return;
   }
+  CAMERABIN_PROCESSING_INC_UNLOCKED (camera);
   g_mutex_unlock (camera->capture_mutex);
 
   GST_OBJECT_LOCK (camera);
