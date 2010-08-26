@@ -758,7 +758,7 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
 {
   guint64 ntpns;
   GstClock *clock;
-  GstClockTime base_time, rt;
+  GstClockTime base_time, rt, clock_time;
 
   GST_OBJECT_LOCK (rtpsession);
   if ((clock = GST_ELEMENT_CLOCK (rtpsession))) {
@@ -766,8 +766,10 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     gst_object_ref (clock);
     GST_OBJECT_UNLOCK (rtpsession);
 
+    clock_time = gst_clock_get_time (clock);
+
     if (rtpsession->priv->use_pipeline_clock) {
-      ntpns = gst_clock_get_time (clock);
+      ntpns = clock_time;
     } else {
       GTimeVal current;
 
@@ -780,7 +782,7 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     ntpns += (2208988800LL * GST_SECOND);
 
     /* get current clock time and convert to running time */
-    rt = gst_clock_get_time (clock) - base_time;
+    rt = clock_time - base_time;
 
     gst_object_unref (clock);
   } else {
