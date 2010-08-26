@@ -721,7 +721,8 @@ gst_base_transform_configure_caps (GstBaseTransform * trans, GstCaps * in,
 
   GST_OBJECT_LOCK (trans);
   /* make sure we reevaluate how the buffer_alloc works wrt to proxy allocating
-   * the buffer. */
+   * the buffer. FIXME, this triggers some quite heavy codepaths that don't need
+   * to be taken.. */
   trans->priv->suggest_pending = TRUE;
   GST_OBJECT_UNLOCK (trans);
   trans->negotiated = ret;
@@ -1350,16 +1351,35 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
     incaps = GST_PAD_CAPS (trans->sinkpad);
 
+    /* check if we can convert the current incaps to the new target caps */
+    can_convert =
+        gst_base_transform_can_transform (trans, trans->sinkpad, incaps,
+        newcaps);
+
+    if (!can_convert) {
+      GST_DEBUG_OBJECT (trans, "cannot perform transform on current buffer");
+      /* we got a suggested caps but we can't transform to it. See if there is
+       * another downstream format that we can transform to */
+      othercaps =
+          gst_base_transform_find_transform (trans, trans->sinkpad, incaps);
+
+      if (othercaps && !gst_caps_is_empty (othercaps)) {
+        GST_DEBUG_OBJECT (trans, "we found target caps %" GST_PTR_FORMAT,
+            othercaps);
+        *out_buf = gst_buffer_make_metadata_writable (*out_buf);
+        gst_buffer_set_caps (*out_buf, othercaps);
+        gst_caps_unref (othercaps);
+        newcaps = GST_BUFFER_CAPS (*out_buf);
+        can_convert = TRUE;
+      } else if (othercaps)
+        gst_caps_unref (othercaps);
+    }
+
     /* it's possible that the buffer we got is of the wrong size, get the
      * expected size here, we will check the size if we are going to use the
      * buffer later on. */
     gst_base_transform_transform_size (trans,
         GST_PAD_SINK, incaps, GST_BUFFER_SIZE (in_buf), newcaps, &expsize);
-
-    /* check if we can convert the current incaps to the new target caps */
-    can_convert =
-        gst_base_transform_can_transform (trans, trans->sinkpad, incaps,
-        newcaps);
 
     if (can_convert) {
       GST_DEBUG_OBJECT (trans, "reconfigure transform for current buffer");
@@ -1401,7 +1421,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       }
       outsize = expsize;
     } else {
-      GST_DEBUG_OBJECT (trans, "cannot perform transform on current buffer");
+      GST_DEBUG_OBJECT (trans, "trying to find upstream suggestion");
 
       /* we cannot convert the current buffer but we might be able to suggest a
        * new format upstream, try to find what the best format is. */
@@ -1724,15 +1744,17 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
           GstCaps *allowed;
           GstCaps *peercaps;
 
+          GST_DEBUG_OBJECT (trans,
+              "Requested pad alloc caps are not supported: %" GST_PTR_FORMAT,
+              sink_suggest);
           /* the requested pad alloc caps are not supported, so let's try
            * picking something allowed between the pads (they are linked,
            * there must be something) */
-
           allowed = gst_pad_get_allowed_caps (pad);
           if (allowed && !gst_caps_is_empty (allowed)) {
-            GST_DEBUG_OBJECT (trans, "Requested pad alloc caps is not "
-                "supported, but pads could agree on one of the following caps: "
-                "%" GST_PTR_FORMAT, allowed);
+            GST_DEBUG_OBJECT (trans,
+                "pads could agree on one of the following caps: " "%"
+                GST_PTR_FORMAT, allowed);
             allowed = gst_caps_make_writable (allowed);
 
             if (klass->fixate_caps) {
