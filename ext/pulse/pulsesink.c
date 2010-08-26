@@ -2606,7 +2606,11 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       g_assert (pulsesink->mainloop == NULL);
       pulsesink->mainloop = pa_threaded_mainloop_new ();
-      g_assert (pulsesink->mainloop != NULL);
+      if (!pulsesink->mainloop) {
+        GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
+            ("pa_threaded_mainloop_new() failed"), (NULL));
+        return GST_STATE_CHANGE_FAILURE;
+      }
       res = pa_threaded_mainloop_start (pulsesink->mainloop);
       g_assert (res == 0);
 
