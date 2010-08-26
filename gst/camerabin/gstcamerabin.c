@@ -1596,8 +1596,21 @@ gst_camerabin_start_video_recording (GstCameraBin * camera)
             "capture-mode")) {
       g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 2, NULL);
     }
-    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING);
-    gst_element_set_locked_state (camera->vidbin, TRUE);
+
+    /* videobin will not go to playing if file is not writable */
+    if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
+        GST_STATE_CHANGE_FAILURE) {
+      GST_ELEMENT_ERROR (camera, CORE, STATE_CHANGE,
+          ("Setting videobin to PLAYING failed"), (NULL));
+      gst_element_set_state (camera->vidbin, GST_STATE_NULL);
+      gst_element_set_locked_state (camera->vidbin, TRUE);
+      g_mutex_lock (camera->capture_mutex);
+      camera->capturing = FALSE;
+      g_mutex_unlock (camera->capture_mutex);
+      gst_camerabin_reset_to_view_finder (camera);
+    } else {
+      gst_element_set_locked_state (camera->vidbin, TRUE);
+    }
   } else {
     GST_WARNING_OBJECT (camera, "videobin state change failed");
     gst_element_set_state (camera->vidbin, GST_STATE_NULL);
@@ -1896,7 +1909,7 @@ gst_camerabin_have_queue_data (GstPad * pad, GstMiniObject * mini_obj,
   if (GST_IS_BUFFER (mini_obj)) {
     GstEvent *tagevent;
 
-    GST_LOG_OBJECT (camera, "queue sending image buffer to imgbin");
+    GST_LOG_OBJECT (camera, "queue sending image buffer to imagebin");
 
     tagevent = gst_event_new_tag (gst_tag_list_copy (camera->event_tags));
     gst_element_send_event (camera->imgbin, tagevent);
@@ -1925,9 +1938,16 @@ gst_camerabin_have_queue_data (GstPad * pad, GstMiniObject * mini_obj,
       fname = gst_structure_get_string (evs, "filename");
       g_object_set (G_OBJECT (camera->imgbin), "filename", fname, NULL);
 
-      /* imgbin fails to start unless the filename is set */
-      gst_element_set_state (camera->imgbin, GST_STATE_PLAYING);
-      GST_LOG_OBJECT (camera, "Set imgbin to PLAYING");
+      /* imgbin fails to start unless the filename is set or file
+         cannot be written */
+      if (gst_element_set_state (camera->imgbin, GST_STATE_PLAYING) ==
+          GST_STATE_CHANGE_FAILURE) {
+        GST_ELEMENT_ERROR (camera, CORE, STATE_CHANGE,
+            ("Setting imagebin to PLAYING failed"), (NULL));
+        gst_element_set_state (camera->imgbin, GST_STATE_NULL);
+      } else {
+        GST_LOG_OBJECT (camera, "Set imagebin to PLAYING");
+      }
 
       ret = FALSE;
     } else if (evs && gst_structure_has_name (evs, "img-eos")) {
