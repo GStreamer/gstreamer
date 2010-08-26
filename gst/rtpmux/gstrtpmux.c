@@ -699,7 +699,7 @@ gst_rtp_mux_sink_event (GstPad * pad, GstEvent * event)
       padpriv = gst_pad_get_element_private (pad);
       if (padpriv)
         gst_segment_init (&padpriv->segment, GST_FORMAT_UNDEFINED);
-      GST_OBJECT_UNLOCK (pad);
+      GST_OBJECT_UNLOCK (mux);
     }
       break;
     case GST_EVENT_NEWSEGMENT:
