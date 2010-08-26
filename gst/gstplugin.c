@@ -711,6 +711,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   GStatBuf file_status;
   GstRegistry *registry;
   gboolean new_plugin = TRUE;
+  GModuleFlags flags;
 
   g_return_val_if_fail (filename != NULL, NULL);
 
@@ -749,7 +750,16 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     goto return_error;
   }
 
-  module = g_module_open (filename, G_MODULE_BIND_LOCAL);
+  flags = G_MODULE_BIND_LOCAL;
+  /* libgstpython.so is the gst-python plugin loader. It needs to be loaded with
+   * G_MODULE_BIND_LAZY.
+   *
+   * Ideally there should be a generic way for plugins to specify that they
+   * need to be loaded with _LAZY.
+   * */
+  if (g_strstr_len (filename, strlen (filename), "libgstpython"))
+    flags |= G_MODULE_BIND_LAZY;
+  module = g_module_open (filename, flags);
   if (module == NULL) {
     GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
         g_module_error ());
