@@ -158,8 +158,13 @@ typedef enum {
  * whether an error message should be posted on the bus. Note that such
  * elements may also need to post an error message in the #GST_FLOW_NOT_LINKED
  * case which is not caught by this macro.
+ *
+ * Deprecated: This macro is badly named and can't be used in any real
+ * scenarios without additional checks.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
+#endif
 
 /**
  * GST_FLOW_IS_SUCCESS:
@@ -171,8 +176,13 @@ typedef enum {
  * of a buffer was successfull.
  *
  * Since: 0.10.7
+ *
+ * Deprecated: This macro is badly named and can't be used in any real
+ * scenarios without additional checks.
  */
+#ifndef GST_DISABLE_DEPRECATED
 #define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
+#endif
 
 G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
