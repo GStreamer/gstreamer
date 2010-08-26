@@ -535,8 +535,17 @@ volume_process_float (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gfloat *data = (gfloat *) bytes;
   guint num_samples = n_bytes / sizeof (gfloat);
+#ifndef broken
+  int i;
 
+  gdouble vol = self->current_volume;
+
+  for (i = 0; i < num_samples; i++) {
+    data[i] *= vol;
+  }
+#else
   orc_scalarmultiply_f32_ns (data, data, self->current_volume, num_samples);
+#endif
 }
 
 static void
