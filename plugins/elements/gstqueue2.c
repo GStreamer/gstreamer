@@ -1055,8 +1055,8 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
       } else if (offset < queue->current->writing_pos + 200000) {
         update_cur_pos (queue, queue->current, offset + length);
         GST_INFO_OBJECT (queue, "wait for data");
+        return FALSE;
       }
-      return FALSE;
     }
 
     /* too far away, do a seek */
