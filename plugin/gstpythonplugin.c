@@ -25,6 +25,7 @@
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 #include <gst/gst.h>
+#include <Python.h>
 
 PyTypeObject *_PyGstElement_Type;
 #define PyGstElement_Type (*_PyGstElement_Type)
@@ -40,35 +41,46 @@ static PyObject *element;
 static inline gboolean
 np_init_pygobject (void)
 {
-  PyObject *gobject = PyImport_ImportModule ("gobject");
-  gboolean res = TRUE;
+  gboolean res = FALSE;
+  PyObject *gobject = NULL;
+  PyObject *main_module = NULL;
+  PyObject *mdict = NULL;
 
-  if (gobject != NULL) {
-    PyObject *mdict = PyModule_GetDict (gobject);
-    PyObject *cobject = PyDict_GetItemString (mdict, "_PyGObject_API");
-    if (PyCObject_Check (cobject)) {
-      _PyGObject_API =
-          (struct _PyGObject_Functions *) PyCObject_AsVoidPtr (cobject);
-    } else {
-      PyErr_SetString (PyExc_RuntimeError,
-          "could not find _PyGObject_API object");
-      PyErr_Print ();
-      res = FALSE;
-      goto beach;
-    }
-    if (!(PyObject_CallMethod (gobject, "threads_init", NULL, NULL))) {
-      PyErr_SetString (PyExc_RuntimeError, "Could not initialize threads");
-      PyErr_Print ();
-      res = FALSE;
-      goto beach;
-    }
-  } else {
+  gobject = PyImport_ImportModule ("gobject");
+  if (gobject == NULL) {
     PyErr_Print ();
     GST_WARNING ("could not import gobject");
-    res = FALSE;
+    goto beach;
   }
 
+  main_module = PyImport_AddModule ("__main__");
+  mdict = PyModule_GetDict (gobject);
+
+  PyObject *cobject = PyDict_GetItemString (mdict, "_PyGObject_API");
+  if (cobject == NULL) {
+    GST_WARNING ("could not find _PyGObject_API");
+    goto beach;
+  }
+
+  _PyGObject_API =
+      (struct _PyGObject_Functions *) PyCObject_AsVoidPtr (cobject);
+  if (_PyGObject_API == NULL) {
+    PyErr_Print ();
+    GST_WARNING ("_PyGObject_API is not a valid CObject");
+    goto beach;
+  }
+
+  if (!(PyObject_CallMethod (gobject, "threads_init", NULL, NULL))) {
+    PyErr_Print ();
+    GST_WARNING ("could not initialize threads");
+    goto beach;
+  }
+
+  res = TRUE;
+
 beach:
+  Py_XDECREF (gobject);
+
   return res;
 }
 
