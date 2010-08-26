@@ -1123,7 +1123,7 @@ out_flushing:
     /* upstream needs to see fatal result ASAP to shut things down,
      * but might be stuck in one of our other full queues;
      * so empty this one and trigger dynamic queue growth */
-    if (GST_FLOW_IS_FATAL (sq->srcresult)) {
+    if (sq->srcresult <= GST_FLOW_UNEXPECTED) {
       gst_data_queue_flush (sq->queue);
       single_queue_underrun_cb (sq->queue, sq);
     }
