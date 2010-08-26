@@ -131,8 +131,7 @@ gst_python_plugin_load_file (GstPlugin * plugin, const char *name)
     return FALSE;
   }
 
-  if (!PyType_Check (class)
-      || !(PyObject_IsSubclass (class, (PyObject *) _PyGstElement_Type))) {
+  if (!(PyObject_IsSubclass (class, (PyObject *) _PyGstElement_Type))) {
     GST_WARNING ("the class provided isn't a subclass of gst.Element");
     PyErr_Print ();
     PyErr_Clear ();
