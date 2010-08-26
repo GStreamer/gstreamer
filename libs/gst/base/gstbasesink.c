@@ -3933,25 +3933,26 @@ paused:
     GST_LOG_OBJECT (basesink, "pausing task, reason %s",
         gst_flow_get_name (result));
     gst_pad_pause_task (pad);
-    /* fatal errors and NOT_LINKED cause EOS */
-    if (GST_FLOW_IS_FATAL (result) || result == GST_FLOW_NOT_LINKED) {
-      if (result == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (basesink->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_segment_done (GST_OBJECT_CAST (basesink),
-                  basesink->segment.format, basesink->segment.last_stop));
-        } else {
-          gst_base_sink_event (pad, gst_event_new_eos ());
-        }
+    if (result == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (basesink->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_segment_done (GST_OBJECT_CAST (basesink),
+                basesink->segment.format, basesink->segment.last_stop));
       } else {
-        /* for fatal errors we post an error message, post the error
-         * first so the app knows about the error first. */
-        GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("stream stopped, reason %s", gst_flow_get_name (result)));
         gst_base_sink_event (pad, gst_event_new_eos ());
       }
+    } else if (result == GST_FLOW_NOT_LINKED || result <= GST_FLOW_UNEXPECTED) {
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first. 
+       * wrong-state is not a fatal error because it happens due to
+       * flushing and posting an error message in that case is the
+       * wrong thing to do, e.g. when basesrc is doing a flushing
+       * seek. */
+      GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (result)));
+      gst_base_sink_event (pad, gst_event_new_eos ());
     }
     return;
   }

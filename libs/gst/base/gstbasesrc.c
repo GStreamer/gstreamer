@@ -2525,41 +2525,43 @@ pause:
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->data.ABI.running = FALSE;
     gst_pad_pause_task (pad);
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        gboolean flag_segment;
-        GstFormat format;
-        gint64 last_stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      gboolean flag_segment;
+      GstFormat format;
+      gint64 last_stop;
 
-        /* perform EOS logic */
-        flag_segment = (src->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0;
-        format = src->segment.format;
-        last_stop = src->segment.last_stop;
+      /* perform EOS logic */
+      flag_segment = (src->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0;
+      format = src->segment.format;
+      last_stop = src->segment.last_stop;
 
-        if (flag_segment) {
-          GstMessage *message;
+      if (flag_segment) {
+        GstMessage *message;
 
-          message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
-              format, last_stop);
-          gst_message_set_seqnum (message, src->priv->seqnum);
-          gst_element_post_message (GST_ELEMENT_CAST (src), message);
-        } else {
-          event = gst_event_new_eos ();
-          gst_event_set_seqnum (event, src->priv->seqnum);
-          gst_pad_push_event (pad, event);
-          src->priv->last_sent_eos = TRUE;
-        }
+        message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
+            format, last_stop);
+        gst_message_set_seqnum (message, src->priv->seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (src), message);
       } else {
         event = gst_event_new_eos ();
         gst_event_set_seqnum (event, src->priv->seqnum);
-        /* for fatal errors we post an error message, post the error
-         * first so the app knows about the error first. */
-        GST_ELEMENT_ERROR (src, STREAM, FAILED,
-            (_("Internal data flow error.")),
-            ("streaming task paused, reason %s (%d)", reason, ret));
         gst_pad_push_event (pad, event);
         src->priv->last_sent_eos = TRUE;
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret <= GST_FLOW_UNEXPECTED) {
+      event = gst_event_new_eos ();
+      gst_event_set_seqnum (event, src->priv->seqnum);
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first.
+       * Also don't do this for WRONG_STATE because it happens
+       * due to flushing and posting an error message because of
+       * that is the wrong thing to do, e.g. when we're doing
+       * a flushing seek. */
+      GST_ELEMENT_ERROR (src, STREAM, FAILED,
+          (_("Internal data flow error.")),
+          ("streaming task paused, reason %s (%d)", reason, ret));
+      gst_pad_push_event (pad, event);
+      src->priv->last_sent_eos = TRUE;
     }
     goto done;
   }
