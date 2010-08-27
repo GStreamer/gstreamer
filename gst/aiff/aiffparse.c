@@ -1247,29 +1247,27 @@ pause:
     aiff->segment_running = FALSE;
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (aiff->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          GstClockTime stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (aiff->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        GstClockTime stop;
 
-          if ((stop = aiff->segment.stop) == -1)
-            stop = aiff->segment.duration;
+        if ((stop = aiff->segment.stop) == -1)
+          stop = aiff->segment.duration;
 
-          gst_element_post_message (GST_ELEMENT_CAST (aiff),
-              gst_message_new_segment_done (GST_OBJECT_CAST (aiff),
-                  aiff->segment.format, stop));
-        } else {
-          gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
-        }
+        gst_element_post_message (GST_ELEMENT_CAST (aiff),
+            gst_message_new_segment_done (GST_OBJECT_CAST (aiff),
+                aiff->segment.format, stop));
       } else {
-        /* for fatal errors we post an error message, post the error
-         * first so the app knows about the error first. */
-        GST_ELEMENT_ERROR (aiff, STREAM, FAILED,
-            (_("Internal data flow error.")),
-            ("streaming task paused, reason %s (%d)", reason, ret));
         gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
       }
+    } else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first. */
+      GST_ELEMENT_ERROR (aiff, STREAM, FAILED,
+          (_("Internal data flow error.")),
+          ("streaming task paused, reason %s (%d)", reason, ret));
+      gst_pad_push_event (aiff->srcpad, gst_event_new_eos ());
     }
     return;
   }
