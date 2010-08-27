@@ -43,6 +43,20 @@ np_init_pygobject (void)
   PyObject *gobject = NULL;
   PyObject *main_module = NULL;
   PyObject *mdict = NULL;
+  PyObject *pygtk = NULL;
+
+  pygtk = PyImport_ImportModule ("pygtk");
+  if (pygtk == NULL) {
+    PyErr_Print ();
+    GST_WARNING ("could not import pygtk");
+    goto beach;
+  }
+
+  if (!(PyObject_CallMethod (pygtk, "require", "s", "2.0"))) {
+    GST_WARNING ("could not run pygtk.require");
+    PyErr_Print ();
+    goto beach;
+  }
 
   gobject = PyImport_ImportModule ("gobject");
   if (gobject == NULL) {
@@ -54,7 +68,7 @@ np_init_pygobject (void)
   main_module = PyImport_AddModule ("__main__");
   mdict = PyModule_GetDict (gobject);
 
-  PyObject *cobject = PyDict_GetItemString (mdict, "_PyGObject_API");
+  PyObject *cobject = PyMapping_GetItemString (mdict, "_PyGObject_API");
   if (cobject == NULL) {
     GST_WARNING ("could not find _PyGObject_API");
     goto beach;
@@ -77,6 +91,7 @@ np_init_pygobject (void)
   res = TRUE;
 
 beach:
+  Py_XDECREF (pygtk);
   Py_XDECREF (gobject);
 
   return res;
