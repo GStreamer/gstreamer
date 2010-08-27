@@ -2059,7 +2059,7 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
           /* assuming we'll be able to get an index ... */
           seekable = demux->seekable;
         } else {
-          seekable = !!demux->index;
+          seekable = ! !demux->index;
         }
 
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
@@ -2599,8 +2599,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
         entry->pos + demux->ebml_segment_start);
   }
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GST_DEBUG_OBJECT (demux, "Starting flush");
@@ -5886,57 +5886,56 @@ eos:
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
+    gboolean push_eos = FALSE;
 
     GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
     demux->segment_running = FALSE;
     gst_pad_pause_task (demux->sinkpad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      gboolean push_eos = TRUE;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
 
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-
-        /* Close the segment, i.e. update segment stop with the duration
-         * if no stop was set */
-        if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
-            !GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
-          GstEvent *event =
-              gst_event_new_new_segment_full (TRUE, demux->segment.rate,
-              demux->segment.applied_rate, demux->segment.format,
-              demux->segment.start,
-              MAX (demux->last_stop_end, demux->segment.start),
-              demux->segment.time);
-          gst_matroska_demux_send_event (demux, event);
-        }
-
-        if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
-
-          /* for segment playback we need to post when (in stream time)
-           * we stopped, this is either stop (when set) or the duration. */
-          if ((stop = demux->segment.stop) == -1)
-            stop = demux->last_stop_end;
-
-          GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
-          gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
-                  stop));
-          push_eos = FALSE;
-        }
-      } else {
-        /* for fatal errors we post an error message */
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
-            ("stream stopped, reason %s", reason));
+      /* Close the segment, i.e. update segment stop with the duration
+       * if no stop was set */
+      if (GST_CLOCK_TIME_IS_VALID (demux->last_stop_end) &&
+          !GST_CLOCK_TIME_IS_VALID (demux->segment.stop)) {
+        GstEvent *event =
+            gst_event_new_new_segment_full (TRUE, demux->segment.rate,
+            demux->segment.applied_rate, demux->segment.format,
+            demux->segment.start,
+            MAX (demux->last_stop_end, demux->segment.start),
+            demux->segment.time);
+        gst_matroska_demux_send_event (demux, event);
       }
-      if (push_eos) {
-        /* send EOS, and prevent hanging if no streams yet */
-        GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-        if (!gst_matroska_demux_send_event (demux, gst_event_new_eos ()) &&
-            (ret == GST_FLOW_UNEXPECTED)) {
-          GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
-              (NULL), ("got eos but no streams (yet)"));
-        }
+
+      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
+
+        /* for segment playback we need to post when (in stream time)
+         * we stopped, this is either stop (when set) or the duration. */
+        if ((stop = demux->segment.stop) == -1)
+          stop = demux->last_stop_end;
+
+        GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
+        gst_element_post_message (GST_ELEMENT (demux),
+            gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
+                stop));
+      } else {
+        push_eos = TRUE;
+      }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      /* for fatal errors we post an error message */
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED, (NULL),
+          ("stream stopped, reason %s", reason));
+      push_eos = TRUE;
+    }
+    if (push_eos) {
+      /* send EOS, and prevent hanging if no streams yet */
+      GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
+      if (!gst_matroska_demux_send_event (demux, gst_event_new_eos ()) &&
+          (ret == GST_FLOW_UNEXPECTED)) {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+            (NULL), ("got eos but no streams (yet)"));
       }
     }
     return;
