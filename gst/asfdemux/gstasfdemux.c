@@ -1650,11 +1650,15 @@ pause:
     gst_pad_pause_task (demux->sinkpad);
 
     /* For the error cases (not EOS) */
-    if (!sent_eos && (GST_FLOW_IS_FATAL (flow) || flow == GST_FLOW_NOT_LINKED)) {
-      /* Post an error. Hopefully something else already has, but if not... */
-      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+    if (!sent_eos) {
+      if (flow == GST_FLOW_UNEXPECTED)
+        gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
+      else if (flow < GST_FLOW_UNEXPECTED || flow == GST_FLOW_NOT_LINKED) {
+        /* Post an error. Hopefully something else already has, but if not... */
+        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+            (_("Internal data stream error.")),
+            ("streaming stopped, reason %s", gst_flow_get_name (flow)));
+      }
     }
     return;
   }
