@@ -1,6 +1,4 @@
 
-.init gst_videotestsrc_orc_init
-
 .function gst_orc_splat_u8
 .dest 1 d1 guint8
 .param 1 p1

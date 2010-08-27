@@ -1,6 +1,4 @@
 
-.init gst_audio_convert_orc_init
-
 .function orc_audio_convert_unpack_u8
 .dest 4 d1 gint32
 .source 1 s1 guint8
