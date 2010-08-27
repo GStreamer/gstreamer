@@ -893,7 +893,7 @@ free_client (GstRtpBinClient * client, GstRtpBin * bin)
 static void
 gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     guint8 * data, guint64 last_unix, guint64 last_extrtptime,
-    guint64 clock_base, guint64 clock_base_time, guint clock_rate)
+    guint64 base_rtptime, guint64 base_time, guint clock_rate)
 {
   GstRtpBinClient *client;
   gboolean created;
@@ -927,18 +927,18 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   /* take the extended rtptime we found in the SR packet and map it to the
    * local rtptime. The local rtp time is used to construct timestamps on the
    * buffers. */
-  local_rtp = last_extrtptime - clock_base;
+  local_rtp = last_extrtptime - base_rtptime;
 
   GST_DEBUG_OBJECT (bin,
       "base %" G_GUINT64_FORMAT ", extrtptime %" G_GUINT64_FORMAT
-      ", local RTP %" G_GUINT64_FORMAT ", clock-rate %d", clock_base,
+      ", local RTP %" G_GUINT64_FORMAT ", clock-rate %d", base_rtptime,
       last_extrtptime, local_rtp, clock_rate);
 
   /* calculate local NTP time in gstreamer timestamp, we essentially perform the
    * same conversion that a jitterbuffer would use to convert an rtp timestamp
    * into a corresponding gstreamer timestamp. */
   local_unix = gst_util_uint64_scale_int (local_rtp, GST_SECOND, clock_rate);
-  local_unix += clock_base_time;
+  local_unix += base_time;
 
   /* calculate delta between server and receiver. last_unix is created by
    * converting the ntptime in the last SR packet to a gstreamer timestamp. This
@@ -1044,8 +1044,8 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   guint64 ntptime;
   gboolean have_sr, have_sdes;
   gboolean more;
-  guint64 clock_base;
-  guint64 clock_base_time;
+  guint64 base_rtptime;
+  guint64 base_time;
   guint clock_rate;
   guint64 extrtptime;
   GstBuffer *buffer;
@@ -1058,9 +1058,9 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
    * timestamps. We get this info directly from the jitterbuffer which
    * constructs gstreamer timestamps from rtp timestamps and so it know exactly
    * what the current situation is. */
-  clock_base = g_value_get_uint64 (gst_structure_get_value (s, "base-rtptime"));
-  clock_base_time =
-      g_value_get_uint64 (gst_structure_get_value (s, "base-time"));
+  base_rtptime =
+      g_value_get_uint64 (gst_structure_get_value (s, "base-rtptime"));
+  base_time = g_value_get_uint64 (gst_structure_get_value (s, "base-time"));
   clock_rate = g_value_get_uint (gst_structure_get_value (s, "clock-rate"));
   extrtptime =
       g_value_get_uint64 (gst_structure_get_value (s, "sr-ext-rtptime"));
@@ -1115,7 +1115,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data,
                   gst_rtcp_ntp_to_unix (ntptime), extrtptime,
-                  clock_base, clock_base_time, clock_rate);
+                  base_rtptime, base_time, clock_rate);
               GST_RTP_BIN_UNLOCK (bin);
             }
           }
