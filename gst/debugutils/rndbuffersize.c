@@ -310,7 +310,7 @@ push_failed:
     if (ret == GST_FLOW_UNEXPECTED) {
       GST_DEBUG_OBJECT (self, "eos");
       gst_pad_push_event (self->srcpad, gst_event_new_eos ());
-    } else if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+    } else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           ("Internal data stream error."),
           ("streaming stopped, reason: %s", gst_flow_get_name (ret)));
