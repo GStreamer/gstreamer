@@ -1122,11 +1122,11 @@ out_flushing:
 
     /* upstream needs to see fatal result ASAP to shut things down,
      * but might be stuck in one of our other full queues;
-     * so empty this one and trigger dynamic queue growth */
-    if (sq->srcresult <= GST_FLOW_UNEXPECTED) {
-      gst_data_queue_flush (sq->queue);
-      single_queue_underrun_cb (sq->queue, sq);
-    }
+     * so empty this one and trigger dynamic queue growth. At
+     * this point the srcresult is not OK, NOT_LINKED
+     * or UNEXPECTED, i.e. a real failure */
+    gst_data_queue_flush (sq->queue);
+    single_queue_underrun_cb (sq->queue, sq);
     gst_data_queue_set_flushing (sq->queue, TRUE);
     gst_pad_pause_task (sq->srcpad);
     GST_CAT_LOG_OBJECT (multi_queue_debug, mq,
