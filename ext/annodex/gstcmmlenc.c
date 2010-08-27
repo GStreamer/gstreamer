@@ -453,7 +453,7 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
     enc->flow_return = gst_cmml_enc_push (enc, buffer);
     headers = g_list_delete_link (headers, headers);
 
-    if (GST_FLOW_IS_FATAL (enc->flow_return))
+    if (enc->flow_return != GST_FLOW_OK)
       goto push_error;
   }
 
@@ -558,7 +558,7 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
   GST_BUFFER_TIMESTAMP (buffer) = clip->start_time;
 
   res = gst_cmml_enc_push (enc, buffer);
-  if (GST_FLOW_IS_FATAL (res))
+  if (res != GST_FLOW_OK)
     goto done;
 
   if (clip->end_time != GST_CLOCK_TIME_NONE) {
@@ -586,7 +586,7 @@ gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer)
   GstFlowReturn res;
 
   res = gst_pad_push (enc->srcpad, buffer);
-  if (GST_FLOW_IS_FATAL (res))
+  if (res != GST_FLOW_OK)
     GST_WARNING_OBJECT (enc, "push returned: %s", gst_flow_get_name (res));
 
   return res;

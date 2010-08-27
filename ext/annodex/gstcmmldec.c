@@ -511,7 +511,7 @@ gst_cmml_dec_parse_first_header (GstCmmlDec * dec, GstBuffer * buffer)
   /* if there is a processing instruction, gst_cmml_dec_parse_preamble
    * will be triggered. Otherwise we need to call it manually.
    */
-  if (!GST_FLOW_IS_FATAL (dec->flow_return) && !dec->sent_root) {
+  if (dec->flow_return != GST_FLOW_OK && !dec->sent_root) {
     guchar *preamble = (guchar *) g_strndup ((gchar *) GST_BUFFER_DATA (buffer),
         GST_BUFFER_SIZE (buffer));
 
@@ -555,9 +555,7 @@ gst_cmml_dec_parse_preamble (GstCmmlDec * dec, guchar * preamble,
     dec->flow_return = gst_pad_push (dec->srcpad, buffer);
   }
 
-  if (dec->flow_return == GST_FLOW_NOT_LINKED)
-    dec->flow_return = GST_FLOW_OK;     /* Ignore NOT_LINKED */
-  if (!GST_FLOW_IS_FATAL (dec->flow_return)) {
+  if (dec->flow_return == GST_FLOW_OK) {
     GST_INFO_OBJECT (dec, "preamble parsed");
   }
 
