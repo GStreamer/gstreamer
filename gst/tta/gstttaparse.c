@@ -464,7 +464,9 @@ gst_tta_parse_loop (GstTtaParse * ttaparse)
 pause:
   GST_LOG_OBJECT (ttaparse, "pausing task, %s", gst_flow_get_name (ret));
   gst_pad_pause_task (ttaparse->sinkpad);
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+  if (ret == GST_FLOW_UNEXPECTED) {
+    gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
+  } else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
     GST_ELEMENT_ERROR (ttaparse, STREAM, FAILED,
         ("Internal data stream error."),
         ("streaming stopped, reason %s", gst_flow_get_name (ret)));
