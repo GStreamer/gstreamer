@@ -352,12 +352,11 @@ pause:
     GST_INFO_OBJECT (asfparse, "Pausing sinkpad task");
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-      } else {
-        GST_ELEMENT_ERROR (asfparse, STREAM, FAILED,
-            (NULL), ("streaming task paused, reason %s (%d)", reason, ret));
-      }
+    if (ret == GST_FLOW_UNEXPECTED) {
+      gst_pad_push_event (asfparse->srcpad, gst_event_new_eos ());
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (asfparse, STREAM, FAILED,
+          (NULL), ("streaming task paused, reason %s (%d)", reason, ret));
       gst_pad_push_event (asfparse->srcpad, gst_event_new_eos ());
     }
   }
