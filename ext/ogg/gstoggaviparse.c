@@ -406,7 +406,7 @@ gst_ogg_avi_parse_chain (GstPad * pad, GstBuffer * buffer)
             break;
           case 1:
             result = gst_ogg_avi_parse_push_packet (ogg, &packet);
-            if (GST_FLOW_IS_FATAL (result))
+            if (result != GST_FLOW_OK)
               goto done;
             break;
           default:

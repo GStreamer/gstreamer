@@ -992,7 +992,7 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
       case 1:
         GST_LOG_OBJECT (ogg, "packetout gave packet of size %ld", packet.bytes);
         result = gst_ogg_pad_submit_packet (pad, &packet);
-        if (GST_FLOW_IS_FATAL (result))
+        if (result != GST_FLOW_OK)
           goto could_not_submit;
         break;
       default:
@@ -3420,40 +3420,44 @@ pause:
     ogg->segment_running = FALSE;
     gst_pad_pause_task (ogg->sinkpad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
-          GstMessage *message;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
+        GstMessage *message;
 
-          /* for segment playback we need to post when (in stream time)
-           * we stopped, this is either stop (when set) or the duration. */
-          if ((stop = ogg->segment.stop) == -1)
-            stop = ogg->segment.duration;
+        /* for segment playback we need to post when (in stream time)
+         * we stopped, this is either stop (when set) or the duration. */
+        if ((stop = ogg->segment.stop) == -1)
+          stop = ogg->segment.duration;
 
-          GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
-          message =
-              gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
-              stop);
-          gst_message_set_seqnum (message, ogg->seqnum);
+        GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
+        message =
+            gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
+            stop);
+        gst_message_set_seqnum (message, ogg->seqnum);
 
-          gst_element_post_message (GST_ELEMENT (ogg), message);
-        } else {
-          /* normal playback, send EOS to all linked pads */
-          GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
-          event = gst_event_new_eos ();
-        }
+        gst_element_post_message (GST_ELEMENT (ogg), message);
       } else {
-        GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("stream stopped, reason %s", reason));
+        /* normal playback, send EOS to all linked pads */
+        GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
         event = gst_event_new_eos ();
       }
-      if (event) {
-        gst_event_set_seqnum (event, ogg->seqnum);
-        gst_ogg_demux_send_event (ogg, event);
-      }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", reason));
+      event = gst_event_new_eos ();
+    }
+
+    /* For wrong-state we still want to pause the task and stop
+     * but no error message or other things are necessary.
+     * wrong-state is no real error and will be caused by flushing,
+     * e.g. because of a flushing seek.
+     */
+    if (event) {
+      gst_event_set_seqnum (event, ogg->seqnum);
+      gst_ogg_demux_send_event (ogg, event);
     }
     return;
   }
