@@ -131,11 +131,9 @@ gst_sdlvideosink_base_init (gpointer g_class)
   guint32 formats[] = {
     GST_MAKE_FOURCC ('I', '4', '2', '0'),
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')
-        /*
-           GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'),
-           GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
-         */
+    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
+    GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'),
+    GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
   };
 
   /* make a list of all available caps */
