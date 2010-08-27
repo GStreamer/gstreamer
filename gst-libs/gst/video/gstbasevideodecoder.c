@@ -1353,7 +1353,7 @@ gst_base_video_decoder_have_frame_2 (GstBaseVideoDecoder * base_video_decoder)
 
   /* do something with frame */
   ret = base_video_decoder_class->handle_frame (base_video_decoder, frame);
-  if (!GST_FLOW_IS_SUCCESS (ret)) {
+  if (ret != GST_FLOW_OK) {
     GST_DEBUG ("flow error!");
   }
 
