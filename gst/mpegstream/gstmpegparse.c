@@ -837,7 +837,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
           ", total since SCR: %" G_GINT64_FORMAT ", br: %" G_GINT64_FORMAT
           ", next SCR: %" G_GINT64_FORMAT, size, bss, br, mpeg_parse->next_scr);
     }
-  } while (GST_FLOW_IS_SUCCESS (result));
+  } while (result != GST_FLOW_OK);
 
   if (result != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (mpeg_parse, "flow: %s", gst_flow_get_name (result));

@@ -954,7 +954,7 @@ gst_mpeg_demux_combine_flows (GstMPEGDemux * demux, GstMPEGStream * stream,
   stream->last_flow = flow;
 
   /* if it's success we can return the value right away */
-  if (GST_FLOW_IS_SUCCESS (flow))
+  if (flow == GST_FLOW_OK)
     goto done;
 
   /* any other error that is not-linked can be returned right
