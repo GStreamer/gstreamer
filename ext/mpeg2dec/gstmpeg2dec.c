@@ -524,7 +524,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
   /* ERRORS */
 no_buffer:
   {
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (ret != GST_FLOW_WRONG_STATE && ret != GST_FLOW_UNEXPECTED) {
       GST_ELEMENT_ERROR (mpeg2dec, RESOURCE, FAILED, (NULL),
           ("Failed to allocate memory for buffer, reason %s",
               gst_flow_get_name (ret)));
