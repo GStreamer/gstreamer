@@ -3061,7 +3061,7 @@ gst_rtspsrc_combine_flows (GstRTSPSrc * src, GstRTSPStream * stream,
   stream->last_ret = ret;
 
   /* if it's success we can return the value right away */
-  if (GST_FLOW_IS_SUCCESS (ret))
+  if (ret == GST_FLOW_OK)
     goto done;
 
   /* any other error that is not-linked can be returned right
@@ -3850,24 +3850,22 @@ pause:
       /* can be NULL when we stopped and unreffed already */
       gst_task_pause (src->task);
     }
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT_CAST (src),
-              gst_message_new_segment_done (GST_OBJECT_CAST (src),
-                  src->segment.format, src->segment.last_stop));
-        } else {
-          gst_rtspsrc_push_event (src, gst_event_new_eos ());
-        }
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gst_element_post_message (GST_ELEMENT_CAST (src),
+            gst_message_new_segment_done (GST_OBJECT_CAST (src),
+                src->segment.format, src->segment.last_stop));
       } else {
-        /* for fatal errors we post an error message, post the error before the
-         * EOS so the app knows about the error first. */
-        GST_ELEMENT_ERROR (src, STREAM, FAILED,
-            ("Internal data flow error."),
-            ("streaming task paused, reason %s (%d)", reason, ret));
         gst_rtspsrc_push_event (src, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      /* for fatal errors we post an error message, post the error before the
+       * EOS so the app knows about the error first. */
+      GST_ELEMENT_ERROR (src, STREAM, FAILED,
+          ("Internal data flow error."),
+          ("streaming task paused, reason %s (%d)", reason, ret));
+      gst_rtspsrc_push_event (src, gst_event_new_eos ());
     }
     return;
   }
