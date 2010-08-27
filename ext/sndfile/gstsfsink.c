@@ -428,14 +428,13 @@ paused:
         gst_flow_get_name (result));
     gst_pad_pause_task (pad);
     /* fatal errors and NOT_LINKED cause EOS */
-    if (GST_FLOW_IS_FATAL (result) || result == GST_FLOW_NOT_LINKED) {
+    if (result == GST_FLOW_UNEXPECTED) {
       gst_pad_send_event (pad, gst_event_new_eos ());
-      /* EOS does not cause an ERROR message */
-      if (result != GST_FLOW_UNEXPECTED) {
-        GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("stream stopped, reason %s", gst_flow_get_name (result)));
-      }
+    } else if (result < GST_FLOW_UNEXPECTED || result == GST_FLOW_NOT_LINKED) {
+      GST_ELEMENT_ERROR (basesink, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (result)));
+      gst_pad_send_event (pad, gst_event_new_eos ());
     }
     gst_object_unref (this);
     return;
