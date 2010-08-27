@@ -534,7 +534,7 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
 
         xing_header_size = GST_BUFFER_SIZE (xing_header);
 
-        if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, xing_header))) {
+        if ((ret = gst_pad_push (xing->srcpad, xing_header)) != GST_FLOW_OK) {
           GST_ERROR_OBJECT (xing, "Failed to push Xing header: %s",
               gst_flow_get_name (ret));
           gst_buffer_unref (xing_header);
@@ -570,7 +570,7 @@ gst_xing_mux_chain (GstPad * pad, GstBuffer * buffer)
     else
       xing->duration += duration;
 
-    if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, outbuf))) {
+    if ((ret = gst_pad_push (xing->srcpad, outbuf)) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (xing, "Failed to push MP3 frame: %s",
           gst_flow_get_name (ret));
       return ret;
@@ -637,7 +637,7 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
 
             GST_INFO ("Writing real Xing header to beginning of stream");
 
-            if (GST_FLOW_IS_FATAL (ret = gst_pad_push (xing->srcpad, header)))
+            if ((ret = gst_pad_push (xing->srcpad, header)) != GST_FLOW_OK)
               GST_WARNING ("Failed to push updated Xing header: %s\n",
                   gst_flow_get_name (ret));
           }
