@@ -1037,7 +1037,7 @@ gst_auto_convert_sink_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = gst_pad_push (internal_srcpad, buffer);
     gst_object_unref (internal_srcpad);
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (ret != GST_FLOW_OK) {
       GstElement *child = gst_auto_convert_get_subelement (autoconvert, TRUE);
       GST_DEBUG_OBJECT (autoconvert,
           "Child element %" GST_PTR_FORMAT "returned flow %s", child,
