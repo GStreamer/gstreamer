@@ -714,7 +714,9 @@ gst_timidity_loop (GstPad * sinkpad)
   gst_buffer_set_caps (out, timidity->out_caps);
   ret = gst_pad_push (timidity->srcpad, out);
 
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
+  if (ret == GST_FLOW_UNEXPECTED)
+    goto eos;
+  else if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED)
     goto error;
 
   return;
@@ -724,6 +726,11 @@ paused:
     GST_DEBUG_OBJECT (timidity, "pausing task");
     gst_pad_pause_task (timidity->sinkpad);
     return;
+  }
+eos:
+  {
+    gst_pad_push_event (timidity->srcpad, gst_event_new_eos ());
+    goto paused;
   }
 error:
   {
