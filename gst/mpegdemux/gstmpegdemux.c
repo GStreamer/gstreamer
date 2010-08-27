@@ -2684,47 +2684,45 @@ pause:
     GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
-        if (demux->src_segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+      if (demux->src_segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
 
-          /* for segment playback we need to post when (in stream time)
-           * we stopped, this is either stop (when set) or the duration. */
-          if ((stop = demux->src_segment.stop) == -1)
-            stop = demux->src_segment.duration;
+        /* for segment playback we need to post when (in stream time)
+         * we stopped, this is either stop (when set) or the duration. */
+        if ((stop = demux->src_segment.stop) == -1)
+          stop = demux->src_segment.duration;
 
-          if (demux->sink_segment.rate >= 0) {
-            GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
-            gst_element_post_message (GST_ELEMENT_CAST (demux),
-                gst_message_new_segment_done (GST_OBJECT_CAST (demux),
-                    GST_FORMAT_TIME, stop));
-          } else {              /* Reverse playback */
-            GST_LOG_OBJECT (demux, "Sending segment done, at beginning of "
-                "segment");
-            gst_element_post_message (GST_ELEMENT_CAST (demux),
-                gst_message_new_segment_done (GST_OBJECT_CAST (demux),
-                    GST_FORMAT_TIME, demux->src_segment.start));
-          }
-        } else {
-          /* normal playback, send EOS to all linked pads */
-          gst_element_no_more_pads (GST_ELEMENT (demux));
-          GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          if (!gst_flups_demux_send_event (demux, gst_event_new_eos ())
-              && !have_open_streams (demux)) {
-            GST_WARNING_OBJECT (demux, "EOS and no streams open");
-            GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-                ("Internal data stream error."), ("No valid streams detected"));
-          }
+        if (demux->sink_segment.rate >= 0) {
+          GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
+          gst_element_post_message (GST_ELEMENT_CAST (demux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (demux),
+                  GST_FORMAT_TIME, stop));
+        } else {                /* Reverse playback */
+          GST_LOG_OBJECT (demux, "Sending segment done, at beginning of "
+              "segment");
+          gst_element_post_message (GST_ELEMENT_CAST (demux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (demux),
+                  GST_FORMAT_TIME, demux->src_segment.start));
         }
       } else {
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("stream stopped, reason %s", reason));
-        gst_flups_demux_send_event (demux, gst_event_new_eos ());
+        /* normal playback, send EOS to all linked pads */
+        gst_element_no_more_pads (GST_ELEMENT (demux));
+        GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
+        if (!gst_flups_demux_send_event (demux, gst_event_new_eos ())
+            && !have_open_streams (demux)) {
+          GST_WARNING_OBJECT (demux, "EOS and no streams open");
+          GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+              ("Internal data stream error."), ("No valid streams detected"));
+        }
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("stream stopped, reason %s", reason));
+      gst_flups_demux_send_event (demux, gst_event_new_eos ());
     }
 
     gst_object_unref (demux);

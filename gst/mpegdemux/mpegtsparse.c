@@ -808,7 +808,8 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet,
       }
       tspad->pushed = TRUE;
 
-      if (G_UNLIKELY (GST_FLOW_IS_FATAL (tspad->flow_return))) {
+      if (G_UNLIKELY (tspad->flow_return != GST_FLOW_OK
+              && tspad->flow_return != GST_FLOW_NOT_LINKED)) {
         /* return the error upstream */
         ret = tspad->flow_return;
         done = TRUE;
@@ -1249,7 +1250,7 @@ mpegts_parse_chain (GstPad * pad, GstBuffer * buf)
   mpegts_packetizer_push (parse->packetizer, buf);
   while (((pret =
               mpegts_packetizer_next_packet (parse->packetizer,
-                  &packet)) != PACKET_NEED_MORE) && !GST_FLOW_IS_FATAL (res)) {
+                  &packet)) != PACKET_NEED_MORE) && res == GST_FLOW_OK) {
     if (G_UNLIKELY (pret == PACKET_BAD))
       /* bad header, skip the packet */
       goto next;
