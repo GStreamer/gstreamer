@@ -1110,7 +1110,7 @@ gst_sdp_demux_combine_flows (GstSDPDemux * demux, GstSDPStream * stream,
   stream->last_ret = ret;
 
   /* if it's success we can return the value right away */
-  if (GST_FLOW_IS_SUCCESS (ret))
+  if (ret == GST_FLOW_OK)
     goto done;
 
   /* any other error that is not-linked can be returned right
