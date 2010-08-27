@@ -406,29 +406,27 @@ pause:
     GST_LOG_OBJECT (rp, "pausing task, reason %s", reason);
     gst_pad_pause_task (rp->sinkpad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          GstClockTime stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      if (rp->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        GstClockTime stop;
 
-          GST_LOG_OBJECT (rp, "Sending segment done");
+        GST_LOG_OBJECT (rp, "Sending segment done");
 
-          if ((stop = rp->segment.stop) == -1)
-            stop = rp->segment.duration;
+        if ((stop = rp->segment.stop) == -1)
+          stop = rp->segment.duration;
 
-          gst_element_post_message (GST_ELEMENT_CAST (rp),
-              gst_message_new_segment_done (GST_OBJECT_CAST (rp),
-                  rp->segment.format, stop));
-        } else {
-          GST_LOG_OBJECT (rp, "Sending EOS, at end of stream");
-          gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
-        }
+        gst_element_post_message (GST_ELEMENT_CAST (rp),
+            gst_message_new_segment_done (GST_OBJECT_CAST (rp),
+                rp->segment.format, stop));
       } else {
-        GST_ELEMENT_ERROR (rp, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("stream stopped, reason %s", reason));
+        GST_LOG_OBJECT (rp, "Sending EOS, at end of stream");
         gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (rp, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("stream stopped, reason %s", reason));
+      gst_pad_push_event (rp->srcpad, gst_event_new_eos ());
     }
     return;
   }
