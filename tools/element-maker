@@ -1,14 +1,30 @@
 #!/bin/sh
 
-class=element
+class=basetransform
 
-GST_IS_REPLACE=GST_IS_CAPS_DEBUG
-GST_REPLACE=GST_CAPS_DEBUG
-GST_TYPE_REPLACE=GST_TYPE_CAPS_DEBUG
-GstReplace=GstCapsDebug
-gst_replace=gst_caps_debug
-gstreplace=gstcapsdebug
-replace=capsdebug
+prefix=gst
+name=edi_test
+
+
+PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
+NAME=$(echo $name | sed -e 's/\(.*\)/\U\1/')
+Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/' -e 's/^\(.\)/\U\1/')
+Name=$(echo $name | sed -e 's/_\(.\)/\U\1/' -e 's/^\(.\)/\U\1/')
+
+GST_IS_REPLACE=${PREFIX}_IS_${NAME}
+GST_REPLACE=${PREFIX}_${NAME}
+GST_TYPE_REPLACE=${PREFIX}_TYPE_${NAME}
+GstReplace=${Prefix}${Name}
+gst_replace=${prefix}_${name}
+gstreplace=${prefix}$(echo $name | sed -e 's/_//')
+replace=$(echo $name | sed -e 's/_//')
+
+if [ "$REAL_NAME" = "" ] ; then
+  REAL_NAME=FIXME
+fi
+if [ "$EMAIL_ADDRESS" = "" ] ; then
+  EMAIL_ADDRESS=fixme@example.com
+fi
 
 source=gst$class.c
 pkg=`grep -A 10000 '^% pkg-config' $source | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1`
@@ -18,7 +34,28 @@ GstBaseReplace=`grep -A 10000 '^% ClassName' $source | tail -n +2|grep -m 1 -B 1
 generate ()
 {
 
-grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
+cat <<-EOF
+/* GStreamer
+ * Copyright (C) $(date +%Y) $REAL_NAME <$EMAIL_ADDRESS>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+EOF
+
+#grep -A 10000 '^% copyright' base.c | tail -n +2|grep -m 1 -B 10000 '^%'|head -n -1
 
 cat <<EOF
 
@@ -82,7 +119,7 @@ gst_replace_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_replace_sink_template));
 
   gst_element_class_set_details_simple (element_class, "FIXME",
-      "Generic", "FIXME", "FIXME <fixme@example.com>");
+      "Generic", "FIXME", "$REAL_NAME <$EMAIL_ADDRESS>");
 }
 
 static void

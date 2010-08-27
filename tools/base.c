@@ -1,7 +1,7 @@
 
 % copyright
 /* GStreamer
- * Copyright (C) 2010 FIXME <fixme@example.com>
+ * Copyright (C) 2010 REAL_NAME <EMAIL_ADDRESS>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
