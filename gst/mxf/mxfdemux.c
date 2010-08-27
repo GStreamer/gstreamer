@@ -2761,44 +2761,42 @@ pause:
     GST_LOG_OBJECT (demux, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
-          GstMessage *m;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
+        GstMessage *m;
 
-          /* for segment playback we need to post when (in stream time)
-           * we stopped, this is either stop (when set) or the duration. */
-          if ((stop = demux->segment.stop) == -1)
-            stop = demux->segment.duration;
+        /* for segment playback we need to post when (in stream time)
+         * we stopped, this is either stop (when set) or the duration. */
+        if ((stop = demux->segment.stop) == -1)
+          stop = demux->segment.duration;
 
-          GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
-          m = gst_message_new_segment_done (GST_OBJECT_CAST (demux),
-              GST_FORMAT_TIME, stop);
-          gst_message_set_seqnum (m, demux->seqnum);
-          gst_element_post_message (GST_ELEMENT_CAST (demux), m);
-        } else {
-          GstEvent *e;
-
-          /* normal playback, send EOS to all linked pads */
-          GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          e = gst_event_new_eos ();
-          gst_event_set_seqnum (e, demux->seqnum);
-          if (!gst_mxf_demux_push_src_event (demux, e)) {
-            GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
-          }
-        }
+        GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
+        m = gst_message_new_segment_done (GST_OBJECT_CAST (demux),
+            GST_FORMAT_TIME, stop);
+        gst_message_set_seqnum (m, demux->seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (demux), m);
       } else {
         GstEvent *e;
 
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("stream stopped, reason %s", reason));
+        /* normal playback, send EOS to all linked pads */
+        GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
         e = gst_event_new_eos ();
         gst_event_set_seqnum (e, demux->seqnum);
-        gst_mxf_demux_push_src_event (demux, e);
+        if (!gst_mxf_demux_push_src_event (demux, e)) {
+          GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
+        }
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GstEvent *e;
+
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("stream stopped, reason %s", reason));
+      e = gst_event_new_eos ();
+      gst_event_set_seqnum (e, demux->seqnum);
+      gst_mxf_demux_push_src_event (demux, e);
     }
     gst_object_unref (demux);
     return;
@@ -3078,8 +3076,8 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -3211,8 +3209,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   if (rate <= 0.0)
     goto wrong_rate;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GstEvent *e;
