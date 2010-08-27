@@ -297,11 +297,11 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
   sink = GST_FAKE_SINK (object);
 
   switch (prop_id) {
-    case PROP_SILENT:
-      sink->silent = g_value_get_boolean (value);
-      break;
     case PROP_STATE_ERROR:
       sink->state_error = g_value_get_enum (value);
+      break;
+    case PROP_SILENT:
+      sink->silent = g_value_get_boolean (value);
       break;
     case PROP_DUMP:
       sink->dump = g_value_get_boolean (value);
