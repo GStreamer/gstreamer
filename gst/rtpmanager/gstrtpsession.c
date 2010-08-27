@@ -259,6 +259,8 @@ static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
 static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
 static void gst_rtp_session_request_key_unit (RTPSession * sess,
     gboolean all_headers, gpointer user_data);
+static GstClockTime gst_rtp_session_request_time (RTPSession * session,
+    gpointer user_data);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
@@ -267,7 +269,8 @@ static RTPSessionCallbacks callbacks = {
   gst_rtp_session_send_rtcp,
   gst_rtp_session_clock_rate,
   gst_rtp_session_reconsider,
-  gst_rtp_session_request_key_unit
+  gst_rtp_session_request_key_unit,
+  gst_rtp_session_request_time
 };
 
 /* GObject vmethods */
@@ -2158,4 +2161,12 @@ gst_rtp_session_request_key_unit (RTPSession * sess,
       gst_structure_new ("GstForceKeyUnit",
           "all-headers", G_TYPE_BOOLEAN, all_headers, NULL));
   gst_pad_push_event (rtpsession->send_rtp_sink, event);
+}
+
+static GstClockTime
+gst_rtp_session_request_time (RTPSession * session, gpointer user_data)
+{
+  GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
+
+  return gst_clock_get_time (rtpsession->priv->sysclock);
 }

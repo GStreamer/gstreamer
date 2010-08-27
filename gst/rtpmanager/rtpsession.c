@@ -773,6 +773,10 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
     sess->callbacks.request_key_unit = callbacks->request_key_unit;
     sess->request_key_unit_user_data = user_data;
   }
+  if (callbacks->request_time) {
+    sess->callbacks.request_time = callbacks->request_time;
+    sess->request_time_user_data = user_data;
+  }
 }
 
 /**
@@ -881,6 +885,24 @@ rtp_session_set_reconsider_callback (RTPSession * sess,
 
   sess->callbacks.reconsider = callback;
   sess->reconsider_user_data = user_data;
+}
+
+/**
+ * rtp_session_set_request_time_callback:
+ * @sess: an #RTPSession
+ * @callback: callback to set
+ * @user_data: user data passed in the callback
+ *
+ * Configure only the request_time callback
+ */
+void
+rtp_session_set_request_time_callback (RTPSession * sess,
+    RTPSessionRequestTime callback, gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  sess->callbacks.request_time = callback;
+  sess->request_time_user_data = user_data;
 }
 
 /**

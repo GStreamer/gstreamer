@@ -134,6 +134,17 @@ typedef void (*RTPSessionRequestKeyUnit) (RTPSession *sess,
     gboolean all_headers, gpointer user_data);
 
 /**
+ * RTPSessionRequestTime:
+ * @sess: an #RTPSession
+ * @user_data: user data specified when registering
+ *
+ * This callback will be called when @sess needs the current time. The time
+ * should be returned as a #GstClockTime
+ */
+typedef GstClockTime (*RTPSessionRequestTime) (RTPSession *sess,
+    gpointer user_data);
+
+/**
  * RTPSessionCallbacks:
  * @RTPSessionProcessRTP: callback to process RTP packets
  * @RTPSessionSendRTP: callback for sending RTP packets
@@ -154,6 +165,7 @@ typedef struct {
   RTPSessionClockRate   clock_rate;
   RTPSessionReconsider  reconsider;
   RTPSessionRequestKeyUnit request_key_unit;
+  RTPSessionRequestTime request_time;
 } RTPSessionCallbacks;
 
 /**
@@ -213,6 +225,7 @@ struct _RTPSession {
   gpointer              clock_rate_user_data;
   gpointer              reconsider_user_data;
   gpointer              request_key_unit_user_data;
+  gpointer              request_time_user_data;
 
   RTPSessionStats stats;
 
@@ -278,6 +291,10 @@ void            rtp_session_set_clock_rate_callback   (RTPSession * sess,
 void            rtp_session_set_reconsider_callback (RTPSession * sess,
                                                     RTPSessionReconsider callback,
                                                     gpointer user_data);
+void            rtp_session_set_request_time_callback (RTPSession * sess,
+                                                    RTPSessionRequestTime callback,
+                                                    gpointer user_data);
+
 void            rtp_session_set_bandwidth          (RTPSession *sess, gdouble bandwidth);
 gdouble         rtp_session_get_bandwidth          (RTPSession *sess);
 void            rtp_session_set_rtcp_fraction      (RTPSession *sess, gdouble fraction);
