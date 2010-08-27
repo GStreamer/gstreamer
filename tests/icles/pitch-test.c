@@ -39,6 +39,7 @@ main (int argc, char **argv)
   GstElement *sink;
   GstElement *pipeline;
   GstController *ctl;
+  GstInterpolationControlSource *csource;
   GValue val = { 0, };
 
   if (argc != 2) {
@@ -69,8 +70,18 @@ main (int argc, char **argv)
   gst_element_link_many (audiotestsrc, audioconvert1, pitch, audioconvert2,
       sink, NULL);
 
-  ctl = gst_object_control_properties (G_OBJECT (pitch), "pitch", NULL);
-  gst_controller_set_interpolation_mode (ctl, "pitch", GST_INTERPOLATE_LINEAR);
+  if (!(ctl = gst_controller_new (G_OBJECT (pitch), "pitch", NULL))) {
+    g_print ("can't control pitch element\n");
+    return -1;
+  }
+
+  csource = gst_interpolation_control_source_new ();
+  gst_interpolation_control_source_set_interpolation_mode (csource,
+      GST_INTERPOLATE_LINEAR);
+
+  gst_controller_set_control_source (ctl, "pitch",
+      GST_CONTROL_SOURCE (csource));
+
 
   g_value_init (&val, G_TYPE_FLOAT);
 
@@ -80,8 +91,10 @@ main (int argc, char **argv)
     else
       g_value_set_float (&val, 1.5);
 
-    gst_controller_set (ctl, "pitch", i * GST_SECOND, &val);
+    gst_interpolation_control_source_set (csource, i * GST_SECOND, &val);
   }
+
+  g_value_unset (&val);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_print ("Running\n");
@@ -94,6 +107,9 @@ main (int argc, char **argv)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_print ("Deleting pipeline\n");
   gst_object_unref (GST_OBJECT (pipeline));
+
+  g_object_unref (csource);
+  g_object_unref (ctl);
 
   return 0;
 }
