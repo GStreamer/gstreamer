@@ -603,9 +603,6 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
       break;
   }
 
-  /* do skew calculation by measuring the difference between rtptime and the
-   * receive time, this function will retimestamp @buf with the skew corrected
-   * running time. */
   rtptime = gst_rtp_buffer_get_timestamp (buf);
   switch (jbuf->mode) {
     case RTP_JITTER_BUFFER_MODE_NONE:
@@ -623,6 +620,9 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
     default:
       break;
   }
+  /* do skew calculation by measuring the difference between rtptime and the
+   * receive time, this function will retimestamp @buf with the skew corrected
+   * running time. */
   time = calculate_skew (jbuf, rtptime, time, clock_rate);
   GST_BUFFER_TIMESTAMP (buf) = time;
 
