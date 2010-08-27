@@ -2934,46 +2934,43 @@ pause:
     gst_pad_pause_task (pad);
 
     /* fatal errors need special actions */
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      /* check EOS */
-      if (ret == GST_FLOW_UNEXPECTED) {
-        if (qtdemux->n_streams == 0) {
-          /* we have no streams, post an error */
-          gst_qtdemux_post_no_playable_stream_error (qtdemux);
-        }
-        if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
+    /* check EOS */
+    if (ret == GST_FLOW_UNEXPECTED) {
+      if (qtdemux->n_streams == 0) {
+        /* we have no streams, post an error */
+        gst_qtdemux_post_no_playable_stream_error (qtdemux);
+      }
+      if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
 
-          /* FIXME: I am not sure this is the right fix. If the sinks are
-           * supposed to detect the segment is complete and accumulate 
-           * automatically, it does not seem to work here. Need more work */
-          qtdemux->segment_running = TRUE;
+        /* FIXME: I am not sure this is the right fix. If the sinks are
+         * supposed to detect the segment is complete and accumulate 
+         * automatically, it does not seem to work here. Need more work */
+        qtdemux->segment_running = TRUE;
 
-          if ((stop = qtdemux->segment.stop) == -1)
-            stop = qtdemux->segment.duration;
+        if ((stop = qtdemux->segment.stop) == -1)
+          stop = qtdemux->segment.duration;
 
-          if (qtdemux->segment.rate >= 0) {
-            GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
-            gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-                gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
-                    GST_FORMAT_TIME, stop));
-          } else {
-            /*  For Reverse Playback */
-            GST_LOG_OBJECT (qtdemux,
-                "Sending segment done, at start of segment");
-            gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-                gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
-                    GST_FORMAT_TIME, qtdemux->segment.start));
-          }
+        if (qtdemux->segment.rate >= 0) {
+          GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
+          gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
+                  GST_FORMAT_TIME, stop));
         } else {
-          GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
-          gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
+          /*  For Reverse Playback */
+          GST_LOG_OBJECT (qtdemux, "Sending segment done, at start of segment");
+          gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
+                  GST_FORMAT_TIME, qtdemux->segment.start));
         }
       } else {
-        GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
-            (NULL), ("streaming stopped, reason %s", reason));
+        GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
         gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
+          (NULL), ("streaming stopped, reason %s", reason));
+      gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
     }
     goto done;
   }
@@ -4151,7 +4148,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -4169,7 +4166,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -4293,7 +4290,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
