@@ -1022,95 +1022,93 @@ gst_multi_queue_loop (GstPad * pad)
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
   mq = sq->mqueue;
 
-  do {
-    GST_DEBUG_OBJECT (mq, "SingleQueue %d : trying to pop an object", sq->id);
+  GST_DEBUG_OBJECT (mq, "SingleQueue %d : trying to pop an object", sq->id);
 
-    /* Get something from the queue, blocking until that happens, or we get
-     * flushed */
-    if (!(gst_data_queue_pop (sq->queue, &sitem)))
-      goto out_flushing;
+  /* Get something from the queue, blocking until that happens, or we get
+   * flushed */
+  if (!(gst_data_queue_pop (sq->queue, &sitem)))
+    goto out_flushing;
 
-    item = (GstMultiQueueItem *) sitem;
-    newid = item->posid;
+  item = (GstMultiQueueItem *) sitem;
+  newid = item->posid;
 
-    /* steal the object and destroy the item */
-    object = gst_multi_queue_item_steal_object (item);
-    gst_multi_queue_item_destroy (item);
+  /* steal the object and destroy the item */
+  object = gst_multi_queue_item_steal_object (item);
+  gst_multi_queue_item_destroy (item);
 
-    GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d , oldid:%d",
-        sq->id, newid, oldid);
+  GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d , oldid:%d",
+      sq->id, newid, oldid);
 
-    /* If we're not-linked, we do some extra work because we might need to
-     * wait before pushing. If we're linked but there's a gap in the IDs,
-     * or it's the first loop, or we just passed the previous highid, 
-     * we might need to wake some sleeping pad up, so there's extra work 
-     * there too */
-    if (sq->srcresult == GST_FLOW_NOT_LINKED ||
-        (oldid == G_MAXUINT32) || (newid != (oldid + 1)) ||
-        oldid > mq->highid) {
-      GST_LOG_OBJECT (mq, "CHECKING sq->srcresult: %s",
-          gst_flow_get_name (sq->srcresult));
+  /* If we're not-linked, we do some extra work because we might need to
+   * wait before pushing. If we're linked but there's a gap in the IDs,
+   * or it's the first loop, or we just passed the previous highid, 
+   * we might need to wake some sleeping pad up, so there's extra work 
+   * there too */
+  if (sq->srcresult == GST_FLOW_NOT_LINKED ||
+      (oldid == G_MAXUINT32) || (newid != (oldid + 1)) || oldid > mq->highid) {
+    GST_LOG_OBJECT (mq, "CHECKING sq->srcresult: %s",
+        gst_flow_get_name (sq->srcresult));
 
-      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+    GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-      /* Update the nextid so other threads know when to wake us up */
-      sq->nextid = newid;
+    /* Update the nextid so other threads know when to wake us up */
+    sq->nextid = newid;
 
-      /* Update the oldid (the last ID we output) for highid tracking */
-      if (oldid != G_MAXUINT32)
-        sq->oldid = oldid;
+    /* Update the oldid (the last ID we output) for highid tracking */
+    if (oldid != G_MAXUINT32)
+      sq->oldid = oldid;
 
-      if (sq->srcresult == GST_FLOW_NOT_LINKED) {
-        /* Go to sleep until it's time to push this buffer */
+    if (sq->srcresult == GST_FLOW_NOT_LINKED) {
+      /* Go to sleep until it's time to push this buffer */
 
-        /* Recompute the highid */
-        compute_high_id (mq);
-        while (newid > mq->highid && sq->srcresult == GST_FLOW_NOT_LINKED) {
-          GST_DEBUG_OBJECT (mq, "queue %d sleeping for not-linked wakeup with "
-              "newid %u and highid %u", sq->id, newid, mq->highid);
+      /* Recompute the highid */
+      compute_high_id (mq);
+      while (newid > mq->highid && sq->srcresult == GST_FLOW_NOT_LINKED) {
+        GST_DEBUG_OBJECT (mq, "queue %d sleeping for not-linked wakeup with "
+            "newid %u and highid %u", sq->id, newid, mq->highid);
 
 
-          /* Wake up all non-linked pads before we sleep */
-          wake_up_next_non_linked (mq);
-
-          mq->numwaiting++;
-          g_cond_wait (sq->turn, mq->qlock);
-          mq->numwaiting--;
-
-          GST_DEBUG_OBJECT (mq, "queue %d woken from sleeping for not-linked "
-              "wakeup with newid %u and highid %u", sq->id, newid, mq->highid);
-        }
-
-        /* Re-compute the high_id in case someone else pushed */
-        compute_high_id (mq);
-      } else {
-        compute_high_id (mq);
-        /* Wake up all non-linked pads */
+        /* Wake up all non-linked pads before we sleep */
         wake_up_next_non_linked (mq);
+
+        mq->numwaiting++;
+        g_cond_wait (sq->turn, mq->qlock);
+        mq->numwaiting--;
+
+        GST_DEBUG_OBJECT (mq, "queue %d woken from sleeping for not-linked "
+            "wakeup with newid %u and highid %u", sq->id, newid, mq->highid);
       }
-      /* We're done waiting, we can clear the nextid */
-      sq->nextid = 0;
 
-      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      /* Re-compute the high_id in case someone else pushed */
+      compute_high_id (mq);
+    } else {
+      compute_high_id (mq);
+      /* Wake up all non-linked pads */
+      wake_up_next_non_linked (mq);
     }
+    /* We're done waiting, we can clear the nextid */
+    sq->nextid = 0;
 
-    GST_LOG_OBJECT (mq, "BEFORE PUSHING sq->srcresult: %s",
-        gst_flow_get_name (sq->srcresult));
-
-    /* Try to push out the new object */
-    result = gst_single_queue_push_one (mq, sq, object);
-    sq->srcresult = result;
-
-    if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
-        && result != GST_FLOW_UNEXPECTED)
-      goto out_flushing;
-
-    GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
-        gst_flow_get_name (sq->srcresult));
-
-    oldid = newid;
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   }
-  while (TRUE);
+
+  GST_LOG_OBJECT (mq, "BEFORE PUSHING sq->srcresult: %s",
+      gst_flow_get_name (sq->srcresult));
+
+  /* Try to push out the new object */
+  result = gst_single_queue_push_one (mq, sq, object);
+  sq->srcresult = result;
+
+  if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
+      && result != GST_FLOW_UNEXPECTED)
+    goto out_flushing;
+
+  GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
+      gst_flow_get_name (sq->srcresult));
+
+  oldid = newid;
+
+  return;
 
 out_flushing:
   {
