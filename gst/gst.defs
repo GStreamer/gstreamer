@@ -8127,8 +8127,48 @@
   )
 )
 
+(define-function util_uint64_scale_round
+  (c-name "gst_util_uint64_scale_round")
+  (return-type "guint64")
+  (parameters
+    '("guint64" "val")
+    '("guint64" "num")
+    '("guint64" "denom")
+  )
+)
+
+(define-function util_uint64_scale_ceil
+  (c-name "gst_util_uint64_scale_ceil")
+  (return-type "guint64")
+  (parameters
+    '("guint64" "val")
+    '("guint64" "num")
+    '("guint64" "denom")
+  )
+)
+
 (define-function util_uint64_scale_int
   (c-name "gst_util_uint64_scale_int")
+  (return-type "guint64")
+  (parameters
+    '("guint64" "val")
+    '("gint" "num")
+    '("gint" "denom")
+  )
+)
+
+(define-function util_uint64_scale_int_round
+  (c-name "gst_util_uint64_scale_int_round")
+  (return-type "guint64")
+  (parameters
+    '("guint64" "val")
+    '("gint" "num")
+    '("gint" "denom")
+  )
+)
+
+(define-function util_uint64_scale_int_ceil
+  (c-name "gst_util_uint64_scale_int_ceil")
   (return-type "guint64")
   (parameters
     '("guint64" "val")
