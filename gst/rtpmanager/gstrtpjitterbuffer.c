@@ -1918,7 +1918,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint64 base_rtptime, timestamp;
+  guint64 base_rtptime, base_time;
   guint32 clock_rate;
   guint64 last_rtptime;
   guint32 ssrc;
@@ -1956,14 +1956,14 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
   /* get the last values from the jitterbuffer */
-  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &timestamp,
+  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
       &clock_rate, &last_rtptime);
 
   GST_DEBUG_OBJECT (jitterbuffer, "ext SR %" G_GUINT64_FORMAT ", base %"
       G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT,
       ext_rtptime, base_rtptime, clock_rate);
 
-  if (base_rtptime == -1 || clock_rate == -1 || timestamp == -1) {
+  if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
     GST_DEBUG_OBJECT (jitterbuffer, "dropping, no RTP values");
     drop = TRUE;
   } else {
@@ -1994,7 +1994,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 
     s = gst_structure_new ("application/x-rtp-sync",
         "base-rtptime", G_TYPE_UINT64, base_rtptime,
-        "base-time", G_TYPE_UINT64, timestamp,
+        "base-time", G_TYPE_UINT64, base_time,
         "clock-rate", G_TYPE_UINT, clock_rate,
         "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
         "sr-buffer", GST_TYPE_BUFFER, buffer, NULL);
