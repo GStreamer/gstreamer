@@ -848,20 +848,18 @@ pause:
 
     GST_DEBUG_OBJECT (wildmidi, "pausing task, reason %s", reason);
     gst_pad_pause_task (sinkpad);
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        event = gst_event_new_eos ();
-        gst_pad_push_event (wildmidi->srcpad, event);
-      } else {
-        event = gst_event_new_eos ();
-        /* for fatal errors we post an error message, post the error
-         * first so the app knows about the error first. */
-        GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
-            ("Internal data flow error."),
-            ("streaming task paused, reason %s (%d)", reason, ret));
-        gst_pad_push_event (wildmidi->srcpad, event);
-      }
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      event = gst_event_new_eos ();
+      gst_pad_push_event (wildmidi->srcpad, event);
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      event = gst_event_new_eos ();
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first. */
+      GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
+          ("Internal data flow error."),
+          ("streaming task paused, reason %s (%d)", reason, ret));
+      gst_pad_push_event (wildmidi->srcpad, event);
     }
   }
 }
