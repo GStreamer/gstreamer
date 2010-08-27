@@ -1026,7 +1026,7 @@ out:
   flacenc->offset += bytes;
   flacenc->samples_written += samples;
 
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
+  if (ret != GST_FLOW_OK)
     return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
   return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;

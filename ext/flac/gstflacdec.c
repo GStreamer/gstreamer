@@ -1111,12 +1111,14 @@ analyze_state:
     {
       GST_DEBUG_OBJECT (flacdec, "everything ok");
 
-      if (GST_FLOW_IS_FATAL (flacdec->last_flow) ||
+      if (flacdec->last_flow < GST_FLOW_UNEXPECTED ||
           flacdec->last_flow == GST_FLOW_NOT_LINKED) {
         GST_ELEMENT_ERROR (flacdec, STREAM, FAILED,
             (_("Internal data stream error.")),
             ("stream stopped, reason %s",
                 gst_flow_get_name (flacdec->last_flow)));
+        goto eos_and_pause;
+      } else if (flacdec->last_flow == GST_FLOW_UNEXPECTED) {
         goto eos_and_pause;
       } else if (flacdec->last_flow != GST_FLOW_OK) {
         goto pause;
@@ -1161,7 +1163,7 @@ analyze_state:
     {
       GST_INFO_OBJECT (flacdec, "read aborted: last pull_range flow = %s",
           gst_flow_get_name (flacdec->pull_flow));
-      if (!GST_FLOW_IS_FATAL (flacdec->pull_flow)) {
+      if (flacdec->pull_flow == GST_FLOW_WRONG_STATE) {
         /* it seems we need to flush the decoder here to reset the decoder
          * state after the abort for FLAC__stream_decoder_seek_absolute()
          * to work properly */
