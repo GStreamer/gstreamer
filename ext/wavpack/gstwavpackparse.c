@@ -1148,30 +1148,29 @@ pause:
     GST_LOG_OBJECT (parse, "pausing task, reason %s", reason);
     gst_pad_pause_task (parse->sinkpad);
 
-    if (GST_FLOW_IS_FATAL (flow_ret) || flow_ret == GST_FLOW_NOT_LINKED) {
-      if (flow_ret == GST_FLOW_UNEXPECTED && parse->srcpad) {
-        if (parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          GstClockTime stop;
+    if (flow_ret == GST_FLOW_UNEXPECTED && parse->srcpad) {
+      if (parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        GstClockTime stop;
 
-          GST_LOG_OBJECT (parse, "Sending segment done");
+        GST_LOG_OBJECT (parse, "Sending segment done");
 
-          if ((stop = parse->segment.stop) == -1)
-            stop = parse->segment.duration;
+        if ((stop = parse->segment.stop) == -1)
+          stop = parse->segment.duration;
 
-          gst_element_post_message (GST_ELEMENT_CAST (parse),
-              gst_message_new_segment_done (GST_OBJECT_CAST (parse),
-                  parse->segment.format, stop));
-        } else {
-          GST_LOG_OBJECT (parse, "Sending EOS, at end of stream");
-          gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
-        }
+        gst_element_post_message (GST_ELEMENT_CAST (parse),
+            gst_message_new_segment_done (GST_OBJECT_CAST (parse),
+                parse->segment.format, stop));
       } else {
-        GST_ELEMENT_ERROR (parse, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("stream stopped, reason %s", reason));
-        if (parse->srcpad)
-          gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
+        GST_LOG_OBJECT (parse, "Sending EOS, at end of stream");
+        gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
       }
+    } else if (flow_ret == GST_FLOW_NOT_LINKED
+        || flow_ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (parse, STREAM, FAILED,
+          (_("Internal data stream error.")), ("stream stopped, reason %s",
+              reason));
+      if (parse->srcpad)
+        gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
     }
     return;
   }
