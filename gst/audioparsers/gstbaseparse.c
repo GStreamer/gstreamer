@@ -1493,7 +1493,9 @@ gst_base_parse_loop (GstPad * pad)
 
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (parse, "flow: %s", gst_flow_get_name (ret));
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (ret == GST_FLOW_UNEXPECTED) {
+      gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
       GST_ELEMENT_ERROR (parse, STREAM, FAILED, (NULL),
           ("streaming task paused, reason: %s", gst_flow_get_name (ret)));
       gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
