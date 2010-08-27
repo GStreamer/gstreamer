@@ -1477,6 +1477,14 @@ type_found (GstElement * typefind, guint probability,
 
   /* remember if we need download buffering */
   decoder->is_download = IS_DOWNLOAD_MEDIA (media_type) && decoder->download;
+  /* only enable download buffering if the upstream duration is known */
+  if (decoder->is_download) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+    gint64 dur;
+
+    decoder->is_download = (gst_element_query_duration (typefind, &fmt, &dur)
+        && fmt == GST_FORMAT_BYTES && dur != -1);
+  }
 
   dec_elem = make_decoder (decoder);
   if (!dec_elem)
