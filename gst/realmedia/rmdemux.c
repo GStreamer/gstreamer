@@ -918,31 +918,29 @@ need_pause:
     rmdemux->segment_running = FALSE;
     gst_pad_pause_task (rmdemux->sinkpad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (rmdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic */
+      if (rmdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
 
-          /* for segment playback we need to post when (in stream time)
-           * we stopped, this is either stop (when set) or the duration. */
-          if ((stop = rmdemux->segment.stop) == -1)
-            stop = rmdemux->segment.duration;
+        /* for segment playback we need to post when (in stream time)
+         * we stopped, this is either stop (when set) or the duration. */
+        if ((stop = rmdemux->segment.stop) == -1)
+          stop = rmdemux->segment.duration;
 
-          GST_LOG_OBJECT (rmdemux, "Sending segment done, at end of segment");
-          gst_element_post_message (GST_ELEMENT (rmdemux),
-              gst_message_new_segment_done (GST_OBJECT (rmdemux),
-                  GST_FORMAT_TIME, stop));
-        } else {
-          /* normal playback, send EOS to all linked pads */
-          GST_LOG_OBJECT (rmdemux, "Sending EOS, at end of stream");
-          gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
-        }
+        GST_LOG_OBJECT (rmdemux, "Sending segment done, at end of segment");
+        gst_element_post_message (GST_ELEMENT (rmdemux),
+            gst_message_new_segment_done (GST_OBJECT (rmdemux),
+                GST_FORMAT_TIME, stop));
       } else {
-        GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
-            (NULL), ("stream stopped, reason %s", reason));
+        /* normal playback, send EOS to all linked pads */
+        GST_LOG_OBJECT (rmdemux, "Sending EOS, at end of stream");
         gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
+          (NULL), ("stream stopped, reason %s", reason));
+      gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
     }
     return;
   }
@@ -1890,7 +1888,7 @@ gst_rmdemux_combine_flows (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   stream->last_flow = ret;
 
   /* if it's success we can return the value right away */
-  if (GST_FLOW_IS_SUCCESS (ret))
+  if (ret == GST_FLOW_OK)
     goto done;
 
   /* any other error that is not-linked can be returned right
