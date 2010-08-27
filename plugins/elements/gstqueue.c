@@ -105,20 +105,20 @@ enum
 
 enum
 {
-  ARG_0,
+  PROP_0,
   /* FIXME: don't we have another way of doing this
    * "Gstreamer format" (frame/byte/time) queries? */
-  ARG_CUR_LEVEL_BUFFERS,
-  ARG_CUR_LEVEL_BYTES,
-  ARG_CUR_LEVEL_TIME,
-  ARG_MAX_SIZE_BUFFERS,
-  ARG_MAX_SIZE_BYTES,
-  ARG_MAX_SIZE_TIME,
-  ARG_MIN_THRESHOLD_BUFFERS,
-  ARG_MIN_THRESHOLD_BYTES,
-  ARG_MIN_THRESHOLD_TIME,
-  ARG_LEAKY
-      /* FILL ME */
+  PROP_CUR_LEVEL_BUFFERS,
+  PROP_CUR_LEVEL_BYTES,
+  PROP_CUR_LEVEL_TIME,
+  PROP_MAX_SIZE_BUFFERS,
+  PROP_MAX_SIZE_BYTES,
+  PROP_MAX_SIZE_TIME,
+  PROP_MIN_THRESHOLD_BUFFERS,
+  PROP_MIN_THRESHOLD_BYTES,
+  PROP_MIN_THRESHOLD_TIME,
+  PROP_LEAKY,
+  /* FILL ME */
 };
 
 /* default property values */
@@ -304,48 +304,48 @@ gst_queue_class_init (GstQueueClass * klass)
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   /* properties */
-  g_object_class_install_property (gobject_class, ARG_CUR_LEVEL_BYTES,
+  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BYTES,
       g_param_spec_uint ("current-level-bytes", "Current level (kB)",
           "Current amount of data in the queue (bytes)",
           0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_CUR_LEVEL_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BUFFERS,
       g_param_spec_uint ("current-level-buffers", "Current level (buffers)",
           "Current number of buffers in the queue",
           0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_CUR_LEVEL_TIME,
+  g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_TIME,
       g_param_spec_uint64 ("current-level-time", "Current level (ns)",
           "Current amount of data in the queue (in ns)",
           0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BYTES,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
           0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
           "Max. number of buffers in the queue (0=disable)", 0, G_MAXUINT,
           DEFAULT_MAX_SIZE_BUFFERS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MAX_SIZE_TIME,
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
           "Max. amount of data in the queue (in ns, 0=disable)", 0, G_MAXUINT64,
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_BYTES,
+  g_object_class_install_property (gobject_class, PROP_MIN_THRESHOLD_BYTES,
       g_param_spec_uint ("min-threshold-bytes", "Min. threshold (kB)",
           "Min. amount of data in the queue to allow reading (bytes, 0=disable)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_MIN_THRESHOLD_BUFFERS,
       g_param_spec_uint ("min-threshold-buffers", "Min. threshold (buffers)",
           "Min. number of buffers in the queue to allow reading (0=disable)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_TIME,
+  g_object_class_install_property (gobject_class, PROP_MIN_THRESHOLD_TIME,
       g_param_spec_uint64 ("min-threshold-time", "Min. threshold (ns)",
           "Min. amount of data in the queue to allow reading (in ns, 0=disable)",
           0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, ARG_LEAKY,
+  g_object_class_install_property (gobject_class, PROP_LEAKY,
       g_param_spec_enum ("leaky", "Leaky",
           "Where the queue leaks, if at all",
           GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK,
@@ -1430,34 +1430,34 @@ gst_queue_set_property (GObject * object,
   GST_QUEUE_MUTEX_LOCK (queue);
 
   switch (prop_id) {
-    case ARG_MAX_SIZE_BYTES:
+    case PROP_MAX_SIZE_BYTES:
       queue->max_size.bytes = g_value_get_uint (value);
       queue_capacity_change (queue);
       break;
-    case ARG_MAX_SIZE_BUFFERS:
+    case PROP_MAX_SIZE_BUFFERS:
       queue->max_size.buffers = g_value_get_uint (value);
       queue_capacity_change (queue);
       break;
-    case ARG_MAX_SIZE_TIME:
+    case PROP_MAX_SIZE_TIME:
       queue->max_size.time = g_value_get_uint64 (value);
       queue_capacity_change (queue);
       break;
-    case ARG_MIN_THRESHOLD_BYTES:
+    case PROP_MIN_THRESHOLD_BYTES:
       queue->min_threshold.bytes = g_value_get_uint (value);
       queue->orig_min_threshold.bytes = queue->min_threshold.bytes;
       QUEUE_THRESHOLD_CHANGE (queue);
       break;
-    case ARG_MIN_THRESHOLD_BUFFERS:
+    case PROP_MIN_THRESHOLD_BUFFERS:
       queue->min_threshold.buffers = g_value_get_uint (value);
       queue->orig_min_threshold.buffers = queue->min_threshold.buffers;
       QUEUE_THRESHOLD_CHANGE (queue);
       break;
-    case ARG_MIN_THRESHOLD_TIME:
+    case PROP_MIN_THRESHOLD_TIME:
       queue->min_threshold.time = g_value_get_uint64 (value);
       queue->orig_min_threshold.time = queue->min_threshold.time;
       QUEUE_THRESHOLD_CHANGE (queue);
       break;
-    case ARG_LEAKY:
+    case PROP_LEAKY:
       queue->leaky = g_value_get_enum (value);
       break;
     default:
@@ -1477,34 +1477,34 @@ gst_queue_get_property (GObject * object,
   GST_QUEUE_MUTEX_LOCK (queue);
 
   switch (prop_id) {
-    case ARG_CUR_LEVEL_BYTES:
+    case PROP_CUR_LEVEL_BYTES:
       g_value_set_uint (value, queue->cur_level.bytes);
       break;
-    case ARG_CUR_LEVEL_BUFFERS:
+    case PROP_CUR_LEVEL_BUFFERS:
       g_value_set_uint (value, queue->cur_level.buffers);
       break;
-    case ARG_CUR_LEVEL_TIME:
+    case PROP_CUR_LEVEL_TIME:
       g_value_set_uint64 (value, queue->cur_level.time);
       break;
-    case ARG_MAX_SIZE_BYTES:
+    case PROP_MAX_SIZE_BYTES:
       g_value_set_uint (value, queue->max_size.bytes);
       break;
-    case ARG_MAX_SIZE_BUFFERS:
+    case PROP_MAX_SIZE_BUFFERS:
       g_value_set_uint (value, queue->max_size.buffers);
       break;
-    case ARG_MAX_SIZE_TIME:
+    case PROP_MAX_SIZE_TIME:
       g_value_set_uint64 (value, queue->max_size.time);
       break;
-    case ARG_MIN_THRESHOLD_BYTES:
+    case PROP_MIN_THRESHOLD_BYTES:
       g_value_set_uint (value, queue->min_threshold.bytes);
       break;
-    case ARG_MIN_THRESHOLD_BUFFERS:
+    case PROP_MIN_THRESHOLD_BUFFERS:
       g_value_set_uint (value, queue->min_threshold.buffers);
       break;
-    case ARG_MIN_THRESHOLD_TIME:
+    case PROP_MIN_THRESHOLD_TIME:
       g_value_set_uint64 (value, queue->min_threshold.time);
       break;
-    case ARG_LEAKY:
+    case PROP_LEAKY:
       g_value_set_enum (value, queue->leaky);
       break;
     default:
