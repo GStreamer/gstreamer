@@ -44,6 +44,7 @@ enum
   SIGNAL_ON_SENDER_TIMEOUT,
   SIGNAL_ON_SENDING_RTCP,
   SIGNAL_ON_FEEDBACK_RTCP,
+  SIGNAL_SEND_RTCP,
   LAST_SIGNAL
 };
 
@@ -104,6 +105,8 @@ static void rtp_session_get_property (GObject * object, guint prop_id,
 
 static gboolean rtp_session_on_sending_rtcp (RTPSession * sess,
     GstBuffer * buffer, gboolean early);
+static void rtp_session_send_rtcp (RTPSession * sess,
+    GstClockTimeDiff max_delay);
 
 
 static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
@@ -299,6 +302,22 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
       G_TYPE_POINTER);
 
+  /**
+   * RTPSession::send-rtcp:
+   * @session: the object which received the signal
+   * @max_delay: The maximum delay after which the feedback will not be useful
+   *  anymore
+   *
+   * Requests that the #RTPSession initiate a new RTCP packet as soon as
+   * possible within the requested delay.
+   */
+
+  rtp_session_signals[SIGNAL_SEND_RTCP] =
+      g_signal_new ("send-rtcp", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
+      gst_rtp_bin_marshal_VOID__UINT64, G_TYPE_NONE, 1, G_TYPE_UINT64);
+
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
           "The internal SSRC used for the session",
@@ -408,6 +427,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
   klass->on_sending_rtcp = GST_DEBUG_FUNCPTR (rtp_session_on_sending_rtcp);
+  klass->send_rtcp = GST_DEBUG_FUNCPTR (rtp_session_send_rtcp);
 
   GST_DEBUG_CATEGORY_INIT (rtp_session_debug, "rtpsession", 0, "RTP Session");
 }
@@ -3133,4 +3153,17 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_UNLOCK (sess);
 
   return ret;
+}
+
+static void
+rtp_session_send_rtcp (RTPSession * sess, GstClockTimeDiff max_delay)
+{
+  GstClockTime now;
+
+  if (!sess->callbacks.send_rtcp)
+    return;
+
+  now = sess->callbacks.request_time (sess, sess->request_time_user_data);
+
+  rtp_session_request_early_rtcp (sess, now, max_delay);
 }
