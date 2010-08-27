@@ -78,6 +78,8 @@ struct _GstMveDemuxStream {
   GstClockTime last_ts;
   gint64 offset;
 
+  GstFlowReturn last_flow;
+
   /* video properties */
   guint16 width;
   guint16 height;

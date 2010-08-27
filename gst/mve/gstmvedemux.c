@@ -317,6 +317,7 @@ gst_mve_video_init (GstMveDemux * mve, const guint8 * data)
     stream->palette = NULL;
     stream->caps = NULL;
     stream->last_ts = GST_CLOCK_TIME_NONE;
+    stream->last_flow = GST_FLOW_OK;
     mve->video_stream = stream;
   }
 
@@ -661,6 +662,7 @@ gst_mve_audio_init (GstMveDemux * mve, guint8 version, const guint8 * data,
     stream = g_new0 (GstMveDemuxStream, 1);
     stream->offset = 0;
     stream->last_ts = 0;
+    stream->last_flow = GST_FLOW_OK;
     mve->audio_stream = stream;
   } else {
     stream = mve->audio_stream;
@@ -1037,10 +1039,17 @@ gst_mve_demux_chain (GstPad * sinkpad, GstBuffer * inbuf)
               GST_BUFFER_SIZE (outbuf), GST_PAD_NAME (stream->pad));
 
           ret = gst_pad_push (stream->pad, outbuf);
+          stream->last_flow = ret;
         }
 
-        if (!GST_FLOW_IS_FATAL (ret))
-          ret = GST_FLOW_OK;
+        if (ret == GST_FLOW_NOT_LINKED) {
+          if (mve->audio_stream
+              && mve->audio_stream->last_flow != GST_FLOW_NOT_LINKED)
+            ret = GST_FLOW_OK;
+          if (mve->video_stream
+              && mve->video_stream->last_flow != GST_FLOW_NOT_LINKED)
+            ret = GST_FLOW_OK;
+        }
 
         /* update current offset */
         mve->chunk_offset += mve->needed_bytes;
