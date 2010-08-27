@@ -113,6 +113,8 @@ struct _GstQueue {
 
   gboolean head_needs_discont, tail_needs_discont;
   gboolean push_newsegment;
+  
+  gboolean silent;      /* don't emit signals */ 
 };
 
 struct _GstQueueClass {
