@@ -1735,24 +1735,21 @@ pause:
     GST_INFO_OBJECT (dvdemux, "pausing task, %s", gst_flow_get_name (ret));
     dvdemux->running = FALSE;
     gst_pad_pause_task (dvdemux->sinkpad);
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        GST_LOG_OBJECT (dvdemux, "got eos");
-        /* perform EOS logic */
-        if (dvdemux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT (dvdemux),
-              gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
-                  dvdemux->time_segment.format,
-                  dvdemux->time_segment.last_stop));
-        } else {
-          gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
-        }
+    if (ret == GST_FLOW_UNEXPECTED) {
+      GST_LOG_OBJECT (dvdemux, "got eos");
+      /* perform EOS logic */
+      if (dvdemux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gst_element_post_message (GST_ELEMENT (dvdemux),
+            gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
+                dvdemux->time_segment.format, dvdemux->time_segment.last_stop));
       } else {
-        /* for fatal errors or not-linked we post an error message */
-        GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
-            (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
         gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      /* for fatal errors or not-linked we post an error message */
+      GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
+          (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+      gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
     }
     goto done;
   }
