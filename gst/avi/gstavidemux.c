@@ -5109,13 +5109,13 @@ gst_avi_demux_loop (GstPad * pad)
   return;
 
   /* ERRORS */
-pause:
-  GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
-  avi->segment_running = FALSE;
-  gst_pad_pause_task (avi->sinkpad);
+pause:{
 
-  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_NOT_LINKED)) {
-    gboolean push_eos = TRUE;
+    gboolean push_eos = FALSE;
+    GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
+    avi->segment_running = FALSE;
+    gst_pad_pause_task (avi->sinkpad);
+
 
     if (res == GST_FLOW_UNEXPECTED) {
       /* handle end-of-stream/segment */
@@ -5131,13 +5131,17 @@ pause:
             (GST_ELEMENT_CAST (avi),
             gst_message_new_segment_done (GST_OBJECT_CAST (avi),
                 GST_FORMAT_TIME, stop));
-        push_eos = FALSE;
+      } else {
+        push_eos = TRUE;
       }
-    } else {
-      /* for fatal errors we post an error message */
+    } else if (res == GST_FLOW_NOT_LINKED || res < GST_FLOW_UNEXPECTED) {
+      /* for fatal errors we post an error message, wrong-state is
+       * not fatal because it happens due to flushes and only means
+       * that we should stop now. */
       GST_ELEMENT_ERROR (avi, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("streaming stopped, reason %s", gst_flow_get_name (res)));
+      push_eos = TRUE;
     }
     if (push_eos) {
       GST_INFO_OBJECT (avi, "sending eos");
