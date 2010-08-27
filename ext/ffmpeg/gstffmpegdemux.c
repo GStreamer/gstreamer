@@ -919,7 +919,7 @@ gst_ffmpegdemux_aggregated_flow (GstFFMpegDemux * demux)
     if (s) {
       res = MIN (res, s->last_flow);
 
-      if (GST_FLOW_IS_SUCCESS (s->last_flow))
+      if (s->last_flow == GST_FLOW_OK)
         have_ok = TRUE;
     }
   }
@@ -1494,28 +1494,26 @@ pause:
       GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
     }
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gint64 stop;
+    if (ret == GST_FLOW_UNEXPECTED) {
+      if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
 
-          if ((stop = demux->segment.stop) == -1)
-            stop = demux->segment.duration;
+        if ((stop = demux->segment.stop) == -1)
+          stop = demux->segment.duration;
 
-          GST_LOG_OBJECT (demux, "posting segment done");
-          gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_segment_done (GST_OBJECT (demux),
-                  demux->segment.format, stop));
-        } else {
-          GST_LOG_OBJECT (demux, "pushing eos");
-          gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
-        }
+        GST_LOG_OBJECT (demux, "posting segment done");
+        gst_element_post_message (GST_ELEMENT (demux),
+            gst_message_new_segment_done (GST_OBJECT (demux),
+                demux->segment.format, stop));
       } else {
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+        GST_LOG_OBJECT (demux, "pushing eos");
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
       }
+    } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED) {
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          ("Internal data stream error."),
+          ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+      gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
     }
     return;
   }
