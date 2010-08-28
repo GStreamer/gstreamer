@@ -1091,6 +1091,7 @@ EXPORTS
 	gst_util_double_to_fraction
 	gst_util_dump_mem
 	gst_util_fraction_add
+	gst_util_fraction_compare
 	gst_util_fraction_multiply
 	gst_util_fraction_to_double
 	gst_util_gdouble_to_guint64

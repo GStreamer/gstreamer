@@ -2577,6 +2577,7 @@ gst_util_fraction_to_double
 gst_util_double_to_fraction
 gst_util_fraction_multiply
 gst_util_fraction_add
+gst_util_fraction_compare
 gst_util_seqnum_next
 gst_util_seqnum_compare
 gst_util_set_object_arg
