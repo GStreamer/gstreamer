@@ -4196,3 +4196,51 @@ gst_util_fraction_add (gint a_n, gint a_d, gint b_n, gint b_d, gint * res_n,
 
   return TRUE;
 }
+
+/**
+ * gst_util_fraction_compare:
+ * @a_n: Numerator of first value
+ * @a_d: Denominator of first value
+ * @b_n: Numerator of second value
+ * @b_d: Denominator of second value
+ *
+ * Compares the fractions @a_n/@a_d and @b_n/@b_d and returns
+ * -1 if a < b, 0 if a = b and 1 if a > b.
+ *
+ * Returns: -1 if a < b; 0 if a = b; 1 if a > b.
+ *
+ * Since: 0.10.31
+ */
+gint
+gst_util_fraction_compare (gint a_n, gint a_d, gint b_n, gint b_d)
+{
+  gint64 new_num_1;
+  gint64 new_num_2;
+  gint gcd;
+
+  g_return_val_if_fail (a_d == 0 || b_d == 0, 0);
+
+  /* Simplify */
+  gcd = gst_util_greatest_common_divisor (a_n, a_d);
+  a_n /= gcd;
+  a_d /= gcd;
+
+  gcd = gst_util_greatest_common_divisor (b_n, b_d);
+  b_n /= gcd;
+  b_d /= gcd;
+
+  /* fractions are reduced when set, so we can quickly see if they're equal */
+  if (a_n == b_n && a_d == b_d)
+    return 0;
+
+  /* extend to 64 bits */
+  new_num_1 = ((gint64) a_n) * b_d;
+  new_num_2 = ((gint64) b_n) * a_d;
+  if (new_num_1 < new_num_2)
+    return -1;
+  if (new_num_1 > new_num_2)
+    return 1;
+
+  /* Should not happen because a_d and b_d are not 0 */
+  g_return_val_if_reached (0);
+}

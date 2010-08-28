@@ -1106,10 +1106,9 @@ gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
   if (collect_values[3].v_int == 0)
     return g_strdup_printf ("passed '0' as second denominator for `%s'",
         G_VALUE_TYPE_NAME (value));
-  if ((((gdouble) collect_values[0].v_int) /
-          ((gdouble) collect_values[1].v_int)) >=
-      (((gdouble) collect_values[2].v_int) /
-          ((gdouble) collect_values[3].v_int)))
+  if (gst_util_fraction_compare (collect_values[0].v_int,
+          collect_values[1].v_int, collect_values[2].v_int,
+          collect_values[3].v_int) >= 0)
     return g_strdup_printf ("range start is not smaller than end for `%s'",
         G_VALUE_TYPE_NAME (value));
 
@@ -1175,9 +1174,8 @@ gst_value_set_fraction_range (GValue * value, const GValue * start,
   g_return_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (value));
   g_return_if_fail (GST_VALUE_HOLDS_FRACTION (start));
   g_return_if_fail (GST_VALUE_HOLDS_FRACTION (end));
-  g_return_if_fail (((gdouble) start->data[0].v_int) /
-      ((gdouble) start->data[1].v_int) <
-      ((gdouble) end->data[0].v_int) / ((gdouble) end->data[1].v_int));
+  g_return_if_fail (gst_util_fraction_compare (start->data[0].v_int,
+          start->data[1].v_int, end->data[0].v_int, end->data[1].v_int) < 0);
 
   vals = (GValue *) value->data[0].v_pointer;
   if (vals == NULL) {
@@ -1210,9 +1208,8 @@ gst_value_set_fraction_range_full (GValue * value,
   g_return_if_fail (value != NULL);
   g_return_if_fail (denominator_start != 0);
   g_return_if_fail (denominator_end != 0);
-  g_return_if_fail (((gdouble) numerator_start) /
-      ((gdouble) denominator_start) <
-      ((gdouble) numerator_end) / ((gdouble) denominator_end));
+  g_return_if_fail (gst_util_fraction_compare (numerator_start,
+          denominator_start, numerator_end, denominator_end) < 0);
 
   g_value_init (&start, GST_TYPE_FRACTION);
   g_value_init (&end, GST_TYPE_FRACTION);
@@ -3910,9 +3907,7 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
 {
   gint n1, n2;
   gint d1, d2;
-
-  gint64 new_num_1;
-  gint64 new_num_2;
+  gint ret;
 
   n1 = value1->data[0].v_int;
   n2 = value2->data[0].v_int;
@@ -3923,18 +3918,22 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
   if (n1 == n2 && d1 == d2)
     return GST_VALUE_EQUAL;
 
-  /* extend to 64 bits */
-  new_num_1 = ((gint64) n1) * d2;
-  new_num_2 = ((gint64) n2) * d1;
-  if (new_num_1 < new_num_2)
+  if (d1 == 0 && d2 == 0)
+    return GST_VALUE_UNORDERED;
+  else if (d1 == 0)
+    return GST_VALUE_GREATER_THAN;
+  else if (d2 == 0)
     return GST_VALUE_LESS_THAN;
-  if (new_num_1 > new_num_2)
+
+  ret = gst_util_fraction_compare (n1, d1, n2, d2);
+  if (ret == -1)
+    return GST_VALUE_LESS_THAN;
+  else if (ret == 1)
     return GST_VALUE_GREATER_THAN;
 
-  /* new_num_1 == new_num_2 implies that both denominators must have 
-   * been 0, beause otherwise simplification would have caught the
-   * equivalence */
-  return GST_VALUE_UNORDERED;
+  /* Equality can't happen here because we check for that
+   * first already */
+  g_return_val_if_reached (GST_VALUE_UNORDERED);
 }
 
 /*********
