@@ -4218,7 +4218,7 @@ gst_util_fraction_compare (gint a_n, gint a_d, gint b_n, gint b_d)
   gint64 new_num_2;
   gint gcd;
 
-  g_return_val_if_fail (a_d == 0 || b_d == 0, 0);
+  g_return_val_if_fail (a_d != 0 && b_d != 0, 0);
 
   /* Simplify */
   gcd = gst_util_greatest_common_divisor (a_n, a_d);
