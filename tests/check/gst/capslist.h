@@ -22,9 +22,14 @@ static const gchar *caps_list[] = {
   /* Test fraction range */
   "test/gst-fraction-range, fraction = (fraction) [ 1/4, 1/3 ]",
   "test/gst-fraction-range, fraction = (fraction) [ MIN, MAX ]",
+  "test/gst-fraction-range, fraction = (fraction) [ 1/MAX, MAX ]",
   /* Test lists of fractions and fraction ranges */
   "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], 1/8 }",
   "test/gst-fraction-range, fraction = (fraction) { [ 1/4, 1/3 ], [ 1/8, 2/8 ] }",
+
+  /* Some random checks */
+  "video/x-raw-yuv, format = (fourcc) { I420, Y42B, Y444 }, framerate = (fraction) [1/MAX, MAX], width = (int) [ 1, MAX ], height = (int) [ 1, MAX ]",
+
   "ANY",
   "EMPTY"
 };
