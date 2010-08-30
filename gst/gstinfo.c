@@ -264,7 +264,7 @@ static GSList *__log_functions = NULL;
 static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
 static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
-static volatile gint G_GNUC_MAY_ALIAS __use_color;
+static volatile gint G_GNUC_MAY_ALIAS __use_color = 1;
 
 static FILE *log_file;
 
