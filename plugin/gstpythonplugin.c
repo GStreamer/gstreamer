@@ -283,10 +283,13 @@ pygst_require (gchar * version)
   modules = PySys_GetObject ("modules");
   /* Try to see if 'gst' is already imported */
   if (!(gst = PyMapping_GetItemString (modules, "gst"))) {
+    PyErr_Clear ();
 
     /* if not, see if 'pygst' was already imported. If so, we assume that
      * 'pygst.require' has already been called. */
     if (!(pygst = PyMapping_GetItemString (modules, "pygst"))) {
+      PyErr_Clear ();
+
       if (!(pygst = PyImport_ImportModule ("pygst"))) {
         GST_ERROR ("the pygst module is not available!");
         goto error;
