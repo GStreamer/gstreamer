@@ -187,7 +187,7 @@ G_STMT_START {								\
 G_STMT_START {                                                      \
   const gchar * first = a;                                          \
   const gchar * second = b;                                         \
-  fail_unless(strcmp (first, second) == 0,                          \
+  fail_unless(g_strcmp0 (first, second) == 0,                          \
     "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);   \
 } G_STMT_END;
 /**
