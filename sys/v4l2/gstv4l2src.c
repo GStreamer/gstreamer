@@ -803,7 +803,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   /* In case the size per frame is unknown assume it's a streaming format (e.g.
    * mpegts) and grab a reasonable default size instead */
   if (buffersize == 0)
-    buffersize = 8192;
+    buffersize = GST_BASE_SRC (v4l2src)->blocksize;
 
   *buf = gst_buffer_new_and_alloc (buffersize);
 
