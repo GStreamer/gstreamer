@@ -1215,7 +1215,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   if (strcmp (mimetype, "video/mpegts") == 0) {
     fourcc = V4L2_PIX_FMT_MPEG;
-    outsize = 8192;
     *fps_n = 0;
     *fps_d = 1;
     goto done;

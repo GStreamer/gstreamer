@@ -800,6 +800,10 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   gint buffersize;
 
   buffersize = v4l2src->frame_byte_size;
+  /* In case the size per frame is unknown assume it's a streaming format (e.g.
+   * mpegts) and grab a reasonable default size instead */
+  if (buffersize == 0)
+    buffersize = 8192;
 
   *buf = gst_buffer_new_and_alloc (buffersize);
 
