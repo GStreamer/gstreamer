@@ -304,6 +304,7 @@ GObject
         ladspa-Rec-VCO
         ladspa-Saw-VCO
         ladspa-Tricardioid-to-AMB
+        ladspa-TripleChorus
         ladspa-Virtualmic
         ladspa-alias
         ladspa-allpass-c
