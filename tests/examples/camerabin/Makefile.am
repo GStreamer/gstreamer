@@ -19,8 +19,7 @@ gst_camera_LDADD   = \
 	$(GTK_LIBS) \
 	$(GMODULE_EXPORT_LIBS)
 
-uidir = $(datadir)/gstreamer-@GST_MAJORMINOR@/camera-apps
-ui_DATA = $(GST_CAMERABIN_UI_FILES)
+noinst_DATA = $(GST_CAMERABIN_UI_FILES)
 
 INCLUDES = -DCAMERA_APPS_UIDIR=\""$(uidir)"\"
 
