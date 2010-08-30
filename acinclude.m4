@@ -83,9 +83,14 @@ if $PYTHON-config --help 2>/dev/null; then
     PYTHON_LIB_LOC=/usr/lib
   else
     PYTHON_LIB_LOC=$PYTHON_LIB/config
+
+    # default to prefix/lib for distros that don't have a link in
+    # .../pythonX.Y/config/
+    if test ! -e $PYTHON_LIB_LOC/libpython${PYTHON_VERSION}.so; then
+      PYTHON_LIB_LOC=${py_prefix}/lib
+    fi
   fi
 else
-  asd
   PYTHON_LIBS="-L${py_prefix}/lib -lpython${PYTHON_VERSION}"
   PYTHON_LIB_LOC="${py_prefix}/lib"
 fi
