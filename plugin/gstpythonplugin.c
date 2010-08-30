@@ -350,7 +350,9 @@ plugin_init (GstPlugin * plugin)
 
   gst_plugin_add_dependency_simple (plugin,
       "HOME/.gstreamer-0.10/plugins/python:GST_PLUGIN_SYSTEM_PATH/python:GST_PLUGIN_PATH/python",
-      NULL, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+      PLUGINDIR "/python:HOME/.gstreamer-0.10/plugins/python:"
+      "GST_PLUGIN_SYSTEM_PATH/python:GST_PLUGIN_PATH/python", NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   GST_LOG ("Checking to see if libpython is already loaded");
   g_module_symbol (g_module_open (NULL, G_MODULE_BIND_LOCAL), "_Py_NoneStruct",
