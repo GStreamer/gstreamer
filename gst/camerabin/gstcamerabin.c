@@ -69,18 +69,6 @@
  * </para>
  * </refsect2>
  * <refsect2>
- * <title>Photography interface</title>
- * <para>
- * GstCameraBin implements #GstPhotography interface, which can be used to set
- * and get different settings related to digital imaging. Since currently many
- * of these settings require low-level support the photography interface support
- * is dependent on video src element. In practice photography interface settings
- * cannot be used successfully until in PAUSED state when the video src has
- * opened the video device. However it is possible to configure photography
- * settings in NULL state and camerabin will try applying them later.
- * </para>
- * </refsect2>
- * <refsect2>
  * <title>States</title>
  * <para>
  * Elements within GstCameraBin are created and destroyed when switching
@@ -162,7 +150,6 @@
 
 #include "gstcamerabin.h"
 #include "gstcamerabincolorbalance.h"
-#include "gstcamerabinphotography.h"
 
 #include "camerabindebug.h"
 #include "camerabingeneral.h"
@@ -305,7 +292,7 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps);
 static void gst_camerabin_finish_image_capture (GstCameraBin * camera);
 static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
     GstCaps * new_caps);
-static void gst_camerabin_proxy_notify_cb (GObject * video_source,
+static void gst_camerabin_scene_mode_notify_cb (GObject * video_source,
     GParamSpec * pspec, gpointer user_data);
 static void gst_camerabin_monitor_video_source_properties (GstCameraBin *
     camera);
@@ -327,9 +314,6 @@ static void gst_camerabin_set_property (GObject * object, guint prop_id,
 
 static void gst_camerabin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static void gst_camerabin_override_photo_properties (GObjectClass *
-    gobject_class);
 
 /*
  * GstElement function declarations
@@ -411,11 +395,7 @@ gst_camerabin_iface_supported (GstImplementsInterface * iface, GType iface_type)
     } else {
       return FALSE;
     }
-  } else if (iface_type == GST_TYPE_PHOTOGRAPHY) {
-    /* Always support photography interface */
-    return TRUE;
   }
-
   return FALSE;
 }
 
@@ -449,11 +429,6 @@ camerabin_init_interfaces (GType type)
     NULL,
     NULL,
   };
-  static const GInterfaceInfo camerabin_photography_info = {
-    (GInterfaceInitFunc) gst_camerabin_photography_init,
-    NULL,
-    NULL,
-  };
 
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &camerabin_info);
@@ -463,9 +438,6 @@ camerabin_init_interfaces (GType type)
 
   g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,
       &camerabin_tagsetter_info);
-
-  g_type_add_interface_static (type, GST_TYPE_PHOTOGRAPHY,
-      &camerabin_photography_info);
 }
 
 GST_BOILERPLATE_FULL (GstCameraBin, gst_camerabin, GstPipeline,
@@ -2427,17 +2399,60 @@ gst_camerabin_adapt_image_capture (GstCameraBin * camera, GstCaps * in_caps)
   }
 }
 
+/*
+ * gst_camerabin_handle_scene_mode:
+ * @camera:       camerabin object
+ * scene_mode:    scene mode
+ *
+ * Handle scene mode if night mode was selected/deselected in video-source
+ *
+ */
 static void
-gst_camerabin_proxy_notify_cb (GObject * video_source, GParamSpec * pspec,
+gst_camerabin_handle_scene_mode (GstCameraBin * camera, GstSceneMode scene_mode)
+{
+  if (scene_mode == GST_PHOTOGRAPHY_SCENE_MODE_NIGHT) {
+    if (!camera->night_mode) {
+      GST_DEBUG ("enabling night mode, lowering fps");
+      /* Make camerabin select the lowest allowed frame rate */
+      camera->night_mode = TRUE;
+      /* Remember frame rate before setting night mode */
+      camera->pre_night_fps_n = camera->fps_n;
+      camera->pre_night_fps_d = camera->fps_d;
+      g_signal_emit_by_name (camera, "set-video-resolution-fps", camera->width,
+          camera->height, 0, 1, NULL);
+    } else {
+      GST_DEBUG ("night mode already enabled");
+    }
+  } else {
+    if (camera->night_mode) {
+      GST_DEBUG ("disabling night mode, restoring fps to %d/%d",
+          camera->pre_night_fps_n, camera->pre_night_fps_d);
+      camera->night_mode = FALSE;
+      g_signal_emit_by_name (camera, "set-video-resolution-fps", camera->width,
+          camera->height, camera->pre_night_fps_n, camera->pre_night_fps_d, 0);
+    }
+  }
+}
+
+/*
+ * gst_camerabin_scene_mode_notify_cb:
+ * @video_source: videosrc object
+ * @pspec:        GParamSpec for property
+ * @user_data:    camerabin object
+ *
+ * Update framerate if scene mode was updated in video-source
+ *
+ */
+static void
+gst_camerabin_scene_mode_notify_cb (GObject * video_source, GParamSpec * pspec,
     gpointer user_data)
 {
+  GstSceneMode scene_mode;
   const gchar *name = g_param_spec_get_name (pspec);
-  GstElement *camerabin = GST_ELEMENT (user_data);
+  GstCameraBin *camera = GST_CAMERABIN (user_data);
 
-  GST_DEBUG_OBJECT (camerabin, "proxying %s notify from %" GST_PTR_FORMAT, name,
-      GST_ELEMENT (video_source));
-  g_object_notify (G_OBJECT (camerabin), name);
-
+  g_object_get (video_source, name, &scene_mode, NULL);
+  gst_camerabin_handle_scene_mode (camera, scene_mode);
 }
 
 /*
@@ -2445,40 +2460,21 @@ gst_camerabin_proxy_notify_cb (GObject * video_source, GParamSpec * pspec,
  * @camera: camerabin object
  *
  * Monitor notify signals from video source photography interface
- * properties, and proxy the notifications to application.
+ * property scene mode.
  *
  */
 static void
 gst_camerabin_monitor_video_source_properties (GstCameraBin * camera)
 {
-  GParamSpec **properties;
-  gchar *notify_string;
-  gpointer photo_iface;
-  guint i, n_properties = 0;
-
   GST_DEBUG_OBJECT (camera, "checking for photography interface support");
   if (GST_IS_ELEMENT (camera->src_vid_src) &&
       gst_element_implements_interface (camera->src_vid_src,
           GST_TYPE_PHOTOGRAPHY)) {
     GST_DEBUG_OBJECT (camera,
-        "start monitoring property changes in %" GST_PTR_FORMAT,
+        "connecting to %" GST_PTR_FORMAT " - notify::scene-mode",
         camera->src_vid_src);
-    photo_iface = g_type_default_interface_ref (GST_TYPE_PHOTOGRAPHY);
-    properties =
-        g_object_interface_list_properties (photo_iface, &n_properties);
-    if (properties) {
-      for (i = 0; i < n_properties; i++) {
-        notify_string =
-            g_strconcat ("notify::", g_param_spec_get_name (properties[i]),
-            NULL);
-        GST_DEBUG_OBJECT (camera, "connecting to %" GST_PTR_FORMAT " - %s",
-            camera->src_vid_src, notify_string);
-        g_signal_connect (G_OBJECT (camera->src_vid_src), notify_string,
-            (GCallback) gst_camerabin_proxy_notify_cb, camera);
-        g_free (notify_string);
-      }
-    }
-    g_type_default_interface_unref (photo_iface);
+    g_signal_connect (G_OBJECT (camera->src_vid_src), "notify::scene-mode",
+        (GCallback) gst_camerabin_scene_mode_notify_cb, camera);
   }
 }
 
@@ -3034,8 +3030,6 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       __gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1,
       G_TYPE_STRING);
 
-  gst_camerabin_override_photo_properties (gobject_class);
-
   klass->capture_start = gst_camerabin_capture_start;
   klass->capture_stop = gst_camerabin_capture_stop;
   klass->capture_pause = gst_camerabin_capture_pause;
@@ -3177,54 +3171,10 @@ gst_camerabin_finalize (GObject * object)
 }
 
 static void
-gst_camerabin_override_photo_properties (GObjectClass * gobject_class)
-{
-  g_object_class_override_property (gobject_class, ARG_WB_MODE,
-      GST_PHOTOGRAPHY_PROP_WB_MODE);
-
-  g_object_class_override_property (gobject_class, ARG_COLOUR_TONE,
-      GST_PHOTOGRAPHY_PROP_COLOUR_TONE);
-
-  g_object_class_override_property (gobject_class, ARG_SCENE_MODE,
-      GST_PHOTOGRAPHY_PROP_SCENE_MODE);
-
-  g_object_class_override_property (gobject_class, ARG_FLASH_MODE,
-      GST_PHOTOGRAPHY_PROP_FLASH_MODE);
-
-  g_object_class_override_property (gobject_class, ARG_CAPABILITIES,
-      GST_PHOTOGRAPHY_PROP_CAPABILITIES);
-
-  g_object_class_override_property (gobject_class, ARG_EV_COMP,
-      GST_PHOTOGRAPHY_PROP_EV_COMP);
-
-  g_object_class_override_property (gobject_class, ARG_ISO_SPEED,
-      GST_PHOTOGRAPHY_PROP_ISO_SPEED);
-
-  g_object_class_override_property (gobject_class, ARG_APERTURE,
-      GST_PHOTOGRAPHY_PROP_APERTURE);
-
-  g_object_class_override_property (gobject_class, ARG_EXPOSURE,
-      GST_PHOTOGRAPHY_PROP_EXPOSURE);
-
-  g_object_class_override_property (gobject_class,
-      ARG_IMAGE_CAPTURE_SUPPORTED_CAPS,
-      GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
-
-  g_object_class_override_property (gobject_class, ARG_FLICKER_MODE,
-      GST_PHOTOGRAPHY_PROP_FLICKER_MODE);
-
-  g_object_class_override_property (gobject_class, ARG_FOCUS_MODE,
-      GST_PHOTOGRAPHY_PROP_FOCUS_MODE);
-}
-
-static void
 gst_camerabin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstCameraBin *camera = GST_CAMERABIN (object);
-
-  if (gst_camerabin_photography_set_property (camera, prop_id, value))
-    return;
 
   switch (prop_id) {
     case ARG_MUTE:
@@ -3464,9 +3414,6 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
 {
   GstCameraBin *camera = GST_CAMERABIN (object);
 
-  if (gst_camerabin_photography_get_property (camera, prop_id, value))
-    return;
-
   switch (prop_id) {
     case ARG_FILENAME:
       g_value_set_string (value, camera->filename->str);
@@ -3632,7 +3579,7 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
       }
       g_mutex_unlock (camera->capture_mutex);
       g_signal_handlers_disconnect_by_func (camera->src_vid_src,
-          gst_camerabin_proxy_notify_cb, camera);
+          gst_camerabin_scene_mode_notify_cb, camera);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       camerabin_destroy_elements (camera);
