@@ -447,9 +447,9 @@ gint    gst_debug_construct_win_color  (guint colorinfo);
  * @cat: the category to initialize.
  * @name: log category name
  *
- * Lookup an exiting #GstDebugCategory by its @name and sets @cat. If category
- * is not found, but GST_CAT_DEFAULT is defined, that is assigned to @cat.
- * Otherwise cat will be NULL.
+ * Looks up an existing #GstDebugCategory by its @name and sets @cat. If the
+ * category is not found, but GST_CAT_DEFAULT is defined, that is assigned to
+ * @cat. Otherwise @cat will be NULL.
  *
  * |[
  * GST_DEBUG_CATEGORY_STATIC (gst_myplugin_debug);
