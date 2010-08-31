@@ -1230,7 +1230,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     prev = NULL;
   } else {
     g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-        "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+        "max-size-bytes", 0, "max-size-time", (gint64) 0, "silent", TRUE, NULL);
     gst_bin_add (bin, chain->queue);
     head = prev = chain->queue;
   }
@@ -1432,7 +1432,8 @@ gen_text_chain (GstPlaySink * playsink)
                   "queue"), ("rendering might be suboptimal"));
         } else {
           g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-              "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+              "max-size-bytes", 0, "max-size-time", (gint64) 0,
+              "silent", TRUE, NULL);
           gst_bin_add (bin, chain->queue);
         }
         /* we have a custom sink, this will be our textsinkpad */
@@ -1477,7 +1478,8 @@ gen_text_chain (GstPlaySink * playsink)
                 "queue"), ("video rendering might be suboptimal"));
       } else {
         g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-            "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+            "max-size-bytes", 0, "max-size-time", (gint64) 0,
+            "silent", TRUE, NULL);
         gst_bin_add (bin, chain->queue);
         videosinkpad = gst_element_get_static_pad (chain->queue, "sink");
       }
@@ -1516,7 +1518,8 @@ gen_text_chain (GstPlaySink * playsink)
                   "queue"), ("rendering might be suboptimal"));
         } else {
           g_object_set (G_OBJECT (element), "max-size-buffers", 3,
-              "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+              "max-size-bytes", 0, "max-size-time", (gint64) 0,
+              "silent", TRUE, NULL);
           gst_bin_add (bin, element);
           gst_element_link_pads_full (element, "src", chain->overlay,
               "subtitle_sink", GST_PAD_LINK_CHECK_TEMPLATE_CAPS);
@@ -1658,6 +1661,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
     head = chain->sink;
     prev = NULL;
   } else {
+    g_object_set (chain->queue, "silent", TRUE, NULL);
     gst_bin_add (bin, chain->queue);
     prev = head = chain->queue;
   }
@@ -1969,6 +1973,7 @@ gen_vis_chain (GstPlaySink * playsink)
   chain->queue = gst_element_factory_make ("queue", "visqueue");
   if (chain->queue == NULL)
     goto no_queue;
+  g_object_set (chain->queue, "silent", TRUE, NULL);
   gst_bin_add (bin, chain->queue);
 
   chain->conv = gst_element_factory_make ("audioconvert", "aconv");
