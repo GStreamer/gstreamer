@@ -61,7 +61,7 @@
 
 #define DEFAULT_SINK "filesink"
 #define DEFAULT_ENC "jpegenc"
-#define DEFAULT_META_MUX "metadatamux"
+#define DEFAULT_META_MUX "jifmux"
 #define DEFAULT_FLAGS GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION
 
 enum

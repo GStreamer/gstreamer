@@ -1336,9 +1336,6 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
   }
 
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      "image-width", camera->width, "image-height", camera->height, NULL);
-
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, camera->zoom / 100.0, NULL);
 
   if (gst_element_implements_interface (GST_ELEMENT (camera),
