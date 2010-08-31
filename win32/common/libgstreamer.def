@@ -797,6 +797,8 @@ EXPORTS
 	gst_print_element_args
 	gst_print_pad_caps
 	gst_proxy_pad_get_type
+	gst_query_add_buffering_range
+	gst_query_get_n_buffering_ranges
 	gst_query_get_structure
 	gst_query_get_type
 	gst_query_new_application
@@ -817,6 +819,7 @@ EXPORTS
 	gst_query_parse_formats_length
 	gst_query_parse_formats_nth
 	gst_query_parse_latency
+	gst_query_parse_nth_buffering_range
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment

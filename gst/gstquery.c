@@ -1246,7 +1246,7 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
 
 /**
  * gst_query_parse_buffering_range:
- * @query: a GST_QUERY_SEEKING type query #GstQuery
+ * @query: a GST_QUERY_BUFFERING type query #GstQuery
  * @format: (out): the format to set for the @segment_start and @segment_end values
  * @start: (out): the start to set
  * @stop: (out): the stop to set
@@ -1281,6 +1281,133 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (ESTIMATED_TOTAL)));
 }
+
+/**
+ * gst_query_add_buffering_range
+ * @query: a GST_QUERY_BUFFERING type query #GstQuery
+ * @start: start position of the range
+ * @stop: stop position of the range
+ *
+ * Set the buffering-ranges array field in @query. The current last
+ * start position of the array should be inferior to @start.
+ *
+ * Returns: a #gboolean indicating if the range was added or not.
+ *
+ * Since: 0.10.31
+ */
+gboolean
+gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
+{
+  GstStructure *structure;
+  GValueArray *array;
+  GValue *last_array_value;
+  const GValue *value;
+  GValue range_value = { 0 };
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, ret);
+
+  if (start >= stop)
+    return ret;
+
+  g_value_init (&range_value, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&range_value, start, stop);
+
+  structure = gst_query_get_structure (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+    last_array_value = g_value_array_get_nth (array, array->n_values - 1);
+    if (start > gst_value_get_int64_range_min (last_array_value))
+      ret = TRUE;
+  } else {
+    array = g_value_array_new (0);
+    ret = TRUE;
+  }
+
+  if (ret) {
+    g_value_array_append (array, &range_value);
+    gst_structure_id_set (structure, GST_QUARK (BUFFERING_RANGES),
+        G_TYPE_VALUE_ARRAY, array, NULL);
+  }
+
+  g_value_unset (&range_value);
+  if (!value)
+    g_value_array_free (array);
+
+  return ret;
+}
+
+/**
+ * gst_query_get_n_buffering_ranges
+ * @query: a GST_QUERY_BUFFERING type query #GstQuery
+ *
+ * Retrieve the number of values currently stored in the
+ * buffered-ranges array of the query's structure.
+ *
+ * Returns: the range array size as a #guint.
+ *
+ * Since: 0.10.31
+ */
+guint
+gst_query_get_n_buffering_ranges (GstQuery * query)
+{
+  GstStructure *structure;
+  GValueArray *array;
+  const GValue *value;
+  guint size = 0;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, 0);
+
+  structure = gst_query_get_structure (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
+  if (value) {
+    array = (GValueArray *) g_value_get_boxed (value);
+    size = array->n_values;
+  }
+  return size;
+}
+
+
+/**
+ * gst_query_parse_nth_buffering_range
+ * @query: a GST_QUERY_BUFFERING type query #GstQuery
+ * @index: position in the buffered-ranges array to read
+ * @start: (out): the start position to set
+ * @stop: (out): the stop position to set
+ *
+ * Parse an available query and get the start and stop values stored
+ * at the @index of the buffered ranges array.
+ *
+ * Returns: a #gboolean indicating if the parsing succeeded.
+ *
+ * Since: 0.10.31
+ */
+gboolean
+gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
+    gint64 * start, gint64 * stop)
+{
+  GstStructure *structure;
+  const GValue *value;
+  GValueArray *ranges;
+  GValue *range_value;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, ret);
+
+  structure = gst_query_get_structure (query);
+  value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
+  ranges = (GValueArray *) g_value_get_boxed (value);
+  range_value = g_value_array_get_nth (ranges, index);
+  if (range_value) {
+    *start = gst_value_get_int64_range_min (range_value);
+    *stop = gst_value_get_int64_range_max (range_value);
+    ret = TRUE;
+  }
+
+  return ret;
+}
+
 
 /**
  * gst_query_new_uri:

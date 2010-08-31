@@ -62,6 +62,33 @@ GST_START_TEST (create_queries)
 
     gst_query_unref (query);
   }
+  /* BUFFERING RANGES */
+  {
+    gint64 start, stop;
+
+    query = gst_query_new_buffering (GST_FORMAT_PERCENT);
+    fail_if (query == NULL);
+    fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING);
+
+    fail_unless (gst_query_add_buffering_range (query, 0, 20));
+    fail_unless (gst_query_add_buffering_range (query, 25, 30));
+
+    /* check incoherent range insertion */
+    fail_if (gst_query_add_buffering_range (query, 10, 15));
+    fail_if (gst_query_add_buffering_range (query, 50, 40));
+
+    fail_unless (gst_query_get_n_buffering_ranges (query) == 2);
+
+    fail_unless (gst_query_parse_nth_buffering_range (query, 0, &start, &stop));
+    fail_unless (start == 0);
+    fail_unless (stop == 20);
+
+    fail_unless (gst_query_parse_nth_buffering_range (query, 1, &start, &stop));
+    fail_unless (start == 25);
+    fail_unless (stop == 30);
+
+    gst_query_unref (query);
+  }
   {
     /* FIXME make tests for:
      *

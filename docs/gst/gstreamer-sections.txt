@@ -1969,6 +1969,9 @@ gst_query_set_buffering_stats
 gst_query_parse_buffering_stats
 gst_query_set_buffering_range
 gst_query_parse_buffering_range
+gst_query_add_buffering_range
+gst_query_get_n_buffering_ranges
+gst_query_parse_buffering_range
 
 gst_query_new_uri
 gst_query_parse_uri

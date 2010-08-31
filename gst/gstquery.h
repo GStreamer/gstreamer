@@ -318,6 +318,15 @@ void            gst_query_set_buffering_range     (GstQuery *query, GstFormat fo
 void            gst_query_parse_buffering_range   (GstQuery *query, GstFormat *format,
                                                    gint64 *start, gint64 *stop,
                                                    gint64 *estimated_total);
+gboolean        gst_query_add_buffering_range     (GstQuery *query,
+                                                   gint64 start, gint64 stop);
+
+guint           gst_query_get_n_buffering_ranges  (GstQuery *query);
+
+gboolean        gst_query_parse_nth_buffering_range (GstQuery *query,
+                                                     guint index, gint64 *start,
+                                                     gint64 *stop);
+
 /* URI query */
 GstQuery *      gst_query_new_uri                 (void);
 void            gst_query_parse_uri               (GstQuery *query, gchar **uri);
