@@ -157,6 +157,7 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 /* FIXME: include #include <gst/gst-i18n-plugin.h> and use _(" ") */
 
 #include "gstcamerabin.h"
@@ -1338,7 +1339,7 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
       "image-width", camera->width, "image-height", camera->height, NULL);
 
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      "capture-digital-zoom", camera->zoom, 100, NULL);
+      GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, camera->zoom / 100.0, NULL);
 
   if (gst_element_implements_interface (GST_ELEMENT (camera),
           GST_TYPE_COLOR_BALANCE)) {
@@ -1367,27 +1368,29 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
        * http://johnlind.tripod.com/science/scienceexposure.html
        *
        */
+/*
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           "capture-brightness", cur_value, 1, NULL);
+*/
     } else if (!g_ascii_strcasecmp (channel->label, "contrast")) {
       /* 0 = Normal, 1 = Soft, 2 = Hard */
 
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          "capture-contrast",
-          (cur_value == mid_value) ? 0 : ((cur_value < mid_value) ? 1 : 2),
-          NULL);
+          GST_TAG_CAPTURING_CONTRAST,
+          (cur_value == mid_value) ? "normal" : ((cur_value < mid_value)
+              ? "soft" : "hard"), NULL);
     } else if (!g_ascii_strcasecmp (channel->label, "gain")) {
       /* 0 = Normal, 1 = Low Up, 2 = High Up, 3 = Low Down, 4 = Hight Down */
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          "capture-gain",
-          (guint) (cur_value == mid_value) ? 0 : ((cur_value <
-                  mid_value) ? 1 : 3), NULL);
+          GST_TAG_CAPTURING_GAIN_ADJUSTMENT,
+          (cur_value == mid_value) ? "normal" : ((cur_value <
+                  mid_value) ? "low-gain-up" : "low-gain-down"), NULL);
     } else if (!g_ascii_strcasecmp (channel->label, "saturation")) {
       /* 0 = Normal, 1 = Low, 2 = High */
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-          "capture-saturation",
-          (cur_value == mid_value) ? 0 : ((cur_value < mid_value) ? 1 : 2),
-          NULL);
+          GST_TAG_CAPTURING_SATURATION,
+          (cur_value == mid_value) ? "normal" : ((cur_value < mid_value)
+              ? "low-saturation" : "high-saturation"), NULL);
     }
   }
 
@@ -2566,6 +2569,8 @@ static void
 gst_camerabin_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+
+  gst_tag_register_musicbrainz_tags ();
 
   gst_element_class_set_details_simple (element_class, "Camera Bin",
       "Generic/Bin/Camera",

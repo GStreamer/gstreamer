@@ -31,7 +31,7 @@ libgstcamerabin_la_CFLAGS = \
 libgstcamerabin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la \
 	$(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
-	-lgstinterfaces-$(GST_MAJORMINOR)
+	-lgstinterfaces-$(GST_MAJORMINOR) -lgsttag-$(GST_MAJORMINOR)
 
 libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
