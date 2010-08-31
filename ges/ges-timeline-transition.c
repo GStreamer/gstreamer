@@ -60,8 +60,6 @@ ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
 {
   GList *tmp;
   GESTimelineTransition *trself = (GESTimelineTransition *) self;
-  GESVideoTransitionType old;
-  old = trself->vtype;
 
   for (tmp = self->trackobjects; tmp; tmp = g_list_next (tmp)) {
     GESTrackVideoTransition *obj;
