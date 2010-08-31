@@ -2444,7 +2444,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
           goto peer_failed;
         GST_DEBUG_OBJECT (queue, "buffering forwarded to peer");
       } else {
-        gint64 start, stop;
+        gint64 start, stop, range_start, range_stop;
         guint64 writing_pos;
         gint percent;
         gint64 estimated_total, buffering_left;
@@ -2452,6 +2452,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
         gint64 duration;
         gboolean peer_res, is_buffering, is_eos;
         gdouble byte_in_rate, byte_out_rate;
+        GstQueue2Range *queued_ranges;
 
         /* we need a current download region */
         if (queue->current == NULL)
@@ -2514,6 +2515,37 @@ gst_queue2_handle_src_query (GstPad * pad, GstQuery * query)
             stop = -1;
             break;
         }
+
+        /* fill out the buffered ranges */
+        for (queued_ranges = queue->ranges; queued_ranges;
+            queued_ranges = queued_ranges->next) {
+          switch (format) {
+            case GST_FORMAT_PERCENT:
+              if (duration == -1) {
+                range_start = 0;
+                range_stop = 0;
+                break;
+              }
+              range_start = 100 * queued_ranges->offset / duration;
+              range_stop = 100 * queued_ranges->writing_pos / duration;
+              break;
+            case GST_FORMAT_BYTES:
+              range_start = queued_ranges->offset;
+              range_stop = queued_ranges->writing_pos;
+              break;
+            default:
+              range_start = -1;
+              range_stop = -1;
+              break;
+          }
+          if (range_start == range_stop)
+            continue;
+          GST_DEBUG_OBJECT (queue,
+              "range starting at %" G_GINT64_FORMAT " and finishing at %"
+              G_GINT64_FORMAT, range_start, range_stop);
+          gst_query_add_buffering_range (query, range_start, range_stop);
+        }
+
         gst_query_set_buffering_percent (query, is_buffering, percent);
         gst_query_set_buffering_range (query, format, start, stop,
             estimated_total);
@@ -2683,7 +2715,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }
@@ -2886,7 +2918,7 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       queue->ring_buffer_max_size = g_value_get_uint64 (value);
-      queue->use_ring_buffer = ! !queue->ring_buffer_max_size;
+      queue->use_ring_buffer = !!queue->ring_buffer_max_size;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
