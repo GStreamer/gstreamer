@@ -56,11 +56,16 @@ thumbnail_cb (gpointer pipeline)
   static int i = 0;
   GESTimelinePipeline *p = (GESTimelinePipeline *) pipeline;
   gchar *filename;
+  gboolean res;
 
   filename = g_strdup_printf ("thumbnail%d.jpg", i++);
 
-  return ges_timeline_pipeline_save_thumbnail (p, -1, -1,
+  res = ges_timeline_pipeline_save_thumbnail (p, -1, -1,
       (gchar *) "image/jpeg", filename);
+
+  g_free (filename);
+
+  return res;
 }
 
 gboolean
