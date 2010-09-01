@@ -3614,6 +3614,18 @@ gst_matroska_demux_parse_metadata_id_simple_tag (GstMatroskaDemux * demux,
         GValue dest = { 0, };
         GType dest_type = gst_tag_get_type (tagname_gst);
 
+        /* Ensure that any date string is complete */
+        if (dest_type == GST_TYPE_DATE) {
+          guint year = 1901, month = 1, day = 1;
+
+          /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy, but we need
+           * the first type */
+          if (sscanf (value, "%04u-%02u-%02u", &year, &month, &day) != 0) {
+            g_free (value);
+            value = g_strdup_printf ("%04u-%02u-%02u", year, month, day);
+          }
+        }
+
         g_value_init (&dest, dest_type);
         if (gst_value_deserialize (&dest, value)) {
           gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
