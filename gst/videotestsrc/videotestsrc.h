@@ -118,6 +118,8 @@ void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
 void    gst_video_test_src_ball         (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
+void gst_video_test_src_moving_color_bars (GstVideoTestSrc * v,
+                                 unsigned char *dest, int w, int h);
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
 

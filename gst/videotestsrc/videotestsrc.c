@@ -1638,6 +1638,60 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   v->zoneplate_t++;
 }
 
+void
+gst_video_test_src_moving_color_bars (GstVideoTestSrc * v, unsigned char *dest,
+    int w, int h)
+{
+  int i, j;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+  int offset;
+
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+
+  offset = v->moving_offset;
+  v->moving_offset += v->moving_speed;
+  if (v->moving_offset >= w) {
+    v->moving_offset -= w;
+  } else if (v->moving_offset < 0) {
+    v->moving_offset += w;
+  }
+
+  /* color bars */
+  for (i = 0; i < 7; i++) {
+    int w1, w2 = 0;
+    int x1 = i * w / 7 + offset;
+    int x2 = (i + 1) * w / 7 + offset;
+
+    if (x1 > w) {
+      x1 -= w;
+      x2 -= w;
+    }
+
+    if (x2 > w) {
+      w1 = w - x1;
+      w2 = (x2 - x1) - w1;
+    } else {
+      w1 = x2 - x1;
+    }
+
+    p->color = p->colors + i;
+    for (j = 0; j < h; j++) {
+      if (x2 > w) {
+        p->paint_hline (p, 0, j, w2);
+      }
+      p->paint_hline (p, x1, j, w1);
+    }
+  }
+}
+
 
 static void
 paint_setup_I420 (paintinfo * p, unsigned char *dest)

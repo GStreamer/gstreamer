@@ -57,6 +57,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_GAMUT: Gamut checking pattern
  * @GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE: Chroma zone plate
  * @GST_VIDEO_TEST_SRC_BALL: Moving ball
+ * @GST_VIDEO_TEST_SRC_MOVING_COLOR_BARS: Moving color bars
  *
  * The test pattern to produce.
  *
@@ -96,7 +97,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_GAMUT,
   GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE,
   GST_VIDEO_TEST_SRC_SOLID,
-  GST_VIDEO_TEST_SRC_BALL
+  GST_VIDEO_TEST_SRC_BALL,
+  GST_VIDEO_TEST_SRC_MOVING_COLOR_BARS
 } GstVideoTestSrcPattern;
 
 /**
@@ -165,6 +167,10 @@ struct _GstVideoTestSrc {
 
   gint zoneplate_t;
   
+  /* moving color bars */
+  gint moving_offset;
+  gint moving_speed;
+
   void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
 };
 
