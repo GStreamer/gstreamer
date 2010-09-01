@@ -124,6 +124,13 @@ ges_timeline_source_dispose (GObject * object)
 static void
 ges_timeline_source_finalize (GObject * object)
 {
+  GESTimelineSource *source = (GESTimelineSource *) object;
+
+  if (source->text)
+    g_free (source->text);
+  if (source->font_desc)
+    g_free (source->font_desc);
+
   G_OBJECT_CLASS (ges_timeline_source_parent_class)->finalize (object);
 }
 
