@@ -132,7 +132,7 @@ decode_error:
       ("Error returned from vdpau was: %s",
           device->vdp_get_error_string (status)));
 
-  gst_buffer_unref (GST_BUFFER_CAST (video_buf));
+  gst_buffer_unref (GST_BUFFER_CAST (*video_buf));
 
   return GST_FLOW_ERROR;
 }
