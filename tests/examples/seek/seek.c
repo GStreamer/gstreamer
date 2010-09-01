@@ -2791,6 +2791,7 @@ main (int argc, char **argv)
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_scale_set_value_pos (GTK_SCALE (hscale), GTK_POS_RIGHT);
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
+  gtk_range_set_restrict_to_fill_level (GTK_RANGE (hscale), FALSE);
   gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
