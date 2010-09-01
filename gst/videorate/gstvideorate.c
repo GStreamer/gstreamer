@@ -551,7 +551,7 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
                     videorate->next_ts - videorate->segment.accum
                     < videorate->segment.stop)
                 || count < 1)) {
-          gst_video_rate_flush_prev (videorate, count > 0);
+          res = gst_video_rate_flush_prev (videorate, count > 0);
           count++;
         }
         if (count > 1) {
