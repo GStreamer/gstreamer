@@ -2475,7 +2475,7 @@ GST_END_TEST;
 GST_START_TEST (test_deserialize_int_range)
 {
   GstStructure *s;
-  gchar *str;
+  gchar *str, *str2;
   gchar *end = NULL;
   const GValue *deserialized_value;
 
@@ -2497,12 +2497,14 @@ GST_START_TEST (test_deserialize_int_range)
       (gint64) G_MAXINT + 1);
   ASSERT_CRITICAL (s = gst_structure_from_string (str, &end));
   g_free (str);
+  gst_structure_free (s);
   str =
       g_strdup_printf ("foo/bar, range=[ %" G_GINT64_FORMAT ", %"
       G_GINT64_FORMAT " ];", (gint64) G_MAXINT, (gint64) G_MAXINT + 1);
   ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
   end = NULL;
   g_free (str);
+  gst_structure_free (s);
 
   /* check a valid int64_range deserialization. Those ranges need to
    * be explicit about their storage type. */
@@ -2513,10 +2515,12 @@ GST_START_TEST (test_deserialize_int_range)
   fail_unless (GST_VALUE_HOLDS_INT64_RANGE (deserialized_value) == TRUE);
   fail_unless (gst_value_get_int64_range_min (deserialized_value) == 1);
   fail_unless (gst_value_get_int64_range_max (deserialized_value) == G_MAXINT);
-  fail_unless (strcmp (str, gst_structure_to_string (s)) == 0);
+  str2 = gst_structure_to_string (s);
+  fail_unless (strcmp (str, str2) == 0);
   gst_structure_free (s);
   end = NULL;
   g_free (str);
+  g_free (str2);
 
   /* check invalid int64_range (starting with a gint) deserialization */
   str =
@@ -2534,6 +2538,7 @@ GST_START_TEST (test_deserialize_int_range)
       G_GUINT64_FORMAT " ];", (gint64) G_MAXINT, (guint64) G_MAXINT64 + 1);
   ASSERT_CRITICAL (s = gst_structure_from_string (str, NULL));
   g_free (str);
+  gst_structure_free (s);
 
   /* check invalid int64_range deserialization into a int_range */
   str =
