@@ -267,7 +267,7 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseVideoDecoder *base_video_decoder;
   GstBaseVideoDecoderClass *base_video_decoder_class;
-  gboolean ret = FALSE;
+  gboolean res = FALSE;
 
   base_video_decoder = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
   base_video_decoder_class =
@@ -275,15 +275,14 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-    {
       if (!base_video_decoder->packetized)
         gst_base_video_decoder_drain (base_video_decoder, TRUE);
 
-      ret =
+      res =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
-    }
       break;
+
     case GST_EVENT_NEWSEGMENT:
     {
       gboolean update;
@@ -319,149 +318,34 @@ gst_base_video_decoder_sink_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (segment->start),
           GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time), update);
 
-      ret =
+      res =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
-    }
       break;
+    }
 
     case GST_EVENT_FLUSH_STOP:
       gst_base_video_decoder_flush (base_video_decoder);
       gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
 
-      ret =
+      res =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
           (base_video_decoder), event);
       break;
 
     default:
-      /* FIXME this changes the order of events */
-      ret =
-          gst_pad_push_event (GST_BASE_VIDEO_DECODER_SRC_PAD
-          (base_video_decoder), event);
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
 done:
   gst_object_unref (base_video_decoder);
-  return ret;
+  return res;
 
 newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (base_video_decoder, "received non TIME newsegment");
-    gst_event_unref (event);
-    goto done;
-  }
-}
-
-#if 0
-static gboolean
-gst_base_video_decoder_sink_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = TRUE;
-  GstBaseVideoDecoder *enc;
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
-  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
-
-  /* FIXME: check if we are in a decoding state */
-
-  switch (src_format) {
-    case GST_FORMAT_BYTES:
-      switch (*dest_format) {
-#if 0
-        case GST_FORMAT_DEFAULT:
-          *dest_value = gst_util_uint64_scale_int (src_value, 1,
-              enc->bytes_per_picture);
-          break;
-#endif
-        case GST_FORMAT_TIME:
-          /* seems like a rather silly conversion, implement me if you like */
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale (src_value,
-              GST_SECOND * enc->fps_d, enc->fps_n);
-          break;
-#if 0
-        case GST_FORMAT_BYTES:
-          *dest_value = gst_util_uint64_scale_int (src_value,
-              enc->bytes_per_picture, 1);
-          break;
-#endif
-        default:
-          res = FALSE;
-      }
-      break;
-    default:
-      res = FALSE;
-      break;
-  }
-}
-#endif
-
-static gboolean
-gst_base_video_decoder_src_convert (GstPad * pad,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  gboolean res = TRUE;
-  GstBaseVideoDecoder *enc;
-
-  if (src_format == *dest_format) {
-    *dest_value = src_value;
-    return TRUE;
-  }
-
-  enc = GST_BASE_VIDEO_DECODER (gst_pad_get_parent (pad));
-
-  /* FIXME: check if we are in a encoding state */
-
-  GST_DEBUG ("src convert");
-  switch (src_format) {
-#if 0
-    case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
-        case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale (granulepos_to_frame (src_value),
-              enc->fps_d * GST_SECOND, enc->fps_n);
-          break;
-        default:
-          res = FALSE;
-      }
-      break;
-    case GST_FORMAT_TIME:
-      switch (*dest_format) {
-        case GST_FORMAT_DEFAULT:
-        {
-          *dest_value = gst_util_uint64_scale (src_value,
-              enc->fps_n, enc->fps_d * GST_SECOND);
-          break;
-        }
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-#endif
-    default:
-      res = FALSE;
-      break;
-  }
-
-  gst_object_unref (enc);
-
-  return res;
+  GST_DEBUG_OBJECT (base_video_decoder, "received non TIME newsegment");
+  gst_event_unref (event);
+  goto done;
 }
 
 static gboolean
@@ -474,42 +358,14 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
-      GstFormat format, tformat;
-      gdouble rate;
-      GstEvent *real_seek;
-      GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
-      gint64 tcur, tstop;
 
-      GST_DEBUG ("seek event");
-
-      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type,
-          &cur, &stop_type, &stop);
-      gst_event_unref (event);
-
-      tformat = GST_FORMAT_TIME;
-      res =
-          gst_base_video_decoder_src_convert (pad, format, cur, &tformat,
-          &tcur);
-      if (!res)
-        goto convert_error;
-      res =
-          gst_base_video_decoder_src_convert (pad, format, stop, &tformat,
-          &tstop);
-      if (!res)
-        goto convert_error;
-
-      real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-          flags, cur_type, tcur, stop_type, tstop);
-
+      /* FIXME: do seek using bitrate incase upstream doesn't handle it */
       res =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SINK_PAD
-          (base_video_decoder), real_seek);
+          (base_video_decoder), event);
 
       break;
-    }
+
     case GST_EVENT_QOS:
     {
       gdouble proportion;
@@ -548,19 +404,16 @@ gst_base_video_decoder_src_event (GstPad * pad, GstEvent * event)
           (base_video_decoder), event);
       break;
     }
+
     default:
       res =
           gst_pad_push_event (GST_BASE_VIDEO_DECODER_SINK_PAD
           (base_video_decoder), event);
       break;
   }
-done:
+
   gst_object_unref (base_video_decoder);
   return res;
-
-convert_error:
-  GST_DEBUG_OBJECT (base_video_decoder, "could not convert format");
-  goto done;
 }
 
 static const GstQueryType *
@@ -569,7 +422,6 @@ gst_base_video_decoder_get_query_types (GstPad * pad)
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
-    GST_QUERY_CONVERT,
     0
   };
 
@@ -604,33 +456,18 @@ gst_base_video_decoder_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, time);
 
       res = TRUE;
-
       break;
     }
+
     case GST_QUERY_DURATION:
-    {
-      res = gst_pad_peer_query (dec->sinkpad, query);
+      /* FIXME: approximate using bitrate if upstream doesn't answear */
+      res = gst_pad_query (dec->sinkpad, query);
       break;
-    }
-    case GST_QUERY_CONVERT:
-    {
-      GstFormat src_fmt, dest_fmt;
-      gint64 src_val, dest_val;
 
-      GST_DEBUG ("convert query");
-
-      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      res =
-          gst_base_video_decoder_src_convert (pad, src_fmt, src_val, &dest_fmt,
-          &dest_val);
-      if (!res)
-        goto error;
-      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
-      break;
-    }
     default:
       res = gst_pad_query_default (pad, query);
     }
+
   gst_object_unref (dec);
   return res;
 

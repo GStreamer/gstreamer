@@ -102,8 +102,8 @@ struct _GstBaseVideoDecoder
 
   GList *timestamps;
   guint64 field_index;
-  GstClockTime last_timestamp;
   GstClockTime timestamp_offset;
+  GstClockTime last_timestamp;
 
   gdouble proportion;
   GstClockTime earliest_time;
