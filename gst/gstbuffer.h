@@ -380,7 +380,7 @@ G_INLINE_FUNC GstBuffer * gst_buffer_copy (const GstBuffer * buf);
 static inline GstBuffer *
 gst_buffer_copy (const GstBuffer * buf)
 {
-  return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buf)));
+  return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (buf)));
 }
 
 

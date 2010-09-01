@@ -94,17 +94,17 @@ GstBuffer *gst_byte_writer_reset_and_get_buffer (GstByteWriter *writer);
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC guint gst_byte_writer_get_pos (const GstByteWriter *writer);
-G_INLINE_FUNC gboolean gst_byte_writer_set_pos (const GstByteWriter *writer, guint pos);
+G_INLINE_FUNC gboolean gst_byte_writer_set_pos (GstByteWriter *writer, guint pos);
 G_INLINE_FUNC guint gst_byte_writer_get_size (const GstByteWriter *writer);
 #else
 static inline guint
 gst_byte_writer_get_pos (const GstByteWriter *writer)
 {
-  return gst_byte_reader_get_pos (GST_BYTE_READER (writer));
+  return gst_byte_reader_get_pos ((const GstByteReader *) writer);
 }
 
 static inline gboolean
-gst_byte_writer_set_pos (const GstByteWriter *writer, guint pos)
+gst_byte_writer_set_pos (GstByteWriter *writer, guint pos)
 {
   return gst_byte_reader_set_pos (GST_BYTE_READER (writer), pos);
 }
@@ -112,7 +112,7 @@ gst_byte_writer_set_pos (const GstByteWriter *writer, guint pos)
 static inline guint
 gst_byte_writer_get_size (const GstByteWriter *writer)
 {
-  return gst_byte_reader_get_size (GST_BYTE_READER (writer));
+  return gst_byte_reader_get_size ((const GstByteReader *) writer);
 }
 #endif
 

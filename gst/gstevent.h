@@ -400,7 +400,7 @@ G_INLINE_FUNC GstEvent * gst_event_copy (const GstEvent * event);
 static inline GstEvent *
 gst_event_copy (const GstEvent * event)
 {
-  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (event)));
+  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (event)));
 }
 
 

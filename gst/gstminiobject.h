@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 #define GST_MINI_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MINI_OBJECT, GstMiniObject))
 #define GST_MINI_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MINI_OBJECT, GstMiniObjectClass))
 #define GST_MINI_OBJECT_CAST(obj)     ((GstMiniObject*)(obj))
+#define GST_MINI_OBJECT_CONST_CAST(obj) ((const GstMiniObject*)(obj))
 
 typedef struct _GstMiniObject GstMiniObject;
 typedef struct _GstMiniObjectClass GstMiniObjectClass;

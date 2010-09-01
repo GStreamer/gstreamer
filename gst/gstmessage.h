@@ -341,7 +341,7 @@ G_INLINE_FUNC GstMessage * gst_message_copy (const GstMessage * msg);
 static inline GstMessage *
 gst_message_copy (const GstMessage * msg)
 {
-  return GST_MESSAGE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (msg)));
+  return GST_MESSAGE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (msg)));
 }
 
 /**

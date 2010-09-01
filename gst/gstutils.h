@@ -270,7 +270,7 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 
 /* Define PUT and GET functions for unaligned memory */
 #define _GST_GET(__data, __idx, __size, __shift) \
-    (((guint##__size) (((guint8 *) (__data))[__idx])) << (__shift))
+    (((guint##__size) (((const guint8 *) (__data))[__idx])) << (__shift))
 
 #define _GST_PUT(__data, __idx, __size, __shift, __num) \
     (((guint8 *) (__data))[__idx] = (((guint##__size) (__num)) >> (__shift)) & 0xff)

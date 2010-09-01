@@ -237,7 +237,7 @@ G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);
 static inline GstQuery *
 gst_query_copy (const GstQuery * q)
 {
-  return GST_QUERY_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (q)));
+  return GST_QUERY_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (q)));
 }
 
 /**
