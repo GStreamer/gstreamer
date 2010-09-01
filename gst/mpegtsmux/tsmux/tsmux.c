@@ -767,8 +767,10 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     }
   }
 
-  pi->stream_avail = tsmux_stream_bytes_avail (stream);
   pi->packet_start_unit_indicator = tsmux_stream_at_pes_start (stream);
+  if (pi->packet_start_unit_indicator)
+    tsmux_stream_initialize_pes_packet (stream);
+  pi->stream_avail = tsmux_stream_bytes_avail (stream);
 
   if (!tsmux_write_ts_header (mux->packet_buf, pi, &payload_len, &payload_offs))
     return FALSE;

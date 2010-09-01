@@ -212,6 +212,7 @@ void 		tsmux_stream_get_es_descrs 	(TsMuxStream *stream, guint8 *buf, guint16 *l
 
 gint 		tsmux_stream_bytes_in_buffer 	(TsMuxStream *stream);
 gint 		tsmux_stream_bytes_avail 	(TsMuxStream *stream);
+gboolean 	tsmux_stream_initialize_pes_packet (TsMuxStream *stream);
 gboolean 	tsmux_stream_get_data 		(TsMuxStream *stream, guint8 *buf, guint len);
 
 guint64 	tsmux_stream_get_pts 		(TsMuxStream *stream);

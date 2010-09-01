@@ -332,6 +332,50 @@ tsmux_stream_bytes_in_buffer (TsMuxStream * stream)
 }
 
 /**
+ * tsmux_stream_initialize_pes_packet:
+ * @stream: a #TsMuxStream
+ *
+ * Initializes the PES packet.
+ *
+ * Returns: TRUE if we the packet was initialized.
+ */
+gboolean
+tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
+{
+  if (stream->state != TSMUX_STREAM_STATE_HEADER)
+    return TRUE;
+
+  if (stream->pes_payload_size != 0) {
+    /* Use prescribed fixed PES payload size */
+    stream->cur_pes_payload_size = stream->pes_payload_size;
+    tsmux_stream_find_pts_dts_within (stream, stream->cur_pes_payload_size,
+        &stream->pts, &stream->dts);
+  } else if (stream->is_video_stream) {
+    /* Unbounded for video streams */
+    stream->cur_pes_payload_size = 0;
+    tsmux_stream_find_pts_dts_within (stream,
+        tsmux_stream_bytes_in_buffer (stream), &stream->pts, &stream->dts);
+  } else {
+    /* Output a PES packet of all currently available bytes otherwise */
+    stream->cur_pes_payload_size = tsmux_stream_bytes_in_buffer (stream);
+    tsmux_stream_find_pts_dts_within (stream, stream->cur_pes_payload_size,
+        &stream->pts, &stream->dts);
+  }
+
+  stream->pi.flags &= ~(TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS |
+      TSMUX_PACKET_FLAG_PES_WRITE_PTS);
+
+  if (stream->pts != -1 && stream->dts != -1)
+    stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS;
+  else {
+    if (stream->pts != -1)
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS;
+  }
+
+  return TRUE;
+}
+
+/**
  * tsmux_stream_get_data:
  * @stream: a #TsMuxStream
  * @buf: a buffer to hold the result
@@ -349,33 +393,6 @@ tsmux_stream_get_data (TsMuxStream * stream, guint8 * buf, guint len)
 
   if (stream->state == TSMUX_STREAM_STATE_HEADER) {
     guint8 pes_hdr_length;
-
-    if (stream->pes_payload_size != 0) {
-      /* Use prescribed fixed PES payload size */
-      stream->cur_pes_payload_size = stream->pes_payload_size;
-      tsmux_stream_find_pts_dts_within (stream, stream->cur_pes_payload_size,
-          &stream->pts, &stream->dts);
-    } else if (stream->is_video_stream) {
-      /* Unbounded for video streams */
-      stream->cur_pes_payload_size = 0;
-      tsmux_stream_find_pts_dts_within (stream,
-          tsmux_stream_bytes_in_buffer (stream), &stream->pts, &stream->dts);
-    } else {
-      /* Output a PES packet of all currently available bytes otherwise */
-      stream->cur_pes_payload_size = tsmux_stream_bytes_in_buffer (stream);
-      tsmux_stream_find_pts_dts_within (stream, stream->cur_pes_payload_size,
-          &stream->pts, &stream->dts);
-    }
-
-    stream->pi.flags &= ~(TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS |
-        TSMUX_PACKET_FLAG_PES_WRITE_PTS);
-
-    if (stream->pts != -1 && stream->dts != -1)
-      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS;
-    else {
-      if (stream->pts != -1)
-        stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS;
-    }
 
     pes_hdr_length = tsmux_stream_pes_header_length (stream);
 
