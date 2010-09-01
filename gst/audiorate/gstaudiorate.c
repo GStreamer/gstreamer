@@ -376,7 +376,9 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      /* FIXME, fill last segment */
+      /* Fill segment until the end */
+      if (GST_CLOCK_TIME_IS_VALID (audiorate->src_segment.stop))
+        gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.stop);
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
     default:
