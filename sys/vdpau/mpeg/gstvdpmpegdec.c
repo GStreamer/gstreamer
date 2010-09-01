@@ -32,7 +32,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #include <gst/gst.h>
@@ -401,7 +401,7 @@ gst_vdp_mpeg_dec_create_frame (GstBaseVideoDecoder * base_video_decoder)
 
 static GstFlowReturn
 gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf, gboolean at_eos)
+    GstBuffer * buf, gboolean at_eos, GstVideoFrame * frame)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
 
@@ -417,8 +417,7 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   /* start_code */
   gst_bit_reader_get_bits_uint8 (&b_reader, &start_code, 8);
 
-  mpeg_frame = (GstVdpMpegFrame *)
-      gst_base_video_decoder_get_current_frame (base_video_decoder);
+  mpeg_frame = GST_VDP_MPEG_FRAME_CAST (frame);
 
   if (start_code >= MPEG_PACKET_SLICE_MIN
       && start_code <= MPEG_PACKET_SLICE_MAX) {
@@ -510,6 +509,9 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     default:
       gst_buffer_unref (buf);
   }
+
+  if (at_eos && mpeg_frame->slices)
+    ret = gst_base_video_decoder_have_frame (base_video_decoder, TRUE, NULL);
 
 done:
   mpeg_dec->prev_packet = start_code;

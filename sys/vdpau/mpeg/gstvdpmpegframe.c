@@ -45,7 +45,8 @@ gst_vdp_mpeg_frame_new (void)
 {
   GstVdpMpegFrame *frame;
 
-  frame = (GstVdpMpegFrame *) gst_mini_object_new (GST_TYPE_VDP_MPEG_FRAME);
+  frame =
+      GST_VDP_MPEG_FRAME_CAST (gst_mini_object_new (GST_TYPE_VDP_MPEG_FRAME));
 
   return frame;
 }

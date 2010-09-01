@@ -47,7 +47,7 @@ struct _GstMpeg4Frame
   GstBuffer *gov_buf;
   GstBuffer *vop_buf;
   
-  GstClockTime vop_time;
+  guint32 vop_time;
 };
 
 struct _GstMpeg4FrameClass

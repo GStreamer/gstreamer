@@ -27,9 +27,10 @@
 
 #include "../basevideodecoder/gstvideoframe.h"
 
-#define GST_TYPE_VDP_MPEG_FRAME (gst_vdp_mpeg_frame_get_type())
-#define GST_IS_VDP_MPEG_FRAME(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_MPEG_FRAME))
-#define GST_VDP_MPEG_FRAME(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_MPEG_FRAME, GstVdpMpegFrame))
+#define GST_TYPE_VDP_MPEG_FRAME      (gst_vdp_mpeg_frame_get_type())
+#define GST_IS_VDP_MPEG_FRAME(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_MPEG_FRAME))
+#define GST_VDP_MPEG_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_MPEG_FRAME, GstVdpMpegFrame))
+#define GST_VDP_MPEG_FRAME_CAST(obj) ((GstVdpMpegFrame *)obj)
 
 typedef struct _GstVdpMpegStreamInfo GstVdpMpegStreamInfo;
 

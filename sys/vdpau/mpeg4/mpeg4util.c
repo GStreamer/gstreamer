@@ -74,6 +74,10 @@ mpeg4_util_parse_VOP (GstBuffer * buf, Mpeg4VideoObjectLayer * vol,
   /* set default values */
   vop->modulo_time_base = 0;
   vop->rounding_type = 0;
+  vop->top_field_first = 1;
+  vop->alternate_vertical_scan_flag = 0;
+  vop->fcode_forward = 1;
+  vop->fcode_backward = 1;
 
   /* start code prefix */
   SKIP (&reader, 24);
@@ -366,6 +370,9 @@ mpeg4_util_parse_VOL (GstBuffer * buf, Mpeg4VisualObject * vo,
     if (!mpeg4_util_parse_quant (&reader, vol->non_intra_quant_mat,
             default_non_intra_quant_mat))
       goto error;
+  } else {
+    memset (&vol->intra_quant_mat, 0, 64);
+    memset (&vol->non_intra_quant_mat, 0, 64);
   }
 
   if (vol->verid != 0x1)

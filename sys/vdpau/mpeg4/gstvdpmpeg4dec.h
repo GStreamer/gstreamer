@@ -45,7 +45,7 @@ struct _GstVdpMpeg4Dec
   
   gboolean is_configured;
   Mpeg4VideoObjectLayer vol;
-  GstClockTime tframe;
+  guint32 tframe;
 
   GstMpeg4Frame *f_frame, *b_frame;
 };

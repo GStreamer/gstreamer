@@ -419,8 +419,8 @@ gst_vdp_h264_dec_create_bitstream_buffers (GstVdpH264Dec * h264_dec,
   else {
     guint i;
 
-    bufs = g_new (VdpBitstreamBuffer, h264_frame->slices->len * 2);
-    *n_bufs = h264_frame->slices->len * 2;
+    bufs = g_new (VdpBitstreamBuffer, h264_frame->slices->len);
+    *n_bufs = h264_frame->slices->len;
 
     for (i = 0; i < h264_frame->slices->len; i++) {
       GstBuffer *buf;
@@ -454,7 +454,7 @@ gst_vdp_h264_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GST_DEBUG ("handle_frame");
 
-  h264_frame = (GstH264Frame *) frame;
+  h264_frame = GST_H264_FRAME_CAST (frame);
 
   slice = &h264_frame->slice_hdr;
   pic = slice->picture;
@@ -644,7 +644,7 @@ gst_vdp_h264_dec_scan_for_packet_end (GstBaseVideoDecoder * base_video_decoder,
 
 static GstFlowReturn
 gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf, gboolean at_eos)
+    GstBuffer * buf, gboolean at_eos, GstVideoFrame * frame)
 {
   GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (base_video_decoder);
   GstBitReader reader;
@@ -655,7 +655,6 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   guint size;
   gint i;
 
-  GstVideoFrame *frame;
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_MEMDUMP ("data", GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
@@ -695,8 +694,6 @@ gst_vdp_h264_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
     size--;
     i--;
   }
-
-  frame = gst_base_video_decoder_get_current_frame (base_video_decoder);
 
   if (GST_VIDEO_FRAME_FLAG_IS_SET (frame, GST_H264_FRAME_GOT_PRIMARY)) {
     if (nal_unit.type == GST_NAL_SPS || nal_unit.type == GST_NAL_PPS ||

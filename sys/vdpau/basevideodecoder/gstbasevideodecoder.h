@@ -140,7 +140,7 @@ struct _GstBaseVideoDecoderClass
     (GstBaseVideoDecoder *coder, GstAdapter *adapter, guint *size, gboolean at_eos);
   
   GstFlowReturn (*parse_data) (GstBaseVideoDecoder *decoder,
-      GstBuffer *buf, gboolean at_eos);
+      GstBuffer *buf, gboolean at_eos, GstVideoFrame *frame);
 
 	
 	GstVideoFrame *(*create_frame) (GstBaseVideoDecoder *coder);
@@ -152,9 +152,6 @@ struct _GstBaseVideoDecoderClass
 };
 
 GType gst_base_video_decoder_get_type (void);
-
-GstVideoFrame *gst_base_video_decoder_get_current_frame (GstBaseVideoDecoder
-    *base_video_decoder);
 
 GstVideoFrame *gst_base_video_decoder_get_frame (GstBaseVideoDecoder *coder,
     gint frame_number);

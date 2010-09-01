@@ -35,6 +35,8 @@
 #include <config.h>
 #endif
 
+#include <math.h>
+
 #include <gst/gst.h>
 #include <vdpau/vdpau.h>
 #include <string.h>
@@ -84,25 +86,22 @@ gst_vdp_mpeg4_dec_fill_info (GstVdpMpeg4Dec * mpeg4_dec,
   }
 
   if (vop->coding_type == B_VOP) {
-    guint32 p_field_period;
-    gint32 trd, trb;
+    guint32 trd_time, trb_time;
 
-    p_field_period = mpeg4_dec->f_frame->vop_time / mpeg4_dec->tframe;
+    trd_time = mpeg4_dec->b_frame->vop_time - mpeg4_dec->f_frame->vop_time;
+    trb_time = mpeg4_frame->vop_time - mpeg4_dec->f_frame->vop_time;
 
-    trd =
-        2 * (mpeg4_dec->b_frame->vop_time / mpeg4_dec->tframe - p_field_period);
-    trb = 2 * (mpeg4_frame->vop_time / mpeg4_dec->tframe - p_field_period);
+    info.trd[0] = trd_time;
+    info.trb[0] = trb_time;
 
-    info.trd[0] = trd;
-    info.trd[1] = trd;
-    info.trb[0] = trb;
-    info.trb[1] = trb;
+    info.trd[1] = round ((double) trd_time / (double) mpeg4_dec->tframe);
+    info.trb[1] = round ((double) trb_time / (double) mpeg4_dec->tframe);
 
     /* backward reference */
     if (mpeg4_dec->b_frame) {
-      info.forward_reference =
+      info.backward_reference =
           GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME (mpeg4_dec->
-              f_frame)->src_buffer)->surface;
+              b_frame)->src_buffer)->surface;
     }
   }
 
@@ -235,13 +234,11 @@ gst_vdp_mpeg4_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   }
 
   /* calculate vop time */
-  mpeg4_frame->vop_time = vop.modulo_time_base * GST_SECOND +
-      gst_util_uint64_scale (vop.time_increment, GST_SECOND,
-      vol->vop_time_increment_resolution);
-  GST_DEBUG ("vop_time: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (mpeg4_frame->vop_time));
+  mpeg4_frame->vop_time =
+      vop.modulo_time_base * vol->vop_time_increment_resolution +
+      vop.time_increment;
 
-  if (mpeg4_dec->tframe == GST_CLOCK_TIME_NONE && vop.coding_type == B_VOP)
+  if (mpeg4_dec->tframe == -1 && vop.coding_type == B_VOP)
     mpeg4_dec->tframe = mpeg4_frame->vop_time - mpeg4_dec->f_frame->vop_time;
 
   if (vop.coding_type != B_VOP) {
@@ -285,7 +282,7 @@ gst_vdp_mpeg4_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
 
 static GstFlowReturn
 gst_vdp_mpeg4_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf, gboolean at_eos)
+    GstBuffer * buf, gboolean at_eos, GstVideoFrame * frame)
 {
   GstBitReader reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint8 start_code;
@@ -299,9 +296,7 @@ gst_vdp_mpeg4_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   /* start_code */
   READ_UINT8 (&reader, start_code, 8);
 
-  mpeg4_frame =
-      GST_MPEG4_FRAME_CAST (gst_base_video_decoder_get_current_frame
-      (base_video_decoder));
+  mpeg4_frame = GST_MPEG4_FRAME_CAST (frame);
 
   /* collect packages */
   if (start_code == MPEG4_PACKET_VOS) {
@@ -424,7 +419,7 @@ gst_vdp_mpeg4_dec_start (GstBaseVideoDecoder * base_video_decoder)
   GstVdpMpeg4Dec *mpeg4_dec = GST_VDP_MPEG4_DEC (base_video_decoder);
 
   mpeg4_dec->is_configured = FALSE;
-  mpeg4_dec->tframe = GST_CLOCK_TIME_NONE;
+  mpeg4_dec->tframe = -1;
 
   mpeg4_dec->b_frame = NULL;
   mpeg4_dec->f_frame = NULL;

@@ -761,7 +761,7 @@ lost_sync:
     dec->current_buf_offset = dec->input_offset -
         gst_adapter_available (dec->input_adapter);
 
-    ret = klass->parse_data (dec, buf, at_eos);
+    ret = klass->parse_data (dec, buf, at_eos, dec->current_frame);
     if (ret != GST_FLOW_OK)
       return ret;
 
@@ -836,16 +836,14 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
     gst_base_video_decoder_flush (base_video_decoder);
   }
 
-  if (base_video_decoder->current_frame == NULL) {
-    base_video_decoder->current_frame =
-        gst_base_video_decoder_new_frame (base_video_decoder);
-  }
-
   base_video_decoder->input_offset += GST_BUFFER_SIZE (buf);
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     gst_base_video_decoder_add_timestamp (base_video_decoder, buf);
   }
 
+  if (!base_video_decoder->current_frame)
+    base_video_decoder->current_frame =
+        gst_base_video_decoder_new_frame (base_video_decoder);
 
   if (base_video_decoder->packetized) {
     base_video_decoder->current_frame->sink_buffer = buf;
@@ -891,6 +889,8 @@ gst_base_video_decoder_start (GstBaseVideoDecoder * base_video_decoder)
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   gst_base_video_decoder_reset (base_video_decoder);
+
+  gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
 
   if (base_video_decoder_class->start)
     return base_video_decoder_class->start (base_video_decoder);
@@ -1175,7 +1175,7 @@ gst_base_video_decoder_have_frame (GstBaseVideoDecoder * base_video_decoder,
 
   /* do something with frame */
   ret = klass->handle_frame (base_video_decoder, frame, deadline);
-  if (!GST_FLOW_IS_SUCCESS (ret)) {
+  if (ret != GST_FLOW_OK) {
     GST_DEBUG ("flow error!");
   }
 
@@ -1217,13 +1217,6 @@ gst_base_video_decoder_lost_sync (GstBaseVideoDecoder * base_video_decoder)
   }
 
   base_video_decoder->have_sync = FALSE;
-}
-
-GstVideoFrame *
-gst_base_video_decoder_get_current_frame (GstBaseVideoDecoder *
-    base_video_decoder)
-{
-  return base_video_decoder->current_frame;
 }
 
 /* GObject vmethod implementations */
@@ -1361,11 +1354,6 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
   gst_pad_use_fixed_caps (pad);
 
   base_video_decoder->input_adapter = gst_adapter_new ();
-
-  gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
-
-  base_video_decoder->current_frame =
-      gst_base_video_decoder_new_frame (base_video_decoder);
 
   /* properties */
   base_video_decoder->packetized = FALSE;
