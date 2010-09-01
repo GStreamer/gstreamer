@@ -213,6 +213,15 @@ gst_base_video_decoder_flush (GstBaseVideoDecoder * base_video_decoder)
     base_video_decoder_class->flush (base_video_decoder);
 }
 
+static void
+gst_base_video_decoder_reset_state (GstVideoState * state)
+{
+  if (state->codec_data)
+    gst_buffer_unref (state->codec_data);
+
+  memset (state, 0, sizeof (GstVideoState));
+  state->par_n = state->par_d = 1;
+}
 
 static gboolean
 gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
@@ -232,17 +241,13 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   state = &base_video_decoder->state;
 
-  if (state->codec_data) {
-    gst_buffer_unref (state->codec_data);
-  }
-  memset (state, 0, sizeof (GstVideoState));
+  gst_base_video_decoder_reset_state (state);
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_video_format_parse_caps (caps, NULL, &state->width, &state->height);
   gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
   gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
-
   gst_structure_get_boolean (structure, "interlaced", &state->interlaced);
 
   codec_data = gst_structure_get_value (structure, "codec_data");
@@ -675,9 +680,14 @@ gst_base_video_decoder_set_src_caps (GstBaseVideoDecoder * base_video_decoder)
   gst_caps_set_simple (caps,
       "width", G_TYPE_INT, state->width,
       "height", G_TYPE_INT, state->height,
-      "framerate", GST_TYPE_FRACTION, state->fps_n, state->fps_d,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, state->par_n, state->par_d,
       "interlaced", G_TYPE_BOOLEAN, state->interlaced, NULL);
+
+  if (state->fps_d != 0)
+    gst_caps_set_simple (caps,
+        "framerate", GST_TYPE_FRACTION, state->fps_n, state->fps_d, NULL);
+
+
   gst_pad_fixate_caps (base_video_decoder->srcpad, caps);
 
 
@@ -889,6 +899,7 @@ gst_base_video_decoder_start (GstBaseVideoDecoder * base_video_decoder)
       GST_BASE_VIDEO_DECODER_GET_CLASS (base_video_decoder);
 
   gst_base_video_decoder_reset (base_video_decoder);
+  gst_base_video_decoder_reset_state (&base_video_decoder->state);
 
   gst_segment_init (&base_video_decoder->segment, GST_FORMAT_TIME);
 
@@ -1354,6 +1365,7 @@ gst_base_video_decoder_init (GstBaseVideoDecoder * base_video_decoder,
   gst_pad_use_fixed_caps (pad);
 
   base_video_decoder->input_adapter = gst_adapter_new ();
+  memset (&base_video_decoder->state, 0, sizeof (GstVideoState));
 
   /* properties */
   base_video_decoder->packetized = FALSE;
