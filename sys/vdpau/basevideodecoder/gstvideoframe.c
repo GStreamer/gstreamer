@@ -57,9 +57,11 @@ gst_video_frame_finalize (GstVideoFrame * frame)
 static void
 gst_video_frame_init (GstVideoFrame * frame, gpointer g_class)
 {
-  frame->decode_timestamp = GST_CLOCK_TIME_NONE;
-  frame->presentation_timestamp = GST_CLOCK_TIME_NONE;
-  frame->presentation_duration = GST_CLOCK_TIME_NONE;
+  frame->upstream_timestamp = GST_CLOCK_TIME_NONE;
+  frame->upstream_duration = GST_CLOCK_TIME_NONE;
+
+  frame->parsed_timestamp = GST_CLOCK_TIME_NONE;
+
   frame->n_fields = 2;
 
   frame->sink_buffer = NULL;

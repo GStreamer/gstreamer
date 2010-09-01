@@ -65,22 +65,15 @@ struct _GstVideoFrame
 {
   GstMiniObject mini_object;
 
-  GstClockTime decode_timestamp;
-  GstClockTime presentation_timestamp;
-  GstClockTime presentation_duration;
+  GstClockTime upstream_timestamp;
+  GstClockTime upstream_duration;
 
-  gint system_frame_number;
-  gint decode_frame_number;
-  gint presentation_frame_number;
+  GstClockTime parsed_timestamp;
 
-  gint distance_from_sync;
+  guint n_fields;
 
 	GstBuffer *sink_buffer;
   GstBuffer *src_buffer;
-  
-  gint field_index;
-  gint n_fields;
-  
 };
 
 struct _GstVideoFrameClass

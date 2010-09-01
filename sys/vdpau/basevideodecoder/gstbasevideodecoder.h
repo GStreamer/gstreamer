@@ -95,19 +95,14 @@ struct _GstBaseVideoDecoder
   GstVideoState state;
   GstSegment segment;
 
-  guint64 presentation_frame_number;
-  guint64 system_frame_number;
-
   GstCaps *caps;
   gboolean have_src_caps;
 
   GstVideoFrame *current_frame;
 
-  gint distance_from_sync;
-  gint reorder_depth;
-
-  GstClockTime buffer_timestamp;
-
+  GList *timestamps;
+  guint64 field_index;
+  GstClockTime last_timestamp;
   GstClockTime timestamp_offset;
 
   gdouble proportion;
@@ -116,22 +111,12 @@ struct _GstBaseVideoDecoder
   guint64 input_offset;
   guint64 current_buf_offset;
   guint64 prev_buf_offset;
-  
-  GstClockTime last_timestamp;
 
-  guint64 base_picture_number;
-
-  gint field_index;
-
-  gboolean is_delta_unit;
-
-  GList *timestamps;
   gboolean have_segment;
 
   /* properties */
   gboolean sink_clipping;
-  gboolean packetized;
-  
+  gboolean packetized; 
 };
 
 struct _GstBaseVideoDecoderClass
