@@ -239,6 +239,28 @@ gst_vdp_h264_dec_init_frame_info (GstVdpH264Dec * h264_dec,
 }
 
 static gboolean
+gst_vdp_h264_dec_calculate_par (GstH264VUIParameters * vui, guint16 * par_n,
+    guint16 * par_d)
+{
+  guint16 aspect[16][2] = { {1, 1}, {12, 11}, {10, 11}, {16, 11}, {40, 33},
+  {24, 11}, {20, 11}, {32, 11}, {80, 33}, {18, 11}, {15, 11}, {64, 33},
+  {160, 99}, {4, 3}, {3, 2}, {2, 1}
+  };
+
+  if (vui->aspect_ratio_idc >= 1 && vui->aspect_ratio_idc <= 16) {
+    *par_n = aspect[vui->aspect_ratio_idc - 1][0];
+    *par_d = aspect[vui->aspect_ratio_idc - 1][1];
+    return TRUE;
+  } else if (vui->aspect_ratio_idc == 255) {
+    *par_n = vui->sar_height;
+    *par_d = vui->sar_width;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
 {
   GstH264Slice *slice;
@@ -281,8 +303,15 @@ gst_vdp_h264_dec_idr (GstVdpH264Dec * h264_dec, GstH264Frame * h264_frame)
     /* calculate framerate if we haven't got one */
     if (state.fps_n == 0 && seq->vui_parameters_present_flag) {
       GstH264VUIParameters *vui;
+      guint16 par_n, par_d;
 
       vui = &seq->vui_parameters;
+
+      if (gst_vdp_h264_dec_calculate_par (vui, &par_n, &par_d)) {
+        state.par_n = par_n;
+        state.par_d = par_d;
+      }
+
       if (vui->timing_info_present_flag && vui->fixed_frame_rate_flag) {
         state.fps_n = vui->time_scale;
         state.fps_d = vui->num_units_in_tick;
