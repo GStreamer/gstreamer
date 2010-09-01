@@ -51,9 +51,10 @@
       <function>gst_clock_get_time ()</function>. The clock-time does not
       need to start at 0. The pipeline, which contains the global clock that
       all elements in the pipeline will use, in addition has a <quote>base
-      time</quote>, which is the clock time at the the point where media time
-      is starting from zero. This timestamp is subtracted from the clock
-      time, and that value is returned by <function>_get_time ()</function>.
+      time</quote>, which is the clock time at the the point where the
+      pipeline went to the PLAYING state. Each element can subtract the
+      <quote>base time</quote> from the clock-time to know the current
+      running time.
     </para>
     <para>
       The clock provider is responsible for making sure that the clock time
@@ -70,10 +71,15 @@
       Clock slaves get assigned a clock by their containing pipeline. Their
       task is to make sure that media playback follows the time progress as
       represented by this clock as closely as possible. For most elements,
-      that will simply mean to wait until a certain time is reached before
-      playing back their current sample; this can be done with the function
-      <function>gst_clock_id_wait ()</function>. Some elements may need to
-      support dropping samples too, however.
+      that will simply mean to wait until the buffer running-time is reached
+      before playing back their current sample.
+    </para>
+    <para>
+      The buffer running-time is derived from the buffer timestamp and the
+      newsegment event preceeding the buffer. A buffer is played synchronized
+      with the clock when the clock's running-time has reached exactly the
+      buffer running-time; this can be done with the function
+      <function>gst_clock_id_wait ()</function>.
     </para>
     <para>
       For more information on how to write elements that conform to this
