@@ -116,8 +116,8 @@ GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_STATIC_CAPS (CAPS)
     );
 
-static void gst_adder_class_init (GstAdderClass * klass);
-static void gst_adder_init (GstAdder * adder);
+GST_BOILERPLATE (GstAdder, gst_adder, GstElement, GST_TYPE_ELEMENT);
+
 static void gst_adder_dispose (GObject * object);
 static void gst_adder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -140,29 +140,6 @@ static GstBuffer *gst_adder_do_clip (GstCollectPads * pads,
     GstCollectData * data, GstBuffer * buffer, gpointer user_data);
 static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
-
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_adder_get_type (void)
-{
-  static GType adder_type = 0;
-
-  if (G_UNLIKELY (adder_type == 0)) {
-    static const GTypeInfo adder_info = {
-      sizeof (GstAdderClass), NULL, NULL,
-      (GClassInitFunc) gst_adder_class_init, NULL, NULL,
-      sizeof (GstAdder), 0,
-      (GInstanceInitFunc) gst_adder_init,
-    };
-
-    adder_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAdder",
-        &adder_info, 0);
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "adder", 0,
-        "audio channel mixing element");
-  }
-  return adder_type;
-}
 
 /* non-clipping versions (for float) */
 #define MAKE_FUNC_NC(name,type)                                 \
@@ -804,14 +781,9 @@ beach:
 }
 
 static void
-gst_adder_class_init (GstAdderClass * klass)
+gst_adder_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->set_property = gst_adder_set_property;
-  gobject_class->get_property = gst_adder_get_property;
-  gobject_class->dispose = gst_adder_dispose;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_adder_src_template));
@@ -821,8 +793,17 @@ gst_adder_class_init (GstAdderClass * klass)
       "Generic/Audio",
       "Add N audio channels together",
       "Thomas Vander Stichele <thomas at apestaart dot org>");
+}
 
-  parent_class = g_type_class_peek_parent (klass);
+static void
+gst_adder_class_init (GstAdderClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->set_property = gst_adder_set_property;
+  gobject_class->get_property = gst_adder_get_property;
+  gobject_class->dispose = gst_adder_dispose;
 
   /**
    * GstAdder:caps:
@@ -843,7 +824,7 @@ gst_adder_class_init (GstAdderClass * klass)
 }
 
 static void
-gst_adder_init (GstAdder * adder)
+gst_adder_init (GstAdder * adder, GstAdderClass * klass)
 {
   GstPadTemplate *template;
 
@@ -1310,6 +1291,9 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "adder", 0,
+      "audio channel mixing element");
+
   if (!gst_element_register (plugin, "adder", GST_RANK_NONE, GST_TYPE_ADDER)) {
     return FALSE;
   }
