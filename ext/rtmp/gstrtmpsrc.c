@@ -538,7 +538,7 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
   src->rtmp = RTMP_Alloc ();
   RTMP_Init (src->rtmp);
   if (!RTMP_SetupURL (src->rtmp, uri_copy)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, NULL,
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Failed to setup URL '%s'", src->uri));
     g_free (uri_copy);
     RTMP_Free (src->rtmp);
