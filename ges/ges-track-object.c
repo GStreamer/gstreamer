@@ -327,7 +327,7 @@ ges_track_object_set_priority_offset_internal (GESTrackObject * object,
 {
   guint32 save;
   save = object->priority_offset;
-  GST_DEBUG ("object:%p, offset:%d", priority_offset);
+  GST_DEBUG ("object:%p, offset:%d", object, priority_offset);
 
   object->priority_offset = priority_offset;
   if (!ges_track_object_update_priority (object)) {
