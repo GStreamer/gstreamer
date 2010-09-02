@@ -237,7 +237,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KXY,
       g_param_spec_int ("kxy", "Zoneplate x*y product phase",
-          "Zoneplate x*t product phase", G_MININT32, G_MAXINT32, 0,
+          "Zoneplate x*y product phase", G_MININT32, G_MAXINT32, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KX2,
       g_param_spec_int ("kx2", "Zoneplate 2nd order x phase",
