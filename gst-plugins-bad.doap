@@ -27,11 +27,10 @@ real live maintainer, or some actual wide use.
  <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
 
  <repository>
-   <CVSRepository>
-     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
-     <module>gst-plugins-bad</module>
-     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/" />
-   </CVSRepository>
+   <GitRepository>
+     <location rdf:resource="git://anongit.freedesktop.org/gstreamer/gst-plugins-bad"/>
+     <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-bad"/>
+   </GitRepository>
  </repository> 
 
  <release>
