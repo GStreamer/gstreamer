@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.15 "Englishman in a Baseball Cap"
+Release notes for GStreamer Ugly Plug-ins 0.10.16 "Because He Knows the Time is Short"
         
 
 The GStreamer team is proud to announce a new release
@@ -55,19 +55,38 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * amrnbenc: give element a rank (SECONDARY) so it's autoplugged
-      * rmdemux: descramble sipro audio before pushing out
-      * x264enc: fix up codec_data / avcC header construction some more
-      * x264enc: Put pixel-aspect-ratio from input into the src pad caps
+      * refactor x264enc to use current x264 API correctly, add new properties and new defaults
+      * liboil is no longer required, but orc is now required
+      * build: require orc >= 0.4.5, GLib >= 2.20, automake >= 1.10, autoconf >= 2.60; liboil is no longer required
+      * asfdemux: fix playback of files or streams that are shorter than the advertised preroll value
+      * asfdemux: fix sending eos event for chained asfs in pull mode (exotic)
+      * asfdemux: fix playback of files or streams that advertise miniscule preroll values
+      * lamemp3enc: implement latency query
+      * rmdemux: fix playback of sipro audio streams
+      * x264enc: refactor code in preparation for presets/tunings
+      * x264enc: add "profile" property (and default to MAIN profile)
+      * x264enc: improve defaults: medium speed/quality preset; auto mode for threads
+      * x264enc: add "speed-preset", "tune" and "psy-tune" properties
+      * x264enc: add "option-string" property to specify advanced parameters
+      * x264enc: set time base if needed, fixes visual artifacts
+      * x264enc: add "sliced-threads", "sync-lookahead", "intra-refresh", "mb-tree", and "rc-lookahead" properties
+      * x264enc: fix compilation against ancient x264 versions (X264_BUILD <= 75)
+      * x264enc: speed up first pass of multi-pass encoding (has no impact on quality)
+      * x264enc: fix flushing of delayed frames with new default settings
 
 Bugs fixed in this release
      
-      * 612995 : x264enc: pixel-aspect-ratio does not appear in src pad caps
-      * 613815 : A call in gst/realmedia/rmutils.c discards qualifiers from pointer target type
-      * 615410 : x264 orders NALs differently than x264enc expects
-      * 617078 : Wrong include paths in amr elements
-      * 619776 : [x264enc] is unable to do Baseline with recent x264
-      * 618098 : [rmdemux] Add descrambling for Sipro codec
+      * 599718 : [asf] support chained asfs
+      * 600412 : [asfdemux] Wrong handling of downstream GstFlowReturn
+      * 607798 : x264enc needs updating to support new features and use x264 correctly
+      * 618896 : lamemp3enc doesn't implement latency query
+      * 620007 : Gibberish sound when playing a certain RealMedia file of Sipro/ACELP.net audio codec
+      * 620344 : Update gst-plugins-ugly docs on website
+      * 622407 : [asfdemux] doesn't detect some streams if preroll value is very small
+      * 624786 : x264enc time base is wrong
+      * 625557 : x264enc doesn't flush delayed frames properly
+      * 626577 : [x264enc] regression: doesn't work with older versions of x264
+      * 627946 : mp3parse misuses GST_FLOW_IS_FATAL, doesn't forward GST_FLOW_UNEXPECTED upstream
 
 Download
 
@@ -96,14 +115,17 @@ Applications
   
 Contributors to this release
     
-      * Benjamin Otte
+      * Alessandro Decina
+      * David Hoyt
+      * David Schleef
       * Edward Hervey
       * Mark Nauwelaerts
       * Olivier Crête
+      * Robert Swain
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos
       * Tim-Philipp Müller
+      * Tristan Matthews
       * Wim Taymans
-      * Руслан Ижбулатов
  

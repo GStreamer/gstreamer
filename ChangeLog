@@ -1,9 +1,721 @@
-=== release 0.10.15 ===
+=== release 0.10.16 ===
 
-2010-05-30  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2010-09-02  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.10.15, "Englishman in a Baseball Cap"
+	  releasing 0.10.16, "Because He Knows the Time is Short"
+
+2010-09-02 23:49:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	  docs: update for release
+
+2010-09-02 23:48:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/LINGUAS:
+	* po/gl.po:
+	* po/id.po:
+	* po/lv.po:
+	* po/ro.po:
+	* po/sv.po:
+	  po: update translations
+
+2010-08-30 16:02:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.15.6 pre-release
+
+2010-08-27 17:50:59 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Don't error out on non-critical flow returns
+	  Only error out when downstream returns:
+	  * NOT_SUPPORTED
+	  * ERROR
+	  * NOT_NEGOTIATED
+	  * NOT_LINKED
+	  If we got _UNEXPECTED, we push an EOS downstream (since maybe only one
+	  of the streams had gone EOS) and then stop the task silently.
+	  In the case of WRONG_STATE we just need to stop silently
+	  https://bugzilla.gnome.org/show_bug.cgi?id=600412
+
+2010-08-25 19:02:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.15.5 pre-release
+
+2010-08-25 15:39:33 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  mp3parse: propagate flow errors upstream.
+	  Remove a wrong GST_FLOW_IS_FATAL call. When pushing fails, mp3parse should
+	  always return the error upstream.
+
+2010-08-21 21:42:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  0.10.15.4 pre-release
+
+2010-08-13 17:24:41 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3e8db1d to ec60217
+
+2010-08-11 16:46:48 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  0.10.15.3 pre-release
+
+2010-08-11 09:21:43 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix b-pyramid libx264 API boolean arg for non-boolean issue
+	  In X264_BUILD >= 78, b-pyramid became a non-boolean so passing a boolean
+	  argument to the option string value causes an error. For < 78 we pass the
+	  boolean value, for >= 78 we use the x264_b_pyramid_names[] array which will
+	  result in passing 'none' for false and 'strict' for true. Other modes can be
+	  set through the option-string property for now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=626577
+
+2010-08-11 00:02:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  0.10.15.2 pre-release
+
+2010-08-10 14:37:39 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  synaesthesia: code cleanups.
+	  Remove unused boilerplate for signals. Use _OBJECT variants of logging macros
+	  more.
+
+2010-08-10 14:24:01 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  synaesthesia: use GST_BOILERPLATE macros
+
+2010-08-10 10:59:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From bd2054b to 3e8db1d
+
+2010-08-09 00:31:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264: fix printf format warning in debug message
+
+2010-08-07 00:09:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	  docs: fix bug passing arguments to gtkdoc-fixref in upload target
+	  Missing backslash at end of line meant we weren't passing all arguments
+	  to gtkdoc-fixref and we'd get a shell error when doing 'make upload'.
+
+2010-08-05 13:57:26 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a519571 to bd2054b
+
+2010-08-04 19:28:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Check if the compiler supports ISO C89 or C99 and which parameters are required
+	  This first checks what is required for ISO C99 support and sets the relevant
+	  compiler parameters and if no C99 compiler is found, it checks for a
+	  C89 compiler. This enables us to check for and use C89/C99 functions
+	  that gcc hides from us without the correct compiler parameters.
+
+2010-07-29 09:41:49 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix flushing of delayed frames
+	  x264_encoder_encode() should be called with a NULL picture until at least
+	  x264_encoder_delayed_frames() returns 0. This fixes what appeared to be a
+	  regression in make check due to the recent change in defaults which enabled
+	  b-frames and b-pyramid, both of which I believe increase the number of delayed
+	  frames when encoding.
+
+2010-07-21 17:24:33 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Improve x264enc defaults
+	  - medium x264 speed/quality preset
+	  - threads defaults to 0 which automatically uses 1.5x number of cpu cores
+	  Addresses part of bug #607798
+
+2010-07-21 17:22:48 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix property description typos
+
+2010-07-22 11:53:04 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Add some more debug info
+
+2010-07-21 17:09:20 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Add speed-preset and [psy-]tuning properties
+	  Use of a rate control method (pass, bitrate, quantizer, etc properties), a
+	  preset and possibly a profile and/or tuning are now the recommended way to
+	  configure x264 through x264enc.
+	  If a preset/tuning are specified then these will define the default values and
+	  the property defaults will be ignored. After this the option-string property is
+	  applied, followed by the user-set properties, fast first pass restrictions and
+	  finally the profile restrictions.
+	  Addresses part of bug #607798
+
+2010-07-21 16:56:06 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Refactor code in preparation for presets/tunings
+	  - Make defaults append the appropriate default value to a string. This is
+	  needed to differentiate between something user-set and the actual prop
+	  default.
+	  - Add an internal option string to which _set_property () cases append for the
+	  majority of properties.
+	  - Use gst_x264_enc_parse_options () to clean up application of settings. This
+	  will make order of application with respect to the presets and tunings quite
+	  simple.
+	  Addresses part of bug #607798
+
+2010-07-21 16:32:11 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Update available me types
+	  Use the x264_motion_est_names[] array to populate the enum of ME types. This is
+	  now self-maintaining.
+
+2010-07-21 15:59:12 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Use new libx264 API to affect fast first pass
+	  Uses new x264 API to apply reduced complexity values to the parameters to
+	  increase encoding speed in the first pass of a multi-pass encode. This does
+	  not impact on final quality.
+	  Addresses part of bug #607798
+
+2010-07-21 15:52:28 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Add profile property
+	  In X264_BUILD >= 86 there is a new API for applying restrictions to an H.264
+	  Profile. This makes it easier to achieve Baseline Profile for example.
+	  Addresses part of bug #607798
+
+2010-07-21 15:40:27 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Add option-string property
+	  Adds support for an x264 format option-string to specify advanced parameters
+	  Addresses part of bug #607798
+
+2010-07-22 13:24:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/mad/Makefile.am:
+	  mad: use right automake variable, should be ID3TAG_{LIBS,CFLAGS} not ID3_{LIBS,CFLAGS}
+	  Spotted by syntr0py.
+
+2010-07-20 19:44:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: only set timebase on versions where it exists
+
+2010-07-20 16:40:22 +0200  David Hoyt <dhoyt@llnl.gov>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: set appropriate time base
+	  Fixes #624786.
+
+2010-06-30 18:45:49 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: add plugin loading whitelist to test environment
+	  Only want to load core/-base/-ugly plugins here.
+
+2010-06-28 16:12:12 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* autogen.sh:
+	* configure.ac:
+	  Bump automake requirement to 1.10 and autoconf to 2.60
+	  For maintainability reasons and $(builddir).
+	  See #622944.
+
+2010-06-28 09:34:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix seeking after last commits
+	  Don't handle wrong-state returns as errors to allow seeking to work
+	  again.
+
+2010-06-24 19:46:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Push all pending data on EOS
+	  When on push mode and receiving an EOS event, asfdemux
+	  should push all pending data because we might be dealing
+	  with a broken file that has a preroll value higher
+	  than its actual length.
+
+2010-06-24 19:29:17 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Fix sending eos event for chained asfs
+	  Properly push EOS event when finishing a chained asf file
+	  in pull mode
+	  Fixes #599718
+
+2010-06-24 20:55:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-rmdemux.xml:
+	  docs: add rmdemux to docs properly
+	  The plugin has been renamed, remove old introspection file.
+
+2010-06-24 18:04:15 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/inspect/plugin-x264.xml:
+	  docs: update for recent x264enc changes
+
+2010-06-24 18:03:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: fix compiler warning when debugging system in core is disabled
+
+2010-06-24 15:09:44 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 73ff93a to a519571
+
+2010-06-23 11:05:11 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Allow at least 500ms of preroll.
+	  Some files have insanely low preroll values which break the
+	  all_streams_prerolled() logic.
+	  Fixes #622407
+
+2010-06-22 11:41:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: add new h264 caps attribute alignment
+	  See #606662.
+
+2010-06-18 14:35:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: conditionally expose enhanced upstream capabilities
+	  API: GstX264Enc:sliced-threads
+	  API: GstX264Enc:sync-lookahead
+	  API: GstX264Enc:intra-refresh
+	  API: GstX264Enc:mb-tree
+	  API: GstX264Enc:rc-lookahead
+	  See #607798.
+
+2010-06-17 16:48:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	  docs: update introspected plugin docs for gstdoc-scangobj and other changes
+	  Update common for latest gstdoc-scangobj and inspect xml files for
+	  escaping and pad template order changes.
+
+2010-06-15 16:50:21 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 9339ccc to 35617c2
+
+2010-06-15 16:54:42 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5adb1ca to 9339ccc
+
+2010-06-15 16:35:49 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 57c89b7 to 5adb1ca
+
+2010-06-15 15:50:09 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From c804988 to 57c89b7
+
+2010-06-14 16:59:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/realmedia/rtspreal.c:
+	  configure: Update required GLib version to 2.20
+
+2010-06-14 15:33:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Call orc_init() before trying to get target flags
+
+2010-06-14 14:34:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Remove debug printf...
+
+2010-06-14 14:34:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/a52dec/Makefile.am:
+	* ext/a52dec/gsta52dec.c:
+	  a52dec: Use orc for CPU feature detection and don't check for liboil
+
+2010-06-14 13:27:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Use GLIB_EXTRA_CFLAGS
+
+2010-06-14 13:05:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7a0fdf5 to c804988
+
+2010-06-14 11:35:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6da3bab to 7a0fdf5
+
+2010-06-12 08:29:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 733fca9 to 6da3bab
+
+2010-06-09 12:40:26 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fad145b to 733fca9
+
+2010-06-09 12:34:18 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 47683c1 to fad145b
+
+2010-06-05 14:11:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: pass bitrate on caps
+	  Set the bitrate on the caps, some decoders like sipro need this to function
+	  properly.
+	  Fixes #620007
+
+2010-06-01 23:49:37 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 17f89e5 to 47683c1
+
+2010-06-01 22:55:22 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From fd7ca04 to 17f89e5
+
+2010-05-31 16:57:42 -0400  Olivier Crête <olivier.crete@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Only set i_weighted_pred on versions where it exists
+
+2010-05-20 11:28:47 -0400  Tristan Matthews <tristan@sat.qc.ca>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: implement latency query
+	  The encoder's latency is deduced from the framesize. Fixes #618896.
+
+2010-06-01 09:30:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.args:
+	* docs/plugins/gst-plugins-ugly-plugins.signals:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.10.15 ===
+
+2010-05-30 14:21:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-ugly-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.10.15
+
+2010-05-30 14:20:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2010-05-30 12:10:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
