@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.24 "Taking Liberties"
+Release notes for GStreamer Good Plug-ins 0.10.25 "Woe to You Oh Earth and Sea"
         
 
 
@@ -54,108 +54,67 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Use Orc (Optimized Inner Loops Runtime Compiler) for SIMD and
-    other optimisations, and remove liboil dependency. The main goal
-    for this release was to make the transition from liboil to liborc.
-    Performance improvements should not be expected and will be the
-    focus of future versions. liborc is an optional dependency for
-    the time being, to make it possible to test and develop the very
-    latest GStreamer versions on systems that don't have orc yet.
-    However, without orc slow unoptimised backup code will be used
-    for many performance critical code paths. Distributors are urged
-    to package and ship the latest version of liborc and compile
-    GStreamer modules with --enable-orc. Please do not distribute
-    GStreamer packages that are not orc enabled. More information on
-    the orc integration can be found in the docs/design/ directory.
-    
-      * alpha: add "prefer-passthrough" property to allow passthrough mode
-      * avidemux: improve audio vbr detection
-      * cmmlenc: Remove hack to let oggmux start a new page for every CMML buffer
-      * deinterlace: add mmx implementations of greedyh for UYVY; orcify some deinterlacing methods
-      * dv1394: fix the internal clock even more
-      * flvmux: add "streamable" property
-      * flvmux: write duration at the correct position
-      * gdkpixbuf: Add a gdkpixbuf3 plugin that uses gdkpixbuf3
-      * jpegdec: improved parsing, and better buffer handling that minimises memcpys
-      * jpegdec, jpegenc: add grayscale support
-      * matroskademux: QoS fixes and improvements; reverse playback improvements
-      * matroskademux: handle zero-sized numbers correctly
-      * matroskamux: add "streamable" property; set streamheaders on output caps
-      * matroskamux: try harder to make sure clusters start with a key frame
-      * matroskamux: mark output buffers properly as keyframe or delta unit
-      * matroskamux: do some write caching to avoid newsegment events before each output buffer
-      * matroskamux: fix some timestamp drift caused by rounding errors
-      * pngenc: Support 8 bit grayscale
-      * pulsesink: optimize communication with PulseAudio using pa_stream_begin_write
-      * pulsesink: Post provide-clock message on the bus if the clock appears/disappears
-      * rtph264depay: consider SPS, PPS and IDR as keyframe, all others as DELTA_UNIT
-      * rtph264pay: handle short startcodes in the h264 bytestream
-      * rtpjitterbuffer: stop buffering and emit EOS at the end of a stream
-      * rtpmparobustdepay: add mpa-robust depayloader
-      * rtpmp4gdepay: calculate the frame duration correctly
-      * rtptheorapay: keep announcing the delivery-method in the capabilities, restores compatibility with older farsight versions again
-      * rtspsrc: respect aggregate control attributes; try all ranges from the sdp
-      * spectrum: support 24-bit width and arbitrary bit depth
-      * udp: make url parsing compatible with VLC syntax
-      * udpsrc: fix multicast support on windows
-      * v4l2sink: destroy buffer pool when changing state to NULL
-      * videobox: fix negotiation for I420/YV12
-      * videomixer: don't mix input with different pixel aspect ratios; negotiation fixes
-      * wavparse: proper closing segment construction when doing non-flushing seeks
-      * wavparse: use typefind functions to check if PCM data contains dts stream
+      * v4l2src: massive performance improvement in many cases
+      * streaming mode fixes for avi and matroska/webm
+      * seeking in matroska and webm files that don't have an index
+      * new cpureport element for debugging
+      * avidemux: improve VBR audio stream handling
+      * avidemux: streaming mode fixes: use proper offset for movi-based index, handle 0-size data chunks
+      * debugutils: new element cpureport, posts "cpu-report" element messages on bus
+      * flacdec, rtspsrc, rtph264pay, rtpmp4vdepay: memory leak fixes
+      * gconfvideosrc: use correct GConf key (ie. not the audiosrc key)
+      * gdkpixbuf: remove gdkpixbuf3 plugin again, gdk-pixbuf was split out of gtk+ and will stay at 2.x
+      * id3v2mux: write beats-per-minute tag using TBPM frame
+      * jpegdec: fix markers parsing regression
+      * matroskademux: do not error out on a block with unknown tracknumber
+      * matroskademux: fix streaming in case where the size in bytes is unknown
+      * matroskademux: handle bogus files storing ADTS AAC data
+      * matroskademux: support seeking in local files even if they don't have an index
+      * matroskamux: don't try to seek back and fix up headers if streamable=TRUE
+      * pulsesink: fix race when creating multiple pulsesinks at the same time
+      * qtdemux: also calculate PAR using track width and height for QT files
+      * qtdemux: fix the max/avg in btrt atom reading
+      * qtdemux: improve reverse playback
+      * qtdemux: parse 64-bit version of mvhd atom as well instead of erroring out
+      * qtdemux: prevent reading past avc1 atom when parsing
+      * rtpg729pay: avoid basertppayload perfect-rtptime mode
+      * rtph263pdepay: allow more clock-rates as input
+      * rtpL16depay: also parse encoding-params for the number of channels
+      * rtpL16depay: default to 1 channel if number of channels not specified
+      * rtpmp4gpay: implement perfect timestamps
+      * rtspsrc: add "port-range" property, useful for setups with firewall/ipsec
+      * rtspsrc: don't reuse udp sockets (avoids odd errors when data from previous streams is received)
+      * udpsrc: add "reuse" property to enable or disable port reuse (enabled by default, but disabled in rtspsrc)
+      * v4l2: sort formats in the right order so that non-emulated formats are prefered
+      * videobalance: fix wrong locking order that could lead to a deadlock
+      * videomixer: only reset QoS information and send a NEWSEGMENT event downstream for NEWSEGMENT events on the master pad
 
 Bugs fixed in this release
      
-      * 619045 : [spectrum] Add support for 24-bit width and all depth combinations
-      * 555967 : [oss4] clarify some translation strings
-      * 570761 : [goom] crash in plugin_info_init allocating 260kB struct on stack
-      * 583047 : [jpegdec] optimise buffer handling when parsing frames
-      * 589997 : [rtp] need mpa-robust depayloader for helix-style MP3-DRAFT-00
-      * 595978 : [udpsrc] failed to play a multicast stream
-      * 597695 : [udpsrc] support VLC-style udp://239.255.11.11:1234 uri with bind address
-      * 611117 : [matroskademux] can't handle unknown cluster sizes
-      * 613066 : [flvmux] re-enable renamed/fixed is-live property
-      * 615461 : dv1394src clock continues to be broken
-      * 617339 : pulsesink doesn't make use of pa_stream_begin_write
-      * 618530 : [videomixer] Doesn't handle pixel-aspect-ratio correctly
-      * 618871 : 1394: remove useless last_time
-      * 618982 : [wavparse] wrong closing segment when doing non-flushing seek
-      * 619198 : [matroskademux] GstEbmlRead cleanup
-      * 619273 : [matroskamux] reduce downstream spam
-      * 619293 : [avimux] clean up avi header creation code
-      * 619531 : [rtspsrc] embedded asx streams' rtsp server doesn't like gstreamer request
-      * 619717 : unit tests fail if older -good plugins are present in system plugin directory
-      * 619824 : Use glib for checksumming
-      * 619848 : [deinterlace] can't switch properties on running pipeline
-      * 620148 : [videomixer] Doesn't negotiate format with downstream
-      * 620154 : [rtph264depay] Seeking with RTP payloaders corrupts images sometimes
-      * 620162 : [gdkpixbufdec] Bump rank to SECONDARY
-      * 620277 : [pulsesink] custom clock is still used after NULL state change
-      * 620358 : [matroskademux] Sorenson Squish WebM output seeking issues
-      * 620390 : rtph264pay doesn't understand short startcodes
-      * 620494 : [rtsp] stuttery audio with some h264/aac streams
-      * 620540 : [pulsesink] pa_stream_write() failed: Invalid argument
-      * 620591 : rtpceltpay doesn't handle stereo celt audio
-      * 620743 : matroskademux: refactor delta unit handling
-      * 620929 : Required libraw1394 version is not high enough
-      * 621510 : GNOME Goal: Remove deprecated glib symbols
-      * 621566 : [pulsesink] since upgrading plugins sound is garbled via Amarok
-      * 621723 : v4l2src crashes on PLAYING- > READY- > PLAYING
-      * 622498 : [avidemux] Doesn't reset all state when going back to READY
-      * 622500 : [v4l2sink] destroy open buffers when changing to NULL
-      * 622501 : [videobox] may negotiate input/output format combinations it can't actually handle
-      * 622816 : Make demos -DSEAL safe
-      * 623103 : matroskamux dispose error
-      * 623172 : [jpegdec] leak in unit test
-      * 623196 : rtpptdemux: don't send custom downstream event twice
-      * 623366 : [qtdemux] strip out bogus tags from XMP
-      * 623379 : [flvmux] Writing duration outside the allocated memory area in streaming mode
-      * 623585 : jpegdec: fails to skip extra 0xff markers at start
-      * 623654 : qtdemux: Fix order of bitrates in 'btrt' atom
-      * 619817 : [matroskademux] Reverse playback doesn't work
-      * 617512 : [alpha] should work in passthrough in all formats if alpha == 1.0
-      * 619485 : matroskademux: skip buffers before a late keyframe (QoS)
-      * 413942 : [wavparse] undetected dts-in-wav
+      * 626463 : [matroskademux] " reading large block of size 14688496 not supported " 
+      * 593117 : [avidemux] Support AVF files
+      * 618535 : [avidemux] fails to stream eva_2010_2.22_promo1.avi
+      * 621520 : [id3v2mux] write beats-per-minute tag
+      * 622017 : [GstRtpMP4GDepay] Packet payload was too short.
+      * 622577 : rtspsrc has confusing error messages
+      * 623209 : bug in rtpL16depay
+      * 623357 : avidemux: push mode doesn't work for some http streaming avi files
+      * 623629 : Reverse Playback Issue in QtDemux
+      * 624173 : [qtdemux] qt file with dimension data in tkhd does not get pixel-aspect-ratio in caps
+      * 624331 : videobalance: deadlocks/freezes when changing " brightness " property
+      * 624455 : The matroska muxer seeks even when used with streamable=TRUE
+      * 624770 : rtspsrc: memory leak in gst_rtspsrc_handle_request
+      * 625002 : [examples] Don't use GdkDraw
+      * 625153 : rtspsrc: add property to set client port range
+      * 625302 : [qtdemux] Set the pixel-aspect-ratio field also for par=1/1
+      * 625371 : [matroskademux] critical warnings when playing live webm with progressive download enabled
+      * 625442 : pulsesink: crash -  pa_threaded_mainloop_stop is called from the pa thread
+      * 625452 : [videomixer] Pipeline from the docs doesn't work anymore
+      * 626467 : matroskademux: CRITICAL **: file matroska-demux.c: line 578 (gst_matroska_demux_get_length): should not be reached
+      * 626609 : [qtdemux] segfault when parsing avc1 atom
+      * 626619 : [imagefreeze] Incorrect seek behaviour
+      * 627689 : [deinterlace] Broken timestamps
+      * 617368 : [matroska] Implement push-mode seeking and non-cue seeking
 
 Download
 
@@ -185,30 +144,17 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Alexander Kojevnikov
       * Andoni Morales Alastruey
-      * Andrzej K. Haczewski
-      * Arun Raghavan
-      * Benjamin Otte
+      * Arnaud Vrac
       * David Schleef
-      * Edward Hervey
-      * Guido Günther
-      * Havoc Pennington
-      * Julien Moutte
-      * Keith Nicholson
-      * Marc-André Lureau
+      * Jonathan Matthew
       * Mark Nauwelaerts
-      * Michael Grzeschik
-      * Philip Jägenstedt
-      * Pierre-Louis Bossart
+      * Philippe Normand
       * Sebastian Dröge
       * Sjoerd Simons
       * Stefan Kost
       * Thiago Santos
-      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Tristan Matthews
       * Wim Taymans
-      * Xavier Queralt
       * Zaheer Abbas Merali
  

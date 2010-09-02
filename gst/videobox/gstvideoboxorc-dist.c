@@ -48,22 +48,13 @@ typedef unsigned long orc_uint64;
 #endif
 typedef union
 {
-  orc_int16 i;
-  orc_int8 x2[2];
-} orc_union16;
-typedef union
-{
   orc_int32 i;
   float f;
-  orc_int16 x2[2];
-  orc_int8 x4[4];
 } orc_union32;
 typedef union
 {
   orc_int64 i;
   double f;
-  orc_int32 x2[2];
-  orc_int16 x4[4];
 } orc_union64;
 #endif
 
@@ -96,17 +87,6 @@ void orc_splat_u32 (guint32 * d1, int p1, int n);
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
-#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
-#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define ORC_RESTRICT restrict
-#elif defined(__GNUC__) && __GNUC__ >= 4
-#define ORC_RESTRICT __restrict__
-#else
-#define ORC_RESTRICT
-#endif
 /* end Orc C target preamble */
 
 
@@ -117,42 +97,38 @@ void
 orc_splat_u32 (guint32 * d1, int p1, int n)
 {
   int i;
-  orc_union32 *ORC_RESTRICT ptr0;
-  orc_union32 var32;
-  orc_union32 var33;
+  orc_union32 var0;
+  orc_union32 *ptr0;
+  const int var24 = p1;
 
   ptr0 = (orc_union32 *) d1;
 
   for (i = 0; i < n; i++) {
-    /* 0: loadpl */
-    var32.i = p1;
-    /* 1: copyl */
-    var33.i = var32.i;
-    /* 2: storel */
-    ptr0[i] = var33;
+    /* 0: copyl */
+    var0.i = var24;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
 
 #else
 static void
-_backup_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_splat_u32 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 *ORC_RESTRICT ptr0;
-  orc_union32 var32;
-  orc_union32 var33;
+  orc_union32 var0;
+  orc_union32 *ptr0;
+  const int var24 = ex->params[24];
 
   ptr0 = (orc_union32 *) ex->arrays[0];
 
   for (i = 0; i < n; i++) {
-    /* 0: loadpl */
-    var32.i = ex->params[24];
-    /* 1: copyl */
-    var33.i = var32.i;
-    /* 2: storel */
-    ptr0[i] = var33;
+    /* 0: copyl */
+    var0.i = var24;
+    *ptr0 = var0;
+    ptr0++;
   }
 
 }
@@ -176,8 +152,7 @@ orc_splat_u32 (guint32 * d1, int p1, int n)
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_parameter (p, 4, "p1");
 
-      orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-          ORC_VAR_D1);
+      orc_program_append (p, "copyl", ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1);
 
       result = orc_program_compile (p);
     }

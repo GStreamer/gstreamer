@@ -1,4 +1,68 @@
-This is GStreamer Good Plug-ins 0.10.24, "Taking Liberties"
+This is GStreamer Good Plug-ins 0.10.25, "Woe to You Oh Earth and Sea"
+
+Changes since 0.10.24:
+
+      * v4l2src: massive performance improvement in many cases
+      * streaming mode fixes for avi and matroska/webm
+      * seeking in matroska and webm files that don't have an index
+      * new cpureport element for debugging
+      * avidemux: improve VBR audio stream handling
+      * avidemux: streaming mode fixes: use proper offset for movi-based index, handle 0-size data chunks
+      * debugutils: new element cpureport, posts "cpu-report" element messages on bus
+      * flacdec, rtspsrc, rtph264pay, rtpmp4vdepay: memory leak fixes
+      * gconfvideosrc: use correct GConf key (ie. not the audiosrc key)
+      * gdkpixbuf: remove gdkpixbuf3 plugin again, gdk-pixbuf was split out of gtk+ and will stay at 2.x
+      * id3v2mux: write beats-per-minute tag using TBPM frame
+      * jpegdec: fix markers parsing regression
+      * matroskademux: do not error out on a block with unknown tracknumber
+      * matroskademux: fix streaming in case where the size in bytes is unknown
+      * matroskademux: handle bogus files storing ADTS AAC data
+      * matroskademux: support seeking in local files even if they don't have an index
+      * matroskamux: don't try to seek back and fix up headers if streamable=TRUE
+      * pulsesink: fix race when creating multiple pulsesinks at the same time
+      * qtdemux: also calculate PAR using track width and height for QT files
+      * qtdemux: fix the max/avg in btrt atom reading
+      * qtdemux: improve reverse playback
+      * qtdemux: parse 64-bit version of mvhd atom as well instead of erroring out
+      * qtdemux: prevent reading past avc1 atom when parsing
+      * rtpg729pay: avoid basertppayload perfect-rtptime mode
+      * rtph263pdepay: allow more clock-rates as input
+      * rtpL16depay: also parse encoding-params for the number of channels
+      * rtpL16depay: default to 1 channel if number of channels not specified
+      * rtpmp4gpay: implement perfect timestamps
+      * rtspsrc: add "port-range" property, useful for setups with firewall/ipsec
+      * rtspsrc: don't reuse udp sockets (avoids odd errors when data from previous streams is received)
+      * udpsrc: add "reuse" property to enable or disable port reuse (enabled by default, but disabled in rtspsrc)
+      * v4l2: sort formats in the right order so that non-emulated formats are prefered
+      * videobalance: fix wrong locking order that could lead to a deadlock
+      * videomixer: only reset QoS information and send a NEWSEGMENT event downstream for NEWSEGMENT events on the master pad
+
+Bugs fixed since 0.10.24:
+
+      * 626463 : [matroskademux] " reading large block of size 14688496 not supported "
+      * 593117 : [avidemux] Support AVF files
+      * 618535 : [avidemux] fails to stream eva_2010_2.22_promo1.avi
+      * 621520 : [id3v2mux] write beats-per-minute tag
+      * 622017 : [GstRtpMP4GDepay] Packet payload was too short.
+      * 622577 : rtspsrc has confusing error messages
+      * 623209 : bug in rtpL16depay
+      * 623357 : avidemux: push mode doesn't work for some http streaming avi files
+      * 623629 : Reverse Playback Issue in QtDemux
+      * 624173 : [qtdemux] qt file with dimension data in tkhd does not get pixel-aspect-ratio in caps
+      * 624331 : videobalance: deadlocks/freezes when changing " brightness " property
+      * 624455 : The matroska muxer seeks even when used with streamable=TRUE
+      * 624770 : rtspsrc: memory leak in gst_rtspsrc_handle_request
+      * 625002 : [examples] Don't use GdkDraw
+      * 625153 : rtspsrc: add property to set client port range
+      * 625302 : [qtdemux] Set the pixel-aspect-ratio field also for par=1/1
+      * 625371 : [matroskademux] critical warnings when playing live webm with progressive download enabled
+      * 625442 : pulsesink: crash -  pa_threaded_mainloop_stop is called from the pa thread
+      * 625452 : [videomixer] Pipeline from the docs doesn't work anymore
+      * 626467 : matroskademux: CRITICAL **: file matroska-demux.c: line 578 (gst_matroska_demux_get_length): should not be reached
+      * 626609 : [qtdemux] segfault when parsing avc1 atom
+      * 626619 : [imagefreeze] Incorrect seek behaviour
+      * 627689 : [deinterlace] Broken timestamps
+      * 617368 : [matroska] Implement push-mode seeking and non-cue seeking
 
 Changes since 0.10.23:
 
