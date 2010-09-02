@@ -67,6 +67,8 @@ struct _GstVideoMixer2
 {
   GstElement element;
 
+  /* < private > */
+
   /* pad */
   GstPad *srcpad;
 

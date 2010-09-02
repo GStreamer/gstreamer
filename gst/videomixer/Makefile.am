@@ -26,4 +26,5 @@ noinst_HEADERS = \
 	videomixerpad.h \
 	blend.h \
 	videomixer2.h \
+	videomixer2pad.h \
 	gstcollectpads2.h

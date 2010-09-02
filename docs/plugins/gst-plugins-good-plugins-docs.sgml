@@ -157,6 +157,7 @@
     <xi:include href="xml/element-videocrop.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
+    <xi:include href="xml/element-videomixer2.xml" />
     <xi:include href="xml/element-warptv.xml" />
     <xi:include href="xml/element-wavenc.xml" />
     <xi:include href="xml/element-waveformsink.xml" />
@@ -249,5 +250,6 @@
     <title>gst-plugins-good Base Classes</title>
     <xi:include href="xml/gstiirequalizer.xml" />
     <xi:include href="xml/gstvideomixerpad.xml" />
+    <xi:include href="xml/gstvideomixer2pad.xml" />
   </chapter>
 </book>

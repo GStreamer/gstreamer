@@ -1949,6 +1949,35 @@ gst_video_mixer_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstvideomixer2pad</FILE>
+<TITLE>GstVideoMixer2Pad</TITLE>
+GstVideoMixer2Pad
+<SUBSECTION Standard>
+GstVideoMixer2PadClass
+GST_VIDEO_MIXER2_PAD
+GST_VIDEO_MIXER2_PAD_CLASS
+GST_IS_VIDEO_MIXER2_PAD
+GST_IS_VIDEO_MIXER2_PAD_CLASS
+GST_TYPE_VIDEO_MIXER2_PAD
+gst_videomixer2_pad_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-videomixer2</FILE>
+<TITLE>videomixer2</TITLE>
+GstVideoMixer2
+GstVideoMixer2Background
+<SUBSECTION Standard>
+GstVideoMixer2Class
+GST_VIDEO_MIXER2
+GST_IS_VIDEO_MIXER2
+GST_TYPE_VIDEO_MIXER2
+GST_VIDEO_MIXER2_CLASS
+GST_IS_VIDEO_MIXER2_CLASS
+gst_videomixer2_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-v4l2src</FILE>
 <TITLE>v4l2src</TITLE>
 GstV4l2Src

@@ -18,6 +18,70 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-videomixer2
+ *
+ * Videomixer2 can accept AYUV, ARGB and BGRA video streams. For each of the requested
+ * sink pads it will compare the incoming geometry and framerate to define the
+ * output parameters. Indeed output video frames will have the geometry of the
+ * biggest incoming video stream and the framerate of the fastest incoming one.
+ *
+ * All sink pads must be either AYUV, ARGB or BGRA, but a mixture of them is not 
+ * supported. The src pad will have the same colorspace as the sinks. 
+ * No colorspace conversion is done. 
+ * 
+ * Individual parameters for each input stream can be configured on the
+ * #GstVideoMixer2Pad.
+ *
+ * At this stage, videomixer2 is considered UNSTABLE. The API provided in the
+ * properties may yet change in the near future. When videomixer2 is stable,
+ * it will replace #videomixer
+ *
+ * <refsect2>
+ * <title>Sample pipelines</title>
+ * |[
+ * gst-launch-0.10 \
+ *   videotestsrc pattern=1 ! \
+ *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)10/1,width=100,height=100 ! \
+ *   videobox border-alpha=0 top=-70 bottom=-70 right=-220 ! \
+ *   videomixer2 name=mix sink_0::alpha=0.7 sink_1::alpha=0.5 ! \
+ *   ffmpegcolorspace ! xvimagesink \
+ *   videotestsrc ! \
+ *   video/x-raw-yuv,format=\(fourcc\)AYUV,framerate=\(fraction\)5/1,width=320,height=240 ! mix.
+ * ]| A pipeline to demonstrate videomixer used together with videobox.
+ * This should show a 320x240 pixels video test source with some transparency
+ * showing the background checker pattern. Another video test source with just
+ * the snow pattern of 100x100 pixels is overlayed on top of the first one on
+ * the left vertically centered with a small transparency showing the first
+ * video test source behind and the checker pattern under it. Note that the
+ * framerate of the output video is 10 frames per second.
+ * |[
+ * gst-launch videotestsrc pattern=1 ! \
+ *   video/x-raw-rgb, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer2 name=mix ! ffmpegcolorspace ! ximagesink \
+ *   videotestsrc !  \
+ *   video/x-raw-rgb, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending). 
+ * |[
+ * gst-launch videotestsrc pattern=1 ! \
+ *   video/x-raw-yuv,format =\(fourcc\)I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
+ *   videomixer2 name=mix ! ffmpegcolorspace ! ximagesink \
+ *   videotestsrc ! \
+ *   video/x-raw-yuv,format=\(fourcc\)I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
+ * ]| A pipeline to test I420
+ * |[
+ * gst-launch videomixer2 name=mixer sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50 ! \
+ *   ffmpegcolorspace ! ximagesink \
+ *   videotestsrc pattern=snow timestamp-offset=3000000000 ! \
+ *   "video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480,framerate=(fraction)30/1" ! \
+ *   timeoverlay ! queue2 ! mixer. \
+ *   videotestsrc pattern=smpte ! \
+ *   "video/x-raw-yuv,format=(fourcc)AYUV,width=800,height=600,framerate=(fraction)10/1" ! \
+ *   timeoverlay ! queue2 ! mixer.
+ * ]| A pipeline to demonstrate synchronized mixing (the second stream starts after 3 seconds)
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -25,6 +89,7 @@
 #include <string.h>
 
 #include "videomixer2.h"
+#include "videomixer2pad.h"
 
 #include <gst/controller/gstcontroller.h>
 
@@ -86,21 +151,6 @@ _do_init (GType object_type)
       &child_proxy_info);
 }
 
-/* GstVideoMixer2Pad */
-#define GST_TYPE_VIDEO_MIXER2_PAD (gst_videomixer2_pad_get_type())
-#define GST_VIDEO_MIXER2_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER2_PAD, GstVideoMixer2Pad))
-#define GST_VIDEO_MIXER2_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixer2PadClass))
-#define GST_IS_VIDEO_MIXER2_PAD(obj) \
-        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER2_PAD))
-#define GST_IS_VIDEO_MIXER2_PAD_CLASS(klass) \
-        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER2_PAD))
-
-typedef struct _GstVideoMixer2Pad GstVideoMixer2Pad;
-typedef struct _GstVideoMixer2PadClass GstVideoMixer2PadClass;
-typedef struct _GstVideoMixer2Collect GstVideoMixer2Collect;
-
 struct _GstVideoMixer2Collect
 {
   GstCollectData2 collect;      /* we extend the CollectData */
@@ -112,29 +162,6 @@ struct _GstVideoMixer2Collect
   GstBuffer *buffer;            /* buffer that should be blended now */
   GstClockTime start_time;
   GstClockTime end_time;
-};
-
-/* all information needed for one video stream */
-struct _GstVideoMixer2Pad
-{
-  GstPad parent;                /* subclass the pad */
-
-  /* caps */
-  gint width, height;
-  gint fps_n;
-  gint fps_d;
-
-  /* properties */
-  gint xpos, ypos;
-  guint zorder;
-  gdouble alpha;
-
-  GstVideoMixer2Collect *mixcol;
-};
-
-struct _GstVideoMixer2PadClass
-{
-  GstPadClass parent_class;
 };
 
 #define DEFAULT_PAD_ZORDER 0
@@ -150,7 +177,6 @@ enum
   PROP_PAD_ALPHA
 };
 
-GType gst_videomixer2_pad_get_type (void);
 G_DEFINE_TYPE (GstVideoMixer2Pad, gst_videomixer2_pad, GST_TYPE_PAD);
 
 static void

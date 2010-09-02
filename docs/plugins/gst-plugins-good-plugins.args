@@ -19709,6 +19709,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPulseSink::client</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Client</NICK>
+<BLURB>The PulseAudio client name to use.</BLURB>
+<DEFAULT>"<unknown>"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPulseSrc::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -20836,5 +20846,15 @@
 <NICK>Config Send Interval</NICK>
 <BLURB>Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixer2::background</NAME>
+<TYPE>GstVideoMixer2Background</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
 </ARG>
 

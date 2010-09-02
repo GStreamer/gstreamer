@@ -209,6 +209,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.h \
 	$(top_srcdir)/gst/videomixer/videomixerpad.h \
+	$(top_srcdir)/gst/videomixer/videomixer2.h \
+	$(top_srcdir)/gst/videomixer/videomixer2pad.h \
 	$(top_srcdir)/gst/wavenc/gstwavenc.h \
 	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/gst/y4m/gsty4mencode.h \

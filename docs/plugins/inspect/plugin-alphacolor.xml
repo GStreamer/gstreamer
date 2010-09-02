@@ -3,16 +3,16 @@
   <description>RGBA from/to AYUV colorspace conversion preserving the alpha channel</description>
   <filename>../../gst/alpha/.libs/libgstalphacolor.so</filename>
   <basename>libgstalphacolor.so</basename>
-  <version>0.10.25.1</version>
+  <version>0.10.24.5</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alphacolor</name>
       <longname>Alpha color filter</longname>
-      <class>Filter/Effect/Video</class>
+      <class>Filter/Converter/Video</class>
       <description>ARGB from/to AYUV colorspace conversion preserving the alpha channel</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
