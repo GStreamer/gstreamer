@@ -171,6 +171,9 @@ GST_START_TEST (test_filesource_images)
   trobj = ges_timeline_object_create_track_object (tlobj, v);
   fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
 
+  /* The track holds a reference to the object */
+  ASSERT_OBJECT_REFCOUNT (trobj, "Video Track Object", 1);
+
   ges_track_remove_object (v, trobj);
   ges_timeline_object_release_track_object (tlobj, trobj);
 
@@ -179,6 +182,13 @@ GST_START_TEST (test_filesource_images)
 
   trobj = ges_timeline_object_create_track_object (tlobj, a);
   fail_unless (GES_IS_TRACK_AUDIO_TEST_SOURCE (trobj));
+
+  /* The track holds a reference to the object */
+  ASSERT_OBJECT_REFCOUNT (trobj, "Audio Track Object", 1);
+
+  ges_track_remove_object (v, trobj);
+  ges_timeline_object_release_track_object (tlobj, trobj);
+
 
   g_object_unref (a);
   g_object_unref (v);
