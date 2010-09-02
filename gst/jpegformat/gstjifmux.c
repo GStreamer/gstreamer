@@ -93,7 +93,7 @@ struct _GstJifMuxPrivate
 
   /* list of GstJifMuxMarker */
   GList *markers;
-  guint16 scan_size;
+  guint scan_size;
   const guint8 *scan_data;
 };
 
@@ -263,6 +263,8 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
   guint8 marker = 0;
   guint16 size = 0;
   const guint8 *data = NULL;
+
+  GST_LOG_OBJECT (self, "Received buffer of size: %u", GST_BUFFER_SIZE (buf));
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
     goto error;
