@@ -187,6 +187,20 @@ for the output to be compressed much better than with colours turned on.
 
 </formalpara>
 
+<formalpara id="GST_DEBUG_OPTIONS">
+  <title><envar>GST_DEBUG_OPTIONS</envar></title>
+
+  <para>
+This environment variable can be used to tweak the behaviour of the debugging
+system. Currently the only options supported are "pretty-tags" and "full-tags".
+In "pretty-tags" mode (the default), taglists in the debug log will be
+serialized so that only the first few and last few bytes of a buffer-type tag
+will be serialized into the log, to avoid dumping hundreds of lines of useless
+output into the log in case of large image tags and the like.
+  </para>
+
+</formalpara>
+
 <formalpara id="GST_DEBUG_DUMP_DOT_DIR">
   <title><envar>GST_DEBUG_DUMP_DOT_DIR</envar></title>
 
@@ -218,6 +232,44 @@ application.
 Set this environment variable to "no" to prevent GStreamer from updating the
 plugin registry. This is useful for embedded device which is not updating the
 plugins frequently, it will save time when doing gst_init().
+  </para>
+
+</formalpara>
+
+<formalpara id="ORC_CODE">
+  <title><envar>ORC_CODE</envar></title>
+
+  <para>
+Useful Orc environment variable. Set ORC_CODE=debug to enable debuggers
+such as gdb to create useful backtraces from Orc-generated code.  Set
+ORC_CODE=backup or ORC_CODE=emulate if you suspect Orc's SIMD code
+generator is producing incorrect code.  (Quite a few important
+GStreamer plugins like videotestsrc, audioconvert or audioresample use Orc).
+  </para>
+
+</formalpara>
+
+<formalpara id="G_DEBUG">
+  <title><envar>G_DEBUG</envar></title>
+
+  <para>
+Useful GLib environment variable. Set G_DEBUG=fatal_warnings to make
+GStreamer programs abort when a critical warning such as an assertion failure
+occurs. This is useful if you want to find out which part of the code caused
+that warning to be triggered and under what circumstances. Simply set G_DEBUG
+as mentioned above and run the program in gdb (or let it core dump). Then get
+a stack trace in the usual way.
+  </para>
+
+</formalpara>
+
+<formalpara id="G_SLICE">
+  <title><envar>G_SLICE</envar></title>
+
+  <para>
+Useful GLib environment variable. Set G_SLICE=always-malloc when running
+GStreamer programs in valgrind, or debugging memory leaks with other tools.
+See the GLib API reference for more details.
   </para>
 
 </formalpara>
