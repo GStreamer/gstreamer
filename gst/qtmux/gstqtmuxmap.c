@@ -187,6 +187,18 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS " ; " ALAC_CAPS)
       }
   ,
+  /* Microsoft Smooth Streaming fmp4/isml */
+  /* TODO add WMV/WMA support */
+  {
+        GST_QT_MUX_FORMAT_ISML,
+        "ismlmux",
+        "ISML",
+        "GstISMLMux",
+        GST_STATIC_CAPS ("video/quicktime, variant = (string) iso"),
+        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS),
+        GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
+      }
+  ,
   /* 3GPP Technical Specification 26.244 V7.3.0
    * (extended in 3GPP2 File Formats for Multimedia Services) */
   {
@@ -225,6 +237,8 @@ gst_qt_mux_map_format_to_flavor (GstQTMuxFormat format)
     return ATOMS_TREE_FLAVOR_MOV;
   else if (format == GST_QT_MUX_FORMAT_3GP)
     return ATOMS_TREE_FLAVOR_3GP;
+  else if (format == GST_QT_MUX_FORMAT_ISML)
+    return ATOMS_TREE_FLAVOR_ISML;
   else
     return ATOMS_TREE_FLAVOR_ISOM;
 }
@@ -270,6 +284,7 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
 {
   static guint32 qt_brands[] = { 0 };
   static guint32 mp4_brands[] = { FOURCC_mp41, FOURCC_isom, FOURCC_iso2, 0 };
+  static guint32 isml_brands[] = { FOURCC_iso2, 0 };
   static guint32 gpp_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
   static guint32 mjp2_brands[] = { FOURCC_isom, FOURCC_iso2, 0 };
   static guint8 mjp2_prefix[] =
@@ -293,6 +308,10 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
     case GST_QT_MUX_FORMAT_MP4:
       major = FOURCC_mp42;
       comp = mp4_brands;
+      break;
+    case GST_QT_MUX_FORMAT_ISML:
+      major = FOURCC_isml;
+      comp = isml_brands;
       break;
     case GST_QT_MUX_FORMAT_3GP:
     {
