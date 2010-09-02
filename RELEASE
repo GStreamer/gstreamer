@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.19 "The World Kicked Back"
+Release notes for GStreamer Bad Plug-ins 0.10.20 "For it is a Human Number"
         
 
 
@@ -60,86 +60,122 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * audioparsers: add bitrate calculation
-      * camerabin: add API to query supported image capture resolution
-      * camerabin: add block-after-capture property for viewfinder blocking
-      * camerabin: add video-capture-width/height/framerate properties
-      * camerabin: add video-source-filter and viewfinder-filter properties
-      * capssetter: element was moved to gst-plugins-good
-      * cogcolorspace: implement color-matrix handling and chroma-site
-      * dc1394: add iso-speed property
-      * dshowvideosrc: add support for YUY2 input format
-      * festival: don't open an infinite number of connections to the server and close connections
-      * h264parse: fix writing NALU prefix for byte-stream output format
-      * h264parse: fix wrong timestamps in some cases after seeking
-      * imagefreeze: plugin was moved to gst-plugins-good
-      * invtelecine: add invtelecine element
-      * jackaudiosrc: implement multichannel support
-      * jpegformat: add xmp reading and writing support
-      * ladspa, lv2: don't fail in plugin_init when having 0 elements (which would cause the plugin to get blacklisted)
-      * mmssrc: Check URI for validity and work around URI parsing bugs in libmms
-      * mmssrc: Use the escaped location for the RTSP redirect message
-      * mpegtsdemux: add support for Blu-Ray style DTS and the two DTS HD stream types
-      * mpegtsparse: parse TDT table in mpegts
-      * mpegvideoparse: export profile and level in caps; estimate bitrate; update caps when sequence header changes
-      * oss4: plugin was moved to gst-plugins-good
-      * qtmux: add support for the VP8 video codec and XMP tags
-      * segmentclip: add audio/video buffer segment clip elements
-      * vcdsrc: support the DVD URI scheme so a device can be specified via the URI
-      * vp8: add libvpx-based VP8 encoder/decoder (NB: encoder properties/API not fully stable yet; also, this plugin may not be compatible with GPLv2-only applications)
+      * asfmux streaming fixes and improvements
+      * new video effects plugins: coloreffects, gaudieffects, geometrictransform
+      * new gsettings plugin with gsettings{audio,video}{src,sink} elements
+      * new ivfparse element
+      * new rtmpsrc element
+      * new shmsink and shmsrc elements for IPC using shared memory
+      * new videomaxrate element
+      * dshowvideosink improvements
+      * vdpau: H.264 and MPEG-4 decoder (not enabled for autoplugging yet though)
+      * vp8enc: support multipass encoding and keyframe-only mode
+      * neonhttpsrc: timeout properties and cookie support
+      * h264parse and mpegvideoparse: can periodically insert codec data into stream now
+      * build: require GLib >= 2.20, automake >= 1.10, autoconf >= 2.60, want orc
+      * asfmux: deprecate "is-live" property, replaced by new "streamable" property
+      * asfmux: don't set the 'seekable' flag in headers if we are streaming
+      * asfmux: put headers into "streamheader" field in output caps for streaming
+      * asfmux: write preroll info in the header at initialization
+      * bayer: support more formats in bayer2rgb, add rgb2bayer element
+      * camerabin: make viewfinder-sink property work with bins
+      * celt: add support for celt 0.8, remove support for celt < 0.5
+      * celtenc: add "prediction" and "start band" properties
+      * coloreffects: new element with heat, sepia, xray and cross-process effects
+      * dshowvideosink: many fixes and improvements
+      * fpsdisplaysink: add "fps-update-interval" and read-only "max-fps"/"min-fps" properties
+      * frei0r: check for plugins in /usr/{local/,}lib{32,64}/frei0r-1 too
+      * gaudieffects: new plugin with burn, chromium, dilate, dodge, exclusion, gaussianblur and solarize video effect elements
+      * geometrictransform: new plugin with circle, diffuse, kaleidoscope, marble, pinch, sphere, twirl, and waterripple, fisheye, mirror, square, tunnel, bulge, stretch video effect elements
+      * gsettings: new GSettings plugin with audio/video sources and sinks (to replace gconf plugin)
+      * h264parse: add "config-interval" property to insert SPS/PPS at periodic intervals
+      * h264parse: handle 3-byte bytestream sync codes; process incoming timestamps more correctly
+      * id3mux: add support for beats-per-minute tag
+      * invtelecine: support more video formats, more pulldown formats, add "verify-field-flags" property
+      * ivfparse: add simple IVF parser element (simple framing for VP8 video data)
+      * jpegformat: add exif writing to jifmux and exif parsing to jpegparse
+      * jpegparse: skip extra 0xff markers, optimize jpeg image parsing
+      * mimic: lots of fixes and clean-ups
+      * mpeg4videoparse: add "config-interval" property to re-insert config in stream
+      * mpegtsmux: start pmt at 0x020; take all the pmt in the streamheaders
+      * mpegtsparse: actually work when we have small buffers coming in
+      * mpegvideoparse: apply previous timestamp when there isn't any newer
+      * neonhttpsrc: add "connect-timeout", "read-timeout" and "cookies" properties
+      * qtmux: write audio/video stream bitrates into header, if available
+      * qtmux: write track-number etc. tags even if count is not available
+      * rtmpsrc: new RTMP source element based on librtmp
+      * rtpdtmfmux: add priority sink pads and drop buffers on non-priority sink pads when something is incoming on the priority sink
+      * rtpmux: add support for GstBufferLists; aggregate incoming segments; fix buffer leak
+      * shm: add new shm-based shmsink and shmsrc elements for IPC using shared memory
+      * vdpau: add H.264 decoder and MPEG-4 part 2 decoder; countless other fixes and improvements
+      * videomaxrate: new plugin/element to limit videorate conditionally based on threshold
+      * vp8dec: mark discont buffers, set decoder deadline from the QoS information
+      * vp8enc: allow a maximum keyframe distance of 0, i.e. all frames are keyframes
+      * vp8enc: fix handling of invisible/alt ref frames
+      * vp8enc: add support for enabling automatic insertion of alt-ref frames by the encoder
+      * vp8enc: implement multipass encoding
+      * wildmidi: Add support for wildmidi 0.2.3
 
 Bugs fixed in this release
      
-      * 340986 : [vcdsrc] plugin not auto-plugged, and weird URI handling
-      * 572551 : mpeg4videoparse fails to extract codec_data from this network camera video stream
-      * 603745 : [dc1394src] add " iso-speed " property
-      * 611302 : [imagefreeze] Add still frame stream generator
-      * 612208 : [soundtouch] [pitch] Removing annoying g_print
-      * 612331 : inputselector: linkage flags are incorrect
-      * 612454 : fix compile errors in latest gst-plugins-bad
-      * 612615 : [camerabin] video bin elements in wrong state when recording
-      * 612687 : [mpegvideoparse] Update caps when sequence header changes
-      * 612757 : Unable to build gst-plugins-bad with Sun Studio compiler
-      * 613156 : cog can't be built against libpng 1.4.x
-      * 613160 : [cogcolorspace] RGB- > I420 conversion adds green vertical bar at the right border
-      * 613332 : [cog] generate_tables generates invalid tables for YUV- > RGB
-      * 613708 : [dshowvideosrc][PATCH] Add support for YUY2 format
-      * 613758 : More build warnings on OS X
-      * 613795 : libmodplug's public header requires WORDS_BIGENDIAN
-      * 613920 : audioparsers: Add bitrate calculation to baseparse
-      * 614016 : [baseparse] NEWSEGMENT event sent with wrong start and position time
-      * 614037 : flacparse: Fix buffer refcount issue
-      * 614259 : mpegtsdemux: can't detect DTS audio
-      * 614349 : [mpegtsparse] assertion gst_buffer_is_metadata_writable (buffer) failed
-      * 614475 : [dvbsrc] Wrong property types for frequency and symbol rate
-      * 614479 : [mpegtspacketizer] Use CRC to check if tables are duplicate
-      * 614591 : [h264parse] Not cleaning internal state properly for reuse
-      * 614958 : [camerabin] Replace actions with properties for setting parameters
-      * 614991 : baseparse: Don't emit bitrate tags too early
-      * 616078 : mpegvideoparse: Export profile and level in caps
-      * 616541 : jackaudiosrc/sink needs to set layout on caps
-      * 617145 : Compile mplex element with with --enable-runtime-pseudo-reloc-v2 on Windows
-      * 617146 : Lots of printf string format warnings on Windows
-      * 617331 : More warnings in -bad
-      * 617650 : [mmssrc] should check location
-      * 618044 : [cogcolorspace] I420/YV12 - > packed 4:2:2 gives assertions
-      * 618388 : [frei0r] Boolean values can't be set from gst-launch [PATCH]
-      * 618409 : jackaudiosrc: improve process callback
-      * 618527 : festival plugin does not close connections to server
-      * 618710 : [resindvd] Needs to check for libdvdread too
-      * 618867 : Remove gst-plugins-bad/ext/polyp ?
-      * 619064 : h264parse: broken timestamps after seeking
-      * 619169 : [vp8enc] Limit DEFAULT_MAX_LATENCY to 25 to match libvpx
-      * 619172 : [vp8] exclude dec/enc based on CONFIG_VP8_DECODER/ENCODER
-      * 619290 : [vp8] add mode property to switch between CBR/VBR
-      * 619317 : [vp8] Encoder thread support
-      * 619318 : [vp8] Decoder QoS (avoid memcpy)
-      * 619344 : [vp8enc] Use GST_VIDEO_CAPS_YUV instead of handwritten YUV caps
-      * 619444 : [mpegtsparse] Memory leak in mpegts_packetizer_parse_pmt
-      * 619502 : [mpegvideoparse] segfault because of access to a NULL buffer gotten from mpeg_packetizer_get_block
-      * 619617 : [h264parse] leaks memory
-      * 619916 : [vp8enc] Doesn't skip non-frame packets correctly
-      * 614317 : [oss4] should always accept PCM in native endianness even if the hardware doesn't
+      * 625908 : [geometrictransform] Some more configuration options for effects
+      * 625076 : neonhttpsrc: add connect-timeout and read-timeout properties
+      * 620746 : basevideodecoder: remove spurious warning
+      * 566614 : bayer2rgb: Make first line configurable
+      * 570428 : autogen.sh fails
+      * 574290 : [dshowvideosink] make set_xwindow_id() in PLAYING state work
+      * 579926 : [directshowvideosink] Doesn't update the last frame after a seek with the pipeline in PAUSED state.
+      * 580967 : shared memory based sink and source
+      * 591622 : [vdpau] needs better error/failure handling
+      * 602551 : dshowvideosink window close doesn't cause gst-launch to exit
+      * 602936 : [ mp4mux] Lipsync issue when converting mkv to mp4 using h264/aac
+      * 613346 : [dshowvideosink] Add support for updating video caps
+      * 616265 : Add a GSettings plugin that provides the same services as the GConf plugin
+      * 618336 : [mpegvideoparse] mpegvideoparse makes some streams unplayable
+      * 618522 : [asfmux][patch] Improve support for streaming
+      * 618921 : [dshowvideosink] Replace CoIntialize with CoInitializeEx for bettrer integration with GStreamer threads
+      * 618936 : [dshowvideosink] close the created window in ::stop()
+      * 620324 : Format warning in ivfparse
+      * 620717 : [geometrytransform] Incomplete template caps
+      * 620825 : [geometrytransform] Make properties controllable and threadsafe
+      * 620978 : insert NAL7/8 always when encountering I frame
+      * 621205 : [mpeg4videoparse] add config-interval property to insert mpeg4video config data in regular intervals
+      * 621348 : [vp8enc] Implement multipass encoding
+      * 621523 : [id3mux] write beats-per-minute tag
+      * 622369 : [rtmpsrc] crash if correct server but wrong video file name
+      * 622484 : [qtmux] missing track number tag when transcoding to aac
+      * 622690 : elements/jpegparse check fails
+      * 622692 : pipelines/metadata check fails
+      * 622725 : [mpgtsparse] Doesn't remove pids from pes_pids
+      * 623272 : [dshowvideosink] setting force-aspect-ratio has no effect after the sink's renderer has been configured
+      * 623365 : [qtmux and variant] Don't store codec tags
+      * 623550 : doesn't compile with celt 0.8
+      * 623678 : qtmux: Write AAC/H.264 bitrate if available
+      * 623710 : [frei0r] Load frei0r plugins in /usr/lib64/frei0r-1 too
+      * 623713 : [dshowaudiodec][patch] Fix compilation error
+      * 623722 : gstwildmidi element update to newer library version
+      * 623802 : camerabin: Bin based viewfinder sink support is broken
+      * 623854 : jpegparse reads a wrong EXIF section size
+      * 623881 : aiffmux.c divide by zero
+      * 623883 : [winks] gstksvideosrc.c error on MSVC using gst_element_class_set_details()
+      * 625003 : [examples] Don't use GdkDraw
+      * 625138 : [dshowvideosrc] Don't use a range in the caps if min==max
+      * 625174 : neonhttpsrc: adds cookies support
+      * 625496 : qtmux - misc fix on btrt box
+      * 625722 : [geometrictransform] Some new effect elements for cheese
+      * 625817 : coloreffects: new plugin for lookup table color mapping
+      * 625959 : geometrictransform: make CircleGeometricTransform " radius " property relative
+      * 626049 : [vdpau] crashes in states.check unit test
+      * 626603 : generic/states check fails with gsettings element installed
+      * 626670 : gaudieffects: Fails to link inline functions properly
+      * 626815 : vp8dec: infinite loop if EOS event before started
+      * 627413 : jifmux causes broken jpeg images at least with some rgb pixel format
+      * 627918 : Do not install gst-camera.ui
+      * 627991 : rtpmux will freeze whenever a flush is sent
+      * 624212 : mp4mux produces incorrect frame rates when h264 input uses bframes
+      * 619158 : IVF parser plugin
+      * 619484 : vp8dec: s/IMG_FMT_I420/VPX_IMG_FMT_I420/
+      * 621404 : [dvbsrc] Set stats-reporting-interval on construction
 
 Download
 
@@ -168,38 +204,39 @@ Applications
   
 Contributors to this release
     
-      * Adam Endrodi
       * Alessandro Decina
       * Andoni Morales
+      * Andoni Morales Alastruey
       * Arun Raghavan
+      * Austin Lund
       * Bastien Nocera
       * Benjamin Otte
-      * Brian Cameron
       * Carl-Anton Ingmarsson
+      * David Hoyt
       * David Schleef
       * Edward Hervey
-      * Ivan Zderadicka
+      * Filippo Argiolas
       * Jan Schmidt
-      * Joshua M. Doe
-      * Lasse Laukkanen
+      * Jonathan Matthew
+      * Julien Moutte
+      * Luis de Bethencourt
+      * Marc-André Lureau
       * Mark Nauwelaerts
+      * Michael Smith
       * Olivier Crête
       * Philip Jägenstedt
-      * Raimo Järvi
-      * René Stadler
-      * Rob Clark
+      * Philippe Normand
+      * Raimo Jarvi
+      * Robert Swain
+      * Sameer Naik
       * Sebastian Dröge
       * Sebastian Pölsterl
-      * Shenghua Liu
       * Stefan Kost
-      * Teemu Katajisto
       * Thiago Santos
-      * Tiago Katcipis
+      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Tommi Myöhänen
-      * Tristan Matthews
       * Víctor Manuel Jáquez Leal
-      * Wim Taymans
+      * Youness Alaoui
       * Zaheer Abbas Merali
       * Руслан Ижбулатов
  

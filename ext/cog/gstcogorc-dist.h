@@ -10,8 +10,6 @@
 extern "C" {
 #endif
 
-
-
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -49,10 +47,10 @@ typedef long orc_int64;
 typedef unsigned long orc_uint64;
 #endif
 #endif
-typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
-typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
-typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
+typedef union { orc_int32 i; float f; } orc_union32;
+typedef union { orc_int64 i; double f; } orc_union64;
 #endif
+
 void cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1, int n);
 void cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1, const orc_uint16 * s2, int n);
 void cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1, const orc_uint16 * s2, int n);

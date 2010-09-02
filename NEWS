@@ -1,4 +1,123 @@
-This is GStreamer Bad Plug-ins 0.10.19, "The World Kicked Back"
+This is GStreamer Bad Plug-ins 0.10.20, "For it is a Human Number"
+
+Changes since 0.10.19:
+
+      * asfmux streaming fixes and improvements
+      * new video effects plugins: coloreffects, gaudieffects, geometrictransform
+      * new gsettings plugin with gsettings{audio,video}{src,sink} elements
+      * new ivfparse element
+      * new rtmpsrc element
+      * new shmsink and shmsrc elements for IPC using shared memory
+      * new videomaxrate element
+      * dshowvideosink improvements
+      * vdpau: H.264 and MPEG-4 decoder (not enabled for autoplugging yet though)
+      * vp8enc: support multipass encoding and keyframe-only mode
+      * neonhttpsrc: timeout properties and cookie support
+      * h264parse and mpegvideoparse: can periodically insert codec data into stream now
+      * build: require GLib >= 2.20, automake >= 1.10, autoconf >= 2.60, want orc
+      * asfmux: deprecate "is-live" property, replaced by new "streamable" property
+      * asfmux: don't set the 'seekable' flag in headers if we are streaming
+      * asfmux: put headers into "streamheader" field in output caps for streaming
+      * asfmux: write preroll info in the header at initialization
+      * bayer: support more formats in bayer2rgb, add rgb2bayer element
+      * camerabin: make viewfinder-sink property work with bins
+      * celt: add support for celt 0.8, remove support for celt < 0.5
+      * celtenc: add "prediction" and "start band" properties
+      * coloreffects: new element with heat, sepia, xray and cross-process effects
+      * dshowvideosink: many fixes and improvements
+      * fpsdisplaysink: add "fps-update-interval" and read-only "max-fps"/"min-fps" properties
+      * frei0r: check for plugins in /usr/{local/,}lib{32,64}/frei0r-1 too
+      * gaudieffects: new plugin with burn, chromium, dilate, dodge, exclusion, gaussianblur and solarize video effect elements
+      * geometrictransform: new plugin with circle, diffuse, kaleidoscope, marble, pinch, sphere, twirl, and waterripple, fisheye, mirror, square, tunnel, bulge, stretch video effect elements
+      * gsettings: new GSettings plugin with audio/video sources and sinks (to replace gconf plugin)
+      * h264parse: add "config-interval" property to insert SPS/PPS at periodic intervals
+      * h264parse: handle 3-byte bytestream sync codes; process incoming timestamps more correctly
+      * id3mux: add support for beats-per-minute tag
+      * invtelecine: support more video formats, more pulldown formats, add "verify-field-flags" property
+      * ivfparse: add simple IVF parser element (simple framing for VP8 video data)
+      * jpegformat: add exif writing to jifmux and exif parsing to jpegparse
+      * jpegparse: skip extra 0xff markers, optimize jpeg image parsing
+      * mimic: lots of fixes and clean-ups
+      * mpeg4videoparse: add "config-interval" property to re-insert config in stream
+      * mpegtsmux: start pmt at 0x020; take all the pmt in the streamheaders
+      * mpegtsparse: actually work when we have small buffers coming in
+      * mpegvideoparse: apply previous timestamp when there isn't any newer
+      * neonhttpsrc: add "connect-timeout", "read-timeout" and "cookies" properties
+      * qtmux: write audio/video stream bitrates into header, if available
+      * qtmux: write track-number etc. tags even if count is not available
+      * rtmpsrc: new RTMP source element based on librtmp
+      * rtpdtmfmux: add priority sink pads and drop buffers on non-priority sink pads when something is incoming on the priority sink
+      * rtpmux: add support for GstBufferLists; aggregate incoming segments; fix buffer leak
+      * shm: add new shm-based shmsink and shmsrc elements for IPC using shared memory
+      * vdpau: add H.264 decoder and MPEG-4 part 2 decoder; countless other fixes and improvements
+      * videomaxrate: new plugin/element to limit videorate conditionally based on threshold
+      * vp8dec: mark discont buffers, set decoder deadline from the QoS information
+      * vp8enc: allow a maximum keyframe distance of 0, i.e. all frames are keyframes
+      * vp8enc: fix handling of invisible/alt ref frames
+      * vp8enc: add support for enabling automatic insertion of alt-ref frames by the encoder
+      * vp8enc: implement multipass encoding
+      * wildmidi: Add support for wildmidi 0.2.3
+
+Bugs fixed since 0.10.19:
+
+      * 625908 : [geometrictransform] Some more configuration options for effects
+      * 625076 : neonhttpsrc: add connect-timeout and read-timeout properties
+      * 620746 : basevideodecoder: remove spurious warning
+      * 566614 : bayer2rgb: Make first line configurable
+      * 570428 : autogen.sh fails
+      * 574290 : [dshowvideosink] make set_xwindow_id() in PLAYING state work
+      * 579926 : [directshowvideosink] Doesn't update the last frame after a seek with the pipeline in PAUSED state.
+      * 580967 : shared memory based sink and source
+      * 591622 : [vdpau] needs better error/failure handling
+      * 602551 : dshowvideosink window close doesn't cause gst-launch to exit
+      * 602936 : [ mp4mux] Lipsync issue when converting mkv to mp4 using h264/aac
+      * 613346 : [dshowvideosink] Add support for updating video caps
+      * 616265 : Add a GSettings plugin that provides the same services as the GConf plugin
+      * 618336 : [mpegvideoparse] mpegvideoparse makes some streams unplayable
+      * 618522 : [asfmux][patch] Improve support for streaming
+      * 618921 : [dshowvideosink] Replace CoIntialize with CoInitializeEx for bettrer integration with GStreamer threads
+      * 618936 : [dshowvideosink] close the created window in ::stop()
+      * 620324 : Format warning in ivfparse
+      * 620717 : [geometrytransform] Incomplete template caps
+      * 620825 : [geometrytransform] Make properties controllable and threadsafe
+      * 620978 : insert NAL7/8 always when encountering I frame
+      * 621205 : [mpeg4videoparse] add config-interval property to insert mpeg4video config data in regular intervals
+      * 621348 : [vp8enc] Implement multipass encoding
+      * 621523 : [id3mux] write beats-per-minute tag
+      * 622369 : [rtmpsrc] crash if correct server but wrong video file name
+      * 622484 : [qtmux] missing track number tag when transcoding to aac
+      * 622690 : elements/jpegparse check fails
+      * 622692 : pipelines/metadata check fails
+      * 622725 : [mpgtsparse] Doesn't remove pids from pes_pids
+      * 623272 : [dshowvideosink] setting force-aspect-ratio has no effect after the sink's renderer has been configured
+      * 623365 : [qtmux and variant] Don't store codec tags
+      * 623550 : doesn't compile with celt 0.8
+      * 623678 : qtmux: Write AAC/H.264 bitrate if available
+      * 623710 : [frei0r] Load frei0r plugins in /usr/lib64/frei0r-1 too
+      * 623713 : [dshowaudiodec][patch] Fix compilation error
+      * 623722 : gstwildmidi element update to newer library version
+      * 623802 : camerabin: Bin based viewfinder sink support is broken
+      * 623854 : jpegparse reads a wrong EXIF section size
+      * 623881 : aiffmux.c divide by zero
+      * 623883 : [winks] gstksvideosrc.c error on MSVC using gst_element_class_set_details()
+      * 625003 : [examples] Don't use GdkDraw
+      * 625138 : [dshowvideosrc] Don't use a range in the caps if min==max
+      * 625174 : neonhttpsrc: adds cookies support
+      * 625496 : qtmux - misc fix on btrt box
+      * 625722 : [geometrictransform] Some new effect elements for cheese
+      * 625817 : coloreffects: new plugin for lookup table color mapping
+      * 625959 : geometrictransform: make CircleGeometricTransform " radius " property relative
+      * 626049 : [vdpau] crashes in states.check unit test
+      * 626603 : generic/states check fails with gsettings element installed
+      * 626670 : gaudieffects: Fails to link inline functions properly
+      * 626815 : vp8dec: infinite loop if EOS event before started
+      * 627413 : jifmux causes broken jpeg images at least with some rgb pixel format
+      * 627918 : Do not install gst-camera.ui
+      * 627991 : rtpmux will freeze whenever a flush is sent
+      * 624212 : mp4mux produces incorrect frame rates when h264 input uses bframes
+      * 619158 : IVF parser plugin
+      * 619484 : vp8dec: s/IMG_FMT_I420/VPX_IMG_FMT_I420/
+      * 621404 : [dvbsrc] Set stats-reporting-interval on construction
 
 Changes since 0.10.18:
 
