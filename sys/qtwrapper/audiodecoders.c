@@ -865,7 +865,7 @@ qtwrapper_audio_decoder_chain (GstPad * pad, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (qtwrapper,
         "Read %d bytes, could have read up to %d bytes", realbytes, savedbytes);
-  } while (realbytes == savedbytes);
+  } while (status != NO_MORE_INPUT_DATA);
 
 beach:
   gst_buffer_unref (buf);
