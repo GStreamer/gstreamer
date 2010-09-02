@@ -4,6 +4,8 @@ GObject
   GstCmmlTagHead
   GstCmmlTagStream
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
