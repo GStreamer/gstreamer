@@ -3,10 +3,10 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.19.3</version>
+  <version>0.10.20</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Chorus1 - Based on CSound orchestra by Sean Costello</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Chorus1 - Based on CSound orchestra by Sean Costello</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Input</name>
@@ -35,7 +35,7 @@
       <longname>Chorus2 - Based on CSound orchestra by Sean Costello</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Chorus2 - Based on CSound orchestra by Sean Costello</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Input</name>
@@ -89,7 +89,7 @@
       <longname>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@skynet.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -122,7 +122,7 @@
       <longname>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -161,7 +161,7 @@
       <longname>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -200,7 +200,7 @@
       <longname>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -239,7 +239,7 @@
       <longname>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -278,7 +278,7 @@
       <longname>Phaser1 - Similar to CSound&apos;s phaser1 by Sean Costello</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Phaser1 - Similar to CSound&apos;s phaser1 by Sean Costello</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Exp_FM</name>
@@ -317,7 +317,7 @@
       <longname>Phaser1 with LFO</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Phaser1 with LFO</description>
-      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
       <pads>
         <caps>
           <name>Input</name>
@@ -327,6 +327,39 @@
         </caps>
         <caps>
           <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-TripleChorus</name>
+      <longname>Triple chorus</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Triple chorus</description>
+      <author>Fons Adriaensen &lt;fons@kokkinizita.net&gt;</author>
+      <pads>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output1</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output2</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>Output3</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, channels=(int)1, rate=(int)[ 1, 2147483647 ]</details>
