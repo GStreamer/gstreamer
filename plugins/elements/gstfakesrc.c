@@ -717,12 +717,8 @@ static GstBuffer *
 gst_fake_src_create_buffer (GstFakeSrc * src)
 {
   GstBuffer *buf;
-  guint size;
+  guint size = gst_fake_src_get_size (src);
   gboolean dump = src->dump;
-
-  size = gst_fake_src_get_size (src);
-  if (size == 0)
-    return gst_buffer_new ();
 
   switch (src->data) {
     case FAKE_SRC_DATA_ALLOCATE:
