@@ -96,7 +96,8 @@ typedef enum _AtomsTreeFlavor
 {
   ATOMS_TREE_FLAVOR_MOV,
   ATOMS_TREE_FLAVOR_ISOM,
-  ATOMS_TREE_FLAVOR_3GP
+  ATOMS_TREE_FLAVOR_3GP,
+  ATOMS_TREE_FLAVOR_ISML
 } AtomsTreeFlavor;
 
 typedef struct _AtomsContext
