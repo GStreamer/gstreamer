@@ -1,14 +1,14 @@
-# translation of gst-plugins-good-0.10.22.2.po to Español
+# translation of gst-plugins-good-0.10.23.2.po to Español
 # spanish translation for gst-plugins-good
 # This file is put in the public domain.
 # Jorge González González <aloriel@gmail.com>, 2007, 2008, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
-"PO-Revision-Date: 2010-06-23 08:23+0200\n"
+"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"PO-Revision-Date: 2010-08-17 19:50+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -183,17 +183,18 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "No se pudo abrir el dispositivo para grabar."
 
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "No se pudo abrir el dispositivo para grabar."
+msgstr ""
+"No se pudo abrir el dispositivo de sonido para su gestión por el control de "
+"mezclado."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"No se pudo abrir el dispositivo de sonido para grabar. No tiene permisos "
-"para abrir el dispositivo."
+"No se pudo abrir el dispositivo de sonido para su gestión por el control de "
+"mezclado. Este elemento no soporta esta versión del Sistema de sonido "
+"abierto (OSS)."
 
 msgid "Master"
 msgstr "Maestro"
@@ -288,13 +289,11 @@ msgstr "Puertos de reproducción"
 msgid "Input"
 msgstr "Entrada"
 
-#, fuzzy
 msgid "Record Source"
-msgstr "Grabación"
+msgstr "Origen de la grabación"
 
-#, fuzzy
 msgid "Monitor Source"
-msgstr "Monitor"
+msgstr "Monitor de origen"
 
 msgid "Keyboard Beep"
 msgstr "Pitido de teclado"
@@ -311,28 +310,26 @@ msgstr "Sonido envolvente"
 msgid "Microphone Gain"
 msgstr "Ganancia del micrófono"
 
-#, fuzzy
 msgid "Speaker Source"
-msgstr "Altavoz"
+msgstr "Altavoz de origen"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Micrófono"
+msgstr "Micrófono de origen"
 
 msgid "Jack"
 msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr ""
+msgstr "Centrado / LFE"
 
 msgid "Stereo Mix"
-msgstr ""
+msgstr "Mezclador estéreo"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Mezclador mono"
 
 msgid "Input Mix"
-msgstr ""
+msgstr "Mezclador de entrada"
 
 msgid "SPDIF In"
 msgstr "Entrada S/PDIF"
@@ -359,7 +356,7 @@ msgid "Modem"
 msgstr "Módem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Auriculares"
 
 msgid "Other"
 msgstr "Otro"
@@ -368,10 +365,10 @@ msgid "None"
 msgstr "Ninguno"
 
 msgid "On"
-msgstr ""
+msgstr "Encendido"
 
 msgid "Off"
-msgstr ""
+msgstr "Apagado"
 
 msgid "Mute"
 msgstr "Silenciar"
@@ -403,18 +400,17 @@ msgstr "Muy alto"
 msgid "Production"
 msgstr "Producción"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Micrófono"
+msgstr "Micrófono del panel frontal"
 
 msgid "Front Panel Line In"
-msgstr ""
+msgstr "Entrada del panel frontal"
 
 msgid "Front Panel Headphones"
-msgstr ""
+msgstr "Auriculares del panel frontal"
 
 msgid "Front Panel Line Out"
-msgstr ""
+msgstr "Salida del panel frontal"
 
 msgid "Green Connector"
 msgstr "Conector verde"
@@ -444,46 +440,46 @@ msgid "Yellow Connector"
 msgstr "Conector amarillo"
 
 msgid "Green Front Panel Connector"
-msgstr ""
+msgstr "Conector verde del panel frontal"
 
 msgid "Pink Front Panel Connector"
-msgstr ""
+msgstr "Conector rosa del panel frontal"
 
 msgid "Blue Front Panel Connector"
-msgstr ""
+msgstr "Conector azul del panel frontal"
 
 msgid "White Front Panel Connector"
-msgstr ""
+msgstr "Conector blanco del panel frontal"
 
 msgid "Black Front Panel Connector"
-msgstr ""
+msgstr "Conector negro del panel frontal"
 
 msgid "Gray Front Panel Connector"
-msgstr ""
+msgstr "Conector gris del panel frontal"
 
 msgid "Orange Front Panel Connector"
-msgstr ""
+msgstr "Conector naranja del panel frontal"
 
 msgid "Red Front Panel Connector"
-msgstr ""
+msgstr "Conector rojo del panel frontal"
 
 msgid "Yellow Front Panel Connector"
-msgstr ""
+msgstr "Conector amarillo del panel frontal"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Expandir salida"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Reducción de canales"
 
 msgid "Virtual Mixer Input"
-msgstr ""
+msgstr "Entrada del mezclador virtual"
 
 msgid "Virtual Mixer Output"
-msgstr ""
+msgstr "Salida del mezclador virtual"
 
 msgid "Virtual Mixer Channels"
-msgstr ""
+msgstr "Canales del mezclador virtual"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
@@ -495,16 +491,16 @@ msgstr "Función %s %d"
 msgid "%s Function"
 msgstr "Función %s"
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"No se pudo abrir el dispositivo de sonido para reproducir. No tiene permisos "
-"para abrir el dispositivo."
+"No se pudo abrir el dispositivo de sonido para su gestión por el control de "
+"mezclado. Este elemento no soporta esta versión del Sistema de sonido "
+"abierto (OSS)."
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Este dispositivo de sonido no soporta la reproducción."
 
 msgid "Audio playback error."
 msgstr "Error de reproducción de sonido."

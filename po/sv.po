@@ -1,15 +1,15 @@
 # Swedish messages for gst-plugins-good.
-# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Christian Rose <menthos@menthos.com>, 2004.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
-"PO-Revision-Date: 2010-05-25 09:09+0100\n"
+"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"PO-Revision-Date: 2010-08-09 11:25+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -184,23 +184,21 @@ msgstr "Kunde inte öppna ljudenheten för inspelning."
 msgid "Could not open audio device for mixer control handling."
 msgstr "Kunde inte öppna ljudenheten för hantering av mixerstyrning."
 
-#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Kunde inte öppna ljudenheten för inspelning. Du har inte behörighet att "
-"öppna enheten."
+"Kunde inte öppna ljudenheten för mixerhantering. Denna version av Open Sound "
+"System saknar stöd för detta element."
 
 msgid "Master"
 msgstr "Övergripande"
 
 msgid "Front"
-msgstr ""
+msgstr "Fram"
 
-#, fuzzy
 msgid "Rear"
-msgstr "Retro"
+msgstr "Bak"
 
 msgid "Headphones"
 msgstr "Hörlurar"
@@ -209,14 +207,13 @@ msgid "Center"
 msgstr "Center"
 
 msgid "LFE"
-msgstr ""
+msgstr "LFE"
 
 msgid "Surround"
 msgstr "Surround"
 
-#, fuzzy
 msgid "Side"
-msgstr "Video"
+msgstr "Sida"
 
 msgid "Built-in Speaker"
 msgstr "Inbyggd högtalare"
@@ -227,19 +224,17 @@ msgstr "AUX 1 ut"
 msgid "AUX 2 Out"
 msgstr "AUX 2 ut"
 
-#, fuzzy
 msgid "AUX Out"
-msgstr "AUX 1 ut"
+msgstr "AUX ut"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D-djup"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D-center"
 
-#, fuzzy
 msgid "3D Enhance"
-msgstr "Dance"
+msgstr "3D Enhance"
 
 msgid "Telephone"
 msgstr "Telefon"
@@ -250,45 +245,38 @@ msgstr "Linje ut"
 msgid "Line In"
 msgstr "Linje-in"
 
-#, fuzzy
 msgid "Internal CD"
-msgstr "Instrumentellt"
+msgstr "Intern cd-spelare"
 
 msgid "Video In"
 msgstr "Video-in"
 
-#, fuzzy
 msgid "AUX 1 In"
-msgstr "AUX 1 ut"
+msgstr "AUX 1 in"
 
-#, fuzzy
 msgid "AUX 2 In"
-msgstr "AUX 2 ut"
+msgstr "AUX 2 in"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX in"
 
-#, fuzzy
 msgid "Record Gain"
-msgstr "Spela in som"
+msgstr "Inspelningsförstärkning"
 
-#, fuzzy
 msgid "Output Gain"
 msgstr "Utförstärkning"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Mikrofon"
+msgstr "Mikrofonboost"
 
-#, fuzzy
 msgid "Loopback"
-msgstr "Lås"
+msgstr "Loopback"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Diagnostik"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Bass Boost"
 
 msgid "Playback Ports"
 msgstr "Uppspelningsportar"
@@ -299,9 +287,8 @@ msgstr "Ingång"
 msgid "Record Source"
 msgstr "Inspelningskälla"
 
-#, fuzzy
 msgid "Monitor Source"
-msgstr "Monitor"
+msgstr "Monitorkälla"
 
 msgid "Keyboard Beep"
 msgstr "Tangentbordspip"
@@ -328,20 +315,19 @@ msgid "Jack"
 msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr ""
+msgstr "Center / LFE"
 
 msgid "Stereo Mix"
-msgstr ""
+msgstr "Stereomix"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Monomix"
 
 msgid "Input Mix"
-msgstr ""
+msgstr "Ingångsmix"
 
-#, fuzzy
 msgid "SPDIF In"
-msgstr "SPDIF ut"
+msgstr "SPDIF in"
 
 msgid "SPDIF Out"
 msgstr "SPDIF ut"
@@ -364,8 +350,9 @@ msgstr "HDMI"
 msgid "Modem"
 msgstr "Modem"
 
+# Telefon?
 msgid "Handset"
-msgstr ""
+msgstr "Handhållen"
 
 msgid "Other"
 msgstr "Annat"
@@ -406,22 +393,20 @@ msgid "Very High"
 msgstr "Mycket hög"
 
 #. TRANSLATORS: "Production" is a quality setting here
-#, fuzzy
 msgid "Production"
-msgstr "Plats"
+msgstr "Produktion"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Mikrofon"
+msgstr "Mikrofon på frontpanel"
 
 msgid "Front Panel Line In"
-msgstr ""
+msgstr "Linje-in frontpanel"
 
 msgid "Front Panel Headphones"
-msgstr ""
+msgstr "Hörlurar frontpanel"
 
 msgid "Front Panel Line Out"
-msgstr ""
+msgstr "Linje-ut frontpanel"
 
 msgid "Green Connector"
 msgstr "Grön kontakt"
@@ -451,46 +436,46 @@ msgid "Yellow Connector"
 msgstr "Gul kontakt"
 
 msgid "Green Front Panel Connector"
-msgstr ""
+msgstr "Grön kontakt frontpanel"
 
 msgid "Pink Front Panel Connector"
-msgstr ""
+msgstr "Rosa kontakt frontpanel"
 
 msgid "Blue Front Panel Connector"
-msgstr ""
+msgstr "Blå kontakt frontpanel"
 
 msgid "White Front Panel Connector"
-msgstr ""
+msgstr "Vit kontakt frontpanel"
 
 msgid "Black Front Panel Connector"
-msgstr ""
+msgstr "Svart kontakt frontpanel"
 
 msgid "Gray Front Panel Connector"
-msgstr ""
+msgstr "Grå kontakt frontpanel"
 
 msgid "Orange Front Panel Connector"
-msgstr ""
+msgstr "Orange kontakt frontpanel"
 
 msgid "Red Front Panel Connector"
-msgstr ""
+msgstr "Röd kontakt frontpanel"
 
 msgid "Yellow Front Panel Connector"
-msgstr ""
+msgstr "Gul kontakt frontpanel"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Spridd utgång"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Nermixning"
 
 msgid "Virtual Mixer Input"
-msgstr ""
+msgstr "Virtuell mixer ingång"
 
 msgid "Virtual Mixer Output"
-msgstr ""
+msgstr "Virtuell mixer utgång"
 
 msgid "Virtual Mixer Channels"
-msgstr ""
+msgstr "Kanaler för virtuell mixer"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format

@@ -1,0 +1,646 @@
+# Romanian translation for gst-plugins-good
+# This file is distributed under the same license as the gst-plugins-good package.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"PO-Revision-Date: 2010-08-16 03:22+0300\n"
+"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
+"X-Generator: Virtaal 0.6.1\n"
+"X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
+
+msgid "Could not establish connection to sound server"
+msgstr "Nu se poate stabili o conexiune la serverul de sunet"
+
+msgid "Failed to query sound server capabilities"
+msgstr "Interogarea capabilităților serverului de sunet a eșuat"
+
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr "„%s” de „%s”"
+
+msgid "Internal data stream error."
+msgstr "Eroare internă a fluxului de date."
+
+msgid "Failed to decode JPEG image"
+msgstr "Nu s-a putut decoda imaginea JPEG"
+
+msgid "Could not connect to server"
+msgstr "Nu se poate stabili o conexiune la server"
+
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr ""
+"Intrarea audio nu există sau este nevalidă, fluxul de date AVI va fi corupt."
+
+msgid "This file contains no playable streams."
+msgstr "Acest fișier nu conține fluxuri ce pot fi redate."
+
+msgid "This file is invalid and cannot be played."
+msgstr "Fișierul nu este valid și nu poate fi redat."
+
+msgid "This file is incomplete and cannot be played."
+msgstr "Acest fișier nu este complet și nu poate fi redat."
+
+msgid "This file is corrupt and cannot be played."
+msgstr "Acest fișier este corupt și nu poate fi redat."
+
+msgid "The video in this file might not play correctly."
+msgstr "Este posibil ca fișierul video să nu fie redat corect."
+
+#, c-format
+msgid "This file contains too many streams. Only playing first %d"
+msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
+
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Nu s-a găsit nici un flux suportat. Pentru fluxuri Real media s-ar putea să "
+"fie nevoie să instalați extensia GStreamer RTSP."
+
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Nu a fost găsit niciun flux suportat. S-ar putea să necesite permiterea mai "
+"multor protocoale de transport sau de altfel s-ar putea să lipsească modulul "
+"corect de extensie GStreamer RTSP."
+
+msgid "Internal data flow error."
+msgstr "Eroare internă a fluxului de date."
+
+msgid "Volume"
+msgstr "Volum"
+
+msgid "Bass"
+msgstr "Bas"
+
+msgid "Treble"
+msgstr "Înalte"
+
+msgid "Synth"
+msgstr "Synth"
+
+msgid "PCM"
+msgstr "PCM"
+
+msgid "Speaker"
+msgstr "Difuzor"
+
+msgid "Line-in"
+msgstr "Linie intrare"
+
+msgid "Microphone"
+msgstr "Microfon"
+
+msgid "CD"
+msgstr "CD"
+
+msgid "Mixer"
+msgstr "Mixer"
+
+msgid "PCM-2"
+msgstr "PCM-2"
+
+msgid "Record"
+msgstr "Înregistrare"
+
+msgid "In-gain"
+msgstr "Câștig intrare"
+
+msgid "Out-gain"
+msgstr "Câștig ieșire"
+
+msgid "Line-1"
+msgstr "Linia-1"
+
+msgid "Line-2"
+msgstr "Linia-2"
+
+msgid "Line-3"
+msgstr "Linia-3"
+
+msgid "Digital-1"
+msgstr "Digital-1"
+
+msgid "Digital-2"
+msgstr "Digital-2"
+
+msgid "Digital-3"
+msgstr "Digital-3"
+
+msgid "Phone-in"
+msgstr "Intrare telefon"
+
+msgid "Phone-out"
+msgstr "Ieșire telefon"
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Radio"
+msgstr "Radio"
+
+msgid "Monitor"
+msgstr "Monitor"
+
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru redare. Dispozitivul este "
+"folosit de o altă aplicație."
+
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru redare. Nu aveți permisiunea "
+"de a deschide dispozitivul."
+
+msgid "Could not open audio device for playback."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru redare."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru înregistrare Nu aveți "
+"permisiunea de a deschide dispozitivul."
+
+msgid "Could not open audio device for recording."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
+
+msgid "Could not open audio device for mixer control handling."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului de "
+"mixaj."
+
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru gestionarea controlului de "
+"mixaj. Această versiune a OSS (Open Sound System) nu este suportată de acest "
+"element"
+
+msgid "Master"
+msgstr "Principal"
+
+msgid "Front"
+msgstr "Față"
+
+msgid "Rear"
+msgstr "Spate"
+
+msgid "Headphones"
+msgstr "Căști"
+
+msgid "Center"
+msgstr "Centru"
+
+msgid "LFE"
+msgstr "LFE"
+
+msgid "Surround"
+msgstr "Surround"
+
+msgid "Side"
+msgstr "Lateral"
+
+msgid "Built-in Speaker"
+msgstr "Boxe integrate"
+
+msgid "AUX 1 Out"
+msgstr "Ieșire AUX 1"
+
+msgid "AUX 2 Out"
+msgstr "Ieșire AUX 2"
+
+msgid "AUX Out"
+msgstr "Ieșire AUX"
+
+msgid "3D Depth"
+msgstr "Adâncime 3D"
+
+msgid "3D Center"
+msgstr "Centru 3D"
+
+msgid "3D Enhance"
+msgstr "Îmbunătățire 3D"
+
+msgid "Telephone"
+msgstr "Telefon"
+
+msgid "Line Out"
+msgstr "Linie ieșire"
+
+msgid "Line In"
+msgstr "Linie intrare"
+
+msgid "Internal CD"
+msgstr "CD intern"
+
+msgid "Video In"
+msgstr "Intrare video"
+
+msgid "AUX 1 In"
+msgstr "Intrare AUX 1"
+
+msgid "AUX 2 In"
+msgstr "Intrare AUX 2"
+
+msgid "AUX In"
+msgstr "Intrare AUX"
+
+msgid "Record Gain"
+msgstr "Câștig înregistrare"
+
+msgid "Output Gain"
+msgstr "Câștig ieșire"
+
+msgid "Microphone Boost"
+msgstr "Amplificare microfon"
+
+msgid "Loopback"
+msgstr "Buclă"
+
+msgid "Diagnostic"
+msgstr "Diagnostic"
+
+msgid "Bass Boost"
+msgstr "Amplificare bas"
+
+msgid "Playback Ports"
+msgstr "Porturi redare"
+
+msgid "Input"
+msgstr "Intrare"
+
+msgid "Record Source"
+msgstr "Sursă înregistrare"
+
+msgid "Monitor Source"
+msgstr "Sursă monitor"
+
+msgid "Keyboard Beep"
+msgstr "Bip tastatură"
+
+msgid "Simulate Stereo"
+msgstr "Simulează stereo"
+
+msgid "Stereo"
+msgstr "Stereo"
+
+msgid "Surround Sound"
+msgstr "Sunet surround"
+
+msgid "Microphone Gain"
+msgstr "Câștig microfon"
+
+msgid "Speaker Source"
+msgstr "Sursă difuzor"
+
+msgid "Microphone Source"
+msgstr "Sursă microfon"
+
+msgid "Jack"
+msgstr "Jack"
+
+msgid "Center / LFE"
+msgstr "Centru / LFE"
+
+msgid "Stereo Mix"
+msgstr "Stereo Mix"
+
+msgid "Mono Mix"
+msgstr "Mono Mix"
+
+msgid "Input Mix"
+msgstr "Mix intrare"
+
+msgid "SPDIF In"
+msgstr "Intrare SPDIF"
+
+msgid "SPDIF Out"
+msgstr "Ieșire SPDIF"
+
+msgid "Microphone 1"
+msgstr "Microfon 1"
+
+msgid "Microphone 2"
+msgstr "Microfon 2"
+
+msgid "Digital Out"
+msgstr "Ieșire digitală"
+
+msgid "Digital In"
+msgstr "Intrare digitală"
+
+msgid "HDMI"
+msgstr "HDMI"
+
+msgid "Modem"
+msgstr "Modem"
+
+msgid "Handset"
+msgstr "Căști"
+
+msgid "Other"
+msgstr "Altul"
+
+msgid "None"
+msgstr "Niciunul"
+
+msgid "On"
+msgstr "Activat"
+
+msgid "Off"
+msgstr "Dezactivat"
+
+msgid "Mute"
+msgstr "Mut"
+
+msgid "Fast"
+msgstr "Rapid"
+
+#. TRANSLATORS: "Very Low" is a quality setting here
+msgid "Very Low"
+msgstr "Foarte scăzută"
+
+#. TRANSLATORS: "Low" is a quality setting here
+msgid "Low"
+msgstr "Scăzută"
+
+#. TRANSLATORS: "Medium" is a quality setting here
+msgid "Medium"
+msgstr "Medie"
+
+#. TRANSLATORS: "High" is a quality setting here
+msgid "High"
+msgstr "Ridicată"
+
+#. TRANSLATORS: "Very High" is a quality setting here
+msgid "Very High"
+msgstr "Foarte ridicată"
+
+#. TRANSLATORS: "Production" is a quality setting here
+msgid "Production"
+msgstr "Producție"
+
+msgid "Front Panel Microphone"
+msgstr "Microfon panou frontal"
+
+msgid "Front Panel Line In"
+msgstr "Linie intrare panou frontal"
+
+msgid "Front Panel Headphones"
+msgstr "Căști panou frontal"
+
+msgid "Front Panel Line Out"
+msgstr "Linie ieșire panou frontal"
+
+msgid "Green Connector"
+msgstr "Conector verde"
+
+msgid "Pink Connector"
+msgstr "Conector roz"
+
+msgid "Blue Connector"
+msgstr "Conector albastru"
+
+msgid "White Connector"
+msgstr "Conector alb"
+
+msgid "Black Connector"
+msgstr "Conector negru"
+
+msgid "Gray Connector"
+msgstr "Conector gri"
+
+msgid "Orange Connector"
+msgstr "Conector portocaliu"
+
+msgid "Red Connector"
+msgstr "Conector roșu"
+
+msgid "Yellow Connector"
+msgstr "Conector galben"
+
+msgid "Green Front Panel Connector"
+msgstr "Conector verde panou frontal"
+
+msgid "Pink Front Panel Connector"
+msgstr "Conector roz panou frontal"
+
+msgid "Blue Front Panel Connector"
+msgstr "Conector albastru panou frontal"
+
+msgid "White Front Panel Connector"
+msgstr "Conector alb panou frontal"
+
+msgid "Black Front Panel Connector"
+msgstr "Conector negru panou frontal"
+
+msgid "Gray Front Panel Connector"
+msgstr "Conector gri panou frontal"
+
+msgid "Orange Front Panel Connector"
+msgstr "Conector portocaliu panou frontal"
+
+msgid "Red Front Panel Connector"
+msgstr "Conector roșu panou frontal"
+
+msgid "Yellow Front Panel Connector"
+msgstr "Conector galben panou frontal"
+
+msgid "Spread Output"
+msgstr "Împarte ieșirea"
+
+msgid "Downmix"
+msgstr "Mixaj redus"
+
+msgid "Virtual Mixer Input"
+msgstr "Intrare mixer video"
+
+msgid "Virtual Mixer Output"
+msgstr "Ieșire mixer video"
+
+msgid "Virtual Mixer Channels"
+msgstr "Canale mixer video"
+
+#. TRANSLATORS: name + number of a volume mixer control
+#, c-format
+msgid "%s %d Function"
+msgstr "Funcție %s %d"
+
+#. TRANSLATORS: name of a volume mixer control
+#, c-format
+msgid "%s Function"
+msgstr "Funcție %s"
+
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru redare. Versiunea aceasta a "
+"OSS (Open Sound System) nu este suportată de acest element."
+
+msgid "Playback is not supported by this audio device."
+msgstr "Redarea nu este suportată de acest dispozitiv audio."
+
+msgid "Audio playback error."
+msgstr "Eroare redare audio."
+
+msgid "Recording is not supported by this audio device."
+msgstr "Înregistrarea nu este suportată de acest dispozitiv audio."
+
+msgid "Error recording from audio device."
+msgstr "Eroare la înregistrarea de la dispozitivul audio."
+
+msgid "Gain"
+msgstr "Amplificare"
+
+msgid "Headphone"
+msgstr "Căști"
+
+#, c-format
+msgid "Error reading %d bytes from device '%s'."
+msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
+
+#, c-format
+msgid "Got unexpected frame size of %u instead of %u."
+msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
+
+#, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Eroare citire %d octeți pe dispozitivul „%s”."
+
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Eroare la obținerea capabilităților pentru dispozitivul „%s”: Nu este un "
+"driver v4l2. Verificați dacă este un driver v4l1."
+
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr "Interogarea atributelor de intrare %d pentru dispozitivul %s a eșuat"
+
+#, c-format
+msgid "Failed to get setting of tuner %d on device '%s'."
+msgstr ""
+"A eșuat obținerea configurării receptorului %d pentru dispozitivul „%s”."
+
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr "Interogarea normei pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
+msgstr "Obținerea atributelor de control pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Dispozitivul „%s” nu poate fi identificat."
+
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr "Acesta nu este un dispozitiv „%s”."
+
+#, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "Nu se poate deschide dispozitivul „%s” pentru citire și scriere."
+
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
+
+#, c-format
+msgid "Device '%s' is not a output device."
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr "Definirea normei pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr ""
+"Obținerea frecvenței curent a receptorului pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr ""
+"Definirea frecvenței curent a receptorului pentru dispozitivul „%s” la %lu "
+"Hz a eșuat."
+
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr "Obținerea nivelului semnalului pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr "Obținerea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr "Definirii valorii %d pentru controlul %d al dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr ""
+"Obținerea intrări curente pentru dispozitivul „%s” a eșuat. Posibil să fie "
+"un dispozitiv radio."
+
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr "Nu s-a putut programa memoria tampon în dispozitivul „%s”."
+
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
+
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
+
+#, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "Nu s-au putut obține parametrii pentru dispozitivul „%s”"
+
+msgid "Video input device did not accept new frame rate setting."
+msgstr ""
+"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+
+#, c-format
+msgid "Could not map buffers from device '%s'"
+msgstr "Nu s-a putut mapa memoria tampon din dispozitivul „%s”"
+
+#, c-format
+msgid "The driver of device '%s' does not support any known capture method."
+msgstr ""
+"Driverul pentru dispozitivul „%s” nu suport nici o metodă de captură "
+"cunoscută."
+
+msgid "Changing resolution at runtime is not yet supported."
+msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
+
+msgid "Cannot operate without a clock"
+msgstr "Nu se poate opera fără un ceas"
