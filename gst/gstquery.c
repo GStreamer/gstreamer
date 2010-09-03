@@ -1400,8 +1400,10 @@ gst_query_parse_nth_buffering_range (GstQuery * query, guint index,
   ranges = (GValueArray *) g_value_get_boxed (value);
   range_value = g_value_array_get_nth (ranges, index);
   if (range_value) {
-    *start = gst_value_get_int64_range_min (range_value);
-    *stop = gst_value_get_int64_range_max (range_value);
+    if (start)
+      *start = gst_value_get_int64_range_min (range_value);
+    if (stop)
+      *stop = gst_value_get_int64_range_max (range_value);
     ret = TRUE;
   }
 
