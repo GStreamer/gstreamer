@@ -63,10 +63,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw-gray, depth=(int)8, bpp=(int)8"));
 
 GST_BOILERPLATE (GstCvEqualizeHist, gst_cv_equalize_hist,
-    GstOpencvBaseTransform, GST_TYPE_OPENCV_BASE_TRANSFORM);
+    GstOpencvVideoFilter, GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static GstFlowReturn gst_cv_equalize_hist_transform (
-    GstOpencvBaseTransform * filter, GstBuffer * buf, IplImage * img,
+    GstOpencvVideoFilter * filter, GstBuffer * buf, IplImage * img,
     GstBuffer * outbuf, IplImage * outimg);
 
 /* Clean up */
@@ -99,10 +99,10 @@ static void
 gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
 {
   GObjectClass *gobject_class;
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_cv_equalize_hist_finalize);
@@ -117,7 +117,7 @@ gst_cv_equalize_hist_init (GstCvEqualizeHist * filter,
 }
 
 static GstFlowReturn
-gst_cv_equalize_hist_transform (GstOpencvBaseTransform * base,
+gst_cv_equalize_hist_transform (GstOpencvVideoFilter * base,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   cvEqualizeHist (img, outimg);

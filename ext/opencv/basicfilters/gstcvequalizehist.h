@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <gstopencvbasetrans.h>
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,12 +67,12 @@ typedef struct _GstCvEqualizeHistClass GstCvEqualizeHistClass;
 
 struct _GstCvEqualizeHist
 {
-  GstOpencvBaseTransform element;
+  GstOpencvVideoFilter element;
 };
 
 struct _GstCvEqualizeHistClass 
 {
-  GstOpencvBaseTransformClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_cv_equalize_hist_get_type (void);

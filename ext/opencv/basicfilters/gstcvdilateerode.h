@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <gstopencvbasetrans.h>
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,14 +67,14 @@ typedef struct _GstCvDilateErodeClass GstCvDilateErodeClass;
 
 struct _GstCvDilateErode
 {
-  GstOpencvBaseTransform element;
+  GstOpencvVideoFilter element;
 
   gint iterations;
 };
 
 struct _GstCvDilateErodeClass 
 {
-  GstOpencvBaseTransformClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_cv_dilate_erode_get_type (void);

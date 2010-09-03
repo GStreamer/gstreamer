@@ -79,8 +79,8 @@ enum
 
 #define DEFAULT_APERTURE_SIZE 3
 
-GST_BOILERPLATE (GstCvLaplace, gst_cv_laplace, GstOpencvBaseTransform,
-    GST_TYPE_OPENCV_BASE_TRANSFORM);
+GST_BOILERPLATE (GstCvLaplace, gst_cv_laplace, GstOpencvVideoFilter,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_cv_laplace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -90,10 +90,10 @@ static void gst_cv_laplace_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_cv_laplace_transform_caps (GstBaseTransform * trans,
     GstPadDirection dir, GstCaps * caps);
 
-static GstFlowReturn gst_cv_laplace_transform (GstOpencvBaseTransform * filter,
+static GstFlowReturn gst_cv_laplace_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
-static gboolean gst_cv_laplace_cv_set_caps (GstOpencvBaseTransform * trans,
+static gboolean gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans,
     gint in_width, gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels);
 
@@ -134,13 +134,13 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *gstbasetransform_class;
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -168,7 +168,7 @@ gst_cv_laplace_init (GstCvLaplace * filter, GstCvLaplaceClass * gclass)
 }
 
 static gboolean
-gst_cv_laplace_cv_set_caps (GstOpencvBaseTransform * trans, gint in_width,
+gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
     gint in_height, gint in_depth, gint in_channels, gint out_width,
     gint out_height, gint out_depth, gint out_channels)
 {
@@ -273,7 +273,7 @@ gst_cv_laplace_get_property (GObject * object, guint prop_id,
 }
 
 static GstFlowReturn
-gst_cv_laplace_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_laplace_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvLaplace *filter = GST_CV_LAPLACE (base);

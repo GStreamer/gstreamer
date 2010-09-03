@@ -119,17 +119,17 @@ gst_cv_smooth_type_get_type (void)
 #define DEFAULT_PARAM3 0.0
 #define DEFAULT_PARAM4 0.0
 
-GST_BOILERPLATE (GstCvSmooth, gst_cv_smooth, GstOpencvBaseTransform,
-    GST_TYPE_OPENCV_BASE_TRANSFORM);
+GST_BOILERPLATE (GstCvSmooth, gst_cv_smooth, GstOpencvVideoFilter,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_cv_smooth_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_cv_smooth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvBaseTransform *
+static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
-static GstFlowReturn gst_cv_smooth_transform (GstOpencvBaseTransform * filter,
+static GstFlowReturn gst_cv_smooth_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* Clean up */
@@ -164,12 +164,12 @@ static void
 gst_cv_smooth_class_init (GstCvSmoothClass * klass)
 {
   GObjectClass *gobject_class;
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -328,7 +328,7 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
 }
 
 static GstFlowReturn
-gst_cv_smooth_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_smooth_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
@@ -340,7 +340,7 @@ gst_cv_smooth_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_cv_smooth_transform_ip (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);

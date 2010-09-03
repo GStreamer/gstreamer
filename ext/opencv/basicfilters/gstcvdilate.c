@@ -55,9 +55,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_debug);
 GST_BOILERPLATE (GstCvDilate, gst_cv_dilate, GstCvDilateErode,
     GST_TYPE_CV_DILATE_ERODE);
 
-static GstFlowReturn gst_cv_dilate_transform_ip (GstOpencvBaseTransform *
+static GstFlowReturn gst_cv_dilate_transform_ip (GstOpencvVideoFilter *
     filter, GstBuffer * buf, IplImage * img);
-static GstFlowReturn gst_cv_dilate_transform (GstOpencvBaseTransform * filter,
+static GstFlowReturn gst_cv_dilate_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* GObject vmethod implementations */
@@ -77,9 +77,9 @@ gst_cv_dilate_base_init (gpointer gclass)
 static void
 gst_cv_dilate_class_init (GstCvDilateClass * klass)
 {
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -98,7 +98,7 @@ gst_cv_dilate_init (GstCvDilate * filter, GstCvDilateClass * gclass)
 }
 
 static GstFlowReturn
-gst_cv_dilate_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_dilate_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvDilateErode *filter = GST_CV_DILATE_ERODE (base);
@@ -110,7 +110,7 @@ gst_cv_dilate_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
 }
 
 static GstFlowReturn
-gst_cv_dilate_transform_ip (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_dilate_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
   GstCvDilateErode *filter = GST_CV_DILATE_ERODE (base);

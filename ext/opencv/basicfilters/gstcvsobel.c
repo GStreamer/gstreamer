@@ -83,8 +83,8 @@ enum
 #define DEFAULT_Y_ORDER 0
 #define DEFAULT_APERTURE_SIZE 3
 
-GST_BOILERPLATE (GstCvSobel, gst_cv_sobel, GstOpencvBaseTransform,
-    GST_TYPE_OPENCV_BASE_TRANSFORM);
+GST_BOILERPLATE (GstCvSobel, gst_cv_sobel, GstOpencvVideoFilter,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_cv_sobel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -94,7 +94,7 @@ static void gst_cv_sobel_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_cv_sobel_transform_caps (GstBaseTransform * trans,
     GstPadDirection dir, GstCaps * caps);
 
-static GstFlowReturn gst_cv_sobel_transform (GstOpencvBaseTransform * filter,
+static GstFlowReturn gst_cv_sobel_transform (GstOpencvVideoFilter * filter,
     GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
 
 /* Clean up */
@@ -129,13 +129,13 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *gstbasetransform_class;
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -260,7 +260,7 @@ gst_cv_sobel_get_property (GObject * object, guint prop_id,
 }
 
 static GstFlowReturn
-gst_cv_sobel_transform (GstOpencvBaseTransform * base, GstBuffer * buf,
+gst_cv_sobel_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img, GstBuffer * outbuf, IplImage * outimg)
 {
   GstCvSobel *filter = GST_CV_SOBEL (base);

@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <gstopencvbasetrans.h>
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,7 +67,7 @@ typedef struct _GstCvLaplaceClass GstCvLaplaceClass;
 
 struct _GstCvLaplace
 {
-  GstOpencvBaseTransform element;
+  GstOpencvVideoFilter element;
 
   gint aperture_size;
 
@@ -76,7 +76,7 @@ struct _GstCvLaplace
 
 struct _GstCvLaplaceClass 
 {
-  GstOpencvBaseTransformClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_cv_laplace_get_type (void);

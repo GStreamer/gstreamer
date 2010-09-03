@@ -41,44 +41,45 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_OPENCV_BASE_TRANSFORM_H__
-#define __GST_OPENCV_BASE_TRANSFORM_H__
+#ifndef __GST_OPENCV_VIDEO_FILTER_H__
+#define __GST_OPENCV_VIDEO_FILTER_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/gstvideofilter.h>
 #include <cv.h>
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_OPENCV_BASE_TRANSFORM \
-  (gst_opencv_base_transform_get_type())
-#define GST_OPENCV_BASE_TRANSFORM(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransform))
-#define GST_OPENCV_BASE_TRANSFORM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransformClass))
-#define GST_IS_OPENCV_BASE_TRANSFORM(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENCV_BASE_TRANSFORM))
-#define GST_IS_OPENCV_BASE_TRANSFORM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENCV_BASE_TRANSFORM))
-#define GST_OPENCV_BASE_TRANSFORM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OPENCV_BASE_TRANSFORM,GstOpencvBaseTransformClass))
+#define GST_TYPE_OPENCV_VIDEO_FILTER \
+  (gst_opencv_video_filter_get_type())
+#define GST_OPENCV_VIDEO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OPENCV_VIDEO_FILTER,GstOpencvVideoFilter))
+#define GST_OPENCV_VIDEO_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OPENCV_VIDEO_FILTER,GstOpencvVideoFilterClass))
+#define GST_IS_OPENCV_VIDEO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OPENCV_VIDEO_FILTER))
+#define GST_IS_OPENCV_VIDEO_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OPENCV_VIDEO_FILTER))
+#define GST_OPENCV_VIDEO_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OPENCV_VIDEO_FILTER,GstOpencvVideoFilterClass))
+#define GST_OPENCV_VIDEO_FILTER_CAST(obj) ((GstOpencvVideoFilter *) (obj))
 
-typedef struct _GstOpencvBaseTransform GstOpencvBaseTransform;
-typedef struct _GstOpencvBaseTransformClass GstOpencvBaseTransformClass;
+typedef struct _GstOpencvVideoFilter GstOpencvVideoFilter;
+typedef struct _GstOpencvVideoFilterClass GstOpencvVideoFilterClass;
 
-typedef GstFlowReturn (*GstOpencvBaseTransformTransformIPFunc)
-    (GstOpencvBaseTransform * transform, GstBuffer * buffer, IplImage * img);
-typedef GstFlowReturn (*GstOpencvBaseTransformTransformFunc)
-    (GstOpencvBaseTransform * transform, GstBuffer * buffer, IplImage * img,
+typedef GstFlowReturn (*GstOpencvVideoFilterTransformIPFunc)
+    (GstOpencvVideoFilter * transform, GstBuffer * buffer, IplImage * img);
+typedef GstFlowReturn (*GstOpencvVideoFilterTransformFunc)
+    (GstOpencvVideoFilter * transform, GstBuffer * buffer, IplImage * img,
     GstBuffer * outbuf, IplImage * outimg);
 
-typedef gboolean (*GstOpencvBaseTransformSetCaps)
-    (GstOpencvBaseTransform * transform, gint in_width, gint in_height,
+typedef gboolean (*GstOpencvVideoFilterSetCaps)
+    (GstOpencvVideoFilter * transform, gint in_width, gint in_height,
     gint in_depth, gint in_channels, gint out_width, gint out_height,
     gint out_depth, gint out_channels);
 
-struct _GstOpencvBaseTransform
+struct _GstOpencvVideoFilter
 {
-  GstBaseTransform trans;
+  GstVideoFilter trans;
 
   gboolean in_place;
 
@@ -86,20 +87,20 @@ struct _GstOpencvBaseTransform
   IplImage *out_cvImage;
 };
 
-struct _GstOpencvBaseTransformClass
+struct _GstOpencvVideoFilterClass
 {
-  GstBaseTransformClass parent_class;
+  GstVideoFilterClass parent_class;
 
-  GstOpencvBaseTransformTransformFunc cv_trans_func;
-  GstOpencvBaseTransformTransformIPFunc cv_trans_ip_func;
+  GstOpencvVideoFilterTransformFunc cv_trans_func;
+  GstOpencvVideoFilterTransformIPFunc cv_trans_ip_func;
 
-  GstOpencvBaseTransformSetCaps cv_set_caps;
+  GstOpencvVideoFilterSetCaps cv_set_caps;
 };
 
-GType gst_opencv_base_transform_get_type (void);
+GType gst_opencv_video_filter_get_type (void);
 
-void gst_opencv_base_transform_set_in_place (GstOpencvBaseTransform * transform,
+void gst_opencv_video_filter_set_in_place (GstOpencvVideoFilter * transform,
     gboolean ip);
 
 G_END_DECLS
-#endif /* __GST_OPENCV_BASE_TRANSFORM_H__ */
+#endif /* __GST_OPENCV_VIDEO_FILTER_H__ */

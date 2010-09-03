@@ -49,11 +49,11 @@
 
 #include <gst/gst.h>
 
-#include "gstopencvbasetrans.h"
+#include "gstopencvvideofilter.h"
 #include "gstopencvutils.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_opencv_base_transform_debug);
-#define GST_CAT_DEFAULT gst_opencv_base_transform_debug
+GST_DEBUG_CATEGORY_STATIC (gst_opencv_video_filter_debug);
+#define GST_CAT_DEFAULT gst_opencv_video_filter_debug
 
 /* Filter signals and args */
 enum
@@ -69,47 +69,45 @@ enum
 
 static GstElementClass *parent_class = NULL;
 
-static void gst_opencv_base_transform_class_init (GstOpencvBaseTransformClass *
+static void gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass *
     klass);
-static void gst_opencv_base_transform_init (GstOpencvBaseTransform * trans,
-    GstOpencvBaseTransformClass * klass);
-static void gst_opencv_base_transform_base_init (gpointer gclass);
+static void gst_opencv_video_filter_init (GstOpencvVideoFilter * trans,
+    GstOpencvVideoFilterClass * klass);
+static void gst_opencv_video_filter_base_init (gpointer gclass);
 
-static gboolean gst_opencv_base_transform_set_caps (GstBaseTransform * trans,
+static gboolean gst_opencv_video_filter_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn gst_opencv_base_transform_transform_ip (GstBaseTransform *
+static GstFlowReturn gst_opencv_video_filter_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
-static GstFlowReturn gst_opencv_base_transform_transform (GstBaseTransform *
+static GstFlowReturn gst_opencv_video_filter_transform (GstBaseTransform *
     trans, GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean gst_opencv_base_transform_get_unit_size (GstBaseTransform *
-    trans, GstCaps * caps, guint * size);
 
-static void gst_opencv_base_transform_set_property (GObject * object,
+static void gst_opencv_video_filter_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_opencv_base_transform_get_property (GObject * object,
+static void gst_opencv_video_filter_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 GType
-gst_opencv_base_transform_get_type (void)
+gst_opencv_video_filter_get_type (void)
 {
   static volatile gsize opencv_base_transform_type = 0;
 
   if (g_once_init_enter (&opencv_base_transform_type)) {
     GType _type;
     static const GTypeInfo opencv_base_transform_info = {
-      sizeof (GstOpencvBaseTransformClass),
-      (GBaseInitFunc) gst_opencv_base_transform_base_init,
+      sizeof (GstOpencvVideoFilterClass),
+      (GBaseInitFunc) gst_opencv_video_filter_base_init,
       NULL,
-      (GClassInitFunc) gst_opencv_base_transform_class_init,
+      (GClassInitFunc) gst_opencv_video_filter_class_init,
       NULL,
       NULL,
-      sizeof (GstOpencvBaseTransform),
+      sizeof (GstOpencvVideoFilter),
       0,
-      (GInstanceInitFunc) gst_opencv_base_transform_init,
+      (GInstanceInitFunc) gst_opencv_video_filter_init,
     };
 
-    _type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstOpencvBaseTransform", &opencv_base_transform_info,
+    _type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
+        "GstOpencvVideoFilter", &opencv_base_transform_info,
         G_TYPE_FLAG_ABSTRACT);
     g_once_init_leave (&opencv_base_transform_type, _type);
   }
@@ -118,9 +116,9 @@ gst_opencv_base_transform_get_type (void)
 
 /* Clean up */
 static void
-gst_opencv_base_transform_finalize (GObject * obj)
+gst_opencv_video_filter_finalize (GObject * obj)
 {
-  GstOpencvBaseTransform *transform = GST_OPENCV_BASE_TRANSFORM (obj);
+  GstOpencvVideoFilter *transform = GST_OPENCV_VIDEO_FILTER (obj);
 
   if (transform->cvImage)
     cvReleaseImage (&transform->cvImage);
@@ -130,12 +128,12 @@ gst_opencv_base_transform_finalize (GObject * obj)
 
 /* GObject vmethod implementations */
 static void
-gst_opencv_base_transform_base_init (gpointer gclass)
+gst_opencv_video_filter_base_init (gpointer gclass)
 {
 }
 
 static void
-gst_opencv_base_transform_class_init (GstOpencvBaseTransformClass * klass)
+gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -146,35 +144,34 @@ gst_opencv_base_transform_class_init (GstOpencvBaseTransformClass * klass)
   basetrans_class = (GstBaseTransformClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_opencv_base_transform_debug,
+  GST_DEBUG_CATEGORY_INIT (gst_opencv_video_filter_debug,
       "opencvbasetransform", 0, "opencvbasetransform element");
 
   gobject_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_opencv_base_transform_finalize);
-  gobject_class->set_property = gst_opencv_base_transform_set_property;
-  gobject_class->get_property = gst_opencv_base_transform_get_property;
+      GST_DEBUG_FUNCPTR (gst_opencv_video_filter_finalize);
+  gobject_class->set_property = gst_opencv_video_filter_set_property;
+  gobject_class->get_property = gst_opencv_video_filter_get_property;
 
-  basetrans_class->transform = gst_opencv_base_transform_transform;
-  basetrans_class->transform_ip = gst_opencv_base_transform_transform_ip;
-  basetrans_class->set_caps = gst_opencv_base_transform_set_caps;
-  basetrans_class->get_unit_size = gst_opencv_base_transform_get_unit_size;
+  basetrans_class->transform = gst_opencv_video_filter_transform;
+  basetrans_class->transform_ip = gst_opencv_video_filter_transform_ip;
+  basetrans_class->set_caps = gst_opencv_video_filter_set_caps;
 }
 
 static void
-gst_opencv_base_transform_init (GstOpencvBaseTransform * transform,
-    GstOpencvBaseTransformClass * bclass)
+gst_opencv_video_filter_init (GstOpencvVideoFilter * transform,
+    GstOpencvVideoFilterClass * bclass)
 {
 }
 
 static GstFlowReturn
-gst_opencv_base_transform_transform (GstBaseTransform * trans,
+gst_opencv_video_filter_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstOpencvBaseTransform *transform;
-  GstOpencvBaseTransformClass *fclass;
+  GstOpencvVideoFilter *transform;
+  GstOpencvVideoFilterClass *fclass;
 
-  transform = GST_OPENCV_BASE_TRANSFORM (trans);
-  fclass = GST_OPENCV_BASE_TRANSFORM_GET_CLASS (transform);
+  transform = GST_OPENCV_VIDEO_FILTER (trans);
+  fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
 
   g_return_val_if_fail (fclass->cv_trans_func != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
@@ -187,34 +184,35 @@ gst_opencv_base_transform_transform (GstBaseTransform * trans,
 }
 
 static GstFlowReturn
-gst_opencv_base_transform_transform_ip (GstBaseTransform * trans,
+gst_opencv_video_filter_transform_ip (GstBaseTransform * trans,
     GstBuffer * buffer)
 {
-  GstOpencvBaseTransform *transform;
-  GstOpencvBaseTransformClass *fclass;
+  GstOpencvVideoFilter *transform;
+  GstOpencvVideoFilterClass *fclass;
 
-  transform = GST_OPENCV_BASE_TRANSFORM (trans);
-  fclass = GST_OPENCV_BASE_TRANSFORM_GET_CLASS (transform);
+  transform = GST_OPENCV_VIDEO_FILTER (trans);
+  fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
 
   g_return_val_if_fail (fclass->cv_trans_ip_func != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
 
+  /* TODO this is not always needed and should be solved at BaseTransform
+   * level */
   buffer = gst_buffer_make_writable (buffer);
 
   transform->cvImage->imageData = (char *) GST_BUFFER_DATA (buffer);
-
 
   /* FIXME how to release buffer? */
   return fclass->cv_trans_ip_func (transform, buffer, transform->cvImage);
 }
 
 static gboolean
-gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+gst_opencv_video_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstOpencvBaseTransform *transform = GST_OPENCV_BASE_TRANSFORM (trans);
-  GstOpencvBaseTransformClass *klass =
-      GST_OPENCV_BASE_TRANSFORM_GET_CLASS (transform);
+  GstOpencvVideoFilter *transform = GST_OPENCV_VIDEO_FILTER (trans);
+  GstOpencvVideoFilterClass *klass =
+      GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
   gint in_width, in_height;
   gint in_depth, in_channels;
   gint out_width, out_height;
@@ -239,7 +237,7 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   }
 
   if (klass->cv_set_caps) {
-    if (!klass->cv_set_caps(transform, in_width, in_height, in_depth,
+    if (!klass->cv_set_caps (transform, in_width, in_height, in_depth,
         in_channels, out_width, out_height, out_depth, out_channels))
       return FALSE;
   }
@@ -262,27 +260,8 @@ gst_opencv_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   return TRUE;
 }
 
-static gboolean
-gst_opencv_base_transform_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, guint * size)
-{
-  gint width, height;
-  gint bpp;
-  GstStructure *structure;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) ||
-      !gst_structure_get_int (structure, "bpp", &bpp)) {
-    return FALSE;
-  }
-  *size = width * height * bpp / 8;
-  return TRUE;
-}
-
 static void
-gst_opencv_base_transform_set_property (GObject * object, guint prop_id,
+gst_opencv_video_filter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -293,7 +272,7 @@ gst_opencv_base_transform_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_opencv_base_transform_get_property (GObject * object, guint prop_id,
+gst_opencv_video_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -304,7 +283,7 @@ gst_opencv_base_transform_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_opencv_base_transform_set_in_place (GstOpencvBaseTransform * transform,
+gst_opencv_video_filter_set_in_place (GstOpencvVideoFilter * transform,
     gboolean ip)
 {
   transform->in_place = ip;

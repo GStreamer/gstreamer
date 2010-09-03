@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <gstopencvbasetrans.h>
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,7 +67,7 @@ typedef struct _GstCvSmoothClass GstCvSmoothClass;
 
 struct _GstCvSmooth
 {
-  GstOpencvBaseTransform element;
+  GstOpencvVideoFilter element;
 
   gint type;
 
@@ -79,7 +79,7 @@ struct _GstCvSmooth
 
 struct _GstCvSmoothClass 
 {
-  GstOpencvBaseTransformClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_cv_smooth_get_type (void);

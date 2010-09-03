@@ -118,7 +118,7 @@ gst_cv_dilate_erode_get_type (void)
       (GInstanceInitFunc) gst_cv_dilate_erode_init,
     };
 
-    _type = g_type_register_static (GST_TYPE_OPENCV_BASE_TRANSFORM,
+    _type = g_type_register_static (GST_TYPE_OPENCV_VIDEO_FILTER,
         "GstCvDilateErode", &opencv_dilate_erode_info,
         G_TYPE_FLAG_ABSTRACT);
 /*
@@ -156,12 +156,12 @@ static void
 gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
 {
   GObjectClass *gobject_class;
-  GstOpencvBaseTransformClass *gstopencvbasefilter_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvBaseTransformClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

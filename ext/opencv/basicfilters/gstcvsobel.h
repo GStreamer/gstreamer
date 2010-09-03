@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
-#include <gstopencvbasetrans.h>
+#include <gstopencvvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,7 +67,7 @@ typedef struct _GstCvSobelClass GstCvSobelClass;
 
 struct _GstCvSobel
 {
-  GstOpencvBaseTransform element;
+  GstOpencvVideoFilter element;
 
   gint x_order;
   gint y_order;
@@ -76,7 +76,7 @@ struct _GstCvSobel
 
 struct _GstCvSobelClass 
 {
-  GstOpencvBaseTransformClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_cv_sobel_get_type (void);
