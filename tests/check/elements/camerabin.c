@@ -30,15 +30,16 @@
 #include <gst/check/gstcheck.h>
 #include <gst/interfaces/photography.h>
 
-#define SINGLE_IMAGE_FILENAME "image.cap"
-#define SINGLE_IMAGE_WITH_FLAGS_FILENAME "image_with_flags.cap"
-#define BURST_IMAGE_FILENAME "burst_image.cap"
-#define VIDEO_FILENAME "video.cap"
-#define VIDEO_WITH_FLAGS_FILENAME "video_with_flags.cap"
-#define VIDEO_PAUSE_FILENAME "video_pause.cap"
-#define VIDEO_NOAUDIO_FILENAME "video_noaudio.cap"
-#define CYCLE_IMAGE_FILENAME "cycle_image.cap"
-#define CYCLE_VIDEO_FILENAME "cycle_video.cap"
+#define SINGLE_IMAGE_FILENAME "image"
+#define SINGLE_IMAGE_WITH_FLAGS_FILENAME "image_with_flags"
+#define BURST_IMAGE_FILENAME "burst_image"
+#define VIDEO_FILENAME "video"
+#define VIDEO_WITH_FLAGS_FILENAME "video_with_flags"
+#define VIDEO_PAUSE_FILENAME "video_pause"
+#define VIDEO_NOAUDIO_FILENAME "video_noaudio"
+#define CYCLE_IMAGE_FILENAME "cycle_image"
+#define CYCLE_VIDEO_FILENAME "cycle_video"
+#define CYCLE_COUNT_MAX 2
 #define MAX_BURST_IMAGES 10
 #define PHOTO_SETTING_DELAY_US 0
 
@@ -49,12 +50,12 @@ static gboolean received_preview_msg = FALSE;
 
 /* helper function for filenames */
 static const gchar *
-make_test_file_name (const gchar * base_name)
+make_test_file_name (const gchar * base_name, gint num)
 {
   static gchar file_name[1000];
 
-  g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S "%s",
-      g_get_tmp_dir (), base_name);
+  g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
+      "gstcamerabintest_%s_%03d.cap", g_get_tmp_dir (), base_name, num);
 
   GST_INFO ("capturing to: %s (cycle: %d)", file_name, cycle_count);
   return file_name;
@@ -91,7 +92,8 @@ handle_image_captured_cb (gpointer data)
   } else {
     /* Set video recording mode */
     g_object_set (camera, "mode", 1,
-        "filename", make_test_file_name (CYCLE_VIDEO_FILENAME), NULL);
+        "filename", make_test_file_name (CYCLE_VIDEO_FILENAME, cycle_count),
+        NULL);
     /* Record video */
     g_signal_emit_by_name (camera, "capture-start", NULL);
     g_usleep (G_USEC_PER_SEC);
@@ -100,12 +102,14 @@ handle_image_captured_cb (gpointer data)
 
     /* Set still image mode */
     g_object_set (camera, "mode", 0,
-        "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
-    /* Take a picture */
-    g_signal_emit_by_name (camera, "capture-start", NULL);
+        "filename", make_test_file_name (CYCLE_IMAGE_FILENAME, cycle_count),
+        NULL);
 
     cycle_count--;
     GST_DEBUG ("next cycle: %d", cycle_count);
+
+    /* Take a picture */
+    g_signal_emit_by_name (camera, "capture-start", NULL);
   }
   GST_DEBUG ("handle_image_captured_cb done");
   return FALSE;
@@ -619,14 +623,15 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 /* Validate captured files by playing them with playbin
  * and checking that no errors occur. */
 static gboolean
-check_file_validity (const gchar * filename)
+check_file_validity (const gchar * filename, gint num)
 {
   GstBus *bus;
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   GstElement *playbin = gst_element_factory_make ("playbin2", NULL);
   GstElement *fakevideo = gst_element_factory_make ("fakesink", NULL);
   GstElement *fakeaudio = gst_element_factory_make ("fakesink", NULL);
-  gchar *uri = g_strconcat ("file://", make_test_file_name (filename), NULL);
+  gchar *uri = g_strconcat ("file://", make_test_file_name (filename, num),
+      NULL);
 
   GST_DEBUG ("checking uri: %s", uri);
   g_object_set (G_OBJECT (playbin), "uri", uri, "video-sink", fakevideo,
@@ -662,7 +667,7 @@ GST_START_TEST (test_single_image_capture)
 
   /* set still image mode */
   g_object_set (camera, "mode", 0,
-      "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
+      "filename", make_test_file_name (SINGLE_IMAGE_FILENAME, 0), NULL);
 
   /* don't run viewfinder after capture */
   g_object_set (camera, "block-after-capture", TRUE, NULL);
@@ -672,6 +677,8 @@ GST_START_TEST (test_single_image_capture)
 
   g_main_loop_run (main_loop);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (SINGLE_IMAGE_FILENAME, 0);
 }
 
 GST_END_TEST;
@@ -686,13 +693,16 @@ GST_START_TEST (test_single_image_capture_with_flags)
 
   /* set still image mode */
   g_object_set (camera, "mode", 0,
-      "filename", make_test_file_name (SINGLE_IMAGE_WITH_FLAGS_FILENAME), NULL);
+      "filename", make_test_file_name (SINGLE_IMAGE_WITH_FLAGS_FILENAME, 0),
+      NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (SINGLE_IMAGE_WITH_FLAGS_FILENAME, 0);
 }
 
 GST_END_TEST;
@@ -710,7 +720,7 @@ GST_START_TEST (test_video_recording)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
-      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
+      "filename", make_test_file_name (VIDEO_WITH_FLAGS_FILENAME, 0), NULL);
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
@@ -726,6 +736,8 @@ GST_START_TEST (test_video_recording)
       "creating video recording preview image failed");
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (VIDEO_WITH_FLAGS_FILENAME, 0);
 }
 
 GST_END_TEST;
@@ -743,7 +755,7 @@ GST_START_TEST (test_video_recording_with_flags)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
-      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
+      "filename", make_test_file_name (VIDEO_FILENAME, 0), NULL);
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
@@ -759,6 +771,8 @@ GST_START_TEST (test_video_recording_with_flags)
       "creating video recording preview image failed");
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (VIDEO_FILENAME, 0);
 }
 
 GST_END_TEST;
@@ -770,7 +784,7 @@ GST_START_TEST (test_video_recording_pause)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
-      "filename", make_test_file_name (VIDEO_PAUSE_FILENAME), NULL);
+      "filename", make_test_file_name (VIDEO_PAUSE_FILENAME, 0), NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
@@ -788,6 +802,8 @@ GST_START_TEST (test_video_recording_pause)
   g_usleep (G_USEC_PER_SEC);
   g_signal_emit_by_name (camera, "capture-stop", NULL);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (VIDEO_PAUSE_FILENAME, 0);
 }
 
 GST_END_TEST;
@@ -805,7 +821,7 @@ GST_START_TEST (test_video_recording_no_audio)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
-      "filename", make_test_file_name (VIDEO_NOAUDIO_FILENAME), NULL);
+      "filename", make_test_file_name (VIDEO_NOAUDIO_FILENAME, 0), NULL);
 
   /* Set preview-caps */
   g_object_set (camera, "preview-caps", preview_caps, NULL);
@@ -821,74 +837,37 @@ GST_START_TEST (test_video_recording_no_audio)
       "creating video recording preview image failed");
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+
+  check_file_validity (VIDEO_NOAUDIO_FILENAME, 0);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_image_video_cycle)
 {
+  gint i;
+
   if (!camera)
     return;
 
-  cycle_count = 2;
+  cycle_count = CYCLE_COUNT_MAX;
 
   /* set still image mode */
   g_object_set (camera, "mode", 0,
-      "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
+      "filename", make_test_file_name (CYCLE_IMAGE_FILENAME, cycle_count),
+      NULL);
 
   GST_INFO ("starting capture");
   g_signal_emit_by_name (camera, "capture-start", NULL);
 
   g_main_loop_run (main_loop);
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
-}
 
-GST_END_TEST;
-
-GST_START_TEST (validate_captured_image_files)
-{
-  if (!camera)
-    return;
-
-  /* validate single image */
-  check_file_validity (SINGLE_IMAGE_FILENAME);
-  /* validate single image with flags */
-  check_file_validity (SINGLE_IMAGE_WITH_FLAGS_FILENAME);
-
-/* burst capture is not supported in camerabin for the moment */
-#ifdef ENABLE_BURST_CAPTURE
-  GString *filename;
-  gint i;
-
-  /* validate burst mode images */
-  filename = g_string_new ("");
-  for (i = 0; i < MAX_BURST_IMAGES; i++) {
-    g_string_printf (filename, "%02u_%s", i, BURST_IMAGE_FILENAME);
-    check_file_validity (filename->str);
+  /* validate all the files */
+  for (i = 2; i > 0; i--) {
+    check_file_validity (CYCLE_IMAGE_FILENAME, i);
+    check_file_validity (CYCLE_VIDEO_FILENAME, i);
   }
-  g_string_free (filename, TRUE);
-#endif
-  /* validate cycled image */
-  check_file_validity (CYCLE_IMAGE_FILENAME);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (validate_captured_video_files)
-{
-  if (!camera)
-    return;
-
-  /* validate video recording */
-  check_file_validity (VIDEO_FILENAME);
-  /* validate video recording */
-  check_file_validity (VIDEO_WITH_FLAGS_FILENAME);
-  /* validate video recording with pause */
-  check_file_validity (VIDEO_PAUSE_FILENAME);
-  /* validate video recording without audio */
-  check_file_validity (VIDEO_NOAUDIO_FILENAME);
-  /* validate cycled  video */
-  check_file_validity (CYCLE_VIDEO_FILENAME);
 }
 
 GST_END_TEST;
@@ -898,7 +877,6 @@ camerabin_suite (void)
 {
   Suite *s = suite_create ("camerabin");
   TCase *tc_basic = tcase_create ("general");
-  TCase *tc_validate = tcase_create ("validate");
 
   /* Test that basic operations run without errors */
   suite_add_tcase (s, tc_basic);
@@ -912,13 +890,6 @@ camerabin_suite (void)
   tcase_add_test (tc_basic, test_video_recording_pause);
   tcase_add_test (tc_basic, test_video_recording_no_audio);
   tcase_add_test (tc_basic, test_image_video_cycle);
-
-  /* Validate captured files */
-  suite_add_tcase (s, tc_validate);
-  /* Increase timeout due to file playback */
-  tcase_set_timeout (tc_validate, 20);
-  tcase_add_test (tc_validate, validate_captured_image_files);
-  tcase_add_test (tc_validate, validate_captured_video_files);
 
   return s;
 }
