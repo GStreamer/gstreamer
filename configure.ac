@@ -3,7 +3,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Bad Plug-ins, 0.10.20,
+AC_INIT(GStreamer Bad Plug-ins, 0.10.20.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-bad)
 
@@ -1627,7 +1627,8 @@ AC_SUBST(PROFILE_CFLAGS)
 
 if test "x$PACKAGE_VERSION_NANO" = "x1"; then
   dnl Define _only_ during CVS (not pre-releases or releases)
-  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+  dnl FIXME: temporarily disabled: DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+  DEPRECATED_CFLAGS=""
 else
   DEPRECATED_CFLAGS=""
 fi
