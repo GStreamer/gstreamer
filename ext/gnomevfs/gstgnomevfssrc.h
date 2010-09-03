@@ -58,8 +58,10 @@ struct _GstGnomeVFSSrc
   /* uri, file, ... */
   GnomeVFSURI *uri;
   gchar *uri_name;
+  GnomeVFSContext *context;
   GnomeVFSHandle *handle;
   gboolean own_handle;
+  gboolean interrupted;
   GnomeVFSFileOffset curoffset; /* current offset in file */
   gboolean seekable;
 

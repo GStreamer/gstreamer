@@ -70,6 +70,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "gstgnomevfssrc.h"
+#include <gnome-vfs-module-2.0/libgnomevfs/gnome-vfs-cancellable-ops.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,6 +133,8 @@ static gboolean gst_gnome_vfs_src_stop (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_start (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_check_get_range (GstBaseSrc * src);
+static gboolean gst_gnome_vfs_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_gnome_vfs_src_unlock_stop (GstBaseSrc * basesrc);
 static gboolean gst_gnome_vfs_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
@@ -241,6 +244,9 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_unlock);
+  gstbasesrc_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_unlock_stop);  
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_get_size);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_is_seekable);
@@ -255,7 +261,9 @@ gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc)
 {
   gnomevfssrc->uri = NULL;
   gnomevfssrc->uri_name = NULL;
+  gnomevfssrc->context = NULL;
   gnomevfssrc->handle = NULL;
+  gnomevfssrc->interrupted = FALSE;
   gnomevfssrc->curoffset = 0;
   gnomevfssrc->seekable = FALSE;
 
@@ -633,9 +641,19 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   data = GST_BUFFER_DATA (buf);
 
   todo = size;
-  while (todo > 0) {
+  while (!src->interrupted && todo > 0) {
     /* this can return less that we ask for */
-    res = gnome_vfs_read (src->handle, data, todo, &readbytes);
+    res = gnome_vfs_read_cancellable (src->handle, data, todo, &readbytes, src->context);
+
+    if (G_UNLIKELY (res == GNOME_VFS_ERROR_CANCELLED)) {
+      GST_DEBUG_OBJECT (src, "interrupted");
+
+      /* Just take what we've so far gotten and return */
+      size = size - todo;
+      GST_BUFFER_SIZE (buf) = size;
+      todo = 0;
+      break;
+    }
 
     if (G_UNLIKELY (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK
                 && readbytes == 0)))
@@ -652,6 +670,11 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     }
     GST_LOG ("  got size %" G_GUINT64_FORMAT, readbytes);
   }
+
+  /* Handle interrupts implicitly, since the flag may have been cleared by now */
+  if (size == todo)
+    goto interrupted;
+
   GST_BUFFER_OFFSET (buf) = src->curoffset;
   src->curoffset += size;
 
@@ -680,6 +703,11 @@ read_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Failed to read data: %s", gnome_vfs_result_to_string (res)));
     return GST_FLOW_ERROR;
+  }
+interrupted:
+  {
+    gst_buffer_unref (buf);
+    return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
@@ -766,6 +794,38 @@ undecided:
   }
 }
 
+/* Interrupt a blocking request. */
+static gboolean
+gst_gnome_vfs_src_unlock (GstBaseSrc * basesrc)
+{
+  GstGnomeVFSSrc *src;
+
+  src = GST_GNOME_VFS_SRC (basesrc);
+  GST_DEBUG_OBJECT (src, "unlock()");
+  src->interrupted = TRUE;
+  if (src->context)
+  {
+    GnomeVFSCancellation *cancel =
+      gnome_vfs_context_get_cancellation (src->context);
+    if (cancel)
+      gnome_vfs_cancellation_cancel (cancel);
+  }
+  return TRUE;
+}
+
+/* Interrupt interrupt. */
+static gboolean
+gst_gnome_vfs_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  GstGnomeVFSSrc *src;
+
+  src = GST_GNOME_VFS_SRC (basesrc);
+  GST_DEBUG_OBJECT (src, "unlock_stop()");
+
+  src->interrupted = FALSE;
+  return TRUE;
+}
+
 static gboolean
 gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
@@ -819,6 +879,7 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 
   gst_gnome_vfs_src_push_callbacks (src);
 
+  src->context = gnome_vfs_context_new();
   if (src->uri != NULL) {
     GnomeVFSOpenMode mode = GNOME_VFS_OPEN_READ;
 
@@ -890,6 +951,9 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
     src->handle = NULL;
   }
   src->curoffset = 0;
+  src->interrupted = FALSE;
+  gnome_vfs_context_free( src->context );
+  src->context = NULL;
 
   return TRUE;
 }
