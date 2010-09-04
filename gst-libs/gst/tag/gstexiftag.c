@@ -1201,8 +1201,8 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
 {
   GstByteReader data_reader;
   guint32 real_offset;
-  gint32 frac_n;
-  gint32 frac_d;
+  gint32 frac_n = 0;
+  gint32 frac_d = 0;
 
   if (count > 1) {
     GST_WARNING ("Rationals with multiple entries are not supported");
@@ -1225,7 +1225,7 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
     goto reader_fail;
 
   if (!is_signed) {
-    guint32 aux_n, aux_d;
+    guint32 aux_n = 0, aux_d = 0;
     if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
       if (!gst_byte_reader_get_uint32_le (&data_reader, &aux_n) ||
           !gst_byte_reader_get_uint32_le (&data_reader, &aux_d))
