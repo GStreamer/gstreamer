@@ -73,6 +73,9 @@ void deinterlace_line_linear (guint8 * d1, const guint8 * s1, const guint8 * s2,
     int n);
 void deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1,
     const guint8 * s2, const guint8 * s3, int n);
+void deinterlace_line_greedy (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int p1,
+    int n);
 
 
 /* begin Orc C target preamble */
@@ -665,6 +668,364 @@ deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* deinterlace_line_greedy */
+#ifdef DISABLE_ORC
+void
+deinterlace_line_greedy (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int p1,
+    int n)
+{
+  int i;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  const orc_int8 *ORC_RESTRICT ptr5;
+  const orc_int8 *ORC_RESTRICT ptr6;
+  const orc_int8 *ORC_RESTRICT ptr7;
+  orc_int8 var40;
+  orc_int8 var41;
+  orc_int8 var42;
+  orc_int8 var43;
+  orc_int8 var44;
+  orc_int8 var45;
+  orc_int8 var46;
+  orc_int8 var47;
+  orc_int8 var48;
+  orc_int8 var49;
+  orc_int8 var50;
+  orc_int8 var51;
+  orc_int8 var52;
+  orc_int8 var53;
+  orc_int8 var54;
+  orc_int8 var55;
+  orc_int8 var56;
+  orc_int8 var57;
+  orc_int8 var58;
+  orc_int8 var59;
+  orc_int8 var60;
+  orc_int8 var61;
+  orc_int8 var62;
+  orc_int8 var63;
+  orc_int8 var64;
+  orc_int8 var65;
+  orc_int8 var66;
+  orc_int8 var67;
+  orc_int8 var68;
+  orc_int8 var69;
+  orc_int8 var70;
+  orc_int8 var71;
+  orc_int8 var72;
+  orc_int8 var73;
+  orc_int8 var74;
+
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_int8 *) s1;
+  ptr5 = (orc_int8 *) s2;
+  ptr6 = (orc_int8 *) s3;
+  ptr7 = (orc_int8 *) s4;
+
+  /* 13: loadpb */
+  var46 = 0x00000080;           /* 128 or 6.32404e-322f */
+  /* 15: loadpb */
+  var47 = 0x00000080;           /* 128 or 6.32404e-322f */
+  /* 29: loadpb */
+  var54 = p1;
+  /* 31: loadpb */
+  var55 = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var40 = ptr5[i];
+    /* 1: loadb */
+    var41 = ptr6[i];
+    /* 2: avgub */
+    var57 = ((orc_uint8) var40 + (orc_uint8) var41 + 1) >> 1;
+    /* 3: loadb */
+    var42 = ptr4[i];
+    /* 4: maxub */
+    var58 = ORC_MAX ((orc_uint8) var42, (orc_uint8) var57);
+    /* 5: loadb */
+    var43 = ptr4[i];
+    /* 6: minub */
+    var59 = ORC_MIN ((orc_uint8) var43, (orc_uint8) var57);
+    /* 7: subb */
+    var60 = var58 - var59;
+    /* 8: loadb */
+    var44 = ptr7[i];
+    /* 9: maxub */
+    var61 = ORC_MAX ((orc_uint8) var44, (orc_uint8) var57);
+    /* 10: loadb */
+    var45 = ptr7[i];
+    /* 11: minub */
+    var62 = ORC_MIN ((orc_uint8) var45, (orc_uint8) var57);
+    /* 12: subb */
+    var63 = var61 - var62;
+    /* 14: xorb */
+    var64 = var60 ^ var46;
+    /* 16: xorb */
+    var65 = var63 ^ var47;
+    /* 17: cmpgtsb */
+    var66 = (var64 > var65) ? (~0) : 0;
+    /* 18: loadb */
+    var48 = ptr4[i];
+    /* 19: andb */
+    var67 = var48 & var66;
+    /* 20: loadb */
+    var49 = ptr7[i];
+    /* 21: andnb */
+    var68 = (~var49) & var66;
+    /* 22: orb */
+    var69 = var67 | var68;
+    /* 23: loadb */
+    var50 = ptr5[i];
+    /* 24: loadb */
+    var51 = ptr6[i];
+    /* 25: maxub */
+    var70 = ORC_MAX ((orc_uint8) var50, (orc_uint8) var51);
+    /* 26: loadb */
+    var52 = ptr5[i];
+    /* 27: loadb */
+    var53 = ptr6[i];
+    /* 28: minub */
+    var71 = ORC_MIN ((orc_uint8) var52, (orc_uint8) var53);
+    /* 30: addusb */
+    var72 = ORC_CLAMP_UB ((orc_uint8) var70 + (orc_uint8) var54);
+    /* 32: subusb */
+    var73 = ORC_CLAMP_UB ((orc_uint8) var71 - (orc_uint8) var55);
+    /* 33: minub */
+    var74 = ORC_MIN ((orc_uint8) var69, (orc_uint8) var72);
+    /* 34: maxub */
+    var56 = ORC_MAX ((orc_uint8) var74, (orc_uint8) var73);
+    /* 35: storeb */
+    ptr0[i] = var56;
+  }
+
+}
+
+#else
+static void
+_backup_deinterlace_line_greedy (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_int8 *ORC_RESTRICT ptr4;
+  const orc_int8 *ORC_RESTRICT ptr5;
+  const orc_int8 *ORC_RESTRICT ptr6;
+  const orc_int8 *ORC_RESTRICT ptr7;
+  orc_int8 var40;
+  orc_int8 var41;
+  orc_int8 var42;
+  orc_int8 var43;
+  orc_int8 var44;
+  orc_int8 var45;
+  orc_int8 var46;
+  orc_int8 var47;
+  orc_int8 var48;
+  orc_int8 var49;
+  orc_int8 var50;
+  orc_int8 var51;
+  orc_int8 var52;
+  orc_int8 var53;
+  orc_int8 var54;
+  orc_int8 var55;
+  orc_int8 var56;
+  orc_int8 var57;
+  orc_int8 var58;
+  orc_int8 var59;
+  orc_int8 var60;
+  orc_int8 var61;
+  orc_int8 var62;
+  orc_int8 var63;
+  orc_int8 var64;
+  orc_int8 var65;
+  orc_int8 var66;
+  orc_int8 var67;
+  orc_int8 var68;
+  orc_int8 var69;
+  orc_int8 var70;
+  orc_int8 var71;
+  orc_int8 var72;
+  orc_int8 var73;
+  orc_int8 var74;
+
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_int8 *) ex->arrays[4];
+  ptr5 = (orc_int8 *) ex->arrays[5];
+  ptr6 = (orc_int8 *) ex->arrays[6];
+  ptr7 = (orc_int8 *) ex->arrays[7];
+
+  /* 13: loadpb */
+  var46 = 0x00000080;           /* 128 or 6.32404e-322f */
+  /* 15: loadpb */
+  var47 = 0x00000080;           /* 128 or 6.32404e-322f */
+  /* 29: loadpb */
+  var54 = ex->params[24];
+  /* 31: loadpb */
+  var55 = ex->params[24];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadb */
+    var40 = ptr5[i];
+    /* 1: loadb */
+    var41 = ptr6[i];
+    /* 2: avgub */
+    var57 = ((orc_uint8) var40 + (orc_uint8) var41 + 1) >> 1;
+    /* 3: loadb */
+    var42 = ptr4[i];
+    /* 4: maxub */
+    var58 = ORC_MAX ((orc_uint8) var42, (orc_uint8) var57);
+    /* 5: loadb */
+    var43 = ptr4[i];
+    /* 6: minub */
+    var59 = ORC_MIN ((orc_uint8) var43, (orc_uint8) var57);
+    /* 7: subb */
+    var60 = var58 - var59;
+    /* 8: loadb */
+    var44 = ptr7[i];
+    /* 9: maxub */
+    var61 = ORC_MAX ((orc_uint8) var44, (orc_uint8) var57);
+    /* 10: loadb */
+    var45 = ptr7[i];
+    /* 11: minub */
+    var62 = ORC_MIN ((orc_uint8) var45, (orc_uint8) var57);
+    /* 12: subb */
+    var63 = var61 - var62;
+    /* 14: xorb */
+    var64 = var60 ^ var46;
+    /* 16: xorb */
+    var65 = var63 ^ var47;
+    /* 17: cmpgtsb */
+    var66 = (var64 > var65) ? (~0) : 0;
+    /* 18: loadb */
+    var48 = ptr4[i];
+    /* 19: andb */
+    var67 = var48 & var66;
+    /* 20: loadb */
+    var49 = ptr7[i];
+    /* 21: andnb */
+    var68 = (~var49) & var66;
+    /* 22: orb */
+    var69 = var67 | var68;
+    /* 23: loadb */
+    var50 = ptr5[i];
+    /* 24: loadb */
+    var51 = ptr6[i];
+    /* 25: maxub */
+    var70 = ORC_MAX ((orc_uint8) var50, (orc_uint8) var51);
+    /* 26: loadb */
+    var52 = ptr5[i];
+    /* 27: loadb */
+    var53 = ptr6[i];
+    /* 28: minub */
+    var71 = ORC_MIN ((orc_uint8) var52, (orc_uint8) var53);
+    /* 30: addusb */
+    var72 = ORC_CLAMP_UB ((orc_uint8) var70 + (orc_uint8) var54);
+    /* 32: subusb */
+    var73 = ORC_CLAMP_UB ((orc_uint8) var71 - (orc_uint8) var55);
+    /* 33: minub */
+    var74 = ORC_MIN ((orc_uint8) var69, (orc_uint8) var72);
+    /* 34: maxub */
+    var56 = ORC_MAX ((orc_uint8) var74, (orc_uint8) var73);
+    /* 35: storeb */
+    ptr0[i] = var56;
+  }
+
+}
+
+void
+deinterlace_line_greedy (orc_uint8 * d1, const orc_uint8 * s1,
+    const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int p1,
+    int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  static int p_inited = 0;
+  static OrcProgram *p = 0;
+  void (*func) (OrcExecutor *);
+
+  if (!p_inited) {
+    orc_once_mutex_lock ();
+    if (!p_inited) {
+      OrcCompileResult result;
+
+      p = orc_program_new ();
+      orc_program_set_name (p, "deinterlace_line_greedy");
+      orc_program_set_backup_function (p, _backup_deinterlace_line_greedy);
+      orc_program_add_destination (p, 1, "d1");
+      orc_program_add_source (p, 1, "s1");
+      orc_program_add_source (p, 1, "s2");
+      orc_program_add_source (p, 1, "s3");
+      orc_program_add_source (p, 1, "s4");
+      orc_program_add_constant (p, 4, 0x00000080, "c1");
+      orc_program_add_parameter (p, 1, "p1");
+      orc_program_add_temporary (p, 1, "t1");
+      orc_program_add_temporary (p, 1, "t2");
+      orc_program_add_temporary (p, 1, "t3");
+      orc_program_add_temporary (p, 1, "t4");
+      orc_program_add_temporary (p, 1, "t5");
+      orc_program_add_temporary (p, 1, "t6");
+      orc_program_add_temporary (p, 1, "t7");
+      orc_program_add_temporary (p, 1, "t8");
+
+      orc_program_append_2 (p, "avgub", 0, ORC_VAR_T1, ORC_VAR_S2, ORC_VAR_S3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "maxub", 0, ORC_VAR_T4, ORC_VAR_S1, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "minub", 0, ORC_VAR_T5, ORC_VAR_S1, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subb", 0, ORC_VAR_T2, ORC_VAR_T4, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "maxub", 0, ORC_VAR_T4, ORC_VAR_S4, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "minub", 0, ORC_VAR_T5, ORC_VAR_S4, ORC_VAR_T1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subb", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorb", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "xorb", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_C1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "cmpgtsb", 0, ORC_VAR_T5, ORC_VAR_T2, ORC_VAR_T3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andb", 0, ORC_VAR_T4, ORC_VAR_S1, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "andnb", 0, ORC_VAR_T5, ORC_VAR_S4, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "orb", 0, ORC_VAR_T6, ORC_VAR_T4, ORC_VAR_T5,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "maxub", 0, ORC_VAR_T8, ORC_VAR_S2, ORC_VAR_S3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "minub", 0, ORC_VAR_T7, ORC_VAR_S2, ORC_VAR_S3,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addusb", 0, ORC_VAR_T8, ORC_VAR_T8, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "subusb", 0, ORC_VAR_T7, ORC_VAR_T7, ORC_VAR_P1,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "minub", 0, ORC_VAR_T6, ORC_VAR_T6, ORC_VAR_T8,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "maxub", 0, ORC_VAR_D1, ORC_VAR_T6, ORC_VAR_T7,
+          ORC_VAR_D1);
+
+      result = orc_program_compile (p);
+    }
+    p_inited = TRUE;
+    orc_once_mutex_unlock ();
+  }
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+  ex->arrays[ORC_VAR_S2] = (void *) s2;
+  ex->arrays[ORC_VAR_S3] = (void *) s3;
+  ex->arrays[ORC_VAR_S4] = (void *) s4;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = p->code_exec;
   func (ex);

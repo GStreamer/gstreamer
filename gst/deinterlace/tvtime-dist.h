@@ -56,6 +56,7 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_u
 void deinterlace_line_vfir (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, const guint8 * s4, const guint8 * s5, int n);
 void deinterlace_line_linear (guint8 * d1, const guint8 * s1, const guint8 * s2, int n);
 void deinterlace_line_linear_blend (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
+void deinterlace_line_greedy (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2, const orc_uint8 * s3, const orc_uint8 * s4, int p1, int n);
 
 #ifdef __cplusplus
 }
