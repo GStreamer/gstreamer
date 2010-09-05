@@ -1819,8 +1819,7 @@ convert_u8_s16 (CogFrame * frame, void *_dest, int component, int i)
   int16_t *src;
 
   src = cog_virt_frame_get_line (frame->virt_frame1, component, i);
-  orc_addc_convert_u8_s16 (dest, frame->virt_priv,
-      frame->components[component].width);
+  orc_addc_convert_u8_s16 (dest, src, frame->components[component].width);
 }
 
 CogFrame *
@@ -1834,7 +1833,6 @@ cog_virt_frame_new_convert_u8 (CogFrame * vf)
   virt_frame = cog_frame_new_virtual (NULL, format, vf->width, vf->height);
   virt_frame->virt_frame1 = vf;
   virt_frame->render_line = convert_u8_s16;
-  virt_frame->virt_priv = g_malloc (sizeof (int16_t) * vf->width);
 
   return virt_frame;
 }
