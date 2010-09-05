@@ -97,15 +97,19 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw-rgb")
     );
 
-GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstOpencvVideoFilter,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_facedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_facedetect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_facedetect_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_facedetect_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_facedetect_set_caps (GstOpencvVideoFilter * transform,
+    gint in_width,  gint in_height, gint in_depth, gint in_channels,
+    gint out_width, gint out_height, gint out_depth, gint out_channels);
+static GstFlowReturn gst_facedetect_transform_ip (GstOpencvVideoFilter * base,
+    GstBuffer * buf, IplImage * img);
 
 static void gst_facedetect_load_profile (Gstfacedetect * filter);
 
@@ -115,9 +119,11 @@ gst_facedetect_finalize (GObject * obj)
 {
   Gstfacedetect *filter = GST_FACEDETECT (obj);
 
-  if (filter->cvImage) {
-    cvReleaseImage (&filter->cvImage);
+  if (filter->cvGray) {
     cvReleaseImage (&filter->cvGray);
+  }
+  if (filter->cvStorage) {
+    cvReleaseMemStorage (&filter->cvStorage);
   }
 
   g_free (filter->profile);
@@ -150,14 +156,19 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_facedetect_finalize);
   gobject_class->set_property = gst_facedetect_set_property;
   gobject_class->get_property = gst_facedetect_get_property;
+
+  gstopencvbasefilter_class->cv_trans_ip_func = gst_facedetect_transform_ip;
+  gstopencvbasefilter_class->cv_set_caps = gst_facedetect_set_caps;
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_boolean ("display", "Display",
@@ -177,23 +188,12 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
 static void
 gst_facedetect_init (Gstfacedetect * filter, GstfacedetectClass * gclass)
 {
-  filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_facedetect_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_facedetect_chain));
-
-  filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->profile = g_strdup(DEFAULT_PROFILE);
   filter->display = TRUE;
   gst_facedetect_load_profile (filter);
+
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
+      TRUE);
 }
 
 static void
@@ -240,53 +240,48 @@ gst_facedetect_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_facedetect_set_caps (GstPad * pad, GstCaps * caps)
+gst_facedetect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
+    gint in_height, gint in_depth, gint in_channels,
+    gint out_width, gint out_height, gint out_depth, gint out_channels)
 {
   Gstfacedetect *filter;
-  GstPad *otherpad;
-  gint width, height;
-  GstStructure *structure;
 
-  filter = GST_FACEDETECT (gst_pad_get_parent (pad));
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "height", &height);
+  filter = GST_FACEDETECT (transform);
 
-  filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
-  filter->cvGray = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 1);
-  filter->cvStorage = cvCreateMemStorage (0);
+  if (filter->cvGray)
+    cvReleaseImage (&filter->cvGray);
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-  gst_object_unref (filter);
+  filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U,
+      1);
 
-  return gst_pad_set_caps (otherpad, caps);
+  if (!filter->cvStorage)
+    filter->cvStorage = cvCreateMemStorage (0);
+  else
+    cvClearMemStorage (filter->cvStorage);
+
+  return TRUE;
 }
 
 /* chain function
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
+gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
+    IplImage * img)
 {
   Gstfacedetect *filter;
   CvSeq *faces;
   int i;
 
-  filter = GST_FACEDETECT (GST_OBJECT_PARENT (pad));
+  filter = GST_FACEDETECT (base);
 
-  filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
-
-  cvCvtColor (filter->cvImage, filter->cvGray, CV_RGB2GRAY);
+  cvCvtColor (img, filter->cvGray, CV_RGB2GRAY);
   cvClearMemStorage (filter->cvStorage);
 
   if (filter->cvCascade) {
     faces =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
-
-    if (filter->display && faces && faces->total > 0) {
-      buf = gst_buffer_make_writable (buf);
-    }
 
     for (i = 0; i < (faces ? faces->total : 0); i++) {
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
@@ -301,20 +296,24 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
       gst_element_post_message (GST_ELEMENT (filter), m);
 
       if (filter->display) {
-        CvPoint center;
-        int radius;
-        center.x = cvRound ((r->x + r->width * 0.5));
-        center.y = cvRound ((r->y + r->height * 0.5));
-        radius = cvRound ((r->width + r->height) * 0.25);
-        cvCircle (filter->cvImage, center, radius, CV_RGB (255, 32, 32), 3, 8,
-            0);
+        if (gst_buffer_is_writable (buf)) {
+          CvPoint center;
+          int radius;
+          center.x = cvRound ((r->x + r->width * 0.5));
+          center.y = cvRound ((r->y + r->height * 0.5));
+          radius = cvRound ((r->width + r->height) * 0.25);
+          cvCircle (img, center, radius, CV_RGB (255, 32, 32), 3, 8, 0);
+        } else {
+          GST_DEBUG_OBJECT (filter, "Buffer is not writable, not drawing "
+              "circles for faces");
+        }
       }
 
     }
 
   }
 
-  return gst_pad_push (filter->srcpad, buf);
+  return GST_FLOW_OK;
 }
 
 

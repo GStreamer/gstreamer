@@ -48,6 +48,7 @@
 
 #include <gst/gst.h>
 #include <cv.h>
+#include "gstopencvvideofilter.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -66,22 +67,20 @@ typedef struct _GstfacedetectClass GstfacedetectClass;
 
 struct _Gstfacedetect
 {
-  GstElement element;
-
-  GstPad *sinkpad, *srcpad;
+  GstOpencvVideoFilter element;
 
   gboolean display;
 
   gchar *profile;
 
-  IplImage *cvImage, *cvGray;
+  IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade;
   CvMemStorage *cvStorage;
 };
 
 struct _GstfacedetectClass
 {
-  GstElementClass parent_class;
+  GstOpencvVideoFilterClass parent_class;
 };
 
 GType gst_facedetect_get_type (void);
