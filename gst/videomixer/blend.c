@@ -722,7 +722,9 @@ FillColorFunction gst_video_mixer_fill_color_uyvy;
 void
 gst_video_mixer_init_blend (void)
 {
+#ifdef HAVE_ORC
   orc_init ();
+#endif
 
   GST_DEBUG_CATEGORY_INIT (gst_videomixer_blend_debug, "videomixer_blend", 0,
       "video mixer blending functions");
