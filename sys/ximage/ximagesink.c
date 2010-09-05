@@ -886,7 +886,7 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
 
   gst_ximagesink_xwindow_decorate (ximagesink, xwindow);
 
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (ximagesink), xwindow->win);
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (ximagesink), xwindow->win);
 
   return xwindow;
 }
@@ -2008,8 +2008,9 @@ gst_ximagesink_navigation_init (GstNavigationInterface * iface)
 }
 
 static void
-gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
+gst_ximagesink_set_window_handle (GstXOverlay * overlay, guintptr id)
 {
+  XID xwindow_id = id;
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
   GstXWindow *xwindow = NULL;
   XWindowAttributes attr;
@@ -2124,7 +2125,7 @@ gst_ximagesink_set_event_handling (GstXOverlay * overlay,
 static void
 gst_ximagesink_xoverlay_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
+  iface->set_window_handle = gst_ximagesink_set_window_handle;
   iface->expose = gst_ximagesink_expose;
   iface->handle_events = gst_ximagesink_set_event_handling;
 }

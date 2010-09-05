@@ -113,8 +113,10 @@ EXPORTS
 	gst_video_orientation_set_vflip
 	gst_x_overlay_expose
 	gst_x_overlay_get_type
+	gst_x_overlay_got_window_handle
 	gst_x_overlay_got_xwindow_id
 	gst_x_overlay_handle_events
 	gst_x_overlay_prepare_xwindow_id
 	gst_x_overlay_set_render_rectangle
+	gst_x_overlay_set_window_handle
 	gst_x_overlay_set_xwindow_id

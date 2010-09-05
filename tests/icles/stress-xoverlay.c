@@ -128,7 +128,7 @@ cycle_window (GstXOverlay * ov)
 
   XSync (disp, FALSE);
 
-  gst_x_overlay_set_xwindow_id (ov, win);
+  gst_x_overlay_set_window_handle (ov, win);
 
   if (old_win) {
     XDestroyWindow (disp, old_win);

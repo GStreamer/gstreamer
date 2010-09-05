@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
   window.show();
   
   WId xwinid = window.winId();
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), xwinid);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), xwinid);
 
   /* run the pipeline */
 

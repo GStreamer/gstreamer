@@ -46,14 +46,14 @@ struct _GstV4lXv
   GMutex *mutex;
 };
 
-static void gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay,
-    XID xwindow_id);
+static void gst_v4l_xoverlay_set_window_handle (GstXOverlay * overlay,
+    guintptr xwindow_id);
 
 void
 gst_v4l_xoverlay_interface_init (GstXOverlayClass * klass)
 {
   /* default virtual functions */
-  klass->set_xwindow_id = gst_v4l_xoverlay_set_xwindow_id;
+  klass->set_window_handle = gst_v4l_xoverlay_set_window_handle;
 
   GST_DEBUG_CATEGORY_INIT (v4lxv_debug, "v4lxv", 0,
       "V4L XOverlay interface debugging");
@@ -126,7 +126,7 @@ gst_v4l_xoverlay_open (GstV4lElement * v4lelement)
   v4lelement->xv = v4lxv;
 
   if (v4lelement->xwindow_id) {
-    gst_v4l_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4lelement),
+    gst_v4l_xoverlay_set_window_handle (GST_X_OVERLAY (v4lelement),
         v4lelement->xwindow_id);
   }
 }
@@ -140,7 +140,7 @@ gst_v4l_xoverlay_close (GstV4lElement * v4lelement)
     return;
 
   if (v4lelement->xwindow_id) {
-    gst_v4l_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4lelement), 0);
+    gst_v4l_xoverlay_set_window_handle (GST_X_OVERLAY (v4lelement), 0);
   }
 
   XCloseDisplay (v4lxv->dpy);
@@ -189,8 +189,9 @@ idle_refresh (gpointer data)
 }
 
 static void
-gst_v4l_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
+gst_v4l_xoverlay_set_window_handle (GstXOverlay * overlay, guintptr id)
 {
+  XID xwindow_id = id;
   GstV4lElement *v4lelement = GST_V4LELEMENT (overlay);
   GstV4lXv *v4lxv;
   XWindowAttributes attr;

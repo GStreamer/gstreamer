@@ -216,7 +216,7 @@ main (gint argc, gchar ** argv)
   /* we know what the video sink is in this case (xvimagesink), so we can
    * just set it directly here now (instead of waiting for a prepare-xwindow-id
    * element message in a sync bus handler and setting it there) */
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), embed_xid);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), embed_xid);
 
   anim_state.overlay = GST_X_OVERLAY (sink);
   anim_state.widget = video_window;

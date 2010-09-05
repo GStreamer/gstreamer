@@ -273,7 +273,7 @@ main (int argc, char **argv)
    * just set it directly here now (instead of waiting for a prepare-xwindow-id
    * element message in a sync bus handler and setting it there) */
   g_print ("setting XID %lu\n", embed_xid);
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), embed_xid);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), embed_xid);
 
   g_idle_add (start_pipeline, pipeline);
   gtk_main ();

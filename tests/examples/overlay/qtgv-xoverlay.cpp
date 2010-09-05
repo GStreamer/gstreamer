@@ -93,7 +93,7 @@ void SinkPipeline::startPipeline()
    * just set it directly here now (instead of waiting for a prepare-xwindow-id
    * element message in a sync bus handler and setting it there) */
 
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (sink), xwinid);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (sink), xwinid);
 
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (sret == GST_STATE_CHANGE_FAILURE) {

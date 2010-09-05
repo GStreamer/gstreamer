@@ -63,8 +63,13 @@ struct _GstXOverlayClass {
   GTypeInterface klass;
 
   /* virtual functions */
+#ifndef GST_DISABLE_DEPRECATED
   void (* set_xwindow_id)      (GstXOverlay *overlay,
                                 gulong       xwindow_id);
+#else
+  void (* set_xwindow_id_disabled) (GstXOverlay *overlay,
+                                gulong       xwindow_id);
+#endif /* not GST_DISABLE_DEPRECATED */
 
   void (* expose)              (GstXOverlay *overlay);
   
@@ -75,15 +80,19 @@ struct _GstXOverlayClass {
                                  gint x, gint y,
                                  gint width, gint height);
 
+  void (* set_window_handle)   (GstXOverlay *overlay,
+                                guintptr    handle);
     /*< private >*/
-  gpointer                 _gst_reserved[GST_PADDING - 2];
+  gpointer                 _gst_reserved[GST_PADDING - 3];
 };
 
 GType   gst_x_overlay_get_type          (void);
 
 /* virtual class function wrappers */
+#ifndef GST_DISABLE_DEPRECATED
 void gst_x_overlay_set_xwindow_id      (GstXOverlay *overlay, 
                                         gulong xwindow_id);
+#endif
 
 gboolean gst_x_overlay_set_render_rectangle (GstXOverlay *overlay,
                                              gint x, gint y,
@@ -94,9 +103,16 @@ void gst_x_overlay_expose              (GstXOverlay *overlay);
 void gst_x_overlay_handle_events       (GstXOverlay *overlay,
                                         gboolean     handle_events);
 
+void gst_x_overlay_set_window_handle   (GstXOverlay *overlay, 
+                                        guintptr handle);
 
 /* public methods to dispatch bus messages */
+#ifndef GST_DISABLE_DEPRECATED
 void gst_x_overlay_got_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);
+#endif
+
+void gst_x_overlay_got_window_handle  (GstXOverlay *overlay,
+    guintptr handle);
 
 void gst_x_overlay_prepare_xwindow_id (GstXOverlay *overlay);
 

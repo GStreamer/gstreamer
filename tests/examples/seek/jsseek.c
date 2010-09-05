@@ -2451,7 +2451,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * data)
      * shouldn't be done from a non-GUI thread without explicit locking).  */
     g_assert (embed_xid != 0);
 
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (element), embed_xid);
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (element), embed_xid);
   }
   return GST_BUS_PASS;
 }
