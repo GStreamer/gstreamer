@@ -39,7 +39,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #include <gst/gst.h>
@@ -501,7 +501,6 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
     }
   }
 
-
   structure = gst_caps_get_structure (video_caps, 0);
   if (!gst_structure_get_int (structure, "width", &vpp->width) ||
       !gst_structure_get_int (structure, "height", &vpp->height) ||
@@ -522,19 +521,6 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
   } else
     vpp->got_par = FALSE;
 
-  if (gst_vdp_vpp_is_interlaced (vpp)) {
-    gint fps_n, fps_d;
-
-    if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
-      gst_fraction_double (&fps_n, &fps_d);
-      gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, fps_n,
-          fps_d, NULL);
-      vpp->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
-    }
-
-    gst_structure_remove_field (structure, "interlaced");
-  }
-
   allowed_caps = gst_pad_get_allowed_caps (vpp->srcpad);
   if (G_UNLIKELY (!allowed_caps))
     goto allowed_caps_error;
@@ -553,6 +539,20 @@ gst_vdp_vpp_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto not_negotiated;
 
   gst_pad_fixate_caps (vpp->srcpad, src_caps);
+
+
+  if (gst_vdp_vpp_is_interlaced (vpp)) {
+    gint fps_n, fps_d;
+
+    if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+      gst_fraction_double (&fps_n, &fps_d);
+      gst_caps_set_simple (src_caps, "framerate", GST_TYPE_FRACTION, fps_n,
+          fps_d, NULL);
+      vpp->field_duration = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n);
+    }
+
+    gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+  }
 
   GST_DEBUG ("src_caps: %" GST_PTR_FORMAT, src_caps);
 
