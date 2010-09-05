@@ -11000,10 +11000,10 @@ cogorc_convert_AYUV_ARGB (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_temporary (p, 1, "t15");
       orc_program_add_temporary (p, 4, "t16");
 
-      orc_program_append_2 (p, "subb", 2, ORC_VAR_T16, ORC_VAR_S1, ORC_VAR_C2,
+      orc_program_append_2 (p, "subb", 2, 47, ORC_VAR_S1, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_T16, ORC_VAR_D1);
+      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2, 47,
+          ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_T2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T6, ORC_VAR_T5, ORC_VAR_T1,
@@ -11064,9 +11064,9 @@ cogorc_convert_AYUV_ARGB (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
           ORC_VAR_T13, ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_T14,
           ORC_VAR_T15, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T16, ORC_VAR_T1,
-          ORC_VAR_T2, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T16, ORC_VAR_C2,
+      orc_program_append_2 (p, "mergewl", 0, 47, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, 47, ORC_VAR_C2,
           ORC_VAR_D1);
 
       result = orc_program_compile (p);
@@ -11469,10 +11469,10 @@ cogorc_convert_AYUV_BGRA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_temporary (p, 1, "t15");
       orc_program_add_temporary (p, 4, "t16");
 
-      orc_program_append_2 (p, "subb", 2, ORC_VAR_T16, ORC_VAR_S1, ORC_VAR_C2,
+      orc_program_append_2 (p, "subb", 2, 47, ORC_VAR_S1, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_T16, ORC_VAR_D1);
+      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2, 47,
+          ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_T2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T6, ORC_VAR_T5, ORC_VAR_T1,
@@ -11533,9 +11533,9 @@ cogorc_convert_AYUV_BGRA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
           ORC_VAR_T14, ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_T13,
           ORC_VAR_T3, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T16, ORC_VAR_T1,
-          ORC_VAR_T2, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T16, ORC_VAR_C2,
+      orc_program_append_2 (p, "mergewl", 0, 47, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, 47, ORC_VAR_C2,
           ORC_VAR_D1);
 
       result = orc_program_compile (p);
@@ -11938,10 +11938,10 @@ cogorc_convert_AYUV_ABGR (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_temporary (p, 1, "t15");
       orc_program_add_temporary (p, 4, "t16");
 
-      orc_program_append_2 (p, "subb", 2, ORC_VAR_T16, ORC_VAR_S1, ORC_VAR_C2,
+      orc_program_append_2 (p, "subb", 2, 47, ORC_VAR_S1, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_T16, ORC_VAR_D1);
+      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2, 47,
+          ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_T2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T6, ORC_VAR_T5, ORC_VAR_T1,
@@ -12002,9 +12002,9 @@ cogorc_convert_AYUV_ABGR (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
           ORC_VAR_T15, ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_T14,
           ORC_VAR_T13, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T16, ORC_VAR_T1,
-          ORC_VAR_T2, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T16, ORC_VAR_C2,
+      orc_program_append_2 (p, "mergewl", 0, 47, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, 47, ORC_VAR_C2,
           ORC_VAR_D1);
 
       result = orc_program_compile (p);
@@ -12407,10 +12407,10 @@ cogorc_convert_AYUV_RGBA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_temporary (p, 1, "t15");
       orc_program_add_temporary (p, 4, "t16");
 
-      orc_program_append_2 (p, "subb", 2, ORC_VAR_T16, ORC_VAR_S1, ORC_VAR_C2,
+      orc_program_append_2 (p, "subb", 2, 47, ORC_VAR_S1, ORC_VAR_C2,
           ORC_VAR_D1);
-      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2,
-          ORC_VAR_T16, ORC_VAR_D1);
+      orc_program_append_2 (p, "splitlw", 0, ORC_VAR_T1, ORC_VAR_T2, 47,
+          ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_T2,
           ORC_VAR_D1);
       orc_program_append_2 (p, "splitwb", 0, ORC_VAR_T6, ORC_VAR_T5, ORC_VAR_T1,
@@ -12471,9 +12471,9 @@ cogorc_convert_AYUV_RGBA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
           ORC_VAR_T14, ORC_VAR_D1);
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T2, ORC_VAR_T15,
           ORC_VAR_T3, ORC_VAR_D1);
-      orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T16, ORC_VAR_T1,
-          ORC_VAR_T2, ORC_VAR_D1);
-      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, ORC_VAR_T16, ORC_VAR_C2,
+      orc_program_append_2 (p, "mergewl", 0, 47, ORC_VAR_T1, ORC_VAR_T2,
+          ORC_VAR_D1);
+      orc_program_append_2 (p, "addb", 2, ORC_VAR_D1, 47, ORC_VAR_C2,
           ORC_VAR_D1);
 
       result = orc_program_compile (p);

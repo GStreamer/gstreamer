@@ -223,7 +223,7 @@ if test "x$HAVE_X11" = "xyes"; then
 fi
 
 dnl Orc
-ORC_CHECK([0.4.8.1])
+ORC_CHECK([0.4.7])
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
