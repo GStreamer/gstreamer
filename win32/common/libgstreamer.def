@@ -303,6 +303,9 @@ EXPORTS
 	gst_element_factory_get_uri_protocols
 	gst_element_factory_get_uri_type
 	gst_element_factory_has_interface
+	gst_element_factory_list_filter
+	gst_element_factory_list_get_elements
+	gst_element_factory_list_is_type
 	gst_element_factory_make
 	gst_element_flags_get_type
 	gst_element_found_tags
@@ -740,8 +743,10 @@ EXPORTS
 	gst_plugin_feature_get_rank
 	gst_plugin_feature_get_type
 	gst_plugin_feature_list_copy
+	gst_plugin_feature_list_debug
 	gst_plugin_feature_list_free
 	gst_plugin_feature_load
+	gst_plugin_feature_rank_compare_func
 	gst_plugin_feature_set_name
 	gst_plugin_feature_set_rank
 	gst_plugin_feature_type_name_filter
