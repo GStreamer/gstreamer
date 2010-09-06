@@ -516,15 +516,22 @@ gst_object_dispatch_properties_changed (GObject * object,
 {
   GstObject *gst_object, *parent, *old_parent;
   guint i;
-  gchar *name;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar *name = NULL;
   const gchar *debug_name;
+#endif
 
   /* do the standard dispatching */
   parent_class->dispatch_properties_changed (object, n_pspecs, pspecs);
 
   gst_object = GST_OBJECT_CAST (object);
-  name = gst_object_get_name (gst_object);
-  debug_name = GST_STR_NULL (name);
+#ifndef GST_DISABLE_GST_DEBUG
+  if (G_UNLIKELY (__gst_debug_min >= GST_LEVEL_LOG)) {
+    name = gst_object_get_name (gst_object);
+    debug_name = GST_STR_NULL (name);
+  } else
+    debug_name = "";
+#endif
 
   /* now let the parent dispatch those, too */
   parent = gst_object_get_parent (gst_object);
@@ -541,7 +548,9 @@ gst_object_dispatch_properties_changed (GObject * object,
     parent = gst_object_get_parent (old_parent);
     gst_object_unref (old_parent);
   }
+#ifndef GST_DISABLE_GST_DEBUG
   g_free (name);
+#endif
 }
 
 /**
