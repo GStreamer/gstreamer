@@ -49,7 +49,7 @@ typedef enum
   GST_H263_PAYLOAD_PICTURE_FORMAT_PLUS = 7
 } GstRtpH263PayPictureFormat;
 
-static guint format_props[8][2] = { {254, 254},
+static const guint format_props[8][2] = { {254, 254},
 {6, 8},
 {9, 11},
 {18, 22},
@@ -64,7 +64,7 @@ static guint format_props[8][2] = { {254, 254},
  */
 #define MCBPC_I_LEN 9
 #define MCBPC_I_WID 6
-static guint32 mcbpc_I[9][6] = {
+static const guint32 mcbpc_I[9][6] = {
   {0x8000, 0x8000, 1, 0, 0, 3},
   {0x2000, 0xe000, 3, 0, 1, 3},
   {0x4000, 0xe000, 3, 1, 0, 3},
@@ -81,7 +81,7 @@ static guint32 mcbpc_I[9][6] = {
  */
 #define MCBPC_P_LEN 21
 #define MCBPC_P_WID 6
-static guint16 mcbpc_P[21][6] = {
+static const guint16 mcbpc_P[21][6] = {
   {0x8000, 0x8000, 1, 0, 0, 0},
   {0x3000, 0xf000, 4, 0, 1, 0},
   {0x2000, 0xf000, 4, 1, 0, 0},
@@ -110,7 +110,7 @@ static guint16 mcbpc_P[21][6] = {
  */
 #define CBPY_LEN 16
 #define CBPY_WID 7
-static guint8 cbpy_I[16][7] = {
+static const guint8 cbpy_I[16][7] = {
   {0x30, 0xf0, 4, 0, 0, 0, 0},
   {0x28, 0xf8, 5, 0, 0, 0, 1},
   {0x20, 0xf8, 5, 0, 0, 1, 0},
@@ -132,7 +132,7 @@ static guint8 cbpy_I[16][7] = {
 /*
  * P-frame CBPY (code, mask, nbits, Y0, Y1, Y2, Y3)
  */
-static guint8 cbpy_P[16][7] = {
+static const guint8 cbpy_P[16][7] = {
   {0x30, 0xf0, 4, 1, 1, 1, 1},
   {0x28, 0xf8, 5, 1, 1, 1, 0},
   {0x20, 0xf8, 5, 1, 1, 0, 1},
@@ -156,7 +156,7 @@ static guint8 cbpy_P[16][7] = {
  */
 #define TCOEF_LEN 103
 #define TCOEF_WID 6
-static guint16 tcoef[103][6] = {
+static const guint16 tcoef[103][6] = {
   {0x8000, 0xc000, 3, 0, 0, 1},
   {0xf000, 0xf000, 5, 0, 0, 2},
   {0x5400, 0xfc00, 7, 0, 0, 3},
@@ -267,7 +267,7 @@ static guint16 tcoef[103][6] = {
  */
 #define MVD_LEN 64
 #define MVD_WID 5
-static guint16 mvd[64][5] = {
+static const guint16 mvd[64][5] = {
   {0x0028, 0xfff8, 13, 0x0060, 0x0020},
   {0x0038, 0xfff8, 13, 0x0061, 0x0021},
   {0x0050, 0xfff0, 12, 0x0062, 0x0022},
@@ -785,7 +785,7 @@ gst_rtp_h263_pay_decode_mcbpc_P (guint32 value)
  * decode CBPY and return index in table or -1 if not found
  */
 static gint
-gst_rtp_h263_pay_decode_cbpy (guint32 value, guint8 cbpy_table[16][7])
+gst_rtp_h263_pay_decode_cbpy (guint32 value, const guint8 cbpy_table[16][7])
 {
 
   gint i;

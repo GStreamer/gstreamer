@@ -217,12 +217,12 @@ gst_rtp_amr_pay_recalc_rtp_time (GstRtpAMRPay * rtpamrpay,
 }
 
 /* -1 is invalid */
-static gint nb_frame_size[16] = {
+static const gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
   5, -1, -1, -1, -1, -1, -1, 0
 };
 
-static gint wb_frame_size[16] = {
+static const gint wb_frame_size[16] = {
   17, 23, 32, 36, 40, 46, 50, 58,
   60, 5, -1, -1, -1, -1, -1, 0
 };
@@ -232,6 +232,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpAMRPay *rtpamrpay;
+  const gint *frame_size;
   GstFlowReturn ret;
   guint size, payload_len;
   GstBuffer *outbuf;
@@ -240,7 +241,6 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint packet_len, mtu;
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
-  gint *frame_size;
   gboolean sid = FALSE;
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);

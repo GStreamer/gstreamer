@@ -157,7 +157,7 @@ gst_rtp_qcelp_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   return res;
 }
 
-static gint frame_size[16] = {
+static const gint frame_size[16] = {
   1, 4, 8, 17, 35, -8, 0, 0,
   0, 0, 0, 0, 0, 0, 1, 0
 };

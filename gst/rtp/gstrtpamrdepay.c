@@ -260,12 +260,12 @@ invalid_mode:
 }
 
 /* -1 is invalid */
-static gint nb_frame_size[16] = {
+static const gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
   5, -1, -1, -1, -1, -1, -1, 0
 };
 
-static gint wb_frame_size[16] = {
+static const gint wb_frame_size[16] = {
   17, 23, 32, 36, 40, 46, 50, 58,
   60, 5, -1, -1, -1, -1, -1, 0
 };
@@ -274,9 +274,9 @@ static GstBuffer *
 gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpAMRDepay *rtpamrdepay;
+  const gint *frame_size;
   GstBuffer *outbuf = NULL;
   gint payload_len;
-  gint *frame_size;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
