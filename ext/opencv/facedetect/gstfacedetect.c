@@ -262,6 +262,28 @@ gst_facedetect_set_caps (GstOpencvVideoFilter * transform, gint in_width,
   return TRUE;
 }
 
+static GstMessage *
+gst_facedetect_message_new (Gstfacedetect * filter, GstBuffer * buf)
+{
+  GstBaseTransform *trans = GST_BASE_TRANSFORM_CAST (filter);
+  GstStructure *s;
+  GstClockTime running_time, stream_time;
+
+  running_time = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buf));
+  stream_time = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buf));
+
+  s = gst_structure_new ("facedetect",
+      "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (buf),
+      "stream-time", G_TYPE_UINT64, stream_time,
+      "running-time", G_TYPE_UINT64, running_time,
+      "duration", G_TYPE_UINT64, GST_BUFFER_DURATION (buf), NULL);
+
+  return gst_message_new_element (GST_OBJECT (filter), s);
+}
+
+
 /* chain function
  * this function does the actual processing
  */
@@ -279,12 +301,21 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
   cvClearMemStorage (filter->cvStorage);
 
   if (filter->cvCascade) {
+    GstMessage *msg = NULL;
+    GValue facelist = { 0 };
+
     faces =
         cvHaarDetectObjects (filter->cvGray, filter->cvCascade,
         filter->cvStorage, 1.1, 2, 0, cvSize (30, 30));
 
+    if (faces && faces->total > 0) {
+      msg = gst_facedetect_message_new (filter, buf);
+      g_value_init (&facelist, GST_TYPE_LIST);
+    }
+
     for (i = 0; i < (faces ? faces->total : 0); i++) {
       CvRect *r = (CvRect *) cvGetSeqElem (faces, i);
+      GValue value = { 0 };
 
       GstStructure *s = gst_structure_new ("face",
           "x", G_TYPE_UINT, r->x,
@@ -293,6 +324,12 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
           "height", G_TYPE_UINT, r->height, NULL);
 
       GstMessage *m = gst_message_new_element (GST_OBJECT (filter), s);
+
+      g_value_init (&value, GST_TYPE_STRUCTURE);
+      gst_value_set_structure (&value, s);
+      gst_value_list_append_value (&facelist, &value);
+      g_value_unset (&value);
+
       gst_element_post_message (GST_ELEMENT (filter), m);
 
       if (filter->display) {
@@ -311,6 +348,11 @@ gst_facedetect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 
     }
 
+    if (msg) {
+      gst_structure_set_value (msg->structure, "faces", &facelist);
+      g_value_unset (&facelist);
+      gst_element_post_message (GST_ELEMENT (filter), msg);
+    }
   }
 
   return GST_FLOW_OK;
