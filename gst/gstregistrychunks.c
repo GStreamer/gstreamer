@@ -589,7 +589,7 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
       if (!factory->meta_data) {
         GST_ERROR
             ("Error when trying to deserialize structure for metadata '%s'",
-            str);
+            meta_data_str);
         goto fail;
       }
     }
