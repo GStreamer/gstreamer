@@ -373,12 +373,14 @@ display_current_fps (gpointer data)
    */
   if (dr == 0.0) {
     g_snprintf (fps_message, 255,
-        "rendered: %llu\t dropped: %llu\t current: %.2f\t average: %.2f",
-        frames_rendered, frames_dropped, rr, average_fps);
+        "rendered: %" G_GUINT64_FORMAT "\t dropped: %" G_GUINT64_FORMAT
+        "\t current: %.2f\t average: %.2f", frames_rendered, frames_dropped, rr,
+        average_fps);
   } else {
     g_snprintf (fps_message, 255,
-        "rendered: %llu\t dropped: %llu\t fps: %.2f\t drop rate: %.2f",
-        frames_rendered, frames_dropped, rr, dr);
+        "rendered: %" G_GUINT64_FORMAT "\t dropped: %" G_GUINT64_FORMAT
+        "\t fps: %.2f\t drop rate: %.2f", frames_rendered, frames_dropped, rr,
+        dr);
   }
 
   if (self->use_text_overlay) {
