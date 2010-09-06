@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -162,6 +162,9 @@ msgstr "E pamundur mbyllja e librarisë mbështetëse."
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "E pamundur mbyllja e librarisë mbështetëse."
+
+msgid "Encoding error."
+msgstr ""
 
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
@@ -762,6 +765,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
 
+#, fuzzy
+msgid "application name"
+msgstr "pozicioni"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -900,16 +917,16 @@ msgstr "File \"%s\" është një socket."
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
 msgid "caps"
 msgstr "mbrojtëse"

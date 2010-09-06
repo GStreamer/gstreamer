@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-04-30 22:36+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -159,6 +159,9 @@ msgstr "Impossible de fermer la bibliothèque de prise en charge."
 
 msgid "Could not configure supporting library."
 msgstr "Impossible de configurer la bibliothèque de prise en charge."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer a rencontré une erreur générale de ressource."
@@ -749,6 +752,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "version du codeur utilisé pour le codage du flux"
 
+#, fuzzy
+msgid "application name"
+msgstr "nom d'emplacement géographique"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "version du codeur utilisé pour le codage du flux"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -890,15 +907,15 @@ msgstr "Le fichier « %s » est un connecteur."
 msgid "Failed after iterations as requested."
 msgstr "Échec suite aux itérations demandées."
 
-msgid "Error while writing to download file."
-msgstr "Erreur d'écriture dans le fichier de téléchargement."
-
 msgid "No Temp directory specified."
 msgstr "Aucun répertoire temporaire indiqué."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Impossible de créer le fichier temporaire « %s »."
+
+msgid "Error while writing to download file."
+msgstr "Erreur d'écriture dans le fichier de téléchargement."
 
 msgid "caps"
 msgstr "capacités"

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-04-30 15:45+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -160,6 +160,9 @@ msgstr "Kan ondersteunende bibliotheek niet sluiten."
 
 msgid "Could not configure supporting library."
 msgstr "Kan ondersteunende bibliotheek niet configureren."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer kwam een algemene fout tegen met systeembronnen."
@@ -752,6 +755,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versie van de encoder gebruikt om deze stroom te coderen"
 
+#, fuzzy
+msgid "application name"
+msgstr "naam geografische locatie"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "versie van de encoder gebruikt om deze stroom te coderen"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -893,15 +910,15 @@ msgstr "Bestand \"%s\" is een socket."
 msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
 
-msgid "Error while writing to download file."
-msgstr "Fout bij het schrijven om bestand te downloaden."
-
 msgid "No Temp directory specified."
 msgstr "Geen tijdelijke map opgegeven."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Kon geen tijdelijk bestand \"%s\" aanmaken."
+
+msgid "Error while writing to download file."
+msgstr "Fout bij het schrijven om bestand te downloaden."
 
 msgid "caps"
 msgstr "mogelijkheden"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-05-01 11:00+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -156,6 +156,9 @@ msgstr "No se pudo cerrar la biblioteca de soporte."
 
 msgid "Could not configure supporting library."
 msgstr "No se pudo configurar la biblioteca de soporte."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer encontró un error general de recurso."
@@ -752,6 +755,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "versión del codificador usado para codificar este flujo"
 
+#, fuzzy
+msgid "application name"
+msgstr "nombre de la geoubicación"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "versión del codificador usado para codificar este flujo"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -893,15 +910,15 @@ msgstr "El archivo «%s» es un socket."
 msgid "Failed after iterations as requested."
 msgstr "Falló después de las iteraciones, como se pidió."
 
-msgid "Error while writing to download file."
-msgstr "Error al escribir para descargar el archivo."
-
 msgid "No Temp directory specified."
 msgstr "No se especificó un directorio temporal."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "No se pudo crear el archivo temporal «%s»."
+
+msgid "Error while writing to download file."
+msgstr "Error al escribir para descargar el archivo."
 
 msgid "caps"
 msgstr "capacidades"

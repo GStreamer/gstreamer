@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-06-29 10:06+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -270,6 +270,9 @@ msgstr "Impossibile chiudere la libreria di supporto."
 
 msgid "Could not configure supporting library."
 msgstr "Impossibile configurare la libreria di supporto."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer ha incontrato un errore generico di risorse."
@@ -895,6 +898,21 @@ msgid "Model of the device used to create this media"
 msgstr ""
 "il modello del dispositivo usato per creare questo contenuto multimediale"
 
+#, fuzzy
+msgid "application name"
+msgstr "nome località geog."
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr ""
+"il modello del dispositivo usato per creare questo contenuto multimediale"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr "orientamento immagine"
 
@@ -1041,15 +1059,15 @@ msgstr "Il file «%s» è un socket."
 msgid "Failed after iterations as requested."
 msgstr "Fallito dopo le iterazioni come richiesto."
 
-msgid "Error while writing to download file."
-msgstr "Errore durante la scritta sul file di scaricamento."
-
 msgid "No Temp directory specified."
 msgstr "Nessuna directory temporanea specificata."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Impossibile creare il file temporaneo «%s»."
+
+msgid "Error while writing to download file."
+msgstr "Errore durante la scritta sul file di scaricamento."
 
 msgid "caps"
 msgstr "caps"

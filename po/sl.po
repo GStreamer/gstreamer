@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-07-02 21:09+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -145,6 +145,9 @@ msgstr "Ni mogoče zapreti podporne knjižnice."
 
 msgid "Could not configure supporting library."
 msgstr "Ni mogoče nastaviti podporne knjižnice."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr ""
@@ -752,6 +755,19 @@ msgstr "video kodek"
 msgid "Model of the device used to create this media"
 msgstr ""
 
+#, fuzzy
+msgid "application name"
+msgstr "Ime mesta vsebine"
+
+msgid "Application used to create the media"
+msgstr ""
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -897,16 +913,16 @@ msgid "Failed after iterations as requested."
 msgstr ""
 
 #, fuzzy
-msgid "Error while writing to download file."
-msgstr "Prišlo je do napake med prenosom datoteke"
-
-#, fuzzy
 msgid "No Temp directory specified."
 msgstr "Ni določenega izvornega pogona"
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Ni mogoče ustvariti datoteke predpomnilnika"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Prišlo je do napake med prenosom datoteke"
 
 #, fuzzy
 msgid "caps"

@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -207,6 +207,9 @@ msgstr "OYA Gufunga Isomero"
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "OYA Gufunga Isomero"
+
+msgid "Encoding error."
+msgstr ""
 
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
@@ -911,6 +914,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "Verisiyo Bya i Kuri iyi"
 
+#, fuzzy
+msgid "application name"
+msgstr "Inturo"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "Verisiyo Bya i Kuri iyi"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -1053,16 +1070,16 @@ msgstr "Idosiye ni a"
 msgid "Failed after iterations as requested."
 msgstr "Nyuma Amasubiramo Nka"
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Kuri IDOSIYE"
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Kuri IDOSIYE"
 
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Revision.TextDisplay.Insert.Attribute..5.text

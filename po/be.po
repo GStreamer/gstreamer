@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -144,6 +144,9 @@ msgstr ""
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "Немагчыма адчыніць расурс для запісу."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr ""
@@ -715,6 +718,18 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr ""
 
+msgid "application name"
+msgstr ""
+
+msgid "Application used to create the media"
+msgstr ""
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -853,15 +868,15 @@ msgstr ""
 msgid "Failed after iterations as requested."
 msgstr ""
 
-msgid "Error while writing to download file."
-msgstr ""
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Немагчыма закадаваць плыню."
+
+msgid "Error while writing to download file."
+msgstr ""
 
 msgid "caps"
 msgstr ""

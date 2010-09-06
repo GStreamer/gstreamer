@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -149,6 +149,9 @@ msgstr "Kon nie ondersteunende biblioteek toemaak nie."
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "Kon nie ondersteunende biblioteek toemaak nie."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer het 'n algemene hulpbronfout teëgekom."
@@ -748,6 +751,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "weergawe van die enkodeerder wat hierdie stroom enkodeer"
 
+#, fuzzy
+msgid "application name"
+msgstr "ligging"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "weergawe van die enkodeerder wat hierdie stroom enkodeer"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -888,16 +905,16 @@ msgstr "Lêer \"%s\" is 'n sok."
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Fout tydens skryf na lêer \"%s\"."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "kon nie inligting oor \"%s\" kry nie."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Fout tydens skryf na lêer \"%s\"."
 
 msgid "caps"
 msgstr "caps"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -159,6 +159,9 @@ msgstr "Ezin izan da euskarri-liburutegia itxi."
 
 msgid "Could not configure supporting library."
 msgstr "Ezin izan da euskarri-liburutegia konfiguratu."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "Baliabide-errore orokorra topatu du GStreamer-ek."
@@ -749,6 +752,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "korronte hau kodetzeko erabili den kodetzailearen bertsioa"
 
+#, fuzzy
+msgid "application name"
+msgstr "geolokalizazioaren izena"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "korronte hau kodetzeko erabili den kodetzailearen bertsioa"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -890,16 +907,16 @@ msgstr "\"%s\" fitxategia socket-a da."
 msgid "Failed after iterations as requested."
 msgstr "Huts egin du eskatutako iterazioak egin ondoren."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
-
 msgid "No Temp directory specified."
 msgstr "Ez da aldi baterako direktoriorik zehaztu."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Ezin izan da \"%s\" aldi baterako fitxategia sortu."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
 
 msgid "caps"
 msgstr "ahalmenak"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -167,6 +167,9 @@ msgstr "Не могу да затворим библиотеку за подрш
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "Не могу да затворим библиотеку за подршку."
+
+msgid "Encoding error."
+msgstr ""
 
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
@@ -771,6 +774,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "издање кодирања којим се кодира овај ток"
 
+#, fuzzy
+msgid "application name"
+msgstr "положај"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "издање кодирања којим се кодира овај ток"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -909,16 +926,16 @@ msgstr "Датотека „%s“ је сокет."
 msgid "Failed after iterations as requested."
 msgstr "Неуспех након траженог броја покушаја."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Грешка при упису у датотеку „%s“."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Не могу да сазнам/поставим подешавања из/у ресурсу."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Грешка при упису у датотеку „%s“."
 
 # bug: this should be full word
 msgid "caps"

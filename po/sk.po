@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-03-08 09:33+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -169,6 +169,9 @@ msgstr "Nepodarilo sa zatvoriť podpornú knižnicu."
 
 msgid "Could not configure supporting library."
 msgstr "Nepodarilo sa nastaviť podpornú knižnicu."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer narazil na všeobecnú chybu zdrojov."
@@ -764,6 +767,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "verzia kodéru používaného pre kódovanie tohto prúdu"
 
+#, fuzzy
+msgid "application name"
+msgstr "geografické umiestnenie"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "verzia kodéru používaného pre kódovanie tohto prúdu"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -904,16 +921,16 @@ msgstr "Súbor \"%s\" je zásuvka."
 msgid "Failed after iterations as requested."
 msgstr "Zlyhanie po vykonaní požadovaných iterácií."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Chyba pri zápise do súboru \"%s\"."
-
 msgid "No Temp directory specified."
 msgstr "Nebol určený dočasný priečinok (Temp)."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Nepodarilo sa získať informácie o \"%s\"."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Chyba pri zápise do súboru \"%s\"."
 
 msgid "caps"
 msgstr "schopnosti"

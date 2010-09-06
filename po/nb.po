@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2007-11-02 15:43+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -140,6 +140,9 @@ msgstr "Kunne ikke lukke støttebibliotek."
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "Kunne ikke lukke støttebibliotek."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr ""
@@ -732,6 +735,19 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr ""
 
+#, fuzzy
+msgid "application name"
+msgstr "plassering"
+
+msgid "Application used to create the media"
+msgstr ""
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -870,16 +886,16 @@ msgstr "Fil «%s» er en plugg."
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Feil ved skriving til fil «%s»."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Feil ved skriving til fil «%s»."
 
 msgid "caps"
 msgstr ""

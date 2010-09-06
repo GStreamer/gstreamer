@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-06-30 11:47+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -157,6 +157,9 @@ msgstr "Tukikirjastoa ei voitu sulkea."
 
 msgid "Could not configure supporting library."
 msgstr "Tukikirjastoa ei voitu konfiguroida."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer kohtasi yleisen resurssivirheen."
@@ -751,6 +754,20 @@ msgstr "laitemalli"
 msgid "Model of the device used to create this media"
 msgstr "Tämän median luomiseen käytetyn laitteen malli"
 
+#, fuzzy
+msgid "application name"
+msgstr "maantietellisen sijainnin nimi"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "Tämän median luomiseen käytetyn laitteen malli"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr "kuvasuunta"
 
@@ -891,15 +908,15 @@ msgstr "Tiedosto ”%s” on pistoke."
 msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
-msgid "Error while writing to download file."
-msgstr "Virhe kirjoitettaessa lataustiedostoon."
-
 msgid "No Temp directory specified."
 msgstr "Tilapäishakemistoa ei ole määritetty."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Ei voitu luoda tilapäistiedostoa ”%s”."
+
+msgid "Error while writing to download file."
+msgstr "Virhe kirjoitettaessa lataustiedostoon."
 
 msgid "caps"
 msgstr "kyvyt"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-06-28 09:46+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -154,6 +154,9 @@ msgstr "Nie udało się zamknąć biblioteki wspierającej."
 
 msgid "Could not configure supporting library."
 msgstr "Nie udało się skonfigurować biblioteki wspierającej."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer napotkał ogólny błąd zasobów."
@@ -749,6 +752,20 @@ msgstr "model urządzenia"
 msgid "Model of the device used to create this media"
 msgstr "Model urządzenia użytego do utworzenia tego nagrania"
 
+#, fuzzy
+msgid "application name"
+msgstr "nazwa położenia geograficznego"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "Model urządzenia użytego do utworzenia tego nagrania"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr "orientacja obrazu"
 
@@ -890,15 +907,15 @@ msgstr "Plik \"%s\" jest gniazdem."
 msgid "Failed after iterations as requested."
 msgstr "Niepowodzenie po iteracjach jak żądano."
 
-msgid "Error while writing to download file."
-msgstr "Błąd podczas zapisu do ściąganego pluku."
-
 msgid "No Temp directory specified."
 msgstr "Nie podano katalogu tymczasowego."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Nie udało się utworzyć pliku tymczasowego \"%s\"."
+
+msgid "Error while writing to download file."
+msgstr "Błąd podczas zapisu do ściąganego pluku."
 
 msgid "caps"
 msgstr "możliwości"

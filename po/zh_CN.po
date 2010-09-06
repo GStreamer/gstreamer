@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -144,6 +144,9 @@ msgstr "无法关闭支持库。"
 
 msgid "Could not configure supporting library."
 msgstr "无法配置支持库。"
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer 遇到了常规资源错误。"
@@ -724,6 +727,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "用于编码此流的编码器版本"
 
+#, fuzzy
+msgid "application name"
+msgstr "地理位置名称"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "用于编码此流的编码器版本"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -864,16 +881,16 @@ msgstr "文件“%s”是套接字。"
 msgid "Failed after iterations as requested."
 msgstr "在完成所要求的迭代操作后出错。"
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "写入文件“%s”时出错。"
-
 msgid "No Temp directory specified."
 msgstr "未指定临时目录。"
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "无法创建临时文件“%s”。"
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "写入文件“%s”时出错。"
 
 msgid "caps"
 msgstr "分析器"

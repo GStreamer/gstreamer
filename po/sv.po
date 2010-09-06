@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-06-07 18:16+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -157,6 +157,9 @@ msgstr "Kunde inte stänga stödbibliotek."
 
 msgid "Could not configure supporting library."
 msgstr "Kunde inte konfigurera stödbibliotek."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer stötte på ett allmänt resursfel."
@@ -754,6 +757,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "version av kodaren som använts för att koda denna ström"
 
+#, fuzzy
+msgid "application name"
+msgstr "geografiskt platsnamn"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "version av kodaren som använts för att koda denna ström"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -896,15 +913,15 @@ msgstr "Filen \"%s\" är ett uttag."
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
-msgid "Error while writing to download file."
-msgstr "Fel vid skrivning till hämtningsfilen."
-
 msgid "No Temp directory specified."
 msgstr "Ingen temporärkatalog angiven."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Kunde inte skapa temporärfilen \"%s\"."
+
+msgid "Error while writing to download file."
+msgstr "Fel vid skrivning till hämtningsfilen."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
 msgid "caps"

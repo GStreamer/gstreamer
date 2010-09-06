@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2010-06-29 21:55+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -151,6 +151,9 @@ msgstr "Tak dapat menutup pustaka pendukung."
 
 msgid "Could not configure supporting library."
 msgstr "Tak dapat mengatur pustaka pendukung."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer menghadapi galat umum sumber daya."
@@ -748,6 +751,20 @@ msgstr "model divais"
 msgid "Model of the device used to create this media"
 msgstr "Model divais yang digunakan untuk membuat media ini"
 
+#, fuzzy
+msgid "application name"
+msgstr "nama lokasi geografis"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "Model divais yang digunakan untuk membuat media ini"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr "orientasi gambar"
 
@@ -888,15 +905,15 @@ msgstr "Berkas \"%s\" adalah soket."
 msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
 
-msgid "Error while writing to download file."
-msgstr "Galat ketika menulis ke berkas unduhan."
-
 msgid "No Temp directory specified."
 msgstr "Tak ada direktori Temp yang ditentukan."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Tak bisa membuat berkas temp \"%s\"."
+
+msgid "Error while writing to download file."
+msgstr "Galat ketika menulis ke berkas unduhan."
 
 msgid "caps"
 msgstr "huruf"

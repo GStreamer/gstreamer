@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -158,6 +158,9 @@ msgstr "Could not close supporting library."
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "Could not close supporting library."
+
+msgid "Encoding error."
+msgstr ""
 
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
@@ -756,6 +759,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "version of the encoder used to encode this stream"
 
+#, fuzzy
+msgid "application name"
+msgstr "location"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "version of the encoder used to encode this stream"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -894,16 +911,16 @@ msgstr "File \"%s\" isn't a regular file."
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Error while writing to file \"%s\"."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Could not get/set settings from/on resource."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Error while writing to file \"%s\"."
 
 msgid "caps"
 msgstr "caps"

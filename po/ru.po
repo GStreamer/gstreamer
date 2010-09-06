@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-07-26 17:44+0200\n"
+"POT-Creation-Date: 2010-09-06 20:18+0100\n"
 "PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -152,6 +152,9 @@ msgstr "Не удалось закрыть дополнительную библ
 
 msgid "Could not configure supporting library."
 msgstr "Не удалось настроить дополнительную библиотеку."
+
+msgid "Encoding error."
+msgstr ""
 
 msgid "GStreamer encountered a general resource error."
 msgstr "Обнаружена общая ошибка ресурса GStreamer."
@@ -760,6 +763,20 @@ msgstr ""
 msgid "Model of the device used to create this media"
 msgstr "версия кодировщика, используемого для кодирования потока"
 
+#, fuzzy
+msgid "application name"
+msgstr "геогр. местоположение"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "версия кодировщика, используемого для кодирования потока"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
 msgid "image orientation"
 msgstr ""
 
@@ -900,16 +917,16 @@ msgstr "Файл «%s» является сокетом."
 msgid "Failed after iterations as requested."
 msgstr "Сбой после итераций, согласно запросу."
 
-#, fuzzy
-msgid "Error while writing to download file."
-msgstr "Ошибка записи в файл «%s»."
-
 msgid "No Temp directory specified."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Не удалось получить сведения для «%s»."
+
+#, fuzzy
+msgid "Error while writing to download file."
+msgstr "Ошибка записи в файл «%s»."
 
 msgid "caps"
 msgstr "возможности"
