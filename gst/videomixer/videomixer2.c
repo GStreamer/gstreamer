@@ -260,6 +260,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       gst_caps_unref (peercaps);
       caps = tmp;
       if (gst_caps_is_empty (caps)) {
+        ret = FALSE;
         GST_VIDEO_MIXER2_UNLOCK (mix);
         goto done;
       }
