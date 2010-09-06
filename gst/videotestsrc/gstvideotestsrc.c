@@ -203,7 +203,9 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_COLOR_SPEC,
       g_param_spec_enum ("colorspec", "Color Specification",
-          "Generate video in the given color specification",
+          "Generate video in the given color specification (Deprecated: "
+          "use a caps filter with video/x-raw-yuv,color-matrix=\"sdtv\" or "
+          "\"hdtv\" instead)",
           GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC,
           DEFAULT_COLOR_SPEC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_K0,
@@ -415,7 +417,6 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
       src->peer_alloc = g_value_get_boolean (value);
       break;
     case PROP_COLOR_SPEC:
-      src->color_spec = g_value_get_enum (value);
       break;
     case PROP_K0:
       src->k0 = g_value_get_int (value);
@@ -481,7 +482,6 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, src->peer_alloc);
       break;
     case PROP_COLOR_SPEC:
-      g_value_set_enum (value, src->color_spec);
       break;
     case PROP_K0:
       g_value_set_int (value, src->k0);
