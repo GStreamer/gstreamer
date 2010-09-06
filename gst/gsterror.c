@@ -98,6 +98,15 @@
  * Last reviewed on 2006-09-15 (0.10.10)
  */
 
+/* FIXME 0.11: the entire error system needs an overhaul - it's not very
+ * useful the way it is. Also, we need to be able to specify additional
+ * 'details' for errors (e.g. disk/file/resource error -> out-of-space; or
+ * put the url/filename/device name that caused the error somewhere)
+ * without having to add enums for every little thing.
+ *
+ * FIXME 0.11: get rid of GST_{CORE,LIBRARY,RESOURCE,STREAM}_ERROR_NUM_ERRORS.
+ * Maybe also replace _quark() functions with g_quark_from_static_string()?
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -106,7 +115,6 @@
 #include <gst/gst.h>
 #include "gst-i18n-lib.h"
 
-#define TABLE(t, d, a, b) t[GST_ ## d ## _ERROR_ ## a] = g_strdup (b)
 #define QUARK_FUNC(string)                                              \
 GQuark gst_ ## string ## _error_quark (void) {                          \
   static GQuark quark;                                                  \
@@ -132,131 +140,152 @@ gst_g_error_get_type (void)
 
 #define FILE_A_BUG "  Please file a bug at " PACKAGE_BUGREPORT "."
 
-/* initialize the dynamic table of translated core errors */
-static gchar **
-_gst_core_errors_init (void)
+static const gchar *
+gst_error_get_core_error (GstCoreError code)
 {
-  gchar **t = NULL;
-
-  t = g_new0 (gchar *, GST_CORE_ERROR_NUM_ERRORS);
-
-  TABLE (t, CORE, FAILED,
-      N_("GStreamer encountered a general core library error."));
-  TABLE (t, CORE, TOO_LAZY,
-      N_("GStreamer developers were too lazy to assign an error code "
-          "to this error." FILE_A_BUG));
-  TABLE (t, CORE, NOT_IMPLEMENTED,
-      N_("Internal GStreamer error: code not implemented." FILE_A_BUG));
-  TABLE (t, CORE, STATE_CHANGE,
-      N_("GStreamer error: state change failed and some element failed to "
-          "post a proper error message with the reason for the failure."));
-  TABLE (t, CORE, PAD, N_("Internal GStreamer error: pad problem." FILE_A_BUG));
-  TABLE (t, CORE, THREAD,
-      N_("Internal GStreamer error: thread problem." FILE_A_BUG));
-  TABLE (t, CORE, NEGOTIATION,
-      N_("Internal GStreamer error: negotiation problem." FILE_A_BUG));
-  TABLE (t, CORE, EVENT,
-      N_("Internal GStreamer error: event problem." FILE_A_BUG));
-  TABLE (t, CORE, SEEK,
-      N_("Internal GStreamer error: seek problem." FILE_A_BUG));
-  TABLE (t, CORE, CAPS,
-      N_("Internal GStreamer error: caps problem." FILE_A_BUG));
-  TABLE (t, CORE, TAG, N_("Internal GStreamer error: tag problem." FILE_A_BUG));
-  TABLE (t, CORE, MISSING_PLUGIN,
-      N_("Your GStreamer installation is missing a plug-in."));
-  TABLE (t, CORE, CLOCK,
-      N_("Internal GStreamer error: clock problem." FILE_A_BUG));
-  TABLE (t, CORE, DISABLED,
-      N_("This application is trying to use GStreamer functionality that "
-          "has been disabled."));
-
-  return t;
+  switch (code) {
+    case GST_CORE_ERROR_FAILED:
+      return _("GStreamer encountered a general core library error.");
+    case GST_CORE_ERROR_TOO_LAZY:
+      return _("GStreamer developers were too lazy to assign an error code "
+          "to this error." FILE_A_BUG);
+    case GST_CORE_ERROR_NOT_IMPLEMENTED:
+      return _("Internal GStreamer error: code not implemented." FILE_A_BUG);
+    case GST_CORE_ERROR_STATE_CHANGE:
+      return _("GStreamer error: state change failed and some element failed "
+          "to post a proper error message with the reason for the failure.");
+    case GST_CORE_ERROR_PAD:
+      return _("Internal GStreamer error: pad problem." FILE_A_BUG);
+    case GST_CORE_ERROR_THREAD:
+      return _("Internal GStreamer error: thread problem." FILE_A_BUG);
+    case GST_CORE_ERROR_NEGOTIATION:
+      return _("Internal GStreamer error: negotiation problem." FILE_A_BUG);
+    case GST_CORE_ERROR_EVENT:
+      return _("Internal GStreamer error: event problem." FILE_A_BUG);
+    case GST_CORE_ERROR_SEEK:
+      return _("Internal GStreamer error: seek problem." FILE_A_BUG);
+    case GST_CORE_ERROR_CAPS:
+      return _("Internal GStreamer error: caps problem." FILE_A_BUG);
+    case GST_CORE_ERROR_TAG:
+      return _("Internal GStreamer error: tag problem." FILE_A_BUG);
+    case GST_CORE_ERROR_MISSING_PLUGIN:
+      return _("Your GStreamer installation is missing a plug-in.");
+    case GST_CORE_ERROR_CLOCK:
+      return _("Internal GStreamer error: clock problem." FILE_A_BUG);
+    case GST_CORE_ERROR_DISABLED:
+      return _("This application is trying to use GStreamer functionality "
+          "that has been disabled.");
+    case GST_CORE_ERROR_NUM_ERRORS:
+    default:
+      break;
+  }
+  return NULL;
 }
 
-/* initialize the dynamic table of translated library errors */
-static gchar **
-_gst_library_errors_init (void)
+static const gchar *
+gst_error_get_library_error (GstLibraryError code)
 {
-  gchar **t = NULL;
-
-  t = g_new0 (gchar *, GST_LIBRARY_ERROR_NUM_ERRORS);
-
-  TABLE (t, LIBRARY, FAILED,
-      N_("GStreamer encountered a general supporting library error."));
-  TABLE (t, LIBRARY, TOO_LAZY,
-      N_("GStreamer developers were too lazy to assign an error code "
-          "to this error." FILE_A_BUG));
-  TABLE (t, LIBRARY, INIT, N_("Could not initialize supporting library."));
-  TABLE (t, LIBRARY, SHUTDOWN, N_("Could not close supporting library."));
-  TABLE (t, LIBRARY, SETTINGS, N_("Could not configure supporting library."));
-
-  return t;
+  switch (code) {
+    case GST_LIBRARY_ERROR_FAILED:
+      return _("GStreamer encountered a general supporting library error.");
+    case GST_LIBRARY_ERROR_TOO_LAZY:
+      return _("GStreamer developers were too lazy to assign an error code "
+          "to this error." FILE_A_BUG);
+    case GST_LIBRARY_ERROR_INIT:
+      return _("Could not initialize supporting library.");
+    case GST_LIBRARY_ERROR_SHUTDOWN:
+      return _("Could not close supporting library.");
+    case GST_LIBRARY_ERROR_SETTINGS:
+      return _("Could not configure supporting library.");
+    case GST_LIBRARY_ERROR_ENCODE:
+      break;                    /* FIXME: add default error message for GST_LIBRARY_ERROR_ENCODE */
+    case GST_LIBRARY_ERROR_NUM_ERRORS:
+    default:
+      break;
+  }
+  return NULL;
 }
 
-/* initialize the dynamic table of translated resource errors */
-static gchar **
-_gst_resource_errors_init (void)
+static const gchar *
+gst_error_get_resource_error (GstResourceError code)
 {
-  gchar **t = NULL;
-
-  t = g_new0 (gchar *, GST_RESOURCE_ERROR_NUM_ERRORS);
-
-  TABLE (t, RESOURCE, FAILED,
-      N_("GStreamer encountered a general resource error."));
-  TABLE (t, RESOURCE, TOO_LAZY,
-      N_("GStreamer developers were too lazy to assign an error code "
-          "to this error." FILE_A_BUG));
-  TABLE (t, RESOURCE, NOT_FOUND, N_("Resource not found."));
-  TABLE (t, RESOURCE, BUSY, N_("Resource busy or not available."));
-  TABLE (t, RESOURCE, OPEN_READ, N_("Could not open resource for reading."));
-  TABLE (t, RESOURCE, OPEN_WRITE, N_("Could not open resource for writing."));
-  TABLE (t, RESOURCE, OPEN_READ_WRITE,
-      N_("Could not open resource for reading and writing."));
-  TABLE (t, RESOURCE, CLOSE, N_("Could not close resource."));
-  TABLE (t, RESOURCE, READ, N_("Could not read from resource."));
-  TABLE (t, RESOURCE, WRITE, N_("Could not write to resource."));
-  TABLE (t, RESOURCE, SEEK, N_("Could not perform seek on resource."));
-  TABLE (t, RESOURCE, SYNC, N_("Could not synchronize on resource."));
-  TABLE (t, RESOURCE, SETTINGS,
-      N_("Could not get/set settings from/on resource."));
-  TABLE (t, RESOURCE, NO_SPACE_LEFT, N_("No space left on the resource."));
-
-  return t;
+  switch (code) {
+    case GST_RESOURCE_ERROR_FAILED:
+      return _("GStreamer encountered a general resource error.");
+    case GST_RESOURCE_ERROR_TOO_LAZY:
+      return _("GStreamer developers were too lazy to assign an error code "
+          "to this error." FILE_A_BUG);
+    case GST_RESOURCE_ERROR_NOT_FOUND:
+      return _("Resource not found.");
+    case GST_RESOURCE_ERROR_BUSY:
+      return _("Resource busy or not available.");
+    case GST_RESOURCE_ERROR_OPEN_READ:
+      return _("Could not open resource for reading.");
+    case GST_RESOURCE_ERROR_OPEN_WRITE:
+      return _("Could not open resource for writing.");
+    case GST_RESOURCE_ERROR_OPEN_READ_WRITE:
+      return _("Could not open resource for reading and writing.");
+    case GST_RESOURCE_ERROR_CLOSE:
+      return _("Could not close resource.");
+    case GST_RESOURCE_ERROR_READ:
+      return _("Could not read from resource.");
+    case GST_RESOURCE_ERROR_WRITE:
+      return _("Could not write to resource.");
+    case GST_RESOURCE_ERROR_SEEK:
+      return _("Could not perform seek on resource.");
+    case GST_RESOURCE_ERROR_SYNC:
+      return _("Could not synchronize on resource.");
+    case GST_RESOURCE_ERROR_SETTINGS:
+      return _("Could not get/set settings from/on resource.");
+    case GST_RESOURCE_ERROR_NO_SPACE_LEFT:
+      return _("No space left on the resource.");
+    case GST_RESOURCE_ERROR_NUM_ERRORS:
+    default:
+      break;
+  }
+  return NULL;
 }
 
-/* initialize the dynamic table of translated stream errors */
-static gchar **
-_gst_stream_errors_init (void)
+static const gchar *
+gst_error_get_stream_error (GstStreamError code)
 {
-  gchar **t = NULL;
+  switch (code) {
+    case GST_STREAM_ERROR_FAILED:
+      return _("GStreamer encountered a general stream error.");
+    case GST_STREAM_ERROR_TOO_LAZY:
+      return _("GStreamer developers were too lazy to assign an error code "
+          "to this error." FILE_A_BUG);
+    case GST_STREAM_ERROR_NOT_IMPLEMENTED:
+      return _("Element doesn't implement handling of this stream. "
+          "Please file a bug.");
+    case GST_STREAM_ERROR_TYPE_NOT_FOUND:
+      return _("Could not determine type of stream.");
+    case GST_STREAM_ERROR_WRONG_TYPE:
+      return _("The stream is of a different type than handled by this "
+          "element.");
+    case GST_STREAM_ERROR_CODEC_NOT_FOUND:
+      return _("There is no codec present that can handle the stream's type.");
+    case GST_STREAM_ERROR_DECODE:
+      return _("Could not decode stream.");
+    case GST_STREAM_ERROR_ENCODE:
+      return _("Could not encode stream.");
+    case GST_STREAM_ERROR_DEMUX:
+      return _("Could not demultiplex stream.");
+    case GST_STREAM_ERROR_MUX:
+      return _("Could not multiplex stream.");
+    case GST_STREAM_ERROR_FORMAT:
+      return _("The stream is in the wrong format.");
+    case GST_STREAM_ERROR_DECRYPT:
+      return _("The stream is encrypted and decryption is not supported.");
+    case GST_STREAM_ERROR_DECRYPT_NOKEY:
+      return _("The stream is encrypted and can't be decrypted because no "
+          "suitable key has been supplied.");
+    case GST_STREAM_ERROR_NUM_ERRORS:
+    default:
+      break;
+  }
 
-  t = g_new0 (gchar *, GST_STREAM_ERROR_NUM_ERRORS);
-
-  TABLE (t, STREAM, FAILED,
-      N_("GStreamer encountered a general stream error."));
-  TABLE (t, STREAM, TOO_LAZY,
-      N_("GStreamer developers were too lazy to assign an error code "
-          "to this error." FILE_A_BUG));
-  TABLE (t, STREAM, NOT_IMPLEMENTED,
-      N_("Element doesn't implement handling of this stream. "
-          "Please file a bug."));
-  TABLE (t, STREAM, TYPE_NOT_FOUND, N_("Could not determine type of stream."));
-  TABLE (t, STREAM, WRONG_TYPE,
-      N_("The stream is of a different type than handled by this element."));
-  TABLE (t, STREAM, CODEC_NOT_FOUND,
-      N_("There is no codec present that can handle the stream's type."));
-  TABLE (t, STREAM, DECODE, N_("Could not decode stream."));
-  TABLE (t, STREAM, ENCODE, N_("Could not encode stream."));
-  TABLE (t, STREAM, DEMUX, N_("Could not demultiplex stream."));
-  TABLE (t, STREAM, MUX, N_("Could not multiplex stream."));
-  TABLE (t, STREAM, FORMAT, N_("The stream is in the wrong format."));
-  TABLE (t, STREAM, DECRYPT,
-      N_("The stream is encrypted and decryption is not supported."));
-  TABLE (t, STREAM, DECRYPT_NOKEY,
-      N_("The stream is encrypted and can't be decrypted because no suitable "
-          "key has been supplied."));
-
-  return t;
+  return NULL;
 }
 
 QUARK_FUNC (core);
@@ -277,39 +306,23 @@ QUARK_FUNC (stream);
 gchar *
 gst_error_get_message (GQuark domain, gint code)
 {
-  static gchar **gst_core_errors = NULL;
-  static gchar **gst_library_errors = NULL;
-  static gchar **gst_resource_errors = NULL;
-  static gchar **gst_stream_errors = NULL;
-
-  gchar *message = NULL;
-
-  /* initialize error message tables if necessary */
-  if (gst_core_errors == NULL)
-    gst_core_errors = _gst_core_errors_init ();
-  if (gst_library_errors == NULL)
-    gst_library_errors = _gst_library_errors_init ();
-  if (gst_resource_errors == NULL)
-    gst_resource_errors = _gst_resource_errors_init ();
-  if (gst_stream_errors == NULL)
-    gst_stream_errors = _gst_stream_errors_init ();
-
+  const gchar *message = NULL;
 
   if (domain == GST_CORE_ERROR)
-    message = gst_core_errors[code];
+    message = gst_error_get_core_error (code);
   else if (domain == GST_LIBRARY_ERROR)
-    message = gst_library_errors[code];
+    message = gst_error_get_library_error (code);
   else if (domain == GST_RESOURCE_ERROR)
-    message = gst_resource_errors[code];
+    message = gst_error_get_resource_error (code);
   else if (domain == GST_STREAM_ERROR)
-    message = gst_stream_errors[code];
+    message = gst_error_get_stream_error (code);
   else {
     g_warning ("No error messages for domain %s", g_quark_to_string (domain));
     return g_strdup_printf (_("No error message for domain %s."),
         g_quark_to_string (domain));
   }
   if (message)
-    return g_strdup (_(message));
+    return g_strdup (message);
   else
     return
         g_strdup_printf (_
