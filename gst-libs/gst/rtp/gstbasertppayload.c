@@ -46,6 +46,7 @@ struct _GstBaseRTPPayloadPrivate
   gboolean ssrc_random;
   guint16 next_seqnum;
   gboolean perfect_rtptime;
+  gint notified_first_timestamp;
 
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
@@ -809,6 +810,12 @@ gst_basertppayload_prepare_push (GstBaseRTPPayload * payload,
       GST_BUFFER_SIZE (GST_BUFFER (obj)), payload->seqnum, data.rtptime,
       GST_TIME_ARGS (data.timestamp));
 
+  if (g_atomic_int_compare_and_exchange (&payload->priv->
+          notified_first_timestamp, 1, 0)) {
+    g_object_notify (G_OBJECT (payload), "timestamp");
+    g_object_notify (G_OBJECT (payload), "seqnum");
+  }
+
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -1023,6 +1030,7 @@ gst_basertppayload_change_state (GstElement * element,
       else
         basertppayload->ts_base = basertppayload->ts_offset;
       basertppayload->timestamp = basertppayload->ts_base;
+      g_atomic_int_set (&basertppayload->priv->notified_first_timestamp, 1);
       break;
     default:
       break;
@@ -1031,6 +1039,9 @@ gst_basertppayload_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      g_atomic_int_set (&basertppayload->priv->notified_first_timestamp, 1);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
