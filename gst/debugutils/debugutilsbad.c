@@ -23,13 +23,17 @@
 
 #include <gst/gst.h>
 
+GType gst_checksum_sink_get_type (void);
 GType fps_display_sink_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "fpsdisplaysink", GST_RANK_NONE,
+  gst_element_register (plugin, "checksumsink", GST_RANK_NONE,
+      gst_checksum_sink_get_type ());
+  gst_element_register (plugin, "fpsdisplaysink", GST_RANK_NONE,
       fps_display_sink_get_type ());
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
