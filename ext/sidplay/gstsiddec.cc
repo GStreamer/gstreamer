@@ -430,20 +430,18 @@ pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
 
-    GST_DEBUG_OBJECT (siddec, "pausing task, reason %s", reason);
-    gst_pad_pause_task (pad);
-
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic, FIXME, segment seek? */
-        gst_pad_push_event (pad, gst_event_new_eos ());
-      } else {
-        /* for fatal errors we post an error message */
-        GST_ELEMENT_ERROR (siddec, STREAM, FAILED,
-            (NULL), ("streaming task paused, reason %s", reason));
-        gst_pad_push_event (pad, gst_event_new_eos ());
-      }
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* perform EOS logic, FIXME, segment seek? */
+      gst_pad_push_event (pad, gst_event_new_eos ());
+    } else  if (ret < GST_FLOW_UNEXPECTED || ret == GST_FLOW_NOT_LINKED) {
+      /* for fatal errors we post an error message */
+      GST_ELEMENT_ERROR (siddec, STREAM, FAILED,
+          (NULL), ("streaming task paused, reason %s", reason));
+      gst_pad_push_event (pad, gst_event_new_eos ());
     }
+
+    GST_INFO_OBJECT (siddec, "pausing task, reason: %s", reason);
+    gst_pad_pause_task (pad);
     goto done;
   }
 }
