@@ -283,31 +283,38 @@ gst_pulsering_get_context (GstPulseRingBuffer * pbuf)
 static void
 gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 {
-  GstPulseContext *pctx;
   GstPulseSink *psink;
 
   g_mutex_lock (pa_ring_buffer_mutex);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
-  pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
+  if (pbuf->context_name) {
+    GstPulseContext *pctx;
 
-  gst_pulsering_destroy_stream (pbuf);
+    GST_DEBUG_OBJECT (psink, "destroying context for pbuf=%p '%s'",
+        pbuf, pbuf->context_name);
 
-  if (pctx) {
-    pctx->ring_buffers = g_slist_remove (pctx->ring_buffers, pbuf);
-    if (!g_slist_length (pctx->ring_buffers)) {
-      pa_context_disconnect (pctx->context);
+    pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
 
-      /* Make sure we don't get any further callbacks */
-      pa_context_set_state_callback (pctx->context, NULL, NULL);
+    gst_pulsering_destroy_stream (pbuf);
+
+    if (pctx) {
+      pctx->ring_buffers = g_slist_remove (pctx->ring_buffers, pbuf);
+      if (!g_slist_length (pctx->ring_buffers)) {
+        pa_context_disconnect (pctx->context);
+
+        /* Make sure we don't get any further callbacks */
+        pa_context_set_state_callback (pctx->context, NULL, NULL);
 #ifdef HAVE_PULSE_0_9_12
-      pa_context_set_subscribe_callback (pctx->context, NULL, NULL);
+        pa_context_set_subscribe_callback (pctx->context, NULL, NULL);
 #endif
 
-      pa_context_unref (pctx->context);
-      g_hash_table_remove (gst_pulse_shared_contexts, pbuf->context_name);
-      g_free (pbuf->context_name);
-      g_slice_free (GstPulseContext, pctx);
+        pa_context_unref (pctx->context);
+        g_hash_table_remove (gst_pulse_shared_contexts, pbuf->context_name);
+        g_free (pbuf->context_name);
+        pbuf->context_name = NULL;
+        g_slice_free (GstPulseContext, pctx);
+      }
     }
   }
   g_mutex_unlock (pa_ring_buffer_mutex);
