@@ -753,6 +753,8 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
       gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_yvyu =
       gst_deinterlace_simple_method_deinterlace_frame_packed;
+  dm_class->deinterlace_frame_uyvy =
+      gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_argb =
       gst_deinterlace_simple_method_deinterlace_frame_packed;
   dm_class->deinterlace_frame_abgr =
@@ -790,6 +792,10 @@ gst_deinterlace_simple_method_class_init (GstDeinterlaceSimpleMethodClass
   klass->interpolate_scanline_ayuv =
       gst_deinterlace_simple_method_interpolate_scanline_packed;
   klass->copy_scanline_ayuv =
+      gst_deinterlace_simple_method_copy_scanline_packed;
+  klass->interpolate_scanline_uyvy =
+      gst_deinterlace_simple_method_interpolate_scanline_packed;
+  klass->copy_scanline_uyvy =
       gst_deinterlace_simple_method_copy_scanline_packed;
 
   klass->interpolate_scanline_argb =
