@@ -153,6 +153,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_DEBUG            FALSE
 #define DEFAULT_RETRY            20
 #define DEFAULT_TIMEOUT          5000000
+#define DEFAULT_UDP_BUFFER_SIZE  0
 #define DEFAULT_TCP_TIMEOUT      20000000
 #define DEFAULT_LATENCY_MS       2000
 #define DEFAULT_CONNECTION_SPEED 0
@@ -184,6 +185,7 @@ enum
   PROP_USER_PW,
   PROP_BUFFER_MODE,
   PROP_PORT_RANGE,
+  PROP_UDP_BUFFER_SIZE,
   PROP_LAST
 };
 
@@ -431,6 +433,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "eg. 3000-3005 (NULL = no restrictions)", DEFAULT_PORT_RANGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRTSPSrc::udp-buffer-size:
+   *
+   * Size of the kernel UDP receive buffer in bytes.
+   *
+   * Since: 0.10.26
+   */
+  g_object_class_install_property (gobject_class, PROP_UDP_BUFFER_SIZE,
+      g_param_spec_int ("udp-buffer-size", "UDP Buffer Size",
+          "Size of the kernel UDP receive buffer in bytes, 0=default",
+          0, G_MAXINT, DEFAULT_UDP_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -467,6 +482,7 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->buffer_mode = DEFAULT_BUFFER_MODE;
   src->client_port_range.min = 0;
   src->client_port_range.max = 0;
+  src->udp_buffer_size = DEFAULT_UDP_BUFFER_SIZE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -655,6 +671,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       }
       break;
     }
+    case PROP_UDP_BUFFER_SIZE:
+      rtspsrc->udp_buffer_size = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -744,6 +763,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_take_string (value, str);
       break;
     }
+    case PROP_UDP_BUFFER_SIZE:
+      g_value_set_int (value, rtspsrc->udp_buffer_size);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2629,6 +2651,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
      * if we can. */
     g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->udp_timeout,
         NULL);
+    g_object_set (G_OBJECT (stream->udpsrc[0]), "buffer-size",
+        src->udp_buffer_size, NULL);
 
     /* get output pad of the UDP source. */
     *outpad = gst_element_get_static_pad (stream->udpsrc[0], "src");

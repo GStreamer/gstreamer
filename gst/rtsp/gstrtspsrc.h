@@ -213,6 +213,7 @@ struct _GstRTSPSrc {
   gchar            *user_pw;
   gint              buffer_mode;
   GstRTSPRange      client_port_range;
+  gint              udp_buffer_size;
 
   /* state */
   GstRTSPState       state;
