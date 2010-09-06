@@ -16,6 +16,31 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-interlace
+ *
+ * The interlace element takes a non-interlaced raw video stream as input,
+ * creates fields out of each frame, then combines fields into interlaced
+ * frames to output as an interlaced video stream.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v videotestsrc pattern=ball ! interlace ! xvimagesink
+ * ]|
+ * This pipeline illustrates the combing effects caused by displaying
+ * two interlaced fields as one progressive frame.
+ * |[
+ * gst-launch -v filesrc location=/path/to/file ! decodebin ! videorate !
+ *   videoscale ! video/x-raw-yuv,format=\(fourcc\)I420,width=720,height=480,
+ *   framerate=60000/1001,pixel-aspect-ratio=11/10 ! 
+ *   interlace top-field-first=false ! ...
+ * ]|
+ * This pipeline converts a progressive video stream into an interlaced
+ * stream suitable for standard definition NTSC.
+ * </refsect2>
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
