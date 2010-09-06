@@ -80,11 +80,14 @@ gst_deinterlace_methods_get_type (void)
     {GST_DEINTERLACE_GREEDY_L, "Motion Adaptive: Simple Detection", "greedyl"},
     {GST_DEINTERLACE_VFIR, "Blur Vertical", "vfir"},
     {GST_DEINTERLACE_LINEAR, "Television: Full resolution", "linear"},
-    {GST_DEINTERLACE_LINEAR_BLEND, "Blur: Temporal", "linearblend"},
+    {GST_DEINTERLACE_LINEAR_BLEND, "Blur: Temporal (Do Not Use)",
+        "linearblend"},
     {GST_DEINTERLACE_SCALER_BOB, "Double lines", "scalerbob"},
-    {GST_DEINTERLACE_WEAVE, "Weave", "weave"},
-    {GST_DEINTERLACE_WEAVE_TFF, "Progressive: Top Field First", "weavetff"},
-    {GST_DEINTERLACE_WEAVE_BFF, "Progressive: Bottom Field First", "weavebff"},
+    {GST_DEINTERLACE_WEAVE, "Weave (Do Not Use)", "weave"},
+    {GST_DEINTERLACE_WEAVE_TFF, "Progressive: Top Field First (Do Not Use)",
+        "weavetff"},
+    {GST_DEINTERLACE_WEAVE_BFF, "Progressive: Bottom Field First (Do Not Use)",
+        "weavebff"},
     {0, NULL, NULL},
   };
 
@@ -440,7 +443,8 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * <listitem>
    * <para>
    * linearblend
-   * Linear interpolation in time domain
+   * Linear interpolation in time domain.  Any motion causes significant
+   * ghosting, so this method should not be used.
    * </para>
    * </listitem>
    * <listitem>
@@ -452,19 +456,19 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    * <listitem>
    * <para>
    * weave
-   * Weave
+   * Weave.  Bad quality, do not use.
    * </para>
    * </listitem>
    * <listitem>
    * <para>
    * weavetff
-   * Progressive: Top Field First
+   * Progressive: Top Field First.  Bad quality, do not use.
    * </para>
    * </listitem>
    * <listitem>
    * <para>
    * weavebff
-   * Progressive: Bottom Field First
+   * Progressive: Bottom Field First.  Bad quality, do not use.
    * </para>
    * </listitem>
    * </itemizedlist>
