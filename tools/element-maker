@@ -1,9 +1,52 @@
 #!/bin/sh
 
-class=basetransform
 
 prefix=gst
-name=edi_test
+
+while [ "$1" ] ; do
+  case $1 in
+    --help)
+      cat <<-EOF
+Usage: element-maker [OPTIONS] ELEMENT_NAME BASE_CLASS
+Create a GStreamer element that subclasses BASE_CLASS.
+Options:
+  --help             Print this information
+  --prefix PREFIX    Use PREFIX instead of "gst"
+Example: 'element-maker my_element basetransform' will create the files
+  gstmyelement.c and gstmyelement.h that implement GstMyElement, a
+  subclass of GstBaseTransform, as an element named myelement.
+EOF
+      exit 0
+      ;;
+    --prefix)
+      shift
+      prefix=$1
+      ;;
+    -*)
+      echo Unknown option: $1
+      exit 1
+      ;;
+    *)
+      if [ "$name" = "" ]; then
+        name=$1
+      elif [ "$class" = "" ]; then
+        class=$1
+      else
+        echo Ignored: $1
+      fi
+  esac
+  shift
+done
+
+if [ "$name" = "" -o "$class" = "" ] ; then
+  echo "Usage: element-maker [OPTIONS] ELEMENT_NAME BASE_CLASS"
+  exit 1
+fi
+
+if [ ! -f "gst$class.c" ] ; then
+  echo "Template file for $class not found."
+  exit 1
+fi
 
 
 PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
@@ -52,6 +95,22 @@ cat <<-EOF
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+EOF
+
+cat <<-EOF
+/**
+ * SECTION:element-$gstreplace
+ *
+ * The $gstreplace element does FIXME stuff.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v fakesrc ! $gstreplace ! FIXME ! fakesink
+ * ]|
+ * FIXME Describe what the pipeline does.
+ * </refsect2>
  */
 EOF
 
