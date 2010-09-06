@@ -160,7 +160,10 @@ struct _GstVideoTestSrc {
   gint yoffset;
 
   /* solid color */
-  guint solid_color;
+  guint foreground_color;
+  guint background_color;
+
+  gint zoneplate_t;
   
   void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
 };

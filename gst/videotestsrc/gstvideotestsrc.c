@@ -50,7 +50,8 @@ GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define DEFAULT_IS_LIVE            FALSE
 #define DEFAULT_PEER_ALLOC         TRUE
 #define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
-#define DEFAULT_SOLID_COLOR        0xff000000
+#define DEFAULT_FOREGROUND_COLOR   0xffffffff
+#define DEFAULT_BACKGROUND_COLOR   0xff000000
 
 enum
 {
@@ -72,7 +73,8 @@ enum
   PROP_KT2,
   PROP_XOFFSET,
   PROP_YOFFSET,
-  PROP_SOLID_COLOR,
+  PROP_FOREGROUND_COLOR,
+  PROP_BACKGROUND_COLOR,
   PROP_LAST
 };
 
@@ -264,16 +266,31 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           "Zoneplate 2nd order products y offset", G_MININT32, G_MAXINT32, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstTextOverlay:solid-color
+   * GstVideoTestSrc:foreground-color
    *
-   * Color to use for solid-color pattern.
+   * Color to use for solid-color pattern and foreground color of other
+   * patterns.  Default is white (0xffffffff).
    *
    * Since: 0.10.31
    **/
-  g_object_class_install_property (gobject_class, PROP_SOLID_COLOR,
-      g_param_spec_uint ("solid-color", "Solid Color",
-          "Solid color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_SOLID_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FOREGROUND_COLOR,
+      g_param_spec_uint ("foreground-color", "Foreground Color",
+          "Foreground color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_FOREGROUND_COLOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstVideoTestSrc:background-color
+   *
+   * Color to use for background color of some patterns.  Default is
+   * black (0xff000000).
+   *
+   * Since: 0.10.31
+   **/
+  g_object_class_install_property (gobject_class, PROP_BACKGROUND_COLOR,
+      g_param_spec_uint ("background-color", "Background Color",
+          "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_BACKGROUND_COLOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
@@ -296,7 +313,8 @@ gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
   gst_video_test_src_set_pattern (src, DEFAULT_PATTERN);
 
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
-  src->solid_color = DEFAULT_SOLID_COLOR;
+  src->foreground_color = DEFAULT_FOREGROUND_COLOR;
+  src->background_color = DEFAULT_BACKGROUND_COLOR;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
@@ -454,8 +472,11 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_YOFFSET:
       src->yoffset = g_value_get_int (value);
       break;
-    case PROP_SOLID_COLOR:
-      src->solid_color = g_value_get_uint (value);
+    case PROP_FOREGROUND_COLOR:
+      src->foreground_color = g_value_get_uint (value);
+      break;
+    case PROP_BACKGROUND_COLOR:
+      src->background_color = g_value_get_uint (value);
       break;
     default:
       break;
@@ -519,8 +540,11 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
     case PROP_YOFFSET:
       g_value_set_int (value, src->yoffset);
       break;
-    case PROP_SOLID_COLOR:
-      g_value_set_uint (value, src->solid_color);
+    case PROP_FOREGROUND_COLOR:
+      g_value_set_uint (value, src->foreground_color);
+      break;
+    case PROP_BACKGROUND_COLOR:
+      g_value_set_uint (value, src->background_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

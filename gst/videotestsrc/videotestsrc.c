@@ -690,6 +690,119 @@ gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
   return (unsigned long) p->endptr;
 }
 
+#define SCALEBITS 10
+#define ONE_HALF  (1 << (SCALEBITS - 1))
+#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
+
+#define RGB_TO_Y(r, g, b) \
+((FIX(0.29900) * (r) + FIX(0.58700) * (g) + \
+  FIX(0.11400) * (b) + ONE_HALF) >> SCALEBITS)
+
+#define RGB_TO_U(r1, g1, b1, shift)\
+(((- FIX(0.16874) * r1 - FIX(0.33126) * g1 +         \
+     FIX(0.50000) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+#define RGB_TO_V(r1, g1, b1, shift)\
+(((FIX(0.50000) * r1 - FIX(0.41869) * g1 -           \
+   FIX(0.08131) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+#define RGB_TO_Y_CCIR(r, g, b) \
+((FIX(0.29900*219.0/255.0) * (r) + FIX(0.58700*219.0/255.0) * (g) + \
+  FIX(0.11400*219.0/255.0) * (b) + (ONE_HALF + (16 << SCALEBITS))) >> SCALEBITS)
+
+#define RGB_TO_U_CCIR(r1, g1, b1, shift)\
+(((- FIX(0.16874*224.0/255.0) * r1 - FIX(0.33126*224.0/255.0) * g1 +         \
+     FIX(0.50000*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+#define RGB_TO_V_CCIR(r1, g1, b1, shift)\
+(((FIX(0.50000*224.0/255.0) * r1 - FIX(0.41869*224.0/255.0) * g1 -           \
+   FIX(0.08131*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+#define RGB_TO_Y_CCIR_709(r, g, b) \
+((FIX(0.212600*219.0/255.0) * (r) + FIX(0.715200*219.0/255.0) * (g) + \
+  FIX(0.072200*219.0/255.0) * (b) + (ONE_HALF + (16 << SCALEBITS))) >> SCALEBITS)
+
+#define RGB_TO_U_CCIR_709(r1, g1, b1, shift)\
+(((- FIX(0.114572*224.0/255.0) * r1 - FIX(0.385427*224.0/255.0) * g1 +         \
+     FIX(0.50000*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+#define RGB_TO_V_CCIR_709(r1, g1, b1, shift)\
+(((FIX(0.50000*224.0/255.0) * r1 - FIX(0.454153*224.0/255.0) * g1 -           \
+   FIX(0.045847*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
+
+static void
+videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
+{
+  int a, r, g, b;
+
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->colors = vts_colors_bt601_ycbcr_100;
+  } else {
+    p->colors = vts_colors_bt709_ycbcr_100;
+  }
+  p->width = w;
+  p->height = h;
+
+  p->paint_hline = v->fourcc->paint_hline;
+
+  a = (v->foreground_color >> 24) & 0xff;
+  r = (v->foreground_color >> 16) & 0xff;
+  g = (v->foreground_color >> 8) & 0xff;
+  b = (v->foreground_color >> 0) & 0xff;
+  p->foreground_color.A = a;
+  p->foreground_color.R = r;
+  p->foreground_color.G = g;
+  p->foreground_color.B = b;
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->foreground_color.Y = RGB_TO_Y_CCIR (r, g, b);
+    p->foreground_color.U = RGB_TO_U_CCIR (r, g, b, 0);
+    p->foreground_color.V = RGB_TO_V_CCIR (r, g, b, 0);
+  } else {
+    p->foreground_color.Y = RGB_TO_Y_CCIR_709 (r, g, b);
+    p->foreground_color.U = RGB_TO_U_CCIR_709 (r, g, b, 0);
+    p->foreground_color.V = RGB_TO_V_CCIR_709 (r, g, b, 0);
+  }
+  p->foreground_color.gray = RGB_TO_Y (r, g, b);
+
+  a = (v->background_color >> 24) & 0xff;
+  r = (v->background_color >> 16) & 0xff;
+  g = (v->background_color >> 8) & 0xff;
+  b = (v->background_color >> 0) & 0xff;
+  p->background_color.A = a;
+  p->background_color.R = r;
+  p->background_color.G = g;
+  p->background_color.B = b;
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->background_color.Y = RGB_TO_Y_CCIR (r, g, b);
+    p->background_color.U = RGB_TO_U_CCIR (r, g, b, 0);
+    p->background_color.V = RGB_TO_V_CCIR (r, g, b, 0);
+  } else {
+    p->background_color.Y = RGB_TO_Y_CCIR_709 (r, g, b);
+    p->background_color.U = RGB_TO_U_CCIR_709 (r, g, b, 0);
+    p->background_color.V = RGB_TO_V_CCIR_709 (r, g, b, 0);
+  }
+  p->background_color.gray = RGB_TO_Y (r, g, b);
+
+}
+
+static void
+videotestsrc_blend_color (struct vts_color_struct *dest,
+    struct vts_color_struct *a, struct vts_color_struct *b, int x)
+{
+#define BLEND1(a,b,x) ((a)*(x) + (b)*(255-(x)))
+#define DIV255(x) (((x) + (((x)+128)>>8) + 128)>>8)
+#define BLEND(a,b,x) DIV255(BLEND1(a,b,x))
+  dest->Y = BLEND (a->Y, b->Y, x);
+  dest->U = BLEND (a->U, b->U, x);
+  dest->V = BLEND (a->V, b->V, x);
+  dest->R = BLEND (a->R, b->R, x);
+  dest->G = BLEND (a->G, b->G, x);
+  dest->B = BLEND (a->B, b->B, x);
+  dest->gray = BLEND (a->gray, b->gray, x);
+#undef BLEND
+
+}
+
 void
 gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
     int h)
@@ -701,19 +814,12 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   y1 = 2 * h / 3;
   y2 = h * 0.75;
@@ -793,13 +899,9 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
 
     for (i = x1; i < w; i++) {
       for (j = y2; j < h; j++) {
-        /* FIXME not strictly correct */
         int y = random_char ();
-        color.Y = y;
-        color.R = y;
-        color.G = y;
-        color.B = y;
-        color.gray = (y << 8) | random_char ();
+        videotestsrc_blend_color (&color, &p->foreground_color,
+            &p->background_color, y);
         p->paint_hline (p, i, j, 1);
       }
     }
@@ -817,19 +919,12 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_75;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_75;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   /* color bars */
   for (i = 0; i < 7; i++) {
@@ -853,32 +948,21 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   struct fourcc_list_struct *fourcc;
   struct vts_color_struct color;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
 
   for (i = 0; i < w; i++) {
     for (j = 0; j < h; j++) {
-      /* FIXME not strictly correct */
       int y = random_char ();
-      color.Y = y;
-      color.R = y;
-      color.G = y;
-      color.B = y;
-      color.gray = (y << 8) | random_char ();
+      videotestsrc_blend_color (&color, &p->foreground_color,
+          &p->background_color, y);
       p->paint_hline (p, i, j, 1);
     }
   }
@@ -893,21 +977,20 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   p->color = p->colors + color_index;
+  if (color_index == COLOR_BLACK) {
+    p->color = &p->background_color;
+  }
+  if (color_index == COLOR_WHITE) {
+    p->color = &p->foreground_color;
+  }
 
   for (i = 0; i < h; i++) {
     p->paint_hline (p, 0, i, w);
@@ -944,46 +1027,6 @@ gst_video_test_src_blue (GstVideoTestSrc * v, guchar * dest, int w, int h)
   gst_video_test_src_unicolor (v, dest, w, h, COLOR_BLUE);
 }
 
-#define SCALEBITS 10
-#define ONE_HALF  (1 << (SCALEBITS - 1))
-#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
-
-#define RGB_TO_Y(r, g, b) \
-((FIX(0.29900) * (r) + FIX(0.58700) * (g) + \
-  FIX(0.11400) * (b) + ONE_HALF) >> SCALEBITS)
-
-#define RGB_TO_U(r1, g1, b1, shift)\
-(((- FIX(0.16874) * r1 - FIX(0.33126) * g1 +         \
-     FIX(0.50000) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
-#define RGB_TO_V(r1, g1, b1, shift)\
-(((FIX(0.50000) * r1 - FIX(0.41869) * g1 -           \
-   FIX(0.08131) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
-#define RGB_TO_Y_CCIR(r, g, b) \
-((FIX(0.29900*219.0/255.0) * (r) + FIX(0.58700*219.0/255.0) * (g) + \
-  FIX(0.11400*219.0/255.0) * (b) + (ONE_HALF + (16 << SCALEBITS))) >> SCALEBITS)
-
-#define RGB_TO_U_CCIR(r1, g1, b1, shift)\
-(((- FIX(0.16874*224.0/255.0) * r1 - FIX(0.33126*224.0/255.0) * g1 +         \
-     FIX(0.50000*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
-#define RGB_TO_V_CCIR(r1, g1, b1, shift)\
-(((FIX(0.50000*224.0/255.0) * r1 - FIX(0.41869*224.0/255.0) * g1 -           \
-   FIX(0.08131*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
-#define RGB_TO_Y_CCIR_709(r, g, b) \
-((FIX(0.212600*219.0/255.0) * (r) + FIX(0.715200*219.0/255.0) * (g) + \
-  FIX(0.072200*219.0/255.0) * (b) + (ONE_HALF + (16 << SCALEBITS))) >> SCALEBITS)
-
-#define RGB_TO_U_CCIR_709(r1, g1, b1, shift)\
-(((- FIX(0.114572*224.0/255.0) * r1 - FIX(0.385427*224.0/255.0) * g1 +         \
-     FIX(0.50000*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
-#define RGB_TO_V_CCIR_709(r1, g1, b1, shift)\
-(((FIX(0.50000*224.0/255.0) * r1 - FIX(0.454153*224.0/255.0) * g1 -           \
-   FIX(0.045847*224.0/255.0) * b1 + (ONE_HALF << shift) - 1) >> (SCALEBITS + shift)) + 128)
-
 void
 gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
     int h)
@@ -992,44 +1035,16 @@ gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
-  struct vts_color_struct yuv;
-  guint8 a, r, g, b;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
-  a = (v->solid_color >> 24) & 0xff;
-  r = (v->solid_color >> 16) & 0xff;
-  g = (v->solid_color >> 8) & 0xff;
-  b = (v->solid_color >> 0) & 0xff;
-
-  yuv.A = a;
-  yuv.R = r;
-  yuv.G = g;
-  yuv.B = b;
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    yuv.Y = RGB_TO_Y_CCIR (r, g, b);
-    yuv.U = RGB_TO_U_CCIR (r, g, b, 0);
-    yuv.V = RGB_TO_V_CCIR (r, g, b, 0);
-  } else {
-    yuv.Y = RGB_TO_Y_CCIR_709 (r, g, b);
-    yuv.U = RGB_TO_U_CCIR_709 (r, g, b, 0);
-    yuv.V = RGB_TO_V_CCIR_709 (r, g, b, 0);
-  }
-  yuv.gray = RGB_TO_Y (r, g, b);
-
-  p->color = &yuv;
+  p->color = &p->foreground_color;
 
   for (i = 0; i < h; i++) {
     p->paint_hline (p, 0, i, w);
@@ -1044,19 +1059,13 @@ gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   for (y = 0; y < h; y++) {
     p->color = p->colors + COLOR_GREEN;
@@ -1076,19 +1085,12 @@ gst_video_test_src_checkers2 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   p->color = p->colors + COLOR_GREEN;
   for (y = 0; y < h; y++) {
@@ -1116,19 +1118,12 @@ gst_video_test_src_checkers4 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   p->color = p->colors + COLOR_GREEN;
   for (y = 0; y < h; y++) {
@@ -1162,19 +1157,12 @@ gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   p->color = p->colors + COLOR_GREEN;
   for (y = 0; y < h; y++) {
@@ -1203,10 +1191,7 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct vts_color_struct color;
   static guint8 sine_array[256];
   static int sine_array_inited = FALSE;
-
-  static int t = 0;             /* time - increment phase vs time by 1 for each generated frame */
-  /* this may not fit with the correct gstreamer notion of time, so maybe FIXME? */
-
+  int t = v->zoneplate_t;
   int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
   int yreset = -(h / 2) - v->yoffset;
 
@@ -1235,19 +1220,12 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
     sine_array_inited = TRUE;
   }
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1327,18 +1305,14 @@ gst_video_test_src_zoneplate (GstVideoTestSrc * v, unsigned char *dest,
       /*phase = phase + ((v->kx2 * x * x)/w) + ((v->ky2 * y * y)/h) + ((v->kt2 * t * t)>>1); */
       phase = phase + ((v->kx2 * x * x * scale_kx2) >> 16) + ky2 + (kt2 >> 1);
 
-      color.Y = sine_array[phase & 0xff];
+      videotestsrc_blend_color (&color, &p->foreground_color,
+          &p->background_color, sine_array[phase & 0xff]);
 
-      color.R = color.Y;
-      color.G = color.Y;
-      color.B = color.Y;
-
-      color.gray = color.Y << 8;
       p->paint_hline (p, i, j, 1);
     }
   }
 
-  t++;
+  v->zoneplate_t++;
 }
 
 void
@@ -1353,9 +1327,7 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
   struct vts_color_struct color;
   static guint8 sine_array[256];
   static int sine_array_inited = FALSE;
-
-  static int t = 0;             /* time - increment phase vs time by 1 for each generated frame */
-  /* this may not fit with the correct gstreamer notion of time, so maybe FIXME? */
+  int t = v->zoneplate_t;
 
   int xreset = -(w / 2) - v->xoffset;   /* starting values for x^2 and y^2, centering the ellipse */
   int yreset = -(h / 2) - v->yoffset;
@@ -1385,19 +1357,12 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
     sine_array_inited = TRUE;
   }
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1460,10 +1425,9 @@ gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, unsigned char *dest,
     }
   }
 
-  t++;
+  v->zoneplate_t++;
 }
 
-#undef SCALE_AMPLITUDE
 #undef SCALE_AMPLITUDE
 void
 gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
@@ -1492,19 +1456,12 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
     sine_array_inited = TRUE;
   }
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   color = p->colors[COLOR_BLACK];
   p->color = &color;
@@ -1531,8 +1488,7 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
               h)) / (2 * w);
       seg = floor (dist * 16);
       if (seg == 0 || seg >= 8) {
-        color.Y = 255;
-        color.gray = 65535;
+        color = p->foreground_color;
       } else {
 #ifdef SCALE_AMPLITUDE
         double a;
@@ -1542,16 +1498,13 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
         a = ampl[seg];
         if (a < 0)
           a = 0;
-        color.Y = 128 + a * (sine_array[d & 0xff] - 128);
-        color.gray = 128 + a * (sine_array[d & 0xff] - 128);
+        videotestsrc_blend_color (&color, &p->foreground_color,
+            &p->background_color, 128 + a * (sine_array[d & 0xff] - 128));
 #else
-        color.Y = sine_array[d & 0xff];
-        color.gray = sine_array[d & 0xff];
+        videotestsrc_blend_color (&color, &p->foreground_color,
+            &p->background_color, sine_array[d & 0xff]);
 #endif
       }
-      color.R = color.Y;
-      color.G = color.Y;
-      color.B = color.Y;
       p->paint_hline (p, i, j, 1);
     }
   }
@@ -1567,19 +1520,12 @@ gst_video_test_src_gamut (GstVideoTestSrc * v, guchar * dest, int w, int h)
   struct vts_color_struct yuv_primary;
   struct vts_color_struct yuv_secondary;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   for (y = 0; y < h; y++) {
     int region = (y * 4) / h;
@@ -1627,28 +1573,16 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
-  struct vts_color_struct yuv_primary;
-  struct vts_color_struct yuv_secondary;
-  static int t = 0;
+  int t = v->zoneplate_t;
   double x, y;
   int radius = 20;
 
-  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
-    p->colors = vts_colors_bt601_ycbcr_100;
-  } else {
-    p->colors = vts_colors_bt709_ycbcr_100;
-  }
-  p->width = w;
-  p->height = h;
+  videotestsrc_setup_paintinfo (v, p, w, h);
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
 
-  yuv_primary = p->colors[COLOR_WHITE];
-  yuv_secondary = p->colors[COLOR_BLACK];
-
   fourcc->paint_setup (p, dest);
-  p->paint_hline = fourcc->paint_hline;
 
   x = radius + (0.5 + 0.5 * sin (2 * M_PI * t / 200)) * (w - 2 * radius);
   y = radius + (0.5 + 0.5 * sin (2 * M_PI * sqrt (2) * t / 200)) * (h -
@@ -1656,14 +1590,14 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 
   for (i = 0; i < h; i++) {
     if (i < y - radius || i > y + radius) {
-      p->color = &yuv_primary;
+      p->color = &p->foreground_color;
       p->paint_hline (p, 0, i, w);
     } else {
       int r = rint (sqrt (radius * radius - (i - y) * (i - y)));
       int x1, x2;
       int j;
 
-      p->color = &yuv_primary;
+      p->color = &p->foreground_color;
       x1 = 0;
       x2 = MAX (0, x - r);
       p->paint_hline (p, x1, i, x2 - x1);
@@ -1676,31 +1610,32 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 
         rr *= 0.5;
         if (rr < 0) {
-          p->color = &yuv_primary;
+          p->color = &p->foreground_color;
         } else if (rr > 1) {
-          p->color = &yuv_secondary;
+          p->color = &p->background_color;
         } else {
 #define BLEND(a,b,x) (rint((a)*(1-x) + (b)*(x)))
-          yuv.Y = BLEND (yuv_primary.Y, yuv_secondary.Y, rr);
-          yuv.U = BLEND (yuv_primary.U, yuv_secondary.U, rr);
-          yuv.V = BLEND (yuv_primary.V, yuv_secondary.V, rr);
-          yuv.R = BLEND (yuv_primary.R, yuv_secondary.R, rr);
-          yuv.G = BLEND (yuv_primary.G, yuv_secondary.G, rr);
-          yuv.B = BLEND (yuv_primary.B, yuv_secondary.B, rr);
-          yuv.gray = BLEND (yuv_primary.gray, yuv_secondary.gray, rr);
+          yuv.Y = BLEND (p->foreground_color.Y, p->background_color.Y, rr);
+          yuv.U = BLEND (p->foreground_color.U, p->background_color.U, rr);
+          yuv.V = BLEND (p->foreground_color.V, p->background_color.V, rr);
+          yuv.R = BLEND (p->foreground_color.R, p->background_color.R, rr);
+          yuv.G = BLEND (p->foreground_color.G, p->background_color.G, rr);
+          yuv.B = BLEND (p->foreground_color.B, p->background_color.B, rr);
+          yuv.gray =
+              BLEND (p->foreground_color.gray, p->background_color.gray, rr);
           p->color = &yuv;
         }
 
         p->paint_hline (p, j, i, 1);
       }
 
-      p->color = &yuv_primary;
+      p->color = &p->foreground_color;
       x1 = MIN (w, x + r + 1);
       x2 = w;
       p->paint_hline (p, x1, i, x2 - x1);
     }
   }
-  t++;
+  v->zoneplate_t++;
 }
 
 

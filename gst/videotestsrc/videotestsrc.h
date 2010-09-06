@@ -53,6 +53,9 @@ struct paintinfo_struct
   const struct vts_color_struct *color;
   /*  const struct vts_color_struct *color; */
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
+
+  struct vts_color_struct foreground_color;
+  struct vts_color_struct background_color;
 };
 
 struct fourcc_list_struct
