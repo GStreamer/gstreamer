@@ -66,7 +66,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define SINK_CAPS \
   "video/x-raw-yuv, " \
-  "format = (fourcc) { YV12, Y41B, Y42B } "
+  "format = (fourcc) { I420, YV12, Y41B, Y42B } "
 
 
 #define SRC_CAPS \
@@ -524,6 +524,8 @@ gst_ssim_setcaps (GstPad * pad, GstCaps * caps)
     g_value_init (&list, GST_TYPE_LIST);
     g_value_init (&fourcc, GST_TYPE_FOURCC);
 
+    gst_value_set_fourcc (&fourcc, GST_MAKE_FOURCC ('I', '4', '2', '0'));
+    gst_value_list_append_value (&list, &fourcc);
     gst_value_set_fourcc (&fourcc, GST_MAKE_FOURCC ('Y', 'V', '1', '2'));
     gst_value_list_append_value (&list, &fourcc);
     gst_value_set_fourcc (&fourcc, GST_MAKE_FOURCC ('Y', '4', '1', 'B'));
@@ -604,6 +606,7 @@ gst_ssim_setcaps (GstPad * pad, GstCaps * caps)
      * index for R, G or B channels separately.
      */
     switch (fourcc) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
       case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
