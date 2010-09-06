@@ -79,7 +79,8 @@ static GstStaticPadTemplate gst_interlace_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}")
         ",interlaced=TRUE")
     );
 
@@ -87,7 +88,8 @@ static GstStaticPadTemplate gst_interlace_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV
+        ("{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}")
         ",interlaced=FALSE")
     );
 
@@ -318,13 +320,74 @@ copy_field (GstInterlace * interlace, GstBuffer * d, GstBuffer * s,
           j * width / 2;
       memcpy (dest, src, width / 2);
     }
-  } else {
+  } else if (interlace->format == GST_VIDEO_FORMAT_UYVY ||
+      interlace->format == GST_VIDEO_FORMAT_YUY2) {
     /* packed 4:2:2 */
     for (j = field_index; j < height; j += 2) {
       dest = GST_BUFFER_DATA (d) + j * width * 2;
       src = GST_BUFFER_DATA (s) + j * width * 2;
       memcpy (dest, src, width * 2);
     }
+  } else if (interlace->format == GST_VIDEO_FORMAT_AYUV) {
+    /* packed 4:4:4 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width * 4;
+      src = GST_BUFFER_DATA (s) + j * width * 4;
+      memcpy (dest, src, width * 4);
+    }
+  } else if (interlace->format == GST_VIDEO_FORMAT_Y42B) {
+    /* planar 4:2:2 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width;
+      src = GST_BUFFER_DATA (s) + j * width;
+      memcpy (dest, src, width);
+    }
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + width * height + j * width / 2;
+      src = GST_BUFFER_DATA (s) + width * height + j * width / 2;
+      memcpy (dest, src, width / 2);
+    }
+    for (j = field_index; j < height; j += 2) {
+      dest =
+          GST_BUFFER_DATA (d) + width * height + width / 2 * height +
+          j * width / 2;
+      src =
+          GST_BUFFER_DATA (s) + width * height + width / 2 * height +
+          j * width / 2;
+      memcpy (dest, src, width / 2);
+    }
+  } else if (interlace->format == GST_VIDEO_FORMAT_Y444) {
+    /* planar 4:4:4 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width;
+      src = GST_BUFFER_DATA (s) + j * width;
+      memcpy (dest, src, width);
+    }
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + width * height + j * width;
+      src = GST_BUFFER_DATA (s) + width * height + j * width;
+      memcpy (dest, src, width);
+    }
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + width * height + width * height + j * width;
+      src = GST_BUFFER_DATA (s) + width * height + width * height + j * width;
+      memcpy (dest, src, width);
+    }
+  } else if (interlace->format == GST_VIDEO_FORMAT_NV12 ||
+      interlace->format == GST_VIDEO_FORMAT_NV21) {
+    /* planar/packed 4:2:0 */
+    for (j = field_index; j < height; j += 2) {
+      dest = GST_BUFFER_DATA (d) + j * width;
+      src = GST_BUFFER_DATA (s) + j * width;
+      memcpy (dest, src, width);
+    }
+    for (j = field_index; j < height / 2; j += 2) {
+      dest = GST_BUFFER_DATA (d) + width * height + j * width;
+      src = GST_BUFFER_DATA (s) + width * height + j * width;
+      memcpy (dest, src, width);
+    }
+  } else {
+    g_assert_not_reached ();
   }
 }
 
@@ -350,7 +413,7 @@ gst_interlace_chain (GstPad * pad, GstBuffer * buffer)
       "");
 
   if (GST_BUFFER_FLAGS (buffer) & GST_BUFFER_FLAG_DISCONT) {
-    GST_ERROR ("discont");
+    GST_DEBUG ("discont");
 
   }
 
