@@ -28,7 +28,6 @@ autoregen.sh
 ABOUT-NLS
 _stdint.h
 gst-plugins-bad-*.tar.*
-tests/examples/shapewipe/shapewipe-example
 
 .deps
 .libs
@@ -42,8 +41,11 @@ Makefile
 
 tmp-orc.c
 gst*orc.h
-/tests/check/orc
 
 /ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 /ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.valid
 /ext/gsettings/org.freedesktop.gstreamer-0.10.default-elements.gschema.xml
+
+/tests/check/orc
+/tests/examples/shapewipe/shapewipe-example
+/tests/examples/jack/jack_client

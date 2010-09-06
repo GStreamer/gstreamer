@@ -16,4 +16,4 @@ DIRECTFB_DIR=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES) switch
-DIST_SUBDIRS= camerabin directfb mxf scaletempo switch
+DIST_SUBDIRS= camerabin directfb jack mxf scaletempo switch
