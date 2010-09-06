@@ -40,6 +40,7 @@ void                  gst_jack_audio_client_init           (void);
 
 
 GstJackAudioClient *  gst_jack_audio_client_new            (const gchar *id, const gchar *server,
+                                                            jack_client_t *jclient,
                                                             GstJackClientType type,
                                                             void (*shutdown) (void *arg),
                                                             JackProcessCallback    process,
