@@ -2433,7 +2433,7 @@ GST_START_TEST (test_serialize_int64_range)
 
   fail_unless (int64_ranges_size == int64_range_strings_size);
 
-  while (i < (int64_ranges_size * 2)) {
+  while (i + 1 < (int64_ranges_size * 2)) {
     if ((i + 1) % 2) {
       gchar *str;
       gchar *str2;
