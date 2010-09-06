@@ -1843,6 +1843,13 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
+  /**
+   * GstPulseSink:client
+   *
+   * The PulseAudio client name to use
+   *
+   * Since: 0.10.25
+   */
   g_object_class_install_property (gobject_class,
       PROP_CLIENT,
       g_param_spec_string ("client", "Client",
