@@ -33,6 +33,17 @@ else
 PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup pipelines/parse-launch
 endif
 
+# Do not run the abi test in case any option which causes the API to change has
+# been used
+if !GST_DISABLE_LOADSAVE
+if !GST_DISABLE_REGISTRY
+if !GST_DISABLE_TRACE
+ABI_CHECKS = gst/gstabi
+endif
+endif
+endif
+
+
 # if it's calling gst_element_factory_make(), it will probably not work without
 # a registry
 if GST_DISABLE_REGISTRY
@@ -73,7 +84,7 @@ REGISTRY_CHECKS =				\
 endif
 
 check_PROGRAMS =				\
-	gst/gstabi			     	\
+	$(ABI_CHECKS)			     	\
 	gst/gstbuffer				\
 	gst/gstbufferlist			\
 	gst/gstbus				\

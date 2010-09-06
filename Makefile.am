@@ -142,12 +142,10 @@ include $(top_srcdir)/common/coverage/lcov.mak
 
 # Do not run the check-exports test in case any option which causes the API to
 # change has been used
-if !GST_DISABLE_GST_DEBUG
 if !GST_DISABLE_LOADSAVE
 if !GST_DISABLE_REGISTRY
 if !GST_DISABLE_TRACE
 CHECK_EXPORTS = check-exports
-endif
 endif
 endif
 endif
