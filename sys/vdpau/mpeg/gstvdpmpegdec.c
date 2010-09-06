@@ -384,13 +384,13 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   frame->src_buffer = GST_BUFFER_CAST (outbuf);
 
   if (info->picture_coding_type == B_FRAME) {
-    gst_base_video_decoder_finish_frame (base_video_decoder, frame);
+    ret = gst_base_video_decoder_finish_frame (base_video_decoder, frame);
   } else {
     info->backward_reference = GST_VDP_VIDEO_BUFFER (outbuf)->surface;
     mpeg_dec->b_frame = gst_video_frame_ref (frame);
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstVideoFrame *
