@@ -921,7 +921,7 @@ gst_object_unparent (GstObject * object)
  * @ancestor: a #GstObject to check as ancestor
  *
  * Check if @object has an ancestor @ancestor somewhere up in
- * the hierarchy.
+ * the hierarchy. One can e.g. check if a #GstElement is inside a #GstPipeline.
  *
  * Returns: TRUE if @ancestor is an ancestor of @object.
  *
