@@ -198,7 +198,7 @@ gst_error_get_library_error (GstLibraryError code)
     case GST_LIBRARY_ERROR_SETTINGS:
       return _("Could not configure supporting library.");
     case GST_LIBRARY_ERROR_ENCODE:
-      break;                    /* FIXME: add default error message for GST_LIBRARY_ERROR_ENCODE */
+      return _("Encoding error.");
     case GST_LIBRARY_ERROR_NUM_ERRORS:
     default:
       break;
