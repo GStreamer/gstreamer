@@ -2063,7 +2063,8 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
    * it directly or fail. For TIME, try upstream, but do it ourselves if
    * it fails upstream */
   if (format != GST_FORMAT_TIME) {
-    return gst_pad_push_event (parse->sinkpad, event);
+    /* default action delegates to upstream */
+    return FALSE;
   } else {
     gst_event_ref (event);
     if (gst_pad_push_event (parse->sinkpad, event)) {
