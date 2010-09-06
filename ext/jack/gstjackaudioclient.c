@@ -189,11 +189,10 @@ connection_find (GstJackAudioConnection * conn, FindData * data)
  * status set. */
 static GstJackAudioConnection *
 gst_jack_audio_make_connection (const gchar * id, const gchar * server,
-    jack_status_t * status)
+    jack_client_t * jclient, jack_status_t * status)
 {
   GstJackAudioConnection *conn;
   jack_options_t options;
-  jack_client_t *jclient;
   gint res;
 
   *status = 0;
@@ -207,7 +206,8 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
   if (server != NULL)
     options |= JackServerName;
   /* open the client */
-  jclient = jack_client_open (id, options, status, server);
+  if (jclient == NULL)
+    jclient = jack_client_open (id, options, status, server);
   if (jclient == NULL)
     goto could_not_open;
 
@@ -258,7 +258,7 @@ could_not_activate:
 
 static GstJackAudioConnection *
 gst_jack_audio_get_connection (const gchar * id, const gchar * server,
-    jack_status_t * status)
+    jack_client_t * jclient, jack_status_t * status)
 {
   GstJackAudioConnection *conn;
   GList *found;
@@ -273,7 +273,7 @@ gst_jack_audio_get_connection (const gchar * id, const gchar * server,
   G_LOCK (connections_lock);
   found =
       g_list_find_custom (connections, &data, (GCompareFunc) connection_find);
-  if (found != NULL) {
+  if (found != NULL && jclient != NULL) {
     /* we found it, increase refcount and return it */
     conn = (GstJackAudioConnection *) found->data;
     conn->refcount++;
@@ -281,7 +281,7 @@ gst_jack_audio_get_connection (const gchar * id, const gchar * server,
     GST_DEBUG ("found connection %p", conn);
   } else {
     /* make new connection */
-    conn = gst_jack_audio_make_connection (id, server, status);
+    conn = gst_jack_audio_make_connection (id, server, jclient, status);
     if (conn != NULL) {
       GST_DEBUG ("created connection %p", conn);
       /* add to list on success */
@@ -407,10 +407,10 @@ gst_jack_audio_connection_remove_client (GstJackAudioConnection * conn,
  */
 GstJackAudioClient *
 gst_jack_audio_client_new (const gchar * id, const gchar * server,
-    GstJackClientType type, void (*shutdown) (void *arg),
-    JackProcessCallback process, JackBufferSizeCallback buffer_size,
-    JackSampleRateCallback sample_rate, gpointer user_data,
-    jack_status_t * status)
+    jack_client_t * jclient, GstJackClientType type,
+    void (*shutdown) (void *arg), JackProcessCallback process,
+    JackBufferSizeCallback buffer_size, JackSampleRateCallback sample_rate,
+    gpointer user_data, jack_status_t * status)
 {
   GstJackAudioClient *client;
   GstJackAudioConnection *conn;
@@ -419,7 +419,7 @@ gst_jack_audio_client_new (const gchar * id, const gchar * server,
   g_return_val_if_fail (status != NULL, NULL);
 
   /* first get a connection for the id/server pair */
-  conn = gst_jack_audio_get_connection (id, server, status);
+  conn = gst_jack_audio_get_connection (id, server, jclient, status);
   if (conn == NULL)
     goto no_connection;
 

@@ -46,6 +46,35 @@ gst_jack_connect_get_type (void)
 }
 
 
+static gpointer
+gst_jack_client_copy (gpointer jclient)
+{
+  return jclient;
+}
+
+
+static void
+gst_jack_client_free (gpointer jclient)
+{
+  return;
+}
+
+
+GType
+gst_jack_client_get_type (void)
+{
+  static GType type;            /* 0 */
+
+  if (type == 0) {
+    /* hackish, but makes it show up nicely in gst-inspect */
+    type = g_boxed_type_register_static ("JackClient",
+        (GBoxedCopyFunc) gst_jack_client_copy,
+        (GBoxedFreeFunc) gst_jack_client_free);
+  }
+
+  return type;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

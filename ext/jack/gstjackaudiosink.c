@@ -334,6 +334,7 @@ gst_jack_ring_buffer_open_device (GstRingBuffer * buf)
     name = "GStreamer";
 
   sink->client = gst_jack_audio_client_new (name, sink->server,
+      sink->jclient,
       GST_JACK_CLIENT_SINK,
       jack_shutdown_cb,
       jack_process_cb, jack_buffer_size_cb, jack_sample_rate_cb, buf, &status);
@@ -627,6 +628,7 @@ enum
   PROP_0,
   PROP_CONNECT,
   PROP_SERVER,
+  PROP_CLIENT,
   PROP_LAST
 };
 
@@ -685,6 +687,12 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
           "The Jack server to connect to (NULL = default)",
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_CLIENT,
+      g_param_spec_boxed ("client", "JackClient", "Handle for jack client",
+          GST_TYPE_JACK_CLIENT,
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_jack_audio_sink_getcaps);
 
   gstbaseaudiosink_class->create_ringbuffer =
@@ -703,6 +711,7 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink,
 {
   sink->connect = DEFAULT_PROP_CONNECT;
   sink->server = g_strdup (DEFAULT_PROP_SERVER);
+  sink->jclient = NULL;
   sink->ports = NULL;
   sink->port_count = 0;
 }
@@ -732,6 +741,12 @@ gst_jack_audio_sink_set_property (GObject * object, guint prop_id,
       g_free (sink->server);
       sink->server = g_value_dup_string (value);
       break;
+    case PROP_CLIENT:
+      if (GST_STATE (sink) == GST_STATE_NULL ||
+          GST_STATE (sink) == GST_STATE_READY) {
+        sink->jclient = g_value_get_boxed (value);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -752,6 +767,9 @@ gst_jack_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SERVER:
       g_value_set_string (value, sink->server);
+      break;
+    case PROP_CLIENT:
+      g_value_set_boxed (value, sink->jclient);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
