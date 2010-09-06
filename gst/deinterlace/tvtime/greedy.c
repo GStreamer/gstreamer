@@ -34,9 +34,6 @@
 
 #include "gstdeinterlacemethod.h"
 #include <string.h>
-#ifdef HAVE_ORC
-#include <orc/orc.h>
-#endif
 #include "tvtime.h"
 
 
@@ -80,270 +77,12 @@ typedef struct
 // Blended Clip but this give too good results for the CPU to ignore here.
 
 static inline void
-deinterlace_greedy_scanline_c (GstDeinterlaceMethodGreedyL * self,
-    const guint8 * m0, const guint8 * t1,
-    const guint8 * b1, const guint8 * m2, guint8 * output, gint width)
-{
-  gint avg, l2_diff, lp2_diff, max, min, best;
-  guint max_comb = self->max_comb;
-
-  // L2 == m0
-  // L1 == t1
-  // L3 == b1
-  // LP2 == m2
-
-  while (width--) {
-    avg = (*t1 + *b1) / 2;
-
-    l2_diff = ABS (*m0 - avg);
-    lp2_diff = ABS (*m2 - avg);
-
-    if (l2_diff > lp2_diff)
-      best = *m2;
-    else
-      best = *m0;
-
-    max = MAX (*t1, *b1);
-    min = MIN (*t1, *b1);
-
-    if (max < 256 - max_comb)
-      max += max_comb;
-    else
-      max = 255;
-
-    if (min > max_comb)
-      min -= max_comb;
-    else
-      min = 0;
-
-    *output = CLAMP (best, min, max);
-
-    // Advance to the next set of pixels.
-    output += 1;
-    m0 += 1;
-    t1 += 1;
-    b1 += 1;
-    m2 += 1;
-  }
-}
-
-static inline void
 deinterlace_greedy_scanline_orc (GstDeinterlaceMethodGreedyL * self,
     const guint8 * m0, const guint8 * t1,
     const guint8 * b1, const guint8 * m2, guint8 * output, gint width)
 {
   deinterlace_line_greedy (output, m0, t1, b1, m2, self->max_comb, width);
 }
-
-#ifdef BUILD_X86_ASM
-#include "mmx.h"
-static void
-deinterlace_greedy_scanline_mmx (GstDeinterlaceMethodGreedyL * self,
-    const guint8 * m0, const guint8 * t1,
-    const guint8 * b1, const guint8 * m2, guint8 * output, gint width)
-{
-  mmx_t MaxComb;
-  mmx_t ShiftMask;
-
-  // How badly do we let it weave? 0-255
-  MaxComb.ub[0] = self->max_comb;
-  MaxComb.ub[1] = self->max_comb;
-  MaxComb.ub[2] = self->max_comb;
-  MaxComb.ub[3] = self->max_comb;
-  MaxComb.ub[4] = self->max_comb;
-  MaxComb.ub[5] = self->max_comb;
-  MaxComb.ub[6] = self->max_comb;
-  MaxComb.ub[7] = self->max_comb;
-
-  ShiftMask.ub[0] = 0x7f;
-  ShiftMask.ub[1] = 0x7f;
-  ShiftMask.ub[2] = 0x7f;
-  ShiftMask.ub[3] = 0x7f;
-  ShiftMask.ub[4] = 0x7f;
-  ShiftMask.ub[5] = 0x7f;
-  ShiftMask.ub[6] = 0x7f;
-  ShiftMask.ub[7] = 0x7f;
-
-  // L2 == m0
-  // L1 == t1
-  // L3 == b1
-  // LP2 == m2  
-
-  movq_m2r (MaxComb, mm6);
-
-  for (; width > 7; width -= 8) {
-    movq_m2r (*t1, mm1);        // L1
-    movq_m2r (*m0, mm2);        // L2
-    movq_m2r (*b1, mm3);        // L3
-    movq_m2r (*m2, mm0);        // LP2
-
-    // average L1 and L3 leave result in mm4
-    movq_r2r (mm1, mm4);        // L1
-    movq_r2r (mm3, mm5);        // L3
-    psrlw_i2r (1, mm4);         // L1/2
-    pand_m2r (ShiftMask, mm4);
-    psrlw_i2r (1, mm5);         // L3/2
-    pand_m2r (ShiftMask, mm5);
-    paddusb_r2r (mm5, mm4);     // (L1 + L3) / 2
-
-    // get abs value of possible L2 comb
-    movq_r2r (mm2, mm7);        // L2
-    psubusb_r2r (mm4, mm7);     // L2 - avg
-    movq_r2r (mm4, mm5);        // avg
-    psubusb_r2r (mm2, mm5);     // avg - L2
-    por_r2r (mm7, mm5);         // abs(avg-L2)
-
-    // get abs value of possible LP2 comb
-    movq_r2r (mm0, mm7);        // LP2
-    psubusb_r2r (mm4, mm7);     // LP2 - avg
-    psubusb_r2r (mm0, mm4);     // avg - LP2
-    por_r2r (mm7, mm4);         // abs(avg-LP2)
-
-    // use L2 or LP2 depending upon which makes smaller comb
-    psubusb_r2r (mm5, mm4);     // see if it goes to zero
-    psubusb_r2r (mm5, mm5);     // 0
-    pcmpeqb_r2r (mm5, mm4);     // if (mm4=0) then FF else 0
-    pcmpeqb_r2r (mm4, mm5);     // opposite of mm4
-
-    // if Comb(LP2) <= Comb(L2) then mm4=ff, mm5=0 else mm4=0, mm5 = 55
-    pand_r2r (mm2, mm5);        // use L2 if mm5 == ff, else 0
-    pand_r2r (mm0, mm4);        // use LP2 if mm4 = ff, else 0
-    por_r2r (mm5, mm4);         // may the best win
-
-    // Now lets clip our chosen value to be not outside of the range
-    // of the high/low range L1-L3 by more than abs(L1-L3)
-    // This allows some comb but limits the damages and also allows more
-    // detail than a boring oversmoothed clip.
-
-    movq_r2r (mm1, mm2);        // copy L1
-    psubusb_r2r (mm3, mm2);     // - L3, with saturation
-    paddusb_r2r (mm3, mm2);     // now = Max(L1,L3)
-
-    pcmpeqb_r2r (mm7, mm7);     // all ffffffff
-    psubusb_r2r (mm1, mm7);     // - L1 
-    paddusb_r2r (mm7, mm3);     // add, may sat at fff..
-    psubusb_r2r (mm7, mm3);     // now = Min(L1,L3)
-
-    // allow the value to be above the high or below the low by amt of MaxComb
-    paddusb_r2r (mm6, mm2);     // increase max by diff
-    psubusb_r2r (mm6, mm3);     // lower min by diff
-
-    psubusb_r2r (mm3, mm4);     // best - Min
-    paddusb_r2r (mm3, mm4);     // now = Max(best,Min(L1,L3)
-
-    pcmpeqb_r2r (mm7, mm7);     // all ffffffff
-    psubusb_r2r (mm4, mm7);     // - Max(best,Min(best,L3) 
-    paddusb_r2r (mm7, mm2);     // add may sat at FFF..
-    psubusb_r2r (mm7, mm2);     // now = Min( Max(best, Min(L1,L3), L2 )=L2 clipped
-
-    movq_r2m (mm2, *output);    // move in our clipped best
-
-    // Advance to the next set of pixels.
-    output += 8;
-    m0 += 8;
-    t1 += 8;
-    b1 += 8;
-    m2 += 8;
-  }
-  emms ();
-  if (width > 0)
-    deinterlace_greedy_scanline_c (self, m0, t1, b1, m2, output, width);
-}
-
-#include "sse.h"
-
-static void
-deinterlace_greedy_scanline_mmxext (GstDeinterlaceMethodGreedyL *
-    self, const guint8 * m0, const guint8 * t1, const guint8 * b1,
-    const guint8 * m2, guint8 * output, gint width)
-{
-  mmx_t MaxComb;
-
-  // How badly do we let it weave? 0-255
-  MaxComb.ub[0] = self->max_comb;
-  MaxComb.ub[1] = self->max_comb;
-  MaxComb.ub[2] = self->max_comb;
-  MaxComb.ub[3] = self->max_comb;
-  MaxComb.ub[4] = self->max_comb;
-  MaxComb.ub[5] = self->max_comb;
-  MaxComb.ub[6] = self->max_comb;
-  MaxComb.ub[7] = self->max_comb;
-
-  // L2 == m0
-  // L1 == t1
-  // L3 == b1
-  // LP2 == m2
-
-  movq_m2r (MaxComb, mm6);
-
-  for (; width > 7; width -= 8) {
-    movq_m2r (*t1, mm1);        // L1
-    movq_m2r (*m0, mm2);        // L2
-    movq_m2r (*b1, mm3);        // L3
-    movq_m2r (*m2, mm0);        // LP2
-
-    // average L1 and L3 leave result in mm4
-    movq_r2r (mm1, mm4);        // L1
-    pavgb_r2r (mm3, mm4);       // (L1 + L3)/2
-
-    // get abs value of possible L2 comb
-    movq_r2r (mm2, mm7);        // L2
-    psubusb_r2r (mm4, mm7);     // L2 - avg
-    movq_r2r (mm4, mm5);        // avg
-    psubusb_r2r (mm2, mm5);     // avg - L2
-    por_r2r (mm7, mm5);         // abs(avg-L2)
-
-    // get abs value of possible LP2 comb
-    movq_r2r (mm0, mm7);        // LP2
-    psubusb_r2r (mm4, mm7);     // LP2 - avg
-    psubusb_r2r (mm0, mm4);     // avg - LP2
-    por_r2r (mm7, mm4);         // abs(avg-LP2)
-
-    // use L2 or LP2 depending upon which makes smaller comb
-    psubusb_r2r (mm5, mm4);     // see if it goes to zero
-    pxor_r2r (mm5, mm5);        // 0
-    pcmpeqb_r2r (mm5, mm4);     // if (mm4=0) then FF else 0
-    pcmpeqb_r2r (mm4, mm5);     // opposite of mm4
-
-    // if Comb(LP2) <= Comb(L2) then mm4=ff, mm5=0 else mm4=0, mm5 = 55
-    pand_r2r (mm2, mm5);        // use L2 if mm5 == ff, else 0
-    pand_r2r (mm0, mm4);        // use LP2 if mm4 = ff, else 0
-    por_r2r (mm5, mm4);         // may the best win
-
-    // Now lets clip our chosen value to be not outside of the range
-    // of the high/low range L1-L3 by more than abs(L1-L3)
-    // This allows some comb but limits the damages and also allows more
-    // detail than a boring oversmoothed clip.
-
-    movq_r2r (mm1, mm2);        // copy L1
-    pmaxub_r2r (mm3, mm2);      // now = Max(L1,L3)
-
-    pminub_r2r (mm1, mm3);      // now = Min(L1,L3)
-
-    // allow the value to be above the high or below the low by amt of MaxComb
-    paddusb_r2r (mm6, mm2);     // increase max by diff
-    psubusb_r2r (mm6, mm3);     // lower min by diff
-
-
-    pmaxub_r2r (mm3, mm4);      // now = Max(best,Min(L1,L3)
-    pminub_r2r (mm4, mm2);      // now = Min( Max(best, Min(L1,L3)), L2 )=L2 clipped
-
-    movq_r2m (mm2, *output);    // move in our clipped best
-
-    // Advance to the next set of pixels.
-    output += 8;
-    m0 += 8;
-    t1 += 8;
-    b1 += 8;
-    m2 += 8;
-  }
-  emms ();
-
-  if (width > 0)
-    deinterlace_greedy_scanline_c (self, m0, t1, b1, m2, output, width);
-}
-
-#endif
 
 static void
 deinterlace_frame_di_greedy_packed (GstDeinterlaceMethod * method,
@@ -561,10 +300,6 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
-#ifdef BUILD_X86_ASM
-  guint cpu_flags =
-      orc_target_get_default_flags (orc_target_get_by_name ("mmx"));
-#endif
 
   gobject_class->set_property = gst_deinterlace_method_greedy_l_set_property;
   gobject_class->get_property = gst_deinterlace_method_greedy_l_get_property;
@@ -596,18 +331,7 @@ gst_deinterlace_method_greedy_l_class_init (GstDeinterlaceMethodGreedyLClass *
   dim_class->deinterlace_frame_rgb = deinterlace_frame_di_greedy_packed;
   dim_class->deinterlace_frame_bgr = deinterlace_frame_di_greedy_packed;
 
-#ifdef BUILD_X86_ASM
-  if (cpu_flags & ORC_TARGET_MMX_MMXEXT) {
-    klass->scanline = deinterlace_greedy_scanline_mmxext;
-  } else if (cpu_flags & ORC_TARGET_MMX_MMX) {
-    klass->scanline = deinterlace_greedy_scanline_mmx;
-  } else {
-    klass->scanline = deinterlace_greedy_scanline_c;
-  }
-#else
-  klass->scanline = deinterlace_greedy_scanline_c;
   klass->scanline = deinterlace_greedy_scanline_orc;
-#endif
 }
 
 static void
