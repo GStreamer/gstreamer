@@ -73,8 +73,6 @@ GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 static void gst_element_factory_finalize (GObject * object);
 static void gst_element_factory_cleanup (GstElementFactory * factory);
 
-static GstPluginFeatureClass *parent_class = NULL;
-
 /* static guint gst_element_factory_signals[LAST_SIGNAL] = { 0 }; */
 
 /* this is defined in gstelement.c */
@@ -94,8 +92,6 @@ static void
 gst_element_factory_class_init (GstElementFactoryClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_element_factory_finalize;
 }
@@ -118,7 +114,7 @@ gst_element_factory_finalize (GObject * object)
   GstElementFactory *factory = GST_ELEMENT_FACTORY (object);
 
   gst_element_factory_cleanup (factory);
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_element_factory_parent_class)->finalize (object);
 }
 
 /**
