@@ -78,7 +78,6 @@ struct _GstInputSelectorClass {
 };
 
 GType gst_input_selector_get_type (void);
-GType gst_selector_pad_get_type (void);
 
 G_END_DECLS
 

@@ -146,7 +146,7 @@ static GstFlowReturn gst_selector_pad_chain (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn gst_selector_pad_bufferalloc (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
-GType
+static GType
 gst_selector_pad_get_type (void)
 {
   static GType selector_pad_type = 0;
@@ -757,6 +757,9 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
+
+  /* FIXME: remove after confirming it is safe now */
+  g_type_class_ref (gst_selector_pad_get_type ());
 
   gobject_class->dispose = gst_input_selector_dispose;
 

@@ -3552,7 +3552,6 @@ gst_play_bin2_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin2", 0, "play bin");
 
   g_type_class_ref (gst_input_selector_get_type ());
-  g_type_class_ref (gst_selector_pad_get_type ());
 
   return gst_element_register (plugin, "playbin2", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
