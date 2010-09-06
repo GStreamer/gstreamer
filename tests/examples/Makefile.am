@@ -1,4 +1,9 @@
 if HAVE_GTK
+if USE_JACK
+JACK_EXAMPLES=jack
+else
+JACK_EXAMPLES=
+endif
 GTK_EXAMPLES=camerabin mxf scaletempo
 else
 GTK_EXAMPLES=
@@ -10,5 +15,5 @@ else
 DIRECTFB_DIR=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) switch
+SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES) switch
 DIST_SUBDIRS= camerabin directfb mxf scaletempo switch

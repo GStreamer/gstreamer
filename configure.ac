@@ -1770,6 +1770,7 @@ tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/examples/switch/Makefile
+tests/examples/jack/Makefile
 tests/icles/Makefile
 ext/alsaspdif/Makefile
 ext/amrwbenc/Makefile
