@@ -302,7 +302,6 @@ invalid_dimension:
   }
 }
 
-
 static guint
 gst_rtp_jpeg_pay_header_size (const guint8 * data, guint offset)
 {
@@ -310,70 +309,91 @@ gst_rtp_jpeg_pay_header_size (const guint8 * data, guint offset)
 }
 
 static guint
-gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint offset,
-    RtpQuantTable tables[], guint remainingBufferSize)
+gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
+    guint offset, RtpQuantTable tables[])
 {
-  gint quant_size, size, result;
+  guint quant_size, tab_size;
   guint8 prec;
   guint8 id;
 
-  result = quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
+  if (offset + 2 > size)
+    return size;
+
+  quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
+  if (quant_size < 2)
+    return size;
+
+  /* clamp to available data */
+  if (offset + quant_size > size)
+    quant_size = size - offset;
+
   offset += 2;
   quant_size -= 2;
 
-  /* Protect against rogue data by checking against remainingBufferSize */
-  while (quant_size > 0 && quant_size < remainingBufferSize) {
+  while (quant_size > 0) {
+    /* not enough to read the id */
+    if (offset + 1 > size)
+      break;
+
     id = data[offset] & 0xf;
+    if (id == 15)
+      /* invalid id received - corrupt data */
+      break;
 
-    /* Protect against data corruption - limit to max number of quantization tables */
-    if (id < 15) {
-      prec = (data[offset] & 0xf0) >> 4;
-      if (prec)
-        size = 128;
-      else
-        size = 64;
+    prec = (data[offset] & 0xf0) >> 4;
+    if (prec)
+      tab_size = 128;
+    else
+      tab_size = 64;
 
-      GST_LOG ("read quant table %d, size %d, prec %02x", id, size, prec);
+    /* there is not enough for the table */
+    if (quant_size < tab_size + 1)
+      break;
 
-      tables[id].size = size;
-      tables[id].data = &data[offset + 1];
+    GST_LOG ("read quant table %d, tab_size %d, prec %02x", id, tab_size, prec);
 
-      size += 1;
-      quant_size -= size;
-      offset += size;
-      remainingBufferSize -= size;
-    } else {
-      /*invalid id received - corrupt data */
-      break;                    /* exit loop */
-    }
+    tables[id].size = tab_size;
+    tables[id].data = &data[offset + 1];
+
+    tab_size += 1;
+    quant_size -= tab_size;
+    offset += tab_size;
   }
-  return result;
+  return offset + quant_size;
 }
 
 static gboolean
 gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
-    guint * offset, CompInfo info[])
+    guint size, guint * offset, CompInfo info[])
 {
-  guint sof_size;
+  guint sof_size, off;
   guint width, height, infolen;
   CompInfo elem;
   gint i, j;
 
-  sof_size = gst_rtp_jpeg_pay_header_size (data, *offset);
+  off = *offset;
+
+  /* we need at least 17 bytes for the SOF */
+  if (off + 17 > size)
+    goto wrong_length;
+
+  sof_size = gst_rtp_jpeg_pay_header_size (data, off);
   if (sof_size < 17)
     goto wrong_length;
 
+  *offset += sof_size;
+
   /* skip size */
-  *offset += 2;
+  off += 2;
 
   /* precision should be 8 */
-  if (data[(*offset)++] != 8)
+  if (data[off++] != 8)
     goto bad_precision;
 
   /* read dimensions */
-  height = data[*offset] << 8 | data[*offset + 1];
-  width = data[*offset + 2] << 8 | data[*offset + 3];
-  *offset += 4;
+  height = data[off] << 8 | data[off + 1];
+  width = data[off + 2] << 8 | data[off + 3];
+  off += 4;
 
   GST_LOG_OBJECT (pay, "got dimensions %ux%u", height, width);
 
@@ -386,14 +406,14 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   pay->width = width / 8;
 
   /* we only support 3 components */
-  if (data[(*offset)++] != 3)
+  if (data[off++] != 3)
     goto bad_components;
 
   infolen = 0;
   for (i = 0; i < 3; i++) {
-    elem.id = data[(*offset)++];
-    elem.samp = data[(*offset)++];
-    elem.qt = data[(*offset)++];
+    elem.id = data[off++];
+    elem.samp = data[off++];
+    elem.qt = data[off++];
     GST_LOG_OBJECT (pay, "got comp %d, samp %02x, qt %d", elem.id, elem.samp,
         elem.qt);
     /* insertion sort from the last element to the first */
@@ -470,8 +490,9 @@ gst_rtp_jpeg_pay_scan_marker (const guint8 * data, guint size, guint * offset)
   } else {
     guint8 marker;
 
-    marker = data[(*offset)++];
-    GST_LOG ("found %02x marker", marker);
+    marker = data[*offset];
+    GST_LOG ("found %02x marker at offset %u", marker, *offset);
+    (*offset)++;
     return marker;
   }
 }
@@ -515,24 +536,24 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   sos_found = FALSE;
   dqt_found = FALSE;
   sof_found = FALSE;
+
   while (!sos_found && (offset < size)) {
     GST_LOG_OBJECT (pay, "checking from offset %u", offset);
     switch (gst_rtp_jpeg_pay_scan_marker (data, size, &offset)) {
       case JPEG_MARKER_JFIF:
       case JPEG_MARKER_CMT:
       case JPEG_MARKER_DHT:
+        GST_LOG_OBJECT (pay, "skipping marker");
         offset += gst_rtp_jpeg_pay_header_size (data, offset);
         break;
       case JPEG_MARKER_SOF:
-        if (!gst_rtp_jpeg_pay_read_sof (pay, data, &offset, info))
+        if (!gst_rtp_jpeg_pay_read_sof (pay, data, size, &offset, info))
           goto invalid_format;
         sof_found = TRUE;
         break;
       case JPEG_MARKER_DQT:
         GST_LOG ("DQT found");
-        offset +=
-            gst_rtp_jpeg_pay_read_quant_table (data, offset, tables,
-            (size - offset));
+        offset = gst_rtp_jpeg_pay_read_quant_table (data, size, offset, tables);
         dqt_found = TRUE;
         break;
       case JPEG_MARKER_SOS:
