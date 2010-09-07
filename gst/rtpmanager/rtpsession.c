@@ -2048,9 +2048,6 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   if (sess->sent_bye)
     goto ignore;
 
-  /* make writable, we might want to change the buffer */
-  buffer = gst_buffer_make_metadata_writable (buffer);
-
   /* start processing the compound packet */
   more = gst_rtcp_buffer_get_first_packet (buffer, &packet);
   while (more) {
@@ -2111,10 +2108,13 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_UNLOCK (sess);
 
   /* notify caller of sr packets in the callback */
-  if (do_sync && sess->callbacks.sync_rtcp)
+  if (do_sync && sess->callbacks.sync_rtcp) {
+    /* make writable, we might want to change the buffer */
+    buffer = gst_buffer_make_metadata_writable (buffer);
+
     result = sess->callbacks.sync_rtcp (sess, sess->source, buffer,
         sess->sync_rtcp_user_data);
-  else
+  } else
     gst_buffer_unref (buffer);
 
   return result;
