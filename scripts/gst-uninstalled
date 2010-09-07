@@ -93,6 +93,9 @@ $GST/prefix/lib/pkgconfig\
 :$GST/gstreamer/pkgconfig\
 :$GST/gst-plugins-base/pkgconfig\
 :$GST/gst-plugins-good/pkgconfig\
+:$GST/gst-plugins-ugly/pkgconfig\
+:$GST/gst-plugins-bad/pkgconfig\
+:$GST/gst-ffmpeg/pkgconfig\
 :$GST/gst-python/pkgconfig\
 :$GST/gst-rtsp-server/pkgconfig\
 :$GST/gstreamer-sharp/pkgconfig\
