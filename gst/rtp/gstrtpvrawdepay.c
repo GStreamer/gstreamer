@@ -266,9 +266,10 @@ static GstBuffer *
 gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVRawDepay *rtpvrawdepay;
-  guint8 *payload, *data, *yp, *up, *vp, *headers;
+  guint8 *payload, *data, *dataend, *yp, *up, *vp, *headers;
   guint32 timestamp;
-  guint cont, ystride, uvstride, pgroup;
+  guint cont, ystride, uvstride, pgroup, payload_len, size;
+  gint width, height, xinc, yinc;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -299,6 +300,8 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   data = GST_BUFFER_DATA (rtpvrawdepay->outbuf);
+  size = GST_BUFFER_SIZE (rtpvrawdepay->outbuf);
+  dataend = data + size;
 
   /* get pointer and strides of the planes */
   yp = data + rtpvrawdepay->yp;
@@ -308,41 +311,79 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   ystride = rtpvrawdepay->ystride;
   uvstride = rtpvrawdepay->uvstride;
   pgroup = rtpvrawdepay->pgroup;
+  width = rtpvrawdepay->width;
+  height = rtpvrawdepay->height;
+  xinc = rtpvrawdepay->xinc;
+  yinc = rtpvrawdepay->yinc;
 
   payload = gst_rtp_buffer_get_payload (buf);
+  payload_len = gst_rtp_buffer_get_payload_len (buf);
+
+  if (payload_len < 3)
+    goto short_packet;
 
   /* skip extended seqnum */
-  payload++;
-  payload++;
+  payload += 2;
+  payload_len -= 2;
 
   /* remember header position */
   headers = payload;
 
   /* find data start */
   do {
+    if (payload_len < 6)
+      goto short_packet;
+
     cont = payload[4] & 0x80;
+
     payload += 6;
+    payload_len -= 6;
   } while (cont);
 
   while (TRUE) {
-    guint length, line, offs;
+    guint length, line, offs, plen;
     guint8 *datap;
 
-    /* read length and cont */
+    /* stop when we run out of data */
+    if (payload_len == 0)
+      break;
+
+    /* read length and cont. This should work because we iterated the headers
+     * above. */
     length = (headers[0] << 8) | headers[1];
     line = ((headers[2] & 0x7f) << 8) | headers[3];
     offs = ((headers[4] & 0x7f) << 8) | headers[5];
     cont = headers[4] & 0x80;
     headers += 6;
 
-    /* sanity check */
-    if (line > (rtpvrawdepay->height - rtpvrawdepay->yinc))
-      continue;
-    if (offs > (rtpvrawdepay->width - rtpvrawdepay->xinc))
-      continue;
+    /* length must be a multiple of pgroup */
+    if (length % pgroup != 0)
+      goto wrong_length;
 
-    GST_LOG_OBJECT (depayload, "writing length %u, line %u, offset %u", length,
-        line, offs);
+    if (length > payload_len)
+      length = payload_len;
+
+    /* sanity check */
+    if (line > (height - yinc)) {
+      GST_WARNING_OBJECT (depayload, "skipping line %d: out of range", line);
+      goto next;
+    }
+    if (offs > (width - xinc)) {
+      GST_WARNING_OBJECT (depayload, "skipping offset %d: out of range", offs);
+      goto next;
+    }
+
+    /* calculate the maximim amount of bytes we can use per line */
+    if (offs + ((length / pgroup) * xinc) > (width - xinc)) {
+      plen = ((width - offs) * pgroup) / xinc;
+      GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d", length,
+          offs);
+    } else
+      plen = length;
+
+    GST_LOG_OBJECT (depayload,
+        "writing length %u/%u, line %u, offset %u, remaining %u", plen, length,
+        line, offs, payload_len);
 
     switch (rtpvrawdepay->format) {
       case GST_VIDEO_FORMAT_RGB:
@@ -351,25 +392,27 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       case GST_VIDEO_FORMAT_BGRA:
       case GST_VIDEO_FORMAT_UYVY:
         /* samples are packed just like gstreamer packs them */
-        offs /= rtpvrawdepay->xinc;
+        offs /= xinc;
         datap = yp + (line * ystride) + (offs * pgroup);
-        memcpy (datap, payload, length);
-        payload += length;
+
+        memcpy (datap, payload, plen);
         break;
       case GST_VIDEO_FORMAT_AYUV:
       {
         gint i;
+        guint8 *p;
 
         datap = yp + (line * ystride) + (offs * 4);
+        p = payload;
 
         /* samples are packed in order Cb-Y-Cr for both interlaced and
          * progressive frames */
-        for (i = 0; i < length; i += pgroup) {
+        for (i = 0; i < plen; i += pgroup) {
           *datap++ = 0;
-          *datap++ = payload[1];
-          *datap++ = payload[0];
-          *datap++ = payload[2];
-          payload += pgroup;
+          *datap++ = p[1];
+          *datap++ = p[0];
+          *datap++ = p[2];
+          p += pgroup;
         }
         break;
       }
@@ -377,25 +420,25 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       {
         gint i;
         guint uvoff;
-        guint8 *yd1p, *yd2p, *udp, *vdp;
+        guint8 *yd1p, *yd2p, *udp, *vdp, *p;
 
         yd1p = yp + (line * ystride) + (offs);
         yd2p = yd1p + ystride;
-        uvoff =
-            (line / rtpvrawdepay->yinc * uvstride) +
-            (offs / rtpvrawdepay->xinc);
+        uvoff = (line / yinc * uvstride) + (offs / xinc);
+
         udp = up + uvoff;
         vdp = vp + uvoff;
+        p = payload;
 
         /* line 0/1: Y00-Y01-Y10-Y11-Cb00-Cr00 Y02-Y03-Y12-Y13-Cb01-Cr01 ...  */
-        for (i = 0; i < length; i += pgroup) {
-          *yd1p++ = payload[0];
-          *yd1p++ = payload[1];
-          *yd2p++ = payload[2];
-          *yd2p++ = payload[3];
-          *udp++ = payload[4];
-          *vdp++ = payload[5];
-          payload += pgroup;
+        for (i = 0; i < plen; i += pgroup) {
+          *yd1p++ = p[0];
+          *yd1p++ = p[1];
+          *yd2p++ = p[2];
+          *yd2p++ = p[3];
+          *udp++ = p[4];
+          *vdp++ = p[5];
+          p += pgroup;
         }
         break;
       }
@@ -403,25 +446,25 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       {
         gint i;
         guint uvoff;
-        guint8 *ydp, *udp, *vdp;
+        guint8 *ydp, *udp, *vdp, *p;
 
         ydp = yp + (line * ystride) + (offs);
-        uvoff =
-            (line / rtpvrawdepay->yinc * uvstride) +
-            (offs / rtpvrawdepay->xinc);
+        uvoff = (line / yinc * uvstride) + (offs / xinc);
+
         udp = up + uvoff;
         vdp = vp + uvoff;
+        p = payload;
 
         /* Samples are packed in order Cb0-Y0-Y1-Cr0-Y2-Y3 for both interlaced
          * and progressive scan lines */
-        for (i = 0; i < length; i += pgroup) {
-          *udp++ = payload[0];
-          *ydp++ = payload[1];
-          *ydp++ = payload[2];
-          *vdp++ = payload[3];
-          *ydp++ = payload[4];
-          *ydp++ = payload[5];
-          payload += pgroup;
+        for (i = 0; i < plen; i += pgroup) {
+          *udp++ = p[0];
+          *ydp++ = p[1];
+          *ydp++ = p[2];
+          *vdp++ = p[3];
+          *ydp++ = p[4];
+          *ydp++ = p[5];
+          p += pgroup;
         }
         break;
       }
@@ -429,8 +472,12 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         goto unknown_sampling;
     }
 
+  next:
     if (!cont)
       break;
+
+    payload += length;
+    payload_len -= length;
   }
 
   if (gst_rtp_buffer_get_marker (buf)) {
@@ -453,7 +500,17 @@ unknown_sampling:
   }
 alloc_failed:
   {
-    GST_DEBUG_OBJECT (depayload, "failed to alloc output buffer");
+    GST_WARNING_OBJECT (depayload, "failed to alloc output buffer");
+    return NULL;
+  }
+wrong_length:
+  {
+    GST_WARNING_OBJECT (depayload, "length not multiple of pgroup");
+    return NULL;
+  }
+short_packet:
+  {
+    GST_WARNING_OBJECT (depayload, "short packet");
     return NULL;
   }
 }
