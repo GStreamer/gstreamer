@@ -589,6 +589,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstQueue::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Don't emit queue signals.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFileSink::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -976,5 +986,15 @@
 <NICK>Remove the Temporary File</NICK>
 <BLURB>Remove the temp-location after use.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::ring-buffer-max-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXUINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. ring buffer size (bytes)</NICK>
+<BLURB>Max. amount of data in the ring buffer (bytes, 0 = disabled.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
