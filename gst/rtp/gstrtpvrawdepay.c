@@ -266,9 +266,9 @@ static GstBuffer *
 gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVRawDepay *rtpvrawdepay;
-  guint8 *payload, *data, *dataend, *yp, *up, *vp, *headers;
+  guint8 *payload, *data, *yp, *up, *vp, *headers;
   guint32 timestamp;
-  guint cont, ystride, uvstride, pgroup, payload_len, size;
+  guint cont, ystride, uvstride, pgroup, payload_len;
   gint width, height, xinc, yinc;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
@@ -300,8 +300,6 @@ gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   data = GST_BUFFER_DATA (rtpvrawdepay->outbuf);
-  size = GST_BUFFER_SIZE (rtpvrawdepay->outbuf);
-  dataend = data + size;
 
   /* get pointer and strides of the planes */
   yp = data + rtpvrawdepay->yp;
