@@ -1203,11 +1203,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       goto need_more_data;
   }
 
+  dec->rem_img_len = img_len;
+
+  GST_LOG_OBJECT (dec, "image size = %u", img_len);
+
   /* QoS: if we're too late anyway, skip decoding */
   if (dec->packetized && !gst_jpeg_dec_do_qos (dec, timestamp))
     goto skip_decoding;
-
-  GST_LOG_OBJECT (dec, "image size = %u", img_len);
 
 #ifndef GST_DISABLE_GST_DEBUG
   data = (guint8 *) gst_adapter_peek (dec->adapter, 4);
@@ -1215,7 +1217,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       data[2], data[3]);
 #endif
 
-  dec->rem_img_len = img_len;
   gst_jpeg_dec_fill_input_buffer (&dec->cinfo);
 
   if (setjmp (dec->jerr.setjmp_buffer)) {
