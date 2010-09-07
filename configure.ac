@@ -492,6 +492,8 @@ tests/Makefile
 tests/check/Makefile
 m4/Makefile
 po/Makefile.in
+pkgconfig/Makefile
+pkgconfig/gstreamer-plugins-ugly-uninstalled.pc
 gst-plugins-ugly.spec
 )
 
