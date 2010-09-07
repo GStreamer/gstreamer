@@ -1220,10 +1220,14 @@ GST_START_TEST (test_exif_multiple_tags)
   GstDateTime *datetime;
   GValue value = { 0 };
 
+  gst_tag_register_musicbrainz_tags ();
+
   taglist = gst_tag_list_new_full (GST_TAG_ARTIST, "artist",
       GST_TAG_DEVICE_MANUFACTURER, "make",
       GST_TAG_DEVICE_MODEL, "model", GST_TAG_GEO_LOCATION_LATITUDE, 45.5,
-      GST_TAG_GEO_LOCATION_LONGITUDE, -10.25, NULL);
+      GST_TAG_GEO_LOCATION_LONGITUDE, -10.25,
+      GST_TAG_IMAGE_HORIZONTAL_PPI, 300.0,
+      GST_TAG_IMAGE_VERTICAL_PPI, 300.0, NULL);
 
   g_value_init (&value, GST_TYPE_DATE_TIME);
   datetime = gst_date_time_new_local_time (2010, 6, 22, 12, 5, 10, 0);
@@ -1372,14 +1376,14 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
       &value);
 
   g_value_set_static_string (&value, "normal");
-  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
-      &value);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SATURATION, &value);
   g_value_set_static_string (&value, "low-saturation");
-  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
-      &value);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SATURATION, &value);
   g_value_set_static_string (&value, "high-saturation");
-  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SATURATION,
-      &value);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_CAPTURING_SATURATION, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);
@@ -1452,6 +1456,19 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_double (&value, 2.7);
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_FOCAL_LENGTH, &value);
+
+  g_value_set_double (&value, 96.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_IMAGE_HORIZONTAL_PPI, &value);
+  g_value_set_double (&value, 300.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_IMAGE_HORIZONTAL_PPI, &value);
+  g_value_set_double (&value, 87.5);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_IMAGE_VERTICAL_PPI, &value);
+  g_value_set_double (&value, 600.0);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_IMAGE_VERTICAL_PPI, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_INT);

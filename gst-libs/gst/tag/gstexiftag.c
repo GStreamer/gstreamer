@@ -242,6 +242,7 @@ EXIF_SERIALIZATION_DESERIALIZATION_FUNC (shutter_speed);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (speed);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (white_balance);
 
+EXIF_DESERIALIZATION_FUNC (resolution);
 EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 
 /* FIXME copyright tag has a weird "artist\0editor\0" format that is
@@ -264,6 +265,9 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_MAKE 0x10F
 #define EXIF_TAG_MODEL 0x110
 #define EXIF_TAG_ORIENTATION 0x112
+#define EXIF_TAG_XRESOLUTION 0x11A
+#define EXIF_TAG_YRESOLUTION 0x11B
+#define EXIF_TAG_RESOLUTION_UNIT 0x128
 #define EXIF_TAG_SOFTWARE 0x131
 #define EXIF_TAG_DATE_TIME 0x132
 #define EXIF_TAG_ARTIST 0x13B
@@ -310,6 +314,12 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
  *     deserialization-func}
  */
 static const GstExifTagMatch tag_map_ifd0[] = {
+  {GST_TAG_IMAGE_HORIZONTAL_PPI, EXIF_TAG_XRESOLUTION, EXIF_TYPE_RATIONAL,
+      0, NULL, deserialize_add_to_pending_tags},
+  {GST_TAG_IMAGE_VERTICAL_PPI, EXIF_TAG_YRESOLUTION, EXIF_TYPE_RATIONAL,
+      0, NULL, deserialize_add_to_pending_tags},
+  {NULL, EXIF_TAG_RESOLUTION_UNIT, EXIF_TYPE_SHORT, 0, NULL,
+      deserialize_resolution},
   {GST_TAG_DESCRIPTION, EXIF_TAG_IMAGE_DESCRIPTION, EXIF_TYPE_ASCII, 0, NULL,
       NULL},
   {GST_TAG_DEVICE_MANUFACTURER, EXIF_TAG_MAKE, EXIF_TYPE_ASCII, 0, NULL, NULL},
@@ -1523,6 +1533,30 @@ parse_exif_ifd (GstExifReader * exif_reader, gint buf_offset,
     }
   }
 
+  /* check if the pending tags have something that can still be added */
+  {
+    GSList *walker;
+    GstExifTagData *data;
+
+    for (walker = exif_reader->pending_tags; walker;
+        walker = g_slist_next (walker)) {
+      data = (GstExifTagData *) walker->data;
+      switch (data->tag) {
+        case EXIF_TAG_XRESOLUTION:
+          parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_HORIZONTAL_PPI,
+              data->count, data->offset, 1, FALSE);
+          break;
+        case EXIF_TAG_YRESOLUTION:
+          parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_VERTICAL_PPI,
+              data->count, data->offset, 1, FALSE);
+          break;
+        default:
+          /* NOP */
+          break;
+      }
+    }
+  }
+
   return TRUE;
 
 read_error:
@@ -2415,6 +2449,55 @@ deserialize_flash (GstExifReader * exif_reader,
   if (mode_str)
     gst_tag_list_add (exif_reader->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_CAPTURING_FLASH_MODE, mode_str, NULL);
+
+  return 0;
+}
+
+static gint
+deserialize_resolution (GstExifReader * exif_reader,
+    GstByteReader * reader, const GstExifTagMatch * exiftag,
+    GstExifTagData * tagdata)
+{
+  GstExifTagData *xres = NULL;
+  GstExifTagData *yres = NULL;
+  guint16 unit;
+  gdouble multiplier;
+
+  if (exif_reader->byte_order == G_LITTLE_ENDIAN) {
+    unit = GST_READ_UINT16_LE (tagdata->offset_as_data);
+  } else {
+    unit = GST_READ_UINT16_BE (tagdata->offset_as_data);
+  }
+
+  if (unit != 2 && unit != 3) {
+    GST_WARNING ("Invalid resolution unit, ignoring PPI tags");
+    return 0;
+  }
+
+  xres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_XRESOLUTION);
+  yres = gst_exif_reader_get_pending_tag (exif_reader, EXIF_TAG_YRESOLUTION);
+
+  switch (unit) {
+    case 2:                    /* inch */
+      multiplier = 1;
+      break;
+    case 3:                    /* cm */
+      multiplier = 1 / 2.54;
+      break;
+    default:
+      multiplier = 1;
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (xres) {
+    parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_HORIZONTAL_PPI,
+        xres->count, xres->offset, multiplier, FALSE);
+  }
+  if (yres) {
+    parse_exif_rational_tag (exif_reader, GST_TAG_IMAGE_VERTICAL_PPI,
+        yres->count, yres->offset, multiplier, FALSE);
+  }
 
   return 0;
 }
