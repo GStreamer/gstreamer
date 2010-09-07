@@ -5,6 +5,7 @@ EXPORTS
 	gst_audio_clock_adjust
 	gst_audio_clock_get_time
 	gst_audio_clock_get_type
+	gst_audio_clock_invalidate
 	gst_audio_clock_new
 	gst_audio_clock_new_full
 	gst_audio_clock_reset
