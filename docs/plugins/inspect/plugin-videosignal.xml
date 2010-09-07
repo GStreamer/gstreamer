@@ -12,7 +12,7 @@
     <element>
       <name>videoanalyse</name>
       <longname>Video analyser</longname>
-      <class>Filter/Effect/Video</class>
+      <class>Filter/Analyzer/Video</class>
       <description>Analyse video signal</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>

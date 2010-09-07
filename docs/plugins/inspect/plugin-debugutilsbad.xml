@@ -10,6 +10,27 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
+      <name>checksumsink</name>
+      <longname>Checksum sink</longname>
+      <class>Debug/Sink</class>
+      <description>Calculates a checksum for buffers</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>fpsdisplaysink</name>
       <longname>Measure and show framerate on videosink</longname>
       <class>Sink/Video</class>

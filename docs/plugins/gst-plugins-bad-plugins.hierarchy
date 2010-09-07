@@ -34,6 +34,7 @@ GObject
             GstNasSink
             GstSDLAudioSink
           GstJackAudioSink
+        GstChecksumSink
         GstDCCPClientSink
         GstDCCPServerSink
         GstFBDEVSink
@@ -208,6 +209,7 @@ GObject
       GstId3BaseMux
         GstId3Mux
       GstInputSelector
+      GstInterlace
       GstInvtelecine
       GstIvfParse
       GstJifMux
