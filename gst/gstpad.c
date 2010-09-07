@@ -4133,8 +4133,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
   GstFlowReturn ret;
   gboolean emit_signal;
 
-  GST_PAD_STREAM_LOCK (pad);
-
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
@@ -4201,8 +4199,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data)
         GST_DEBUG_FUNCPTR_NAME (chainlistfunc), gst_flow_get_name (ret));
   }
 
-  GST_PAD_STREAM_UNLOCK (pad);
-
   return ret;
 
 chain_groups:
@@ -4210,8 +4206,6 @@ chain_groups:
     GstBufferList *list;
     GstBufferListIterator *it;
     GstBuffer *group;
-
-    GST_PAD_STREAM_UNLOCK (pad);
 
     GST_INFO_OBJECT (pad, "chaining each group in list as a merged buffer");
 
@@ -4247,14 +4241,12 @@ flushing:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
-    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
   }
 dropping:
   {
     gst_pad_data_unref (is_buffer, data);
     GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_OK;
   }
 not_negotiated:
@@ -4262,7 +4254,6 @@ not_negotiated:
     gst_pad_data_unref (is_buffer, data);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing data but pad did not accept");
-    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_function:
@@ -4273,7 +4264,6 @@ no_function:
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
-    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_SUPPORTED;
   }
 }
@@ -4307,11 +4297,17 @@ no_function:
 GstFlowReturn
 gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 {
+  GstFlowReturn res;
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, TRUE, buffer);
+  GST_PAD_STREAM_LOCK (pad);
+  res = gst_pad_chain_data_unchecked (pad, TRUE, buffer);
+  GST_PAD_STREAM_UNLOCK (pad);
+
+  return res;
 }
 
 /**
@@ -4345,11 +4341,16 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 GstFlowReturn
 gst_pad_chain_list (GstPad * pad, GstBufferList * list)
 {
+  GstFlowReturn res;
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_chain_data_unchecked (pad, FALSE, list);
+  GST_PAD_STREAM_LOCK (pad);
+  res = gst_pad_chain_data_unchecked (pad, FALSE, list);
+  GST_PAD_STREAM_UNLOCK (pad);
+  return res;
 }
 
 static GstFlowReturn
@@ -4394,9 +4395,8 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   caps = gst_pad_data_get_caps (is_buffer, data);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
-  /* take ref to peer pad before releasing the lock */
-  gst_object_ref (peer);
-
+  /* use a nested lock to avoid reffing the peer pad */
+  GST_PAD_STREAM_LOCK (peer);
   GST_OBJECT_UNLOCK (pad);
 
   /* we got a new datatype from the pad, it had better handle it */
@@ -4409,8 +4409,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data)
   }
 
   ret = gst_pad_chain_data_unchecked (peer, is_buffer, data);
-
-  gst_object_unref (peer);
+  GST_PAD_STREAM_UNLOCK (peer);
 
   return ret;
 
@@ -4472,9 +4471,9 @@ not_linked:
 not_negotiated:
   {
     gst_pad_data_unref (is_buffer, data);
-    gst_object_unref (peer);
     GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "element pushed data then refused to accept the caps");
+    GST_PAD_STREAM_UNLOCK (peer);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
