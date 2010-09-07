@@ -1963,6 +1963,14 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   GST_DEBUG_OBJECT (pulsesink, "using pulseaudio version %s",
       pulsesink->pa_version);
 
+  /* override with a custom clock */
+  if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
+    gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
+
+  GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
+      gst_audio_clock_new ("GstPulseSinkClock",
+      (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
+
   /* TRUE for sinks, FALSE for sources */
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
       G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device,
@@ -2671,30 +2679,11 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       g_assert (pulsesink->mainloop == NULL);
       pulsesink->mainloop = pa_threaded_mainloop_new ();
-      if (!pulsesink->mainloop) {
-        GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
-            ("pa_threaded_mainloop_new() failed"), (NULL));
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      if (!pulsesink->mainloop)
+        goto mainloop_failed;
       res = pa_threaded_mainloop_start (pulsesink->mainloop);
       g_assert (res == 0);
 
-      /* override with a custom clock */
-      if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
-        gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
-
-/* FIXME: get rid once we can depend on core/base git again (>= 0.10.30.1)
- * (and the pbutils include above as well) */
-#if defined(GST_PLUGINS_BASE_VERSION_MAJOR)
-      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
-          gst_audio_clock_new_full ("GstPulseSinkClock",
-          (GstAudioClockGetTimeFunc) gst_pulsesink_get_time,
-          gst_object_ref (pulsesink), (GDestroyNotify) gst_object_unref);
-#else
-      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock =
-          gst_audio_clock_new ("GstPulseSinkClock",
-          (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink);
-#endif
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_element_post_message (element,
@@ -2706,19 +2695,8 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
-  if (ret == GST_STATE_CHANGE_FAILURE
-      && transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
-      gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
-    GST_BASE_AUDIO_SINK (pulsesink)->provided_clock = NULL;
-
-    g_assert (pulsesink->mainloop);
-    pa_threaded_mainloop_stop (pulsesink->mainloop);
-    pa_threaded_mainloop_free (pulsesink->mainloop);
-    pulsesink->mainloop = NULL;
-  }
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto state_failure;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -2727,9 +2705,6 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
               GST_BASE_AUDIO_SINK (pulsesink)->provided_clock));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
-        gst_object_unref (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock);
-      GST_BASE_AUDIO_SINK (pulsesink)->provided_clock = NULL;
       if (pulsesink->mainloop) {
         pa_threaded_mainloop_stop (pulsesink->mainloop);
         pa_threaded_mainloop_free (pulsesink->mainloop);
@@ -2741,4 +2716,23 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+
+  /* ERRORS */
+mainloop_failed:
+  {
+    GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
+        ("pa_threaded_mainloop_new() failed"), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+state_failure:
+  {
+    if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
+      /* Clear the PA mainloop if baseaudiosink failed to open the ring_buffer */
+      g_assert (pulsesink->mainloop);
+      pa_threaded_mainloop_stop (pulsesink->mainloop);
+      pa_threaded_mainloop_free (pulsesink->mainloop);
+      pulsesink->mainloop = NULL;
+    }
+    return ret;
+  }
 }
