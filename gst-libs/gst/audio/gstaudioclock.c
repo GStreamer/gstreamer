@@ -202,6 +202,12 @@ gst_audio_clock_reset (GstAudioClock * clock, GstClockTime time)
 }
 
 static GstClockTime
+gst_audio_clock_func_invalid (GstClock * clock, gpointer user_data)
+{
+  return GST_CLOCK_TIME_NONE;
+}
+
+static GstClockTime
 gst_audio_clock_get_internal_time (GstClock * clock)
 {
   GstAudioClock *aclock;
@@ -282,4 +288,27 @@ gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
   result = time + aclock->abidata.ABI.time_offset;
 
   return result;
+}
+
+/**
+ * gst_audio_clock_invalidate:
+ * @clock: a #GstAudioClock
+ *
+ * Invalidate the clock function. Call this function when the provided
+ * #GstAudioClockGetTimeFunc cannot be called anymore, for example, when the
+ * user_data becomes invalid.
+ *
+ * After calling this function, @clock will return the last returned time for
+ * the rest of its lifetime.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_audio_clock_invalidate (GstClock * clock)
+{
+  GstAudioClock *aclock;
+
+  aclock = GST_AUDIO_CLOCK_CAST (clock);
+
+  aclock->func = gst_audio_clock_func_invalid;
 }

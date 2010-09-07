@@ -111,6 +111,7 @@ gst_audio_clock_new_full
 gst_audio_clock_adjust
 gst_audio_clock_get_time
 gst_audio_clock_reset
+gst_audio_clock_invalidate
 <SUBSECTION Standard>
 GstAudioClockClass
 GST_AUDIO_CLOCK

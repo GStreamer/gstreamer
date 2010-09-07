@@ -101,6 +101,8 @@ void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockT
 GstClockTime    gst_audio_clock_get_time        (GstClock * clock);
 GstClockTime    gst_audio_clock_adjust          (GstClock * clock, GstClockTime time);
 
+void            gst_audio_clock_invalidate      (GstClock * clock);
+
 G_END_DECLS
 
 #endif /* __GST_AUDIO_CLOCK_H__ */
