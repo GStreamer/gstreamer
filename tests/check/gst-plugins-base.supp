@@ -353,16 +353,8 @@
 {
    <Fontconfig init>
    Memcheck:Leak
-   fun:malloc
-   obj:/usr/lib/libfontconfig.so.*
-   obj:/usr/lib/libfontconfig.so.*
-   obj:/usr/lib/libfontconfig.so.*
-   obj:/usr/lib/libfontconfig.so.*
-   obj:/usr/lib/libexpat.so.*
-   obj:/usr/lib/libexpat.so.*
-   obj:/usr/lib/libexpat.so.*
-   obj:/usr/lib/libexpat.so.*
-   fun:XML_ParseBuffer
+   fun:*alloc
+   ...
    fun:FcConfigParseAndLoad
 }
 
