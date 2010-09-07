@@ -4125,7 +4125,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -4143,7 +4143,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -4267,7 +4267,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
@@ -6109,7 +6109,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
     g_array_sort (durations, less_than);
     stream->min_duration = g_array_index (durations, guint32, samples / 2);
-    g_array_unref (durations);
+    g_array_free (durations, TRUE);
   }
   /* configure segments */
   if (!qtdemux_parse_segments (qtdemux, stream, trak))
