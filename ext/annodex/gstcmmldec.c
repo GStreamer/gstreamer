@@ -511,7 +511,7 @@ gst_cmml_dec_parse_first_header (GstCmmlDec * dec, GstBuffer * buffer)
   /* if there is a processing instruction, gst_cmml_dec_parse_preamble
    * will be triggered. Otherwise we need to call it manually.
    */
-  if (dec->flow_return != GST_FLOW_OK && !dec->sent_root) {
+  if (dec->flow_return == GST_FLOW_OK && !dec->sent_root) {
     guchar *preamble = (guchar *) g_strndup ((gchar *) GST_BUFFER_DATA (buffer),
         GST_BUFFER_SIZE (buffer));
 
