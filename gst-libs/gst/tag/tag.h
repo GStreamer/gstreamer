@@ -306,6 +306,24 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_CAPTURING_FLASH_MODE         "capturing-flash-mode"
 
+/**
+ * GST_TAG_IMAGE_HORIZONTAL_PPI:
+ *
+ * Media (image/video) intended horizontal pixel density in ppi. (double)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_IMAGE_HORIZONTAL_PPI         "image-horizontal-ppi"
+/**
+ * GST_TAG_IMAGE_VERTICAL_PPI:
+ *
+ * Media (image/video) intended vertical pixel density in ppi. (double)
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_IMAGE_VERTICAL_PPI           "image-vertical-ppi"
+
+
 /* additional information for image tags */
 
 /**

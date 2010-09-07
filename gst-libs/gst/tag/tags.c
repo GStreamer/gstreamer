@@ -144,6 +144,14 @@ gst_tag_register_tags_internal (gpointer unused)
       G_TYPE_STRING, _("capturing flash mode"),
       _("The selected flash mode while capturing and image"), NULL);
 
+  gst_tag_register (GST_TAG_IMAGE_HORIZONTAL_PPI, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("image horizontal ppi"),
+      _("Media (image/video) intended horizontal pixel density in ppi"), NULL);
+
+  gst_tag_register (GST_TAG_IMAGE_VERTICAL_PPI, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("image vertical ppi"),
+      _("Media (image/video) intended vertical pixel density in ppi"), NULL);
+
   return NULL;
 }
 
