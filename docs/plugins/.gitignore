@@ -8,6 +8,9 @@ Makefile.in
 *-unused.txt
 *.bak
 
+gst-plugins-bad-plugins.args.new
+gst-plugins-bad-plugins.signals.new
+
 tmpl
 xml
 html
