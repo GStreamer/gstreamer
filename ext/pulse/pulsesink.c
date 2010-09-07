@@ -113,7 +113,7 @@ struct _GstPulseContext
 /* Store the PA contexts in a hash table to allow easy sharing among
  * multiple instances of the sink. Keys are $context_name@$server_name
  * (strings) and values should be GstPulseContext pointers. */
-static GHashTable *gst_pulse_shared_contexts;
+static GHashTable *gst_pulse_shared_contexts = NULL;
 
 /* We keep a custom ringbuffer that is backed up by data allocated by
  * pulseaudio. We must also overide the commit function to write into
@@ -1674,8 +1674,13 @@ static void gst_pulsesink_init_interfaces (GType type);
 #endif
 
 GST_IMPLEMENT_PULSEPROBE_METHODS (GstPulseSink, gst_pulsesink);
+
+#define _do_init(type) \
+  gst_pulseringbuffer_init_contexts (); \
+  gst_pulsesink_init_interfaces (type);
+
 GST_BOILERPLATE_FULL (GstPulseSink, gst_pulsesink, GstBaseAudioSink,
-    GST_TYPE_BASE_AUDIO_SINK, gst_pulsesink_init_interfaces);
+    GST_TYPE_BASE_AUDIO_SINK, _do_init);
 
 static gboolean
 gst_pulsesink_interface_supported (GstImplementsInterface *
@@ -1818,8 +1823,6 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pulsesink_change_state);
-
-  gst_pulseringbuffer_init_contexts ();
 
   gstaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_pulsesink_create_ringbuffer);
