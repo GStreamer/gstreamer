@@ -311,7 +311,7 @@ gst_rtp_jpeg_pay_header_size (const guint8 * data, guint offset)
 
 static guint
 gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint offset,
-    RtpQuantTable tables[])
+    RtpQuantTable tables[], guint remainingBufferSize)
 {
   gint quant_size, size, result;
   guint8 prec;
@@ -321,23 +321,31 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint offset,
   offset += 2;
   quant_size -= 2;
 
-  while (quant_size > 0) {
-    prec = (data[offset] & 0xf0) >> 4;
+  /* Protect against rogue data by checking against remainingBufferSize */
+  while (quant_size > 0 && quant_size < remainingBufferSize) {
     id = data[offset] & 0xf;
 
-    if (prec)
-      size = 128;
-    else
-      size = 64;
+    /* Protect against data corruption - limit to max number of quantization tables */
+    if (id < 15) {
+      prec = (data[offset] & 0xf0) >> 4;
+      if (prec)
+        size = 128;
+      else
+        size = 64;
 
-    GST_LOG ("read quant table %d, size %d, prec %02x", id, size, prec);
+      GST_LOG ("read quant table %d, size %d, prec %02x", id, size, prec);
 
-    tables[id].size = size;
-    tables[id].data = &data[offset + 1];
+      tables[id].size = size;
+      tables[id].data = &data[offset + 1];
 
-    size += 1;
-    quant_size -= size;
-    offset += size;
+      size += 1;
+      quant_size -= size;
+      offset += size;
+      remainingBufferSize -= size;
+    } else {
+      /*invalid id received - corrupt data */
+      break;                    /* exit loop */
+    }
   }
   return result;
 }
@@ -522,7 +530,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         break;
       case JPEG_MARKER_DQT:
         GST_LOG ("DQT found");
-        offset += gst_rtp_jpeg_pay_read_quant_table (data, offset, tables);
+        offset +=
+            gst_rtp_jpeg_pay_read_quant_table (data, offset, tables,
+            (size - offset));
         dqt_found = TRUE;
         break;
       case JPEG_MARKER_SOS:
