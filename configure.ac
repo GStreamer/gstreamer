@@ -208,8 +208,7 @@ dnl GLib is required
 AG_GST_GLIB_CHECK([2.18])
 
 dnl Orc
-ORC_CHECK([0.4.7])
-
+ORC_CHECK([0.4.8])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
