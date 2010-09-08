@@ -301,7 +301,7 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
 
     if (pctx) {
       pctx->ring_buffers = g_slist_remove (pctx->ring_buffers, pbuf);
-      if (!g_slist_length (pctx->ring_buffers)) {
+      if (pctx->ring_buffers == NULL) {
         pa_context_disconnect (pctx->context);
 
         /* Make sure we don't get any further callbacks */
@@ -310,10 +310,11 @@ gst_pulsering_destroy_context (GstPulseRingBuffer * pbuf)
         pa_context_set_subscribe_callback (pctx->context, NULL, NULL);
 #endif
 
-        pa_context_unref (pctx->context);
         g_hash_table_remove (gst_pulse_shared_contexts, pbuf->context_name);
         g_free (pbuf->context_name);
         pbuf->context_name = NULL;
+
+        pa_context_unref (pctx->context);
         g_slice_free (GstPulseContext, pctx);
       }
     }
@@ -458,7 +459,6 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
 
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
   if (pctx == NULL) {
-    pctx = g_slice_new0 (GstPulseContext);
     /* get the mainloop api and create a context */
     GST_LOG_OBJECT (psink, "new context with name %s",
         GST_STR_NULL (pbuf->context_name));
@@ -466,7 +466,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     if (!(pctx->context = pa_context_new (api, pbuf->context_name)))
       goto create_failed;
 
-    pctx->ring_buffers = g_slist_append (pctx->ring_buffers, pbuf);
+    pctx = g_slice_new0 (GstPulseContext);
+    pctx->ring_buffers = g_slist_prepend (pctx->ring_buffers, pbuf);
     g_hash_table_insert (gst_pulse_shared_contexts, pbuf->context_name,
         (gpointer) pctx);
     /* register some essential callbacks */
@@ -487,7 +488,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   } else {
     GST_LOG_OBJECT (psink, "reusing shared pulseaudio context with name %s",
         GST_STR_NULL (pbuf->context_name));
-    pctx->ring_buffers = g_slist_append (pctx->ring_buffers, pbuf);
+    pctx->ring_buffers = g_slist_prepend (pctx->ring_buffers, pbuf);
   }
 
   for (;;) {
