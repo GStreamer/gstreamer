@@ -1,0 +1,265 @@
+<plugin>
+  <name>opencv</name>
+  <description>GStreamer OpenCV Plugins</description>
+  <filename>../../ext/opencv/.libs/libgstopencv.so</filename>
+  <basename>libgstopencv.so</basename>
+  <version>0.10.20.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>OpenCv</package>
+  <origin>http://opencv.willowgarage.com</origin>
+  <elements>
+    <element>
+      <name>cvdilate</name>
+      <longname>cvdilate</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvDilate OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cvequalizehist</name>
+      <longname>cvequalizehist</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvEqualizeHist OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cverode</name>
+      <longname>cverode</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvErode OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cvlaplace</name>
+      <longname>cvlaplace</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvLaplace OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)16, bpp=(int)16, endianness=(int)4321</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cvsmooth</name>
+      <longname>cvsmooth</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvSmooth OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, depth=(int)24, bpp=(int)24; video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>cvsobel</name>
+      <longname>cvsobel</longname>
+      <class>Transform/Effect/Video</class>
+      <description>Applies cvSobel OpenCV function to the image</description>
+      <author>Thiago Santos&lt;thiago.sousa.santos@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)8, bpp=(int)8</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-gray, depth=(int)16, bpp=(int)16, endianness=(int)4321</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>edgedetect</name>
+      <longname>edgedetect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs canny edge detection on videos and images.</description>
+      <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>faceblur</name>
+      <longname>faceblur</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Blurs faces in images and videos</description>
+      <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>facedetect</name>
+      <longname>facedetect</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs face detection on videos and images, providing detected positions via bus messages</description>
+      <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>pyramidsegment</name>
+      <longname>pyramidsegment</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Applies pyramid segmentation to a video or image.</description>
+      <author>Michael Sheldon &lt;mike@mikeasoft.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>templatematch</name>
+      <longname>templatematch</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs template matching on videos and images, providing detected positions via bus messages</description>
+      <author>Noam Lewis &lt;jones.noamle@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>textwrite</name>
+      <longname>textwrite</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Performs text writing to the video</description>
+      <author>sreerenj&lt;bsreerenj@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

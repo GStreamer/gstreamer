@@ -1223,6 +1223,35 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
   AC_SUBST(OFA_LIBS)
 ])
 
+dnl *** opencv ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENCV, true)
+AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
+  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 libswscale >= 0.7 , [
+    AC_PROG_CXX
+    AC_LANG_CPLUSPLUS
+    OLD_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS=$OPENCV_CFLAGS
+    AC_CHECK_HEADER(highgui.h, HAVE_HIGHGUI="yes", HAVE_HIGHGUI="no")
+    AC_CHECK_HEADER(cvaux.h, HAVE_CVAUX="yes", HAVE_CVAUX="no")
+    CPPFLAGS=$OLD_CPPFLAGS
+    AC_LANG_C
+    if test "x$HAVE_HIGHGUI" = "xno"; then
+      AC_MSG_RESULT(highgui.h could not be found.)
+      HAVE_OPENCV="no"
+    elif test "x$HAVE_CVAUX" = "xno"; then
+      AC_MSG_RESULT(cvaux.h could not be found.)
+      HAVE_OPENCV="no"
+    else
+      HAVE_OPENCV="yes"
+    fi
+  ], [
+    HAVE_OPENCV="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(OPENCV_CFLAGS)
+  AC_SUBST(OPENCV_LIBS)
+])
+
 dnl *** rsvg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RSVG, true)
 AG_GST_CHECK_FEATURE(RSVG, [rsvg decoder], rsvg, [
@@ -1809,6 +1838,7 @@ ext/mythtv/Makefile
 ext/nas/Makefile
 ext/neon/Makefile
 ext/ofa/Makefile
+ext/opencv/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
 ext/rtmp/Makefile

@@ -245,6 +245,96 @@ gst_color_effects_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-cvdilate</FILE>
+<TITLE>cvdilate</TITLE>
+GstCvDilate
+<SUBSECTION Standard>
+GstCvDilateClass
+GST_CV_DILATE
+GST_CV_DILATE_CLASS
+GST_IS_CV_DILATE
+GST_IS_CV_DILATE_CLASS
+GST_TYPE_CV_DILATE
+gst_cv_dilate_get_type
+gst_cv_dilate_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cverode</FILE>
+<TITLE>cverode</TITLE>
+GstCvErode
+<SUBSECTION Standard>
+GstCvErodeClass
+GST_CV_ERODE
+GST_CV_ERODE_CLASS
+GST_IS_CV_ERODE
+GST_IS_CV_ERODE_CLASS
+GST_TYPE_CV_ERODE
+gst_cv_erode_get_type
+gst_cv_erode_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cvequalizehist</FILE>
+<TITLE>cvequalizehist</TITLE>
+GstCvEqualizeHist
+<SUBSECTION Standard>
+GstCvEqualizeHistClass
+GST_CV_EQUALIZE_HIST
+GST_CV_EQUALIZE_HIST_CLASS
+GST_IS_CV_EQUALIZE_HIST
+GST_IS_CV_EQUALIZE_HIST_CLASS
+GST_TYPE_CV_EQUALIZE_HIST
+gst_cv_equalize_hist_get_type
+gst_cv_equalize_hist_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cvlaplace</FILE>
+<TITLE>cvlaplace</TITLE>
+GstCvLaplace
+<SUBSECTION Standard>
+GstCvLaplaceClass
+GST_CV_LAPLACE
+GST_CV_LAPLACE_CLASS
+GST_IS_CV_LAPLACE
+GST_IS_CV_LAPLACE_CLASS
+GST_TYPE_CV_LAPLACE
+gst_cv_laplace_get_type
+gst_cv_laplace_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cvsmooth</FILE>
+<TITLE>cvsmooth</TITLE>
+GstCvSmooth
+<SUBSECTION Standard>
+GstCvSmoothClass
+GST_CV_SMOOTH
+GST_CV_SMOOTH_CLASS
+GST_IS_CV_SMOOTH
+GST_IS_CV_SMOOTH_CLASS
+GST_TYPE_CV_SMOOTH
+gst_cv_smooth_get_type
+gst_cv_smooth_plugin_init
+</SECTION>
+
+<SECTION>
+<FILE>element-cvsobel</FILE>
+<TITLE>cvsobel</TITLE>
+GstCvSobel
+<SUBSECTION Standard>
+GstCvSobelClass
+GST_CV_SOBEL
+GST_CV_SOBEL_CLASS
+GST_IS_CV_SOBEL
+GST_IS_CV_SOBEL_CLASS
+GST_TYPE_CV_SOBEL
+gst_cv_sobel_get_type
+gst_cv_sobel_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-dataurisrc</FILE>
 <TITLE>dataurisrc</TITLE>
 GstDataURISrc
@@ -513,6 +603,21 @@ SPU_STATE_FLAGS_MASK
 </SECTION>
 
 <SECTION>
+<FILE>element-edgedetect</FILE>
+<TITLE>edgedetect</TITLE>
+Gstedgedetect
+<SUBSECTION Standard>
+GstedgedetectClass
+GST_EDGEDETECT
+GST_EDGEDETECT_CLASS
+GST_IS_EDGEDETECT
+GST_IS_EDGEDETECT_CLASS
+GST_TYPE_EDGEDETECT
+gst_edgedetect_get_type
+gst_edgedetect_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-exclusion</FILE>
 <TITLE>exclusion</TITLE>
 GstExclusion
@@ -553,6 +658,35 @@ GST_IS_FAAD
 GST_FAAD_CLASS
 GST_IS_FAAD_CLASS
 gst_faad_get_type
+</SECTION>
+<SECTION>
+
+<FILE>element-faceblur</FILE>
+<TITLE>faceblur</TITLE>
+Gstfaceblur
+<SUBSECTION Standard>
+GstfaceblurClass
+GST_FACEBLUR
+GST_FACEBLUR_CLASS
+GST_TYPE_FACEBLUR
+GST_IS_FACEBLUR
+GST_IS_FACEBLUR_CLASS
+gst_faceblur_get_type
+gst_faceblur_plugin_init
+</SECTION>
+
+<FILE>element-facedetect</FILE>
+<TITLE>facedetect</TITLE>
+Gstfacedetect
+<SUBSECTION Standard>
+GstfacedetectClass
+GST_FACEDETECT
+GST_FACEDETECT_CLASS
+GST_TYPE_FACEDETECT
+GST_IS_FACEDETECT
+GST_IS_FACEDETECT_CLASS
+gst_facedetect_get_type
+gst_facedetect_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1117,6 +1251,20 @@ gst_pinch_get_type
 gst_pinch_plugin_init
 </SECTION>
 
+<FILE>element-pyramidsegment</FILE>
+<TITLE>pyramidsegment</TITLE>
+Gstpyramidsegment
+<SUBSECTION Standard>
+GstpyramidsegmentClass
+GST_PYRAMIDSEGMENT
+GST_PYRAMIDSEGMENT_CLASS
+GST_TYPE_PYRAMIDSEGMENT
+GST_IS_PYRAMIDSEGMENT
+GST_IS_PYRAMIDSEGMENT_CLASS
+gst_pyramidsegment_get_type
+gst_pyramidsegment_plugin_init
+</SECTION>
+
 <SECTION>
 <FILE>element-rtpdtmfdepay</FILE>
 <TITLE>rtpdtmfdepay</TITLE>
@@ -1364,6 +1512,34 @@ GST_IS_STRETCH_CLASS
 GST_TYPE_STRETCH
 gst_stretch_get_type
 gst_stretch_plugin_init
+</SECTION>
+
+<FILE>element-templatematch</FILE>
+<TITLE>templatematch</TITLE>
+GstTemplateMatch
+<SUBSECTION Standard>
+GstTemplateMatchClass
+GST_TEMPLATEMATCH
+GST_TEMPLATEMATCH_CLASS
+GST_TYPE_TEMPLATEMATCH
+GST_IS_TEMPLATEMATCH
+GST_IS_TEMPLATEMATCH_CLASS
+gst_templatematch_get_type
+gst_templatematch_plugin_init
+</SECTION>
+
+<FILE>element-textwrite</FILE>
+<TITLE>textwrite</TITLE>
+Gsttextwrite
+<SUBSECTION Standard>
+GsttextwriteClass
+GST_textwrite
+GST_textwrite_CLASS
+GST_TYPE_textwrite
+GST_IS_textwrite
+GST_IS_textwrite_CLASS
+gst_textwrite_get_type
+gst_textwrite_plugin_init
 </SECTION>
 
 <SECTION>

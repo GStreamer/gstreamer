@@ -117,6 +117,18 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
 	$(top_srcdir)/ext/mplex/gstmplex.hh \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
+	$(top_srcdir)/ext/opencv/gstcvdilate.h \
+	$(top_srcdir)/ext/opencv/gstcverode.h \
+	$(top_srcdir)/ext/opencv/gstcvequalizehist.h \
+	$(top_srcdir)/ext/opencv/gstcvlaplace.h \
+	$(top_srcdir)/ext/opencv/gstcvsmooth.h \
+	$(top_srcdir)/ext/opencv/gstcvsobel.h \
+	$(top_srcdir)/ext/opencv/gstedgedetect.h \
+	$(top_srcdir)/ext/opencv/gstfaceblur.h \
+	$(top_srcdir)/ext/opencv/gstfacedetect.h \
+	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
+	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
+	$(top_srcdir)/ext/opencv/gsttextwrite.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
 	$(top_srcdir)/ext/theora/theoradec.h \

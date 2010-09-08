@@ -33,6 +33,12 @@
     <xi:include href="xml/element-chromium.xml" />
     <xi:include href="xml/element-circle.xml" />
     <xi:include href="xml/element-coloreffects.xml" />
+    <xi:include href="xml/element-cvdilate.xml" />
+    <xi:include href="xml/element-cverode.xml" />
+    <xi:include href="xml/element-cvequalizehist.xml" />
+    <xi:include href="xml/element-cvlaplace.xml" />
+    <xi:include href="xml/element-cvsmooth.xml" />
+    <xi:include href="xml/element-cvsobel.xml" />
     <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
     <xi:include href="xml/element-dccpclientsink.xml" />
@@ -50,8 +56,11 @@
     <xi:include href="xml/element-dvbsrc.xml" />
     <xi:include href="xml/element-dvdspu.xml" />
     <xi:include href="xml/element-exclusion.xml" />
+    <xi:include href="xml/element-edgedetect.xml" />
     <xi:include href="xml/element-faac.xml" />
     <xi:include href="xml/element-faad.xml" />
+    <xi:include href="xml/element-faceblur.xml" />
+    <xi:include href="xml/element-facedetect.xml" />
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-fisheye.xml" />
     <xi:include href="xml/element-flacparse.xml" />
@@ -87,6 +96,7 @@
     <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
+    <xi:include href="xml/element-pyramidsegment.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
@@ -104,6 +114,8 @@
     <xi:include href="xml/element-stereo.xml" />
     <xi:include href="xml/element-stretch.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
+    <xi:include href="xml/element-templatematch.xml" />
+    <xi:include href="xml/element-textwrite.xml" />
     <xi:include href="xml/element-tiger.xml" />
     <xi:include href="xml/element-timidity.xml" />
     <xi:include href="xml/element-trm.xml" />

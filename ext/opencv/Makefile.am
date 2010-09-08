@@ -11,7 +11,7 @@ libgstopencv_la_SOURCES = gstopencv.c gstopencvvideofilter.c gstopencvutils.c
 # add other _CFLAGS and _LIBS as needed
 libgstopencv_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(OPENCV_CFLAGS) \
 			$(GSTPB_BASE_CFLAGS) \
-								 -I${top_srcdir}/src \
+								 -I${top_srcdir}/ext \
 								 -I${top_srcdir}/ext/opencv/basicfilters \
 								 -I${top_srcdir}/ext/opencv/edgedetect \
 								 -I${top_srcdir}/ext/opencv/faceblur \

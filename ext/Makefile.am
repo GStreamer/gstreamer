@@ -256,6 +256,12 @@ else
 OFA_DIR=
 endif
 
+if USE_OPENCV
+OPENCV_DIR=opencv
+else
+OPENCV_DIR=
+endif
+
 if USE_RSVG
 RSVG_DIR=rsvg
 else
@@ -424,6 +430,7 @@ SUBDIRS=\
 	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(OFA_DIR) \
+	$(OPENCV_DIR) \
 	$(RSVG_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
@@ -479,6 +486,7 @@ DIST_SUBDIRS = \
 	nas \
 	neon \
 	ofa \
+	opencv \
 	rsvg \
 	resindvd \
 	schroedinger \
