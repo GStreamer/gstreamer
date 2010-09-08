@@ -272,10 +272,8 @@ static GstPulseContext *
 gst_pulsering_get_context (GstPulseRingBuffer * pbuf)
 {
   GstPulseContext *pctx;
-  GstPulseSink *psink;
 
   g_mutex_lock (pa_ring_buffer_mutex);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
   g_mutex_unlock (pa_ring_buffer_mutex);
   return pctx;
