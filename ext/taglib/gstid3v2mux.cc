@@ -657,6 +657,7 @@ static const struct
 } add_funcs[] = {
   {
   GST_TAG_ARTIST, add_text_tag, "TPE1"}, {
+  GST_TAG_ALBUM_ARTIST, add_text_tag, "TPE2"}, {
   GST_TAG_TITLE, add_text_tag, "TIT2"}, {
   GST_TAG_ALBUM, add_text_tag, "TALB"}, {
   GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
