@@ -113,7 +113,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-GST_BOILERPLATE (Gsttextwrite, gst_textwrite, GstElement,GST_TYPE_ELEMENT);
+GST_BOILERPLATE (Gsttextwrite, gst_textwrite, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_textwrite_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -147,11 +147,10 @@ gst_textwrite_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple(element_class,
-    "textwrite",
-    "Filter/Effect/Video",
-    "Performs text writing to the video",
-    "sreerenj<bsreerenj@gmail.com>");
+  gst_element_class_set_details_simple (element_class,
+      "textwrite",
+      "Filter/Effect/Video",
+      "Performs text writing to the video", "sreerenj<bsreerenj@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
@@ -176,12 +175,12 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
   gobject_class->get_property = gst_textwrite_get_property;
 
 
- g_object_class_install_property (gobject_class, PROP_TEXT,
+  g_object_class_install_property (gobject_class, PROP_TEXT,
       g_param_spec_string ("text", "text",
           "Text to be display.", DEFAULT_PROP_TEXT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
- g_object_class_install_property (gobject_class, PROP_XPOS,
+  g_object_class_install_property (gobject_class, PROP_XPOS,
       g_param_spec_int ("xpos", "horizontal position",
           "Sets the Horizontal position", 0, G_MAXINT,
           DEFAULT_PROP_XPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -191,22 +190,22 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
           "Sets the Vertical position", 0, G_MAXINT,
           DEFAULT_PROP_YPOS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
- g_object_class_install_property (gobject_class, PROP_THICKNESS,
+  g_object_class_install_property (gobject_class, PROP_THICKNESS,
       g_param_spec_int ("thickness", "font thickness",
           "Sets the Thickness of Font", 0, G_MAXINT,
           DEFAULT_PROP_THICKNESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
- g_object_class_install_property (gobject_class, PROP_COLOR_R,
+  g_object_class_install_property (gobject_class, PROP_COLOR_R,
       g_param_spec_int ("colorR", "color -Red ",
           "Sets the color -R", 0, 255,
           DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
- g_object_class_install_property (gobject_class, PROP_COLOR_G,
+  g_object_class_install_property (gobject_class, PROP_COLOR_G,
       g_param_spec_int ("colorG", "color -Green",
           "Sets the color -G", 0, 255,
           DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
- g_object_class_install_property (gobject_class, PROP_COLOR_B,
+  g_object_class_install_property (gobject_class, PROP_COLOR_B,
       g_param_spec_int ("colorB", "color -Blue",
           "Sets the color -B", 0, 255,
           DEFAULT_PROP_COLOR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -215,14 +214,14 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_double ("height", "Height",
-          "Sets the height of fonts",1.0,5.0,
-          DEFAULT_HEIGHT, G_PARAM_READWRITE|G_PARAM_STATIC_STRINGS));
+          "Sets the height of fonts", 1.0, 5.0,
+          DEFAULT_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_double ("width", "Width",
-          "Sets the width of fonts",1.0,5.0,
-          DEFAULT_WIDTH, G_PARAM_READWRITE| G_PARAM_STATIC_STRINGS));
-  
+          "Sets the width of fonts", 1.0, 5.0,
+          DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 /* initialize the new element
@@ -231,24 +230,23 @@ gst_textwrite_class_init (GsttextwriteClass * klass)
  * initialize instance structure
  */
 static void
-gst_textwrite_init (Gsttextwrite * filter,
-    GsttextwriteClass * gclass)
+gst_textwrite_init (Gsttextwrite * filter, GsttextwriteClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_textwrite_set_caps));
+      GST_DEBUG_FUNCPTR (gst_textwrite_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_textwrite_chain));
+      GST_DEBUG_FUNCPTR (gst_textwrite_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-                                GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->textbuf = g_strdup (DEFAULT_PROP_TEXT); 
+  filter->textbuf = g_strdup (DEFAULT_PROP_TEXT);
   filter->width = DEFAULT_PROP_WIDTH;
   filter->height = DEFAULT_PROP_HEIGHT;
   filter->xpos = DEFAULT_PROP_XPOS;
@@ -272,30 +270,30 @@ gst_textwrite_set_property (GObject * object, guint prop_id,
       filter->textbuf = g_value_dup_string (value);
       break;
     case PROP_XPOS:
-      filter->xpos = g_value_get_int(value);
+      filter->xpos = g_value_get_int (value);
       break;
     case PROP_YPOS:
-      filter->ypos = g_value_get_int(value);
+      filter->ypos = g_value_get_int (value);
       break;
     case PROP_THICKNESS:
-      filter->thickness = g_value_get_int(value);
+      filter->thickness = g_value_get_int (value);
       break;
 
     case PROP_COLOR_R:
-      filter->colorR = g_value_get_int(value);
+      filter->colorR = g_value_get_int (value);
       break;
     case PROP_COLOR_G:
-      filter->colorG = g_value_get_int(value);
+      filter->colorG = g_value_get_int (value);
       break;
     case PROP_COLOR_B:
-      filter->colorB = g_value_get_int(value);
+      filter->colorB = g_value_get_int (value);
       break;
 
     case PROP_HEIGHT:
-      filter->height = g_value_get_double(value);
+      filter->height = g_value_get_double (value);
       break;
     case PROP_WIDTH:
-      filter->width = g_value_get_double(value);
+      filter->width = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -351,12 +349,12 @@ gst_textwrite_set_caps (GstPad * pad, GstCaps * caps)
 {
   Gsttextwrite *filter;
   GstPad *otherpad;
-  
+
   gint width, height;
   GstStructure *structure;
 
   filter = GST_textwrite (gst_pad_get_parent (pad));
-  
+
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
@@ -381,11 +379,14 @@ gst_textwrite_chain (GstPad * pad, GstBuffer * buf)
   filter = GST_textwrite (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
- 
-  cvInitFont(&(filter->font),CV_FONT_VECTOR0, filter->width,filter->height,0,filter->thickness,0);
-  
+
+  cvInitFont (&(filter->font), CV_FONT_VECTOR0, filter->width, filter->height,
+      0, filter->thickness, 0);
+
   buf = gst_buffer_make_writable (buf);
-  cvPutText (filter->cvImage,filter->textbuf,cvPoint(filter->xpos,filter->ypos), &(filter->font), cvScalar(filter->colorR,filter->colorG,filter->colorB,0));
+  cvPutText (filter->cvImage, filter->textbuf, cvPoint (filter->xpos,
+          filter->ypos), &(filter->font), cvScalar (filter->colorR,
+          filter->colorG, filter->colorB, 0));
 
   return gst_pad_push (filter->srcpad, buf);
 }
@@ -408,5 +409,3 @@ gst_textwrite_plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "textwrite", GST_RANK_NONE,
       GST_TYPE_textwrite);
 }
-
-

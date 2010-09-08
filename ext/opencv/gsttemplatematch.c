@@ -329,18 +329,20 @@ gst_templatematch_chain (GstPad * pad, GstBuffer * buf)
     }
   }
   if (filter->cvTemplateImage) {
+    GstStructure *s;
+    GstMessage *m;
+
     gst_templatematch_match (filter->cvImage, filter->cvTemplateImage,
         filter->cvDistImage, &best_res, &best_pos, filter->method);
 
-    GstStructure *s = gst_structure_new ("template_match",
+    s = gst_structure_new ("template_match",
         "x", G_TYPE_UINT, best_pos.x,
         "y", G_TYPE_UINT, best_pos.y,
         "width", G_TYPE_UINT, filter->cvTemplateImage->width,
         "height", G_TYPE_UINT, filter->cvTemplateImage->height,
-        "result", G_TYPE_DOUBLE, best_res,
-        NULL);
+        "result", G_TYPE_DOUBLE, best_res, NULL);
 
-    GstMessage *m = gst_message_new_element (GST_OBJECT (filter), s);
+    m = gst_message_new_element (GST_OBJECT (filter), s);
     gst_element_post_message (GST_ELEMENT (filter), m);
 
     if (filter->display) {

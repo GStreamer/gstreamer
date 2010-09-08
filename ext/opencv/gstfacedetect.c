@@ -106,7 +106,7 @@ static void gst_facedetect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_facedetect_set_caps (GstOpencvVideoFilter * transform,
-    gint in_width,  gint in_height, gint in_depth, gint in_channels,
+    gint in_width, gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels);
 static GstFlowReturn gst_facedetect_transform_ip (GstOpencvVideoFilter * base,
     GstBuffer * buf, IplImage * img);
@@ -188,7 +188,7 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
 static void
 gst_facedetect_init (Gstfacedetect * filter, GstfacedetectClass * gclass)
 {
-  filter->profile = g_strdup(DEFAULT_PROFILE);
+  filter->profile = g_strdup (DEFAULT_PROFILE);
   filter->display = TRUE;
   gst_facedetect_load_profile (filter);
 

@@ -65,9 +65,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstCvEqualizeHist, gst_cv_equalize_hist,
     GstOpencvVideoFilter, GST_TYPE_OPENCV_VIDEO_FILTER);
 
-static GstFlowReturn gst_cv_equalize_hist_transform (
-    GstOpencvVideoFilter * filter, GstBuffer * buf, IplImage * img,
-    GstBuffer * outbuf, IplImage * outimg);
+static GstFlowReturn gst_cv_equalize_hist_transform (GstOpencvVideoFilter *
+    filter, GstBuffer * buf, IplImage * img, GstBuffer * outbuf,
+    IplImage * outimg);
 
 /* Clean up */
 static void

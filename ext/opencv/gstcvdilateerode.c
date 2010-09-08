@@ -119,8 +119,7 @@ gst_cv_dilate_erode_get_type (void)
     };
 
     _type = g_type_register_static (GST_TYPE_OPENCV_VIDEO_FILTER,
-        "GstCvDilateErode", &opencv_dilate_erode_info,
-        G_TYPE_FLAG_ABSTRACT);
+        "GstCvDilateErode", &opencv_dilate_erode_info, G_TYPE_FLAG_ABSTRACT);
 /*
     GST_DEBUG_CATEGORY_INIT (gst_cv_dilate_erode_debug, "cvdilateerode", 0,
         "cvdilateerode");

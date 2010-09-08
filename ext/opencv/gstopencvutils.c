@@ -21,7 +21,7 @@
 
 #include "gstopencvutils.h"
 
-gboolean
+static gboolean
 gst_opencv_get_ipl_depth_and_channels (GstStructure * structure,
     gint * ipldepth, gint * channels, GError ** err)
 {

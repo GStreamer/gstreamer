@@ -118,7 +118,7 @@ gst_faceblur_finalize (GObject * obj)
     cvReleaseImage (&filter->cvImage);
     cvReleaseImage (&filter->cvGray);
   }
-  
+
   g_free (filter->profile);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
