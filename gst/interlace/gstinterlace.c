@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2010 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2010 Robert Swain <robert.swain@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +22,8 @@
  *
  * The interlace element takes a non-interlaced raw video stream as input,
  * creates fields out of each frame, then combines fields into interlaced
- * frames to output as an interlaced video stream.
+ * frames to output as an interlaced video stream. It can also produce
+ * telecined streams from progressive input.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -38,6 +40,15 @@
  * ]|
  * This pipeline converts a progressive video stream into an interlaced
  * stream suitable for standard definition NTSC.
+ * |[
+ * gst-launch -v videotestsrc pattern=ball ! video/x-raw-yuv,
+ *   format=\(fourcc\)I420,width=720,height=480,framerate=24000/1001,
+ *   pixel-aspect-ratio=11/10 ! interlace mode=telecine telecine-pattern=2:3 !
+ *   ...
+ * ]|
+ * This pipeline converts a 24 frames per second progressive film stream into a
+ * 30000/1001 2:3:2:3... pattern telecined stream suitable for displaying film
+ * content on NTSC.
  * </refsect2>
  */
 
@@ -79,26 +90,83 @@ struct _GstInterlace
 
   /* properties */
   gboolean top_field_first;
+  gint mode;
 
   /* state */
   int width;
   int height;
   GstVideoFormat format;
   GstBuffer *stored_frame;
-
+  gint stored_fields_pushed;
+  gint telecine_pattern;
+  gint phase_index;
+  GstClockTime buffer_ts;
 };
 
 struct _GstInterlaceClass
 {
   GstElementClass element_class;
-
 };
 
 enum
 {
-  ARG_0,
-  PROP_TOP_FIELD_FIRST
+  PROP_0,
+  PROP_TOP_FIELD_FIRST,
+  PROP_MODE,
+  PROP_TELECINE_PATTERN
 };
+
+typedef enum
+{
+  GST_INTERLACE_MODE_INTERLACE,
+  GST_INTERLACE_MODE_TELECINE
+} GstInterlaceMode;
+
+#define GST_INTERLACE_MODE (gst_interlace_mode_get_type ())
+static GType
+gst_interlace_mode_get_type (void)
+{
+  static GType interlace_mode_type = 0;
+  static const GEnumValue mode_types[] = {
+    {GST_INTERLACE_MODE_INTERLACE, "Interlace", "interlace"},
+    {GST_INTERLACE_MODE_TELECINE, "Telecine", "telecine"},
+    {0, NULL, NULL}
+  };
+
+  if (!interlace_mode_type) {
+    interlace_mode_type =
+        g_enum_register_static ("GstInterlaceMode", mode_types);
+  }
+
+  return interlace_mode_type;
+}
+
+typedef enum
+{
+  GST_INTERLACE_PATTERN_2_3,
+  GST_INTERLACE_PATTERN_2_3_3_2,
+  GST_INTERLACE_PATTERN_EURO
+} GstInterlacePattern;
+
+#define GST_INTERLACE_PATTERN (gst_interlace_pattern_get_type ())
+static GType
+gst_interlace_pattern_get_type (void)
+{
+  static GType interlace_pattern_type = 0;
+  static const GEnumValue pattern_types[] = {
+    {GST_INTERLACE_PATTERN_2_3, "2:3", "2:3"},
+    {GST_INTERLACE_PATTERN_2_3_3_2, "2:3:3:2", "2:3:3:2"},
+    {GST_INTERLACE_PATTERN_EURO, "Euro 2-11:3", "2-11:3"},
+    {0, NULL, NULL}
+  };
+
+  if (!interlace_pattern_type) {
+    interlace_pattern_type =
+        g_enum_register_static ("GstInterlacePattern", pattern_types);
+  }
+
+  return interlace_pattern_type;
+}
 
 static GstStaticPadTemplate gst_interlace_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -121,6 +189,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_interlace_base_init (gpointer g_class);
 static void gst_interlace_class_init (GstInterlaceClass * klass);
 static void gst_interlace_init (GstInterlace * interlace);
+static gboolean gst_interlace_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_interlace_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_interlace_set_property (GObject * object,
@@ -164,7 +233,6 @@ gst_interlace_get_type (void)
 static void
 gst_interlace_base_init (gpointer g_class)
 {
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details_simple (element_class,
@@ -196,6 +264,22 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           "Interlaced stream should be top field first", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Type of interlacing to be performed",
+          GST_INTERLACE_MODE, GST_INTERLACE_MODE_INTERLACE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_TELECINE_PATTERN,
+      g_param_spec_enum ("telecine-pattern", "Telecine pattern",
+          "Pattern of fields to be used for telecine", GST_INTERLACE_PATTERN,
+          GST_INTERLACE_PATTERN_2_3,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_interlace_reset (GstInterlace * interlace)
+{
+  interlace->phase_index = 0;
+  interlace->buffer_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -208,6 +292,7 @@ gst_interlace_init (GstInterlace * interlace)
   gst_pad_set_chain_function (interlace->sinkpad, gst_interlace_chain);
   gst_pad_set_setcaps_function (interlace->sinkpad, gst_interlace_setcaps);
   gst_pad_set_getcaps_function (interlace->sinkpad, gst_interlace_getcaps);
+  gst_pad_set_event_function (interlace->sinkpad, gst_interlace_sink_event);
 
   interlace->srcpad =
       gst_pad_new_from_static_template (&gst_interlace_src_template, "src");
@@ -216,6 +301,121 @@ gst_interlace_init (GstInterlace * interlace)
   gst_pad_set_getcaps_function (interlace->srcpad, gst_interlace_getcaps);
 
   interlace->top_field_first = FALSE;
+  interlace->mode = GST_INTERLACE_MODE_INTERLACE;
+  interlace->telecine_pattern = GST_INTERLACE_PATTERN_2_3;
+  gst_interlace_reset (interlace);
+}
+
+typedef struct _PulldownFormat PulldownFormat;
+struct _PulldownFormat
+{
+  const gchar *name;
+  int n_fields[13];
+  int dur_n, dur_d;
+};
+
+static const PulldownFormat formats[] = {
+  /* 24p -> 30fps telecine */
+  {"2:3", {2, 3,}, 1001, 30000},
+  {"2:3:3:2", {2, 3, 3, 2,}, 1001, 30000},
+  /* 24p -> 50i Euro pulldown */
+  {"2-11:3", {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3,}, 1, 25}
+};
+
+static void
+gst_interlace_telecine_decorate_buffer (GstInterlace * interlace,
+    GstBuffer * buf, const PulldownFormat * format)
+{
+  GST_BUFFER_TIMESTAMP (buf) = interlace->buffer_ts;
+  GST_BUFFER_DURATION (buf) =
+      gst_util_uint64_scale (GST_SECOND, format->dur_n, format->dur_d);
+  /* increment the buffer timestamp by duration for the next buffer */
+  interlace->buffer_ts +=
+      gst_util_uint64_scale (GST_SECOND, format->dur_n, format->dur_d);
+  gst_buffer_set_caps (buf, interlace->srccaps);
+
+  if (interlace->top_field_first)
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_TFF);
+}
+
+static gboolean
+gst_interlace_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret;
+  GstInterlace *interlace;
+
+  interlace = GST_INTERLACE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (interlace, "handling FLUSH_START");
+      if (interlace->stored_frame) {
+        gst_buffer_unref (interlace->stored_frame);
+        interlace->stored_frame = NULL;
+      }
+      ret = gst_pad_push_event (interlace->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (interlace, "handling FLUSH_STOP");
+      gst_interlace_reset (interlace);
+      ret = gst_pad_push_event (interlace->srcpad, event);
+      break;
+    case GST_EVENT_EOS:
+      if (interlace->mode == GST_INTERLACE_MODE_TELECINE) {
+        gint num_fields;
+        const PulldownFormat *format = &formats[interlace->telecine_pattern];
+
+        num_fields =
+            format->n_fields[interlace->phase_index] -
+            interlace->stored_fields_pushed;
+        interlace->stored_fields_pushed = 0;
+
+        /* on EOS we want to push as many sane frames as are left */
+        while (num_fields > 1) {
+          GstBuffer *output_buffer;
+
+          /* make metadata writable before editing it */
+          interlace->stored_frame =
+              gst_buffer_make_metadata_writable (interlace->stored_frame);
+          num_fields -= 2;
+
+          gst_interlace_telecine_decorate_buffer (interlace,
+              interlace->stored_frame, format);
+
+          /* ref output_buffer/stored frame because we want to keep it for now
+           * and pushing gives away a ref */
+          output_buffer = gst_buffer_ref (interlace->stored_frame);
+          if (gst_pad_push (interlace->srcpad, output_buffer)) {
+            GST_DEBUG_OBJECT (interlace, "Failed to push buffer %p",
+                output_buffer);
+            return FALSE;
+          }
+          output_buffer = NULL;
+
+          if (num_fields <= 1) {
+            gst_buffer_unref (interlace->stored_frame);
+            interlace->stored_frame = NULL;
+            break;
+          }
+        }
+
+        /* increment the phase index */
+        interlace->phase_index++;
+        if (!format->n_fields[interlace->phase_index]) {
+          interlace->phase_index = 0;
+        }
+      }
+
+      ret = gst_pad_push_event (interlace->srcpad, event);
+      break;
+    default:
+      ret = gst_pad_push_event (interlace->srcpad, event);
+      break;
+  }
+
+  g_object_unref (interlace);
+
+  return ret;
 }
 
 static GstCaps *
@@ -225,8 +425,6 @@ gst_interlace_getcaps (GstPad * pad)
   GstPad *otherpad;
   GstCaps *othercaps;
   GstCaps *icaps;
-  GstStructure *structure;
-  int i;
 
   interlace = GST_INTERLACE (gst_pad_get_parent (pad));
 
@@ -241,15 +439,8 @@ gst_interlace_getcaps (GstPad * pad)
         gst_pad_get_pad_template_caps (otherpad));
   }
 
-  for (i = 0; i < gst_caps_get_size (icaps); i++) {
-    structure = gst_caps_get_structure (icaps, i);
-
-    if (pad == interlace->srcpad) {
-      gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
-    } else {
-      gst_structure_set (structure, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
-    }
-  }
+  gst_caps_set_simple (icaps, "interlaced", G_TYPE_BOOLEAN,
+      pad == interlace->srcpad ? TRUE : FALSE, NULL);
 
   return icaps;
 }
@@ -265,7 +456,8 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   int fps_n, fps_d;
   GstPad *otherpad;
   GstCaps *othercaps;
-  GstStructure *structure;
+  GString *method = NULL;
+  const PulldownFormat *pdformat;
 
   interlace = GST_INTERLACE (gst_pad_get_parent (pad));
 
@@ -281,16 +473,32 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
 
   othercaps = gst_caps_copy (caps);
 
-  structure = gst_caps_get_structure (othercaps, 0);
+  if (interlace->mode == GST_INTERLACE_MODE_TELECINE) {
+    pdformat = &formats[interlace->telecine_pattern];
+    method = g_string_new ("telecine-");
+    g_string_append (method, pdformat->name);
+  }
 
   if (pad == interlace->srcpad) {
-    gst_structure_set (structure,
-        "interlaced", G_TYPE_BOOLEAN, FALSE,
-        "framerate", GST_TYPE_FRACTION, fps_n * 2, fps_d, NULL);
+    gst_caps_set_simple (othercaps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+    if (interlace->mode == GST_INTERLACE_MODE_INTERLACE) {
+      gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, fps_n * 2,
+          fps_d, NULL);
+    } else {
+      gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
+          pdformat->dur_d, pdformat->dur_n, "interlacing-method", G_TYPE_STRING,
+          method->str, NULL);
+    }
   } else {
-    gst_structure_set (structure,
-        "interlaced", G_TYPE_BOOLEAN, TRUE,
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d * 2, NULL);
+    gst_caps_set_simple (othercaps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+    if (interlace->mode == GST_INTERLACE_MODE_INTERLACE) {
+      gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION, fps_n,
+          fps_d * 2, NULL);
+    } else {
+      gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
+          pdformat->dur_d, pdformat->dur_n, "interlacing-method", G_TYPE_STRING,
+          method->str, NULL);
+    }
   }
 
   ret = gst_pad_set_caps (otherpad, othercaps);
@@ -422,6 +630,7 @@ gst_interlace_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstInterlace *interlace = GST_INTERLACE (gst_pad_get_parent (pad));
   GstFlowReturn ret;
+  gint num_fields = 0;
 
   GST_DEBUG ("Received buffer at %u:%02u:%02u:%09u",
       (guint) (GST_BUFFER_TIMESTAMP (buffer) / (GST_SECOND * 60 * 60)),
@@ -439,37 +648,109 @@ gst_interlace_chain (GstPad * pad, GstBuffer * buffer)
 
   if (GST_BUFFER_FLAGS (buffer) & GST_BUFFER_FLAG_DISCONT) {
     GST_DEBUG ("discont");
+  }
 
+  if (interlace->buffer_ts == GST_CLOCK_TIME_NONE) {
+    /* get the initial ts */
+    interlace->buffer_ts = GST_BUFFER_TIMESTAMP (buffer);
   }
 
   if (interlace->stored_frame == NULL) {
     interlace->stored_frame = buffer;
     ret = GST_FLOW_OK;
   } else {
-    GstBuffer *output_buffer;
+    switch (interlace->mode) {
+      case GST_INTERLACE_MODE_INTERLACE:
+      {
+        GstBuffer *output_buffer;
 
-    output_buffer = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer));
+        output_buffer = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer));
 
-    copy_field (interlace, output_buffer, interlace->stored_frame,
-        !interlace->top_field_first);
-    copy_field (interlace, output_buffer, buffer, interlace->top_field_first);
+        copy_field (interlace, output_buffer, interlace->stored_frame,
+            !interlace->top_field_first);
+        copy_field (interlace, output_buffer, buffer,
+            interlace->top_field_first);
 
-    GST_BUFFER_TIMESTAMP (output_buffer) =
-        GST_BUFFER_TIMESTAMP (interlace->stored_frame);
-    GST_BUFFER_DURATION (output_buffer) =
-        GST_BUFFER_DURATION (interlace->stored_frame) +
-        GST_BUFFER_DURATION (buffer);
-    gst_buffer_set_caps (output_buffer, interlace->srccaps);
+        GST_BUFFER_TIMESTAMP (output_buffer) =
+            GST_BUFFER_TIMESTAMP (interlace->stored_frame);
+        GST_BUFFER_DURATION (output_buffer) =
+            GST_BUFFER_DURATION (interlace->stored_frame) +
+            GST_BUFFER_DURATION (buffer);
+        gst_buffer_set_caps (output_buffer, interlace->srccaps);
 
-    if (interlace->top_field_first) {
-      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_TFF);
+        if (interlace->top_field_first) {
+          GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_TFF);
+        }
+
+        ret = gst_pad_push (interlace->srcpad, output_buffer);
+
+        gst_buffer_unref (buffer);
+        gst_buffer_unref (interlace->stored_frame);
+        interlace->stored_frame = NULL;
+        break;
+      }
+      case GST_INTERLACE_MODE_TELECINE:
+      {
+        const PulldownFormat *format = &formats[interlace->telecine_pattern];
+
+        num_fields =
+            format->n_fields[interlace->phase_index] -
+            interlace->stored_fields_pushed;
+        interlace->stored_fields_pushed = 0;
+
+        while (num_fields > 0) {
+          GstBuffer *output_buffer;
+
+          if (num_fields > 1) {
+            /* make metadata writable before editing it */
+            interlace->stored_frame =
+                gst_buffer_make_metadata_writable (interlace->stored_frame);
+            num_fields -= 2;
+            gst_interlace_telecine_decorate_buffer (interlace,
+                interlace->stored_frame, format);
+            /* ref output_buffer/stored frame because we want to keep it for now
+             * and pushing gives away a ref */
+            output_buffer = gst_buffer_ref (interlace->stored_frame);
+          } else {
+            output_buffer = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer));
+
+            /* take the top field from the stored frame */
+            copy_field (interlace, output_buffer, interlace->stored_frame, 0);
+            /* take the bottom field from the incoming buffer */
+            copy_field (interlace, output_buffer, buffer, 1);
+            /* one field pushed from the stored frame, one from the incoming
+             * buffer that will become stored */
+            num_fields--;
+            interlace->stored_fields_pushed = 1;
+            gst_interlace_telecine_decorate_buffer (interlace, output_buffer,
+                format);
+          }
+
+          if ((ret = gst_pad_push (interlace->srcpad, output_buffer))) {
+            GST_DEBUG_OBJECT (interlace, "Failed to push buffer %p",
+                output_buffer);
+            return ret;
+          }
+          output_buffer = NULL;
+
+          if (!num_fields) {
+            gst_buffer_unref (interlace->stored_frame);
+            /* if we still need one field from the incoming buffer, store it */
+            interlace->stored_frame = buffer;
+            break;
+          }
+        }
+
+        /* increment the phase index */
+        interlace->phase_index++;
+        if (!format->n_fields[interlace->phase_index]) {
+          interlace->phase_index = 0;
+        }
+        break;
+      }
+      default:
+        break;
     }
-
-    ret = gst_pad_push (interlace->srcpad, output_buffer);
-
-    gst_buffer_unref (buffer);
-    gst_buffer_unref (interlace->stored_frame);
-    interlace->stored_frame = NULL;
   }
 
   gst_object_unref (interlace);
@@ -487,6 +768,12 @@ gst_interlace_set_property (GObject * object,
     case PROP_TOP_FIELD_FIRST:
       interlace->top_field_first = g_value_get_boolean (value);
       break;
+    case PROP_MODE:
+      interlace->mode = g_value_get_enum (value);
+      break;
+    case PROP_TELECINE_PATTERN:
+      interlace->telecine_pattern = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -502,6 +789,12 @@ gst_interlace_get_property (GObject * object,
   switch (prop_id) {
     case PROP_TOP_FIELD_FIRST:
       g_value_set_boolean (value, interlace->top_field_first);
+      break;
+    case PROP_MODE:
+      g_value_set_enum (value, interlace->mode);
+      break;
+    case PROP_TELECINE_PATTERN:
+      g_value_set_enum (value, interlace->telecine_pattern);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
