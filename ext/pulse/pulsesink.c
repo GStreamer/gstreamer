@@ -459,6 +459,8 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
 
   pctx = g_hash_table_lookup (gst_pulse_shared_contexts, pbuf->context_name);
   if (pctx == NULL) {
+    pctx = g_slice_new0 (GstPulseContext);
+
     /* get the mainloop api and create a context */
     GST_LOG_OBJECT (psink, "new context with name %s",
         GST_STR_NULL (pbuf->context_name));
@@ -466,7 +468,6 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
     if (!(pctx->context = pa_context_new (api, pbuf->context_name)))
       goto create_failed;
 
-    pctx = g_slice_new0 (GstPulseContext);
     pctx->ring_buffers = g_slist_prepend (pctx->ring_buffers, pbuf);
     g_hash_table_insert (gst_pulse_shared_contexts, pbuf->context_name,
         (gpointer) pctx);
