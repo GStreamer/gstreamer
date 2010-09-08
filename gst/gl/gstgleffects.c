@@ -213,7 +213,7 @@ gst_gl_effects_reset_gl_resources (GstGLFilter * filter)
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
   gint i;
 
-  for (i = 0; i < 10; i++) {
+  for (i = 0; i < NEEDED_TEXTURES; i++) {
     glDeleteTextures (1, &effects->midtexture[i]);
     effects->midtexture[i] = 0;
   }
