@@ -1837,24 +1837,17 @@ gst_caps_structure_simplify (GstStructure ** result,
 
   /* try to subtract to get a real subset */
   if (gst_caps_structure_subtract (&list, simplify, compare)) {
-    switch (g_slist_length (list)) {
-      case 0:
-        *result = NULL;
-        return TRUE;
-      case 1:
-        *result = list->data;
-        g_slist_free (list);
-        return TRUE;
-      default:
-      {
-        GSList *walk;
-
-        for (walk = list; walk; walk = g_slist_next (walk)) {
-          gst_structure_free (walk->data);
-        }
-        g_slist_free (list);
-        break;
-      }
+    if (list == NULL) {         /* no result */
+      *result = NULL;
+      return TRUE;
+    } else if (list->next == NULL) {    /* one result */
+      *result = list->data;
+      g_slist_free (list);
+      return TRUE;
+    } else {                    /* multiple results */
+      g_slist_foreach (list, (GFunc) gst_structure_free, NULL);
+      g_slist_free (list);
+      list = NULL;
     }
   }
 
