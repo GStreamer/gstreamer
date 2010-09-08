@@ -4630,29 +4630,8 @@ not_connected:
   }
 }
 
-/**
- * gst_pad_get_range:
- * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
- * @offset: The start offset of the buffer
- * @size: The length of the buffer
- * @buffer: a pointer to hold the #GstBuffer, returns #GST_FLOW_ERROR if %NULL.
- *
- * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
- * immediatly and @buffer is %NULL.
- *
- * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
- * description of a getrange function. If @pad has no getrange function
- * installed (see gst_pad_set_getrange_function()) this function returns
- * #GST_FLOW_NOT_SUPPORTED.
- *
- * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
- *
- * Returns: a #GstFlowReturn from the pad.
- *
- * MT safe.
- */
-GstFlowReturn
-gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
+static GstFlowReturn
+gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
   GstFlowReturn ret;
@@ -4660,10 +4639,6 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   gboolean emit_signal;
   GstCaps *caps;
   gboolean caps_changed;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -4754,6 +4729,37 @@ not_negotiated:
   }
 }
 
+/**
+ * gst_pad_get_range:
+ * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
+ * @offset: The start offset of the buffer
+ * @size: The length of the buffer
+ * @buffer: a pointer to hold the #GstBuffer, returns #GST_FLOW_ERROR if %NULL.
+ *
+ * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
+ * immediatly and @buffer is %NULL.
+ *
+ * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
+ * description of a getrange function. If @pad has no getrange function
+ * installed (see gst_pad_set_getrange_function()) this function returns
+ * #GST_FLOW_NOT_SUPPORTED.
+ *
+ * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
+ *
+ * Returns: a #GstFlowReturn from the pad.
+ *
+ * MT safe.
+ */
+GstFlowReturn
+gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
+    GstBuffer ** buffer)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  return gst_pad_get_range_unchecked (pad, offset, size, buffer);
+}
 
 /**
  * gst_pad_pull_range:
@@ -4813,7 +4819,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
 
-  ret = gst_pad_get_range (peer, offset, size, buffer);
+  ret = gst_pad_get_range_unchecked (peer, offset, size, buffer);
 
   gst_object_unref (peer);
 
