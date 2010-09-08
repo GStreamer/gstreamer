@@ -375,7 +375,7 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
 
   /* we need at least 17 bytes for the SOF */
   if (off + 17 > size)
-    goto wrong_length;
+    goto wrong_size;
 
   sof_size = gst_rtp_jpeg_pay_header_size (data, off);
   if (sof_size < 17)
@@ -448,6 +448,12 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   return TRUE;
 
   /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
+        ("Wrong size %u (needed %u).", size, off + 17), (NULL));
+    return FALSE;
+  }
 wrong_length:
   {
     GST_ELEMENT_ERROR (pay, STREAM, FORMAT,
