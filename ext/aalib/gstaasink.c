@@ -482,17 +482,18 @@ gst_aasink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_aasink_open (GstAASink * aasink)
 {
-  aa_recommendhidisplay (aa_drivers[aasink->aa_driver]->shortname);
+  if (!aasink->context) {
+    aa_recommendhidisplay (aa_drivers[aasink->aa_driver]->shortname);
 
-  aasink->context = aa_autoinit (&aasink->ascii_surf);
-  if (aasink->context == NULL) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (aasink), LIBRARY, TOO_LAZY, (NULL),
-        ("error opening aalib context"));
-    return FALSE;
+    aasink->context = aa_autoinit (&aasink->ascii_surf);
+    if (aasink->context == NULL) {
+      GST_ELEMENT_ERROR (GST_ELEMENT (aasink), LIBRARY, TOO_LAZY, (NULL),
+          ("error opening aalib context"));
+      return FALSE;
+    }
+    aa_autoinitkbd (aasink->context, 0);
+    aa_resizehandler (aasink->context, (void *) aa_resize);
   }
-  aa_autoinitkbd (aasink->context, 0);
-  aa_resizehandler (aasink->context, (void *) aa_resize);
-
   return TRUE;
 }
 
@@ -500,6 +501,7 @@ static gboolean
 gst_aasink_close (GstAASink * aasink)
 {
   aa_close (aasink->context);
+  aasink->context = NULL;
 
   return TRUE;
 }
