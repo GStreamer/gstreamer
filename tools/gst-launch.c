@@ -560,21 +560,9 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       case GST_MESSAGE_STATE_CHANGED:{
         GstState old, new, pending;
 
-        gst_message_parse_state_changed (message, &old, &new, &pending);
-
         /* we only care about pipeline state change messages */
         if (GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (pipeline))
           break;
-
-        /* dump graph for pipeline state changes */
-        {
-          gchar *dump_name = g_strdup_printf ("gst-launch.%s_%s",
-              gst_element_state_get_name (old),
-              gst_element_state_get_name (new));
-          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-              GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
-          g_free (dump_name);
-        }
 
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */
@@ -582,6 +570,8 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           PRINT (_("Prerolled, waiting for buffering to finish...\n"));
           break;
         }
+
+        gst_message_parse_state_changed (message, &old, &new, &pending);
 
         /* if we reached the final target state, exit */
         if (target_state == GST_STATE_PAUSED && new == target_state)
@@ -673,6 +663,48 @@ exit:
 #endif
     return res;
   }
+}
+
+static GstBusSyncReply
+bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
+{
+  GstElement *pipeline = (GstElement *) data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STATE_CHANGED:
+      /* we only care about pipeline state change messages */
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (pipeline)) {
+        GstState old, new, pending;
+        gchar *state_transition_name;
+
+        gst_message_parse_state_changed (message, &old, &new, &pending);
+
+        state_transition_name = g_strdup_printf ("%s_%s",
+            gst_element_state_get_name (old), gst_element_state_get_name (new));
+
+        /* dump graph for (some) pipeline state changes */
+        {
+          gchar *dump_name = g_strconcat ("gst-launch.", state_transition_name,
+              NULL);
+          GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+              GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+          g_free (dump_name);
+        }
+
+        /* place a marker into e.g. strace logs */
+        {
+          gchar *access_name = g_strconcat (g_get_tmp_dir (), G_DIR_SEPARATOR_S,
+              "gst-launch", G_DIR_SEPARATOR_S, state_transition_name, NULL);
+          access (access_name, R_OK);
+          g_free (access_name);
+        }
+
+        g_free (state_transition_name);
+      }
+    default:
+      break;
+  }
+  return GST_BUS_PASS;
 }
 
 int
@@ -822,6 +854,7 @@ main (int argc, char *argv[])
   if (!savefile) {
     GstState state, pending;
     GstStateChangeReturn ret;
+    GstBus *bus;
 
     /* If the top-level object is not a pipeline, place it in a pipeline. */
     if (!GST_IS_PIPELINE (pipeline)) {
@@ -834,6 +867,11 @@ main (int argc, char *argv[])
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
+
+    bus = gst_element_get_bus (pipeline);
+    gst_bus_set_sync_handler (bus, bus_sync_handler, (gpointer) pipeline);
+    gst_object_unref (bus);
+
     PRINT (_("Setting pipeline to PAUSED ...\n"));
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
