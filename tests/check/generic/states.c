@@ -40,7 +40,7 @@ setup (void)
 
   GST_DEBUG ("getting elements for package %s", PACKAGE);
   STATE_IGNORE_ELEMENTS = g_getenv ("STATE_IGNORE_ELEMENTS");
-  if (STATE_IGNORE_ELEMENTS) {
+  if (!g_getenv ("GST_NO_STATE_IGNORE_ELEMENTS") && STATE_IGNORE_ELEMENTS) {
     GST_DEBUG ("Will ignore element factories: '%s'", STATE_IGNORE_ELEMENTS);
     ignorelist = g_strsplit (STATE_IGNORE_ELEMENTS, " ", 0);
   }
