@@ -317,11 +317,11 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
   guint8 id;
 
   if (offset + 2 > size)
-    return size;
+    goto too_small;
 
   quant_size = gst_rtp_jpeg_pay_header_size (data, offset);
   if (quant_size < 2)
-    return size;
+    goto small_quant_size;
 
   /* clamp to available data */
   if (offset + quant_size > size)
@@ -335,10 +335,10 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
     if (offset + 1 > size)
       break;
 
-    id = data[offset] & 0xf;
+    id = data[offset] & 0x0f;
     if (id == 15)
       /* invalid id received - corrupt data */
-      break;
+      goto invalid_id;
 
     prec = (data[offset] & 0xf0) >> 4;
     if (prec)
@@ -348,7 +348,7 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
 
     /* there is not enough for the table */
     if (quant_size < tab_size + 1)
-      break;
+      goto no_table;
 
     GST_LOG ("read quant table %d, tab_size %d, prec %02x", id, tab_size, prec);
 
@@ -359,7 +359,31 @@ gst_rtp_jpeg_pay_read_quant_table (const guint8 * data, guint size,
     quant_size -= tab_size;
     offset += tab_size;
   }
+done:
   return offset + quant_size;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_WARNING ("not enough data");
+    return size;
+  }
+small_quant_size:
+  {
+    GST_WARNING ("quant_size too small (%u < 2)", quant_size);
+    return size;
+  }
+invalid_id:
+  {
+    GST_WARNING ("invalid id");
+    goto done;
+  }
+no_table:
+  {
+    GST_WARNING ("not enough data for table (%u < %u)", quant_size,
+        tab_size + 1);
+    goto done;
+  }
 }
 
 static gboolean
@@ -434,14 +458,14 @@ gst_rtp_jpeg_pay_read_sof (GstRtpJPEGPay * pay, const guint8 * data,
   else
     goto invalid_comp;
 
-  /* the other components are free to use any quant table but they have to
-   * have the same table id */
   if (!(info[1].samp == 0x11))
     goto invalid_comp;
 
   if (!(info[2].samp == 0x11))
     goto invalid_comp;
 
+  /* the other components are free to use any quant table but they have to
+   * have the same table id */
   if (info[1].qt != info[2].qt)
     goto invalid_comp;
 
