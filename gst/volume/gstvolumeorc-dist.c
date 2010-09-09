@@ -73,6 +73,8 @@ void orc_process_int16_clamp (gint16 * d1, int p1, int n);
 void orc_process_int8 (gint8 * d1, int p1, int n);
 void orc_process_int8_clamp (gint8 * d1, int p1, int n);
 
+void gst_volume_orc_init (void);
+
 
 /* begin Orc C target preamble */
 #define ORC_CLAMP(x,a,b) ((x)<(a) ? (a) : ((x)>(b) ? (b) : (x)))
@@ -99,11 +101,19 @@ void orc_process_int8_clamp (gint8 * d1, int p1, int n);
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
+#define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
-#define ORC_MIN_NORMAL (1.1754944909521339405e-38)
-#define ORC_DENORMAL(x) (((x) > -ORC_MIN_NORMAL && (x) < ORC_MIN_NORMAL) ? ((x)<0 ? (-0.0f) : (0.0f)) : (x))
-#define ORC_MINF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)<(b)) ? (a) : (b))
-#define ORC_MAXF(a,b) (isnan(a) ? a : isnan(b) ? b : ((a)>(b)) ? (a) : (b))
+#define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
+#define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
+#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))
+#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define ORC_RESTRICT restrict
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define ORC_RESTRICT __restrict__
+#else
+#define ORC_RESTRICT
+#endif
 /* end Orc C target preamble */
 
 
@@ -114,8 +124,8 @@ void
 orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
 {
   int i;
-  orc_union32 *ptr0;
-  const orc_union32 *ptr4;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -123,13 +133,22 @@ orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
   ptr0 = (orc_union32 *) d1;
   ptr4 = (orc_union32 *) s1;
 
+  /* 1: loadpl */
+  var33.i = p1;
+
   for (i = 0; i < n; i++) {
     /* 0: loadl */
     var32 = ptr4[i];
-    /* 1: loadpl */
-    var33.i = p1;
     /* 2: mulf */
-    var34.f = ORC_DENORMAL (ORC_DENORMAL (var32.f) * ORC_DENORMAL (var33.f));
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var32.i);
+      _src2.i = ORC_DENORMAL (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL (_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
@@ -138,12 +157,12 @@ orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
 
 #else
 static void
-_backup_orc_scalarmultiply_f32_ns (OrcExecutor * ex)
+_backup_orc_scalarmultiply_f32_ns (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union32 *ptr0;
-  const orc_union32 *ptr4;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
@@ -151,47 +170,36 @@ _backup_orc_scalarmultiply_f32_ns (OrcExecutor * ex)
   ptr0 = (orc_union32 *) ex->arrays[0];
   ptr4 = (orc_union32 *) ex->arrays[4];
 
+  /* 1: loadpl */
+  var33.i = ex->params[24];
+
   for (i = 0; i < n; i++) {
     /* 0: loadl */
     var32 = ptr4[i];
-    /* 1: loadpl */
-    var33.i = ((orc_union32 *) (ex->params + 24))->f;
     /* 2: mulf */
-    var34.f = ORC_DENORMAL (ORC_DENORMAL (var32.f) * ORC_DENORMAL (var33.f));
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var32.i);
+      _src2.i = ORC_DENORMAL (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL (_dest1.i);
+    }
     /* 3: storel */
     ptr0[i] = var34;
   }
 
 }
 
+static OrcProgram *_orc_program_orc_scalarmultiply_f32_ns;
 void
 orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
+  OrcProgram *p = _orc_program_orc_scalarmultiply_f32_ns;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_scalarmultiply_f32_ns");
-      orc_program_set_backup_function (p, _backup_orc_scalarmultiply_f32_ns);
-      orc_program_add_destination (p, 4, "d1");
-      orc_program_add_source (p, 4, "s1");
-      orc_program_add_parameter_float (p, 4, "p1");
-
-      orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
-          ORC_VAR_D1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
   ex->program = p;
 
   ex->n = n;
@@ -215,7 +223,7 @@ void
 orc_process_int16 (gint16 * d1, int p1, int n)
 {
   int i;
-  orc_union16 *ptr0;
+  orc_union16 *ORC_RESTRICT ptr0;
   orc_union16 var33;
   orc_union16 var34;
   orc_union16 var35;
@@ -224,11 +232,12 @@ orc_process_int16 (gint16 * d1, int p1, int n)
 
   ptr0 = (orc_union16 *) d1;
 
+  /* 1: loadpw */
+  var34.i = p1;
+
   for (i = 0; i < n; i++) {
     /* 0: loadw */
     var33 = ptr0[i];
-    /* 1: loadpw */
-    var34.i = p1;
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
@@ -243,11 +252,11 @@ orc_process_int16 (gint16 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_process_int16 (OrcExecutor * ex)
+_backup_orc_process_int16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union16 *ptr0;
+  orc_union16 *ORC_RESTRICT ptr0;
   orc_union16 var33;
   orc_union16 var34;
   orc_union16 var35;
@@ -256,11 +265,12 @@ _backup_orc_process_int16 (OrcExecutor * ex)
 
   ptr0 = (orc_union16 *) ex->arrays[0];
 
+  /* 1: loadpw */
+  var34.i = ex->params[24];
+
   for (i = 0; i < n; i++) {
     /* 0: loadw */
     var33 = ptr0[i];
-    /* 1: loadpw */
-    var34.i = ex->params[24];
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
@@ -273,39 +283,14 @@ _backup_orc_process_int16 (OrcExecutor * ex)
 
 }
 
+static OrcProgram *_orc_program_orc_process_int16;
 void
 orc_process_int16 (gint16 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
+  OrcProgram *p = _orc_program_orc_process_int16;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_process_int16");
-      orc_program_set_backup_function (p, _backup_orc_process_int16);
-      orc_program_add_destination (p, 2, "d1");
-      orc_program_add_constant (p, 2, 0x0000000d, "c1");
-      orc_program_add_parameter (p, 2, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-
-      orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
   ex->program = p;
 
   ex->n = n;
@@ -324,7 +309,7 @@ void
 orc_process_int16_clamp (gint16 * d1, int p1, int n)
 {
   int i;
-  orc_union16 *ptr0;
+  orc_union16 *ORC_RESTRICT ptr0;
   orc_union16 var33;
   orc_union16 var34;
   orc_union16 var35;
@@ -333,11 +318,12 @@ orc_process_int16_clamp (gint16 * d1, int p1, int n)
 
   ptr0 = (orc_union16 *) d1;
 
+  /* 1: loadpw */
+  var34.i = p1;
+
   for (i = 0; i < n; i++) {
     /* 0: loadw */
     var33 = ptr0[i];
-    /* 1: loadpw */
-    var34.i = p1;
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
@@ -352,11 +338,11 @@ orc_process_int16_clamp (gint16 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_process_int16_clamp (OrcExecutor * ex)
+_backup_orc_process_int16_clamp (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_union16 *ptr0;
+  orc_union16 *ORC_RESTRICT ptr0;
   orc_union16 var33;
   orc_union16 var34;
   orc_union16 var35;
@@ -365,11 +351,12 @@ _backup_orc_process_int16_clamp (OrcExecutor * ex)
 
   ptr0 = (orc_union16 *) ex->arrays[0];
 
+  /* 1: loadpw */
+  var34.i = ex->params[24];
+
   for (i = 0; i < n; i++) {
     /* 0: loadw */
     var33 = ptr0[i];
-    /* 1: loadpw */
-    var34.i = ex->params[24];
     /* 2: mulswl */
     var36.i = var33.i * var34.i;
     /* 3: shrsl */
@@ -382,39 +369,14 @@ _backup_orc_process_int16_clamp (OrcExecutor * ex)
 
 }
 
+static OrcProgram *_orc_program_orc_process_int16_clamp;
 void
 orc_process_int16_clamp (gint16 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
+  OrcProgram *p = _orc_program_orc_process_int16_clamp;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_process_int16_clamp");
-      orc_program_set_backup_function (p, _backup_orc_process_int16_clamp);
-      orc_program_add_destination (p, 2, "d1");
-      orc_program_add_constant (p, 2, 0x0000000d, "c1");
-      orc_program_add_parameter (p, 2, "p1");
-      orc_program_add_temporary (p, 4, "t1");
-
-      orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssslw", 0, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
   ex->program = p;
 
   ex->n = n;
@@ -433,7 +395,7 @@ void
 orc_process_int8 (gint8 * d1, int p1, int n)
 {
   int i;
-  orc_int8 *ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var33;
   orc_int8 var34;
   orc_int8 var35;
@@ -442,11 +404,12 @@ orc_process_int8 (gint8 * d1, int p1, int n)
 
   ptr0 = (orc_int8 *) d1;
 
+  /* 1: loadpb */
+  var34 = p1;
+
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var33 = ptr0[i];
-    /* 1: loadpb */
-    var34 = p1;
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
@@ -461,11 +424,11 @@ orc_process_int8 (gint8 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_process_int8 (OrcExecutor * ex)
+_backup_orc_process_int8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 *ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var33;
   orc_int8 var34;
   orc_int8 var35;
@@ -474,11 +437,12 @@ _backup_orc_process_int8 (OrcExecutor * ex)
 
   ptr0 = (orc_int8 *) ex->arrays[0];
 
+  /* 1: loadpb */
+  var34 = ex->params[24];
+
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var33 = ptr0[i];
-    /* 1: loadpb */
-    var34 = ex->params[24];
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
@@ -491,39 +455,14 @@ _backup_orc_process_int8 (OrcExecutor * ex)
 
 }
 
+static OrcProgram *_orc_program_orc_process_int8;
 void
 orc_process_int8 (gint8 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
+  OrcProgram *p = _orc_program_orc_process_int8;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_process_int8");
-      orc_program_set_backup_function (p, _backup_orc_process_int8);
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_constant (p, 2, 0x00000005, "c1");
-      orc_program_add_parameter (p, 1, "p1");
-      orc_program_add_temporary (p, 2, "t1");
-
-      orc_program_append_2 (p, "mulsbw", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "shrsw", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convwb", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
-          ORC_VAR_D1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
   ex->program = p;
 
   ex->n = n;
@@ -542,7 +481,7 @@ void
 orc_process_int8_clamp (gint8 * d1, int p1, int n)
 {
   int i;
-  orc_int8 *ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var33;
   orc_int8 var34;
   orc_int8 var35;
@@ -551,11 +490,12 @@ orc_process_int8_clamp (gint8 * d1, int p1, int n)
 
   ptr0 = (orc_int8 *) d1;
 
+  /* 1: loadpb */
+  var34 = p1;
+
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var33 = ptr0[i];
-    /* 1: loadpb */
-    var34 = p1;
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
@@ -570,11 +510,11 @@ orc_process_int8_clamp (gint8 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_process_int8_clamp (OrcExecutor * ex)
+_backup_orc_process_int8_clamp (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
-  orc_int8 *ptr0;
+  orc_int8 *ORC_RESTRICT ptr0;
   orc_int8 var33;
   orc_int8 var34;
   orc_int8 var35;
@@ -583,11 +523,12 @@ _backup_orc_process_int8_clamp (OrcExecutor * ex)
 
   ptr0 = (orc_int8 *) ex->arrays[0];
 
+  /* 1: loadpb */
+  var34 = ex->params[24];
+
   for (i = 0; i < n; i++) {
     /* 0: loadb */
     var33 = ptr0[i];
-    /* 1: loadpb */
-    var34 = ex->params[24];
     /* 2: mulsbw */
     var36.i = var33 * var34;
     /* 3: shrsw */
@@ -600,39 +541,14 @@ _backup_orc_process_int8_clamp (OrcExecutor * ex)
 
 }
 
+static OrcProgram *_orc_program_orc_process_int8_clamp;
 void
 orc_process_int8_clamp (gint8 * d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
-  static int p_inited = 0;
-  static OrcProgram *p = 0;
+  OrcProgram *p = _orc_program_orc_process_int8_clamp;
   void (*func) (OrcExecutor *);
 
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-      OrcCompileResult result;
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "orc_process_int8_clamp");
-      orc_program_set_backup_function (p, _backup_orc_process_int8_clamp);
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_constant (p, 2, 0x00000005, "c1");
-      orc_program_add_parameter (p, 1, "p1");
-      orc_program_add_temporary (p, 2, "t1");
-
-      orc_program_append_2 (p, "mulsbw", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "shrsw", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
-          ORC_VAR_D1);
-      orc_program_append_2 (p, "convssswb", 0, ORC_VAR_D1, ORC_VAR_T1,
-          ORC_VAR_D1, ORC_VAR_D1);
-
-      result = orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
   ex->program = p;
 
   ex->n = n;
@@ -643,3 +559,162 @@ orc_process_int8_clamp (gint8 * d1, int p1, int n)
   func (ex);
 }
 #endif
+
+
+void
+gst_volume_orc_init (void)
+{
+#ifndef DISABLE_ORC
+  {
+    /* orc_scalarmultiply_f32_ns */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_scalarmultiply_f32_ns");
+    orc_program_set_backup_function (p, _backup_orc_scalarmultiply_f32_ns);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_constant (p, 0, 0x00000000, "c1");
+    orc_program_add_constant (p, 0, 0x00000000, "c2");
+    orc_program_add_constant (p, 0, 0x00000000, "c3");
+    orc_program_add_constant (p, 0, 0x00000000, "c4");
+    orc_program_add_constant (p, 0, 0x00000000, "c5");
+    orc_program_add_constant (p, 0, 0x00000000, "c6");
+    orc_program_add_constant (p, 0, 0x00000000, "c7");
+    orc_program_add_constant (p, 0, 0x00000000, "c8");
+    orc_program_add_parameter_float (p, 4, "p1");
+
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_scalarmultiply_f32_ns = p;
+  }
+  {
+    /* orc_process_int16 */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int16");
+    orc_program_set_backup_function (p, _backup_orc_process_int16);
+    orc_program_add_destination (p, 2, "d1");
+    orc_program_add_constant (p, 4, 0x0000000d, "c1");
+    orc_program_add_constant (p, 0, 0x00000000, "c2");
+    orc_program_add_constant (p, 0, 0x00000000, "c3");
+    orc_program_add_constant (p, 0, 0x00000000, "c4");
+    orc_program_add_constant (p, 0, 0x00000000, "c5");
+    orc_program_add_constant (p, 0, 0x00000000, "c6");
+    orc_program_add_constant (p, 0, 0x00000000, "c7");
+    orc_program_add_constant (p, 0, 0x00000000, "c8");
+    orc_program_add_parameter (p, 2, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+
+    orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int16 = p;
+  }
+  {
+    /* orc_process_int16_clamp */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int16_clamp");
+    orc_program_set_backup_function (p, _backup_orc_process_int16_clamp);
+    orc_program_add_destination (p, 2, "d1");
+    orc_program_add_constant (p, 4, 0x0000000d, "c1");
+    orc_program_add_constant (p, 0, 0x00000000, "c2");
+    orc_program_add_constant (p, 0, 0x00000000, "c3");
+    orc_program_add_constant (p, 0, 0x00000000, "c4");
+    orc_program_add_constant (p, 0, 0x00000000, "c5");
+    orc_program_add_constant (p, 0, 0x00000000, "c6");
+    orc_program_add_constant (p, 0, 0x00000000, "c7");
+    orc_program_add_constant (p, 0, 0x00000000, "c8");
+    orc_program_add_parameter (p, 2, "p1");
+    orc_program_add_temporary (p, 4, "t1");
+
+    orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int16_clamp = p;
+  }
+  {
+    /* orc_process_int8 */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int8");
+    orc_program_set_backup_function (p, _backup_orc_process_int8);
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_constant (p, 4, 0x00000005, "c1");
+    orc_program_add_constant (p, 0, 0x00000000, "c2");
+    orc_program_add_constant (p, 0, 0x00000000, "c3");
+    orc_program_add_constant (p, 0, 0x00000000, "c4");
+    orc_program_add_constant (p, 0, 0x00000000, "c5");
+    orc_program_add_constant (p, 0, 0x00000000, "c6");
+    orc_program_add_constant (p, 0, 0x00000000, "c7");
+    orc_program_add_constant (p, 0, 0x00000000, "c8");
+    orc_program_add_parameter (p, 1, "p1");
+    orc_program_add_temporary (p, 2, "t1");
+
+    orc_program_append_2 (p, "mulsbw", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsw", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convwb", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int8 = p;
+  }
+  {
+    /* orc_process_int8_clamp */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int8_clamp");
+    orc_program_set_backup_function (p, _backup_orc_process_int8_clamp);
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_constant (p, 4, 0x00000005, "c1");
+    orc_program_add_constant (p, 0, 0x00000000, "c2");
+    orc_program_add_constant (p, 0, 0x00000000, "c3");
+    orc_program_add_constant (p, 0, 0x00000000, "c4");
+    orc_program_add_constant (p, 0, 0x00000000, "c5");
+    orc_program_add_constant (p, 0, 0x00000000, "c6");
+    orc_program_add_constant (p, 0, 0x00000000, "c7");
+    orc_program_add_constant (p, 0, 0x00000000, "c8");
+    orc_program_add_parameter (p, 1, "p1");
+    orc_program_add_temporary (p, 2, "t1");
+
+    orc_program_append_2 (p, "mulsbw", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsw", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssswb", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int8_clamp = p;
+  }
+#endif
+}

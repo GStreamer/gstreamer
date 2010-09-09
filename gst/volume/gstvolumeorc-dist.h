@@ -10,6 +10,8 @@
 extern "C" {
 #endif
 
+void gst_volume_orc_init (void);
+
 
 
 #ifndef _ORC_INTEGER_TYPEDEFS_

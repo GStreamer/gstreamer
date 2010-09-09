@@ -10,6 +10,10 @@
 extern "C" {
 #endif
 
+void gst_adder_orc_init (void);
+
+
+
 #ifndef _ORC_INTEGER_TYPEDEFS_
 #define _ORC_INTEGER_TYPEDEFS_
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
@@ -47,10 +51,10 @@ typedef long orc_int64;
 typedef unsigned long orc_uint64;
 #endif
 #endif
-typedef union { orc_int32 i; float f; } orc_union32;
-typedef union { orc_int64 i; double f; } orc_union64;
+typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
+typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
+typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-
 void add_int32 (gint32 * d1, const gint32 * s1, int n);
 void add_int16 (gint16 * d1, const gint16 * s1, int n);
 void add_int8 (gint8 * d1, const gint8 * s1, int n);
