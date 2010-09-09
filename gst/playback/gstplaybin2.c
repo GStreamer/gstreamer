@@ -231,7 +231,6 @@
 #include "gstplay-marshal.h"
 #include "gstplayback.h"
 #include "gstplaysink.h"
-#include "gstscreenshot.h"
 #include "gstinputselector.h"
 #include "gstsubtitleoverlay.h"
 

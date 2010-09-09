@@ -18,7 +18,6 @@ libgstplaybin_la_SOURCES = \
 	gstplaybasebin.c \
 	gstplay-enum.c \
 	gstinputselector.c \
-	gstscreenshot.c \
 	gststreaminfo.c \
 	gststreamselector.c \
 	gstsubtitleoverlay.c \
@@ -59,12 +58,11 @@ noinst_HEADERS = \
 	gststreaminfo.h \
 	gstinputselector.h \
 	gstplay-enum.h \
-	gstscreenshot.h \
 	gststreamselector.h \
 	gstrawcaps.h \
 	gstsubtitleoverlay.h \
 	gststreamsynchronizer.h
-	
+
 BUILT_SOURCES = $(built_headers) $(built_sources)
 
 EXTRA_DIST = gstplay-marshal.list
