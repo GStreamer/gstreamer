@@ -1226,7 +1226,13 @@ AG_GST_CHECK_FEATURE(OFA, [ofa plugins], ofa, [
 dnl *** opencv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENCV, true)
 AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
-  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 libswscale >= 0.7 , [
+  dnl we specify a max. version too because we set CV_NO_BACKWARD_COMPATIBILITY
+  dnl and don't want the build to break when a new opencv version comes out.
+  dnl Need to adjust this upwards once we know that our code compiles fine with
+  dnl a new version and the no-backward-compatibility define. (There doesn't
+  dnl seem to be a switch to suppress the warnings the cvcompat.h header
+  dnl causes.)
+  PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.1.0 libswscale >= 0.7 , [
     AC_PROG_CXX
     AC_LANG_CPLUSPLUS
     OLD_CPPFLAGS=$CPPFLAGS

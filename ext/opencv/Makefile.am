@@ -24,7 +24,8 @@ libgstopencv_la_SOURCES = gstopencv.c \
 # override CV_INLINE: GLib will take care of defining 'inline' sufficiently and
 # OpenCV's define isn't good enough to avoid 'unused' gcc warnings (at v2.1.0)
 libgstopencv_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(OPENCV_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) -DCV_INLINE="static inline"
+	$(GST_PLUGINS_BASE_CFLAGS) -DCV_INLINE="static inline" \
+	-DCV_NO_BACKWARD_COMPATIBILITY
 
 libgstopencv_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(OPENCV_LIBS) \
 			$(GSTPB_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR)
