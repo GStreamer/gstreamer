@@ -82,4 +82,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "opencv",
     "GStreamer OpenCV Plugins",
-    plugin_init, VERSION, "LGPL", "OpenCv", "http://opencv.willowgarage.com")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
