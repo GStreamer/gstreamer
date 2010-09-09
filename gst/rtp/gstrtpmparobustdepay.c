@@ -281,7 +281,7 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
   dummy = g_slice_dup (GstADUFrame, frame);
 
   /* go for maximum bitrate */
-  dummy->header = frame->header | (0xf << 12);
+  dummy->header = (frame->header & ~(0xf << 12)) | (0xe << 12);
   dummy->size =
       mp3_type_frame_length_from_header (GST_ELEMENT_CAST (rtpmpadepay),
       dummy->header, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
