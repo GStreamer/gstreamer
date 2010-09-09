@@ -1,4 +1,6 @@
 
+.init gst_videoscale_orc_init
+
 .function orc_merge_linear_u8
 .dest 1 d1
 .source 1 s1

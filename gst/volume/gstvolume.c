@@ -1078,6 +1078,8 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_volume_orc_init ();
+
   /* initialize gst controller library */
   gst_controller_init (NULL, NULL);
 
