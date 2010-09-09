@@ -291,6 +291,8 @@ gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   g_static_rec_mutex_init (&identity->notify_lock);
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 }
 
 static void
