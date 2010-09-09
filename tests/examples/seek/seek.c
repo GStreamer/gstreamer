@@ -2661,8 +2661,9 @@ main (int argc, char **argv)
 
   pipeline_spec = argv[2];
 
-  if (g_strrstr (pipeline_spec, "*") != NULL ||
-      g_strrstr (pipeline_spec, "?") != NULL) {
+  if (g_path_is_absolute (pipeline_spec) &&
+      (g_strrstr (pipeline_spec, "*") != NULL ||
+          g_strrstr (pipeline_spec, "?") != NULL)) {
     paths = handle_wildcards (pipeline_spec);
   } else {
     paths = g_list_prepend (paths, g_strdup (pipeline_spec));
