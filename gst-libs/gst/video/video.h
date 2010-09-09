@@ -413,6 +413,9 @@ gboolean gst_video_format_convert (GstVideoFormat format, int width, int height,
 GstEvent *gst_video_event_new_still_frame (gboolean in_still);
 gboolean gst_video_event_parse_still_frame (GstEvent *event, gboolean *in_still);
 
+GstBuffer *gst_video_convert_frame(GstBuffer *buf, const GstCaps *to_caps,
+				   GstClockTime timeout, GError **error);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_H__ */

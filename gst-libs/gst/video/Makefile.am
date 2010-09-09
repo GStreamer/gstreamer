@@ -13,7 +13,7 @@ lib_LTLIBRARIES = libgstvideo-@GST_MAJORMINOR@.la
 CLEANFILES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@_la_SOURCES = \
-	video.c gstvideosink.c gstvideofilter.c
+	video.c gstvideosink.c gstvideofilter.c convertframe.c
 nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = $(BUILT_SOURCES)
 
 libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
