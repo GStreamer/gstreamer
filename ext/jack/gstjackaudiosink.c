@@ -55,6 +55,11 @@
  * Last reviewed on 2006-11-30 (0.10.4)
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/gst-i18n-plugin.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -350,7 +355,8 @@ could_not_open:
   {
     if (status & JackServerFailed) {
       GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-          (NULL), ("Cannot connect to the Jack server (status %d)", status));
+          (_("Jack server not found")),
+          ("Cannot connect to the Jack server (status %d)", status));
     } else {
       GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
           (NULL), ("Jack client open error (status %d)", status));

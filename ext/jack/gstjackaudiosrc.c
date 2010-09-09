@@ -74,7 +74,11 @@
  * Last reviewed on 2008-07-22 (0.10.4)
  */
 
-#include <gst/gst.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/gst-i18n-plugin.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -357,7 +361,8 @@ could_not_open:
   {
     if (status & JackServerFailed) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-          (NULL), ("Cannot connect to the Jack server (status %d)", status));
+          (_("Jack server not found")),
+          ("Cannot connect to the Jack server (status %d)", status));
     } else {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_WRITE,
           (NULL), ("Jack client open error (status %d)", status));
@@ -670,7 +675,6 @@ static GstRingBuffer *gst_jack_audio_src_create_ringbuffer (GstBaseAudioSrc *
 static void
 gst_jack_audio_src_base_init (gpointer gclass)
 {
-
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
