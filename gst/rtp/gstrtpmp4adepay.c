@@ -216,8 +216,10 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       if (sr_idx < G_N_ELEMENTS (aac_sample_rates)) {
         gst_caps_set_simple (srccaps,
             "rate", G_TYPE_INT, (gint) aac_sample_rates[sr_idx], NULL);
+        GST_DEBUG_OBJECT (depayload, "sampling rate from stream-config %u",
+            aac_sample_rates[sr_idx]);
       } else {
-        GST_WARNING ("Invalid sample rate index %u", sr_idx);
+        GST_WARNING_OBJECT (depayload, "Invalid sample rate index %u", sr_idx);
       }
 
       /* ignore remaining bit, we're only interested in full bytes */
