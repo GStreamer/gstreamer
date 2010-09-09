@@ -942,7 +942,9 @@ gst_teletextdec_push_preroll_buffer (GstTeletextDec * teletext)
     goto beach;
   }
 
-  buf = gst_buffer_new ();
+  buf = gst_buffer_new_and_alloc (1);
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) =
+      (guint8 *) g_strdup ("");
   gst_buffer_set_caps (buf, out_caps);
   ret = gst_pad_push (teletext->srcpad, buf);
   if (ret != GST_FLOW_OK)
