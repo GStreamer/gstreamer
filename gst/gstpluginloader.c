@@ -270,6 +270,8 @@ restart:
       l->got_plugin_details = TRUE;
       /* Now remove this crashy plugin from the head of the list */
       l->pending_plugins = g_list_delete_link (cur, cur);
+      g_free (entry->filename);
+      g_slice_free (PendingPluginEntry, entry);
       if (l->pending_plugins == NULL)
         l->pending_plugins_tail = NULL;
       if (!gst_plugin_loader_spawn (l))
