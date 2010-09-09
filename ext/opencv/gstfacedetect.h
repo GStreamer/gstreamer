@@ -72,6 +72,11 @@ struct _Gstfacedetect
   gboolean display;
 
   gchar *profile;
+  gdouble scale_factor;
+  gint min_neighbors;
+  gint flags;
+  gint min_size_width;
+  gint min_size_height;
 
   IplImage *cvGray;
   CvHaarClassifierCascade *cvCascade;
