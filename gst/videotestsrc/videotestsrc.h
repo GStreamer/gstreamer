@@ -53,6 +53,10 @@ struct paintinfo_struct
   const struct vts_color_struct *color;
   /*  const struct vts_color_struct *color; */
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
+  void (*paint_tmpline) (paintinfo * p, int x, int w);
+  void (*convert_tmpline) (paintinfo * p, int y);
+
+  unsigned char *tmpline;
 
   struct vts_color_struct foreground_color;
   struct vts_color_struct background_color;

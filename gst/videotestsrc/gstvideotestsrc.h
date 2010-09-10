@@ -172,6 +172,9 @@ struct _GstVideoTestSrc {
   gint moving_speed;
 
   void (*make_image) (GstVideoTestSrc *v, unsigned char *dest, int w, int h);
+
+  /* temporary AYUV/ARGB scanline */
+  guint8 *tmpline;
 };
 
 struct _GstVideoTestSrcClass {
