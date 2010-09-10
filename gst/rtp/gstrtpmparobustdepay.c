@@ -288,8 +288,8 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
   dummy->data_size = dummy->size - dummy->side_info;
   dummy->backpointer = 0;
 
-  dummy->buffer = gst_buffer_new_and_alloc (dummy->size);
-  memset (GST_BUFFER_DATA (dummy->buffer), 0, dummy->size);
+  dummy->buffer = gst_buffer_new_and_alloc (dummy->side_info + 4);
+  memset (GST_BUFFER_DATA (dummy->buffer), 0, dummy->side_info + 4);
   GST_WRITE_UINT32_BE (GST_BUFFER_DATA (dummy->buffer), dummy->header);
   GST_BUFFER_TIMESTAMP (dummy->buffer) = GST_BUFFER_TIMESTAMP (frame->buffer);
 
@@ -561,6 +561,13 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
             rtpmpadepay->cur_adu_frame, dummy);
         /* offset is known to be zero, so we can shift current one */
         rtpmpadepay->cur_adu_frame = rtpmpadepay->cur_adu_frame->prev;
+        if (!rtpmpadepay->size) {
+          g_assert (rtpmpadepay->cur_adu_frame ==
+              rtpmpadepay->adu_frames->head);
+          GST_LOG_OBJECT (rtpmpadepay, "... which is new head frame");
+          gst_byte_writer_free (rtpmpadepay->mp3_frame);
+          rtpmpadepay->mp3_frame = NULL;
+        }
         /* ... and continue adding that empty one immediately,
          * and then see if that provided enough extra space */
         continue;
