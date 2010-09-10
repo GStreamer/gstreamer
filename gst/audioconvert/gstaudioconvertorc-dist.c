@@ -4370,13 +4370,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 1, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4404,14 +4397,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_unpack_s8);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 1, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4438,13 +4423,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4469,14 +4447,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_unpack_s16);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 2, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4501,13 +4471,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4536,14 +4499,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s16_swap);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 2, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4570,13 +4525,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4599,14 +4547,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_unpack_s32);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
 
     orc_program_append_2 (p, "shll", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
@@ -4628,13 +4568,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4660,14 +4593,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s32_swap);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4693,12 +4618,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x4f000000, "c1");
     orc_program_add_constant (p, 4, 0x3f000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "loadl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -4727,12 +4646,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x4f000000, "c1");
     orc_program_add_constant (p, 4, 0x3f000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "swapl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -4759,14 +4672,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_float_double);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
 
     orc_program_append_2 (p, "convfd", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
         ORC_VAR_D1);
@@ -4786,14 +4691,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_float_double_swap);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "swapl", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -4816,14 +4713,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_double_double);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
 
     orc_program_append_2 (p, "copyq", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
         ORC_VAR_D1);
@@ -4843,14 +4732,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_double_double_swap);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
 
     orc_program_append_2 (p, "swapq", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
         ORC_VAR_D1);
@@ -4871,13 +4752,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 1, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4908,14 +4782,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s8_double);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 1, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -4945,13 +4811,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -4979,14 +4838,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s16_double);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 2, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5013,13 +4864,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 2, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -5050,14 +4894,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s16_double_swap);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 2, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 2, "t1");
     orc_program_add_temporary (p, 4, "t2");
@@ -5087,13 +4923,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5119,14 +4948,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s32_double);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5151,13 +4972,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5185,14 +4999,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_unpack_s32_double_swap);
     orc_program_add_destination (p, 8, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5218,13 +5024,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5252,14 +5051,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_pack_s8);
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5286,13 +5077,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5317,14 +5101,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_pack_s16);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5349,13 +5125,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5384,14 +5153,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_s16_swap);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5418,13 +5179,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5447,14 +5201,6 @@ gst_audio_convert_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_audio_convert_pack_s32);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
 
     orc_program_append_2 (p, "shrsl", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
@@ -5476,13 +5222,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x80000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5508,14 +5247,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_s32_swap);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5540,13 +5271,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x4f000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "convlf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -5572,13 +5296,6 @@ gst_audio_convert_orc_init (void)
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
     orc_program_add_constant (p, 4, 0x4f000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "convlf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -5603,14 +5320,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_float);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
 
     orc_program_append_2 (p, "convdf", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
         ORC_VAR_D1);
@@ -5630,14 +5339,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_float_swap);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_temporary (p, 4, "t1");
 
     orc_program_append_2 (p, "convdf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -5660,14 +5361,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_s8);
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5696,14 +5389,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_s16);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5729,14 +5414,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_s16_swap);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
     orc_program_add_temporary (p, 2, "t2");
@@ -5765,14 +5442,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_s32);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -5796,14 +5465,6 @@ gst_audio_convert_orc_init (void)
         _backup_orc_audio_convert_pack_double_s32_swap);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 8, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
     orc_program_add_temporary (p, 4, "t1");
 

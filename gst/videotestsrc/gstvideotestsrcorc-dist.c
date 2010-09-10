@@ -402,14 +402,6 @@ gst_videotestsrc_orc_init (void)
     orc_program_set_name (p, "gst_orc_splat_u8");
     orc_program_set_backup_function (p, _backup_gst_orc_splat_u8);
     orc_program_add_destination (p, 1, "d1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 1, "p1");
 
     orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
@@ -428,14 +420,6 @@ gst_videotestsrc_orc_init (void)
     orc_program_set_name (p, "gst_orc_splat_s16");
     orc_program_set_backup_function (p, _backup_gst_orc_splat_s16);
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 2, "p1");
 
     orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
@@ -454,14 +438,6 @@ gst_videotestsrc_orc_init (void)
     orc_program_set_name (p, "gst_orc_splat_u16");
     orc_program_set_backup_function (p, _backup_gst_orc_splat_u16);
     orc_program_add_destination (p, 2, "d1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 2, "p1");
 
     orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
@@ -480,14 +456,6 @@ gst_videotestsrc_orc_init (void)
     orc_program_set_name (p, "gst_orc_splat_u32");
     orc_program_set_backup_function (p, _backup_gst_orc_splat_u32);
     orc_program_add_destination (p, 4, "d1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 4, "p1");
 
     orc_program_append_2 (p, "copyl", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,

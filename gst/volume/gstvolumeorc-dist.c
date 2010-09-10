@@ -575,14 +575,6 @@ gst_volume_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_scalarmultiply_f32_ns);
     orc_program_add_destination (p, 4, "d1");
     orc_program_add_source (p, 4, "s1");
-    orc_program_add_constant (p, 0, 0x00000000, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter_float (p, 4, "p1");
 
     orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
@@ -602,13 +594,6 @@ gst_volume_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_process_int16);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_constant (p, 4, 0x0000000d, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 2, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -633,13 +618,6 @@ gst_volume_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_process_int16_clamp);
     orc_program_add_destination (p, 2, "d1");
     orc_program_add_constant (p, 4, 0x0000000d, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 2, "p1");
     orc_program_add_temporary (p, 4, "t1");
 
@@ -664,13 +642,6 @@ gst_volume_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_process_int8);
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_constant (p, 4, 0x00000005, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 1, "p1");
     orc_program_add_temporary (p, 2, "t1");
 
@@ -695,13 +666,6 @@ gst_volume_orc_init (void)
     orc_program_set_backup_function (p, _backup_orc_process_int8_clamp);
     orc_program_add_destination (p, 1, "d1");
     orc_program_add_constant (p, 4, 0x00000005, "c1");
-    orc_program_add_constant (p, 0, 0x00000000, "c2");
-    orc_program_add_constant (p, 0, 0x00000000, "c3");
-    orc_program_add_constant (p, 0, 0x00000000, "c4");
-    orc_program_add_constant (p, 0, 0x00000000, "c5");
-    orc_program_add_constant (p, 0, 0x00000000, "c6");
-    orc_program_add_constant (p, 0, 0x00000000, "c7");
-    orc_program_add_constant (p, 0, 0x00000000, "c8");
     orc_program_add_parameter (p, 1, "p1");
     orc_program_add_temporary (p, 2, "t1");
 
