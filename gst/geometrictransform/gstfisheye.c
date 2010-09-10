@@ -74,7 +74,9 @@ static gboolean
 fisheye_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstFisheye *fisheye = GST_FISHEYE_CAST (gt);
+#endif
   gdouble norm_x;
   gdouble norm_y;
   gdouble r;

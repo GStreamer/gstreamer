@@ -82,7 +82,9 @@ tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
 {
   GstCircleGeometricTransform *cgt = GST_CIRCLE_GEOMETRIC_TRANSFORM_CAST (gt);
+#ifndef GST_DISABLE_GST_DEBUG
   GstTunnel *tunnel = GST_TUNNEL_CAST (gt);
+#endif
 
   gdouble norm_x, norm_y;
   gdouble width = gt->width;
