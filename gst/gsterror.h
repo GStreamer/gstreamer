@@ -240,7 +240,11 @@ typedef enum
  */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
+/* Hide this compatibility type from introspection */
+#ifndef __GI_SCANNER__
 GType gst_g_error_get_type (void);
+#endif
+
 gchar *gst_error_get_message (GQuark domain, gint code);
 GQuark gst_stream_error_quark (void);
 GQuark gst_core_error_quark (void);
