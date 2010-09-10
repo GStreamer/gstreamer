@@ -229,7 +229,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   }
 
   /* Is there a reason we require the caller to always specify a framerate? */
-  GST_LOG_OBJECT (v4l2src, "Desired framerate: %u/%u", fps_n, fps_d);
+  GST_DEBUG_OBJECT (v4l2src, "Desired framerate: %u/%u", fps_n, fps_d);
 
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -243,10 +243,8 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   /* Note: V4L2 provides the frame interval, we have the frame rate */
   if (fractions_are_equal (stream.parm.capture.timeperframe.numerator,
           stream.parm.capture.timeperframe.denominator, fps_d, fps_n)) {
-    GST_LOG_OBJECT (v4l2src, "Desired framerate already set");
-    v4l2src->fps_n = fps_n;
-    v4l2src->fps_d = fps_d;
-    goto done;
+    GST_DEBUG_OBJECT (v4l2src, "Desired framerate already set");
+    goto already_set;
   }
 
   /* We want to change the frame rate, so check whether we can. Some cheap USB
@@ -270,6 +268,8 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
     goto done;
   }
 
+already_set:
+
   v4l2src->fps_n = fps_n;
   v4l2src->fps_d = fps_d;
 
@@ -283,8 +283,6 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   GST_INFO_OBJECT (v4l2src,
       "Set framerate to %u/%u and duration to %" GST_TIME_FORMAT, fps_n, fps_d,
       GST_TIME_ARGS (v4l2src->duration));
-
-
 done:
 
   return TRUE;
