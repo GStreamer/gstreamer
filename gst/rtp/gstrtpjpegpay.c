@@ -88,6 +88,7 @@ typedef enum _RtpJpegMarker RtpJpegMarker;
  * @JPEG_MARKER_DHT: Define Huffman Table marker
  * @JPEG_MARKER_SOS: Start of Scan marker
  * @JPEG_MARKER_EOI: End of Image marker
+ * @JPEG_MARKER_DRI: Define Restart Interval marker
  *
  * Identifers for markers in JPEG header
  */
@@ -102,6 +103,7 @@ enum _RtpJpegMarker
   JPEG_MARKER_DHT = 0xC4,
   JPEG_MARKER_SOS = 0xDA,
   JPEG_MARKER_EOI = 0xD9,
+  JPEG_MARKER_DRI = 0xDD
 };
 
 #define DEFAULT_JPEG_QUANT    255
@@ -181,6 +183,36 @@ typedef struct
   guint8 size;
   const guint8 *data;
 } RtpQuantTable;
+
+/*
+ * RtpRestartMarkerHeader:
+ * @restartInterval: number of MCUs that appear between restart markers
+ * @restartFirstLastCount: a combination of the first packet mark in the chunk
+ *                         last packet mark in the chunk and the position of the 
+ *                         first restart interval in the current "chunk"
+ *
+ *    0                   1                   2                   3
+ *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *  |       Restart Interval        |F|L|       Restart Count       |
+ *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *
+ *  The restart marker header is implemented according to the following
+ *  methodology specified in section 3.1.7 of rfc2435.txt.
+ *
+ *  "If the restart intervals in a frame are not guaranteed to be aligned
+ *  with packet boundaries, the F (first) and L (last) bits MUST be set
+ *  to 1 and the Restart Count MUST be set to 0x3FFF.  This indicates
+ *  that a receiver MUST reassemble the entire frame before decoding it."
+ *
+ */
+
+typedef struct
+{ 
+  guint16 restartInterval;
+  guint16 restartFirstLastCount;
+} RtpRestartMarkerHeader;
+
 
 typedef struct
 {
@@ -536,6 +568,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret = GST_FLOW_ERROR;
   RtpJpegHeader jpeg_header;
   RtpQuantHeader quant_header;
+  RtpRestartMarkerHeader restart_marker_header;
   RtpQuantTable tables[15] = { {0, NULL}, };
   CompInfo info[3] = { {0,}, };
   guint quant_data_size;
@@ -546,7 +579,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint jpeg_header_size = 0;
   guint offset;
   gboolean frame_done;
-  gboolean sos_found, sof_found, dqt_found;
+  gboolean sos_found, sof_found, dqt_found, dri_found;
   gint i;
   GstBufferList *list = NULL;
   GstBufferListIterator *it = NULL;
@@ -566,6 +599,7 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   sos_found = FALSE;
   dqt_found = FALSE;
   sof_found = FALSE;
+  dri_found = FALSE;
 
   while (!sos_found && (offset < size)) {
     GST_LOG_OBJECT (pay, "checking from offset %u", offset);
@@ -597,6 +631,14 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       case JPEG_MARKER_SOI:
         GST_LOG_OBJECT (pay, "SOI found");
         break;
+      case JPEG_MARKER_DRI:
+        GST_LOG_OBJECT (pay, "DRI found");
+        restart_marker_header.restartInterval=g_htons((data[offset+2] << 8) | (data[offset + 3]));
+        restart_marker_header.restartFirstLastCount=g_htons(0xFFFF);
+        if (restart_marker_header.restartInterval > 0) {
+          dri_found = TRUE;
+        }
+		break;      
       default:
         break;
     }
@@ -614,6 +656,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   size -= jpeg_header_size;
   data += jpeg_header_size;
   offset = 0;
+
+  if (dri_found)
+    pay->type += 64;
 
   /* prepare stuff for the jpeg header */
   jpeg_header.type_spec = 0;
@@ -659,6 +704,9 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   bytes_left = sizeof (jpeg_header) + quant_data_size + size;
 
+  if (dri_found)
+    bytes_left += sizeof (restart_marker_header);
+
   frame_done = FALSE;
   do {
     GstBuffer *outbuf;
@@ -666,8 +714,13 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
 
     if (pay->buffer_list) {
-      outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
+  	  if (dri_found){
+        outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
+          sizeof (restart_marker_header) + quant_data_size, 0, 0);
+	  } else {
+        outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
           quant_data_size, 0, 0);
+	  }
     } else {
       outbuf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
     }
@@ -691,6 +744,13 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     memcpy (payload, &jpeg_header, sizeof (jpeg_header));
     payload += sizeof (jpeg_header);
     payload_size -= sizeof (jpeg_header);
+
+    if (dri_found)
+    {
+      memcpy (payload, &restart_marker_header, sizeof (restart_marker_header));
+      payload += sizeof (restart_marker_header);
+      payload_size -= sizeof (restart_marker_header);	    
+    }
 
     /* only send quant table with first packet */
     if (G_UNLIKELY (quant_data_size > 0)) {
