@@ -454,6 +454,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtsp_ext_list_init ();
 }
 
+
 static void
 gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
@@ -3760,8 +3761,9 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   /* close and cleanup our state */
   gst_rtspsrc_close (src);
 
-  /* see if we have TCP left to try */
-  if (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP))
+  /* see if we have TCP left to try. Also don't try TCP when we were configured
+   * with an SDP. */
+  if (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP) || src->from_sdp)
     goto no_protocols;
 
   /* We post a warning message now to inform the user
@@ -6158,7 +6160,8 @@ gst_rtspsrc_uri_get_type (void)
 static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
-  static const gchar *protocols[] = { "rtsp", "rtspu", "rtspt", "rtsph", NULL };
+  static const gchar *protocols[] =
+      { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp" };
 
   return (gchar **) protocols;
 }
@@ -6177,7 +6180,8 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstRTSPSrc *src;
   GstRTSPResult res;
-  GstRTSPUrl *newurl;
+  GstRTSPUrl *newurl = NULL;
+  GstSDPMessage *sdp = NULL;
 
   src = GST_RTSPSRC (handler);
 
@@ -6185,18 +6189,39 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   if (src->conninfo.location && uri && !strcmp (uri, src->conninfo.location))
     goto was_ok;
 
-  /* try to parse */
-  if ((res = gst_rtsp_url_parse (uri, &newurl)) < 0)
-    goto parse_error;
+  if (g_str_has_prefix (uri, "rtsp-sdp://")) {
+    if ((res = gst_sdp_message_new (&sdp) < 0))
+      goto sdp_failed;
+
+    GST_DEBUG_OBJECT (src, "parsing SDP message");
+    if ((res =
+            gst_sdp_message_parse_buffer ((const guint8 *) uri, strlen (uri),
+                sdp) < 0))
+      goto invalid_sdp;
+  } else {
+    /* try to parse */
+    GST_DEBUG_OBJECT (src, "parsing URI");
+    if ((res = gst_rtsp_url_parse (uri, &newurl)) < 0)
+      goto parse_error;
+  }
 
   /* if worked, free previous and store new url object along with the original
    * location. */
-  gst_rtsp_url_free (src->conninfo.url);
-  src->conninfo.url = newurl;
+  GST_DEBUG_OBJECT (src, "configuring URI");
   g_free (src->conninfo.location);
   src->conninfo.location = g_strdup (uri);
+  gst_rtsp_url_free (src->conninfo.url);
+  src->conninfo.url = newurl;
   g_free (src->conninfo.url_str);
-  src->conninfo.url_str = gst_rtsp_url_get_request_uri (src->conninfo.url);
+  if (newurl)
+    src->conninfo.url_str = gst_rtsp_url_get_request_uri (src->conninfo.url);
+  else
+    src->conninfo.url_str = NULL;
+
+  if (src->sdp)
+    gst_sdp_message_free (src->sdp);
+  src->sdp = sdp;
+  src->from_sdp = sdp != NULL;
 
   GST_DEBUG_OBJECT (src, "set uri: %s", GST_STR_NULL (uri));
   GST_DEBUG_OBJECT (src, "request uri is: %s",
@@ -6209,6 +6234,18 @@ was_ok:
   {
     GST_DEBUG_OBJECT (src, "URI was ok: '%s'", GST_STR_NULL (uri));
     return TRUE;
+  }
+sdp_failed:
+  {
+    GST_ERROR_OBJECT (src, "Could not create new SDP (%d)", res);
+    return FALSE;
+  }
+invalid_sdp:
+  {
+    GST_ERROR_OBJECT (src, "Not a valid SDP (%d) '%s'", res,
+        GST_STR_NULL (uri));
+    gst_sdp_message_free (sdp);
+    return FALSE;
   }
 parse_error:
   {

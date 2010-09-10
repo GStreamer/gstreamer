@@ -188,6 +188,7 @@ struct _GstRTSPSrc {
   GStaticRecMutex *conn_rec_lock;
 
   GstSDPMessage   *sdp;
+  gboolean         from_sdp;
   gint             numstreams;
   GList           *streams;
   GstStructure    *props;
