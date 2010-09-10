@@ -920,6 +920,11 @@ gst_video_test_src_smpte75 (GstVideoTestSrc * v, unsigned char *dest, int w,
   struct fourcc_list_struct *fourcc;
 
   videotestsrc_setup_paintinfo (v, p, w, h);
+  if (v->color_spec == GST_VIDEO_TEST_SRC_BT601) {
+    p->colors = vts_colors_bt601_ycbcr_75;
+  } else {
+    p->colors = vts_colors_bt709_ycbcr_75;
+  }
   fourcc = v->fourcc;
   if (fourcc == NULL)
     return;
