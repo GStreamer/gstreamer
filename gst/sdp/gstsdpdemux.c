@@ -1261,6 +1261,65 @@ gst_sdp_demux_start (GstSDPDemux * demux)
   if (demux->debug)
     gst_sdp_message_dump (&sdp);
 
+  /* maybe this is plain RTSP DESCRIBE rtsp and we should redirect */
+  /* look for rtsp control url */
+  {
+    const gchar *control;
+
+    for (i = 0;; i++) {
+      control = gst_sdp_message_get_attribute_val_n (&sdp, "control", i);
+      if (control == NULL)
+        break;
+
+      /* only take fully qualified urls */
+      if (g_str_has_prefix (control, "rtsp://"))
+        break;
+    }
+    if (!control) {
+      gint idx;
+
+      /* try to find non-aggragate control */
+      n_streams = gst_sdp_message_medias_len (&sdp);
+
+      for (idx = 0; idx < n_streams; idx++) {
+        const GstSDPMedia *media;
+
+        /* get media, should not return NULL */
+        media = gst_sdp_message_get_media (&sdp, idx);
+        if (media == NULL)
+          break;
+
+        for (i = 0;; i++) {
+          control = gst_sdp_media_get_attribute_val_n (media, "control", i);
+          if (control == NULL)
+            break;
+
+          /* only take fully qualified urls */
+          if (g_str_has_prefix (control, "rtsp://"))
+            break;
+        }
+        /* this media has no control, exit */
+        if (!control)
+          break;
+      }
+    }
+
+    if (control) {
+      gchar *uri;
+
+      /* we have RTSP redirect now */
+      uri = gst_sdp_message_as_uri ("rtsp-sdp", &sdp);
+
+      GST_INFO_OBJECT (demux, "redirect to %s", uri);
+
+      gst_element_post_message (GST_ELEMENT_CAST (demux),
+          gst_message_new_element (GST_OBJECT_CAST (demux),
+              gst_structure_new ("redirect",
+                  "new-location", G_TYPE_STRING, uri, NULL)));
+      goto sent_redirect;
+    }
+  }
+
   /* try to get and configure a manager */
   if (!gst_sdp_demux_configure_manager (demux))
     goto no_manager;
@@ -1313,6 +1372,15 @@ could_not_parse:
     gst_sdp_message_uninit (&sdp);
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not parse SDP message."));
+    GST_SDP_STREAM_UNLOCK (demux);
+    return FALSE;
+  }
+sent_redirect:
+  {
+    /* avoid hanging if redirect not handled */
+    gst_sdp_message_uninit (&sdp);
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Sent RTSP redirect."));
     GST_SDP_STREAM_UNLOCK (demux);
     return FALSE;
   }
