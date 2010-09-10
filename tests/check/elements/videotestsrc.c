@@ -93,9 +93,10 @@ GST_START_TEST (test_all_patterns)
   fail_unless (G_IS_PARAM_SPEC_ENUM (property));
   values = G_ENUM_CLASS (g_type_class_ref (property->value_type))->values;
 
-
   while (values[j].value_name) {
     GST_DEBUG_OBJECT (videotestsrc, "testing pattern %s", values[j].value_name);
+
+    g_object_set (videotestsrc, "pattern", j, NULL);
 
     fail_unless (gst_element_set_state (videotestsrc,
             GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -107,7 +108,6 @@ GST_START_TEST (test_all_patterns)
       g_cond_wait (check_cond, check_mutex);
     }
     g_mutex_unlock (check_mutex);
-
 
     gst_element_set_state (videotestsrc, GST_STATE_READY);
 
