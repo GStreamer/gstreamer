@@ -2209,6 +2209,7 @@ gst_structure_foreach
 gst_structure_n_fields
 gst_structure_has_field
 gst_structure_has_field_typed
+gst_structure_is_equal
 gst_structure_id_has_field
 gst_structure_id_has_field_typed
 gst_structure_get_boolean

@@ -1007,6 +1007,7 @@ EXPORTS
 	gst_structure_id_set_valist
 	gst_structure_id_set_value
 	gst_structure_id_take_value
+	gst_structure_is_equal
 	gst_structure_map_in_place
 	gst_structure_n_fields
 	gst_structure_new

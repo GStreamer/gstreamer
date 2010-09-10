@@ -2916,3 +2916,48 @@ gst_structure_id_get (const GstStructure * structure, GQuark first_field_id,
 
   return ret;
 }
+
+static gboolean
+gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
+    gpointer data)
+{
+  GstStructure *struct1 = (GstStructure *) data;
+  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+
+  if (G_UNLIKELY (val1 == NULL))
+    return FALSE;
+  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_structure_is_equal:
+ * @structure1: a #GstStructure.
+ * @structure2: a #GstStructure.
+ *
+ * Tests if the two #GstStructure are equal.
+ *
+ * Returns: TRUE if the two structures have the same name and field.
+ *
+ * Since: 0.10.31
+ **/
+gboolean
+gst_structure_is_equal (const GstStructure * structure1,
+    GstStructure * structure2)
+{
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure1), FALSE);
+  g_return_val_if_fail (GST_IS_STRUCTURE (structure2), FALSE);
+
+  if (structure1->name != structure2->name) {
+    return FALSE;
+  }
+  if (structure1->fields->len != structure2->fields->len) {
+    return FALSE;
+  }
+
+  return gst_structure_foreach (structure1, gst_structure_is_equal_foreach,
+      structure2);
+}
