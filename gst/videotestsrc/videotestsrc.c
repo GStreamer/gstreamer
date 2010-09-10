@@ -188,6 +188,7 @@ static void convert_hline_v210 (paintinfo * p, int y);
 static void convert_hline_IMC1 (paintinfo * p, int y);
 #endif
 static void convert_hline_YUV9 (paintinfo * p, int y);
+static void convert_hline_astr4 (paintinfo * p, int y);
 static void convert_hline_str4 (paintinfo * p, int y);
 static void convert_hline_str3 (paintinfo * p, int y);
 static void convert_hline_RGB565 (paintinfo * p, int y);
@@ -282,16 +283,16 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_RGB, "RGB ", "BGRx8888", 32, paint_setup_BGRx8888, convert_hline_str4,
         24,
       0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGB ", "ARGB8888", 32, paint_setup_ARGB8888, convert_hline_str4,
+  {VTS_RGB, "RGB ", "ARGB8888", 32, paint_setup_ARGB8888, convert_hline_astr4,
         32,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
-  {VTS_RGB, "RGB ", "ABGR8888", 32, paint_setup_ABGR8888, convert_hline_str4,
+  {VTS_RGB, "RGB ", "ABGR8888", 32, paint_setup_ABGR8888, convert_hline_astr4,
         32,
       0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
-  {VTS_RGB, "RGB ", "RGBA8888", 32, paint_setup_RGBA8888, convert_hline_str4,
+  {VTS_RGB, "RGB ", "RGBA8888", 32, paint_setup_RGBA8888, convert_hline_astr4,
         32,
       0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
-  {VTS_RGB, "RGB ", "BGRA8888", 32, paint_setup_BGRA8888, convert_hline_str4,
+  {VTS_RGB, "RGB ", "BGRA8888", 32, paint_setup_BGRA8888, convert_hline_astr4,
         32,
       0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
   {VTS_RGB, "RGB ", "RGB888", 24, paint_setup_RGB888, convert_hline_str3, 24,
@@ -1873,22 +1874,47 @@ convert_hline_v210 (paintinfo * p, int y)
   guint8 *Y = p->yp + y * p->ystride;
   guint8 *ayuv = p->tmpline;
 
-  for (i = 0; i < p->width - 2; i += 3) {
+  for (i = 0; i < p->width; i += 6) {
     guint32 a0, a1, a2, a3;
+    guint16 y0, y1, y2, y3, y4, y5;
+    guint16 u0, u1, u2;
+    guint16 v0, v1, v2;
 
-    a0 = TO_10 (ayuv[4 * i + 2]) | (TO_10 (ayuv[4 * i + 1]) << 10)
-        | (TO_10 (ayuv[4 * i + 3]) << 20);
-    a1 = TO_10 (ayuv[4 * i + 1]) | (TO_10 (ayuv[4 * i + 2]) << 10)
-        | (TO_10 (ayuv[4 * i + 1]) << 20);
-    a2 = TO_10 (ayuv[4 * i + 3]) | (TO_10 (ayuv[4 * i + 1]) << 10)
-        | (TO_10 (ayuv[4 * i + 2]) << 20);
-    a3 = TO_10 (ayuv[4 * i + 1]) | (TO_10 (ayuv[4 * i + 3]) << 10)
-        | (TO_10 (ayuv[4 * i + 1]) << 20);
+    y0 = ayuv[4 * (i + 0) + 1];
+    y1 = ayuv[4 * (i + 1) + 1];
+    y2 = ayuv[4 * (i + 2) + 1];
+    y3 = ayuv[4 * (i + 3) + 1];
+    y4 = ayuv[4 * (i + 4) + 1];
+    y5 = ayuv[4 * (i + 5) + 1];
 
-    GST_WRITE_UINT32_LE (Y + (i / 3) * 16 + 0, a0);
-    GST_WRITE_UINT32_LE (Y + (i / 3) * 16 + 4, a1);
-    GST_WRITE_UINT32_LE (Y + (i / 3) * 16 + 8, a2);
-    GST_WRITE_UINT32_LE (Y + (i / 3) * 16 + 12, a3);
+    u0 = (ayuv[4 * (i + 0) + 2] + ayuv[4 * (i + 1) + 2] + 1) >> 1;
+    u1 = (ayuv[4 * (i + 2) + 2] + ayuv[4 * (i + 3) + 2] + 1) >> 1;
+    u2 = (ayuv[4 * (i + 4) + 2] + ayuv[4 * (i + 5) + 2] + 1) >> 1;
+
+    v0 = (ayuv[4 * (i + 0) + 3] + ayuv[4 * (i + 1) + 3] + 1) >> 1;
+    v1 = (ayuv[4 * (i + 2) + 3] + ayuv[4 * (i + 3) + 3] + 1) >> 1;
+    v2 = (ayuv[4 * (i + 4) + 3] + ayuv[4 * (i + 5) + 3] + 1) >> 1;
+
+#if 0
+    a0 = TO_10 (ayuv[4 * (i + 0) + 2]) | (TO_10 (ayuv[4 * (i + 0) + 1]) << 10)
+        | (TO_10 (ayuv[4 * (i + 0) + 3]) << 20);
+    a1 = TO_10 (ayuv[4 * (i + 1) + 1]) | (TO_10 (ayuv[4 * (i + 2) + 2]) << 10)
+        | (TO_10 (ayuv[4 * (i + 2) + 1]) << 20);
+    a2 = TO_10 (ayuv[4 * (i + 2) + 3]) | (TO_10 (ayuv[4 * (i + 3) + 1]) << 10)
+        | (TO_10 (ayuv[4 * (i + 4) + 2]) << 20);
+    a3 = TO_10 (ayuv[4 * (i + 4) + 1]) | (TO_10 (ayuv[4 * (i + 4) + 3]) << 10)
+        | (TO_10 (ayuv[4 * (i + 5) + 1]) << 20);
+#endif
+
+    a0 = TO_10 (u0) | (TO_10 (y0) << 10) | (TO_10 (v0) << 20);
+    a1 = TO_10 (y1) | (TO_10 (u1) << 10) | (TO_10 (y2) << 20);
+    a2 = TO_10 (v1) | (TO_10 (y3) << 10) | (TO_10 (u2) << 20);
+    a3 = TO_10 (y4) | (TO_10 (v2) << 10) | (TO_10 (y5) << 20);
+
+    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 0, a0);
+    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 4, a1);
+    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 8, a2);
+    GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 12, a3);
   }
 }
 
@@ -2101,28 +2127,24 @@ static void
 paint_setup_ARGB8888 (paintinfo * p, unsigned char *dest)
 {
   paint_setup_xRGB8888 (p, dest);
-  p->ap = dest;
 }
 
 static void
 paint_setup_ABGR8888 (paintinfo * p, unsigned char *dest)
 {
   paint_setup_xBGR8888 (p, dest);
-  p->ap = dest;
 }
 
 static void
 paint_setup_RGBA8888 (paintinfo * p, unsigned char *dest)
 {
   paint_setup_RGBx8888 (p, dest);
-  p->ap = dest + 3;
 }
 
 static void
 paint_setup_BGRA8888 (paintinfo * p, unsigned char *dest)
 {
   paint_setup_BGRx8888 (p, dest);
-  p->ap = dest + 3;
 }
 
 static void
@@ -2131,7 +2153,10 @@ paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 1;
   p->up = dest + 2;
   p->vp = dest + 3;
+  p->ap = dest;
   p->ystride = p->width * 4;
+  p->ustride = p->width * 4;
+  p->vstride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2141,7 +2166,10 @@ paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 3;
   p->up = dest + 2;
   p->vp = dest + 1;
+  p->ap = dest;
   p->ystride = p->width * 4;
+  p->ustride = p->width * 4;
+  p->vstride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2151,7 +2179,10 @@ paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
+  p->ap = dest + 3;
   p->ystride = p->width * 4;
+  p->ustride = p->width * 4;
+  p->vstride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2161,7 +2192,10 @@ paint_setup_BGRx8888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
+  p->ap = dest + 3;
   p->ystride = p->width * 4;
+  p->ustride = p->width * 4;
+  p->vstride = p->width * 4;
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2172,6 +2206,8 @@ paint_setup_RGB888 (paintinfo * p, unsigned char *dest)
   p->up = dest + 1;
   p->vp = dest + 2;
   p->ystride = GST_ROUND_UP_4 (p->width * 3);
+  p->ustride = GST_ROUND_UP_4 (p->width * 3);
+  p->vstride = GST_ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2182,11 +2218,31 @@ paint_setup_BGR888 (paintinfo * p, unsigned char *dest)
   p->up = dest + 1;
   p->vp = dest + 0;
   p->ystride = GST_ROUND_UP_4 (p->width * 3);
+  p->ustride = GST_ROUND_UP_4 (p->width * 3);
+  p->vstride = GST_ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
 static void
 convert_hline_str4 (paintinfo * p, int y)
+{
+  int i;
+  guint8 *A = p->ap + y * p->ystride;
+  guint8 *R = p->yp + y * p->ystride;
+  guint8 *G = p->up + y * p->ustride;
+  guint8 *B = p->vp + y * p->vstride;
+  guint8 *argb = p->tmpline;
+
+  for (i = 0; i < p->width; i++) {
+    A[4 * i] = 0xff;
+    R[4 * i] = argb[4 * i + 1];
+    G[4 * i] = argb[4 * i + 2];
+    B[4 * i] = argb[4 * i + 3];
+  }
+}
+
+static void
+convert_hline_astr4 (paintinfo * p, int y)
 {
   int i;
   guint8 *A = p->ap + y * p->ystride;
@@ -2224,6 +2280,8 @@ paint_setup_RGB565 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width * 2);
+  p->ustride = GST_ROUND_UP_4 (p->width * 2);
+  p->vstride = GST_ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2237,8 +2295,11 @@ convert_hline_RGB565 (paintinfo * p, int y)
   for (i = 0; i < p->width; i++) {
     guint16 value = ((argb[4 * i + 1] & 0xf8) << 8) |
         ((argb[4 * i + 2] & 0xfc) << 3) | ((argb[4 * i + 3] & 0xf8) >> 3);
-    /* FIXME should be native endian */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_WRITE_UINT16_LE (R + 2 * i, value);
+#else
     GST_WRITE_UINT16_BE (R + 2 * i, value);
+#endif
   }
 }
 
@@ -2252,8 +2313,11 @@ convert_hline_xRGB1555 (paintinfo * p, int y)
   for (i = 0; i < p->width; i++) {
     guint16 value = ((argb[4 * i + 1] & 0xf8) << 7) |
         ((argb[4 * i + 2] & 0xf8) << 2) | ((argb[4 * i + 3] & 0xf8) >> 3);
-    /* FIXME should be native endian */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_WRITE_UINT16_LE (R + 2 * i, value);
+#else
     GST_WRITE_UINT16_BE (R + 2 * i, value);
+#endif
   }
 }
 
@@ -2262,6 +2326,8 @@ paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width * 2);
+  p->ustride = GST_ROUND_UP_4 (p->width * 2);
+  p->vstride = GST_ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2271,6 +2337,8 @@ paint_setup_bayer (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->ystride = GST_ROUND_UP_4 (p->width);
+  p->ustride = GST_ROUND_UP_4 (p->width);
+  p->vstride = GST_ROUND_UP_4 (p->width);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -2336,6 +2404,10 @@ convert_hline_GRAY16 (paintinfo * p, int y)
 
   /* FIXME this should use gray, not YUV */
   for (i = 0; i < p->width; i++) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    GST_WRITE_UINT16_LE (Y + i * 2, ayuv[4 * i + 1] << 8);
+#else
     GST_WRITE_UINT16_BE (Y + i * 2, ayuv[4 * i + 1] << 8);
+#endif
   }
 }
