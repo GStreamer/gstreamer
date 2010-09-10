@@ -1265,52 +1265,6 @@ error:
   return NULL;
 }
 
-static gboolean
-gst_caps_structure_can_intersect_field (GQuark id, const GValue * val1,
-    gpointer data)
-{
-  GstStructure *other = (GstStructure *) data;
-  const GValue *val2 = gst_structure_id_get_value (other, id);
-
-  if (G_LIKELY (val2)) {
-    if (!gst_value_can_intersect (val1, val2)) {
-      return FALSE;
-    } else {
-      gint eq = gst_value_compare (val1, val2);
-
-      if (eq == GST_VALUE_UNORDERED) {
-        /* we need to try interseting */
-        GValue dest_value = { 0 };
-        if (gst_value_intersect (&dest_value, val1, val2)) {
-          g_value_unset (&dest_value);
-        } else {
-          return FALSE;
-        }
-      } else if (eq != GST_VALUE_EQUAL) {
-        return FALSE;
-      }
-    }
-  }
-  return TRUE;
-}
-
-static gboolean
-gst_caps_structure_can_intersect (const GstStructure * struct1,
-    const GstStructure * struct2)
-{
-  g_assert (struct1 != NULL);
-  g_assert (struct2 != NULL);
-
-  if (G_UNLIKELY (struct1->name != struct2->name))
-    return FALSE;
-
-  /* tries to intersect if we have the field in both */
-  if (G_UNLIKELY (!gst_structure_foreach ((GstStructure *) struct1,
-              gst_caps_structure_can_intersect_field, (gpointer) struct2)))
-    return FALSE;
-
-  return TRUE;
-}
 
 /**
  * gst_caps_can_intersect:
@@ -1379,7 +1333,7 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
       struct1 = gst_caps_get_structure_unchecked (caps1, j);
       struct2 = gst_caps_get_structure_unchecked (caps2, k);
 
-      if (gst_caps_structure_can_intersect (struct1, struct2)) {
+      if (gst_structure_can_intersect (struct1, struct2)) {
         return TRUE;
       }
       /* move down left */

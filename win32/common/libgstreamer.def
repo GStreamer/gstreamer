@@ -964,6 +964,7 @@ EXPORTS
 	gst_stream_error_get_type
 	gst_stream_error_quark
 	gst_stream_status_type_get_type
+	gst_structure_can_intersect
 	gst_structure_change_type_get_type
 	gst_structure_copy
 	gst_structure_empty_new
