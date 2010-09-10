@@ -110,6 +110,8 @@ static void gst_jif_mux_reset (GstJifMux * self);
 static gboolean gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_jif_mux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_jif_mux_chain (GstPad * pad, GstBuffer * buffer);
+static GstStateChangeReturn gst_jif_mux_change_state (GstElement * element,
+    GstStateChange transition);
 
 
 static void
@@ -146,10 +148,14 @@ static void
 gst_jif_mux_class_init (GstJifMuxClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
 
   g_type_class_add_private (gobject_class, sizeof (GstJifMuxPrivate));
+
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_jif_mux_change_state);
 
   gobject_class->finalize = gst_jif_mux_finalize;
 }
@@ -215,6 +221,7 @@ gst_jif_mux_sink_event (GstPad * pad, GstEvent * event)
       const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &list);
+
       gst_tag_setter_merge_tags (setter, list, mode);
       break;
     }
@@ -508,6 +515,8 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     tags = gst_tag_list_new ();
   }
 
+  GST_DEBUG_OBJECT (self, "Tags to be serialized %" GST_PTR_FORMAT, tags);
+
   /* FIXME: not happy with those
    * - else where we would use VIDEO_CODEC = "Jpeg"
    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
@@ -729,4 +738,38 @@ gst_jif_mux_chain (GstPad * pad, GstBuffer * buf)
     fret = gst_pad_push (self->priv->srcpad, buf);
   }
   return fret;
+}
+
+static GstStateChangeReturn
+gst_jif_mux_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstJifMux *self = GST_JIF_MUX_CAST (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_tag_setter_reset_tags (GST_TAG_SETTER (self));
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
