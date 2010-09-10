@@ -69,7 +69,7 @@ struct fourcc_list_struct
   const char *name;
   int bitspp;
   void (*paint_setup) (paintinfo * p, unsigned char *dest);
-  void (*paint_hline) (paintinfo * p, int x, int y, int w);
+  void (*convert_hline) (paintinfo * p, int y);
   int depth;
   unsigned int red_mask;
   unsigned int green_mask;
