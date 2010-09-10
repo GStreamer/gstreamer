@@ -1274,7 +1274,6 @@ gst_camerabin_rewrite_tags_to_bin (GstBin * bin, const GstTagList * list)
 {
   GstElement *setter;
   GstElementFactory *setter_factory;
-  const gchar *klass;
   GstIterator *iter;
   GstIteratorResult res = GST_ITERATOR_OK;
   gpointer data;
@@ -1296,14 +1295,9 @@ gst_camerabin_rewrite_tags_to_bin (GstBin * bin, const GstTagList * list)
         setter = GST_ELEMENT (data);
         GST_LOG ("iterating tag setters: %" GST_PTR_FORMAT, setter);
         setter_factory = gst_element_get_factory (setter);
-        klass = gst_element_factory_get_klass (setter_factory);
-        /* FIXME: check if tags should be written to all tag setters,
-           set tags only to Muxer elements for now */
-        if (g_strrstr (klass, "Muxer")) {
-          GST_DEBUG ("replacement tags %" GST_PTR_FORMAT, list);
-          gst_tag_setter_merge_tags (GST_TAG_SETTER (setter), list,
-              GST_TAG_MERGE_REPLACE_ALL);
-        }
+        GST_DEBUG ("replacement tags %" GST_PTR_FORMAT, list);
+        gst_tag_setter_merge_tags (GST_TAG_SETTER (setter), list,
+            GST_TAG_MERGE_REPLACE_ALL);
         gst_object_unref (setter);
         break;
       default:
