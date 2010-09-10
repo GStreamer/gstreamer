@@ -6194,9 +6194,7 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       goto sdp_failed;
 
     GST_DEBUG_OBJECT (src, "parsing SDP message");
-    if ((res =
-            gst_sdp_message_parse_buffer ((const guint8 *) uri, strlen (uri),
-                sdp) < 0))
+    if ((res = gst_sdp_message_parse_uri (uri, sdp) < 0))
       goto invalid_sdp;
   } else {
     /* try to parse */
