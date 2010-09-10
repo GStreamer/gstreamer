@@ -521,6 +521,11 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->user_id);
   g_free (rtspsrc->user_pw);
 
+  if (rtspsrc->sdp) {
+    gst_sdp_message_free (rtspsrc->sdp);
+    rtspsrc->sdp = NULL;
+  }
+
   /* free locks */
   g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->stream_rec_lock);
@@ -1146,7 +1151,8 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     gst_rtsp_range_free (src->range);
   src->range = NULL;
 
-  if (src->sdp) {
+  /* don't clear the SDP when it was used in the url */
+  if (src->sdp && !src->from_sdp) {
     gst_sdp_message_free (src->sdp);
     src->sdp = NULL;
   }
