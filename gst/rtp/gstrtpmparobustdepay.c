@@ -223,8 +223,10 @@ mp3_type_frame_length_from_header (GstElement * mp3parse, guint32 header,
   bitrate = mp3types_bitrates[lsf][layer - 1][bitrate] * 1000;
   /* The caller has ensured we have a valid header, so bitrate can't be
      zero here. */
-  if (bitrate == 0)
+  if (bitrate == 0) {
+    GST_DEBUG_OBJECT (mp3parse, "invalid bitrate");
     return 0;
+  }
 
   samplerate = (header >> 10) & 0x3;
   samplerate = mp3types_freqs[lsf + mpg25][samplerate];
@@ -267,6 +269,7 @@ mp3_type_frame_length_from_header (GstElement * mp3parse, guint32 header,
   if (put_crc)
     *put_crc = crc;
 
+  GST_LOG_OBJECT (mp3parse, "size = %u", length);
   return length;
 }
 
@@ -341,7 +344,7 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
     GST_LOG_OBJECT (rtpmpadepay, "backpointer: %d", frame->backpointer);
   }
 
-  if (crc)
+  if (!crc)
     frame->side_info += 2;
 
   GST_LOG_OBJECT (rtpmpadepay, "side info: %d", frame->side_info);
@@ -353,7 +356,7 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
 
   /* ADU data would then extend past MP3 frame,
    * even using past byte reservoir */
-  if (-frame->backpointer + GST_BUFFER_SIZE (buf) > frame->size)
+  if (-frame->backpointer + (gint) (GST_BUFFER_SIZE (buf)) > frame->size)
     goto corrupt_frame;
 
   /* ok, take buffer and queue */
