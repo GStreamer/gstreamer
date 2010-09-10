@@ -645,6 +645,9 @@ gst_alpha_color_transform_ip (GstBaseTransform * btrans, GstBuffer * inbuf)
     return GST_FLOW_ERROR;
   }
 
+  if (gst_base_transform_is_passthrough (btrans))
+    return GST_FLOW_OK;
+
   if (G_UNLIKELY (!alpha->process)) {
     GST_ERROR_OBJECT (alpha, "Not negotiated yet");
     return GST_FLOW_NOT_NEGOTIATED;
