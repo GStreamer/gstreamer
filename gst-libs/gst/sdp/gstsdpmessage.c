@@ -524,8 +524,6 @@ gst_sdp_message_parse_uri (const gchar * uri, GstSDPMessage * msg)
   g_return_val_if_fail (uri != NULL, GST_SDP_EINVAL);
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
 
-  g_print ("uri %s\n", uri);
-
   colon = strstr (uri, "://");
   if (!colon)
     goto no_colon;
