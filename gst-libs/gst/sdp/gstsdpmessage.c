@@ -341,12 +341,12 @@ is_multicast_address (const gchar * host_name, guint * family)
   for (ai = res; !ret && ai; ai = ai->ai_next) {
     if (ai->ai_family == AF_INET)
       ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
-              sin_addr.s_addr));
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
+              s_addr));
     else
       ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
-              ai_addr)->sin6_addr);
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
+          sin6_addr);
     if (ret && family)
       *family = ai->ai_family;
   }
@@ -484,6 +484,185 @@ gst_sdp_message_as_text (const GstSDPMessage * msg)
   }
 
   return g_string_free (lines, FALSE);
+}
+
+static int
+hex_to_int (gchar c)
+{
+  return c >= '0' && c <= '9' ? c - '0'
+      : c >= 'A' && c <= 'F' ? c - 'A' + 10
+      : c >= 'a' && c <= 'f' ? c - 'a' + 10 : 0;
+}
+
+/**
+ * gst_sdp_message_parse_uri:
+ * @uri: the start of the uri
+ * @msg: the result #GstSDPMessage
+ *
+ * Parse the null-terminated @uri and store the result in @msg.
+ *
+ * The uri should be of the form:
+ *
+ *  scheme://[address[:ttl=ttl][:noa=noa]]/[sessionname]
+ *               [#type=value *[&type=value]]
+ *
+ *  where value is url encoded. This looslely resembles
+ *  http://tools.ietf.org/html/draft-fujikawa-sdp-url-01
+ *
+ * Returns: #GST_SDP_OK on success.
+ *
+ * Since: 0.10.31
+ */
+GstSDPResult
+gst_sdp_message_parse_uri (const gchar * uri, GstSDPMessage * msg)
+{
+  GstSDPResult res;
+  gchar *message;
+  const gchar *colon, *slash, *hash, *p;
+  GString *lines;
+
+  g_return_val_if_fail (uri != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+
+  g_print ("uri %s\n", uri);
+
+  colon = strstr (uri, "://");
+  if (!colon)
+    goto no_colon;
+
+  /* FIXME connection info goes here */
+
+  slash = strstr (colon + 3, "/");
+  if (!slash)
+    goto no_slash;
+
+  /* FIXME session name goes here */
+
+  hash = strstr (slash + 1, "#");
+  if (!hash)
+    goto no_hash;
+
+  lines = g_string_new ("");
+
+  /* unescape */
+  for (p = hash + 1; *p; p++) {
+    if (*p == '&')
+      g_string_append_printf (lines, "\r\n");
+    else if (*p == '+')
+      g_string_append_c (lines, ' ');
+    else if (*p == '%') {
+      gchar a, b;
+
+      if ((a = p[1])) {
+        if ((b = p[2])) {
+          g_string_append_c (lines, (hex_to_int (a) << 4) | hex_to_int (b));
+          p += 2;
+        }
+      } else {
+        p++;
+      }
+    } else
+      g_string_append_c (lines, *p);
+  }
+
+  message = g_string_free (lines, FALSE);
+  res =
+      gst_sdp_message_parse_buffer ((const guint8 *) message, strlen (message),
+      msg);
+  g_free (message);
+
+  return res;
+
+  /* ERRORS */
+no_colon:
+  {
+    return GST_SDP_EINVAL;
+  }
+no_slash:
+  {
+    return GST_SDP_EINVAL;
+  }
+no_hash:
+  {
+    return GST_SDP_EINVAL;
+  }
+}
+
+static const guchar acceptable[96] = {
+  /* X0   X1    X2    X3    X4    X5    X6    X7    X8    X9    XA    XB    XC    XD    XE    XF */
+  0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x00, 0x01, 0x01, 0x01, 0x00,       /* 2X  !"#$%&'()*+,-./   */
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,       /* 3X 0123456789:;<=>?   */
+  0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,       /* 4X @ABCDEFGHIJKLMNO   */
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01,       /* 5X PQRSTUVWXYZ[\]^_   */
+  0x00, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,       /* 6X `abcdefghijklmno   */
+  0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00        /* 7X pqrstuvwxyz{|}~DEL */
+};
+
+static const gchar hex[16] = "0123456789ABCDEF";
+
+#define ACCEPTABLE_CHAR(a) ((a)>=32 && (a)<128 && acceptable[(a)-32])
+
+/**
+ * gst_sdp_message_as_uri:
+ * @scheme: the uri scheme
+ * @msg: the #GstSDPMessage
+ *
+ * Creates a uri from @msg with the given @scheme. The uri has the format:
+ *
+ *  @scheme:///[#type=value *[&type=value]]
+ *
+ *  Where each value is url encoded.
+ *
+ * Returns: a uri for @msg.
+ *
+ * Since: 0.10.31
+ */
+gchar *
+gst_sdp_message_as_uri (const gchar * scheme, const GstSDPMessage * msg)
+{
+  gchar *serialized, *p;
+  gchar *res;
+  GString *lines;
+  gboolean first;
+
+  g_return_val_if_fail (scheme != NULL, NULL);
+  g_return_val_if_fail (msg != NULL, NULL);
+
+  p = serialized = gst_sdp_message_as_text (msg);
+
+  lines = g_string_new ("");
+  g_string_append_printf (lines, "%s:///#", scheme);
+
+  /* now escape */
+  first = TRUE;
+  for (p = serialized; *p; p++) {
+    if (first) {
+      g_string_append_printf (lines, "%c=", *p);
+      if (*(p + 1))
+        p++;
+      first = FALSE;
+      continue;
+    }
+    if (*p == '\r')
+      continue;
+    else if (*p == '\n') {
+      if (*(p + 1))
+        g_string_append_c (lines, '&');
+      first = TRUE;
+    } else if (*p == ' ')
+      g_string_append_c (lines, '+');
+    else if (ACCEPTABLE_CHAR (*p))
+      g_string_append_c (lines, *p);
+    else {
+      /* escape */
+      g_string_append_printf (lines, "%%%c%c", hex[*p >> 4], hex[*p & 0xf]);
+    }
+  }
+
+  res = g_string_free (lines, FALSE);
+  g_free (serialized);
+
+  return res;
 }
 
 /**

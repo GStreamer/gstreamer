@@ -1543,7 +1543,13 @@ gst_sdp_message_new
 gst_sdp_message_init
 gst_sdp_message_uninit
 gst_sdp_message_free
+
 gst_sdp_message_parse_buffer
+gst_sdp_message_as_text
+
+gst_sdp_message_parse_uri
+gst_sdp_message_as_uri
+
 gst_sdp_message_get_version
 gst_sdp_message_set_version
 gst_sdp_message_get_origin
@@ -1582,7 +1588,6 @@ gst_sdp_message_medias_len
 gst_sdp_message_get_media
 gst_sdp_message_add_media
 gst_sdp_message_dump
-gst_sdp_message_as_text
 
 gst_sdp_media_new
 gst_sdp_media_init
