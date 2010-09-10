@@ -2009,25 +2009,11 @@ invalid_track:
 }
 
 static gboolean
-qtdemux_parse_sdtp (GstQTDemux * qtdemux, GstByteReader * sdtp,
-    guint32 samples_count)
-{
-  guint8 sample_data;
-  gint i = 0;
-
-  for (i = 0; i < samples_count; i++) {
-    gst_byte_reader_get_uint8 (sdtp, &sample_data);
-  }
-
-  return TRUE;
-}
-
-static gboolean
 qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     guint32 moof_offset, QtDemuxStream * stream, guint64 start_time)
 {
-  GNode *moof_node, *traf_node, *tfhd_node, *trun_node, *sdtp_node;
-  GstByteReader trun_data, tfhd_data, sdtp_data;
+  GNode *moof_node, *traf_node, *tfhd_node, *trun_node;
+  GstByteReader trun_data, tfhd_data;
   guint32 id = 0, default_sample_size = 0, default_sample_duration = 0;
   guint32 samples_count = 0;
   guint64 mdat_offset;
@@ -2060,12 +2046,6 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
           default_sample_duration, default_sample_size, &samples_count);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type (trun_node, FOURCC_trun);
-    }
-    sdtp_node =
-        qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_sdtp,
-        &sdtp_data);
-    if (sdtp_node) {
-      qtdemux_parse_sdtp (qtdemux, &sdtp_data, samples_count);
     }
 
     /* iterate all siblings */
