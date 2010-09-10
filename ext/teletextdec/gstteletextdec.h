@@ -69,6 +69,7 @@ struct _GstTeletextDec
   gint subno;
   gboolean subtitles_mode;
   gchar *subtitles_template;
+  gchar *font_description;
 
   vbi_dvb_demux *demux;
   vbi_decoder *decoder;

@@ -47,6 +47,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_teletextdec_debug);
 
 #define SUBTITLES_PAGE 888
 #define MAX_SLICES 32
+#define DEFAULT_FONT_DESCRIPTION "verdana 12"
+#define PANGO_TEMPLATE "<span font_desc=\"%s\" foreground=\"%s\"> %s \n</span>"
 
 /* Filter signals and args */
 enum
@@ -60,7 +62,8 @@ enum
   PROP_PAGENO,
   PROP_SUBNO,
   PROP_SUBTITLES_MODE,
-  PROP_SUBS_TEMPLATE
+  PROP_SUBS_TEMPLATE,
+  PROP_FONT_DESCRIPTION
 };
 
 enum
@@ -99,6 +102,23 @@ typedef enum
   SYSTEM_525 = 0,
   SYSTEM_625
 } systems;
+
+/*
+ *  ETS 300 706 Table 30: Colour Map
+ */
+static const gchar *default_color_map[40] = {
+  "#000000", "#FF0000", "#00FF00", "#FFFF00", "#0000FF",
+  "#FF00FF", "#00FFFF", "#FFFFFF", "#000000", "#770000",
+  "#007700", "#777700", "#000077", "#770077", "#007777",
+  "#777777", "#FF0055", "#FF7700", "#00FF77", "#FFFFBB",
+  "#00CCAA", "#550000", "#665522", "#CC7777", "#333333",
+  "#FF7777", "#77FF77", "#FFFF77", "#7777FF", "#FF77FF",
+  "#77FFFF", "#DDD0DD",
+
+  /* Private colors */
+  "#000000", "#FFAA99", "#44EE00", "#FFDD00", "#FFAA99",
+  "#FF00FF", "#00FFFF", "#EEEEEE"
+};
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -216,6 +236,11 @@ gst_teletextdec_class_init (GstTeletextDecClass * klass)
       g_param_spec_string ("subtitles-template", "Subtitles output template",
           "Output template used to print each one of the subtitles lines",
           g_strescape ("%s\n", NULL), G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_FONT_DESCRIPTION,
+      g_param_spec_string ("font-description", "Pango font description",
+          "Font description used for the pango output.",
+          DEFAULT_FONT_DESCRIPTION, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -246,6 +271,7 @@ gst_teletextdec_init (GstTeletextDec * teletext, GstTeletextDecClass * klass)
   teletext->subno = -1;
   teletext->subtitles_mode = FALSE;
   teletext->subtitles_template = g_strescape ("%s\n", NULL);
+  teletext->font_description = g_strdup (DEFAULT_FONT_DESCRIPTION);
 
   teletext->in_timestamp = GST_CLOCK_TIME_NONE;
   teletext->in_duration = GST_CLOCK_TIME_NONE;
@@ -347,6 +373,9 @@ gst_teletextdec_set_property (GObject * object, guint prop_id,
     case PROP_SUBS_TEMPLATE:
       teletext->subtitles_template = g_value_dup_string (value);
       break;
+    case PROP_FONT_DESCRIPTION:
+      teletext->font_description = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -371,6 +400,9 @@ gst_teletextdec_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SUBS_TEMPLATE:
       g_value_set_string (value, teletext->subtitles_template);
+      break;
+    case PROP_FONT_DESCRIPTION:
+      g_value_set_string (value, teletext->font_description);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -942,23 +974,57 @@ gst_teletextdec_export_pango_page (GstTeletextDec * teletext, vbi_page * page,
     GstBuffer ** buf)
 {
   vbi_char *acp;
-  gint colors[page->rows];
-  int i, j;
+  const guint rows = page->rows;
+  gchar **colors;
+  gchar **lines;
+  GString *subs;
+  GstCaps *caps;
+  GstFlowReturn ret;
+  guint start, stop;
+  guint i, j;
 
-  /* Parse all the lines and approximate it's foreground color from the first
+  colors = (gchar **) g_malloc (sizeof (gchar *) * (rows + 1));
+  colors[rows] = g_strdup ('\0');
+
+  /* parse all the lines and approximate it's foreground color using the first
    * non null character */
   for (acp = page->text, i = 0; i < page->rows; acp += page->columns, i++) {
     for (j = 0; j < page->columns; j++) {
-      if (acp[j].unicode != 20) {
-        color[i] = acp[j].foreground;
-        continue;
+      colors[i] = g_strdup (default_color_map[7]);
+      if (acp[j].unicode != 0x20) {
+        colors[i] = g_strdup (default_color_map[acp[j].foreground]);
+        break;
       }
     }
   }
 
+  /* get an array of strings with each line of the telext page */
+  start = teletext->subtitles_mode ? 1 : 0;
+  stop = teletext->subtitles_mode ? rows - 2 : rows - 1;
+  lines = gst_teletextdec_vbi_page_to_text_lines (teletext, start, stop, page);
 
-  *buf = gst_buffer_new ();
-  return GST_FLOW_OK;
+  /* format each line in pango markup */
+  subs = g_string_new ("");
+  for (i = start; i <= stop; i++) {
+    g_string_append_printf (subs, PANGO_TEMPLATE,
+        teletext->font_description, colors[i], lines[i - start]);
+  }
+
+  /* Allocate new buffer */
+  caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
+  ret = gst_pad_alloc_buffer (teletext->srcpad, GST_BUFFER_OFFSET_NONE,
+      subs->len + 1, caps, &(*buf));
+  if (G_LIKELY (ret == GST_FLOW_OK))
+    GST_BUFFER_DATA (*buf) = GST_BUFFER_MALLOCDATA (*buf) =
+        (guint8 *) subs->str;
+  else
+    gst_buffer_unref (*buf);
+
+  g_strfreev (lines);
+  g_strfreev (colors);
+  g_string_free (subs, FALSE);
+  gst_caps_unref (caps);
+  return ret;
 }
 
 static gboolean
