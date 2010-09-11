@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -35,6 +35,31 @@ msgstr "解码 JPEG 图像出错"
 
 msgid "Could not connect to server"
 msgstr "无法连接至服务器"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "设备‘%s’不支持视频捕获"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "无法连接至服务器"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "无法建立与音频服务器的连接"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "没有或无效的输入音频，AVI 流将损坏。"
@@ -661,9 +686,6 @@ msgstr "没有时钟的话无法操作"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "在内存池中 %d 处没有可分配的缓冲区。"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "设备‘%s’不支持视频捕获"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "设备‘%s’不能在 %dx%d 处捕获"

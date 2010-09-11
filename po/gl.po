@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-08-12 15:46+0200\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -36,6 +36,30 @@ msgstr "Produciuse un erro ao descodificar a imaxe JPEG"
 
 msgid "Could not connect to server"
 msgstr "Non foi posíbel conectarse ao servidor"
+
+msgid "Server does not support seeking."
+msgstr ""
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Non foi posíbel conectarse ao servidor"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Non foi posíbel estabelecer a conexión co servidor de son"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "O audio non existe ou non é válido, o fluxo AVI está corrompido."

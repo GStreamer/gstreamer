@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-06-29 22:42+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -35,6 +35,31 @@ msgstr "Gagal untuk mengawasandi citra JPEG"
 
 msgid "Could not connect to server"
 msgstr "Tak dapat menghubungi server"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Divais '%s' tak mendukung penangkap video"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Tak dapat menghubungi server"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Tak dapat membangun koneksi ke server suara"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
@@ -659,9 +684,6 @@ msgstr "Tak dapat beroperasi tanpa jam"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Tak ada penyangga bebas ditemukan di lubuk pada indeks %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Divais '%s' tak mendukung penangkap video"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Divais '%s' tak dapat menangkap di %dx%d"

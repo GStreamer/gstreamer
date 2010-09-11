@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-05-23 23:02+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -44,6 +44,31 @@ msgstr "Dekodieren des JPEG-Bildes schlug fehl"
 
 msgid "Could not connect to server"
 msgstr "Verbindung zum Server konnte nicht hergestellt werden"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Verbindung zum Server konnte nicht hergestellt werden"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Kein oder ungültiger Eingabeton, der AVI-Strom wird fehlerhaft sein."
@@ -685,9 +710,6 @@ msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Es wurden keine freien Puffer im Vorrat bei Index %d gefunden."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Das Gerät »%s« kann nicht bei %dx%d aufnehmen"

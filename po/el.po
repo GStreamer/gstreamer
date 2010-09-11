@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2009-12-04 14:37+0200\n"
 "Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -36,6 +36,31 @@ msgstr "Αποτυχία αποκωδικοποίησης της εικόνας 
 
 msgid "Could not connect to server"
 msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Η συσκευή '%s' δεν υποστηρίζει την λήψη βίντεο "
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Καμία ή άκυρη εισαγωγή ήχου, η AVI ροή θα καταρρεύσει."
@@ -720,9 +745,6 @@ msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολ
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."
 #~ msgstr ""
 #~ "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'. Μη αρκετή μνήμη."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Η συσκευή '%s' δεν υποστηρίζει την λήψη βίντεο "
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Η συσκευή '%s' δεν μπορεί να κάνει λήψη στο %dx%d"

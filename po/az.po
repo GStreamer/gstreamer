@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -37,6 +37,30 @@ msgstr ""
 #, fuzzy
 msgid "Could not connect to server"
 msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
+msgid "Server does not support seeking."
+msgstr ""
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."

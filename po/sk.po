@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2009-11-13 10:28+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -37,6 +37,31 @@ msgstr "Nepodarilo sa dekódovať obrázok JPEG"
 
 msgid "Could not connect to server"
 msgstr "Nepodarilo sa pripojiť k serveru"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Zariadenie '%s' nie je určené pre zachytávanie videa"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Nepodarilo sa pripojiť k serveru"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Nepodarilo sa nadviazať spojenie so zvukovým serverom"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
@@ -769,9 +794,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Zariadenie '%s' nevie zachytávať na %dx%d"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Zariadenie '%s' nie je určené pre zachytávanie videa"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr ""

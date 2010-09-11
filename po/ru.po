@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2009-02-12 14:35+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -35,6 +35,31 @@ msgstr "Не удалось декодировать JPEG-изображение
 
 msgid "Could not connect to server"
 msgstr "Не удалось соединиться с сервером"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Устройство «%s» не поддерживает захват видео"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Не удалось соединиться с сервером"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Не удалось установить соединение с сервером звука"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -710,9 +735,6 @@ msgstr "Операция невозможна без часов"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Устройство «%s» не поддерживает захват видео"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "В пуле не найдено свободных буферов для индекса %d."

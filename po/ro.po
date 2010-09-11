@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -37,6 +37,30 @@ msgstr "Nu s-a putut decoda imaginea JPEG"
 
 msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
+
+msgid "Server does not support seeking."
+msgstr ""
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Nu se poate stabili o conexiune la server"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Nu se poate stabili o conexiune la serverul de sunet"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""

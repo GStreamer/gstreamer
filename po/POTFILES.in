@@ -4,6 +4,7 @@ ext/flac/gstflacdec.c
 ext/jpeg/gstjpegdec.c
 ext/libpng/gstpngdec.c
 ext/shout2/gstshout2.c
+ext/soup/gstsouphttpsrc.c
 ext/wavpack/gstwavpackparse.c
 gconf/gstreamer.schemas.in
 gst/avi/gstavidemux.c

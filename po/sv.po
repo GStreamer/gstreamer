@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-08-09 11:25+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -36,6 +36,31 @@ msgstr "Misslyckades med att avkoda JPEG-bild"
 
 msgid "Could not connect to server"
 msgstr "Kunde inte ansluta till servern"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "Enheten \"%s\" saknar stöd för videofångst"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Kunde inte ansluta till servern"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Kunde inte etablera en anslutning till ljudservern"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
@@ -666,9 +691,6 @@ msgstr "Kan inte fungera utan en klocka"
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "Inga lediga buffertar hittades i poolen på index %d."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Enheten \"%s\" saknar stöd för videofångst"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "Enheten \"%s\" kan inte fånga i %dx%d"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-02 19:45+0100\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -38,6 +38,30 @@ msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
 
 msgid "Could not connect to server"
 msgstr "Nepavyko prisijungti prie serverio"
+
+msgid "Server does not support seeking."
+msgstr ""
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "Nepavyko prisijungti prie serverio"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "Nepavyko prisijungti prie garso serverio"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nėra įvesties garso arba jis netinkamas, AVI srautas bus sugadintas."

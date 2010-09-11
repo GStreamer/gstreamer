@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-25 18:48+0200\n"
+"POT-Creation-Date: 2010-09-12 00:08+0100\n"
 "PO-Revision-Date: 2009-06-01 19:29+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -37,6 +37,31 @@ msgstr "JPEG画像のデコードに失敗しました"
 
 msgid "Could not connect to server"
 msgstr "サーバーへ接続できません"
+
+#, fuzzy
+msgid "Server does not support seeking."
+msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
+
+#, fuzzy
+msgid "Could not resolve server name."
+msgstr "サーバーへ接続できません"
+
+#, fuzzy
+msgid "Could not establish connection to server."
+msgstr "サウンドサーバーへの接続に失敗しました"
+
+msgid "Secure connection setup failed."
+msgstr ""
+
+msgid ""
+"A network error occured, or the server closed the connection unexpectedly."
+msgstr ""
+
+msgid "Server sent bad data."
+msgstr ""
+
+msgid "No URL set."
+msgstr ""
 
 # SUN REVIEWED
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -716,9 +741,6 @@ msgstr ""
 
 #~ msgid "No free buffers found in the pool at index %d."
 #~ msgstr "インデックス %d でプール内に空きバッファがありません。"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
 
 #~ msgid "Device '%s' cannot capture at %dx%d"
 #~ msgstr "デバイス '%s' は %dx%d でキャプチャできません"
