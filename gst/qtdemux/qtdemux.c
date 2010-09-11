@@ -1854,7 +1854,7 @@ extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
 
 static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
-    QtDemuxStream * stream, guint32 mdat_offset, guint64 start_time,
+    QtDemuxStream * stream, guint32 mdat_offset,
     guint32 d_sample_duration, guint32 d_sample_size, guint32 * samples_count)
 {
   guint64 timestamp;
@@ -1909,22 +1909,24 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
     goto index_too_big;
 
+  GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)",
+      stream->n_samples, (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
+
+  /* create a new array of samples if it's the first sample parsed */
+  if (stream->n_samples == 0)
+    stream->samples = g_try_new0 (QtDemuxSample, *samples_count);
+  /* or try to reallocate it with space enough to insert the new samples */
+  else
+    stream->samples = g_try_renew (QtDemuxSample, stream->samples,
+        stream->n_samples + *samples_count);
+  if (stream->samples == NULL)
+    goto out_of_memory;
+
   for (i = 0; i < *samples_count; i++) {
-    if (i == 0) {
-      GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u (%u MB)",
-          stream->n_samples,
-          (stream->n_samples * sizeof (QtDemuxSample)) >> 20);
-      /* create a new array of samples if it's the first sample parsed */
-      if (stream->n_samples == 0)
-        stream->samples = g_try_new0 (QtDemuxSample, *samples_count);
-      /* or try to reallocate it with space enough to insert the new samples */
-      else
-        stream->samples = g_try_renew (QtDemuxSample, stream->samples,
-            stream->n_samples + *samples_count);
-      if (stream->samples == NULL)
-        goto out_of_memory;
-      /* the timestamp of the first sample is provided by the tfra entry */
-      timestamp = start_time;
+    if (G_UNLIKELY (stream->n_samples == 0)) {
+      /* the timestamp of the first sample is also provided by the tfra entry
+       * but we shouldn't rely on it as it is at the end of files */
+      timestamp = 0;
     } else {
       /* a track run documents a contiguous set of samples */
       timestamp =
@@ -2010,7 +2012,7 @@ invalid_track:
 
 static gboolean
 qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
-    guint32 moof_offset, QtDemuxStream * stream, guint64 start_time)
+    guint32 moof_offset, QtDemuxStream * stream)
 {
   GNode *moof_node, *traf_node, *tfhd_node, *trun_node;
   GstByteReader trun_data, tfhd_data;
@@ -2042,7 +2044,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
         &trun_data);
     while (trun_node) {
-      qtdemux_parse_trun (qtdemux, &trun_data, stream, mdat_offset, start_time,
+      qtdemux_parse_trun (qtdemux, &trun_data, stream, mdat_offset,
           default_sample_duration, default_sample_size, &samples_count);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type (trun_node, FOURCC_trun);
@@ -2117,7 +2119,7 @@ qtdemux_parse_tfra (GstQTDemux * qtdemux, GNode * tfra_node,
     if (ret != GST_FLOW_OK)
       goto corrupt_file;
     qtdemux_parse_moof (qtdemux, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
-        moof_offset, stream, time);
+        moof_offset, stream);
     gst_buffer_unref (buf);
   }
 
