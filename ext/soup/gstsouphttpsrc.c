@@ -1446,6 +1446,13 @@ gst_soup_http_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#endif
+
   return gst_element_register (plugin, "souphttpsrc", GST_RANK_PRIMARY,
       GST_TYPE_SOUP_HTTP_SRC);
 }
