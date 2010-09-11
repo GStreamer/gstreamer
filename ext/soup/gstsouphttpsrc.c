@@ -860,9 +860,9 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   if (src->ret == GST_FLOW_CUSTOM_ERROR &&
       src->read_position && msg->status_code != SOUP_STATUS_PARTIAL_CONTENT) {
     src->seekable = FALSE;
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        ("\"%s\": failed to seek; server does not accept Range HTTP header",
-            src->location), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
+        (_("Server does not support seeking.")),
+        ("Server does not accept Range HTTP header, URL: ", src->location));
     src->ret = GST_FLOW_ERROR;
   }
 }
@@ -909,6 +909,7 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     src->ret = GST_FLOW_CUSTOM_ERROR;
   } else if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
+    /* FIXME: reason_phrase is not translated, add proper error message */
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
         ("%s", msg->reason_phrase),
         ("libsoup status code %d", msg->status_code));
@@ -1054,36 +1055,42 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
   g_main_loop_quit (src->loop);
 }
 
+#define SOUP_HTTP_SRC_ERROR(src,soup_msg,cat,code,error_message)     \
+  GST_ELEMENT_ERROR ((src), cat, code, ("%s", error_message),        \
+      ("%s (%d), URL: %s", (soup_msg)->reason_phrase,                \
+          (soup_msg)->status_code, (src)->location));
+
 static void
 gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
     switch (msg->status_code) {
       case SOUP_STATUS_CANT_RESOLVE:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            ("%s: %s", msg->reason_phrase, src->location),
-            ("libsoup status code %d", msg->status_code));
-        src->ret = GST_FLOW_ERROR;
-        break;
       case SOUP_STATUS_CANT_RESOLVE_PROXY:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            ("%s", msg->reason_phrase),
-            ("libsoup status code %d", msg->status_code));
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, NOT_FOUND,
+            _("Could not resolve server name."));
         src->ret = GST_FLOW_ERROR;
         break;
       case SOUP_STATUS_CANT_CONNECT:
       case SOUP_STATUS_CANT_CONNECT_PROXY:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
+            _("Could not establish connection to server."));
+        src->ret = GST_FLOW_ERROR;
+        break;
       case SOUP_STATUS_SSL_FAILED:
-        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-            ("%s: %s", msg->reason_phrase, src->location),
-            ("libsoup status code %d", msg->status_code));
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
+            _("Secure connection setup failed."));
         src->ret = GST_FLOW_ERROR;
         break;
       case SOUP_STATUS_IO_ERROR:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
+            _("A network error occured, or the server closed the connection "
+                "unexpectedly."));
+        src->ret = GST_FLOW_ERROR;
+        break;
       case SOUP_STATUS_MALFORMED:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ,
-            ("%s: %s", msg->reason_phrase, src->location),
-            ("libsoup status code %d", msg->status_code));
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
+            _("Server sent bad data."));
         src->ret = GST_FLOW_ERROR;
         break;
       case SOUP_STATUS_CANCELLED:
@@ -1094,9 +1101,13 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
       SOUP_STATUS_IS_REDIRECTION (msg->status_code) ||
       SOUP_STATUS_IS_SERVER_ERROR (msg->status_code)) {
     /* Report HTTP error. */
+    /* FIXME: reason_phrase is not translated and not suitable for user
+     * error dialog according to libsoup documentation.
+     * FIXME: error code (OPEN_READ vs. READ) should depend on http status? */
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        ("%s: %s", msg->reason_phrase, src->location),
-        ("%d %s", msg->status_code, msg->reason_phrase));
+        ("%s", msg->reason_phrase),
+        ("%s (%d), URL: %s", msg->reason_phrase, msg->status_code,
+            src->location));
     src->ret = GST_FLOW_ERROR;
   }
 }
@@ -1107,7 +1118,7 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
   src->msg = soup_message_new (SOUP_METHOD_GET, src->location);
   if (!src->msg) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (NULL), ("Error parsing URL \"%s\"", src->location));
+        ("Error parsing URL."), ("URL: %s", src->location));
     return FALSE;
   }
   src->session_io_status = GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_IDLE;
@@ -1224,8 +1235,8 @@ gst_soup_http_src_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "start(\"%s\")", src->location);
 
   if (!src->location) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (NULL), ("Missing location property"));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (_("No URL set.")),
+        ("Missing location property"));
     return FALSE;
   }
 
