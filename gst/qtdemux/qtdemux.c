@@ -2038,7 +2038,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         &default_sample_size);
     /* skip trun atoms that don't match the track ID */
     if (id != stream->track_id)
-      continue;
+      goto next;
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
@@ -2050,6 +2050,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       trun_node = qtdemux_tree_get_sibling_by_type (trun_node, FOURCC_trun);
     }
 
+  next:
     /* iterate all siblings */
     traf_node = qtdemux_tree_get_sibling_by_type (traf_node, FOURCC_traf);
   }
