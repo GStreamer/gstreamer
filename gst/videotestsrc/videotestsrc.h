@@ -104,6 +104,8 @@ void    gst_video_test_src_blue         (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_solid        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
+void    gst_video_test_src_blink        (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
 void    gst_video_test_src_checkers1    (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_checkers2    (GstVideoTestSrc * v,

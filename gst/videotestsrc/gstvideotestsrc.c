@@ -402,7 +402,7 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       videotestsrc->make_image = gst_video_test_src_circular;
       break;
     case GST_VIDEO_TEST_SRC_BLINK:
-      videotestsrc->make_image = gst_video_test_src_black;
+      videotestsrc->make_image = gst_video_test_src_blink;
       break;
     case GST_VIDEO_TEST_SRC_SMPTE75:
       videotestsrc->make_image = gst_video_test_src_smpte75;
@@ -874,18 +874,9 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
   src->tmpline = g_malloc (src->width * 4);
 
-  if (src->pattern_type == GST_VIDEO_TEST_SRC_BLINK) {
-    if (src->n_frames & 0x1) {
-      gst_video_test_src_white (src, (void *) GST_BUFFER_DATA (outbuf),
-          src->width, src->height);
-    } else {
-      gst_video_test_src_black (src, (void *) GST_BUFFER_DATA (outbuf),
-          src->width, src->height);
-    }
-  } else {
-    src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
-        src->width, src->height);
-  }
+  src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
+      src->width, src->height);
+
   g_free (src->tmpline);
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;

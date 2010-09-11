@@ -899,6 +899,35 @@ gst_video_test_src_blue (GstVideoTestSrc * v, guchar * dest, int w, int h)
 }
 
 void
+gst_video_test_src_blink (GstVideoTestSrc * v, unsigned char *dest, int w,
+    int h)
+{
+  int i;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+
+  if (v->n_frames & 1) {
+    p->color = &p->foreground_color;
+  } else {
+    p->color = &p->background_color;
+  }
+
+  for (i = 0; i < h; i++) {
+    p->paint_tmpline (p, 0, w);
+    p->convert_tmpline (p, i);
+  }
+}
+
+void
 gst_video_test_src_solid (GstVideoTestSrc * v, unsigned char *dest, int w,
     int h)
 {
