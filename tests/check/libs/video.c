@@ -583,6 +583,57 @@ GST_START_TEST (test_events)
 
 GST_END_TEST;
 
+GST_START_TEST (test_convert_frame)
+{
+  GstCaps *from_caps, *to_caps;
+  GstBuffer *from_buffer, *to_buffer;
+  GError *error = NULL;
+  gint i;
+  guint8 *data;
+
+  from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
+  data = GST_BUFFER_DATA (from_buffer);
+
+  for (i = 0; i < 640 * 480; i++) {
+    data[4 * i + 0] = 0;        /* x */
+    data[4 * i + 1] = 255;      /* R */
+    data[4 * i + 2] = 0;        /* G */
+    data[4 * i + 3] = 0;        /* B */
+  }
+  from_caps = gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB,
+      640, 480, 25, 1, 1, 1);
+  gst_buffer_set_caps (from_buffer, from_caps);
+
+  to_caps =
+      gst_caps_from_string
+      ("something/that, does=(string)not, exist=(boolean)FALSE");
+
+  to_buffer =
+      gst_video_convert_frame (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
+      &error);
+  fail_if (to_buffer != NULL);
+  fail_unless (error != NULL);
+  g_error_free (error);
+  error = NULL;
+
+  gst_caps_unref (to_caps);
+  to_caps =
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_I420, 240, 320, 25, 1, 1, 2);
+  to_buffer =
+      gst_video_convert_frame (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
+      &error);
+  fail_unless (to_buffer != NULL);
+  fail_unless (gst_caps_can_intersect (to_caps, GST_BUFFER_CAPS (to_buffer)));
+  fail_unless (error == NULL);
+
+  gst_buffer_unref (from_buffer);
+  gst_caps_unref (from_caps);
+  gst_buffer_unref (to_buffer);
+  gst_caps_unref (to_caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -594,6 +645,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_events);
+  tcase_add_test (tc_chain, test_convert_frame);
 
   return s;
 }
