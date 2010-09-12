@@ -251,9 +251,10 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
   GstBuffer *result = NULL;
   GError *error = NULL;
   GstBus *bus;
-  GstCaps *from_caps;
+  GstCaps *from_caps, *to_caps_copy = NULL;
   GstFlowReturn ret;
   GstElement *pipeline, *src, *sink;
+  guint i, n;
 
   g_return_val_if_fail (buf != NULL, NULL);
   g_return_val_if_fail (to_caps != NULL, NULL);
@@ -261,14 +262,26 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
 
   from_caps = GST_BUFFER_CAPS (buf);
 
+  to_caps_copy = gst_caps_new_empty ();
+  n = gst_caps_get_size (to_caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (to_caps, i);
+
+    s = gst_structure_copy (s);
+    gst_structure_remove_field (s, "framerate");
+    gst_caps_append_structure (to_caps_copy, s);
+  }
+
   pipeline =
-      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps, &error);
+      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps_copy,
+      &error);
   if (!pipeline)
     goto no_pipeline;
 
   /* now set the pipeline to the paused state, after we push the buffer into
    * appsrc, this should preroll the converted buffer in appsink */
-  GST_DEBUG ("running conversion pipeline to caps %" GST_PTR_FORMAT, to_caps);
+  GST_DEBUG ("running conversion pipeline to caps %" GST_PTR_FORMAT,
+      to_caps_copy);
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   /* feed buffer in appsrc */
@@ -326,12 +339,15 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
+  gst_caps_unref (to_caps_copy);
 
   return result;
 
   /* ERRORS */
 no_pipeline:
   {
+    gst_caps_unref (to_caps_copy);
+
     if (err)
       *err = error;
     else
