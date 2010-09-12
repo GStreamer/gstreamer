@@ -108,40 +108,14 @@ fail:
   return encoder;
 }
 
-/**
- * gst_video_convert_frame:
- * @buf: a #GstBuffer
- * @to_caps: the #GstCaps to convert to
- * @timeout: the maximum amount of time allowed for the processing.
- * @err: pointer to a #GError. Can be %NULL.
- *
- * Converts a raw video buffer into the specified output caps.
- *
- * The output caps can be any raw video formats or any image formats (jpeg, png, ...).
- *
- * The width, height and pixel-aspect-ratio can also be specified in the output caps.
- *
- * Returns: The converted #GstBuffer, or %NULL if an error happened (in which case @err
- * will point to the #GError).
- */
-GstBuffer *
-gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
-    GstClockTime timeout, GError ** err)
+static GstElement *
+build_convert_frame_pipeline (GstElement ** src_element,
+    GstElement ** sink_element, const GstCaps * from_caps,
+    const GstCaps * to_caps, GError ** err)
 {
-  GstElement *src = NULL, *csp = NULL, *vscale = NULL, *sink = NULL, *encoder =
-      NULL, *pipeline;
-  GstMessage *msg;
-  GstBuffer *result = NULL;
+  GstElement *src = NULL, *csp = NULL, *vscale = NULL;
+  GstElement *sink = NULL, *encoder = NULL, *pipeline;
   GError *error = NULL;
-  GstBus *bus;
-  GstCaps *from_caps;
-  GstFlowReturn ret;
-
-  g_return_val_if_fail (buf != NULL, NULL);
-  g_return_val_if_fail (to_caps != NULL, NULL);
-  g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
-
-  from_caps = GST_BUFFER_CAPS (buf);
 
   /* videoscale is here to correct for the pixel-aspect-ratio for us */
   GST_DEBUG ("creating elements");
@@ -193,6 +167,104 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
     if (!gst_element_link_pads (encoder, "src", sink, "sink"))
       goto link_failed;
   }
+
+  *src_element = src;
+  *sink_element = sink;
+
+  return pipeline;
+  /* ERRORS */
+no_encoder:
+  {
+    gst_object_unref (pipeline);
+
+    GST_ERROR ("could not find an encoder for provided caps");
+    if (err)
+      *err = error;
+    else
+      g_error_free (error);
+
+    return NULL;
+  }
+no_elements:
+  {
+    if (src)
+      gst_object_unref (src);
+    if (csp)
+      gst_object_unref (csp);
+    if (vscale)
+      gst_object_unref (vscale);
+    if (sink)
+      gst_object_unref (sink);
+    GST_ERROR ("Could not convert video frame: %s", error->message);
+    if (err)
+      *err = error;
+    else
+      g_error_free (error);
+    return NULL;
+  }
+no_pipeline:
+  {
+    gst_object_unref (src);
+    gst_object_unref (csp);
+    gst_object_unref (vscale);
+    gst_object_unref (sink);
+
+    GST_ERROR ("Could not convert video frame: no pipeline (unknown error)");
+    if (err)
+      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          "Could not convert video frame: no pipeline (unknown error)");
+    return NULL;
+  }
+link_failed:
+  {
+    gst_object_unref (pipeline);
+
+    GST_ERROR ("Could not convert video frame: failed to link elements");
+    if (err)
+      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
+          "Could not convert video frame: failed to link elements");
+    return NULL;
+  }
+}
+
+/**
+ * gst_video_convert_frame:
+ * @buf: a #GstBuffer
+ * @to_caps: the #GstCaps to convert to
+ * @timeout: the maximum amount of time allowed for the processing.
+ * @err: pointer to a #GError. Can be %NULL.
+ *
+ * Converts a raw video buffer into the specified output caps.
+ *
+ * The output caps can be any raw video formats or any image formats (jpeg, png, ...).
+ *
+ * The width, height and pixel-aspect-ratio can also be specified in the output caps.
+ *
+ * Returns: The converted #GstBuffer, or %NULL if an error happened (in which case @err
+ * will point to the #GError).
+ */
+GstBuffer *
+gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
+    GstClockTime timeout, GError ** err)
+{
+  GstMessage *msg;
+  GstBuffer *result = NULL;
+  GError *error = NULL;
+  GstBus *bus;
+  GstCaps *from_caps;
+  GstFlowReturn ret;
+  GstElement *pipeline, *src, *sink;
+
+  g_return_val_if_fail (buf != NULL, NULL);
+  g_return_val_if_fail (to_caps != NULL, NULL);
+  g_return_val_if_fail (GST_BUFFER_CAPS (buf) != NULL, NULL);
+
+  from_caps = GST_BUFFER_CAPS (buf);
+
+  pipeline =
+      build_convert_frame_pipeline (&src, &sink, from_caps, to_caps, &error);
+  if (!pipeline)
+    goto no_pipeline;
 
   /* now set the pipeline to the paused state, after we push the buffer into
    * appsrc, this should preroll the converted buffer in appsink */
@@ -258,47 +330,13 @@ gst_video_convert_frame (GstBuffer * buf, const GstCaps * to_caps,
   return result;
 
   /* ERRORS */
-no_encoder:
-  {
-    GST_ERROR ("could not find an encoder for provided caps");
-    if (err)
-      *err = error;
-    else
-      g_error_free (error);
-    return NULL;
-  }
-no_elements:
-  {
-    if (src)
-      gst_object_unref (src);
-    if (csp)
-      gst_object_unref (csp);
-    if (vscale)
-      gst_object_unref (vscale);
-    if (sink)
-      gst_object_unref (sink);
-    GST_ERROR ("Could not convert video frame: %s", error->message);
-    if (err)
-      *err = error;
-    else
-      g_error_free (error);
-    return NULL;
-  }
 no_pipeline:
   {
-    GST_ERROR ("Could not convert video frame: no pipeline (unknown error)");
     if (err)
-      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          "Could not convert video frame: no pipeline (unknown error)");
-    return NULL;
-  }
-link_failed:
-  {
-    GST_ERROR ("Could not convert video frame: failed to link elements");
-    if (err)
-      *err = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_NEGOTIATION,
-          "Could not convert video frame: failed to link elements");
-    gst_object_unref (pipeline);
+      *err = error;
+    else
+      g_error_free (error);
+
     return NULL;
   }
 }
