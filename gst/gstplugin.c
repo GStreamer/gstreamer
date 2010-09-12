@@ -62,6 +62,7 @@
 #endif
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
 
 #include "glib-compat-private.h"
 
@@ -757,8 +758,9 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
    * Ideally there should be a generic way for plugins to specify that they
    * need to be loaded with _LAZY.
    * */
-  if (g_strstr_len (filename, strlen (filename), "libgstpython"))
+  if (strstr (filename, "libgstpython"))
     flags |= G_MODULE_BIND_LAZY;
+
   module = g_module_open (filename, flags);
   if (module == NULL) {
     GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
