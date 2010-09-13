@@ -46,6 +46,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSESINK))
 #define GST_PULSESINK_CAST(obj) \
   ((GstPulseSink *)(obj))
+#define GST_PULSESINK_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_PULSESINK,GstPulseSinkClass))
+
 
 typedef struct _GstPulseSink GstPulseSink;
 typedef struct _GstPulseSinkClass GstPulseSinkClass;
@@ -79,6 +82,9 @@ struct _GstPulseSink
 struct _GstPulseSinkClass
 {
   GstBaseAudioSinkClass parent_class;
+
+  pa_threaded_mainloop *mainloop;
+  guint main_loop_ref_ct;
 };
 
 GType gst_pulsesink_get_type (void);
