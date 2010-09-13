@@ -80,7 +80,7 @@ enum
   if ((avg) == 0)                       \
    (avg) = (val) << 4;                  \
   else                                  \
-   (avg) = ((val) + (15 * (avg))) >> 4;
+   (avg) = ((val) + (15 * (avg)));
 
 /* The number RTCP intervals after which to timeout entries in the
  * collision table
