@@ -2022,12 +2022,12 @@ done:
  * can cause severe issues. Refer to the documentation of #GstPadLinkCheck
  * for more information.
  *
+ * MT Safe.
+ *
  * Returns: A result code indicating if the connection worked or
  *          what went wrong.
  *
  * Since: 0.10.30
- *
- * MT Safe.
  */
 GstPadLinkReturn
 gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)

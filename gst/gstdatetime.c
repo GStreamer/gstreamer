@@ -25,7 +25,7 @@
 #include "gstdatetime.h"
 
 /**
- * SECTION:gst-date-time
+ * SECTION:gstdatetime
  * @title: GstDateTime
  * @short_description: A date, time and timezone structure
  *
@@ -299,24 +299,24 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
 
 /**
  * gst_date_time_new_from_unix_epoch:
- * @t: seconds from the Unix epoch
+ * @secs: seconds from the Unix epoch
  *
- * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by @t.
- * The #GstDateTime is in the local timezone.
+ * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
+ * @secs. The #GstDateTime is in the local timezone.
  *
  * Return value: the newly created #GstDateTime
  *
  * Since: 0.10.31
  */
 GstDateTime *
-gst_date_time_new_from_unix_epoch (gint64 t)
+gst_date_time_new_from_unix_epoch (gint64 secs)
 {
   GstDateTime *dt;
   struct tm tm;
   time_t tt;
 
   memset (&tm, 0, sizeof (tm));
-  tt = (time_t) t;
+  tt = (time_t) secs;
 
 #ifdef HAVE_LOCALTIME_R
   localtime_r (&tt, &tm);

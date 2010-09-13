@@ -1254,7 +1254,7 @@ gst_element_class_set_documentation_uri (GstElementClass * klass,
 /**
  * gst_element_class_set_icon_name:
  * @klass: class to set details for
- * @uri: name of an icon
+ * @name: name of an icon
  *
  * Elements that bridge to certain other products can include an icon of that
  * used product. Application can show the icon in menus/selectors to help

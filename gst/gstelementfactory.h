@@ -224,6 +224,7 @@ typedef guint64 GstElementFactoryListType;
 
 /**
  * GST_ELEMENT_FACTORY_TYPE_ANY:
+ *
  * Elements of any of the defined GST_ELEMENT_FACTORY_LIST types
  *
  * Since: 0.10.31
@@ -232,6 +233,7 @@ typedef guint64 GstElementFactoryListType;
 
 /**
  * GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY:
+ *
  * Elements matching any of the defined GST_ELEMENT_FACTORY_TYPE_MEDIA types
  *
  * Note: Do not use this if you wish to not filter against any of the defined
@@ -244,6 +246,7 @@ typedef guint64 GstElementFactoryListType;
 
 /**
  * GST_ELEMENT_FACTORY_TYPE_VIDEO_ENCODER:
+ *
  * All encoders handling video or image media types
  *
  * Since: 0.10.31
@@ -252,6 +255,7 @@ typedef guint64 GstElementFactoryListType;
 
 /**
  * GST_ELEMENT_FACTORY_TYPE_AUDIO_ENCODER:
+ *
  * All encoders handling audio media types
  *
  * Since: 0.10.31
