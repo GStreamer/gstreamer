@@ -29,6 +29,13 @@ enum {
   VTS_BAYER
 };
 
+enum {
+  VTS_BAYER_BGGR,
+  VTS_BAYER_RGGB,
+  VTS_BAYER_GRBG,
+  VTS_BAYER_GBRG
+};
+
 struct vts_color_struct {
   guint8 Y, U, V, A;
   guint8 R, G, B;
@@ -55,8 +62,14 @@ struct paintinfo_struct
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
   void (*paint_tmpline) (paintinfo * p, int x, int w);
   void (*convert_tmpline) (paintinfo * p, int y);
+  int x_offset;
 
-  unsigned char *tmpline;
+  int bayer_x_invert;
+  int bayer_y_invert;
+
+  guint8 *tmpline;
+  guint8 *tmpline2;
+  guint8 *tmpline_u8;
 
   struct vts_color_struct foreground_color;
   struct vts_color_struct background_color;
@@ -124,8 +137,8 @@ void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
 void    gst_video_test_src_ball         (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
-void gst_video_test_src_moving_color_bars (GstVideoTestSrc * v,
-                                 unsigned char *dest, int w, int h);
+void gst_video_test_src_smpte100        (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
 

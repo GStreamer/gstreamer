@@ -53,7 +53,7 @@ GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
 #define DEFAULT_FOREGROUND_COLOR   0xffffffff
 #define DEFAULT_BACKGROUND_COLOR   0xff000000
-#define DEFAULT_MOVING_SPEED       1
+#define DEFAULT_HORIZONTAL_SPEED   0
 
 enum
 {
@@ -77,7 +77,7 @@ enum
   PROP_YOFFSET,
   PROP_FOREGROUND_COLOR,
   PROP_BACKGROUND_COLOR,
-  PROP_MOVING_SPEED,
+  PROP_HORIZONTAL_SPEED,
   PROP_LAST
 };
 
@@ -134,8 +134,7 @@ gst_video_test_src_pattern_get_type (void)
         "chroma-zone-plate"},
     {GST_VIDEO_TEST_SRC_SOLID, "Solid color", "solid-color"},
     {GST_VIDEO_TEST_SRC_BALL, "Moving ball", "ball"},
-    {GST_VIDEO_TEST_SRC_MOVING_COLOR_BARS, "Moving color bars",
-        "moving-color-bars"},
+    {GST_VIDEO_TEST_SRC_SMPTE100, "SMPTE 100% color bars", "smpte100"},
     {0, NULL, NULL}
   };
 
@@ -297,10 +296,10 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           DEFAULT_BACKGROUND_COLOR,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_MOVING_SPEED,
-      g_param_spec_int ("moving-speed", "Move color bars with this speed",
-          "Move bars every frame with this amount of pixels (negative is inverse direction)",
-          G_MININT32, G_MAXINT32, DEFAULT_MOVING_SPEED,
+  g_object_class_install_property (gobject_class, PROP_HORIZONTAL_SPEED,
+      g_param_spec_int ("horizontal-speed", "Horizontal Speed",
+          "Scroll image number of pixels per frame (positive is scroll to the left)",
+          G_MININT32, G_MAXINT32, DEFAULT_HORIZONTAL_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
@@ -326,7 +325,7 @@ gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
   src->foreground_color = DEFAULT_FOREGROUND_COLOR;
   src->background_color = DEFAULT_BACKGROUND_COLOR;
-  src->moving_speed = DEFAULT_MOVING_SPEED;
+  src->horizontal_speed = DEFAULT_HORIZONTAL_SPEED;
 
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
@@ -422,8 +421,8 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     case GST_VIDEO_TEST_SRC_BALL:
       videotestsrc->make_image = gst_video_test_src_ball;
       break;
-    case GST_VIDEO_TEST_SRC_MOVING_COLOR_BARS:
-      videotestsrc->make_image = gst_video_test_src_moving_color_bars;
+    case GST_VIDEO_TEST_SRC_SMPTE100:
+      videotestsrc->make_image = gst_video_test_src_smpte100;
       break;
     default:
       g_assert_not_reached ();
@@ -493,8 +492,8 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_BACKGROUND_COLOR:
       src->background_color = g_value_get_uint (value);
       break;
-    case PROP_MOVING_SPEED:
-      src->moving_speed = g_value_get_int (value);
+    case PROP_HORIZONTAL_SPEED:
+      src->horizontal_speed = g_value_get_int (value);
     default:
       break;
   }
@@ -563,8 +562,8 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
     case PROP_BACKGROUND_COLOR:
       g_value_set_uint (value, src->background_color);
       break;
-    case PROP_MOVING_SPEED:
-      g_value_set_int (value, src->moving_speed);
+    case PROP_HORIZONTAL_SPEED:
+      g_value_set_int (value, src->horizontal_speed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -872,12 +871,16 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   }
 
   memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
-  src->tmpline = g_malloc (src->width * 4);
+  src->tmpline_u8 = g_malloc (src->width + 8);
+  src->tmpline = g_malloc ((src->width + 8) * 4);
+  src->tmpline2 = g_malloc ((src->width + 8) * 4);
 
   src->make_image (src, (void *) GST_BUFFER_DATA (outbuf),
       src->width, src->height);
 
   g_free (src->tmpline);
+  g_free (src->tmpline2);
+  g_free (src->tmpline_u8);
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
   GST_BUFFER_OFFSET (outbuf) = src->n_frames;
