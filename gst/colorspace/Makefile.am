@@ -1,15 +1,22 @@
-plugin_LTLIBRARIES = libgstyuvtorgbcolorspace.la
+plugin_LTLIBRARIES = libgstcolorspace.la
 
-if HAVE_CPU_I386
-ARCHSRCS = yuv2rgb_mmx16.s
-else
-ARCHSRCS =
-endif
+ORC_SOURCE=gstcolorspaceorc
+include $(top_srcdir)/common/orc.mak
 
-libgstyuvtorgbcolorspace_la_SOURCES = gstcolorspace.c yuv2rgb.c
-libgstyuvtorgbcolorspace_la_CFLAGS = $(GST_CFLAGS)
-libgstyuvtorgbcolorspace_la_LIBADD = 
-libgstyuvtorgbcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstyuvtorgbcolorspace_la_LIBTOOLFLAGS = --tag=disable-static
+libgstcolorspace_la_SOURCES = gstcolorspace.c
+nodist_libgstcolorspace_la_SOURCES = $(ORC_NODIST_SOURCES)
+libgstcolorspace_la_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(ORC_CFLAGS)
+libgstcolorspace_la_LIBADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS) \
+	$(ORC_LIBS)
+libgstcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcolorspace_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = yuv2rgb.h gstcolorspace.h
+noinst_HEADERS = gstcolorspace.h
+
+
