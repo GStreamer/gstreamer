@@ -40,7 +40,9 @@
 GST_DEBUG_CATEGORY_STATIC (taskpool_debug);
 #define GST_CAT_DEFAULT (taskpool_debug)
 
+#ifndef GST_DISABLE_GST_DEBUG
 static void gst_task_pool_finalize (GObject * object);
+#endif
 
 #define _do_init \
 { \
@@ -126,7 +128,9 @@ gst_task_pool_class_init (GstTaskPoolClass * klass)
   gobject_class = (GObjectClass *) klass;
   gsttaskpool_class = (GstTaskPoolClass *) klass;
 
+#ifndef GST_DISABLE_GST_DEBUG
   gobject_class->finalize = gst_task_pool_finalize;
+#endif
 
   gsttaskpool_class->prepare = default_prepare;
   gsttaskpool_class->cleanup = default_cleanup;
@@ -139,6 +143,7 @@ gst_task_pool_init (GstTaskPool * pool)
 {
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 static void
 gst_task_pool_finalize (GObject * object)
 {
@@ -146,7 +151,7 @@ gst_task_pool_finalize (GObject * object)
 
   G_OBJECT_CLASS (gst_task_pool_parent_class)->finalize (object);
 }
-
+#endif
 /**
  * gst_task_pool_new:
  *
