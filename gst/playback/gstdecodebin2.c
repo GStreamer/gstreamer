@@ -1939,7 +1939,7 @@ static void
 type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin)
 {
-  GstPad *pad;
+  GstPad *pad, *sink_pad;
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
@@ -1961,10 +1961,18 @@ type_found (GstElement * typefind, guint probability,
   decode_bin->have_type = TRUE;
 
   pad = gst_element_get_static_pad (typefind, "src");
+  sink_pad = gst_element_get_static_pad (typefind, "sink");
 
+  /* need some lock here to prevent race with shutdown state change
+   * which might yank away e.g. decode_chain while building stuff here.
+   * In typical cases, STREAM_LOCK is held and handles that, it need not
+   * be held (if called from a proxied setcaps), so grab it anyway */
+  GST_PAD_STREAM_LOCK (sink_pad);
   decode_bin->decode_chain = gst_decode_chain_new (decode_bin, NULL, pad);
   analyze_new_pad (decode_bin, typefind, pad, caps, decode_bin->decode_chain);
+  GST_PAD_STREAM_UNLOCK (sink_pad);
 
+  gst_object_unref (sink_pad);
   gst_object_unref (pad);
 
 exit:
