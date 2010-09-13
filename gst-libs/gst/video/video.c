@@ -772,6 +772,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_Y800;
     case GST_MAKE_FOURCC ('Y', '1', '6', ' '):
       return GST_VIDEO_FORMAT_Y16;
+    case GST_MAKE_FOURCC ('U', 'Y', 'V', 'P'):
+      return GST_VIDEO_FORMAT_UYVP;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
@@ -827,6 +829,8 @@ gst_video_format_to_fourcc (GstVideoFormat format)
       return GST_MAKE_FOURCC ('Y', '8', '0', '0');
     case GST_VIDEO_FORMAT_Y16:
       return GST_MAKE_FOURCC ('Y', '1', '6', ' ');
+    case GST_VIDEO_FORMAT_UYVP:
+      return GST_MAKE_FOURCC ('U', 'Y', 'V', 'P');
     default:
       return 0;
   }
@@ -960,6 +964,7 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_UYVP:
       return FALSE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1011,6 +1016,7 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_v308:
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_UYVP:
       return TRUE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1087,6 +1093,7 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_v308:
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_UYVP:
       return FALSE;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBA:
@@ -1195,6 +1202,8 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y16:
       return GST_ROUND_UP_4 (width * 2);
+    case GST_VIDEO_FORMAT_UYVP:
+      return GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4);
     default:
       return 0;
   }
@@ -1277,6 +1286,9 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y16:
       return 2;
+    case GST_VIDEO_FORMAT_UYVP:
+      /* UYVP is packed at the bit level, so pixel stride doesn't make sense */
+      return 0;
     default:
       return 0;
   }
@@ -1315,6 +1327,7 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_v216:
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_UYVP:
       if (component == 0) {
         return width;
       } else {
@@ -1415,6 +1428,7 @@ gst_video_format_get_component_height (GstVideoFormat format,
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_UYVP:
       return height;
     default:
       return 0;
@@ -1615,6 +1629,9 @@ gst_video_format_get_component_offset (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
       return 0;
+    case GST_VIDEO_FORMAT_UYVP:
+      /* UYVP is bit-packed, so this doesn't make sense */
+      return 0;
     default:
       return 0;
   }
@@ -1693,6 +1710,8 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y16:
       return GST_ROUND_UP_4 (width * 2) * height;
+    case GST_VIDEO_FORMAT_UYVP:
+      return GST_ROUND_UP_4 ((width * 2 * 5 + 3) / 4) * height;
     default:
       return 0;
   }

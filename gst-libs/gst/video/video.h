@@ -63,6 +63,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_BGR16: reverse rgb 5-6-5 bits per component (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_RGB15: rgb 5-5-5 bits per component (Since: 0.10.30)
  * @GST_VIDEO_FORMAT_BGR15: reverse rgb 5-5-5 bits per component (Since: 0.10.30)
+ * @GST_VIDEO_FORMAT_UYVP: packed 10-bit 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...) 
  *
  * Enum value describing the most common video formats.
  */
@@ -100,7 +101,8 @@ typedef enum {
   GST_VIDEO_FORMAT_RGB16,
   GST_VIDEO_FORMAT_BGR16,
   GST_VIDEO_FORMAT_RGB15,
-  GST_VIDEO_FORMAT_BGR15
+  GST_VIDEO_FORMAT_BGR15,
+  GST_VIDEO_FORMAT_UYVP
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
