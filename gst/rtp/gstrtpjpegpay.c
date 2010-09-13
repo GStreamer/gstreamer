@@ -188,7 +188,7 @@ typedef struct
  * RtpRestartMarkerHeader:
  * @restartInterval: number of MCUs that appear between restart markers
  * @restartFirstLastCount: a combination of the first packet mark in the chunk
- *                         last packet mark in the chunk and the position of the 
+ *                         last packet mark in the chunk and the position of the
  *                         first restart interval in the current "chunk"
  *
  *    0                   1                   2                   3
@@ -208,11 +208,10 @@ typedef struct
  */
 
 typedef struct
-{ 
-  guint16 restartInterval;
-  guint16 restartFirstLastCount;
+{
+  guint16 restart_interval;
+  guint16 restart_count;
 } RtpRestartMarkerHeader;
-
 
 typedef struct
 {
@@ -541,6 +540,44 @@ invalid_comp:
   }
 }
 
+static gboolean
+gst_rtp_jpeg_pay_read_dri (GstRtpJPEGPay * pay, const guint8 * data,
+    guint size, guint * offset, RtpRestartMarkerHeader * dri)
+{
+  guint dri_size, off;
+
+  off = *offset;
+
+  /* we need at least 4 bytes for the DRI */
+  if (off + 4 > size)
+    goto wrong_size;
+
+  dri_size = gst_rtp_jpeg_pay_header_size (data, off);
+  if (dri_size < 4)
+    goto wrong_length;
+
+  *offset += dri_size;
+  off += 2;
+
+  dri->restart_interval = g_htons ((data[off] << 8) | (data[off + 1]));
+  dri->restart_count = g_htons (0xFFFF);
+
+  return dri->restart_interval > 0;
+
+wrong_size:
+  {
+    GST_WARNING ("not enough data for DRI");
+    *offset = size;
+    return FALSE;
+  }
+wrong_length:
+  {
+    GST_WARNING ("DRI size too small (%u)", dri_size);
+    *offset += dri_size;
+    return FALSE;
+  }
+}
+
 static RtpJpegMarker
 gst_rtp_jpeg_pay_scan_marker (const guint8 * data, guint size, guint * offset)
 {
@@ -633,12 +670,10 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         break;
       case JPEG_MARKER_DRI:
         GST_LOG_OBJECT (pay, "DRI found");
-        restart_marker_header.restartInterval=g_htons((data[offset+2] << 8) | (data[offset + 3]));
-        restart_marker_header.restartFirstLastCount=g_htons(0xFFFF);
-        if (restart_marker_header.restartInterval > 0) {
+        if (gst_rtp_jpeg_pay_read_dri (pay, data, size, &offset,
+                &restart_marker_header))
           dri_found = TRUE;
-        }
-		break;      
+        break;
       default:
         break;
     }
@@ -714,13 +749,13 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     guint payload_size = (bytes_left < mtu ? bytes_left : mtu);
 
     if (pay->buffer_list) {
-  	  if (dri_found){
-        outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
-          sizeof (restart_marker_header) + quant_data_size, 0, 0);
-	  } else {
-        outbuf = gst_rtp_buffer_new_allocate (sizeof (jpeg_header) +
-          quant_data_size, 0, 0);
-	  }
+      guint header_size;
+
+      header_size = sizeof (jpeg_header) + quant_data_size;
+      if (dri_found)
+        header_size += sizeof (restart_marker_header);
+
+      outbuf = gst_rtp_buffer_new_allocate (header_size, 0, 0);
     } else {
       outbuf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
     }
@@ -745,11 +780,10 @@ gst_rtp_jpeg_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     payload += sizeof (jpeg_header);
     payload_size -= sizeof (jpeg_header);
 
-    if (dri_found)
-    {
+    if (dri_found) {
       memcpy (payload, &restart_marker_header, sizeof (restart_marker_header));
       payload += sizeof (restart_marker_header);
-      payload_size -= sizeof (restart_marker_header);	    
+      payload_size -= sizeof (restart_marker_header);
     }
 
     /* only send quant table with first packet */
