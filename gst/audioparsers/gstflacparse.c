@@ -1040,6 +1040,9 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
   guint32 img_len = 0, img_type = 0;
   guint32 img_mimetype_len = 0, img_description_len = 0;
 
+  if (!gst_byte_reader_skip (&reader, 4))
+    goto error;
+
   if (!gst_byte_reader_get_uint32_be (&reader, &img_type))
     goto error;
 
