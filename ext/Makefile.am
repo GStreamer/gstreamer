@@ -336,6 +336,12 @@ else
 SWFDEC_DIR=
 endif
 
+if USE_TELETEXTDEC
+TELETEXT_DIR=teletextdec
+else
+TELETEXT_DIR=
+endif
+
 if USE_VP8
 VP8_DIR=vp8
 else
@@ -423,6 +429,7 @@ SUBDIRS=\
 	$(GME_DIR) \
 	$(SPC_DIR) \
 	$(SWFDEC_DIR) \
+	$(TELETEXTDEC_DIR) \
 	$(TIMIDITY_DIR) \
 	$(VP8_DIR) \
 	$(XVID_DIR) \
@@ -473,6 +480,7 @@ DIST_SUBDIRS = \
 	spc \
 	gme \
 	swfdec \
+	teletextdec \
 	timidity \
 	voaacenc \
 	voamrwbenc \

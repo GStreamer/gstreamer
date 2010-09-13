@@ -1382,6 +1382,12 @@ AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
   AC_SUBST(TIMIDITY_LIBS)
 ])
 
+dnl *** teletextdec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TELETEXTDEC, true)
+AG_GST_CHECK_FEATURE(TELETEXTDEC, [Teletext decoder], teletextdec, [
+  AG_GST_PKG_CHECK_MODULES(TELETEXTDEC, zvbi-0.2)
+ ])
+
 dnl *** wildmidi ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WILDMIDI, true)
 AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
@@ -1719,6 +1725,7 @@ AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_VP8, false)
 AM_CONDITIONAL(USE_RTMP, false)
+AM_CONDITIONAL(USE_TELETEXTDEC, false)
 
 fi dnl of EXT plugins
 
@@ -1947,6 +1954,7 @@ ext/schroedinger/Makefile
 ext/sdl/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
+ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/gsettings/Makefile
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
