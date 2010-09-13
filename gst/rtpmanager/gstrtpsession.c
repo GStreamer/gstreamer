@@ -542,7 +542,8 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
-          "The RTCP bandwidth of the session in bytes per second (or as a real fraction of the RTP bandwidth if < 1)",
+          "The RTCP bandwidth of the session in bytes per second "
+          "(or as a real fraction of the RTP bandwidth if < 1.0)",
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
