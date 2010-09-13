@@ -529,3 +529,26 @@ GES_TRACK_TEXT_OVERLAY_CLASS
 GES_TRACK_TEXT_OVERLAY_GET_CLASS
 GES_TYPE_TRACK_TEXT_OVERLAY
 </SECTION>
+
+<SECTION>
+<FILE>ges-formatter</FILE>
+<TITLE>GESFormatter</TITLE>
+GESFormatter
+GESFormatterClass
+ges_formatter_new
+ges_formatter_load_from_uri
+ges_formatter_save_to_uri
+ges_formatter_new_for_uri
+ges_formatter_can_load_uri
+ges_formatter_can_save_uri
+ges_formatter_load
+ges_formatter_save
+<SUBSECTION Standard>
+ges_formatter_get_type
+GES_FORMATTER
+GES_FORMATTER_CLASS
+GES_FORMATTER_GET_CLASS
+GES_IS_FORMATTER
+GES_IS_FORMATTER_CLASS
+GES_TYPE_FORMATTER
+</SECTION>

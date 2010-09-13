@@ -105,5 +105,7 @@ typedef struct _GESTrackTextOverlay GESTrackTextOverlay;
 typedef struct _GESTrackTextOverlayClass
   GESTrackTextOverlayClass;
 
+typedef struct _GESFormatter GESFormatter;
+typedef struct _GESFormatterClass GESFormatterClass;
 
 #endif /* __GES_TYPES_H__ */

@@ -54,6 +54,8 @@
 #include <ges/ges-track-video-transition.h>
 #include <ges/ges-track-audio-transition.h>
 
+#include <ges/ges-formatter.h>
+
 #include <ges/ges-utils.h>
 
 G_BEGIN_DECLS

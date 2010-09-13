@@ -38,6 +38,7 @@ libges_@GST_MAJORMINOR@_la_SOURCES = 		\
 	ges-track-title-source.c		\
 	ges-track-text-overlay.c		\
 	ges-screenshot.c			\
+	ges-formatter.c				\
 	ges-utils.c
 
 libges_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/ges/
@@ -74,6 +75,7 @@ libges_@GST_MAJORMINOR@include_HEADERS = 	\
 	ges-track-title-source.h		\
 	ges-track-text-overlay.h		\
 	ges-screenshot.h			\
+	ges-formatter.h				\
 	ges-utils.h
 
 libges_@GST_MAJORMINOR@_la_CFLAGS = -I$(top_srcdir) $(GST_PROFILE_CFLAGS) $(GST_PBUTILS_CFLAGS) $(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)

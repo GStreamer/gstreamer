@@ -77,6 +77,11 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-custom-timeline-source.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Serialization Classes</title>
+    <xi:include href="xml/ges-formatter.xml"/>
+  </chapter>
+
   <chapter id="ges-hierarchy">
     <title>Object Hierarchy</title>
     <xi:include href="xml/tree_index.sgml"/>
