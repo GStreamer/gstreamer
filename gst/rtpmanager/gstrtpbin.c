@@ -1823,7 +1823,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       rtpbin->use_pipeline_clock = g_value_get_boolean (value);
       for (sessions = rtpbin->sessions; sessions;
           sessions = g_slist_next (sessions)) {
-        g_object_set (G_OBJECT (((GstRtpBinSession *) sessions->data)->session),
+        GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
+
+        g_object_set (G_OBJECT (session->session),
             "use-pipeline-clock", rtpbin->use_pipeline_clock, NULL);
       }
       GST_RTP_BIN_UNLOCK (rtpbin);
