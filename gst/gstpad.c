@@ -5074,8 +5074,10 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_PAD_UNSET_FLUSHING (pad);
-      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
+      if (G_LIKELY (GST_PAD_ACTIVATE_MODE (pad) != GST_ACTIVATE_NONE)) {
+        GST_PAD_UNSET_FLUSHING (pad);
+        GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
+      }
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */
       GST_PAD_STREAM_LOCK (pad);
