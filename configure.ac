@@ -273,6 +273,7 @@ AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
+AG_GST_CHECK_PLUGIN(colorspace)
 AG_GST_CHECK_PLUGIN(dataurisrc)
 AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(debugutils)
@@ -1722,6 +1723,7 @@ gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
 gst/cdxaparse/Makefile
+gst/colorspace/Makefile
 gst/coloreffects/Makefile
 gst/dataurisrc/Makefile
 gst/dccp/Makefile
