@@ -1469,6 +1469,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
  * @sess: and #RTPSession
  * @buffer: an RTP buffer
  * @current_time: the current system time
+ * @running_time: the running_time of @buffer
  *
  * Process an RTP buffer in the session manager. This function takes ownership
  * of @buffer.
