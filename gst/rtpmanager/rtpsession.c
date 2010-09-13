@@ -1385,6 +1385,7 @@ rtp_session_get_source_by_cname (RTPSession * sess, const gchar * cname)
   return result;
 }
 
+/* should be called with the SESSION lock */
 static guint32
 rtp_session_create_new_ssrc (RTPSession * sess)
 {
@@ -1488,6 +1489,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTPArrivalStats arrival;
   guint32 csrcs[16];
   guint8 i, count;
+  guint64 oldrate;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -1512,6 +1514,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   prevactive = RTP_SOURCE_IS_ACTIVE (source);
+  oldrate = source->bitrate;
 
   /* copy available csrc for later */
   count = gst_rtp_buffer_get_csrc_count (buffer);
@@ -1537,6 +1540,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
     GST_DEBUG ("source: %08x became sender, %d sender sources", ssrc,
         sess->stats.sender_sources);
   }
+  if (oldrate != source->bitrate)
+    sess->recalc_bandwidth = TRUE;
 
   if (created)
     on_new_ssrc (sess, source);
@@ -2022,6 +2027,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   RTPSource *source;
   gboolean prevsender;
   gboolean valid_packet;
+  guint64 oldrate;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
@@ -2044,12 +2050,15 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   source->last_rtp_activity = current_time;
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
+  oldrate = source->bitrate;
 
   /* we use our own source to send */
   result = rtp_source_send_rtp (source, data, is_list, running_time);
 
   if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
     sess->stats.sender_sources++;
+  if (oldrate != source->bitrate)
+    sess->recalc_bandwidth = TRUE;
   RTP_SESSION_UNLOCK (sess);
 
   return result;
@@ -2064,11 +2073,8 @@ invalid_packet:
 }
 
 static void
-add_bitrates (gpointer key, gpointer value, gpointer user_data)
+add_bitrates (gpointer key, RTPSource * source, gdouble * bandwidth)
 {
-  gdouble *bandwidth = user_data;
-  RTPSource *source = value;
-
   *bandwidth += source->bitrate;
 }
 
@@ -2078,8 +2084,8 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
 {
   GstClockTime result;
 
-  if (sess->recalc_bandwidth || sess->bandwidth == 0) {
-    /* recalculate bandwidth when it changed */
+  /* recalculate bandwidth when it changed */
+  if (sess->recalc_bandwidth) {
     gdouble bandwidth;
 
     if (sess->bandwidth > 0)
@@ -2088,15 +2094,15 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       /* If it is <= 0, then try to estimate the actual bandwidth */
       bandwidth = sess->source->bitrate;
 
-      g_hash_table_foreach (sess->cnames, add_bitrates, &bandwidth);
+      g_hash_table_foreach (sess->cnames, (GHFunc) add_bitrates, &bandwidth);
       bandwidth /= 8.0;
     }
-
     if (bandwidth == 0)
       bandwidth = RTP_STATS_BANDWIDTH;
 
-    rtp_stats_set_bandwidths (&sess->stats, sess->bandwidth,
+    rtp_stats_set_bandwidths (&sess->stats, bandwidth,
         sess->rtcp_bandwidth, sess->rtcp_rs_bandwidth, sess->rtcp_rr_bandwidth);
+
     sess->recalc_bandwidth = FALSE;
   }
 
