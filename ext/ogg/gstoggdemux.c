@@ -452,34 +452,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     if (bytes < 1)
       goto empty_packet;
 
-    if (data[0] & 1) {
+    if ((data[0] & 1) || (data[0] & 3 && pad->map.is_ogm_text)) {
       /* We don't push header packets for OGM */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
-      goto done;
-    } else if (data[0] & 3 && pad->map.is_ogm_text) {
-      GstTagList *tags;
-
-      /* We don't push comment packets either for text streams,
-       * other streams will handle the comment packets in the
-       * decoder */
-      buf = gst_buffer_new ();
-
-      GST_BUFFER_DATA (buf) = (guint8 *) data;
-      GST_BUFFER_SIZE (buf) = bytes;
-
-      tags = gst_tag_list_from_vorbiscomment_buffer (buf,
-          (const guint8 *) "\003vorbis", 7, NULL);
-      gst_buffer_unref (buf);
-      buf = NULL;
-
-      if (tags) {
-        GST_DEBUG_OBJECT (ogg, "tags = %" GST_PTR_FORMAT, tags);
-        gst_element_found_tags_for_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad),
-            tags);
-      } else {
-        GST_DEBUG_OBJECT (ogg, "failed to extract tags from vorbis comment");
-      }
-
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
     }
@@ -497,32 +471,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       }
     }
   } else if (pad->map.is_vp8) {
-    if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
-      GstTagList *tags;
-
-      buf = gst_buffer_new ();
-
-      GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
-      GST_BUFFER_SIZE (buf) = packet->bytes;
-
-      tags = gst_tag_list_from_vorbiscomment_buffer (buf,
-          (const guint8 *) "OVP80\2 ", 7, NULL);
-      gst_buffer_unref (buf);
-      buf = NULL;
-
-      if (tags) {
-        GST_DEBUG_OBJECT (ogg, "tags = %" GST_PTR_FORMAT, tags);
-        gst_element_found_tags_for_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad),
-            tags);
-      } else {
-        GST_DEBUG_OBJECT (ogg,
-            "failed to extract VP8 tags from vorbis comment");
-      }
-      /* We don't push header packets for VP8 */
-      cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
-      goto done;
-    } else if (packet->b_o_s || (packet->bytes >= 5
-            && memcmp (packet->packet, "OVP80", 5) == 0)) {
+    if ((packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) ||
+        packet->b_o_s ||
+        (packet->bytes >= 5 && memcmp (packet->packet, "OVP80", 5) == 0)) {
       /* We don't push header packets for VP8 */
       cret = gst_ogg_demux_combine_flows (ogg, pad, GST_FLOW_OK);
       goto done;
@@ -1791,6 +1742,10 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
     pad->added = TRUE;
+    if (event && pad->map.taglist) {
+      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (ogg),
+          GST_PAD_CAST (pad), pad->map.taglist);
+    }
   }
   /* prefer the index bitrate over the ones encoded in the streams */
   ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);

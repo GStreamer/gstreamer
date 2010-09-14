@@ -596,6 +596,32 @@ granulepos_to_key_granule_vp8 (GstOggStream * pad, gint64 granulepos)
 static gboolean
 is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
 {
+  if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
+    GstBuffer *buf = NULL;
+    gchar *encoder = NULL;
+
+    buf = gst_buffer_new ();
+
+    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
+    GST_BUFFER_SIZE (buf) = packet->bytes;
+
+    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (const guint8 *) "OVP80\2 ", 7, &encoder);
+    if (!pad->taglist) {
+      GST_ERROR_OBJECT (pad, "couldn't decode comments");
+      pad->taglist = gst_tag_list_new ();
+    }
+
+    gst_buffer_unref (buf);
+    buf = NULL;
+    if (encoder) {
+      if (encoder[0])
+        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ENCODER, encoder, NULL);
+      g_free (encoder);
+    }
+  }
+
   if (packet->bytes >= 5 && packet->packet[0] == 0x4F &&
       packet->packet[1] == 0x56 && packet->packet[2] == 0x50 &&
       packet->packet[3] == 0x38 && packet->packet[4] == 0x30)
@@ -611,7 +637,9 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   guint8 *data = packet->packet;
   guint chans;
 
-  data += 1 + 6 + 4;
+  data += 1 + 6;
+  pad->version = GST_READ_UINT32_LE (data);
+  data += 4;
   chans = GST_READ_UINT8 (data);
   data += 1;
   pad->granulerate_n = GST_READ_UINT32_LE (data);
@@ -620,8 +648,26 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->last_size = 0;
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
-  data += 8;
-  pad->bitrate = GST_READ_UINT32_LE (data);
+  data += 4;
+  pad->bitrate_upper = GST_READ_UINT32_LE (data);
+  data += 4;
+  pad->bitrate_nominal = GST_READ_UINT32_LE (data);
+  data += 4;
+  pad->bitrate_lower = GST_READ_UINT32_LE (data);
+
+  if (pad->bitrate_nominal > 0 && pad->bitrate_nominal <= 0x7FFFFFFF)
+    pad->bitrate = pad->bitrate_nominal;
+
+  if (pad->bitrate_upper > 0 && pad->bitrate_upper <= 0x7FFFFFFF)
+    if (!pad->bitrate)
+      pad->bitrate = pad->bitrate_upper;
+
+  if (pad->bitrate_lower > 0 && pad->bitrate_lower <= 0x7FFFFFFF)
+    if (!pad->bitrate)
+      pad->bitrate = pad->bitrate_lower;
+
+  pad->taglist = NULL;
+
   GST_LOG ("bit rate: %d", pad->bitrate);
 
   pad->n_header_packets = 3;
@@ -643,6 +689,49 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
 {
   if (packet->bytes > 0 && (packet->packet[0] & 0x01) == 0)
     return FALSE;
+
+  if (((guint8 *) (packet->packet))[0] == 0x03) {
+    GstBuffer *buf = NULL;
+    gchar *encoder = NULL;
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
+    GST_BUFFER_SIZE (buf) = packet->bytes;
+
+    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (const guint8 *) "\003vorbis", 7, &encoder);
+
+    if (!pad->taglist) {
+      GST_ERROR_OBJECT (pad, "couldn't decode comments");
+      pad->taglist = gst_tag_list_new ();
+    }
+
+    gst_buffer_unref (buf);
+    buf = NULL;
+    if (encoder) {
+      if (encoder[0])
+        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ENCODER, encoder, NULL);
+      g_free (encoder);
+    }
+    gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_ENCODER_VERSION, pad->version, NULL);
+
+    if (pad->bitrate_nominal > 0 && pad->bitrate_nominal <= 0x7FFFFFFF)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_NOMINAL_BITRATE, (guint) pad->bitrate_nominal, NULL);
+
+    if (pad->bitrate_upper > 0 && pad->bitrate_upper <= 0x7FFFFFFF)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_MAXIMUM_BITRATE, (guint) pad->bitrate_upper, NULL);
+
+    if (pad->bitrate_lower > 0 && pad->bitrate_lower <= 0x7FFFFFFF)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_MINIMUM_BITRATE, (guint) pad->bitrate_lower, NULL);
+
+    if (pad->bitrate)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
+  }
 
   if (packet->packet[0] == 5) {
     parse_vorbis_setup_packet (pad, packet);
@@ -1204,6 +1293,32 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
 static gboolean
 is_header_ogm (GstOggStream * pad, ogg_packet * packet)
 {
+  if (!(packet->packet[0] & 1) && (packet->packet[0] & 3 && pad->is_ogm_text)) {
+    GstBuffer *buf = NULL;
+    gchar *encoder = NULL;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
+    GST_BUFFER_SIZE (buf) = packet->bytes;;
+
+    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (const guint8 *) "\003vorbis", 7, &encoder);
+
+    if (!pad->taglist) {
+      GST_ERROR ("couldn't decode comments");
+      pad->taglist = gst_tag_list_new ();
+    }
+
+    gst_buffer_unref (buf);
+    buf = NULL;
+    if (encoder) {
+      if (encoder[0])
+        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_ENCODER, encoder, NULL);
+      g_free (encoder);
+    }
+  }
+
   if (packet->bytes >= 1 && (packet->packet[0] & 0x01))
     return TRUE;
 

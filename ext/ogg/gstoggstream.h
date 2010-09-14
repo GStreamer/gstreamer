@@ -25,6 +25,7 @@
 #include <ogg/ogg.h>
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 
 G_BEGIN_DECLS
 
@@ -79,6 +80,11 @@ struct _GstOggStream
   int vorbis_log2_num_modes;
   int vorbis_mode_sizes[256];
   int last_size;
+  int version;
+  long bitrate_upper;
+  long bitrate_nominal;
+  long bitrate_lower;
+  GstTagList *taglist;
   /* theora stuff */
   gboolean theora_has_zero_keyoffset;
   /* VP8 stuff */
