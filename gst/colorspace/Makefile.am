@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstcolorspace.la
 ORC_SOURCE=gstcolorspaceorc
 include $(top_srcdir)/common/orc.mak
 
-libgstcolorspace_la_SOURCES = gstcolorspace.c
+libgstcolorspace_la_SOURCES = gstcolorspace.c colorspace.c
 nodist_libgstcolorspace_la_SOURCES = $(ORC_NODIST_SOURCES)
 libgstcolorspace_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -17,6 +17,6 @@ libgstcolorspace_la_LIBADD = \
 libgstcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcolorspace_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstcolorspace.h
+noinst_HEADERS = gstcolorspace.h colorspace.h
 
 

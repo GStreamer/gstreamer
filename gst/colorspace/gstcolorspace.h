@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
+#include "colorspace.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,8 @@ struct _GstCsp {
   GstVideoFormat from_format;
   GstVideoFormat to_format;
   guint32 *palette;
+
+  ColorspaceConvert *convert;
 };
 
 struct _GstCspClass
