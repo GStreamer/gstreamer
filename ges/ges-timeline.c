@@ -200,7 +200,7 @@ ges_timeline_init (GESTimeline * self)
       self);
   g_signal_connect (self->discoverer, "discovered",
       G_CALLBACK (discoverer_discovered_cb), self);
-  gst_discoverer_start (self->discoverer, NULL);
+  gst_discoverer_start (self->discoverer);
 }
 
 /**

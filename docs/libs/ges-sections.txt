@@ -293,7 +293,7 @@ ges_timeline_pipeline_get_thumbnail_buffer
 ges_timeline_pipeline_get_thumbnail_rgb24
 ges_timeline_pipeline_save_thumbnail
 <SUBSECTION Standard>
-gst_play_sink_convert_frame
+ges_play_sink_convert_frame
 ges_timeline_pipeline_get_type
 GES_TIMELINE_PIPELINE
 GES_TIMELINE_PIPELINE_CLASS

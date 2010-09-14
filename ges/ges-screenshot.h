@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 GstBuffer *
-gst_play_sink_convert_frame (GstElement * playsink, GstCaps * caps);
+ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps);
 
 G_END_DECLS
 

@@ -726,9 +726,7 @@ ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
     return NULL;
   }
 
-  /* FIXME (merge into core): this should be replaced with the "convert-frame"
-   * action */
-  buf = gst_play_sink_convert_frame (sink, caps);
+  buf = ges_play_sink_convert_frame (sink, caps);
 
   return buf;
 }
