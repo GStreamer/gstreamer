@@ -416,6 +416,11 @@ gboolean gst_video_event_parse_still_frame (GstEvent *event, gboolean *in_still)
 GstBuffer *gst_video_convert_frame(GstBuffer *buf, const GstCaps *to_caps,
 				   GstClockTime timeout, GError **error);
 
+typedef void (*GstVideoConvertFrameCallback) (GstBuffer *buf, GError *error, gpointer user_data);
+void gst_video_convert_frame_async(GstBuffer *buf, const GstCaps *to_caps,
+				   GstClockTime timeout, GstVideoConvertFrameCallback callback,
+                                   gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_H__ */
