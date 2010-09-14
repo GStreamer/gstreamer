@@ -1898,6 +1898,7 @@ gst_video_parse_caps_pixel_aspect_ratio
 gst_video_parse_caps_color_matrix
 gst_video_parse_caps_chroma_site
 gst_video_convert_frame
+gst_video_convert_frame_async
 </SECTION>
 
 <SECTION>
