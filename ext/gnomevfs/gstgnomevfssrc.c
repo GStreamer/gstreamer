@@ -211,7 +211,8 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
       g_param_spec_boxed ("handle",
           "GnomeVFSHandle", "Handle for GnomeVFS",
           GST_TYPE_GNOME_VFS_HANDLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
