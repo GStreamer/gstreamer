@@ -149,6 +149,7 @@ static void paint_setup_v410 (paintinfo * p, unsigned char *dest);
 #endif
 static void paint_setup_v216 (paintinfo * p, unsigned char *dest);
 static void paint_setup_v210 (paintinfo * p, unsigned char *dest);
+static void paint_setup_UYVP (paintinfo * p, unsigned char *dest);
 
 static void paint_setup_YUV9 (paintinfo * p, unsigned char *dest);
 static void paint_setup_YVU9 (paintinfo * p, unsigned char *dest);
@@ -188,6 +189,7 @@ static void convert_hline_v410 (paintinfo * p, int y);
 #endif
 static void convert_hline_v216 (paintinfo * p, int y);
 static void convert_hline_v210 (paintinfo * p, int y);
+static void convert_hline_UYVP (paintinfo * p, int y);
 
 static void convert_hline_YUV9 (paintinfo * p, int y);
 static void convert_hline_astr4 (paintinfo * p, int y);
@@ -219,6 +221,7 @@ struct fourcc_list_struct fourcc_list[] = {
 #endif
   {VTS_YUV, "v210", "v210", 21, paint_setup_v210, convert_hline_v210},
   {VTS_YUV, "v216", "v216", 32, paint_setup_v216, convert_hline_v216},
+  {VTS_YUV, "UYVP", "UYVP", 20, paint_setup_UYVP, convert_hline_UYVP},
 
 #ifdef disabled
   {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_IYU2, convert_hline_IYU2},
@@ -1764,6 +1767,18 @@ paint_setup_v210 (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_UYVP (paintinfo * p, unsigned char *dest)
+{
+  p->ap = dest;
+  p->yp = dest + 0;
+  p->up = dest + 0;
+  p->vp = dest + 0;
+  p->ystride = GST_ROUND_UP_4 ((p->width * 2 * 5 + 3) / 4);
+  GST_ERROR ("stride %d", p->ystride);
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
 paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
@@ -1920,6 +1935,31 @@ convert_hline_v210 (paintinfo * p, int y)
     GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 4, a1);
     GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 8, a2);
     GST_WRITE_UINT32_LE (Y + (i / 6) * 16 + 12, a3);
+  }
+}
+
+static void
+convert_hline_UYVP (paintinfo * p, int y)
+{
+  int i;
+  guint8 *Y = p->yp + y * p->ystride;
+  guint8 *ayuv = p->tmpline;
+
+  for (i = 0; i < p->width; i += 2) {
+    guint16 y0, y1;
+    guint16 u0;
+    guint16 v0;
+
+    y0 = ayuv[4 * (i + 0) + 1];
+    y1 = ayuv[4 * (i + 1) + 1];
+    u0 = (ayuv[4 * (i + 0) + 2] + ayuv[4 * (i + 1) + 2] + 1) >> 1;
+    v0 = (ayuv[4 * (i + 0) + 3] + ayuv[4 * (i + 1) + 3] + 1) >> 1;
+
+    Y[(i / 2) * 5 + 0] = u0;
+    Y[(i / 2) * 5 + 1] = y0 >> 2;
+    Y[(i / 2) * 5 + 2] = (y0 << 6) | (v0 >> 4);
+    Y[(i / 2) * 5 + 3] = (v0 << 4) | (y1 >> 2);
+    Y[(i / 2) * 5 + 4] = (y1 << 2);
   }
 }
 
