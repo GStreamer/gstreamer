@@ -716,8 +716,11 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
 
   for (n = 0; n < qtdemux->n_streams; n++) {
     GstPad *pad;
+    QtDemuxStream *stream = qtdemux->streams[n];
 
-    if ((pad = qtdemux->streams[n]->pad)) {
+    if (etype == GST_EVENT_EOS && stream->sent_eos)
+      pushed_sucessfully = TRUE;
+    else if ((pad = stream->pad)) {
       if (gst_pad_push_event (pad, gst_event_ref (event)))
         pushed_sucessfully = TRUE;
     }
