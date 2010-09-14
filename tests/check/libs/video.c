@@ -634,6 +634,82 @@ GST_START_TEST (test_convert_frame)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMainLoop *loop;
+  GstBuffer *buffer;
+  GError *error;
+} ConvertFrameContext;
+
+static void
+convert_frame_async_callback (GstBuffer * buf, GError * err,
+    ConvertFrameContext * cf_data)
+{
+  cf_data->buffer = buf;
+  cf_data->error = err;
+
+  g_main_loop_quit (cf_data->loop);
+}
+
+GST_START_TEST (test_convert_frame_async)
+{
+  GstCaps *from_caps, *to_caps;
+  GstBuffer *from_buffer;
+  gint i;
+  guint8 *data;
+  GMainLoop *loop;
+  ConvertFrameContext cf_data = { NULL, NULL, NULL };
+
+  from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
+  data = GST_BUFFER_DATA (from_buffer);
+
+  for (i = 0; i < 640 * 480; i++) {
+    data[4 * i + 0] = 0;        /* x */
+    data[4 * i + 1] = 255;      /* R */
+    data[4 * i + 2] = 0;        /* G */
+    data[4 * i + 3] = 0;        /* B */
+  }
+  from_caps = gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB,
+      640, 480, 25, 1, 1, 1);
+  gst_buffer_set_caps (from_buffer, from_caps);
+
+  to_caps =
+      gst_caps_from_string
+      ("something/that, does=(string)not, exist=(boolean)FALSE");
+
+  loop = cf_data.loop = g_main_loop_new (NULL, FALSE);
+
+  gst_video_convert_frame_async (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
+      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data);
+
+  g_main_loop_run (loop);
+
+  fail_if (cf_data.buffer != NULL);
+  fail_unless (cf_data.error != NULL);
+  g_error_free (cf_data.error);
+  cf_data.error = NULL;
+
+  gst_caps_unref (to_caps);
+  to_caps =
+      gst_video_format_new_caps (GST_VIDEO_FORMAT_I420, 240, 320, 25, 1, 1, 2);
+  gst_video_convert_frame_async (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
+      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data);
+  g_main_loop_run (loop);
+  fail_unless (cf_data.buffer != NULL);
+  fail_unless (gst_caps_can_intersect (to_caps,
+          GST_BUFFER_CAPS (cf_data.buffer)));
+  fail_unless (cf_data.error == NULL);
+
+  gst_buffer_unref (from_buffer);
+  gst_caps_unref (from_caps);
+  gst_buffer_unref (cf_data.buffer);
+  gst_caps_unref (to_caps);
+
+  g_main_loop_unref (loop);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -646,6 +722,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
+  tcase_add_test (tc_chain, test_convert_frame_async);
 
   return s;
 }
