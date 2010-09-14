@@ -1,23 +1,23 @@
 
 .function cogorc_memcpy_2d
 .flags 2d
-.dest 1 d1
-.source 1 s1
+.dest 1 d1 guint8
+.source 1 s1 guint8
 
 copyb d1, s1
 
 
 .function cogorc_downsample_horiz_cosite_1tap
-.dest 1 d1
-.source 2 s1
+.dest 1 d1 guint8
+.source 2 s1 guint8
 
 select0wb d1, s1
 
 
 .function cogorc_downsample_horiz_cosite_3tap
-.dest 1 d1
-.source 2 s1
-.source 2 s2
+.dest 1 d1 guint8
+.source 2 s1 guint8
+.source 2 s2 guint8
 .temp 1 t1
 .temp 1 t2
 .temp 1 t3
@@ -41,9 +41,9 @@ convsuswb d1, t4
 
 
 .function cogorc_downsample_420_jpeg
-.dest 1 d1
-.source 2 s1
-.source 2 s2
+.dest 1 d1 guint8
+.source 2 s1 guint8
+.source 2 s2 guint8
 .temp 2 t1
 .temp 1 t2
 .temp 1 t3
@@ -62,18 +62,18 @@ avgub d1, t2, t4
 
 
 .function cogorc_downsample_vert_halfsite_2tap
-.dest 1 d1
-.source 1 s1
-.source 1 s2
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 
 avgub d1, s1, s2
 
 
 .function cogorc_downsample_vert_cosite_3tap
-.dest 1 d1
-.source 1 s1
-.source 1 s2
-.source 1 s3
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .temp 2 t1
 .temp 2 t2
 .temp 2 t3
@@ -91,11 +91,11 @@ convsuswb d1, t1
 
 
 .function cogorc_downsample_vert_halfsite_4tap
-.dest 1 d1
-.source 1 s1
-.source 1 s2
-.source 1 s3
-.source 1 s4
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
+.source 1 s4 guint8
 .temp 2 t1
 .temp 2 t2
 .temp 2 t3
@@ -116,8 +116,8 @@ convsuswb d1, t2
 
 
 .function cogorc_upsample_horiz_cosite_1tap
-.dest 2 d1 guint8
-.source 1 s1
+.dest 2 d1 guint8 guint8
+.source 1 s1 guint8
 .temp 1 t1
 
 copyb t1, s1
@@ -125,9 +125,9 @@ mergebw d1, t1, t1
 
 
 .function cogorc_upsample_horiz_cosite
-.dest 2 d1 guint8
-.source 1 s1
-.source 1 s2
+.dest 2 d1 guint8 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 .temp 1 t1
 .temp 1 t2
 
@@ -137,9 +137,9 @@ mergebw d1, t1, t2
 
 
 .function cogorc_upsample_vert_avgub
-.dest 1 d1
-.source 1 s1
-.source 1 s2
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 
 avgub d1, s1, s2
 
@@ -147,15 +147,15 @@ avgub d1, s1, s2
 
 
 .function orc_unpack_yuyv_y
-.dest 1 d1
-.source 2 s1
+.dest 1 d1 guint8
+.source 2 s1 guint8
 
 select0wb d1, s1
 
 
 .function orc_unpack_yuyv_u
-.dest 1 d1
-.source 4 s1
+.dest 1 d1 guint8
+.source 4 s1 guint8
 .temp 2 t1
 
 select0lw t1, s1
@@ -163,8 +163,8 @@ select1wb d1, t1
 
 
 .function orc_unpack_yuyv_v
-.dest 1 d1
-.source 4 s1
+.dest 1 d1 guint8
+.source 4 s1 guint8
 .temp 2 t1
 
 select1lw t1, s1
@@ -172,10 +172,10 @@ select1wb d1, t1
 
 
 .function orc_pack_yuyv
-.dest 4 d1
-.source 2 s1 guint8
-.source 1 s2
-.source 1 s3
+.dest 4 d1 guint8
+.source 2 s1 guint8 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .temp 1 t1
 .temp 1 t2
 .temp 2 t3
@@ -191,15 +191,15 @@ mergewl d1, t3, t4
 
 
 .function orc_unpack_uyvy_y
-.dest 1 d1
-.source 2 s1
+.dest 1 d1 guint8
+.source 2 s1 guint8
 
 select1wb d1, s1
 
 
 .function orc_unpack_uyvy_u
-.dest 1 d1
-.source 4 s1
+.dest 1 d1 guint8
+.source 4 s1 guint8
 .temp 2 t1
 
 select0lw t1, s1
@@ -207,8 +207,8 @@ select0wb d1, t1
 
 
 .function orc_unpack_uyvy_v
-.dest 1 d1
-.source 4 s1
+.dest 1 d1 guint8
+.source 4 s1 guint8
 .temp 2 t1
 
 select1lw t1, s1
@@ -216,10 +216,10 @@ select0wb d1, t1
 
 
 .function orc_pack_uyvy
-.dest 4 d1
-.source 2 s1 guint8
-.source 1 s2
-.source 1 s3
+.dest 4 d1 guint8
+.source 2 s1 guint8 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .temp 1 t1
 .temp 1 t2
 .temp 2 t3
@@ -235,9 +235,9 @@ mergewl d1, t3, t4
 
 
 .function orc_matrix2_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -255,9 +255,9 @@ convsuswb d1, t1
 
 
 .function orc_matrix2_11_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -280,9 +280,9 @@ convsuswb d1, t3
 
 
 .function orc_matrix2_12_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -306,10 +306,10 @@ convsuswb d1, t3
 
 
 .function orc_matrix3_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
-.source 1 s3 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
+.source 1 s3 guint8 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -331,10 +331,10 @@ convsuswb d1, t1
 
 
 .function orc_matrix3_100_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
-.source 1 s3 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
+.source 1 s3 guint8 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -361,10 +361,10 @@ convsuswb d1, t3
 
 
 .function orc_matrix3_100_offset_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
-.source 1 s3 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
+.source 1 s3 guint8 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -394,10 +394,10 @@ convsuswb d1, t1
 
 
 .function orc_matrix3_000_u8
-.dest 1 d1 guint8
-.source 1 s1 guint8
-.source 1 s2 guint8
-.source 1 s3 guint8
+.dest 1 d1 guint8 guint8
+.source 1 s1 guint8 guint8
+.source 1 s2 guint8 guint8
+.source 1 s3 guint8 guint8
 .param 2 p1
 .param 2 p2
 .param 2 p3
@@ -425,10 +425,10 @@ convwb d1, t1
 
 
 .function orc_pack_123x
-.dest 4 d1 guint32
-.source 1 s1
-.source 1 s2
-.source 1 s3
+.dest 4 d1 guint32 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 1 p1
 .temp 2 t1
 .temp 2 t2
@@ -439,10 +439,10 @@ mergewl d1, t1, t2
 
 
 .function orc_pack_x123
-.dest 4 d1 guint32
-.source 1 s1
-.source 1 s2
-.source 1 s3
+.dest 4 d1 guint32 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
+.source 1 s3 guint8
 .param 1 p1
 .temp 2 t1
 .temp 2 t2
@@ -453,9 +453,9 @@ mergewl d1, t1, t2
 
 
 .function cogorc_combine2_u8
-.dest 1 d1
-.source 1 s1
-.source 1 s2
+.dest 1 d1 guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 .param 2 p1
 .param 2 p2
 .temp 2 t1
@@ -471,12 +471,12 @@ convsuswb d1, t1
 
 
 .function cogorc_convert_I420_UYVY
-.dest 4 d1
-.dest 4 d2
-.source 2 y1
-.source 2 y2
-.source 1 u
-.source 1 v
+.dest 4 d1 guint8
+.dest 4 d2 guint8
+.source 2 y1 guint8
+.source 2 y2 guint8
+.source 1 u guint8
+.source 1 v guint8
 .temp 2 uv
 
 mergebw uv, u, v
@@ -485,12 +485,12 @@ x2 mergebw d2, uv, y2
 
 
 .function cogorc_convert_I420_YUY2
-.dest 4 d1
-.dest 4 d2
-.source 2 y1
-.source 2 y2
-.source 1 u
-.source 1 v
+.dest 4 d1 guint8
+.dest 4 d2 guint8
+.source 2 y1 guint8
+.source 2 y2 guint8
+.source 1 u guint8
+.source 1 v guint8
 .temp 2 uv
 
 mergebw uv, u, v
@@ -500,12 +500,12 @@ x2 mergebw d2, y2, uv
 
 
 .function cogorc_convert_I420_AYUV
-.dest 4 d1
-.dest 4 d2
-.source 1 y1
-.source 1 y2
-.source 1 u
-.source 1 v
+.dest 4 d1 guint8
+.dest 4 d2 guint8
+.source 1 y1 guint8
+.source 1 y2 guint8
+.source 1 u guint8
+.source 1 v guint8
 .const 1 c255 255
 .temp 2 uv
 .temp 2 ay
@@ -522,12 +522,12 @@ mergewl d2, ay, uv
 
 
 .function cogorc_convert_YUY2_I420
-.dest 2 y1
-.dest 2 y2
-.dest 1 u
-.dest 1 v
-.source 4 yuv1
-.source 4 yuv2
+.dest 2 y1 guint8
+.dest 2 y2 guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 yuv1 guint8
+.source 4 yuv2 guint8
 .temp 2 t1
 .temp 2 t2
 .temp 2 ty
@@ -542,17 +542,17 @@ splitwb v, u, t1
 
 .function cogorc_convert_UYVY_YUY2
 .flags 2d
-.dest 4 yuy2
-.source 4 uyvy
+.dest 4 yuy2 guint8
+.source 4 uyvy guint8
 
 x2 swapw yuy2, uyvy
 
 
 .function cogorc_planar_chroma_420_422
 .flags 2d
-.dest 1 d1
-.dest 1 d2
-.source 1 s
+.dest 1 d1 guint8
+.dest 1 d2 guint8
+.source 1 s guint8
 
 copyb d1, s
 copyb d2, s
@@ -560,9 +560,9 @@ copyb d2, s
 
 .function cogorc_planar_chroma_420_444
 .flags 2d
-.dest 2 d1
-.dest 2 d2
-.source 1 s
+.dest 2 d1 guint8
+.dest 2 d2 guint8
+.source 1 s guint8
 .temp 2 t
 
 splatbw t, s
@@ -572,8 +572,8 @@ storew d2, t
 
 .function cogorc_planar_chroma_422_444
 .flags 2d
-.dest 2 d1
-.source 1 s
+.dest 2 d1 guint8
+.source 1 s guint8
 .temp 2 t
 
 splatbw t, s
@@ -582,8 +582,8 @@ storew d1, t
 
 .function cogorc_planar_chroma_444_422
 .flags 2d
-.dest 1 d
-.source 2 s
+.dest 1 d guint8
+.source 2 s guint8
 .temp 1 t1
 .temp 1 t2
 
@@ -593,9 +593,9 @@ avgub d, t1, t2
 
 .function cogorc_planar_chroma_444_420
 .flags 2d
-.dest 1 d
-.source 2 s1
-.source 2 s2
+.dest 1 d guint8
+.source 2 s1 guint8
+.source 2 s2 guint8
 .temp 2 t
 .temp 1 t1
 .temp 1 t2
@@ -607,17 +607,17 @@ avgub d, t1, t2
 
 .function cogorc_planar_chroma_422_420
 .flags 2d
-.dest 1 d
-.source 1 s1
-.source 1 s2
+.dest 1 d guint8
+.source 1 s1 guint8
+.source 1 s2 guint8
 
 avgub d, s1, s2
 
 
 .function cogorc_convert_YUY2_AYUV
 .flags 2d
-.dest 8 ayuv
-.source 4 yuy2
+.dest 8 ayuv guint8
+.source 4 yuy2 guint8
 .const 2 c255 0xff
 .temp 2 yy
 .temp 2 uv
@@ -632,8 +632,8 @@ x2 mergewl ayuv, ayay, uvuv
 
 .function cogorc_convert_UYVY_AYUV
 .flags 2d
-.dest 8 ayuv
-.source 4 uyvy
+.dest 8 ayuv guint8
+.source 4 uyvy guint8
 .const 2 c255 0xff
 .temp 2 yy
 .temp 2 uv
@@ -648,10 +648,10 @@ x2 mergewl ayuv, ayay, uvuv
 
 .function cogorc_convert_YUY2_Y42B
 .flags 2d
-.dest 2 y
-.dest 1 u
-.dest 1 v
-.source 4 yuy2
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 yuy2 guint8
 .temp 2 uv
 
 x2 splitwb uv, y, yuy2
@@ -660,10 +660,10 @@ splitwb v, u, uv
 
 .function cogorc_convert_UYVY_Y42B
 .flags 2d
-.dest 2 y
-.dest 1 u
-.dest 1 v
-.source 4 uyvy
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 uyvy guint8
 .temp 2 uv
 
 x2 splitwb y, uv, uyvy
@@ -672,10 +672,10 @@ splitwb v, u, uv
 
 .function cogorc_convert_YUY2_Y444
 .flags 2d
-.dest 2 y
-.dest 2 uu
-.dest 2 vv
-.source 4 yuy2
+.dest 2 y guint8
+.dest 2 uu guint8
+.dest 2 vv guint8
+.source 4 yuy2 guint8
 .temp 2 uv
 .temp 1 u
 .temp 1 v
@@ -688,10 +688,10 @@ splatbw vv, v
 
 .function cogorc_convert_UYVY_Y444
 .flags 2d
-.dest 2 y
-.dest 2 uu
-.dest 2 vv
-.source 4 uyvy
+.dest 2 y guint8
+.dest 2 uu guint8
+.dest 2 vv guint8
+.source 4 uyvy guint8
 .temp 2 uv
 .temp 1 u
 .temp 1 v
@@ -703,12 +703,12 @@ splatbw vv, v
 
 
 .function cogorc_convert_UYVY_I420
-.dest 2 y1
-.dest 2 y2
-.dest 1 u
-.dest 1 v
-.source 4 yuv1
-.source 4 yuv2
+.dest 2 y1 guint8
+.dest 2 y2 guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 yuv1 guint8
+.source 4 yuv2 guint8
 .temp 2 t1
 .temp 2 t2
 .temp 2 ty
@@ -724,12 +724,12 @@ splitwb v, u, t1
 
 .function cogorc_convert_AYUV_I420
 .flags 2d
-.dest 2 y1
-.dest 2 y2
-.dest 1 u
-.dest 1 v
-.source 8 ayuv1
-.source 8 ayuv2
+.dest 2 y1 guint8
+.dest 2 y2 guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv1 guint8
+.source 8 ayuv2 guint8
 .temp 4 ay
 .temp 4 uv1
 .temp 4 uv2
@@ -754,8 +754,8 @@ avgub v, t1, t2
 
 .function cogorc_convert_AYUV_YUY2
 .flags 2d
-.dest 4 yuy2
-.source 8 ayuv
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
 .temp 2 yy
 .temp 2 uv1
 .temp 2 uv2
@@ -771,8 +771,8 @@ x2 mergebw yuy2, yy, uv1
 
 .function cogorc_convert_AYUV_UYVY
 .flags 2d
-.dest 4 yuy2
-.source 8 ayuv
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
 .temp 2 yy
 .temp 2 uv1
 .temp 2 uv2
@@ -789,10 +789,10 @@ x2 mergebw yuy2, uv1, yy
 
 .function cogorc_convert_AYUV_Y42B
 .flags 2d
-.dest 2 y
-.dest 1 u
-.dest 1 v
-.source 8 ayuv
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv guint8
 .temp 4 ayay
 .temp 4 uvuv
 .temp 2 uv1
@@ -807,10 +807,10 @@ x2 select1wb y, ayay
 
 .function cogorc_convert_AYUV_Y444
 .flags 2d
-.dest 1 y
-.dest 1 u
-.dest 1 v
-.source 4 ayuv
+.dest 1 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 ayuv guint8
 .temp 2 ay
 .temp 2 uv
 
@@ -821,10 +821,10 @@ select1wb y, ay
 
 .function cogorc_convert_Y42B_YUY2
 .flags 2d
-.dest 4 yuy2
-.source 2 y
-.source 1 u
-.source 1 v
+.dest 4 yuy2 guint8
+.source 2 y guint8
+.source 1 u guint8
+.source 1 v guint8
 .temp 2 uv
 
 mergebw uv, u, v
@@ -833,10 +833,10 @@ x2 mergebw yuy2, y, uv
 
 .function cogorc_convert_Y42B_UYVY
 .flags 2d
-.dest 4 uyvy
-.source 2 y
-.source 1 u
-.source 1 v
+.dest 4 uyvy guint8
+.source 2 y guint8
+.source 1 u guint8
+.source 1 v guint8
 .temp 2 uv
 
 mergebw uv, u, v
@@ -845,10 +845,10 @@ x2 mergebw uyvy, uv, y
 
 .function cogorc_convert_Y42B_AYUV
 .flags 2d
-.dest 8 ayuv
-.source 2 yy
-.source 1 u
-.source 1 v
+.dest 8 ayuv guint8
+.source 2 yy guint8
+.source 1 u guint8
+.source 1 v guint8
 .const 1 c255 255
 .temp 2 uv
 .temp 2 ay
@@ -863,10 +863,10 @@ x2 mergewl ayuv, ayay, uvuv
 
 .function cogorc_convert_Y444_YUY2
 .flags 2d
-.dest 4 yuy2
-.source 2 y
-.source 2 u
-.source 2 v
+.dest 4 yuy2 guint8
+.source 2 y guint8
+.source 2 u guint8
+.source 2 v guint8
 .temp 2 uv
 .temp 4 uvuv
 .temp 2 uv1
@@ -880,10 +880,10 @@ x2 mergebw yuy2, y, uv
 
 .function cogorc_convert_Y444_UYVY
 .flags 2d
-.dest 4 uyvy
-.source 2 y
-.source 2 u
-.source 2 v
+.dest 4 uyvy guint8
+.source 2 y guint8
+.source 2 u guint8
+.source 2 v guint8
 .temp 2 uv
 .temp 4 uvuv
 .temp 2 uv1
@@ -897,10 +897,10 @@ x2 mergebw uyvy, uv, y
 
 .function cogorc_convert_Y444_AYUV
 .flags 2d
-.dest 4 ayuv
-.source 1 yy
-.source 1 u
-.source 1 v
+.dest 4 ayuv guint8
+.source 1 yy guint8
+.source 1 u guint8
+.source 1 v guint8
 .const 1 c255 255
 .temp 2 uv
 .temp 2 ay
@@ -913,8 +913,8 @@ mergewl ayuv, ay, uv
 
 .function cogorc_convert_AYUV_ARGB
 .flags 2d
-.dest 4 argb
-.source 4 ayuv
+.dest 4 argb guint8
+.source 4 ayuv guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 a
@@ -978,8 +978,8 @@ x4 addb argb, x, 128
 
 .function cogorc_convert_AYUV_BGRA
 .flags 2d
-.dest 4 argb
-.source 4 ayuv
+.dest 4 argb guint8
+.source 4 ayuv guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 a
@@ -1044,8 +1044,8 @@ x4 addb argb, x, 128
 
 .function cogorc_convert_AYUV_ABGR
 .flags 2d
-.dest 4 argb
-.source 4 ayuv
+.dest 4 argb guint8
+.source 4 ayuv guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 a
@@ -1109,8 +1109,8 @@ x4 addb argb, x, 128
 
 .function cogorc_convert_AYUV_RGBA
 .flags 2d
-.dest 4 argb
-.source 4 ayuv
+.dest 4 argb guint8
+.source 4 ayuv guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 a
@@ -1173,10 +1173,10 @@ x4 addb argb, x, 128
 
 
 .function cogorc_convert_I420_BGRA
-.dest 4 argb
-.source 1 y
-.source 1 u
-.source 1 v
+.dest 4 argb guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 t3
@@ -1238,12 +1238,12 @@ x4 addb argb, x, c128
 
 
 .function cogorc_convert_I420_BGRA_avg
-.dest 4 argb
-.source 1 y
-.source 1 u1
-.source 1 u2
-.source 1 v1
-.source 1 v2
+.dest 4 argb guint8
+.source 1 y guint8
+.source 1 u1 guint8
+.source 1 u2 guint8
+.source 1 v1 guint8
+.source 1 v2 guint8
 .temp 2 t1
 .temp 2 t2
 .temp 1 t3
@@ -1307,5 +1307,375 @@ mergebw t2, r, 255
 mergewl x, t1, t2
 x4 addb argb, x, c128
 
+
+
+.function cogorc_getline_I420
+.dest 4 d guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw uv, tu, tv
+mergebw ay, c255, y
+mergewl d, ay, uv
+
+
+.function cogorc_getline_YUY2
+.dest 8 ayuv guint8
+.source 4 yuy2 guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb uv, yy, yuy2
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_getline_UYVY
+.dest 8 ayuv guint8
+.source 4 uyvy guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb yy, uv, uyvy
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_getline_YVYU
+.dest 8 ayuv guint8
+.source 4 uyvy guint8
+.const 2 c255 0xff
+.temp 2 yy
+.temp 2 uv
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitwb yy, uv, uyvy
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_getline_Y42B
+.dest 8 ayuv guint8
+.source 2 yy guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+.temp 4 uvuv
+.temp 4 ayay
+
+mergebw uv, u, v
+x2 mergebw ayay, c255, yy
+mergewl uvuv, uv, uv
+x2 mergewl ayuv, ayay, uvuv
+
+
+.function cogorc_getline_Y444
+.dest 4 ayuv guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 2 ay
+
+mergebw uv, u, v
+mergebw ay, c255, y
+mergewl ayuv, ay, uv
+
+
+.function cogorc_getline_Y800
+.dest 4 ayuv guint8
+.source 1 y guint8
+.const 1 c255 255
+.const 2 c0xffff 0xffff
+.temp 2 ay
+
+mergebw ay, c255, y
+mergewl ayuv, ay, c0xffff
+
+
+.function cogorc_getline_BGRA
+.dest 4 argb guint8
+.source 4 bgra guint8
+
+swapl argb, bgra
+
+
+.function cogorc_getline_ABGR
+.dest 4 argb guint8
+.source 4 abgr guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 gr
+.temp 2 ab
+.temp 2 ar
+.temp 2 gb
+
+splitlw gr, ab, abgr
+splitwb r, g, gr
+splitwb b, a, ab
+mergebw ar, a, r
+mergebw gb, g, b
+mergewl argb, ar, gb
+
+
+.function cogorc_getline_RGBA
+.dest 4 argb guint8
+.source 4 rgba guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 rg
+.temp 2 ba
+.temp 2 ar
+.temp 2 gb
+
+splitlw ba, rg, rgba
+splitwb g, r, rg
+splitwb a, b, ba
+mergebw ar, a, r
+mergebw gb, g, b
+mergewl argb, ar, gb
+
+
+.function cogorc_getline_NV12
+.dest 8 d guint8
+.source 2 y guint8
+.source 2 uv guint8
+.const 1 c255 255
+.temp 4 ay
+.temp 4 uvuv
+
+mergewl uvuv, uv, uv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uvuv
+
+
+.function cogorc_getline_NV21
+.dest 8 d guint8
+.source 2 y guint8
+.source 2 vu guint8
+.const 1 c255 255
+.temp 2 uv
+.temp 4 ay
+.temp 4 uvuv
+
+swapw uv, vu
+mergewl uvuv, uv, uv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uvuv
+
+
+.function cogorc_putline_I420
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uv
+.temp 2 uu
+.temp 2 vv
+.temp 1 t1
+.temp 1 t2
+
+x2 splitlw uv, ay, ayuv
+x2 select1wb y, ay
+x2 splitwb vv, uu, uv
+splitwb t1, t2, uu
+avgub u, t1, t2
+splitwb t1, t2, vv
+avgub v, t1, t2
+
+
+
+.function cogorc_putline_YUY2
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+x2 mergebw yuy2, yy, uv1
+
+
+.function cogorc_putline_YVYU
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+swapw uv1, uv1
+x2 mergebw yuy2, yy, uv1
+
+
+.function cogorc_putline_UYVY
+.dest 4 yuy2 guint8
+.source 8 ayuv guint8
+.temp 2 yy
+.temp 2 uv1
+.temp 2 uv2
+.temp 4 ayay
+.temp 4 uvuv
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+x2 select1wb yy, ayay
+x2 mergebw yuy2, uv1, yy
+
+
+
+.function cogorc_putline_Y42B
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 8 ayuv guint8
+.temp 4 ayay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+
+x2 splitlw uvuv, ayay, ayuv
+splitlw uv1, uv2, uvuv
+x2 avgub uv1, uv1, uv2
+splitwb v, u, uv1
+x2 select1wb y, ayay
+
+
+.function cogorc_putline_Y444
+.dest 1 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.source 4 ayuv guint8
+.temp 2 ay
+.temp 2 uv
+
+splitlw uv, ay, ayuv
+splitwb v, u, uv
+select1wb y, ay
+
+
+.function cogorc_putline_Y800
+.dest 1 y guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+select0lw ay, ayuv
+select1wb y, ay
+
+
+.function cogorc_putline_BGRA
+.dest 4 bgra guint8
+.source 4 argb guint8
+
+swapl bgra, argb
+
+
+.function cogorc_putline_ABGR
+.dest 4 abgr guint8
+.source 4 argb guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 gr
+.temp 2 ab
+.temp 2 ar
+.temp 2 gb
+
+splitlw gb, ar, argb
+splitwb b, g, gb
+splitwb r, a, ar
+mergebw ab, a, b
+mergebw gr, g, r
+mergewl abgr, ab, gr
+
+
+.function cogorc_putline_RGBA
+.dest 4 rgba guint8
+.source 4 argb guint8
+.temp 1 a
+.temp 1 r
+.temp 1 g
+.temp 1 b
+.temp 2 rg
+.temp 2 ba
+.temp 2 ar
+.temp 2 gb
+
+splitlw gb, ar, argb
+splitwb b, g, gb
+splitwb r, a, ar
+mergebw ba, b, a
+mergebw rg, r, g
+mergewl rgba, rg, ba
+
+
+.function cogorc_putline_NV12
+.dest 2 y guint8
+.dest 2 uv guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+
+x2 splitlw uvuv, ay, ayuv
+x2 select1wb y, ay
+splitlw uv1, uv2, uvuv
+x2 avgub uv, uv1, uv2
+
+
+.function cogorc_putline_NV21
+.dest 2 y guint8
+.dest 2 vu guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uvuv
+.temp 2 uv1
+.temp 2 uv2
+.temp 2 uv
+
+x2 splitlw uvuv, ay, ayuv
+x2 select1wb y, ay
+splitlw uv1, uv2, uvuv
+x2 avgub uv, uv1, uv2
+swapw vu, uv
 
 

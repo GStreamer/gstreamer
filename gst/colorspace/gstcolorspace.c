@@ -47,7 +47,7 @@ GST_DEBUG_CATEGORY (colorspace_performance);
 #define CSP_VIDEO_CAPS						\
   "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
   "height="GST_VIDEO_SIZE_RANGE",framerate="GST_VIDEO_FPS_RANGE","	\
-  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV } ;" \
+  "format= (fourcc) { I420 , NV12 , NV21 , YV12 , YUY2 , Y42B , Y444 , YUV9 , YVU9 , Y41B , Y800 , Y8 , GREY , Y16 , UYVY , YVYU , IYU1 , v308 , AYUV, v210 } ;" \
   GST_VIDEO_CAPS_RGB";"							\
   GST_VIDEO_CAPS_BGR";"							\
   GST_VIDEO_CAPS_RGBx";"						\
@@ -266,13 +266,23 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       in_interlaced != out_interlaced)
     goto format_mismatch;
 
+  space->from_format = in_format;
+  space->to_format = out_format;
   space->width = in_width;
   space->height = in_height;
   space->interlaced = in_interlaced;
 
+  space->convert = colorspace_convert_new (out_format, in_format,
+      in_width, in_height);
+  if (space->convert) {
+    colorspace_convert_set_interlaced (space->convert, in_interlaced);
+  }
 
   /* palette, only for from data */
   /* FIXME add palette handling */
+#if 0
+  colorspace_convert_set_palette (convert, palette);
+#endif
 
   GST_DEBUG ("reconfigured %d %d", space->from_format, space->to_format);
 
@@ -281,21 +291,21 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   /* ERRORS */
 no_width_height:
   {
-    GST_DEBUG_OBJECT (space, "did not specify width or height");
+    GST_ERROR_OBJECT (space, "did not specify width or height");
     space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
 no_framerate:
   {
-    GST_DEBUG_OBJECT (space, "did not specify framerate");
+    GST_ERROR_OBJECT (space, "did not specify framerate");
     space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
 format_mismatch:
   {
-    GST_DEBUG_OBJECT (space, "input and output formats do not match");
+    GST_ERROR_OBJECT (space, "input and output formats do not match");
     space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
@@ -393,6 +403,8 @@ gst_csp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
           space->to_format == GST_VIDEO_FORMAT_UNKNOWN))
     goto unknown_format;
 
+  colorspace_convert_convert (space->convert, GST_BUFFER_DATA (outbuf),
+      GST_BUFFER_DATA (inbuf));
 
   /* baseclass copies timestamps */
   GST_DEBUG ("from %d -> to %d done", space->from_format, space->to_format);
