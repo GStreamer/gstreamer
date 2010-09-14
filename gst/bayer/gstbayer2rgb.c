@@ -138,7 +138,8 @@ struct _GstBayer2RGBClass
   GST_VIDEO_CAPS_RGB ";"                         \
   GST_VIDEO_CAPS_BGR
 
-#define SINK_CAPS "video/x-raw-bayer,width=(int)[1,MAX],height=(int)[1,MAX]"
+#define SINK_CAPS "video/x-raw-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
+  "width=(int)[1,MAX],height=(int)[1,MAX]"
 
 enum
 {
@@ -328,7 +329,8 @@ gst_bayer2rgb_transform_caps (GstBaseTransform * base,
   structure = gst_caps_get_structure (caps, 0);
 
   if (direction == GST_PAD_SRC) {
-    newcaps = gst_caps_new_simple ("video/x-raw-bayer", NULL);
+    newcaps = gst_caps_from_string ("video/x-raw-bayer,"
+        "format=(string){bggr,grbg,gbrg,rggb}");
   } else {
     newcaps = gst_caps_new_simple ("video/x-raw-rgb", NULL);
   }
