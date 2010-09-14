@@ -650,7 +650,7 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
 
-  structure = gst_event_get_structure (event);
+  structure = event->structure;
   if (G_LIKELY (update))
     *update =
         g_value_get_boolean (gst_structure_id_get_value (structure,
@@ -770,7 +770,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_BUFFERSIZE);
 
-  structure = gst_event_get_structure (event);
+  structure = event->structure;
   if (format)
     *format =
         g_value_get_enum (gst_structure_id_get_value (structure,
@@ -874,7 +874,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
 
-  structure = gst_event_get_structure (event);
+  structure = event->structure;
   if (proportion)
     *proportion =
         g_value_get_double (gst_structure_id_get_value (structure,
@@ -994,7 +994,7 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
 
-  structure = gst_event_get_structure (event);
+  structure = event->structure;
   if (rate)
     *rate =
         g_value_get_double (gst_structure_id_get_value (structure,
@@ -1085,15 +1085,12 @@ gst_event_new_latency (GstClockTime latency)
 void
 gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
 {
-  const GstStructure *structure;
-
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_LATENCY);
 
-  structure = gst_event_get_structure (event);
   if (latency)
     *latency =
-        g_value_get_uint64 (gst_structure_id_get_value (structure,
+        g_value_get_uint64 (gst_structure_id_get_value (event->structure,
             GST_QUARK (LATENCY)));
 }
 
@@ -1166,7 +1163,7 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STEP);
 
-  structure = gst_event_get_structure (event);
+  structure = event->structure;
   if (format)
     *format = g_value_get_enum (gst_structure_id_get_value (structure,
             GST_QUARK (FORMAT)));
@@ -1225,14 +1222,11 @@ gst_event_new_sink_message (GstMessage * msg)
 void
 gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 {
-  const GstStructure *structure;
-
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SINK_MESSAGE);
 
-  structure = gst_event_get_structure (event);
   if (msg)
     *msg =
         GST_MESSAGE (gst_value_dup_mini_object (gst_structure_id_get_value
-            (structure, GST_QUARK (MESSAGE))));
+            (event->structure, GST_QUARK (MESSAGE))));
 }
