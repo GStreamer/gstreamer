@@ -2055,7 +2055,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     traf_node = qtdemux_tree_get_sibling_by_type (traf_node, FOURCC_traf);
   }
   g_node_destroy (moof_node);
-  return FALSE;
+  return TRUE;
 
 missing_tfhd:
   {
