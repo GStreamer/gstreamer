@@ -421,7 +421,7 @@ GstBuffer *gst_video_convert_frame(GstBuffer *buf, const GstCaps *to_caps,
 typedef void (*GstVideoConvertFrameCallback) (GstBuffer *buf, GError *error, gpointer user_data);
 void gst_video_convert_frame_async(GstBuffer *buf, const GstCaps *to_caps,
 				   GstClockTime timeout, GstVideoConvertFrameCallback callback,
-                                   gpointer user_data);
+                                   gpointer user_data, GDestroyNotify destroy_notify);
 
 G_END_DECLS
 

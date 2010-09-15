@@ -369,6 +369,7 @@ typedef struct
   GstElement *pipeline;
   GstVideoConvertFrameCallback callback;
   gpointer user_data;
+  GDestroyNotify destroy_notify;
   GMainContext *context;
   GstBuffer *buffer;
   gulong timeout_id;
@@ -381,6 +382,7 @@ typedef struct
   GstBuffer *buffer;
   GError *error;
   gpointer user_data;
+  GDestroyNotify destroy_notify;
 
   GstVideoConvertFrameContext *context;
 } GstVideoConvertFrameCallbackContext;
@@ -418,6 +420,9 @@ convert_frame_dispatch_callback (GstVideoConvertFrameCallbackContext * ctx)
 {
   ctx->callback (ctx->buffer, ctx->error, ctx->user_data);
 
+  if (ctx->destroy_notify)
+    ctx->destroy_notify (ctx->user_data);
+
   return FALSE;
 }
 
@@ -435,6 +440,7 @@ convert_frame_finish (GstVideoConvertFrameContext * context, GstBuffer * buffer,
   ctx = g_slice_new (GstVideoConvertFrameCallbackContext);
   ctx->callback = context->callback;
   ctx->user_data = context->user_data;
+  ctx->destroy_notify = context->destroy_notify;
   ctx->buffer = buffer;
   ctx->error = error;
   ctx->context = context;
@@ -571,6 +577,7 @@ done:
  * @to_caps: the #GstCaps to convert to
  * @timeout: the maximum amount of time allowed for the processing.
  * @callback: %GstVideoConvertFrameCallback that will be called after conversion.
+ * @destroy_notify: %GDestroyNotify to be called after @user_data is not needed anymore
  *
  * Converts a raw video buffer into the specified output caps.
  *
@@ -583,13 +590,16 @@ done:
  * %GMainContext, see g_main_context_get_thread_default(). If GLib before 2.22 is used,
  * this will always be the global default main context.
  *
+ * @destroy_notify will be called after the callback was called and @user_data is not needed
+ * anymore.
+ *
  * Since: 0.10.31
  *
  */
 void
 gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
     GstClockTime timeout, GstVideoConvertFrameCallback callback,
-    gpointer user_data)
+    gpointer user_data, GDestroyNotify destroy_notify)
 {
   GMainContext *context = NULL;
   GError *error = NULL;
@@ -603,6 +613,7 @@ gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
   g_return_if_fail (buf != NULL);
   g_return_if_fail (to_caps != NULL);
   g_return_if_fail (GST_BUFFER_CAPS (buf) != NULL);
+  g_return_if_fail (callback != NULL);
 
 #if GLIB_CHECK_VERSION(2,22,0)
   context = g_main_context_get_thread_default ();
@@ -635,6 +646,7 @@ gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
   ctx->buffer = gst_buffer_ref (buf);
   ctx->callback = callback;
   ctx->user_data = user_data;
+  ctx->destroy_notify = destroy_notify;
   ctx->context = g_main_context_ref (context);
   ctx->finished = FALSE;
   ctx->pipeline = pipeline;
@@ -675,6 +687,7 @@ no_pipeline:
     ctx = g_slice_new0 (GstVideoConvertFrameCallbackContext);
     ctx->callback = callback;
     ctx->user_data = user_data;
+    ctx->destroy_notify = destroy_notify;
     ctx->buffer = NULL;
     ctx->error = error;
 

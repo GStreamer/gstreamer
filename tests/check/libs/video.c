@@ -680,7 +680,8 @@ GST_START_TEST (test_convert_frame_async)
   loop = cf_data.loop = g_main_loop_new (NULL, FALSE);
 
   gst_video_convert_frame_async (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
-      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data);
+      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data,
+      NULL);
 
   g_main_loop_run (loop);
 
@@ -693,7 +694,8 @@ GST_START_TEST (test_convert_frame_async)
   to_caps =
       gst_video_format_new_caps (GST_VIDEO_FORMAT_I420, 240, 320, 25, 1, 1, 2);
   gst_video_convert_frame_async (from_buffer, to_caps, GST_CLOCK_TIME_NONE,
-      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data);
+      (GstVideoConvertFrameCallback) convert_frame_async_callback, &cf_data,
+      NULL);
   g_main_loop_run (loop);
   fail_unless (cf_data.buffer != NULL);
   fail_unless (gst_caps_can_intersect (to_caps,
