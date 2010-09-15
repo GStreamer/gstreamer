@@ -147,8 +147,21 @@ typedef struct _AtomData
 
   /* not written */
   guint32 datalen;
+
   guint8 *data;
 } AtomData;
+
+typedef struct _AtomUUID
+{
+  Atom header;
+
+  guint8 uuid[16];
+
+  /* not written */
+  guint32 datalen;
+
+  guint8 *data;
+} AtomUUID;
 
 typedef struct _AtomFTYP
 {
@@ -741,6 +754,7 @@ AtomInfo *   build_gama_atom             (gdouble gamma);
 AtomInfo *   build_SMI_atom              (const GstBuffer *seqh);
 AtomInfo *   build_ima_adpcm_extension   (gint channels, gint rate,
                                           gint blocksize);
+AtomInfo *   build_uuid_xmp_atom         (const GstTagList * taglist);
 
 
 /*

@@ -144,6 +144,8 @@ struct _GstQTMux
   AtomsContext *context;
   AtomFTYP *ftyp;
   AtomMOOV *moov;
+  GSList *extra_atoms; /* list of extra top-level atoms (e.g. UUID for xmp)
+                        * Stored as AtomInfo structs */
 
   /* fast start */
   FILE *fast_start_file;
