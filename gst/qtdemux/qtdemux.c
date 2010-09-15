@@ -708,7 +708,7 @@ static void
 gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
 {
   guint n;
-  gboolean pushed_sucessfully = FALSE;
+  gboolean has_valid_stream = FALSE;
   GstEventType etype = GST_EVENT_TYPE (event);
 
   GST_DEBUG_OBJECT (qtdemux, "pushing %s event on all source pads",
@@ -718,17 +718,20 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
     GstPad *pad;
     QtDemuxStream *stream = qtdemux->streams[n];
 
-    if (etype == GST_EVENT_EOS && stream->sent_eos)
-      pushed_sucessfully = TRUE;
-    else if ((pad = stream->pad)) {
-      if (gst_pad_push_event (pad, gst_event_ref (event)))
-        pushed_sucessfully = TRUE;
+    if ((pad = stream->pad)) {
+      has_valid_stream = TRUE;
+
+      if (etype == GST_EVENT_EOS)
+        stream->sent_eos = TRUE;
+
+      gst_pad_push_event (pad, gst_event_ref (event));
     }
   }
+
   gst_event_unref (event);
 
-  /* if it is EOS and nothing is pushed, post an error */
-  if (!pushed_sucessfully && etype == GST_EVENT_EOS) {
+  /* if it is EOS and there are no pads, post an error */
+  if (!has_valid_stream && etype == GST_EVENT_EOS) {
     gst_qtdemux_post_no_playable_stream_error (qtdemux);
   }
 }
