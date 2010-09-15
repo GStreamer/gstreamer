@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-06-26 17:54+0100\n"
+"POT-Creation-Date: 2010-09-15 14:51+0100\n"
 "PO-Revision-Date: 2010-04-26 21:15+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -290,6 +290,102 @@ msgstr "kappaleen TRM-tunniste"
 
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-tunniste"
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing and image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing and image"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
 
 msgid "This CD has no audio tracks"
 msgstr "Tällä CD-levyllä ei ole ääniraitoja"
