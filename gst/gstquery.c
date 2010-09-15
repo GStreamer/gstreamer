@@ -1303,23 +1303,19 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
   GValue *last_array_value;
   const GValue *value;
   GValue range_value = { 0 };
-  gboolean ret = FALSE;
 
-  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, ret);
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_BUFFERING, FALSE);
 
-  if (start >= stop)
-    return ret;
-
-  g_value_init (&range_value, GST_TYPE_INT64_RANGE);
-  gst_value_set_int64_range (&range_value, start, stop);
+  if (G_UNLIKELY (start >= stop))
+    return FALSE;
 
   structure = gst_query_get_structure (query);
   value = gst_structure_id_get_value (structure, GST_QUARK (BUFFERING_RANGES));
   if (value) {
     array = (GValueArray *) g_value_get_boxed (value);
     last_array_value = g_value_array_get_nth (array, array->n_values - 1);
-    if (start > gst_value_get_int64_range_min (last_array_value))
-      ret = TRUE;
+    if (G_UNLIKELY (start <= gst_value_get_int64_range_min (last_array_value)))
+      return FALSE;
   } else {
     GValue new_array_val = { 0, };
 
@@ -1332,17 +1328,14 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
      * existing value array owned by the GstStructure / the field's GValue */
     gst_structure_id_take_value (structure, GST_QUARK (BUFFERING_RANGES),
         &new_array_val);
-
-    ret = TRUE;
   }
 
-  if (ret) {
-    g_value_array_append (array, &range_value);
-  }
+  g_value_init (&range_value, GST_TYPE_INT64_RANGE);
+  gst_value_set_int64_range (&range_value, start, stop);
+  g_value_array_append (array, &range_value);
+  /* skip the g_value_unset(&range_value) here, we know it's not needed */
 
-  g_value_unset (&range_value);
-
-  return ret;
+  return TRUE;
 }
 
 /**
