@@ -1403,6 +1403,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       /* If the caps are raw, this just means we don't want to expose them */
       if (gst_caps_can_intersect (raw, caps)) {
         gst_caps_unref (raw);
+        gst_object_unref (dpad);
         goto discarded_type;
       }
       gst_caps_unref (raw);
@@ -1462,8 +1463,10 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     }
     gst_caps_unref (rawcaps);
 
-    if (dontuse)
+    if (dontuse) {
+      gst_object_unref (dpad);
       goto discarded_type;
+    }
   }
 
   /* 1.f else continue autoplugging something from the list. */
