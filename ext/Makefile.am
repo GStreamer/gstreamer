@@ -202,12 +202,6 @@ else
 MPEG2ENC_DIR=
 endif
 
-if USE_METADATA
-METADATA_DIR=metadata
-else
-METADATA_DIR=
-endif
-
 if USE_MIMIC
 MIMIC_DIR=mimic
 else
@@ -421,7 +415,6 @@ SUBDIRS=\
 	$(LIBMMS_DIR) \
 	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
-	$(METADATA_DIR) \
 	$(MIMIC_DIR) \
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
@@ -476,7 +469,6 @@ DIST_SUBDIRS = \
 	dts \
 	divx \
 	modplug \
-	metadata \
 	mimic \
 	mpeg2enc \
 	mplex \

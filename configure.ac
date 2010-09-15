@@ -743,49 +743,13 @@ AG_GST_CHECK_FEATURE(RESINDVD, [resindvd plugin], resindvd, [
   ])
 ])
 
-dnl **** exif (used on metadata and jifmux tests) ****
+dnl **** exif (used on jifmux tests) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_EXIF, true)
 AG_GST_CHECK_FEATURE(EXIF, [exif], exif, [
   PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
     HAVE_EXIF="no"
     AC_MSG_RESULT(no)
   ])
-])
-
-
-dnl *** METADATA ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_METADATA, true)
-AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
-  HAVE_METADATA="no"
-  PKG_CHECK_MODULES(IPTC, libiptcdata >= 1.0.2, HAVE_IPTC="yes", [
-    HAVE_IPTC="no"
-  ])
-  PKG_CHECK_MODULES(XMP, exempi-2.0, HAVE_XMP="yes", [
-    HAVE_XMP="no"
-  ])
-  PKG_CHECK_MODULES(XMP_1_99_5, exempi-2.0 >= 1.99.5, XMP_CFLAGS="-DXMP_1_99_5 $XMP_CFLAGS", AC_MSG_RESULT(no))
-  if test x$HAVE_EXIF = xyes; then
-    METADATA_CFLAGS="$EXIF_CFLAGS $METADATA_CFLAGS"
-    METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS -lm"
-    HAVE_METADATA="yes"
-  fi
-  if test x$HAVE_IPTC = xyes; then
-    METADATA_CFLAGS="-DHAVE_IPTC $IPTC_CFLAGS $METADATA_CFLAGS"
-    METADATA_LIBS="$IPTC_LIBS $METADATA_LIBS"
-    HAVE_METADATA="yes"
-  fi
-  if test x$HAVE_XMP = xyes; then
-    METADATA_CFLAGS="-DHAVE_XMP $XMP_CFLAGS $METADATA_CFLAGS"
-    METADATA_LIBS="$XMP_LIBS $METADATA_LIBS"
-    HAVE_METADATA="yes"
-  fi
-  if test x$HAVE_METADATA = xno; then
-    AC_MSG_WARN(no of metadata libraries (exif, iptc or xmp) found)
-  else
-    HAVE_METADATA="yes"
-  fi
-  AC_SUBST(METADATA_CFLAGS)
-  AC_SUBST(METADATA_LIBS)
 ])
 
 dnl **** Free AAC Encoder (FAAC) ****
@@ -1602,7 +1566,6 @@ AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIVX, false)
 AM_CONDITIONAL(USE_EXIF, false)
 AM_CONDITIONAL(USE_RESINDVD, false)
-AM_CONDITIONAL(USE_METADATA, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_FBDEV, false)
@@ -1835,7 +1798,6 @@ ext/ladspa/Makefile
 ext/lv2/Makefile
 ext/libmms/Makefile
 ext/Makefile
-ext/metadata/Makefile
 ext/modplug/Makefile
 ext/mpeg2enc/Makefile
 ext/mimic/Makefile

@@ -108,9 +108,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/kate/gstkatetiger.h \
 	$(top_srcdir)/ext/ladspa/gstladspa.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
-	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
-	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
-	$(top_srcdir)/ext/metadata/gstmetadatamux.h \
 	$(top_srcdir)/ext/mimic/gstmimenc.h \
 	$(top_srcdir)/ext/mimic/gstmimdec.h \
 	$(top_srcdir)/ext/modplug/gstmodplug.h \

@@ -51,12 +51,6 @@ else
 check_jifmux =
 endif
 
-if USE_METADATA
-check_metadata = pipelines/metadata
-else
-check_metadata =
-endif
-
 if USE_MPEG2ENC
 check_mpeg2enc = elements/mpeg2enc
 else
