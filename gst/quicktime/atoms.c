@@ -206,6 +206,23 @@ atom_data_free (AtomData * data)
   g_free (data);
 }
 
+static AtomUUID *
+atom_uuid_new (void)
+{
+  AtomUUID *uuid = g_new0 (AtomUUID, 1);
+
+  atom_header_set (&uuid->header, FOURCC_uuid, 0, 0);
+  return uuid;
+}
+
+static void
+atom_uuid_free (AtomUUID * data)
+{
+  atom_clear (&data->header);
+  g_free (data->data);
+  g_free (data);
+}
+
 static void
 atom_ftyp_init (AtomFTYP * ftyp, guint32 major, guint32 version, GList * brands)
 {
@@ -1314,6 +1331,23 @@ atom_data_copy_data (AtomData * data, guint8 ** buffer, guint64 * size,
   }
   if (data->datalen)
     prop_copy_uint8_array (data->data, data->datalen, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
+atom_uuid_copy_data (AtomUUID * uuid, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_copy_data (&uuid->header, buffer, size, offset)) {
+    return 0;
+  }
+  prop_copy_uint8_array (uuid->uuid, 16, buffer, size, offset);
+  if (uuid->datalen)
+    prop_copy_uint8_array (uuid->data, uuid->datalen, buffer, size, offset);
 
   atom_write_size (buffer, size, offset, original_offset);
   return *offset - original_offset;
@@ -2775,17 +2809,23 @@ atom_moov_add_3gp_uint_tag (AtomMOOV * moov, guint32 fourcc, guint16 value)
 void
 atom_moov_add_xmp_tags (AtomMOOV * moov, const GstTagList * tags)
 {
-  GstBuffer *xmpbuffer = gst_tag_list_to_xmp_buffer (tags, TRUE);
+  GstBuffer *xmpbuffer;
   AtomData *data_atom = NULL;
 
-  data_atom = atom_data_new_from_gst_buffer (FOURCC_XMP_, xmpbuffer);
-  gst_buffer_unref (xmpbuffer);
+  if (moov->context.flavor == ATOMS_TREE_FLAVOR_MOV) {
+    xmpbuffer = gst_tag_list_to_xmp_buffer (tags, TRUE);
+    if (xmpbuffer) {
+      data_atom = atom_data_new_from_gst_buffer (FOURCC_XMP_, xmpbuffer);
+      atom_moov_init_metatags (moov, &moov->context);
+      moov->udta->entries = g_list_append (moov->udta->entries,
+          build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
+              atom_data_free));
+      gst_buffer_unref (xmpbuffer);
+    }
+  } else {
+    GST_DEBUG ("Not adding xmp to moov atom, it is only used in 'mov' format");
+  }
 
-  atom_moov_init_metatags (moov, &moov->context);
-
-  moov->udta->entries = g_list_append (moov->udta->entries,
-      build_atom_info_wrapper ((Atom *) data_atom, atom_data_copy_data,
-          atom_data_free));
 }
 
 /*
@@ -3565,4 +3605,31 @@ build_ima_adpcm_extension (gint channels, gint rate, gint blocksize)
 
   return build_atom_info_wrapper ((Atom *) wave, atom_wave_copy_data,
       atom_wave_free);
+}
+
+AtomInfo *
+build_uuid_xmp_atom (const GstTagList * taglist)
+{
+  GstBuffer *xmp_data;
+  AtomUUID *uuid;
+  static guint8 xmp_uuid[] = { 0xBE, 0x7A, 0xCF, 0xCB,
+    0x97, 0xA9, 0x42, 0xE8,
+    0x9C, 0x71, 0x99, 0x94,
+    0x91, 0xE3, 0xAF, 0xAC
+  };
+
+  xmp_data = gst_tag_list_to_xmp_buffer (taglist, TRUE);
+  if (xmp_data == NULL)
+    return NULL;
+
+  uuid = atom_uuid_new ();
+  memcpy (uuid->uuid, xmp_uuid, 16);
+
+  uuid->data = g_malloc (GST_BUFFER_SIZE (xmp_data));
+  uuid->datalen = GST_BUFFER_SIZE (xmp_data);
+  memcpy (uuid->data, GST_BUFFER_DATA (xmp_data), GST_BUFFER_SIZE (xmp_data));
+
+  gst_buffer_unref (xmp_data);
+  return build_atom_info_wrapper ((Atom *) uuid, atom_uuid_copy_data,
+      atom_uuid_free);
 }

@@ -300,6 +300,12 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
     fclose (qtmux->moov_recov_file);
     qtmux->moov_recov_file = NULL;
   }
+  for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
+    AtomInfo *ainfo = (AtomInfo *) walk->data;
+    ainfo->free_func (ainfo->atom);
+  }
+  g_slist_free (qtmux->extra_atoms);
+  qtmux->extra_atoms = NULL;
 
   GST_OBJECT_LOCK (qtmux);
   gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
@@ -880,15 +886,24 @@ gst_qt_mux_add_xmp_tags (GstQTMux * qtmux, const GstTagList * list)
 {
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
 
-  /* adobe specs only say 'quicktime', but I guess we can extrapolate to
-   * mp4 and gpp. Keep mj2 out for now as we don't add any tags for it yet.
+  /* adobe specs only have 'quicktime' and 'mp4',
+   * but I guess we can extrapolate to gpp.
+   * Keep mj2 out for now as we don't add any tags for it yet.
    * If you have further info about xmp on these formats, please share */
   if (qtmux_klass->format == GST_QT_MUX_FORMAT_MJ2)
     return;
 
   GST_DEBUG_OBJECT (qtmux, "Adding xmp tags");
 
-  atom_moov_add_xmp_tags (qtmux->moov, list);
+  if (qtmux_klass->format == GST_QT_MUX_FORMAT_QT) {
+    atom_moov_add_xmp_tags (qtmux->moov, list);
+  } else {
+    /* for isom/mp4, it is a top level uuid atom */
+    AtomInfo *ainfo = build_uuid_xmp_atom (list);
+    if (ainfo) {
+      qtmux->extra_atoms = g_slist_prepend (qtmux->extra_atoms, ainfo);
+    }
+  }
 }
 
 static void
@@ -1489,6 +1504,17 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "calculated moov atom size %" G_GUINT64_FORMAT,
         offset);
     offset += qtmux->header_size + (large_file ? 16 : 8);
+
+    /* sum up with the extra atoms size */
+    for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
+      guint64 extra_size = 0, extra_offset = 0;
+      AtomInfo *ainfo = (AtomInfo *) walk->data;
+
+      if (!ainfo->copy_data_func (ainfo->atom, NULL, &extra_size,
+              &extra_offset))
+        goto serialize_error;
+      offset += extra_offset;
+    }
   } else
     offset = qtmux->header_size;
   atom_moov_chunks_add_offset (qtmux->moov, offset);
@@ -1497,8 +1523,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   offset = size = 0;
   data = NULL;
   GST_LOG_OBJECT (qtmux, "Copying movie header into buffer");
-  ret = atom_moov_copy_data (qtmux->moov, &data, &size, &offset);
-  if (!ret)
+  if (!atom_moov_copy_data (qtmux->moov, &data, &size, &offset))
     goto serialize_error;
 
   buffer = gst_buffer_new ();
@@ -1508,6 +1533,23 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
    * since there is no more use for it anyway */
   GST_DEBUG_OBJECT (qtmux, "Pushing movie atoms");
   gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+
+  /* push extra top-level atoms */
+  for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
+    AtomInfo *ainfo = (AtomInfo *) walk->data;
+
+    offset = size = 0;
+    data = NULL;
+    if (!ainfo->copy_data_func (ainfo->atom, &data, &size, &offset))
+      goto serialize_error;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_MALLOCDATA (buffer) = GST_BUFFER_DATA (buffer) = data;
+    GST_BUFFER_SIZE (buffer) = offset;
+    GST_DEBUG_OBJECT (qtmux, "Pushing extra top-level atom %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (ainfo->atom->type));
+    gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+  }
 
   /* if needed, send mdat atom and move buffered data into it */
   if (qtmux->fast_start_file) {
@@ -1520,12 +1562,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     if (ret != GST_FLOW_OK)
       return ret;
   } else {
-    /* mdata needs update iff not using faststart */
-    GST_DEBUG_OBJECT (qtmux, "updating mdata size");
+    /* mdat needs update iff not using faststart */
+    GST_DEBUG_OBJECT (qtmux, "updating mdat size");
     ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
         qtmux->mdat_size, NULL);
     /* note; no seeking back to the end of file is done,
-     * since we longer write anything anyway */
+     * since we no longer write anything anyway */
   }
 
   return ret;
@@ -1874,8 +1916,12 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
   } else {
     ret = gst_qt_mux_stop_file (qtmux);
     if (ret == GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (qtmux, "Pushing eos");
       gst_pad_push_event (qtmux->srcpad, gst_event_new_eos ());
       ret = GST_FLOW_UNEXPECTED;
+    } else {
+      GST_WARNING_OBJECT (qtmux, "Failed to stop file: %s",
+          gst_flow_get_name (ret));
     }
     qtmux->state = GST_QT_MUX_STATE_EOS;
   }

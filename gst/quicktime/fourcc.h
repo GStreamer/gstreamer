@@ -187,6 +187,7 @@ G_BEGIN_DECLS
 #define FOURCC_soco     GST_MAKE_FOURCC('s','o','c','o')
 #define FOURCC_sosn     GST_MAKE_FOURCC('s','o','s','n')
 #define FOURCC_XMP_     GST_MAKE_FOURCC('X','M','P','_')
+#define FOURCC_uuid     GST_MAKE_FOURCC('u','u','i','d')
 
 
 /* SVQ3 fourcc */
