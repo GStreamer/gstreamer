@@ -1321,19 +1321,26 @@ gst_query_add_buffering_range (GstQuery * query, gint64 start, gint64 stop)
     if (start > gst_value_get_int64_range_min (last_array_value))
       ret = TRUE;
   } else {
+    GValue new_array_val = { 0, };
+
     array = g_value_array_new (0);
+
+    g_value_init (&new_array_val, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&new_array_val, array);
+
+    /* set the value array only once, so we then modify (append to) the
+     * existing value array owned by the GstStructure / the field's GValue */
+    gst_structure_id_take_value (structure, GST_QUARK (BUFFERING_RANGES),
+        &new_array_val);
+
     ret = TRUE;
   }
 
   if (ret) {
     g_value_array_append (array, &range_value);
-    gst_structure_id_set (structure, GST_QUARK (BUFFERING_RANGES),
-        G_TYPE_VALUE_ARRAY, array, NULL);
   }
 
   g_value_unset (&range_value);
-  if (!value)
-    g_value_array_free (array);
 
   return ret;
 }
