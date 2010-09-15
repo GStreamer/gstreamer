@@ -445,6 +445,8 @@ gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class)
   queue->item_del = g_cond_new ();
   queue->queue = g_queue_new ();
 
+  queue->buffering_percent = 100;
+
   /* tempfile related */
   queue->temp_template = NULL;
   queue->temp_location = NULL;
@@ -824,37 +826,38 @@ update_buffering (GstQueue2 * queue)
     if (percent > 100)
       percent = 100;
 
-    queue->buffering_percent = percent;
+    if (percent != queue->buffering_percent) {
+      queue->buffering_percent = percent;
 
-    if (!QUEUE_IS_USING_QUEUE (queue)) {
-      GstFormat fmt = GST_FORMAT_BYTES;
-      gint64 duration;
+      if (!QUEUE_IS_USING_QUEUE (queue)) {
+        GstFormat fmt = GST_FORMAT_BYTES;
+        gint64 duration;
 
-      if (QUEUE_IS_USING_RING_BUFFER (queue))
-        mode = GST_BUFFERING_TIMESHIFT;
-      else
-        mode = GST_BUFFERING_DOWNLOAD;
+        if (QUEUE_IS_USING_RING_BUFFER (queue))
+          mode = GST_BUFFERING_TIMESHIFT;
+        else
+          mode = GST_BUFFERING_DOWNLOAD;
 
-      if (queue->byte_in_rate > 0) {
-        if (gst_pad_query_peer_duration (queue->sinkpad, &fmt, &duration))
-          buffering_left =
-              (gdouble) ((duration -
-                  queue->current->writing_pos) * 1000) / queue->byte_in_rate;
+        if (queue->byte_in_rate > 0) {
+          if (gst_pad_query_peer_duration (queue->sinkpad, &fmt, &duration))
+            buffering_left =
+                (gdouble) ((duration -
+                    queue->current->writing_pos) * 1000) / queue->byte_in_rate;
+        } else {
+          buffering_left = G_MAXINT64;
+        }
       } else {
-        buffering_left = G_MAXINT64;
+        mode = GST_BUFFERING_STREAM;
       }
-    } else {
-      mode = GST_BUFFERING_STREAM;
+
+      GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
+      message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
+          (gint) percent);
+      gst_message_set_buffering_stats (message, mode,
+          queue->byte_in_rate, queue->byte_out_rate, buffering_left);
+
+      gst_element_post_message (GST_ELEMENT_CAST (queue), message);
     }
-
-    GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
-    message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
-        (gint) percent);
-    gst_message_set_buffering_stats (message, mode,
-        queue->byte_in_rate, queue->byte_out_rate, buffering_left);
-
-    gst_element_post_message (GST_ELEMENT_CAST (queue), message);
-
   } else {
     GST_DEBUG_OBJECT (queue, "filled %d percent", (gint) percent);
   }
