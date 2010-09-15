@@ -1311,12 +1311,6 @@ speex_resampler_get_output_latency (SpeexResamplerState * st)
 }
 
 EXPORT int
-speex_resampler_get_filt_len (SpeexResamplerState * st)
-{
-  return st->filt_len;
-}
-
-EXPORT int
 speex_resampler_skip_zeros (SpeexResamplerState * st)
 {
   spx_uint32_t i;
