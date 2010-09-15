@@ -24,6 +24,7 @@
 #  include <config.h>
 #endif
 
+#include <stdio.h>
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
