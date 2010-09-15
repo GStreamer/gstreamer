@@ -52,6 +52,7 @@ CRUFT_FILES = \
 	$(top_builddir)/sys/oss4/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/tests/check/elements/capssetter \
 	$(top_builddir)/tests/check/elements/imagefreeze \
+	$(top_builddir)/tests/check/pipelines/metadata \
 	$(top_builddir)/tests/icles/test-oss4
 
 CRUFT_DIRS = \
@@ -61,7 +62,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/imagefreeze \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/tests/examples/shapewipe
-	$(top_srcdir)/ext/ivorbis
+	$(top_srcdir)/ext/ivorbis \
+	$(top_srcdir)/ext/metadata 
 
 include $(top_srcdir)/common/cruft.mak
 
