@@ -329,21 +329,49 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstV4l2Src:brightness
+   *
+   * Picture brightness, or more precisely, the black level
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
       g_param_spec_int ("brightness", "Brightness",
           "Picture brightness, or more precisely, the black level", G_MININT,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  /**
+   * GstV4l2Src:contrast
+   *
+   * Picture contrast or luma gain
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_CONTRAST,
       g_param_spec_int ("contrast", "Contrast",
           "Picture contrast or luma gain", G_MININT,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  /**
+   * GstV4l2Src:saturation
+   *
+   * Picture color saturation or chroma gain
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_SATURATION,
       g_param_spec_int ("saturation", "Saturation",
           "Picture color saturation or chroma gain", G_MININT,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+  /**
+   * GstV4l2Src:hue
+   *
+   * Hue or color balance
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_HUE,
       g_param_spec_int ("hue", "Hue",
           "Hue or color balance", G_MININT,

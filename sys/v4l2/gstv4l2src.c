@@ -266,6 +266,13 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       g_param_spec_boolean ("always-copy", "Always Copy",
           "If the buffer will or not be used directly from mmap",
           PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstV4l2Src:decimate
+   *
+   * Only use every nth frame
+   *
+   * Since: 0.10.26
+   */
   g_object_class_install_property (gobject_class, PROP_DECIMATE,
       g_param_spec_int ("decimate", "Decimate",
           "Only use every nth frame", 1, G_MAXINT,
