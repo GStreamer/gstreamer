@@ -2097,10 +2097,12 @@ gst_structure_id_get
 gst_structure_id_get_valist
 gst_structure_id_get_value
 gst_structure_id_set_value
+gst_structure_id_take_value
 gst_structure_get
 gst_structure_get_valist
 gst_structure_get_value
 gst_structure_set_value
+gst_structure_take_value
 gst_structure_set
 gst_structure_set_valist
 gst_structure_id_set

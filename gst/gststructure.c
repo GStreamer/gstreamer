@@ -466,6 +466,73 @@ gst_structure_set_value (GstStructure * structure,
       value);
 }
 
+static inline void
+gst_structure_id_take_value_internal (GstStructure * structure, GQuark field,
+    GValue * value)
+{
+  GstStructureField gsfield = { 0, {0,} };
+
+  gsfield.name = field;
+  gsfield.value = *value;
+
+  gst_structure_set_field (structure, &gsfield);
+
+  /* we took ownership */
+#ifdef USE_POISONING
+  memset (value, 0, sizeof (GValue));
+#else
+  value->g_type = G_TYPE_INVALID;
+#endif
+}
+
+/**
+ * gst_structure_id_take_value:
+ * @structure: a #GstStructure
+ * @field: a #GQuark representing a field
+ * @value: (transfer full): the new value of the field
+ *
+ * Sets the field with the given GQuark @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_structure_id_take_value (GstStructure * structure, GQuark field,
+    GValue * value)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_structure_id_take_value_internal (structure, field, value);
+}
+
+/**
+ * gst_structure_take_value:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @value: (transfer full): the new value of the field
+ *
+ * Sets the field with the given name @field to @value.  If the field
+ * does not exist, it is created.  If the field exists, the previous
+ * value is replaced and freed. The function will take ownership of @value.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_structure_take_value (GstStructure * structure, const gchar * fieldname,
+    GValue * value)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (fieldname != NULL);
+  g_return_if_fail (G_IS_VALUE (value));
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  gst_structure_id_take_value_internal (structure,
+      g_quark_from_string (fieldname), value);
+}
+
 /**
  * gst_structure_set:
  * @structure: a #GstStructure
