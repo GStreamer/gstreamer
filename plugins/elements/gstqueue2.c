@@ -781,6 +781,7 @@ update_buffering (GstQueue2 * queue)
     /* on EOS we are always 100% full, we set the var here so that it we can
      * reuse the logic below to stop buffering */
     percent = 100;
+    GST_LOG_OBJECT (queue, "we are EOS");
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
 
@@ -1823,10 +1824,10 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
   }
 
   if (item) {
-    if (QUEUE_IS_USING_QUEUE (queue)) {
-      /* update the buffering status */
-      update_buffering (queue);
+    /* update the buffering status */
+    update_buffering (queue);
 
+    if (QUEUE_IS_USING_QUEUE (queue)) {
       g_queue_push_tail (queue->queue, item);
     } else {
       gst_mini_object_unref (GST_MINI_OBJECT_CAST (item));
