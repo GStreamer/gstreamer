@@ -608,6 +608,8 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->tmpline2 = v->tmpline2;
   p->tmpline_u8 = v->tmpline_u8;
   p->x_offset = (v->horizontal_speed * v->n_frames) % p->width;
+  if (p->x_offset < 0)
+    p->x_offset += p->width;
 
   a = (v->foreground_color >> 24) & 0xff;
   r = (v->foreground_color >> 16) & 0xff;
