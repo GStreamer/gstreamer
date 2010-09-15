@@ -1927,9 +1927,7 @@ gst_videomixer2_class_init (GstVideoMixer2Class * klass)
       GST_DEBUG_FUNCPTR (gst_videomixer2_change_state);
 
   /* Register the pad class */
-  (void) (GST_TYPE_VIDEO_MIXER2_PAD);
-  /* Register the background enum */
-  (void) (GST_TYPE_VIDEO_MIXER2_BACKGROUND);
+  g_type_class_ref (GST_TYPE_VIDEO_MIXER2_PAD);
 }
 
 static void
