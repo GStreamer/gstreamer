@@ -1855,6 +1855,35 @@ gst_base_parse_get_drain (GstBaseParse * parse)
   return ret;
 }
 
+static gboolean
+gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
+    GstClockTime * duration)
+{
+  GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (duration != NULL, FALSE);
+
+  *duration = GST_CLOCK_TIME_NONE;
+  if (parse->priv->duration != -1 && format == parse->priv->duration_fmt) {
+    GST_LOG_OBJECT (parse, "using provided duration");
+    *duration = parse->priv->duration;
+    res = TRUE;
+  } else if (parse->priv->duration != -1) {
+    GST_LOG_OBJECT (parse, "converting provided duration");
+    res = klass->convert (parse, parse->priv->duration_fmt,
+        parse->priv->duration, format, (gint64 *) duration);
+  } else if (format == GST_FORMAT_TIME && parse->priv->estimated_duration != -1) {
+    GST_LOG_OBJECT (parse, "using estimated duration");
+    *duration = parse->priv->estimated_duration;
+    res = TRUE;
+  }
+
+  GST_LOG_OBJECT (parse, "res: %d, duration %" GST_TIME_FORMAT, res,
+      GST_TIME_ARGS (*duration));
+  return res;
+}
+
 /**
  * gst_base_parse_get_querytypes:
  * @pad: GstPad
@@ -1900,6 +1929,8 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
     return FALSE;
   }
 
+  GST_LOG_OBJECT (parse, "handling query: %" GST_PTR_FORMAT, query);
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
@@ -1907,11 +1938,9 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       GST_DEBUG_OBJECT (parse, "position query");
-
       gst_query_parse_position (query, &format, NULL);
 
       g_mutex_lock (parse->parse_lock);
-
       if (format == GST_FORMAT_BYTES) {
         dest_value = parse->priv->offset;
         res = TRUE;
@@ -1919,84 +1948,92 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
           GST_CLOCK_TIME_IS_VALID (parse->segment.last_stop)) {
         dest_value = parse->segment.last_stop;
         res = TRUE;
-      } else {
-        /* priv->offset is updated in both PUSH/PULL modes */
-        res = klass->convert (parse, GST_FORMAT_BYTES, parse->priv->offset,
-            format, &dest_value);
       }
       g_mutex_unlock (parse->parse_lock);
 
       if (res)
         gst_query_set_position (query, format, dest_value);
-      else
+      else {
         res = gst_pad_query_default (pad, query);
-
+        if (!res) {
+          /* no precise result, upstream no idea either, then best estimate */
+          /* priv->offset is updated in both PUSH/PULL modes */
+          g_mutex_lock (parse->parse_lock);
+          res = klass->convert (parse, GST_FORMAT_BYTES, parse->priv->offset,
+              format, &dest_value);
+          g_mutex_unlock (parse->parse_lock);
+        }
+      }
       break;
     }
     case GST_QUERY_DURATION:
     {
       GstFormat format;
-      gint64 dest_value;
+      GstClockTime duration;
 
       GST_DEBUG_OBJECT (parse, "duration query");
-
       gst_query_parse_duration (query, &format, NULL);
 
-      g_mutex_lock (parse->parse_lock);
+      /* consult upstream */
+      res = gst_pad_query_default (pad, query);
 
-      if (format == GST_FORMAT_BYTES) {
-        res = gst_pad_query_peer_duration (parse->sinkpad, &format,
-            &dest_value);
-      } else if (parse->priv->duration != -1 &&
-          format == parse->priv->duration_fmt) {
-        dest_value = parse->priv->duration;
-        res = TRUE;
-      } else if (parse->priv->duration != -1) {
-        res = klass->convert (parse, parse->priv->duration_fmt,
-            parse->priv->duration, format, &dest_value);
-      } else if (parse->priv->estimated_duration != -1) {
-        dest_value = parse->priv->estimated_duration;
-        res = TRUE;
+      /* otherwise best estimate from us */
+      if (!res) {
+        g_mutex_lock (parse->parse_lock);
+        res = gst_base_parse_get_duration (parse, format, &duration);
+        g_mutex_unlock (parse->parse_lock);
+        if (res)
+          gst_query_set_duration (query, format, duration);
       }
-
-      g_mutex_unlock (parse->parse_lock);
-
-      if (res)
-        gst_query_set_duration (query, format, dest_value);
-      else
-        res = gst_pad_query_default (pad, query);
       break;
     }
     case GST_QUERY_SEEKING:
     {
       GstFormat fmt;
+      GstClockTime duration = GST_CLOCK_TIME_NONE;
       gboolean seekable = FALSE;
 
       GST_DEBUG_OBJECT (parse, "seeking query");
-
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
 
-      if (fmt != GST_FORMAT_TIME) {
-        return gst_pad_query_default (pad, query);
+      /* consult upstream */
+      res = gst_pad_query_default (pad, query);
+
+      /* we may be able to help if in TIME */
+      if (fmt == GST_FORMAT_TIME && klass->is_seekable (parse)) {
+        gst_query_parse_seeking (query, &fmt, &seekable, NULL, NULL);
+        /* already OK if upstream takes care */
+        GST_LOG_OBJECT (parse, "upstream handled %d, seekable %d",
+            res, seekable);
+        if (!(res && seekable)) {
+          /* TODO maybe also check upstream provides proper duration ? */
+          seekable = TRUE;
+          if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &duration)
+              || duration == -1) {
+            seekable = FALSE;
+          } else {
+            GstQuery *q;
+
+            q = gst_query_new_seeking (GST_FORMAT_BYTES);
+            if (!gst_pad_peer_query (parse->sinkpad, q)) {
+              seekable = FALSE;
+            } else {
+              gst_query_parse_seeking (q, &fmt, &seekable, NULL, NULL);
+            }
+            GST_LOG_OBJECT (parse, "upstream BYTE handled %d, seekable %d",
+                res, seekable);
+            gst_query_unref (q);
+          }
+          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
+          res = TRUE;
+        }
       }
-
-      seekable = klass->is_seekable (parse);
-
-      /* TODO: could this duration be calculated/converted if subclass
-         hasn't given it? */
-      gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0,
-          (parse->priv->duration == -1) ?
-          GST_CLOCK_TIME_NONE : parse->priv->duration);
-
-      GST_DEBUG_OBJECT (parse, "seekable: %d", seekable);
-      res = TRUE;
       break;
     }
     case GST_QUERY_FORMATS:
       gst_query_set_formatsv (query, 3, fmtlist);
       res = TRUE;
       break;
-
     case GST_QUERY_CONVERT:
     {
       GstFormat src_format, dest_format;
@@ -2005,16 +2042,12 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       gst_query_parse_convert (query, &src_format, &src_value,
           &dest_format, &dest_value);
 
-      /* FIXME: hm? doesn't make sense 
-       * We require all those values to be given
-       if (src_format && src_value && dest_format && dest_value ) { */
       res = klass->convert (parse, src_format, src_value,
           dest_format, &dest_value);
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
             dest_format, dest_value);
       }
-      /*} */
       break;
     }
     default:
