@@ -258,6 +258,10 @@ gboolean gst_base_parse_get_sync (GstBaseParse * parse);
 
 gboolean gst_base_parse_get_drain (GstBaseParse * parse);
 
+gboolean gst_base_parse_convert_default (GstBaseParse * parse,
+                                         GstFormat src_format, gint64 src_value,
+                                         GstFormat dest_format, gint64 * dest_value);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */
