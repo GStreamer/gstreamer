@@ -1962,6 +1962,14 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 
 beach:
   if (ret == GST_FLOW_UNEXPECTED && qtdemux->got_moov) {
+    /* all header tags ready and parsed, push them */
+    GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
+        qtdemux->tag_list);
+    /* post now, send event on pads later */
+    gst_element_post_message (GST_ELEMENT (qtdemux),
+        gst_message_new_tag (GST_OBJECT (qtdemux),
+            gst_tag_list_copy (qtdemux->tag_list)));
+
     qtdemux->state = QTDEMUX_STATE_MOVIE;
     GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
         qtdemux->state);
@@ -3301,6 +3309,14 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           demux->offset = demux->mdatoffset;
           demux->neededbytes = next_entry_size (demux);
           demux->state = QTDEMUX_STATE_MOVIE;
+
+          GST_INFO_OBJECT (demux, "posting global tags: %" GST_PTR_FORMAT,
+              demux->tag_list);
+          /* post now, send event on pads later */
+          gst_element_post_message (GST_ELEMENT (demux),
+              gst_message_new_tag (GST_OBJECT (demux),
+                  gst_tag_list_copy (demux->tag_list)));
+
         } else {
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
           gst_adapter_flush (demux->adapter, demux->neededbytes);
@@ -7338,19 +7354,22 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   }
 
   qtdemux->tag_list = qtdemux_add_container_format (qtdemux, qtdemux->tag_list);
-  GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
-      qtdemux->tag_list);
-  /* post now, send event on pads later */
-  gst_element_post_message (GST_ELEMENT (qtdemux),
-      gst_message_new_tag (GST_OBJECT (qtdemux),
-          gst_tag_list_copy (qtdemux->tag_list)));
 
   /* check if we should post a redirect in case there is a single trak
    * and it is a redirecting trak */
   if (qtdemux->n_streams == 1 && qtdemux->streams[0]->redirect_uri != NULL) {
     GstMessage *m;
+
+    /* Post tags now as there is probably no data on this stream */
+    GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
+        qtdemux->tag_list);
+    /* post now, send event on pads later */
+    gst_element_post_message (GST_ELEMENT (qtdemux),
+        gst_message_new_tag (GST_OBJECT (qtdemux),
+            gst_tag_list_copy (qtdemux->tag_list)));
+
     GST_INFO_OBJECT (qtdemux, "Issuing a redirect due to a single track with "
-        "a external content");
+        "an external content");
     m = gst_message_new_element (GST_OBJECT_CAST (qtdemux),
         gst_structure_new ("redirect",
             "new-location", G_TYPE_STRING, qtdemux->streams[0]->redirect_uri,
