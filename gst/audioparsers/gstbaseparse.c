@@ -802,7 +802,6 @@ gst_base_parse_convert (GstBaseParse * parse,
     if (dest_format == GST_FORMAT_TIME) {
       /* BYTES -> TIME conversion */
       GST_DEBUG_OBJECT (parse, "converting bytes -> time");
-
       *dest_value = gst_util_uint64_scale (src_value, duration, bytes);
       *dest_value *= GST_MSECOND;
       GST_DEBUG_OBJECT (parse, "conversion result: %" G_GINT64_FORMAT " ms",
@@ -810,8 +809,8 @@ gst_base_parse_convert (GstBaseParse * parse,
       ret = TRUE;
     }
   } else if (src_format == GST_FORMAT_TIME) {
-    GST_DEBUG_OBJECT (parse, "converting time -> bytes");
     if (dest_format == GST_FORMAT_BYTES) {
+      GST_DEBUG_OBJECT (parse, "converting time -> bytes");
       *dest_value = gst_util_uint64_scale (src_value / GST_MSECOND, bytes,
           duration);
       GST_DEBUG_OBJECT (parse,
@@ -2267,6 +2266,5 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (klass->set_sink_caps)
     res = klass->set_sink_caps (parse, caps);
 
-  parse->negotiated = res;
   return res && gst_pad_set_caps (pad, caps);
 }
