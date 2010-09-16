@@ -64,6 +64,7 @@
 #include "gstinfo.h"
 #include "gsturi.h"
 #include "gstregistry.h"
+#include "gst.h"
 
 #include "glib-compat-private.h"
 
@@ -435,6 +436,7 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
   GstElement *element;
 
   g_return_val_if_fail (factoryname != NULL, NULL);
+  g_return_val_if_fail (gst_is_initialized (), NULL);
 
   GST_LOG ("gstelementfactory: make \"%s\" \"%s\"",
       factoryname, GST_STR_NULL (name));
