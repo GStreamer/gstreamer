@@ -32,6 +32,7 @@
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
 GESTimelinePipeline *pipeline = NULL;
+static gboolean seenerrors = FALSE;
 
 gboolean pattern_source_fill_func (GESTimelineObject * object, GESTrackObject
     * trobject, GstElement * gnlobj, gpointer user_data);
@@ -281,6 +282,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
       g_print ("ERROR\n");
+      seenerrors = TRUE;
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
@@ -429,7 +431,7 @@ main (int argc, gchar ** argv)
   if ((argc < 4) || (outputuri && (!render && !smartrender))) {
     g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
-    exit (-1);
+    exit (1);
   }
 
   g_option_context_free (ctx);
@@ -439,7 +441,7 @@ main (int argc, gchar ** argv)
   /* Create the pipeline */
   pipeline = create_timeline (argc - 1, argv + 1);
   if (!pipeline)
-    exit (-1);
+    exit (1);
 
   /* Setup profile/encoding if needed */
   if (render || smartrender) {
@@ -451,7 +453,7 @@ main (int argc, gchar ** argv)
         !ges_timeline_pipeline_set_render_settings (pipeline, outputuri, prof)
         || !ges_timeline_pipeline_set_mode (pipeline,
             smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER))
-      exit (-1);
+      exit (1);
 
     g_free (outputuri);
     gst_encoding_profile_free (prof);
@@ -482,5 +484,5 @@ main (int argc, gchar ** argv)
 
   gst_object_unref (pipeline);
 
-  return 0;
+  return (int) seenerrors;
 }
