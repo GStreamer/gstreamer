@@ -120,16 +120,16 @@ typedef struct _GstBaseParsePrivate GstBaseParsePrivate;
  * The opaque #GstBaseParse data structure.
  */
 struct _GstBaseParse {
-  GstElement	 element;
-  GstAdapter   *adapter;
+  GstElement     element;
+  GstAdapter    *adapter;
 
   /*< protected >*/
   /* source and sink pads */
-  GstPad	*sinkpad;
-  GstPad	*srcpad;
+  GstPad         *sinkpad;
+  GstPad         *srcpad;
 
   /* MT-protected (with STREAM_LOCK) */
-  GstSegment     segment;
+  GstSegment      segment;
 
   /* Newsegment event to be sent after SEEK */
   GstEvent       *pending_segment;
@@ -137,10 +137,7 @@ struct _GstBaseParse {
   /* Segment event that closes the running segment prior to SEEK */
   GstEvent       *close_segment;
 
-  /* Caps nego done already? */
-  gboolean   negotiated;
-
-  GMutex	*parse_lock;
+  GMutex         *parse_lock;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE];
