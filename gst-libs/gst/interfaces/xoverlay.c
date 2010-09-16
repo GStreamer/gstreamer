@@ -438,7 +438,7 @@ gst_x_overlay_got_window_handle (GstXOverlay * overlay, guintptr handle)
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_X_OVERLAY (overlay));
 
-  GST_LOG_OBJECT (GST_OBJECT (overlay), "xwindow_id = %" G_GUINTPTR_FORMAT,
+  GST_LOG_OBJECT (GST_OBJECT (overlay), "xwindow_id = %p", (gpointer)
       handle);
   s = gst_structure_new ("have-xwindow-id",
       "xwindow-id", G_TYPE_ULONG, (unsigned long) handle,
