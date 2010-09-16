@@ -1734,6 +1734,59 @@ qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
 }
 
 static void
+qtdemux_handle_xmp_taglist (GstQTDemux * qtdemux, GstTagList * taglist)
+{
+  /* Strip out bogus fields */
+  if (taglist) {
+    gst_tag_list_remove_tag (taglist, GST_TAG_VIDEO_CODEC);
+
+    GST_DEBUG_OBJECT (qtdemux, "Found XMP tags %" GST_PTR_FORMAT, taglist);
+
+    if (qtdemux->tag_list) {
+      /* prioritize native tags using _KEEP mode */
+      gst_tag_list_insert (qtdemux->tag_list, taglist, GST_TAG_MERGE_KEEP);
+      gst_tag_list_free (taglist);
+    } else
+      qtdemux->tag_list = taglist;
+  }
+}
+
+static void
+qtdemux_parse_uuid (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
+{
+  static guint8 xmp_uuid[] = { 0xBE, 0x7A, 0xCF, 0xCB,
+    0x97, 0xA9, 0x42, 0xE8,
+    0x9C, 0x71, 0x99, 0x94,
+    0x91, 0xE3, 0xAF, 0xAC
+  };
+  guint offset;
+
+  offset = (QT_UINT32 (buffer) == 0) ? 16 : 8;
+
+  if (length <= offset + 16) {
+    GST_DEBUG_OBJECT (qtdemux, "uuid atom is too short, skipping");
+    return;
+  }
+
+  if (memcmp (buffer + offset, xmp_uuid, 16) == 0) {
+    GstBuffer *buf;
+    GstTagList *taglist;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = (guint8 *) buffer + offset + 16;
+    GST_BUFFER_SIZE (buf) = length - offset - 16;
+
+    taglist = gst_tag_list_from_xmp_buffer (buf);
+    gst_buffer_unref (buf);
+
+    qtdemux_handle_xmp_taglist (qtdemux, taglist);
+
+  } else {
+    GST_DEBUG_OBJECT (qtdemux, "Ignoring unknown uuid");
+  }
+}
+
+static void
 extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
     guint32 * pfourcc)
 {
@@ -1802,6 +1855,12 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     {
       GstBuffer *moov;
 
+      if (qtdemux->got_moov) {
+        GST_DEBUG_OBJECT (qtdemux, "Skipping moov atom as we have one already");
+        qtdemux->offset += length;
+        goto beach;
+      }
+
       ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &moov);
       if (ret != GST_FLOW_OK)
         goto beach;
@@ -1851,9 +1910,7 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       g_node_destroy (qtdemux->moov_node);
       gst_buffer_unref (moov);
       qtdemux->moov_node = NULL;
-      qtdemux->state = QTDEMUX_STATE_MOVIE;
-      GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
-          qtdemux->state);
+      qtdemux->got_moov = TRUE;
       break;
     }
     case FOURCC_ftyp:
@@ -1868,6 +1925,20 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux_parse_ftyp (qtdemux, GST_BUFFER_DATA (ftyp),
           GST_BUFFER_SIZE (ftyp));
       gst_buffer_unref (ftyp);
+      break;
+    }
+    case FOURCC_uuid:
+    {
+      GstBuffer *uuid;
+
+      /* uuid are extension atoms */
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &uuid);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      qtdemux->offset += length;
+      qtdemux_parse_uuid (qtdemux, GST_BUFFER_DATA (uuid),
+          GST_BUFFER_SIZE (uuid));
+      gst_buffer_unref (uuid);
       break;
     }
     default:
@@ -1890,6 +1961,12 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   }
 
 beach:
+  if (ret == GST_FLOW_UNEXPECTED && qtdemux->got_moov) {
+    qtdemux->state = QTDEMUX_STATE_MOVIE;
+    GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
+        qtdemux->state);
+    return GST_FLOW_OK;
+  }
   return ret;
 }
 
@@ -7003,19 +7080,7 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     taglist = gst_tag_list_from_xmp_buffer (buf);
     gst_buffer_unref (buf);
 
-    /* Strip out bogus fields */
-
-    if (taglist) {
-      gst_tag_list_remove_tag (taglist, GST_TAG_VIDEO_CODEC);
-      if (qtdemux->tag_list) {
-        GST_DEBUG_OBJECT (qtdemux, "Found XMP tags");
-
-        /* prioritize native tags using _KEEP mode */
-        gst_tag_list_insert (qtdemux->tag_list, taglist, GST_TAG_MERGE_KEEP);
-        gst_tag_list_free (taglist);
-      } else
-        qtdemux->tag_list = taglist;
-    }
+    qtdemux_handle_xmp_taglist (qtdemux, taglist);
   } else {
     GST_DEBUG_OBJECT (qtdemux, "No XMP_ node found");
   }

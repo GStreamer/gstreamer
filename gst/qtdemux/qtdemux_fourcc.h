@@ -205,6 +205,7 @@ G_BEGIN_DECLS
 #define FOURCC_tCtC     GST_MAKE_FOURCC('t','C','t','C')
 
 #define FOURCC_XMP_     GST_MAKE_FOURCC('X','M','P','_')
+#define FOURCC_uuid     GST_MAKE_FOURCC('u','u','i','d')
 
 G_END_DECLS
 
