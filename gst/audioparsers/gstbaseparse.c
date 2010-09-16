@@ -309,9 +309,6 @@ static gboolean gst_base_parse_src_eventfunc (GstBaseParse * parse,
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
-gboolean gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
-    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
-
 static void gst_base_parse_drain (GstBaseParse * parse);
 
 static void gst_base_parse_post_bitrates (GstBaseParse * parse,
@@ -363,7 +360,7 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   klass->parse_frame = gst_base_parse_parse_frame;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->is_seekable = gst_base_parse_is_seekable;
-  klass->convert = gst_base_parse_convert;
+  klass->convert = gst_base_parse_convert_default;
 
   GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
       "baseparse element");
@@ -472,33 +469,60 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-
 /**
- * gst_base_parse_bytepos_to_time:
+ * gst_base_parse_convert:
  * @parse: #GstBaseParse.
- * @bytepos: Position (in bytes) to be converted.
- * @pos_in_time: #GstClockTime pointer where the result is set.
+ * @src_format: #GstFormat describing the source format.
+ * @src_value: Source value to be converted.
+ * @dest_format: #GstFormat defining the converted format.
+ * @dest_value: Pointer where the conversion result will be put.
  *
- * Convert given byte position into #GstClockTime format.
- * 
- * Returns: TRUE if conversion succeeded.
+ * Converts using configured "convert" vmethod in #GstBaseParse class.
+ *
+ * Returns: TRUE if conversion was successful.
  */
 static gboolean
-gst_base_parse_bytepos_to_time (GstBaseParse * parse, gint64 bytepos,
-    GstClockTime * pos_in_time)
+gst_base_parse_convert (GstBaseParse * parse,
+    GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
-  GstBaseParseClass *klass;
-  gboolean res = FALSE;
+  GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
+  gboolean ret;
 
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
+  g_return_val_if_fail (dest_value != NULL, FALSE);
 
-  if (klass->convert) {
-    res = klass->convert (parse, GST_FORMAT_BYTES, bytepos,
-        GST_FORMAT_TIME, (gint64 *) pos_in_time);
+  if (!klass->convert)
+    return FALSE;
+
+  ret = klass->convert (parse, src_format, src_value, dest_format, dest_value);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    if (ret) {
+      if (src_format == GST_FORMAT_TIME && dest_format == GST_FORMAT_BYTES) {
+        GST_LOG_OBJECT (parse,
+            "TIME -> BYTES: %" GST_TIME_FORMAT " -> %" G_GINT64_FORMAT,
+            GST_TIME_ARGS (src_value), *dest_value);
+      } else if (dest_format == GST_FORMAT_TIME &&
+          src_format == GST_FORMAT_BYTES) {
+        GST_LOG_OBJECT (parse,
+            "BYTES -> TIME: %" G_GINT64_FORMAT " -> %" GST_TIME_FORMAT,
+            src_value, GST_TIME_ARGS (*dest_value));
+      } else {
+        GST_LOG_OBJECT (parse,
+            "%s -> %s: %" G_GINT64_FORMAT " -> %" G_GINT64_FORMAT,
+            GST_STR_NULL (gst_format_get_name (src_format)),
+            GST_STR_NULL (gst_format_get_name (dest_format)),
+            src_value, *dest_value);
+      }
+    } else {
+      GST_DEBUG_OBJECT (parse, "conversion failed");
+    }
   }
-  return res;
-}
+#endif
 
+  return ret;
+}
 
 /**
  * gst_base_parse_sink_event:
@@ -594,8 +618,10 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         seg_stop = GST_CLOCK_TIME_NONE;
         offset = pos;
 
-        if (gst_base_parse_bytepos_to_time (parse, start, &seg_start) &&
-            gst_base_parse_bytepos_to_time (parse, pos, &seg_pos)) {
+        if (gst_base_parse_convert (parse, GST_FORMAT_BYTES, start,
+                GST_FORMAT_TIME, (gint64 *) & seg_start) &&
+            gst_base_parse_convert (parse, GST_FORMAT_BYTES, pos,
+                GST_FORMAT_TIME, (gint64 *) & seg_pos)) {
           gst_event_unref (event);
           event = gst_event_new_new_segment_full (update, rate, applied_rate,
               GST_FORMAT_TIME, seg_start, seg_stop, seg_pos);
@@ -753,19 +779,19 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
 }
 
 /**
- * gst_base_parse_convert:
+ * gst_base_parse_convert_default:
  * @parse: #GstBaseParse.
  * @src_format: #GstFormat describing the source format.
  * @src_value: Source value to be converted.
  * @dest_format: #GstFormat defining the converted format.
  * @dest_value: Pointer where the conversion result will be put.
  *
- * Implementation of "convert" vmethod in #GstBaseParse class.
+ * Default implementation of "convert" vmethod in #GstBaseParse class.
  *
  * Returns: TRUE if conversion was successful.
  */
 gboolean
-gst_base_parse_convert (GstBaseParse * parse,
+gst_base_parse_convert_default (GstBaseParse * parse,
     GstFormat src_format,
     gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
@@ -843,14 +869,8 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
 {
   GstPad *peer;
   GstBaseParse *parse;
-  GstBaseParseClass *klass;
 
   parse = GST_BASE_PARSE (aacparse);
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  /* must be able to convert */
-  if (!klass->convert)
-    return;
 
   peer = gst_pad_get_peer (parse->sinkpad);
   if (peer) {
@@ -861,7 +881,8 @@ gst_base_parse_update_duration (GstBaseParse * aacparse)
     qres = gst_pad_query_duration (peer, &pformat, &ptot);
     gst_object_unref (GST_OBJECT (peer));
     if (qres) {
-      if (klass->convert (parse, pformat, ptot, GST_FORMAT_TIME, &dest_value))
+      if (gst_base_parse_convert (parse, pformat, ptot,
+              GST_FORMAT_TIME, &dest_value))
         parse->priv->estimated_duration = dest_value;
     }
   }
@@ -1859,7 +1880,6 @@ static gboolean
 gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     GstClockTime * duration)
 {
-  GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
   gboolean res = FALSE;
 
   g_return_val_if_fail (duration != NULL, FALSE);
@@ -1871,7 +1891,7 @@ gst_base_parse_get_duration (GstBaseParse * parse, GstFormat format,
     res = TRUE;
   } else if (parse->priv->duration != -1) {
     GST_LOG_OBJECT (parse, "converting provided duration");
-    res = klass->convert (parse, parse->priv->duration_fmt,
+    res = gst_base_parse_convert (parse, parse->priv->duration_fmt,
         parse->priv->duration, format, (gint64 *) duration);
   } else if (format == GST_FORMAT_TIME && parse->priv->estimated_duration != -1) {
     GST_LOG_OBJECT (parse, "using estimated duration");
@@ -1923,12 +1943,6 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
   parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  /* If subclass doesn't provide conversion function we can't reply
-     to the query either */
-  if (!klass->convert) {
-    return FALSE;
-  }
-
   GST_LOG_OBJECT (parse, "handling query: %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1959,8 +1973,8 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
           /* no precise result, upstream no idea either, then best estimate */
           /* priv->offset is updated in both PUSH/PULL modes */
           g_mutex_lock (parse->parse_lock);
-          res = klass->convert (parse, GST_FORMAT_BYTES, parse->priv->offset,
-              format, &dest_value);
+          res = gst_base_parse_convert (parse,
+              GST_FORMAT_BYTES, parse->priv->offset, format, &dest_value);
           g_mutex_unlock (parse->parse_lock);
         }
       }
@@ -2042,7 +2056,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       gst_query_parse_convert (query, &src_format, &src_value,
           &dest_format, &dest_value);
 
-      res = klass->convert (parse, src_format, src_value,
+      res = gst_base_parse_convert (parse, src_format, src_value,
           dest_format, &dest_value);
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
