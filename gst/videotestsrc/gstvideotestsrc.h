@@ -58,6 +58,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE: Chroma zone plate
  * @GST_VIDEO_TEST_SRC_BALL: Moving ball
  * @GST_VIDEO_TEST_SRC_SMPTE100: SMPTE test pattern (100% color bars)
+ * @GST_VIDEO_TEST_SRC_BAR: Bar with foreground color
  *
  * The test pattern to produce.
  *
@@ -98,7 +99,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_CHROMA_ZONE_PLATE,
   GST_VIDEO_TEST_SRC_SOLID,
   GST_VIDEO_TEST_SRC_BALL,
-  GST_VIDEO_TEST_SRC_SMPTE100
+  GST_VIDEO_TEST_SRC_SMPTE100,
+  GST_VIDEO_TEST_SRC_BAR
 } GstVideoTestSrcPattern;
 
 /**

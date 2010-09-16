@@ -139,6 +139,8 @@ void    gst_video_test_src_ball         (GstVideoTestSrc * v,
 		                         unsigned char *dest, int w, int h);
 void gst_video_test_src_smpte100        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
+void    gst_video_test_src_bar          (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;
 

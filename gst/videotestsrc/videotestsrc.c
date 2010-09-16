@@ -888,6 +888,33 @@ gst_video_test_src_smpte100 (GstVideoTestSrc * v, unsigned char *dest, int w,
 }
 
 void
+gst_video_test_src_bar (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+{
+  int j;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  videotestsrc_setup_paintinfo (v, p, w, h);
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+
+  for (j = 0; j < h; j++) {
+    /* use fixed size for now */
+    int x2 = w / 7;
+
+    p->color = &p->foreground_color;
+    p->paint_tmpline (p, 0, x2);
+    p->color = &p->background_color;
+    p->paint_tmpline (p, x2, (w - x2));
+    videotestsrc_convert_tmpline (p, j);
+  }
+}
+
+void
 gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 {
   int i;
