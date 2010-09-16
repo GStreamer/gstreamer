@@ -961,6 +961,7 @@ tests/examples/gio/Makefile
 tests/examples/overlay/Makefile
 tests/examples/seek/Makefile
 tests/examples/snapshot/Makefile
+tests/examples/playrec/Makefile
 tests/examples/volume/Makefile
 tests/examples/v4l/Makefile
 tests/files/Makefile

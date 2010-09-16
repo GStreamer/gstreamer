@@ -8,8 +8,8 @@ if USE_GIO
 GIO_SUBDIRS = gio
 endif
 
-SUBDIRS = app  dynamic $(FT2_SUBDIRS) $(GIO_SUBDIRS) overlay volume v4l
+SUBDIRS = app  dynamic $(FT2_SUBDIRS) $(GIO_SUBDIRS) overlay playrec volume v4l
 
-DIST_SUBDIRS = app dynamic gio overlay seek snapshot volume v4l
+DIST_SUBDIRS = app dynamic gio overlay seek snapshot playrec volume v4l
 
 include $(top_srcdir)/common/parallel-subdirs.mak
