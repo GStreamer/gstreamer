@@ -70,9 +70,7 @@ cleanup_videotestsrc (GstElement * videotestsrc)
 {
   GST_DEBUG ("cleanup_videotestsrc");
 
-  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (buffers);
-  buffers = NULL;
+  gst_check_drop_buffers ();
 
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (videotestsrc);
@@ -111,9 +109,7 @@ GST_START_TEST (test_all_patterns)
 
     gst_element_set_state (videotestsrc, GST_STATE_READY);
 
-    g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
-    g_list_free (buffers);
-    buffers = NULL;
+    gst_check_drop_buffers ();
     ++j;
   }
 
