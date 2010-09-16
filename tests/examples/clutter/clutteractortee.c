@@ -86,7 +86,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 
   if (count < N_ACTORS) {
     g_message ("adding actor %d", count);
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
         actor[count]->win);
     clutter_threads_add_idle ((GSourceFunc) create_actor, actor[count]);
     count++;

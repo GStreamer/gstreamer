@@ -110,8 +110,8 @@ static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 
 static void gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface);
-static void gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay,
-    gulong window_id);
+static void gst_glimage_sink_set_window_handle (GstXOverlay * overlay,
+    guintptr id);
 static void gst_glimage_sink_expose (GstXOverlay * overlay);
 static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
     iface, GType type);
@@ -643,15 +643,16 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 static void
 gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_glimage_sink_set_xwindow_id;
+  iface->set_window_handle = gst_glimage_sink_set_window_handle;
   iface->expose = gst_glimage_sink_expose;
 }
 
 
 static void
-gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
+gst_glimage_sink_set_window_handle (GstXOverlay * overlay, guintptr id)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
+  gulong window_id = (gulong) id;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
 

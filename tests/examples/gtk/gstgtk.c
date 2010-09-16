@@ -32,20 +32,20 @@
 
 
 void
-gst_x_overlay_set_gtk_window (GstXOverlay *xoverlay, GtkWidget *window)
+gst_x_overlay_set_gtk_window (GstXOverlay * xoverlay, GtkWidget * window)
 {
 
 #if defined(GDK_WINDOWING_WIN32)
-    gst_x_overlay_set_xwindow_id (xoverlay, (gulong)GDK_WINDOW_HWND(window->window));
+  gst_x_overlay_set_window_handle (xoverlay,
+      (gulong) GDK_WINDOW_HWND (window->window));
 #elif defined(GDK_WINDOWING_QUARTZ)
-    gst_x_overlay_set_xwindow_id (xoverlay,
-        (gulong)gdk_quartz_window_get_nswindow (window->window));
+  gst_x_overlay_set_window_handle (xoverlay,
+      (gulong) gdk_quartz_window_get_nswindow (window->window));
 #elif defined(GDK_WINDOWING_X11)
-    gst_x_overlay_set_xwindow_id (xoverlay, GDK_WINDOW_XWINDOW(window->window));
+  gst_x_overlay_set_window_handle (xoverlay,
+      GDK_WINDOW_XWINDOW (window->window));
 #else
 #error unimplemented GTK backend
 #endif
 
 }
-
-

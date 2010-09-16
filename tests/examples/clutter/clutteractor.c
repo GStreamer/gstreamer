@@ -106,7 +106,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 
   g_debug ("CREATING WINDOW");
 
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
       actor->win);
   clutter_threads_add_idle ((GSourceFunc) create_actor, actor);
 
