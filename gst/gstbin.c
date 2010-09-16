@@ -477,7 +477,7 @@ gst_bin_class_init (GstBinClass * klass)
    * the bin. This can be interesting when one wants to be notified of the EOS
    * state of individual elements, for example.
    *
-   * The messages are converted to an APPLICATION message with the bin as the
+   * The messages are converted to an ELEMENT message with the bin as the
    * source. The structure of the message is named 'GstBinForwarded' and contains
    * a field named 'message' of type GST_TYPE_MESSAGE that contains the original
    * forwarded message.
