@@ -218,6 +218,8 @@ struct _GstBinPrivate
 
   /* cached index */
   GstIndex *index;
+  /* forward messages from our children */
+  gboolean message_forward;
 };
 
 typedef struct
@@ -283,12 +285,14 @@ enum
 };
 
 #define DEFAULT_ASYNC_HANDLING	FALSE
+#define DEFAULT_MESSAGE_FORWARD	FALSE
 
 enum
 {
   PROP_0,
-  PROP_ASYNC_HANDLING
-      /* FILL ME */
+  PROP_ASYNC_HANDLING,
+  PROP_MESSAGE_FORWARD,
+  PROP_LAST
 };
 
 static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
@@ -466,6 +470,25 @@ gst_bin_class_init (GstBinClass * klass)
       _gst_boolean_accumulator, NULL, gst_marshal_BOOLEAN__VOID,
       G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
+  /**
+   * GstBin:message-forward
+   *
+   * Forward all children messages, even those that would normally be filtered by
+   * the bin. This can be interesting when one wants to be notified of the EOS
+   * state of individual elements, for example.
+   *
+   * The messages are converted to an APPLICATION message with the bin as the
+   * source. The structure of the message is named 'GstBinForwarded' and contains
+   * a field named 'message' of type GST_TYPE_MESSAGE that contains the original
+   * forwarded message.
+   *
+   * Since: 0.10.31
+   */
+  g_object_class_install_property (gobject_class, PROP_MESSAGE_FORWARD,
+      g_param_spec_boolean ("message-forward", "Message Forward",
+          "Forwards all children messages",
+          DEFAULT_MESSAGE_FORWARD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->dispose = gst_bin_dispose;
 
 #if !defined(GST_DISABLE_LOADSAVE) && !defined(GST_REMOVE_DEPRECATED)
@@ -526,6 +549,7 @@ gst_bin_init (GstBin * bin, GstBinClass * klass)
   bin->priv = GST_BIN_GET_PRIVATE (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
   bin->priv->structure_cookie = 0;
+  bin->priv->message_forward = DEFAULT_MESSAGE_FORWARD;
 }
 
 static void
@@ -586,6 +610,11 @@ gst_bin_set_property (GObject * object, guint prop_id,
       gstbin->priv->asynchandling = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (gstbin);
       break;
+    case PROP_MESSAGE_FORWARD:
+      GST_OBJECT_LOCK (gstbin);
+      gstbin->priv->message_forward = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (gstbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -604,6 +633,11 @@ gst_bin_get_property (GObject * object, guint prop_id,
     case PROP_ASYNC_HANDLING:
       GST_OBJECT_LOCK (gstbin);
       g_value_set_boolean (value, gstbin->priv->asynchandling);
+      GST_OBJECT_UNLOCK (gstbin);
+      break;
+    case PROP_MESSAGE_FORWARD:
+      GST_OBJECT_LOCK (gstbin);
+      g_value_set_boolean (value, gstbin->priv->message_forward);
       GST_OBJECT_UNLOCK (gstbin);
       break;
     default:
@@ -2948,6 +2982,31 @@ nothing_pending:
   }
 }
 
+/* must be called with the object lock. This function releases the lock to post
+ * the message. */
+static void
+bin_do_message_forward (GstBin * bin, GstMessage * message)
+{
+  if (bin->priv->message_forward) {
+    GstMessage *forwarded;
+
+    GST_DEBUG_OBJECT (bin, "pass %s message upward",
+        GST_MESSAGE_TYPE_NAME (message));
+    GST_OBJECT_UNLOCK (bin);
+
+    /* we need to convert these messages to element messages so that our parent
+     * bin can easily ignore them and so that the application can easily
+     * distinguish between the internally forwarded and the real messages. */
+    forwarded = gst_message_new_element (GST_OBJECT_CAST (bin),
+        gst_structure_new ("GstBinForwarded",
+            "message", GST_TYPE_MESSAGE, message, NULL));
+
+    gst_element_post_message (GST_ELEMENT_CAST (bin), forwarded);
+
+    GST_OBJECT_LOCK (bin);
+  }
+}
+
 /* handle child messages:
  *
  * This method is called synchronously when a child posts a message on
@@ -3035,6 +3094,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       /* collect all eos messages from the children */
       GST_OBJECT_LOCK (bin);
+      bin_do_message_forward (bin, message);
       /* ref message for future use  */
       gst_message_ref (message);
       bin_replace_message (bin, message, GST_MESSAGE_EOS);
@@ -3071,6 +3131,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       seqnum = gst_message_get_seqnum (message);
 
       GST_OBJECT_LOCK (bin);
+      bin_do_message_forward (bin, message);
       /* if this is the first segment-start, post to parent but not to the
        * application */
       if (!find_message (bin, NULL, GST_MESSAGE_SEGMENT_START) &&
@@ -3103,6 +3164,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       seqnum = gst_message_get_seqnum (message);
 
       GST_OBJECT_LOCK (bin);
+      bin_do_message_forward (bin, message);
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
       /* if there are no more segment_start messages, everybody posted
        * a segment_done and we can post one on the bus. */
@@ -3201,9 +3263,10 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gst_message_parse_async_start (message, &new_base_time);
 
       GST_OBJECT_LOCK (bin);
+      bin_do_message_forward (bin, message);
+
       /* we ignore the message if we are going to <= READY */
-      target = GST_STATE_TARGET (bin);
-      if (target <= GST_STATE_READY)
+      if ((target = GST_STATE_TARGET (bin)) <= GST_STATE_READY)
         goto ignore_start_message;
 
       /* takes ownership of the message */
@@ -3230,9 +3293,10 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
           src ? GST_OBJECT_NAME (src) : "(NULL)");
 
       GST_OBJECT_LOCK (bin);
-      target = GST_STATE_TARGET (bin);
+      bin_do_message_forward (bin, message);
+
       /* ignore messages if we are shutting down */
-      if (target <= GST_STATE_READY)
+      if ((target = GST_STATE_TARGET (bin)) <= GST_STATE_READY)
         goto ignore_done_message;
 
       bin_replace_message (bin, message, GST_MESSAGE_ASYNC_START);
