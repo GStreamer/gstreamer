@@ -155,7 +155,7 @@ ldreslinl d1, s1, p1, p2
 
 ldreslinl b, s2, p2, p3
 storel d2, b
-x4 loadb a, s1
+loadl a, s1
 x4 convubw t1, a
 x4 convubw t2, b
 x4 subw t2, t2, t1
