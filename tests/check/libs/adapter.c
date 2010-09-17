@@ -335,6 +335,8 @@ GST_START_TEST (test_timestamp)
   guint avail;
   GstClockTime timestamp;
   guint64 dist;
+  guint8 *data;
+  const guint8 *cdata;
 
   adapter = gst_adapter_new ();
   fail_unless (adapter != NULL);
@@ -447,6 +449,85 @@ GST_START_TEST (test_timestamp)
   timestamp = gst_adapter_prev_timestamp (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 0);
+
+  /* push an empty buffer with timestamp in the adapter */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  /* push another empty buffer */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 0);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  /* push a buffer with timestamp in the adapter */
+  buffer = gst_buffer_new_and_alloc (100);
+  GST_BUFFER_TIMESTAMP (buffer) = 4 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 2 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  gst_adapter_flush (adapter, 1);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 99);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 4 * GST_SECOND);
+  fail_unless (dist == 1);
+
+  /* push an empty buffer with timestamp in the adapter */
+  buffer = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buffer) = 5 * GST_SECOND;
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 99);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 4 * GST_SECOND);
+  fail_unless (dist == 1);
+
+  /* push buffer without timestamp */
+  buffer = gst_buffer_new_and_alloc (100);
+  gst_adapter_push (adapter, buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 199);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 4 * GST_SECOND);
+  fail_unless (dist == 1);
+
+  /* remove first buffer, timestamp of empty buffer is visible */
+  buffer = gst_adapter_take_buffer (adapter, 99);
+  fail_unless (buffer != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer) == 99);
+  gst_buffer_unref (buffer);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 100);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 5 * GST_SECOND);
+  fail_unless (dist == 0);
+
+  /* remove empty buffer, timestamp still visible */
+  cdata = gst_adapter_peek (adapter, 50);
+  fail_unless (cdata != NULL);
+  data = gst_adapter_take (adapter, 50);
+  fail_unless (data != NULL);
+  g_free (data);
+  avail = gst_adapter_available (adapter);
+  fail_unless (avail == 50);
+  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  fail_unless (timestamp == 5 * GST_SECOND);
+  fail_unless (dist == 50);
 
   g_object_unref (adapter);
 }

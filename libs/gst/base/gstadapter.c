@@ -271,10 +271,13 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
   while (size > 0) {
     g = g_slist_next (g);
     buf = g->data;
-    csize = MIN (GST_BUFFER_SIZE (buf), size);
-    memcpy (dest, GST_BUFFER_DATA (buf), csize);
-    size -= csize;
-    dest += csize;
+    bsize = GST_BUFFER_SIZE (buf);
+    if (G_LIKELY (bsize > 0)) {
+      csize = MIN (bsize, size);
+      memcpy (dest, GST_BUFFER_DATA (buf), csize);
+      size -= csize;
+      dest += csize;
+    }
   }
 }
 
@@ -285,8 +288,6 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, guint skip,
  *
  * Adds the data from @buf to the data stored inside @adapter and takes
  * ownership of the buffer.
- * Empty buffers will be automatically dereferenced and not stored in the
- * @adapter.
  */
 void
 gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
@@ -297,27 +298,19 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
   g_return_if_fail (GST_IS_BUFFER (buf));
 
   size = GST_BUFFER_SIZE (buf);
+  adapter->size += size;
 
-  if (G_UNLIKELY (size == 0)) {
-    /* we can't have empty buffers, several parts in this file rely on it, this
-     * has some problems for the timestamp tracking. */
-    GST_LOG_OBJECT (adapter, "discarding empty buffer");
-    gst_buffer_unref (buf);
+  /* Note: merging buffers at this point is premature. */
+  if (G_UNLIKELY (adapter->buflist == NULL)) {
+    GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
+    adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+    update_timestamp (adapter, buf);
   } else {
-    adapter->size += size;
-
-    /* Note: merging buffers at this point is premature. */
-    if (G_UNLIKELY (adapter->buflist == NULL)) {
-      GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
-      adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
-      update_timestamp (adapter, buf);
-    } else {
-      /* Otherwise append to the end, and advance our end pointer */
-      GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
-          adapter->size);
-      adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
-      adapter->buflist_end = g_slist_next (adapter->buflist_end);
-    }
+    /* Otherwise append to the end, and advance our end pointer */
+    GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
+        adapter->size);
+    adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
+    adapter->buflist_end = g_slist_next (adapter->buflist_end);
   }
 }
 
@@ -711,22 +704,29 @@ gst_adapter_available (GstAdapter * adapter)
 guint
 gst_adapter_available_fast (GstAdapter * adapter)
 {
-  GstBuffer *first;
+  GstBuffer *cur;
   guint size;
+  GSList *g;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), 0);
 
-  /* no buffers, we have no data */
-  if (!adapter->buflist)
+  /* no data */
+  if (adapter->size == 0)
     return 0;
 
   /* some stuff we already assembled */
   if (adapter->assembled_len)
     return adapter->assembled_len;
 
-  /* take the first buffer and its size */
-  first = GST_BUFFER_CAST (adapter->buflist->data);
-  size = GST_BUFFER_SIZE (first);
+  /* take the first non-zero buffer */
+  g = adapter->buflist;
+  while (TRUE) {
+    cur = g->data;
+    size = GST_BUFFER_SIZE (cur);
+    if (size != 0)
+      break;
+    g = g_slist_next (g);
+  }
 
   /* we can quickly get the (remaining) data of the first buffer */
   return size - adapter->skip;
