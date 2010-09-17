@@ -695,7 +695,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
         {
           gchar *access_name = g_strconcat (g_get_tmp_dir (), G_DIR_SEPARATOR_S,
               "gst-launch", G_DIR_SEPARATOR_S, state_transition_name, NULL);
-          access (access_name, R_OK);
+          g_file_test (access_name, G_FILE_TEST_EXISTS);
           g_free (access_name);
         }
 
