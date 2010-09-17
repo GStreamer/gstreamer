@@ -545,19 +545,38 @@ static guint8 *
 gst_adapter_take_internal (GstAdapter * adapter, guint nbytes)
 {
   guint8 *data;
+  guint toreuse, tocopy;
 
-  /* we have enough assembled data, take from there */
-  if (adapter->assembled_len >= nbytes) {
-    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
+  /* see how much data we can reuse from the assembled memory and how much
+   * we need to copy */
+  toreuse = MIN (nbytes, adapter->assembled_len);
+  tocopy = nbytes - toreuse;
+
+  /* find memory to return */
+  if (adapter->assembled_size >= nbytes && toreuse > 0) {
+    /* we reuse already allocated memory but only when we're going to reuse
+     * something from it because else we are worse than the malloc and copy
+     * case below */
+    GST_LOG_OBJECT (adapter, "reusing %u bytes of assembled data", toreuse);
+    /* we have enough free space in the assembled array */
     data = adapter->assembled_data;
-    /* allocate new data, assembled_len will be set to 0 in the flush later */
+    /* flush after this function should set the assembled_size to 0 */
     adapter->assembled_data = g_malloc (adapter->assembled_size);
   } else {
-    /* we need to allocate and copy. We could potentially copy bytes from the
-     * assembled data before doing the copy_into */
-    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
+    GST_LOG_OBJECT (adapter, "allocating %u bytes", nbytes);
+    /* not enough bytes in the assembled array, just allocate new space */
     data = g_malloc (nbytes);
-    copy_into_unchecked (adapter, data, adapter->skip, nbytes);
+    /* reuse what we can from the already assembled data */
+    if (toreuse) {
+      GST_LOG_OBJECT (adapter, "reusing %u bytes", toreuse);
+      memcpy (data, adapter->assembled_data, toreuse);
+    }
+  }
+  if (tocopy) {
+    /* copy the remaining data */
+    GST_LOG_OBJECT (adapter, "copying %u bytes", tocopy);
+    copy_into_unchecked (adapter, toreuse + data, toreuse + adapter->skip,
+        tocopy);
   }
   return data;
 }
