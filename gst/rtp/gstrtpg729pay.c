@@ -217,8 +217,8 @@ gst_rtp_g729_pay_recalc_rtp_time (GstRTPG729Pay * rtpg729pay, GstClockTime time)
     rtpdiff = (diff / GST_MSECOND) * 8;
     rtpg729pay->next_rtp_time = rtpg729pay->first_rtp_time + rtpdiff;
     GST_DEBUG_OBJECT (rtpg729pay,
-        "elapsed time %" GST_TIME_FORMAT ", rtp %d, "
-        "new offset %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
+        "elapsed time %" GST_TIME_FORMAT ", rtp %" G_GUINT32_FORMAT ", "
+        "new offset %" G_GUINT32_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
         rtpg729pay->next_rtp_time);
   }
 }

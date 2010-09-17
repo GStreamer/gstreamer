@@ -210,8 +210,8 @@ gst_rtp_amr_pay_recalc_rtp_time (GstRtpAMRPay * rtpamrpay,
         (rtpamrpay->mode == GST_RTP_AMR_P_MODE_WB);
     rtpamrpay->next_rtp_time = rtpamrpay->first_rtp_time + rtpdiff;
     GST_DEBUG_OBJECT (rtpamrpay,
-        "elapsed time %" GST_TIME_FORMAT ", rtp %d, "
-        "new offset %" G_GUINT64_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
+        "elapsed time %" GST_TIME_FORMAT ", rtp %" G_GUINT32_FORMAT ", "
+        "new offset %" G_GUINT32_FORMAT, GST_TIME_ARGS (diff), rtpdiff,
         rtpamrpay->next_rtp_time);
   }
 }
