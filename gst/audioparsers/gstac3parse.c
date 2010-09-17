@@ -161,7 +161,6 @@ static void gst_ac3_parse_finalize (GObject * object);
 
 static gboolean gst_ac3_parse_start (GstBaseParse * parse);
 static gboolean gst_ac3_parse_stop (GstBaseParse * parse);
-static gboolean gst_ac3_parse_is_seekable (GstBaseParse * parse);
 static gboolean gst_ac3_parse_check_valid_frame (GstBaseParse * parse,
     GstBuffer * buffer, guint * size, gint * skipsize);
 static GstFlowReturn gst_ac3_parse_parse_frame (GstBaseParse * parse,
@@ -200,7 +199,6 @@ gst_ac3_parse_class_init (GstAc3ParseClass * klass)
   parse_class->check_valid_frame =
       GST_DEBUG_FUNCPTR (gst_ac3_parse_check_valid_frame);
   parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_ac3_parse_parse_frame);
-  parse_class->is_seekable = GST_DEBUG_FUNCPTR (gst_ac3_parse_is_seekable);
 }
 
 static void
@@ -240,12 +238,6 @@ gst_ac3_parse_stop (GstBaseParse * parse)
 {
   GST_DEBUG_OBJECT (parse, "stopping");
 
-  return TRUE;
-}
-
-static gboolean
-gst_ac3_parse_is_seekable (GstBaseParse * parse)
-{
   return TRUE;
 }
 
