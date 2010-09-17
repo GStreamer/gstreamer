@@ -52,6 +52,8 @@ struct _GstRtpVRawPay
   guint yp, up, vp;
   gint ystride;
   gint uvstride;
+  gboolean interlaced;
+  gint depth;
 };
 
 struct _GstRtpVRawPayClass
