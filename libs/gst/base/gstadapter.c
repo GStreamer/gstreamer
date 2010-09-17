@@ -392,6 +392,8 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 {
   GstBuffer *cur;
   guint skip;
+  guint toreuse, tocopy;
+  guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (size > 0, NULL);
@@ -421,20 +423,34 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
       return GST_BUFFER_DATA (cur) + skip;
   }
 
+  /* see how much data we can reuse from the assembled memory and how much
+   * we need to copy */
+  toreuse = adapter->assembled_len;
+  tocopy = size - toreuse;
+
   /* Gonna need to copy stuff out */
   if (G_UNLIKELY (adapter->assembled_size < size)) {
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
     GST_DEBUG_OBJECT (adapter, "resizing internal buffer to %u",
         adapter->assembled_size);
-    /* no g_realloc to avoid a memcpy that is not desired here since we are
-     * going to copy new data into the area below */
-    g_free (adapter->assembled_data);
-    adapter->assembled_data = g_malloc (adapter->assembled_size);
+    if (toreuse == 0) {
+      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "alloc new buffer");
+      /* no g_realloc to avoid a memcpy that is not desired here since we are
+       * not going to reuse any data here */
+      g_free (adapter->assembled_data);
+      adapter->assembled_data = g_malloc (adapter->assembled_size);
+    } else {
+      /* we are going to reuse all data, realloc then */
+      GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "reusing %u bytes", toreuse);
+      adapter->assembled_data =
+          g_realloc (adapter->assembled_data, adapter->assembled_size);
+    }
   }
+  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy remaining %u bytes from adapter",
+      tocopy);
+  data = adapter->assembled_data;
+  copy_into_unchecked (adapter, data + toreuse, skip + toreuse, tocopy);
   adapter->assembled_len = size;
-
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy data from adapter");
-  copy_into_unchecked (adapter, adapter->assembled_data, skip, size);
 
   return adapter->assembled_data;
 }
