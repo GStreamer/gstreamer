@@ -709,6 +709,54 @@ done:
 }
 
 /**
+ * gst_adapter_take_list:
+ * @adapter: a #GstAdapter
+ * @nbytes: the number of bytes to take
+ *
+ * Returns a #GSList of buffers containing the first @nbytes bytes of the
+ * @adapter. The returned bytes will be flushed from the adapter.
+ * When the caller can deal with individual buffers, this function is more
+ * performant because no memory should be coppied.
+ *
+ * Caller owns returned list and contained buffers. gst_buffer_unref() each
+ * buffer in the list before freeng the list after usage.
+ *
+ * Since: 0.10.24
+ *
+ * Returns: a #GSList of buffers containing the first @nbytes of the adapter, 
+ * or #NULL if @nbytes bytes are not available
+ */
+GList *
+gst_adapter_take_list (GstAdapter * adapter, guint nbytes)
+{
+  GList *result = NULL, *tail = NULL;
+  GstBuffer *cur;
+  guint hsize, skip;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
+  g_return_val_if_fail (nbytes <= adapter->size, NULL);
+
+  GST_LOG_OBJECT (adapter, "taking %u bytes", nbytes);
+
+  while (nbytes > 0) {
+    cur = adapter->buflist->data;
+    skip = adapter->skip;
+    hsize = MIN (nbytes, GST_BUFFER_SIZE (cur) - skip);
+
+    cur = gst_adapter_take_buffer (adapter, hsize);
+
+    if (result == NULL) {
+      result = tail = g_list_append (result, cur);
+    } else {
+      tail = g_list_append (tail, cur);
+      tail = g_list_next (tail);
+    }
+    nbytes -= hsize;
+  }
+  return result;
+}
+
+/**
  * gst_adapter_available:
  * @adapter: a #GstAdapter
  *

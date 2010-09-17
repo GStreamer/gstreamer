@@ -90,6 +90,7 @@ void                    gst_adapter_copy                (GstAdapter *adapter, gu
 void                    gst_adapter_flush               (GstAdapter *adapter, guint flush);
 guint8*                 gst_adapter_take                (GstAdapter *adapter, guint nbytes);
 GstBuffer*              gst_adapter_take_buffer         (GstAdapter *adapter, guint nbytes);
+GList*                  gst_adapter_take_list           (GstAdapter *adapter, guint nbytes);
 guint                   gst_adapter_available           (GstAdapter *adapter);
 guint                   gst_adapter_available_fast      (GstAdapter *adapter);
 
