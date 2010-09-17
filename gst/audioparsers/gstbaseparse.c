@@ -974,6 +974,14 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
   if (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE &&
       (update_min || update_avg || update_max))
     gst_base_parse_post_bitrates (parse, update_min, update_avg, update_max);
+
+  /* If average bitrate changes that much and no valid (time) duration provided,
+   * then post a new duration message so applications can update their cached
+   * values */
+  if (update_avg && !(parse->priv->duration_fmt == GST_FORMAT_TIME &&
+          GST_CLOCK_TIME_IS_VALID (parse->priv->duration)))
+    gst_element_post_message (GST_ELEMENT (parse),
+        gst_message_new_duration (GST_OBJECT (parse), GST_FORMAT_TIME, -1));
 }
 
 /**
