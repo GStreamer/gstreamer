@@ -808,6 +808,11 @@ gst_base_parse_convert_default (GstBaseParse * parse,
     return TRUE;
   }
 
+  if (G_UNLIKELY (src_value == 0)) {
+    *dest_value = 0;
+    return TRUE;
+  }
+
   /* need at least some frames */
   if (!parse->priv->framecount)
     return FALSE;
