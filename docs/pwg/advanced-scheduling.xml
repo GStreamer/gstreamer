@@ -63,7 +63,7 @@
           by operating in <quote>pull</quote>-based mode, while the sourcepads
           of the element still operate in push-based mode. In order to be the
           driving force, those pads start a <classname>GstTask</classname>
-          when their pads are being activated. This task is a thread, which
+          when they are activated. This task is a thread, which
           will call a function specified by the element. When called, this
           function will have random data access (through
           <function>gst_pad_get_range ()</function>) over all sinkpads, and
