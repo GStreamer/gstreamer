@@ -26,6 +26,7 @@ typedef uint8_t orc_uint8;
 typedef uint16_t orc_uint16;
 typedef uint32_t orc_uint32;
 typedef uint64_t orc_uint64;
+#define ORC_UINT64_C(x) UINT64_C(x)
 #elif defined(_MSC_VER)
 typedef signed __int8 orc_int8;
 typedef signed __int16 orc_int16;
@@ -35,6 +36,7 @@ typedef unsigned __int8 orc_uint8;
 typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
+#define ORC_UINT64_C(x) (x##Ui64)
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -46,14 +48,16 @@ typedef unsigned int orc_uint32;
 #if INT_MAX == LONG_MAX
 typedef long long orc_int64;
 typedef unsigned long long orc_uint64;
+#define ORC_UINT64_C(x) (x##ULL)
 #else
 typedef long orc_int64;
 typedef unsigned long orc_uint64;
+#define ORC_UINT64_C(x) (x##UL)
 #endif
 #endif
 typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
-typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
+typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
 void add_int32 (gint32 * d1, const gint32 * s1, int n);
 void add_int16 (gint16 * d1, const gint16 * s1, int n);
