@@ -375,8 +375,7 @@ gst_output_selector_switch (GstOutputSelector * osel)
     /* Resend latest buffer to newly switched pad */
     if (osel->resend_latest && osel->latest_buffer) {
       GST_INFO ("resending latest buffer");
-      gst_pad_push (osel->active_srcpad, osel->latest_buffer);
-      osel->latest_buffer = NULL;
+      gst_pad_push (osel->active_srcpad, gst_buffer_ref (osel->latest_buffer));
     }
   } else {
     GST_WARNING_OBJECT (osel, "switch failed, pad not linked");
