@@ -26,7 +26,9 @@
 #include <gst/video/video.h>
 #include <string.h>
 #include <cog/cogframe.h>
+#ifdef HAVE_ORC
 #include <orc/orc.h>
+#endif
 #include <math.h>
 
 #include "gstcogutils.h"
@@ -447,7 +449,7 @@ gst_mse_sink_event (GstPad * pad, GstEvent * event)
 static int
 sum_square_diff_u8 (uint8_t * s1, uint8_t * s2, int n)
 {
-#if 0
+#ifndef HAVE_ORC
   int sum = 0;
   int i;
   int x;
@@ -456,8 +458,8 @@ sum_square_diff_u8 (uint8_t * s1, uint8_t * s2, int n)
     x = s1[i] - s2[i];
     sum += x * x;
   }
-  d_1[0] = sum;
-#endif
+  return sum;
+#else
   static OrcProgram *p = NULL;
   OrcExecutor *ex;
   int val;
@@ -494,6 +496,7 @@ sum_square_diff_u8 (uint8_t * s1, uint8_t * s2, int n)
   orc_executor_free (ex);
 
   return val;
+#endif
 }
 
 static double

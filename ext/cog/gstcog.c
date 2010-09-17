@@ -23,7 +23,9 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#ifdef HAVE_ORC
 #include <orc/orc.h>
+#endif
 
 GType gst_deblock_get_type (void);
 GType gst_cogdownsample_get_type (void);
@@ -38,7 +40,9 @@ GST_DEBUG_CATEGORY (cog_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef HAVE_ORC
   orc_init ();
+#endif
 
   GST_DEBUG_CATEGORY_INIT (cog_debug, "cog", 0, "Cog");
 

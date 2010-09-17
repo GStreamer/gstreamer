@@ -9,7 +9,11 @@
 #include <cog/cog.h>
 #include <string.h>
 #include <math.h>
+#ifdef HAVE_ORC
 #include <orc/orc.h>
+#else
+#define orc_memcpy memcpy
+#endif
 #include <gst/gst.h>
 
 #include "gstcogorc.h"

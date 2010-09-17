@@ -8,11 +8,13 @@ libgstcog_la_CFLAGS = \
 	-I$(srcdir)/.. \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
+	$(ORC_CFLAGS) \
 	$(COG_CFLAGS)
 libgstcog_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	$(ORC_LIBS) \
 	$(COG_LIBS)
 libgstcog_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstcog_la_LIBTOOLFLAGS = --tag=disable-static

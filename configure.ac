@@ -602,13 +602,12 @@ AG_GST_CHECK_FEATURE(CELT, [celt], celt, [
 dnl *** Cog ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_COG, true)
 AG_GST_CHECK_FEATURE(COG, [Cog plugin], cog, [
-  PKG_CHECK_MODULES(COG, libpng >= 1.2 orc-0.4 >= $ORC_REQ, HAVE_COG="yes", [
+  PKG_CHECK_MODULES(COG, libpng >= 1.2, HAVE_COG="yes", [
     HAVE_COG="no"
     AC_MSG_RESULT(no)
   ])
   AC_SUBST(COG_CFLAGS)
   AC_SUBST(COG_LIBS)
-  dnl ORCC was set up by Orc check above
 ])
 
 dnl *** dc1394  ***
