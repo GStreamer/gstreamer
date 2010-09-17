@@ -598,7 +598,7 @@ static const guchar acceptable[96] = {
 
 static const gchar hex[16] = "0123456789ABCDEF";
 
-#define ACCEPTABLE_CHAR(a) ((a)>=32 && acceptable[(a)-32])
+#define ACCEPTABLE_CHAR(a) ((a)>=32 && (a)<128 && acceptable[(a)-32])
 
 /**
  * gst_sdp_message_as_uri:
