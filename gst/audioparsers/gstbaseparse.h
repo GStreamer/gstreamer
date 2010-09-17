@@ -130,6 +130,21 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_PARSE_UNLOCK(obj) g_mutex_unlock (GST_BASE_PARSE_CAST (obj)->parse_lock)
 
+
+/**
+ * GstBaseParseSeekable:
+ * @GST_BASE_PARSE_SEEK_NONE: No seeking possible.
+ * GST_BASE_PARSE_SEEK_DEFAULT: Default seeking possible using estimated bitrate.
+ * GST_BASE_PARSE_SEEK_TABLE: Additional metadata provides more accurate seeking.
+ *
+ * Indicates what level (of quality) of seeking is possible.
+ */
+typedef enum _GstBaseParseSeekable {
+  GST_BASE_PARSE_SEEK_NONE,
+  GST_BASE_PARSE_SEEK_DEFAULT,
+  GST_BASE_PARSE_SEEK_TABLE
+} GstBaseParseSeekable;
+
 typedef struct _GstBaseParse GstBaseParse;
 typedef struct _GstBaseParseClass GstBaseParseClass;
 typedef struct _GstBaseParsePrivate GstBaseParsePrivate;
@@ -196,10 +211,6 @@ struct _GstBaseParse {
  * @src_event:      Optional.
  *                  Event handler on the source pad. Should return TRUE
  *                  if the event was handled and can be dropped.
- * @is_seekable:    Optional.
- *                  Subclass can override this if it wants to control the
- *                  seekability of the stream. Otherwise the element assumes
- *                  that stream is always seekable.
  *
  * @get_frame_overhead: Finds the metadata overhead for the given frame. This
  *                      is used to enable more accurate bitrate computations.
@@ -256,8 +267,6 @@ struct _GstBaseParseClass {
   gboolean      (*src_event)          (GstBaseParse *parse,
                                        GstEvent *event);
 
-  gboolean      (*is_seekable)        (GstBaseParse *parse);
-
   gint          (*get_frame_overhead) (GstBaseParse *parse,
                                        GstBuffer *buf);
 
@@ -277,6 +286,9 @@ GstFlowReturn gst_base_parse_push_buffer (GstBaseParse *parse,
 void gst_base_parse_set_duration (GstBaseParse *parse,
                                   GstFormat fmt,
                                   gint64 duration);
+
+void gst_base_parse_set_seek (GstBaseParse * parse,
+                              GstBaseParseSeekable seek, guint bitrate);
 
 void gst_base_parse_set_min_frame_size (GstBaseParse *parse,
                                         guint min_size);
