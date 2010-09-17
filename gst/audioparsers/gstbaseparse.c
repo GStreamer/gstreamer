@@ -1063,6 +1063,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime last_start = GST_CLOCK_TIME_NONE;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
+  GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
 
   GST_LOG_OBJECT (parse,
       "processing buffer of size %d with ts %" GST_TIME_FORMAT
@@ -1142,24 +1143,42 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
 
   /* TODO: Add to seek table */
 
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-      GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
-      GST_BUFFER_TIMESTAMP (buffer) > parse->segment.stop) {
-    GST_LOG_OBJECT (parse, "Dropped frame, after segment");
+  if (klass->pre_push_buffer)
+    ret = klass->pre_push_buffer (parse, buffer);
+  else
+    ret = GST_BASE_PARSE_FLOW_CLIP;
+
+  if (ret == GST_BASE_PARSE_FLOW_CLIP) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+        GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
+        GST_BUFFER_TIMESTAMP (buffer) > parse->segment.stop) {
+      GST_LOG_OBJECT (parse, "Dropped frame, after segment");
+      ret = GST_FLOW_UNEXPECTED;
+    } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
+        GST_BUFFER_DURATION_IS_VALID (buffer) &&
+        GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
+        < parse->segment.start) {
+      GST_LOG_OBJECT (parse, "Dropped frame, before segment");
+      ret = GST_BASE_PARSE_FLOW_DROPPED;
+    } else {
+      ret = GST_FLOW_OK;
+    }
+  }
+
+  if (ret == GST_BASE_PARSE_FLOW_DROPPED) {
+    GST_LOG_OBJECT (parse, "frame (%d bytes) dropped",
+        GST_BUFFER_SIZE (buffer));
     gst_buffer_unref (buffer);
-  } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-      GST_BUFFER_DURATION_IS_VALID (buffer) &&
-      GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
-      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
-      < parse->segment.start) {
-    /* FIXME: subclass needs way to override the start as downstream might
-     * need frames before for proper decoding */
-    GST_LOG_OBJECT (parse, "Dropped frame, before segment");
-    gst_buffer_unref (buffer);
-  } else {
+    ret = GST_FLOW_OK;
+  } else if (ret == GST_FLOW_OK) {
     ret = gst_pad_push (parse->srcpad, buffer);
-    GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %d",
-        GST_BUFFER_SIZE (buffer), ret);
+    GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
+        GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+  } else {
+    gst_buffer_unref (buffer);
+    GST_LOG_OBJECT (parse, "frame (%d bytes) not pushed: %s",
+        GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
   }
 
   /* Update current running segment position */

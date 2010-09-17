@@ -69,14 +69,35 @@ G_BEGIN_DECLS
 #define GST_BASE_PARSE_SINK_PAD(obj)	(GST_BASE_PARSE_CAST (obj)->sinkpad)
 
 /**
+ * GST_BASE_PARSE_SEGMENT:
+ * @obj: base parse instance
+ *
+ * Gives the segment of the element.
+ *
+ * Since: 0.10.x
+ */
+#define GST_BASE_PARSE_SEGMENT(obj)     (GST_BASE_PARSE_CAST (obj)->segment)
+
+/**
  * GST_BASE_PARSE_FLOW_DROPPED:
  *
  * A #GstFlowReturn that can be returned from parse_frame to
- * indicate that no output buffer was generated.
+ * indicate that no output buffer was generated, or from pre_push_buffer to
+ * to forego pushing buffer.
  *
  * Since: 0.10.x
  */
 #define GST_BASE_PARSE_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
+
+/**
+ * GST_BASE_PARSE_FLOW_CLIP:
+ *
+ * A #GstFlowReturn that can be returned from pre_push_buffer to
+ * indicate that regular segment clipping should be performed.
+ *
+ * Since: 0.10.x
+ */
+#define GST_BASE_PARSE_FLOW_CLIP      GST_FLOW_CUSTOM_SUCCESS_1
 
 /**
  * GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME:
@@ -186,6 +207,13 @@ struct _GstBaseParse {
  *                      this returns -1, it is assumed that this frame should
  *                      be skipped in bitrate calculation.
  *
+ * @pre_push_buffer: Optional.
+ *                   Called just prior to pushing a frame (after any pending
+ *                   events have been sent) to give subclass a chance to perform
+ *                   additional actions at this time (e.g. tag sending) or to
+ *                   decide whether this buffer should be dropped or no
+ *                   (e.g. custom segment clipping).
+ *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @check_valid_frame and @parse_frame needs to be
  * overridden.
@@ -231,6 +259,9 @@ struct _GstBaseParseClass {
   gboolean      (*is_seekable)        (GstBaseParse *parse);
 
   gint          (*get_frame_overhead) (GstBaseParse *parse,
+                                       GstBuffer *buf);
+
+  GstFlowReturn (*pre_push_buffer)    (GstBaseParse *parse,
                                        GstBuffer *buf);
 
   /*< private >*/
