@@ -394,7 +394,18 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
 
   osel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
 
-  if (osel->pending_srcpad) {
+  /*
+   * The _switch function might push a buffer if 'resend-latest' is true.
+   *
+   * Elements/Applications (e.g. camerabin) might use pad probes to
+   * switch output-selector's active pad. If we simply switch and don't
+   * recheck any pending pad switch the following codepath could end
+   * up pushing a buffer on a non-active pad. This is bad.
+   *
+   * So we always should check the pending_srcpad before going further down
+   * the chain and pushing the new buffer
+   */
+  while (osel->pending_srcpad) {
     /* Do the switch */
     gst_output_selector_switch (osel);
   }
