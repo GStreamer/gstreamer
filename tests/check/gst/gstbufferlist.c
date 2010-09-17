@@ -766,6 +766,36 @@ GST_START_TEST (test_foreach)
 
 GST_END_TEST;
 
+GST_START_TEST (test_list)
+{
+  GstBufferListIterator *it;
+  GList *l = NULL;
+  gint i;
+
+  for (i = 0; i < 10; i++) {
+    gchar name[10];
+    g_snprintf (name, 10, "%d", i);
+    l = g_list_append (l, buffer_from_string (name));
+  }
+
+  /* add buffers to the list */
+  it = gst_buffer_list_iterate (list);
+  gst_buffer_list_iterator_add_group (it);
+  gst_buffer_list_iterator_add_list (it, l);
+
+  for (i = 0; i < 10; i++) {
+    GstBuffer *buf;
+    gchar name[10];
+
+    buf = gst_buffer_list_get (list, 0, i);
+    g_snprintf (name, 10, "%d", i);
+    fail_unless (memcmp (name, (gchar *) GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf)) == 0);
+  }
+  gst_buffer_list_iterator_free (it);
+}
+
+GST_END_TEST;
 
 static Suite *
 gst_buffer_list_suite (void)
@@ -783,6 +813,7 @@ gst_buffer_list_suite (void)
   tcase_add_test (tc_chain, test_do);
   tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_foreach);
+  tcase_add_test (tc_chain, test_list);
 
   return s;
 }

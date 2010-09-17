@@ -220,6 +220,7 @@ GstBuffer *              gst_buffer_list_iterator_next         (GstBufferListIte
 gboolean                 gst_buffer_list_iterator_next_group   (GstBufferListIterator *it);
 
 void                     gst_buffer_list_iterator_add          (GstBufferListIterator *it, GstBuffer *buffer);
+void                     gst_buffer_list_iterator_add_list     (GstBufferListIterator *it, GList *list);
 void                     gst_buffer_list_iterator_add_group    (GstBufferListIterator *it);
 void                     gst_buffer_list_iterator_remove       (GstBufferListIterator *it);
 GstBuffer *              gst_buffer_list_iterator_steal        (GstBufferListIterator *it);

@@ -527,6 +527,52 @@ gst_buffer_list_iterator_add (GstBufferListIterator * it, GstBuffer * buffer)
 }
 
 /**
+ * gst_buffer_list_iterator_add_list:
+ * @it: a #GstBufferListIterator
+ * @list: a #GList
+ *
+ * Inserts @list of buffers into the #GstBufferList iterated with @it. The list is
+ * inserted into the current group, immediately before the buffer that would be
+ * returned by gst_buffer_list_iterator_next(). The list is inserted before
+ * the implicit cursor, a subsequent call to gst_buffer_list_iterator_next()
+ * will return the buffer after the last buffer of the inserted list, if any.
+ *
+ * This function takes ownership of @list and all its buffers.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_buffer_list_iterator_add_list (GstBufferListIterator * it, GList * list)
+{
+  GList *last;
+
+  g_return_if_fail (it != NULL);
+  g_return_if_fail (it->next != it->list->buffers);
+
+  if (list == NULL)
+    return;
+
+  if (it->next) {
+    last = list;
+    while (last->next)
+      last = last->next;
+
+    last->next = it->next;
+    list->prev = it->next->prev;
+    it->next->prev = last;
+    if (list->prev)
+      list->prev->next = list;
+  } else {
+    last = it->list->buffers;
+    while (last->next)
+      last = last->next;
+
+    last->next = list;
+    list->prev = last;
+  }
+}
+
+/**
  * gst_buffer_list_iterator_add_group:
  * @it: a #GstBufferListIterator
  *
