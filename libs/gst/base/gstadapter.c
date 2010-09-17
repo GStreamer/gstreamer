@@ -540,6 +540,28 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   gst_adapter_flush_unchecked (adapter, flush);
 }
 
+/* internal function, nbytes should be flushed after calling this function */
+static guint8 *
+gst_adapter_take_internal (GstAdapter * adapter, guint nbytes)
+{
+  guint8 *data;
+
+  /* we have enough assembled data, take from there */
+  if (adapter->assembled_len >= nbytes) {
+    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
+    data = adapter->assembled_data;
+    /* allocate new data, assembled_len will be set to 0 in the flush later */
+    adapter->assembled_data = g_malloc (adapter->assembled_size);
+  } else {
+    /* we need to allocate and copy. We could potentially copy bytes from the
+     * assembled data before doing the copy_into */
+    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
+    data = g_malloc (nbytes);
+    copy_into_unchecked (adapter, data, adapter->skip, nbytes);
+  }
+  return data;
+}
+
 /**
  * gst_adapter_take:
  * @adapter: a #GstAdapter
@@ -566,19 +588,7 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
   if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
 
-  /* we have enough assembled data, take from there */
-  if (adapter->assembled_len >= nbytes) {
-    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
-    data = adapter->assembled_data;
-    /* allocate new data, assembled_len will be set to 0 in the flush below */
-    adapter->assembled_data = g_malloc (adapter->assembled_size);
-  } else {
-    /* we need to allocate and copy. We could potentially copy bytes from the
-     * assembled data before doing the copy_into */
-    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
-    data = g_malloc (nbytes);
-    copy_into_unchecked (adapter, data, adapter->skip, nbytes);
-  }
+  data = gst_adapter_take_internal (adapter, nbytes);
 
   gst_adapter_flush_unchecked (adapter, nbytes);
 
@@ -609,6 +619,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   GstBuffer *buffer;
   GstBuffer *cur;
   guint hsize, skip;
+  guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes > 0, NULL);
@@ -649,22 +660,12 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
     }
   }
 
-  /* we have enough assembled data, copy from there */
-  if (adapter->assembled_len >= nbytes) {
-    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
-    buffer = gst_buffer_new ();
-    GST_BUFFER_SIZE (buffer) = nbytes;
-    GST_BUFFER_DATA (buffer) = adapter->assembled_data;
-    GST_BUFFER_MALLOCDATA (buffer) = adapter->assembled_data;
-    /* flush will set the assembled_len to 0 */
-    adapter->assembled_data = g_malloc (adapter->assembled_size);
-  } else {
-    /* we need to allocate and copy. We could potentially copy bytes from the
-     * assembled data before doing the copy_into */
-    buffer = gst_buffer_new_and_alloc (nbytes);
-    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
-    copy_into_unchecked (adapter, GST_BUFFER_DATA (buffer), skip, nbytes);
-  }
+  data = gst_adapter_take_internal (adapter, nbytes);
+
+  buffer = gst_buffer_new ();
+  GST_BUFFER_SIZE (buffer) = nbytes;
+  GST_BUFFER_DATA (buffer) = data;
+  GST_BUFFER_MALLOCDATA (buffer) = data;
 
 done:
   gst_adapter_flush_unchecked (adapter, nbytes);
