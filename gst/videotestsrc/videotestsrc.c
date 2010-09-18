@@ -1562,17 +1562,17 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 
   for (i = 0; i < h; i++) {
     if (i < y - radius || i > y + radius) {
-      p->color = &p->foreground_color;
       memset (p->tmpline_u8, 0, w);
     } else {
       int r = rint (sqrt (radius * radius - (i - y) * (i - y)));
       int x1, x2;
       int j;
 
-      p->color = &p->foreground_color;
       x1 = 0;
       x2 = MAX (0, x - r);
-      p->paint_tmpline (p, x1, x2 - x1);
+      for (j = x1; j < x2; j++) {
+        p->tmpline_u8[j] = 0;
+      }
 
       x1 = MAX (0, x - r);
       x2 = MIN (w, x + r + 1);
@@ -1580,13 +1580,14 @@ gst_video_test_src_ball (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
         double rr = radius - sqrt ((j - x) * (j - x) + (i - y) * (i - y));
 
         rr *= 0.5;
-        p->tmpline_u8[j] = CLAMP (floor (256 * rr), 0, 255);
+        p->tmpline_u8[j] = CLAMP ((int) floor (256 * rr), 0, 255);
       }
 
-      p->color = &p->foreground_color;
       x1 = MIN (w, x + r + 1);
       x2 = w;
-      p->paint_tmpline (p, x1, x2 - x1);
+      for (j = x1; j < x2; j++) {
+        p->tmpline_u8[j] = 0;
+      }
     }
     videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
         &p->foreground_color, &p->background_color, p->width);
