@@ -560,7 +560,7 @@ static const PulldownFormat formats[] = {
   /* interlaced */
   {"interlaced", 1, {1}},
   /* 30p */
-  {"2:1", 2, {2}},
+  {"2:2", 2, {2}},
   /* 24p */
   {"3:2", 5, {2, 3,}},
 };
