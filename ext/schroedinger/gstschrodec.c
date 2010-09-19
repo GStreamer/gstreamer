@@ -90,8 +90,6 @@ static gboolean gst_schro_dec_stop (GstBaseVideoDecoder * dec);
 static gboolean gst_schro_dec_reset (GstBaseVideoDecoder * dec);
 static GstFlowReturn gst_schro_dec_parse_data (GstBaseVideoDecoder *
     base_video_decoder, gboolean at_eos);
-static int gst_schro_dec_scan_for_sync (GstBaseVideoDecoder *
-    base_video_decoder, gboolean at_eos, int offset, int n);
 static GstFlowReturn gst_schro_dec_handle_frame (GstBaseVideoDecoder * decoder,
     GstVideoFrame * frame);
 static gboolean gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder);
@@ -150,11 +148,12 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
   base_video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_schro_dec_reset);
   base_video_decoder_class->parse_data =
       GST_DEBUG_FUNCPTR (gst_schro_dec_parse_data);
-  base_video_decoder_class->scan_for_sync =
-      GST_DEBUG_FUNCPTR (gst_schro_dec_scan_for_sync);
   base_video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_schro_dec_handle_frame);
   base_video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_schro_dec_finish);
+
+  gst_base_video_decoder_class_set_capture_pattern (base_video_decoder_class,
+      0xffffffff, 0x42424344);
 }
 
 static void
@@ -535,35 +534,6 @@ gst_schro_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
 
   return GST_FLOW_OK;
 }
-
-static int
-gst_schro_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
-    gboolean at_eos, int offset, int n)
-{
-  GstAdapter *adapter = base_video_decoder->input_adapter;
-  int n_available;
-  int ret;
-
-  n_available = gst_adapter_available (adapter) - offset;
-
-  if (n_available < 4) {
-    if (at_eos) {
-      return n_available;
-    } else {
-      return 0;
-    }
-  }
-
-  n = MIN (n, n_available - 3);
-
-  ret = gst_adapter_masked_scan_uint32 (adapter, 0xffffffff, 0x42424344,
-      offset, n);
-  if (ret == -1) {
-    return n;
-  }
-  return ret;
-}
-
 
 static void
 gst_schrodec_send_tags (GstSchroDec * schro_dec)

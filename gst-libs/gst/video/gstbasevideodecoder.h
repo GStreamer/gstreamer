@@ -137,9 +137,14 @@ struct _GstBaseVideoDecoderClass
   GstFlowReturn (*shape_output) (GstBaseVideoDecoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoDecoder *coder);
 
+  guint32 capture_mask;
+  guint32 capture_pattern;
 };
 
 GType gst_base_video_decoder_get_type (void);
+
+void gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *klass,
+    guint32 mask, guint32 pattern);
 
 int gst_base_video_decoder_get_width (GstBaseVideoDecoder *coder);
 int gst_base_video_decoder_get_height (GstBaseVideoDecoder *coder);

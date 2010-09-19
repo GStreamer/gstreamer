@@ -862,32 +862,36 @@ gst_base_video_decoder_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG ("no sync, scanning");
 
       n = gst_adapter_available (base_video_decoder->input_adapter);
-      m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
+      if (klass->capture_mask != 0) {
+        m = gst_adapter_masked_scan_uint32 (base_video_decoder->input_adapter,
+            klass->capture_mask, klass->capture_pattern, 0, n - 3);
+      } else if (klass->scan_for_sync) {
+        m = klass->scan_for_sync (base_video_decoder, FALSE, 0, n);
+      } else {
+        m = 0;
+      }
       if (m == -1) {
+        GST_ERROR ("scan returned no sync");
+        gst_adapter_flush (base_video_decoder->input_adapter, n - 3);
+
         gst_object_unref (base_video_decoder);
         return GST_FLOW_OK;
-      }
+      } else {
+        if (m > 0) {
+          if (m >= n) {
+            GST_ERROR ("subclass scanned past end %d >= %d", m, n);
+          }
 
-      if (m < 0) {
-        g_warning ("subclass returned negative scan %d", m);
-      }
+          gst_adapter_flush (base_video_decoder->input_adapter, m);
 
-      if (m >= n) {
-        GST_ERROR ("subclass scanned past end %d >= %d", m, n);
-      }
+          if (m < n) {
+            GST_DEBUG ("found possible sync after %d bytes (of %d)", m, n);
 
-      gst_adapter_flush (base_video_decoder->input_adapter, m);
+            /* this is only "maybe" sync */
+            base_video_decoder->have_sync = TRUE;
+          }
+        }
 
-      if (m < n) {
-        GST_DEBUG ("found possible sync after %d bytes (of %d)", m, n);
-
-        /* this is only "maybe" sync */
-        base_video_decoder->have_sync = TRUE;
-      }
-
-      if (!base_video_decoder->have_sync) {
-        gst_object_unref (base_video_decoder);
-        return GST_FLOW_OK;
       }
     }
 
@@ -1495,4 +1499,14 @@ gst_base_video_decoder_get_max_decode_time (GstBaseVideoDecoder *
     deadline = G_MAXINT64;
 
   return deadline;
+}
+
+void
+gst_base_video_decoder_class_set_capture_pattern (GstBaseVideoDecoderClass *
+    base_video_decoder_class, guint32 mask, guint32 pattern)
+{
+  g_return_if_fail (((~mask) & pattern) == 0);
+
+  base_video_decoder_class->capture_mask = mask;
+  base_video_decoder_class->capture_pattern = pattern;
 }
