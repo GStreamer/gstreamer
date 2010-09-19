@@ -78,6 +78,7 @@ struct _GstVideoFrame
   int n_fields;
 
   void *coder_hook;
+  GstClockTime deadline;
 };
 
 gboolean gst_base_video_rawvideo_convert (GstVideoState *state,

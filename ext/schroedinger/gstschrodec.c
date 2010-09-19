@@ -93,7 +93,7 @@ static GstFlowReturn gst_schro_dec_parse_data (GstBaseVideoDecoder *
 static int gst_schro_dec_scan_for_sync (GstBaseVideoDecoder *
     base_video_decoder, gboolean at_eos, int offset, int n);
 static GstFlowReturn gst_schro_dec_handle_frame (GstBaseVideoDecoder * decoder,
-    GstVideoFrame * frame, GstClockTimeDiff deadline);
+    GstVideoFrame * frame);
 static gboolean gst_schro_dec_finish (GstBaseVideoDecoder * base_video_decoder);
 static void gst_schrodec_send_tags (GstSchroDec * schro_dec);
 
@@ -681,7 +681,7 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
 
 GstFlowReturn
 gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame, GstClockTimeDiff deadline)
+    GstVideoFrame * frame)
 {
   GstSchroDec *schro_dec;
   int schro_ret;
