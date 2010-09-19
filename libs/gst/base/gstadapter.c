@@ -880,6 +880,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
 
   g_return_val_if_fail (size > 0, -1);
   g_return_val_if_fail (offset + size <= adapter->size, -1);
+  g_return_val_if_fail (((~mask) & pattern) == 0, -1);
 
   /* we can't find the pattern with less than 4 bytes */
   if (G_UNLIKELY (size < 4))
