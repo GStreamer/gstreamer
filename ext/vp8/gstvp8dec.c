@@ -103,7 +103,7 @@ static gboolean gst_vp8_dec_reset (GstBaseVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_parse_data (GstBaseVideoDecoder * decoder,
     gboolean at_eos);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder,
-    GstVideoFrame * frame, GstClockTimeDiff deadline);
+    GstVideoFrame * frame);
 
 static GstStaticPadTemplate gst_vp8_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -377,8 +377,7 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
 }
 
 static GstFlowReturn
-gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
-    GstClockTimeDiff deadline)
+gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
 {
   GstVP8Dec *dec;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -386,6 +385,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
   vpx_codec_iter_t iter = NULL;
   vpx_image_t *img;
   long decoder_deadline = 0;
+  GstClockTimeDiff deadline;
 
   GST_DEBUG_OBJECT (decoder, "handle_frame");
 
@@ -470,6 +470,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame,
   }
 #endif
 
+  deadline = gst_base_video_decoder_get_max_decode_time (decoder, frame);
   if (deadline < 0) {
     decoder_deadline = 1;
   } else if (deadline == G_MAXINT64) {
