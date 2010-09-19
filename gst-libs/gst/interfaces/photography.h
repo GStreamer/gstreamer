@@ -69,6 +69,7 @@ G_BEGIN_DECLS
     "image-preview-supported-caps"
 #define GST_PHOTOGRAPHY_PROP_FLICKER_MODE "flicker-mode"
 #define GST_PHOTOGRAPHY_PROP_FOCUS_MODE   "focus-mode"
+#define GST_PHOTOGRAPHY_PROP_ZOOM   "zoom"
 
 /**
  * GstPhotography:

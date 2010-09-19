@@ -580,4 +580,11 @@ gst_photography_iface_class_init (gpointer g_class)
           "Image preview supported caps",
           "Caps describing supported image preview formats", GST_TYPE_CAPS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /* Zoom */
+  g_object_interface_install_property (g_class,
+      g_param_spec_float (GST_PHOTOGRAPHY_PROP_ZOOM,
+          "Zoom property",
+          "How much the resulted image will be zoomed",
+          1.0f, 10.0f, 1.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
