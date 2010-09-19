@@ -998,7 +998,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
           GST_TIME_ARGS (frame->presentation_timestamp -
               base_video_decoder->segment.start));
       base_video_decoder->timestamp_offset = frame->presentation_timestamp;
-      base_video_decoder->field_index = 0;
+      base_video_decoder->field_index &= 1;
     } else {
       /* This case is for one initial timestamp and no others, e.g.,
        * filesrc ! decoder ! xvimagesink */
@@ -1013,7 +1013,7 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
             ("No base timestamp.  Assuming frames start at segment start");
         base_video_decoder->timestamp_offset =
             base_video_decoder->segment.start;
-        base_video_decoder->field_index = 0;
+        base_video_decoder->field_index &= 1;
       }
     }
   }
@@ -1046,15 +1046,6 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
 
   GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   if (base_video_decoder->state.interlaced) {
-#ifndef GST_VIDEO_BUFFER_TFF
-#define GST_VIDEO_BUFFER_TFF (GST_MINI_OBJECT_FLAG_LAST << 5)
-#endif
-#ifndef GST_VIDEO_BUFFER_RFF
-#define GST_VIDEO_BUFFER_RFF (GST_MINI_OBJECT_FLAG_LAST << 6)
-#endif
-#ifndef GST_VIDEO_BUFFER_ONEFIELD
-#define GST_VIDEO_BUFFER_ONEFIELD (GST_MINI_OBJECT_FLAG_LAST << 7)
-#endif
     int tff = base_video_decoder->state.top_field_first;
 
     if (frame->field_index & 1) {
@@ -1070,11 +1061,11 @@ gst_base_video_decoder_finish_frame (GstBaseVideoDecoder * base_video_decoder,
     if (frame->n_fields == 3) {
       GST_BUFFER_FLAG_SET (frame->src_buffer, GST_VIDEO_BUFFER_RFF);
     } else if (frame->n_fields == 1) {
-      GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
+      GST_BUFFER_FLAG_SET (frame->src_buffer, GST_VIDEO_BUFFER_ONEFIELD);
     }
   }
   if (base_video_decoder->discont) {
-    GST_BUFFER_FLAG_UNSET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (frame->src_buffer, GST_BUFFER_FLAG_DISCONT);
     base_video_decoder->discont = FALSE;
   }
 
