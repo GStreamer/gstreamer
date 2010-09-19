@@ -688,9 +688,9 @@ GST_START_TEST (test_scan)
       gst_adapter_masked_scan_uint32 (adapter, 0xff000000, 0x61000000, 0, 0x62);
   fail_unless (offset == -1);
   /* does not even exist */
-  offset =
+  ASSERT_CRITICAL (offset =
       gst_adapter_masked_scan_uint32 (adapter, 0x00ffffff, 0xffffffff, 0x65,
-      99);
+          99));
   fail_unless (offset == -1);
 
   /* flush some bytes */
