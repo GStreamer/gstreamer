@@ -79,6 +79,8 @@ struct _GstVideoFrame
 
   void *coder_hook;
   GstClockTime deadline;
+
+  gboolean force_keyframe;
 };
 
 gboolean gst_base_video_rawvideo_convert (GstVideoState *state,

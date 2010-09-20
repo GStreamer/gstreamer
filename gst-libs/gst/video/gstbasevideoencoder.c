@@ -31,6 +31,8 @@ static void gst_base_video_encoder_finalize (GObject * object);
 
 static gboolean gst_base_video_encoder_sink_setcaps (GstPad * pad,
     GstCaps * caps);
+static gboolean gst_base_video_encoder_src_event (GstPad * pad,
+    GstEvent * event);
 static gboolean gst_base_video_encoder_sink_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_base_video_encoder_chain (GstPad * pad,
@@ -90,6 +92,7 @@ gst_base_video_encoder_init (GstBaseVideoEncoder * base_video_encoder,
 
   gst_pad_set_query_type_function (pad, gst_base_video_encoder_get_query_types);
   gst_pad_set_query_function (pad, gst_base_video_encoder_src_query);
+  gst_pad_set_event_function (pad, gst_base_video_encoder_src_event);
 }
 
 static gboolean
@@ -220,6 +223,25 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
           event);
     }
       break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        GST_OBJECT_LOCK (base_video_encoder);
+        base_video_encoder->force_keyframe = TRUE;
+        GST_OBJECT_UNLOCK (base_video_encoder);
+        gst_event_unref (event);
+        ret = GST_FLOW_OK;
+      } else {
+        ret =
+            gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD
+            (base_video_encoder), event);
+      }
+      break;
+    }
     default:
       /* FIXME this changes the order of events */
       ret =
@@ -238,6 +260,49 @@ newseg_wrong_format:
     gst_event_unref (event);
     goto done;
   }
+}
+
+static gboolean
+gst_base_video_encoder_src_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseVideoEncoder *base_video_encoder;
+  GstBaseVideoEncoderClass *base_video_encoder_class;
+  gboolean ret = FALSE;
+
+  base_video_encoder = GST_BASE_VIDEO_ENCODER (gst_pad_get_parent (pad));
+  base_video_encoder_class =
+      GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        GST_OBJECT_LOCK (base_video_encoder);
+        base_video_encoder->force_keyframe = TRUE;
+        GST_OBJECT_UNLOCK (base_video_encoder);
+
+        gst_event_unref (event);
+        ret = TRUE;
+      } else {
+        ret =
+            gst_pad_push_event (GST_BASE_VIDEO_CODEC_SINK_PAD
+            (base_video_encoder), event);
+      }
+      break;
+    }
+    default:
+      ret =
+          gst_pad_push_event (GST_BASE_VIDEO_CODEC_SINK_PAD
+          (base_video_encoder), event);
+      break;
+  }
+
+  gst_object_unref (base_video_encoder);
+  return ret;
 }
 
 static const GstQueryType *
@@ -460,6 +525,27 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 
   gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
       base_video_encoder->caps);
+
+  if (frame->force_keyframe) {
+    GstClockTime stream_time;
+    GstClockTime running_time;
+    GstStructure *s;
+
+    running_time = gst_segment_to_running_time (&base_video_encoder->segment,
+        GST_FORMAT_TIME, frame->presentation_timestamp);
+    stream_time = gst_segment_to_stream_time (&base_video_encoder->segment,
+        GST_FORMAT_TIME, frame->presentation_timestamp);
+
+    /* FIXME this should send the event that we got on the sink pad
+       instead of creating a new one */
+    s = gst_structure_new ("GstForceKeyUnit",
+        "timestamp", G_TYPE_UINT64, frame->presentation_timestamp,
+        "stream-time", G_TYPE_UINT64, stream_time,
+        "running-time", G_TYPE_UINT64, running_time, NULL);
+
+    gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s));
+  }
 
   if (base_video_encoder_class->shape_output) {
     ret = base_video_encoder_class->shape_output (base_video_encoder, frame);

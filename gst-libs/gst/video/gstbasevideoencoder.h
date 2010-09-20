@@ -81,6 +81,8 @@ struct _GstBaseVideoEncoder
 
   gint64 min_latency;
   gint64 max_latency;
+
+  gboolean force_keyframe;
 };
 
 struct _GstBaseVideoEncoderClass
