@@ -82,7 +82,7 @@ static GstStateChangeReturn gst_icydemux_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_icydemux_sink_setcaps (GstPad * pad, GstCaps * caps);
 
-static void gst_icydemux_send_tag_event (GstICYDemux * icydemux,
+static gboolean gst_icydemux_send_tag_event (GstICYDemux * icydemux,
     GstTagList * taglist);
 
 static GstElementClass *parent_class = NULL;
@@ -301,6 +301,22 @@ gst_icydemux_unicodify (const gchar * str)
   return gst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
+static gboolean
+gst_icydemux_tag_found (GstICYDemux * icydemux, GstTagList * tags)
+{
+  /* send the tag event if we have finished typefinding and have a src pad */
+  if (icydemux->srcpad)
+    return gst_icydemux_send_tag_event (icydemux, tags);
+
+  /* if we haven't a source pad yet, cache the tags */
+  if (!icydemux->cached_tags)
+    icydemux->cached_tags = gst_tag_list_new ();
+
+  gst_tag_list_insert (icydemux->cached_tags, tags, GST_TAG_MERGE_REPLACE_ALL);
+
+  return TRUE;
+}
+
 static void
 gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
 {
@@ -351,24 +367,22 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   g_free (buffer);
   gst_adapter_clear (icydemux->meta_adapter);
 
-  if (found_tag) {
-    if (icydemux->srcpad) {
-      gst_icydemux_send_tag_event (icydemux, tags);
-    } else {
-      if (!icydemux->cached_tags) {
-        icydemux->cached_tags = gst_tag_list_new ();
-      }
-
-      gst_tag_list_insert (icydemux->cached_tags, tags,
-          GST_TAG_MERGE_REPLACE_ALL);
-    }
-  }
+  if (found_tag)
+    gst_icydemux_tag_found (icydemux, tags);
 }
 
 static gboolean
 gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
 {
   GstICYDemux *icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    GstTagList *tags;
+
+    gst_event_parse_tag (event, &tags);
+    gst_event_unref (event);
+    return gst_icydemux_tag_found (icydemux, tags);
+  }
 
   if (icydemux->typefinding) {
     switch (GST_EVENT_TYPE (event)) {
@@ -603,7 +617,7 @@ gst_icydemux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static void
+static gboolean
 gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
 {
   GstEvent *event;
@@ -615,7 +629,7 @@ gst_icydemux_send_tag_event (GstICYDemux * icydemux, GstTagList * tags)
   GST_EVENT_TIMESTAMP (event) = 0;
 
   GST_DEBUG_OBJECT (icydemux, "Sending tag event on src pad");
-  gst_pad_push_event (icydemux->srcpad, event);
+  return gst_pad_push_event (icydemux->srcpad, event);
 
 }
 
