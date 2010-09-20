@@ -88,34 +88,8 @@ struct _GstBaseVideoCodec
   /*< private >*/
   GstPad *sinkpad;
   GstPad *srcpad;
-  GstAdapter *input_adapter;
-  GstAdapter *output_adapter;
 
-#if 0
-  /* FIXME need to move from subclasses */
-  GstVideoState state;
-#endif
-  
-  //int reorder_depth;
-
-  //gboolean have_sync;
-  //gboolean discont;
-  //gboolean started;
-
-  //GstVideoFrame *current_frame;
-  //int distance_from_sync;
-
-  //gboolean sink_clipping;
-
-  //guint64 presentation_frame_number;
   guint64 system_frame_number;
-
-  //GstCaps *caps;
-  //gboolean set_output_caps;
-
-  //GstClockTime buffer_timestamp;
-
-  GstClockTime timestamp_offset;
 };
 
 struct _GstBaseVideoCodecClass
@@ -134,11 +108,6 @@ struct _GstBaseVideoCodecClass
 };
 
 GType gst_base_video_codec_get_type (void);
-
-#if 0
-guint64 gst_base_video_codec_get_timestamp (GstBaseVideoCodec *codec,
-    int picture_number);
-#endif
 
 GstVideoFrame * gst_base_video_codec_new_frame (GstBaseVideoCodec *base_video_codec);
 void gst_base_video_codec_free_frame (GstVideoFrame *frame);

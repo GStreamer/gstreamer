@@ -104,21 +104,12 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
   gst_element_add_pad (GST_ELEMENT (base_video_codec),
       base_video_codec->srcpad);
 
-  base_video_codec->input_adapter = gst_adapter_new ();
-  base_video_codec->output_adapter = gst_adapter_new ();
-
 }
 
 static void
 gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 {
   GST_DEBUG ("reset");
-
-  base_video_codec->system_frame_number = 0;
-
-  //gst_segment_init (&base_video_codec->state.segment, GST_FORMAT_TIME);
-  gst_adapter_clear (base_video_codec->input_adapter);
-  gst_adapter_clear (base_video_codec->output_adapter);
 
 }
 
@@ -130,12 +121,6 @@ gst_base_video_codec_finalize (GObject * object)
   g_return_if_fail (GST_IS_BASE_VIDEO_CODEC (object));
   base_video_codec = GST_BASE_VIDEO_CODEC (object);
 
-  if (base_video_codec->input_adapter) {
-    g_object_unref (base_video_codec->input_adapter);
-  }
-  if (base_video_codec->output_adapter) {
-    g_object_unref (base_video_codec->output_adapter);
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -527,25 +512,6 @@ gst_base_video_codec_change_state (GstElement * element,
   return ret;
 }
 
-#if 0
-guint64
-gst_base_video_codec_get_timestamp (GstBaseVideoCodec * base_video_codec,
-    int picture_number)
-{
-  if (picture_number < 0) {
-    return base_video_codec->timestamp_offset -
-        (gint64) gst_util_uint64_scale (-picture_number,
-        base_video_codec->state.fps_d * GST_SECOND,
-        base_video_codec->state.fps_n);
-  } else {
-    return base_video_codec->timestamp_offset +
-        gst_util_uint64_scale (picture_number,
-        base_video_codec->state.fps_d * GST_SECOND,
-        base_video_codec->state.fps_n);
-  }
-}
-#endif
-
 GstVideoFrame *
 gst_base_video_codec_new_frame (GstBaseVideoCodec * base_video_codec)
 {
@@ -565,11 +531,6 @@ gst_base_video_codec_free_frame (GstVideoFrame * frame)
   if (frame->sink_buffer) {
     gst_buffer_unref (frame->sink_buffer);
   }
-#if 0
-  if (frame->src_buffer) {
-    gst_buffer_unref (frame->src_buffer);
-  }
-#endif
 
   g_free (frame);
 }

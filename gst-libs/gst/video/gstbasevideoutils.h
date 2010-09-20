@@ -93,8 +93,6 @@ gboolean gst_base_video_encoded_video_convert (GstVideoState *state,
 GstClockTime gst_video_state_get_timestamp (const GstVideoState *state,
     GstSegment *segment, int frame_number);
 
-int gst_adapter_masked_scan_uint32_compat (GstAdapter *adapter,
-    guint32 pattern, guint32 mask, guint offset, guint n);
 GstBuffer *gst_adapter_get_buffer (GstAdapter *adapter);
 
 G_END_DECLS
