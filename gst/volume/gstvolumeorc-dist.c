@@ -139,7 +139,7 @@ orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
   ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
-  var33.i = p1;
+  var33.f = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
