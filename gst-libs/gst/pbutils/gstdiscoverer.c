@@ -760,9 +760,9 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       GstCaps *caps;
       const GstStructure *st;
 
-      GST_DEBUG ("next is a structure %" GST_PTR_FORMAT);
-
       st = gst_value_get_structure (nval);
+
+      GST_DEBUG ("next is a structure %" GST_PTR_FORMAT, st);
 
       if (!parent)
         parent = res;
