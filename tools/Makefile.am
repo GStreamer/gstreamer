@@ -4,10 +4,20 @@ bin_SCRIPTS = \
 man_MANS = \
         gst-visualise-@GST_MAJORMINOR@.1
 
-CLEANFILES = $(man_MANS) $(bin_SCRIPTS)
+bin_PROGRAMS = \
+	gst-discoverer
+
+CLEANFILES = $(man_MANS) $(bin_SCRIPTS) $(bin_PROGRAMS)
 
 EXTRA_DIST = \
-	gst-visualise-m.m gst-visualise.1.in
+	gst-visualise-m.m gst-visualise.1.in \
+	gst-discoverer.c
+
+LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la\
+	-lgstpbutils-@GST_MAJORMINOR@ \
+	$(GST_LIBS)
+
+AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 
 # generate versioned scripts from templates
 %-@GST_MAJORMINOR@: %-m.m
