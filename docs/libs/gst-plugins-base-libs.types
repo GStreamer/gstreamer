@@ -57,3 +57,5 @@ gst_video_filter_get_type
 #include <gst/video/gstvideosink.h>
 gst_video_sink_get_type
 
+#include <gst/pbutils/pbutils.h>
+gst_discoverer_get_type

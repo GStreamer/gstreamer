@@ -75,10 +75,11 @@ SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/sdp/libgstsdp-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES =
+IGNORE_HFILES = gstdiscoverer-private.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
