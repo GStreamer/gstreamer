@@ -4,7 +4,8 @@ headers_pbutils = \
 	pbutils.h         \
 	descriptions.h    \
 	install-plugins.h \
-	missing-plugins.h
+	missing-plugins.h \
+	gstdiscoverer.h
 
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_pbutils)
@@ -13,10 +14,12 @@ glib_gen_prefix = gst_install
 glib_gen_basename = pbutils
 
 built_sources = \
-	pbutils-enumtypes.c
+	pbutils-enumtypes.c	\
+	pbutils-marshal.c
 
 built_headers = \
-	pbutils-enumtypes.h
+	pbutils-enumtypes.h	\
+	pbutils-marshal.h
 
 built_headers_configure = \
 	gstpluginsbaseversion.h
@@ -26,7 +29,9 @@ libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	pbutils.c         \
 	descriptions.c    \
 	install-plugins.c \
-	missing-plugins.c
+	missing-plugins.c \
+	gstdiscoverer.c   \
+	gstdiscoverer-types.c
 
 nodist_libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	$(built_sources)
@@ -36,8 +41,13 @@ libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(headers_pbutils)
 nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_headers) $(built_headers_configure)
+noinst_HEADERS = \
+	gstdiscoverer-private.h
+EXTRA_DIST = pbutils-marshal.list
 
-libgstpbutils_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
+libgstpbutils_@GST_MAJORMINOR@_la_LIBADD = \
+  $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+  $(GST_LIBS)
 libgstpbutils_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstpbutils_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
@@ -71,10 +81,12 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
+		--add-include-path=$(srcdir)/../video \
 		--library=libgstpbutils-0.10.la \
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
+		--pkg gstreamer-video-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
@@ -91,6 +103,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 %.typelib: %.gir $(INTROSPECTION_COMPILER)
 	$(AM_V_GEN)$(INTROSPECTION_COMPILER) \
 		--includedir=$(srcdir) \
+		--includedir=$(srcdir)/../video \
 		--includedir=$(builddir) \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-0.10` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
