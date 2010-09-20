@@ -3912,7 +3912,7 @@ plugin_init (GstPlugin * plugin)
   static const gchar *flx_exts[] = { "flc", "fli", NULL };
   static const gchar *id3_exts[] =
       { "mp3", "mp2", "mp1", "mpga", "ogg", "flac", "tta", NULL };
-  static const gchar *apetag_exts[] = { "ape", "mpc", "wv", NULL };     /* and mp3 and wav? */
+  static const gchar *apetag_exts[] = { "mp3", "ape", "mpc", "wv", NULL };
   static const gchar *tta_exts[] = { "tta", NULL };
   static const gchar *mod_exts[] = { "669", "amf", "dsm", "gdm", "far", "imf",
     "it", "med", "mod", "mtm", "okt", "sam",
