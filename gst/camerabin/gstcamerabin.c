@@ -851,6 +851,15 @@ camerabin_destroy_elements (GstCameraBin * camera)
 
   camera->active_bin = NULL;
 
+  /* Reset caps data as the elements might be completely different next
+   * time we 'start' */
+  if (camera->view_finder_caps) {
+    gst_caps_replace (&camera->view_finder_caps, NULL);
+  }
+  gst_caps_replace (&camera->allowed_caps, NULL);
+  camera->fps_n = camera->fps_d = 0;
+  camera->width = camera->height = 0;
+
   /* Remove elements */
   gst_camerabin_remove_elements_from_bin (GST_BIN (camera));
 }
