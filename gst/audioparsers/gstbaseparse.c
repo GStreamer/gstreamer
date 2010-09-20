@@ -226,6 +226,7 @@ struct _GstBaseParsePrivate
   gboolean drain;
 
   gint64 offset;
+  gint64 sync_offset;
   GstClockTime next_ts;
   GstClockTime prev_ts;
   GstClockTime frame_duration;
@@ -665,7 +666,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_base_parse_drain (parse);
       gst_adapter_clear (parse->adapter);
       parse->priv->offset = offset;
+      parse->priv->sync_offset = offset;
       parse->priv->next_ts = start;
+      parse->priv->discont = TRUE;
       break;
     }
 
@@ -1244,6 +1247,20 @@ gst_base_parse_drain (GstBaseParse * parse)
   parse->priv->drain = FALSE;
 }
 
+/* small helper that checks whether we have been trying to resync too long */
+static inline GstFlowReturn
+gst_base_parse_check_sync (GstBaseParse * parse)
+{
+  if (G_UNLIKELY (parse->priv->discont &&
+          parse->priv->offset - parse->priv->sync_offset > 2 * 1024 * 1024)) {
+    GST_ELEMENT_ERROR (parse, STREAM, DECODE,
+        ("Failed to parse stream"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
+}
+
 
 /**
  * gst_base_parse_chain:
@@ -1333,17 +1350,25 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
         gst_adapter_flush (parse->adapter, skip);
         parse->priv->offset += skip;
+        if (!parse->priv->discont)
+          parse->priv->sync_offset = parse->priv->offset;
         parse->priv->discont = TRUE;
       } else if (skip == -1) {
         /* subclass didn't touch this value. By default we skip 1 byte */
         GST_LOG_OBJECT (parse, "finding sync, skipping 1 byte");
         gst_adapter_flush (parse->adapter, 1);
         parse->priv->offset++;
+        if (!parse->priv->discont)
+          parse->priv->sync_offset = parse->priv->offset;
         parse->priv->discont = TRUE;
       }
       /* There is a possibility that subclass set the skip value to zero.
          This means that it has probably found a frame but wants to ask
          more data (by increasing the min_size) to be sure of this. */
+      if ((ret = gst_base_parse_check_sync (parse)) != GST_FLOW_OK) {
+        gst_buffer_unref (tmpbuf);
+        goto done;
+      }
     }
     gst_buffer_unref (tmpbuf);
     tmpbuf = NULL;
@@ -1522,14 +1547,22 @@ gst_base_parse_loop (GstPad * pad)
     if (skip > 0) {
       GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
       parse->priv->offset += skip;
+      if (!parse->priv->discont)
+        parse->priv->sync_offset = parse->priv->offset;
       parse->priv->discont = TRUE;
     } else if (skip == -1) {
       GST_LOG_OBJECT (parse, "finding sync, skipping 1 byte");
       parse->priv->offset++;
+      if (!parse->priv->discont)
+        parse->priv->sync_offset = parse->priv->offset;
       parse->priv->discont = TRUE;
     }
+    /* skip == 0 should imply subclass set min_size to need more data ... */
     GST_DEBUG_OBJECT (parse, "finding sync...");
     gst_buffer_unref (buffer);
+    if ((ret = gst_base_parse_check_sync (parse)) != GST_FLOW_OK) {
+      goto done;
+    }
   }
 
   if (fsize <= GST_BUFFER_SIZE (buffer)) {
@@ -1569,6 +1602,7 @@ gst_base_parse_loop (GstPad * pad)
     goto need_pause;
   }
 
+done:
   gst_object_unref (parse);
   return;
 
@@ -1645,6 +1679,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->discont = TRUE;
     parse->priv->flushing = FALSE;
     parse->priv->offset = 0;
+    parse->priv->sync_offset = 0;
     parse->priv->update_interval = 50;
     parse->priv->fps_num = parse->priv->fps_den = 0;
     parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
@@ -2248,7 +2283,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         last_stop);
 
     /* now commit to new position */
-    parse->priv->offset = seekpos;
 
     /* prepare for streaming again */
     if (flush) {
@@ -2292,11 +2326,13 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         GST_TIME_ARGS (stop), GST_TIME_ARGS (parse->segment.last_stop));
 
     /* mark discont if we are going to stream from another position. */
-    if (last_stop != parse->segment.last_stop) {
+    if (seekpos != parse->priv->offset) {
       GST_DEBUG_OBJECT (parse,
           "mark DISCONT, we did a seek to another position");
+      parse->priv->offset = seekpos;
       parse->priv->discont = TRUE;
       parse->priv->next_ts = parse->segment.last_stop;
+      parse->priv->sync_offset = seekpos;
     }
 
     /* Start streaming thread if paused */
