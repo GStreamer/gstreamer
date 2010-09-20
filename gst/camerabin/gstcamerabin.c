@@ -294,6 +294,8 @@ static void gst_camerabin_adapt_image_capture (GstCameraBin * camera,
     GstCaps * new_caps);
 static void gst_camerabin_scene_mode_notify_cb (GObject * video_source,
     GParamSpec * pspec, gpointer user_data);
+static void gst_camerabin_zoom_notify_cb (GObject * video_source,
+    GParamSpec * pspec, gpointer user_data);
 static void gst_camerabin_monitor_video_source_properties (GstCameraBin *
     camera);
 static void gst_camerabin_configure_format (GstCameraBin * camera,
@@ -1022,23 +1024,12 @@ static gboolean
 gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gfloat zoom)
 {
   gboolean ret = FALSE;
-  GParamSpec *spec;
 
-  spec = g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
-      "zoom");
-  if (spec) {
-    GValue value = { 0 };
-
-    g_value_init (&value, G_TYPE_FLOAT);
-    g_value_set_float (&value, zoom);
-
-    /* puts zoom into the valid range of the src element */
-    if (g_param_value_validate (spec, &value)) {
-      GST_DEBUG_OBJECT (camera, "Modified zoom from %f to %f", zoom,
-          g_value_get_float (&value));
-      zoom = g_value_get_float (&value);
-    }
-    g_object_set (G_OBJECT (camera->src_vid_src), "zoom", zoom, NULL);
+  /* Try with photography interface zooming */
+  if (GST_IS_ELEMENT (camera->src_vid_src) &&
+      gst_element_implements_interface (camera->src_vid_src,
+          GST_TYPE_PHOTOGRAPHY)) {
+    gst_photography_set_zoom (GST_PHOTOGRAPHY (camera->src_vid_src), zoom);
     ret = TRUE;
   }
   return ret;
@@ -2459,6 +2450,29 @@ gst_camerabin_scene_mode_notify_cb (GObject * video_source, GParamSpec * pspec,
   gst_camerabin_handle_scene_mode (camera, scene_mode);
 }
 
+ /*
+  * gst_camerabin_zoom_notify_cb:
+  * @video_source: videosrc object
+  * @pspec:        GParamSpec for property
+  * @user_data:    camerabin object
+  *
+  * Update zoom value if video-source updated its zoom
+  *
+  */
+static void
+gst_camerabin_zoom_notify_cb (GObject * video_source, GParamSpec * pspec,
+    gpointer user_data)
+{
+  gfloat zoom;
+  const gchar *name = g_param_spec_get_name (pspec);
+  GstCameraBin *camera = GST_CAMERABIN (user_data);
+
+  g_object_get (video_source, name, &zoom, NULL);
+
+  camera->zoom = zoom;
+  g_object_notify (G_OBJECT (camera), "zoom");
+}
+
 /*
  * gst_camerabin_monitor_video_source_properties:
  * @camera: camerabin object
@@ -2479,6 +2493,11 @@ gst_camerabin_monitor_video_source_properties (GstCameraBin * camera)
         camera->src_vid_src);
     g_signal_connect (G_OBJECT (camera->src_vid_src), "notify::scene-mode",
         (GCallback) gst_camerabin_scene_mode_notify_cb, camera);
+    GST_DEBUG_OBJECT (camera,
+        "connecting to %" GST_PTR_FORMAT " - notify::zoom",
+        camera->src_vid_src);
+    g_signal_connect (G_OBJECT (camera->src_vid_src), "notify::zoom",
+        (GCallback) gst_camerabin_zoom_notify_cb, camera);
   }
 }
 
@@ -3582,6 +3601,8 @@ gst_camerabin_change_state (GstElement * element, GstStateChange transition)
       g_mutex_unlock (camera->capture_mutex);
       g_signal_handlers_disconnect_by_func (camera->src_vid_src,
           gst_camerabin_scene_mode_notify_cb, camera);
+      g_signal_handlers_disconnect_by_func (camera->src_vid_src,
+          gst_camerabin_zoom_notify_cb, camera);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       camerabin_destroy_elements (camera);
