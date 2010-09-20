@@ -91,6 +91,12 @@ struct _GstCameraBin
   gint fps_n;
   gint fps_d;
 
+  /* app configured resolution/framerate */
+  gint app_width;
+  gint app_height;
+  gint app_fps_n;
+  gint app_fps_d;
+
   gboolean video_capture_caps_update;
 
   /* Image capture resolution */
