@@ -241,6 +241,7 @@ struct _GstBaseParsePrivate
   guint min_bitrate;
   guint avg_bitrate;
   guint max_bitrate;
+  guint posted_avg_bitrate;
 
   GList *pending_events;
 
@@ -888,9 +889,11 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, parse->priv->min_bitrate, NULL);
 
-  if (post_avg && parse->priv->post_min_bitrate)
+  if (post_avg && parse->priv->post_avg_bitrate) {
+    parse->priv->posted_avg_bitrate = parse->priv->avg_bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
         parse->priv->avg_bitrate, NULL);
+  }
 
   if (post_max && parse->priv->post_max_bitrate)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
@@ -919,7 +922,7 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
 
   GstBaseParseClass *klass;
   guint64 data_len, frame_dur;
-  gint overhead = 0, frame_bitrate, old_avg_bitrate = parse->priv->avg_bitrate;
+  gint overhead = 0, frame_bitrate, old_avg_bitrate;
   gboolean update_min = FALSE, update_avg = FALSE, update_max = FALSE;
 
   klass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -957,6 +960,9 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
 
   frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
 
+  GST_LOG_OBJECT (parse, "frame bitrate %u, avg bitrate %u", frame_bitrate,
+      parse->priv->avg_bitrate);
+
   if (frame_bitrate < parse->priv->min_bitrate) {
     parse->priv->min_bitrate = frame_bitrate;
     update_min = TRUE;
@@ -967,11 +973,16 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
     update_max = TRUE;
   }
 
-  if (old_avg_bitrate / update_threshold !=
-      parse->priv->avg_bitrate / update_threshold)
+  old_avg_bitrate = parse->priv->posted_avg_bitrate;
+  if ((gint) (old_avg_bitrate - parse->priv->avg_bitrate) > update_threshold ||
+      (gint) (parse->priv->avg_bitrate - old_avg_bitrate) > update_threshold)
     update_avg = TRUE;
 
-  if (parse->priv->framecount >= MIN_FRAMES_TO_POST_BITRATE &&
+  /* always post all at threshold time */
+  if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE)
+    gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
+
+  if (parse->priv->framecount > MIN_FRAMES_TO_POST_BITRATE &&
       (update_min || update_avg || update_max))
     gst_base_parse_post_bitrates (parse, update_min, update_avg, update_max);
 
@@ -1639,7 +1650,8 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->post_max_bitrate = TRUE;
     parse->priv->min_bitrate = G_MAXUINT;
     parse->priv->max_bitrate = 0;
-    parse->priv->max_bitrate = 0;
+    parse->priv->avg_bitrate = 0;
+    parse->priv->posted_avg_bitrate = 0;
 
     if (parse->pending_segment)
       gst_event_unref (parse->pending_segment);
