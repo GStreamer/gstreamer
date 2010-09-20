@@ -580,7 +580,7 @@ run_pipeline (gpointer user_data)
     g_object_unref (video_source);
   }
   g_object_set (camera_bin, "mute", mute, NULL);
-  g_object_set (camera_bin, "zoom", zoom, NULL);
+  g_object_set (camera_bin, "zoom", zoom / 100.0f, NULL);
 
   capture_count++;
   g_signal_emit_by_name (camera_bin, "capture-start", 0);

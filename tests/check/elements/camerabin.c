@@ -346,7 +346,7 @@ static void
 test_camerabin_properties (GstElement * cam)
 {
   guint flags;
-  gint zoom;
+  gfloat zoom;
   gboolean mute;
 
   flags = 0x1f;
@@ -354,11 +354,11 @@ test_camerabin_properties (GstElement * cam)
   g_object_get (G_OBJECT (cam), "flags", &flags, NULL);
   fail_if (flags != 0x1f, "setting camerabin flags failed");
 
-  zoom = 200;
+  zoom = 2.0;
   g_object_set (G_OBJECT (cam), "zoom", zoom, NULL);
   g_object_get (G_OBJECT (cam), "zoom", &zoom, NULL);
-  fail_if (zoom != 200, "setting camerabin zoom failed");
-  g_object_set (G_OBJECT (cam), "zoom", 100, NULL);
+  fail_if (zoom != 2.0, "setting camerabin zoom failed");
+  g_object_set (G_OBJECT (cam), "zoom", 1.0f, NULL);
 
   mute = TRUE;
   g_object_set (G_OBJECT (cam), "mute", mute, NULL);

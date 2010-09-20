@@ -97,8 +97,8 @@ struct _GstCameraBin
   /* Caps used to create video preview image */
   GstCaps *video_preview_caps;
 
-  /* The digital zoom (from 100% to 1000%) */
-  gint zoom;
+  /* The digital zoom (from 1.0 to 10.0) */
+  gfloat zoom;
 
   /* concurrency control */
   GMutex *capture_mutex;

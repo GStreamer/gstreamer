@@ -186,7 +186,7 @@ static guint camerabin_signals[LAST_SIGNAL];
 /* default and range values for args */
 
 #define DEFAULT_MODE MODE_IMAGE
-#define DEFAULT_ZOOM 100
+#define DEFAULT_ZOOM 1.0
 #define DEFAULT_WIDTH 640
 #define DEFAULT_HEIGHT 480
 #define DEFAULT_CAPTURE_WIDTH 800
@@ -205,8 +205,8 @@ static guint camerabin_signals[LAST_SIGNAL];
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
 
-#define MIN_ZOOM 100
-#define MAX_ZOOM 1000
+#define MIN_ZOOM 1.0
+#define MAX_ZOOM 10.0
 #define ZOOM_1X MIN_ZOOM
 
 /* FIXME: this is v4l2camsrc specific */
@@ -1019,14 +1019,26 @@ gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
 }
 
 static gboolean
-gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gint zoom)
+gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gfloat zoom)
 {
   gboolean ret = FALSE;
+  GParamSpec *spec;
 
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
-          "zoom")) {
-    g_object_set (G_OBJECT (camera->src_vid_src), "zoom",
-        (gfloat) zoom / 100, NULL);
+  spec = g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
+      "zoom");
+  if (spec) {
+    GValue value = { 0 };
+
+    g_value_init (&value, G_TYPE_FLOAT);
+    g_value_set_float (&value, zoom);
+
+    /* puts zoom into the valid range of the src element */
+    if (g_param_value_validate (spec, &value)) {
+      GST_DEBUG_OBJECT (camera, "Modified zoom from %f to %f", zoom,
+          g_value_get_float (&value));
+      zoom = g_value_get_float (&value);
+    }
+    g_object_set (G_OBJECT (camera->src_vid_src), "zoom", zoom, NULL);
     ret = TRUE;
   }
   return ret;
@@ -1034,7 +1046,7 @@ gst_camerabin_set_videosrc_zoom (GstCameraBin * camera, gint zoom)
 
 
 static gboolean
-gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
+gst_camerabin_set_element_zoom (GstCameraBin * camera, gfloat zoom)
 {
   gint w2_crop = 0, h2_crop = 0;
   GstPad *pad_zoom_sink = NULL;
@@ -1046,7 +1058,7 @@ gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
 
   if (camera->src_zoom_crop) {
     /* Update capsfilters to apply the zoom */
-    GST_INFO_OBJECT (camera, "zoom: %d, orig size: %dx%d", zoom,
+    GST_INFO_OBJECT (camera, "zoom: %f, orig size: %dx%d", zoom,
         camera->width, camera->height);
 
     if (zoom != ZOOM_1X) {
@@ -1088,15 +1100,15 @@ gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
 static void
 gst_camerabin_setup_zoom (GstCameraBin * camera)
 {
-  gint zoom;
+  gfloat zoom;
 
   g_return_if_fail (camera != NULL);
 
-  zoom = g_atomic_int_get (&camera->zoom);
+  zoom = camera->zoom;
 
   g_return_if_fail (zoom);
 
-  GST_INFO_OBJECT (camera, "setting zoom %d", zoom);
+  GST_INFO_OBJECT (camera, "setting zoom %f", zoom);
 
   if (gst_camerabin_set_videosrc_zoom (camera, zoom)) {
     gst_camerabin_set_element_zoom (camera, ZOOM_1X);
@@ -1294,7 +1306,7 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
   }
 
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-      GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, camera->zoom / 100.0, NULL);
+      GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, (gdouble) camera->zoom, NULL);
 
   if (gst_element_implements_interface (GST_ELEMENT (camera),
           GST_TYPE_COLOR_BALANCE)) {
@@ -2633,8 +2645,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    */
 
   g_object_class_install_property (gobject_class, ARG_ZOOM,
-      g_param_spec_int ("zoom", "Zoom",
-          "The zoom. 100 for 1x, 200 for 2x and so on",
+      g_param_spec_float ("zoom", "Zoom",
+          "The zoom. 1.0 for 1x, 2.0 for 2x and so on",
           MIN_ZOOM, MAX_ZOOM, DEFAULT_ZOOM,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -3172,7 +3184,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
           g_value_get_boolean (value));
       break;
     case ARG_ZOOM:
-      g_atomic_int_set (&camera->zoom, g_value_get_int (value));
+      camera->zoom = g_value_get_float (value);
       /* does not set it if in NULL, the src is not created yet */
       if (GST_STATE (camera) != GST_STATE_NULL)
         gst_camerabin_setup_zoom (camera);
@@ -3419,7 +3431,7 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
           gst_camerabin_video_get_mute (GST_CAMERABIN_VIDEO (camera->vidbin)));
       break;
     case ARG_ZOOM:
-      g_value_set_int (value, g_atomic_int_get (&camera->zoom));
+      g_value_set_float (value, camera->zoom);
       break;
     case ARG_IMAGE_POST:
       g_value_set_object (value,
