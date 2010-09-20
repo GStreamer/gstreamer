@@ -158,14 +158,8 @@ gst_base_video_decoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_video_parse_caps_framerate (caps, &state->fps_n, &state->fps_d);
   gst_video_parse_caps_pixel_aspect_ratio (caps, &state->par_n, &state->par_d);
 
-#if 0
-  /* requires 0.10.23 */
   state->have_interlaced =
       gst_video_format_parse_caps_interlaced (caps, &state->interlaced);
-#else
-  state->have_interlaced = gst_structure_get_boolean (structure,
-      "interlaced", &state->interlaced);
-#endif
 
   codec_data = gst_structure_get_value (structure, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
