@@ -686,6 +686,17 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
     case GST_EVENT_EOS:
       gst_base_parse_drain (parse);
+
+      /* If we STILL have zero frames processed, fire an error */
+      if (parse->priv->framecount == 0) {
+        GST_ELEMENT_ERROR (parse, STREAM, WRONG_TYPE,
+            ("No valid frames found before end of stream"), (NULL));
+      }
+      /* newsegment before eos */
+      if (parse->pending_segment) {
+        gst_pad_push_event (parse->srcpad, parse->pending_segment);
+        parse->pending_segment = NULL;
+      }
       break;
 
     default:
