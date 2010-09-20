@@ -41,8 +41,8 @@ GType gst_discoverer_stream_info_get_type (void);
  * Base structure for informations concerning a media stream. Depending on the @streamtype,
  * One can find more media-specific information in #GstDiscovererAudioInfo,
  * #GstDiscovererVideoInfo, #GstDiscovererContainerInfo.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 #define gst_discoverer_stream_info_ref(info) ((GstDiscovererStreamInfo*) gst_mini_object_ref((GstMiniObject*) info))
 #define gst_discoverer_stream_info_unref(info) (gst_mini_object_unref((GstMiniObject*) info))
@@ -58,8 +58,8 @@ const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDisc
  * GstDiscovererContainerInfo:
  *
  * #GstDiscovererStreamInfo specific to container streams.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_CONTAINER_INFO \
   (gst_discoverer_container_info_get_type ())
@@ -79,8 +79,8 @@ GList *gst_discoverer_container_info_get_streams(GstDiscovererStreamInfo *info);
  * GstDiscovererAudioInfo:
  *
  * #GstDiscovererStreamInfo specific to audio streams.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_AUDIO_INFO \
   (gst_discoverer_audio_info_get_type ())
@@ -103,8 +103,8 @@ guint gst_discoverer_audio_info_get_max_bitrate(GstDiscovererStreamInfo* info);
  * GstDiscovererVideoInfo:
  *
  * #GstDiscovererStreamInfo specific to video streams.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_VIDEO_INFO \
   (gst_discoverer_video_info_get_type ())
@@ -138,8 +138,8 @@ gboolean        gst_discoverer_video_info_get_is_image(GstDiscovererStreamInfo* 
  * @GST_DISCOVERER_MISSING_PLUGINS: Some plugins are missing for full discovery
  *
  * Result values for the discovery process.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 typedef enum {
   GST_DISCOVERER_OK               = 0,
@@ -155,8 +155,8 @@ typedef enum {
  * GstDiscovererInfo:
  *
  * Structure containing the information of a URI analyzed by #GstDiscoverer.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  */
 typedef struct _GstDiscovererInfo GstDiscovererInfo;
 
@@ -209,8 +209,8 @@ typedef struct _GstDiscovererPrivate GstDiscovererPrivate;
  * GstDiscoverer:
  *
  * The #GstDiscoverer structure.
- * 
- * Since 0.10.31
+ *
+ * Since: 0.10.31
  **/
 struct _GstDiscoverer {
   GObject parent;

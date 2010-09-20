@@ -27,13 +27,13 @@
  *
  * It provides two APIs, allowing usage in blocking or non-blocking mode.
  *
- * The blocking mode just requires calling @gst_discoverer_discover_uri
+ * The blocking mode just requires calling gst_discoverer_discover_uri()
  * with the URI one wishes to discover.
  *
  * The non-blocking mode requires a running #GMainLoop in the default
  * #GMainContext, where one connects to the various signals, appends the
- * URIs to be processed (through @gst_discoverer_discover_uri_async) and then
- * asks for the discovery to begin (through @gst_discoverer_start).
+ * URIs to be processed (through gst_discoverer_discover_uri_async()) and then
+ * asks for the discovery to begin (through gst_discoverer_start()).
  *
  * All the information is returned in a #GstDiscovererInfo structure.
  * 
@@ -181,7 +181,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * The duration (in nanoseconds) after which the discovery of an individual
    * URI will timeout.
    *
-   * If the discovery of a URI times out, the @GST_DISCOVERER_TIMEOUT will be
+   * If the discovery of a URI times out, the %GST_DISCOVERER_TIMEOUT will be
    * set on the result flags.
    */
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
@@ -1176,7 +1176,7 @@ beach:
  * A #GMainLoop must be available for #GstDiscoverer to properly work in
  * asynchronous mode.
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 void
 gst_discoverer_start (GstDiscoverer * discoverer)
@@ -1272,15 +1272,15 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  * @uri: the URI to add.
  *
  * Appends the given @uri to the list of URIs to discoverer. The actual
- * discovery of the @uri will only take place if @gst_discoverer_start has
+ * discovery of the @uri will only take place if gst_discoverer_start() has
  * been called.
  *
- * A copy of @uri will be done internally, the caller can safely %g_free afterwards.
+ * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
  *
- * Returns: TRUE if the @uri was succesfully appended to the list of pending
- * uris, else FALSE
+ * Returns: %TRUE if the @uri was succesfully appended to the list of pending
+ * uris, else %FALSE
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 gboolean
 gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
@@ -1312,12 +1312,12 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  *
  * Synchronously discovers the given @uri.
  *
- * A copy of @uri will be done internally, the caller can safely %g_free afterwards.
+ * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
  *
  * Returns: (transfer none): see #GstDiscovererInfo. The caller must free this structure
  * after use.
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 GstDiscovererInfo *
 gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
@@ -1366,7 +1366,7 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  * If an error happened when creating the discoverer, @err will be set accordingly
  * and %NULL will be returned.
  * 
- * Since 0.10.31
+ * Since: 0.10.31
  */
 GstDiscoverer *
 gst_discoverer_new (GstClockTime timeout, GError ** err)
