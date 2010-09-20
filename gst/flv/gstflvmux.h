@@ -76,6 +76,7 @@ typedef struct _GstFlvMux {
   gboolean streamable;
 
   GstTagList *tags;
+  gboolean new_tags;
   GList *index;
   guint64 byte_count;
   guint64 duration;

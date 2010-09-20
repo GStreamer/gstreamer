@@ -192,6 +192,8 @@ gst_flv_mux_init (GstFlvMux * mux, GstFlvMuxClass * g_class)
   /* property */
   mux->streamable = DEFAULT_STREAMABLE;
 
+  mux->new_tags = FALSE;
+
   mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (mux->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_flv_mux_collected), mux);
@@ -228,6 +230,7 @@ gst_flv_mux_reset (GstElement * element)
 
   mux->have_audio = mux->have_video = FALSE;
   mux->duration = GST_CLOCK_TIME_NONE;
+  mux->new_tags = FALSE;
 
   mux->state = GST_FLV_MUX_STATE_HEADER;
 
@@ -267,6 +270,7 @@ gst_flv_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
+      mux->new_tags = TRUE;
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -1398,6 +1402,13 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
     mux->state = GST_FLV_MUX_STATE_DATA;
   }
 
+  if (mux->new_tags) {
+    GstBuffer *buf = gst_flv_mux_create_metadata (mux);
+    gst_flv_mux_push (mux, buf);
+    mux->new_tags = FALSE;
+  }
+
+
   best = NULL;
   best_time = GST_CLOCK_TIME_NONE;
   for (sl = mux->collect->data; sl; sl = sl->next) {
@@ -1475,6 +1486,12 @@ gst_flv_mux_set_property (GObject * object,
   switch (prop_id) {
     case PROP_STREAMABLE:
       mux->streamable = g_value_get_boolean (value);
+      if (mux->streamable)
+        gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (mux),
+            GST_TAG_MERGE_REPLACE);
+      else
+        gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (mux),
+            GST_TAG_MERGE_KEEP);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
