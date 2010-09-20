@@ -1634,7 +1634,7 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->discont = TRUE;
     parse->priv->flushing = FALSE;
     parse->priv->offset = 0;
-    parse->priv->update_interval = 0;
+    parse->priv->update_interval = 50;
     parse->priv->fps_num = parse->priv->fps_den = 0;
     parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
     parse->priv->seekable = GST_BASE_PARSE_SEEK_DEFAULT;
@@ -1853,12 +1853,10 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * @fps_den: frames per second (denominator).
  * @interval: duration update interval in frames.
  *
- * If frames per second is configured, parser can provide for default @convert
- * between GST_FORMAT_TIME and GST_FORMAT_BYTES, as well as buffer duration
- * and timestamping.  However, even if this frame information is provided,
- * subclass can still choose to provide for a @convert and set buffer metadata.
- * If #interval is non-zero (default), then stream duration is determined
- * based on frame and byte counts, and updated every #interval frames.
+ * If frames per second is configured, parser can take care of buffer duration
+ * and timestamping. If #interval is non-zero (default), then stream duration
+ * is determined based on frame and byte counts, and updated every #interval
+ * frames.
  */
 void
 gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
