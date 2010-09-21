@@ -248,7 +248,8 @@ gst_vdp_sink_window_new (VdpSink * vdp_sink, gint width, gint height)
             device->vdp_get_error_string (status)));
   }
 
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (vdp_sink), window->win);
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (vdp_sink),
+      (guintptr) window->win);
 
   return window;
 }
@@ -838,8 +839,8 @@ gst_vdp_sink_show_frame (GstBaseSink * bsink, GstBuffer * outbuf)
 
     g_mutex_lock (vdp_sink->x_lock);
     status =
-        device->vdp_presentation_queue_query_surface_status (vdp_sink->
-        window->queue, surface, &queue_status, &pres_time);
+        device->vdp_presentation_queue_query_surface_status (vdp_sink->window->
+        queue, surface, &queue_status, &pres_time);
     g_mutex_unlock (vdp_sink->x_lock);
 
     if (queue_status == VDP_PRESENTATION_QUEUE_STATUS_QUEUED) {
@@ -1104,11 +1105,12 @@ gst_vdp_sink_navigation_init (GstNavigationInterface * iface)
 }
 
 static void
-gst_vdp_sink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
+gst_vdp_sink_set_window_handle (GstXOverlay * overlay, guintptr window_handle)
 {
   VdpSink *vdp_sink = GST_VDP_SINK (overlay);
   GstVdpWindow *window = NULL;
   XWindowAttributes attr;
+  Window xwindow_id = (XID) window_handle;
 
   /* We acquire the stream lock while setting this window in the element.
      We are basically cleaning tons of stuff replacing the old window, putting
@@ -1213,7 +1215,7 @@ gst_vdp_sink_set_event_handling (GstXOverlay * overlay, gboolean handle_events)
 static void
 gst_vdp_sink_xoverlay_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_vdp_sink_set_xwindow_id;
+  iface->set_window_handle = gst_vdp_sink_set_window_handle;
   iface->expose = gst_vdp_sink_expose;
   iface->handle_events = gst_vdp_sink_set_event_handling;
 }
