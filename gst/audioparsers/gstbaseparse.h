@@ -305,6 +305,9 @@ gboolean gst_base_parse_convert_default (GstBaseParse * parse,
                                          GstFormat src_format, gint64 src_value,
                                          GstFormat dest_format, gint64 * dest_value);
 
+gboolean gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
+                                         GstClockTime ts, gboolean key, gboolean force);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_PARSE_H__ */
