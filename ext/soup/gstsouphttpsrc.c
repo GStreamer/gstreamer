@@ -862,7 +862,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     src->seekable = FALSE;
     GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
         (_("Server does not support seeking.")),
-        ("Server does not accept Range HTTP header, URL: ", src->location));
+        ("Server does not accept Range HTTP header, URL: %s", src->location));
     src->ret = GST_FLOW_ERROR;
   }
 }
