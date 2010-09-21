@@ -556,7 +556,7 @@ gst_mplex_chain (GstPad * sinkpad, GstBuffer * buffer)
   if (G_UNLIKELY (mpad->eos))
     goto eos;
 
-  if (G_UNLIKELY (!GST_FLOW_IS_SUCCESS (mplex->srcresult)))
+  if (G_UNLIKELY (mplex->srcresult != GST_FLOW_OK))
     goto ignore;
 
   gst_adapter_push (mpad->adapter, buffer);
