@@ -1628,8 +1628,7 @@ AC_SUBST(PROFILE_CFLAGS)
 
 if test "x$PACKAGE_VERSION_NANO" = "x1"; then
   dnl Define _only_ during CVS (not pre-releases or releases)
-  dnl FIXME: temporarily disabled: DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
-  DEPRECATED_CFLAGS=""
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
 else
   DEPRECATED_CFLAGS=""
 fi
