@@ -281,6 +281,10 @@ gst_base_parse_get_type (void)
 
 static void gst_base_parse_finalize (GObject * object);
 
+static GstStateChangeReturn gst_base_parse_change_state (GstElement * element,
+    GstStateChange transition);
+static void gst_base_parse_reset (GstBaseParse * parse);
+
 static gboolean gst_base_parse_sink_activate (GstPad * sinkpad);
 static gboolean gst_base_parse_sink_activate_push (GstPad * pad,
     gboolean active);
@@ -351,11 +355,16 @@ static void
 gst_base_parse_class_init (GstBaseParseClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GstBaseParsePrivate));
   parent_class = g_type_class_peek_parent (klass);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_parse_finalize);
+
+  gstelement_class = (GstElementClass *) klass;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_base_parse_change_state);
 
   /* Default handlers */
   klass->check_valid_frame = gst_base_parse_check_frame;
@@ -412,20 +421,58 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
 
   parse->parse_lock = g_mutex_new ();
   parse->adapter = gst_adapter_new ();
-  parse->pending_segment = NULL;
-  parse->close_segment = NULL;
 
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
-  parse->priv->duration = -1;
-  parse->priv->min_frame_size = 1;
-  parse->priv->passthrough = FALSE;
-  parse->priv->discont = FALSE;
-  parse->priv->flushing = FALSE;
-  parse->priv->offset = 0;
+
+  /* init state */
+  gst_base_parse_reset (parse);
   GST_DEBUG_OBJECT (parse, "init ok");
 }
 
+static void
+gst_base_parse_reset (GstBaseParse * parse)
+{
+  GST_OBJECT_LOCK (parse);
+  gst_segment_init (&parse->segment, GST_FORMAT_TIME);
+  parse->priv->duration = -1;
+  parse->priv->min_frame_size = 1;
+  parse->priv->discont = TRUE;
+  parse->priv->flushing = FALSE;
+  parse->priv->offset = 0;
+  parse->priv->sync_offset = 0;
+  parse->priv->update_interval = 50;
+  parse->priv->fps_num = parse->priv->fps_den = 0;
+  parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
+  parse->priv->seekable = GST_BASE_PARSE_SEEK_DEFAULT;
+  parse->priv->bitrate = 0;
+  parse->priv->framecount = 0;
+  parse->priv->bytecount = 0;
+  parse->priv->acc_duration = 0;
+  parse->priv->estimated_duration = -1;
+  parse->priv->next_ts = 0;
+  parse->priv->passthrough = FALSE;
+  parse->priv->post_min_bitrate = TRUE;
+  parse->priv->post_avg_bitrate = TRUE;
+  parse->priv->post_max_bitrate = TRUE;
+  parse->priv->min_bitrate = G_MAXUINT;
+  parse->priv->max_bitrate = 0;
+  parse->priv->avg_bitrate = 0;
+  parse->priv->posted_avg_bitrate = 0;
 
+  if (parse->pending_segment)
+    gst_event_unref (parse->pending_segment);
+
+  g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
+      NULL);
+  g_list_free (parse->priv->pending_events);
+  parse->priv->pending_events = NULL;
+
+  if (parse->priv->cache) {
+    gst_buffer_unref (parse->priv->cache);
+    parse->priv->cache = NULL;
+  }
+  GST_OBJECT_UNLOCK (parse);
+}
 
 /**
  * gst_base_parse_check_frame:
@@ -1672,42 +1719,6 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
   if (active) {
     if (parse->priv->pad_mode == GST_ACTIVATE_NONE && klass->start)
       result = klass->start (parse);
-
-    GST_OBJECT_LOCK (parse);
-    gst_segment_init (&parse->segment, GST_FORMAT_TIME);
-    parse->priv->duration = -1;
-    parse->priv->discont = TRUE;
-    parse->priv->flushing = FALSE;
-    parse->priv->offset = 0;
-    parse->priv->sync_offset = 0;
-    parse->priv->update_interval = 50;
-    parse->priv->fps_num = parse->priv->fps_den = 0;
-    parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
-    parse->priv->seekable = GST_BASE_PARSE_SEEK_DEFAULT;
-    parse->priv->bitrate = 0;
-    parse->priv->framecount = 0;
-    parse->priv->bytecount = 0;
-    parse->priv->acc_duration = 0;
-    parse->priv->estimated_duration = -1;
-    parse->priv->next_ts = 0;
-    parse->priv->passthrough = FALSE;
-    parse->priv->post_min_bitrate = TRUE;
-    parse->priv->post_avg_bitrate = TRUE;
-    parse->priv->post_max_bitrate = TRUE;
-    parse->priv->min_bitrate = G_MAXUINT;
-    parse->priv->max_bitrate = 0;
-    parse->priv->avg_bitrate = 0;
-    parse->priv->posted_avg_bitrate = 0;
-
-    if (parse->pending_segment)
-      gst_event_unref (parse->pending_segment);
-
-    parse->pending_segment =
-        gst_event_new_new_segment (FALSE, parse->segment.rate,
-        parse->segment.format,
-        parse->segment.start, parse->segment.stop, parse->segment.last_stop);
-
-    GST_OBJECT_UNLOCK (parse);
   } else {
     /* We must make sure streaming has finished before resetting things
      * and calling the ::stop vfunc */
@@ -1716,16 +1727,6 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
 
     if (parse->priv->pad_mode != GST_ACTIVATE_NONE && klass->stop)
       result = klass->stop (parse);
-
-    g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
-        NULL);
-    g_list_free (parse->priv->pending_events);
-    parse->priv->pending_events = NULL;
-
-    if (parse->priv->cache) {
-      gst_buffer_unref (parse->priv->cache);
-      parse->priv->cache = NULL;
-    }
 
     parse->priv->pad_mode = GST_ACTIVATE_NONE;
   }
@@ -1784,6 +1785,9 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (result) {
     if (active) {
+      parse->pending_segment = gst_event_new_new_segment (FALSE,
+          parse->segment.rate, parse->segment.format,
+          parse->segment.start, parse->segment.stop, parse->segment.last_stop);
       result &= gst_pad_start_task (sinkpad,
           (GstTaskFunction) gst_base_parse_loop, sinkpad);
     } else {
@@ -2417,4 +2421,25 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
     res = klass->set_sink_caps (parse, caps);
 
   return res && gst_pad_set_caps (pad, caps);
+}
+
+static GstStateChangeReturn
+gst_base_parse_change_state (GstElement * element, GstStateChange transition)
+{
+  GstBaseParse *parse;
+  GstStateChangeReturn result;
+
+  parse = GST_BASE_PARSE (element);
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_base_parse_reset (parse);
+      break;
+    default:
+      break;
+  }
+
+  return result;
 }
