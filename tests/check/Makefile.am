@@ -24,7 +24,8 @@ check_PROGRAMS = \
 	ges/backgroundsource\
 	ges/titles\
 	ges/overlays\
-	ges/text_properties
+	ges/text_properties\
+	ges/save_and_load
 
 noinst_HEADERS = 
 
