@@ -21,6 +21,8 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstlfocontrolsource.h>
 
+#include <stdlib.h>
+
 static gboolean
 on_message (GstBus * bus, GstMessage * message, gpointer user_data)
 {
@@ -68,19 +70,24 @@ main (gint argc, gchar ** argv)
   GMainLoop *loop;
   GstBus *bus;
   gchar *pipeline_string;
+  gfloat border = 0.05;
 
-  if (argc != 2) {
-    g_print ("Usage: shapewipe mask.png\n");
+  if (argc < 2) {
+    g_print ("Usage: shapewipe mask.png <border>\n");
     return -1;
   }
 
   gst_init (&argc, &argv);
   gst_controller_init (&argc, &argv);
 
+  if (argc > 2) {
+    border = atof (argv[2]);
+  }
+
   pipeline_string =
       g_strdup_printf
-      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! shapewipe name=shape border=0.05 ! videomixer name=mixer ! ffmpegcolorspace ! autovideosink     filesrc location=%s ! typefind ! decodebin2 ! ffmpegcolorspace ! videoscale ! queue ! shape.mask_sink    videotestsrc pattern=snow ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! queue ! mixer.",
-      argv[1]);
+      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! shapewipe name=shape border=%f ! videomixer name=mixer ! ffmpegcolorspace ! autovideosink     filesrc location=%s ! typefind ! decodebin2 ! ffmpegcolorspace ! videoscale ! queue ! shape.mask_sink    videotestsrc pattern=snow ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! queue ! mixer.",
+      border, argv[1]);
 
   pipeline = gst_parse_launch (pipeline_string, NULL);
   g_free (pipeline_string);
@@ -109,7 +116,7 @@ main (gint argc, gchar ** argv)
   g_object_set (G_OBJECT (csource), "offset", &val, NULL);
   g_value_unset (&val);
 
-  g_object_set (G_OBJECT (csource), "frequency", 0.5, NULL);
+  g_object_set (G_OBJECT (csource), "frequency", 0.25, NULL);
   g_object_set (G_OBJECT (csource), "timeshift", 500 * GST_MSECOND, NULL);
 
   g_object_unref (csource);
