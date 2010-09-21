@@ -127,7 +127,7 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   v4l2object->xv = v4l2xv;
 
   if (v4l2object->xwindow_id) {
-    gst_v4l2_xoverlay_set_xwindow_id (v4l2object, v4l2object->xwindow_id);
+    gst_v4l2_xoverlay_set_window_handle (v4l2object, v4l2object->xwindow_id);
   }
 }
 
@@ -140,7 +140,7 @@ gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
     return;
 
   if (v4l2object->xwindow_id) {
-    gst_v4l2_xoverlay_set_xwindow_id (v4l2object, 0);
+    gst_v4l2_xoverlay_set_window_handle (v4l2object, 0);
   }
 
   XCloseDisplay (v4l2xv->dpy);
@@ -189,10 +189,11 @@ idle_refresh (gpointer data)
 }
 
 void
-gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object, XID xwindow_id)
+gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object, guintptr id)
 {
   GstV4l2Xv *v4l2xv;
   XWindowAttributes attr;
+  XID xwindow_id = id;
   gboolean change = (v4l2object->xwindow_id != xwindow_id);
 
   GST_LOG_OBJECT (v4l2object->element, "Setting XID to %lx",

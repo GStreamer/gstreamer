@@ -37,25 +37,25 @@ void gst_v4l2_xoverlay_start (GstV4l2Object  *v4l2object);
 void gst_v4l2_xoverlay_stop  (GstV4l2Object  *v4l2object);
 
 void gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass);
-void gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object,
-    XID xwindow_id);
+void gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object,
+    guintptr id);
 
 
 #define GST_IMPLEMENT_V4L2_XOVERLAY_METHODS(Type, interface_as_function)      \
                                                                               \
 static void                                                                   \
-interface_as_function ## _xoverlay_set_xwindow_id (GstXOverlay * xoverlay,    \
-                                                   XID xwindow_id)            \
+interface_as_function ## _xoverlay_set_window_handle (GstXOverlay * xoverlay, \
+                                                   guintptr id)               \
 {                                                                             \
   Type *this = (Type*) xoverlay;                                              \
-  gst_v4l2_xoverlay_set_xwindow_id (this->v4l2object, xwindow_id);            \
+  gst_v4l2_xoverlay_set_window_handle (this->v4l2object, id);                 \
 }                                                                             \
                                                                               \
 static void                                                                   \
 interface_as_function ## _xoverlay_interface_init (GstXOverlayClass * klass)  \
 {                                                                             \
   /* default virtual functions */                                             \
-  klass->set_xwindow_id = interface_as_function ## _xoverlay_set_xwindow_id;  \
+  klass->set_window_handle = interface_as_function ## _xoverlay_set_window_handle;  \
                                                                               \
   gst_v4l2_xoverlay_interface_init(klass);                                    \
 }                                                                             \
