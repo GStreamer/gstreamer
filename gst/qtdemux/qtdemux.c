@@ -1719,6 +1719,18 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
+qtdemux_post_global_tags (GstQTDemux * qtdemux)
+{
+  /* all header tags ready and parsed, push them */
+  GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
+      qtdemux->tag_list);
+  /* post now, send event on pads later */
+  gst_element_post_message (GST_ELEMENT (qtdemux),
+      gst_message_new_tag (GST_OBJECT (qtdemux),
+          gst_tag_list_copy (qtdemux->tag_list)));
+}
+
+static void
 qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
 {
   /* only consider at least a sufficiently complete ftyp atom */
@@ -1962,13 +1974,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
 
 beach:
   if (ret == GST_FLOW_UNEXPECTED && qtdemux->got_moov) {
-    /* all header tags ready and parsed, push them */
-    GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
-        qtdemux->tag_list);
-    /* post now, send event on pads later */
-    gst_element_post_message (GST_ELEMENT (qtdemux),
-        gst_message_new_tag (GST_OBJECT (qtdemux),
-            gst_tag_list_copy (qtdemux->tag_list)));
+    /* Only post, event on pads is done after newsegment */
+    qtdemux_post_global_tags (qtdemux);
 
     qtdemux->state = QTDEMUX_STATE_MOVIE;
     GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
@@ -3198,6 +3205,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             /* we have the headers, start playback */
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry_size (demux);
+
+            /* Only post, event on pads is done after newsegment */
+            qtdemux_post_global_tags (demux);
+
           } else {
             /* no headers yet, try to get them */
             guint bs;
@@ -3284,6 +3295,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         } else if (fourcc == FOURCC_ftyp) {
           GST_DEBUG_OBJECT (demux, "Parsing [ftyp]");
           qtdemux_parse_ftyp (demux, data, demux->neededbytes);
+        } else if (fourcc == FOURCC_uuid) {
+          GST_DEBUG_OBJECT (demux, "Parsing [uuid]");
+          qtdemux_parse_uuid (demux, data, demux->neededbytes);
         } else {
           GST_WARNING_OBJECT (demux,
               "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
@@ -3310,12 +3324,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           demux->neededbytes = next_entry_size (demux);
           demux->state = QTDEMUX_STATE_MOVIE;
 
-          GST_INFO_OBJECT (demux, "posting global tags: %" GST_PTR_FORMAT,
-              demux->tag_list);
-          /* post now, send event on pads later */
-          gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_tag (GST_OBJECT (demux),
-                  gst_tag_list_copy (demux->tag_list)));
+          /* Only post, event on pads is done after newsegment */
+          qtdemux_post_global_tags (demux);
 
         } else {
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
