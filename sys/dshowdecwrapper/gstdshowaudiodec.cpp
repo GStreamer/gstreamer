@@ -519,7 +519,7 @@ gst_dshowaudiodec_chain (GstPad * pad, GstBuffer * buffer)
     goto beach;
   }
 
-  if (GST_FLOW_IS_FATAL (adec->last_ret)) {
+  if (adec->last_ret < GST_FLOW_UNEXPECTED) {
     GST_DEBUG_OBJECT (adec, "last decoding iteration generated a fatal error "
         "%s", gst_flow_get_name (adec->last_ret));
     goto beach;
