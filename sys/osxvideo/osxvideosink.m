@@ -418,9 +418,10 @@ gst_osx_video_sink_interface_init (GstImplementsInterfaceClass * klass)
 }
 
 static void
-gst_osx_video_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
+gst_osx_video_sink_set_window_handle (GstXOverlay * overlay, guintptr handle_id)
 {
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
+  gulong window_id = (gulong) handle_id;
 
   if (osxvideosink->superview) {
     GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
@@ -443,7 +444,7 @@ gst_osx_video_sink_set_xwindow_id (GstXOverlay * overlay, gulong window_id)
 static void
 gst_osx_video_sink_xoverlay_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_osx_video_sink_set_xwindow_id;
+  iface->set_window_handle = gst_osx_video_sink_set_window_handle;
   iface->expose = NULL;
   iface->handle_events = NULL;
 }
