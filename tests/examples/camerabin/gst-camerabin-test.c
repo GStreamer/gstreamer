@@ -392,6 +392,50 @@ create_audioencoder_bin (void)
   return bin;
 }
 
+static GstElement *
+create_ipp_bin (void)
+{
+  GstElement *bin = NULL, *element = NULL;
+  GstPad *pad = NULL;
+  gchar **elements;
+  GList *element_list = NULL, *current = NULL, *next = NULL;
+  int i;
+
+  bin = gst_bin_new ("ippbin");
+
+  elements = g_strsplit (imagepp_name, ",", 0);
+
+  for (i = 0; elements[i] != NULL; i++) {
+    element = gst_element_factory_make (elements[i], NULL);
+    if (element) {
+      element_list = g_list_append (element_list, element);
+      gst_bin_add (GST_BIN (bin), element);
+    } else
+      GST_WARNING ("Could create element %s for ippbin", elements[i]);
+  }
+
+  for (i = 1; i < g_list_length (element_list); i++) {
+    current = g_list_nth (element_list, i - 1);
+    next = g_list_nth (element_list, i);
+    gst_element_link (current->data, next->data);
+  }
+
+  current = g_list_first (element_list);
+  pad = gst_element_get_static_pad (current->data, "sink");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (GST_OBJECT (pad));
+
+  current = g_list_last (element_list);
+  pad = gst_element_get_static_pad (current->data, "src");
+  gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
+  gst_object_unref (GST_OBJECT (pad));
+
+  g_list_free (element_list);
+  g_strfreev (elements);
+
+  return bin;
+}
+
 static gboolean
 setup_pipeline (void)
 {
@@ -432,9 +476,16 @@ setup_pipeline (void)
       GST_WARNING ("Could not make audio encoder element");
   }
 
+  if (imagepp_name) {
+    ipp = create_ipp_bin ();
+    if (ipp)
+      g_object_set (camera_bin, "image-post-processing", ipp, NULL);
+    else
+      GST_WARNING ("Could not create ipp elements");
+  }
+
   res &= setup_pipeline_element ("video-encoder", videoenc_name, NULL);
   res &= setup_pipeline_element ("image-encoder", imageenc_name, &ienc);
-  res &= setup_pipeline_element ("image-post-processing", imagepp_name, &ipp);
   res &= setup_pipeline_element ("video-muxer", videomux_name, &vmux);
   if (!res) {
     goto error;
@@ -656,7 +707,7 @@ main (int argc, char *argv[])
     {"image-enc", '\0', 0, G_OPTION_ARG_STRING, &imageenc_name,
         "Image encoder used in still capture", NULL},
     {"image-pp", '\0', 0, G_OPTION_ARG_STRING, &imagepp_name,
-        "Image post-processing element", NULL},
+        "List of image post-processing elements separated with comma", NULL},
     {"video-mux", '\0', 0, G_OPTION_ARG_STRING, &videomux_name,
         "Muxer used in video recording", NULL},
     {"viewfinder-sink", '\0', 0, G_OPTION_ARG_STRING, &vfsink_name,
