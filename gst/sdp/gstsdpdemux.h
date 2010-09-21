@@ -97,11 +97,13 @@ struct _GstSDPDemux {
   gboolean          debug;
   guint64           udp_timeout;
   guint             latency;
+  gboolean          redirect;
 
   /* session management */
   GstElement      *session;
   gulong           session_sig_id;
   gulong           session_ptmap_id;
+  gulong           session_nmp_id;
 };
 
 struct _GstSDPDemuxClass {
