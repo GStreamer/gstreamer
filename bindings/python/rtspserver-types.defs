@@ -1,6 +1,63 @@
+;; From gst/rtsp-server/rtsp-server.h
+
 (define-object Server
   (in-module "Gst.RTSPServer")
   (parent "GObject")
   (c-name "GstRTSPServer")
   (gtype-id "GST_TYPE_RTSP_SERVER")
 )
+
+;; From gst/rtsp-server/rtsp-media-mapping.h
+
+(define-object MediaMapping
+  (in-module "Gst.RTSPServer")
+  (parent "GObject")
+  (c-name "GstRTSPMediaMapping")
+  (gtype-id "GST_TYPE_RTSP_MEDIA_MAPPING")
+)
+
+;; From gst/rtsp-server/rtsp-media-factory.h
+
+(define-object MediaFactory
+  (in-module "Gst.RTSPServer")
+  (parent "GObject")
+  (c-name "GstRTSPMediaFactory")
+  (gtype-id "GST_TYPE_RTSP_MEDIA_FACTORY")
+)
+
+;; From gst/rtsp-server/rtsp-media.h
+
+(define-object Media
+  (in-module "Gst.RTSPServer")
+  (parent "GObject")
+  (c-name "GstRTSPMedia")
+  (gtype-id "GST_TYPE_RTSP_MEDIA")
+)
+
+;; From gst/rtsp-server/rtsp-session-pool.h
+
+(define-object SessionPool
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstRTSPSessionPool")
+  (gtype-id "GST_TYPE_RTSP_SESSION_POOL")
+)
+
+;; From gst/rtsp-server/rtsp-session.h
+
+(define-object Session
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstRTSPSession")
+  (gtype-id "GST_TYPE_RTSP_SESSION")
+)
+
+;; From gst/rtsp-server/rtsp-client.h
+
+(define-object Client
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstRTSPClient")
+  (gtype-id "GST_TYPE_RTSP_CLIENT")
+)
+

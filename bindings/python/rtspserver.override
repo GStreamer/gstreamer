@@ -5,6 +5,11 @@ headers
 #define NO_IMPORT_PYGOBJECT
 #include <pygobject.h>
 
+#include <gst/gst.h>
+#include <gst/rtsp-server/rtsp-server.h>
+
+#include <glib.h>
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -24,29 +29,39 @@ typedef struct {
 %%
 import gobject.GObject as PyGObject_Type
 import gobject.MainContext as PyGMainContext_Type
-
 %%
 override gst_rtsp_server_attach kwargs
 static PyObject *
 _wrap_gst_rtsp_server_attach (PyGObject *self,
-		PyObject *args, PyObject *keywords)
+    PyObject *args, PyObject *keywords)
 {
-	static char *kwlist[] = {"context", NULL};
-	PyGMainContext *py_context = NULL;
-	GMainContext *context = NULL;
-	guint res;
+  static char *kwlist[] = {"context", NULL};
+  PyGMainContext *py_context = NULL;
+  GMainContext *context = NULL;
+  guint res;
 
-	if (!PyArg_ParseTupleAndKeywords (args, keywords,
-			"|O!:GstRTSPServer.__init__", kwlist,
-			&PyGMainContext_Type, &py_context))
-		return NULL;
+  if (!PyArg_ParseTupleAndKeywords (args, keywords,
+      "|O!:GstRTSPServer.__init__", kwlist,
+      &PyGMainContext_Type, &py_context))
+    return NULL;
 
-	if (py_context)
-		context = py_context->context;
+  if (py_context)
+    context = py_context->context;
 
-	pyg_begin_allow_threads;
-	res = gst_rtsp_server_attach (GST_RTSP_SERVER (self->obj), context);
-	pyg_end_allow_threads;
+  pyg_begin_allow_threads;
+  res = gst_rtsp_server_attach (GST_RTSP_SERVER (self->obj), context);
+  pyg_end_allow_threads;
 
-	return PyLong_FromLong (res);
+  return PyLong_FromLong (res);
+}
+%%
+override gst_rtsp_server_create_watch kwargs
+static PyObject *
+_wrap_gst_rtsp_server_create_watch(PyGObject *self, PyObject *args, PyObject *keywords)
+{
+    GSource *ret;
+    pyg_begin_allow_threads;
+    ret = gst_rtsp_server_create_watch(GST_RTSP_SERVER(self->obj));
+    pyg_end_allow_threads;
+    return pygobject_new((GObject *)ret);
 }
