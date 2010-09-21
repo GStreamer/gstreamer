@@ -247,6 +247,18 @@ struct _GstBaseParsePrivate
   GList *pending_events;
 
   GstBuffer *cache;
+
+  /* index entry storage, either ours or provided */
+  GstIndex *index;
+  gint index_id;
+  gboolean own_index;
+  /* seek table entries only maintained if upstream is BYTE seekable */
+  gboolean upstream_seekable;
+  /* minimum distance between two index entries */
+  GstClockTimeDiff idx_interval;
+  /* ts and offset of last entry added */
+  GstClockTime index_last_ts;
+  guint64 index_last_offset;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -284,6 +296,9 @@ static void gst_base_parse_finalize (GObject * object);
 static GstStateChangeReturn gst_base_parse_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_base_parse_reset (GstBaseParse * parse);
+
+static void gst_base_parse_set_index (GstElement * element, GstIndex * index);
+static GstIndex *gst_base_parse_get_index (GstElement * element);
 
 static gboolean gst_base_parse_sink_activate (GstPad * sinkpad);
 static gboolean gst_base_parse_sink_activate_push (GstPad * pad,
@@ -348,6 +363,11 @@ gst_base_parse_finalize (GObject * object)
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
 
+  if (parse->priv->index) {
+    gst_object_unref (parse->priv->index);
+    parse->priv->index = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -365,6 +385,8 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_parse_change_state);
+  gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_base_parse_set_index);
+  gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_base_parse_get_index);
 
   /* Default handlers */
   klass->check_valid_frame = gst_base_parse_check_frame;
@@ -458,6 +480,11 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->max_bitrate = 0;
   parse->priv->avg_bitrate = 0;
   parse->priv->posted_avg_bitrate = 0;
+
+  parse->priv->index_last_ts = 0;
+  parse->priv->index_last_offset = 0;
+  parse->priv->upstream_seekable = FALSE;
+  parse->priv->idx_interval = 0;
 
   if (parse->pending_segment)
     gst_event_unref (parse->pending_segment);
@@ -687,6 +714,10 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         gst_event_unref (event);
         event = gst_event_new_new_segment_full (update, rate, applied_rate,
             GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
+      } else {
+        /* not considered BYTE seekable if it is talking to us in TIME,
+         * whatever else it might claim */
+        parse->priv->upstream_seekable = FALSE;
       }
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
@@ -1057,6 +1088,126 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
 }
 
 /**
+ * gst_base_parse_add_index_entry:
+ * @parse: #GstBaseParse.
+ * @offset: offset of entry
+ * @ts: timestamp associated with offset
+ * @key: whether entry refers to keyframe
+ * @force: add entry disregarding sanity checks
+ *
+ * Adds an entry to the index associating @offset to @ts.  It is recommended
+ * to only add keyframe entries.  @force allows to bypass checks, such as
+ * whether the stream is (upstream) seekable, another entry is already "close"
+ * to the new entry, etc.
+ *
+ * Returns: #gboolean indicating whether entry was added
+ */
+gboolean
+gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
+    GstClockTime ts, gboolean key, gboolean force)
+{
+  gboolean ret = FALSE;
+  GstIndexAssociation associations[2];
+
+  GST_LOG_OBJECT (parse, "Adding key=%d index entry %" GST_TIME_FORMAT
+      " @ offset 0x%08" G_GINT64_MODIFIER "x", key, GST_TIME_ARGS (ts), offset);
+
+  if (G_LIKELY (!force)) {
+
+    if (!parse->priv->upstream_seekable) {
+      GST_DEBUG_OBJECT (parse, "upstream not seekable; discarding");
+      goto exit;
+    }
+
+    if (parse->priv->index_last_offset >= offset) {
+      GST_DEBUG_OBJECT (parse, "already have entries up to offset "
+          "0x%08" G_GINT64_MODIFIER "x", parse->priv->index_last_offset);
+      goto exit;
+    }
+
+    if (GST_CLOCK_DIFF (parse->priv->index_last_ts, ts) <
+        parse->priv->idx_interval) {
+      GST_DEBUG_OBJECT (parse, "entry too close to last time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (parse->priv->index_last_ts));
+      goto exit;
+    }
+  }
+
+  associations[0].format = GST_FORMAT_TIME;
+  associations[0].value = ts;
+  associations[1].format = GST_FORMAT_BYTES;
+  associations[1].value = offset;
+
+  /* index might change on-the-fly, although that would be nutty app ... */
+  GST_OBJECT_LOCK (parse);
+  gst_index_add_associationv (parse->priv->index, parse->priv->index_id,
+      (key) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+      2, (const GstIndexAssociation *) &associations);
+  GST_OBJECT_UNLOCK (parse);
+
+  parse->priv->index_last_offset = offset;
+  parse->priv->index_last_ts = ts;
+
+  ret = TRUE;
+
+exit:
+  return ret;
+}
+
+/* check for seekable upstream, above and beyond a mere query */
+static void
+gst_base_parse_check_seekability (GstBaseParse * parse)
+{
+  GstQuery *query;
+  gboolean seekable = FALSE;
+  gint64 start = -1, stop = -1;
+  guint idx_interval = 0;
+
+  query = gst_query_new_seeking (GST_FORMAT_BYTES);
+  if (!gst_pad_peer_query (parse->sinkpad, query)) {
+    GST_DEBUG_OBJECT (parse, "seeking query failed");
+    goto done;
+  }
+
+  gst_query_parse_seeking (query, NULL, &seekable, &start, &stop);
+
+  /* try harder to query upstream size if we didn't get it the first time */
+  if (seekable && stop == -1) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+
+    GST_DEBUG_OBJECT (parse, "doing duration query to fix up unset stop");
+    gst_pad_query_peer_duration (parse->sinkpad, &fmt, &stop);
+  }
+
+  /* if upstream doesn't know the size, it's likely that it's not seekable in
+   * practice even if it technically may be seekable */
+  if (seekable && (start != 0 || stop <= start)) {
+    GST_DEBUG_OBJECT (parse, "seekable but unknown start/stop -> disable");
+    seekable = FALSE;
+  }
+
+  /* let's not put every single frame into our index */
+  if (seekable) {
+    if (stop < 10 * 1024 * 1024)
+      idx_interval = 100;
+    else if (stop < 100 * 1024 * 1024)
+      idx_interval = 500;
+    else
+      idx_interval = 1000;
+  }
+
+done:
+  gst_query_unref (query);
+
+  GST_DEBUG_OBJECT (parse, "seekable: %d (%" G_GUINT64_FORMAT " - %"
+      G_GUINT64_FORMAT ")", seekable, start, stop);
+  parse->priv->upstream_seekable = seekable;
+
+  GST_DEBUG_OBJECT (parse, "idx_interval: %ums", idx_interval);
+  parse->priv->idx_interval = idx_interval * GST_MSECOND;
+}
+
+/**
  * gst_base_parse_handle_and_push_buffer:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
@@ -1140,6 +1291,11 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
       ", duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (buffer),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
+
+  /* some one-time start-up */
+  if (G_UNLIKELY (!parse->priv->framecount)) {
+    gst_base_parse_check_seekability (parse);
+  }
 
   /* update stats */
   parse->priv->bytecount += GST_BUFFER_SIZE (buffer);
@@ -2423,6 +2579,38 @@ gst_base_parse_sink_setcaps (GstPad * pad, GstCaps * caps)
   return res && gst_pad_set_caps (pad, caps);
 }
 
+static void
+gst_base_parse_set_index (GstElement * element, GstIndex * index)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (element);
+
+  GST_OBJECT_LOCK (parse);
+  if (parse->priv->index)
+    gst_object_unref (parse->priv->index);
+  if (index) {
+    parse->priv->index = gst_object_ref (index);
+    gst_index_get_writer_id (index, GST_OBJECT (element),
+        &parse->priv->index_id);
+    parse->priv->own_index = FALSE;
+  } else
+    parse->priv->index = NULL;
+  GST_OBJECT_UNLOCK (parse);
+}
+
+static GstIndex *
+gst_base_parse_get_index (GstElement * element)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (element);
+  GstIndex *result = NULL;
+
+  GST_OBJECT_LOCK (parse);
+  if (parse->priv->index)
+    result = gst_object_ref (parse->priv->index);
+  GST_OBJECT_UNLOCK (parse);
+
+  return result;
+}
+
 static GstStateChangeReturn
 gst_base_parse_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2430,6 +2618,30 @@ gst_base_parse_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn result;
 
   parse = GST_BASE_PARSE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* If this is our own index destroy it as the
+       * old entries might be wrong for the new stream */
+      if (parse->priv->own_index) {
+        gst_object_unref (parse->priv->index);
+        parse->priv->index = NULL;
+        parse->priv->own_index = FALSE;
+      }
+
+      /* If no index was created, generate one */
+      if (G_UNLIKELY (!parse->priv->index)) {
+        GST_DEBUG_OBJECT (parse, "no index provided creating our own");
+
+        parse->priv->index = gst_index_factory_make ("memindex");
+        gst_index_get_writer_id (parse->priv->index, GST_OBJECT (parse),
+            &parse->priv->index_id);
+        parse->priv->own_index = TRUE;
+      }
+      break;
+    default:
+      break;
+  }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
