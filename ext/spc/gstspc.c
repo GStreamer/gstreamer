@@ -439,7 +439,8 @@ spc_play (GstPad * pad)
 
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (flow_return) || flow_return == GST_FLOW_NOT_LINKED) {
+    if (flow_return <= GST_FLOW_UNEXPECTED
+        || flow_return == GST_FLOW_NOT_LINKED) {
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
   }
