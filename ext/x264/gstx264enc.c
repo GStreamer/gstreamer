@@ -232,7 +232,7 @@ gst_x264_enc_pass_get_type (void)
 
   static const GEnumValue pass_types[] = {
     {GST_X264_ENC_PASS_CBR, "Constant Bitrate Encoding", "cbr"},
-    {GST_X264_ENC_PASS_QUANT, "Constant Quantizer", "quant"},
+    {GST_X264_ENC_PASS_QUANT, "Constant Quantizer (debugging only)", "quant"},
     {GST_X264_ENC_PASS_QUAL, "Constant Quality", "qual"},
     {GST_X264_ENC_PASS_PASS1, "VBR Encoding - Pass 1", "pass1"},
     {GST_X264_ENC_PASS_PASS2, "VBR Encoding - Pass 2", "pass2"},
