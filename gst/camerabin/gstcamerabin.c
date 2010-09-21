@@ -53,6 +53,11 @@
  * Available resolutions can be taken from the #GstCameraBin:video-source-caps
  * property. Image capture resolution can be set with 
  * #GstCameraBin::set-image-resolution action signal.
+ *
+ * Some video source elements implement the #GstPhotography interface, which contains
+ * functions and properties for setting photography parameters. One can use
+ * gst_bin_iterate_all_by_interface() to get a reference to it.
+ *
  * </para>
  * </refsect2>
  * <refsect2>
