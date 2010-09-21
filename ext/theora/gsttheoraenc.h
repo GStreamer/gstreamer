@@ -92,7 +92,9 @@ struct _GstTheoraEnc
   gboolean initialised;
 
   gint video_bitrate;           /* bitrate target for Theora video */
+  gboolean bitrate_changed;
   gint video_quality;           /* Theora quality selector 0 = low, 63 = high */
+  gboolean quality_changed;
   gboolean keyframe_auto;
   gint keyframe_freq;
   gint keyframe_force;

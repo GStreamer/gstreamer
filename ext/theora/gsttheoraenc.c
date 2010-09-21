@@ -52,7 +52,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include "config.h"
+#include "config.h"
 #endif
 
 #include "gsttheoraenc.h"
@@ -259,11 +259,13 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
           0, (1 << 24) - 1, THEORA_DEF_BITRATE,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Video quality", 0, 63,
           THEORA_DEF_QUALITY,
-          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_QUICK,
       g_param_spec_boolean ("quick", "Quick",
           "ignored and kept for API compat only", TRUE,
@@ -462,6 +464,13 @@ theora_enc_reset (GstTheoraEnc * enc)
   ogg_uint32_t keyframe_force;
   int rate_flags;
 
+  GST_OBJECT_LOCK (enc);
+  enc->info.target_bitrate = enc->video_bitrate;
+  enc->info.quality = enc->video_quality;
+  enc->bitrate_changed = FALSE;
+  enc->quality_changed = FALSE;
+  GST_OBJECT_UNLOCK (enc);
+
   if (enc->encoder)
     th_encode_free (enc->encoder);
   enc->encoder = th_encode_alloc (&enc->info);
@@ -633,8 +642,6 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   enc->info.colorspace = TH_CS_UNSPECIFIED;
-  enc->info.target_bitrate = enc->video_bitrate;
-  enc->info.quality = enc->video_quality;
 
   /* as done in theora */
   enc->info.keyframe_granule_shift = _ilog (enc->keyframe_force - 1);
@@ -1071,8 +1078,24 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  /* see if we need to schedule a keyframe */
   GST_OBJECT_LOCK (enc);
+  if (enc->bitrate_changed) {
+    long int bitrate = enc->video_bitrate;
+
+    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_BITRATE, &bitrate,
+        sizeof (long int));
+    enc->bitrate_changed = FALSE;
+  }
+
+  if (enc->quality_changed) {
+    long int quality = enc->video_quality;
+
+    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_QUALITY, &quality,
+        sizeof (long int));
+    enc->quality_changed = FALSE;
+  }
+
+  /* see if we need to schedule a keyframe */
   force_keyframe = enc->force_keyframe;
   enc->force_keyframe = FALSE;
   GST_OBJECT_UNLOCK (enc);
@@ -1353,12 +1376,23 @@ theora_enc_set_property (GObject * object, guint prop_id,
       /* kept for API compat, but ignored */
       break;
     case PROP_BITRATE:
+      GST_OBJECT_LOCK (enc);
       enc->video_bitrate = g_value_get_int (value) * 1000;
       enc->video_quality = 0;
+      enc->bitrate_changed = TRUE;
+      GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_QUALITY:
-      enc->video_quality = g_value_get_int (value);
-      enc->video_bitrate = 0;
+      GST_OBJECT_LOCK (enc);
+      if (GST_STATE (enc) >= GST_STATE_PAUSED && enc->video_quality == 0) {
+        GST_WARNING_OBJECT (object, "Can't change from bitrate to quality mode"
+            " while playing");
+      } else {
+        enc->video_quality = g_value_get_int (value);
+        enc->video_bitrate = 0;
+        enc->quality_changed = TRUE;
+      }
+      GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_KEYFRAME_AUTO:
       enc->keyframe_auto = g_value_get_boolean (value);
@@ -1413,10 +1447,14 @@ theora_enc_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, BORDER_BLACK);
       break;
     case PROP_BITRATE:
+      GST_OBJECT_LOCK (enc);
       g_value_set_int (value, enc->video_bitrate / 1000);
+      GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_QUALITY:
+      GST_OBJECT_LOCK (enc);
       g_value_set_int (value, enc->video_quality);
+      GST_OBJECT_UNLOCK (enc);
       break;
     case PROP_QUICK:
       g_value_set_boolean (value, TRUE);
