@@ -31,7 +31,7 @@
  * of the encoding.  This will similarly be the case if this target bitrate
  * is to obtained in multiple (2 or 3) pass encoding.
  * Alternatively, one may choose to perform Constant Quantizer or Quality encoding,
- * in which case the #GstX264Enc:quantizer property controls much of the outcome.
+ * in which case the #GstX264Enc:quantizer property controls much of the outcome, in that case #GstX264Enc:bitrate is the maximum bitrate.
  *
  * The H264 profile that is eventually used depends on a few settings.
  * If #GstX264Enc:dct8x8 is enabled, then High profile is used.
@@ -1131,6 +1131,10 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     case GST_X264_ENC_PASS_QUAL:
       encoder->x264param.rc.i_rc_method = X264_RC_CRF;
       encoder->x264param.rc.f_rf_constant = encoder->quantizer;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
       break;
     case GST_X264_ENC_PASS_CBR:
     case GST_X264_ENC_PASS_PASS1:
