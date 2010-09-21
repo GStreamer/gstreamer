@@ -275,7 +275,7 @@ my_bus_sync_callback (GstBus * bus, GstMessage * message, gpointer data)
     return GST_BUS_PASS;
 
   /* FIXME: make sure to get XID in main thread */
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (message->src),
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (message->src),
       GDK_WINDOW_XWINDOW (gtk_widget_get_window (ui_drawing)));
 
   gst_message_unref (message);

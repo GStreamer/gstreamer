@@ -270,7 +270,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       if (st) {
         if (gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
           if (!no_xwindow && window) {
-            gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC
+            gst_x_overlay_set_window_handle (GST_X_OVERLAY (GST_MESSAGE_SRC
                     (message)), window);
             gst_message_unref (message);
             message = NULL;
