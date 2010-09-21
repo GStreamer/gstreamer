@@ -63,7 +63,7 @@ static gboolean gst_sdlvideosink_supported (GstImplementsInterface * iface,
     GType type);
 
 static void gst_sdlvideosink_xoverlay_init (GstXOverlayClass * klass);
-static void gst_sdlvideosink_xoverlay_set_xwindow_id
+static void gst_sdlvideosink_xoverlay_set_window_handle
     (GstXOverlay * overlay, unsigned long parent);
 
 static gboolean gst_sdlvideosink_lock (GstSDLVideoSink * sdl);
@@ -361,14 +361,15 @@ gst_sdlvideosink_supported (GstImplementsInterface * interface,
 static void
 gst_sdlvideosink_xoverlay_init (GstXOverlayClass * klass)
 {
-  klass->set_xwindow_id = gst_sdlvideosink_xoverlay_set_xwindow_id;
+  klass->set_window_handle = gst_sdlvideosink_xoverlay_set_window_handle;
 }
 
 static void
-gst_sdlvideosink_xoverlay_set_xwindow_id (GstXOverlay * overlay,
-    unsigned long parent)
+gst_sdlvideosink_xoverlay_set_window_handle (GstXOverlay * overlay,
+    guintptr handle)
 {
   GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (overlay);
+  unsigned long parent = (unsigned long) handle;
 
   if (sdlvideosink->xwindow_id == parent)
     return;
