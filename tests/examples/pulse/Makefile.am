@@ -1,0 +1,5 @@
+noinst_PROGRAMS = pulse
+pulse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+pulse_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-0.10 $(GST_BASE_LIBS) $(GST_LIBS)
+
+

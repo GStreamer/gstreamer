@@ -1160,6 +1160,7 @@ tests/examples/Makefile
 tests/examples/audiofx/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
+tests/examples/pulse/Makefile
 tests/examples/rtp/Makefile
 tests/examples/shapewipe/Makefile
 tests/examples/spectrum/Makefile
