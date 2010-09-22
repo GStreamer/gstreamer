@@ -237,7 +237,7 @@ gst_amrparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
   }
 
   amrparse->need_header = FALSE;
-  gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 50);
+  gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1);
   gst_amrparse_set_src_caps (amrparse);
   return TRUE;
 }
@@ -306,7 +306,7 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
     if (dsize >= AMR_MIME_HEADER_SIZE &&
         gst_amrparse_parse_header (amrparse, data, skipsize)) {
       amrparse->need_header = FALSE;
-      gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1, 50);
+      gst_base_parse_set_frame_props (GST_BASE_PARSE (amrparse), 50, 1);
     } else {
       GST_WARNING ("media doesn't look like a AMR format");
     }

@@ -995,7 +995,7 @@ gst_flac_parse_handle_streaminfo (GstFlacParse * flacparse, GstBuffer * buffer)
   if (flacparse->total_samples)
     gst_base_parse_set_duration (GST_BASE_PARSE (flacparse), GST_FORMAT_TIME,
         GST_FRAMES_TO_CLOCK_TIME (flacparse->total_samples,
-            flacparse->samplerate));
+            flacparse->samplerate), 0);
 
   GST_DEBUG_OBJECT (flacparse, "STREAMINFO:\n"
       "\tmin/max blocksize: %u/%u,\n"

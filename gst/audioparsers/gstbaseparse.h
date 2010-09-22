@@ -284,8 +284,7 @@ GstFlowReturn gst_base_parse_push_buffer (GstBaseParse *parse,
                                           GstBuffer *buffer);
 
 void gst_base_parse_set_duration (GstBaseParse *parse,
-                                  GstFormat fmt,
-                                  gint64 duration);
+                                  GstFormat fmt, gint64 duration, gint interval);
 
 void gst_base_parse_set_seek (GstBaseParse * parse,
                               GstBaseParseSeekable seek, guint bitrate);
@@ -295,7 +294,7 @@ void gst_base_parse_set_min_frame_size (GstBaseParse *parse,
 void gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough);
 
 void gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
-                                     guint fps_den, gint interval);
+                                     guint fps_den);
 
 gboolean gst_base_parse_get_sync (GstBaseParse * parse);
 
