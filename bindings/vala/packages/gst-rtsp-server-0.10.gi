@@ -22,8 +22,10 @@
 			</parameters>
 		</function>
 		<function name="rtsp_sdp_from_media" symbol="gst_rtsp_sdp_from_media">
-			<return-type type="GstSDPMessage*"/>
+			<return-type type="gboolean"/>
 			<parameters>
+				<parameter name="sdp" type="GstSDPMessage*"/>
+				<parameter name="info" type="GstSDPInfo*"/>
 				<parameter name="media" type="GstRTSPMedia*"/>
 			</parameters>
 		</function>
@@ -90,8 +92,16 @@
 			<field name="caps_sig" type="gulong"/>
 			<field name="caps" type="GstCaps*"/>
 			<field name="transports" type="GList*"/>
+			<field name="filter_duplicates" type="gboolean"/>
+			<field name="destinations" type="GList*"/>
 		</struct>
 		<struct name="GstRTSPMediaTrans">
+			<method name="cleanup" symbol="gst_rtsp_media_trans_cleanup">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="trans" type="GstRTSPMediaTrans*"/>
+				</parameters>
+			</method>
 			<field name="idx" type="guint"/>
 			<field name="send_rtp" type="GstRTSPSendFunc"/>
 			<field name="send_rtcp" type="GstRTSPSendFunc"/>
@@ -106,6 +116,13 @@
 			<field name="rtpsource" type="GObject*"/>
 		</struct>
 		<struct name="GstRTSPSessionMedia">
+			<method name="alloc_channels" symbol="gst_rtsp_session_media_alloc_channels">
+				<return-type type="gboolean"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPSessionMedia*"/>
+					<parameter name="range" type="GstRTSPRange*"/>
+				</parameters>
+			</method>
 			<method name="get_stream" symbol="gst_rtsp_session_media_get_stream">
 				<return-type type="GstRTSPSessionStream*"/>
 				<parameters>
@@ -123,6 +140,7 @@
 			<field name="url" type="GstRTSPUrl*"/>
 			<field name="media" type="GstRTSPMedia*"/>
 			<field name="state" type="GstRTSPState"/>
+			<field name="counter" type="guint"/>
 			<field name="streams" type="GArray*"/>
 		</struct>
 		<struct name="GstRTSPSessionStream">
@@ -155,10 +173,20 @@
 			<field name="trans" type="GstRTSPMediaTrans"/>
 			<field name="media_stream" type="GstRTSPMediaStream*"/>
 		</struct>
+		<struct name="GstSDPInfo">
+			<field name="server_proto" type="gchar*"/>
+			<field name="server_ip" type="gchar*"/>
+		</struct>
 		<enum name="GstRTSPFilterResult">
 			<member name="GST_RTSP_FILTER_REMOVE" value="0"/>
 			<member name="GST_RTSP_FILTER_KEEP" value="1"/>
 			<member name="GST_RTSP_FILTER_REF" value="2"/>
+		</enum>
+		<enum name="GstRTSPMediaStatus">
+			<member name="GST_RTSP_MEDIA_STATUS_UNPREPARED" value="0"/>
+			<member name="GST_RTSP_MEDIA_STATUS_PREPARING" value="1"/>
+			<member name="GST_RTSP_MEDIA_STATUS_PREPARED" value="2"/>
+			<member name="GST_RTSP_MEDIA_STATUS_ERROR" value="3"/>
 		</enum>
 		<object name="GstRTSPClient" parent="GObject" type-name="GstRTSPClient" get-type="gst_rtsp_client_get_type">
 			<method name="accept" symbol="gst_rtsp_client_accept">
@@ -202,6 +230,8 @@
 			<field name="connection" type="GstRTSPConnection*"/>
 			<field name="watch" type="GstRTSPWatch*"/>
 			<field name="watchid" type="guint"/>
+			<field name="server_ip" type="gchar*"/>
+			<field name="is_ipv6" type="gboolean"/>
 			<field name="session_pool" type="GstRTSPSessionPool*"/>
 			<field name="media_mapping" type="GstRTSPMediaMapping*"/>
 			<field name="uri" type="GstRTSPUrl*"/>
@@ -210,11 +240,23 @@
 			<field name="sessions" type="GList*"/>
 		</object>
 		<object name="GstRTSPMedia" parent="GObject" type-name="GstRTSPMedia" get-type="gst_rtsp_media_get_type">
+			<method name="get_protocols" symbol="gst_rtsp_media_get_protocols">
+				<return-type type="GstRTSPLowerTrans"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
+				</parameters>
+			</method>
 			<method name="get_stream" symbol="gst_rtsp_media_get_stream">
 				<return-type type="GstRTSPMediaStream*"/>
 				<parameters>
 					<parameter name="media" type="GstRTSPMedia*"/>
 					<parameter name="idx" type="guint"/>
+				</parameters>
+			</method>
+			<method name="is_eos_shutdown" symbol="gst_rtsp_media_is_eos_shutdown">
+				<return-type type="gboolean"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
 				</parameters>
 			</method>
 			<method name="is_prepared" symbol="gst_rtsp_media_is_prepared">
@@ -263,6 +305,20 @@
 					<parameter name="range" type="GstRTSPTimeRange*"/>
 				</parameters>
 			</method>
+			<method name="set_eos_shutdown" symbol="gst_rtsp_media_set_eos_shutdown">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
+					<parameter name="eos_shutdown" type="gboolean"/>
+				</parameters>
+			</method>
+			<method name="set_protocols" symbol="gst_rtsp_media_set_protocols">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="media" type="GstRTSPMedia*"/>
+					<parameter name="protocols" type="GstRTSPLowerTrans"/>
+				</parameters>
+			</method>
 			<method name="set_reusable" symbol="gst_rtsp_media_set_reusable">
 				<return-type type="void"/>
 				<parameters>
@@ -291,6 +347,8 @@
 					<parameter name="media" type="GstRTSPMedia*"/>
 				</parameters>
 			</method>
+			<property name="eos-shutdown" type="gboolean" readable="1" writable="1" construct="0" construct-only="0"/>
+			<property name="protocols" type="GstRTSPLowerTrans" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="reusable" type="gboolean" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="shared" type="gboolean" readable="1" writable="1" construct="0" construct-only="0"/>
 			<signal name="unprepared" when="LAST">
@@ -312,14 +370,20 @@
 					<parameter name="media" type="GstRTSPMedia*"/>
 				</parameters>
 			</vfunc>
+			<field name="lock" type="GMutex*"/>
+			<field name="cond" type="GCond*"/>
 			<field name="shared" type="gboolean"/>
 			<field name="reusable" type="gboolean"/>
+			<field name="protocols" type="GstRTSPLowerTrans"/>
 			<field name="reused" type="gboolean"/>
+			<field name="is_ipv6" type="gboolean"/>
+			<field name="eos_shutdown" type="gboolean"/>
 			<field name="element" type="GstElement*"/>
 			<field name="streams" type="GArray*"/>
 			<field name="dynamic" type="GList*"/>
-			<field name="prepared" type="gboolean"/>
+			<field name="status" type="GstRTSPMediaStatus"/>
 			<field name="active" type="gint"/>
+			<field name="eos_pending" type="gboolean"/>
 			<field name="pipeline" type="GstElement*"/>
 			<field name="fakesink" type="GstElement*"/>
 			<field name="source" type="GSource*"/>
@@ -352,6 +416,12 @@
 					<parameter name="factory" type="GstRTSPMediaFactory*"/>
 				</parameters>
 			</method>
+			<method name="is_eos_shutdown" symbol="gst_rtsp_media_factory_is_eos_shutdown">
+				<return-type type="gboolean"/>
+				<parameters>
+					<parameter name="factory" type="GstRTSPMediaFactory*"/>
+				</parameters>
+			</method>
 			<method name="is_shared" symbol="gst_rtsp_media_factory_is_shared">
 				<return-type type="gboolean"/>
 				<parameters>
@@ -361,6 +431,13 @@
 			<constructor name="new" symbol="gst_rtsp_media_factory_new">
 				<return-type type="GstRTSPMediaFactory*"/>
 			</constructor>
+			<method name="set_eos_shutdown" symbol="gst_rtsp_media_factory_set_eos_shutdown">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="factory" type="GstRTSPMediaFactory*"/>
+					<parameter name="eos_shutdown" type="gboolean"/>
+				</parameters>
+			</method>
 			<method name="set_launch" symbol="gst_rtsp_media_factory_set_launch">
 				<return-type type="void"/>
 				<parameters>
@@ -375,6 +452,7 @@
 					<parameter name="shared" type="gboolean"/>
 				</parameters>
 			</method>
+			<property name="eos-shutdown" type="gboolean" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="launch" type="char*" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="shared" type="gboolean" readable="1" writable="1" construct="0" construct-only="0"/>
 			<vfunc name="configure">
@@ -415,6 +493,7 @@
 			<field name="lock" type="GMutex*"/>
 			<field name="launch" type="gchar*"/>
 			<field name="shared" type="gboolean"/>
+			<field name="eos_shutdown" type="gboolean"/>
 			<field name="medias_lock" type="GMutex*"/>
 			<field name="medias" type="GHashTable*"/>
 		</object>
@@ -467,6 +546,12 @@
 					<parameter name="server" type="GstRTSPServer*"/>
 				</parameters>
 			</method>
+			<method name="get_address" symbol="gst_rtsp_server_get_address">
+				<return-type type="gchar*"/>
+				<parameters>
+					<parameter name="server" type="GstRTSPServer*"/>
+				</parameters>
+			</method>
 			<method name="get_backlog" symbol="gst_rtsp_server_get_backlog">
 				<return-type type="gint"/>
 				<parameters>
@@ -485,8 +570,8 @@
 					<parameter name="server" type="GstRTSPServer*"/>
 				</parameters>
 			</method>
-			<method name="get_port" symbol="gst_rtsp_server_get_port">
-				<return-type type="gint"/>
+			<method name="get_service" symbol="gst_rtsp_server_get_service">
+				<return-type type="gchar*"/>
 				<parameters>
 					<parameter name="server" type="GstRTSPServer*"/>
 				</parameters>
@@ -508,6 +593,13 @@
 			<constructor name="new" symbol="gst_rtsp_server_new">
 				<return-type type="GstRTSPServer*"/>
 			</constructor>
+			<method name="set_address" symbol="gst_rtsp_server_set_address">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="server" type="GstRTSPServer*"/>
+					<parameter name="address" type="gchar*"/>
+				</parameters>
+			</method>
 			<method name="set_backlog" symbol="gst_rtsp_server_set_backlog">
 				<return-type type="void"/>
 				<parameters>
@@ -522,11 +614,11 @@
 					<parameter name="mapping" type="GstRTSPMediaMapping*"/>
 				</parameters>
 			</method>
-			<method name="set_port" symbol="gst_rtsp_server_set_port">
+			<method name="set_service" symbol="gst_rtsp_server_set_service">
 				<return-type type="void"/>
 				<parameters>
 					<parameter name="server" type="GstRTSPServer*"/>
-					<parameter name="port" type="gint"/>
+					<parameter name="service" type="gchar*"/>
 				</parameters>
 			</method>
 			<method name="set_session_pool" symbol="gst_rtsp_server_set_session_pool">
@@ -536,9 +628,10 @@
 					<parameter name="pool" type="GstRTSPSessionPool*"/>
 				</parameters>
 			</method>
+			<property name="address" type="char*" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="backlog" type="gint" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="media-mapping" type="GstRTSPMediaMapping*" readable="1" writable="1" construct="0" construct-only="0"/>
-			<property name="port" type="gint" readable="1" writable="1" construct="0" construct-only="0"/>
+			<property name="service" type="char*" readable="1" writable="1" construct="0" construct-only="0"/>
 			<property name="session-pool" type="GstRTSPSessionPool*" readable="1" writable="1" construct="0" construct-only="0"/>
 			<vfunc name="accept_client">
 				<return-type type="GstRTSPClient*"/>
@@ -547,9 +640,9 @@
 					<parameter name="channel" type="GIOChannel*"/>
 				</parameters>
 			</vfunc>
-			<field name="port" type="gint"/>
+			<field name="address" type="gchar*"/>
+			<field name="service" type="gchar*"/>
 			<field name="backlog" type="gint"/>
-			<field name="host" type="gchar*"/>
 			<field name="server_sin" type="struct sockaddr_in"/>
 			<field name="server_sock" type="GstPollFD"/>
 			<field name="io_channel" type="GIOChannel*"/>
@@ -558,6 +651,12 @@
 			<field name="media_mapping" type="GstRTSPMediaMapping*"/>
 		</object>
 		<object name="GstRTSPSession" parent="GObject" type-name="GstRTSPSession" get-type="gst_rtsp_session_get_type">
+			<method name="allow_expire" symbol="gst_rtsp_session_allow_expire">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="session" type="GstRTSPSession*"/>
+				</parameters>
+			</method>
 			<method name="get_media" symbol="gst_rtsp_session_get_media">
 				<return-type type="GstRTSPSessionMedia*"/>
 				<parameters>
@@ -605,6 +704,12 @@
 					<parameter name="now" type="GTimeVal*"/>
 				</parameters>
 			</method>
+			<method name="prevent_expire" symbol="gst_rtsp_session_prevent_expire">
+				<return-type type="void"/>
+				<parameters>
+					<parameter name="session" type="GstRTSPSession*"/>
+				</parameters>
+			</method>
 			<method name="release_media" symbol="gst_rtsp_session_release_media">
 				<return-type type="gboolean"/>
 				<parameters>
@@ -631,6 +736,7 @@
 			<field name="timeout" type="guint"/>
 			<field name="create_time" type="GTimeVal"/>
 			<field name="last_access" type="GTimeVal"/>
+			<field name="expire_count" type="gint"/>
 			<field name="medias" type="GList*"/>
 		</object>
 		<object name="GstRTSPSessionPool" parent="GObject" type-name="GstRTSPSessionPool" get-type="gst_rtsp_session_pool_get_type">
