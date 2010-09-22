@@ -361,7 +361,6 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   /* Default handlers */
   klass->check_valid_frame = gst_base_parse_check_frame;
   klass->parse_frame = gst_base_parse_parse_frame;
-  klass->event = gst_base_parse_sink_eventfunc;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->is_seekable = gst_base_parse_is_seekable;
   klass->convert = gst_base_parse_convert;
@@ -547,6 +546,9 @@ gst_base_parse_sink_event (GstPad * pad, GstEvent * event)
 
     if (bclass->event)
       handled = bclass->event (parse, event);
+
+    if (!handled)
+      handled = gst_base_parse_sink_eventfunc (parse, event);
 
     if (!handled)
       ret = gst_pad_event_default (pad, event);
