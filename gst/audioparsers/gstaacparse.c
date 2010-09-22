@@ -465,7 +465,7 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
     aacparse->channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
 
     gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
-        aacparse->sample_rate, 1024);
+        aacparse->sample_rate, 1024, 2, 2);
 
     GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d",
         aacparse->sample_rate, aacparse->channels, aacparse->object_type);
