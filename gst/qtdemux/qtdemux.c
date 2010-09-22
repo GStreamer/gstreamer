@@ -1721,13 +1721,15 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 static void
 qtdemux_post_global_tags (GstQTDemux * qtdemux)
 {
-  /* all header tags ready and parsed, push them */
-  GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
-      qtdemux->tag_list);
-  /* post now, send event on pads later */
-  gst_element_post_message (GST_ELEMENT (qtdemux),
-      gst_message_new_tag (GST_OBJECT (qtdemux),
-          gst_tag_list_copy (qtdemux->tag_list)));
+  if (qtdemux->tag_list) {
+    /* all header tags ready and parsed, push them */
+    GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
+        qtdemux->tag_list);
+    /* post now, send event on pads later */
+    gst_element_post_message (GST_ELEMENT (qtdemux),
+        gst_message_new_tag (GST_OBJECT (qtdemux),
+            gst_tag_list_copy (qtdemux->tag_list)));
+  }
 }
 
 static void
@@ -7370,13 +7372,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   if (qtdemux->n_streams == 1 && qtdemux->streams[0]->redirect_uri != NULL) {
     GstMessage *m;
 
-    /* Post tags now as there is probably no data on this stream */
-    GST_INFO_OBJECT (qtdemux, "posting global tags: %" GST_PTR_FORMAT,
-        qtdemux->tag_list);
-    /* post now, send event on pads later */
-    gst_element_post_message (GST_ELEMENT (qtdemux),
-        gst_message_new_tag (GST_OBJECT (qtdemux),
-            gst_tag_list_copy (qtdemux->tag_list)));
+    qtdemux_post_global_tags (qtdemux);
 
     GST_INFO_OBJECT (qtdemux, "Issuing a redirect due to a single track with "
         "an external content");
