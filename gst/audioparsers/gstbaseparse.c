@@ -943,14 +943,8 @@ gst_base_parse_convert_default (GstBaseParse * parse,
   if (!parse->priv->framecount)
     return FALSE;
 
-  /* either frame info (having num means den also ok) or use average bitrate */
-  if (parse->priv->fps_num) {
-    duration = parse->priv->framecount * parse->priv->fps_den * 1000;
-    bytes = parse->priv->bytecount * parse->priv->fps_num;
-  } else {
-    duration = parse->priv->acc_duration / GST_MSECOND;
-    bytes = parse->priv->bytecount;
-  }
+  duration = parse->priv->acc_duration / GST_MSECOND;
+  bytes = parse->priv->bytecount;
 
   if (G_UNLIKELY (!duration || !bytes))
     return FALSE;
@@ -1076,13 +1070,9 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
   data_len = GST_BUFFER_SIZE (buffer) - overhead;
   parse->priv->data_bytecount += data_len;
 
-  if (parse->priv->fps_num) {
-    /* Calculate duration of a frame from frame properties */
-    frame_dur = (GST_SECOND * parse->priv->fps_den) / parse->priv->fps_num;
-    parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
-        (parse->priv->framecount * frame_dur);
-
-  } else if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+  /* duration should be valid by now,
+   * either set by subclass or maybe based on fps settings */
+  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
     /* Calculate duration of a frame from buffer properties */
     frame_dur = GST_BUFFER_DURATION (buffer);
     parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
