@@ -294,7 +294,7 @@ void gst_base_parse_set_min_frame_size (GstBaseParse *parse,
 void gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough);
 
 void gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
-                                     guint fps_den);
+                                     guint fps_den, guint lead_in, guint lead_out);
 
 gboolean gst_base_parse_get_sync (GstBaseParse * parse);
 

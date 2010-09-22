@@ -219,6 +219,8 @@ struct _GstBaseParsePrivate
   guint fps_num, fps_den;
   guint update_interval;
   guint bitrate;
+  guint lead_in, lead_out;
+  GstClockTime lead_in_ts, lead_out_ts;
   GstBaseParseSeekable seekable;
 
   gboolean discont;
@@ -478,6 +480,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->update_interval = 50;
   parse->priv->fps_num = parse->priv->fps_den = 0;
   parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
+  parse->priv->lead_in = parse->priv->lead_out = 0;
+  parse->priv->lead_in_ts = parse->priv->lead_out_ts = 0;
   parse->priv->seekable = GST_BASE_PARSE_SEEK_DEFAULT;
   parse->priv->bitrate = 0;
   parse->priv->framecount = 0;
@@ -1475,14 +1479,15 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   if (ret == GST_BASE_PARSE_FLOW_CLIP) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
-        GST_BUFFER_TIMESTAMP (buffer) > parse->segment.stop) {
+        GST_BUFFER_TIMESTAMP (buffer) >
+        parse->segment.stop + parse->priv->lead_out_ts) {
       GST_LOG_OBJECT (parse, "Dropped frame, after segment");
       ret = GST_FLOW_UNEXPECTED;
     } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_BUFFER_DURATION_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
-        < parse->segment.start) {
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) +
+        parse->priv->lead_in_ts < parse->segment.start) {
       GST_LOG_OBJECT (parse, "Dropped frame, before segment");
       ret = GST_BASE_PARSE_FLOW_DROPPED;
     } else {
@@ -2205,13 +2210,18 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * @parse: the #GstBaseParse to set
  * @fps_num: frames per second (numerator).
  * @fps_den: frames per second (denominator).
+ * @lead_in: frames needed before a segment for subsequent decode
+ * @lead_out: frames needed after a segment
  *
  * If frames per second is configured, parser can take care of buffer duration
- * and timestamping.
+ * and timestamping.  When performing segment clipping, or seeking to a specific
+ * location, a corresponding decoder might need an initial @lead_in and a
+ * following @lead_out number of frames to ensure the desired segment is
+ * entirely filled upon decoding.
  */
 void
 gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
-    guint fps_den)
+    guint fps_den, guint lead_in, guint lead_out)
 {
   g_return_if_fail (parse != NULL);
 
@@ -2223,13 +2233,24 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
         fps_num, fps_den);
     fps_num = fps_den = 0;
     parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
+    parse->priv->lead_in = parse->priv->lead_out = 0;
+    parse->priv->lead_in_ts = parse->priv->lead_out_ts = 0;
   } else {
     parse->priv->frame_duration =
-        gst_util_uint64_scale (GST_SECOND, parse->priv->fps_den,
-        parse->priv->fps_num);
+        gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+    parse->priv->lead_in = lead_in;
+    parse->priv->lead_out = lead_out;
+    parse->priv->lead_in_ts =
+        gst_util_uint64_scale (GST_SECOND, fps_den * lead_in, fps_num);
+    parse->priv->lead_out_ts =
+        gst_util_uint64_scale (GST_SECOND, fps_den * lead_out, fps_num);
   }
   GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %" G_GINT64_FORMAT " ms",
       fps_num, fps_den, parse->priv->frame_duration / GST_MSECOND);
+  GST_LOG_OBJECT (parse, "set lead in: %d frames = %" G_GUINT64_FORMAT " ms, "
+      "lead out: %d frames = %" G_GUINT64_FORMAT " ms",
+      lead_in, parse->priv->lead_in_ts / GST_MSECOND,
+      lead_out, parse->priv->lead_out_ts / GST_MSECOND);
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
@@ -2598,8 +2619,14 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     accurate = TRUE;
   }
   if (accurate) {
-    seekpos = gst_base_parse_find_offset (parse, seeksegment.last_stop, TRUE,
-        &start_ts);
+    GstClockTime startpos = seeksegment.last_stop;
+
+    /* accurate requested, so ... seek a bit before target */
+    if (startpos < parse->priv->lead_in_ts)
+      startpos = 0;
+    else
+      startpos -= parse->priv->lead_in_ts;
+    seekpos = gst_base_parse_find_offset (parse, startpos, TRUE, &start_ts);
     seekstop = gst_base_parse_find_offset (parse, seeksegment.stop, FALSE,
         NULL);
   } else {
