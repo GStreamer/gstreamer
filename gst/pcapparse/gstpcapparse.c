@@ -63,6 +63,8 @@ enum
   PROP_DST_IP,
   PROP_SRC_PORT,
   PROP_DST_PORT,
+  PROP_CAPS,
+  PROP_LAST
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_pcap_parse_debug);
@@ -78,7 +80,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void gst_pcap_parse_dispose (GObject * object);
+static void gst_pcap_parse_finalize (GObject * object);
 static void gst_pcap_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_pcap_parse_set_property (GObject * object, guint prop_id,
@@ -112,7 +114,7 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->dispose = gst_pcap_parse_dispose;
+  gobject_class->finalize = gst_pcap_parse_finalize;
   gobject_class->get_property = gst_pcap_parse_get_property;
   gobject_class->set_property = gst_pcap_parse_set_property;
 
@@ -133,6 +135,10 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
       PROP_DST_PORT, g_param_spec_int ("dst-port", "Destination port",
           "Destination port to restrict to", -1, G_MAXUINT16, -1,
           G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_pcap_parse_debug, "pcapparse", 0, "pcap parser");
 }
@@ -163,13 +169,15 @@ gst_pcap_parse_init (GstPcapParse * self, GstPcapParseClass * gclass)
 }
 
 static void
-gst_pcap_parse_dispose (GObject * object)
+gst_pcap_parse_finalize (GObject * object)
 {
   GstPcapParse *self = GST_PCAP_PARSE (object);
 
   g_object_unref (self->adapter);
+  if (self->caps)
+    gst_caps_unref (self->caps);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static const gchar *
@@ -219,6 +227,10 @@ gst_pcap_parse_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, self->dst_port);
       break;
 
+    case PROP_CAPS:
+      gst_value_set_caps (value, self->caps);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -248,6 +260,26 @@ gst_pcap_parse_set_property (GObject * object, guint prop_id,
       self->dst_port = g_value_get_int (value);
       break;
 
+    case PROP_CAPS:
+    {
+      const GstCaps *new_caps_val;
+      GstCaps *new_caps, *old_caps;
+
+      new_caps_val = gst_value_get_caps (value);
+      if (new_caps_val == NULL) {
+        new_caps = gst_caps_new_any ();
+      } else {
+        new_caps = gst_caps_copy (new_caps_val);
+      }
+
+      old_caps = self->caps;
+      self->caps = new_caps;
+      if (old_caps)
+        gst_caps_unref (old_caps);
+
+      gst_pad_set_caps (self->src_pad, new_caps);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -361,21 +393,6 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstPcapParse *self = GST_PCAP_PARSE (GST_PAD_PARENT (pad));
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (GST_PAD_CAPS (self->src_pad) == NULL) {
-    GstCaps *caps;
-
-    caps = gst_pad_peer_get_caps (self->src_pad);
-    if (caps == NULL)
-      return GST_FLOW_NOT_NEGOTIATED;
-
-    if (!gst_caps_is_fixed (caps) || !gst_pad_set_caps (self->src_pad, caps)) {
-      gst_caps_unref (caps);
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-
-    gst_caps_unref (caps);
-  }
-
   gst_adapter_push (self->adapter, buffer);
 
   while (ret == GST_FLOW_OK) {
@@ -400,8 +417,7 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
             GstBuffer *out_buf;
 
             ret = gst_pad_alloc_buffer_and_set_caps (self->src_pad,
-                self->buffer_offset, payload_size,
-                GST_PAD_CAPS (self->src_pad), &out_buf);
+                self->buffer_offset, payload_size, self->caps, &out_buf);
 
             if (ret == GST_FLOW_OK) {
 
@@ -487,9 +503,11 @@ gst_pcap_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
       /* Drop it, we'll replace it with our own */
+      gst_event_unref (event);
       break;
     default:
       ret = gst_pad_push_event (self->src_pad, event);
+      break;
   }
 
   gst_object_unref (self);

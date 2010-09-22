@@ -64,6 +64,7 @@ struct _GstPcapParse
   gint64 dst_ip;
   gint32 src_port;
   gint32 dst_port;
+  GstCaps *caps;
 
   /* state */
   GstAdapter * adapter;
