@@ -1577,9 +1577,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
       if (G_LIKELY (!parse->priv->skip)) {
-        ret = gst_pad_push (parse->srcpad, buffer);
         GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
             GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+        ret = gst_pad_push (parse->srcpad, buffer);
       } else {
         GST_DEBUG_OBJECT (parse, "initial frame (%d bytes) discarded",
             GST_BUFFER_SIZE (buffer));
