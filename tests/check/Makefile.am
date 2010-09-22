@@ -99,6 +99,7 @@ check_PROGRAMS = \
 	$(check_theora) \
 	elements/adder	\
 	elements/appsink	\
+	elements/appsrc 	\
 	elements/audioconvert \
 	elements/audiorate \
 	elements/audioresample \
@@ -239,6 +240,14 @@ elements_appsink_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_appsink_LDADD = \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(LDADD)
+
+elements_appsrc_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+elements_appsrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
