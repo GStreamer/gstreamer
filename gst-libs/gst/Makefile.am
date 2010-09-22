@@ -10,12 +10,12 @@ SUBDIRS = \
 	fft \
 	floatcast \
 	netbuffer \
-	pbutils \
 	riff \
 	rtp \
 	sdp \
 	rtsp \
 	video \
+	pbutils \
 	app
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h
