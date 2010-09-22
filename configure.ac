@@ -1,5 +1,4 @@
-AC_PREREQ(2.52)
-
+AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
@@ -8,7 +7,7 @@ AC_INIT(Gst-RTSP, 0.10.6.1,
     gst-rtsp)
 
 dnl initialize automake
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([-Wno-portability 1.10])
 
 dnl define PACKAGE_VERSION_* variables
 AS_VERSION
@@ -27,6 +26,11 @@ AM_MAINTAINER_MODE
 
 dnl sets host_* variables
 AC_CANONICAL_HOST
+
+dnl use pretty build output with automake >= 1.11
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
+  [AM_DEFAULT_VERBOSITY=1
+   AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
@@ -72,6 +76,9 @@ AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS="yes"], [HAVE_PYTHON_HEADERS="no"])
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
+
+dnl check for gobject-introspection
+GOBJECT_INTROSPECTION_CHECK([0.6.3])
 
 dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
