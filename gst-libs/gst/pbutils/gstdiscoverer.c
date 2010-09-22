@@ -407,7 +407,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     goto error;
 
   g_object_set (ps->sink, "silent", TRUE, NULL);
-  g_object_set (ps->queue, "max-size-buffers", 1, NULL);
+  g_object_set (ps->queue, "max-size-buffers", 1, "silent", TRUE, NULL);
 
   gst_bin_add_many (dc->priv->pipeline, ps->queue, ps->sink, NULL);
 
