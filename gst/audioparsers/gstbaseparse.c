@@ -2106,11 +2106,13 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
  * @duration: duration value.
  *
  * Sets the duration of the currently playing media. Subclass can use this
- * when it notices a change in the media duration.
- */
+ * when it is able to determine duration and/or notices a change in the media
+ * duration.  Alternatively, if @interval is non-zero (default), then stream
+ * duration is determined based on estimated bitrate, and updated every @interval
+ * frames. */
 void
 gst_base_parse_set_duration (GstBaseParse * parse,
-    GstFormat fmt, gint64 duration)
+    GstFormat fmt, gint64 duration, gint interval)
 {
   g_return_if_fail (parse != NULL);
 
@@ -2126,6 +2128,14 @@ gst_base_parse_set_duration (GstBaseParse * parse,
   parse->priv->duration = duration;
   parse->priv->duration_fmt = fmt;
   GST_DEBUG_OBJECT (parse, "set duration: %" G_GINT64_FORMAT, duration);
+  if (fmt == GST_FORMAT_TIME && GST_CLOCK_TIME_IS_VALID (duration)) {
+    if (interval != 0) {
+      GST_DEBUG_OBJECT (parse, "valid duration provided, disabling estimate");
+      interval = 0;
+    }
+  }
+  GST_DEBUG_OBJECT (parse, "set update interval: %d", interval);
+  parse->priv->update_interval = interval;
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
@@ -2195,28 +2205,23 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
  * @parse: the #GstBaseParse to set
  * @fps_num: frames per second (numerator).
  * @fps_den: frames per second (denominator).
- * @interval: duration update interval in frames.
  *
  * If frames per second is configured, parser can take care of buffer duration
- * and timestamping. If #interval is non-zero (default), then stream duration
- * is determined based on frame and byte counts, and updated every #interval
- * frames.
+ * and timestamping.
  */
 void
 gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
-    guint fps_den, gint interval)
+    guint fps_den)
 {
   g_return_if_fail (parse != NULL);
 
   GST_BASE_PARSE_LOCK (parse);
   parse->priv->fps_num = fps_num;
   parse->priv->fps_den = fps_den;
-  parse->priv->update_interval = interval;
   if (!fps_num || !fps_den) {
     GST_DEBUG_OBJECT (parse, "invalid fps (%d/%d), ignoring parameters",
         fps_num, fps_den);
     fps_num = fps_den = 0;
-    interval = 0;
     parse->priv->frame_duration = GST_CLOCK_TIME_NONE;
   } else {
     parse->priv->frame_duration =
@@ -2225,7 +2230,6 @@ gst_base_parse_set_frame_props (GstBaseParse * parse, guint fps_num,
   }
   GST_LOG_OBJECT (parse, "set fps: %d/%d => duration: %" G_GINT64_FORMAT " ms",
       fps_num, fps_den, parse->priv->frame_duration / GST_MSECOND);
-  GST_LOG_OBJECT (parse, "set update interval: %d", interval);
   GST_BASE_PARSE_UNLOCK (parse);
 }
 
