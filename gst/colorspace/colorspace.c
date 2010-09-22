@@ -699,7 +699,7 @@ colorspace_convert_lookup_getput (ColorspaceConvert * convert)
       break;
     }
   }
-  GST_ERROR ("get %p put %p", convert->getline, convert->putline);
+  GST_DEBUG ("get %p put %p", convert->getline, convert->putline);
 
   if (gst_video_format_is_rgb (convert->to_format) &&
       gst_video_format_is_yuv (convert->from_format)) {
