@@ -574,12 +574,14 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
           100 * 1024, ARG_BITRATE_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
           0, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
 #ifdef X264_PRESETS
   g_object_class_install_property (gobject_class, ARG_SPEED_PRESET,
@@ -1209,6 +1211,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 #endif /* X264_PRESETS */
 
+  encoder->reconfig = FALSE;
+
   GST_OBJECT_UNLOCK (encoder);
 
   encoder->x264enc = x264_encoder_open (&encoder->x264param);
@@ -1621,6 +1625,14 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
   if (G_UNLIKELY (encoder->x264enc == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
 
+  GST_OBJECT_LOCK (encoder);
+  if (encoder->reconfig) {
+    encoder->reconfig = FALSE;
+    if (x264_encoder_reconfig (encoder->x264enc, &encoder->x264param) < 0)
+      GST_WARNING_OBJECT (encoder, "Could not reconfigure");
+  }
+  GST_OBJECT_UNLOCK (encoder);
+
   encoder_return = x264_encoder_encode (encoder->x264enc,
       &nal, i_nal, pic_in, &pic_out);
 
@@ -1759,6 +1771,35 @@ out:
   return ret;
 }
 
+
+
+static void
+gst_x264_enc_reconfig (GstX264Enc * encoder)
+{
+  switch (encoder->pass) {
+    case GST_X264_ENC_PASS_QUAL:
+      encoder->x264param.rc.f_rf_constant = encoder->quantizer;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
+      break;
+    case GST_X264_ENC_PASS_CBR:
+    case GST_X264_ENC_PASS_PASS1:
+    case GST_X264_ENC_PASS_PASS2:
+    case GST_X264_ENC_PASS_PASS3:
+    default:
+      encoder->x264param.rc.i_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
+      encoder->x264param.rc.i_vbv_buffer_size
+          = encoder->x264param.rc.i_vbv_max_bitrate
+          * encoder->vbv_buf_capacity / 1000;
+      break;
+  }
+
+  encoder->reconfig = TRUE;
+}
+
 static void
 gst_x264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1773,8 +1814,10 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (encoder);
   /* state at least matters for sps, bytestream, pass,
    * and so by extension ... */
+
   state = GST_STATE (encoder);
-  if (state != GST_STATE_READY && state != GST_STATE_NULL)
+  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
+      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING))
     goto wrong_state;
 
   switch (prop_id) {
@@ -1783,12 +1826,15 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
       break;
     case ARG_QUANTIZER:
       encoder->quantizer = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_BITRATE:
       encoder->bitrate = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_VBV_BUF_CAPACITY:
       encoder->vbv_buf_capacity = g_value_get_uint (value);
+      gst_x264_enc_reconfig (encoder);
       break;
     case ARG_SPEED_PRESET:
       encoder->speed_preset = g_value_get_enum (value);
@@ -1971,7 +2017,7 @@ gst_x264_enc_set_property (GObject * object, guint prop_id,
   /* ERROR */
 wrong_state:
   {
-    GST_DEBUG_OBJECT (encoder, "setting property in wrong state");
+    GST_WARNING_OBJECT (encoder, "setting property in wrong state");
     GST_OBJECT_UNLOCK (encoder);
   }
 }
