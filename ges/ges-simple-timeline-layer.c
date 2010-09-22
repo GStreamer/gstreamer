@@ -52,6 +52,8 @@ static void
 timeline_object_height_changed_cb (GESTimelineObject * object G_GNUC_UNUSED,
     GParamSpec * arg G_GNUC_UNUSED, GESSimpleTimelineLayer * layer);
 
+static GList *get_objects (GESTimelineLayer * layer);
+
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
     GES_TYPE_TIMELINE_LAYER);
 
@@ -122,6 +124,7 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
   /* Be informed when objects are being added/removed from elsewhere */
   layer_class->object_removed = ges_simple_timeline_layer_object_removed;
   layer_class->object_added = ges_simple_timeline_layer_object_added;
+  layer_class->get_objects = get_objects;
 
   /**
    * GESSimpleTimelineLayer:valid:
@@ -447,4 +450,20 @@ timeline_object_height_changed_cb (GESTimelineObject * object,
 {
   GST_LOG ("layer %p: notify height changed %p", layer, object);
   gstl_recalculate (layer);
+}
+
+static GList *
+get_objects (GESTimelineLayer * l)
+{
+  GList *ret;
+  GList *tmp;
+  GESSimpleTimelineLayer *layer = (GESSimpleTimelineLayer *) l;
+
+  ret = g_list_copy (layer->objects);
+
+  for (tmp = ret; tmp; tmp = tmp->next) {
+    g_object_ref (tmp->data);
+  }
+
+  return ret;
 }
