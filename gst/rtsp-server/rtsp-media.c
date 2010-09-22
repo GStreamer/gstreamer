@@ -1702,8 +1702,8 @@ remove_udp_destination (GstRTSPMedia *media, GstRTSPMediaStream *stream,
     gchar *dest, gint min, gint max)
 {
   gboolean do_remove = TRUE;
-  RTSPDestination *ndest;
-  GList *find;
+  RTSPDestination *ndest = NULL;
+  GList *find = NULL;
 
   if (stream->filter_duplicates) {
     RTSPDestination fdest;
