@@ -54,7 +54,6 @@ struct _GstRtpH264Depay
   gboolean    merge;
   GstAdapter *picture_adapter;
   gboolean    picture_start;
-  gboolean    picture_complete;
   GstClockTime last_ts;
   gboolean    last_delta;
 };
