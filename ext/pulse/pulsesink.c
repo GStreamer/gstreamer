@@ -341,20 +341,30 @@ gst_pulseringbuffer_finalize (GObject * object)
   G_OBJECT_CLASS (ring_parent_class)->finalize (object);
 }
 
+
+#define CONTEXT_OK(c) ((c) && PA_CONTEXT_IS_GOOD (pa_context_get_state ((c))))
+#define STREAM_OK(s) ((s) && PA_STREAM_IS_GOOD (pa_stream_get_state ((s))))
+
 static gboolean
-gst_pulsering_is_dead (GstPulseSink * psink, GstPulseRingBuffer * pbuf)
+gst_pulsering_is_dead (GstPulseSink * psink, GstPulseRingBuffer * pbuf,
+    gboolean check_stream)
 {
-  if (!pbuf->context
-      || !PA_CONTEXT_IS_GOOD (pa_context_get_state (pbuf->context))
-      || !pbuf->stream
-      || !PA_STREAM_IS_GOOD (pa_stream_get_state (pbuf->stream))) {
+  if (!CONTEXT_OK (pbuf->context))
+    goto error;
+
+  if (check_stream && !STREAM_OK (pbuf->stream))
+    goto error;
+
+  return FALSE;
+
+error:
+  {
     const gchar *err_str =
         pbuf->context ? pa_strerror (pa_context_errno (pbuf->context)) : NULL;
     GST_ELEMENT_ERROR (psink, RESOURCE, FAILED, ("Disconnected: %s",
             err_str), (NULL));
     return TRUE;
   }
-  return FALSE;
 }
 
 static void
@@ -971,7 +981,7 @@ gst_pulsering_set_corked (GstPulseRingBuffer * pbuf, gboolean corked,
 
     while (wait && pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
       pa_threaded_mainloop_wait (mainloop);
-      if (gst_pulsering_is_dead (psink, pbuf))
+      if (gst_pulsering_is_dead (psink, pbuf, TRUE))
         goto server_dead;
     }
     pbuf->corked = corked;
@@ -1143,7 +1153,7 @@ gst_pulseringbuffer_stop (GstRingBuffer * buf)
       while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
         GST_DEBUG_OBJECT (psink, "wait for completion");
         pa_threaded_mainloop_wait (mainloop);
-        if (gst_pulsering_is_dead (psink, pbuf))
+        if (gst_pulsering_is_dead (psink, pbuf, TRUE))
           goto server_dead;
       }
       GST_DEBUG_OBJECT (psink, "flush completed");
@@ -1897,7 +1907,7 @@ gst_pulsesink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   pa_threaded_mainloop_lock (mainloop);
-  if (gst_pulsering_is_dead (psink, pbuf))
+  if (gst_pulsering_is_dead (psink, pbuf, TRUE))
     goto server_dead;
 
   /* if we don't have enough data to get a timestamp, just return NONE, which
@@ -2176,7 +2186,7 @@ gst_pulsesink_get_volume (GstPulseSink * psink)
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
     pa_threaded_mainloop_wait (mainloop);
-    if (gst_pulsering_is_dead (psink, pbuf))
+    if (gst_pulsering_is_dead (psink, pbuf, TRUE))
       goto unlock;
   }
 
@@ -2248,7 +2258,7 @@ gst_pulsesink_get_mute (GstPulseSink * psink)
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
     pa_threaded_mainloop_wait (mainloop);
-    if (gst_pulsering_is_dead (psink, pbuf))
+    if (gst_pulsering_is_dead (psink, pbuf, TRUE))
       goto unlock;
   }
 
@@ -2300,11 +2310,6 @@ gst_pulsesink_sink_info_cb (pa_context * c, const pa_sink_info * i, int eol,
   if (!i)
     goto done;
 
-  if (!pbuf->stream)
-    goto done;
-
-  g_assert (i->index == pa_stream_get_device_index (pbuf->stream));
-
   g_free (psink->device_description);
   psink->device_description = g_strdup (i->description);
 
@@ -2324,17 +2329,16 @@ gst_pulsesink_device_description (GstPulseSink * psink)
 
   pa_threaded_mainloop_lock (mainloop);
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
-  if (pbuf == NULL || pbuf->stream == NULL)
+  if (pbuf == NULL)
     goto no_buffer;
 
-  if (!(o = pa_context_get_sink_info_by_index (pbuf->context,
-              pa_stream_get_device_index (pbuf->stream),
-              gst_pulsesink_sink_info_cb, pbuf)))
+  if (!(o = pa_context_get_sink_info_by_name (pbuf->context,
+              psink->device, gst_pulsesink_sink_info_cb, pbuf)))
     goto info_failed;
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
     pa_threaded_mainloop_wait (mainloop);
-    if (gst_pulsering_is_dead (psink, pbuf))
+    if (gst_pulsering_is_dead (psink, pbuf, FALSE))
       goto unlock;
   }
 

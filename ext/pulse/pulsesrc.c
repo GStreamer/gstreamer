@@ -359,23 +359,28 @@ gst_pulsesrc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gboolean
-gst_pulsesrc_is_dead (GstPulseSrc * pulsesrc)
-{
+#define CONTEXT_OK(c) ((c) && PA_CONTEXT_IS_GOOD (pa_context_get_state ((c))))
+#define STREAM_OK(s) ((s) && PA_STREAM_IS_GOOD (pa_stream_get_state ((s))))
 
-  if (!pulsesrc->context
-      || !PA_CONTEXT_IS_GOOD (pa_context_get_state (pulsesrc->context))
-      || !pulsesrc->stream
-      || !PA_STREAM_IS_GOOD (pa_stream_get_state (pulsesrc->stream))) {
+static gboolean
+gst_pulsesrc_is_dead (GstPulseSrc * pulsesrc, gboolean check_stream)
+{
+  if (!CONTEXT_OK (pulsesrc->context))
+    goto error;
+
+  if (check_stream && !STREAM_OK (pulsesrc->stream))
+    goto error;
+
+  return FALSE;
+
+error:
+  {
     const gchar *err_str = pulsesrc->context ?
         pa_strerror (pa_context_errno (pulsesrc->context)) : NULL;
-
     GST_ELEMENT_ERROR ((pulsesrc), RESOURCE, FAILED, ("Disconnected: %s",
             err_str), (NULL));
     return TRUE;
   }
-
-  return FALSE;
 }
 
 static void
@@ -385,15 +390,13 @@ gst_pulsesrc_source_info_cb (pa_context * c, const pa_source_info * i, int eol,
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
   if (!i)
-    return;
-
-  if (!pulsesrc->stream)
-    return;
-
-  g_assert (i->index == pa_stream_get_device_index (pulsesrc->stream));
+    goto done;
 
   g_free (pulsesrc->device_description);
   pulsesrc->device_description = g_strdup (i->description);
+
+done:
+  pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 
 static gchar *
@@ -407,12 +410,8 @@ gst_pulsesrc_device_description (GstPulseSrc * pulsesrc)
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  if (!pulsesrc->stream)
-    goto unlock;
-
-  if (!(o = pa_context_get_source_info_by_index (pulsesrc->context,
-              pa_stream_get_device_index (pulsesrc->stream),
-              gst_pulsesrc_source_info_cb, pulsesrc))) {
+  if (!(o = pa_context_get_source_info_by_name (pulsesrc->context,
+              pulsesrc->device, gst_pulsesrc_source_info_cb, pulsesrc))) {
 
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
         ("pa_stream_get_source_info() failed: %s",
@@ -422,7 +421,7 @@ gst_pulsesrc_device_description (GstPulseSrc * pulsesrc)
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
 
-    if (gst_pulsesrc_is_dead (pulsesrc))
+    if (gst_pulsesrc_is_dead (pulsesrc, FALSE))
       goto unlock;
 
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
@@ -713,7 +712,7 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     /*check if we have a leftover buffer */
     if (!pulsesrc->read_buffer) {
       for (;;) {
-        if (gst_pulsesrc_is_dead (pulsesrc))
+        if (gst_pulsesrc_is_dead (pulsesrc, TRUE))
           goto unlock_and_fail;
 
         /* read all available data, we keep a pointer to the data and the length
@@ -805,7 +804,7 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
   guint result;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
-  if (gst_pulsesrc_is_dead (pulsesrc))
+  if (gst_pulsesrc_is_dead (pulsesrc, TRUE))
     goto server_dead;
 
   /* get the latency, this can fail when we don't have a latency update yet.
@@ -1100,7 +1099,7 @@ gst_pulsesrc_reset (GstAudioSrc * asrc)
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
   GST_DEBUG_OBJECT (pulsesrc, "reset");
 
-  if (gst_pulsesrc_is_dead (pulsesrc))
+  if (gst_pulsesrc_is_dead (pulsesrc, TRUE))
     goto unlock_and_fail;
 
   if (!(o =
@@ -1121,7 +1120,7 @@ gst_pulsesrc_reset (GstAudioSrc * asrc)
   pulsesrc->operation_success = FALSE;
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
 
-    if (gst_pulsesrc_is_dead (pulsesrc))
+    if (gst_pulsesrc_is_dead (pulsesrc, TRUE))
       goto unlock_and_fail;
 
     pa_threaded_mainloop_wait (pulsesrc->mainloop);
@@ -1159,7 +1158,7 @@ gst_pulsesrc_set_corked (GstPulseSrc * psrc, gboolean corked, gboolean wait)
 
     while (wait && pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
       pa_threaded_mainloop_wait (psrc->mainloop);
-      if (gst_pulsesrc_is_dead (psrc))
+      if (gst_pulsesrc_is_dead (psrc, TRUE))
         goto server_dead;
     }
     psrc->corked = corked;
