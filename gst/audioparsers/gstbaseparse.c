@@ -259,7 +259,20 @@ struct _GstBaseParsePrivate
   /* ts and offset of last entry added */
   GstClockTime index_last_ts;
   guint64 index_last_offset;
+
+  /* timestamps currently produced are accurate, e.g. started from 0 onwards */
+  gboolean exact_position;
+  /* seek events are temporarily kept to match them with newsegments */
+  GSList *pending_seeks;
 };
+
+typedef struct _GstBaseParseSeek
+{
+  GstSegment segment;
+  gboolean accurate;
+  gint64 offset;
+  GstClockTime start_ts;
+} GstBaseParseSeek;
 
 static GstElementClass *parent_class = NULL;
 
@@ -485,6 +498,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->index_last_offset = 0;
   parse->priv->upstream_seekable = FALSE;
   parse->priv->idx_interval = 0;
+  parse->priv->exact_position = TRUE;
 
   if (parse->pending_segment)
     gst_event_unref (parse->pending_segment);
@@ -498,6 +512,11 @@ gst_base_parse_reset (GstBaseParse * parse)
     gst_buffer_unref (parse->priv->cache);
     parse->priv->cache = NULL;
   }
+
+  g_slist_foreach (parse->priv->pending_seeks, (GFunc) g_free, NULL);
+  g_slist_free (parse->priv->pending_seeks);
+  parse->priv->pending_seeks = NULL;
+
   GST_OBJECT_UNLOCK (parse);
 }
 
@@ -679,57 +698,86 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
     {
       gdouble rate, applied_rate;
       GstFormat format;
-      gint64 start, stop, pos, offset = 0;
+      gint64 start, stop, pos, next_ts, offset = 0;
       gboolean update;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
 
+      GST_DEBUG_OBJECT (parse, "newseg rate %g, applied rate %g, "
+          "format %d, start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT
+          ", pos = %" GST_TIME_FORMAT, rate, applied_rate, format,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (pos));
 
       if (format == GST_FORMAT_BYTES) {
-        GstClockTime seg_start, seg_stop, seg_pos;
+        GstClockTime seg_start, seg_stop;
+        GstBaseParseSeek *seek = NULL;
+        GSList *node;
 
         /* stop time is allowed to be open-ended, but not start & pos */
         seg_stop = GST_CLOCK_TIME_NONE;
+        seg_start = 0;
         offset = pos;
 
-        if (gst_base_parse_convert (parse, GST_FORMAT_BYTES, start,
-                GST_FORMAT_TIME, (gint64 *) & seg_start) &&
-            gst_base_parse_convert (parse, GST_FORMAT_BYTES, pos,
-                GST_FORMAT_TIME, (gint64 *) & seg_pos)) {
-          gst_event_unref (event);
-          event = gst_event_new_new_segment_full (update, rate, applied_rate,
-              GST_FORMAT_TIME, seg_start, seg_stop, seg_pos);
-          format = GST_FORMAT_TIME;
-          GST_DEBUG_OBJECT (parse, "Converted incoming segment to TIME. "
-              "start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT
-              ", pos = %" GST_TIME_FORMAT, GST_TIME_ARGS (seg_start),
-              GST_TIME_ARGS (seg_stop), GST_TIME_ARGS (seg_pos));
-        }
-      }
+        GST_OBJECT_LOCK (parse);
+        for (node = parse->priv->pending_seeks; node; node = node->next) {
+          GstBaseParseSeek *tmp = node->data;
 
-      if (format != GST_FORMAT_TIME) {
+          if (tmp->offset == pos) {
+            seek = tmp;
+            break;
+          }
+        }
+        parse->priv->pending_seeks =
+            g_slist_remove (parse->priv->pending_seeks, seek);
+        GST_OBJECT_UNLOCK (parse);
+
+        if (seek) {
+          GST_DEBUG_OBJECT (parse,
+              "Matched newsegment to%s seek: %" GST_SEGMENT_FORMAT,
+              seek->accurate ? " accurate" : "", &seek->segment);
+          seg_start = seek->segment.start;
+          seg_stop = seek->segment.stop;
+          next_ts = seek->start_ts;
+          parse->priv->exact_position = seek->accurate;
+          g_free (seek);
+        } else {
+          /* best attempt convert */
+          /* as these are only estimates, stop is kept open-ended to avoid
+           * premature cutting */
+          gst_base_parse_convert (parse, GST_FORMAT_BYTES, start,
+              GST_FORMAT_TIME, (gint64 *) & seg_start);
+          parse->priv->exact_position = (start == 0);
+          next_ts = seg_start;
+        }
+
+        gst_event_unref (event);
+        event = gst_event_new_new_segment_full (update, rate, applied_rate,
+            GST_FORMAT_TIME, seg_start, seg_stop, seg_start);
+        format = GST_FORMAT_TIME;
+        start = seg_start;
+        stop = seg_stop;
+        GST_DEBUG_OBJECT (parse, "Converted incoming segment to TIME. "
+            "start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (seg_start), GST_TIME_ARGS (seg_stop));
+      } else if (format != GST_FORMAT_TIME) {
         /* Unknown incoming segment format. Output a default open-ended 
          * TIME segment */
         gst_event_unref (event);
         event = gst_event_new_new_segment_full (update, rate, applied_rate,
             GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
+        format = GST_FORMAT_TIME;
+        next_ts = start = 0;
+        stop = GST_CLOCK_TIME_NONE;
       } else {
         /* not considered BYTE seekable if it is talking to us in TIME,
          * whatever else it might claim */
         parse->priv->upstream_seekable = FALSE;
+        next_ts = start;
       }
 
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &pos);
-
       gst_segment_set_newsegment_full (&parse->segment, update, rate,
-          applied_rate, format, start, stop, pos);
-
-      GST_DEBUG_OBJECT (parse, "Created newseg rate %g, applied rate %g, "
-          "format %d, start = %" GST_TIME_FORMAT ", stop = %" GST_TIME_FORMAT
-          ", pos = %" GST_TIME_FORMAT, rate, applied_rate, format,
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (pos));
+          applied_rate, format, start, stop, start);
 
       /* save the segment for later, right before we push a new buffer so that
        * the caps are fixed and the next linked element can receive
@@ -745,7 +793,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_adapter_clear (parse->adapter);
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
-      parse->priv->next_ts = start;
+      parse->priv->next_ts = next_ts;
       parse->priv->discont = TRUE;
       break;
     }
@@ -1330,7 +1378,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     /* segment times are typically estimates,
      * actual frame data might lead subclass to different timestamps,
      * so override segment start from what is supplied there */
-    if (G_UNLIKELY (parse->pending_segment &&
+    if (G_UNLIKELY (parse->pending_segment && !parse->priv->exact_position &&
             GST_CLOCK_TIME_IS_VALID (last_start))) {
       gst_event_unref (parse->pending_segment);
       parse->segment.start =
@@ -1423,7 +1471,11 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     parse->priv->pending_events = NULL;
   }
 
-  /* TODO: Add to seek table */
+  if (parse->priv->upstream_seekable && parse->priv->exact_position &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    gst_base_parse_add_index_entry (parse, GST_BUFFER_OFFSET (buffer),
+        GST_BUFFER_TIMESTAMP (buffer),
+        !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT), FALSE);
 
   if (klass->pre_push_buffer)
     ret = klass->pre_push_buffer (parse, buffer);
@@ -2429,6 +2481,52 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+static gint64
+gst_base_parse_find_offset (GstBaseParse * parse, GstClockTime time,
+    gboolean before, GstClockTime * _ts)
+{
+  gint64 bytes = 0, ts = 0;
+  GstIndexEntry *entry = NULL;
+
+  if (time == GST_CLOCK_TIME_NONE) {
+    ts = time;
+    bytes = -1;
+    goto exit;
+  }
+
+  GST_OBJECT_LOCK (parse);
+  if (parse->priv->index) {
+    /* Let's check if we have an index entry for that time */
+    entry = gst_index_get_assoc_entry (parse->priv->index,
+        parse->priv->index_id,
+        before ? GST_INDEX_LOOKUP_BEFORE : GST_INDEX_LOOKUP_AFTER,
+        GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, time);
+  }
+
+  if (entry) {
+    gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
+    gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &ts);
+
+    GST_DEBUG_OBJECT (parse, "found index entry for %" GST_TIME_FORMAT
+        " at %" GST_TIME_FORMAT ", offset %" G_GINT64_FORMAT,
+        GST_TIME_ARGS (time), GST_TIME_ARGS (ts), bytes);
+  } else {
+    GST_DEBUG_OBJECT (parse, "no index entry found for %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (time));
+    if (!before) {
+      bytes = -1;
+      ts = GST_CLOCK_TIME_NONE;
+    }
+  }
+  GST_OBJECT_UNLOCK (parse);
+
+exit:
+  if (_ts)
+    *_ts = ts;
+
+  return bytes;
+}
+
 
 /**
  * gst_base_parse_handle_seek:
@@ -2445,10 +2543,11 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
-  gboolean flush, update, res = TRUE;
-  gint64 cur, stop, seekpos;
+  gboolean flush, update, res = TRUE, accurate;
+  gint64 cur, stop, seekpos, seekstop;
   GstSegment seeksegment = { 0, };
   GstFormat dstformat;
+  GstClockTime start_ts;
 
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
@@ -2492,14 +2591,40 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   gst_segment_set_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
-  dstformat = GST_FORMAT_BYTES;
-  if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.last_stop,
-          &dstformat, &seekpos))
-    goto convert_failed;
+  /* accurate seeking implies seek tables are used to obtain position,
+   * and the requested segment is maintained exactly, not adjusted any way */
+  accurate = flags & GST_SEEK_FLAG_ACCURATE;
+
+  /* maybe we can be accurate for (almost) free */
+  if (seeksegment.last_stop <= parse->priv->index_last_ts + 20 * GST_SECOND) {
+    GST_DEBUG_OBJECT (parse,
+        "seek position %" GST_TIME_FORMAT " <= %" GST_TIME_FORMAT
+        "accurate seek possible", GST_TIME_ARGS (seeksegment.last_stop),
+        GST_TIME_ARGS (parse->priv->index_last_ts));
+    accurate = TRUE;
+  }
+  if (accurate) {
+    seekpos = gst_base_parse_find_offset (parse, seeksegment.last_stop, TRUE,
+        &start_ts);
+    seekstop = gst_base_parse_find_offset (parse, seeksegment.stop, FALSE,
+        NULL);
+  } else {
+    start_ts = seeksegment.last_stop;
+    dstformat = GST_FORMAT_BYTES;
+    if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.last_stop,
+            &dstformat, &seekpos))
+      goto convert_failed;
+    if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.stop,
+            &dstformat, &seekstop))
+      goto convert_failed;
+  }
 
   GST_DEBUG_OBJECT (parse,
       "seek position %" G_GINT64_FORMAT " in bytes: %" G_GINT64_FORMAT, cur,
       seekpos);
+  GST_DEBUG_OBJECT (parse,
+      "seek stop %" G_GINT64_FORMAT " in bytes: %" G_GINT64_FORMAT,
+      seeksegment.stop, seekstop);
 
   if (parse->priv->pad_mode == GST_ACTIVATE_PULL) {
     gint64 last_stop;
@@ -2573,8 +2698,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
           "mark DISCONT, we did a seek to another position");
       parse->priv->offset = seekpos;
       parse->priv->discont = TRUE;
-      parse->priv->next_ts = parse->segment.last_stop;
+      parse->priv->next_ts = start_ts;
       parse->priv->sync_offset = seekpos;
+      parse->priv->exact_position = accurate;
     }
 
     /* Start streaming thread if paused */
@@ -2584,22 +2710,39 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     GST_PAD_STREAM_UNLOCK (parse->sinkpad);
   } else {
     GstEvent *new_event;
-    gint64 stop_pos;
+    GstBaseParseSeek *seek;
 
     /* The only thing we need to do in PUSH-mode is to send the
        seek event (in bytes) to upstream. Segment / flush handling happens
        in corresponding src event handlers */
     GST_DEBUG_OBJECT (parse, "seek in PUSH mode");
-
-    /* already converted start, need same for stop */
-    dstformat = GST_FORMAT_BYTES;
-    if (!gst_pad_query_convert (parse->srcpad, format, seeksegment.start,
-            &dstformat, &stop_pos))
-      goto convert_failed;
     new_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flush,
-        GST_SEEK_TYPE_SET, seekpos, stop_type, stop_pos);
+        GST_SEEK_TYPE_SET, seekpos, stop_type, seekstop);
+
+    /* store segment info so its precise details can be reconstructed when
+     * receiving newsegment;
+     * this matters for all details when accurate seeking,
+     * is most useful to preserve NONE stop time otherwise */
+    seek = g_new0 (GstBaseParseSeek, 1);
+    seek->segment = seeksegment;
+    seek->accurate = accurate;
+    seek->offset = seekpos;
+    seek->start_ts = start_ts;
+    GST_OBJECT_LOCK (parse);
+    /* less optimal, but preserves order */
+    parse->priv->pending_seeks =
+        g_slist_append (parse->priv->pending_seeks, seek);
+    GST_OBJECT_UNLOCK (parse);
 
     res = gst_pad_push_event (parse->sinkpad, new_event);
+
+    if (!res) {
+      GST_OBJECT_LOCK (parse);
+      parse->priv->pending_seeks =
+          g_slist_remove (parse->priv->pending_seeks, seek);
+      GST_OBJECT_UNLOCK (parse);
+      g_free (seek);
+    }
   }
 
 done:
