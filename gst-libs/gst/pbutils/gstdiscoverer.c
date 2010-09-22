@@ -942,6 +942,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       /* We need to stop */
       done = TRUE;
 
+      GST_DEBUG ("Setting result to ERROR");
       dc->priv->current_info->result = GST_DISCOVERER_ERROR;
     }
       break;
@@ -965,6 +966,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
           "structure %" GST_PTR_FORMAT, msg->structure);
       if (sttype == _MISSING_PLUGIN_QUARK) {
+        GST_DEBUG ("Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
         dc->priv->current_info->misc = gst_structure_copy (msg->structure);
       } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
@@ -1018,7 +1020,7 @@ handle_current_sync (GstDiscoverer * dc)
 
   /* return result */
   if (!done) {
-    GST_DEBUG ("we timed out!");
+    GST_DEBUG ("we timed out! Setting result to TIMEOUT");
     dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
   }
 
@@ -1117,6 +1119,7 @@ static gboolean
 async_timeout_cb (GstDiscoverer * dc)
 {
   dc->priv->timeoutid = 0;
+  GST_DEBUG ("Setting result to TIMEOUT");
   dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
   dc->priv->processing = FALSE;
   discoverer_collect (dc);
@@ -1140,14 +1143,14 @@ start_discovering (GstDiscoverer * dc)
   DISCO_LOCK (dc);
   if (dc->priv->pending_uris == NULL) {
     GST_WARNING ("No URI to process");
-    res |= GST_DISCOVERER_URI_INVALID;
+    res = GST_DISCOVERER_URI_INVALID;
     DISCO_UNLOCK (dc);
     goto beach;
   }
 
   if (dc->priv->current_info != NULL) {
     GST_WARNING ("Already processing a file");
-    res |= GST_DISCOVERER_BUSY;
+    res = GST_DISCOVERER_BUSY;
     DISCO_UNLOCK (dc);
     goto beach;
   }
@@ -1347,7 +1350,11 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
     *err = g_error_copy (discoverer->priv->current_error);
   else
     *err = NULL;
-  discoverer->priv->current_info->result = res;
+  if (res != GST_DISCOVERER_OK) {
+    GST_DEBUG ("Setting result to %d (was %d)", res,
+        discoverer->priv->current_info->result);
+    discoverer->priv->current_info->result = res;
+  }
   info = discoverer->priv->current_info;
 
   discoverer_cleanup (discoverer);

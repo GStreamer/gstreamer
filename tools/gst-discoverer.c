@@ -245,35 +245,55 @@ static void
 print_info (GstDiscovererInfo * info, GError * err)
 {
   GstDiscovererResult result = gst_discoverer_info_get_result (info);
+  GstDiscovererStreamInfo *sinfo;
 
   g_print ("Done discovering %s\n", gst_discoverer_info_get_uri (info));
-  if (result & GST_DISCOVERER_URI_INVALID)
-    g_print ("URI is not valid\n");
-  else if (result & GST_DISCOVERER_TIMEOUT)
-    g_print ("Timeout !\n");
-  if (result & GST_DISCOVERER_ERROR) {
-    g_print ("An error was encountered while discovering the file\n");
-    g_print (" %s\n", err->message);
-    if (verbose && (result & GST_DISCOVERER_MISSING_PLUGINS)) {
-      gchar *tmp =
-          gst_structure_to_string (gst_discoverer_info_get_misc (info));
-      g_print (" (%s)\n", tmp);
-      g_free (tmp);
+  switch (result) {
+    case GST_DISCOVERER_OK:
+    {
+      sinfo = gst_discoverer_info_get_stream_info (info);
+      g_print ("\nTopology:\n");
+      print_topology (sinfo, 1);
+      g_print ("\nDuration:\n");
+      print_duration (info, 1);
+      gst_discoverer_stream_info_unref (sinfo);
+      break;
     }
-
-    return;
+    case GST_DISCOVERER_URI_INVALID:
+    {
+      g_print ("URI is not valid\n");
+      break;
+    }
+    case GST_DISCOVERER_ERROR:
+    {
+      g_print ("An error was encountered while discovering the file\n");
+      g_print (" %s\n", err->message);
+      break;
+    }
+    case GST_DISCOVERER_TIMEOUT:
+    {
+      g_print ("Analyzing URI timed out\n");
+      break;
+    }
+    case GST_DISCOVERER_BUSY:
+    {
+      g_print ("Discoverer was busy\n");
+      break;
+    }
+    case GST_DISCOVERER_MISSING_PLUGINS:
+    {
+      g_print ("Missing plugins\n");
+      if (verbose) {
+        gchar *tmp =
+            gst_structure_to_string (gst_discoverer_info_get_misc (info));
+        g_print (" (%s)\n", tmp);
+        g_free (tmp);
+      }
+      break;
+    }
   }
 
-  if (!(result & (GST_DISCOVERER_ERROR | GST_DISCOVERER_TIMEOUT))) {
-    GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
-    g_print ("\nTopology:\n");
-    print_topology (sinfo, 1);
-    g_print ("\nDuration:\n");
-    print_duration (info, 1);
-    gst_discoverer_stream_info_unref (sinfo);
-  }
   g_print ("\n");
-
 }
 
 static void
