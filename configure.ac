@@ -113,23 +113,18 @@ fi
 
 AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON_BINDINGS" = "xyes"])
 
-dnl Check for vala
-PKG_CHECK_EXISTS([vala-1.0], [HAVE_VALA="yes"], [HAVE_VALA="no"])
+dnl Check for Vala
+AC_ARG_ENABLE([vala],
+  AC_HELP_STRING([--enable-vala],[enable Vala bindings (default=yes)]),
+  [case "${enableval}" in
+    yes) enable_vala=yes ;;
+    no)  enable_vala=no ;;
+    *) AC_MSG_ERROR(bad value ${enableval} for --enable-vala) ;;
+   esac
+  ],
+  [enable_vala=yes]) dnl Default value
+AM_CONDITIONAL(WITH_VALA, [test "x$enable_vala" = "xyes"])
 
-AM_CONDITIONAL(WITH_VALA, [test "x$HAVE_VALA" = "xyes"])
-
-AC_ARG_WITH([vapidir],
-  AS_HELP_STRING([--with-vapidir], [Define where to install the VAPI files]))
-	
-if test "x$HAVE_VALA" = "xyes"; then
-  if test "x$with_vapidir" = "x"; then
-  	VAPIDIR="`pkg-config --variable vapidir vala-1.0`" 
-  else
-    VAPIDIR="$with_vapidir"
-  fi
-fi
-AC_SUBST(VAPIDIR)
-	
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
@@ -284,7 +279,7 @@ Configuration
 	Source code location       : ${srcdir}
 	Prefix                     : ${prefix}
 	Compiler                   : ${CC}
-	Vala bindings              : ${HAVE_VALA}
+	Vala bindings              : ${enable_vala}
 	Python bindings:           : ${HAVE_PYTHON_BINDINGS}
 
 Gst-rtsp-server configured. Type 'make' to build.
