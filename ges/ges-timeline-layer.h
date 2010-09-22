@@ -73,6 +73,8 @@ struct _GESTimelineLayer {
 struct _GESTimelineLayerClass {
   GObjectClass parent_class;
 
+  GList *(*get_objects) (GESTimelineLayer * layer);
+
   /*< signals >*/
   void	(*object_added)		(GESTimelineLayer * layer, GESTimelineObject * object);
   void	(*object_removed)	(GESTimelineLayer * layer, GESTimelineObject * object);
@@ -87,6 +89,7 @@ gboolean ges_timeline_layer_add_object (GESTimelineLayer * layer, GESTimelineObj
 gboolean ges_timeline_layer_remove_object (GESTimelineLayer * layer, GESTimelineObject * object);
 
 void ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority);
+GList * ges_timeline_layer_get_objects (GESTimelineLayer * layer);
 
 G_END_DECLS
 

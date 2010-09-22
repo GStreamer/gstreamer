@@ -333,3 +333,35 @@ ges_timeline_layer_set_priority (GESTimelineLayer * layer, guint priority)
     ges_timeline_layer_resync_priorities (layer);
   }
 }
+
+/**
+ * ges_timeline_layer_get_objects:
+ * @layer: a #GESTimelineLayer
+ *
+ * Get the timeline objects this layer contains.
+ *
+ * Returns: a #GList of timeline objects. The user is responsible for
+ * unreffing the contained objects and freeing the list.
+ */
+
+GList *
+ges_timeline_layer_get_objects (GESTimelineLayer * layer)
+{
+  GList *ret = NULL;
+  GSList *tmp;
+  GESTimelineLayerClass *klass;
+
+  klass = GES_TIMELINE_LAYER_GET_CLASS (layer);
+
+  if (klass->get_objects) {
+    return klass->get_objects (layer);
+  }
+
+  for (tmp = layer->objects_start; tmp; tmp = tmp->next) {
+    ret = g_list_prepend (ret, tmp->data);
+    g_object_ref (tmp->data);
+  }
+
+  ret = g_list_reverse (ret);
+  return ret;
+}
