@@ -43,7 +43,7 @@ struct _GstIirEqualizer3Bands
 
 struct _GstIirEqualizer3BandsClass
 {
-  GstIirEqualizer equalizer_class;
+  GstIirEqualizerClass equalizer_class;
 };
 
 extern GType gst_iir_equalizer_3bands_get_type(void);
