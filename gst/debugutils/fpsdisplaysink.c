@@ -224,7 +224,7 @@ on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
 
       ts = gst_util_get_timestamp ();
       if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (self->start_ts))) {
-        self->last_ts = self->start_ts = ts;
+        self->interval_ts = self->last_ts = self->start_ts = ts;
       }
       if (GST_CLOCK_DIFF (self->interval_ts, ts) > self->fps_update_interval) {
         display_current_fps (self);
@@ -404,6 +404,8 @@ fps_display_sink_start (GstFPSDisplaySink * self)
   /* Init counters */
   self->frames_rendered = G_GUINT64_CONSTANT (0);
   self->frames_dropped = G_GUINT64_CONSTANT (0);
+  self->last_frames_rendered = G_GUINT64_CONSTANT (0);
+  self->last_frames_dropped = G_GUINT64_CONSTANT (0);
   self->max_fps = -1;
   self->min_fps = -1;
 
