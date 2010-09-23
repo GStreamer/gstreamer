@@ -442,9 +442,9 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
     }
   }
 
-  /* Try ISO-8859-1 */
-  GST_LOG ("Trying to convert freeform string using ISO-8859-1 fallback");
-  utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
+  /* Try Windows-1252 */
+  GST_LOG ("Trying to convert freeform string using Windows-1252 fallback");
+  utf8 = g_convert (data, size, "UTF-8", "Windows-1252", &bytes_read, NULL, NULL);
   if (utf8 != NULL && bytes_read == size) {
     goto beach;
   }
