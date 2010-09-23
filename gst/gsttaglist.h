@@ -843,6 +843,15 @@ gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
  */
 #define GST_TAG_GEO_LOCATION_SUBLOCATION             "geo-location-sublocation"
 /**
+ * GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR:
+ *
+ * Represents the expected error on the horizontal positioning in
+ * meters (double).
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR   "geo-location-horizontal-error"
+/**
  * GST_TAG_GEO_LOCATION_MOVEMENT_SPEED:
  *
  * Speed of the capturing device when performing the capture.

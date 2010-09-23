@@ -298,6 +298,10 @@ _gst_tag_initialize (void)
       G_TYPE_STRING, _("geo location sublocation"),
       _("a location whithin a city where the media has been produced "
           "or created (e.g. the neighborhood)"), NULL);
+  gst_tag_register (GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("geo location horizontal error"),
+      _("expected error of the horizontal positioning measures (in meters)"),
+      NULL);
   gst_tag_register (GST_TAG_GEO_LOCATION_MOVEMENT_SPEED, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("geo location movement speed"),
       _("movement speed of the capturing device while performing the capture "
