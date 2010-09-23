@@ -32,7 +32,7 @@
  *-----------------------------------------------------------------------------
  * audiosrc -> audio_queue -> audioconvert -> volume -> audioenc
  *                                                       > videomux -> filesink
- *                       video_queue -> [timeoverlay] -> videoenc
+ *                       video_queue -> [timeoverlay] -> [csp] -> videoenc -> queue
  * -> [post proc] -> tee <
  *                       queue ->
  *-----------------------------------------------------------------------------
@@ -580,6 +580,14 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   /* Add probe for rewriting video timestamps */
   vid->vid_tee_probe_id = gst_pad_add_buffer_probe (vid->tee_video_srcpad,
       G_CALLBACK (camerabin_video_pad_tee_src0_have_buffer), vid);
+
+  if (vid->flags & GST_CAMERABIN_FLAG_VIDEO_COLOR_CONVERSION) {
+    /* Add colorspace converter */
+    if (gst_camerabin_create_and_add_element (vidbin,
+            "ffmpegcolorspace") == NULL) {
+      goto error;
+    }
+  }
 
   /* Add user set or default video encoder element */
   if (vid->app_vid_enc) {

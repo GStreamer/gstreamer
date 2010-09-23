@@ -43,6 +43,9 @@ register_gst_camerabin_flags (GType * id)
     {C_FLAGS (GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION),
           "Enable colorspace conversion for still image",
         "image-colorspace-conversion"},
+    {C_FLAGS (GST_CAMERABIN_FLAG_VIDEO_COLOR_CONVERSION),
+          "Enable colorspace conversion for video capture",
+        "video-colorspace-conversion"},
     {0, NULL, NULL}
   };
   *id = g_flags_register_static ("GstCameraBinFlags", values);
