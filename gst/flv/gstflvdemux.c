@@ -1084,7 +1084,16 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   if (codec_tag == 4 || codec_tag == 5) {
     codec_data = 2;
   } else if (codec_tag == 7) {
+    gint32 cts;
+
     codec_data = 5;
+
+    cts = GST_READ_UINT24_BE (data + 9);
+    cts = (cts + 0xff800000) ^ 0xff800000;
+
+    GST_LOG_OBJECT (demux, "got cts %d", cts);
+
+    pts = pts + cts;
   }
 
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
