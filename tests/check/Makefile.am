@@ -43,6 +43,11 @@ endif
 endif
 endif
 
+if HAVE_CXX
+CXX_CHECKS = gst/gstcpp
+else
+CXX_CHECKS =
+endif
 
 # if it's calling gst_element_factory_make(), it will probably not work without
 # a registry
@@ -89,7 +94,7 @@ check_PROGRAMS =				\
 	gst/gstbufferlist			\
 	gst/gstbus				\
 	gst/gstcaps     			\
-	gst/gstcpp			     	\
+	$(CXX_CHECKS)			     	\
 	gst/gstdatetime     			\
 	gst/gstinfo		 		\
 	gst/gstiterator 			\
