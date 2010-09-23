@@ -1,5 +1,5 @@
 
-/* Generated data (by glib-mkenums) */
+
 
 #include "gst_private.h"
 #include <gst/gst.h>
@@ -1530,5 +1530,3 @@ gst_parse_flags_get_type (void)
 
   return (GType) id;
 }
-
-/* Generated data ends here */

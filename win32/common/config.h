@@ -64,6 +64,9 @@
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
+/* GStreamer package release date/time for plugins as YYYY-MM-DD */
+#define GST_PACKAGE_RELEASE_DATETIME "2010-09-23T23:20Z"
+
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
 
@@ -156,6 +159,9 @@
 
 /* Have GMP library */
 #undef HAVE_GMP
+
+/* Define to 1 if you have the `gmtime_r' function. */
+#undef HAVE_GMTIME_R
 
 /* Have GSL library */
 #undef HAVE_GSL
@@ -273,6 +279,9 @@
 
 /* Define to 1 if you have the <sys/wait.h> header file. */
 #undef HAVE_SYS_WAIT_H
+
+/* Have tm_gmtoff field in struct tm */
+#undef HAVE_TM_GMTOFF
 
 /* Define to 1 if you have the <ucontext.h> header file. */
 #undef HAVE_UCONTEXT_H
