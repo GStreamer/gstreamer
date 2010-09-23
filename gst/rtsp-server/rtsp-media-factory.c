@@ -413,8 +413,13 @@ static gchar *
 default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
   gchar *result;
+  const gchar *pre_query;
+  const gchar *query;
 
-  result = gst_rtsp_url_get_request_uri ((GstRTSPUrl *)url);
+  pre_query = url->query ? "?" : "";
+  query = url->query ? url->query : "";
+
+  result = g_strdup_printf ("%u%s%s%s", url->port, url->abspath, pre_query, query);
 
   return result;
 }
