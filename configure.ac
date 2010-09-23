@@ -270,6 +270,11 @@ AC_SUBST(GST_LICENSE)
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
+dnl set release date/time
+AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  ["${srcdir}/gst-plugins-good.doap"],
+  [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
+
 dnl define an ERROR_CFLAGS Makefile variable
 dnl -Wundef: too many broken headers
 dnl -Waggregate-return: causes problems with ObjC code like in osxvideosink
