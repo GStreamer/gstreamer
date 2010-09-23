@@ -2,6 +2,7 @@
 adder
 alsa
 appsink
+appsrc
 audioconvert
 audiorate
 audioresample
