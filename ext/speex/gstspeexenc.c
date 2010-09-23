@@ -647,15 +647,15 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
   switch (enc->mode) {
     case GST_SPEEX_ENC_MODE_UWB:
       GST_LOG_OBJECT (enc, "configuring for requested UWB mode");
-      enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_UWB);
       break;
     case GST_SPEEX_ENC_MODE_WB:
       GST_LOG_OBJECT (enc, "configuring for requested WB mode");
-      enc->speex_mode = (SpeexMode *) & speex_wb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_WB);
       break;
     case GST_SPEEX_ENC_MODE_NB:
       GST_LOG_OBJECT (enc, "configuring for requested NB mode");
-      enc->speex_mode = (SpeexMode *) & speex_nb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_NB);
       break;
     case GST_SPEEX_ENC_MODE_AUTO:
       /* fall through */
@@ -667,9 +667,9 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
   if (enc->rate > 25000) {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
       GST_LOG_OBJECT (enc, "selected UWB mode for samplerate %d", enc->rate);
-      enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_UWB);
     } else {
-      if (enc->speex_mode != &speex_uwb_mode) {
+      if (enc->speex_mode != speex_lib_get_mode (SPEEX_MODEID_UWB)) {
         gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use ultra wide band mode for this rate");
       }
@@ -677,9 +677,9 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
   } else if (enc->rate > 12500) {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
       GST_LOG_OBJECT (enc, "selected WB mode for samplerate %d", enc->rate);
-      enc->speex_mode = (SpeexMode *) & speex_wb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_WB);
     } else {
-      if (enc->speex_mode != &speex_wb_mode) {
+      if (enc->speex_mode != speex_lib_get_mode (SPEEX_MODEID_WB)) {
         gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use wide band mode for this rate");
       }
@@ -687,9 +687,9 @@ gst_speex_enc_setup (GstSpeexEnc * enc)
   } else {
     if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
       GST_LOG_OBJECT (enc, "selected NB mode for samplerate %d", enc->rate);
-      enc->speex_mode = (SpeexMode *) & speex_nb_mode;
+      enc->speex_mode = speex_lib_get_mode (SPEEX_MODEID_NB);
     } else {
-      if (enc->speex_mode != &speex_nb_mode) {
+      if (enc->speex_mode != speex_lib_get_mode (SPEEX_MODEID_NB)) {
         gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use narrow band mode for this rate");
       }
