@@ -95,7 +95,8 @@ gst_camerabin_try_add_element (GstBin * bin, GstElement * new_elem)
         GST_DEBUG_PAD_NAME (bin_pad));
     bin_elem = gst_pad_get_parent_element (bin_pad);
     gst_object_unref (bin_pad);
-    if (!gst_element_link (bin_elem, new_elem)) {
+    if (!gst_element_link_pads_full (bin_elem, NULL, new_elem, NULL,
+            GST_PAD_LINK_CHECK_CAPS)) {
       gst_object_ref (new_elem);
       gst_bin_remove (bin, new_elem);
       ret = FALSE;

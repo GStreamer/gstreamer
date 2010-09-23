@@ -106,30 +106,36 @@ gst_camerabin_preview_create_pipeline (GstCameraBin * camera, GstCaps * caps,
 
   /* FIXME: linking is still way too expensive, profile this properly */
   GST_DEBUG ("linking src->vscale");
-  if (!gst_element_link_pads (src, "src", vscale, "sink"))
+  if (!gst_element_link_pads_full (src, "src", vscale, "sink",
+          GST_PAD_LINK_CHECK_CAPS))
     return FALSE;
 
   if (src_filter) {
     GST_DEBUG ("linking vscale->filter");
-    if (!gst_element_link_pads (vscale, "src", src_filter, "sink")) {
+    if (!gst_element_link_pads_full (vscale, "src", src_filter, "sink",
+            GST_PAD_LINK_CHECK_CAPS)) {
       return FALSE;
     }
     GST_DEBUG ("linking filter->csp");
-    if (!gst_element_link_pads (src_filter, "src", csp, "sink")) {
+    if (!gst_element_link_pads_full (src_filter, "src", csp, "sink",
+            GST_PAD_LINK_CHECK_CAPS)) {
       return FALSE;
     }
   } else {
     GST_DEBUG ("linking vscale->csp");
-    if (!gst_element_link_pads (vscale, "src", csp, "sink"))
+    if (!gst_element_link_pads_full (vscale, "src", csp, "sink",
+            GST_PAD_LINK_CHECK_CAPS))
       return FALSE;
   }
 
   GST_DEBUG ("linking csp->capsfilter");
-  if (!gst_element_link_pads (csp, "src", filter, "sink"))
+  if (!gst_element_link_pads_full (csp, "src", filter, "sink",
+          GST_PAD_LINK_CHECK_CAPS))
     return FALSE;
 
   GST_DEBUG ("linking capsfilter->sink");
-  if (!gst_element_link_pads (filter, "src", sink, "sink"))
+  if (!gst_element_link_pads_full (filter, "src", sink, "sink",
+          GST_PAD_LINK_CHECK_CAPS))
     return FALSE;
 
   return pipe;

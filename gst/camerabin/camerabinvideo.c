@@ -660,7 +660,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     }
 
     /* Link audio part to the muxer */
-    if (!gst_element_link (vid->aud_enc, vid->muxer)) {
+    if (!gst_element_link_pads_full (vid->aud_enc, NULL, vid->muxer, NULL,
+            GST_PAD_LINK_CHECK_CAPS)) {
       GST_ELEMENT_ERROR (vid, CORE, NEGOTIATION, (NULL),
           ("linking audio encoder and muxer failed"));
       goto error;

@@ -772,7 +772,9 @@ camerabin_create_elements (GstCameraBin * camera)
   unconnected_pad = gst_bin_find_unlinked_pad (GST_BIN (camera), GST_PAD_SRC);
   camera->pad_view_vid =
       gst_element_get_request_pad (camera->view_in_sel, "sink%d");
-  link_ret = gst_pad_link (unconnected_pad, camera->pad_view_vid);
+  link_ret =
+      gst_pad_link_full (unconnected_pad, camera->pad_view_vid,
+      GST_PAD_LINK_CHECK_CAPS);
   gst_object_unref (unconnected_pad);
   if (GST_PAD_LINK_FAILED (link_ret)) {
     GST_ELEMENT_ERROR (camera, CORE, NEGOTIATION, (NULL),
@@ -1186,7 +1188,7 @@ gst_camerabin_get_allowed_input_caps (GstCameraBin * camera)
     /* Reset videosrc to NULL state, some drivers seem to need this */
     gst_element_set_state (videosrc, GST_STATE_NULL);
     if (peer_pad) {
-      gst_pad_link (pad, peer_pad);
+      gst_pad_link_full (pad, peer_pad, GST_PAD_LINK_CHECK_CAPS);
       gst_object_unref (peer_pad);
     }
     gst_element_set_locked_state (videosrc, FALSE);
