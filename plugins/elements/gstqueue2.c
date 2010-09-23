@@ -2062,11 +2062,10 @@ gst_queue2_is_filled (GstQueue2 * queue)
   /* if using a ring buffer we're filled if all ring buffer space is used
    * _by the current range_ */
   if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-    guint max_bytes = queue->max_level.bytes;
     guint64 rb_size = queue->ring_buffer_max_size;
     GST_DEBUG_OBJECT (queue,
-        "max bytes %u, rb size %" G_GUINT64_FORMAT ", cur bytes %u", max_bytes,
-        rb_size, queue->cur_level.bytes);
+        "max bytes %u, rb size %" G_GUINT64_FORMAT ", cur bytes %u",
+        queue->max_level.bytes, rb_size, queue->cur_level.bytes);
     return CHECK_FILLED (bytes, rb_size);
   }
 
