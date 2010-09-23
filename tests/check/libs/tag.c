@@ -1435,6 +1435,13 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
 
   g_value_set_double (&value, 0);
   do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR, &value);
+  g_value_set_double (&value, 50.25);
+  do_simple_exif_tag_serialization_deserialization
+      (GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR, &value);
+
+  g_value_set_double (&value, 0);
+  do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, &value);
   g_value_set_double (&value, 2.5);
   do_simple_exif_tag_serialization_deserialization
