@@ -44,5 +44,15 @@ ges_init (void)
       "GStreamer Editing Services");
   gst_controller_init (NULL, NULL);
 
+  /* register timeline object classes with the system */
+
+  GES_TYPE_TIMELINE_TEST_SOURCE;
+  GES_TYPE_TIMELINE_FILE_SOURCE;
+  GES_TYPE_TIMELINE_TITLE_SOURCE;
+  GES_TYPE_TIMELINE_TRANSITION;
+  GES_TYPE_TIMELINE_OVERLAY;
+
+  /* TODO: user-defined types? */
+
   GST_DEBUG ("GStreamer Editing Services initialized");
 }
