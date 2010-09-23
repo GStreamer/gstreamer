@@ -46,8 +46,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_ring_buffer_debug
 
-static void gst_ring_buffer_class_init (GstRingBufferClass * klass);
-static void gst_ring_buffer_init (GstRingBuffer * ringbuffer);
 static void gst_ring_buffer_dispose (GObject * object);
 static void gst_ring_buffer_finalize (GObject * object);
 
@@ -56,36 +54,8 @@ static void default_clear_all (GstRingBuffer * buf);
 static guint default_commit (GstRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum);
 
-static GstObjectClass *parent_class = NULL;
-
 /* ringbuffer abstract base class */
-GType
-gst_ring_buffer_get_type (void)
-{
-  static GType ringbuffer_type = 0;
-
-  if (G_UNLIKELY (!ringbuffer_type)) {
-    static const GTypeInfo ringbuffer_info = {
-      sizeof (GstRingBufferClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_ring_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRingBuffer),
-      0,
-      (GInstanceInitFunc) gst_ring_buffer_init,
-      NULL
-    };
-
-    ringbuffer_type = g_type_register_static (GST_TYPE_OBJECT, "GstRingBuffer",
-        &ringbuffer_info, G_TYPE_FLAG_ABSTRACT);
-
-    GST_DEBUG_CATEGORY_INIT (gst_ring_buffer_debug, "ringbuffer", 0,
-        "ringbuffer class");
-  }
-  return ringbuffer_type;
-}
+G_DEFINE_ABSTRACT_TYPE (GstRingBuffer, gst_ring_buffer, GST_TYPE_OBJECT);
 
 static void
 gst_ring_buffer_class_init (GstRingBufferClass * klass)
@@ -96,7 +66,8 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  GST_DEBUG_CATEGORY_INIT (gst_ring_buffer_debug, "ringbuffer", 0,
+      "ringbuffer class");
 
   gobject_class->dispose = gst_ring_buffer_dispose;
   gobject_class->finalize = gst_ring_buffer_finalize;
@@ -124,7 +95,8 @@ gst_ring_buffer_dispose (GObject * object)
 
   gst_caps_replace (&ringbuffer->spec.caps, NULL);
 
-  G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (ringbuffer));
+  G_OBJECT_CLASS (gst_ring_buffer_parent_class)->dispose (G_OBJECT
+      (ringbuffer));
 }
 
 static void
@@ -135,7 +107,8 @@ gst_ring_buffer_finalize (GObject * object)
   g_cond_free (ringbuffer->cond);
   g_free (ringbuffer->empty_seg);
 
-  G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (ringbuffer));
+  G_OBJECT_CLASS (gst_ring_buffer_parent_class)->finalize (G_OBJECT
+      (ringbuffer));
 }
 
 typedef struct
