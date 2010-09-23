@@ -320,6 +320,13 @@ flags_to_string (GFlagsValue * vals, guint flags)
   return g_string_free (s, FALSE);
 }
 
+#define KNOWN_PARAM_FLAGS \
+  (G_PARAM_CONSTRUCT | G_PARAM_CONSTRUCT_ONLY | \
+  G_PARAM_LAX_VALIDATION |  G_PARAM_STATIC_STRINGS | \
+  G_PARAM_READABLE | G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE | \
+  GST_PARAM_MUTABLE_PLAYING | GST_PARAM_MUTABLE_PAUSED | \
+  GST_PARAM_MUTABLE_READY)
+
 static void
 print_element_properties_info (GstElement * element)
 {
@@ -349,23 +356,27 @@ print_element_properties_info (GstElement * element)
     if (param->flags & G_PARAM_READABLE) {
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
-      if (!first_flag)
-        g_print (", ");
-      else
-        first_flag = FALSE;
-      g_print (_("readable"));
+      g_print ("%s%s", (first_flag) ? "" : ", ", _("readable"));
+      first_flag = FALSE;
     }
     if (param->flags & G_PARAM_WRITABLE) {
-      if (!first_flag)
-        g_print (", ");
-      else
-        first_flag = FALSE;
-      g_print (_("writable"));
+      g_print ("%s%s", (first_flag) ? "" : ", ", _("writable"));
+      first_flag = FALSE;
     }
     if (param->flags & GST_PARAM_CONTROLLABLE) {
-      if (!first_flag)
-        g_print (", ");
-      g_print (_("controllable"));
+      g_print (", %s", _("controllable"));
+      first_flag = FALSE;
+    }
+    if (param->flags & GST_PARAM_MUTABLE_PLAYING) {
+      g_print (", %s", _("changeable in NULL, READY, PAUSED or PLAYING state"));
+    } else if (param->flags & GST_PARAM_MUTABLE_PAUSED) {
+      g_print (", %s", _("changeable only in NULL, READY or PAUSED state"));
+    } else if (param->flags & GST_PARAM_MUTABLE_READY) {
+      g_print (", %s", _("changeable only in NULL or READY state"));
+    }
+    if (param->flags & ~KNOWN_PARAM_FLAGS) {
+      g_print ("%s0x%0x", (first_flag) ? "" : ", ",
+          param->flags & ~KNOWN_PARAM_FLAGS);
     }
     n_print ("\n");
 
