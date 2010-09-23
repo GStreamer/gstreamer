@@ -111,11 +111,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != ! !keyframe)
+    if (time != ts || key != !!keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     return;
@@ -689,15 +689,15 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   g_return_val_if_fail (GST_BUFFER_SIZE (buffer) == demux->tag_size,
       GST_FLOW_ERROR);
 
-  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
-      data[2], data[3]);
-
   /* Grab information about audio tag */
   pts = GST_READ_UINT24_BE (data);
   /* read the pts extension to 32 bits integer */
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
   pts |= pts_ext << 24;
+
+  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X (%d)", data[0], data[1],
+      data[2], data[3], pts);
 
   /* Error out on tags with too small headers */
   if (GST_BUFFER_SIZE (buffer) < 11) {
@@ -1051,9 +1051,6 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
 
-  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
-      data[2], data[3]);
-
   if (demux->no_more_pads && !demux->video_pad) {
     GST_WARNING_OBJECT (demux,
         "Signaled no-more-pads already but had no audio pad -- ignoring");
@@ -1066,6 +1063,9 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
   pts |= pts_ext << 24;
+
+  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X (%d)", data[0], data[1],
+      data[2], data[3], pts);
 
   if (GST_BUFFER_SIZE (buffer) < 12) {
     GST_ERROR_OBJECT (demux, "Too small tag size");
@@ -2345,9 +2345,9 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used ! */
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -2511,9 +2511,9 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
   /* FIXME : the keyframe flag is never used */
-  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
