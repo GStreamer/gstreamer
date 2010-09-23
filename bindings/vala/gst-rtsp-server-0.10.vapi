@@ -36,7 +36,7 @@ namespace Gst {
 		public bool is_ipv6;
 		public bool is_live;
 		public weak GLib.Mutex @lock;
-		public weak Gst.Element pipeline;
+		public Gst.Element pipeline;
 		public weak Gst.RTSPTimeRange range;
 		public bool reused;
 		public weak Gst.Element rtpbin;
@@ -256,18 +256,18 @@ namespace Gst {
 		public Gst.RTSPTransport set_transport (Gst.RTSPTransport ct);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gst/gst.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-sdp.h")]
 	public class SDPInfo {
 		public weak string server_ip;
 		public weak string server_proto;
 	}
-	[CCode (cprefix = "GST_RTSP_FILTER_", has_type_id = false, cheader_filename = "gst/gst.h")]
+	[CCode (cprefix = "GST_RTSP_FILTER_", has_type_id = false, cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
 	public enum RTSPFilterResult {
 		REMOVE,
 		KEEP,
 		REF
 	}
-	[CCode (cprefix = "GST_RTSP_MEDIA_STATUS_", has_type_id = false, cheader_filename = "gst/gst.h")]
+	[CCode (cprefix = "GST_RTSP_MEDIA_STATUS_", has_type_id = false, cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public enum RTSPMediaStatus {
 		UNPREPARED,
 		PREPARING,
