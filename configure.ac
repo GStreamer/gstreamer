@@ -50,8 +50,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.29.3
-GSTPB_REQ=0.10.29.1
+GST_REQ=0.10.30.1
+GSTPB_REQ=0.10.30.1
 
 dnl *** autotools stuff ****
 
@@ -164,21 +164,21 @@ fi
 AC_SUBST(GST_PROFILE_LIBS)
 AC_SUBST(GST_PROFILE_CFLAGS)
 
-dnl check for gstreamer-discoverer
-PKG_CHECK_MODULES(GST_DISCOVERER, gstreamer-discoverer-$GST_MAJORMINOR, HAVE_GST_DISCOVERER="yes", HAVE_GST_DISCOVERER="no")
-if test "x$HAVE_GST_DISCOVERER" != "xyes"; then
-  AC_ERROR([gst-discoverer is required for rendering support])
+dnl check for gstreamer-pbutils
+PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_MAJORMINOR, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
+if test "x$HAVE_GST_PBUTILS" != "xyes"; then
+  AC_ERROR([gst-pbutils is required for rendering support])
 fi
-AC_SUBST(GST_DISCOVERER_LIBS)
-AC_SUBST(GST_DISCOVERER_CFLAGS)
+AC_SUBST(GST_PBUTILS_LIBS)
+AC_SUBST(GST_PBUTILS_CFLAGS)
 
 dnl check for gst-controller
 PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_MAJORMINOR, HAVE_GST_CONTROLLER="yes", HAVE_GST_CONROLLER="no")
 if test "x$HAVE_GST_CONTROLLER" != "xyes"; then
   AC_ERROR([gst-controller is required for transition support])
 fi
-AC_SUBST(GST_DISCOVERER_LIBS)
-AC_SUBST(GST_DISCOVERER_CFLAGS)
+AC_SUBST(GST_CONTROLLER_LIBS)
+AC_SUBST(GST_CONTROLLER_CFLAGS)
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"

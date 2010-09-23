@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include <gst/discoverer/gstdiscoverer.h>
+#include <gst/pbutils/gstdiscoverer.h>
 #include <ges/ges-types.h>
 
 G_BEGIN_DECLS

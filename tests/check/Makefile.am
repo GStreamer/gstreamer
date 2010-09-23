@@ -31,6 +31,6 @@ noinst_HEADERS =
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS =  -I$(top_srcdir) $(GST_CFLAGS) $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
-LDADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la -lges-@GST_MAJORMINOR@ $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS) 
+LDADD = $(top_builddir)/ges/libges-@GST_MAJORMINOR@.la $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS) 
 
 EXTRA_DIST = #gst-plugins-bad.supp

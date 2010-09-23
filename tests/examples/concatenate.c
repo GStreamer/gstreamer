@@ -19,12 +19,11 @@
 
 #include <ges/ges.h>
 #include <gst/profile/gstprofile.h>
-#include <gst/discoverer/gstdiscoverer.h>
+#include <gst/pbutils/gstdiscoverer.h>
 
-GstDiscovererInformation *get_info_for_file (GstDiscoverer * disco,
-    gchar * filename);
+GstDiscovererInfo *get_info_for_file (GstDiscoverer * disco, gchar * filename);
 
-GstDiscovererInformation *
+GstDiscovererInfo *
 get_info_for_file (GstDiscoverer * disco, gchar * filename)
 {
   GError *err;
@@ -50,33 +49,39 @@ get_info_for_file (GstDiscoverer * disco, gchar * filename)
 }
 
 static GstEncodingProfile *
-make_profile_from_info (GstDiscovererInformation * info)
+make_profile_from_info (GstDiscovererInfo * info)
 {
   GstEncodingProfile *profile = NULL;
+  GstDiscovererStreamInfo *sinfo = gst_discoverer_info_get_stream_info (info);
 
   /* Get the container format */
-  if (info->stream_info->streamtype == GST_STREAM_CONTAINER) {
-    GstStreamContainerInformation *container =
-        GST_STREAM_CONTAINER_INFORMATION (info->stream_info);
-    GList *tmp;
+  if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
+    GList *tmp, *substreams;
 
     profile = gst_encoding_profile_new ((gchar *) "concatenate",
-        gst_caps_copy (info->stream_info->caps), NULL, FALSE);
+        gst_discoverer_stream_info_get_caps (sinfo), NULL, FALSE);
+
+    substreams = gst_discoverer_container_info_get_streams (sinfo);
+
     /* For each on the formats add stream profiles */
-    for (tmp = container->streams; tmp; tmp = tmp->next) {
-      GstStreamInformation *stream = GST_STREAM_INFORMATION (tmp->data);
+    for (tmp = substreams; tmp; tmp = tmp->next) {
+      GstDiscovererStreamInfo *stream = GST_DISCOVERER_STREAM_INFO (tmp->data);
       GstStreamEncodingProfile *sprof;
 
       sprof =
-          gst_stream_encoding_profile_new (stream->streamtype ==
-          GST_STREAM_VIDEO ? GST_ENCODING_PROFILE_VIDEO :
-          GST_ENCODING_PROFILE_AUDIO, gst_caps_copy (stream->caps), NULL,
-          NULL, 1);
+          gst_stream_encoding_profile_new (GST_IS_DISCOVERER_VIDEO_INFO (stream)
+          ? GST_ENCODING_PROFILE_VIDEO : GST_ENCODING_PROFILE_AUDIO,
+          gst_discoverer_stream_info_get_caps (stream), NULL, NULL, 1);
       gst_encoding_profile_add_stream (profile, sprof);
     }
+    if (substreams)
+      gst_discoverer_stream_info_list_free (substreams);
   } else {
     GST_ERROR ("No container format !!!");
   }
+
+  if (sinfo)
+    gst_discoverer_stream_info_unref (sinfo);
 
   return profile;
 }
@@ -127,10 +132,10 @@ main (int argc, gchar ** argv)
   if (!ges_timeline_add_layer (timeline, layer))
     return -1;
 
-  disco = gst_discoverer_new (10 * GST_SECOND);
+  disco = gst_discoverer_new (10 * GST_SECOND, NULL);
 
   for (i = 2; i < argc; i++) {
-    GstDiscovererInformation *info;
+    GstDiscovererInfo *info;
     GESTimelineFileSource *src;
 
     info = get_info_for_file (disco, argv[i]);
@@ -140,13 +145,15 @@ main (int argc, gchar ** argv)
       gotprofile = TRUE;
     }
 
-    src = ges_timeline_filesource_new (info->uri);
-    g_object_set (src, (gchar *) "duration", info->duration, NULL);
+    src = ges_timeline_filesource_new ((gchar *)
+        gst_discoverer_info_get_uri (info));
+    g_object_set (src, (gchar *) "duration",
+        gst_discoverer_info_get_duration (info), NULL);
     /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
      * appended to the end of the layer */
     ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
 
-    gst_discoverer_information_free (info);
+    gst_discoverer_info_unref (info);
     sources = g_list_append (sources, src);
   }
 

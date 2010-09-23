@@ -19,8 +19,6 @@
  */
 
 #include <gst/gst.h>
-#include <glib-object.h>
-#include <string.h>
 #include <gst/video/video.h>
 #include "ges-screenshot.h"
 #include "ges-internal.h"
@@ -28,7 +26,7 @@
 GstBuffer *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 {
-  GstBuffer *result = NULL;
+  GstBuffer *result;
 
   g_object_get (G_OBJECT (playsink), "frame", (GstMiniObject *) & result, NULL);
 
@@ -36,9 +34,16 @@ ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)
 
   if (result != NULL && caps != NULL) {
     GstBuffer *temp;
+    GError *err = NULL;
 
-    temp = gst_video_convert_frame (result, caps, 25 * GST_SECOND, NULL);
+    temp = gst_video_convert_frame (result, caps, 25 * GST_SECOND, &err);
     gst_buffer_unref (result);
+    if (temp == NULL && err) {
+      /* I'm really uncertain whether we should make playsink post an error
+       * on the bus or not. It's not like it's a critical issue regarding
+       * playsink behaviour. */
+      GST_ERROR ("Error converting frame: %s", err->message);
+    }
     result = temp;
   }
   return result;
