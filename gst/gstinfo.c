@@ -468,6 +468,31 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
   va_end (var_args);
 }
 
+#ifdef _MSC_VER
+/* based on g_basename(), which we can't use because it was deprecated */
+static inline const gchar *
+gst_path_basename (const gchar * file_name)
+{
+  register const gchar *base;
+
+  base = strrchr (file_name, G_DIR_SEPARATOR);
+
+  {
+    const gchar *q = strrchr (file_name, '/');
+    if (base == NULL || (q != NULL && q > base))
+      base = q;
+  }
+
+  if (base)
+    return base + 1;
+
+  if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
+    return file_name + 2;
+
+  return file_name;
+}
+#endif
+
 /**
  * gst_debug_log_valist:
  * @category: category to log
@@ -491,22 +516,16 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   LogFuncEntry *entry;
   GSList *handler;
 
-#ifdef _MSC_VER
-  gchar *file_basename;
-#endif
-
   g_return_if_fail (category != NULL);
   g_return_if_fail (file != NULL);
   g_return_if_fail (function != NULL);
   g_return_if_fail (format != NULL);
 
-#ifdef _MSC_VER
-  /*
-   * The predefined macro __FILE__ is always the exact path given to the
+  /* The predefined macro __FILE__ is always the exact path given to the
    * compiler with MSVC, which may or may not be the basename.  We work
-   * around it at runtime to improve the readability.
-   */
-  file = file_basename = g_path_get_basename (file);
+   * around it at runtime to improve the readability. */
+#ifdef _MSC_VER
+  file = gst_path_basename (file);
 #endif
 
   message.message = NULL;
@@ -522,10 +541,6 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   }
   g_free (message.message);
   va_end (message.arguments);
-
-#ifdef _MSC_VER
-  g_free (file_basename);
-#endif
 }
 
 /**
