@@ -2181,10 +2181,17 @@ no_qos:
       GST_DEBUG_OBJECT (trans, "doing inplace transform");
 
       if (inbuf != *outbuf) {
-        /* different buffers, copy the input to the output first, we then do an
-         * in-place transform on the output buffer. */
-        memcpy (GST_BUFFER_DATA (*outbuf), GST_BUFFER_DATA (inbuf),
-            GST_BUFFER_SIZE (inbuf));
+        guint8 *indata, *outdata;
+
+        /* Different buffer. The data can still be the same when we are dealing
+         * with subbuffers of the same buffer. Note that because of the FIXME in
+         * prepare_output_buffer() we have decreased the refcounts of inbuf and
+         * outbuf to keep them writable */
+        indata = GST_BUFFER_DATA (inbuf);
+        outdata = GST_BUFFER_DATA (*outbuf);
+
+        if (indata != outdata)
+          memcpy (outdata, indata, GST_BUFFER_SIZE (inbuf));
       }
       ret = bclass->transform_ip (trans, *outbuf);
     } else {
