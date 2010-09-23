@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-06 20:18+0100\n"
+"POT-Creation-Date: 2010-09-23 20:57+0100\n"
 "PO-Revision-Date: 2010-06-30 11:47+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -649,6 +649,13 @@ msgid ""
 "the neighborhood)"
 msgstr "sijainti kaupungin sisällä, jossa media on nauhoitettu tai tuotettu"
 
+#, fuzzy
+msgid "geo location horizontal error"
+msgstr "maantietellisen sijainnin nimi"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr ""
+
 msgid "geo location movement speed"
 msgstr "maantieteellisen sijainnin liikenopeus"
 
@@ -950,6 +957,15 @@ msgstr "kirjoitettavissa"
 
 msgid "controllable"
 msgstr "ohjattavissa"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr ""
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr ""
+
+msgid "changeable only in NULL or READY state"
+msgstr ""
 
 msgid "Blacklisted files:"
 msgstr "Mustalistatut tiedostot:"

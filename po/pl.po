@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-06 20:18+0100\n"
+"POT-Creation-Date: 2010-09-23 20:57+0100\n"
 "PO-Revision-Date: 2010-06-28 09:46+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -649,6 +649,13 @@ msgstr ""
 "miejsce wewnątrz miejscowości, w którym utwór został nagrany lub "
 "wyprodukowany (np. dzielnica)"
 
+#, fuzzy
+msgid "geo location horizontal error"
+msgstr "nazwa położenia geograficznego"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr ""
+
 msgid "geo location movement speed"
 msgstr "prędkość zmiany położenia geograficznego"
 
@@ -949,6 +956,15 @@ msgstr "zapis"
 
 msgid "controllable"
 msgstr "sterowanie"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr ""
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr ""
+
+msgid "changeable only in NULL or READY state"
+msgstr ""
 
 msgid "Blacklisted files:"
 msgstr "Pliki wykluczone:"

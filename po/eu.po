@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-06 20:18+0100\n"
+"POT-Creation-Date: 2010-09-23 20:57+0100\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -652,6 +652,13 @@ msgid ""
 msgstr "muldimedia grabatu edo ekoiztu den herriko kokaleku bat (adib, auzoa)"
 
 #, fuzzy
+msgid "geo location horizontal error"
+msgstr "geolokalizazioaren izena"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr ""
+
+#, fuzzy
 msgid "geo location movement speed"
 msgstr "geolokalizazioaren longitudea"
 
@@ -950,6 +957,15 @@ msgstr "idatz daitekeena"
 
 msgid "controllable"
 msgstr "kontrola daitekeena"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr ""
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr ""
+
+msgid "changeable only in NULL or READY state"
+msgstr ""
 
 msgid "Blacklisted files:"
 msgstr "Zerrenda beltzeko fitxategiak:"
