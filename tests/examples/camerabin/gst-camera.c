@@ -545,6 +545,7 @@ me_gst_setup_pipeline (const gchar * imagepost, const gchar * videopost)
   /* set properties */
   g_object_set (gst_camera_bin, "filename", filename->str, NULL);
   g_object_set (gst_camera_bin, "preview-caps", preview_caps, NULL);
+  g_object_set (gst_camera_bin, "flags", 0xdf, NULL);
   gst_caps_unref (preview_caps);
 
   gst_videosrc = gst_element_factory_make (CAMERA_APP_VIDEOSRC, NULL);
