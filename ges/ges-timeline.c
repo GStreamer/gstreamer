@@ -104,14 +104,19 @@ ges_timeline_dispose (GObject * object)
     timeline->discoverer = NULL;
   }
 
-  while (timeline->tracks) {
-    TrackPrivate *priv = (TrackPrivate *) timeline->tracks->data;
-    ges_timeline_remove_track (timeline, priv->track);
-  }
-
   while (timeline->layers) {
     GESTimelineLayer *layer = (GESTimelineLayer *) timeline->layers->data;
     ges_timeline_remove_layer (timeline, layer);
+  }
+
+  /* FIXME: it should be possible to remove tracks before removing
+   * layers, but at the moment this creates a problem because the track
+   * objects aren't notified that their gnlobjects have been destroyed.
+   */
+
+  while (timeline->tracks) {
+    TrackPrivate *priv = (TrackPrivate *) timeline->tracks->data;
+    ges_timeline_remove_track (timeline, priv->track);
   }
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
