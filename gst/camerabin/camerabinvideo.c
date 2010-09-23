@@ -575,6 +575,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   if (!gst_camerabin_add_element (vidbin, vid->video_queue)) {
     goto error;
   }
+  g_object_set (vid->video_queue, "silent", TRUE, NULL);
 
   /* Add probe for rewriting video timestamps */
   vid->vid_tee_probe_id = gst_pad_add_buffer_probe (vid->tee_video_srcpad,
@@ -626,6 +627,7 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
     if (!gst_camerabin_add_element (vidbin, queue)) {
       goto error;
     }
+    g_object_set (queue, "silent", TRUE, NULL);
 
     /* Add optional audio conversion and volume elements and
        raise no errors if adding them fails */
@@ -672,7 +674,8 @@ gst_camerabin_video_create_elements (GstCameraBinVideo * vid)
   }
   /* Set queue leaky, we don't want to block video encoder feed, but
      prefer leaking view finder buffers instead. */
-  g_object_set (G_OBJECT (queue), "leaky", 2, "max-size-buffers", 1, NULL);
+  g_object_set (G_OBJECT (queue), "leaky", 2, "max-size-buffers", 1, "silent",
+      TRUE, NULL);
 
   /* Set up src ghost pad for video bin */
   vid_srcpad = gst_element_get_static_pad (queue, "src");
