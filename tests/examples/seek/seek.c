@@ -78,6 +78,7 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 /* the state to go to when stop is pressed */
 #define STOP_STATE      GST_STATE_READY
 
+#define N_GRAD 1000.0
 
 static GList *seekable_pads = NULL;
 static GList *rate_pads = NULL;
@@ -1195,9 +1196,9 @@ update_fill (gpointer data)
             start, stop);
 
         if (stop != -1)
-          fill = 100.0 * stop / GST_FORMAT_PERCENT_MAX;
+          fill = N_GRAD * stop / GST_FORMAT_PERCENT_MAX;
         else
-          fill = 100.0;
+          fill = N_GRAD;
 
         gtk_range_set_fill_level (GTK_RANGE (hscale), fill);
       }
@@ -1244,7 +1245,7 @@ update_scale (gpointer data)
     duration = position;
 
   if (duration > 0) {
-    set_scale (position * 100.0 / duration);
+    set_scale (position * N_GRAD / duration);
   }
 
   /* FIXME: see make_playerbin2_pipeline() and volume_notify_cb() */
@@ -1314,7 +1315,10 @@ do_seek (GtkWidget * widget)
   GstEvent *s_event;
   GstSeekFlags flags;
 
-  real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
+  real = gtk_range_get_value (GTK_RANGE (widget)) * duration / N_GRAD;
+
+  GST_DEBUG ("value=%f, real=%d", gtk_range_get_value (GTK_RANGE (widget)),
+      real);
 
   flags = 0;
   if (flush_seek)
@@ -2787,13 +2791,12 @@ main (int argc, char **argv)
 
   /* seek bar */
   adjustment =
-      GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
+      GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, N_GRAD, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
   gtk_scale_set_value_pos (GTK_SCALE (hscale), GTK_POS_RIGHT);
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
-  gtk_range_set_restrict_to_fill_level (GTK_RANGE (hscale), FALSE);
-  gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
+  gtk_range_set_fill_level (GTK_RANGE (hscale), N_GRAD);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   g_signal_connect (hscale, "button_press_event", G_CALLBACK (start_seek),
