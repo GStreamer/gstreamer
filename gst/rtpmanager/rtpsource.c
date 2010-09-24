@@ -252,8 +252,9 @@ rtp_source_create_stats (RTPSource * src)
         "octets-received", G_TYPE_UINT64, src->stats.octets_received,
         "packets-received", G_TYPE_UINT64, src->stats.packets_received,
         "bitrate", G_TYPE_UINT64, src->bitrate,
-        "packets-lost", G_TYPE_INT, (gint) rtp_stats_get_packets_lost (&src->stats),
-        "jitter", G_TYPE_UINT, (guint) (src->stats.jitter >> 4), NULL);
+        "packets-lost", G_TYPE_INT,
+        (gint) rtp_stats_get_packets_lost (&src->stats), "jitter", G_TYPE_UINT,
+        (guint) (src->stats.jitter >> 4), NULL);
 
     if (is_sender) {
       gboolean have_sr;
@@ -895,6 +896,8 @@ init_seq (RTPSource * src, guint16 seq)
   GST_DEBUG ("base_seq %d", seq);
 }
 
+#define BITRATE_INTERVAL (2 * GST_SECOND)
+
 static void
 do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
     guint64 * bytes_handled)
@@ -904,12 +907,10 @@ do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
   if (src->prev_rtime) {
     elapsed = running_time - src->prev_rtime;
 
-    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
-      const guint64 bits_per_byte = G_GUINT64_CONSTANT (8);
+    if (elapsed > BITRATE_INTERVAL) {
       guint64 rate;
 
-      rate = gst_util_uint64_scale (*bytes_handled,
-				    bits_per_byte * GST_SECOND, elapsed);
+      rate = gst_util_uint64_scale (*bytes_handled, 8 * GST_SECOND, elapsed);
 
       GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
           ", rate %" G_GUINT64_FORMAT, elapsed, *bytes_handled, rate);
