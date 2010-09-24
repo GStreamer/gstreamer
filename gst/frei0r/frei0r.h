@@ -40,6 +40,11 @@
  *
  * @section sec_changes Changes
  *
+ * @subsection sec_changes_1_1_1_2 From frei0r 1.1 to frei0r 1.2
+ *   - make <vendor> in plugin path optional
+ *   - added section on FREI0R_PATH environment variable
+ *   - added requirement to initialize all parameters in f0r_construct()
+ *
  * @subsection sec_changes_1_0_1_1 From frei0r 1.0 to frei0r 1.1
  *
  *   - added specifications for plugin locations
@@ -79,7 +84,7 @@
  * - /home/martin/.frei0r-1/lib/martin/test.so
  *
  * Like in these examples plugins should be placed in "vendor" subdirs
- * to reduce name clashes.
+ * to reduce name clashes. However, <vendor> is optional and may be left blank.
  *
  * @subsection sec_order Plugin Loading Order
  *
@@ -95,6 +100,16 @@
  *
  * The order of loading plugins inside each of the directories 
  * 1, 2, and 3 is not defined.
+ *
+ * @subsection sec_path FREI0R_PATH Environment Variable
+ *
+ * If the environment variable FREI0R_PATH is defined, then it shall be
+ * considered a colon separated list of directories which replaces the
+ * default list.
+ *
+ * For example:
+ *
+ * FREI0R_PATH=/home/foo/frei0r-plugins:/usr/lib/frei0r-1:/etc/frei0r
  */
 
 /**
@@ -173,7 +188,7 @@
 
 
 /** \file
- * \brief This file defines the frei0r api, version 1.1.
+ * \brief This file defines the frei0r api, version 1.2.
  *
  * A conforming plugin must implement and export all functions declared in
  * this header.
@@ -195,7 +210,7 @@
 /**
  * The frei0r API minor version
  */
-#define FREI0R_MINOR_VERSION 1
+#define FREI0R_MINOR_VERSION 2
 
 //---------------------------------------------------------------------------
 
@@ -240,7 +255,7 @@ void f0r_deinit();
  * by their significance in an uint32_t value.
  * 
  * For effects that work on the color components,
- * RGBA8888 is the recommended color model for frei0r-1.1 effects.
+ * RGBA8888 is the recommended color model for frei0r-1.2 effects.
  * For effects that only work on pixels, PACKED32 is the recommended
  * color model since it helps the application to avoid unnecessary
  * color conversions.
@@ -449,8 +464,9 @@ typedef void* f0r_instance_t;
  * Constructor for effect instances. The plugin returns a pointer to
  * its internal instance structure.
  *
- * The resolution has to be an integer multiple of 8,
+ * The resolution must be an integer multiple of 8,
  * must be greater than 0 and be at most 2048 in both dimensions.
+ * The plugin must set default values for all parameters in this function.
  *
  * \param width The x-resolution of the processed video frames
  * \param height The y-resolution of the processed video frames
@@ -480,6 +496,13 @@ typedef void* f0r_param_t;
  * This function allows the application to set the parameter values of an
  * effect instance. Validity of the parameter pointer is handled by the
  * application thus the data must be copied by the effect.
+ *
+ * Furthermore, if d an update event/signal is needed in a host
+ * application to notice when parameters have changed, this should be
+ * implemented inside its own update() call. The host application
+ * would presumably need to store the current value as well to see if
+ * it changes; to make this thread safe, it should store a copy of the
+ * current value in a struct which uses instance as a key.
  *
  * \param instance the effect instance
  * \param param pointer to the parameter value
@@ -551,7 +574,7 @@ void f0r_update(f0r_instance_t instance,
  * \param inframe2 the second incoming video frame
           (can be zero for sources and filters)
  * \param inframe3 the third incoming video frame
-          (can be zero for sources, filters and mixer3) 
+          (can be zero for sources, filters and mixer2) 
  * \param outframe the resulting video frame
  *
  * \see f0r_update
