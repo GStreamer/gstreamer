@@ -982,6 +982,11 @@ gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
         mode, camera->mode);
     /* Interrupt ongoing capture */
     gst_camerabin_do_stop (camera);
+
+    /* reset night-mode stored values */
+    camera->pre_night_fps_n = 0;
+    camera->pre_night_fps_d = 1;
+
     camera->mode = mode;
     gst_element_get_state (GST_ELEMENT (camera), &state, &pending_state, 0);
     if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING ||
