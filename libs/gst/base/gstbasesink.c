@@ -2005,7 +2005,8 @@ out_of_segment:
 }
 
 /* with STREAM_LOCK, PREROLL_LOCK, LOCK
- * adjust a timestamp with the latency and timestamp offset */
+ * adjust a timestamp with the latency and timestamp offset. This function does
+ * not adjust for the render delay. */
 static GstClockTime
 gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
 {
@@ -2015,7 +2016,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     return time;
 
-  time += basesink->priv->latency - basesink->priv->render_delay;
+  time += basesink->priv->latency;
 
   /* apply offset, be carefull for underflows */
   ts_offset = basesink->priv->ts_offset;
@@ -2027,6 +2028,12 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
       time = 0;
   } else
     time += ts_offset;
+
+  /* subtract the render delay again, which was included in the latency */
+  if (time > basesink->priv->render_delay)
+    time -= basesink->priv->render_delay;
+  else
+    time = 0;
 
   return time;
 }
