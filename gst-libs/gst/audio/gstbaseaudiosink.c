@@ -1145,7 +1145,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
 {
   GstClock *clock;
   GstClockReturn status;
-  GstClockTime time;
+  GstClockTime time, render_delay;
   GstFlowReturn ret;
   GstBaseAudioSink *sink;
   GstClockTime itime, etime;
@@ -1174,6 +1174,15 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
     GST_OBJECT_LOCK (sink);
     time = sink->priv->us_latency;
     GST_OBJECT_UNLOCK (sink);
+
+    /* Renderdelay is added onto our own latency, and needs
+     * to be subtracted as well */
+    render_delay = gst_base_sink_get_render_delay (bsink);
+
+    if (G_LIKELY (time > render_delay))
+      time -= render_delay;
+    else
+      time = 0;
 
     /* preroll done, we can sync since we are in PLAYING now. */
     GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
