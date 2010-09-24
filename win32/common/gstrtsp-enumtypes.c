@@ -1,5 +1,5 @@
 
-/* Generated data (by glib-mkenums) */
+
 
 #include "gstrtsp-enumtypes.h"
 
@@ -387,5 +387,3 @@ gst_rtsp_status_code_get_type (void)
   }
   return g_define_type_id__volatile;
 }
-
-/* Generated data ends here */

@@ -1,5 +1,5 @@
 
-/* Generated data (by glib-mkenums) */
+
 
 #include "audio-enumtypes.h"
 
@@ -171,5 +171,3 @@ gst_buffer_format_get_type (void)
   }
   return g_define_type_id__volatile;
 }
-
-/* Generated data ends here */

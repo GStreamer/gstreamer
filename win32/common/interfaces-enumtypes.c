@@ -1,5 +1,5 @@
 
-/* Generated data (by glib-mkenums) */
+
 
 #include "interfaces-enumtypes.h"
 
@@ -272,5 +272,3 @@ gst_tuner_channel_flags_get_type (void)
   }
   return g_define_type_id__volatile;
 }
-
-/* Generated data ends here */

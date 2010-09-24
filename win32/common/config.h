@@ -74,6 +74,9 @@
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
+/* GStreamer package release date/time for plugins as YYYY-MM-DD */
+#define GST_PACKAGE_RELEASE_DATETIME "2010-09-24T11:21Z"
+
 /* I know the API is subject to change. */
 #undef G_UDEV_API_IS_SUBJECT_TO_CHANGE
 
@@ -208,6 +211,9 @@
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
+
+/* Define to 1 if you have the `log2' function. */
+#undef HAVE_LOG2
 
 /* Define if you have C99's lrint function. */
 #undef HAVE_LRINT
