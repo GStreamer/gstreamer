@@ -1604,7 +1604,6 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
  *
  * Returns: TRUE if it was a known conflict, FALSE otherwise
  */
-
 gboolean
 rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
     GstClockTime time)
@@ -1632,7 +1631,6 @@ rtp_source_find_conflicting_address (RTPSource * src, GstNetAddress * address,
  *
  * Adds a new conflict address
  */
-
 void
 rtp_source_add_conflicting_address (RTPSource * src,
     GstNetAddress * address, GstClockTime time)
@@ -1656,7 +1654,6 @@ rtp_source_add_conflicting_address (RTPSource * src,
  *
  * This is processed on each RTCP interval. It times out old collisions.
  */
-
 void
 rtp_source_timeout (RTPSource * src, GstClockTime current_time,
     GstClockTime collision_timeout)
