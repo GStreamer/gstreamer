@@ -340,6 +340,7 @@ id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   guint8 *frame_data;
   gchar *media_type;
   guint frame_size, header_size;
+  guint i;
 
   switch (ID3V2_VER_MAJOR (work->hdr.version)) {
     case 1:
@@ -359,6 +360,12 @@ id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
 
   blob = gst_buffer_new_and_alloc (frame_size);
   memcpy (GST_BUFFER_DATA (blob), frame_data, frame_size);
+
+  /* Sanitize frame id */
+  for (i = 0; i < 4; i++) {
+    if (!g_ascii_isalnum (frame_data[i]))
+      frame_data[i] = '_';
+  }
 
   media_type = g_strdup_printf ("application/x-gst-id3v2-%c%c%c%c-frame",
       g_ascii_tolower (frame_data[0]), g_ascii_tolower (frame_data[1]),
@@ -418,6 +425,7 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     guint16 frame_flags = 0x0;
     gboolean obsolete_id = FALSE;
     gboolean read_synch_size = TRUE;
+    guint i;
 
     /* Read the header */
     switch (ID3V2_VER_MAJOR (work->hdr.version)) {
@@ -467,6 +475,22 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     if (frame_size > work->hdr.frame_data_size || strcmp (frame_id, "") == 0)
       break;                    /* No more frames to read */
 
+    /* Sanitize frame id */
+    switch (ID3V2_VER_MAJOR (work->hdr.version)) {
+      case 0:
+      case 1:
+      case 2:
+        for (i = 0; i < 3; i++) {
+          if (!g_ascii_isalnum (frame_id[i]))
+            frame_id[i] = '_';
+        }
+        break;
+      default:
+        for (i = 0; i < 4; i++) {
+          if (!g_ascii_isalnum (frame_id[i]))
+            frame_id[i] = '_';
+        }
+    }
 #if 1
     GST_LOG
         ("Frame @ %ld (0x%02lx) id %s size %u, next=%ld (0x%02lx) obsolete=%d",
