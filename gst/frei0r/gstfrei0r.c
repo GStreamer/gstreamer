@@ -635,13 +635,14 @@ plugin_init (GstPlugin * plugin)
   const gchar *homedir;
   gchar *path;
   GHashTable *plugin_names;
+  const gchar *frei0r_path;
 
   GST_DEBUG_CATEGORY_INIT (frei0r_debug, "frei0r", 0, "frei0r");
 
   gst_controller_init (NULL, NULL);
 
   gst_plugin_add_dependency_simple (plugin,
-      "HOME/.frei0r-1/lib",
+      "FREI0R_PATH:HOME/.frei0r-1/lib",
       "/usr/lib/frei0r-1:/usr/local/lib/frei0r-1:"
       "/usr/lib32/frei0r-1:/usr/local/lib32/frei0r-1:"
       "/usr/lib64/frei0r-1:/usr/local/lib64/frei0r-1",
@@ -651,17 +652,28 @@ plugin_init (GstPlugin * plugin)
       g_hash_table_new_full ((GHashFunc) g_str_hash, (GEqualFunc) g_str_equal,
       (GDestroyNotify) g_free, NULL);
 
-  homedir = g_get_home_dir ();
-  path = g_build_filename (homedir, ".frei0r-1", NULL);
-  register_plugins (plugin, plugin_names, path);
-  g_free (path);
+  frei0r_path = g_getenv ("FREI0R_PATH");
+  if (frei0r_path && *frei0r_path) {
+    gchar **p, **paths = g_strsplit (frei0r_path, ":", -1);
 
-  register_plugins (plugin, plugin_names, "/usr/local/lib/frei0r-1");
-  register_plugins (plugin, plugin_names, "/usr/lib/frei0r-1");
-  register_plugins (plugin, plugin_names, "/usr/local/lib32/frei0r-1");
-  register_plugins (plugin, plugin_names, "/usr/lib32/frei0r-1");
-  register_plugins (plugin, plugin_names, "/usr/local/lib64/frei0r-1");
-  register_plugins (plugin, plugin_names, "/usr/lib64/frei0r-1");
+    for (p = paths; *p; p++) {
+      register_plugins (plugin, plugin_names, *p);
+    }
+
+    g_strfreev (paths);
+  } else {
+    homedir = g_get_home_dir ();
+    path = g_build_filename (homedir, ".frei0r-1", NULL);
+    register_plugins (plugin, plugin_names, path);
+    g_free (path);
+
+    register_plugins (plugin, plugin_names, "/usr/local/lib/frei0r-1");
+    register_plugins (plugin, plugin_names, "/usr/lib/frei0r-1");
+    register_plugins (plugin, plugin_names, "/usr/local/lib32/frei0r-1");
+    register_plugins (plugin, plugin_names, "/usr/lib32/frei0r-1");
+    register_plugins (plugin, plugin_names, "/usr/local/lib64/frei0r-1");
+    register_plugins (plugin, plugin_names, "/usr/lib64/frei0r-1");
+  }
 
   g_hash_table_unref (plugin_names);
 
