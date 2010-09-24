@@ -131,6 +131,7 @@ struct _RTPSource {
   gboolean      internal;
   gboolean      is_csrc;
   gboolean      is_sender;
+  gboolean      closing;
 
   GstStructure  *sdes;
 

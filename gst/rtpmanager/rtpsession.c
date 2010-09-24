@@ -2360,7 +2360,7 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 }
 
 /* perform cleanup of sources that timed out */
-static gboolean
+static void
 session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 {
   gboolean remove = FALSE;
@@ -2428,7 +2428,8 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     if (sendertimeout)
       on_sender_timeout (sess, source);
   }
-  return remove;
+
+  source->closing = remove;
 }
 
 static void
@@ -2556,6 +2557,18 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   return result;
 }
 
+static void
+clone_ssrcs_hashtable (gchar * key, RTPSource * source, GHashTable * hash_table)
+{
+  g_hash_table_insert (hash_table, key, g_object_ref (source));
+}
+
+static gboolean
+remove_closing_sources (const gchar * key, RTPSource * source, gpointer * data)
+{
+  return source->closing;
+}
+
 /**
  * rtp_session_on_timeout:
  * @sess: an #RTPSession
@@ -2581,6 +2594,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   GstFlowReturn result = GST_FLOW_OK;
   ReportData data;
   RTPSource *own;
+  GHashTable *table_copy;
   gboolean notify = FALSE;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
@@ -2602,9 +2616,21 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* get a new interval, we need this for various cleanups etc */
   data.interval = calculate_rtcp_interval (sess, TRUE, sess->first_rtcp);
 
-  /* first perform cleanups */
+  /* Make a local copy of the hashtable. We need to do this because the
+   * cleanup stage below releases the session lock. */
+  table_copy = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) g_object_unref);
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) clone_ssrcs_hashtable, table_copy);
+
+  /* Clean up the session, mark the source for removing, this might release the
+   * session lock. */
+  g_hash_table_foreach (table_copy, (GHFunc) session_cleanup, &data);
+  g_hash_table_destroy (table_copy);
+
+  /* Now remove the marked sources */
   g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
-      (GHRFunc) session_cleanup, &data);
+      (GHRFunc) remove_closing_sources, NULL);
 
   /* see if we need to generate SR or RR packets */
   if (is_rtcp_time (sess, current_time, &data)) {

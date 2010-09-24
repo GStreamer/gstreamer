@@ -158,6 +158,7 @@ rtp_source_init (RTPSource * src)
   src->validated = FALSE;
   src->internal = FALSE;
   src->probation = RTP_DEFAULT_PROBATION;
+  src->closing = FALSE;
 
   src->sdes = gst_structure_new ("application/x-rtp-source-sdes", NULL);
 
