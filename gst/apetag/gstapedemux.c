@@ -197,9 +197,15 @@ ape_demux_parse_tags (const guint8 * data, gint size)
     if (size - n < len)
       break;
 
+    /* If the tag is empty, skip to the next one */
+    if (len == 0)
+      goto next_tag;
+
     /* read */
     tag = g_strndup ((gchar *) data + 8, n - 9);
     val = g_strndup ((gchar *) data + n, len);
+
+    GST_LOG ("tag [%s], val[%s]", tag, val);
 
     /* special-case 'media' tag, could be e.g. "CD 1/2" */
     if (g_ascii_strcasecmp (tag, "media") == 0) {
@@ -314,6 +320,7 @@ ape_demux_parse_tags (const guint8 * data, gint size)
     g_free (val);
 
     /* move data pointer */
+  next_tag:
     size -= len + n;
     data += len + n;
   }
