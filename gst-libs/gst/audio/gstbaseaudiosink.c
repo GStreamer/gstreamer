@@ -616,7 +616,9 @@ gst_base_audio_sink_get_slave_method (GstBaseAudioSink * sink)
  * @sink: a #GstBaseAudioSink
  * @drift_tolerance: the new drift tolerance in microseconds
  *
- * Controls the sink's drift tolerance. 
+ * Controls the sink's drift tolerance.
+ *
+ * Since: 0.10.31
  */
 void
 gst_base_audio_sink_set_drift_tolerance (GstBaseAudioSink * sink,
@@ -636,6 +638,8 @@ gst_base_audio_sink_set_drift_tolerance (GstBaseAudioSink * sink,
  * Get the current drift tolerance, in microseconds, used by @sink.
  *
  * Returns: The current drift tolerance used by @sink.
+ *
+ * Since: 0.10.31
  */
 gint64
 gst_base_audio_sink_get_drift_tolerance (GstBaseAudioSink * sink)
