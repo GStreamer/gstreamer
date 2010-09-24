@@ -47,19 +47,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_mux_debug
 
-enum
-{
-  LAST_SIGNAL
-};
-
-
 static GstStaticPadTemplate priority_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("priority_sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp"));
-
-// static guint gst_rtpdtmfmux_signals[LAST_SIGNAL] = { 0 };
 
 static GstPad *gst_rtp_dtmf_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
