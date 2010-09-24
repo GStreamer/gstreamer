@@ -51,6 +51,29 @@ void print_pattern_list (void);
 
 gboolean thumbnail_cb (gpointer pipeline);
 
+static gchar *
+ensure_uri (gchar * location)
+{
+  gchar *res;
+  gchar *path;
+
+  if (gst_uri_is_valid (location))
+    return g_strdup (location);
+
+  if (!g_path_is_absolute (location)) {
+    gchar *cur_dir;
+    cur_dir = g_get_current_dir ();
+    path = g_build_filename (cur_dir, location, NULL);
+    g_free (cur_dir);
+  } else
+    path = g_strdup (location);
+
+  res = g_filename_to_uri (path, NULL, NULL);
+  g_free (path);
+
+  return res;
+}
+
 gboolean
 thumbnail_cb (gpointer pipeline)
 {
@@ -167,10 +190,9 @@ make_encoding_profile (gchar * audio, gchar * video, gchar * video_restriction,
   return profile;
 }
 
-static GESTimelinePipeline *
+static GESTimeline *
 create_timeline (int nbargs, gchar ** argv)
 {
-  GESTimelinePipeline *pipeline;
   GESTimelineLayer *layer;
   GESTrack *tracka, *trackv;
   GESTimeline *timeline;
@@ -243,7 +265,10 @@ create_timeline (int nbargs, gchar ** argv)
       if (!check_path (source))
         g_error ("'%s': could not open path!", source);
 
-      uri = g_strdup_printf ("file://%s", source);
+      if (!(uri = ensure_uri (source))) {
+        GST_ERROR ("couldn't create uri for '%'s", source);
+        exit (-1);
+      }
       inpoint = str_to_time (argv[i * 3 + 1]);
 
       obj = GES_TIMELINE_OBJECT (ges_timeline_filesource_new (uri));
@@ -265,8 +290,55 @@ create_timeline (int nbargs, gchar ** argv)
     ges_timeline_layer_add_object (layer, obj);
   }
 
+  return timeline;
+}
+
+static GESTimelinePipeline *
+create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv)
+{
+  GESTimelinePipeline *pipeline;
+  GESTimeline *timeline;
+
+  g_printf ("save_path: %s\n", save_path);
+  g_printf ("load_path: %s\n", load_path);
+
+  if (load_path) {
+    gchar *uri;
+    g_printf ("got here\n");
+
+    if (!(uri = ensure_uri (load_path))) {
+      GST_ERROR ("couldn't create uri for '%s'", load_path);
+      exit (-1);
+    }
+    g_printf ("reading from '%s' (arguments ignored)\n", load_path);
+    if (!(timeline = ges_timeline_new_from_uri (uri))) {
+      GST_ERROR ("failed to create timeline from file '%s'", load_path);
+      exit (-1);
+    }
+    g_printf ("loaded project %p\n", timeline);
+    g_free (uri);
+  } else {
+
+    timeline = create_timeline (argc, argv);
+
+    /* save project if path is given. we do this now in case GES crashes or
+     * hangs during playback. */
+
+    if (save_path) {
+      gchar *uri;
+      if (!(uri = ensure_uri (save_path))) {
+        GST_ERROR ("couldn't create uri for '%s", save_path);
+        exit (-1);
+      }
+      ges_timeline_save_to_uri (timeline, uri);
+      g_free (uri);
+    }
+
+  }
+
   /* In order to view our timeline, let's grab a convenience pipeline to put
    * our timeline in. */
+
   pipeline = ges_timeline_pipeline_new ();
 
   /* Add the timeline to that pipeline */
@@ -373,6 +445,8 @@ main (int argc, gchar ** argv)
   static gboolean list_transitions = FALSE;
   static gboolean list_patterns = FALSE;
   static gdouble thumbinterval = 0;
+  gchar *save_path = NULL;
+  gchar *load_path = NULL;
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
         "Take thumbnails every n seconds (saved in current directory)", "N"},
@@ -396,6 +470,10 @@ main (int argc, gchar ** argv)
         "List valid transition types and exit", NULL},
     {"list-patterns", 'p', 0, G_OPTION_ARG_NONE, &list_patterns,
         "List patterns and exit", NULL},
+    {"save", 'z', 0, G_OPTION_ARG_STRING, &save_path,
+        "Save project to file before rendering", "<path>"},
+    {"load", 'q', 0, G_OPTION_ARG_STRING, &load_path,
+        "Load project from file before rendering", "<path>"},
     {NULL}
   };
   GOptionContext *ctx;
@@ -435,7 +513,7 @@ main (int argc, gchar ** argv)
     exit (0);
   }
 
-  if ((argc < 4) || (outputuri && (!render && !smartrender))) {
+  if (((!load_path && (argc < 4))) || (outputuri && (!render && !smartrender))) {
     g_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     exit (1);
@@ -446,7 +524,7 @@ main (int argc, gchar ** argv)
   ges_init ();
 
   /* Create the pipeline */
-  pipeline = create_timeline (argc - 1, argv + 1);
+  pipeline = create_pipeline (load_path, save_path, argc - 1, argv + 1);
   if (!pipeline)
     exit (1);
 
