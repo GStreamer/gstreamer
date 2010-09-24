@@ -85,11 +85,9 @@ gst_rtp_dtmf_mux_base_init (gpointer g_class)
 static void
 gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstRTPMuxClass *gstrtpmux_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstrtpmux_class = (GstRTPMuxClass *) klass;
 
