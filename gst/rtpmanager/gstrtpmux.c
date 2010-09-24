@@ -416,12 +416,11 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   GstEvent *newseg_event = NULL;
   gboolean drop;
 
-  rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
+  rtp_mux = GST_RTP_MUX (GST_OBJECT_PARENT (pad));
 
   if (!gst_rtp_buffer_validate (buffer)) {
     gst_buffer_unref (buffer);
     GST_ERROR_OBJECT (rtp_mux, "Invalid RTP buffer");
-    gst_object_unref (rtp_mux);
     return GST_FLOW_ERROR;
   }
 
@@ -430,9 +429,8 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   if (!padpriv) {
     GST_OBJECT_UNLOCK (rtp_mux);
-    ret = GST_FLOW_NOT_LINKED;
     gst_buffer_unref (buffer);
-    goto out;
+    return GST_FLOW_NOT_LINKED;
   }
 
   buffer = gst_buffer_make_writable (buffer);
@@ -460,9 +458,6 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_pad_push (rtp_mux->srcpad, buffer);
   }
 
-out:
-
-  gst_object_unref (rtp_mux);
   return ret;
 }
 
