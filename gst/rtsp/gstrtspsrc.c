@@ -4588,8 +4588,8 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
   if (*transports != NULL)
     return GST_RTSP_OK;
 
-  /* it's the default but some servers need it */
-  add_udp_str = TRUE;
+  /* it's the default */
+  add_udp_str = FALSE;
 
   /* the default RTSP transports */
   result = g_string_new ("");
