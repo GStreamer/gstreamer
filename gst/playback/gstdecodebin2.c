@@ -3000,6 +3000,12 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
   GList *l;
   GstCaps *caps;
 
+  if (G_UNLIKELY ((chain->endpad || chain->deadend)
+          && (chain->endcaps == NULL))) {
+    GST_WARNING ("End chain without valid caps !");
+    return NULL;
+  }
+
   u = gst_structure_id_empty_new (topology_structure_name);
 
   /* Now at the last element */
@@ -3021,10 +3027,12 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     g_value_init (&item, GST_TYPE_STRUCTURE);
     for (l = chain->active_group->children; l; l = l->next) {
       s = gst_decode_chain_get_topology (l->data);
-      gst_value_set_structure (&item, s);
-      gst_value_list_append_value (&list, &item);
-      g_value_reset (&item);
-      gst_structure_free (s);
+      if (s) {
+        gst_value_set_structure (&item, s);
+        gst_value_list_append_value (&list, &item);
+        g_value_reset (&item);
+        gst_structure_free (s);
+      }
     }
     gst_structure_id_set_value (u, topology_next, &list);
     g_value_unset (&list);
