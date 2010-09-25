@@ -2485,23 +2485,13 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
         GST_LOG_OBJECT (parse, "upstream handled %d, seekable %d",
             res, seekable);
         if (!(res && seekable)) {
-          /* TODO maybe also check upstream provides proper duration ? */
-          seekable = TRUE;
           if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &duration)
               || duration == -1) {
             seekable = FALSE;
           } else {
-            GstQuery *q;
-
-            q = gst_query_new_seeking (GST_FORMAT_BYTES);
-            if (!gst_pad_peer_query (parse->sinkpad, q)) {
-              seekable = FALSE;
-            } else {
-              gst_query_parse_seeking (q, &fmt, &seekable, NULL, NULL);
-            }
-            GST_LOG_OBJECT (parse, "upstream BYTE handled %d, seekable %d",
-                res, seekable);
-            gst_query_unref (q);
+            seekable = parse->priv->upstream_seekable;
+            GST_LOG_OBJECT (parse, "already determine upstream seekabled: %d",
+                seekable);
           }
           gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
           res = TRUE;
