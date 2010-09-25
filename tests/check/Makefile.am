@@ -155,7 +155,7 @@ check_PROGRAMS = \
 	$(check_orc) \
         pipelines/tagschecking
 
-noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
+noinst_HEADERS = elements/mxfdemux.h
 
 TESTS = $(check_PROGRAMS)
 
@@ -189,6 +189,14 @@ elements_rtpmux_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstrtp-0.10
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.10
+
+# parser unit test convenience lib
+noinst_LTLIBRARIES = libparser.la
+libparser_la_SOURCES = elements/parser.c
+
+elements_aacparse_LDADD = libparser.la $(LDADD)
+
+elements_amrparse_LDADD = libparser.la $(LDADD)
 
 EXTRA_DIST = gst-plugins-bad.supp
 

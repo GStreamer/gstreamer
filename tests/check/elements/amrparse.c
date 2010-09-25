@@ -24,7 +24,7 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include "amrparse_data.h"
+#include "parser.h"
 
 #define SRC_CAPS_NB  "audio/x-amr-nb-sh"
 #define SRC_CAPS_WB  "audio/x-amr-wb-sh"
@@ -36,14 +36,6 @@
 
 #define AMR_FRAME_DURATION (GST_SECOND/50)
 
-GList *current_buf = NULL;
-
-GstPad *srcpad, *sinkpad;
-guint dataoffset = 0;
-GstClockTime ts_counter = 0;
-gint64 offset_counter = 0;
-guint buffer_counter = 0;
-
 static GstStaticPadTemplate sinktemplate_nb = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -54,12 +46,6 @@ static GstStaticPadTemplate sinktemplate_wb = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (SINK_CAPS_WB)
-    );
-
-static GstStaticPadTemplate sinktemplate_any = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (SINK_CAPS_ANY)
     );
 
 static GstStaticPadTemplate srctemplate_nb = GST_STATIC_PAD_TEMPLATE ("src",
@@ -74,555 +60,193 @@ static GstStaticPadTemplate srctemplate_wb = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SRC_CAPS_WB)
     );
 
-static GstStaticPadTemplate srctemplate_any = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (SRC_CAPS_ANY)
-    );
 
-typedef struct
-{
-  guint buffers_before_offset_skip;
-  guint offset_skip_amount;
-} buffer_verify_data_s;
+/* some data */
 
-/*
- * Create a GstBuffer of the given data and set the caps, if not NULL.
- */
-static GstBuffer *
-buffer_new (const unsigned char *buffer_data, guint size,
-    const gchar * caps_str)
-{
-  GstBuffer *buffer;
-  GstCaps *caps;
+static guint8 frame_data_nb[] = {
+  0x0c, 0x56, 0x3c, 0x52, 0xe0, 0x61, 0xbc, 0x45,
+  0x0f, 0x98, 0x2e, 0x01, 0x42, 0x02
+};
 
-  buffer = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (buffer), buffer_data, size);
-  if (caps_str) {
-    caps = gst_caps_from_string (caps_str);
-    gst_buffer_set_caps (buffer, caps);
-    gst_caps_unref (caps);
-  }
-  GST_BUFFER_OFFSET (buffer) = dataoffset;
-  dataoffset += size;
-  return buffer;
-}
+static guint8 frame_data_wb[] = {
+  0x08, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+  0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+  0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16
+};
+
+static guint8 frame_hdr_nb[] = {
+  '#', '!', 'A', 'M', 'R', '\n'
+};
+
+static guint8 frame_hdr_wb[] = {
+  '#', '!', 'A', 'M', 'R', '-', 'W', 'B', '\n'
+};
+
+static guint8 garbage_frame[] = {
+  0xff, 0xff, 0xff, 0xff, 0xff
+};
 
 
-/*
- * Unrefs given buffer.
- */
-static void
-buffer_unref (void *buffer, void *user_data)
-{
-  gst_buffer_unref (GST_BUFFER (buffer));
-}
-
-
-/*
- * Verify that given buffer contains predefined AMR-NB frame.
- */
-static void
-buffer_verify_nb (void *buffer, void *user_data)
-{
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), frame_data_nb,
-          FRAME_DATA_NB_LEN) == 0);
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
-  fail_unless (GST_BUFFER_DURATION (buffer) == AMR_FRAME_DURATION);
-  ts_counter += AMR_FRAME_DURATION;
-
-  if (user_data) {
-    buffer_verify_data_s *vdata = (buffer_verify_data_s *) user_data;
-
-    /* This is for skipping the garbage in some test cases */
-    if (buffer_counter == vdata->buffers_before_offset_skip) {
-      offset_counter += vdata->offset_skip_amount;
-    }
-  }
-  fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
-  offset_counter += FRAME_DATA_NB_LEN;
-  buffer_counter++;
-}
-
-
-/*
- * Verify that given buffer contains predefined AMR-WB frame.
- */
-static void
-buffer_verify_wb (void *buffer, void *user_data)
-{
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), frame_data_wb,
-          FRAME_DATA_WB_LEN) == 0);
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
-  fail_unless (GST_BUFFER_DURATION (buffer) == AMR_FRAME_DURATION);
-
-  if (user_data) {
-    buffer_verify_data_s *vdata = (buffer_verify_data_s *) user_data;
-
-    /* This is for skipping the garbage in some test cases */
-    if (buffer_counter == vdata->buffers_before_offset_skip) {
-      offset_counter += vdata->offset_skip_amount;
-    }
-  }
-  fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
-  offset_counter += FRAME_DATA_WB_LEN;
-  ts_counter += AMR_FRAME_DURATION;
-  buffer_counter++;
-}
-
-/*
- * Create a parser and pads according to given templates.
- */
-static GstElement *
-setup_amrparse (GstStaticPadTemplate * srctemplate,
-    GstStaticPadTemplate * sinktemplate)
-{
-  GstElement *amrparse;
-  GstBus *bus;
-
-  GST_DEBUG ("setup_amrparse");
-  amrparse = gst_check_setup_element ("amrparse");
-  srcpad = gst_check_setup_src_pad (amrparse, srctemplate, NULL);
-  sinkpad = gst_check_setup_sink_pad (amrparse, sinktemplate, NULL);
-  gst_pad_set_active (srcpad, TRUE);
-  gst_pad_set_active (sinkpad, TRUE);
-
-  bus = gst_bus_new ();
-  gst_element_set_bus (amrparse, bus);
-
-  fail_unless (gst_element_set_state (amrparse,
-          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
-      "could not set to playing");
-
-  ts_counter = offset_counter = buffer_counter = 0;
-  buffers = NULL;
-  return amrparse;
-}
-
-
-/*
- * Delete parser and all related resources.
- */
-static void
-cleanup_amrparse (GstElement * amrparse)
-{
-  GstBus *bus;
-
-  /* free parsed buffers */
-  g_list_foreach (buffers, buffer_unref, NULL);
-  g_list_free (buffers);
-  buffers = NULL;
-
-  bus = GST_ELEMENT_BUS (amrparse);
-  gst_bus_set_flushing (bus, TRUE);
-  gst_object_unref (bus);
-
-  GST_DEBUG ("cleanup_amrparse");
-  gst_pad_set_active (srcpad, FALSE);
-  gst_pad_set_active (sinkpad, FALSE);
-  gst_check_teardown_src_pad (amrparse);
-  gst_check_teardown_sink_pad (amrparse);
-  gst_check_teardown_element (amrparse);
-  srcpad = NULL;
-  sinkpad = NULL;
-}
-
-
-/*
- * Test if NB parser manages to find all frames and pushes them forward.
- */
 GST_START_TEST (test_parse_nb_normal)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_nb, &sinktemplate_nb);
-
-  /* Push the header */
-  buffer = buffer_new (frame_hdr_nb, FRAME_HDR_NB_LEN, SRC_CAPS_NB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  offset_counter = FRAME_HDR_NB_LEN;
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_nb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_normal (frame_data_nb, sizeof (frame_data_nb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if NB parser drains its buffers properly. Even one single buffer
- * should be drained and pushed forward when EOS occurs. This single buffer
- * case is special, since normally the parser needs more data to be sure
- * about stream format. But it should still push the frame forward in EOS.
- */
 GST_START_TEST (test_parse_nb_drain_single)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-
-  amrparse = setup_amrparse (&srctemplate_nb, &sinktemplate_nb);
-
-  buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  g_list_foreach (buffers, buffer_verify_nb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_drain_single (frame_data_nb, sizeof (frame_data_nb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Make sure that parser does not drain garbage when EOS occurs.
- */
 GST_START_TEST (test_parse_nb_drain_garbage)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_nb, &sinktemplate_nb);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* Now push one garbage frame and then EOS */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN, SRC_CAPS_NB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* parser should have pushed only the valid frames */
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_nb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_drain_garbage (frame_data_nb, sizeof (frame_data_nb),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if NB parser splits a buffer that contains two frames into two
- * separate buffers properly.
- */
 GST_START_TEST (test_parse_nb_split)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_nb, &sinktemplate_nb);
-
-  for (i = 0; i < 10; i++) {
-    /* Put two frames in one buffer */
-    buffer = buffer_new (frame_data_nb, 2 * FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-    memcpy (GST_BUFFER_DATA (buffer) + FRAME_DATA_NB_LEN,
-        frame_data_nb, FRAME_DATA_NB_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 20);
-
-  /* Does output buffers contain correct frame data? */
-  g_list_foreach (buffers, buffer_verify_nb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_split (frame_data_nb, sizeof (frame_data_nb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if NB parser detects the format correctly.
- */
-GST_START_TEST (test_parse_nb_detect_stream)
-{
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  GstCaps *caps, *mycaps;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_any, &sinktemplate_any);
-
-  /* Push the header */
-  buffer = buffer_new (frame_hdr_nb, FRAME_HDR_NB_LEN, NULL);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, NULL);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  caps = GST_PAD_CAPS (sinkpad);
-  mycaps = gst_caps_from_string (SINK_CAPS_NB);
-  fail_unless (gst_caps_is_equal (caps, mycaps));
-  gst_caps_unref (mycaps);
-
-  cleanup_amrparse (amrparse);
-}
-
-GST_END_TEST;
-
-
-/*
- * Test if NB parser skips garbage in the datastream correctly and still
- * finds all correct frames.
- */
 GST_START_TEST (test_parse_nb_skip_garbage)
 {
-  buffer_verify_data_s vdata = { 5, GARBAGE_FRAME_LEN };
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_nb, &sinktemplate_nb);
-
-  /* First push 5 healthy frames */
-  for (i = 0; i < 5; i++) {
-    buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* Then push some garbage */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN, SRC_CAPS_NB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  /* Again, healthy frames */
-  for (i = 0; i < 5; i++) {
-    buffer = buffer_new (frame_data_nb, FRAME_DATA_NB_LEN, SRC_CAPS_NB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* Did it find all 10 healthy frames? */
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_nb, &vdata);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_skip_garbage (frame_data_nb, sizeof (frame_data_nb),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if WB parser manages to find all frames and pushes them forward.
- */
+GST_START_TEST (test_parse_nb_detect_stream)
+{
+  GstParserTest ptest;
+  GstCaps *old_ctx_caps;
+
+  /* no input caps, override ctx */
+  old_ctx_caps = ctx_input_caps;
+  ctx_input_caps = NULL;
+
+  /* AMR-NB header */
+  gst_parser_test_init (&ptest, frame_hdr_nb, sizeof (frame_hdr_nb), 1);
+  /* well, no garbage, followed by real data */
+  ptest.series[2].data = frame_data_nb;
+  ptest.series[2].size = sizeof (frame_data_nb);
+  ptest.series[2].num = 10;
+  /* header gets dropped, so ... */
+  /* buffer count will not match */
+  ptest.framed = FALSE;
+  /* total size a bit less */
+  ptest.dropped = sizeof (frame_hdr_nb);
+
+  /* Check that the negotiated caps are as expected */
+  ptest.sink_caps = gst_caps_from_string (SINK_CAPS_NB);
+
+  gst_parser_test_run (&ptest, NULL);
+
+  gst_caps_unref (ptest.sink_caps);
+
+  ctx_input_caps = old_ctx_caps;
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_parse_wb_normal)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_wb, &sinktemplate_wb);
-
-  /* Push the header */
-  buffer = buffer_new (frame_hdr_wb, FRAME_HDR_WB_LEN, SRC_CAPS_WB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  offset_counter = FRAME_HDR_WB_LEN;
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_wb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_normal (frame_data_wb, sizeof (frame_data_wb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if WB parser drains its buffers properly. Even one single buffer
- * should be drained and pushed forward when EOS occurs. This single buffer
- * case is special, since normally the parser needs more data to be sure
- * about stream format. But it should still push the frame forward in EOS.
- */
 GST_START_TEST (test_parse_wb_drain_single)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-
-  amrparse = setup_amrparse (&srctemplate_wb, &sinktemplate_wb);
-
-  buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  g_list_foreach (buffers, buffer_verify_wb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_drain_single (frame_data_wb, sizeof (frame_data_wb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Make sure that parser does not drain garbage when EOS occurs.
- */
 GST_START_TEST (test_parse_wb_drain_garbage)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_wb, &sinktemplate_wb);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* Now push one garbage frame and then EOS */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN, SRC_CAPS_WB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* parser should have pushed only the valid frames */
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_wb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_drain_garbage (frame_data_wb, sizeof (frame_data_wb),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if WB parser splits a buffer that contains two frames into two
- * separate buffers properly.
- */
 GST_START_TEST (test_parse_wb_split)
 {
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_wb, &sinktemplate_wb);
-
-  for (i = 0; i < 10; i++) {
-    /* Put two frames in one buffer */
-    buffer = buffer_new (frame_data_wb, 2 * FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-    memcpy (GST_BUFFER_DATA (buffer) + FRAME_DATA_WB_LEN,
-        frame_data_wb, FRAME_DATA_WB_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 20);
-
-  /* Does output buffers contain correct frame data? */
-  g_list_foreach (buffers, buffer_verify_wb, NULL);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_split (frame_data_wb, sizeof (frame_data_wb));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if WB parser detects the format correctly.
- */
-GST_START_TEST (test_parse_wb_detect_stream)
-{
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  GstCaps *caps, *mycaps;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_any, &sinktemplate_any);
-
-  /* Push the header */
-  buffer = buffer_new (frame_hdr_wb, FRAME_HDR_WB_LEN, NULL);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, NULL);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  caps = GST_PAD_CAPS (sinkpad);
-  mycaps = gst_caps_from_string (SINK_CAPS_WB);
-  fail_unless (gst_caps_is_equal (caps, mycaps));
-  gst_caps_unref (mycaps);
-
-  cleanup_amrparse (amrparse);
-}
-
-GST_END_TEST;
-
-
-/*
- * Test if WB parser skips garbage in the datastream correctly and still
- * finds all correct frames.
- */
 GST_START_TEST (test_parse_wb_skip_garbage)
 {
-  buffer_verify_data_s vdata = { 5, GARBAGE_FRAME_LEN };
-  GstElement *amrparse;
-  GstBuffer *buffer;
-  guint i;
-
-  amrparse = setup_amrparse (&srctemplate_wb, &sinktemplate_wb);
-
-  /* First push 5 healthy frames */
-  for (i = 0; i < 5; i++) {
-    buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* Then push some garbage */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN, SRC_CAPS_WB);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  /* Again, healthy frames */
-  for (i = 0; i < 5; i++) {
-    buffer = buffer_new (frame_data_wb, FRAME_DATA_WB_LEN, SRC_CAPS_WB);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* Did it find all 10 healthy frames? */
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_wb, &vdata);
-
-  cleanup_amrparse (amrparse);
+  gst_parser_test_skip_garbage (frame_data_wb, sizeof (frame_data_wb),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_parse_wb_detect_stream)
+{
+  GstParserTest ptest;
+  GstCaps *old_ctx_caps;
+
+  /* no input caps, override ctx */
+  old_ctx_caps = ctx_input_caps;
+  ctx_input_caps = NULL;
+
+  /* AMR-WB header */
+  gst_parser_test_init (&ptest, frame_hdr_wb, sizeof (frame_hdr_wb), 1);
+  /* well, no garbage, followed by real data */
+  ptest.series[2].data = frame_data_wb;
+  ptest.series[2].size = sizeof (frame_data_wb);
+  ptest.series[2].num = 10;
+  /* header gets dropped, so ... */
+  /* buffer count will not match */
+  ptest.framed = FALSE;
+  /* total size a bit less */
+  ptest.dropped = sizeof (frame_hdr_wb);
+
+  /* Check that the negotiated caps are as expected */
+  ptest.sink_caps = gst_caps_from_string (SINK_CAPS_WB);
+
+  gst_parser_test_run (&ptest, NULL);
+
+  gst_caps_unref (ptest.sink_caps);
+
+  ctx_input_caps = old_ctx_caps;
+}
+
+GST_END_TEST;
+
 
 
 /*
  * Create test suite.
  */
 static Suite *
-amrparse_suite (void)
+amrnb_parse_suite (void)
 {
-  Suite *s = suite_create ("amrparse");
+  Suite *s = suite_create ("amrwb_parse");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -634,6 +258,16 @@ amrparse_suite (void)
   tcase_add_test (tc_chain, test_parse_nb_detect_stream);
   tcase_add_test (tc_chain, test_parse_nb_skip_garbage);
 
+  return s;
+}
+
+static Suite *
+amrwb_parse_suite (void)
+{
+  Suite *s = suite_create ("amrnb_parse");
+  TCase *tc_chain = tcase_create ("general");
+
+  suite_add_tcase (s, tc_chain);
   /* AMR-WB tests */
   tcase_add_test (tc_chain, test_parse_wb_normal);
   tcase_add_test (tc_chain, test_parse_wb_drain_single);
@@ -641,6 +275,7 @@ amrparse_suite (void)
   tcase_add_test (tc_chain, test_parse_wb_split);
   tcase_add_test (tc_chain, test_parse_wb_detect_stream);
   tcase_add_test (tc_chain, test_parse_wb_skip_garbage);
+
   return s;
 }
 
@@ -650,4 +285,43 @@ amrparse_suite (void)
  *      * Pull-mode & EOS
  */
 
-GST_CHECK_MAIN (amrparse);
+int
+main (int argc, char **argv)
+{
+  int nf;
+  GstCaps *caps;
+
+  Suite *s = amrnb_parse_suite ();
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  /* init test context */
+  ctx_factory = "amrparse";
+  ctx_sink_template = &sinktemplate_nb;
+  ctx_src_template = &srctemplate_nb;
+  caps = gst_caps_from_string (SRC_CAPS_NB);
+  g_assert (caps);
+  ctx_input_caps = caps;
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+  gst_caps_unref (caps);
+
+  s = amrwb_parse_suite ();
+  sr = srunner_create (s);
+
+  ctx_sink_template = &sinktemplate_wb;
+  ctx_src_template = &srctemplate_wb;
+  caps = gst_caps_from_string (SRC_CAPS_WB);
+  g_assert (caps);
+  ctx_input_caps = caps;
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf += srunner_ntests_failed (sr);
+  srunner_free (sr);
+  gst_caps_unref (caps);
+
+  return nf;
+}
