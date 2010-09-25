@@ -25,6 +25,7 @@
 #include "gstamrparse.h"
 #include "gstac3parse.h"
 #include "gstflacparse.h"
+#include "gstmpegaudioparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -39,6 +40,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY + 1, GST_TYPE_AC3_PARSE);
   ret &= gst_element_register (plugin, "flacparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_FLAC_PARSE);
+  ret &= gst_element_register (plugin, "mpegaudioparse",
+      GST_RANK_PRIMARY + 2, GST_TYPE_MPEG_AUDIO_PARSE);
 
   return ret;
 }
