@@ -140,6 +140,8 @@ create_fingerprint (GstOFA * ofa)
       GST_TAG_OFA_FINGERPRINT, ofa->fingerprint, NULL);
   gst_element_found_tags (GST_ELEMENT (ofa), tags);
 
+  g_object_notify (G_OBJECT (ofa), "fingerprint");
+
   ofa->record = FALSE;
 }
 
