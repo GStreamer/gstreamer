@@ -843,7 +843,7 @@ gst_base_sink_set_async_enabled (GstBaseSink * sink, gboolean enabled)
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
   GST_PAD_PREROLL_LOCK (sink->sinkpad);
-  sink->priv->async_enabled = enabled;
+  g_atomic_int_set (&sink->priv->async_enabled, enabled);
   GST_LOG_OBJECT (sink, "set async enabled to %d", enabled);
   GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
 }
@@ -867,9 +867,7 @@ gst_base_sink_is_async_enabled (GstBaseSink * sink)
 
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
 
-  GST_PAD_PREROLL_LOCK (sink->sinkpad);
-  res = sink->priv->async_enabled;
-  GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
+  res = g_atomic_int_get (&sink->priv->async_enabled);
 
   return res;
 }
@@ -1281,7 +1279,7 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_PREROLL_QUEUE_LEN:
       /* preroll lock necessary to serialize with finish_preroll */
       GST_PAD_PREROLL_LOCK (sink->sinkpad);
-      sink->preroll_queue_max_len = g_value_get_uint (value);
+      g_atomic_int_set (&sink->preroll_queue_max_len, g_value_get_uint (value));
       GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
       break;
     case PROP_SYNC:
@@ -1322,9 +1320,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_PREROLL_QUEUE_LEN:
-      GST_PAD_PREROLL_LOCK (sink->sinkpad);
-      g_value_set_uint (value, sink->preroll_queue_max_len);
-      GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
+      g_value_set_uint (value, g_atomic_int_get (&sink->preroll_queue_max_len));
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, gst_base_sink_get_sync (sink));
