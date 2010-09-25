@@ -173,8 +173,6 @@ gst_aacparse_class_init (GstAacParseClass * klass)
 static void
 gst_aacparse_init (GstAacParse * aacparse, GstAacParseClass * klass)
 {
-  /* init rest */
-  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
   GST_DEBUG ("initialized");
 }
 
@@ -665,6 +663,7 @@ gst_aacparse_start (GstBaseParse * parse)
   aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("start");
   aacparse->src_caps_set = FALSE;
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
   gst_base_parse_set_passthrough (parse, FALSE);
   return TRUE;
 }
