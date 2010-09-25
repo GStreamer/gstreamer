@@ -24,7 +24,7 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include "aacparse_data.h"
+#include "parser.h"
 
 #define SRC_CAPS_CDATA "audio/mpeg, framed=(boolean)false, codec_data=(buffer)1190"
 #define SRC_CAPS_TMPL  "audio/mpeg, framed=(boolean)false, mpegversion=(int){2,4}"
@@ -37,163 +37,36 @@
     "audio/mpeg, framed=(boolean)true, mpegversion=4, rate=96000, channels=2"
 #define SINK_CAPS_TMPL  "audio/mpeg, framed=(boolean)true, mpegversion=(int){2,4}"
 
-GList *current_buf = NULL;
-
-GstPad *srcpad, *sinkpad;
-guint dataoffset = 0;
-GstClockTime ts_counter = 0;
-gint64 offset_counter = 0;
-guint buffer_counter = 0;
-
-static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (SINK_CAPS_TMPL)
     );
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (SRC_CAPS_TMPL)
     );
 
-typedef struct
-{
-  guint buffers_before_offset_skip;
-  guint offset_skip_amount;
-  const unsigned char *data_to_verify;
-  GstCaps *caps;
-} buffer_verify_data_s;
+/* some data */
+static guint8 adif_header[] = {
+  'A', 'D', 'I', 'F'
+};
 
-/* takes a copy of the passed buffer data */
-static GstBuffer *
-buffer_new (const unsigned char *buffer_data, guint size)
-{
-  GstBuffer *buffer;
+static guint8 adts_frame_mpeg2[] = {
+  0xff, 0xf9, 0x4c, 0x80, 0x01, 0xff, 0xfc, 0x21, 0x10, 0xd3, 0x20, 0x0c,
+  0x32, 0x00, 0xc7
+};
 
-  buffer = gst_buffer_new_and_alloc (size);
-  if (buffer_data) {
-    memcpy (GST_BUFFER_DATA (buffer), buffer_data, size);
-  } else {
-    guint i;
-    /* Create a recognizable pattern (loop 0x00 -> 0xff) in the data block */
-    for (i = 0; i < size; i++) {
-      GST_BUFFER_DATA (buffer)[i] = i % 0x100;
-    }
-  }
+static guint8 adts_frame_mpeg4[] = {
+  0xff, 0xf1, 0x4c, 0x80, 0x01, 0xff, 0xfc, 0x21, 0x10, 0xd3, 0x20, 0x0c,
+  0x32, 0x00, 0xc7
+};
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (srcpad));
-  GST_BUFFER_OFFSET (buffer) = dataoffset;
-  dataoffset += size;
-  return buffer;
-}
-
-
-/*
- * Count buffer sizes together.
- */
-static void
-buffer_count_size (void *buffer, void *user_data)
-{
-  guint *sum = (guint *) user_data;
-  *sum += GST_BUFFER_SIZE (buffer);
-}
-
-
-/*
- * Verify that given buffer contains predefined ADTS frame.
- */
-static void
-buffer_verify_adts (void *buffer, void *user_data)
-{
-  buffer_verify_data_s *vdata;
-
-  if (!user_data) {
-    return;
-  }
-
-  vdata = (buffer_verify_data_s *) user_data;
-
-  fail_unless (memcmp (GST_BUFFER_DATA (buffer), vdata->data_to_verify,
-          ADTS_FRAME_LEN) == 0);
-
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
-  fail_unless (GST_BUFFER_DURATION (buffer) != 0);
-
-  if (vdata->buffers_before_offset_skip) {
-    /* This is for skipping the garbage in some test cases */
-    if (buffer_counter == vdata->buffers_before_offset_skip) {
-      offset_counter += vdata->offset_skip_amount;
-    }
-  }
-  fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
-
-  if (vdata->caps) {
-    gchar *bcaps = gst_caps_to_string (GST_BUFFER_CAPS (buffer));
-    g_free (bcaps);
-
-    GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?",
-        GST_BUFFER_CAPS (buffer), vdata->caps);
-    fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (buffer), vdata->caps));
-  }
-
-  ts_counter += GST_BUFFER_DURATION (buffer);
-  offset_counter += ADTS_FRAME_LEN;
-  buffer_counter++;
-}
-
-static GstElement *
-setup_aacparse (const gchar * src_caps_str)
-{
-  GstElement *aacparse;
-  GstCaps *srccaps = NULL;
-  GstBus *bus;
-
-  if (src_caps_str) {
-    srccaps = gst_caps_from_string (src_caps_str);
-    fail_unless (srccaps != NULL);
-  }
-
-  aacparse = gst_check_setup_element ("aacparse");
-  srcpad = gst_check_setup_src_pad (aacparse, &srctemplate, srccaps);
-  sinkpad = gst_check_setup_sink_pad (aacparse, &sinktemplate, NULL);
-  gst_pad_set_active (srcpad, TRUE);
-  gst_pad_set_active (sinkpad, TRUE);
-
-  bus = gst_bus_new ();
-  gst_element_set_bus (aacparse, bus);
-
-  fail_unless (gst_element_set_state (aacparse,
-          GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE,
-      "could not set to playing");
-
-  if (srccaps) {
-    gst_caps_unref (srccaps);
-  }
-  ts_counter = offset_counter = buffer_counter = 0;
-  buffers = NULL;
-  return aacparse;
-}
-
-static void
-cleanup_aacparse (GstElement * aacparse)
-{
-  GstBus *bus;
-
-  /* Free parsed buffers */
-  gst_check_drop_buffers ();
-
-  bus = GST_ELEMENT_BUS (aacparse);
-  gst_bus_set_flushing (bus, TRUE);
-  gst_object_unref (bus);
-
-  gst_pad_set_active (srcpad, FALSE);
-  gst_pad_set_active (sinkpad, FALSE);
-  gst_check_teardown_src_pad (aacparse);
-  gst_check_teardown_sink_pad (aacparse);
-  gst_check_teardown_element (aacparse);
-}
-
+static guint8 garbage_frame[] = {
+  0xff, 0xff, 0xff, 0xff, 0xff
+};
 
 /*
  * Test if the parser pushes data with ADIF header properly and detects the
@@ -201,194 +74,65 @@ cleanup_aacparse (GstElement * aacparse)
  */
 GST_START_TEST (test_parse_adif_normal)
 {
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  GstCaps *scaps, *sinkcaps;
-  guint datasum = 0;
-  guint i;
+  GstParserTest ptest;
 
-  aacparse = setup_aacparse (NULL);
-
-  buffer = buffer_new (adif_header, ADIF_HEADER_LEN);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  for (i = 0; i < 3; i++) {
-    buffer = buffer_new (NULL, 100);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* Calculate the outputted buffer sizes */
-  g_list_foreach (buffers, buffer_count_size, &datasum);
-
-  /* ADIF is not a framed format, and therefore we cannot expect the
-     same amount of output buffers as we pushed. However, all data should
-     still come through, including the header bytes */
-  fail_unless_equals_int (datasum, 3 * 100 + ADIF_HEADER_LEN);
-
+  /* ADIF header */
+  gst_parser_test_init (&ptest, adif_header, sizeof (adif_header), 1);
+  /* well, no garbage, followed by random data */
+  ptest.series[2].size = 100;
+  ptest.series[2].num = 3;
+  /* and we do not really expect output frames */
+  ptest.framed = FALSE;
   /* Check that the negotiated caps are as expected */
   /* For ADIF parser assumes that data is always version 4 */
-  scaps = gst_caps_from_string (SINK_CAPS_MPEG4 ", stream-format=(string)adif");
-  sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
+  ptest.sink_caps =
+      gst_caps_from_string (SINK_CAPS_MPEG4 ", stream-format=(string)adif");
 
-  GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?", sinkcaps, scaps);
-  fail_unless (gst_caps_is_equal (sinkcaps, scaps));
-  gst_caps_unref (sinkcaps);
-  gst_caps_unref (scaps);
+  gst_parser_test_run (&ptest, NULL);
 
-  cleanup_aacparse (aacparse);
+  gst_caps_unref (ptest.sink_caps);
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if the parser pushes data with ADTS frames properly.
- */
 GST_START_TEST (test_parse_adts_normal)
 {
-  buffer_verify_data_s vdata = { 0, 0, adts_frame_mpeg4, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  guint i;
-
-  aacparse = setup_aacparse (NULL);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  cleanup_aacparse (aacparse);
+  gst_parser_test_normal (adts_frame_mpeg4, sizeof (adts_frame_mpeg4));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if ADTS parser drains its buffers properly. Even one single frame
- * should be drained and pushed forward when EOS occurs. This single frame
- * case is special, since normally the parser needs more data to be sure
- * about stream format. But it should still push the frame forward in EOS.
- */
 GST_START_TEST (test_parse_adts_drain_single)
 {
-  buffer_verify_data_s vdata = { 0, 0, adts_frame_mpeg4, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-
-  aacparse = setup_aacparse (NULL);
-
-  buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  cleanup_aacparse (aacparse);
+  gst_parser_test_drain_single (adts_frame_mpeg4, sizeof (adts_frame_mpeg4));
 }
 
 GST_END_TEST;
 
 
-/*
- * Make sure that parser does not drain garbage when EOS occurs.
- */
 GST_START_TEST (test_parse_adts_drain_garbage)
 {
-  buffer_verify_data_s vdata = { 0, 0, adts_frame_mpeg4, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  guint i;
-
-  aacparse = setup_aacparse (NULL);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* Push one garbage frame and then EOS */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  cleanup_aacparse (aacparse);
+  gst_parser_test_drain_garbage (adts_frame_mpeg4, sizeof (adts_frame_mpeg4),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if ADTS parser splits a buffer that contains two frames into two
- * separate buffers properly.
- */
 GST_START_TEST (test_parse_adts_split)
 {
-  buffer_verify_data_s vdata = { 0, 0, adts_frame_mpeg4, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  guint i;
-
-  aacparse = setup_aacparse (NULL);
-
-  for (i = 0; i < 5; i++) {
-    buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN * 2);
-    memcpy (GST_BUFFER_DATA (buffer) + ADTS_FRAME_LEN,
-        adts_frame_mpeg4, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  cleanup_aacparse (aacparse);
+  gst_parser_test_split (adts_frame_mpeg4, sizeof (adts_frame_mpeg4));
 }
 
 GST_END_TEST;
 
 
-/*
- * Test if the ADTS parser skips garbage between frames properly.
- */
 GST_START_TEST (test_parse_adts_skip_garbage)
 {
-  buffer_verify_data_s vdata =
-      { 10, GARBAGE_FRAME_LEN, adts_frame_mpeg4, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  guint i;
-
-  aacparse = setup_aacparse (NULL);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-
-  /* push garbage */
-  buffer = buffer_new (garbage_frame, GARBAGE_FRAME_LEN);
-  fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-
-  for (i = 0; i < 10; i++) {
-    buffer = buffer_new (adts_frame_mpeg4, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  fail_unless_equals_int (g_list_length (buffers), 20);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  cleanup_aacparse (aacparse);
+  gst_parser_test_skip_garbage (adts_frame_mpeg4, sizeof (adts_frame_mpeg4),
+      garbage_frame, sizeof (garbage_frame));
 }
 
 GST_END_TEST;
@@ -399,36 +143,8 @@ GST_END_TEST;
  */
 GST_START_TEST (test_parse_adts_detect_mpeg_version)
 {
-  buffer_verify_data_s vdata = { 0, 0, adts_frame_mpeg2, NULL };
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  GstCaps *sinkcaps;
-  guint i;
-
-  aacparse = setup_aacparse (NULL);
-
-  /* buffer_verify_adts will check if the caps are equal */
-  vdata.caps = gst_caps_from_string (SINK_CAPS_MPEG2
-      ", stream-format=(string)adts");
-
-  for (i = 0; i < 10; i++) {
-    /* Push MPEG version 2 frames. */
-    buffer = buffer_new (adts_frame_mpeg2, ADTS_FRAME_LEN);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
-
-  /* Check that the negotiated caps are as expected */
-  sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
-  GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT "?", sinkcaps, vdata.caps);
-  fail_unless (gst_caps_is_equal (sinkcaps, vdata.caps));
-  gst_caps_unref (sinkcaps);
-
-  fail_unless_equals_int (g_list_length (buffers), 10);
-  g_list_foreach (buffers, buffer_verify_adts, &vdata);
-
-  gst_caps_unref (vdata.caps);
-  cleanup_aacparse (aacparse);
+  gst_parser_test_output_caps (adts_frame_mpeg2, sizeof (adts_frame_mpeg2),
+      NULL, SINK_CAPS_MPEG2 ", stream-format=(string)adts");
 }
 
 GST_END_TEST;
@@ -442,29 +158,19 @@ GST_END_TEST;
  */
 GST_START_TEST (test_parse_handle_codec_data)
 {
-  GstElement *aacparse;
-  GstBuffer *buffer;
-  GstCaps *sinkcaps;
+  GstCaps *caps;
   GstStructure *s;
-  guint datasum = 0;
-  guint i;
   const gchar *stream_format;
 
-  aacparse = setup_aacparse (SRC_CAPS_CDATA);
-
-  for (i = 0; i < 10; i++) {
-    /* Push random data. It should get through since the parser should be
-       initialized because it got codec_data in the caps */
-    buffer = buffer_new (NULL, 100);
-    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
-  }
-  gst_pad_push_event (srcpad, gst_event_new_eos ());
+  /* Push random data. It should get through since the parser should be
+   * initialized because it got codec_data in the caps */
+  caps = gst_parser_test_get_output_caps (NULL, 100, SRC_CAPS_CDATA);
+  fail_unless (caps != NULL);
 
   /* Check that the negotiated caps are as expected */
   /* When codec_data is present, parser assumes that data is version 4 */
-  sinkcaps = gst_pad_get_negotiated_caps (sinkpad);
-  GST_LOG ("aac output caps: %" GST_PTR_FORMAT, sinkcaps);
-  s = gst_caps_get_structure (sinkcaps, 0);
+  GST_LOG ("aac output caps: %" GST_PTR_FORMAT, caps);
+  s = gst_caps_get_structure (caps, 0);
   fail_unless (gst_structure_has_name (s, "audio/mpeg"));
   fail_unless_structure_field_int_equals (s, "mpegversion", 4);
   fail_unless_structure_field_int_equals (s, "channels", 2);
@@ -474,12 +180,7 @@ GST_START_TEST (test_parse_handle_codec_data)
   stream_format = gst_structure_get_string (s, "stream-format");
   fail_unless (strcmp (stream_format, "raw") == 0);
 
-  gst_caps_unref (sinkcaps);
-
-  g_list_foreach (buffers, buffer_count_size, &datasum);
-  fail_unless_equals_int (datasum, 10 * 100);
-
-  cleanup_aacparse (aacparse);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -516,4 +217,24 @@ aacparse_suite (void)
  *      * Pull-mode & EOS
  */
 
-GST_CHECK_MAIN (aacparse);
+int
+main (int argc, char **argv)
+{
+  int nf;
+
+  Suite *s = aacparse_suite ();
+  SRunner *sr = srunner_create (s);
+
+  gst_check_init (&argc, &argv);
+
+  /* init test context */
+  ctx_factory = "aacparse";
+  ctx_sink_template = &sinktemplate;
+  ctx_src_template = &srctemplate;
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
+}
