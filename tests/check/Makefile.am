@@ -133,6 +133,7 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	$(check_kate)  \
 	elements/aacparse \
+	elements/ac3parse \
 	elements/amrparse \
 	elements/autoconvert \
 	elements/asfmux \
@@ -146,6 +147,7 @@ check_PROGRAMS = \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
+	elements/mpegaudioparse \
 	pipelines/mxf \
 	$(check_metadata) \
 	$(check_mimic) \
@@ -196,7 +198,11 @@ libparser_la_SOURCES = elements/parser.c
 
 elements_aacparse_LDADD = libparser.la $(LDADD)
 
+elements_ac3parse_LDADD = libparser.la $(LDADD)
+
 elements_amrparse_LDADD = libparser.la $(LDADD)
+
+elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
 EXTRA_DIST = gst-plugins-bad.supp
 
