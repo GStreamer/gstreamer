@@ -303,7 +303,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_int ("speed-level", "Speed level",
           "Controls the amount of motion vector searching done while "
           "encoding.  This property requires libtheora version >= 1.0",
-          0, 2, THEORA_DEF_SPEEDLEVEL,
+          0, 3, THEORA_DEF_SPEEDLEVEL,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VP3_COMPATIBLE,
       g_param_spec_boolean ("vp3-compatible", "VP3 Compatible",
