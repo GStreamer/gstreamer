@@ -227,8 +227,8 @@ gst_frei0r_filter_init (GstFrei0rFilter * self, GstFrei0rFilterClass * klass)
 }
 
 GstFrei0rPluginRegisterReturn
-gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
-    const GstFrei0rFuncTable * ftable)
+gst_frei0r_filter_register (GstPlugin * plugin, const gchar * vendor,
+    const f0r_plugin_info_t * info, const GstFrei0rFuncTable * ftable)
 {
   GTypeInfo typeinfo = {
     sizeof (GstFrei0rFilterClass),
@@ -246,7 +246,10 @@ gst_frei0r_filter_register (GstPlugin * plugin, const f0r_plugin_info_t * info,
   GstFrei0rFilterClassData *class_data;
   GstFrei0rPluginRegisterReturn ret = GST_FREI0R_PLUGIN_REGISTER_RETURN_FAILED;
 
-  tmp = g_strdup_printf ("frei0r-filter-%s", info->name);
+  if (vendor)
+    tmp = g_strdup_printf ("frei0r-filter-%s-%s", vendor, info->name);
+  else
+    tmp = g_strdup_printf ("frei0r-filter-%s", info->name);
   type_name = g_ascii_strdown (tmp, -1);
   g_free (tmp);
   g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
