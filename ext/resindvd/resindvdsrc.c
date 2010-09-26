@@ -857,6 +857,25 @@ update_title_info (resinDvdSrc * src)
   }
 }
 
+/* we don't cache the result on purpose */
+static gboolean
+rsn_descrambler_available (void)
+{
+  GModule *module;
+  gpointer sym;
+  gsize res;
+
+  module = g_module_open ("libdvdcss", 0);
+  if (module != NULL) {
+    res = g_module_symbol (module, "dvdcss_open", &sym);
+    g_module_close (module);
+  } else {
+    res = FALSE;
+  }
+
+  return res;
+}
+
 static GstFlowReturn
 rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 {
@@ -1092,19 +1111,35 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
   }
 
   return ret;
+
+/* ERRORS */
 read_error:
-  GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-      ("Failed to read next DVD block. Error: %s",
-          dvdnav_err_to_string (src->dvdnav)));
-  return GST_FLOW_ERROR;
+  {
+    if (!rsn_descrambler_available ()) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ,
+          (_("Could not read DVD. This may be because the DVD is encrypted "
+                  "and a DVD decryption library is not installed.")),
+          ("Failed to read next DVD block. Error: %s",
+              dvdnav_err_to_string (src->dvdnav)));
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (_("Could not read DVD.")),
+          ("Failed to read next DVD block. Error: %s",
+              dvdnav_err_to_string (src->dvdnav)));
+    }
+    return GST_FLOW_ERROR;
+  }
 internal_error:
-  GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-      ("Internal error processing DVD commands. Error: %s",
-          dvdnav_err_to_string (src->dvdnav)));
-  return GST_FLOW_ERROR;
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (_("Could not read DVD.")),
+        ("Internal error processing DVD commands. Error: %s",
+            dvdnav_err_to_string (src->dvdnav)));
+    return GST_FLOW_ERROR;
+  }
 branching:
-  g_mutex_unlock (src->branch_lock);
-  return GST_FLOW_WRONG_STATE;
+  {
+    g_mutex_unlock (src->branch_lock);
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 /* Send app a bus message that the available commands have changed */
@@ -2334,7 +2369,7 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
       GST_LOG_OBJECT (src, "handling seek event");
 
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-      src->flushing_seek = !!(flags & GST_SEEK_FLAG_FLUSH);
+      src->flushing_seek = ! !(flags & GST_SEEK_FLAG_FLUSH);
       GST_DEBUG_OBJECT (src, "%s seek event",
           src->flushing_seek ? "flushing" : "non-flushing");
 
