@@ -885,6 +885,25 @@ block_read_error:
   }
 }
 
+/* we don't cache the result on purpose */
+static gboolean
+gst_dvd_read_descrambler_available (void)
+{
+  GModule *module;
+  gpointer sym;
+  gsize res;
+
+  module = g_module_open ("libdvdcss", 0);
+  if (module != NULL) {
+    res = g_module_symbol (module, "dvdcss_open", &sym);
+    g_module_close (module);
+  } else {
+    res = FALSE;
+  }
+
+  return res;
+}
+
 static GstFlowReturn
 gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
 {
@@ -928,7 +947,15 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
 
   switch (res) {
     case GST_DVD_READ_ERROR:{
-      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), (NULL));
+      /* FIXME: figure out a way to detect if scrambling is the problem */
+      if (!gst_dvd_read_descrambler_available ()) {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            (_("Could not read DVD. This may be because the DVD is encrypted "
+                    "and a DVD decryption library is not installed.")), (NULL));
+      } else {
+        GST_ELEMENT_ERROR (src, RESOURCE, READ, (_("Could not read DVD.")),
+            (NULL));
+      }
       return GST_FLOW_ERROR;
     }
     case GST_DVD_READ_EOS:{
