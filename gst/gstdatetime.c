@@ -21,8 +21,12 @@
 #include "config.h"
 #endif
 
+#include "glib-compat-private.h"
 #include "gst_private.h"
 #include "gstdatetime.h"
+#include <glib.h>
+
+#ifndef GLIB_HAS_GDATETIME
 
 /**
  * SECTION:gstdatetime
@@ -437,44 +441,6 @@ gst_date_time_new_now_local_time (void)
   return datetime;
 }
 
-/**
- * gst_date_time_ref:
- * @datetime: a #GstDateTime
- *
- * Atomically increments the reference count of @datetime by one.
- *
- * Return value: the reference @datetime
- *
- * Since: 0.10.31
- */
-GstDateTime *
-gst_date_time_ref (GstDateTime * datetime)
-{
-  g_return_val_if_fail (datetime != NULL, NULL);
-  g_return_val_if_fail (datetime->ref_count > 0, NULL);
-  g_atomic_int_inc (&datetime->ref_count);
-  return datetime;
-}
-
-/**
- * gst_date_time_unref:
- * @datetime: a #GstDateTime
- *
- * Atomically decrements the reference count of @datetime by one.  When the
- * reference count reaches zero, the structure is freed.
- *
- * Since: 0.10.31
- */
-void
-gst_date_time_unref (GstDateTime * datetime)
-{
-  g_return_if_fail (datetime != NULL);
-  g_return_if_fail (datetime->ref_count > 0);
-
-  if (g_atomic_int_dec_and_test (&datetime->ref_count))
-    gst_date_time_free (datetime);
-}
-
 static GstDateTime *
 gst_date_time_copy (const GstDateTime * dt)
 {
@@ -588,4 +554,180 @@ done:
   gst_date_time_unref (a);
   gst_date_time_unref (b);
   return res;
+}
+
+#else
+
+struct _GstDateTime
+{
+  GDateTime *datetime;
+
+  volatile gint ref_count;
+};
+
+static GstDateTime *
+gst_date_time_new_from_gdatetime (GDateTime * dt)
+{
+  GstDateTime *gst_dt;
+
+  if (!dt)
+    return NULL;
+
+  gst_dt = g_slice_new (GstDateTime);
+  gst_dt->datetime = dt;
+  gst_dt->ref_count = 1;
+  return gst_dt;
+}
+
+gint
+gst_date_time_get_year (const GstDateTime * datetime)
+{
+  return g_date_time_get_year (datetime->datetime);
+}
+
+gint
+gst_date_time_get_month (const GstDateTime * datetime)
+{
+  return g_date_time_get_month (datetime->datetime);
+}
+
+gint
+gst_date_time_get_day (const GstDateTime * datetime)
+{
+  return g_date_time_get_day_of_month (datetime->datetime);
+}
+
+gint
+gst_date_time_get_hour (const GstDateTime * datetime)
+{
+  return g_date_time_get_hour (datetime->datetime);
+}
+
+gint
+gst_date_time_get_minute (const GstDateTime * datetime)
+{
+  return g_date_time_get_minute (datetime->datetime);
+}
+
+gint
+gst_date_time_get_second (const GstDateTime * datetime)
+{
+  return g_date_time_get_second (datetime->datetime);
+}
+
+gint
+gst_date_time_get_microsecond (const GstDateTime * datetime)
+{
+  return g_date_time_get_microsecond (datetime->datetime);
+}
+
+gfloat
+gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
+{
+  return g_date_time_get_utc_offset (datetime->datetime) /
+      (G_USEC_PER_SEC * G_GINT64_CONSTANT (3600));
+}
+
+GstDateTime *
+gst_date_time_new_from_unix_epoch (gint64 secs)
+{
+  return
+      gst_date_time_new_from_gdatetime (g_date_time_new_from_unix_local (secs));
+}
+
+GstDateTime *
+gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
+    gint minute, gint second, gint microsecond)
+{
+  return gst_date_time_new_from_gdatetime (g_date_time_new_local (year, month,
+          day, hour, minute, second + (microsecond / 1000000.0)));
+}
+
+GstDateTime *
+gst_date_time_new_now_local_time (void)
+{
+  return gst_date_time_new_from_gdatetime (g_date_time_new_now_local ());
+}
+
+GstDateTime *
+gst_date_time_new_now_utc (void)
+{
+  return gst_date_time_new_from_gdatetime (g_date_time_new_now_utc ());
+}
+
+gint
+priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2)
+{
+  const GstDateTime *datetime1 = dt1;
+  const GstDateTime *datetime2 = dt2;
+  return g_date_time_compare (datetime1->datetime, datetime2->datetime);
+}
+
+GstDateTime *
+gst_date_time_new (gint year, gint month, gint day, gint hour, gint minute,
+    gint second, gint microsecond, gfloat tzoffset)
+{
+  gchar buf[6];
+  GTimeZone *tz;
+  GDateTime *dt;
+  gint tzhour, tzminute;
+
+  tzhour = (gint) ABS (tzoffset);
+  tzminute = (gint) ((ABS (tzoffset) - tzhour) * 60);
+
+  g_snprintf (buf, 6, "%c%02d%02d", tzoffset >= 0 ? '+' : '-', tzhour,
+      tzminute);
+
+  tz = g_time_zone_new (buf);
+  dt = g_date_time_new (tz, year, month, day, hour, minute,
+      second + (microsecond / 1000000.0));
+  g_time_zone_unref (tz);
+  return gst_date_time_new_from_gdatetime (dt);
+}
+
+static void
+gst_date_time_free (GstDateTime * datetime)
+{
+  g_date_time_unref (datetime->datetime);
+  g_slice_free (GstDateTime, datetime);
+}
+
+#endif
+
+/**
+ * gst_date_time_ref:
+ * @datetime: a #GstDateTime
+ *
+ * Atomically increments the reference count of @datetime by one.
+ *
+ * Return value: the reference @datetime
+ *
+ * Since: 0.10.31
+ */
+GstDateTime *
+gst_date_time_ref (GstDateTime * datetime)
+{
+  g_return_val_if_fail (datetime != NULL, NULL);
+  g_return_val_if_fail (datetime->ref_count > 0, NULL);
+  g_atomic_int_inc (&datetime->ref_count);
+  return datetime;
+}
+
+/**
+ * gst_date_time_unref:
+ * @datetime: a #GstDateTime
+ *
+ * Atomically decrements the reference count of @datetime by one.  When the
+ * reference count reaches zero, the structure is freed.
+ *
+ * Since: 0.10.31
+ */
+void
+gst_date_time_unref (GstDateTime * datetime)
+{
+  g_return_if_fail (datetime != NULL);
+  g_return_if_fail (datetime->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&datetime->ref_count))
+    gst_date_time_free (datetime);
 }
