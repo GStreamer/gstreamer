@@ -43,6 +43,24 @@
  * </refsect2>
  */
 
+#define GST_CAT_DEFAULT gst_tag_ensure_debug_category()
+
+static GstDebugCategory *
+gst_tag_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    gsize cat_done;
+
+    cat_done = (gsize) _gst_debug_category_new ("tag-tags", 0,
+        "GstTag helper functions");
+
+    g_once_init_leave (&cat_gonce, cat_done);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
 
 static gpointer
 gst_tag_register_tags_internal (gpointer unused)
