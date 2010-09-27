@@ -2066,7 +2066,7 @@ GST_START_TEST (test_date_time)
   str = NULL;
 
   /* with timezone */
-  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, -3 * 60);
+  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, -3.0);
 
   s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
       GST_TYPE_DATE_TIME, datetime, NULL);
@@ -2108,8 +2108,7 @@ GST_START_TEST (test_date_time)
   fail_unless (gst_date_time_get_minute (datetime) == 40);
   fail_unless (gst_date_time_get_second (datetime) == 10);
   fail_unless (gst_date_time_get_microsecond (datetime) == 1);
-  fail_unless (gst_date_time_get_time_zone_offset (datetime) ==
-      ((gint64) - 3 * 60));
+  fail_unless (gst_date_time_get_time_zone_offset (datetime) == -3);
   gst_date_time_unref (datetime);
   datetime = NULL;
 
@@ -2123,7 +2122,7 @@ GST_START_TEST (test_date_time)
   str = NULL;
 
   /* with positive timezone */
-  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, 2 * 60);
+  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, 2);
 
   s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
       GST_TYPE_DATE_TIME, datetime, NULL);
@@ -2165,8 +2164,7 @@ GST_START_TEST (test_date_time)
   fail_unless (gst_date_time_get_minute (datetime) == 40);
   fail_unless (gst_date_time_get_second (datetime) == 10);
   fail_unless (gst_date_time_get_microsecond (datetime) == 1);
-  fail_unless (gst_date_time_get_time_zone_offset (datetime) ==
-      ((gint64) 2 * 60));
+  fail_unless (gst_date_time_get_time_zone_offset (datetime) == 2);
   gst_date_time_unref (datetime);
   datetime = NULL;
 

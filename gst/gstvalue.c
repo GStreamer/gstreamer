@@ -4375,21 +4375,24 @@ gst_value_compare_date_time (const GValue * value1, const GValue * value2)
 static gchar *
 gst_value_serialize_date_time (const GValue * val)
 {
-  const GstDateTime *date = (const GstDateTime *) g_value_get_boxed (val);
+  GstDateTime *date = (GstDateTime *) g_value_get_boxed (val);
   gint offset;
+  gint tzhour, tzminute;
 
   if (date == NULL)
     return g_strdup ("null");
 
   offset = gst_date_time_get_time_zone_offset (date);
 
+  tzhour = (gint) ABS (offset);
+  tzminute = (gint) ((ABS (offset) - tzhour) * 60);
+
   return g_strdup_printf ("\"%04d-%02d-%02dT%02d:%02d:%02d.%06d"
       "%c%02d%02d\"", gst_date_time_get_year (date),
       gst_date_time_get_month (date), gst_date_time_get_day (date),
       gst_date_time_get_hour (date), gst_date_time_get_minute (date),
       gst_date_time_get_second (date), gst_date_time_get_microsecond (date),
-      offset >= 0 ? '+' : '-', (gint) ABS (offset) / 60,
-      (gint) ABS (offset) % 60);
+      offset >= 0 ? '+' : '-', tzhour, tzminute);
 }
 
 static gboolean
@@ -4398,6 +4401,7 @@ gst_value_deserialize_date_time (GValue * dest, const gchar * s)
   gint year, month, day, hour, minute, second, usecond;
   gchar signal;
   gint offset = 0;
+  gfloat tzoffset = 0;
   gint ret;
 
   if (!s || strcmp (s, "null") == 0) {
@@ -4407,14 +4411,14 @@ gst_value_deserialize_date_time (GValue * dest, const gchar * s)
   ret = sscanf (s, "%04d-%02d-%02dT%02d:%02d:%02d.%06d%c%04d",
       &year, &month, &day, &hour, &minute, &second, &usecond, &signal, &offset);
   if (ret >= 9) {
-    offset = (offset / 100) * 60 + (offset % 100);
+    tzoffset = (offset / 100) + ((offset % 100) / 60.0);
     if (signal == '-')
-      offset = -offset;
+      tzoffset = -tzoffset;
   } else
     return FALSE;
 
   g_value_take_boxed (dest, gst_date_time_new (year, month, day, hour,
-          minute, second, usecond, offset));
+          minute, second, usecond, tzoffset));
   return TRUE;
 }
 
