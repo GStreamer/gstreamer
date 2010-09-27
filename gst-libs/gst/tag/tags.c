@@ -322,7 +322,7 @@ gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
  * variables (whose names are specified in the NULL-terminated string array
  * @env_vars) containing a list of character encodings to try/use. If none
  * are specified, the current locale will be tried. If that also doesn't work,
- * ISO-8859-1 is assumed (which will almost always succeed).
+ * WINDOWS-1252/ISO-8859-1 is assumed (which will almost always succeed).
  *
  * Returns: a newly-allocated string in UTF-8 encoding, or NULL
  *
@@ -442,11 +442,27 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
     }
   }
 
-  /* Try Windows-1252 */
-  GST_LOG ("Trying to convert freeform string using Windows-1252 fallback");
-  utf8 = g_convert (data, size, "UTF-8", "Windows-1252", &bytes_read, NULL, NULL);
-  if (utf8 != NULL && bytes_read == size) {
-    goto beach;
+  /* Try Windows-1252 (which is a superset of ISO 8859-1 that uses a control
+   * character range in ISO 8859-1 for more printable characters) */
+  {
+    GError *err = NULL;
+
+    GST_LOG ("Trying to convert freeform string using Windows-1252/ISO-8859-1 "
+        "fallback");
+    utf8 = g_convert (data, size, "UTF-8", "WINDOWS-1252", &bytes_read, NULL,
+        &err);
+    if (err != NULL) {
+      /* fallback in case iconv implementation doesn't support windows-1252
+       * for some reason */
+      if (err->code == G_CONVERT_ERROR_NO_CONVERSION) {
+        utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read,
+            NULL, NULL);
+      }
+      g_error_free (err);
+    }
+
+    if (utf8 != NULL && bytes_read == size)
+      goto beach;
   }
 
   g_free (utf8);
