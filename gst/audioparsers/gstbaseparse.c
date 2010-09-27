@@ -89,11 +89,16 @@
  *     <listitem><para>
  *       After valid frame is found, it will be passed again to subclass with
  *       @parse_frame call. Now subclass is responsible for parsing the
- *       frame contents and setting the buffer timestamp, duration and caps.
+ *       frame contents and setting the caps, buffer timestamp and duration
+ *       (although the latter can also be done by GstBaseParse if it is
+ *       appropriately configured, see below).
  *     </para></listitem>
  *     <listitem><para>
  *       Finally the buffer can be pushed downstream and parsing loop starts
- *       over again.
+ *       over again.  Just prior to actually pushing the buffer in question,
+ *       it is passed to @pre_push_buffer which gives subclass yet one
+ *       last chance to examine buffer metadata, or to send some custom (tag)
+ *       events, or to perform custom (segment) filtering.
  *     </para></listitem>
  *     <listitem><para>
  *       During the parsing process GstBaseParseClass will handle both srcpad and
@@ -122,8 +127,8 @@
  * GST_FORMAT_TIME to GST_FORMAT_DEFAULT must return the
  * frame number that can be found from the given byte position.
  *
- * GstBaseParse uses subclasses conversion methods also for seeking. If
- * subclass doesn't provide @convert function, seeking will get disabled.
+ * GstBaseParse uses subclasses conversion methods also for seeking (or otherwise
+ * uses its own default one, see also below).
  *
  * Subclass @start and @stop functions will be called to inform the beginning
  * and end of data processing.
@@ -151,34 +156,31 @@
  *      Update the duration information with @gst_base_parse_set_duration
  *   </para></listitem>
  *   <listitem><para>
- *      Alternatively, parsing (or specs) might yield a frames per seconds rate
- *      which can be provided to GstBaseParse to enable it to cater for
+ *      Optionally passthrough using @gst_base_parse_set_passthrough
+ *   </para></listitem>
+ *   <listitem><para>
+ *      Configure various baseparse parameters using @gst_base_parse_set_seek and
+ *      @gst_base_parse_set_frame_props.
+ *   </para></listitem>
+ *   <listitem><para>
+ *      In particular, if subclass is unable to determine a duration, but
+ *      parsing (or specs) yields a frames per seconds rate, then this can be
+ *      provided to GstBaseParse to enable it to cater for
  *      buffer time metadata (which will be taken from upstream as much as possible).
- *      Internally keeping track of frames and respective
- *      sizes that have been pushed provides GstBaseParse with a bytes per frame
- *      rate.  A default @convert (used if not overriden) will then use these
+ *      Internally keeping track of frame durations and respective
+ *      sizes that have been pushed provides GstBaseParse with an estimated bitrate.
+ *      A default @convert (used if not overriden) will then use these
  *      rates to perform obvious conversions.  These rates are also used to update
  *      (estimated) duration at regular frame intervals.
- *      If no (fixed) frames per second rate applies, default conversion will be
- *      based on (estimated) bytes per second (but no default buffer metadata
- *      can be provided in this case).
  *   </para></listitem>
  * </itemizedlist>
  *
  */
 
 /* TODO:
- *  - Better segment handling:
- *    - NEWSEGMENT for gaps
- *    - Not NEWSEGMENT starting at 0 but at first frame timestamp
- *  - GstIndex support
- *  - Seek table generation and subclass seek entry injection
- *  - Accurate seeking
  *  - In push mode provide a queue of adapter-"queued" buffers for upstream
  *    buffer metadata
  *  - Queue buffers/events until caps are set
- *  - Let subclass decide if frames outside the segment should be dropped
- *  - Send queries upstream
  */
 
 #ifdef HAVE_CONFIG_H
@@ -1865,8 +1867,6 @@ gst_base_parse_loop (GstPad * pad)
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  /* TODO: Check if we reach segment stop limit */
 
   while (TRUE) {
 
