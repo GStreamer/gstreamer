@@ -930,6 +930,7 @@ static GstElement *
 construct_playerbin (const gchar * name, const gchar * location)
 {
   GstElement *player;
+  GstElement *avsink;
 
   player = gst_element_factory_make (name, "player");
   g_assert (player);
@@ -940,6 +941,14 @@ construct_playerbin (const gchar * name, const gchar * location)
 
   /* force element seeking on this pipeline */
   elem_seek = TRUE;
+
+  avsink = gst_element_factory_make_or_warn (opt_audiosink_str, "a_sink");
+  if (avsink)
+    g_object_set (player, "audio-sink", avsink, NULL);
+
+  avsink = gst_element_factory_make_or_warn (opt_videosink_str, "v_sink");
+  if (avsink)
+    g_object_set (player, "video-sink", avsink, NULL);
 
   return player;
 }
