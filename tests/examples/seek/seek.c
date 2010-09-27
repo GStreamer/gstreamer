@@ -35,6 +35,10 @@
 #ifdef HAVE_X
 #include <gdk/gdkx.h>
 #endif
+#ifdef G_OS_WIN32
+#include <gdk/gdkwin32.h>
+#endif
+
 #include <gst/interfaces/xoverlay.h>
 
 #if (!GTK_CHECK_VERSION(2, 23, 0) || GTK_CHECK_VERSION(2, 90, 0)) && !GTK_CHECK_VERSION(2, 91, 1)
@@ -57,17 +61,26 @@ gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
 
 /* configuration */
 
-//#define SOURCE "filesrc"
-#define SOURCE "gnomevfssrc"
+#define SOURCE "filesrc"
 
-#define ASINK "alsasink"
+#define ASINK DEFAULT_AUDIOSINK
+//#define ASINK "pulsesink"
+//#define ASINK "alsasink"
 //#define ASINK "osssink"
+//#define ASINK "directsoundsink"
 
+#ifdef G_OS_WIN32
+#define VSINK "directdrawsink"
+#else
 #define VSINK "xvimagesink"
+#endif
 //#define VSINK "sdlvideosink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
 //#define VSINK "cacasink"
+//#define VSINK "dshowvideosink"
+//#define VSINK "sdlvideosink"
+//#define VSINK "glimagesink"
 
 #define FILL_INTERVAL 100
 //#define UPDATE_INTERVAL 500
@@ -2424,7 +2437,7 @@ msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
-#ifdef HAVE_X
+#if defined (HAVE_X) || defined (G_OS_WIN32)
 
 static gulong embed_xid = 0;
 
@@ -2492,11 +2505,15 @@ realize_cb (GtkWidget * widget, gpointer data)
   }
 #endif
 
-#ifdef HAVE_X
+#if defined (HAVE_X) || defined (G_OS_WIN32)
   {
     GdkWindow *window = gtk_widget_get_window (video_window);
 
+#ifdef G_OS_WIN32
+    embed_xid = GDK_WINDOW_HWND (window);
+#else
     embed_xid = GDK_WINDOW_XID (window);
+#endif
     g_print ("Window realize: video window XID = %lu\n", embed_xid);
   }
 #endif
