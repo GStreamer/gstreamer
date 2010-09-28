@@ -121,7 +121,7 @@ gst_valve_class_init (GstValveClass * klass)
       g_param_spec_boolean ("drop",
           "Drops all buffers if TRUE",
           "If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
