@@ -341,8 +341,6 @@ gst_measure_collector_class_init (GstMeasureCollectorClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "measurecollect", 0,
       "measurement collector");
 
