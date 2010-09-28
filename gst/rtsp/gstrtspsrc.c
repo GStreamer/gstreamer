@@ -6167,7 +6167,7 @@ static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
   static const gchar *protocols[] =
-      { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp" };
+      { "rtsp", "rtspu", "rtspt", "rtsph", "rtsp-sdp", NULL };
 
   return (gchar **) protocols;
 }
