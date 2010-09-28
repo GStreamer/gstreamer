@@ -152,13 +152,13 @@ gst_valve_set_property (GObject * object,
   GstValve *valve = GST_VALVE (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
     case ARG_DROP:
       GST_OBJECT_LOCK (object);
       valve->drop = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (object);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -170,13 +170,13 @@ gst_valve_get_property (GObject * object,
   GstValve *valve = GST_VALVE (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
     case ARG_DROP:
       GST_OBJECT_LOCK (object);
       g_value_set_boolean (value, valve->drop);
       GST_OBJECT_UNLOCK (object);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
