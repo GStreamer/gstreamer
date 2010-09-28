@@ -122,8 +122,6 @@ gst_valve_class_init (GstValveClass * klass)
           "Drops all buffers if TRUE",
           "If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through",
           FALSE, G_PARAM_READWRITE));
-
-  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
