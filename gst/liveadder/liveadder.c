@@ -153,21 +153,7 @@ MAKE_FUNC_NC (add_float32, gfloat, gfloat)
 static void
 gst_live_adder_base_init (gpointer klass)
 {
-}
-
-static void
-gst_live_adder_class_init (GstLiveAdderClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  gobject_class->finalize = gst_live_adder_finalize;
-  gobject_class->set_property = gst_live_adder_set_property;
-  gobject_class->get_property = gst_live_adder_get_property;
-
-  gstelement_class = (GstElementClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_live_adder_src_template));
@@ -177,6 +163,17 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
       "Generic/Audio",
       "Mixes live/discontinuous audio streams",
       "Olivier Crete <olivier.crete@collabora.co.uk>");
+}
+
+static void
+gst_live_adder_class_init (GstLiveAdderClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+
+  gobject_class->finalize = gst_live_adder_finalize;
+  gobject_class->set_property = gst_live_adder_set_property;
+  gobject_class->get_property = gst_live_adder_get_property;
 
   parent_class = g_type_class_peek_parent (klass);
 
