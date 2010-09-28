@@ -180,6 +180,14 @@ fi
 AC_SUBST(GST_CONTROLLER_LIBS)
 AC_SUBST(GST_CONTROLLER_CFLAGS)
 
+dnl check for gstvideo
+PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_MAJORMINOR, HAVE_GST_VIDEO="yes", HAVE_GST_CONROLLER="no")
+if test "x$HAVE_GST_VIDEO" != "xyes"; then
+  AC_ERROR([gst-video is required for transition support])
+fi
+AC_SUBST(GST_VIDEO_LIBS)
+AC_SUBST(GST_VIDEO_CFLAGS)
+
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
