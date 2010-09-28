@@ -56,6 +56,7 @@ struct _GstZBar
 
   /* properties */
   gboolean message;
+  gboolean cache;
   
   /* internals */
   zbar_image_scanner_t *scanner;

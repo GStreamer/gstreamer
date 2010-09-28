@@ -102,6 +102,7 @@ enum
 {
   PROP_0,
   PROP_MESSAGE,
+  PROP_CACHE,
 };
 
 #define DEFAULT_PROP_ZBAR  1
@@ -170,6 +171,11 @@ gst_zbar_class_init (GstZBarClass * g_class)
           "Post a barcode message for each detected code",
           TRUE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_CACHE,
+      g_param_spec_boolean ("cache", "cache",
+          "Enable or disable the inter-image result cache",
+          TRUE, G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_zbar_start);
@@ -179,6 +185,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
 static void
 gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
 {
+  zbar->cache = TRUE;
   zbar->message = TRUE;
 
   zbar->scanner = zbar_image_scanner_create ();
@@ -204,6 +211,9 @@ gst_zbar_set_property (GObject * object, guint prop_id, const GValue * value,
   zbar = GST_ZBAR (object);
 
   switch (prop_id) {
+    case PROP_CACHE:
+      zbar->cache = g_value_get_boolean (value);
+      break;
     case PROP_MESSAGE:
       zbar->message = g_value_get_boolean (value);
       break;
@@ -223,6 +233,9 @@ gst_zbar_get_property (GObject * object, guint prop_id, GValue * value,
   zbar = GST_ZBAR (object);
 
   switch (prop_id) {
+    case PROP_CACHE:
+      g_value_set_boolean (value, zbar->cache);
+      break;
     case PROP_MESSAGE:
       g_value_set_boolean (value, zbar->message);
       break;
@@ -274,6 +287,8 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   /* scan the image for barcodes */
   n = zbar_scan_image (zbar->scanner, image);
+  if (n == 0)
+    goto out;
 
   /* extract results */
   symbol = zbar_image_first_symbol (image);
@@ -285,7 +300,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     GST_DEBUG_OBJECT (zbar, "decoded %s symbol \"%s\" at quality %d",
         zbar_get_symbol_name (typ), data, quality);
 
-    if (zbar_symbol_get_count (symbol) != 0)
+    if (zbar->cache && zbar_symbol_get_count (symbol) != 0)
       continue;
 
     if (zbar->message) {
@@ -302,7 +317,9 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     }
   }
 
+out:
   /* clean up */
+  zbar_image_scanner_recycle_image (zbar->scanner, image);
   zbar_image_destroy (image);
 
 done:
@@ -316,8 +333,8 @@ gst_zbar_start (GstBaseTransform * base)
 {
   GstZBar *zbar = GST_ZBAR (base);
 
-  /* start the cache (e.g. for filtering dupes) */
-  zbar_image_scanner_enable_cache (zbar->scanner, TRUE);
+  /* start the cache if enabled (e.g. for filtering dupes) */
+  zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);
 
   return TRUE;
 }
@@ -327,8 +344,8 @@ gst_zbar_stop (GstBaseTransform * base)
 {
   GstZBar *zbar = GST_ZBAR (base);
 
-  /* stop the cache (e.g. for filtering dupes) */
-  zbar_image_scanner_enable_cache (zbar->scanner, FALSE);
+  /* stop the cache if enabled (e.g. for filtering dupes) */
+  zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);
 
   return TRUE;
 }
