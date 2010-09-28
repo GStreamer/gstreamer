@@ -416,7 +416,7 @@ gst_x_overlay_got_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
 {
   GST_WARNING_OBJECT (overlay,
       "Using deprecated gst_x_overlay_got_xwindow_id()");
-  gst_x_overlay_got_xwindow_id (overlay, xwindow_id);
+  gst_x_overlay_got_window_handle (overlay, xwindow_id);
 }
 #endif
 
