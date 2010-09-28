@@ -15,7 +15,9 @@ EXTRA_DIST = \
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la\
 	-lgstpbutils-@GST_MAJORMINOR@ \
-	$(GST_LIBS)
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la\
+	-lgstvideo-@GST_MAJORMINOR@ \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS)
 
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 
