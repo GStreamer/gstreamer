@@ -43,6 +43,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "pbutils.h"
+#include "gstdiscoverer-private.h"
 
 #include <string.h>
 
@@ -780,23 +781,27 @@ gchar *
 gst_pb_utils_get_decoder_description (const GstCaps * caps)
 {
   gchar *str, *ret;
+  GstCaps *tmp;
 
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+
+  tmp = copy_and_clean_caps (caps);
+
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
   /* special-case RTP caps */
-  if (caps_are_rtp_caps (caps, "video", &str)) {
+  if (caps_are_rtp_caps (tmp, "video", &str)) {
     ret = g_strdup_printf (_("%s video RTP depayloader"), str);
-  } else if (caps_are_rtp_caps (caps, "audio", &str)) {
+  } else if (caps_are_rtp_caps (tmp, "audio", &str)) {
     ret = g_strdup_printf (_("%s audio RTP depayloader"), str);
-  } else if (caps_are_rtp_caps (caps, "application", &str)) {
+  } else if (caps_are_rtp_caps (tmp, "application", &str)) {
     ret = g_strdup_printf (_("%s RTP depayloader"), str);
   } else {
     const FormatInfo *info;
 
-    str = gst_pb_utils_get_codec_description (caps);
-    info = find_format_info (caps);
+    str = gst_pb_utils_get_codec_description (tmp);
+    info = find_format_info (tmp);
     if (info != NULL && (info->flags & FLAG_CONTAINER) != 0) {
       ret = g_strdup_printf (_("%s demuxer"), str);
     } else {
@@ -805,6 +810,7 @@ gst_pb_utils_get_decoder_description (const GstCaps * caps)
   }
 
   g_free (str);
+  gst_caps_unref (tmp);
 
   return ret;
 }
@@ -828,23 +834,25 @@ gchar *
 gst_pb_utils_get_encoder_description (const GstCaps * caps)
 {
   gchar *str, *ret;
+  GstCaps *tmp;
 
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+  tmp = copy_and_clean_caps (caps);
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
   /* special-case RTP caps */
-  if (caps_are_rtp_caps (caps, "video", &str)) {
+  if (caps_are_rtp_caps (tmp, "video", &str)) {
     ret = g_strdup_printf (_("%s video RTP payloader"), str);
-  } else if (caps_are_rtp_caps (caps, "audio", &str)) {
+  } else if (caps_are_rtp_caps (tmp, "audio", &str)) {
     ret = g_strdup_printf (_("%s audio RTP payloader"), str);
-  } else if (caps_are_rtp_caps (caps, "application", &str)) {
+  } else if (caps_are_rtp_caps (tmp, "application", &str)) {
     ret = g_strdup_printf (_("%s RTP payloader"), str);
   } else {
     const FormatInfo *info;
 
-    str = gst_pb_utils_get_codec_description (caps);
-    info = find_format_info (caps);
+    str = gst_pb_utils_get_codec_description (tmp);
+    info = find_format_info (tmp);
     if (info != NULL && (info->flags & FLAG_CONTAINER) != 0) {
       ret = g_strdup_printf (_("%s muxer"), str);
     } else {
@@ -853,6 +861,7 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
   }
 
   g_free (str);
+  gst_caps_unref (tmp);
 
   return ret;
 }
@@ -942,17 +951,19 @@ gst_pb_utils_get_codec_description (const GstCaps * caps)
 {
   const FormatInfo *info;
   gchar *str, *comma;
+  GstCaps *tmp;
 
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+  tmp = copy_and_clean_caps (caps);
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
-  info = find_format_info (caps);
+  info = find_format_info (tmp);
 
   if (info) {
-    str = format_info_get_desc (info, caps);
+    str = format_info_get_desc (info, tmp);
   } else {
-    str = gst_caps_to_string (caps);
+    str = gst_caps_to_string (tmp);
 
     /* cut off everything after the media type, if there is anything */
     if ((comma = strchr (str, ','))) {
@@ -964,6 +975,7 @@ gst_pb_utils_get_codec_description (const GstCaps * caps)
 
     GST_WARNING ("No description available for media type: %s", str);
   }
+  gst_caps_unref (tmp);
 
   return str;
 }

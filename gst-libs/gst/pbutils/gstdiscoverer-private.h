@@ -81,3 +81,7 @@ struct _GstDiscovererInfo {
 
   gpointer _reserved[GST_PADDING];
 };
+
+/* missing-plugins.c */
+
+GstCaps *copy_and_clean_caps (const GstCaps * caps);

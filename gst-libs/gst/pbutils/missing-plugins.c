@@ -67,6 +67,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "pbutils.h"
+#include "gstdiscoverer-private.h"
 
 #include <string.h>
 
@@ -112,7 +113,7 @@ missing_structure_get_type (const GstStructure * s)
   return GST_MISSING_TYPE_UNKNOWN;
 }
 
-static GstCaps *
+GstCaps *
 copy_and_clean_caps (const GstCaps * caps)
 {
   GstStructure *s;
