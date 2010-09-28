@@ -72,6 +72,12 @@ gst_frei0r_klass_install_properties (GObjectClass * gobject_class,
 
     ftable->get_param_info (param_info, i);
 
+    if (!param_info->name) {
+      GST_ERROR ("Property %d of %s without a valid name", i,
+          g_type_name (G_TYPE_FROM_CLASS (gobject_class)));
+      continue;
+    }
+
     prop_name = g_ascii_strdown (param_info->name, -1);
     g_strcanon (prop_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
     /* satisfy glib2 (argname[0] must be [A-Za-z]) */
