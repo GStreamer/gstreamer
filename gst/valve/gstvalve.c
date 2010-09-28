@@ -82,11 +82,8 @@ static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
 static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
 static GstCaps *gst_valve_getcaps (GstPad * pad);
 
-static void
-_do_init (GType type)
-{
+#define _do_init(bla) \
   GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
-}
 
 GST_BOILERPLATE_FULL (GstValve, gst_valve, GstElement,
     GST_TYPE_ELEMENT, _do_init);
