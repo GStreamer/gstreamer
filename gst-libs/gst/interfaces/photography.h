@@ -56,6 +56,7 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_COLOUR_TONE  "colour-tone-mode"
 #define GST_PHOTOGRAPHY_PROP_SCENE_MODE   "scene-mode"
 #define GST_PHOTOGRAPHY_PROP_FLASH_MODE   "flash-mode"
+#define GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION   "noise-reduction"
 #define GST_PHOTOGRAPHY_PROP_FOCUS_STATUS "focus-status"
 #define GST_PHOTOGRAPHY_PROP_CAPABILITIES "capabilities"
 #define GST_PHOTOGRAPHY_PROP_SHAKE_RISK   "shake-risk"
@@ -78,6 +79,34 @@ G_BEGIN_DECLS
  */
 typedef struct _GstPhotography GstPhotography;
 
+/**
+ * GstPhotographyNoiseReduction:
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_BAYER: Adaptive noise reduction on Bayer
+ * format
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_YCC: reduces the noise on Y and 2-chroma
+ * images.
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_TEMPORAL: Multi-frame adaptive NR,
+ * provided for the video mode
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_FPN: Fixed Pattern Noise refers to noise
+ * that does not change between frames. The noise is removed from the sensor
+ * image, by subtracting a previously-captured black image in memory.
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA: Extra Noise Reduction. In the case
+ * of high-ISO capturing, some noise remains after YCC NR. XNR reduces this
+ * remaining noise.
+ *
+ * Noise Reduction features of a photography capture or filter element.
+ *
+ * Since: 0.10.21
+ */
+typedef enum
+{
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_BAYER = ( 1<<0 ),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_YCC = ( 1<<1 ),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_TEMPORAL= ( 1<< 2),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_FIXED = (1 << 3),
+  GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA = (1 << 4)
+} GstPhotographyNoiseReduction;
+
 typedef enum
 {
   GST_PHOTOGRAPHY_WB_MODE_AUTO = 0,
@@ -98,7 +127,10 @@ typedef enum
   GST_PHOTOGRAPHY_COLOUR_TONE_MODE_VIVID,
   GST_PHOTOGRAPHY_COLOUR_TONE_MODE_COLORSWAP,
   GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE,
-  GST_PHOTOGRAPHY_COLOUR_TONE_MODE_OUT_OF_FOCUS
+  GST_PHOTOGRAPHY_COLOUR_TONE_MODE_OUT_OF_FOCUS,
+  GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SKY_BLUE,
+  GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRASS_GREEN,
+  GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SKIN_WHITEN
 } GstColourToneMode;
 
 typedef enum
@@ -177,6 +209,7 @@ typedef struct
   GstColourToneMode tone_mode;
   GstSceneMode scene_mode;
   GstFlashMode flash_mode;
+  guint noise_reduction;
   guint32 exposure;
   guint aperture;
   gfloat ev_compensation;
@@ -209,6 +242,7 @@ typedef void (*GstPhotoCapturePrepared) (gpointer data,
  * @get_colour_tone_mode: vmethod to get colour tone mode value
  * @get_scene_mode: vmethod to get scene mode value
  * @get_flash_mode: vmethod to get flash mode value
+ * @get_noise_reduction: vmethod to get noise reduction mode value
  * @get_zoom: vmethod to get zoom factor value
  * @set_ev_compensation: vmethod to set ev exposure compensation value
  * @set_iso_speed: vmethod to set iso speed (light sensitivity) value
@@ -218,6 +252,7 @@ typedef void (*GstPhotoCapturePrepared) (gpointer data,
  * @set_colour_tone_mode: vmethod to set colour tone mode value
  * @set_scene_mode: vmethod to set scene mode value
  * @set_flash_mode: vmethod to set flash mode value
+ * @set_noise_reduction: vmethod to set noise reduction mode value
  * @set_zoom: vmethod to set zoom factor value
  * @get_capabilities: vmethod to get supported capabilities of the interface
  * @prepare_for_capture: vmethod to tell the element to prepare for capturing
@@ -245,6 +280,8 @@ typedef struct _GstPhotographyInterface
       GstSceneMode * scene_mode);
     gboolean (*get_flash_mode) (GstPhotography * photo,
       GstFlashMode * flash_mode);
+    gboolean (*get_noise_reduction) (GstPhotography * photo,
+      guint * noise_reduction);
     gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
     gboolean (*get_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode * flicker_mode);
@@ -263,6 +300,8 @@ typedef struct _GstPhotographyInterface
       GstSceneMode scene_mode);
     gboolean (*set_flash_mode) (GstPhotography * photo,
       GstFlashMode flash_mode);
+    gboolean (*set_noise_reduction) (GstPhotography * photo,
+      guint noise_reduction);
     gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
     gboolean (*set_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode flicker_mode);
@@ -299,6 +338,8 @@ gboolean gst_photography_get_scene_mode (GstPhotography * photo,
     GstSceneMode * scene_mode);
 gboolean gst_photography_get_flash_mode (GstPhotography * photo,
     GstFlashMode * flash_mode);
+gboolean gst_photography_get_noise_reduction (GstPhotography * photo,
+    guint * noise_reduction);
 gboolean gst_photography_get_zoom (GstPhotography * photo, gfloat * zoom);
 gboolean gst_photography_get_flicker_mode (GstPhotography * photo,
     GstFlickerReductionMode *mode);
@@ -319,6 +360,8 @@ gboolean gst_photography_set_scene_mode (GstPhotography * photo,
     GstSceneMode scene_mode);
 gboolean gst_photography_set_flash_mode (GstPhotography * photo,
     GstFlashMode flash_mode);
+gboolean gst_photography_set_noise_reduction (GstPhotography * photo,
+    guint noise_reduction);
 gboolean gst_photography_set_zoom (GstPhotography * photo, gfloat zoom);
 gboolean gst_photography_set_flicker_mode (GstPhotography * photo,
     GstFlickerReductionMode mode);
