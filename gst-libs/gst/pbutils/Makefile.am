@@ -44,7 +44,7 @@ libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_headers) $(built_headers_configure)
 noinst_HEADERS = \
-	gstdiscoverer-private.h
+	pbutils-private.h
 EXTRA_DIST = pbutils-marshal.list
 
 libgstpbutils_@GST_MAJORMINOR@_la_LIBADD = \

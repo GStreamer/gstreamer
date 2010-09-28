@@ -23,7 +23,7 @@
 #endif
 
 #include "pbutils.h"
-#include "gstdiscoverer-private.h"
+#include "pbutils-private.h"
 
 static GstDiscovererStreamInfo
     * gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,

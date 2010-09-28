@@ -47,7 +47,7 @@
 #include <gst/video/video.h>
 #include "pbutils.h"
 #include "pbutils-marshal.h"
-#include "gstdiscoverer-private.h"
+#include "pbutils-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (discoverer_debug);
 #define GST_CAT_DEFAULT discoverer_debug

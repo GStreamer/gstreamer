@@ -43,7 +43,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "pbutils.h"
-#include "gstdiscoverer-private.h"
+#include "pbutils-private.h"
 
 #include <string.h>
 

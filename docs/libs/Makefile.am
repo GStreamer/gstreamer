@@ -79,7 +79,7 @@ SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = gstdiscoverer-private.h
+IGNORE_HFILES = pbutils-private.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
