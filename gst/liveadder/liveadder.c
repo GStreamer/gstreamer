@@ -175,8 +175,6 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
   gobject_class->set_property = gst_live_adder_set_property;
   gobject_class->get_property = gst_live_adder_get_property;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstelement_class->request_new_pad = gst_live_adder_request_new_pad;
   gstelement_class->release_pad = gst_live_adder_release_pad;
   gstelement_class->change_state = gst_live_adder_change_state;
