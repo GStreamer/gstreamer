@@ -5,6 +5,9 @@
  * Copyright 2005 David Schleef <ds@schleef.org>
  */
 
+#ifndef __GLIB_COMPAT_PRIVATE_H__
+#define __GLIB_COMPAT_PRIVATE_H__
+
 #include "gst_private.h" /* for g_warning */
 #include <glib.h>
 
@@ -19,3 +22,5 @@ typedef struct stat GStatBuf;
 /* adaptations */
 
 G_END_DECLS
+
+#endif
