@@ -76,6 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static void gst_mad_dispose (GObject * object);
+static void gst_mad_clear_queues (GstMad * mad);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -94,6 +95,7 @@ static gboolean gst_mad_convert_src (GstPad * pad, GstFormat src_format,
 
 static gboolean gst_mad_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mad_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_mad_chain_reverse (GstMad * mad, GstBuffer * buf);
 
 static GstStateChangeReturn gst_mad_change_state (GstElement * element,
     GstStateChange transition);
@@ -627,6 +629,9 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
+  if (rate < 0.0)
+    return FALSE;
+
   if (format == GST_FORMAT_TIME) {
     gst_segment_set_seek (&mad->segment, rate, format, flags, cur_type,
         cur, stop_type, stop, NULL);
@@ -697,6 +702,9 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
+
+  if (rate < 0.0)
+    return FALSE;
 
   if (format != GST_FORMAT_TIME) {
     conv = GST_FORMAT_TIME;
@@ -988,6 +996,8 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
+      if (mad->segment.rate < 0.0)
+        gst_mad_chain_reverse (mad, NULL);
       mad->caps_set = FALSE;    /* could be a new stream */
       result = gst_pad_push_event (mad->srcpad, event);
       break;
@@ -997,9 +1007,10 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
       mad->tempsize = 0;
       mad_frame_mute (&mad->frame);
       mad_synth_mute (&mad->synth);
+      gst_mad_clear_queues (mad);
+      /* fall-through */
     case GST_EVENT_FLUSH_START:
       result = gst_pad_event_default (pad, event);
-
       break;
     default:
       if (mad->restart) {
@@ -1261,6 +1272,115 @@ gst_mad_check_caps_reset (GstMad * mad)
   }
 }
 
+static void
+gst_mad_clear_queues (GstMad * mad)
+{
+  g_list_foreach (mad->queued, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mad->queued);
+  mad->queued = NULL;
+  g_list_foreach (mad->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mad->gather);
+  mad->gather = NULL;
+  g_list_foreach (mad->decode, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (mad->decode);
+  mad->decode = NULL;
+}
+
+static GstFlowReturn
+gst_mad_flush_decode (GstMad * mad)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GList *walk;
+
+  walk = mad->decode;
+
+  GST_DEBUG_OBJECT (mad, "flushing buffers to decoder");
+
+  /* clear buffer and decoder state */
+  mad->tempsize = 0;
+  mad_frame_mute (&mad->frame);
+  mad_synth_mute (&mad->synth);
+
+  mad->process = TRUE;
+  while (walk) {
+    GList *next;
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    GST_DEBUG_OBJECT (mad, "decoding buffer %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    next = g_list_next (walk);
+    /* decode buffer, resulting data prepended to output queue */
+    gst_buffer_ref (buf);
+    res = gst_mad_chain (mad->sinkpad, buf);
+
+    /* if we generated output, we can discard the buffer, else we
+     * keep it in the queue */
+    if (mad->queued) {
+      GST_DEBUG_OBJECT (mad, "decoded buffer to %p", mad->queued->data);
+      mad->decode = g_list_delete_link (mad->decode, walk);
+      gst_buffer_unref (buf);
+    } else {
+      GST_DEBUG_OBJECT (mad, "buffer did not decode, keeping");
+    }
+    walk = next;
+  }
+  mad->process = FALSE;
+
+  /* now send queued data downstream */
+  while (mad->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (mad->queued->data);
+    GstClockTime timestamp, duration;
+
+    timestamp = GST_BUFFER_TIMESTAMP (buf);
+    duration = GST_BUFFER_DURATION (buf);
+
+    GST_DEBUG_OBJECT (mad, "pushing buffer %p of size %u, "
+        "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
+        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+    res = gst_pad_push (mad->srcpad, buf);
+
+    mad->queued = g_list_delete_link (mad->queued, mad->queued);
+  }
+
+  return res;
+}
+
+static GstFlowReturn
+gst_mad_chain_reverse (GstMad * mad, GstBuffer * buf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+
+  /* if we have a discont, move buffers to the decode list */
+  if (!buf || GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (mad, "received discont");
+    while (mad->gather) {
+      GstBuffer *gbuf;
+
+      gbuf = GST_BUFFER_CAST (mad->gather->data);
+      /* remove from the gather list */
+      mad->gather = g_list_delete_link (mad->gather, mad->gather);
+      /* copy to decode queue */
+      mad->decode = g_list_prepend (mad->decode, gbuf);
+    }
+    /* decode stuff in the decode queue */
+    gst_mad_flush_decode (mad);
+  }
+
+  if (G_LIKELY (buf)) {
+    GST_DEBUG_OBJECT (mad, "gathering buffer %p of size %u, "
+        "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
+        GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+    /* add buffer to gather queue */
+    mad->gather = g_list_prepend (mad->gather, buf);
+  }
+
+  return result;
+}
+
 static GstFlowReturn
 gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1280,8 +1400,15 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG ("mad restarted");
   }
 
-  /* take discont flag */
-  discont = GST_BUFFER_IS_DISCONT (buffer);
+  if (mad->segment.rate < 0.0) {
+    if (!mad->process)
+      return gst_mad_chain_reverse (mad, buffer);
+    /* no output discont */
+    discont = FALSE;
+  } else {
+    /* take discont flag */
+    discont = GST_BUFFER_IS_DISCONT (buffer);
+  }
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT,
@@ -1650,7 +1777,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           }
 
           mad->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuffer);
-          result = gst_pad_push (mad->srcpad, outbuffer);
+          if (mad->segment.rate > 0.0) {
+            result = gst_pad_push (mad->srcpad, outbuffer);
+          } else {
+            GST_LOG_OBJECT (mad, "queued buffer");
+            mad->queued = g_list_prepend (mad->queued, outbuffer);
+            result = GST_FLOW_OK;
+          }
           if (result != GST_FLOW_OK) {
             /* Head for the exit, dropping samples as we go */
             goto_exit = TRUE;
@@ -1769,6 +1902,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
         gst_tag_list_free (mad->tags);
         mad->tags = NULL;
       }
+      gst_mad_clear_queues (mad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

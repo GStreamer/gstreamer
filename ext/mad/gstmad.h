@@ -97,6 +97,12 @@ struct _GstMad
   gboolean framed;              /* whether there is a demuxer in front of us */
 
   GList *pending_events;
+
+  /* reverse playback */
+  GList *decode;
+  GList *gather;
+  GList *queued;
+  gboolean process;
 };
 
 struct _GstMadClass
