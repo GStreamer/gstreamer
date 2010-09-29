@@ -251,12 +251,6 @@ print_info (GstDiscovererInfo * info, GError * err)
   switch (result) {
     case GST_DISCOVERER_OK:
     {
-      sinfo = gst_discoverer_info_get_stream_info (info);
-      g_print ("\nTopology:\n");
-      print_topology (sinfo, 1);
-      g_print ("\nDuration:\n");
-      print_duration (info, 1);
-      gst_discoverer_stream_info_unref (sinfo);
       break;
     }
     case GST_DISCOVERER_URI_INVALID:
@@ -291,6 +285,14 @@ print_info (GstDiscovererInfo * info, GError * err)
       }
       break;
     }
+  }
+
+  if ((sinfo = gst_discoverer_info_get_stream_info (info))) {
+    g_print ("\nTopology:\n");
+    print_topology (sinfo, 1);
+    g_print ("\nDuration:\n");
+    print_duration (info, 1);
+    gst_discoverer_stream_info_unref (sinfo);
   }
 
   g_print ("\n");
