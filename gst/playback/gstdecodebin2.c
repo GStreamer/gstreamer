@@ -1522,7 +1522,6 @@ unknown_type:
       gst_decode_bin_expose (dbin);
     }
     EXPOSE_UNLOCK (dbin);
-    do_async_done (dbin);
 
     if (src == dbin->typefind) {
       gchar *desc;
@@ -1540,6 +1539,7 @@ unknown_type:
             (_("Could not determine type of stream")),
             ("Stream caps %" GST_PTR_FORMAT, caps));
       }
+      do_async_done (dbin);
     }
     return;
   }
