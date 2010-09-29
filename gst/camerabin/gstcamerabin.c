@@ -963,15 +963,17 @@ static void
 gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
 {
   if (camera->mode != mode || !camera->active_bin) {
-    GstState state;
+    GstState state, pending_state;
 
     GST_DEBUG_OBJECT (camera, "setting mode: %d (old_mode=%d)",
         mode, camera->mode);
     /* Interrupt ongoing capture */
     gst_camerabin_do_stop (camera);
     camera->mode = mode;
-    gst_element_get_state (GST_ELEMENT (camera), &state, NULL, 0);
-    if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
+    gst_element_get_state (GST_ELEMENT (camera), &state, &pending_state, 0);
+    if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING ||
+        pending_state == GST_STATE_PAUSED
+        || pending_state == GST_STATE_PLAYING) {
       if (camera->active_bin) {
         GST_DEBUG_OBJECT (camera, "stopping active bin");
         gst_element_set_state (camera->active_bin, GST_STATE_READY);
