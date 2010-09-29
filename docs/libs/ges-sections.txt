@@ -210,7 +210,7 @@ ges_timeline_add_track
 ges_timeline_remove_track
 ges_timeline_get_track_for_pad
 ges_timeline_load_from_uri
-ges_timeline_save
+ges_timeline_save_to_uri
 ges_timeline_get_tracks
 <SUBSECTION Standard>
 ges_timeline_get_type
@@ -443,6 +443,7 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 GESTimelineTextOverlay
 GESTimelineTextOverlayClass
 ges_timeline_text_overlay_new
+ges_timeline_new_from_uri
 <SUBSECTION Standard>
 ges_tl_text_overlay_get_type
 GES_IS_TIMELINE_TEXT_OVERLAY

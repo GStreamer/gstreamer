@@ -223,41 +223,99 @@ ges_timeline_new (void)
 }
 
 /**
- * ges_timeline_load_from_uri:
- * @uri: The URI to load from
+ * ges_timeline_new_from_uri:
+ * @uri: the URI to load from
  *
- * Creates a timeline from the contents of given uri.
+ * Creates a timeline from the given URI.
  *
- * NOT_IMPLEMENTED !
- *
- * Returns: A new #GESTimeline if loading was successful, else NULL.
+ * Returns: A new timeline if the uri was loaded successfully, or NULL if the
+ * uri could not be loaded 
  */
 
 GESTimeline *
-ges_timeline_load_from_uri (gchar * uri)
+ges_timeline_new_from_uri (gchar * uri)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GESTimeline *ret;
+
+  ret = ges_timeline_new ();
+
+  if (!ges_timeline_load_from_uri (ret, uri)) {
+    g_object_unref (ret);
+    return NULL;
+  }
+
+  return ret;
+}
+
+
+/**
+ * ges_timeline_load_from_uri:
+ * @timeline: an empty #GESTimeline into which to load the formatter
+ * @uri: The URI to load from
+ *
+ * Loads the contents of URI into the given timeline.
+ *
+ * Returns: TRUE if the timeline was loaded successfully, or FALSE if the uri
+ * could not be loaded.
+ */
+
+gboolean
+ges_timeline_load_from_uri (GESTimeline * timeline, gchar * uri)
+{
+  GESFormatter *p = NULL;
+  gboolean ret = FALSE;
+
+  if (!(p = ges_formatter_new_for_uri (uri))) {
+    GST_ERROR ("unsupported uri '%s'", uri);
+    goto fail;
+  }
+
+  if (!ges_formatter_load_from_uri (p, timeline, uri)) {
+    GST_ERROR ("error deserializing formatter");
+    goto fail;
+  }
+
+  ret = TRUE;
+
+fail:
+  if (p)
+    g_object_unref (p);
+  return ret;
 }
 
 /**
- * ges_timeline_save:
+ * ges_timeline_save_to_uri:
  * @timeline: a #GESTimeline
  * @uri: The location to save to
  *
  * Saves the timeline to the given location
- *
- * NOT_IMPLEMENTED !
  *
  * Returns: TRUE if the timeline was successfully saved to the given location,
  * else FALSE.
  */
 
 gboolean
-ges_timeline_save (GESTimeline * timeline, gchar * uri)
+ges_timeline_save_to_uri (GESTimeline * timeline, gchar * uri)
 {
-  /* FIXME : IMPLEMENT */
-  return FALSE;
+  GESFormatter *p = NULL;
+  gboolean ret = FALSE;
+
+  if (!(p = ges_formatter_new_for_uri (uri))) {
+    GST_ERROR ("unsupported uri '%s'", uri);
+    goto fail;
+  }
+
+  if (!ges_formatter_save_to_uri (p, timeline, uri)) {
+    GST_ERROR ("error serializing formatter");
+    goto fail;
+  }
+
+  ret = TRUE;
+
+fail:
+  if (p)
+    g_object_unref (p);
+  return ret;
 }
 
 static void
