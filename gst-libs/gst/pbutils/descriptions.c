@@ -99,6 +99,7 @@ static const FormatInfo formats[] = {
   {"audio/x-amr-nb-sh", "Adaptive Multi Rate NarrowBand (AMR-NB)", 0},
   {"audio/x-amr-wb-sh", "Adaptive Multi Rate WideBand (AMR-WB)", 0},
   {"audio/x-au", "Sun .au", 0},
+  {"audio/x-celt", "Constrained Energy Lapped Transform (CELT)", 0},
   {"audio/x-cinepak", "Cinepak Audio", 0},
   {"audio/x-dpcm", "DPCM", 0},
   {"audio/x-dts", "DTS", 0},
@@ -156,6 +157,7 @@ static const FormatInfo formats[] = {
   {"video/x-cirrus-logic-accupak", "Cirrus Logipak AccuPak", 0},
   {"video/x-compressed-yuv", N_("CYUV Lossless"), 0},
   {"video/x-dirac", "Dirac", 0},
+  {"video/x-dnxhd", "Digital Nonlinear Extensible High Definition (DNxHD)", 0},
   {"video/x-dvd-subpicture", "DVD subpicture", 0},
   {"video/x-ffv", N_("FFMpeg v1"), 0},
   {"video/x-flash-screen", "Flash Screen Video", 0},
@@ -166,6 +168,7 @@ static const FormatInfo formats[] = {
   {"video/x-jpeg", "Motion JPEG", 0},
   /* { "video/x-jpeg-b", "", 0 }, does this actually exist? */
   {"video/x-loco", "LOCO Lossless", 0},
+  {"video/x-mimic", "MIMIC", 0},
   {"video/x-mjpeg", "Motion-JPEG", 0},
   {"video/x-mjpeg-b", "Motion-JPEG format B", 0},
   {"video/mpegts", "MPEG-2 Transport Stream", FLAG_CONTAINER},
