@@ -201,6 +201,7 @@
         flags.
       </para>
       <xi:include href="xml/gstpbutils.xml" />
+      <xi:include href="xml/gstpbutilscodecutils.xml" />
       <xi:include href="xml/gstpbutilsdescriptions.xml" />
       <xi:include href="xml/gstpbutilsmissingplugins.xml" />
       <xi:include href="xml/gstpbutilsinstallplugins.xml" />
