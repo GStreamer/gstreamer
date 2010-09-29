@@ -1317,8 +1317,8 @@ do_seek (GtkWidget * widget)
 
   real = gtk_range_get_value (GTK_RANGE (widget)) * duration / N_GRAD;
 
-  GST_DEBUG ("value=%f, real=%d", gtk_range_get_value (GTK_RANGE (widget)),
-      real);
+  GST_DEBUG ("value=%f, real=%" G_GINT64_FORMAT,
+      gtk_range_get_value (GTK_RANGE (widget)), real);
 
   flags = 0;
   if (flush_seek)
