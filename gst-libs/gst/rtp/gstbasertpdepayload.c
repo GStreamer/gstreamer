@@ -339,6 +339,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
     /* we detected a seqnum discont but the buffer was not flagged with a discont,
      * set the discont flag so that the subclass can throw away old data. */
     priv->discont = TRUE;
+    in = gst_buffer_make_metadata_writable (in);
     GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
   }
 
