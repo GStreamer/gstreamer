@@ -528,6 +528,12 @@ clear_queued (GstFaad * faad)
   g_list_foreach (faad->queued, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (faad->queued);
   faad->queued = NULL;
+  g_list_foreach (faad->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (faad->gather);
+  faad->gather = NULL;
+  g_list_foreach (faad->decode, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (faad->decode);
+  faad->decode = NULL;
 }
 
 static GstFlowReturn
@@ -556,10 +562,24 @@ gst_faad_drain (GstFaad * faad)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
+  GST_DEBUG_OBJECT (faad, "draining");
+
   if (faad->segment.rate < 0.0) {
+    /* also decode tail = head of previous fragment to fill this one */
+    while (faad->decode) {
+      GstBuffer *buf = GST_BUFFER_CAST (faad->decode->data);
+
+      GST_DEBUG_OBJECT (faad, "processing delayed decode buffer");
+      gst_faad_chain (faad->sinkpad, buf);
+      faad->decode = g_list_delete_link (faad->decode, faad->decode);
+    }
     /* if we have some queued frames for reverse playback, flush
      * them now */
     ret = flush_queued (faad);
+    /* move non-decoded leading buffers gathered in previous run
+     * to decode queue for this run */
+    faad->decode = g_list_reverse (faad->gather);
+    faad->gather = NULL;
   } else {
     /* squeeze any possible remaining frames that are pending sync */
     gst_faad_chain (faad->sinkpad, NULL);
@@ -1215,6 +1235,16 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
           if (ret != GST_FLOW_OK)
             goto out;
         }
+      }
+    } else {
+      if (faad->packetised && faad->segment.rate < 0.0) {
+        /* leading non-decoded frames used as tail
+         * for next preceding fragment */
+        outbuf = gst_adapter_take_buffer (faad->adapter, available);
+        available = 0;
+        outbuf = gst_buffer_make_metadata_writable (outbuf);
+        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
+        faad->gather = g_list_prepend (faad->gather, outbuf);
       }
     }
 
