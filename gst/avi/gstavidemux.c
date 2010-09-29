@@ -2370,7 +2370,7 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
 static guint
 gst_avi_demux_index_last (GstAviDemux * avi, GstAviStream * stream)
 {
-  return stream->idx_n - 1;
+  return stream->idx_n;
 }
 
 /* find a previous entry in the index with the given flags */
@@ -4503,7 +4503,7 @@ gst_avi_demux_advance (GstAviDemux * avi, GstAviStream * stream,
   new_entry = old_entry + 1;
 
   /* see if we reached the end */
-  if (new_entry > stream->stop_entry) {
+  if (new_entry >= stream->stop_entry) {
     if (avi->segment.rate < 0.0) {
       if (stream->step_entry == stream->start_entry) {
         /* we stepped all the way to the start, eos */
