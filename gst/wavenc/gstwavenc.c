@@ -248,8 +248,7 @@ gst_wavenc_push_header (GstWavEnc * wavenc, guint audio_data_size)
 
   /* seek to beginning of file */
   gst_pad_push_event (wavenc->srcpad,
-      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
-          0, GST_CLOCK_TIME_NONE, 0));
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
 
   GST_DEBUG_OBJECT (wavenc, "writing header with datasize=%u", audio_data_size);
 
