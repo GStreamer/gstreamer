@@ -263,8 +263,8 @@ gst_faad_reset (GstFaad * faad)
   faad->packetised = FALSE;
   g_free (faad->channel_positions);
   faad->channel_positions = NULL;
-  faad->next_ts = 0;
-  faad->prev_ts = GST_CLOCK_TIME_NONE;
+  faad->next_ts = GST_CLOCK_TIME_NONE;
+  faad->prev_ts = 0;
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->error_count = 0;
@@ -698,8 +698,8 @@ gst_faad_sink_event (GstPad * pad, GstEvent * event)
             " - %" GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
             GST_TIME_ARGS (new_end));
 
-        faad->next_ts = new_start;
-        faad->prev_ts = GST_CLOCK_TIME_NONE;
+        faad->next_ts = GST_CLOCK_TIME_NONE;
+        faad->prev_ts = new_start;
       }
 
       res = gst_pad_push_event (faad->srcpad, event);
@@ -1045,15 +1045,21 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     next = FALSE;
   }
 
-  ts = gst_adapter_prev_timestamp (faad->adapter, NULL);
-  if (GST_CLOCK_TIME_IS_VALID (ts) && (ts != faad->prev_ts))
-    faad->prev_ts = faad->next_ts = ts;
-
   available = gst_adapter_available (faad->adapter);
   input_size = available;
-
   if (G_UNLIKELY (!available))
     goto out;
+
+  ts = gst_adapter_prev_timestamp (faad->adapter, NULL);
+  if (GST_CLOCK_TIME_IS_VALID (ts) && (ts != faad->prev_ts)) {
+    faad->prev_ts = ts;
+  } else {
+    /* nothing new */
+    ts = GST_CLOCK_TIME_NONE;
+  }
+
+  if (!GST_CLOCK_TIME_IS_VALID (faad->next_ts))
+    faad->next_ts = faad->prev_ts;
 
   input_data = (guchar *) gst_adapter_peek (faad->adapter, available);
 
@@ -1210,6 +1216,12 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
             goto out;
         }
       }
+    }
+
+    /* adjust to incoming new timestamp, if any, after decoder delay */
+    if (GST_CLOCK_TIME_IS_VALID (ts)) {
+      faad->next_ts = ts;
+      ts = GST_CLOCK_TIME_NONE;
     }
   }
 
