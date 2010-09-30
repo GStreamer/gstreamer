@@ -43,6 +43,7 @@
  * </refsect2>
  */
 
+#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_tag_ensure_debug_category()
 
 static GstDebugCategory *
@@ -60,6 +61,7 @@ gst_tag_ensure_debug_category (void)
 
   return (GstDebugCategory *) cat_gonce;
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static gpointer
 gst_tag_register_tags_internal (gpointer unused)
