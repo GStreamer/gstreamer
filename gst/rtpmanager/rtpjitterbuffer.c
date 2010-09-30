@@ -274,8 +274,8 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
 }
 
 /* For the clock skew we use a windowed low point averaging algorithm as can be
- * found in http://www.grame.fr/pub/TR-050601.pdf. The idea is that the jitter is
- * composed of:
+ * found in http://www.grame.fr/Ressources/pub/TR-050601.pdf. The idea is that
+ * the jitter is composed of:
  *
  *  J = N + n
  *
