@@ -190,18 +190,19 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_OBJECT_LOCK (valve);
   drop = valve->drop;
-
-  if (!drop && valve->discont) {
-    buffer = gst_buffer_make_metadata_writable (buffer);
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
-    valve->discont = FALSE;
-  }
   GST_OBJECT_UNLOCK (valve);
 
-  if (drop)
+  if (drop) {
     gst_buffer_unref (buffer);
-  else
+    valve->discont = TRUE;
+  } else {
+    if (valve->discont) {
+      buffer = gst_buffer_make_metadata_writable (buffer);
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    }
+
     ret = gst_pad_push (valve->srcpad, buffer);
+  }
 
 
   /* Ignore errors if "drop" was changed while the thread was blocked
