@@ -32,6 +32,10 @@
  * </refsect2>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "pbutils.h"
 
 #define GST_SIMPLE_CAPS_HAS_NAME(caps,name) \
