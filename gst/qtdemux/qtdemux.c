@@ -7499,9 +7499,12 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
       if (data_ptr && data_len == 2) {
         guint channels, rateindex, rate;
 
+        /* FIXME: add gst_codec_utils_aac_get_{channels|sample_rate}()? */
         channels = (data_ptr[1] & 0x7f) >> 3;
-        if (channels <= 7) {
+        if (channels > 0 && channels < 7) {
           stream->n_channels = channels;
+        } else if (channels == 7) {
+          stream->n_channels = 8;
         }
 
         rateindex = ((data_ptr[0] & 0x7) << 1) | ((data_ptr[1] & 0x80) >> 7);
