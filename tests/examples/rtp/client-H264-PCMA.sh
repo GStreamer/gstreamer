@@ -3,7 +3,7 @@
 # A simple RTP receiver 
 #
 #  receives H264 encoded RTP video on port 5000, RTCP is received on  port 5001.
-#  the receiver RTCP reports are sent to port 5006
+#  the receiver RTCP reports are sent to port 5005
 #  receives alaw encoded RTP audio on port 5002, RTCP is received on  port 5003.
 #  the receiver RTCP reports are sent to port 5007
 #
