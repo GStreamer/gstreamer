@@ -150,6 +150,7 @@ check_PROGRAMS = \
 	$(check_metadata) \
 	$(check_mimic) \
 	elements/rtpmux \
+	elements/valve \
 	$(check_vp8) \
 	$(check_orc) \
         pipelines/tagschecking
