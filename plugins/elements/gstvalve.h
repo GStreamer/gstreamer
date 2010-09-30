@@ -55,8 +55,8 @@ struct _GstValve
   /*< private >*/
   GstElement parent;
 
-  /* Protected by the object lock */
-  gboolean drop;
+  /* atomic boolean */
+  volatile gint drop;
 
   /* Protected by the stream lock */
   gboolean discont;

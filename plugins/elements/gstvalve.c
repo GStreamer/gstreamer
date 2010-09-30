@@ -153,9 +153,7 @@ gst_valve_set_property (GObject * object,
 
   switch (prop_id) {
     case ARG_DROP:
-      GST_OBJECT_LOCK (object);
-      valve->drop = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (object);
+      g_atomic_int_set (&valve->drop, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -171,9 +169,7 @@ gst_valve_get_property (GObject * object,
 
   switch (prop_id) {
     case ARG_DROP:
-      GST_OBJECT_LOCK (object);
-      g_value_set_boolean (value, valve->drop);
-      GST_OBJECT_UNLOCK (object);
+      g_value_set_boolean (value, g_atomic_int_get (&valve->drop));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -186,13 +182,8 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean drop;
 
-  GST_OBJECT_LOCK (valve);
-  drop = valve->drop;
-  GST_OBJECT_UNLOCK (valve);
-
-  if (drop) {
+  if (g_atomic_int_get (&valve->drop)) {
     gst_buffer_unref (buffer);
     valve->discont = TRUE;
   } else {
@@ -208,10 +199,8 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards
    */
-  GST_OBJECT_LOCK (valve);
-  if (valve->drop)
+  if (g_atomic_int_get (&valve->drop))
     ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
 
@@ -224,13 +213,8 @@ gst_valve_event (GstPad * pad, GstEvent * event)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   gboolean ret = TRUE;
-  gboolean drop;
 
-  GST_OBJECT_LOCK (valve);
-  drop = valve->drop;
-  GST_OBJECT_UNLOCK (valve);
-
-  if (drop)
+  if (g_atomic_int_get (&valve->drop))
     gst_event_unref (event);
   else
     ret = gst_pad_push_event (valve->srcpad, event);
@@ -238,10 +222,8 @@ gst_valve_event (GstPad * pad, GstEvent * event)
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards.
    */
-  GST_OBJECT_LOCK (valve);
-  if (valve->drop)
+  if (g_atomic_int_get (&valve->drop))
     ret = TRUE;
-  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
   return ret;
@@ -253,13 +235,8 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean drop;
 
-  GST_OBJECT_LOCK (valve);
-  drop = valve->drop;
-  GST_OBJECT_UNLOCK (valve);
-
-  if (drop)
+  if (g_atomic_int_get (&valve->drop))
     *buf = NULL;
   else
     ret = gst_pad_alloc_buffer (valve->srcpad, offset, size, caps, buf);
@@ -267,10 +244,8 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards
    */
-  GST_OBJECT_LOCK (valve);
-  if (valve->drop)
+  if (g_atomic_int_get (&valve->drop))
     ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
 
