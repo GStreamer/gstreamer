@@ -2,8 +2,10 @@
  *
  * gstrtpmux.c:
  *
- * Copyright (C) <2007> Nokia Corporation.
+ * Copyright (C) <2007-2010> Nokia Corporation.
  *   Contact: Zeeshan Ali <zeeshan.ali@nokia.com>
+ * Copyright (C) <2007-2010> Collabora Ltd
+ *   Contact: Olivier Crete <olivier.crete@collabora.co.uk>
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *               2000,2005 Wim Taymans <wim@fluendo.com>
  *
@@ -25,9 +27,27 @@
 
 /**
  * SECTION:element-rtpmux
+ * @see_also: rtpdtmfmux
  *
  * The rtp muxer takes multiple RTP streams having the same clock-rate and
  * muxes into a single stream with a single SSRC.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch rtpmux name=mux ! udpsink host=127.0.0.1 port=8888        \
+ *              alsasrc ! alawenc ! rtppcmapay !                        \
+ *              application/x-rtp, payload=8, rate=8000 ! mux.sink_0    \
+ *              audiotestsrc is-live=1 !                                \
+ *              mulawenc ! rtppcmupay !                                 \
+ *              application/x-rtp, payload=0, rate=8000 ! mux.sink_1
+ * ]|
+ * In this example, an audio stream is captured from ALSA and another is
+ * generated, both are encoded into different payload types and muxed together
+ * so they can be sent on the same port.
+ * </refsect2>
+ *
+ * Last reviewed on 2010-09-30 (0.10.21)
  */
 
 #ifdef HAVE_CONFIG_H
