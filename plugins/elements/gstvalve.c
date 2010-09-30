@@ -1,9 +1,7 @@
-/*
- * Farsight Voice+Video library
- *
- *  Copyright 2007 Collabora Ltd, 
- *  Copyright 2007 Nokia Corporation
+/* GStreamer
+ *  Copyright 2007-2009 Collabora Ltd
  *   @author: Olivier Crete <olivier.crete@collabora.co.uk>
+ *  Copyright 2007-2009 Nokia Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,6 +19,7 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+
 /**
  * SECTION:element-valve
  *
@@ -117,7 +116,8 @@ gst_valve_class_init (GstValveClass * klass)
   g_object_class_install_property (gobject_class, ARG_DROP,
       g_param_spec_boolean ("drop",
           "Drops all buffers if TRUE",
-          "If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through",
+          "If this property if TRUE, the element will drop all buffers, "
+          "if its FALSE, it will let them through",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -204,6 +204,9 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_pad_push (valve->srcpad, buffer);
 
 
+  /* Ignore errors if "drop" was changed while the thread was blocked
+   * downwards
+   */
   GST_OBJECT_LOCK (GST_OBJECT (valve));
   if (valve->drop)
     ret = GST_FLOW_OK;
@@ -231,6 +234,9 @@ gst_valve_event (GstPad * pad, GstEvent * event)
   else
     ret = gst_pad_push_event (valve->srcpad, event);
 
+  /* Ignore errors if "drop" was changed while the thread was blocked
+   * downwards.
+   */
   GST_OBJECT_LOCK (GST_OBJECT (valve));
   if (valve->drop)
     ret = TRUE;
@@ -257,6 +263,9 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   else
     ret = gst_pad_alloc_buffer (valve->srcpad, offset, size, caps, buf);
 
+  /* Ignore errors if "drop" was changed while the thread was blocked
+   * downwards
+   */
   GST_OBJECT_LOCK (GST_OBJECT (valve));
   if (valve->drop)
     ret = GST_FLOW_OK;
