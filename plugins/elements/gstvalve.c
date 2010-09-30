@@ -188,7 +188,7 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean drop;
 
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   drop = valve->drop;
 
   if (!drop && valve->discont) {
@@ -196,7 +196,7 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     valve->discont = FALSE;
   }
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   if (drop)
     gst_buffer_unref (buffer);
@@ -207,10 +207,10 @@ gst_valve_chain (GstPad * pad, GstBuffer * buffer)
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards
    */
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   if (valve->drop)
     ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
 
@@ -225,9 +225,9 @@ gst_valve_event (GstPad * pad, GstEvent * event)
   gboolean ret = TRUE;
   gboolean drop;
 
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   drop = valve->drop;
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   if (drop)
     gst_event_unref (event);
@@ -237,10 +237,10 @@ gst_valve_event (GstPad * pad, GstEvent * event)
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards.
    */
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   if (valve->drop)
     ret = TRUE;
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
   return ret;
@@ -254,9 +254,9 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean drop;
 
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   drop = valve->drop;
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   if (drop)
     *buf = NULL;
@@ -266,10 +266,10 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   /* Ignore errors if "drop" was changed while the thread was blocked
    * downwards
    */
-  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  GST_OBJECT_LOCK (valve);
   if (valve->drop)
     ret = GST_FLOW_OK;
-  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+  GST_OBJECT_UNLOCK (valve);
 
   gst_object_unref (valve);
 
