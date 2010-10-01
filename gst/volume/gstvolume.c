@@ -502,13 +502,8 @@ volume_process_double (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gdouble *data = (gdouble *) bytes;
   guint num_samples = n_bytes / sizeof (gdouble);
-  int i;
 
-  gdouble vol = self->current_volume;
-
-  for (i = 0; i < num_samples; i++) {
-    data[i] *= vol;
-  }
+  orc_scalarmultiply_f64_ns (data, self->current_volume, num_samples);
 }
 
 static void

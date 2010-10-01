@@ -1,6 +1,12 @@
 
 .init gst_volume_orc_init
 
+.function orc_scalarmultiply_f64_ns
+.dest 8 d1 double
+.floatparam 8 p1
+
+muld d1, d1, p1
+
 .function orc_scalarmultiply_f32_ns
 .dest 4 d1 float
 .floatparam 4 p1
