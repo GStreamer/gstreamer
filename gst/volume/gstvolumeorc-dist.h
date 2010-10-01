@@ -59,7 +59,7 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
-void orc_scalarmultiply_f32_ns (float * d1, const float * s1, float p1, int n);
+void orc_scalarmultiply_f32_ns (float * d1, float p1, int n);
 void orc_process_int16 (gint16 * d1, int p1, int n);
 void orc_process_int16_clamp (gint16 * d1, int p1, int n);
 void orc_process_int8 (gint8 * d1, int p1, int n);

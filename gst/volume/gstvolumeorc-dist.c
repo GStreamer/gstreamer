@@ -72,7 +72,7 @@ typedef union
 } orc_union64;
 #endif
 
-void orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n);
+void orc_scalarmultiply_f32_ns (float *d1, float p1, int n);
 void orc_process_int16 (gint16 * d1, int p1, int n);
 void orc_process_int16_clamp (gint16 * d1, int p1, int n);
 void orc_process_int8 (gint8 * d1, int p1, int n);
@@ -126,24 +126,22 @@ void gst_volume_orc_init (void);
 /* orc_scalarmultiply_f32_ns */
 #ifdef DISABLE_ORC
 void
-orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
+orc_scalarmultiply_f32_ns (float *d1, float p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
-  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
 
   ptr0 = (orc_union32 *) d1;
-  ptr4 = (orc_union32 *) s1;
 
   /* 1: loadpl */
   var33.f = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
-    var32 = ptr4[i];
+    var32 = ptr0[i];
     /* 2: mulf */
     {
       orc_union32 _src1;
@@ -167,20 +165,18 @@ _backup_orc_scalarmultiply_f32_ns (OrcExecutor * ORC_RESTRICT ex)
   int i;
   int n = ex->n;
   orc_union32 *ORC_RESTRICT ptr0;
-  const orc_union32 *ORC_RESTRICT ptr4;
   orc_union32 var32;
   orc_union32 var33;
   orc_union32 var34;
 
   ptr0 = (orc_union32 *) ex->arrays[0];
-  ptr4 = (orc_union32 *) ex->arrays[4];
 
   /* 1: loadpl */
   var33.i = ex->params[24];
 
   for (i = 0; i < n; i++) {
     /* 0: loadl */
-    var32 = ptr4[i];
+    var32 = ptr0[i];
     /* 2: mulf */
     {
       orc_union32 _src1;
@@ -199,7 +195,7 @@ _backup_orc_scalarmultiply_f32_ns (OrcExecutor * ORC_RESTRICT ex)
 
 static OrcProgram *_orc_program_orc_scalarmultiply_f32_ns;
 void
-orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
+orc_scalarmultiply_f32_ns (float *d1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   OrcProgram *p = _orc_program_orc_scalarmultiply_f32_ns;
@@ -209,7 +205,6 @@ orc_scalarmultiply_f32_ns (float *d1, const float *s1, float p1, int n)
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
-  ex->arrays[ORC_VAR_S1] = (void *) s1;
   {
     orc_union32 tmp;
     tmp.f = p1;
@@ -579,10 +574,9 @@ gst_volume_orc_init (void)
     orc_program_set_name (p, "orc_scalarmultiply_f32_ns");
     orc_program_set_backup_function (p, _backup_orc_scalarmultiply_f32_ns);
     orc_program_add_destination (p, 4, "d1");
-    orc_program_add_source (p, 4, "s1");
     orc_program_add_parameter_float (p, 4, "p1");
 
-    orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_P1,
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_P1,
         ORC_VAR_D1);
 
     result = orc_program_compile (p);
