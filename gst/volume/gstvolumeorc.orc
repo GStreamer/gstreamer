@@ -68,3 +68,26 @@ convld t1, s1
 subd t1, 0x3FF0000000000000L, t1
 muld d1, d1, t1
 
+.function orc_process_controlled_f64_1ch
+.dest 8 d1 gdouble
+.source 8 s1 gdouble
+
+muld d1, d1, s1
+
+.function orc_process_controlled_f32_1ch
+.dest 4 d1 gfloat
+.source 8 s1 gdouble
+.temp 4 t1
+
+convdf t1, s1
+mulf d1, d1, t1
+
+.function orc_process_controlled_f32_2ch
+.dest 8 d1 gfloat
+.source 8 s1 gdouble
+.temp 4 t1
+.temp 8 t2
+
+convdf t1, s1
+mergelq t2, t1, t1
+x2 mulf d1, d1, t2

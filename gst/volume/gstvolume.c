@@ -521,10 +521,14 @@ volume_process_controlled_double (GstVolume * self, gpointer bytes,
   guint i, j;
   gdouble vol;
 
-  for (i = 0; i < num_samples; i++) {
-    vol = *volume++;
-    for (j = 0; j < channels; j++) {
-      *data++ *= vol;
+  if (channels == 1) {
+    orc_process_controlled_f64_1ch (data, volume, num_samples);
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      vol = *volume++;
+      for (j = 0; j < channels; j++) {
+        *data++ *= vol;
+      }
     }
   }
 }
@@ -547,10 +551,16 @@ volume_process_controlled_float (GstVolume * self, gpointer bytes,
   guint i, j;
   gdouble vol;
 
-  for (i = 0; i < num_samples; i++) {
-    vol = *volume++;
-    for (j = 0; j < channels; j++) {
-      *data++ *= vol;
+  if (channels == 1) {
+    orc_process_controlled_f32_1ch (data, volume, num_samples);
+  } else if (channels == 2) {
+    orc_process_controlled_f32_2ch (data, volume, num_samples);
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      vol = *volume++;
+      for (j = 0; j < channels; j++) {
+        *data++ *= vol;
+      }
     }
   }
 }
