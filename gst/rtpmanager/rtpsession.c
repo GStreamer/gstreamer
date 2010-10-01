@@ -1749,7 +1749,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
   i = 0;
   while (more_items) {
     guint32 ssrc;
-    gboolean changed, created;
+    gboolean changed, created, validated;
     RTPSource *source;
     GstStructure *sdes;
 
@@ -1802,10 +1802,13 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     /* takes ownership of sdes */
     changed = rtp_source_set_sdes_struct (source, sdes);
 
+    validated = !RTP_SOURCE_IS_ACTIVE (source);
     source->validated = TRUE;
 
     if (created)
       on_new_ssrc (sess, source);
+    if (validated)
+      on_ssrc_validated (sess, source);
     if (changed)
       on_ssrc_sdes (sess, source);
 
