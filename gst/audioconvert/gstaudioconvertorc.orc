@@ -139,6 +139,30 @@ mulf t1, t1, 0x4F000000
 addf t1, t1, 0x3F000000
 convfl d1, t1
 
+.function orc_audio_convert_unpack_double_s32
+.source 8 s1 gdouble
+.dest 4 d1 guint32
+.temp 8 t1
+
+loadq t1, s1
+# multiply with 2147483647.0
+muld t1, t1, 0x41DFFFFFFFC00000L
+# add 0.5 for rounding
+addd t1, t1, 0x3FE0000000000000L
+convdl d1, t1
+
+.function orc_audio_convert_unpack_double_s32_swap
+.source 8 s1 gdouble
+.dest 4 d1 guint32
+.temp 8 t1
+
+swapq t1, s1
+# multiply with 2147483647.0
+muld t1, t1, 0x41DFFFFFFFC00000L
+# add 0.5 for rounding
+addd t1, t1, 0x3FE0000000000000L
+convdl d1, t1
+
 .function orc_audio_convert_unpack_float_double
 .dest 8 d1 gdouble
 .source 4 s1 gfloat
@@ -417,6 +441,26 @@ convlf t1, s1
 divf t1, t1, 0x4F000000
 swapl d1, t1
 
+.function orc_audio_convert_pack_s32_double
+.dest 8 d1 gdouble
+.source 4 s1 gint32
+.temp 8 t1
+
+convld t1, s1
+# divide by 2147483647.0
+divd t1, t1, 0x41DFFFFFFFC00000L
+storeq d1, t1
+
+.function orc_audio_convert_pack_s32_double_swap
+.dest 8 d1 gdouble
+.source 4 s1 gint32
+.temp 8 t1
+
+convld t1, s1
+# divide by 2147483647.0
+divd t1, t1, 0x41DFFFFFFFC00000L
+swapq d1, t1
+
 .function orc_audio_convert_pack_double_float
 .dest 4 d1 gfloat
 .source 8 s1 gdouble
@@ -431,6 +475,20 @@ convdf d1, s1
 convdf t1, s1
 swapl d1, t1
 
+.function orc_audio_convert_pack_double_u8
+.dest 1 d1 guint8
+.source 8 s1 gdouble
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 4 t1
+.temp 2 t2
+
+convdl t1, s1
+xorl t1, t1, c1
+shrul t1, t1, p1
+convlw t2, t1
+convwb d1, t2
+
 .function orc_audio_convert_pack_double_s8
 .dest 1 d1 guint8
 .source 8 s1 gdouble
@@ -443,6 +501,18 @@ shrsl t1, t1, p1
 convlw t2, t1
 convwb d1, t2
 
+.function orc_audio_convert_pack_double_u16
+.dest 2 d1 guint8
+.source 8 s1 gdouble
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 4 t1
+
+convdl t1, s1
+xorl t1, t1, c1
+shrul t1, t1, p1
+convlw d1, t1
+
 .function orc_audio_convert_pack_double_s16
 .dest 2 d1 guint8
 .source 8 s1 gdouble
@@ -452,6 +522,20 @@ convwb d1, t2
 convdl t1, s1
 shrsl t1, t1, p1
 convlw d1, t1
+
+.function orc_audio_convert_pack_double_u16_swap
+.dest 2 d1 guint8
+.source 8 s1 gdouble
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 4 t1
+.temp 2 t2
+
+convdl t1, s1
+xorl t1, t1, c1
+shrul t1, t1, p1
+convlw t2, t1
+swapw d1, t2
 
 .function orc_audio_convert_pack_double_s16_swap
 .dest 2 d1 guint8
@@ -465,6 +549,17 @@ shrsl t1, t1, p1
 convlw t2, t1
 swapw d1, t2
 
+.function orc_audio_convert_pack_double_u32
+.dest 4 d1 guint8
+.source 8 s1 gdouble
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 4 t1
+
+convdl t1, s1
+xorl t1, t1, c1
+shrul d1, t1, p1
+
 .function orc_audio_convert_pack_double_s32
 .dest 4 d1 guint8
 .source 8 s1 gdouble
@@ -473,6 +568,18 @@ swapw d1, t2
 
 convdl t1, s1
 shrsl d1, t1, p1
+
+.function orc_audio_convert_pack_double_u32_swap
+.dest 4 d1 guint8
+.source 8 s1 gdouble
+.param 4 p1
+.const 4 c1 0x80000000
+.temp 4 t1
+
+convdl t1, s1
+xorl t1, t1, c1
+shrul t1, t1, p1
+swapl d1, t1
 
 .function orc_audio_convert_pack_double_s32_swap
 .dest 4 d1 guint8
