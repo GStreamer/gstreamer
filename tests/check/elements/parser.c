@@ -33,7 +33,10 @@ GstStaticPadTemplate *ctx_sink_template;
 GstStaticPadTemplate *ctx_src_template;
 GstCaps *ctx_input_caps;
 GstCaps *ctx_output_caps;
+guint ctx_discard = 0;
+datablob ctx_headers[MAX_HEADERS] = { {NULL, 0}, };
 
+gboolean ctx_no_metadata = FALSE;
 
 /* helper variables */
 GList *current_buf = NULL;
@@ -46,11 +49,13 @@ guint buffer_counter = 0;
 
 typedef struct
 {
+  guint discard;
   guint buffers_before_offset_skip;
   guint offset_skip_amount;
   const guint8 *data_to_verify;
   guint data_to_verify_size;
   GstCaps *caps;
+  gboolean no_metadata;
 } buffer_verify_data_s;
 
 /* takes a copy of the passed buffer data */
@@ -100,12 +105,19 @@ buffer_verify_data (void *buffer, void *user_data)
 
   vdata = (buffer_verify_data_s *) user_data;
 
+  GST_DEBUG ("discard: %d", vdata->discard);
+  if (vdata->discard) {
+    buffer_counter++;
+    if (buffer_counter == vdata->discard) {
+      buffer_counter = 0;
+      vdata->discard = 0;
+    }
+    return;
+  }
+
   fail_unless (GST_BUFFER_SIZE (buffer) == vdata->data_to_verify_size);
   fail_unless (memcmp (GST_BUFFER_DATA (buffer), vdata->data_to_verify,
           vdata->data_to_verify_size) == 0);
-
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
-  fail_unless (GST_BUFFER_DURATION (buffer) != 0);
 
   if (vdata->buffers_before_offset_skip) {
     /* This is for skipping the garbage in some test cases */
@@ -113,7 +125,11 @@ buffer_verify_data (void *buffer, void *user_data)
       offset_counter += vdata->offset_skip_amount;
     }
   }
-  fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
+  if (!vdata->no_metadata) {
+    fail_unless (GST_BUFFER_TIMESTAMP (buffer) == ts_counter);
+    fail_unless (GST_BUFFER_DURATION (buffer) != 0);
+    fail_unless (GST_BUFFER_OFFSET (buffer) == offset_counter);
+  }
 
   if (vdata->caps) {
     GST_LOG ("%" GST_PTR_FORMAT " = %" GST_PTR_FORMAT " ?",
@@ -190,6 +206,8 @@ gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
   /* could be NULL if not relevant/needed */
   ptest->src_caps = ctx_input_caps;
   ptest->sink_caps = ctx_output_caps;
+  memcpy (ptest->headers, ctx_headers, sizeof (ptest->headers));
+  ptest->discard = ctx_discard;
   /* some data that pleases caller */
   ptest->series[0].data = data;
   ptest->series[0].size = size;
@@ -197,6 +215,7 @@ gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
   ptest->series[0].fpb = 1;
   ptest->series[1].fpb = 1;
   ptest->series[2].fpb = 1;
+  ptest->no_metadata = ctx_no_metadata;
 }
 
 /*
@@ -205,7 +224,7 @@ gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size,
 void
 gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
 {
-  buffer_verify_data_s vdata = { 0, 0, NULL, 0, NULL };
+  buffer_verify_data_s vdata = { 0, 0, 0, NULL, 0, NULL, FALSE };
   GstElement *element;
   GstBuffer *buffer = NULL;
   GstCaps *src_caps;
@@ -214,6 +233,12 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
 
   element = setup_element (test->factory, test->sink_template, NULL,
       test->src_template, test->src_caps);
+
+  /* push some setup headers */
+  for (j = 0; j < G_N_ELEMENTS (test->headers) && test->headers[j].data; j++) {
+    buffer = buffer_new (test->headers[j].data, test->headers[j].size);
+    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
+  }
 
   for (j = 0; j < 3; j++) {
     for (i = 0; i < test->series[j].num; i++) {
@@ -246,17 +271,19 @@ gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps)
   gst_pad_push_event (srcpad, gst_event_new_eos ());
 
   if (G_LIKELY (test->framed))
-    fail_unless_equals_int (g_list_length (buffers), frames);
+    fail_unless_equals_int (g_list_length (buffers) - test->discard, frames);
 
   /* if all frames are identical, do extended test,
    * otherwise only verify total data size */
-  if (test->series[0].data && test->series[2].data &&
-      test->series[0].size == test->series[2].size &&
-      !memcmp (test->series[0].data, test->series[2].data,
-          test->series[0].size)) {
+  if (test->series[0].data && (!test->series[2].size ||
+          (test->series[0].size == test->series[2].size && test->series[2].data
+              && !memcmp (test->series[0].data, test->series[2].data,
+                  test->series[0].size)))) {
     vdata.data_to_verify = test->series[0].data;
     vdata.data_to_verify_size = test->series[0].size;
     vdata.caps = test->sink_caps;
+    vdata.discard = test->discard;
+    vdata.no_metadata = test->no_metadata;
     g_list_foreach (buffers, buffer_verify_data, &vdata);
   } else {
     guint datasum = 0;

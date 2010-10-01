@@ -139,6 +139,7 @@ check_PROGRAMS = \
 	elements/asfmux \
 	elements/camerabin \
 	elements/dataurisrc \
+	elements/flacparse \
 	elements/legacyresample \
         $(check_jifmux) \
 	elements/jpegparse \
@@ -201,6 +202,8 @@ elements_aacparse_LDADD = libparser.la $(LDADD)
 elements_ac3parse_LDADD = libparser.la $(LDADD)
 
 elements_amrparse_LDADD = libparser.la $(LDADD)
+
+elements_flacparse_LDADD = libparser.la $(LDADD)
 
 elements_mpegaudioparse_LDADD = libparser.la $(LDADD)
 
