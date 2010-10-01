@@ -497,8 +497,6 @@ gst_volume_init (GstVolume * self, GstVolumeClass * g_class)
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (self), TRUE);
 }
 
-#define USE_ORC
-
 static void
 volume_process_double (GstVolume * self, gpointer bytes, guint n_bytes)
 {
@@ -536,7 +534,7 @@ volume_process_float (GstVolume * self, gpointer bytes, guint n_bytes)
   gfloat *data = (gfloat *) bytes;
   guint num_samples = n_bytes / sizeof (gfloat);
 
-  orc_scalarmultiply_f32_ns (data, data, self->current_volume, num_samples);
+  orc_scalarmultiply_f32_ns (data, self->current_volume, num_samples);
 }
 
 static void
