@@ -25,6 +25,13 @@
 
 #include <gst/check/gstcheck.h>
 
+#define MAX_HEADERS 10
+
+typedef struct {
+    guint8     *data;
+    guint       size;
+} datablob;
+
 /* context state variables; to be set by test using this helper */
 /* mandatory */
 extern const gchar *ctx_factory;
@@ -33,6 +40,9 @@ extern GstStaticPadTemplate *ctx_src_template;
 /* optional */
 extern GstCaps *ctx_input_caps;
 extern GstCaps *ctx_output_caps;
+extern guint ctx_discard;
+extern datablob ctx_headers[MAX_HEADERS];
+extern gboolean ctx_no_metadata;
 
 /* no refs taken/kept, all up to caller */
 typedef struct
@@ -44,6 +54,10 @@ typedef struct
   GstCaps              *src_caps;
   /* optional: output caps to verify */
   GstCaps              *sink_caps;
+  /* initial headers */
+  datablob              headers[MAX_HEADERS];
+  /* initial (header) output to forego checking */
+  guint                 discard;
   /* series of buffers; middle series considered garbage */
   struct {
     /* data and size */
@@ -57,6 +71,7 @@ typedef struct
   /* sigh, weird cases */
   gboolean              framed;
   guint                 dropped;
+  gboolean              no_metadata;
 } GstParserTest;
 
 void gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size, guint num);
