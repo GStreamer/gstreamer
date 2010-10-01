@@ -111,6 +111,8 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
   if (len < 1)
     return NULL;
 
+  GST_MEMDUMP ("audio config", audio_config, len);
+
   profile = audio_config[0] >> 3;
   switch (profile) {
     case 1:
@@ -180,6 +182,8 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
 
   if (len < 2)
     return NULL;
+
+  GST_MEMDUMP ("audio config", audio_config, len);
 
   profile = audio_config[0] >> 3;
   /* FIXME: add support for sr_idx = 0xf */
@@ -365,6 +369,9 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
     }
   }
 
+  GST_LOG ("profile : %s", (profile) ? profile : "---");
+  GST_LOG ("level   : %s", (level) ? level : "---");
+
   return (level != NULL && profile != NULL);
 }
 
@@ -402,6 +409,8 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
 
   if (len < 2)
     return NULL;
+
+  GST_MEMDUMP ("SPS", sps, len);
 
   csf1 = (sps[1] & 0x40) >> 6;
   csf3 = (sps[1] & 0x10) >> 4;
@@ -473,6 +482,8 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
   if (len < 3)
     return NULL;
 
+  GST_MEMDUMP ("SPS", sps, len);
+
   csf3 = (sps[1] & 0x10) >> 4;
 
   if (sps[2] == 11 && csf3)
@@ -542,6 +553,9 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
   if (profile != NULL)
     gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
+  GST_LOG ("profile : %s", (profile) ? profile : "---");
+  GST_LOG ("level   : %s", (level) ? level : "---");
+
   return (level != NULL && profile != NULL);
 }
 
@@ -580,8 +594,12 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
   if (len < 1)
     return NULL;
 
+  GST_MEMDUMP ("VOS", vis_obj_seq, len);
+
   profile_id = vis_obj_seq[0] >> 4;
   level_id = vis_obj_seq[0] & 0xf;
+
+  GST_LOG ("profile_id = %d, level_id = %d", profile_id, level_id);
 
   if (profile_id != 6 && profile_id < 0xe)
     return profiles[profile_id];
@@ -648,8 +666,12 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
   if (len < 1)
     return NULL;
 
+  GST_MEMDUMP ("VOS", vis_obj_seq, len);
+
   profile_id = vis_obj_seq[0] >> 4;
   level_id = vis_obj_seq[0] & 0xf;
+
+  GST_LOG ("profile_id = %d, level_id = %d", profile_id, level_id);
 
   if (profile_id != 0xf && level_id == 0)
     return NULL;
@@ -725,10 +747,13 @@ gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps * caps,
   if (profile != NULL)
     gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile, NULL);
 
-  level = gst_codec_utils_mpeg4video_get_profile (vis_obj_seq, len);
+  level = gst_codec_utils_mpeg4video_get_level (vis_obj_seq, len);
 
   if (level != NULL)
     gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
+
+  GST_LOG ("profile : %s", (profile) ? profile : "---");
+  GST_LOG ("level   : %s", (level) ? level : "---");
 
   return (profile != NULL && level != NULL);
 }
