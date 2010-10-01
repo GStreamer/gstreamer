@@ -53,4 +53,18 @@ mulsbw t1, d1, p1
 shrsw t1, t1, 5
 convssswb d1, t1
 
+.function orc_memset_f64
+.dest 8 d1 gdouble
+.floatparam 8 p1
+
+copyq d1, p1
+
+.function orc_prepare_volumes
+.dest 8 d1 gdouble
+.source 4 s1 gboolean
+.temp 8 t1
+
+convld t1, s1
+subd t1, 0x3FF0000000000000L, t1
+muld d1, d1, t1
 

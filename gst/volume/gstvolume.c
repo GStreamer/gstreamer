@@ -49,8 +49,14 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
-#include "gstvolumeorc.h"
 
+#ifdef HAVE_ORC
+#include <orc/orcfunctions.h>
+#else
+#define orc_memset memset
+#endif
+
+#include "gstvolumeorc.h"
 #include "gstvolume.h"
 
 /* some defines for audio processing */
@@ -973,17 +979,11 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
       gst_object_unref (volume_csource);
       volume_csource = NULL;
     } else {
-      guint i;
-
-      for (i = 0; i < nsamples; i++)
-        self->volumes[i] = self->current_volume;
+      orc_memset_f64 (self->volumes, self->current_volume, nsamples);
     }
 
     if (mute_csource) {
-      guint i;
-
-      for (i = 0; i < nsamples; i++)
-        self->volumes[i] *= (1.0 - self->mutes[i]);
+      orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     }
 
     self->process_controlled (self, data, self->volumes, channels, size);
@@ -994,7 +994,7 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   }
 
   if (self->current_volume == 0.0 || self->current_mute) {
-    memset (data, 0, size);
+    orc_memset (data, 0, size);
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
   } else if (self->current_volume != 1.0) {
     self->process (self, data, size);
