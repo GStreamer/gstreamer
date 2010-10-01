@@ -769,11 +769,17 @@ volume_process_controlled_int16_clamp (GstVolume * self, gpointer bytes,
   guint num_samples = n_bytes / (sizeof (gint16) * channels);
   gdouble vol, val;
 
-  for (i = 0; i < num_samples; i++) {
-    vol = *volume++;
-    for (j = 0; j < channels; j++) {
-      val = *data * vol;
-      *data++ = (gint16) CLAMP (val, VOLUME_MIN_INT16, VOLUME_MAX_INT16);
+  if (channels == 1) {
+    orc_process_controlled_int16_1ch (data, volume, num_samples);
+  } else if (channels == 2) {
+    orc_process_controlled_int16_2ch (data, volume, num_samples);
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      vol = *volume++;
+      for (j = 0; j < channels; j++) {
+        val = *data * vol;
+        *data++ = (gint16) CLAMP (val, VOLUME_MIN_INT16, VOLUME_MAX_INT16);
+      }
     }
   }
 }
@@ -837,11 +843,19 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
   guint num_samples = n_bytes / (sizeof (gint8) * channels);
   gdouble val, vol;
 
-  for (i = 0; i < num_samples; i++) {
-    vol = *volume++;
-    for (j = 0; j < channels; j++) {
-      val = *data * vol;
-      *data++ = (gint8) CLAMP (val, VOLUME_MIN_INT8, VOLUME_MAX_INT8);
+  if (channels == 1) {
+    orc_process_controlled_int8_1ch (data, volume, num_samples);
+  } else if (channels == 2) {
+    orc_process_controlled_int8_2ch (data, volume, num_samples);
+  } else if (channels == 4) {
+    orc_process_controlled_int8_4ch (data, volume, num_samples);
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      vol = *volume++;
+      for (j = 0; j < channels; j++) {
+        val = *data * vol;
+        *data++ = (gint8) CLAMP (val, VOLUME_MIN_INT8, VOLUME_MAX_INT8);
+      }
     }
   }
 }
