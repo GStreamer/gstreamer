@@ -60,6 +60,8 @@ struct _GstV4l2Sink {
   guint32 num_buffers;
   guint32 min_queued_bufs;
 
+  gint video_width, video_height;      /* original (unscaled) video w/h */
+
   /*
    * field to store requested overlay and crop top/left/width/height props:
    * note, could maybe be combined with 'vwin' field in GstV4l2Object?

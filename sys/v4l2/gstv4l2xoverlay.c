@@ -33,6 +33,8 @@
 #include <X11/extensions/Xvlib.h>
 #include <sys/stat.h>
 
+#include <gst/interfaces/navigation.h>
+
 #include "gstv4l2xoverlay.h"
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
@@ -43,7 +45,7 @@ struct _GstV4l2Xv
 {
   Display *dpy;
   gint port, idle_id, event_id;
-  GMutex *mutex;
+  GMutex *mutex;                       /* to serialize calls to X11 */
 };
 
 GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
@@ -175,15 +177,53 @@ gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
   gst_v4l2_xoverlay_close (v4l2object);
 }
 
+/* should be called with mutex held */
+static gboolean
+get_render_rect (GstV4l2Object * v4l2object, GstVideoRectangle *rect)
+{
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
+  if (v4l2xv && v4l2xv->dpy && v4l2object->xwindow_id) {
+    XWindowAttributes attr;
+    XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
+    /* this is where we'd add support to maintain aspect ratio */
+    rect->x = 0;
+    rect->y = 0;
+    rect->w = attr.width;
+    rect->h = attr.height;
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+gboolean
+gst_v4l2_xoverlay_get_render_rect (GstV4l2Object *v4l2object,
+    GstVideoRectangle *rect)
+{
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
+  gboolean ret = FALSE;
+  if (v4l2xv) {
+    g_mutex_lock (v4l2xv->mutex);
+    ret = get_render_rect (v4l2object, rect);
+    g_mutex_unlock (v4l2xv->mutex);
+  }
+  return ret;
+}
+
 static void
 update_geometry (GstV4l2Object * v4l2object)
 {
   GstV4l2Xv *v4l2xv = v4l2object->xv;
-  XWindowAttributes attr;
-  XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
+  GstVideoRectangle rect;
+  if (!get_render_rect (v4l2object, &rect))
+    return;
+  /* note: we don't pass in valid video x/y/w/h.. currently the xserver
+   * doesn't need to know these, as they come from v4l2 by setting the
+   * crop..
+   */
   XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
       DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
-      0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
+      0, 0, rect.w, rect.h, rect.x, rect.y, rect.w, rect.h);
 }
 
 static gboolean
@@ -220,6 +260,92 @@ event_refresh (gpointer data)
     XEvent e;
 
     g_mutex_lock (v4l2xv->mutex);
+
+    /* If the element supports navigation, collect the relavent input
+     * events and push them upstream as navigation events
+     */
+    if (GST_IS_NAVIGATION (v4l2object->element)) {
+      guint pointer_x = 0, pointer_y = 0;
+      gboolean pointer_moved = FALSE;
+
+      /* We get all pointer motion events, only the last position is
+       * interesting.
+       */
+      while (XCheckWindowEvent (v4l2xv->dpy, v4l2object->xwindow_id,
+          PointerMotionMask, &e)) {
+        switch (e.type) {
+          case MotionNotify:
+            pointer_x = e.xmotion.x;
+            pointer_y = e.xmotion.y;
+            pointer_moved = TRUE;
+            break;
+          default:
+            break;
+        }
+      }
+      if (pointer_moved) {
+        GST_DEBUG_OBJECT (v4l2object->element,
+            "pointer moved over window at %d,%d", pointer_x, pointer_y);
+        g_mutex_unlock (v4l2xv->mutex);
+        gst_navigation_send_mouse_event (GST_NAVIGATION (v4l2object->element),
+            "mouse-move", 0, e.xbutton.x, e.xbutton.y);
+        g_mutex_lock (v4l2xv->mutex);
+      }
+
+      /* We get all events on our window to throw them upstream
+       */
+      while (XCheckWindowEvent (v4l2xv->dpy, v4l2object->xwindow_id,
+              KeyPressMask | KeyReleaseMask |
+              ButtonPressMask | ButtonReleaseMask, &e)) {
+        KeySym keysym;
+        const char *key_str = NULL;
+
+        g_mutex_unlock (v4l2xv->mutex);
+
+        switch (e.type) {
+          case ButtonPress:
+            GST_DEBUG_OBJECT (v4l2object->element,
+                "button %d pressed over window at %d,%d",
+                e.xbutton.button, e.xbutton.x, e.xbutton.y);
+            gst_navigation_send_mouse_event (
+                GST_NAVIGATION (v4l2object->element),
+                "mouse-button-press", e.xbutton.button,
+                e.xbutton.x, e.xbutton.y);
+            break;
+          case ButtonRelease:
+            GST_DEBUG_OBJECT (v4l2object->element,
+                "button %d released over window at %d,%d",
+                e.xbutton.button, e.xbutton.x, e.xbutton.y);
+            gst_navigation_send_mouse_event (
+                GST_NAVIGATION (v4l2object->element),
+                "mouse-button-release", e.xbutton.button,
+                e.xbutton.x, e.xbutton.y);
+            break;
+          case KeyPress:
+          case KeyRelease:
+            g_mutex_lock (v4l2xv->mutex);
+            keysym = XKeycodeToKeysym (v4l2xv->dpy, e.xkey.keycode, 0);
+            if (keysym != NoSymbol) {
+              key_str = XKeysymToString (keysym);
+            } else {
+              key_str = "unknown";
+            }
+            g_mutex_unlock (v4l2xv->mutex);
+            GST_DEBUG_OBJECT (v4l2object->element,
+                "key %d pressed over window at %d,%d (%s)",
+                e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
+            gst_navigation_send_key_event (
+                GST_NAVIGATION (v4l2object->element),
+                e.type == KeyPress ? "key-press" : "key-release", key_str);
+            break;
+          default:
+            GST_DEBUG_OBJECT (v4l2object->element,
+                "unhandled X event (%d)", e.type);
+        }
+
+        g_mutex_lock (v4l2xv->mutex);
+      }
+    }
 
     /* Handle ConfigureNotify */
     while (XCheckWindowEvent (v4l2xv->dpy, v4l2object->xwindow_id,
@@ -312,6 +438,7 @@ gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
     GstV4l2Xv *v4l2xv;
     Window win;
     int width, height;
+    long event_mask;
 
     if (!v4l2object->xv && GST_V4L2_IS_OPEN (v4l2object))
       gst_v4l2_xoverlay_open (v4l2object);
@@ -338,13 +465,13 @@ gst_v4l2_xoverlay_prepare_xwindow_id (GstV4l2Object * v4l2object,
 
     GST_DEBUG_OBJECT (v4l2object->element, "win=%lu", win);
 
-    /* @todo add mouse events for all windows, and button events for self
-     * created windows, and hook up to navigation interface.. note that at
-     * least some of the events we want to handle regardless of whether it
-     * is a self created window or not.. such as mouse/button events in
-     * order to implement navigation interface?
-     */
-    XSelectInput (v4l2xv->dpy, win, ExposureMask | StructureNotifyMask);
+    event_mask = ExposureMask | StructureNotifyMask;
+    if (GST_IS_NAVIGATION (v4l2object->element)) {
+      event_mask |= PointerMotionMask |
+          KeyPressMask | KeyReleaseMask |
+          ButtonPressMask | ButtonReleaseMask;
+    }
+    XSelectInput (v4l2xv->dpy, win, event_mask);
     v4l2xv->event_id = g_timeout_add (45, event_refresh, v4l2object);
 
     XMapRaised (v4l2xv->dpy, win);

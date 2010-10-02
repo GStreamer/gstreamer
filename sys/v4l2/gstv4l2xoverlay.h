@@ -28,6 +28,8 @@
 
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
+#include <gst/video/gstvideosink.h>  /* for GstVideoRectange */
 
 #include "gstv4l2object.h"
 
@@ -35,6 +37,8 @@ G_BEGIN_DECLS
 
 void gst_v4l2_xoverlay_start (GstV4l2Object  *v4l2object);
 void gst_v4l2_xoverlay_stop  (GstV4l2Object  *v4l2object);
+gboolean gst_v4l2_xoverlay_get_render_rect (GstV4l2Object *v4l2object,
+    GstVideoRectangle *rect);
 
 void gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass);
 void gst_v4l2_xoverlay_set_window_handle (GstV4l2Object * v4l2object,
