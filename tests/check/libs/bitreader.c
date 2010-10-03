@@ -45,7 +45,7 @@ GST_START_TEST (test_initialization)
   GstBuffer *buffer = gst_buffer_new ();
   GstBitReader reader = GST_BIT_READER_INIT (data, 4);
   GstBitReader *reader2;
-  guint8 x;
+  guint8 x = 0;
 
   GST_BUFFER_DATA (buffer) = data;
   GST_BUFFER_SIZE (buffer) = 4;
@@ -197,7 +197,7 @@ GST_START_TEST (test_position_tracking)
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
   };
   GstBitReader reader = GST_BIT_READER_INIT (data, 16);
-  guint8 a;
+  guint8 a = 0;
 
   fail_unless_equals_int (gst_bit_reader_get_pos (&reader), 0);
   fail_unless_equals_int (gst_bit_reader_get_remaining (&reader), 16 * 8);
