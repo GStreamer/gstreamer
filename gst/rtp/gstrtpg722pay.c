@@ -131,8 +131,9 @@ gst_rtp_g722_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   else
     order = NULL;
 
-  if (rate == 16000)
-    clock_rate = 8000;
+  /* Clock rate is always 8000 Hz for G722 according to
+   * RFC 3551 although the sampling rate is 16000 Hz */
+  clock_rate = 8000;
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "G722",
       clock_rate);
