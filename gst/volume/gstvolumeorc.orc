@@ -13,6 +13,23 @@ muld d1, d1, p1
 
 mulf d1, d1, p1
 
+.function orc_process_int32
+.dest 4 d1 gint32
+.param 4 p1
+.temp 8 t1
+
+mulslq t1, d1, p1
+shrsq t1, t1, 27
+convql d1, t1
+
+.function orc_process_int32_clamp
+.dest 4 d1 gint32
+.param 4 p1
+.temp 8 t1
+
+mulslq t1, d1, p1
+shrsq t1, t1, 27
+convsssql d1, t1
 
 .function orc_process_int16
 .dest 2 d1 gint16
@@ -90,6 +107,18 @@ mulf d1, d1, t1
 convdf t1, s1
 mergelq t2, t1, t1
 x2 mulf d1, d1, t2
+
+.function orc_process_controlled_int32_1ch
+.dest 4 d1 gint32
+.source 8 s1 gdouble
+.temp 8 t1
+.temp 4 t2
+
+muld t1, s1, 0x41DFFFFFFFC00000L
+convdl t2, t1
+mulslq t1, d1, t2
+shrsq t1, t1, 32
+convql d1, t1
 
 .function orc_process_controlled_int16_1ch
 .dest 2 d1 gint16

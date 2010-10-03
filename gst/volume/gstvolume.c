@@ -569,10 +569,13 @@ static void
 volume_process_int32 (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gint32 *data = (gint32 *) bytes;
-  guint i, num_samples;
+  guint num_samples = n_bytes / sizeof (gint);
+#ifndef USE_ORC
+  guint i;
   gint64 val;
 
-  num_samples = n_bytes / sizeof (gint);
+  /* hard coded in volume.orc */
+  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 27);
   for (i = 0; i < num_samples; i++) {
     /* we use bitshifting instead of dividing by UNITY_INT for speed */
     val = (gint64) * data;
@@ -581,16 +584,22 @@ volume_process_int32 (GstVolume * self, gpointer bytes, guint n_bytes)
             val) >> VOLUME_UNITY_INT32_BIT_SHIFT);
     *data++ = (gint32) val;
   }
+#else
+  orc_process_int32 (data, self->current_vol_i32, num_samples);
+#endif
 }
 
 static void
 volume_process_int32_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
 {
   gint32 *data = (gint32 *) bytes;
-  guint i, num_samples;
+  guint num_samples = n_bytes / sizeof (gint);
+#ifndef USE_ORC
+  guint i;
   gint64 val;
 
-  num_samples = n_bytes / sizeof (gint32);
+  /* hard coded in volume.orc */
+  g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 27);
 
   for (i = 0; i < num_samples; i++) {
     /* we use bitshifting instead of dividing by UNITY_INT for speed */
@@ -600,6 +609,9 @@ volume_process_int32_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
             val) >> VOLUME_UNITY_INT32_BIT_SHIFT);
     *data++ = (gint32) CLAMP (val, VOLUME_MIN_INT32, VOLUME_MAX_INT32);
   }
+#else
+  orc_process_int32_clamp (data, self->current_vol_i32, num_samples);
+#endif
 }
 
 static void
@@ -611,11 +623,15 @@ volume_process_controlled_int32_clamp (GstVolume * self, gpointer bytes,
   guint num_samples = n_bytes / (sizeof (gint32) * channels);
   gdouble vol, val;
 
-  for (i = 0; i < num_samples; i++) {
-    vol = *volume++;
-    for (j = 0; j < channels; j++) {
-      val = *data * vol;
-      *data++ = (gint32) CLAMP (val, VOLUME_MIN_INT32, VOLUME_MAX_INT32);
+  if (channels == 1) {
+    orc_process_controlled_int32_1ch (data, volume, num_samples);
+  } else {
+    for (i = 0; i < num_samples; i++) {
+      vol = *volume++;
+      for (j = 0; j < channels; j++) {
+        val = *data * vol;
+        *data++ = (gint32) CLAMP (val, VOLUME_MIN_INT32, VOLUME_MAX_INT32);
+      }
     }
   }
 }
