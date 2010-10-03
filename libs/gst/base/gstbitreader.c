@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#define GST_BIT_READER_DISABLE_INLINES
 #include "gstbitreader.h"
 
 #include <string.h>
@@ -174,9 +175,7 @@ gst_bit_reader_set_pos (GstBitReader * reader, guint pos)
 guint
 gst_bit_reader_get_pos (const GstBitReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
-  return reader->byte * 8 + reader->bit;
+  return _gst_bit_reader_get_pos_inline (reader);
 }
 
 /**
@@ -192,9 +191,7 @@ gst_bit_reader_get_pos (const GstBitReader * reader)
 guint
 gst_bit_reader_get_remaining (const GstBitReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
-  return reader->size * 8 - (reader->byte * 8 + reader->bit);
+  return _gst_bit_reader_get_remaining_inline (reader);
 }
 
 /**
@@ -210,9 +207,7 @@ gst_bit_reader_get_remaining (const GstBitReader * reader)
 guint
 gst_bit_reader_get_size (const GstBitReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
-  return reader->size * 8;
+  return _gst_bit_reader_get_size_inline (reader);
 }
 
 /**
@@ -229,16 +224,7 @@ gst_bit_reader_get_size (const GstBitReader * reader)
 gboolean
 gst_bit_reader_skip (GstBitReader * reader, guint nbits)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-
-  if (gst_bit_reader_get_remaining (reader) < nbits)
-    return FALSE;
-
-  reader->bit += nbits;
-  reader->byte += reader->bit / 8;
-  reader->bit = reader->bit % 8;
-
-  return TRUE;
+  return _gst_bit_reader_skip_inline (reader, nbits);
 }
 
 /**
@@ -254,17 +240,7 @@ gst_bit_reader_skip (GstBitReader * reader, guint nbits)
 gboolean
 gst_bit_reader_skip_to_byte (GstBitReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-
-  if (reader->byte > reader->size)
-    return FALSE;
-
-  if (reader->bit) {
-    reader->bit = 0;
-    reader->byte++;
-  }
-
-  return TRUE;
+  return _gst_bit_reader_skip_to_byte_inline (reader);
 }
 
 /**
@@ -375,55 +351,13 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 gboolean \
 gst_bit_reader_peek_bits_uint##bits (const GstBitReader *reader, guint##bits *val, guint nbits) \
 { \
-  guint##bits ret = 0; \
-  const guint8 *data; \
-  guint byte, bit; \
-  \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  g_return_val_if_fail (nbits <= bits, FALSE); \
-  \
-  data = reader->data; \
-  byte = reader->byte; \
-  bit = reader->bit; \
-  \
-  if (byte * 8 + bit + nbits > reader->size * 8) \
-    return FALSE; \
-  \
-  while (nbits > 0) { \
-    guint toread = MIN (nbits, 8 - bit); \
-    \
-    ret <<= toread; \
-    ret |= (data[byte] & (0xff >> bit)) >> (8 - toread - bit); \
-    \
-    bit += toread; \
-    if (bit >= 8) { \
-      byte++; \
-      bit = 0; \
-    } \
-    nbits -= toread; \
-  } \
-  \
-  *val = ret; \
-  return TRUE; \
+  return _gst_bit_reader_peek_bits_uint##bits##_inline (reader, val, nbits); \
 } \
 \
 gboolean \
 gst_bit_reader_get_bits_uint##bits (GstBitReader *reader, guint##bits *val, guint nbits) \
 { \
-  gboolean ret; \
-  \
-  ret = gst_bit_reader_peek_bits_uint##bits (reader, val, nbits); \
-  \
-  if (ret) { \
-    reader->bit += nbits; \
-    if (reader->bit >= 8) { \
-      reader->byte += reader->bit / 8; \
-      reader->bit = reader->bit % 8; \
-    } \
-  } \
-  \
-  return ret; \
+  return _gst_bit_reader_get_bits_uint##bits##_inline (reader, val, nbits); \
 }
 
 GST_BIT_READER_READ_BITS (8);

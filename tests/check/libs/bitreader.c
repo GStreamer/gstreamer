@@ -112,10 +112,10 @@ GST_START_TEST (test_get_bits)
     0xfe, 0xdc, 0xba, 0x09, 0x87, 0x65, 0x43, 0x21
   };
   GstBitReader reader = GST_BIT_READER_INIT (data, 16);
-  guint8 a;
-  guint16 b;
-  guint32 c;
-  guint64 d;
+  guint8 a = 0;
+  guint16 b = 0;
+  guint32 c = 0;
+  guint64 d = 0;
 
   /* 8 bit */
   GET_CHECK (&reader, a, 8, 8, 0x12);

@@ -36,7 +36,8 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstdataqueue.h
 
 noinst_HEADERS = \
-	gstbytereader-docs.h
+	gstbytereader-docs.h \
+	gstbitreader-docs.h
 
 CLEANFILES = *.gcno *.gcda *.gcov
 
