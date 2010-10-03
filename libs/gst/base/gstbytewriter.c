@@ -22,8 +22,8 @@
 #include "config.h"
 #endif
 
+#define GST_BYTE_WRITER_DISABLE_INLINES
 #include "gstbytewriter.h"
-#include <string.h>
 
 /**
  * SECTION:gstbytewriter
@@ -385,19 +385,6 @@ gst_byte_writer_get_remaining (const GstByteWriter * writer)
     return writer->alloc_size - writer->parent.byte;
 }
 
-static guint
-_next_pow2 (guint n)
-{
-  guint ret = 16;
-
-  /* We start with 16, smaller allocations make no sense */
-
-  while (ret < n)
-    ret <<= 1;
-
-  return ret;
-}
-
 /**
  * gst_byte_writer_ensure_free_space:
  * @writer: #GstByteWriter instance
@@ -413,23 +400,7 @@ _next_pow2 (guint n)
 gboolean
 gst_byte_writer_ensure_free_space (GstByteWriter * writer, guint size)
 {
-  guint8 *data;
-
-  if (G_UNLIKELY (size <= writer->alloc_size - writer->parent.byte))
-    return TRUE;
-  if (G_UNLIKELY (writer->fixed || !writer->owned))
-    return FALSE;
-  if (G_UNLIKELY (writer->parent.byte > G_MAXUINT - size))
-    return FALSE;
-
-  writer->alloc_size = _next_pow2 (writer->parent.byte + size);
-  data = g_try_realloc ((guint8 *) writer->parent.data, writer->alloc_size);
-  if (G_UNLIKELY (data == NULL))
-    return FALSE;
-
-  writer->parent.data = data;
-
-  return TRUE;
+  return _gst_byte_writer_ensure_free_space_inline (writer, size);
 }
 
 
@@ -437,19 +408,7 @@ gst_byte_writer_ensure_free_space (GstByteWriter * writer, guint size)
 gboolean \
 gst_byte_writer_put_##name (GstByteWriter *writer, type val) \
 { \
-  guint8 *write_data; \
-  \
-  g_return_val_if_fail (writer != NULL, FALSE); \
-  \
-  if (G_UNLIKELY (!gst_byte_writer_ensure_free_space(writer, bits/8))) \
-    return FALSE; \
-  \
-  write_data = (guint8 *) writer->parent.data + writer->parent.byte; \
-  write_func (write_data, val); \
-  writer->parent.byte += bits/8; \
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte); \
-  \
-  return TRUE; \
+  return _gst_byte_writer_put_##name##_inline (writer, val); \
 }
 
 CREATE_WRITE_FUNC (8, guint8, uint8, GST_WRITE_UINT8);
@@ -480,31 +439,13 @@ gboolean
 gst_byte_writer_put_data (GstByteWriter * writer, const guint8 * data,
     guint size)
 {
-  g_return_val_if_fail (writer != NULL, FALSE);
-
-  if (G_UNLIKELY (!gst_byte_writer_ensure_free_space (writer, size)))
-    return FALSE;
-
-  memcpy ((guint8 *) & writer->parent.data[writer->parent.byte], data, size);
-  writer->parent.byte += size;
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
-
-  return TRUE;
+  return _gst_byte_writer_put_data_inline (writer, data, size);
 }
 
 gboolean
-gst_byte_writer_fill (GstByteWriter * writer, const guint8 value, guint size)
+gst_byte_writer_fill (GstByteWriter * writer, guint8 value, guint size)
 {
-  g_return_val_if_fail (writer != NULL, FALSE);
-
-  if (G_UNLIKELY (!gst_byte_writer_ensure_free_space (writer, size)))
-    return FALSE;
-
-  memset ((guint8 *) & writer->parent.data[writer->parent.byte], value, size);
-  writer->parent.byte += size;
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
-
-  return TRUE;
+  return _gst_byte_writer_fill_inline (writer, value, size);
 }
 
 #define CREATE_WRITE_STRING_FUNC(bits,type) \
@@ -512,6 +453,7 @@ gboolean \
 gst_byte_writer_put_string_utf##bits (GstByteWriter *writer, const type * data) \
 { \
   guint size = 0; \
+  \
   g_return_val_if_fail (writer != NULL, FALSE); \
   \
   /* endianness does not matter if we are looking for a NUL terminator */ \
@@ -523,10 +465,10 @@ gst_byte_writer_put_string_utf##bits (GstByteWriter *writer, const type * data) 
   } \
   ++size; \
   \
-  if (G_UNLIKELY (!gst_byte_writer_ensure_free_space(writer, size * (bits / 8)))) \
+  if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline(writer, size * (bits / 8)))) \
     return FALSE; \
   \
-  gst_byte_writer_put_data (writer, (const guint8 *) data, size * (bits / 8)); \
+  _gst_byte_writer_put_data_inline (writer, (const guint8 *) data, size * (bits / 8)); \
   \
   return TRUE; \
 }
