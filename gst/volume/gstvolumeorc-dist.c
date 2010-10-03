@@ -72,11 +72,25 @@ typedef union
 } orc_union64;
 #endif
 
+void orc_scalarmultiply_f64_ns (double *d1, double p1, int n);
 void orc_scalarmultiply_f32_ns (float *d1, float p1, int n);
+void orc_process_int32 (gint32 * d1, int p1, int n);
+void orc_process_int32_clamp (gint32 * d1, int p1, int n);
 void orc_process_int16 (gint16 * d1, int p1, int n);
 void orc_process_int16_clamp (gint16 * d1, int p1, int n);
 void orc_process_int8 (gint8 * d1, int p1, int n);
 void orc_process_int8_clamp (gint8 * d1, int p1, int n);
+void orc_memset_f64 (gdouble * d1, double p1, int n);
+void orc_prepare_volumes (gdouble * d1, const gboolean * s1, int n);
+void orc_process_controlled_f64_1ch (gdouble * d1, const gdouble * s1, int n);
+void orc_process_controlled_f32_1ch (gfloat * d1, const gdouble * s1, int n);
+void orc_process_controlled_f32_2ch (gfloat * d1, const gdouble * s1, int n);
+void orc_process_controlled_int32_1ch (gint32 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int16_1ch (gint16 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int16_2ch (gint16 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_1ch (gint8 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_2ch (gint8 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_4ch (gint8 * d1, const gdouble * s1, int n);
 
 void gst_volume_orc_init (void);
 
@@ -121,6 +135,103 @@ void gst_volume_orc_init (void);
 #endif
 /* end Orc C target preamble */
 
+
+
+/* orc_scalarmultiply_f64_ns */
+#ifdef DISABLE_ORC
+void
+orc_scalarmultiply_f64_ns (double *d1, double p1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) d1;
+
+  /* 1: loadpq */
+  var33.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+#else
+static void
+_backup_orc_scalarmultiply_f64_ns (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+
+  /* 1: loadpq */
+  var33.i =
+      (ex->params[24] & 0xffffffff) | ((orc_uint64) (ex->params[24 +
+              (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_scalarmultiply_f64_ns;
+void
+orc_scalarmultiply_f64_ns (double *d1, double p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_scalarmultiply_f64_ns;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  {
+    orc_union64 tmp;
+    tmp.f = p1;
+    ex->params[ORC_VAR_P1] = tmp.x2[0];
+    ex->params[ORC_VAR_T1] = tmp.x2[1];
+  }
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
 
 
 /* orc_scalarmultiply_f32_ns */
@@ -210,6 +321,178 @@ orc_scalarmultiply_f32_ns (float *d1, float p1, int n)
     tmp.f = p1;
     ex->params[ORC_VAR_P1] = tmp.i;
   }
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_int32 */
+#ifdef DISABLE_ORC
+void
+orc_process_int32 (gint32 * d1, int p1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+
+  ptr0 = (orc_union32 *) d1;
+
+  /* 1: loadpl */
+  var34.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulslq */
+    var36.i = ((orc_int64) var33.i) * ((orc_int64) var34.i);
+    /* 3: shrsq */
+    var37.i = var36.i >> 27;
+    /* 4: convql */
+    var35.i = var37.i;
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_int32 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+
+  /* 1: loadpl */
+  var34.i = ex->params[24];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulslq */
+    var36.i = ((orc_int64) var33.i) * ((orc_int64) var34.i);
+    /* 3: shrsq */
+    var37.i = var36.i >> 27;
+    /* 4: convql */
+    var35.i = var37.i;
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_int32;
+void
+orc_process_int32 (gint32 * d1, int p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_int32;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_P1] = p1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_int32_clamp */
+#ifdef DISABLE_ORC
+void
+orc_process_int32_clamp (gint32 * d1, int p1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+
+  ptr0 = (orc_union32 *) d1;
+
+  /* 1: loadpl */
+  var34.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulslq */
+    var36.i = ((orc_int64) var33.i) * ((orc_int64) var34.i);
+    /* 3: shrsq */
+    var37.i = var36.i >> 27;
+    /* 4: convsssql */
+    var35.i = ORC_CLAMP_SL (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_int32_clamp (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  orc_union32 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+
+  /* 1: loadpl */
+  var34.i = ex->params[24];
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr0[i];
+    /* 2: mulslq */
+    var36.i = ((orc_int64) var33.i) * ((orc_int64) var34.i);
+    /* 3: shrsq */
+    var37.i = var36.i >> 27;
+    /* 4: convsssql */
+    var35.i = ORC_CLAMP_SL (var37.i);
+    /* 5: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_int32_clamp;
+void
+orc_process_int32_clamp (gint32 * d1, int p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_int32_clamp;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->params[ORC_VAR_P1] = p1;
 
   func = p->code_exec;
   func (ex);
@@ -561,10 +844,1589 @@ orc_process_int8_clamp (gint8 * d1, int p1, int n)
 #endif
 
 
+/* orc_memset_f64 */
+#ifdef DISABLE_ORC
+void
+orc_memset_f64 (gdouble * d1, double p1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *) d1;
+
+  /* 0: loadpq */
+  var32.i = p1;
+
+  for (i = 0; i < n; i++) {
+    /* 1: copyq */
+    var33.i = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+#else
+static void
+_backup_orc_memset_f64 (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  orc_union64 var32;
+  orc_union64 var33;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+
+  /* 0: loadpq */
+  var32.i =
+      (ex->params[24] & 0xffffffff) | ((orc_uint64) (ex->params[24 +
+              (ORC_VAR_T1 - ORC_VAR_P1)]) << 32);
+
+  for (i = 0; i < n; i++) {
+    /* 1: copyq */
+    var33.i = var32.i;
+    /* 2: storeq */
+    ptr0[i] = var33;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_memset_f64;
+void
+orc_memset_f64 (gdouble * d1, double p1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_memset_f64;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  {
+    orc_union64 tmp;
+    tmp.f = p1;
+    ex->params[ORC_VAR_P1] = tmp.x2[0];
+    ex->params[ORC_VAR_T1] = tmp.x2[1];
+  }
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_prepare_volumes */
+#ifdef DISABLE_ORC
+void
+orc_prepare_volumes (gdouble * d1, const gboolean * s1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union64 var38;
+
+  ptr0 = (orc_union64 *) d1;
+  ptr4 = (orc_union32 *) s1;
+
+  /* 2: loadpq */
+  var34.i = ORC_UINT64_C (0x3ff0000000000000);  /* 1f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convld */
+    var37.f = var33.i;
+    /* 3: subd */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f - _src2.f;
+      var38.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 4: loadq */
+    var35 = ptr0[i];
+    /* 5: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var38.i);
+      _dest1.f = _src1.f * _src2.f;
+      var36.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 6: storeq */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_orc_prepare_volumes (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union32 *ORC_RESTRICT ptr4;
+  orc_union32 var33;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union64 var38;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+  ptr4 = (orc_union32 *) ex->arrays[4];
+
+  /* 2: loadpq */
+  var34.i = ORC_UINT64_C (0x3ff0000000000000);  /* 1f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadl */
+    var33 = ptr4[i];
+    /* 1: convld */
+    var37.f = var33.i;
+    /* 3: subd */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f - _src2.f;
+      var38.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 4: loadq */
+    var35 = ptr0[i];
+    /* 5: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var38.i);
+      _dest1.f = _src1.f * _src2.f;
+      var36.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 6: storeq */
+    ptr0[i] = var36;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_prepare_volumes;
+void
+orc_prepare_volumes (gdouble * d1, const gboolean * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_prepare_volumes;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_f64_1ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_f64_1ch (gdouble * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 1: loadq */
+    var33 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_f64_1ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var32;
+  orc_union64 var33;
+  orc_union64 var34;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var32 = ptr0[i];
+    /* 1: loadq */
+    var33 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var32.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest1.f = _src1.f * _src2.f;
+      var34.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: storeq */
+    ptr0[i] = var34;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_f64_1ch;
+void
+orc_process_controlled_f64_1ch (gdouble * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_f64_1ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_f32_1ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_f32_1ch (gfloat * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var33 = ptr4[i];
+    /* 1: convdf */
+    {
+      orc_union64 _src1;
+      orc_union32 _dest;
+      _src1.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest.f = _src1.f;
+      var36.i = ORC_DENORMAL (_dest.i);
+    }
+    /* 2: loadl */
+    var34 = ptr0[i];
+    /* 3: mulf */
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var34.i);
+      _src2.i = ORC_DENORMAL (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var35.i = ORC_DENORMAL (_dest1.i);
+    }
+    /* 4: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_f32_1ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var33;
+  orc_union32 var34;
+  orc_union32 var35;
+  orc_union32 var36;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var33 = ptr4[i];
+    /* 1: convdf */
+    {
+      orc_union64 _src1;
+      orc_union32 _dest;
+      _src1.i = ORC_DENORMAL_DOUBLE (var33.i);
+      _dest.f = _src1.f;
+      var36.i = ORC_DENORMAL (_dest.i);
+    }
+    /* 2: loadl */
+    var34 = ptr0[i];
+    /* 3: mulf */
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var34.i);
+      _src2.i = ORC_DENORMAL (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var35.i = ORC_DENORMAL (_dest1.i);
+    }
+    /* 4: storel */
+    ptr0[i] = var35;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_f32_1ch;
+void
+orc_process_controlled_f32_1ch (gfloat * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_f32_1ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_f32_2ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_f32_2ch (gfloat * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union32 var37;
+  orc_union64 var38;
+
+  ptr0 = (orc_union64 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var34 = ptr4[i];
+    /* 1: convdf */
+    {
+      orc_union64 _src1;
+      orc_union32 _dest;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _dest.f = _src1.f;
+      var37.i = ORC_DENORMAL (_dest.i);
+    }
+    /* 2: mergelq */
+    var38.i = ((orc_uint64) var37.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
+        var37.i << 32);
+    /* 3: loadq */
+    var35 = ptr0[i];
+    /* 4: mulf */
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var35.x2[0]);
+      _src2.i = ORC_DENORMAL (var38.x2[0]);
+      _dest1.f = _src1.f * _src2.f;
+      var36.x2[0] = ORC_DENORMAL (_dest1.i);
+    }
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var35.x2[1]);
+      _src2.i = ORC_DENORMAL (var38.x2[1]);
+      _dest1.f = _src1.f * _src2.f;
+      var36.x2[1] = ORC_DENORMAL (_dest1.i);
+    }
+    /* 5: storeq */
+    ptr0[i] = var36;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_f32_2ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union64 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union32 var37;
+  orc_union64 var38;
+
+  ptr0 = (orc_union64 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var34 = ptr4[i];
+    /* 1: convdf */
+    {
+      orc_union64 _src1;
+      orc_union32 _dest;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _dest.f = _src1.f;
+      var37.i = ORC_DENORMAL (_dest.i);
+    }
+    /* 2: mergelq */
+    var38.i = ((orc_uint64) var37.i & ORC_UINT64_C (0xffffffff)) | ((orc_uint64)
+        var37.i << 32);
+    /* 3: loadq */
+    var35 = ptr0[i];
+    /* 4: mulf */
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var35.x2[0]);
+      _src2.i = ORC_DENORMAL (var38.x2[0]);
+      _dest1.f = _src1.f * _src2.f;
+      var36.x2[0] = ORC_DENORMAL (_dest1.i);
+    }
+    {
+      orc_union32 _src1;
+      orc_union32 _src2;
+      orc_union32 _dest1;
+      _src1.i = ORC_DENORMAL (var35.x2[1]);
+      _src2.i = ORC_DENORMAL (var38.x2[1]);
+      _dest1.f = _src1.f * _src2.f;
+      var36.x2[1] = ORC_DENORMAL (_dest1.i);
+    }
+    /* 5: storeq */
+    ptr0[i] = var36;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_f32_2ch;
+void
+orc_process_controlled_f32_2ch (gfloat * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_f32_2ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int32_1ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int32_1ch (gint32 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union32 var36;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union64 var41;
+  orc_union64 var42;
+  orc_union64 var43;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var35.i = ORC_UINT64_C (0x41e0000000000000);  /* 2.14748e+09f */
+  /* 6: loadpq */
+  var37.i = ORC_UINT64_C (0x000000000fffffff);  /* 1.32625e-315f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var34 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _dest1.f = _src1.f * _src2.f;
+      var39.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var39.f;
+      if (tmp == 0x80000000 && !(var39.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var40.i = tmp;
+    }
+    /* 4: loadl */
+    var36 = ptr0[i];
+    /* 5: mulslq */
+    var41.i = ((orc_int64) var36.i) * ((orc_int64) var40.i);
+    /* 7: addq */
+    var42.i = var41.i + var37.i;
+    /* 8: shrsq */
+    var43.i = var42.i >> 31;
+    /* 9: convql */
+    var38.i = var43.i;
+    /* 10: storel */
+    ptr0[i] = var38;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int32_1ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var34;
+  orc_union64 var35;
+  orc_union32 var36;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union64 var41;
+  orc_union64 var42;
+  orc_union64 var43;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var35.i = ORC_UINT64_C (0x41e0000000000000);  /* 2.14748e+09f */
+  /* 6: loadpq */
+  var37.i = ORC_UINT64_C (0x000000000fffffff);  /* 1.32625e-315f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var34 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var34.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _dest1.f = _src1.f * _src2.f;
+      var39.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var39.f;
+      if (tmp == 0x80000000 && !(var39.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var40.i = tmp;
+    }
+    /* 4: loadl */
+    var36 = ptr0[i];
+    /* 5: mulslq */
+    var41.i = ((orc_int64) var36.i) * ((orc_int64) var40.i);
+    /* 7: addq */
+    var42.i = var41.i + var37.i;
+    /* 8: shrsq */
+    var43.i = var42.i >> 31;
+    /* 9: convql */
+    var38.i = var43.i;
+    /* 10: storel */
+    ptr0[i] = var38;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int32_1ch;
+void
+orc_process_controlled_int32_1ch (gint32 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int32_1ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int16_1ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int16_1ch (gint16 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union16 var39;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+
+  ptr0 = (orc_union16 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var36.i = ORC_UINT64_C (0x40e0000000000000);  /* 32768f */
+  /* 7: loadpl */
+  var38.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var35 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var40.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var40.f;
+      if (tmp == 0x80000000 && !(var40.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var41.i = tmp;
+    }
+    /* 4: convssslw */
+    var42.i = ORC_CLAMP_SW (var41.i);
+    /* 5: loadw */
+    var37 = ptr0[i];
+    /* 6: mulswl */
+    var43.i = var42.i * var37.i;
+    /* 8: addl */
+    var44.i = var43.i + var38.i;
+    /* 9: shrsl */
+    var45.i = var44.i >> 15;
+    /* 10: convlw */
+    var39.i = var45.i;
+    /* 11: storew */
+    ptr0[i] = var39;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int16_1ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union16 var37;
+  orc_union32 var38;
+  orc_union16 var39;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_union32 var43;
+  orc_union32 var44;
+  orc_union32 var45;
+
+  ptr0 = (orc_union16 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var36.i = ORC_UINT64_C (0x40e0000000000000);  /* 32768f */
+  /* 7: loadpl */
+  var38.i = 0x00000fff;         /* 4095 or 2.0232e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var35 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var40.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var40.f;
+      if (tmp == 0x80000000 && !(var40.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var41.i = tmp;
+    }
+    /* 4: convssslw */
+    var42.i = ORC_CLAMP_SW (var41.i);
+    /* 5: loadw */
+    var37 = ptr0[i];
+    /* 6: mulswl */
+    var43.i = var42.i * var37.i;
+    /* 8: addl */
+    var44.i = var43.i + var38.i;
+    /* 9: shrsl */
+    var45.i = var44.i >> 15;
+    /* 10: convlw */
+    var39.i = var45.i;
+    /* 11: storew */
+    ptr0[i] = var39;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int16_1ch;
+void
+orc_process_controlled_int16_1ch (gint16 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int16_1ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int16_2ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int16_2ch (gint16 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union32 var37;
+  orc_union64 var38;
+  orc_union32 var39;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_union32 var43;
+  orc_union64 var44;
+  orc_union64 var45;
+  orc_union64 var46;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var36.i = ORC_UINT64_C (0x40e0000000000000);  /* 32768f */
+  /* 8: loadpl */
+  var38.x2[0] = 0x00000fff;     /* 4095 or 2.0232e-320f */
+  var38.x2[1] = 0x00000fff;     /* 4095 or 2.0232e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var35 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var40.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var40.f;
+      if (tmp == 0x80000000 && !(var40.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var41.i = tmp;
+    }
+    /* 4: convssslw */
+    var42.i = ORC_CLAMP_SW (var41.i);
+    /* 5: mergewl */
+    var43.i =
+        ((orc_uint16) var42.i & 0x0000ffff) | ((orc_uint16) var42.i << 16);
+    /* 6: loadl */
+    var37 = ptr0[i];
+    /* 7: mulswl */
+    var44.x2[0] = var43.x2[0] * var37.x2[0];
+    var44.x2[1] = var43.x2[1] * var37.x2[1];
+    /* 9: addl */
+    var45.x2[0] = var44.x2[0] + var38.x2[0];
+    var45.x2[1] = var44.x2[1] + var38.x2[1];
+    /* 10: shrsl */
+    var46.x2[0] = var45.x2[0] >> 15;
+    var46.x2[1] = var45.x2[1] >> 15;
+    /* 11: convlw */
+    var39.x2[0] = var46.x2[0];
+    var39.x2[1] = var46.x2[1];
+    /* 12: storel */
+    ptr0[i] = var39;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int16_2ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var35;
+  orc_union64 var36;
+  orc_union32 var37;
+  orc_union64 var38;
+  orc_union32 var39;
+  orc_union64 var40;
+  orc_union32 var41;
+  orc_union16 var42;
+  orc_union32 var43;
+  orc_union64 var44;
+  orc_union64 var45;
+  orc_union64 var46;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var36.i = ORC_UINT64_C (0x40e0000000000000);  /* 32768f */
+  /* 8: loadpl */
+  var38.x2[0] = 0x00000fff;     /* 4095 or 2.0232e-320f */
+  var38.x2[1] = 0x00000fff;     /* 4095 or 2.0232e-320f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var35 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var35.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _dest1.f = _src1.f * _src2.f;
+      var40.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var40.f;
+      if (tmp == 0x80000000 && !(var40.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var41.i = tmp;
+    }
+    /* 4: convssslw */
+    var42.i = ORC_CLAMP_SW (var41.i);
+    /* 5: mergewl */
+    var43.i =
+        ((orc_uint16) var42.i & 0x0000ffff) | ((orc_uint16) var42.i << 16);
+    /* 6: loadl */
+    var37 = ptr0[i];
+    /* 7: mulswl */
+    var44.x2[0] = var43.x2[0] * var37.x2[0];
+    var44.x2[1] = var43.x2[1] * var37.x2[1];
+    /* 9: addl */
+    var45.x2[0] = var44.x2[0] + var38.x2[0];
+    var45.x2[1] = var44.x2[1] + var38.x2[1];
+    /* 10: shrsl */
+    var46.x2[0] = var45.x2[0] >> 15;
+    var46.x2[1] = var45.x2[1] >> 15;
+    /* 11: convlw */
+    var39.x2[0] = var46.x2[0];
+    var39.x2[1] = var46.x2[1];
+    /* 12: storel */
+    ptr0[i] = var39;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int16_2ch;
+void
+orc_process_controlled_int16_2ch (gint16 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int16_2ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int8_1ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int8_1ch (gint8 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_int8 var38;
+  orc_union16 var39;
+  orc_int8 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union16 var46;
+  orc_union16 var47;
+
+  ptr0 = (orc_int8 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 8: loadpw */
+  var39.i = 0x0000000f;         /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: loadb */
+    var38 = ptr0[i];
+    /* 7: mulsbw */
+    var45.i = var44 * var38;
+    /* 9: addw */
+    var46.i = var45.i + var39.i;
+    /* 10: shrsw */
+    var47.i = var46.i >> 7;
+    /* 11: convwb */
+    var40 = var47.i;
+    /* 12: storeb */
+    ptr0[i] = var40;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int8_1ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_int8 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_int8 var38;
+  orc_union16 var39;
+  orc_int8 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union16 var46;
+  orc_union16 var47;
+
+  ptr0 = (orc_int8 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 8: loadpw */
+  var39.i = 0x0000000f;         /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: loadb */
+    var38 = ptr0[i];
+    /* 7: mulsbw */
+    var45.i = var44 * var38;
+    /* 9: addw */
+    var46.i = var45.i + var39.i;
+    /* 10: shrsw */
+    var47.i = var46.i >> 7;
+    /* 11: convwb */
+    var40 = var47.i;
+    /* 12: storeb */
+    ptr0[i] = var40;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int8_1ch;
+void
+orc_process_controlled_int8_1ch (gint8 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int8_1ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int8_2ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int8_2ch (gint8 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union16 var38;
+  orc_union32 var39;
+  orc_union16 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union32 var48;
+
+  ptr0 = (orc_union16 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 9: loadpw */
+  var39.x2[0] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x2[1] = 0x0000000f;     /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: mergebw */
+    var45.i = ((orc_uint8) var44 & 0x00ff) | ((orc_uint8) var44 << 8);
+    /* 7: loadw */
+    var38 = ptr0[i];
+    /* 8: mulsbw */
+    var46.x2[0] = var45.x2[0] * var38.x2[0];
+    var46.x2[1] = var45.x2[1] * var38.x2[1];
+    /* 10: addw */
+    var47.x2[0] = var46.x2[0] + var39.x2[0];
+    var47.x2[1] = var46.x2[1] + var39.x2[1];
+    /* 11: shrsw */
+    var48.x2[0] = var47.x2[0] >> 7;
+    var48.x2[1] = var47.x2[1] >> 7;
+    /* 12: convwb */
+    var40.x2[0] = var48.x2[0];
+    var40.x2[1] = var48.x2[1];
+    /* 13: storew */
+    ptr0[i] = var40;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int8_2ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union16 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union16 var38;
+  orc_union32 var39;
+  orc_union16 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union32 var46;
+  orc_union32 var47;
+  orc_union32 var48;
+
+  ptr0 = (orc_union16 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 9: loadpw */
+  var39.x2[0] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x2[1] = 0x0000000f;     /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: mergebw */
+    var45.i = ((orc_uint8) var44 & 0x00ff) | ((orc_uint8) var44 << 8);
+    /* 7: loadw */
+    var38 = ptr0[i];
+    /* 8: mulsbw */
+    var46.x2[0] = var45.x2[0] * var38.x2[0];
+    var46.x2[1] = var45.x2[1] * var38.x2[1];
+    /* 10: addw */
+    var47.x2[0] = var46.x2[0] + var39.x2[0];
+    var47.x2[1] = var46.x2[1] + var39.x2[1];
+    /* 11: shrsw */
+    var48.x2[0] = var47.x2[0] >> 7;
+    var48.x2[1] = var47.x2[1] >> 7;
+    /* 12: convwb */
+    var40.x2[0] = var48.x2[0];
+    var40.x2[1] = var48.x2[1];
+    /* 13: storew */
+    ptr0[i] = var40;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int8_2ch;
+void
+orc_process_controlled_int8_2ch (gint8 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int8_2ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
+/* orc_process_controlled_int8_4ch */
+#ifdef DISABLE_ORC
+void
+orc_process_controlled_int8_4ch (gint8 * d1, const gdouble * s1, int n)
+{
+  int i;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union32 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union64 var49;
+
+  ptr0 = (orc_union32 *) d1;
+  ptr4 = (orc_union64 *) s1;
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 10: loadpw */
+  var39.x4[0] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[1] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[2] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[3] = 0x0000000f;     /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: mergebw */
+    var45.i = ((orc_uint8) var44 & 0x00ff) | ((orc_uint8) var44 << 8);
+    /* 7: mergewl */
+    var46.i =
+        ((orc_uint16) var45.i & 0x0000ffff) | ((orc_uint16) var45.i << 16);
+    /* 8: loadl */
+    var38 = ptr0[i];
+    /* 9: mulsbw */
+    var47.x4[0] = var46.x4[0] * var38.x4[0];
+    var47.x4[1] = var46.x4[1] * var38.x4[1];
+    var47.x4[2] = var46.x4[2] * var38.x4[2];
+    var47.x4[3] = var46.x4[3] * var38.x4[3];
+    /* 11: addw */
+    var48.x4[0] = var47.x4[0] + var39.x4[0];
+    var48.x4[1] = var47.x4[1] + var39.x4[1];
+    var48.x4[2] = var47.x4[2] + var39.x4[2];
+    var48.x4[3] = var47.x4[3] + var39.x4[3];
+    /* 12: shrsw */
+    var49.x4[0] = var48.x4[0] >> 7;
+    var49.x4[1] = var48.x4[1] >> 7;
+    var49.x4[2] = var48.x4[2] >> 7;
+    var49.x4[3] = var48.x4[3] >> 7;
+    /* 13: convwb */
+    var40.x4[0] = var49.x4[0];
+    var40.x4[1] = var49.x4[1];
+    var40.x4[2] = var49.x4[2];
+    var40.x4[3] = var49.x4[3];
+    /* 14: storel */
+    ptr0[i] = var40;
+  }
+
+}
+
+#else
+static void
+_backup_orc_process_controlled_int8_4ch (OrcExecutor * ORC_RESTRICT ex)
+{
+  int i;
+  int n = ex->n;
+  orc_union32 *ORC_RESTRICT ptr0;
+  const orc_union64 *ORC_RESTRICT ptr4;
+  orc_union64 var36;
+  orc_union64 var37;
+  orc_union32 var38;
+  orc_union64 var39;
+  orc_union32 var40;
+  orc_union64 var41;
+  orc_union32 var42;
+  orc_union16 var43;
+  orc_int8 var44;
+  orc_union16 var45;
+  orc_union32 var46;
+  orc_union64 var47;
+  orc_union64 var48;
+  orc_union64 var49;
+
+  ptr0 = (orc_union32 *) ex->arrays[0];
+  ptr4 = (orc_union64 *) ex->arrays[4];
+
+  /* 1: loadpq */
+  var37.i = ORC_UINT64_C (0x4060000000000000);  /* 128f */
+  /* 10: loadpw */
+  var39.x4[0] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[1] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[2] = 0x0000000f;     /* 15 or 7.41098e-323f */
+  var39.x4[3] = 0x0000000f;     /* 15 or 7.41098e-323f */
+
+  for (i = 0; i < n; i++) {
+    /* 0: loadq */
+    var36 = ptr4[i];
+    /* 2: muld */
+    {
+      orc_union64 _src1;
+      orc_union64 _src2;
+      orc_union64 _dest1;
+      _src1.i = ORC_DENORMAL_DOUBLE (var36.i);
+      _src2.i = ORC_DENORMAL_DOUBLE (var37.i);
+      _dest1.f = _src1.f * _src2.f;
+      var41.i = ORC_DENORMAL_DOUBLE (_dest1.i);
+    }
+    /* 3: convdl */
+    {
+      int tmp;
+      tmp = var41.f;
+      if (tmp == 0x80000000 && !(var41.i & ORC_UINT64_C (0x8000000000000000)))
+        tmp = 0x7fffffff;
+      var42.i = tmp;
+    }
+    /* 4: convlw */
+    var43.i = var42.i;
+    /* 5: convssswb */
+    var44 = ORC_CLAMP_SB (var43.i);
+    /* 6: mergebw */
+    var45.i = ((orc_uint8) var44 & 0x00ff) | ((orc_uint8) var44 << 8);
+    /* 7: mergewl */
+    var46.i =
+        ((orc_uint16) var45.i & 0x0000ffff) | ((orc_uint16) var45.i << 16);
+    /* 8: loadl */
+    var38 = ptr0[i];
+    /* 9: mulsbw */
+    var47.x4[0] = var46.x4[0] * var38.x4[0];
+    var47.x4[1] = var46.x4[1] * var38.x4[1];
+    var47.x4[2] = var46.x4[2] * var38.x4[2];
+    var47.x4[3] = var46.x4[3] * var38.x4[3];
+    /* 11: addw */
+    var48.x4[0] = var47.x4[0] + var39.x4[0];
+    var48.x4[1] = var47.x4[1] + var39.x4[1];
+    var48.x4[2] = var47.x4[2] + var39.x4[2];
+    var48.x4[3] = var47.x4[3] + var39.x4[3];
+    /* 12: shrsw */
+    var49.x4[0] = var48.x4[0] >> 7;
+    var49.x4[1] = var48.x4[1] >> 7;
+    var49.x4[2] = var48.x4[2] >> 7;
+    var49.x4[3] = var48.x4[3] >> 7;
+    /* 13: convwb */
+    var40.x4[0] = var49.x4[0];
+    var40.x4[1] = var49.x4[1];
+    var40.x4[2] = var49.x4[2];
+    var40.x4[3] = var49.x4[3];
+    /* 14: storel */
+    ptr0[i] = var40;
+  }
+
+}
+
+static OrcProgram *_orc_program_orc_process_controlled_int8_4ch;
+void
+orc_process_controlled_int8_4ch (gint8 * d1, const gdouble * s1, int n)
+{
+  OrcExecutor _ex, *ex = &_ex;
+  OrcProgram *p = _orc_program_orc_process_controlled_int8_4ch;
+  void (*func) (OrcExecutor *);
+
+  ex->program = p;
+
+  ex->n = n;
+  ex->arrays[ORC_VAR_D1] = d1;
+  ex->arrays[ORC_VAR_S1] = (void *) s1;
+
+  func = p->code_exec;
+  func (ex);
+}
+#endif
+
+
 void
 gst_volume_orc_init (void)
 {
 #ifndef DISABLE_ORC
+  {
+    /* orc_scalarmultiply_f64_ns */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_scalarmultiply_f64_ns");
+    orc_program_set_backup_function (p, _backup_orc_scalarmultiply_f64_ns);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_parameter_double (p, 8, "p1");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_scalarmultiply_f64_ns = p;
+  }
   {
     /* orc_scalarmultiply_f32_ns */
     OrcProgram *p;
@@ -582,6 +2444,54 @@ gst_volume_orc_init (void)
     result = orc_program_compile (p);
 
     _orc_program_orc_scalarmultiply_f32_ns = p;
+  }
+  {
+    /* orc_process_int32 */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int32");
+    orc_program_set_backup_function (p, _backup_orc_process_int32);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_constant (p, 4, 0x0000001b, "c1");
+    orc_program_add_parameter (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+
+    orc_program_append_2 (p, "mulslq", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsq", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convql", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int32 = p;
+  }
+  {
+    /* orc_process_int32_clamp */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_int32_clamp");
+    orc_program_set_backup_function (p, _backup_orc_process_int32_clamp);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_constant (p, 4, 0x0000001b, "c1");
+    orc_program_add_parameter (p, 4, "p1");
+    orc_program_add_temporary (p, 8, "t1");
+
+    orc_program_append_2 (p, "mulslq", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_P1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsq", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convsssql", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_int32_clamp = p;
   }
   {
     /* orc_process_int16 */
@@ -678,6 +2588,347 @@ gst_volume_orc_init (void)
     result = orc_program_compile (p);
 
     _orc_program_orc_process_int8_clamp = p;
+  }
+  {
+    /* orc_memset_f64 */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_memset_f64");
+    orc_program_set_backup_function (p, _backup_orc_memset_f64);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_parameter_double (p, 8, "p1");
+
+    orc_program_append_2 (p, "copyq", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_memset_f64 = p;
+  }
+  {
+    /* orc_prepare_volumes */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_prepare_volumes");
+    orc_program_set_backup_function (p, _backup_orc_prepare_volumes);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 4, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x3ff0000000000000ULL, "c1");
+    orc_program_add_temporary (p, 8, "t1");
+
+    orc_program_append_2 (p, "convld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "subd", 0, ORC_VAR_T1, ORC_VAR_C1, ORC_VAR_T1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_T1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_prepare_volumes = p;
+  }
+  {
+    /* orc_process_controlled_f64_1ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_f64_1ch");
+    orc_program_set_backup_function (p, _backup_orc_process_controlled_f64_1ch);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_S1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_f64_1ch = p;
+  }
+  {
+    /* orc_process_controlled_f32_1ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_f32_1ch");
+    orc_program_set_backup_function (p, _backup_orc_process_controlled_f32_1ch);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_temporary (p, 4, "t1");
+
+    orc_program_append_2 (p, "convdf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 0, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_T1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_f32_1ch = p;
+  }
+  {
+    /* orc_process_controlled_f32_2ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_f32_2ch");
+    orc_program_set_backup_function (p, _backup_orc_process_controlled_f32_2ch);
+    orc_program_add_destination (p, 8, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_temporary (p, 4, "t1");
+    orc_program_add_temporary (p, 8, "t2");
+
+    orc_program_append_2 (p, "convdf", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergelq", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_T1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulf", 1, ORC_VAR_D1, ORC_VAR_D1, ORC_VAR_T2,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_f32_2ch = p;
+  }
+  {
+    /* orc_process_controlled_int32_1ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int32_1ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int32_1ch);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x41e0000000000000ULL, "c1");
+    orc_program_add_constant_int64 (p, 8, 0x000000000fffffffULL, "c2");
+    orc_program_add_constant (p, 4, 0x0000001f, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulslq", 0, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_T2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addq", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsq", 0, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convql", 0, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int32_1ch = p;
+  }
+  {
+    /* orc_process_controlled_int16_1ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int16_1ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int16_1ch);
+    orc_program_add_destination (p, 2, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x40e0000000000000ULL, "c1");
+    orc_program_add_constant (p, 4, 0x00000fff, "c2");
+    orc_program_add_constant (p, 4, 0x0000000f, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 2, "t3");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulswl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsl", 0, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 0, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int16_1ch = p;
+  }
+  {
+    /* orc_process_controlled_int16_2ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int16_2ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int16_2ch);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x40e0000000000000ULL, "c1");
+    orc_program_add_constant (p, 4, 0x00000fff, "c2");
+    orc_program_add_constant (p, 4, 0x0000000f, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 2, "t3");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssslw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulswl", 1, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsl", 1, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int16_2ch = p;
+  }
+  {
+    /* orc_process_controlled_int8_1ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int8_1ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int8_1ch);
+    orc_program_add_destination (p, 1, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x4060000000000000ULL, "c1");
+    orc_program_add_constant (p, 4, 0x0000000f, "c2");
+    orc_program_add_constant (p, 4, 0x00000007, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 2, "t3");
+    orc_program_add_temporary (p, 1, "t4");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssswb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulsbw", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addw", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsw", 0, ORC_VAR_T3, ORC_VAR_T3, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convwb", 0, ORC_VAR_D1, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int8_1ch = p;
+  }
+  {
+    /* orc_process_controlled_int8_2ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int8_2ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int8_2ch);
+    orc_program_add_destination (p, 2, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x4060000000000000ULL, "c1");
+    orc_program_add_constant (p, 4, 0x0000000f, "c2");
+    orc_program_add_constant (p, 4, 0x00000007, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 2, "t3");
+    orc_program_add_temporary (p, 1, "t4");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssswb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_T4,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulsbw", 1, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addw", 1, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsw", 1, ORC_VAR_T2, ORC_VAR_T2, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convwb", 1, ORC_VAR_D1, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int8_2ch = p;
+  }
+  {
+    /* orc_process_controlled_int8_4ch */
+    OrcProgram *p;
+    OrcCompileResult result;
+
+    p = orc_program_new ();
+    orc_program_set_name (p, "orc_process_controlled_int8_4ch");
+    orc_program_set_backup_function (p,
+        _backup_orc_process_controlled_int8_4ch);
+    orc_program_add_destination (p, 4, "d1");
+    orc_program_add_source (p, 8, "s1");
+    orc_program_add_constant_int64 (p, 8, 0x4060000000000000ULL, "c1");
+    orc_program_add_constant (p, 4, 0x0000000f, "c2");
+    orc_program_add_constant (p, 4, 0x00000007, "c3");
+    orc_program_add_temporary (p, 8, "t1");
+    orc_program_add_temporary (p, 4, "t2");
+    orc_program_add_temporary (p, 2, "t3");
+    orc_program_add_temporary (p, 1, "t4");
+
+    orc_program_append_2 (p, "muld", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convdl", 0, ORC_VAR_T2, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convlw", 0, ORC_VAR_T3, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convssswb", 0, ORC_VAR_T4, ORC_VAR_T3, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T3, ORC_VAR_T4, ORC_VAR_T4,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mergewl", 0, ORC_VAR_T2, ORC_VAR_T3, ORC_VAR_T3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "mulsbw", 2, ORC_VAR_T1, ORC_VAR_T2, ORC_VAR_D1,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "addw", 2, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C2,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "shrsw", 2, ORC_VAR_T1, ORC_VAR_T1, ORC_VAR_C3,
+        ORC_VAR_D1);
+    orc_program_append_2 (p, "convwb", 2, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_D1,
+        ORC_VAR_D1);
+
+    result = orc_program_compile (p);
+
+    _orc_program_orc_process_controlled_int8_4ch = p;
   }
 #endif
 }

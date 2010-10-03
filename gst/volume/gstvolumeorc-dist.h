@@ -59,11 +59,25 @@ typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
 typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
+void orc_scalarmultiply_f64_ns (double * d1, double p1, int n);
 void orc_scalarmultiply_f32_ns (float * d1, float p1, int n);
+void orc_process_int32 (gint32 * d1, int p1, int n);
+void orc_process_int32_clamp (gint32 * d1, int p1, int n);
 void orc_process_int16 (gint16 * d1, int p1, int n);
 void orc_process_int16_clamp (gint16 * d1, int p1, int n);
 void orc_process_int8 (gint8 * d1, int p1, int n);
 void orc_process_int8_clamp (gint8 * d1, int p1, int n);
+void orc_memset_f64 (gdouble * d1, double p1, int n);
+void orc_prepare_volumes (gdouble * d1, const gboolean * s1, int n);
+void orc_process_controlled_f64_1ch (gdouble * d1, const gdouble * s1, int n);
+void orc_process_controlled_f32_1ch (gfloat * d1, const gdouble * s1, int n);
+void orc_process_controlled_f32_2ch (gfloat * d1, const gdouble * s1, int n);
+void orc_process_controlled_int32_1ch (gint32 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int16_1ch (gint16 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int16_2ch (gint16 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_1ch (gint8 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_2ch (gint8 * d1, const gdouble * s1, int n);
+void orc_process_controlled_int8_4ch (gint8 * d1, const gdouble * s1, int n);
 
 #ifdef __cplusplus
 }
