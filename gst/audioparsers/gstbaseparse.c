@@ -1586,7 +1586,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
         parse->priv->skip--;
       }
     } else {
-      GST_LOG_OBJECT (parse, "frame (%d bytes) queued for now: %d",
+      GST_LOG_OBJECT (parse, "frame (%d bytes) queued for now",
           GST_BUFFER_SIZE (buffer));
       parse->priv->buffers_queued =
           g_slist_prepend (parse->priv->buffers_queued, buffer);
