@@ -373,27 +373,33 @@ gst_bit_reader_skip_to_byte (GstBitReader * reader)
 
 #define GST_BIT_READER_READ_BITS(bits) \
 gboolean \
-gst_bit_reader_get_bits_uint##bits (GstBitReader *reader, guint##bits *val, guint nbits) \
+gst_bit_reader_peek_bits_uint##bits (const GstBitReader *reader, guint##bits *val, guint nbits) \
 { \
   guint##bits ret = 0; \
+  const guint8 *data; \
+  guint byte, bit; \
   \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   g_return_val_if_fail (nbits <= bits, FALSE); \
   \
-  if (reader->byte * 8 + reader->bit + nbits > reader->size * 8) \
+  data = reader->data; \
+  byte = reader->byte; \
+  bit = reader->bit; \
+  \
+  if (byte * 8 + bit + nbits > reader->size * 8) \
     return FALSE; \
   \
   while (nbits > 0) { \
-    guint toread = MIN (nbits, 8 - reader->bit); \
+    guint toread = MIN (nbits, 8 - bit); \
     \
     ret <<= toread; \
-    ret |= (reader->data[reader->byte] & (0xff >> reader->bit)) >> (8 - toread - reader->bit); \
+    ret |= (data[byte] & (0xff >> bit)) >> (8 - toread - bit); \
     \
-    reader->bit += toread; \
-    if (reader->bit >= 8) { \
-      reader->byte++; \
-      reader->bit = 0; \
+    bit += toread; \
+    if (bit >= 8) { \
+      byte++; \
+      bit = 0; \
     } \
     nbits -= toread; \
   } \
@@ -403,13 +409,21 @@ gst_bit_reader_get_bits_uint##bits (GstBitReader *reader, guint##bits *val, guin
 } \
 \
 gboolean \
-gst_bit_reader_peek_bits_uint##bits (const GstBitReader *reader, guint##bits *val, guint nbits) \
+gst_bit_reader_get_bits_uint##bits (GstBitReader *reader, guint##bits *val, guint nbits) \
 { \
-  GstBitReader tmp; \
+  gboolean ret; \
   \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  tmp = *reader; \
-  return gst_bit_reader_get_bits_uint##bits (&tmp, val, nbits); \
+  ret = gst_bit_reader_peek_bits_uint##bits (reader, val, nbits); \
+  \
+  if (ret) { \
+    reader->bit += nbits; \
+    if (reader->bit >= 8) { \
+      reader->byte += reader->bit / 8; \
+      reader->bit = reader->bit % 8; \
+    } \
+  } \
+  \
+  return ret; \
 }
 
 GST_BIT_READER_READ_BITS (8);
