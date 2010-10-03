@@ -294,7 +294,6 @@ gst_flac_parse_finalize (GObject * object)
     flacparse->tags = NULL;
   }
 
-
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
   flacparse->headers = NULL;
@@ -1180,6 +1179,11 @@ push_headers:
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse)), caps);
   gst_caps_unref (caps);
 
+  /* Push tags */
+  if (flacparse->tags)
+    gst_element_found_tags (GST_ELEMENT (flacparse),
+        gst_tag_list_copy (flacparse->tags));
+
   /* push header buffers; update caps, so when we push the first buffer the
    * negotiated caps will change to caps that include the streamheader field */
   for (l = flacparse->headers; l != NULL; l = l->next) {
@@ -1197,11 +1201,6 @@ push_headers:
   }
   g_list_free (flacparse->headers);
   flacparse->headers = NULL;
-
-  /* Push tags */
-  if (flacparse->tags)
-    gst_element_found_tags (GST_ELEMENT (flacparse),
-        gst_tag_list_copy (flacparse->tags));
 
   return TRUE;
 }
