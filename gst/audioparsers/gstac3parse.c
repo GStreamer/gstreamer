@@ -248,18 +248,18 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint8 fscod, frmsizcod, bsid, bsmod, acmod, lfe_on;
 
-  gst_bit_reader_skip (&bits, 16 + 16);
-  gst_bit_reader_get_bits_uint8 (&bits, &fscod, 2);
-  gst_bit_reader_get_bits_uint8 (&bits, &frmsizcod, 6);
+  gst_bit_reader_skip_unchecked (&bits, 16 + 16);
+  fscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);
+  frmsizcod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 6);
 
   if (G_UNLIKELY (fscod == 3 || frmsizcod >= G_N_ELEMENTS (frmsizcod_table))) {
     GST_DEBUG_OBJECT (ac3parse, "bad fscod=%d frmsizcod=%d", fscod, frmsizcod);
     return FALSE;
   }
 
-  gst_bit_reader_get_bits_uint8 (&bits, &bsid, 5);
-  gst_bit_reader_get_bits_uint8 (&bits, &bsmod, 3);
-  gst_bit_reader_get_bits_uint8 (&bits, &acmod, 3);
+  bsid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 5);
+  bsmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
+  acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);
 
   /* FIXME: are other bsids ok as well? check spec */
   if (bsid != 8 && bsid != 6) {
@@ -268,13 +268,13 @@ gst_ac3_parse_frame_header_ac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   }
 
   if ((acmod & 0x1) && (acmod != 0x1))  /* 3 front channels */
-    gst_bit_reader_skip (&bits, 2);
+    gst_bit_reader_skip_unchecked (&bits, 2);
   if ((acmod & 0x4))            /* if a surround channel exists */
-    gst_bit_reader_skip (&bits, 2);
+    gst_bit_reader_skip_unchecked (&bits, 2);
   if (acmod == 0x2)             /* if in 2/0 mode */
-    gst_bit_reader_skip (&bits, 2);
+    gst_bit_reader_skip_unchecked (&bits, 2);
 
-  gst_bit_reader_get_bits_uint8 (&bits, &lfe_on, 1);
+  lfe_on = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);
 
   if (frame_size)
     *frame_size = frmsizcod_table[frmsizcod].frame_size[fscod] * 2;
@@ -298,18 +298,18 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
   guint16 frmsiz, sample_rate, blocks;
   guint8 strmtyp, fscod, fscod2, acmod, lfe_on, strmid, numblkscod;
 
-  gst_bit_reader_skip (&bits, 16 + 16);
-  gst_bit_reader_get_bits_uint8 (&bits, &strmtyp, 2);   /* strmtyp     */
+  gst_bit_reader_skip_unchecked (&bits, 16 + 16);
+  strmtyp = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2); /* strmtyp     */
   if (G_UNLIKELY (strmtyp == 3)) {
     GST_DEBUG_OBJECT (ac3parse, "bad strmtyp %d", strmtyp);
     return FALSE;
   }
 
-  gst_bit_reader_get_bits_uint8 (&bits, &strmid, 3);    /* substreamid */
-  gst_bit_reader_get_bits_uint16 (&bits, &frmsiz, 11);  /* frmsiz      */
-  gst_bit_reader_get_bits_uint8 (&bits, &fscod, 2);     /* fscod       */
+  strmid = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);  /* substreamid */
+  frmsiz = gst_bit_reader_get_bits_uint16_unchecked (&bits, 11);        /* frmsiz      */
+  fscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);   /* fscod       */
   if (fscod == 3) {
-    gst_bit_reader_get_bits_uint8 (&bits, &fscod2, 2);  /* fscod2      */
+    fscod2 = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);        /* fscod2      */
     if (G_UNLIKELY (fscod2 == 3)) {
       GST_DEBUG_OBJECT (ac3parse, "invalid fscod2");
       return FALSE;
@@ -317,15 +317,15 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
     sample_rate = fscod_rates[fscod2] / 2;
     blocks = 6;
   } else {
-    gst_bit_reader_get_bits_uint8 (&bits, &numblkscod, 2);      /* numblkscod  */
+    numblkscod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 2);    /* numblkscod  */
     sample_rate = fscod_rates[fscod];
     blocks = numblks[numblkscod];
   }
 
-  gst_bit_reader_get_bits_uint8 (&bits, &acmod, 3);     /* acmod       */
-  gst_bit_reader_get_bits_uint8 (&bits, &lfe_on, 1);    /* lfeon       */
+  acmod = gst_bit_reader_get_bits_uint8_unchecked (&bits, 3);   /* acmod       */
+  lfe_on = gst_bit_reader_get_bits_uint8_unchecked (&bits, 1);  /* lfeon       */
 
-  gst_bit_reader_skip (&bits, 5);       /* bsid        */
+  gst_bit_reader_skip_unchecked (&bits, 5);     /* bsid        */
 
   if (frame_size)
     *frame_size = (frmsiz + 1) * 2;
@@ -351,9 +351,9 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
 
   GST_MEMDUMP_OBJECT (parse, "AC3 frame sync", GST_BUFFER_DATA (buf), 16);
 
-  gst_bit_reader_get_bits_uint16 (&bits, &sync, 16);
-  gst_bit_reader_skip (&bits, 16 + 8);
-  gst_bit_reader_peek_bits_uint8 (&bits, &bsid, 5);
+  sync = gst_bit_reader_get_bits_uint16_unchecked (&bits, 16);
+  gst_bit_reader_skip_unchecked (&bits, 16 + 8);
+  bsid = gst_bit_reader_peek_bits_uint8_unchecked (&bits, 5);
 
   if (G_UNLIKELY (sync != 0x0b77))
     return FALSE;
