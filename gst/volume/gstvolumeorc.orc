@@ -114,10 +114,11 @@ x2 mulf d1, d1, t2
 .temp 8 t1
 .temp 4 t2
 
-muld t1, s1, 0x41DFFFFFFFC00000L
+muld t1, s1, 0x41E0000000000000L
 convdl t2, t1
 mulslq t1, d1, t2
-shrsq t1, t1, 32
+addq t1, t1, 0x0FFFFFFFL
+shrsq t1, t1, 31
 convql d1, t1
 
 .function orc_process_controlled_int16_1ch
@@ -127,11 +128,12 @@ convql d1, t1
 .temp 4 t2
 .temp 2 t3
 
-muld t1, s1, 0x40DFFFC000000000L
+muld t1, s1, 0x40E0000000000000L
 convdl t2, t1
 convssslw t3, t2
 mulswl t2, t3, d1
-shrsl t2, t2, 16
+addl t2, t2, 0x0FFF
+shrsl t2, t2, 15
 convlw d1, t2
 
 .function orc_process_controlled_int16_2ch
@@ -141,12 +143,13 @@ convlw d1, t2
 .temp 4 t2
 .temp 2 t3
 
-muld t1, s1, 0x40DFFFC000000000L
+muld t1, s1, 0x40E0000000000000L
 convdl t2, t1
 convssslw t3, t2
 mergewl t2, t3, t3
 x2 mulswl t1, t2, d1
-x2 shrsl t1, t1, 16
+x2 addl t1, t1, 0x0FFF
+x2 shrsl t1, t1, 15
 x2 convlw d1, t1
 
 .function orc_process_controlled_int8_1ch
@@ -157,12 +160,13 @@ x2 convlw d1, t1
 .temp 2 t3
 .temp 1 t4
 
-muld t1, s1, 0x405FC00000000000L
+muld t1, s1, 0x4060000000000000L
 convdl t2, t1
 convlw t3, t2
 convssswb t4, t3
 mulsbw t3, t4, d1
-shrsw t3, t3, 8
+addw t3, t3, 0x0F
+shrsw t3, t3, 7
 convwb d1, t3
 
 .function orc_process_controlled_int8_2ch
@@ -173,13 +177,14 @@ convwb d1, t3
 .temp 2 t3
 .temp 1 t4
 
-muld t1, s1, 0x405FC00000000000L
+muld t1, s1, 0x4060000000000000L
 convdl t2, t1
 convlw t3, t2
 convssswb t4, t3
 mergebw t3, t4, t4
 x2 mulsbw t2, t3, d1
-x2 shrsw t2, t2, 8
+x2 addw t2, t2, 0x0F
+x2 shrsw t2, t2, 7
 x2 convwb d1, t2
 
 .function orc_process_controlled_int8_4ch
@@ -190,13 +195,14 @@ x2 convwb d1, t2
 .temp 2 t3
 .temp 1 t4
 
-muld t1, s1, 0x405FC00000000000L
+muld t1, s1, 0x4060000000000000L
 convdl t2, t1
 convlw t3, t2
 convssswb t4, t3
 mergebw t3, t4, t4
 mergewl t2, t3, t3
 x4 mulsbw t1, t2, d1
-x4 shrsw t1, t1, 8
+x4 addw t1, t1, 0x0F
+x4 shrsw t1, t1, 7
 x4 convwb d1, t1
 
