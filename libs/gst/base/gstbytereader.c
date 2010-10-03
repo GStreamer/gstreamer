@@ -179,9 +179,7 @@ gst_byte_reader_set_pos (GstByteReader * reader, guint pos)
 guint
 gst_byte_reader_get_pos (const GstByteReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
-  return reader->byte;
+  return _gst_byte_reader_get_pos_inline (reader);
 }
 
 /**
@@ -197,8 +195,6 @@ gst_byte_reader_get_pos (const GstByteReader * reader)
 guint
 gst_byte_reader_get_remaining (const GstByteReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
   return _gst_byte_reader_get_remaining_inline (reader);
 }
 
@@ -215,8 +211,6 @@ gst_byte_reader_get_remaining (const GstByteReader * reader)
 guint
 gst_byte_reader_get_size (const GstByteReader * reader)
 {
-  g_return_val_if_fail (reader != NULL, 0);
-
   return _gst_byte_reader_get_size_inline (reader);
 }
 
@@ -237,8 +231,6 @@ gst_byte_reader_get_size (const GstByteReader * reader)
 gboolean
 gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-
   return _gst_byte_reader_skip_inline (reader, nbytes);
 }
 
@@ -711,18 +703,12 @@ gst_byte_reader_skip (GstByteReader * reader, guint nbytes)
 gboolean \
 gst_byte_reader_get_##name (GstByteReader * reader, type * val) \
 { \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
   return _gst_byte_reader_get_##name##_inline (reader, val); \
 } \
 \
 gboolean \
 gst_byte_reader_peek_##name (GstByteReader * reader, type * val) \
 { \
-  g_return_val_if_fail (reader != NULL, FALSE); \
-  g_return_val_if_fail (val != NULL, FALSE); \
-  \
   return _gst_byte_reader_peek_##name##_inline (reader, val); \
 }
 
@@ -881,9 +867,6 @@ gboolean
 gst_byte_reader_get_data (GstByteReader * reader, guint size,
     const guint8 ** val)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-  g_return_val_if_fail (val != NULL, FALSE);
-
   return _gst_byte_reader_get_data_inline (reader, size, val);
 }
 
@@ -906,9 +889,6 @@ gboolean
 gst_byte_reader_peek_data (GstByteReader * reader, guint size,
     const guint8 ** val)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-  g_return_val_if_fail (val != NULL, FALSE);
-
   return _gst_byte_reader_peek_data_inline (reader, size, val);
 }
 
@@ -929,9 +909,6 @@ gst_byte_reader_peek_data (GstByteReader * reader, guint size,
 gboolean
 gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
 {
-  g_return_val_if_fail (reader != NULL, FALSE);
-  g_return_val_if_fail (val != NULL, FALSE);
-
   return _gst_byte_reader_dup_data_inline (reader, size, val);
 }
 
