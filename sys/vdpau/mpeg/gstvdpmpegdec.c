@@ -408,14 +408,14 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
   GstVdpMpegFrame *mpeg_frame;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
-  guint32 sync_code;
   guint8 start_code;
 
   /* skip sync_code */
-  gst_bit_reader_get_bits_uint32 (&b_reader, &sync_code, 8 * 3);
+  gst_bit_reader_skip (&b_reader, 8 * 3);
 
   /* start_code */
-  gst_bit_reader_get_bits_uint8 (&b_reader, &start_code, 8);
+  if (!gst_bit_reader_get_bits_uint8 (&b_reader, &start_code, 8))
+    return GST_FLOW_ERROR;
 
   mpeg_frame = GST_VDP_MPEG_FRAME_CAST (frame);
 
@@ -464,7 +464,11 @@ gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
       guint8 ext_code;
 
       /* ext_code */
-      gst_bit_reader_get_bits_uint8 (&b_reader, &ext_code, 4);
+      if (!gst_bit_reader_get_bits_uint8 (&b_reader, &ext_code, 4)) {
+        ret = GST_FLOW_ERROR;
+        gst_buffer_unref (buf);
+        goto done;
+      }
 
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION: %d", ext_code);
 
