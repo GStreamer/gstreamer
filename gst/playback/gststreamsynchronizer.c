@@ -634,9 +634,13 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
 
       /* Is there a 1 second lag? */
       if (last_stop != -1 && last_stop + GST_SECOND < timestamp_end) {
-        gint64 new_start;
+        gint64 new_start, new_stop;
 
         new_start = timestamp_end - GST_SECOND;
+        if (ostream->segment.stop == -1)
+          new_stop = -1;
+        else
+          new_stop = MAX (new_start, ostream->segment.stop);
 
         GST_DEBUG_OBJECT (ostream->sinkpad,
             "Advancing stream %u from %" GST_TIME_FORMAT " to %"
@@ -646,11 +650,10 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
         gst_pad_push_event (ostream->srcpad,
             gst_event_new_new_segment_full (TRUE, ostream->segment.rate,
                 ostream->segment.applied_rate, ostream->segment.format,
-                new_start, ostream->segment.stop, new_start));
+                new_start, new_stop, new_start));
         gst_segment_set_newsegment_full (&ostream->segment, TRUE,
             ostream->segment.rate, ostream->segment.applied_rate,
-            ostream->segment.format, new_start, ostream->segment.stop,
-            new_start);
+            ostream->segment.format, new_start, new_stop, new_start);
         gst_segment_set_last_stop (&ostream->segment, GST_FORMAT_TIME,
             new_start);
       }
