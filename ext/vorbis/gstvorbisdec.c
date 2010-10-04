@@ -72,6 +72,8 @@ static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn vorbis_dec_chain_forward (GstVorbisDec * vd,
     gboolean discont, GstBuffer * buffer);
+static GstFlowReturn vorbis_dec_chain_reverse (GstVorbisDec * vd,
+    gboolean discont, GstBuffer * buf);
 static GstStateChangeReturn vorbis_dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -467,6 +469,8 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      if (dec->segment.rate < 0.0)
+        vorbis_dec_chain_reverse (dec, TRUE, NULL);
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_START:
@@ -1135,13 +1139,16 @@ vorbis_dec_chain_reverse (GstVorbisDec * vd, gboolean discont, GstBuffer * buf)
     result = vorbis_dec_flush_decode (vd);
   }
 
-  GST_DEBUG_OBJECT (vd, "gathering buffer %p of size %u, time %" GST_TIME_FORMAT
-      ", dur %" GST_TIME_FORMAT, buf, GST_BUFFER_SIZE (buf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+  if (G_LIKELY (buf)) {
+    GST_DEBUG_OBJECT (vd,
+        "gathering buffer %p of size %u, time %" GST_TIME_FORMAT
+        ", dur %" GST_TIME_FORMAT, buf, GST_BUFFER_SIZE (buf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  /* add buffer to gather queue */
-  vd->gather = g_list_prepend (vd->gather, buf);
+    /* add buffer to gather queue */
+    vd->gather = g_list_prepend (vd->gather, buf);
+  }
 
   return result;
 }
