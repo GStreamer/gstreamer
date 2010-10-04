@@ -353,11 +353,11 @@ gst_flac_parse_get_frame_size (GstFlacParse * flacparse, GstBuffer * buffer,
     guint * framesize_ret)
 {
   GstBitReader reader = GST_BIT_READER_INIT_FROM_BUFFER (buffer);
-  guint16 samplerate;
-  guint8 tmp;
+  guint16 samplerate = 0;
+  guint8 tmp = 0;
   gint i;
   guint8 channel_assignment = 0;
-  guint8 actual_crc, expected_crc;
+  guint8 actual_crc, expected_crc = 0;
 
   /* Skip 14 bit sync code */
   if (!gst_bit_reader_skip (&reader, 14))
@@ -660,7 +660,7 @@ gst_flac_parse_get_frame_size (GstFlacParse * flacparse, GstBuffer * buffer,
     } else {
       guint8 residual_type;
       guint order = 0;
-      guint16 partition_order;
+      guint16 partition_order = 0;
       guint j;
 
       /* Skip warm-up samples for fixed subframe and calculate order */
@@ -761,7 +761,7 @@ gst_flac_parse_get_frame_size (GstFlacParse * flacparse, GstBuffer * buffer,
   gst_bit_reader_skip_to_byte (&reader);
 
   if (flacparse->check_frame_checksums) {
-    guint16 actual_crc16, expected_crc16;
+    guint16 actual_crc16, expected_crc16 = 0;
 
     if (!gst_bit_reader_get_bits_uint16 (&reader, &expected_crc16, 16))
       goto need_more_data;
