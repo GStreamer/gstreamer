@@ -47,6 +47,11 @@
 GST_DEBUG_CATEGORY_STATIC (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
+#define DEFAULT_WIDTH  320
+#define DEFAULT_HEIGHT 240
+#define DEFAULT_FPS_N  25
+#define DEFAULT_FPS_D  1
+
 /* signals and args */
 enum
 {
@@ -173,10 +178,10 @@ gst_goom_init (GstGoom * goom)
 
   goom->adapter = gst_adapter_new ();
 
-  goom->width = 320;
-  goom->height = 200;
-  goom->fps_n = 25;             /* desired frame rate */
-  goom->fps_d = 1;              /* desired frame rate */
+  goom->width = DEFAULT_WIDTH;
+  goom->height = DEFAULT_HEIGHT;
+  goom->fps_n = DEFAULT_FPS_N;  /* desired frame rate */
+  goom->fps_d = DEFAULT_FPS_D;  /* desired frame rate */
   goom->channels = 0;
   goom->rate = 0;
   goom->duration = 0;
@@ -285,9 +290,10 @@ gst_goom_src_negotiate (GstGoom * goom)
   }
 
   structure = gst_caps_get_structure (target, 0);
-  gst_structure_fixate_field_nearest_int (structure, "width", 320);
-  gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+  gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
+  gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+      DEFAULT_FPS_N, DEFAULT_FPS_D);
 
   gst_pad_set_caps (goom->srcpad, target);
   gst_caps_unref (target);
