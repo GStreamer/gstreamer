@@ -585,8 +585,7 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
     GST_WARNING ("jumped %" G_GINT64_FORMAT
         " frames backwards! not sure what to do here",
         parse->prev_frame - prev_frame);
-    ret = GST_FLOW_ERROR;
-    goto done;
+    parse->prev_frame = prev_frame;
   } else if (prev_frame > parse->prev_frame) {
     GST_INFO ("discontinuity detected (%" G_GINT64_FORMAT
         " frames)", prev_frame - parse->prev_frame);
