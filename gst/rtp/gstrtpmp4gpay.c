@@ -179,9 +179,9 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
 {
   guint8 *data;
   guint size;
-  guint8 objectType;
-  guint8 samplingIdx;
-  guint8 channelCfg;
+  guint8 objectType = 0;
+  guint8 samplingIdx = 0;
+  guint8 channelCfg = 0;
   GstBitReader br;
 
   data = GST_BUFFER_DATA (buffer);
@@ -208,7 +208,7 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
 
   /* rtp rate depends on sampling rate of the audio */
   if (samplingIdx == 15) {
-    guint32 rate;
+    guint32 rate = 0;
 
     /* index of 15 means we get the rate in the next 24 bits */
     if (!gst_bit_reader_get_bits_uint32 (&br, &rate, 24))
@@ -230,7 +230,7 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
     case 6:
     case 7:
     {
-      guint8 frameLenFlag;
+      guint8 frameLenFlag = 0;
 
       if (gst_bit_reader_get_bits_uint8 (&br, &frameLenFlag, 1))
         if (frameLenFlag)
