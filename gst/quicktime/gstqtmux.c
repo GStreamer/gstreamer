@@ -212,34 +212,37 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
       g_param_spec_boolean ("large-file", "Support for large files",
           "Uses 64bits to some fields instead of 32bits, "
           "providing support for large files",
-          DEFAULT_LARGE_FILE, G_PARAM_READWRITE));
+          DEFAULT_LARGE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
       g_param_spec_uint ("movie-timescale", "Movie timescale",
           "Timescale to use in the movie (units per second)",
           1, G_MAXUINT32, DEFAULT_MOVIE_TIMESCALE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_CTTS,
       g_param_spec_boolean ("presentation-time",
           "Include presentation-time info",
           "Calculate and include presentation/composition time "
           "(in addition to decoding time) (use with caution)",
-          DEFAULT_DO_CTTS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_DO_CTTS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START,
       g_param_spec_boolean ("faststart", "Format file to faststart",
           "If the file should be formated for faststart (headers first). ",
-          DEFAULT_FAST_START, G_PARAM_READWRITE));
+          DEFAULT_FAST_START, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START_TEMP_FILE,
       g_param_spec_string ("faststart-file", "File to use for storing buffers",
           "File that will be used temporarily to store data from the stream "
           "when creating a faststart file. If null a filepath will be "
           "created automatically", DEFAULT_FAST_START_TEMP_FILE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MOOV_RECOV_FILE,
-      g_param_spec_string ("moov-recovery-file", "File to store data for "
-          "posterior moov atom recovery", "File to be used to store "
+      g_param_spec_string ("moov-recovery-file",
+          "File to store data for posterior moov atom recovery",
+          "File to be used to store "
           "data for moov atom making movie file recovery possible in case "
           "of a crash during muxing. Null for disabled. (Experimental)",
-          DEFAULT_MOOV_RECOV_FILE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_MOOV_RECOV_FILE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_qt_mux_request_new_pad);
