@@ -864,6 +864,7 @@ AG_GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
 	 fi
   fi
 ])
+AM_CONDITIONAL(USE_LIBIEC61883, [ test "x${HAVE_LIBIEC61883}" = xyes ] )
 
 dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
