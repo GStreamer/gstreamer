@@ -2420,8 +2420,8 @@ again:
    * or sync is disabled with GST_CLOCK_BADTIME. */
   status = gst_base_sink_wait_clock (basesink, stime, &jitter);
 
-  GST_DEBUG_OBJECT (basesink, "clock returned %d, jitter %" GST_TIME_FORMAT,
-      status, GST_TIME_ARGS (jitter));
+  GST_DEBUG_OBJECT (basesink, "clock returned %d, jitter %c%" GST_TIME_FORMAT,
+      status, (jitter < 0 ? '-' : ' '), GST_TIME_ARGS (ABS (jitter)));
 
   /* invalid time, no clock or sync disabled, just render */
   if (status == GST_CLOCK_BADTIME)
