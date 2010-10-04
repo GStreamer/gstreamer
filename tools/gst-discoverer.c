@@ -378,7 +378,7 @@ _run_async (PrivStruct * ps)
 }
 
 static void
-_discoverer_ready (GstDiscoverer * dc, GMainLoop * ml)
+_discoverer_finished (GstDiscoverer * dc, GMainLoop * ml)
 {
   g_main_loop_quit (ml);
 }
@@ -448,7 +448,7 @@ main (int argc, char **argv)
 
     /* connect signals */
     g_signal_connect (dc, "discovered", G_CALLBACK (_new_discovered_uri), NULL);
-    g_signal_connect (dc, "ready", G_CALLBACK (_discoverer_ready), ml);
+    g_signal_connect (dc, "finished", G_CALLBACK (_discoverer_finished), ml);
 
     gst_discoverer_start (dc);
     /* run mainloop */
