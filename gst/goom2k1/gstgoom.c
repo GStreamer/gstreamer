@@ -95,6 +95,8 @@ static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
 
+static gboolean gst_goom_src_query (GstPad * pad, GstQuery * query);
+
 static gboolean gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
 
@@ -174,6 +176,8 @@ gst_goom_init (GstGoom * goom)
       GST_DEBUG_FUNCPTR (gst_goom_src_setcaps));
   gst_pad_set_event_function (goom->srcpad,
       GST_DEBUG_FUNCPTR (gst_goom_src_event));
+  gst_pad_set_query_function (goom->srcpad,
+      GST_DEBUG_FUNCPTR (gst_goom_src_query));
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
   goom->adapter = gst_adapter_new ();
@@ -387,6 +391,63 @@ gst_goom_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (goom->srcpad, event);
       break;
   }
+  gst_object_unref (goom);
+
+  return res;
+}
+
+static gboolean
+gst_goom_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstGoom *goom;
+
+  goom = GST_GOOM (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      /* We need to send the query upstream and add the returned latency to our
+       * own */
+      GstClockTime min_latency, max_latency;
+      gboolean us_live;
+      GstClockTime our_latency;
+      guint max_samples;
+
+      if ((res = gst_pad_peer_query (goom->sinkpad, query))) {
+        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
+
+        GST_DEBUG_OBJECT (goom, "Peer latency: min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        /* the max samples we must buffer buffer */
+        max_samples = MAX (GOOM_SAMPLES, goom->spf);
+        our_latency =
+            gst_util_uint64_scale_int (max_samples, GST_SECOND, goom->rate);
+
+        GST_DEBUG_OBJECT (goom, "Our latency: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (our_latency));
+
+        /* we add some latency but only if we need to buffer more than what
+         * upstream gives us */
+        min_latency = MAX (our_latency, min_latency);
+        if (max_latency != -1)
+          max_latency = MAX (our_latency, max_latency);
+
+        GST_DEBUG_OBJECT (goom, "Calculated total latency : min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        gst_query_set_latency (query, TRUE, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_peer_query (goom->sinkpad, query);
+      break;
+  }
+
   gst_object_unref (goom);
 
   return res;
