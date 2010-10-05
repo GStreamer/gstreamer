@@ -274,10 +274,6 @@ struct _GstBaseParsePrivate
   GSList *buffers_queued;
   GstClockTime last_ts;
   gint64 last_offset;
-
-  /* property */
-  /* number of initial frames to discard */
-  gint skip;
 };
 
 typedef struct _GstBaseParseSeek
@@ -287,23 +283,6 @@ typedef struct _GstBaseParseSeek
   gint64 offset;
   GstClockTime start_ts;
 } GstBaseParseSeek;
-
-/* signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  PROP_0,
-  PROP_SKIP
-      /* FILL ME */
-};
-
-#define PROP_DEFAULT_SKIP        0
-
 
 static GstElementClass *parent_class = NULL;
 
@@ -343,10 +322,6 @@ static void gst_base_parse_reset (GstBaseParse * parse);
 
 static void gst_base_parse_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_base_parse_get_index (GstElement * element);
-static void gst_base_parse_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_base_parse_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_base_parse_sink_activate (GstPad * sinkpad);
 static gboolean gst_base_parse_sink_activate_push (GstPad * pad,
@@ -456,14 +431,6 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (gst_base_parse_set_index);
   gstelement_class->get_index = GST_DEBUG_FUNCPTR (gst_base_parse_get_index);
 
-  gobject_class->set_property = gst_base_parse_set_property;
-  gobject_class->get_property = gst_base_parse_get_property;
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SKIP,
-      g_param_spec_int ("skip", "skip", "Discard number of initial frames",
-          0, G_MAXINT, PROP_DEFAULT_SKIP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   /* Default handlers */
   klass->check_valid_frame = gst_base_parse_check_frame;
   klass->parse_frame = gst_base_parse_parse_frame;
@@ -521,7 +488,6 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->adapter = gst_adapter_new ();
 
   parse->priv->pad_mode = GST_ACTIVATE_NONE;
-  parse->priv->skip = PROP_DEFAULT_SKIP;
 
   /* init state */
   gst_base_parse_reset (parse);
@@ -1576,15 +1542,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     ret = GST_FLOW_OK;
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
-      if (G_LIKELY (!parse->priv->skip)) {
-        GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
-            GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
-        ret = gst_pad_push (parse->srcpad, buffer);
-      } else {
-        GST_DEBUG_OBJECT (parse, "initial frame (%d bytes) discarded",
-            GST_BUFFER_SIZE (buffer));
-        parse->priv->skip--;
-      }
+      GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
+          GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
+      ret = gst_pad_push (parse->srcpad, buffer);
     } else {
       GST_LOG_OBJECT (parse, "frame (%d bytes) queued for now",
           GST_BUFFER_SIZE (buffer));
@@ -3156,41 +3116,6 @@ gst_base_parse_get_index (GstElement * element)
   GST_OBJECT_UNLOCK (parse);
 
   return result;
-}
-
-static void
-gst_base_parse_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstBaseParse *parse;
-
-  parse = GST_BASE_PARSE (object);
-
-  switch (prop_id) {
-    case PROP_SKIP:
-      parse->priv->skip = g_value_get_int (value);
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_base_parse_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstBaseParse *parse;
-
-  parse = GST_BASE_PARSE (object);
-
-  switch (prop_id) {
-    case PROP_SKIP:
-      g_value_set_int (value, parse->priv->skip);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn
