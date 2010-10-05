@@ -1013,9 +1013,9 @@ format_value (GtkScale * scale, gdouble value)
   gint64 seconds;
   gint64 subseconds;
 
-  real = value * duration / 100;
+  real = value * duration / N_GRAD;
   seconds = (gint64) real / GST_SECOND;
-  subseconds = (gint64) real / (GST_SECOND / 100);
+  subseconds = (gint64) real / (GST_SECOND / N_GRAD);
 
   return g_strdup_printf ("%02" G_GINT64_FORMAT ":%02" G_GINT64_FORMAT ":%02"
       G_GINT64_FORMAT, seconds / 60, seconds % 60, subseconds % 100);
