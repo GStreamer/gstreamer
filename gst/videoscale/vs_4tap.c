@@ -31,21 +31,9 @@
 
 #include "vs_4tap.h"
 
-#include <math.h>
+#include <gst/math-compat.h>
 
 #define SHIFT 10
-
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
-#define CLAMP(x,a,b) MAX(MIN((x),(b)),(a))
-
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
-#ifdef _MSC_VER
-#define rint(x) (floor((x)+0.5))
-#endif
 
 static int16_t vs_4tap_taps[256][4];
 
