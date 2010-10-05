@@ -1,9 +1,3 @@
-if USE_ALSA
-ALSASPDIF_DIR = alsaspdif
-else
-ALSASPDIF_DIR =
-endif
-
 if USE_ASSRENDER
 ASSRENDER_DIR = assrender
 else
@@ -380,7 +374,6 @@ endif
 
 
 SUBDIRS=\
-	$(ALSASPDIF_DIR) \
 	$(ASSRENDER_DIR) \
 	$(AMRWB_DIR) \
 	$(APEXSINK_DIR) \
@@ -444,7 +437,6 @@ SUBDIRS=\
 	$(RTMP_DIR)
 
 DIST_SUBDIRS = \
-	alsaspdif \
 	amrwbenc \
 	assrender \
 	apexsink \

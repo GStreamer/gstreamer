@@ -499,18 +499,6 @@ dnl keep this list sorted alphabetically !
 
 if test "x$BUILD_EXTERNAL" = "xyes"; then
 
-dnl *** alsa ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-AG_GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
-  PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
-    HAVE_ALSA="yes"
-    AC_SUBST(ALSA_CFLAGS)
-    AC_SUBST(ALSA_LIBS)
-  ], [
-    AM_PATH_ALSA(0.9.1, HAVE_ALSA="yes", HAVE_ALSA="no")
-  ])
-])
-
 dnl *** assrender ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ASSRENDER, true)
 AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
@@ -1555,7 +1543,6 @@ else
 dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
-AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
@@ -1777,7 +1764,6 @@ tests/examples/scaletempo/Makefile
 tests/examples/switch/Makefile
 tests/examples/jack/Makefile
 tests/icles/Makefile
-ext/alsaspdif/Makefile
 ext/amrwbenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile

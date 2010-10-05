@@ -159,7 +159,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_BZ2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
-@USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsaspdif.so
 @USE_MUSEPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
 @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so

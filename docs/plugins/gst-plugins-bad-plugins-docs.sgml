@@ -138,7 +138,6 @@
     <xi:include href="xml/plugin-audioparsersbad.xml" />
     <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
-    <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-amrwbenc.xml" />
     <xi:include href="xml/plugin-assrender.xml" />
     <xi:include href="xml/plugin-bayer.xml" />

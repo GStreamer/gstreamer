@@ -13,7 +13,6 @@ EXTRA_DIST = \
 	gettext.m4 \
 	glibc21.m4 \
 	glib.m4 \
-	gst-alsa.m4 \
 	gst-artsc.m4 \
 	gst-fionread.m4 \
 	gst-matroska.m4 \
