@@ -136,6 +136,8 @@ static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_visual_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
 
+static gboolean gst_visual_src_query (GstPad * pad, GstQuery * query);
+
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_visual_getcaps (GstPad * pad);
@@ -220,6 +222,7 @@ gst_visual_init (GstVisual * visual)
   gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_pad_set_event_function (visual->srcpad, gst_visual_src_event);
+  gst_pad_set_query_function (visual->srcpad, gst_visual_src_query);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
   visual->adapter = gst_adapter_new ();
@@ -519,6 +522,63 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (visual);
+  return res;
+}
+
+static gboolean
+gst_visual_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res;
+  GstVisual *visual;
+
+  visual = GST_VISUAL (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      /* We need to send the query upstream and add the returned latency to our
+       * own */
+      GstClockTime min_latency, max_latency;
+      gboolean us_live;
+      GstClockTime our_latency;
+      guint max_samples;
+
+      if ((res = gst_pad_peer_query (visual->sinkpad, query))) {
+        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
+
+        GST_DEBUG_OBJECT (visual, "Peer latency: min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        /* the max samples we must buffer buffer */
+        max_samples = MAX (VISUAL_SAMPLES, visual->spf);
+        our_latency =
+            gst_util_uint64_scale_int (max_samples, GST_SECOND, visual->rate);
+
+        GST_DEBUG_OBJECT (visual, "Our latency: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (our_latency));
+
+        /* we add some latency but only if we need to buffer more than what
+         * upstream gives us */
+        min_latency += our_latency;
+        if (max_latency != -1)
+          max_latency += our_latency;
+
+        GST_DEBUG_OBJECT (visual, "Calculated total latency : min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+        gst_query_set_latency (query, TRUE, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_peer_query (visual->sinkpad, query);
+      break;
+  }
+
+  gst_object_unref (visual);
+
   return res;
 }
 
