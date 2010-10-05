@@ -27,19 +27,13 @@
 #include "videotestsrc.h"
 #include "gstvideotestsrcorc.h"
 
+#include <gst/math-compat.h>
 
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
-
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
 
 static void paint_tmpline_ARGB (paintinfo * p, int x, int w);
 static void paint_tmpline_AYUV (paintinfo * p, int x, int w);
-
-
 
 static unsigned char
 random_char (void)
