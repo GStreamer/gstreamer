@@ -1373,13 +1373,12 @@ gst_sdp_demux_start (GstSDPDemux * demux)
     }
   }
 
-  /* try to get and configure a manager */
-  if (uri) {
-    /* we get here when we didn't do a redirect */
-    if (!gst_sdp_demux_configure_manager (demux, uri))
-      goto no_manager;
-  } else {
+  /* we get here when we didn't do a redirect */
 
+  /* try to get and configure a manager */
+  if (!gst_sdp_demux_configure_manager (demux, uri))
+    goto no_manager;
+  if (!uri) {
     /* create streams with UDP sources and sinks */
     n_streams = gst_sdp_message_medias_len (&sdp);
     for (i = 0; i < n_streams; i++) {
