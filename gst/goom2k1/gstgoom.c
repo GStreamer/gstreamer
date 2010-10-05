@@ -208,7 +208,6 @@ gst_goom_finalize (GObject * object)
 static void
 gst_goom_reset (GstGoom * goom)
 {
-  goom->next_ts = -1;
   gst_adapter_clear (goom->adapter);
   gst_segment_init (&goom->segment, GST_FORMAT_UNDEFINED);
 
@@ -431,9 +430,9 @@ gst_goom_src_query (GstPad * pad, GstQuery * query)
 
         /* we add some latency but only if we need to buffer more than what
          * upstream gives us */
-        min_latency = MAX (our_latency, min_latency);
+        min_latency += our_latency;
         if (max_latency != -1)
-          max_latency = MAX (our_latency, max_latency);
+          max_latency += our_latency;
 
         GST_DEBUG_OBJECT (goom, "Calculated total latency : min %"
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -498,12 +497,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
   /* don't try to combine samples from discont buffer */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (goom->adapter);
-    goom->next_ts = -1;
   }
-
-  /* Match timestamps from the incoming audio */
-  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
-    goom->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_DEBUG_OBJECT (goom,
       "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
@@ -520,6 +514,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     guchar *out_frame;
     gint i;
     guint avail, to_flush;
+    guint64 dist, timestamp;
 
     avail = gst_adapter_available (goom->adapter);
     GST_DEBUG_OBJECT (goom, "avail now %u", avail);
@@ -534,11 +529,19 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (goom, "processing buffer");
 
-    if (goom->next_ts != -1) {
+    /* get timestamp of the current adapter byte */
+    timestamp = gst_adapter_prev_timestamp (goom->adapter, &dist);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* convert bytes to time */
+      dist /= goom->bps;
+      timestamp += gst_util_uint64_scale_int (dist, GST_SECOND, goom->rate);
+    }
+
+    if (timestamp != -1) {
       gint64 qostime;
 
       qostime = gst_segment_to_running_time (&goom->segment, GST_FORMAT_TIME,
-          goom->next_ts);
+          timestamp);
 
       GST_OBJECT_LOCK (goom);
       /* check for QoS, don't compute buffers that are known to be late */
@@ -579,7 +582,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
-    GST_BUFFER_TIMESTAMP (outbuf) = goom->next_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_DURATION (outbuf) = goom->duration;
     GST_BUFFER_SIZE (outbuf) = goom->outsize;
 
@@ -587,17 +590,13 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, goom->outsize);
 
     GST_DEBUG ("Pushing frame with time=%" GST_TIME_FORMAT ", duration=%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (goom->next_ts),
+        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
         GST_TIME_ARGS (goom->duration));
 
     ret = gst_pad_push (goom->srcpad, outbuf);
     outbuf = NULL;
 
   skip:
-    /* interpollate next timestamp */
-    if (goom->next_ts != -1)
-      goom->next_ts += goom->duration;
-
     /* Now flush the samples we needed for this frame, which might be more than
      * the samples we used (GOOM_SAMPLES). */
     to_flush = goom->bpf;

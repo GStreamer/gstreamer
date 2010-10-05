@@ -70,9 +70,6 @@ struct _GstGoom
   /* segment state */
   GstSegment segment;
 
-  /* the timestamp of the next frame */
-  GstClockTime next_ts;
-
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
   GstClockTime earliest_time;
