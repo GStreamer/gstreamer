@@ -28,10 +28,6 @@
 #include <glib-object.h>
 #include <gst/gstconfig.h>
 
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-
 G_BEGIN_DECLS
 
 /**

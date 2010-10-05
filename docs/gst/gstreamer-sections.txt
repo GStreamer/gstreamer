@@ -1076,7 +1076,6 @@ GstDebugMessage
 gst_debug_color_flags_get_type
 gst_debug_level_get_type
 gst_debug_graph_details_get_type
-M_PI
 GST_CAT_LEVEL_LOG_valist
 </SECTION>
 
