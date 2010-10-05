@@ -40,6 +40,14 @@ typedef struct _GstVisualClass GstVisualClass;
 GST_DEBUG_CATEGORY_STATIC (libvisual_debug);
 #define GST_CAT_DEFAULT (libvisual_debug)
 
+/* amounf of samples before we can feed libvisual */
+#define VISUAL_SAMPLES  512
+
+#define DEFAULT_WIDTH   320
+#define DEFAULT_HEIGHT  240
+#define DEFAULT_FPS_N   25
+#define DEFAULT_FPS_D   1
+
 struct _GstVisual
 {
   GstElement element;
@@ -404,11 +412,12 @@ gst_vis_src_negotiate (GstVisual * visual)
 
   /* fixate in case something is not fixed. This does nothing if the value is
    * already fixed. For video we always try to fixate to something like
-   * 320x240x30 by convention. */
+   * 320x240x25 by convention. */
   structure = gst_caps_get_structure (target, 0);
-  gst_structure_fixate_field_nearest_int (structure, "width", 320);
-  gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+  gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
+  gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+      DEFAULT_FPS_N, DEFAULT_FPS_D);
 
   gst_pad_set_caps (visual->srcpad, target);
   gst_caps_unref (target);
@@ -587,8 +596,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     avail = gst_adapter_available (visual->adapter);
     GST_DEBUG_OBJECT (visual, "avail now %u", avail);
 
-    /* we need at least 512 samples */
-    if (avail < 512 * visual->bps)
+    /* we need at least VISUAL_SAMPLES samples */
+    if (avail < VISUAL_SAMPLES * visual->bps)
       break;
 
     /* we need at least enough samples to make one frame */
@@ -624,26 +633,27 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
-    /* Read 512 samples per channel */
+    /* Read VISUAL_SAMPLES samples per channel */
     data =
-        (const guint16 *) gst_adapter_peek (visual->adapter, 512 * visual->bps);
+        (const guint16 *) gst_adapter_peek (visual->adapter,
+        VISUAL_SAMPLES * visual->bps);
 
 #if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
     {
       VisBuffer *lbuf, *rbuf;
-      guint16 ldata[512], rdata[512];
+      guint16 ldata[VISUAL_SAMPLES], rdata[VISUAL_SAMPLES];
       VisAudioSampleRateType rate;
 
       lbuf = visual_buffer_new_with_buffer (ldata, sizeof (ldata), NULL);
       rbuf = visual_buffer_new_with_buffer (rdata, sizeof (rdata), NULL);
 
       if (visual->channels == 2) {
-        for (i = 0; i < 512; i++) {
+        for (i = 0; i < VISUAL_SAMPLES; i++) {
           ldata[i] = *data++;
           rdata[i] = *data++;
         }
       } else {
-        for (i = 0; i < 512; i++) {
+        for (i = 0; i < VISUAL_SAMPLES; i++) {
           ldata[i] = *data;
           rdata[i] = *data++;
         }
@@ -694,12 +704,12 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     }
 #else
     if (visual->channels == 2) {
-      for (i = 0; i < 512; i++) {
+      for (i = 0; i < VISUAL_SAMPLES; i++) {
         visual->audio->plugpcm[0][i] = *data++;
         visual->audio->plugpcm[1][i] = *data++;
       }
     } else {
-      for (i = 0; i < 512; i++) {
+      for (i = 0; i < VISUAL_SAMPLES; i++) {
         visual->audio->plugpcm[0][i] = *data;
         visual->audio->plugpcm[1][i] = *data++;
       }
@@ -757,8 +767,8 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       visual->actor =
-          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->
-          info->plugname);
+          visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
+          plugname);
       visual->video = visual_video_new ();
       visual->audio = visual_audio_new ();
       /* can't have a play without actors */
