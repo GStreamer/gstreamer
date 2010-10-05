@@ -454,6 +454,9 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
       goto no_connection;
   }
 
+  if (!conn->address)
+    goto no_connection;
+
   stream->destination = conn->address;
   stream->ttl = conn->ttl;
   stream->multicast = is_multicast_address (stream->destination);
@@ -1384,6 +1387,9 @@ gst_sdp_demux_start (GstSDPDemux * demux)
     for (i = 0; i < n_streams; i++) {
       stream = gst_sdp_demux_create_stream (demux, &sdp, i);
 
+      if (!stream)
+        continue;
+
       GST_DEBUG_OBJECT (demux, "configuring transport for stream %p", stream);
 
       if (!gst_sdp_demux_stream_configure_udp (demux, stream))
@@ -1391,6 +1397,9 @@ gst_sdp_demux_start (GstSDPDemux * demux)
       if (!gst_sdp_demux_stream_configure_udp_sink (demux, stream))
         goto transport_failed;
     }
+
+    if (!demux->streams)
+      goto no_streams;
   }
 
   /* set target state on session manager */
@@ -1432,6 +1441,14 @@ could_not_parse:
     gst_sdp_message_uninit (&sdp);
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not parse SDP message."));
+    GST_SDP_STREAM_UNLOCK (demux);
+    return FALSE;
+  }
+no_streams:
+  {
+    gst_sdp_message_uninit (&sdp);
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("No streams in SDP message."));
     GST_SDP_STREAM_UNLOCK (demux);
     return FALSE;
   }
