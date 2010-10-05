@@ -1418,56 +1418,56 @@ gst_sdp_demux_start (GstSDPDemux * demux)
     }
   }
   GST_SDP_STREAM_UNLOCK (demux);
+  gst_sdp_message_uninit (&sdp);
 
   return TRUE;
 
   /* ERRORS */
+done:
+  {
+    GST_SDP_STREAM_UNLOCK (demux);
+    gst_sdp_message_uninit (&sdp);
+    return FALSE;
+  }
 transport_failed:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not create RTP stream transport."));
-    GST_SDP_STREAM_UNLOCK (demux);
-    return FALSE;
+    goto done;
   }
 no_manager:
   {
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not create RTP session manager."));
-    GST_SDP_STREAM_UNLOCK (demux);
-    return FALSE;
+    goto done;
   }
 could_not_parse:
   {
-    gst_sdp_message_uninit (&sdp);
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Could not parse SDP message."));
-    GST_SDP_STREAM_UNLOCK (demux);
-    return FALSE;
+    goto done;
   }
 no_streams:
   {
-    gst_sdp_message_uninit (&sdp);
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("No streams in SDP message."));
-    GST_SDP_STREAM_UNLOCK (demux);
-    return FALSE;
+    goto done;
   }
 sent_redirect:
   {
     /* avoid hanging if redirect not handled */
-    gst_sdp_message_uninit (&sdp);
     GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
         ("Sent RTSP redirect."));
-    GST_SDP_STREAM_UNLOCK (demux);
-    return FALSE;
+    goto done;
   }
 start_session_failure:
   {
-    GST_DEBUG_OBJECT (demux, "could not start session");
+    GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Could not start RTP session manager."));
     gst_element_set_state (demux->session, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (demux), demux->session);
     demux->session = NULL;
-    return FALSE;
+    goto done;
   }
 }
 
