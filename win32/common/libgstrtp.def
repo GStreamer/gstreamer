@@ -35,9 +35,12 @@ EXPORTS
 	gst_rtcp_packet_bye_get_reason_len
 	gst_rtcp_packet_bye_get_ssrc_count
 	gst_rtcp_packet_bye_set_reason
+	gst_rtcp_packet_fb_get_fci
+	gst_rtcp_packet_fb_get_fci_length
 	gst_rtcp_packet_fb_get_media_ssrc
 	gst_rtcp_packet_fb_get_sender_ssrc
 	gst_rtcp_packet_fb_get_type
+	gst_rtcp_packet_fb_set_fci_length
 	gst_rtcp_packet_fb_set_media_ssrc
 	gst_rtcp_packet_fb_set_sender_ssrc
 	gst_rtcp_packet_fb_set_type
@@ -67,6 +70,8 @@ EXPORTS
 	gst_rtcp_sdes_name_to_type
 	gst_rtcp_sdes_type_to_name
 	gst_rtcp_unix_to_ntp
+	gst_rtp_buffer_add_extension_onebyte_header
+	gst_rtp_buffer_add_extension_twobytes_header
 	gst_rtp_buffer_allocate_data
 	gst_rtp_buffer_calc_header_len
 	gst_rtp_buffer_calc_packet_len
@@ -78,6 +83,8 @@ EXPORTS
 	gst_rtp_buffer_get_csrc_count
 	gst_rtp_buffer_get_extension
 	gst_rtp_buffer_get_extension_data
+	gst_rtp_buffer_get_extension_onebyte_header
+	gst_rtp_buffer_get_extension_twobytes_header
 	gst_rtp_buffer_get_header_len
 	gst_rtp_buffer_get_marker
 	gst_rtp_buffer_get_packet_len
@@ -91,6 +98,11 @@ EXPORTS
 	gst_rtp_buffer_get_ssrc
 	gst_rtp_buffer_get_timestamp
 	gst_rtp_buffer_get_version
+	gst_rtp_buffer_list_add_extension_onebyte_header
+	gst_rtp_buffer_list_add_extension_twobytes_header
+	gst_rtp_buffer_list_from_buffer
+	gst_rtp_buffer_list_get_extension_onebyte_header
+	gst_rtp_buffer_list_get_extension_twobytes_header
 	gst_rtp_buffer_list_get_payload_len
 	gst_rtp_buffer_list_get_payload_type
 	gst_rtp_buffer_list_get_seq
