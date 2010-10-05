@@ -196,7 +196,8 @@ gst_headers =			\
 	gstparse.h		\
 	gstxml.h
 
-libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
+libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers) math-compat.h
+
 nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_header_configure) $(built_header_make)
 

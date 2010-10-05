@@ -73,6 +73,7 @@ IGNORE_HFILES= \
 	\
 	grammar.tab.h \
 	grammar.tab.pre.h \
+	math-compat.h \
 	types.h
 
 gst-universe.svg: gst-universe.dot
