@@ -196,7 +196,9 @@ CRUFT_FILES = \
 	$(top_builddir)/common/m4/xsize.m4
 
 CRUFT_DIRS = \
-	$(top_builddir)/tests/examples/xml
+	$(top_builddir)/tests/examples/xml \
+	$(top_builddir)/gst/tmp-introspect* \
+	$(top_builddir)/libs/gst/*/tmp-introspect*
 
 include $(top_srcdir)/common/cruft.mak
 
