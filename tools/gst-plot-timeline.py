@@ -28,7 +28,7 @@ BACKGROUND_COLOR = (0, 0, 0)
 
 # assumes GST_DEBUG_LOG_COLOR=1
 #                             timestamp          pid  thread        level   category,file,line,msg
-mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ +0?x?[0-9a-f]+ [A-Z]+ +([-a-zA-Z0-9_]+ )(.*)')
+mark_regex = re.compile (r'^(\d+:\d+:\d+\.\d+) +\d+ +0?x?[0-9a-f]+ [A-Z]+ +([-a-zA-Z0-9_]+ )(.*)')
 mark_timestamp_group = 1
 mark_program_group = 2
 mark_log_group = 3
@@ -87,8 +87,8 @@ class SyscallParser:
     def add_line (self, str):
         m = mark_regex.search (str)
         if m:
-            timestr = m.group (mark_timestamp_group)
-            timestamp = float (timestr[5:]) + (float (timestr[2:3]) * 60.0) + (float (timestr[0]) * 60.0*60.0)
+            timestr = m.group (mark_timestamp_group).split(':')
+            timestamp = float (timestr[2]) + (float (timestr[1]) * 60.0) + (float (timestr[0]) * 3600.0)
             program = m.group (mark_program_group)
             text = program + m.group (mark_log_group)
             if text == 'last':
