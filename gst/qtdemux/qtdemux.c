@@ -7421,7 +7421,10 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         rate = gst_codec_utils_aac_get_sample_rate_from_index (rateindex);
         if (rate > 0)
           stream->rate = rate;
+      }
 
+      /* Set level and profile if possible */
+      if (data_ptr != NULL && data_len >= 2) {
         gst_codec_utils_aac_caps_set_level_and_profile (stream->caps,
             data_ptr, data_len);
       }
