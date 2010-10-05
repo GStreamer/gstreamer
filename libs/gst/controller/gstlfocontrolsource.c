@@ -43,7 +43,7 @@
 #include "gstlfocontrolsource.h"
 #include "gstlfocontrolsourceprivate.h"
 
-#include "math.h"
+#include <gst/math-compat.h>
 
 #define EMPTY(x) (x)
 
