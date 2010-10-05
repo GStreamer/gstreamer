@@ -2515,6 +2515,13 @@ retry:
       if (cluster_time > time) {
         GST_DEBUG_OBJECT (demux, "overshot target");
         /* cluster overshoots */
+        if (cluster_offset == demux->first_cluster_offset) {
+          /* but no prev one */
+          GST_DEBUG_OBJECT (demux, "but using first cluster anyway");
+          prev_cluster_time = cluster_time;
+          prev_cluster_offset = cluster_offset;
+          break;
+        }
         if (prev_cluster_time != GST_CLOCK_TIME_NONE) {
           /* prev cluster did not overshoot, so prev cluster is target */
           break;
