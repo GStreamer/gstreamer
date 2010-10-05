@@ -542,6 +542,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
 
       qostime = gst_segment_to_running_time (&goom->segment, GST_FORMAT_TIME,
           timestamp);
+      qostime += goom->duration;
 
       GST_OBJECT_LOCK (goom);
       /* check for QoS, don't compute buffers that are known to be late */
