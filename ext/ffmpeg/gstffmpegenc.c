@@ -839,8 +839,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 
 static GstFlowReturn
 gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
-    guint max_size, GstClockTime timestamp, GstClockTime duration,
-    gboolean discont)
+    guint in_size, guint max_size, GstClockTime timestamp,
+    GstClockTime duration, gboolean discont)
 {
   GstBuffer *outbuf;
   AVCodecContext *ctx;
@@ -850,14 +850,15 @@ gst_ffmpegenc_encode_audio (GstFFMpegEnc * ffmpegenc, guint8 * audio_in,
 
   ctx = ffmpegenc->context;
 
-  outbuf = gst_buffer_new_and_alloc (max_size);
+  /* We need to provide at least ffmpegs minimal buffer size */
+  outbuf = gst_buffer_new_and_alloc (max_size + FF_MIN_BUFFER_SIZE);
   audio_out = GST_BUFFER_DATA (outbuf);
 
   GST_LOG_OBJECT (ffmpegenc, "encoding buffer of max size %d", max_size);
   if (ffmpegenc->buffer_size != max_size)
     ffmpegenc->buffer_size = max_size;
 
-  res = avcodec_encode_audio (ctx, audio_out, max_size, (short *) audio_in);
+  res = avcodec_encode_audio (ctx, audio_out, in_size, (short *) audio_in);
 
   if (res < 0) {
     GST_ERROR_OBJECT (ffmpegenc, "Failed to encode buffer: %d", res);
@@ -999,11 +1000,11 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           ctx->sample_rate);
       duration -= (timestamp - ffmpegenc->adapter_ts);
 
-      /* 4 times the input size plus the minimal buffer size
-       * should be big enough... */
-      out_size = frame_bytes * 4 + FF_MIN_BUFFER_SIZE;
+      /* 4 times the input size should be big enough... */
+      out_size = frame_bytes * 4;
 
-      ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
+      ret =
+          gst_ffmpegenc_encode_audio (ffmpegenc, in_data, frame_bytes, out_size,
           timestamp, duration, ffmpegenc->discont);
 
       gst_adapter_flush (ffmpegenc->adapter, frame_bytes);
@@ -1021,19 +1022,16 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
   } else {
     /* we have no frame_size, feed the encoder all the data and expect a fixed
      * output size */
-    int coded_bps = av_get_bits_per_sample (oclass->in_plugin->id) / 8;
+    int coded_bps = av_get_bits_per_sample (oclass->in_plugin->id);
 
     GST_LOG_OBJECT (ffmpegenc, "coded bps %d, osize %d", coded_bps, osize);
 
     out_size = size / osize;
     if (coded_bps)
-      out_size *= coded_bps;
-
-    /* We need to provide at least ffmpegs minimal buffer size */
-    out_size += FF_MIN_BUFFER_SIZE;
+      out_size = (out_size * coded_bps) / 8;
 
     in_data = (guint8 *) GST_BUFFER_DATA (inbuf);
-    ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, out_size,
+    ret = gst_ffmpegenc_encode_audio (ffmpegenc, in_data, size, out_size,
         timestamp, duration, discont);
     gst_buffer_unref (inbuf);
 
