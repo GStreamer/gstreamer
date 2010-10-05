@@ -678,6 +678,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       /* QoS is done on running time */
       qostime = gst_segment_to_running_time (&visual->segment, GST_FORMAT_TIME,
           timestamp);
+      qostime += visual->duration;
 
       GST_OBJECT_LOCK (visual);
       /* check for QoS, don't compute buffers that are known to be late */
