@@ -2353,8 +2353,6 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       newpos += cluster_pos;
       GST_DEBUG_OBJECT (demux,
           "found cluster ebml id at offset %" G_GINT64_FORMAT, newpos);
-      gst_buffer_unref (buf);
-      buf = NULL;
       /* extra checks whether we really sync'ed to a cluster:
        * - either it is the first and only cluster
        * - either there is a cluster after this one
@@ -2396,6 +2394,11 @@ gst_matroska_demux_search_cluster (GstMatroskaDemux * demux, gint64 * pos)
       gst_buffer_unref (buf);
       buf = NULL;
     }
+  }
+
+  if (buf) {
+    gst_buffer_unref (buf);
+    buf = NULL;
   }
 
   demux->offset = orig_offset;
