@@ -24,10 +24,7 @@
 #include <gst/gst.h>
 
 #include "gstcoloreffects.h"
-
-#ifndef PACKAGE
-#define PACKAGE "coloreffects"
-#endif
+#include "gstchromahold.h"
 
 struct _elements_entry
 {
@@ -37,6 +34,7 @@ struct _elements_entry
 
 static const struct _elements_entry _elements[] = {
   {"coloreffects", gst_color_effects_get_type},
+  {"chromahold", gst_chroma_hold_get_type},
   {NULL, 0},
 };
 
