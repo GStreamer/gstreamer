@@ -44,6 +44,10 @@ typedef struct _GstFFMpegDec GstFFMpegDec;
 
 #define MAX_TS_MASK 0xff
 
+/* for each incomming buffer we keep all timing info in a structure like this.
+ * We keep a circular array of these structures around to store the timing info.
+ * The index in the array is what we pass as opaque data (to pictures) and
+ * pts (to parsers) so that ffmpeg can remember them for us. */
 typedef struct
 {
   gint idx;
