@@ -195,12 +195,23 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
   /* fixed, non probing context */
   if (context != NULL && context->width != -1) {
+    gint num, denom;
+
     caps = gst_caps_new_simple (mimetype,
         "width", G_TYPE_INT, context->width,
-        "height", G_TYPE_INT, context->height,
-        "framerate", GST_TYPE_FRACTION,
-        context->time_base.den / context->ticks_per_frame,
-        context->time_base.num, NULL);
+        "height", G_TYPE_INT, context->height, NULL);
+
+    num = context->time_base.den / context->ticks_per_frame;
+    denom = context->time_base.num;
+
+    if (gst_util_fraction_compare (num, denom, 1000, 1) > 0) {
+      GST_LOG ("excessive framerate: %d/%d, -> 0/1", num, denom);
+      num = 0;
+      denom = 1;
+    }
+    GST_LOG ("setting framerate: %d/%d", num, denom);
+    gst_caps_set_simple (caps,
+        "framerate", GST_TYPE_FRACTION, num, denom, NULL);
   } else {
     /* so we are after restricted caps in this case */
     switch (codec_id) {
