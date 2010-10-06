@@ -52,7 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_chroma_hold_debug);
 #define DEFAULT_TARGET_R 255
 #define DEFAULT_TARGET_G 0
 #define DEFAULT_TARGET_B 0
-#define DEFAULT_TOLERANCE 2
+#define DEFAULT_TOLERANCE 30
 
 enum
 {
@@ -301,23 +301,24 @@ gst_chroma_hold_set_caps (GstBaseTransform * btrans,
 static inline gint
 rgb_to_hue (gint r, gint g, gint b)
 {
-  gint m, M, C, h;
+  gint m, M, C, C2, h;
 
   m = MIN (MIN (r, g), b);
   M = MAX (MAX (r, g), b);
   C = M - m;
+  C2 = C >> 1;
 
   if (C == 0) {
     return G_MAXUINT;
   } else if (M == r) {
-    h = ((g - b) / C) % 6;
+    h = ((256 * 60 * (g - b) + C2) / C);
   } else if (M == g) {
-    h = ((b - r) / C) + 2;
-  } else {                      /* if (M == b) */
-
-    h = ((r - g) / C) + 4;
+    h = ((256 * 60 * (b - r) + C2) / C) + 120 * 256;
+  } else {
+    /* if (M == b) */
+    h = ((256 * 60 * (r - g) + C2) / C) + 240 * 256;
   }
-  h = 60 * h;
+  h >>= 8;
 
   if (h >= 360)
     h -= 360;
