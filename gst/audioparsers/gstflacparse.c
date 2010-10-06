@@ -198,6 +198,8 @@ static GstFlowReturn gst_flac_parse_parse_frame (GstBaseParse * parse,
     GstBuffer * buffer);
 static gint gst_flac_parse_get_frame_overhead (GstBaseParse * parse,
     GstBuffer * buffer);
+static GstFlowReturn gst_flac_parse_pre_push_buffer (GstBaseParse * parse,
+    GstBuffer * buf);
 
 GST_BOILERPLATE (GstFlacParse, gst_flac_parse, GstBaseParse,
     GST_TYPE_BASE_PARSE);
@@ -244,6 +246,8 @@ gst_flac_parse_class_init (GstFlacParseClass * klass)
   baseparse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_flac_parse_parse_frame);
   baseparse_class->get_frame_overhead =
       GST_DEBUG_FUNCPTR (gst_flac_parse_get_frame_overhead);
+  baseparse_class->pre_push_buffer =
+      GST_DEBUG_FUNCPTR (gst_flac_parse_pre_push_buffer);
 }
 
 static void
@@ -1182,11 +1186,6 @@ push_headers:
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (flacparse)), caps);
   gst_caps_unref (caps);
 
-  /* Push tags */
-  if (flacparse->tags)
-    gst_element_found_tags (GST_ELEMENT (flacparse),
-        gst_tag_list_copy (flacparse->tags));
-
   /* push header buffers; update caps, so when we push the first buffer the
    * negotiated caps will change to caps that include the streamheader field */
   for (l = flacparse->headers; l != NULL; l = l->next) {
@@ -1480,4 +1479,18 @@ gst_flac_parse_get_frame_overhead (GstBaseParse * parse, GstBuffer * buffer)
      * subframe headers. The first could lead us to being off by 88 bits and
      * the second even less, so the total inaccuracy is negligible. */
     return 7;
+}
+
+static GstFlowReturn
+gst_flac_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
+{
+  GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+
+  /* Push tags */
+  if (flacparse->tags) {
+    gst_element_found_tags (GST_ELEMENT (flacparse), flacparse->tags);
+    flacparse->tags = NULL;
+  }
+
+  return GST_FLOW_OK;
 }
