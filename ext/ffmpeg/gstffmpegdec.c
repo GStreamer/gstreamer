@@ -506,11 +506,14 @@ gst_ffmpegdec_query (GstPad * pad, GstQuery * query)
 
 static void
 gst_ffmpegdec_update_qos (GstFFMpegDec * ffmpegdec, gdouble proportion,
-    GstClockTime time)
+    GstClockTime timestamp)
 {
+  GST_LOG_OBJECT (ffmpegdec, "update QOS: %f, %" GST_TIME_FORMAT,
+      proportion, GST_TIME_ARGS (timestamp));
+
   GST_OBJECT_LOCK (ffmpegdec);
   ffmpegdec->proportion = proportion;
-  ffmpegdec->earliest_time = time;
+  ffmpegdec->earliest_time = timestamp;
   GST_OBJECT_UNLOCK (ffmpegdec);
 }
 
@@ -522,11 +525,11 @@ gst_ffmpegdec_reset_qos (GstFFMpegDec * ffmpegdec)
 
 static void
 gst_ffmpegdec_read_qos (GstFFMpegDec * ffmpegdec, gdouble * proportion,
-    GstClockTime * time)
+    GstClockTime * timestamp)
 {
   GST_OBJECT_LOCK (ffmpegdec);
   *proportion = ffmpegdec->proportion;
-  *time = ffmpegdec->earliest_time;
+  *timestamp = ffmpegdec->earliest_time;
   GST_OBJECT_UNLOCK (ffmpegdec);
 }
 
