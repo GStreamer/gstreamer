@@ -540,7 +540,6 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
           &appbits, 5, 0, &pointer, &size) == TRUE);
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
-  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
