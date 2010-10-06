@@ -308,7 +308,7 @@ rgb_to_hue (gint r, gint g, gint b)
   C = M - m;
 
   if (C == 0) {
-    h = 0;
+    return G_MAXUINT;
   } else if (M == r) {
     h = ((g - b) / C) % 6;
   } else if (M == g) {
@@ -370,7 +370,7 @@ gst_chroma_hold_process_xrgb (guint8 * dest, gint width,
 
       h2 = rgb_to_hue (r, g, b);
       diff = hue_dist (h1, h2);
-      if (diff > tolerance) {
+      if (h1 == G_MAXUINT || diff > tolerance) {
         grey = (13938 * r + 46869 * g + 4730 * b) >> 16;
         grey = CLAMP (grey, 0, 255);
         dest[p[1]] = grey;
