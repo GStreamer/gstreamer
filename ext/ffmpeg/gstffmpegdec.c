@@ -1820,6 +1820,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    */
   if (out_offset != GST_BUFFER_OFFSET_NONE) {
     /* out_offset already contains the offset from ts_info */
+    GST_LOG_OBJECT (ffmpegdec, "Using offset returned by ffmpeg");
   } else if (out_timestamp != GST_CLOCK_TIME_NONE) {
     GstFormat out_fmt = GST_FORMAT_DEFAULT;
     GST_LOG_OBJECT (ffmpegdec, "Using offset converted from timestamp");
