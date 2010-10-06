@@ -980,9 +980,9 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
   fields_required = gst_deinterlace_method_get_fields_required (self->method);
 
   /* Not enough fields in the history */
-  if (self->history_count < fields_required + 1) {
+  if (self->history_count < fields_required) {
     GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
-        self->history_count, fields_required + 1);
+        self->history_count, fields_required);
     return GST_FLOW_OK;
   }
 
