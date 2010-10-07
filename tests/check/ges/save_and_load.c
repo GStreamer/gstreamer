@@ -44,8 +44,8 @@ compare (GKeyFile * cmp, GESFormatter * formatter, GESTimeline * timeline)
 
   if (!(g_strcmp0 (data, fmt_data) == 0)) {
     GST_ERROR ("difference between expected and output");
-    g_printf ("expected: \n%s\n\n", data);
-    g_printf ("actual: \n%s\n\n", fmt_data);
+    GST_ERROR ("expected: \n%s", data);
+    GST_ERROR ("actual: \n%s", fmt_data);
     result = FALSE;
   }
   g_free (data);
@@ -108,6 +108,7 @@ GST_START_TEST (test_keyfile_save)
 
   /* add sources */
 
+  GST_DEBUG ("Adding first source");
   source = (GESTimelineObject *) ges_timeline_test_source_new ();
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
       source, -1);
@@ -127,6 +128,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object0", "volume", "0");
   COMPARE;
 
+  GST_DEBUG ("Adding transition");
   source = (GESTimelineObject *)
       ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
 
@@ -142,6 +144,7 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object1", "vtype", "A bar moves from left to right");
   COMPARE;
 
+  GST_DEBUG ("Adding second source");
   source = (GESTimelineObject *) ges_timeline_test_source_new ();
   g_object_set (G_OBJECT (source), "duration", 2 * GST_SECOND, NULL);
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
@@ -151,7 +154,8 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object2", "start", "1500000000");
   KEY ("Object2", "in-point", "0");
   KEY ("Object2", "duration", "2000000000");
-  KEY ("Object2", "priority", "2");
+  /* This object will be under the other object and transition */
+  KEY ("Object2", "priority", "4");
   KEY ("Object2", "font-desc", "\"Serif\\\\ 36\"");
   KEY ("Object2", "halignment", "center");
   KEY ("Object2", "valignment", "baseline");
@@ -184,7 +188,8 @@ GST_START_TEST (test_keyfile_save)
   KEY ("Object3", "start", "5000000000");
   KEY ("Object3", "in-point", "0");
   KEY ("Object3", "duration", "1000000000");
-  KEY ("Object3", "priority", "2");
+  /* The second layer's minimum priority will be 10 */
+  KEY ("Object3", "priority", "10");
   KEY ("Object3", "mute", "false");
   KEY ("Object3", "text", "\"the\\\\ quick\\\\ brown\\\\ fox\"");
   KEY ("Object3", "font-desc", "\"Serif\\\\ 36\"");
@@ -439,15 +444,19 @@ fail:
   return ret;
 }
 
-#define TIMELINE_COMPARE_BEGIN(orig) \
+#define TIMELINE_BEGIN(location) \
 {\
-  GESTimeline *a, *b;\
-  a = orig;\
-  b = ges_timeline_new ();
+  GESTimeline **a, *b;\
+  a = &(location);\
+  if (*a) g_object_unref (*a);\
+  b = ges_timeline_new();\
+  *a = b;\
 
-#define TIMELINE_COMPARE_END \
-  ges_timelines_equal (a, b);\
-  g_object_unref (b);\
+#define TIMELINE_END }
+
+#define TIMELINE_COMPARE(a, b)\
+{\
+  fail_unless (ges_timelines_equal(a, b));\
 }
 
 #define TRACK(type, caps) \
@@ -570,7 +579,7 @@ static const gchar *data = "\n[General]\n"
 
 GST_START_TEST (test_keyfile_load)
 {
-  GESTimeline *timeline;
+  GESTimeline *timeline = NULL, *expected = NULL;
   GESFormatter *formatter;
 
   ges_init ();
@@ -590,7 +599,7 @@ GST_START_TEST (test_keyfile_load)
 
   fail_unless (ges_formatter_load (formatter, timeline));
 
-  TIMELINE_COMPARE_BEGIN (timeline) {
+  TIMELINE_BEGIN (expected) {
 
     TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw-float; audio/x-raw-int");
 
@@ -616,12 +625,84 @@ GST_START_TEST (test_keyfile_load)
 
     } LAYER_END;
 
-  } TIMELINE_COMPARE_END;
+  } TIMELINE_END;
 
+  TIMELINE_COMPARE (timeline, expected);
 
   /* tear-down */
   g_object_unref (formatter);
   g_object_unref (timeline);
+  g_object_unref (expected);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_keyfile_identity)
+{
+
+  /* we will create several timelines. they will first be serialized, then
+   * deseriailzed and compared against the original. */
+
+  GESTimeline *orig = NULL, *serialized = NULL;
+  GESFormatter *formatter;
+
+  ges_init ();
+
+  formatter = GES_FORMATTER (ges_keyfile_formatter_new ());
+
+  TIMELINE_BEGIN (orig) {
+
+    TRACK (GES_TRACK_TYPE_AUDIO, "audio/x-raw-int,width=32,rate=8000");
+    TRACK (GES_TRACK_TYPE_VIDEO, "video/x-raw-rgb");
+
+    LAYER_BEGIN (5) {
+
+      LAYER_OBJECT (GES_TYPE_TIMELINE_TEXT_OVERLAY,
+          "start", GST_SECOND,
+          "duration", 2 * GST_SECOND,
+          "priority", 1,
+          "text", "Hello, world!",
+          "font-desc", "Sans 9",
+          "halignment", GES_TEXT_HALIGN_LEFT,
+          "valignment", GES_TEXT_VALIGN_TOP);
+
+      LAYER_OBJECT (GES_TYPE_TIMELINE_TEST_SOURCE,
+          "start", 0,
+          "duration", 5 * GST_SECOND,
+          "priority", 2,
+          "freq", (gdouble) 500,
+          "volume", 1.0, "vpattern", GES_VIDEO_TEST_PATTERN_WHITE);
+
+      LAYER_OBJECT (GES_TYPE_TIMELINE_TEXT_OVERLAY,
+          "start", 7 * GST_SECOND,
+          "duration", 2 * GST_SECOND,
+          "priority", 2,
+          "text", "Hello, world!",
+          "font-desc", "Sans 9",
+          "halignment", GES_TEXT_HALIGN_LEFT,
+          "valignment", GES_TEXT_VALIGN_TOP);
+
+      LAYER_OBJECT (GES_TYPE_TIMELINE_TEST_SOURCE,
+          "start", 6 * GST_SECOND,
+          "duration", 5 * GST_SECOND,
+          "priority", 3,
+          "freq", (gdouble) 600,
+          "volume", 1.0, "vpattern", GES_VIDEO_TEST_PATTERN_RED);
+
+    } LAYER_END;
+
+  } TIMELINE_END;
+
+  serialized = ges_timeline_new ();
+
+  ges_formatter_save (formatter, orig);
+  ges_formatter_load (formatter, serialized);
+
+  TIMELINE_COMPARE (serialized, orig);
+
+  g_object_unref (formatter);
+  g_object_unref (serialized);
+  g_object_unref (orig);
 }
 
 GST_END_TEST;
@@ -636,6 +717,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_keyfile_save);
   tcase_add_test (tc_chain, test_keyfile_load);
+  tcase_add_test (tc_chain, test_keyfile_identity);
 
   return s;
 }
