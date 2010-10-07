@@ -544,6 +544,9 @@ ges_formatter_can_load_uri
 ges_formatter_can_save_uri
 ges_formatter_load
 ges_formatter_save
+ges_formatter_set_data
+ges_formatter_clear_data
+ges_formatter_get_data
 <SUBSECTION Standard>
 ges_formatter_get_type
 GES_FORMATTER

@@ -36,6 +36,11 @@ G_DEFINE_TYPE (GESFormatter, ges_formatter, G_TYPE_OBJECT);
 
 static void ges_formatter_dispose (GObject * object);
 static void ges_formatter_finalize (GObject * object);
+static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
+    timeline, gchar * uri);
+static gboolean save_to_uri (GESFormatter * formatter, GESTimeline *
+    timeline, gchar * uri);
+
 
 static void
 ges_formatter_class_init (GESFormatterClass * klass)
@@ -44,6 +49,9 @@ ges_formatter_class_init (GESFormatterClass * klass)
 
   object_class->dispose = ges_formatter_dispose;
   object_class->finalize = ges_formatter_finalize;
+
+  klass->load_from_uri = load_from_uri;
+  klass->save_to_uri = save_to_uri;
 }
 
 static void
@@ -168,14 +176,71 @@ ges_formatter_can_save_uri (gchar * uri)
 }
 
 /**
+ * ges_formatter_set_data:
+ * @formatter: a pointer to a #GESFormatter instance or subclass
+ * @data: a pointer to the data to be set on the formatter
+ * @length: a #gsize indicating the length of the data in bytes
+ *
+ * Set the data that this formatter will use for loading. The formatter will
+ * takes ownership of the data and will free the data if
+ * ges_formatter_set_data is called again or when the formatter itself is
+ * disposed. You should calle ges_formatter_clear_data () if you do not wish
+ * this to happen.
+ */
+
+void
+ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
+{
+  if (formatter->data)
+    g_free (formatter->data);
+  formatter->data = data;
+  formatter->length = length;
+}
+
+/**
+ * ges_formatter_set_data:
+ * @formatter: a pointer to a #GESFormatter
+ * @length: a pointer to a location into which to store the size of the
+ * data in bytes.
+ *
+ * Returns: a pointer to the data.
+ */
+
+void *
+ges_formatter_get_data (GESFormatter * formatter, gsize * length)
+{
+  *length = formatter->length;
+
+  return formatter->data;
+}
+
+/**
+ * ges_formatter_clear_data:
+ * @formatter: a pointer to a #GESFormatter
+ *
+ * clears the data from a #GESFormatter without freeing it. You should call
+ * this before disposing or setting data on a #GESFormatter if the current data
+ * pointer should not be freed.
+ *
+ * Returns: a pointer to the data
+ */
+
+void
+ges_formatter_clear_data (GESFormatter * formatter)
+{
+  formatter->data = NULL;
+  formatter->length = 0;
+}
+
+/**
  * ges_formatter_load:
  * @formatter: a pointer to a #GESFormatter instance or subclass.
  * @timeline: a pointer to a #GESTimeline
  *
- * Loads data from formatter to into timeline. The data field of formatter
- * must point to a block of data, and length must be correctly set to the
- * length of the data. This method is only implemented in subclasses.
- * 
+ * Loads data from formatter to into timeline. You should first call
+ * ges_formatter_set_data () with the location and size of a block of data
+ * from which to read. This method is only implemented in subclasses. 
+ *
  * Returns: TRUE if the data was successfully loaded into timeline
  * or FALSE if an error occured during loading.
  */
@@ -198,10 +263,9 @@ ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline)
  * @formatter: a pointer to a #GESFormatter instance or subclass.
  * @timeline: a pointer to a #GESTimeline
  *
- * Save data from timeline into formatter. Upon success, The data field of the
- * formatter will point to a newly-allocated block of data, and the length
- * field of the formatter will contain the length of the block. This method is
- * only implemented in subclasses.
+ * Save data from timeline into a block of data. You can retrieve the location
+ * and size of this data with ges_formatter_get_data(). This method is only
+ * implemented in subclasses.
  *
  * Returns: TRUE if the timeline data was successfully saved for FALSE if
  * an error occured during saving.
@@ -241,6 +305,17 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 gboolean
 ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
     gchar * uri)
+{
+  GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
+
+  if (klass->load_from_uri)
+    return klass->load_from_uri (formatter, timeline, uri);
+
+  return FALSE;
+}
+
+static gboolean
+load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
 {
   gchar *location;
   GError *e = NULL;
@@ -292,8 +367,19 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
  */
 
 gboolean
-ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
-    gchar * uri)
+ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
+    timeline, gchar * uri)
+{
+  GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
+
+  if (klass->save_to_uri)
+    return klass->save_to_uri (formatter, timeline, uri);
+
+  return FALSE;
+}
+
+static gboolean
+save_to_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
 {
   gchar *location;
   GError *e = NULL;

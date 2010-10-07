@@ -43,7 +43,6 @@
 
 /**
  * GESFormatter:
- * @parent: parent
  *
  * Base class for timeline data serialization and deserialization.
  */
@@ -63,6 +62,8 @@ struct _GESFormatter {
  * from a given URI. 
  * @can_save_uri: class method which rturns true of a #GEFormatterClass can
  * write to a given URI.
+ * @load_from_uri: class method to deserialize data from a URI
+ * @save_from_uri: class method to serialize data to a URI
  * @save: method to save timeline data
  * @load: method to load timeline data
  * 
@@ -73,6 +74,8 @@ struct _GESFormatterClass {
 
   gboolean (*can_load_uri) (gchar * uri);
   gboolean (*can_save_uri) (gchar * uri);
+  gboolean (*load_from_uri) (GESFormatter *, GESTimeline *, gchar * uri);
+  gboolean (*save_to_uri) (GESFormatter *, GESTimeline *, gchar * uri);
   gboolean (*save) (GESFormatter * formatter, GESTimeline * timeline);
   gboolean (*load) (GESFormatter * formatter, GESTimeline * timeline);
 };
@@ -90,6 +93,12 @@ gboolean ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline
 
 gboolean ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *timeline,
     gchar *uri);
+
+void ges_formatter_set_data (GESFormatter * formatter, void *data, gsize
+    length);
+
+void *ges_formatter_get_data (GESFormatter *formatter, gsize *length);
+void ges_formatter_clear_data (GESFormatter *formatter);
 
 gboolean ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline);
 gboolean ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline);
