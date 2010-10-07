@@ -132,6 +132,9 @@ static GstStateChangeReturn gst_video_rate_change_state (GstElement * element,
 
 /*static guint gst_video_rate_signals[LAST_SIGNAL] = { 0 }; */
 
+static GParamSpec *pspec_drop = NULL;
+static GParamSpec *pspec_duplicate = NULL;
+
 GST_BOILERPLATE (GstVideoRate, gst_video_rate, GstElement, GST_TYPE_ELEMENT);
 
 static void
@@ -168,13 +171,13 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
   g_object_class_install_property (object_class, ARG_OUT,
       g_param_spec_uint64 ("out", "Out", "Number of output frames", 0,
           G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_DUP,
-      g_param_spec_uint64 ("duplicate", "Duplicate",
-          "Number of duplicated frames", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_DROP,
-      g_param_spec_uint64 ("drop", "Drop", "Number of dropped frames", 0,
-          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  pspec_duplicate = g_param_spec_uint64 ("duplicate", "Duplicate",
+      "Number of duplicated frames", 0, G_MAXUINT64, 0,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, ARG_DUP, pspec_duplicate);
+  pspec_drop = g_param_spec_uint64 ("drop", "Drop", "Number of dropped frames",
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, ARG_DROP, pspec_drop);
   g_object_class_install_property (object_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
@@ -512,6 +515,26 @@ gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
   videorate->prev_ts = time;
 }
 
+static void
+gst_video_rate_notify_drop (GstVideoRate * videorate)
+{
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) videorate, "drop");
+#else
+  g_object_notify_by_pspec ((GObject *) videorate, pspec_drop);
+#endif
+}
+
+static void
+gst_video_rate_notify_duplicate (GstVideoRate * videorate)
+{
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) videorate, "duplicate");
+#else
+  g_object_notify_by_pspec ((GObject *) videorate, pspec_duplicate);
+#endif
+}
+
 #define MAGIC_LIMIT  25
 static gboolean
 gst_video_rate_event (GstPad * pad, GstEvent * event)
@@ -557,11 +580,11 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
         if (count > 1) {
           videorate->dup += count - 1;
           if (!videorate->silent)
-            g_object_notify (G_OBJECT (videorate), "duplicate");
+            gst_video_rate_notify_duplicate (videorate);
         } else if (count == 0) {
           videorate->drop++;
           if (!videorate->silent)
-            g_object_notify (G_OBJECT (videorate), "drop");
+            gst_video_rate_notify_drop (videorate);
         }
         /* clean up for the new one; _chain will resume from the new start */
         videorate->segment_out = 0;
@@ -617,11 +640,11 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
       if (count > 1) {
         videorate->dup += count - 1;
         if (!videorate->silent)
-          g_object_notify (G_OBJECT (videorate), "duplicate");
+          gst_video_rate_notify_duplicate (videorate);
       } else if (count == 0) {
         videorate->drop++;
         if (!videorate->silent)
-          g_object_notify (G_OBJECT (videorate), "drop");
+          gst_video_rate_notify_drop (videorate);
       }
 
       break;
@@ -792,7 +815,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
           GST_TIME_ARGS (intime), GST_TIME_ARGS (prevtime));
       videorate->drop++;
       if (!videorate->silent)
-        g_object_notify (G_OBJECT (videorate), "drop");
+        gst_video_rate_notify_drop (videorate);
       gst_buffer_unref (buffer);
       goto done;
     }
@@ -836,14 +859,14 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     if (count > 1) {
       videorate->dup += count - 1;
       if (!videorate->silent)
-        g_object_notify (G_OBJECT (videorate), "duplicate");
+        gst_video_rate_notify_duplicate (videorate);
     }
     /* if we didn't output the first buffer, we have a drop */
     else if (count == 0) {
       videorate->drop++;
 
       if (!videorate->silent)
-        g_object_notify (G_OBJECT (videorate), "drop");
+        gst_video_rate_notify_drop (videorate);
 
       GST_LOG_OBJECT (videorate,
           "new is best, old never used, drop, outgoing ts %"
