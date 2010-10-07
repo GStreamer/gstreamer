@@ -1364,7 +1364,6 @@ gst_clock_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (clock);
       clock->stats = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (clock);
-      g_object_notify (object, "stats");
       break;
     case PROP_WINDOW_SIZE:
       GST_CLOCK_SLAVE_LOCK (clock);
