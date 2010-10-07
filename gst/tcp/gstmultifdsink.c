@@ -381,7 +381,8 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   gobject_class->finalize = gst_multi_fd_sink_finalize;
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOL,
-      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
+      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in"
+          ". GDP protocol here is deprecated. Please use gdppay element.",
           GST_TYPE_TCP_PROTOCOL, DEFAULT_PROTOCOL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
