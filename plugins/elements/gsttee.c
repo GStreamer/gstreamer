@@ -113,6 +113,9 @@ GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
 /* structure and quark to keep track of which pads have been pushed */
 static GQuark push_data;
 
+static GParamSpec *pspec_last_message = NULL;
+static GParamSpec *pspec_alloc_pad = NULL;
+
 typedef struct
 {
   gboolean pushed;
@@ -223,19 +226,21 @@ gst_tee_class_init (GstTeeClass * klass)
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_PROP_SILENT,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec_last_message = g_param_spec_string ("last-message", "Last Message",
+      "The message describing current status", DEFAULT_PROP_LAST_MESSAGE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last-message", "Last Message",
-          "The message describing current status", DEFAULT_PROP_LAST_MESSAGE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      pspec_last_message);
   g_object_class_install_property (gobject_class, PROP_PULL_MODE,
       g_param_spec_enum ("pull-mode", "Pull mode",
           "Behavior of tee in pull mode", GST_TYPE_TEE_PULL_MODE,
           DEFAULT_PULL_MODE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec_alloc_pad = g_param_spec_object ("alloc-pad", "Allocation Src Pad",
+      "The pad used for gst_pad_alloc_buffer", GST_TYPE_PAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_ALLOC_PAD,
-      g_param_spec_object ("alloc-pad", "Allocation Src Pad",
-          "The pad used for gst_pad_alloc_buffer", GST_TYPE_PAD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      pspec_alloc_pad);
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
@@ -266,6 +271,16 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
+}
+
+static void
+gst_tee_notify_alloc_pad (GstTee * tee)
+{
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) tee, "alloc-pad");
+#else
+  g_object_notify_by_pspec ((GObject *) tee, pspec_alloc_pad);
+#endif
 }
 
 static GstPad *
@@ -344,7 +359,7 @@ activate_failed:
     GST_OBJECT_UNLOCK (tee);
     gst_object_unref (srcpad);
     if (changed) {
-      g_object_notify (G_OBJECT (tee), "alloc-pad");
+      gst_tee_notify_alloc_pad (tee);
     }
     return NULL;
   }
@@ -380,7 +395,7 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
   GST_TEE_DYN_UNLOCK (tee);
 
   if (changed) {
-    g_object_notify (G_OBJECT (tee), "alloc-pad");
+    gst_tee_notify_alloc_pad (tee);
   }
 }
 
@@ -517,7 +532,7 @@ retry:
       /* we have a buffer, keep the pad for later and exit the loop. */
       tee->allocpad = pad;
       GST_OBJECT_UNLOCK (tee);
-      g_object_notify ((GObject *) tee, "alloc-pad");
+      gst_tee_notify_alloc_pad (tee);
       GST_OBJECT_LOCK (tee);
       break;
     }
@@ -631,7 +646,12 @@ gst_tee_do_message (GstTee * tee, GstPad * pad, gpointer data, gboolean is_list)
         GST_BUFFER_SIZE (data), GST_BUFFER_TIMESTAMP (data), data);
   }
   GST_OBJECT_UNLOCK (tee);
-  g_object_notify (G_OBJECT (tee), "last_message");
+
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) tee, "last_message");
+#else
+  g_object_notify_by_pspec ((GObject *) tee, pspec_last_message);
+#endif
 }
 
 static GstFlowReturn
