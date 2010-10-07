@@ -536,7 +536,7 @@ GES_TYPE_TRACK_TEXT_OVERLAY
 <TITLE>GESFormatter</TITLE>
 GESFormatter
 GESFormatterClass
-ges_formatter_new
+ges_default_formatter_new
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri
 ges_formatter_new_for_uri
@@ -552,4 +552,20 @@ GES_FORMATTER_GET_CLASS
 GES_IS_FORMATTER
 GES_IS_FORMATTER_CLASS
 GES_TYPE_FORMATTER
+</SECTION>
+
+<SECTION>
+<FILE>ges-keyfile-formatter</FILE>
+<TITLE>GESFormatter</TITLE>
+GESKeyfileFormatter
+GESKeyfileFormatterClass
+ges_keyfile_formatter_new
+<SUBSECTION Standard>
+GES_IS_KEYFILE_FORMATTER
+GES_IS_KEYFILE_FORMATTER_CLASS
+GES_KEYFILE_FORMATTER
+GES_KEYFILE_FORMATTER_CLASS
+GES_KEYFILE_FORMATTER_GET_CLASS
+GES_TYPE_KEYFILE_FORMATTER
+ges_keyfile_formatter_get_type
 </SECTION>

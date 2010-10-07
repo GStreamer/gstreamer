@@ -79,8 +79,8 @@ struct _GESFormatterClass {
 
 GType ges_formatter_get_type (void);
 
-GESFormatter *ges_formatter_new (void);
 GESFormatter *ges_formatter_new_for_uri (gchar *uri);
+GESFormatter *ges_default_formatter_new (void);
 
 gboolean ges_formatter_can_load_uri (gchar * uri);
 gboolean ges_formatter_can_save_uri (gchar * uri);

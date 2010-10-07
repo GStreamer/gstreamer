@@ -31,3 +31,4 @@ ges_text_halign_get_type
 ges_video_test_pattern_get_type
 ges_track_operation_get_type
 ges_formatter_get_type
+ges_keyfile_formatter_get_type

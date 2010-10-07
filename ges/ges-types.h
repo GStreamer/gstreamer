@@ -108,4 +108,8 @@ typedef struct _GESTrackTextOverlayClass
 typedef struct _GESFormatter GESFormatter;
 typedef struct _GESFormatterClass GESFormatterClass;
 
+typedef struct _GESKeyfileFormatter GESKeyfileFormatter;
+typedef struct _GESKeyfileFormatterClass GESKeyfileFormatterClass;
+
+
 #endif /* __GES_TYPES_H__ */
