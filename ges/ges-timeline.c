@@ -566,12 +566,24 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
+  GList *layer_objects, *tmp;
+
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
   if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
     GST_WARNING ("Layer doesn't belong to this timeline");
     return FALSE;
   }
+
+  /* remove objects from any private data structures */
+
+  layer_objects = ges_timeline_layer_get_objects (layer);
+  for (tmp = layer_objects; tmp; tmp = tmp->next) {
+    layer_object_removed_cb (layer, GES_TIMELINE_OBJECT (tmp->data), timeline);
+    g_object_unref (G_OBJECT (tmp->data));
+    tmp->data = NULL;
+  }
+  g_list_free (layer_objects);
 
   /* Disconnect signals */
   GST_DEBUG ("Disconnecting signal callbacks");
