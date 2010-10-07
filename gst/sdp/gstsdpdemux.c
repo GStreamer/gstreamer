@@ -1403,6 +1403,14 @@ gst_sdp_demux_start (GstSDPDemux * demux)
   }
 
   /* set target state on session manager */
+  /* setting rtspsrc to PLAYING may cause it to loose it that target state
+   * along the way due to no-preroll udpsrc elements, so ...
+   * do it in two stages here (similar to other elements) */
+  if (demux->target > GST_STATE_PAUSED) {
+    ret = gst_element_set_state (demux->session, GST_STATE_PAUSED);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto start_session_failure;
+  }
   ret = gst_element_set_state (demux->session, demux->target);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_session_failure;
