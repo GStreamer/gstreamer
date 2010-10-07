@@ -71,6 +71,8 @@ void orc_audio_convert_unpack_u32_swap (gint32 * d1, const guint8 * s1, int p1, 
 void orc_audio_convert_unpack_s32_swap (gint32 * d1, const guint8 * s1, int p1, int n);
 void orc_audio_convert_unpack_float_s32 (guint32 * d1, const gfloat * s1, int n);
 void orc_audio_convert_unpack_float_s32_swap (guint32 * d1, const gfloat * s1, int n);
+void orc_audio_convert_unpack_double_s32 (guint32 * d1, const gdouble * s1, int n);
+void orc_audio_convert_unpack_double_s32_swap (guint32 * d1, const gdouble * s1, int n);
 void orc_audio_convert_unpack_float_double (gdouble * d1, const gfloat * s1, int n);
 void orc_audio_convert_unpack_float_double_swap (gdouble * d1, const gfloat * s1, int n);
 void orc_audio_convert_unpack_double_double (gdouble * d1, const gdouble * s1, int n);
@@ -97,12 +99,19 @@ void orc_audio_convert_pack_u32_swap (guint8 * d1, const gint32 * s1, int p1, in
 void orc_audio_convert_pack_s32_swap (guint8 * d1, const gint32 * s1, int p1, int n);
 void orc_audio_convert_pack_s32_float (gfloat * d1, const gint32 * s1, int n);
 void orc_audio_convert_pack_s32_float_swap (gfloat * d1, const gint32 * s1, int n);
+void orc_audio_convert_pack_s32_double (gdouble * d1, const gint32 * s1, int n);
+void orc_audio_convert_pack_s32_double_swap (gdouble * d1, const gint32 * s1, int n);
 void orc_audio_convert_pack_double_float (gfloat * d1, const gdouble * s1, int n);
 void orc_audio_convert_pack_double_float_swap (gfloat * d1, const gdouble * s1, int n);
+void orc_audio_convert_pack_double_u8 (guint8 * d1, const gdouble * s1, int p1, int n);
 void orc_audio_convert_pack_double_s8 (guint8 * d1, const gdouble * s1, int p1, int n);
+void orc_audio_convert_pack_double_u16 (guint8 * d1, const gdouble * s1, int p1, int n);
 void orc_audio_convert_pack_double_s16 (guint8 * d1, const gdouble * s1, int p1, int n);
+void orc_audio_convert_pack_double_u16_swap (guint8 * d1, const gdouble * s1, int p1, int n);
 void orc_audio_convert_pack_double_s16_swap (guint8 * d1, const gdouble * s1, int p1, int n);
+void orc_audio_convert_pack_double_u32 (guint8 * d1, const gdouble * s1, int p1, int n);
 void orc_audio_convert_pack_double_s32 (guint8 * d1, const gdouble * s1, int p1, int n);
+void orc_audio_convert_pack_double_u32_swap (guint8 * d1, const gdouble * s1, int p1, int n);
 void orc_audio_convert_pack_double_s32_swap (guint8 * d1, const gdouble * s1, int p1, int n);
 
 #ifdef __cplusplus
