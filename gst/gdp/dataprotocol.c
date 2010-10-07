@@ -294,8 +294,8 @@ gst_dp_version_get_type (void)
 {
   static GType gst_dp_version_type = 0;
   static const GEnumValue gst_dp_version[] = {
-    {GST_DP_VERSION_0_2, "GDP Version 0.2", "0.2"},
-    {GST_DP_VERSION_1_0, "GDP Version 1.0", "1.0"},
+    {GST_DP_VERSION_0_2, "GST_DP_VERSION_0_2", "0.2"},
+    {GST_DP_VERSION_1_0, "GST_DP_VERSION_1_0", "1.0"},
     {0, NULL, NULL},
   };
 
