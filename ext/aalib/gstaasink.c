@@ -222,8 +222,8 @@ gst_aasink_class_init (GstAASinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAMMA, g_param_spec_float ("gamma", "gamma", "gamma", 0.0, 5.0, 1.0, G_PARAM_READWRITE));        /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_INVERSION, g_param_spec_boolean ("inversion", "inversion", "inversion", TRUE, G_PARAM_READWRITE));       /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RANDOMVAL, g_param_spec_int ("randomval", "randomval", "randomval", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED, g_param_spec_int ("frames_displayed", "frames_displayed", "frames_displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME, g_param_spec_int ("frame_time", "frame_time", "frame_time", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAMES_DISPLAYED, g_param_spec_int ("frames-displayed", "frames displayed", "frames displayed", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME_TIME, g_param_spec_int ("frame-time", "frame time", "frame time", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
 
   gst_aasink_signals[SIGNAL_FRAME_DISPLAYED] =
       g_signal_new ("frame-displayed", G_TYPE_FROM_CLASS (klass),

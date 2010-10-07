@@ -184,7 +184,7 @@ gst_esdmon_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
-  g_object_class_install_property (gobject_class, ARG_BYTESPERREAD, g_param_spec_ulong ("bytes_per_read", "bytes_per_read", "bytes_per_read", 0, G_MAXULONG, 0, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_BYTESPERREAD, g_param_spec_ulong ("bytes-per-read", "bytes per read", "bytes per read", 0, G_MAXULONG, 0, G_PARAM_READWRITE));    /* CHECKME */
   g_object_class_install_property (gobject_class, ARG_CUROFFSET, g_param_spec_ulong ("curoffset", "curoffset", "curoffset", 0, G_MAXULONG, 0, G_PARAM_READABLE));       /* CHECKME */
   g_object_class_install_property (gobject_class, ARG_DEPTH, g_param_spec_enum ("depth", "depth", "depth", GST_TYPE_ESDMON_DEPTHS, 16, G_PARAM_READWRITE));     /* CHECKME! */
   g_object_class_install_property (gobject_class, ARG_CHANNELS, g_param_spec_enum ("channels", "channels", "channels", GST_TYPE_ESDMON_CHANNELS, 2, G_PARAM_READWRITE));        /* CHECKME! */

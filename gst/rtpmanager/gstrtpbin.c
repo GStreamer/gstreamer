@@ -1635,7 +1635,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
-      g_param_spec_boolean ("ignore_pt", "Ignore PT",
+      g_param_spec_boolean ("ignore-pt", "Ignore PT",
           "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
           G_PARAM_READWRITE));
 

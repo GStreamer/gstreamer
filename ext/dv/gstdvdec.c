@@ -193,10 +193,10 @@ gst_dvdec_class_init (GstDVDecClass * klass)
   gobject_class->get_property = gst_dvdec_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLAMP_LUMA,
-      g_param_spec_boolean ("clamp_luma", "Clamp luma", "Clamp luma",
+      g_param_spec_boolean ("clamp-luma", "Clamp luma", "Clamp luma",
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLAMP_CHROMA,
-      g_param_spec_boolean ("clamp_chroma", "Clamp chroma", "Clamp chroma",
+      g_param_spec_boolean ("clamp-chroma", "Clamp chroma", "Clamp chroma",
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_enum ("quality", "Quality", "Decoding quality",

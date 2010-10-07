@@ -183,10 +183,10 @@ gst_mikmod_class_init (GstMikModClass * klass)
       g_param_spec_boolean ("hqmixer", "hqmixer", "hqmixer",
           FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_MUSIC,
-      g_param_spec_boolean ("soft_music", "soft_music", "soft_music",
+      g_param_spec_boolean ("soft-music", "soft music", "soft music",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_SNDFX,
-      g_param_spec_boolean ("soft_sndfx", "soft_sndfx", "soft_sndfx",
+      g_param_spec_boolean ("soft-sndfx", "soft sndfx", "soft sndfx",
           TRUE, G_PARAM_READWRITE));
 
 

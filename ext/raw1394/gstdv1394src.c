@@ -220,7 +220,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
       g_param_spec_int ("skip", "skip frames", "skip n frames",
           0, G_MAXINT, DEFAULT_SKIP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DROP_INCOMPLETE,
-      g_param_spec_boolean ("drop_incomplete", "drop_incomplete",
+      g_param_spec_boolean ("drop-incomplete", "drop incomplete",
           "drop incomplete frames", DEFAULT_DROP_INCOMPLETE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_USE_AVC,
