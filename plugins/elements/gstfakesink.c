@@ -133,6 +133,8 @@ static gboolean gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event);
 
 static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
+GParamSpec *pspec_last_message = NULL;
+
 static void
 marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
     guint n_param_values, const GValue * param_values, gpointer invocation_hint,
@@ -196,10 +198,11 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       g_param_spec_enum ("state-error", "State Error",
           "Generate a state change error", GST_TYPE_FAKE_SINK_STATE_ERROR,
           DEFAULT_STATE_ERROR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec_last_message = g_param_spec_string ("last-message", "Last Message",
+      "The message describing current status", DEFAULT_LAST_MESSAGE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last-message", "Last Message",
-          "The message describing current status", DEFAULT_LAST_MESSAGE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      pspec_last_message);
   g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
@@ -273,7 +276,9 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
+#if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_init (&fakesink->notify_lock);
+#endif
 
   gst_base_sink_set_sync (GST_BASE_SINK (fakesink), DEFAULT_SYNC);
 }
@@ -281,9 +286,11 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
 static void
 gst_fake_sink_finalize (GObject * obj)
 {
+#if !GLIB_CHECK_VERSION(2,26,0)
   GstFakeSink *sink = GST_FAKE_SINK (obj);
 
   g_static_rec_mutex_free (&sink->notify_lock);
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -373,10 +380,14 @@ gst_fake_sink_notify_last_message (GstFakeSink * sink)
    * http://bugzilla.gnome.org/show_bug.cgi?id=166020#c60 and follow-ups.
    * So we really don't want to do a g_object_notify() here for out-of-band
    * events with the streaming thread possibly also doing a g_object_notify()
-   * for an in-band buffer or event. */
+   * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
+#if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_lock (&sink->notify_lock);
   g_object_notify ((GObject *) sink, "last_message");
   g_static_rec_mutex_unlock (&sink->notify_lock);
+#else
+  g_object_notify_by_pspec ((GObject *) sink, pspec_last_message);
+#endif
 }
 
 static gboolean
