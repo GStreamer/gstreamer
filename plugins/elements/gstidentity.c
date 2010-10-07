@@ -114,6 +114,8 @@ static gboolean gst_identity_stop (GstBaseTransform * trans);
 
 static guint gst_identity_signals[LAST_SIGNAL] = { 0 };
 
+static GParamSpec *pspec_last_message = NULL;
+
 static void
 gst_identity_base_init (gpointer g_class)
 {
@@ -137,7 +139,10 @@ gst_identity_finalize (GObject * object)
   identity = GST_IDENTITY (object);
 
   g_free (identity->last_message);
+
+#if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_free (&identity->notify_lock);
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -207,9 +212,10 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_boolean ("single-segment", "Single Segment",
           "Timestamp buffers and eat newsegments so as to appear as one segment",
           DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec_last_message = g_param_spec_string ("last-message", "last-message",
+      "last-message", NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last-message", "last-message", "last-message", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      pspec_last_message);
   g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -290,7 +296,10 @@ gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
+
+#if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_init (&identity->notify_lock);
+#endif
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 }
@@ -303,10 +312,14 @@ gst_identity_notify_last_message (GstIdentity * identity)
    * http://bugzilla.gnome.org/show_bug.cgi?id=166020#c60 and follow-ups.
    * So we really don't want to do a g_object_notify() here for out-of-band
    * events with the streaming thread possibly also doing a g_object_notify()
-   * for an in-band buffer or event. */
+   * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
+#if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_lock (&identity->notify_lock);
   g_object_notify ((GObject *) identity, "last_message");
   g_static_rec_mutex_unlock (&identity->notify_lock);
+#else
+  g_object_notify_by_pspec ((GObject *) identity, pspec_last_message);
+#endif
 }
 
 static gboolean
