@@ -67,6 +67,7 @@ ges_keyfile_formatter_init (GESKeyfileFormatter * object)
 static void
 ges_keyfile_formatter_dispose (GObject * object)
 {
+  G_OBJECT_CLASS (ges_keyfile_formatter_parent_class)->dispose (object);
 }
 
 static void
@@ -88,6 +89,8 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
   int i = 0;
   int n_objects = 0;
   gchar buffer[255];
+  gchar *data;
+  gsize length;
 
   GST_DEBUG ("saving keyfile_formatter");
 
@@ -187,12 +190,8 @@ save_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
     g_list_free (objs);
   }
 
-  if (keyfile_formatter->data) {
-    g_free (keyfile_formatter->data);
-  }
-
-  keyfile_formatter->data =
-      g_key_file_to_data (kf, &keyfile_formatter->length, NULL);
+  data = g_key_file_to_data (kf, &length, NULL);
+  ges_formatter_set_data (keyfile_formatter, data, length);
   g_key_file_free (kf);
 
   return TRUE;
@@ -405,13 +404,15 @@ load_keyfile (GESFormatter * keyfile_formatter, GESTimeline * timeline)
   gchar **groups;
   gsize n_groups, i;
   GESTimelineLayer *cur_layer = NULL;
+  gchar *data;
+  gsize length;
 
   kf = g_key_file_new ();
-  if (!g_key_file_load_from_data (kf, keyfile_formatter->data,
-          keyfile_formatter->length, G_KEY_FILE_NONE, &error)) {
+  data = ges_formatter_get_data (keyfile_formatter, &length);
+  if (!g_key_file_load_from_data (kf, data, length, G_KEY_FILE_NONE, &error)) {
     ret = FALSE;
     GST_ERROR (error->message);
-    GST_INFO (keyfile_formatter->data);
+    GST_INFO (data);
     goto free_kf;
   }
 
