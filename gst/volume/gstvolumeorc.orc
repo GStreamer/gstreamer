@@ -3,7 +3,7 @@
 
 .function orc_scalarmultiply_f64_ns
 .dest 8 d1 double
-.floatparam 8 p1
+.doubleparam 8 p1
 
 muld d1, d1, p1
 
@@ -71,7 +71,7 @@ convssswb d1, t1
 
 .function orc_memset_f64
 .dest 8 d1 gdouble
-.floatparam 8 p1
+.doubleparam 8 p1
 
 copyq d1, p1
 
