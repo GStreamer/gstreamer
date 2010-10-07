@@ -107,7 +107,7 @@ The GST_MESSAGE_QOS contains at least the following info:
       will likely use GST_FORMAT_DEFAULT (samples).
 
  - processed: G_TYPE_UINT64:
-      Total number of units correctly precessed since the last state change to
+      Total number of units correctly processed since the last state change to
       READY or a flushing operation.
 
  - dropped: G_TYPE_UINT64:
@@ -117,7 +117,7 @@ The GST_MESSAGE_QOS contains at least the following info:
 The 'running-time' and 'processed' fields can be used to estimate the average
 processing rate (framerate for video).
 
-Elements might add additional fields in the message which are documents in the
+Elements might add additional fields in the message which are documented in the
 relevant elements or baseclasses.
 
 
@@ -350,14 +350,15 @@ proportion member be used to permanently skip frames.
 
 It is suggested to adjust the quality field of the QoS message with the expected
 amount of dropped frames (skipping B and/or P frames). This depends on the
-particulat spacing of B and P frames in the stream. If the quality control would
+particular spacing of B and P frames in the stream. If the quality control would
 result in half of the frames to be dropped (typical B frame skipping), the
-quality field would be set to 1000000/2 = 500000. If a typical I frame spacing
-of 18 frames is used, skipping B and P frames would result in 17 dropped frames,
-and the quality member should be set to 1000000/17 = 58824.
+quality field would be set to 1000000 * 1/2 = 500000. If a typical I frame spacing
+of 18 frames is used, skipping B and P frames would result in 17 dropped frames
+or 1 decoded frame every 18 frames. The quality member should be set to
+1000000 * 1/18 = 55555.
 
  - skipping B frames: quality = 500000
- - skipping P/B frames: quality = 58824 (for I-frame spacing of 18 frames)
+ - skipping P/B frames: quality = 55555 (for I-frame spacing of 18 frames)
 
 
 Demuxers
