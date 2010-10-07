@@ -53,6 +53,7 @@ struct _GstAudioParse
   gint depth;
   gint signedness;
   gint endianness;
+  GValueArray *channel_positions;
 };
 
 struct _GstAudioParseClass

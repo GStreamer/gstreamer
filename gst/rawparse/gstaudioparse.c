@@ -30,6 +30,8 @@
 
 #include "gstaudioparse.h"
 
+#include <gst/audio/multichannel.h>
+
 typedef enum
 {
   GST_AUDIO_PARSE_FORMAT_INT,
@@ -48,6 +50,7 @@ static void gst_audio_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_audio_parse_finalize (GObject * object);
 
 static GstCaps *gst_audio_parse_get_caps (GstRawParse * rp);
 
@@ -65,7 +68,8 @@ enum
   PROP_ENDIANNESS,
   PROP_WIDTH,
   PROP_DEPTH,
-  PROP_SIGNED
+  PROP_SIGNED,
+  PROP_CHANNEL_POSITIONS
 };
 
 
@@ -155,6 +159,7 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
 
   gobject_class->set_property = gst_audio_parse_set_property;
   gobject_class->get_property = gst_audio_parse_get_property;
+  gobject_class->finalize = gst_audio_parse_finalize;
 
   rp_class->get_caps = gst_audio_parse_get_caps;
 
@@ -192,6 +197,16 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
       g_param_spec_enum ("endianness", "Endianness",
           "Endianness of audio samples in raw stream",
           GST_AUDIO_PARSE_ENDIANNESS, G_BYTE_ORDER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_CHANNEL_POSITIONS,
+      g_param_spec_value_array ("channel-positions", "Channel positions",
+          "Channel positions used on the output",
+          g_param_spec_enum ("channel-position", "Channel position",
+              "Channel position of the n-th input",
+              GST_TYPE_AUDIO_CHANNEL_POSITION,
+              GST_AUDIO_CHANNEL_POSITION_NONE,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -239,6 +254,12 @@ gst_audio_parse_set_property (GObject * object, guint prop_id,
     case PROP_ENDIANNESS:
       ap->endianness = g_value_get_enum (value);
       break;
+    case PROP_CHANNEL_POSITIONS:
+      if (ap->channel_positions)
+        g_value_array_free (ap->channel_positions);
+
+      ap->channel_positions = g_value_dup_boxed (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -279,10 +300,26 @@ gst_audio_parse_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_ENDIANNESS:
       g_value_set_enum (value, ap->endianness);
       break;
+    case PROP_CHANNEL_POSITIONS:
+      g_value_set_boxed (value, ap->channel_positions);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_audio_parse_finalize (GObject * object)
+{
+  GstAudioParse *ap = GST_AUDIO_PARSE (object);
+
+  if (ap->channel_positions) {
+    g_value_array_free (ap->channel_positions);
+    ap->channel_positions = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 void
@@ -305,6 +342,61 @@ gst_audio_parse_update_frame_size (GstAudioParse * ap)
   framesize = (width / 8) * ap->channels;
 
   gst_raw_parse_set_framesize (GST_RAW_PARSE (ap), framesize);
+}
+
+static gboolean
+gst_audio_parse_check_channel_positions (GValueArray * positions)
+{
+  gint i;
+  guint channels;
+  GstAudioChannelPosition *pos;
+  gboolean ret;
+
+  channels = positions->n_values;
+  pos = g_new (GstAudioChannelPosition, positions->n_values);
+
+  for (i = 0; i < channels; i++) {
+    GValue *v = g_value_array_get_nth (positions, i);
+
+    pos[i] = g_value_get_enum (v);
+  }
+
+  ret = gst_audio_check_channel_positions (pos, channels);
+  g_free (pos);
+
+  return ret;
+}
+
+static void
+gst_audio_parse_set_channel_positions (GstAudioParse * ap, GstStructure * s)
+{
+  GValue pos_array = { 0, };
+  gint i;
+
+  g_value_init (&pos_array, GST_TYPE_ARRAY);
+
+  if (ap->channel_positions
+      && ap->channels == ap->channel_positions->n_values
+      && gst_audio_parse_check_channel_positions (ap->channel_positions)) {
+    GST_DEBUG_OBJECT (ap, "Using provided channel positions");
+    for (i = 0; i < ap->channels; i++)
+      gst_value_array_append_value (&pos_array,
+          g_value_array_get_nth (ap->channel_positions, i));
+  } else if (ap->channels != 1 && ap->channels != 2) {
+    GValue pos_none = { 0, };
+
+    GST_WARNING_OBJECT (ap, "Using NONE channel positions");
+
+    g_value_init (&pos_none, GST_TYPE_AUDIO_CHANNEL_POSITION);
+    g_value_set_enum (&pos_none, GST_AUDIO_CHANNEL_POSITION_NONE);
+
+    for (i = 0; i < ap->channels; i++)
+      gst_value_array_append_value (&pos_array, &pos_none);
+
+    g_value_unset (&pos_none);
+  }
+  gst_structure_set_value (s, "channel-positions", &pos_array);
+  g_value_unset (&pos_array);
 }
 
 static GstCaps *
@@ -349,5 +441,8 @@ gst_audio_parse_get_caps (GstRawParse * rp)
       GST_ERROR_OBJECT (rp, "unexpected format %d", ap->format);
       break;
   }
+
+  gst_audio_parse_set_channel_positions (ap, gst_caps_get_structure (caps, 0));
+
   return caps;
 }
