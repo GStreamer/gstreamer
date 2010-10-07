@@ -51,7 +51,7 @@ compare (GKeyFile * cmp, GESFormatter * formatter, GESTimeline * timeline)
   return result;
 }
 
-GST_START_TEST (test_save)
+GST_START_TEST (test_keyfile_save)
 {
   GESTimeline *timeline;
   GESTimelineLayer *layer, *layer2;
@@ -71,7 +71,7 @@ GST_START_TEST (test_save)
   /* create serialization object */
 
   GST_DEBUG ("creating a keyfile formatter");
-  formatter = ges_formatter_new ();
+  formatter = GES_FORMATTER (ges_keyfile_formatter_new ());
 
   /* add a layer and make sure it's serialized */
 
@@ -567,7 +567,7 @@ static const gchar *data = "\n[General]\n"
     "font-desc=\"Serif\\\\ 36\"\n"
     "halignment=center\n" "valignment=baseline\n";
 
-GST_START_TEST (test_load)
+GST_START_TEST (test_keyfile_load)
 {
   GESTimeline *timeline;
   GESFormatter *formatter;
@@ -582,8 +582,8 @@ GST_START_TEST (test_load)
 
   /* create serialization object */
 
-  GST_DEBUG ("creating a keyfile formatter");
-  formatter = ges_formatter_new ();
+  GST_DEBUG ("creating a default formatter");
+  formatter = GES_FORMATTER (ges_keyfile_formatter_new ());
 
   formatter->data = g_strdup (data);
   formatter->length = strlen (data);
@@ -634,8 +634,8 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_save);
-  tcase_add_test (tc_chain, test_load);
+  tcase_add_test (tc_chain, test_keyfile_save);
+  tcase_add_test (tc_chain, test_keyfile_load);
 
   return s;
 }
