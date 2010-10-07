@@ -88,7 +88,7 @@ static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
 static void on_src_target_notify (GstPad * target,
     GParamSpec * unused, gpointer user_data);
 
-
+static GParamSpec *pspec_caps = NULL;
 
 static const GstQueryType *
 gst_proxy_pad_do_query_type (GstPad * pad)
@@ -702,8 +702,13 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
     gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
   GST_OBJECT_UNLOCK (pad);
 
-  if (changed)
-    g_object_notify (G_OBJECT (pad), "caps");
+  if (changed) {
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+#else
+    g_object_notify ((GObject *) pad, "caps");
+#endif
+  }
 
   if (caps)
     gst_caps_unref (caps);
@@ -749,8 +754,14 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, gpointer user_data)
   if (changed)
     gst_caps_replace (&(GST_PAD_CAPS (gpad)), caps);
   GST_OBJECT_UNLOCK (gpad);
-  if (changed)
-    g_object_notify (G_OBJECT (gpad), "caps");
+
+  if (changed) {
+#if GLIB_CHECK_VERSION(2,26,0)
+    g_object_notify_by_pspec ((GObject *) gpad, pspec_caps);
+#else
+    g_object_notify ((GObject *) gpad, "caps");
+#endif
+  }
 
   g_object_unref (gpad);
 
@@ -789,6 +800,8 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
+
+  pspec_caps = g_object_class_find_property (gobject_class, "caps");
 
   gobject_class->dispose = gst_ghost_pad_dispose;
 

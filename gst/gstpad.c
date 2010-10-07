@@ -138,6 +138,8 @@ GList *gst_pad_get_internal_links_default (GstPad * pad);
 static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
+static GParamSpec *pspec_caps = NULL;
+
 /* quarks for probe signals */
 static GQuark buffer_quark;
 static GQuark event_quark;
@@ -313,9 +315,11 @@ gst_pad_class_init (GstPadClass * klass)
       NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
       GST_TYPE_MINI_OBJECT);
 
-  g_object_class_install_property (gobject_class, PAD_PROP_CAPS,
-      g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
-          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  pspec_caps = g_param_spec_boxed ("caps", "Caps",
+      "The capabilities of the pad", GST_TYPE_CAPS,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PAD_PROP_CAPS, pspec_caps);
+
   g_object_class_install_property (gobject_class, PAD_PROP_DIRECTION,
       g_param_spec_enum ("direction", "Direction", "The direction of the pad",
           GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
@@ -2674,7 +2678,11 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
       caps);
   GST_OBJECT_UNLOCK (pad);
 
-  g_object_notify (G_OBJECT (pad), "caps");
+#if GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
+#else
+  g_object_notify ((GObject *) pad, "caps");
+#endif
 
   return TRUE;
 
