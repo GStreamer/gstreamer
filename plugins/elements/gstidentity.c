@@ -315,7 +315,7 @@ gst_identity_notify_last_message (GstIdentity * identity)
    * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
 #if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_lock (&identity->notify_lock);
-  g_object_notify ((GObject *) identity, "last_message");
+  g_object_notify ((GObject *) identity, "last-message");
   g_static_rec_mutex_unlock (&identity->notify_lock);
 #else
   g_object_notify_by_pspec ((GObject *) identity, pspec_last_message);

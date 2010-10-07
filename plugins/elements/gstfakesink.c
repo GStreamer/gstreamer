@@ -383,7 +383,7 @@ gst_fake_sink_notify_last_message (GstFakeSink * sink)
    * for an in-band buffer or event. This is fixed in GLib >= 2.26 */
 #if !GLIB_CHECK_VERSION(2,26,0)
   g_static_rec_mutex_lock (&sink->notify_lock);
-  g_object_notify ((GObject *) sink, "last_message");
+  g_object_notify ((GObject *) sink, "last-message");
   g_static_rec_mutex_unlock (&sink->notify_lock);
 #else
   g_object_notify_by_pspec ((GObject *) sink, pspec_last_message);
