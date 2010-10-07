@@ -2050,6 +2050,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   gint64 result = 0;
   GstFlowReturn ret;
   gint i, pending, len;
+  gboolean first_parsed_page = TRUE;
 
   position = segment->last_stop;
 
@@ -2113,6 +2114,32 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
       GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
       continue;
     }
+
+    /* we only do this the first time we pass here */
+    if (first_parsed_page) {
+      /* Now that we have a time reference from the page, we can check
+       * whether all streams still have pages from here on.
+       *
+       * This would be more elegant before the loop, but getting the page from
+       * there without breaking anything would be more costly */
+      granule_time = gst_ogg_stream_get_end_time_for_granulepos (&pad->map,
+          granulepos);
+      for (i = 0; i < len; i++) {
+        GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, i);
+
+        if (stream == pad)
+          /* we already know we have at least one page (the current one)
+           * for this stream */
+          continue;
+
+        if (granule_time > stream->map.total_time)
+          /* we won't encounter any more pages of this stream, so we don't
+           * try finding a key frame for it */
+          pending--;
+      }
+      first_parsed_page = FALSE;
+    }
+
 
     /* in reverse we want to go past the page with the lower timestamp */
     if (segment->rate < 0.0) {
