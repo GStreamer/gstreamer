@@ -34,17 +34,18 @@
 static gboolean
 compare (GKeyFile * cmp, GESFormatter * formatter, GESTimeline * timeline)
 {
-  gchar *data;
+  gchar *data, *fmt_data;
   gsize length;
   gboolean result = TRUE;
 
   data = g_key_file_to_data (cmp, &length, NULL);
-
   ges_formatter_save (formatter, timeline);
-  if (!(g_strcmp0 (data, formatter->data) == 0)) {
+  fmt_data = ges_formatter_get_data (formatter, &length);
+
+  if (!(g_strcmp0 (data, fmt_data) == 0)) {
     GST_ERROR ("difference between expected and output");
     g_printf ("expected: \n%s\n\n", data);
-    g_printf ("actual: \n%s\n\n", formatter->data);
+    g_printf ("actual: \n%s\n\n", fmt_data);
     result = FALSE;
   }
   g_free (data);
@@ -585,8 +586,7 @@ GST_START_TEST (test_keyfile_load)
   GST_DEBUG ("creating a default formatter");
   formatter = GES_FORMATTER (ges_keyfile_formatter_new ());
 
-  formatter->data = g_strdup (data);
-  formatter->length = strlen (data);
+  ges_formatter_set_data (formatter, g_strdup (data), strlen (data));
 
   fail_unless (ges_formatter_load (formatter, timeline));
 
