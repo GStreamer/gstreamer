@@ -351,6 +351,21 @@ gst_flac_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
+static const guint8 sample_size_table[] = { 0, 8, 12, 0, 16, 20, 24, 0 };
+
+static const guint16 blocksize_table[16] = {
+  0, 192, 576 << 0, 576 << 1, 576 << 2, 576 << 3, 0, 0,
+  256 << 0, 256 << 1, 256 << 2, 256 << 3, 256 << 4, 256 << 5, 256 << 6,
+  256 << 7,
+};
+
+static const guint32 sample_rate_table[16] = {
+  0,
+  88200, 176400, 192000,
+  8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000,
+  0, 0, 0, 0,
+};
+
 typedef enum
 {
   FRAME_HEADER_VALID,
@@ -409,17 +424,8 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     goto error;
   } else if (bps == 0 && flacparse->bps == 0) {
     goto need_streaminfo;
-  } else if (tmp == 0x01) {
-    bps = 8;
-  } else if (bps == 0x02) {
-    bps = 12;
-  } else if (bps == 0x04) {
-    bps = 16;
-  } else if (bps == 0x05) {
-    bps = 20;
-  } else if (bps == 0x06) {
-    bps = 24;
   }
+  bps = sample_size_table[bps];
   if (flacparse->bps && bps != flacparse->bps)
     goto error;
 
@@ -477,13 +483,9 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
   }
 
   /* calculate real blocksize from the blocksize index */
-  if (block_size == 1)
-    block_size = 192;
-  else if (block_size <= 5)
-    block_size = 576 * (1 << (block_size - 2));
-  else if (block_size <= 15)
-    block_size = 256 * (1 << (block_size - 8));
-  else if (block_size == 6) {
+  if (block_size == 0) {
+    goto error;
+  } else if (block_size == 6) {
     if (!gst_bit_reader_get_bits_uint16 (&reader, &block_size, 8))
       goto need_more_data;
     block_size++;
@@ -491,33 +493,15 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
     if (!gst_bit_reader_get_bits_uint16 (&reader, &block_size, 16))
       goto need_more_data;
     block_size++;
+  } else {
+    block_size = blocksize_table[block_size];
   }
 
   /* calculate the real samplerate from the samplerate index */
   if (samplerate == 0 && flacparse->samplerate == 0) {
     goto need_streaminfo;
-  } else if (samplerate == 1) {
-    samplerate = 88200;
-  } else if (samplerate == 2) {
-    samplerate = 176400;
-  } else if (samplerate == 3) {
-    samplerate = 192000;
-  } else if (samplerate == 4) {
-    samplerate = 8000;
-  } else if (samplerate == 5) {
-    samplerate = 16000;
-  } else if (samplerate == 6) {
-    samplerate = 22050;
-  } else if (samplerate == 7) {
-    samplerate = 24000;
-  } else if (samplerate == 8) {
-    samplerate = 32000;
-  } else if (samplerate == 9) {
-    samplerate = 44100;
-  } else if (samplerate == 10) {
-    samplerate = 48000;
-  } else if (samplerate == 11) {
-    samplerate = 96000;
+  } else if (samplerate < 12) {
+    samplerate = sample_rate_table[samplerate];
   } else if (samplerate == 12) {
     if (!gst_bit_reader_get_bits_uint32 (&reader, &samplerate, 8))
       goto need_more_data;
