@@ -126,6 +126,9 @@ static GstElementClass *parent_class = NULL;
 
 /*static guint gst_audio_rate_signals[LAST_SIGNAL] = { 0 }; */
 
+static GParamSpec *pspec_drop = NULL;
+static GParamSpec *pspec_add = NULL;
+
 static GType
 gst_audio_rate_get_type (void)
 {
@@ -185,12 +188,12 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
   g_object_class_install_property (object_class, ARG_OUT,
       g_param_spec_uint64 ("out", "Out", "Number of output samples", 0,
           G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_ADD,
-      g_param_spec_uint64 ("add", "Add", "Number of added samples", 0,
-          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (object_class, ARG_DROP,
-      g_param_spec_uint64 ("drop", "Drop", "Number of dropped samples", 0,
-          G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  pspec_add = g_param_spec_uint64 ("add", "Add", "Number of added samples",
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, ARG_ADD, pspec_add);
+  pspec_drop = g_param_spec_uint64 ("drop", "Drop", "Number of dropped samples",
+      0, G_MAXUINT64, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, ARG_DROP, pspec_drop);
   g_object_class_install_property (object_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
@@ -493,6 +496,26 @@ gst_audio_rate_convert_segments (GstAudioRate * audiorate)
   return TRUE;
 }
 
+static void
+gst_audio_rate_notify_drop (GstAudioRate * audiorate)
+{
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) audiorate, "drop");
+#else
+  g_object_notify_by_pspec ((GObject *) audiorate, pspec_drop);
+#endif
+}
+
+static void
+gst_audio_rate_notify_add (GstAudioRate * audiorate)
+{
+#if !GLIB_CHECK_VERSION(2,26,0)
+  g_object_notify ((GObject *) audiorate, "add");
+#else
+  g_object_notify_by_pspec ((GObject *) audiorate, pspec_add);
+#endif
+}
+
 static GstFlowReturn
 gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -628,7 +651,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       audiorate->add += cursamples;
 
       if (!audiorate->silent)
-        g_object_notify (G_OBJECT (audiorate), "add");
+        gst_audio_rate_notify_add (audiorate);
     }
 
   } else if (in_offset < audiorate->next_offset) {
@@ -646,7 +669,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       buf = NULL;
 
       if (!audiorate->silent)
-        g_object_notify (G_OBJECT (audiorate), "drop");
+        gst_audio_rate_notify_drop (audiorate);
 
       goto beach;
     } else {
@@ -671,7 +694,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
           truncsamples);
 
       if (!audiorate->silent)
-        g_object_notify (G_OBJECT (audiorate), "drop");
+        gst_audio_rate_notify_drop (audiorate);
     }
   }
 
