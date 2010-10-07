@@ -69,8 +69,6 @@ struct _GstFlacParse {
   guint8 bps;
   guint64 total_samples;
 
-  guint requested_frame_size;
-
   /* Current frame */
   guint64 offset;
   guint8 blocking_strategy;
