@@ -49,11 +49,14 @@ GType
 gst_base_audio_src_slave_method_get_type (void)
 {
   static GType slave_method_type = 0;
+  /* FIXME 0.11: nick should be "retimestamp" not "re-timestamp" */
   static const GEnumValue slave_method[] = {
-    {GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE, "Resampling slaving", "resample"},
-    {GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP, "Re-timestamp", "re-timestamp"},
-    {GST_BASE_AUDIO_SRC_SLAVE_SKEW, "Skew", "skew"},
-    {GST_BASE_AUDIO_SRC_SLAVE_NONE, "No slaving", "none"},
+    {GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE,
+        "GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE", "resample"},
+    {GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP,
+        "GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP", "re-timestamp"},
+    {GST_BASE_AUDIO_SRC_SLAVE_SKEW, "GST_BASE_AUDIO_SRC_SLAVE_SKEW", "skew"},
+    {GST_BASE_AUDIO_SRC_SLAVE_NONE, "GST_BASE_AUDIO_SRC_SLAVE_NONE", "none"},
     {0, NULL, NULL},
   };
 

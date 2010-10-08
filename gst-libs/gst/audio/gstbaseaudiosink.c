@@ -112,9 +112,10 @@ gst_base_audio_sink_slave_method_get_type (void)
 {
   static GType slave_method_type = 0;
   static const GEnumValue slave_method[] = {
-    {GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE, "Resampling slaving", "resample"},
-    {GST_BASE_AUDIO_SINK_SLAVE_SKEW, "Skew slaving", "skew"},
-    {GST_BASE_AUDIO_SINK_SLAVE_NONE, "No slaving", "none"},
+    {GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE, "GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE",
+        "resample"},
+    {GST_BASE_AUDIO_SINK_SLAVE_SKEW, "GST_BASE_AUDIO_SINK_SLAVE_SKEW", "skew"},
+    {GST_BASE_AUDIO_SINK_SLAVE_NONE, "GST_BASE_AUDIO_SINK_SLAVE_NONE", "none"},
     {0, NULL, NULL},
   };
 
