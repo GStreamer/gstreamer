@@ -77,7 +77,6 @@ void orc_process_controlled_int16_1ch (gint16 * d1, const gdouble * s1, int n);
 void orc_process_controlled_int16_2ch (gint16 * d1, const gdouble * s1, int n);
 void orc_process_controlled_int8_1ch (gint8 * d1, const gdouble * s1, int n);
 void orc_process_controlled_int8_2ch (gint8 * d1, const gdouble * s1, int n);
-void orc_process_controlled_int8_4ch (gint8 * d1, const gdouble * s1, int n);
 
 #ifdef __cplusplus
 }
