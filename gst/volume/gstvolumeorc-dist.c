@@ -150,7 +150,7 @@ orc_scalarmultiply_f64_ns (double *d1, double p1, int n)
   ptr0 = (orc_union64 *) d1;
 
   /* 1: loadpq */
-  var33.i = p1;
+  var33.f = p1;
 
   for (i = 0; i < n; i++) {
     /* 0: loadq */
@@ -856,7 +856,7 @@ orc_memset_f64 (gdouble * d1, double p1, int n)
   ptr0 = (orc_union64 *) d1;
 
   /* 0: loadpq */
-  var32.i = p1;
+  var32.f = p1;
 
   for (i = 0; i < n; i++) {
     /* 1: copyq */
