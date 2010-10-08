@@ -119,10 +119,11 @@ gst_rtsp_lower_trans_get_type (void)
 {
   static GType rtsp_lower_trans_type = 0;
   static const GFlagsValue rtsp_lower_trans[] = {
-    {GST_RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
-    {GST_RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
-    {GST_RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
-    {GST_RTSP_LOWER_TRANS_HTTP, "HTTP tunneled mode", "http"},
+    {GST_RTSP_LOWER_TRANS_UDP, "GST_RTSP_LOWER_TRANS_UDP", "udp-unicast"},
+    {GST_RTSP_LOWER_TRANS_UDP_MCAST, "GST_RTSP_LOWER_TRANS_UDP_MCAST",
+        "udp-multicast"},
+    {GST_RTSP_LOWER_TRANS_TCP, "GST_RTSP_LOWER_TRANS_TCP", "tcp"},
+    {GST_RTSP_LOWER_TRANS_HTTP, "GST_RTSP_LOWER_TRANS_HTTP", "http"},
     {0, NULL, NULL},
   };
 
