@@ -56,28 +56,28 @@ static GstSystemClockClass *parent_class = NULL;
 GType
 gst_audio_clock_get_type (void)
 {
-  static GType clock_type = 0;
+  static volatile gsize clock_type = 0;
+  static const GTypeInfo clock_info = {
+    sizeof (GstAudioClockClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_audio_clock_class_init,
+    NULL,
+    NULL,
+    sizeof (GstAudioClock),
+    4,
+    (GInstanceInitFunc) gst_audio_clock_init,
+    NULL
+  };
 
-  if (!clock_type) {
-    static const GTypeInfo clock_info = {
-      sizeof (GstAudioClockClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_audio_clock_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAudioClock),
-      4,
-      (GInstanceInitFunc) gst_audio_clock_init,
-      NULL
-    };
-
-    clock_type = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstAudioClock",
+  if (g_once_init_enter (&clock_type)) {
+    GType tmp = g_type_register_static (GST_TYPE_SYSTEM_CLOCK, "GstAudioClock",
         &clock_info, 0);
+    g_once_init_leave (&clock_type, tmp);
   }
-  return clock_type;
-}
 
+  return (GType) clock_type;
+}
 
 static void
 gst_audio_clock_class_init (GstAudioClockClass * klass)

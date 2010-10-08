@@ -48,7 +48,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_audio_src_debug);
 GType
 gst_base_audio_src_slave_method_get_type (void)
 {
-  static GType slave_method_type = 0;
+  static volatile gsize slave_method_type = 0;
   /* FIXME 0.11: nick should be "retimestamp" not "re-timestamp" */
   static const GEnumValue slave_method[] = {
     {GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE,
@@ -60,11 +60,12 @@ gst_base_audio_src_slave_method_get_type (void)
     {0, NULL, NULL},
   };
 
-  if (!slave_method_type) {
-    slave_method_type =
+  if (g_once_init_enter (&slave_method_type)) {
+    GType tmp =
         g_enum_register_static ("GstBaseAudioSrcSlaveMethod", slave_method);
+    g_once_init_leave (&slave_method_type, tmp);
   }
-  return slave_method_type;
+  return (GType) slave_method_type;
 }
 
 #define GST_BASE_AUDIO_SRC_GET_PRIVATE(obj)  \

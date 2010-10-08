@@ -110,7 +110,7 @@ enum
 GType
 gst_base_audio_sink_slave_method_get_type (void)
 {
-  static GType slave_method_type = 0;
+  static volatile gsize slave_method_type = 0;
   static const GEnumValue slave_method[] = {
     {GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE, "GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE",
         "resample"},
@@ -119,11 +119,13 @@ gst_base_audio_sink_slave_method_get_type (void)
     {0, NULL, NULL},
   };
 
-  if (!slave_method_type) {
-    slave_method_type =
+  if (g_once_init_enter (&slave_method_type)) {
+    GType tmp =
         g_enum_register_static ("GstBaseAudioSinkSlaveMethod", slave_method);
+    g_once_init_leave (&slave_method_type, tmp);
   }
-  return slave_method_type;
+
+  return (GType) slave_method_type;
 }
 
 
