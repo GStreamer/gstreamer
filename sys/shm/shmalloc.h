@@ -46,6 +46,10 @@
 
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _ShmAllocSpace ShmAllocSpace;
 typedef struct _ShmAllocBlock ShmAllocBlock;
 
