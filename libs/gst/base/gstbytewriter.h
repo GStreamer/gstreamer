@@ -174,10 +174,10 @@ _gst_byte_writer_next_pow2 (guint n)
 
   /* We start with 16, smaller allocations make no sense */
 
-  while (ret < n)
+  while (ret < n && ret > 0)
     ret <<= 1;
 
-  return ret;
+  return ret ? ret : n;
 }
 
 static inline gboolean
