@@ -218,6 +218,24 @@ end:
 }
 
 static gint
+__exif_tag_capture_sharpness_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "normal") == 0)
+    return 0;
+  else if (strcmp (str, "soft") == 0)
+    return 1;
+  else if (strcmp (str, "hard") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid sharpness type: %s", str);
+  return -1;
+}
+
+static gint
 __exif_tag_capture_saturation_to_exif_value (const gchar * str)
 {
   if (str == NULL)
@@ -235,13 +253,61 @@ end:
   return -1;
 }
 
+static gint
+__exif_tag_capture_metering_mode_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "unknown") == 0)
+    return 0;
+  else if (strcmp (str, "average") == 0)
+    return 1;
+  else if (strcmp (str, "center-weighted-average") == 0)
+    return 2;
+  else if (strcmp (str, "spot") == 0)
+    return 3;
+  else if (strcmp (str, "multi-spot") == 0)
+    return 4;
+  else if (strcmp (str, "pattern") == 0)
+    return 5;
+  else if (strcmp (str, "partial") == 0)
+    return 6;
+  else if (strcmp (str, "other") == 0)
+    return 255;
+
+end:
+  GST_WARNING ("Invalid metering mode type: %s", str);
+  return -1;
+}
+
+static gint
+__exif_tag_capture_source_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "dsc") == 0)
+    return 3;
+  else if (strcmp (str, "other") == 0)
+    return 0;
+  else if (strcmp (str, "transparent-scanner") == 0)
+    return 1;
+  else if (strcmp (str, "reflex-scanner") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid capturing source type: %s", str);
+  return -1;
+}
+
 #define GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC(gst_tag,name)           \
 static void                                                                   \
 compare_ ## name (ExifEntry * entry, ExifTagCheckData * testdata)             \
 {                                                                             \
   gchar *str_tag = NULL;                                                      \
-  gint exif_value;                                                            \
-  gint value;                                                                 \
+  gint exif_value = -1;                                                       \
+  gint value = -1;                                                            \
                                                                               \
   if (!gst_tag_list_get_string_index (testdata->taglist,                      \
           gst_tag, 0, &str_tag)) {                                            \
@@ -257,8 +323,11 @@ compare_ ## name (ExifEntry * entry, ExifTagCheckData * testdata)             \
     fail ();                                                                  \
   }                                                                           \
                                                                               \
-  exif_value = (gint) exif_get_short (entry->data,                            \
-      exif_data_get_byte_order (entry->parent->parent));                      \
+  if (entry->format == EXIF_TYPE_SHORT)                                       \
+    exif_value = (gint) exif_get_short (entry->data,                          \
+        exif_data_get_byte_order (entry->parent->parent));                    \
+  else if (entry->format == EXIF_TYPE_UNDEFINED)                              \
+    exif_value = (gint) entry->data[0];                                       \
                                                                               \
   if (value != exif_value) {                                                  \
     GST_WARNING ("Gstreamer tag value (%d) is different from libexif (%d)",   \
@@ -286,7 +355,13 @@ GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
 GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC (GST_TAG_CAPTURING_SATURATION,
     capture_saturation);
 GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
+    (GST_TAG_CAPTURING_SHARPNESS, capture_sharpness);
+GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
     (GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, capture_scene_capture_type);
+GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
+    (GST_TAG_CAPTURING_METERING_MODE, capture_metering_mode);
+GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
+    (GST_TAG_CAPTURING_SOURCE, capture_source);
 
 static void
 compare_date_time (ExifEntry * entry, ExifTagCheckData * testdata)
@@ -565,6 +640,12 @@ static const GstExifTagMatch tag_map[] = {
       compare_capture_contrast},
   {GST_TAG_CAPTURING_SATURATION, EXIF_TAG_SATURATION, EXIF_TYPE_SHORT,
       compare_capture_saturation},
+  {GST_TAG_CAPTURING_SHARPNESS, EXIF_TAG_SHARPNESS, EXIF_TYPE_SHORT,
+      compare_capture_sharpness},
+  {GST_TAG_CAPTURING_METERING_MODE, EXIF_TAG_METERING_MODE, EXIF_TYPE_SHORT,
+      compare_capture_metering_mode},
+  {GST_TAG_CAPTURING_SOURCE, EXIF_TAG_FILE_SOURCE, EXIF_TYPE_UNDEFINED,
+      compare_capture_source},
 
   /* gps tags */
   {GST_TAG_GEO_LOCATION_LATITUDE, EXIF_TAG_GPS_LATITUDE, EXIF_TYPE_RATIONAL,
@@ -947,6 +1028,11 @@ GST_START_TEST (test_jifmux_tags)
       GST_TAG_APPLICATION_DATA, buffer,
       GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto",
+      GST_TAG_CAPTURING_SOURCE, "dsc",
+      GST_TAG_CAPTURING_METERING_MODE, "multi-spot",
+      GST_TAG_CAPTURING_SHARPNESS, "normal",
+      GST_TAG_CAPTURING_SATURATION, "normal",
+      GST_TAG_CAPTURING_CONTRAST, "normal",
       GST_TAG_GEO_LOCATION_LATITUDE, -32.375,
       GST_TAG_GEO_LOCATION_LONGITUDE, 76.0125,
       GST_TAG_GEO_LOCATION_ELEVATION, 300.85,
@@ -1058,6 +1144,44 @@ GST_START_TEST (test_jifmux_tags)
   libexif_check_tags (SATURATION_TAG ("low-saturation"), tmpfile);
   generate_jif_file_with_tags (SATURATION_TAG ("high-saturation"), tmpfile);
   libexif_check_tags (SATURATION_TAG ("high-saturation"), tmpfile);
+
+#define SHARPNESS_TAG(t) "taglist," GST_TAG_CAPTURING_SHARPNESS "=" t
+  generate_jif_file_with_tags (SHARPNESS_TAG ("normal"), tmpfile);
+  libexif_check_tags (SHARPNESS_TAG ("normal"), tmpfile);
+  generate_jif_file_with_tags (SHARPNESS_TAG ("soft"), tmpfile);
+  libexif_check_tags (SHARPNESS_TAG ("soft"), tmpfile);
+  generate_jif_file_with_tags (SHARPNESS_TAG ("hard"), tmpfile);
+  libexif_check_tags (SHARPNESS_TAG ("hard"), tmpfile);
+
+#define METERING_MODE_TAG(t) "taglist," GST_TAG_CAPTURING_METERING_MODE "=" t
+  generate_jif_file_with_tags (METERING_MODE_TAG ("unknown"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("unknown"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("average"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("average"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("center-weighted-average"),
+      tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("center-weighted-average"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("spot"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("spot"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("multi-spot"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("multi-spot"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("pattern"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("pattern"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("partial"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("partial"), tmpfile);
+  generate_jif_file_with_tags (METERING_MODE_TAG ("other"), tmpfile);
+  libexif_check_tags (METERING_MODE_TAG ("other"), tmpfile);
+
+#define FILE_SOURCE_TAG(t) "taglist," GST_TAG_CAPTURING_SOURCE "=" t
+  generate_jif_file_with_tags (FILE_SOURCE_TAG ("dsc"), tmpfile);
+  libexif_check_tags (FILE_SOURCE_TAG ("dsc"), tmpfile);
+  generate_jif_file_with_tags (FILE_SOURCE_TAG ("other"), tmpfile);
+  libexif_check_tags (FILE_SOURCE_TAG ("other"), tmpfile);
+  generate_jif_file_with_tags (FILE_SOURCE_TAG ("reflex-scanner"), tmpfile);
+  libexif_check_tags (FILE_SOURCE_TAG ("reflex-scanner"), tmpfile);
+  generate_jif_file_with_tags (FILE_SOURCE_TAG ("transparent-scanner"),
+      tmpfile);
+  libexif_check_tags (FILE_SOURCE_TAG ("transparent-scanner"), tmpfile);
 
   g_free (tmpfile);
 }
