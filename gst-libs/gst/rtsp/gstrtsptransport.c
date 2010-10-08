@@ -117,7 +117,7 @@ static const RTSPLTransMap ltrans[] = {
 GType
 gst_rtsp_lower_trans_get_type (void)
 {
-  static GType rtsp_lower_trans_type = 0;
+  static volatile gsize rtsp_lower_trans_type = 0;
   static const GFlagsValue rtsp_lower_trans[] = {
     {GST_RTSP_LOWER_TRANS_UDP, "GST_RTSP_LOWER_TRANS_UDP", "udp-unicast"},
     {GST_RTSP_LOWER_TRANS_UDP_MCAST, "GST_RTSP_LOWER_TRANS_UDP_MCAST",
@@ -127,11 +127,12 @@ gst_rtsp_lower_trans_get_type (void)
     {0, NULL, NULL},
   };
 
-  if (!rtsp_lower_trans_type) {
-    rtsp_lower_trans_type =
-        g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
+  if (g_once_init_enter (&rtsp_lower_trans_type)) {
+    GType tmp = g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
+    g_once_init_leave (&rtsp_lower_trans_type, tmp);
   }
-  return rtsp_lower_trans_type;
+
+  return (GType) rtsp_lower_trans_type;
 }
 
 #define RTSP_TRANSPORT_PARAMETER_IS_UNIQUE(param) \

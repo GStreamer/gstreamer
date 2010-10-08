@@ -54,21 +54,18 @@
 
 #include "gstrtspurl.h"
 
-static void
-register_rtsp_url_type (GType * id)
-{
-  *id = g_boxed_type_register_static ("GstRTSPUrl",
-      (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
-}
-
 GType
 gst_rtsp_url_get_type (void)
 {
-  static GType id;
-  static GOnce once = G_ONCE_INIT;
+  static volatile gsize url_type = 0;
 
-  g_once (&once, (GThreadFunc) register_rtsp_url_type, &id);
-  return id;
+  if (g_once_init_enter (&url_type)) {
+    GType tmp = g_boxed_type_register_static ("GstRTSPUrl",
+        (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
+    g_once_init_leave (&url_type, tmp);
+  }
+
+  return (GType) url_type;
 }
 
 static const struct
