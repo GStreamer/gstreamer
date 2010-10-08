@@ -292,18 +292,19 @@ gst_dp_dump_byte_array (guint8 * array, guint length)
 GType
 gst_dp_version_get_type (void)
 {
-  static GType gst_dp_version_type = 0;
+  static gsize gst_dp_version_type = 0;
   static const GEnumValue gst_dp_version[] = {
     {GST_DP_VERSION_0_2, "GST_DP_VERSION_0_2", "0.2"},
     {GST_DP_VERSION_1_0, "GST_DP_VERSION_1_0", "1.0"},
     {0, NULL, NULL},
   };
 
-  if (!gst_dp_version_type) {
-    gst_dp_version_type =
-        g_enum_register_static ("GstDPVersion", gst_dp_version);
+  if (g_once_init_enter (&gst_dp_version_type)) {
+    GType tmp = g_enum_register_static ("GstDPVersion", gst_dp_version);
+    g_once_init_leave (&gst_dp_version_type, tmp);
   }
-  return gst_dp_version_type;
+
+  return (GType) gst_dp_version_type;
 };
 
 /**
