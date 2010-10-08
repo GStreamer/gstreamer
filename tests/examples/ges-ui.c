@@ -87,13 +87,16 @@ typedef struct App
   GtkSpinButton *frequency;
 } App;
 
+static int n_instances = 0;
+
 /* Prototypes for auto-connected signal handlers ***************************/
 
 /**
  * These are declared non-static for signal auto-connection
  */
 
-gboolean window_delete_event_cb (GtkObject * window, App * app);
+gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
+    App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -999,6 +1002,12 @@ app_dispose (App * app)
 
     g_free (app);
   }
+
+  n_instances--;
+
+  if (n_instances == 0) {
+    gtk_main_quit ();
+  }
 }
 
 static App *
@@ -1006,6 +1015,7 @@ app_new (void)
 {
   App *ret;
   ret = g_new0 (App, 1);
+  n_instances++;
 
   ret->selected_type = G_TYPE_NONE;
 
@@ -1040,10 +1050,10 @@ fail:
 /* UI callbacks  ************************************************************/
 
 gboolean
-window_delete_event_cb (GtkObject * window, App * app)
+window_delete_event_cb (GtkObject * window, GdkEvent * event, App * app)
 {
-  gtk_main_quit ();
-  return TRUE;
+  app_dispose (app);
+  return FALSE;
 }
 
 void
@@ -1283,7 +1293,6 @@ main (int argc, char *argv[])
 
   if ((app = app_new ())) {
     gtk_main ();
-    app_dispose (app);
   }
 
   return 0;

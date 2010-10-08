@@ -60,7 +60,9 @@
                       <object class="GtkImageMenuItem" id="new_item">
                         <property name="label">gtk-new</property>
                         <property name="use_underline">True</property>
+                        <property name="visible">True</property>
                         <property name="use_stock">True</property>
+                        <signal name="activate" handler="new_activate_cb"/>
                       </object>
                     </child>
                     <child>
@@ -82,20 +84,6 @@
                         <property name="label">gtk-save-as</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem" id="separatormenuitem1">
-                        <property name="visible">True</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkImageMenuItem" id="quit_item">
-                        <property name="label">gtk-quit</property>
-                        <property name="visible">True</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
-                        <signal name="activate" handler="quit_item_activate_cb"/>
                       </object>
                     </child>
                   </object>
