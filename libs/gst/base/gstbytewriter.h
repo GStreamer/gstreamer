@@ -203,20 +203,26 @@ _gst_byte_writer_ensure_free_space_inline (GstByteWriter * writer, guint size)
 }
 
 #define __GST_BYTE_WRITER_CREATE_WRITE_FUNC(bits,type,name,write_func) \
-static inline gboolean \
-_gst_byte_writer_put_##name##_inline (GstByteWriter *writer, type val) \
+static inline void \
+gst_byte_writer_put_##name##_unchecked (GstByteWriter *writer, type val) \
 { \
   guint8 *write_data; \
-  \
-  g_return_val_if_fail (writer != NULL, FALSE); \
-  \
-  if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline(writer, bits/8))) \
-    return FALSE; \
   \
   write_data = (guint8 *) writer->parent.data + writer->parent.byte; \
   write_func (write_data, val); \
   writer->parent.byte += bits/8; \
   writer->parent.size = MAX (writer->parent.size, writer->parent.byte); \
+} \
+\
+static inline gboolean \
+_gst_byte_writer_put_##name##_inline (GstByteWriter *writer, type val) \
+{ \
+  g_return_val_if_fail (writer != NULL, FALSE); \
+  \
+  if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline(writer, bits/8))) \
+    return FALSE; \
+  \
+  gst_byte_writer_put_##name##_unchecked (writer, val); \
   \
   return TRUE; \
 }
@@ -247,6 +253,15 @@ __GST_BYTE_WRITER_CREATE_WRITE_FUNC (64, gdouble, float64_le, GST_WRITE_DOUBLE_L
 
 #undef __GST_BYTE_WRITER_CREATE_WRITE_FUNC
 
+static inline void
+gst_byte_writer_put_data_unchecked (GstByteWriter * writer, const guint8 * data,
+    guint size)
+{
+  memcpy ((guint8 *) & writer->parent.data[writer->parent.byte], data, size);
+  writer->parent.byte += size;
+  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
+}
+
 static inline gboolean
 _gst_byte_writer_put_data_inline (GstByteWriter * writer, const guint8 * data,
     guint size)
@@ -256,11 +271,17 @@ _gst_byte_writer_put_data_inline (GstByteWriter * writer, const guint8 * data,
   if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline (writer, size)))
     return FALSE;
 
-  memcpy ((guint8 *) & writer->parent.data[writer->parent.byte], data, size);
-  writer->parent.byte += size;
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
+  gst_byte_writer_put_data_unchecked (writer, data, size);
 
   return TRUE;
+}
+
+static inline void
+gst_byte_writer_fill_unchecked (GstByteWriter * writer, guint8 value, guint size)
+{
+  memset ((guint8 *) & writer->parent.data[writer->parent.byte], value, size);
+  writer->parent.byte += size;
+  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
 }
 
 static inline gboolean
@@ -271,9 +292,7 @@ _gst_byte_writer_fill_inline (GstByteWriter * writer, guint8 value, guint size)
   if (G_UNLIKELY (!_gst_byte_writer_ensure_free_space_inline (writer, size)))
     return FALSE;
 
-  memset ((guint8 *) & writer->parent.data[writer->parent.byte], value, size);
-  writer->parent.byte += size;
-  writer->parent.size = MAX (writer->parent.size, writer->parent.byte);
+  gst_byte_writer_fill_unchecked (writer, value, size);
 
   return TRUE;
 }
