@@ -580,26 +580,27 @@ enum
 GType
 gst_lfo_waveform_get_type (void)
 {
-  static GType gtype = 0;
+  static gsize gtype = 0;
+  static const GEnumValue values[] = {
+    {GST_LFO_WAVEFORM_SINE, "GST_LFO_WAVEFORM_SINE",
+        "sine"},
+    {GST_LFO_WAVEFORM_SQUARE, "GST_LFO_WAVEFORM_SQUARE",
+        "square"},
+    {GST_LFO_WAVEFORM_SAW, "GST_LFO_WAVEFORM_SAW",
+        "saw"},
+    {GST_LFO_WAVEFORM_REVERSE_SAW, "GST_LFO_WAVEFORM_REVERSE_SAW",
+        "reverse-saw"},
+    {GST_LFO_WAVEFORM_TRIANGLE, "GST_LFO_WAVEFORM_TRIANGLE",
+        "triangle"},
+    {0, NULL, NULL}
+  };
 
-  if (gtype == 0) {
-    static const GEnumValue values[] = {
-      {GST_LFO_WAVEFORM_SINE, "GST_LFO_WAVEFORM_SINE",
-          "sine"},
-      {GST_LFO_WAVEFORM_SQUARE, "GST_LFO_WAVEFORM_SQUARE",
-          "square"},
-      {GST_LFO_WAVEFORM_SAW, "GST_LFO_WAVEFORM_SAW",
-          "saw"},
-      {GST_LFO_WAVEFORM_REVERSE_SAW, "GST_LFO_WAVEFORM_REVERSE_SAW",
-          "reverse-saw"},
-      {GST_LFO_WAVEFORM_TRIANGLE, "GST_LFO_WAVEFORM_TRIANGLE",
-          "triangle"},
-      {0, NULL, NULL}
-    };
-
-    gtype = g_enum_register_static ("GstLFOWaveform", values);
+  if (g_once_init_enter (&gtype)) {
+    GType tmp = g_enum_register_static ("GstLFOWaveform", values);
+    g_once_init_leave (&gtype, tmp);
   }
-  return gtype;
+
+  return (GType) gtype;
 }
 
 G_DEFINE_TYPE (GstLFOControlSource, gst_lfo_control_source,
