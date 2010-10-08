@@ -1016,7 +1016,6 @@ gst_multi_queue_loop (GstPad * pad)
   GstMultiQueue *mq;
   GstMiniObject *object;
   guint32 newid;
-  guint32 oldid = G_MAXUINT32;
   GstFlowReturn result;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
@@ -1036,16 +1035,14 @@ gst_multi_queue_loop (GstPad * pad)
   object = gst_multi_queue_item_steal_object (item);
   gst_multi_queue_item_destroy (item);
 
-  GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d , oldid:%d",
-      sq->id, newid, oldid);
+  GST_LOG_OBJECT (mq, "SingleQueue %d : newid:%d", sq->id, newid);
 
   /* If we're not-linked, we do some extra work because we might need to
    * wait before pushing. If we're linked but there's a gap in the IDs,
    * or it's the first loop, or we just passed the previous highid, 
    * we might need to wake some sleeping pad up, so there's extra work 
    * there too */
-  if (sq->srcresult == GST_FLOW_NOT_LINKED ||
-      (oldid == G_MAXUINT32) || (newid != (oldid + 1)) || oldid > mq->highid) {
+  if (sq->srcresult == GST_FLOW_NOT_LINKED) {
     GST_LOG_OBJECT (mq, "CHECKING sq->srcresult: %s",
         gst_flow_get_name (sq->srcresult));
 
@@ -1053,10 +1050,6 @@ gst_multi_queue_loop (GstPad * pad)
 
     /* Update the nextid so other threads know when to wake us up */
     sq->nextid = newid;
-
-    /* Update the oldid (the last ID we output) for highid tracking */
-    if (oldid != G_MAXUINT32)
-      sq->oldid = oldid;
 
     if (sq->srcresult == GST_FLOW_NOT_LINKED) {
       /* Go to sleep until it's time to push this buffer */
@@ -1098,6 +1091,7 @@ gst_multi_queue_loop (GstPad * pad)
   /* Try to push out the new object */
   result = gst_single_queue_push_one (mq, sq, object);
   sq->srcresult = result;
+  sq->oldid = newid;
 
   if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED
       && result != GST_FLOW_UNEXPECTED)
@@ -1105,8 +1099,6 @@ gst_multi_queue_loop (GstPad * pad)
 
   GST_LOG_OBJECT (mq, "AFTER PUSHING sq->srcresult: %s",
       gst_flow_get_name (sq->srcresult));
-
-  oldid = newid;
 
   return;
 
