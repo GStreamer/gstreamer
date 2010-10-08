@@ -340,6 +340,22 @@ G_BEGIN_DECLS
 #define GST_TAG_CAPTURING_METERING_MODE      "capturing-metering-mode"
 
 /**
+ * GST_TAG_CAPTURING_SOURCE:
+ *
+ * Indicates the source of capture. The device/medium used to do the
+ * capture. (string)
+ *
+ * Allowed values are:
+ *   "dsc" (= digital still camera)
+ *   "transparent-scanner"
+ *   "reflex-scanner"
+ *   "other"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_SOURCE             "capturing-source"
+
+/**
  * GST_TAG_IMAGE_HORIZONTAL_PPI:
  *
  * Media (image/video) intended horizontal pixel density in ppi. (double)

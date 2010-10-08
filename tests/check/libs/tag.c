@@ -1419,6 +1419,19 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_static_string (&value, "other");
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_METERING_MODE, &value);
+
+  g_value_set_static_string (&value, "dsc");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SOURCE,
+      &value);
+  g_value_set_static_string (&value, "other");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SOURCE,
+      &value);
+  g_value_set_static_string (&value, "transparent-scanner");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SOURCE,
+      &value);
+  g_value_set_static_string (&value, "reflex-scanner");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SOURCE,
+      &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);

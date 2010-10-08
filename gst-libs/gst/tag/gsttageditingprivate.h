@@ -65,6 +65,9 @@ const gchar * __exif_tag_capturing_sharpness_from_exif_value (gint value);
 gint __exif_tag_capturing_metering_mode_to_exif_value (const gchar * str);
 const gchar * __exif_tag_capturing_metering_mode_from_exif_value (gint value);
 
+gint __exif_tag_capturing_source_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_source_from_exif_value (gint value);
+
 G_END_DECLS
 
 #endif /* __GST_TAG_EDIT_PRIVATE_H__ */

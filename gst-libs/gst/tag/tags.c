@@ -173,6 +173,10 @@ gst_tag_register_tags_internal (gpointer unused)
       _("The metering mode used while determining exposure for capturing an"
           " image"), NULL);
 
+  gst_tag_register (GST_TAG_CAPTURING_SOURCE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing source"),
+      _("The source or type of device used for the capture"), NULL);
+
   gst_tag_register (GST_TAG_IMAGE_HORIZONTAL_PPI, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("image horizontal ppi"),
       _("Media (image/video) intended horizontal pixel density in ppi"), NULL);

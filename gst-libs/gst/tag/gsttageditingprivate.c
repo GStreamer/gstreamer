@@ -428,3 +428,41 @@ __exif_tag_capturing_metering_mode_from_exif_value (gint value)
       return NULL;
   }
 }
+
+gint
+__exif_tag_capturing_source_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "dsc") == 0)
+    return 3;
+  else if (strcmp (str, "other") == 0)
+    return 0;
+  else if (strcmp (str, "transparent-scanner") == 0)
+    return 1;
+  else if (strcmp (str, "reflex-scanner") == 0)
+    return 2;
+
+end:
+  GST_WARNING ("Invalid capturing source type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_source_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "other";
+    case 1:
+      return "transparent-scanner";
+    case 2:
+      return "reflex-scanner";
+    case 3:
+      return "dsc";
+    default:
+      GST_WARNING ("Invalid capturing source type: %d", value);
+      return NULL;
+  }
+}
