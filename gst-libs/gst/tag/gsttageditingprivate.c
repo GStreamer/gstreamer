@@ -277,8 +277,9 @@ __exif_tag_capturing_white_balance_from_exif_value (gint value)
   }
 }
 
-gint
-__exif_tag_capturing_contrast_to_exif_value (const gchar * str)
+static gint
+__exif_tag_capturing_contrast_sharpness_to_exif_value (const gchar * str,
+    const gchar * tag_name)
 {
   if (str == NULL)
     goto end;
@@ -291,12 +292,13 @@ __exif_tag_capturing_contrast_to_exif_value (const gchar * str)
     return 2;
 
 end:
-  GST_WARNING ("Invalid contrast type: %s", str);
+  GST_WARNING ("Invalid %s type: %s", tag_name, str);
   return -1;
 }
 
-const gchar *
-__exif_tag_capturing_contrast_from_exif_value (gint value)
+static const gchar *
+__exif_tag_capturing_contrast_sharpness_from_exif_value (gint value,
+    const gchar * tag_name)
 {
   switch (value) {
     case 0:
@@ -306,9 +308,23 @@ __exif_tag_capturing_contrast_from_exif_value (gint value)
     case 2:
       return "hard";
     default:
-      GST_WARNING ("Invalid contrast type: %d", value);
+      GST_WARNING ("Invalid %s type: %d", tag_name, value);
       return NULL;
   }
+}
+
+gint
+__exif_tag_capturing_contrast_to_exif_value (const gchar * str)
+{
+  return __exif_tag_capturing_contrast_sharpness_to_exif_value (str,
+      "contrast");
+}
+
+const gchar *
+__exif_tag_capturing_contrast_from_exif_value (gint value)
+{
+  return __exif_tag_capturing_contrast_sharpness_from_exif_value (value,
+      "contrast");
 }
 
 gint
@@ -343,4 +359,18 @@ __exif_tag_capturing_saturation_from_exif_value (gint value)
       GST_WARNING ("Invalid saturation type: %d", value);
       return NULL;
   }
+}
+
+gint
+__exif_tag_capturing_sharpness_to_exif_value (const gchar * str)
+{
+  return __exif_tag_capturing_contrast_sharpness_to_exif_value (str,
+      "sharpness");
+}
+
+const gchar *
+__exif_tag_capturing_sharpness_from_exif_value (gint value)
+{
+  return __exif_tag_capturing_contrast_sharpness_from_exif_value (value,
+      "sharpness");
 }

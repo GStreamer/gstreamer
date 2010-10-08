@@ -1384,6 +1384,16 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   g_value_set_static_string (&value, "high-saturation");
   do_simple_exif_tag_serialization_deserialization
       (GST_TAG_CAPTURING_SATURATION, &value);
+
+  g_value_set_static_string (&value, "normal");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SHARPNESS,
+      &value);
+  g_value_set_static_string (&value, "hard");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SHARPNESS,
+      &value);
+  g_value_set_static_string (&value, "soft");
+  do_simple_exif_tag_serialization_deserialization (GST_TAG_CAPTURING_SHARPNESS,
+      &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_DOUBLE);

@@ -59,6 +59,9 @@ const gchar * __exif_tag_capturing_contrast_from_exif_value (gint value);
 gint __exif_tag_capturing_saturation_to_exif_value (const gchar * str);
 const gchar * __exif_tag_capturing_saturation_from_exif_value (gint value);
 
+gint __exif_tag_capturing_sharpness_to_exif_value (const gchar * str);
+const gchar * __exif_tag_capturing_sharpness_from_exif_value (gint value);
+
 G_END_DECLS
 
 #endif /* __GST_TAG_EDIT_PRIVATE_H__ */

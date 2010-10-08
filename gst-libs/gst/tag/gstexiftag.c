@@ -238,6 +238,7 @@ EXIF_SERIALIZATION_DESERIALIZATION_FUNC (orientation);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (saturation);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (scene_capture_type);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (sensitivity_type);
+EXIF_SERIALIZATION_DESERIALIZATION_FUNC (sharpness);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (shutter_speed);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (speed);
 EXIF_SERIALIZATION_DESERIALIZATION_FUNC (white_balance);
@@ -293,6 +294,7 @@ EXIF_DESERIALIZATION_FUNC (add_to_pending_tags);
 #define EXIF_TAG_GAIN_CONTROL 0xA407
 #define EXIF_TAG_CONTRAST 0xA408
 #define EXIF_TAG_SATURATION 0xA409
+#define EXIF_TAG_SHARPNESS 0xA40A
 
 /* IFD pointer tags */
 #define EXIF_IFD_TAG 0x8769
@@ -390,6 +392,8 @@ static const GstExifTagMatch tag_map_exif[] = {
       serialize_contrast, deserialize_contrast},
   {GST_TAG_CAPTURING_SATURATION, EXIF_TAG_SATURATION, EXIF_TYPE_SHORT, 0,
       serialize_saturation, deserialize_saturation},
+  {GST_TAG_CAPTURING_SHARPNESS, EXIF_TAG_SHARPNESS, EXIF_TYPE_SHORT, 0,
+      serialize_sharpness, deserialize_sharpness},
   {NULL, 0, 0, 0, NULL, NULL}
 };
 
@@ -1761,6 +1765,8 @@ EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (saturation,
     capturing_saturation);
 EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (scene_capture_type,
     capturing_scene_capture_type);
+EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (sharpness,
+    capturing_sharpness);
 EXIF_SERIALIZATION_DESERIALIZATION_MAP_STRING_TO_INT_FUNC (white_balance,
     capturing_white_balance);
 

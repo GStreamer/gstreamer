@@ -281,6 +281,20 @@ G_BEGIN_DECLS
 #define GST_TAG_CAPTURING_SATURATION          "capturing-saturation"
 
 /**
+ * GST_TAG_CAPTURING_SHARPNESS:
+ *
+ * Direction of sharpness processing applied when capturing an image. (string)
+ *
+ * The allowed values are:
+ *  "normal"
+ *  "soft"
+ *  "hard"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_SHARPNESS          "capturing-sharpness"
+
+/**
  * GST_TAG_CAPTURING_FLASH_FIRED:
  *
  * If flash was fired during the capture of an image. (boolean)
