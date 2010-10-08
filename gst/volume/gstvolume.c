@@ -780,8 +780,6 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
     orc_process_controlled_int8_1ch (data, volume, num_samples);
   } else if (channels == 2) {
     orc_process_controlled_int8_2ch (data, volume, num_samples);
-  } else if (channels == 4) {
-    orc_process_controlled_int8_4ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
