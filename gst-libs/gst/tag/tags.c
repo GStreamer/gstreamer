@@ -162,11 +162,16 @@ gst_tag_register_tags_internal (gpointer unused)
 
   gst_tag_register (GST_TAG_CAPTURING_FLASH_FIRED, GST_TAG_FLAG_META,
       G_TYPE_BOOLEAN, _("capturing flash fired"),
-      _("If the flash fired while capturing and image"), NULL);
+      _("If the flash fired while capturing an image"), NULL);
 
   gst_tag_register (GST_TAG_CAPTURING_FLASH_MODE, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("capturing flash mode"),
-      _("The selected flash mode while capturing and image"), NULL);
+      _("The selected flash mode while capturing an image"), NULL);
+
+  gst_tag_register (GST_TAG_CAPTURING_METERING_MODE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("capturing metering mode"),
+      _("The metering mode used while determining exposure for capturing an"
+          " image"), NULL);
 
   gst_tag_register (GST_TAG_IMAGE_HORIZONTAL_PPI, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("image horizontal ppi"),

@@ -321,6 +321,25 @@ G_BEGIN_DECLS
 #define GST_TAG_CAPTURING_FLASH_MODE         "capturing-flash-mode"
 
 /**
+ * GST_TAG_CAPTURING_METERING_MODE:
+ *
+ * Defines the way a camera determines the exposure. (string)
+ *
+ * The allowed values are:
+ *   "unknown"
+ *   "average"
+ *   "center-weighted-average"
+ *   "spot"
+ *   "multi-spot"
+ *   "pattern"
+ *   "partial"
+ *   "other"
+ *
+ * Since: 0.10.31
+ */
+#define GST_TAG_CAPTURING_METERING_MODE      "capturing-metering-mode"
+
+/**
  * GST_TAG_IMAGE_HORIZONTAL_PPI:
  *
  * Media (image/video) intended horizontal pixel density in ppi. (double)

@@ -374,3 +374,57 @@ __exif_tag_capturing_sharpness_from_exif_value (gint value)
   return __exif_tag_capturing_contrast_sharpness_from_exif_value (value,
       "sharpness");
 }
+
+gint
+__exif_tag_capturing_metering_mode_to_exif_value (const gchar * str)
+{
+  if (str == NULL)
+    goto end;
+
+  if (strcmp (str, "unknown") == 0)
+    return 0;
+  else if (strcmp (str, "average") == 0)
+    return 1;
+  else if (strcmp (str, "center-weighted-average") == 0)
+    return 2;
+  else if (strcmp (str, "spot") == 0)
+    return 3;
+  else if (strcmp (str, "multi-spot") == 0)
+    return 4;
+  else if (strcmp (str, "pattern") == 0)
+    return 5;
+  else if (strcmp (str, "partial") == 0)
+    return 6;
+  else if (strcmp (str, "other") == 0)
+    return 255;
+
+end:
+  GST_WARNING ("Invalid metering mode type: %s", str);
+  return -1;
+}
+
+const gchar *
+__exif_tag_capturing_metering_mode_from_exif_value (gint value)
+{
+  switch (value) {
+    case 0:
+      return "unknown";
+    case 1:
+      return "average";
+    case 2:
+      return "center-weighted-average";
+    case 3:
+      return "spot";
+    case 4:
+      return "multi-spot";
+    case 5:
+      return "pattern";
+    case 6:
+      return "partial";
+    case 255:
+      return "other";
+    default:
+      GST_WARNING ("Invalid metering mode type: %d", value);
+      return NULL;
+  }
+}
