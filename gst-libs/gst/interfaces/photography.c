@@ -76,7 +76,7 @@ gst_photography_iface_base_init (GstPhotographyInterface * iface)
   iface->get_aperture = NULL;
   iface->get_exposure = NULL;
   iface->get_white_balance_mode = NULL;
-  iface->get_colour_tone_mode = NULL;
+  iface->get_color_tone_mode = NULL;
   iface->get_scene_mode = NULL;
   iface->get_flash_mode = NULL;
   iface->get_noise_reduction = NULL;
@@ -89,7 +89,7 @@ gst_photography_iface_base_init (GstPhotographyInterface * iface)
   iface->set_aperture = NULL;
   iface->set_exposure = NULL;
   iface->set_white_balance_mode = NULL;
-  iface->set_colour_tone_mode = NULL;
+  iface->set_color_tone_mode = NULL;
   iface->set_scene_mode = NULL;
   iface->set_flash_mode = NULL;
   iface->set_noise_reduction = NULL;
@@ -212,7 +212,7 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (exposure, guint32);
 /**
  * gst_photography_set_white_balance_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @wb_mode: #GstWhiteBalanceMode to set
+ * @wb_mode: #GstPhotographyWhiteBalanceMode to set
  *
  * Set the white balance mode for the #GstElement
  *
@@ -221,38 +221,39 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (exposure, guint32);
 /**
  * gst_photography_get_white_balance_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @wb_mode: #GstWhiteBalanceMode to get
+ * @wb_mode: #GstPhotographyWhiteBalanceMode to get
  *
  * Get the white balance mode for the #GstElement
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (white_balance_mode, GstWhiteBalanceMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (white_balance_mode,
+    GstPhotographyWhiteBalanceMode);
 
 /**
- * gst_photography_set_colour_tone_mode:
+ * gst_photography_set_color_tone_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @tone_mode: #GstColourToneMode to set
+ * @tone_mode: #GstPhotographyColorToneMode to set
  *
- * Set the colour tone mode for the #GstElement
+ * Set the color tone mode for the #GstElement
  *
  * Returns: %TRUE if setting the value succeeded, %FALSE otherwise
  */
 /**
- * gst_photography_get_colour_tone_mode:
+ * gst_photography_get_color_tone_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @tone_mode: #GstColourToneMode to get
+ * @tone_mode: #GstPhotographyColorToneMode to get
  *
- * Get the colour tone mode for the #GstElement
+ * Get the color tone mode for the #GstElement
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (colour_tone_mode, GstColourToneMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (color_tone_mode, GstPhotographyColorToneMode);
 
 /**
  * gst_photography_set_scene_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @scene_mode: #GstSceneMode to set
+ * @scene_mode: #GstPhotographySceneMode to set
  *
  * Set the scene mode for the #GstElement
  *
@@ -261,18 +262,18 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (colour_tone_mode, GstColourToneMode);
 /**
  * gst_photography_get_scene_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @scene_mode: #GstSceneMode to get
+ * @scene_mode: #GstPhotographySceneMode to get
  *
  * Get the scene mode for the #GstElement
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (scene_mode, GstSceneMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (scene_mode, GstPhotographySceneMode);
 
 /**
  * gst_photography_set_flash_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @flash_mode: #GstFlashMode to set
+ * @flash_mode: #GstPhotographyFlashMode to set
  *
  * Set the flash mode for the #GstElement
  *
@@ -281,18 +282,18 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (scene_mode, GstSceneMode);
 /**
  * gst_photography_get_flash_mode:
  * @photo: #GstPhotography interface of a #GstElement
- * @flash_mode: #GstFlashMode to get
+ * @flash_mode: #GstPhotographyFlashMode to get
  *
  * Get the flash mode for the #GstElement
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstFlashMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstPhotographyFlashMode);
 
 /**
  * gst_photography_set_noise_reduction:
  * @photo: #GstPhotography interface of a #GstElement
- * @noise_reduction: #GstNoiseReductionMode to set
+ * @noise_reduction: #GstPhotographyNoiseReductionMode to set
  *
  * Set the noise reduction mode for the #GstElement
  *
@@ -303,7 +304,7 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flash_mode, GstFlashMode);
 /**
  * gst_photography_get_noise_reduction:
  * @photo: #GstPhotography interface of a #GstElement
- * @noise_reduction: #GstNoiseReductionMode to get
+ * @noise_reduction: #GstPhotographyNoiseReductionMode to get
  *
  * Get the noise reduction mode for the #GstElement
  *
@@ -352,7 +353,8 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (zoom, gfloat);
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (flicker_mode, GstFlickerReductionMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (flicker_mode,
+    GstPhotographyFlickerReductionMode);
 
 /**
  * gst_photography_set_focus_mode:
@@ -372,18 +374,18 @@ GST_PHOTOGRAPHY_FUNC_TEMPLATE (flicker_mode, GstFlickerReductionMode);
  *
  * Returns: %TRUE if getting the value succeeded, %FALSE otherwise
  */
-GST_PHOTOGRAPHY_FUNC_TEMPLATE (focus_mode, GstFocusMode);
+GST_PHOTOGRAPHY_FUNC_TEMPLATE (focus_mode, GstPhotographyFocusMode);
 
 /**
  * gst_photography_get_capabilities:
  * @photo: #GstPhotography interface of a #GstElement
  *
- * Get #GstPhotoCaps bitmask value that indicates what photography
+ * Get #GstPhotographyCaps bitmask value that indicates what photography
  * interface features the #GstElement supports
  *
- * Returns: #GstPhotoCaps value
+ * Returns: #GstPhotographyCaps value
  */
-GstPhotoCaps
+GstPhotographyCaps
 gst_photography_get_capabilities (GstPhotography * photo)
 {
   GstPhotographyInterface *iface;
@@ -411,7 +413,8 @@ gst_photography_get_capabilities (GstPhotography * photo)
  */
 gboolean
 gst_photography_prepare_for_capture (GstPhotography * photo,
-    GstPhotoCapturePrepared func, GstCaps * capture_caps, gpointer user_data)
+    GstPhotographyCapturePrepared func, GstCaps * capture_caps,
+    gpointer user_data)
 {
   GstPhotographyInterface *iface;
   gboolean ret = TRUE;
@@ -449,14 +452,15 @@ gst_photography_set_autofocus (GstPhotography * photo, gboolean on)
 /**
  * gst_photography_set_config:
  * @photo: #GstPhotography interface of a #GstElement
- * @config: #GstPhotoSettings containg the configuration
+ * @config: #GstPhotographySettings containg the configuration
  *
  * Set all configuration settings at once.
  *
  * Returns: TRUE if configuration was set successfully, otherwise FALSE.
  */
 gboolean
-gst_photography_set_config (GstPhotography * photo, GstPhotoSettings * config)
+gst_photography_set_config (GstPhotography * photo,
+    GstPhotographySettings * config)
 {
   GstPhotographyInterface *iface;
   gboolean ret = FALSE;
@@ -474,14 +478,15 @@ gst_photography_set_config (GstPhotography * photo, GstPhotoSettings * config)
 /**
  * gst_photography_get_config:
  * @photo: #GstPhotography interface of a #GstElement
- * @config: #GstPhotoSettings containg the configuration
+ * @config: #GstPhotographySettings containg the configuration
  *
  * Get all configuration settings at once.
  *
  * Returns: TRUE if configuration was got successfully, otherwise FALSE.
  */
 gboolean
-gst_photography_get_config (GstPhotography * photo, GstPhotoSettings * config)
+gst_photography_get_config (GstPhotography * photo,
+    GstPhotographySettings * config)
 {
   GstPhotographyInterface *iface;
   gboolean ret = FALSE;
@@ -507,17 +512,17 @@ gst_photography_iface_class_init (gpointer g_class)
       g_param_spec_enum (GST_PHOTOGRAPHY_PROP_WB_MODE,
           "White balance mode property",
           "White balance affects the color temperature of the photo",
-          GST_TYPE_WHITE_BALANCE_MODE,
+          GST_TYPE_PHOTOGRAPHY_WHITE_BALANCE_MODE,
           GST_PHOTOGRAPHY_WB_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* Colour tone */
+  /* Color tone */
   g_object_interface_install_property (g_class,
-      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_COLOUR_TONE,
-          "Colour tone mode property",
-          "Colour tone setting changes colour shading in the photo",
-          GST_TYPE_COLOUR_TONE_MODE,
-          GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL,
+      g_param_spec_enum (GST_PHOTOGRAPHY_PROP_COLOR_TONE,
+          "Color tone mode property",
+          "Color tone setting changes color shading in the photo",
+          GST_TYPE_PHOTOGRAPHY_COLOR_TONE_MODE,
+          GST_PHOTOGRAPHY_COLOR_TONE_MODE_NORMAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Scene mode */
@@ -525,7 +530,7 @@ gst_photography_iface_class_init (gpointer g_class)
       g_param_spec_enum (GST_PHOTOGRAPHY_PROP_SCENE_MODE,
           "Scene mode property",
           "Scene mode works as a preset for different photo shooting mode settings",
-          GST_TYPE_SCENE_MODE,
+          GST_TYPE_PHOTOGRAPHY_SCENE_MODE,
           GST_PHOTOGRAPHY_SCENE_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -534,7 +539,7 @@ gst_photography_iface_class_init (gpointer g_class)
       g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FLASH_MODE,
           "Flash mode property",
           "Flash mode defines how the flash light should be used",
-          GST_TYPE_FLASH_MODE,
+          GST_TYPE_PHOTOGRAPHY_FLASH_MODE,
           GST_PHOTOGRAPHY_FLASH_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -543,7 +548,7 @@ gst_photography_iface_class_init (gpointer g_class)
       g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FLICKER_MODE,
           "Flicker reduction mode property",
           "Flicker reduction mode defines a line frequency for flickering prevention",
-          GST_TYPE_FLICKER_REDUCTION_MODE,
+          GST_TYPE_PHOTOGRAPHY_FLICKER_REDUCTION_MODE,
           GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -552,7 +557,7 @@ gst_photography_iface_class_init (gpointer g_class)
       g_param_spec_enum (GST_PHOTOGRAPHY_PROP_FOCUS_MODE,
           "Focus mode property",
           "Focus mode defines the range of focal lengths to use in autofocus search",
-          GST_TYPE_FOCUS_MODE,
+          GST_TYPE_PHOTOGRAPHY_FOCUS_MODE,
           GST_PHOTOGRAPHY_FOCUS_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

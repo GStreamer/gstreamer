@@ -716,7 +716,7 @@ start_image_capture (GstWrapperCameraBinSrc * self)
     GST_DEBUG_OBJECT (self, "prepare image capture caps %" GST_PTR_FORMAT,
         self->image_capture_caps);
     ret = gst_photography_prepare_for_capture (photography,
-        (GstPhotoCapturePrepared) img_capture_prepared,
+        (GstPhotographyCapturePrepared) img_capture_prepared,
         self->image_capture_caps, self);
   } else {
     g_mutex_unlock (&bcamsrc->capturing_mutex);
