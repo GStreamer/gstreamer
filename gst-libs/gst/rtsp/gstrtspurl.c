@@ -71,20 +71,17 @@ gst_rtsp_url_get_type (void)
   return id;
 }
 
-static const gchar *rtsp_url_schemes[] = {
-  "rtsp",
-  "rtspu",
-  "rtspt",
-  "rtsph",
-  NULL
-};
-
-static GstRTSPLowerTrans rtsp_url_transports[] = {
-  GST_RTSP_LOWER_TRANS_TCP | GST_RTSP_LOWER_TRANS_UDP |
-      GST_RTSP_LOWER_TRANS_UDP_MCAST,
-  GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST,
-  GST_RTSP_LOWER_TRANS_TCP,
-  GST_RTSP_LOWER_TRANS_HTTP | GST_RTSP_LOWER_TRANS_TCP,
+static const struct
+{
+  const char scheme[6];
+  GstRTSPLowerTrans transports;
+} rtsp_schemes_map[] = {
+  {
+  "rtsp", GST_RTSP_LOWER_TRANS_TCP | GST_RTSP_LOWER_TRANS_UDP |
+        GST_RTSP_LOWER_TRANS_UDP_MCAST}, {
+  "rtspu", GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST}, {
+  "rtspt", GST_RTSP_LOWER_TRANS_TCP}, {
+  "rtsph", GST_RTSP_LOWER_TRANS_HTTP | GST_RTSP_LOWER_TRANS_TCP}
 };
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] where host
@@ -109,7 +106,7 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   GstRTSPUrl *res;
   gchar *p, *delim, *at, *col;
   gchar *host_end = NULL;
-  guint scheme;
+  guint i;
 
   g_return_val_if_fail (urlstr != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (url != NULL, GST_RTSP_EINVAL);
@@ -122,9 +119,9 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   if (col == NULL)
     goto invalid;
 
-  for (scheme = 0; rtsp_url_schemes[scheme] != NULL; scheme++) {
-    if (g_ascii_strncasecmp (rtsp_url_schemes[scheme], p, col - p) == 0) {
-      res->transports = rtsp_url_transports[scheme];
+  for (i = 0; i < G_N_ELEMENTS (rtsp_schemes_map); i++) {
+    if (g_ascii_strncasecmp (rtsp_schemes_map[i].scheme, p, col - p) == 0) {
+      res->transports = rtsp_schemes_map[i].transports;
       p = col + 3;
       break;
     }
