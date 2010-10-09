@@ -611,7 +611,7 @@ Error:
   g_timer_destroy (timer);
 #endif
   if (mapped) {
-#if GLIB_CHECK_VERSION(2,22,0)
+#if GLIB_CHECK_VERSION(2,21,3)
     g_mapped_file_unref (mapped);
 #else
     g_mapped_file_free (mapped);
