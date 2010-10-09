@@ -1,0 +1,109 @@
+% ClassName
+GstBaseParse
+% TYPE_CLASS_NAME
+GST_TYPE_BASE_PARSE
+% pkg-config
+gstreamer-base-0.10
+% includes
+#include <gst/baseparse/gstbaseparse.h>
+% prototypes
+static gboolean gst_replace_start (GstBaseParse *parse);
+static gboolean gst_replace_stop (GstBaseParse *parse);
+static gboolean gst_replace_set_sink_caps (GstBaseParse *parse, GstCaps *caps);
+static gboolean gst_replace_check_valid_frame (GstBaseParse *parse,
+    GstBaseParseFrame *frame, guint *framesize, gint *skipsize);
+static GstFlowReturn gst_replace_parse_frame (GstBaseParse *parse,
+    GstBaseParseFrame *frame);
+static gboolean gst_replace_convert (GstBaseParse * parse,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
+    gint64 * dest_value);
+static gboolean gst_replace_event (GstBaseParse *parse, GstEvent *event);
+static gboolean gst_replace_src_event (GstBaseParse *parse, GstEvent *event);
+static GstFlowReturn gst_replace_pre_push_frame (GstBaseParse *parse,
+    GstBaseParseFrame *frame);
+% declare-class
+  GstBaseParseClass *base_parse_class = GST_BASE_PARSE_CLASS (klass);
+% set-methods
+  base_parse_class->start = GST_DEBUG_FUNCPTR (gst_replace_start);
+  base_parse_class->stop = GST_DEBUG_FUNCPTR (gst_replace_stop);
+  base_parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_replace_set_sink_caps);
+  base_parse_class->check_valid_frame = GST_DEBUG_FUNCPTR (gst_replace_check_valid_frame);
+  base_parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_replace_parse_frame);
+  base_parse_class->pre_push_frame = GST_DEBUG_FUNCPTR (gst_replace_pre_push_frame);
+  base_parse_class->convert = GST_DEBUG_FUNCPTR (gst_replace_convert);
+  base_parse_class->event = GST_DEBUG_FUNCPTR (gst_replace_event);
+  base_parse_class->src_event = GST_DEBUG_FUNCPTR (gst_replace_src_event);
+% methods
+
+static gboolean
+gst_replace_start (GstBaseParse *parse)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_replace_stop (GstBaseParse *parse)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_replace_set_sink_caps (GstBaseParse *parse, GstCaps *caps)
+{
+  /* Called when sink caps are set */
+  return TRUE;
+}
+
+static gboolean
+gst_replace_check_valid_frame (GstBaseParse *parse,
+    GstBaseParseFrame *frame, guint *framesize, gint *skipsize)
+{
+  /* Called when processing incoming buffers.  Function should check
+     whether the buffer contains a valid frame */
+  /* MUST implement */
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_replace_parse_frame (GstBaseParse *parse,
+    GstBaseParseFrame *frame)
+{
+  /* Called when processing incoming buffers.  Function should parse
+     a checked frame. */
+  /* MUST implement */
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_replace_convert (GstBaseParse * parse, GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
+{
+  /* Convert between formats */
+
+  return FALSE;
+}
+
+static gboolean
+gst_replace_event (GstBaseParse *parse, GstEvent *event)
+{
+  /* Sink pad event handler */
+
+  return FALSE;
+}
+
+static gboolean
+gst_replace_src_event (GstBaseParse *parse, GstEvent *event)
+{
+  /* Src pad event handler */
+
+  return FALSE;
+}
+
+static GstFlowReturn
+gst_replace_pre_push_frame (GstBaseParse *parse, GstBaseParseFrame *frame)
+{
+
+  return GST_FLOW_OK;
+}
+
+% end
