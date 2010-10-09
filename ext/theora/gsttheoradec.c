@@ -123,6 +123,13 @@ gst_theora_dec_base_init (gpointer g_class)
       "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
 }
 
+static gboolean
+gst_theora_dec_ctl_is_supported (int req)
+{
+  /* should return TH_EFAULT or TH_EINVAL if supported, and TH_EIMPL if not */
+  return (th_decode_ctl (NULL, req, NULL, 0) != TH_EIMPL);
+}
+
 static void
 gst_theora_dec_class_init (GstTheoraDecClass * klass)
 {
@@ -137,34 +144,49 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
           "Crop the image to the visible region", THEORA_DEF_CROP,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_TELEMETRY_MV,
-      g_param_spec_int ("vis-mv", "Visualise motion vectors",
-          "Show motion vector selection overlaid on image. "
-          "Value gives a mask for MV modes to show.",
-          0, 0xffff, THEORA_DEF_TELEMETRY_MV, (GParamFlags) G_PARAM_READWRITE));
+  if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_MV)) {
+    g_object_class_install_property (gobject_class, PROP_TELEMETRY_MV,
+        g_param_spec_int ("visualize-motion-vectors",
+            "Visualize motion vectors",
+            "Show motion vector selection overlaid on image. "
+            "Value gives a mask for motion vector (MV) modes to show",
+            0, 0xffff, THEORA_DEF_TELEMETRY_MV,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
-  g_object_class_install_property (gobject_class, PROP_TELEMETRY_MBMODE,
-      g_param_spec_int ("vis-mbmode",
-          "Visualise macroblock modes",
-          "Show macroblock mode selection overlaid on image. "
-          "Value gives a mask for MB modes to show.",
-          0, 0xffff, THEORA_DEF_TELEMETRY_MBMODE,
-          (GParamFlags) G_PARAM_READWRITE));
+  if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_MBMODE)) {
+    g_object_class_install_property (gobject_class, PROP_TELEMETRY_MBMODE,
+        g_param_spec_int ("visualize-macroblock-modes",
+            "Visualize macroblock modes",
+            "Show macroblock mode selection overlaid on image. "
+            "Value gives a mask for macroblock (MB) modes to show",
+            0, 0xffff, THEORA_DEF_TELEMETRY_MBMODE,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
-  g_object_class_install_property (gobject_class, PROP_TELEMETRY_QI,
-      g_param_spec_int ("vis-qi",
-          "Visualise adaptive quantization modes",
-          "Show adaptive quantization mode selection overlaid on image. "
-          "Value gives a mask for QI modes to show.",
-          0, 0xffff, THEORA_DEF_TELEMETRY_QI, (GParamFlags) G_PARAM_READWRITE));
+  if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_QI)) {
+    g_object_class_install_property (gobject_class, PROP_TELEMETRY_QI,
+        g_param_spec_int ("visualize-quantization-modes",
+            "Visualize adaptive quantization modes",
+            "Show adaptive quantization mode selection overlaid on image. "
+            "Value gives a mask for quantization (QI) modes to show",
+            0, 0xffff, THEORA_DEF_TELEMETRY_QI,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
-  g_object_class_install_property (gobject_class, PROP_TELEMETRY_BITS,
-      g_param_spec_int ("vis-bits",
-          "Visualise bitstream breakdown modes",
-          "Show bitstream breakdown mode selection overlaid on image. "
-          "Value gives a mask for BITS modes to show.",
-          0, 0xffff, THEORA_DEF_TELEMETRY_BITS,
-          (GParamFlags) G_PARAM_READWRITE));
+  if (gst_theora_dec_ctl_is_supported (TH_DECCTL_SET_TELEMETRY_BITS)) {
+    /* FIXME: make this a boolean instead? The value scales the bars so
+     * they're less wide. Default is to use full width, and anything else
+     * doesn't seem particularly useful, since the smaller bars just disappear
+     * then (they almost disappear for a value of 2 already). */
+    g_object_class_install_property (gobject_class, PROP_TELEMETRY_BITS,
+        g_param_spec_int ("visualize-bit-usage",
+            "Visualize bitstream usage breakdown",
+            "Sets the bitstream breakdown visualization mode. "
+            "Values influence the width of the bit usage bars to show",
+            0, 0xff, THEORA_DEF_TELEMETRY_BITS,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  }
 
   gstelement_class->change_state = theora_dec_change_state;
 
@@ -869,20 +891,21 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
 
   if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MV,
-          &dec->telemetry_mv, sizeof (dec->telemetry_mv)))
+          &dec->telemetry_mv, sizeof (dec->telemetry_mv)) != TH_EIMPL) {
     GST_WARNING_OBJECT (dec, "Could not enable MV visualisation");
-
+  }
   if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MBMODE,
-          &dec->telemetry_mbmode, sizeof (dec->telemetry_mbmode)))
+          &dec->telemetry_mbmode, sizeof (dec->telemetry_mbmode)) != TH_EIMPL) {
     GST_WARNING_OBJECT (dec, "Could not enable MB mode visualisation");
-
+  }
   if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_QI,
-          &dec->telemetry_qi, sizeof (dec->telemetry_qi)))
+          &dec->telemetry_qi, sizeof (dec->telemetry_qi)) != TH_EIMPL) {
     GST_WARNING_OBJECT (dec, "Could not enable QI mode visualisation");
-
+  }
   if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_BITS,
-          &dec->telemetry_bits, sizeof (dec->telemetry_bits)))
+          &dec->telemetry_bits, sizeof (dec->telemetry_bits)) != TH_EIMPL) {
     GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
+  }
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, fourcc,
