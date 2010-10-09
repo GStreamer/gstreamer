@@ -1,5 +1,6 @@
 /* GStreamer video parsers
  * Copyright (C) 2011 Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+ * Copyright (C) 2009 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,6 +24,7 @@
 
 #include "gsth263parse.h"
 #include "gsth264parse.h"
+#include "gstdiracparse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -33,6 +35,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_NONE, GST_TYPE_H263_PARSE);
   ret = gst_element_register (plugin, "h264parse",
       GST_RANK_NONE, GST_TYPE_H264_PARSE);
+  ret = gst_element_register (plugin, "diracparse",
+      GST_RANK_NONE, GST_TYPE_DIRAC_PARSE);
 
   return ret;
 }
