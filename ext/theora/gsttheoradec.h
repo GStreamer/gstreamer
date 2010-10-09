@@ -73,6 +73,12 @@ struct _GstTheoraDec
   gint offset_x, offset_y;
   gint output_bpp;
 
+  /* telemetry debuging options */
+  gint telemetry_mv;
+  gint telemetry_mbmode;
+  gint telemetry_qi;
+  gint telemetry_bits;
+
   gboolean crop;
 
   /* list of buffers that need timestamps */

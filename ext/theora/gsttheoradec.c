@@ -49,10 +49,19 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define THEORA_DEF_CROP         TRUE
+#define THEORA_DEF_TELEMETRY_MV 0
+#define THEORA_DEF_TELEMETRY_MBMODE 0
+#define THEORA_DEF_TELEMETRY_QI 0
+#define THEORA_DEF_TELEMETRY_BITS 0
+
 enum
 {
   PROP_0,
-  PROP_CROP
+  PROP_CROP,
+  PROP_TELEMETRY_MV,
+  PROP_TELEMETRY_MBMODE,
+  PROP_TELEMETRY_QI,
+  PROP_TELEMETRY_BITS
 };
 
 static GstStaticPadTemplate theora_dec_src_factory =
@@ -128,6 +137,35 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
           "Crop the image to the visible region", THEORA_DEF_CROP,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_TELEMETRY_MV,
+      g_param_spec_int ("vis-mv", "Visualise motion vectors",
+          "Show motion vector selection overlaid on image. "
+          "Value gives a mask for MV modes to show.",
+          0, 0xffff, THEORA_DEF_TELEMETRY_MV, (GParamFlags) G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_TELEMETRY_MBMODE,
+      g_param_spec_int ("vis-mbmode",
+          "Visualise macroblock modes",
+          "Show macroblock mode selection overlaid on image. "
+          "Value gives a mask for MB modes to show.",
+          0, 0xffff, THEORA_DEF_TELEMETRY_MBMODE,
+          (GParamFlags) G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_TELEMETRY_QI,
+      g_param_spec_int ("vis-qi",
+          "Visualise adaptive quantization modes",
+          "Show adaptive quantization mode selection overlaid on image. "
+          "Value gives a mask for QI modes to show.",
+          0, 0xffff, THEORA_DEF_TELEMETRY_QI, (GParamFlags) G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_TELEMETRY_BITS,
+      g_param_spec_int ("vis-bits",
+          "Visualise bitstream breakdown modes",
+          "Show bitstream breakdown mode selection overlaid on image. "
+          "Value gives a mask for BITS modes to show.",
+          0, 0xffff, THEORA_DEF_TELEMETRY_BITS,
+          (GParamFlags) G_PARAM_READWRITE));
+
   gstelement_class->change_state = theora_dec_change_state;
 
   GST_DEBUG_CATEGORY_INIT (theoradec_debug, "theoradec", 0, "Theora decoder");
@@ -153,6 +191,10 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->crop = THEORA_DEF_CROP;
+  dec->telemetry_mv = THEORA_DEF_TELEMETRY_MV;
+  dec->telemetry_mbmode = THEORA_DEF_TELEMETRY_MBMODE;
+  dec->telemetry_qi = THEORA_DEF_TELEMETRY_QI;
+  dec->telemetry_bits = THEORA_DEF_TELEMETRY_BITS;
   dec->gather = NULL;
   dec->decode = NULL;
   dec->queued = NULL;
@@ -826,6 +868,22 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   /* done */
   dec->decoder = th_decode_alloc (&dec->info, dec->setup);
 
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MV,
+          &dec->telemetry_mv, sizeof (dec->telemetry_mv)))
+    GST_WARNING_OBJECT (dec, "Could not enable MV visualisation");
+
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_MBMODE,
+          &dec->telemetry_mbmode, sizeof (dec->telemetry_mbmode)))
+    GST_WARNING_OBJECT (dec, "Could not enable MB mode visualisation");
+
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_QI,
+          &dec->telemetry_qi, sizeof (dec->telemetry_qi)))
+    GST_WARNING_OBJECT (dec, "Could not enable QI mode visualisation");
+
+  if (th_decode_ctl (dec->decoder, TH_DECCTL_SET_TELEMETRY_BITS,
+          &dec->telemetry_bits, sizeof (dec->telemetry_bits)))
+    GST_WARNING_OBJECT (dec, "Could not enable BITS mode visualisation");
+
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, fourcc,
       "framerate", GST_TYPE_FRACTION,
@@ -1473,6 +1531,18 @@ theora_dec_set_property (GObject * object, guint prop_id,
     case PROP_CROP:
       dec->crop = g_value_get_boolean (value);
       break;
+    case PROP_TELEMETRY_MV:
+      dec->telemetry_mv = g_value_get_int (value);
+      break;
+    case PROP_TELEMETRY_MBMODE:
+      dec->telemetry_mbmode = g_value_get_int (value);
+      break;
+    case PROP_TELEMETRY_QI:
+      dec->telemetry_qi = g_value_get_int (value);
+      break;
+    case PROP_TELEMETRY_BITS:
+      dec->telemetry_bits = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1488,6 +1558,18 @@ theora_dec_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CROP:
       g_value_set_boolean (value, dec->crop);
+      break;
+    case PROP_TELEMETRY_MV:
+      g_value_set_int (value, dec->telemetry_mv);
+      break;
+    case PROP_TELEMETRY_MBMODE:
+      g_value_set_int (value, dec->telemetry_mbmode);
+      break;
+    case PROP_TELEMETRY_QI:
+      g_value_set_int (value, dec->telemetry_qi);
+      break;
+    case PROP_TELEMETRY_BITS:
+      g_value_set_int (value, dec->telemetry_bits);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
