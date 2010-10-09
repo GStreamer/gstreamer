@@ -329,6 +329,9 @@ enum
 static void
 gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
 {
+  if (!v4l2sink->overlay_fields_set)
+    return;
+
   if (GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
 
     gint fd = v4l2sink->v4l2object->video_fd;
@@ -339,19 +342,17 @@ gst_v4l2sink_sync_overlay_fields (GstV4l2Sink * v4l2sink)
 
     g_return_if_fail (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) >= 0);
 
-    if (v4l2sink->overlay_fields_set) {
-      if (v4l2sink->overlay_fields_set & OVERLAY_TOP_SET)
-        format.fmt.win.w.top = v4l2sink->overlay.top;
-      if (v4l2sink->overlay_fields_set & OVERLAY_LEFT_SET)
-        format.fmt.win.w.left = v4l2sink->overlay.left;
-      if (v4l2sink->overlay_fields_set & OVERLAY_WIDTH_SET)
-        format.fmt.win.w.width = v4l2sink->overlay.width;
-      if (v4l2sink->overlay_fields_set & OVERLAY_HEIGHT_SET)
-        format.fmt.win.w.height = v4l2sink->overlay.height;
+    if (v4l2sink->overlay_fields_set & OVERLAY_TOP_SET)
+      format.fmt.win.w.top = v4l2sink->overlay.top;
+    if (v4l2sink->overlay_fields_set & OVERLAY_LEFT_SET)
+      format.fmt.win.w.left = v4l2sink->overlay.left;
+    if (v4l2sink->overlay_fields_set & OVERLAY_WIDTH_SET)
+      format.fmt.win.w.width = v4l2sink->overlay.width;
+    if (v4l2sink->overlay_fields_set & OVERLAY_HEIGHT_SET)
+      format.fmt.win.w.height = v4l2sink->overlay.height;
 
-      g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) >= 0);
-      v4l2sink->overlay_fields_set = 0;
-    }
+    g_return_if_fail (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) >= 0);
+    v4l2sink->overlay_fields_set = 0;
 
     v4l2sink->overlay = format.fmt.win.w;
   }
