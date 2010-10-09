@@ -31,7 +31,7 @@
 #include <stdlib.h>
 
 /* FIXME: remove once we depend on GLib >= 2.22 */
-#if !GLIB_CHECK_VERSION (2, 22, 0)
+#if !GLIB_CHECK_VERSION (2, 21, 3)
 #define g_mapped_file_unref g_mapped_file_free
 #endif
 
