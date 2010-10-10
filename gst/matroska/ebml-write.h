@@ -59,6 +59,7 @@ typedef struct _GstEbmlWrite {
   gboolean writing_streamheader;
   GstByteWriter *streamheader;
   guint64 streamheader_pos;
+  guint64 current_offset;
 
   GstCaps *caps;
 } GstEbmlWrite;
