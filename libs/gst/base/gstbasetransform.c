@@ -258,6 +258,8 @@ struct _GstBaseTransformPrivate
   /* QoS stats */
   guint64 processed;
   guint64 dropped;
+
+  GstClockTime last_stop_out;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1208,9 +1210,12 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
       gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME && trans->segment.format == GST_FORMAT_TIME) {
         ret = TRUE;
+
         gst_query_set_position (query, format,
             gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
-                trans->segment.last_stop));
+                (pad ==
+                    trans->sinkpad) ? trans->segment.last_stop : trans->
+                priv->last_stop_out));
       } else {
         ret = gst_pad_peer_query (otherpad, query);
       }
@@ -1947,6 +1952,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       /* we need new segment info after the flush. */
       trans->have_newsegment = FALSE;
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
+      trans->priv->last_stop_out = GST_CLOCK_TIME_NONE;
       break;
     case GST_EVENT_EOS:
       break;
@@ -2319,10 +2325,23 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
   if (outbuf != NULL) {
     if ((ret == GST_FLOW_OK)) {
+      GstClockTime last_stop_out = GST_CLOCK_TIME_NONE;
+
       /* Remember last stop position */
-      if ((last_stop != GST_CLOCK_TIME_NONE) &&
-          (trans->segment.format == GST_FORMAT_TIME))
+      if (last_stop != GST_CLOCK_TIME_NONE &&
+          trans->segment.format == GST_FORMAT_TIME)
         gst_segment_set_last_stop (&trans->segment, GST_FORMAT_TIME, last_stop);
+
+      if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf)) {
+        last_stop_out = GST_BUFFER_TIMESTAMP (outbuf);
+        if (GST_BUFFER_DURATION_IS_VALID (outbuf))
+          last_stop_out += GST_BUFFER_DURATION (outbuf);
+      } else if (last_stop != GST_CLOCK_TIME_NONE) {
+        last_stop_out = last_stop;
+      }
+      if (last_stop_out != GST_CLOCK_TIME_NONE
+          && trans->segment.format == GST_FORMAT_TIME)
+        trans->priv->last_stop_out = last_stop_out;
 
       /* apply DISCONT flag if the buffer is not yet marked as such */
       if (trans->priv->discont) {
@@ -2409,6 +2428,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     trans->negotiated = FALSE;
     trans->have_newsegment = FALSE;
     gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
+    trans->priv->last_stop_out = GST_CLOCK_TIME_NONE;
     trans->priv->proportion = 1.0;
     trans->priv->earliest_time = -1;
     trans->priv->discont = FALSE;
