@@ -576,7 +576,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
             pad->current_granule);
         out_duration = gst_util_uint64_scale (duration,
             GST_SECOND * pad->map.granulerate_d, pad->map.granulerate_n);
-      } else if (pad->is_sparse) {
+      } else if (pad->map.is_sparse) {
         out_timestamp = gst_ogg_stream_granule_to_time (&pad->map,
             pad->current_granule);
         out_duration = GST_CLOCK_TIME_NONE;
@@ -1792,11 +1792,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
     structure = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
-    pad->is_sparse =
-        gst_structure_has_name (structure, "application/x-ogm-text") ||
-        gst_structure_has_name (structure, "text/x-cmml") ||
-        gst_structure_has_name (structure, "subtitle/x-kate") ||
-        gst_structure_has_name (structure, "application/x-kate");
 
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
@@ -3367,7 +3362,7 @@ gst_ogg_demux_sync_streams (GstOggDemux * ogg)
     /* Theoretically, we should be doing this for all streams, but we're only
      * doing it for known-to-be-sparse streams at the moment in order not to
      * break things for wrongly-muxed streams (like we used to produce once) */
-    if (stream->is_sparse && stream->last_stop != GST_CLOCK_TIME_NONE) {
+    if (stream->map.is_sparse && stream->last_stop != GST_CLOCK_TIME_NONE) {
 
       /* Does this stream lag? Random threshold of 2 seconds */
       if (GST_CLOCK_DIFF (stream->last_stop, cur) > (2 * GST_SECOND)) {

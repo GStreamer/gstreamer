@@ -918,6 +918,9 @@ setup_fishead_mapper (GstOggStream * pad, ogg_packet * packet)
       GST_TIME_ARGS (pad->prestime));
 
   pad->is_skeleton = TRUE;
+  pad->is_sparse = TRUE;
+
+  pad->caps = gst_caps_new_simple ("none/none", NULL);
 
   return TRUE;
 }
@@ -1336,6 +1339,7 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->n_header_packets = 1;
   pad->is_ogm = TRUE;
   pad->is_ogm_text = TRUE;
+  pad->is_sparse = TRUE;
 
   return TRUE;
 }
@@ -1493,6 +1497,7 @@ setup_cmml_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_DEBUG ("blocksize1: %u", 1 << (data[0] & 0x0F));
 
   pad->caps = gst_caps_new_simple ("text/x-cmml", NULL);
+  pad->is_sparse = TRUE;
 
   return TRUE;
 }
@@ -1550,6 +1555,8 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   } else {
     pad->caps = gst_caps_new_simple ("application/x-kate", NULL);
   }
+
+  pad->is_sparse = TRUE;
 
   return TRUE;
 }

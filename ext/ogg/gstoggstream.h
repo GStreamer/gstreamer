@@ -66,6 +66,7 @@ struct _GstOggStream
   gint frame_size;
   gint bitrate;
   guint64 total_time;
+  gboolean is_sparse;
 
   GstCaps *caps;
 
