@@ -2827,10 +2827,8 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
         if (pad->map.serialno == ogg_page_serialno (&og)) {
           gint64 granulepos = ogg_page_granulepos (&og);
 
-          if (last_granule == -1 || last_granule < granulepos) {
-            last_granule = granulepos;
-            last_pad = pad;
-          }
+          last_granule = granulepos;
+          last_pad = pad;
           if (last_granule != -1) {
             done = TRUE;
           }
