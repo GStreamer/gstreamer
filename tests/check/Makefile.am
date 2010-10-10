@@ -76,6 +76,12 @@ else
 check_ofa = 
 endif
 
+if USE_SCHRO
+check_schro=elements/schroenc
+else
+check_schro=
+endif
+
 if USE_TIMIDITY
 check_timidity=elements/timidity
 else
@@ -159,6 +165,7 @@ check_PROGRAMS = \
 	pipelines/mxf \
 	$(check_mimic) \
 	elements/rtpmux \
+	$(check_schro) \
 	elements/valve \
 	$(check_vp8) \
 	$(check_zbar) \
