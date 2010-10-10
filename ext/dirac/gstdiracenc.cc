@@ -1247,7 +1247,7 @@ gst_dirac_enc_shape_output_ogg (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_OFFSET_END (buf) = dirac_enc->last_granulepos;
   }
 
-  gst_buffer_set_caps (buf, base_video_encoder->caps);
+  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -1262,12 +1262,12 @@ gst_dirac_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      &base_video_encoder->segment, frame->presentation_frame_number);
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment, frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
-      &base_video_encoder->segment,
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) =
-      gst_video_state_get_timestamp (state, &base_video_encoder->segment,
+  GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
       frame->system_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
@@ -1278,7 +1278,7 @@ gst_dirac_enc_shape_output_quicktime (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, base_video_encoder->caps);
+  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }
@@ -1293,17 +1293,19 @@ gst_dirac_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
   GST_BUFFER_TIMESTAMP (buf) = gst_video_state_get_timestamp (state,
-      &base_video_encoder->segment, frame->presentation_frame_number);
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
+      frame->presentation_frame_number);
   GST_BUFFER_DURATION (buf) = gst_video_state_get_timestamp (state,
-      &base_video_encoder->segment,
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
       frame->presentation_frame_number + 1) - GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_OFFSET_END (buf) =
-      gst_video_state_get_timestamp (state, &base_video_encoder->segment,
+  GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
       frame->decode_frame_number);
   GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
 
   GST_BUFFER_OFFSET_END (buf) = gst_video_state_get_timestamp (state,
-      &base_video_encoder->segment, frame->system_frame_number);
+      &GST_BASE_VIDEO_CODEC(base_video_encoder)->segment,
+      frame->system_frame_number);
 
   if (frame->is_sync_point &&
       frame->presentation_frame_number == frame->system_frame_number) {
@@ -1312,7 +1314,7 @@ gst_dirac_enc_shape_output_mp4 (GstBaseVideoEncoder * base_video_encoder,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  gst_buffer_set_caps (buf, base_video_encoder->caps);
+  gst_buffer_set_caps (buf, GST_BASE_VIDEO_CODEC(base_video_encoder)->caps);
 
   return gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
 }

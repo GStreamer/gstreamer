@@ -65,24 +65,20 @@ struct _GstBaseVideoEncoder
   GstBaseVideoCodec base_video_codec;
 
   /*< private >*/
-  GList *frames;
-
-  GstVideoState state;
-  GstSegment segment;
-
   gboolean sink_clipping;
 
   guint64 presentation_frame_number;
-  guint64 system_frame_number;
   int distance_from_sync;
 
-  GstCaps *caps;
   gboolean set_output_caps;
 
   gint64 min_latency;
   gint64 max_latency;
 
   gboolean force_keyframe;
+
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 struct _GstBaseVideoEncoderClass
@@ -97,6 +93,8 @@ struct _GstBaseVideoEncoderClass
   GstFlowReturn (*shape_output) (GstBaseVideoEncoder *coder, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoEncoder *coder);
 
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 GType gst_base_video_encoder_get_type (void);

@@ -104,12 +104,26 @@ gst_base_video_codec_init (GstBaseVideoCodec * base_video_codec,
   gst_element_add_pad (GST_ELEMENT (base_video_codec),
       base_video_codec->srcpad);
 
+  gst_segment_init (&base_video_codec->segment, GST_FORMAT_TIME);
+
 }
 
 static void
 gst_base_video_codec_reset (GstBaseVideoCodec * base_video_codec)
 {
+  GList *g;
+
   GST_DEBUG ("reset");
+
+  for (g = base_video_codec->frames; g; g = g_list_next (g)) {
+    gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
+  }
+  g_list_free (base_video_codec->frames);
+
+  if (base_video_codec->caps) {
+    gst_caps_unref (base_video_codec->caps);
+    base_video_codec->caps = NULL;
+  }
 
 }
 
@@ -120,7 +134,6 @@ gst_base_video_codec_finalize (GObject * object)
 
   g_return_if_fail (GST_IS_BASE_VIDEO_CODEC (object));
   base_video_codec = GST_BASE_VIDEO_CODEC (object);
-
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

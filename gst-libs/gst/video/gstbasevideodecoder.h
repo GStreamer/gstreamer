@@ -73,21 +73,14 @@ struct _GstBaseVideoDecoder
   GstAdapter *input_adapter;
   GstAdapter *output_adapter;
 
-  GList *frames;
-
   gboolean have_sync;
   gboolean discont;
   gboolean started;
 
-  GstVideoState state;
-  GstSegment segment;
-
   gboolean sink_clipping;
 
   guint64 presentation_frame_number;
-  guint64 system_frame_number;
 
-  GstCaps *caps;
   gboolean have_src_caps;
 
   GstVideoFrame *current_frame;
@@ -98,9 +91,6 @@ struct _GstBaseVideoDecoder
   GstClockTime buffer_timestamp;
 
   GstClockTime timestamp_offset;
-
-  gdouble proportion;
-  GstClockTime earliest_time;
 
   //GstBuffer *codec_data;
 
@@ -117,6 +107,9 @@ struct _GstBaseVideoDecoder
 
   GList *timestamps;
   gboolean have_segment;
+
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 struct _GstBaseVideoDecoderClass
@@ -139,6 +132,9 @@ struct _GstBaseVideoDecoderClass
 
   guint32 capture_mask;
   guint32 capture_pattern;
+
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 GType gst_base_video_decoder_get_type (void);

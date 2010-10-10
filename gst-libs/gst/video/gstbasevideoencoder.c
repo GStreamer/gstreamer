@@ -110,7 +110,7 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG ("setcaps");
 
-  state = &base_video_encoder->state;
+  state = &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
   structure = gst_caps_get_structure (caps, 0);
 
   gst_video_format_parse_caps (caps, &state->format,
@@ -137,7 +137,7 @@ gst_base_video_encoder_sink_setcaps (GstPad * pad, GstCaps * caps)
   state->clean_offset_top = 0;
 
   ret = base_video_encoder_class->set_format (base_video_encoder,
-      &base_video_encoder->state);
+      &GST_BASE_VIDEO_CODEC (base_video_encoder)->state);
   if (ret) {
     ret = base_video_encoder_class->start (base_video_encoder);
   }
@@ -152,23 +152,12 @@ gst_base_video_encoder_finalize (GObject * object)
 {
   GstBaseVideoEncoder *base_video_encoder;
   GstBaseVideoEncoderClass *base_video_encoder_class;
-  GList *g;
 
   g_return_if_fail (GST_IS_BASE_VIDEO_ENCODER (object));
   base_video_encoder = GST_BASE_VIDEO_ENCODER (object);
   base_video_encoder_class = GST_BASE_VIDEO_ENCODER_GET_CLASS (object);
 
   GST_DEBUG ("finalize");
-
-  for (g = base_video_encoder->frames; g; g = g_list_next (g)) {
-    gst_base_video_codec_free_frame ((GstVideoFrame *) g->data);
-  }
-  g_list_free (base_video_encoder->frames);
-
-  if (base_video_encoder->caps) {
-    gst_caps_unref (base_video_encoder->caps);
-    base_video_encoder->caps = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -215,8 +204,9 @@ gst_base_video_encoder_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG ("new segment %" GST_TIME_FORMAT " %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start), GST_TIME_ARGS (position));
 
-      gst_segment_set_newsegment_full (&base_video_encoder->segment,
-          update, rate, applied_rate, format, start, stop, position);
+      gst_segment_set_newsegment_full (&GST_BASE_VIDEO_CODEC
+          (base_video_encoder)->segment, update, rate, applied_rate, format,
+          start, stop, position);
 
       ret =
           gst_pad_push_event (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
@@ -338,8 +328,8 @@ gst_base_video_encoder_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       res =
-          gst_base_video_encoded_video_convert (&enc->state, src_fmt, src_val,
-          &dest_fmt, &dest_val);
+          gst_base_video_encoded_video_convert (&GST_BASE_VIDEO_CODEC
+          (enc)->state, src_fmt, src_val, &dest_fmt, &dest_val);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -413,7 +403,7 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
     gint64 clip_start;
     gint64 clip_stop;
 
-    if (!gst_segment_clip (&base_video_encoder->segment,
+    if (!gst_segment_clip (&GST_BASE_VIDEO_CODEC (base_video_encoder)->segment,
             GST_FORMAT_TIME, start, stop, &clip_start, &clip_stop)) {
       GST_DEBUG ("clipping to segment dropped frame");
       goto done;
@@ -430,8 +420,8 @@ gst_base_video_encoder_chain (GstPad * pad, GstBuffer * buf)
       base_video_encoder->presentation_frame_number;
   base_video_encoder->presentation_frame_number++;
 
-  base_video_encoder->frames =
-      g_list_append (base_video_encoder->frames, frame);
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
+      g_list_append (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
   klass->handle_frame (base_video_encoder, frame);
 
@@ -482,8 +472,9 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
   base_video_encoder_class =
       GST_BASE_VIDEO_ENCODER_GET_CLASS (base_video_encoder);
 
-  frame->system_frame_number = base_video_encoder->system_frame_number;
-  base_video_encoder->system_frame_number++;
+  frame->system_frame_number =
+      GST_BASE_VIDEO_CODEC (base_video_encoder)->system_frame_number;
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->system_frame_number++;
 
   if (frame->is_sync_point) {
     base_video_encoder->distance_from_sync = 0;
@@ -500,41 +491,46 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
     frame->decode_timestamp = 0;
   } else {
     frame->decode_timestamp = gst_util_uint64_scale (frame->decode_frame_number,
-        GST_SECOND * base_video_encoder->state.fps_d,
-        base_video_encoder->state.fps_n);
+        GST_SECOND * GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d,
+        GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n);
   }
 
   GST_BUFFER_TIMESTAMP (frame->src_buffer) = frame->presentation_timestamp;
   GST_BUFFER_DURATION (frame->src_buffer) = frame->presentation_duration;
   GST_BUFFER_OFFSET (frame->src_buffer) = frame->decode_timestamp;
 
-  base_video_encoder->frames =
-      g_list_remove (base_video_encoder->frames, frame);
+  GST_BASE_VIDEO_CODEC (base_video_encoder)->frames =
+      g_list_remove (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames, frame);
 
   if (!base_video_encoder->set_output_caps) {
     if (base_video_encoder_class->get_caps) {
-      base_video_encoder->caps =
+      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps =
           base_video_encoder_class->get_caps (base_video_encoder);
     } else {
-      base_video_encoder->caps = gst_caps_new_simple ("video/unknown", NULL);
+      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps =
+          gst_caps_new_simple ("video/unknown", NULL);
     }
     gst_pad_set_caps (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder),
-        base_video_encoder->caps);
+        GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
     base_video_encoder->set_output_caps = TRUE;
   }
 
   gst_buffer_set_caps (GST_BUFFER (frame->src_buffer),
-      base_video_encoder->caps);
+      GST_BASE_VIDEO_CODEC (base_video_encoder)->caps);
 
   if (frame->force_keyframe) {
     GstClockTime stream_time;
     GstClockTime running_time;
     GstStructure *s;
 
-    running_time = gst_segment_to_running_time (&base_video_encoder->segment,
-        GST_FORMAT_TIME, frame->presentation_timestamp);
-    stream_time = gst_segment_to_stream_time (&base_video_encoder->segment,
-        GST_FORMAT_TIME, frame->presentation_timestamp);
+    running_time =
+        gst_segment_to_running_time (&GST_BASE_VIDEO_CODEC
+        (base_video_encoder)->segment, GST_FORMAT_TIME,
+        frame->presentation_timestamp);
+    stream_time =
+        gst_segment_to_stream_time (&GST_BASE_VIDEO_CODEC
+        (base_video_encoder)->segment, GST_FORMAT_TIME,
+        frame->presentation_timestamp);
 
     /* FIXME this should send the event that we got on the sink pad
        instead of creating a new one */
@@ -563,19 +559,19 @@ gst_base_video_encoder_finish_frame (GstBaseVideoEncoder * base_video_encoder,
 int
 gst_base_video_encoder_get_height (GstBaseVideoEncoder * base_video_encoder)
 {
-  return base_video_encoder->state.height;
+  return GST_BASE_VIDEO_CODEC (base_video_encoder)->state.height;
 }
 
 int
 gst_base_video_encoder_get_width (GstBaseVideoEncoder * base_video_encoder)
 {
-  return base_video_encoder->state.width;
+  return GST_BASE_VIDEO_CODEC (base_video_encoder)->state.width;
 }
 
 const GstVideoState *
 gst_base_video_encoder_get_state (GstBaseVideoEncoder * base_video_encoder)
 {
-  return &base_video_encoder->state;
+  return &GST_BASE_VIDEO_CODEC (base_video_encoder)->state;
 }
 
 GstFlowReturn
@@ -583,7 +579,7 @@ gst_base_video_encoder_end_of_stream (GstBaseVideoEncoder * base_video_encoder,
     GstBuffer * buffer)
 {
 
-  if (base_video_encoder->frames) {
+  if (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames) {
     GST_WARNING ("EOS with frames left over");
   }
 
@@ -612,8 +608,8 @@ gst_base_video_encoder_set_latency_fields (GstBaseVideoEncoder *
   gint64 latency;
 
   latency = gst_util_uint64_scale (n_fields,
-      base_video_encoder->state.fps_d * GST_SECOND,
-      2 * base_video_encoder->state.fps_n);
+      GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_d * GST_SECOND,
+      2 * GST_BASE_VIDEO_CODEC (base_video_encoder)->state.fps_n);
 
   gst_base_video_encoder_set_latency (base_video_encoder, latency, latency);
 
@@ -625,7 +621,7 @@ gst_base_video_encoder_get_oldest_frame (GstBaseVideoEncoder *
 {
   GList *g;
 
-  g = g_list_first (base_video_encoder->frames);
+  g = g_list_first (GST_BASE_VIDEO_CODEC (base_video_encoder)->frames);
 
   if (g == NULL)
     return NULL;

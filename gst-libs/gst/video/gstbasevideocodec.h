@@ -90,6 +90,18 @@ struct _GstBaseVideoCodec
   GstPad *srcpad;
 
   guint64 system_frame_number;
+
+  GList *frames;
+  GstVideoState state;
+  GstSegment segment;
+
+  GstCaps *caps;
+
+  gdouble proportion;
+  GstClockTime earliest_time;
+
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 struct _GstBaseVideoCodecClass
@@ -105,6 +117,8 @@ struct _GstBaseVideoCodecClass
   GstFlowReturn (*shape_output) (GstBaseVideoCodec *codec, GstVideoFrame *frame);
   GstCaps *(*get_caps) (GstBaseVideoCodec *codec);
 
+  /* FIXME before moving to base */
+  void *padding[GST_PADDING_LARGE];
 };
 
 GType gst_base_video_codec_get_type (void);
