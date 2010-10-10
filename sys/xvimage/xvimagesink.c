@@ -2536,9 +2536,6 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   /* Check the caps against our xcontext */
   intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
 
-  /* Ensure the returned caps are fixed */
-  gst_caps_truncate (intersection);
-
   GST_DEBUG_OBJECT (xvimagesink, "intersection in buffer alloc returned %"
       GST_PTR_FORMAT, intersection);
 
@@ -2605,6 +2602,9 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     if (gst_caps_is_empty (intersection))
       goto incompatible;
   }
+
+  /* Ensure the returned caps are fixed */
+  gst_caps_truncate (intersection);
 
   GST_DEBUG_OBJECT (xvimagesink, "allocating a buffer with caps %"
       GST_PTR_FORMAT, intersection);
