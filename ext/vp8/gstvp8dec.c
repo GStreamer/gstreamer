@@ -330,21 +330,17 @@ static void
 gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
     GstBuffer * buffer)
 {
-  GstBaseVideoDecoder *decoder = (GstBaseVideoDecoder *) dec;
   int stride, w, h, i;
   guint8 *d;
+  GstVideoState *state = &GST_BASE_VIDEO_CODEC (dec)->state;
 
   d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (decoder->state.format, 0,
-      decoder->state.width, decoder->state.height);
-  stride =
-      gst_video_format_get_row_stride (decoder->state.format, 0,
-      decoder->state.width);
-  h = gst_video_format_get_component_height (decoder->state.format, 0,
-      decoder->state.height);
+      gst_video_format_get_component_offset (state->format, 0,
+      state->width, state->height);
+  stride = gst_video_format_get_row_stride (state->format, 0, state->width);
+  h = gst_video_format_get_component_height (state->format, 0, state->height);
   h = MIN (h, img->h);
-  w = gst_video_format_get_component_width (decoder->state.format, 0,
-      decoder->state.width);
+  w = gst_video_format_get_component_width (state->format, 0, state->width);
   w = MIN (w, img->w);
 
   for (i = 0; i < h; i++)
@@ -352,24 +348,20 @@ gst_vp8_dec_image_to_buffer (GstVP8Dec * dec, const vpx_image_t * img,
         img->planes[VPX_PLANE_Y] + i * img->stride[VPX_PLANE_Y], w);
 
   d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (decoder->state.format, 1,
-      decoder->state.width, decoder->state.height);
-  stride =
-      gst_video_format_get_row_stride (decoder->state.format, 1,
-      decoder->state.width);
-  h = gst_video_format_get_component_height (decoder->state.format, 1,
-      decoder->state.height);
+      gst_video_format_get_component_offset (state->format, 1,
+      state->width, state->height);
+  stride = gst_video_format_get_row_stride (state->format, 1, state->width);
+  h = gst_video_format_get_component_height (state->format, 1, state->height);
   h = MIN (h, img->h >> img->y_chroma_shift);
-  w = gst_video_format_get_component_width (decoder->state.format, 1,
-      decoder->state.width);
+  w = gst_video_format_get_component_width (state->format, 1, state->width);
   w = MIN (w, img->w >> img->x_chroma_shift);
   for (i = 0; i < h; i++)
     memcpy (d + i * stride,
         img->planes[VPX_PLANE_U] + i * img->stride[VPX_PLANE_U], w);
 
   d = GST_BUFFER_DATA (buffer) +
-      gst_video_format_get_component_offset (decoder->state.format, 2,
-      decoder->state.width, decoder->state.height);
+      gst_video_format_get_component_offset (state->format, 2,
+      state->width, state->height);
   /* Same stride, height, width as above */
   for (i = 0; i < h; i++)
     memcpy (d + i * stride,
@@ -395,6 +387,7 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     int flags = 0;
     vpx_codec_stream_info_t stream_info;
     vpx_codec_caps_t caps;
+    GstVideoState *state = &GST_BASE_VIDEO_CODEC (dec)->state;
 
     memset (&stream_info, 0, sizeof (stream_info));
     stream_info.sz = sizeof (stream_info);
@@ -410,9 +403,9 @@ gst_vp8_dec_handle_frame (GstBaseVideoDecoder * decoder, GstVideoFrame * frame)
     }
 
     /* should set size here */
-    decoder->state.width = stream_info.w;
-    decoder->state.height = stream_info.h;
-    decoder->state.format = GST_VIDEO_FORMAT_I420;
+    state->width = stream_info.w;
+    state->height = stream_info.h;
+    state->format = GST_VIDEO_FORMAT_I420;
     gst_vp8_dec_send_tags (dec);
 
     caps = vpx_codec_get_caps (&vpx_codec_vp8_dx_algo);
