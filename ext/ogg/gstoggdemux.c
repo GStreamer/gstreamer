@@ -720,7 +720,7 @@ gst_ogg_demux_collect_start_time (GstOggDemux * ogg, GstOggChain * chain)
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-    if (pad->map.is_skeleton)
+    if (pad->map.is_sparse)
       continue;
 
     /*  can do this if the pad start time is not defined */
@@ -2747,7 +2747,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
         }
       }
       /* the timestamp will be filled in when we submit the pages */
-      if (!pad->map.is_skeleton)
+      if (!pad->map.is_sparse)
         done &= (pad->start_time != GST_CLOCK_TIME_NONE);
 
       GST_LOG_OBJECT (ogg, "done %08lx now %d", pad->map.serialno, done);
@@ -2821,7 +2821,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
       for (i = 0; i < chain->streams->len; i++) {
         GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-        if (pad->map.is_skeleton)
+        if (pad->map.is_sparse)
           continue;
 
         if (pad->map.serialno == ogg_page_serialno (&og)) {
