@@ -1721,8 +1721,8 @@ src_iterator_filter (GstElement * child, GstBin * bin)
  * gst_bin_iterate_sources:
  * @bin: a #GstBin
  *
- * Gets an iterator for all elements in the bin that have no sinkpads and have
- * the #GST_ELEMENT_IS_SINK flag unset.
+ * Gets an iterator for all elements in the bin that have the
+ * #GST_ELEMENT_IS_SOURCE flag set.
  *
  * Each element yielded by the iterator will have its refcount increased, so
  * unref after use.
