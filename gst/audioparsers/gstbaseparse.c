@@ -1130,6 +1130,9 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
   /* override if subclass provided bitrate, e.g. metadata based */
   if (parse->priv->bitrate) {
     parse->priv->avg_bitrate = parse->priv->bitrate;
+    /* spread this (confirmed) info ASAP */
+    if (parse->priv->posted_avg_bitrate != parse->priv->avg_bitrate)
+      gst_base_parse_post_bitrates (parse, FALSE, TRUE, FALSE);
   }
 
   frame_bitrate = (8 * data_len * GST_SECOND) / frame_dur;
