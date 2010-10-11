@@ -677,6 +677,38 @@ get_video_patterns (void)
         goto fail;\
 }
 
+
+static void
+layer_added_cb (GESTimeline * timeline, GESTimelineLayer * layer, App * app)
+{
+  if (!GES_IS_SIMPLE_TIMELINE_LAYER (layer)) {
+    GST_ERROR ("This timeline contains a layer type other than "
+        "GESSimpleTimelineLayer. Timeline editing disabled");
+    return;
+  }
+
+  if (!(app->layer)) {
+    app->layer = layer;
+  }
+
+  if (layer != app->layer) {
+    GST_ERROR ("This demo doesn't support editing timelines with multiple"
+        " layers");
+    return;
+  }
+
+  g_signal_connect (app->layer, "object-added",
+      G_CALLBACK (layer_object_added_cb), app);
+  g_signal_connect (app->layer, "object-removed",
+      G_CALLBACK (layer_object_removed_cb), app);
+  g_signal_connect (app->layer, "object-moved",
+      G_CALLBACK (layer_object_moved_cb), app);
+  g_signal_connect (app->layer, "notify::valid",
+      G_CALLBACK (layer_notify_valid_changed_cb), app);
+}
+
+
+
 static gboolean
 create_ui (App * app)
 {
@@ -772,17 +804,10 @@ create_ui (App * app)
   gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (app->background_type),
       background_type_renderer, "text", 0);
 
+  g_signal_connect (app->timeline, "layer-added", G_CALLBACK
+      (layer_added_cb), app);
+
   /* register callbacks on GES objects */
-
-  g_signal_connect (app->layer, "object-added",
-      G_CALLBACK (layer_object_added_cb), app);
-  g_signal_connect (app->layer, "object-removed",
-      G_CALLBACK (layer_object_removed_cb), app);
-  g_signal_connect (app->layer, "object-moved",
-      G_CALLBACK (layer_object_moved_cb), app);
-  g_signal_connect (app->layer, "notify::valid",
-      G_CALLBACK (layer_notify_valid_changed_cb), app);
-
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), app);
@@ -1011,7 +1036,7 @@ app_dispose (App * app)
 }
 
 static App *
-app_new (void)
+app_init (void)
 {
   App *ret;
   ret = g_new0 (App, 1);
@@ -1022,7 +1047,7 @@ app_new (void)
   if (!ret)
     return NULL;
 
-  if (!(ret->timeline = ges_timeline_new_audio_video ()))
+  if (!(ret->timeline = ges_timeline_new ()))
     goto fail;
 
   if (!(ret->pipeline = ges_timeline_pipeline_new ()))
@@ -1031,18 +1056,52 @@ app_new (void)
   if (!ges_timeline_pipeline_add_timeline (ret->pipeline, ret->timeline))
     goto fail;
 
-  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
-    goto fail;
-
-  if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
-    goto fail;
-
   if (!(create_ui (ret)))
     goto fail;
 
   return ret;
 
 fail:
+  app_dispose (ret);
+  return NULL;
+}
+
+static App *
+app_new (void)
+{
+  App *ret;
+  GESTrack *a = NULL, *v = NULL;
+
+  ret = app_init ();
+
+  /* add base audio and video track */
+
+  if (!(a = ges_track_audio_raw_new ()))
+    goto fail;
+
+  if (!(ges_timeline_add_track (ret->timeline, a)))
+    goto fail;
+
+  if (!(v = ges_track_video_raw_new ()))
+    goto fail;
+
+  if (!(ges_timeline_add_track (ret->timeline, v)))
+    goto fail;
+
+  if (!(ret->layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ()))
+    goto fail;
+
+  if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
+    goto fail;
+
+  return ret;
+
+fail:
+
+  if (a)
+    gst_object_unref (a);
+  if (v)
+    gst_object_unref (v);
   app_dispose (ret);
   return NULL;
 }

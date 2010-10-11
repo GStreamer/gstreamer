@@ -69,7 +69,9 @@
                       <object class="GtkImageMenuItem" id="open_item">
                         <property name="label">gtk-open</property>
                         <property name="use_underline">True</property>
+                        <property name="visible">True</property>
                         <property name="use_stock">True</property>
+                        <signal name="activate" handler="open_activate_cb"/>
                       </object>
                     </child>
                     <child>
