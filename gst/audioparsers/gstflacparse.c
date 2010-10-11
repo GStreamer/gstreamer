@@ -588,8 +588,12 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse, GstBuffer * buffer,
     goto need_more;
   }
 
+  /* mind unknown framesize */
   search_start = MAX (2, flacparse->min_framesize);
-  search_end = MIN (size, flacparse->max_framesize + 9 + 2);
+  if (flacparse->max_framesize)
+    search_end = MIN (size, flacparse->max_framesize + 9 + 2);
+  else
+    search_end = size;
   search_end -= 2;
 
   remaining = size;
