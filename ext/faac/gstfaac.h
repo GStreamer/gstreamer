@@ -68,6 +68,8 @@ struct _GstFaac {
   GstAdapter *adapter;
   /* offset of data to be encoded next */
   guint offset;
+  /* ts for last buffer */
+  GstClockTime next_ts;
 };
 
 struct _GstFaacClass {

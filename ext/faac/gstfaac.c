@@ -700,17 +700,17 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
         break;
     }
 
-    /* in case encoder returns more data than is expected (which seems possible)
-     * ignore the extra part */
+    /* deal with encoder lead-out */
     if (G_UNLIKELY (av == 0 && faac->offset == 0)) {
-      GST_DEBUG_OBJECT (faac, "encoder returned unexpected data; discarding");
-      gst_buffer_unref (outbuf);
-      continue;
+      GST_DEBUG_OBJECT (faac, "encoder returned additional data");
+      /* continuous with previous output, ok to have 0 duration */
+      timestamp = faac->next_ts;
+    } else {
+      /* after some caching, finally some data */
+      /* adapter gives time */
+      timestamp = gst_adapter_prev_timestamp (faac->adapter, &distance);
     }
 
-    /* after some caching, finally some data */
-    /* adapter gives time */
-    timestamp = gst_adapter_prev_timestamp (faac->adapter, &distance);
     if (G_LIKELY ((av = gst_adapter_available (faac->adapter)) >= frame_size)) {
       /* must have then come from a complete frame */
       gst_adapter_flush (faac->adapter, frame_size);
@@ -731,6 +731,9 @@ gst_faac_push_buffers (GstFaac * faac, gboolean force)
     GST_BUFFER_DURATION (outbuf) =
         GST_FRAMES_TO_CLOCK_TIME (size / faac->channels / faac->bps,
         faac->samplerate);
+    faac->next_ts =
+        GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
+
     /* perhaps check/set DISCONT based on timestamps ? */
 
     GST_LOG_OBJECT (faac, "Pushing out buffer time: %" GST_TIME_FORMAT
