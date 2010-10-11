@@ -945,8 +945,10 @@ gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     GST_INFO ("got index packet");
     stype = GST_OGG_SKELETON_INDEX;
     serial_offset = 6;
+  } else if (memcmp (data, "fishead\0", 8) == 0) {
+    return FALSE;
   } else {
-    GST_WARNING ("unknown skeleton packet %10.10s", data);
+    GST_WARNING ("unknown skeleton packet \"%10.10s\"", data);
     return FALSE;
   }
 
