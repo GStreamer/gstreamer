@@ -326,7 +326,8 @@ elements_volume_CFLAGS = \
 
 elements_vorbisdec_LDADD = \
 	$(LDADD) \
-	$(VORBIS_LIBS)
+	$(VORBIS_LIBS) \
+	$(VORBISENC_LIBS)
 
 elements_vorbisdec_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -336,7 +337,8 @@ elements_vorbisdec_CFLAGS = \
 
 elements_vorbistag_LDADD = \
 	$(LDADD) \
-	$(VORBIS_LIBS)
+	$(VORBIS_LIBS) \
+	$(VORBISENC_LIBS)
 
 elements_vorbistag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
