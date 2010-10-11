@@ -1035,7 +1035,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink;
+  gboolean is_sink, is_source;
   GstMessage *clock_message = NULL, *async_message = NULL;
   GstStateChangeReturn ret;
 
@@ -1049,6 +1049,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   GST_OBJECT_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
+  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SOURCE);
   GST_OBJECT_UNLOCK (element);
 
   GST_OBJECT_LOCK (bin);
@@ -1070,6 +1071,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
         elem_name);
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+  }
+  if (is_source) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was source",
+        elem_name);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SOURCE);
   }
   if (gst_element_provides_clock (element)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
@@ -1232,7 +1238,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink, othersink, found;
+  gboolean is_sink, is_source, othersink, othersource, found;
   GstMessage *clock_message = NULL;
   GstClock **provided_clock_p;
   GstElement **clock_provider_p;
@@ -1252,6 +1258,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   /* grab element name so we can print it */
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   is_sink = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK);
+  is_source = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SOURCE);
   GST_OBJECT_UNLOCK (element);
 
   /* unlink all linked pads */
@@ -1275,13 +1282,16 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       /* remove the element */
       bin->children = g_list_delete_link (bin->children, walk);
     } else {
-      gboolean child_sink;
+      gboolean child_sink, child_source;
 
       GST_OBJECT_LOCK (child);
       child_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
+      child_source = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SOURCE);
       /* when we remove a sink, check if there are other sinks. */
       if (is_sink && !othersink && child_sink)
         othersink = TRUE;
+      if (is_source && !othersource && child_source)
+        othersource = TRUE;
       /* check if we have NO_PREROLL children */
       if (GST_STATE_RETURN (child) == GST_STATE_CHANGE_NO_PREROLL)
         have_no_preroll = TRUE;
@@ -1304,6 +1314,12 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     GST_DEBUG_OBJECT (bin, "we removed the last sink");
     GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
   }
+  if (is_source && !othersource) {
+    /* we're not a source anymore */
+    GST_DEBUG_OBJECT (bin, "we removed the last source");
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SOURCE);
+  }
+
 
   /* if the clock provider for this element is removed, we lost
    * the clock as well, we need to inform the parent of this
@@ -1672,16 +1688,12 @@ gst_bin_iterate_sinks (GstBin * bin)
 static gint
 bin_element_is_src (GstElement * child, GstBin * bin)
 {
-  gboolean is_src = FALSE;
+  gboolean is_src;
 
   /* we lock the child here for the remainder of the function to
    * get its name and other info safely. */
   GST_OBJECT_LOCK (child);
-  if (child->numsinkpads == 0) {
-    /* rough check.. We could improve this by checking if there are no sinkpad
-     * templates available. */
-    is_src = TRUE;
-  }
+  is_src = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SOURCE);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
       "child %s %s src", GST_OBJECT_NAME (child), is_src ? "is" : "is not");
