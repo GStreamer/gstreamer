@@ -324,7 +324,11 @@ gst_mini_object_free (GstMiniObject * mini_object)
   /* At this point, the refcount of the object is 0. We increase the refcount
    * here because if a subclass recycles the object and gives out a new
    * reference we don't want to free the instance anymore. */
-  gst_mini_object_ref (mini_object);
+  GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p ref %d->%d", mini_object,
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
+      GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) + 1);
+
+  g_atomic_int_inc (&mini_object->refcount);
 
   mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
   mo_class->finalize (mini_object);
