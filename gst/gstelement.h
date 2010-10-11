@@ -317,6 +317,7 @@ typedef enum /*< flags=0 >*/
  * @GST_ELEMENT_IS_SINK: the element is a sink
  * @GST_ELEMENT_UNPARENTING: Child is being removed from the parent bin.
  *  gst_bin_remove() on a child already being removed immediately returns FALSE
+ * @GST_ELEMENT_IS_SOURCE: the element is a source. Since 0.10.31
  * @GST_ELEMENT_FLAG_LAST: offset to define more flags
  *
  * The standard flags that an element may have.
@@ -326,6 +327,7 @@ typedef enum
   GST_ELEMENT_LOCKED_STATE      = (GST_OBJECT_FLAG_LAST << 0),
   GST_ELEMENT_IS_SINK           = (GST_OBJECT_FLAG_LAST << 1),
   GST_ELEMENT_UNPARENTING       = (GST_OBJECT_FLAG_LAST << 2),
+  GST_ELEMENT_IS_SOURCE         = (GST_OBJECT_FLAG_LAST << 3),
   /* padding */
   GST_ELEMENT_FLAG_LAST         = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
