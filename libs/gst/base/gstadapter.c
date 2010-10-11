@@ -42,7 +42,7 @@
  *
  * For example, a sink pad's chain function that needs to pass data to a library
  * in 512-byte chunks could be implemented like this:
- * <programlisting>
+ * |[
  * static GstFlowReturn
  * sink_pad_chain (GstPad *pad, GstBuffer *buffer)
  * {
@@ -66,7 +66,8 @@
  *   gst_object_unref (this);
  *   return ret;
  * }
- * </programlisting>
+ * ]|
+ *
  * For another example, a simple element inside GStreamer that uses GstAdapter
  * is the libvisual element.
  *
