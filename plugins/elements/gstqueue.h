@@ -115,6 +115,9 @@ struct _GstQueue {
   gboolean push_newsegment;
   
   gboolean silent;      /* don't emit signals */ 
+
+  /* whether the first new segment has been applied to src */
+  gboolean newseg_applied_to_src;
 };
 
 struct _GstQueueClass {

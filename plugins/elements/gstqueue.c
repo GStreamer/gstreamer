@@ -430,6 +430,8 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
   queue->sink_tainted = TRUE;
   queue->src_tainted = TRUE;
 
+  queue->newseg_applied_to_src = FALSE;
+
   GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
 }
@@ -680,15 +682,6 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   queue->cur_level.bytes += GST_BUFFER_SIZE (buffer);
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
-  /* if this is the first buffer update the end side as well, but without the
-   * duration. */
-  /* FIXME : This will only be useful for current time level if the
-   * source task is running, which is not the case for ex in
-   * gstplaybasebin when pre-rolling.
-   * See #482147 */
-  /*     if (queue->cur_level.buffers == 1) */
-  /*       apply_buffer (queue, buffer, &queue->src_segment, FALSE); */
-
   g_queue_push_tail (queue->queue, item);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
@@ -709,6 +702,11 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       break;
     case GST_EVENT_NEWSEGMENT:
       apply_segment (queue, event, &queue->sink_segment, TRUE);
+      /* if the queue is empty, apply sink segment on the source */
+      if (queue->queue->length == 0) {
+        apply_segment (queue, event, &queue->src_segment, FALSE);
+        queue->newseg_applied_to_src = TRUE;
+      }
       /* a new segment allows us to accept more buffers if we got UNEXPECTED
        * from downstream */
       queue->unexpected = FALSE;
@@ -758,7 +756,12 @@ gst_queue_locked_dequeue (GstQueue * queue, gboolean * is_buffer)
         GST_QUEUE_CLEAR_LEVEL (queue->cur_level);
         break;
       case GST_EVENT_NEWSEGMENT:
-        apply_segment (queue, event, &queue->src_segment, FALSE);
+        /* apply newsegment if it has not already been applied */
+        if (G_LIKELY (!queue->newseg_applied_to_src)) {
+          apply_segment (queue, event, &queue->src_segment, FALSE);
+        } else {
+          queue->newseg_applied_to_src = FALSE;
+        }
         break;
       default:
         break;

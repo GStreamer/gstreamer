@@ -537,6 +537,38 @@ GST_START_TEST (test_time_level)
 
 GST_END_TEST;
 
+GST_START_TEST (test_time_level_task_not_started)
+{
+  GstEvent *event;
+  GstClockTime time;
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME,
+      1 * GST_SECOND, 5 * GST_SECOND, 0);
+  gst_pad_push_event (mysrcpad, event);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 0 * GST_SECOND);
+
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+      1 * GST_SECOND, 5 * GST_SECOND, 0);
+  gst_pad_push_event (mysrcpad, event);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 4 * GST_SECOND);
+
+  GST_DEBUG ("stopping");
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+}
+
+GST_END_TEST;
+
 static gboolean
 event_equals_newsegment (GstEvent * event, gboolean update, gdouble rate,
     GstFormat format, gint64 start, gint64 stop, gint64 position)
@@ -674,6 +706,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_leaky_upstream);
   tcase_add_test (tc_chain, test_leaky_downstream);
   tcase_add_test (tc_chain, test_time_level);
+  tcase_add_test (tc_chain, test_time_level_task_not_started);
   tcase_add_test (tc_chain, test_newsegment);
 
   return s;
