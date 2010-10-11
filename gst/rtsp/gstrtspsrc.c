@@ -5214,6 +5214,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
   }
 
   src->state = GST_RTSP_STATE_INIT;
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 
   /* setup streams */
   if (!gst_rtspsrc_setup_streams (src))
