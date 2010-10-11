@@ -704,6 +704,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       apply_segment (queue, event, &queue->sink_segment, TRUE);
       /* if the queue is empty, apply sink segment on the source */
       if (queue->queue->length == 0) {
+        GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Apply segment on srcpad");
         apply_segment (queue, event, &queue->src_segment, FALSE);
         queue->newseg_applied_to_src = TRUE;
       }
