@@ -438,6 +438,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
+  GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_IS_SOURCE);
 
   GST_DEBUG_OBJECT (basesrc, "init done");
 }
