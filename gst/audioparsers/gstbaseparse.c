@@ -1395,8 +1395,6 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
       (parse->priv->framecount % parse->priv->update_interval) == 0)
     gst_base_parse_update_duration (parse);
 
-  gst_base_parse_update_bitrates (parse, buffer);
-
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     last_start = last_stop = GST_BUFFER_TIMESTAMP (buffer);
   if (last_start != GST_CLOCK_TIME_NONE
@@ -1497,6 +1495,10 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
       parse->pending_segment = NULL;
     }
   }
+
+  /* update bitrates and optionally post corresponding tags
+   * (following newsegment) */
+  gst_base_parse_update_bitrates (parse, buffer);
 
   if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *l;
