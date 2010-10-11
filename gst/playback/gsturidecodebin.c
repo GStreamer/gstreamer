@@ -560,6 +560,8 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
   dec->use_buffering = DEFAULT_USE_BUFFERING;
   dec->expose_allstreams = DEFAULT_EXPOSE_ALL_STREAMS;
   dec->ring_buffer_max_size = DEFAULT_RING_BUFFER_MAX_SIZE;
+
+  GST_OBJECT_FLAG_SET (dec, GST_ELEMENT_IS_SOURCE);
 }
 
 static void
@@ -1302,6 +1304,9 @@ remove_decoders (GstURIDecodeBin * bin, gboolean force)
     bin->pending_decodebins = NULL;
 
   }
+
+  /* Don't loose the SOURCE flag */
+  GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SOURCE);
 }
 
 static void
@@ -1630,6 +1635,8 @@ could_not_link:
     GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
         (NULL), ("Can't link source to typefind element"));
     gst_bin_remove (GST_BIN_CAST (decoder), typefind);
+    /* Don't loose the SOURCE flag */
+    GST_OBJECT_FLAG_SET (decoder, GST_ELEMENT_IS_SOURCE);
     return FALSE;
   }
 }
@@ -1667,6 +1674,8 @@ remove_source (GstURIDecodeBin * bin)
     gst_bin_remove (GST_BIN_CAST (bin), bin->typefind);
     bin->typefind = NULL;
   }
+  /* Don't loose the SOURCE flag */
+  GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SOURCE);
 }
 
 /* is called when a dynamic source element created a new pad. */
