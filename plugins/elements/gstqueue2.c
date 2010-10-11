@@ -1314,6 +1314,8 @@ gst_queue2_read_item_from_file (GstQueue2 * queue)
   return item;
 }
 
+/* must be called with MUTEX_LOCK. Will briefly release the lock when notifying
+ * the temp filename. */
 static gboolean
 gst_queue2_open_temp_location_file (GstQueue2 * queue)
 {
@@ -1350,7 +1352,12 @@ gst_queue2_open_temp_location_file (GstQueue2 * queue)
     g_free (queue->temp_location);
     queue->temp_location = name;
 
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+
+    /* we can't emit the notify with the lock */
     g_object_notify (G_OBJECT (queue), "temp-location");
+
+    GST_QUEUE2_MUTEX_LOCK (queue);
   } else {
     /* open the file for update/writing, this is deprecated but we still need to
      * support it for API/ABI compatibility */
@@ -2712,6 +2719,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
   queue = GST_QUEUE2 (gst_pad_get_parent (pad));
 
   if (active) {
+    GST_QUEUE2_MUTEX_LOCK (queue);
     if (!QUEUE_IS_USING_QUEUE (queue)) {
       if (QUEUE_IS_USING_TEMP_FILE (queue)) {
         /* open the temp file now */
@@ -2723,7 +2731,6 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = TRUE;
       }
 
-      GST_QUEUE2_MUTEX_LOCK (queue);
       GST_DEBUG_OBJECT (queue, "activating pull mode");
       init_ranges (queue);
       queue->srcresult = GST_FLOW_OK;
