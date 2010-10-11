@@ -41,6 +41,7 @@ typedef struct App
   GESTimelineLayer *layer;
 
   /* application state */
+  gchar *pending_uri;
   int n_objects;
 
   int n_selected;
@@ -97,6 +98,8 @@ static int n_instances = 0;
 
 gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
     App * app);
+void new_activate_cb (GtkMenuItem * item, App * app);
+void open_activate_cb (GtkMenuItem * item, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -1106,6 +1109,33 @@ fail:
   return NULL;
 }
 
+static gboolean
+load_file_async (App * app)
+{
+  GESFormatter *formatter;
+  g_printf ("%s\n", app->pending_uri);
+
+  formatter = ges_formatter_new_for_uri (app->pending_uri);
+  ges_formatter_load_from_uri (formatter, app->timeline, app->pending_uri);
+
+  g_free (app->pending_uri);
+  app->pending_uri = NULL;
+
+  return FALSE;
+}
+
+static gboolean
+app_new_from_uri (gchar * uri)
+{
+  App *ret;
+
+  ret = app_init ();
+  ret->pending_uri = g_strdup (uri);
+  g_idle_add ((GSourceFunc) load_file_async, ret);
+
+  return FALSE;
+}
+
 /* UI callbacks  ************************************************************/
 
 gboolean
@@ -1113,6 +1143,36 @@ window_delete_event_cb (GtkObject * window, GdkEvent * event, App * app)
 {
   app_dispose (app);
   return FALSE;
+}
+
+void
+new_activate_cb (GtkMenuItem * item, App * app)
+{
+  app_new ();
+}
+
+void
+open_activate_cb (GtkMenuItem * item, App * app)
+{
+  GtkFileChooserDialog *dlg;
+
+  GST_DEBUG ("add file signal handler");
+
+  dlg = (GtkFileChooserDialog *) gtk_file_chooser_dialog_new ("Open Project...",
+      GTK_WINDOW (app->main_window),
+      GTK_FILE_CHOOSER_ACTION_OPEN,
+      GTK_STOCK_CANCEL,
+      GTK_RESPONSE_CANCEL, GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+
+  g_object_set (G_OBJECT (dlg), "select-multiple", FALSE, NULL);
+
+  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
+    gchar *uri;
+    uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dlg));
+    app_new_from_uri (uri);
+    g_free (uri);
+  }
+  gtk_widget_destroy ((GtkWidget *) dlg);
 }
 
 void
