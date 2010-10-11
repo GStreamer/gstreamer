@@ -89,6 +89,8 @@ gst_switch_src_init (GstSwitchSrc * src, GstSwitchSrcClass * g_class)
   gst_element_add_pad (GST_ELEMENT (src), src->pad);
 
   gst_switch_src_reset (src);
+
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 }
 
 static void
@@ -191,6 +193,8 @@ gst_switch_src_commit_new_kid (GstSwitchSrc * src)
     gst_element_set_state (old_kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (src), old_kid);
     gst_object_unref (old_kid);
+    /* Don't lose the SOURCE flag */
+    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
   }
 
   /* re-attach ghostpad */
