@@ -1269,6 +1269,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GST_OBJECT_LOCK (bin);
   found = FALSE;
   othersink = FALSE;
+  othersource = FALSE;
   have_no_preroll = FALSE;
   /* iterate the elements, we collect which ones are async and no_preroll. We
    * also remove the element when we find it. */
