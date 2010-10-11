@@ -43,6 +43,9 @@
 static GstAllocTrace *_gst_mini_object_trace;
 #endif
 
+#define GST_MINI_OBJECT_GET_CLASS_UNCHECKED(obj) \
+    ((GstMiniObjectClass *) (((GTypeInstance*)(obj))->g_class))
+
 #if 0
 static void gst_mini_object_base_init (gpointer g_class);
 static void gst_mini_object_base_finalize (gpointer g_class);
@@ -330,7 +333,7 @@ gst_mini_object_free (GstMiniObject * mini_object)
 
   g_atomic_int_inc (&mini_object->refcount);
 
-  mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
+  mo_class = GST_MINI_OBJECT_GET_CLASS_UNCHECKED (mini_object);
   mo_class->finalize (mini_object);
 
   /* decrement the refcount again, if the subclass recycled the object we don't
