@@ -86,6 +86,8 @@
                         <property name="label">gtk-save-as</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="visible">True</property>
+                        <signal name="activate" handler="save_as_activate_cb"/>
                       </object>
                     </child>
                   </object>

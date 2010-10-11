@@ -100,6 +100,7 @@ gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
     App * app);
 void new_activate_cb (GtkMenuItem * item, App * app);
 void open_activate_cb (GtkMenuItem * item, App * app);
+void save_as_activate_cb (GtkMenuItem * item, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -1020,6 +1021,12 @@ app_add_transition (App * app)
 }
 
 static void
+app_save_to_uri (App * app, gchar * uri)
+{
+  ges_timeline_save_to_uri (app->timeline, uri);
+}
+
+static void
 app_dispose (App * app)
 {
   if (app) {
@@ -1170,6 +1177,30 @@ open_activate_cb (GtkMenuItem * item, App * app)
     gchar *uri;
     uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dlg));
     app_new_from_uri (uri);
+    g_free (uri);
+  }
+  gtk_widget_destroy ((GtkWidget *) dlg);
+}
+
+void
+save_as_activate_cb (GtkMenuItem * item, App * app)
+{
+  GtkFileChooserDialog *dlg;
+
+  GST_DEBUG ("save as signal handler");
+
+  dlg = (GtkFileChooserDialog *)
+      gtk_file_chooser_dialog_new ("Save project as...",
+      GTK_WINDOW (app->main_window), GTK_FILE_CHOOSER_ACTION_SAVE,
+      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE, GTK_RESPONSE_OK,
+      NULL);
+
+  g_object_set (G_OBJECT (dlg), "select-multiple", FALSE, NULL);
+
+  if (gtk_dialog_run ((GtkDialog *) dlg) == GTK_RESPONSE_OK) {
+    gchar *uri;
+    uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (dlg));
+    app_save_to_uri (app, uri);
     g_free (uri);
   }
   gtk_widget_destroy ((GtkWidget *) dlg);
