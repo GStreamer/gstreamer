@@ -133,6 +133,8 @@ gst_auto_video_src_clear_kid (GstAutoVideoSrc * src)
     gst_element_set_state (src->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (src), src->kid);
     src->kid = NULL;
+    /* Don't loose SOURCE flag */
+    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
   }
 }
 
@@ -174,7 +176,7 @@ gst_auto_video_src_init (GstAutoVideoSrc * src, GstAutoVideoSrcClass * g_class)
   src->filter_caps = gst_static_caps_get (&raw_caps);
 
   /* mark as source */
-  GST_OBJECT_FLAG_UNSET (src, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 }
 
 static gboolean

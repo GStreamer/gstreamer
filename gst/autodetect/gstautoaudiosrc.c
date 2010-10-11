@@ -117,24 +117,27 @@ gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
 }
 
 static void
-gst_auto_audio_src_dispose (GstAutoAudioSrc * sink)
+gst_auto_audio_src_dispose (GstAutoAudioSrc * src)
 {
-  gst_auto_audio_src_clear_kid (sink);
+  gst_auto_audio_src_clear_kid (src);
 
-  if (sink->filter_caps)
-    gst_caps_unref (sink->filter_caps);
-  sink->filter_caps = NULL;
+  if (src->filter_caps)
+    gst_caps_unref (src->filter_caps);
+  src->filter_caps = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) sink);
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) src);
 }
 
 static void
-gst_auto_audio_src_clear_kid (GstAutoAudioSrc * sink)
+gst_auto_audio_src_clear_kid (GstAutoAudioSrc * src)
 {
-  if (sink->kid) {
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-    sink->kid = NULL;
+  if (src->kid) {
+    gst_element_set_state (src->kid, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (src), src->kid);
+    src->kid = NULL;
+
+    /* Don't lose SOURCE flag */
+    GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
   }
 }
 
@@ -174,7 +177,7 @@ gst_auto_audio_src_init (GstAutoAudioSrc * src, GstAutoAudioSrcClass * g_class)
   src->filter_caps = gst_static_caps_get (&raw_caps);
 
   /* mark as source */
-  GST_OBJECT_FLAG_UNSET (src, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_IS_SOURCE);
 }
 
 static gboolean
