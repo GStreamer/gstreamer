@@ -12,7 +12,7 @@ static guint spect_bands = 256;
 static gfloat height_scale = 2.0;
 
 static void
-on_window_destroy (GtkObject * object, gpointer user_data)
+on_window_destroy (GObject * object, gpointer user_data)
 {
   drawingarea = NULL;
   gtk_main_quit ();

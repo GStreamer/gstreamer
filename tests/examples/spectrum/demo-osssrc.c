@@ -40,7 +40,7 @@ static GtkWidget *drawingarea = NULL;
 static GstClock *sync_clock = NULL;
 
 static void
-on_window_destroy (GtkObject * object, gpointer user_data)
+on_window_destroy (GObject * object, gpointer user_data)
 {
   drawingarea = NULL;
   gtk_main_quit ();
