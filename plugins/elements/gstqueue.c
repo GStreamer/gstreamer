@@ -142,7 +142,9 @@ enum
 
 #define GST_QUEUE_WAIT_DEL_CHECK(q, label) G_STMT_START {               \
   STATUS (q, q->sinkpad, "wait for DEL");                               \
+  q->waiting_del = TRUE;                                                \
   g_cond_wait (q->item_del, q->qlock);                                  \
+  q->waiting_del = FALSE;                                               \
   if (q->srcresult != GST_FLOW_OK) {                                    \
     STATUS (q, q->srcpad, "received DEL wakeup");                       \
     goto label;                                                         \
@@ -152,7 +154,9 @@ enum
 
 #define GST_QUEUE_WAIT_ADD_CHECK(q, label) G_STMT_START {               \
   STATUS (q, q->srcpad, "wait for ADD");                                \
+  q->waiting_add = TRUE;                                                \
   g_cond_wait (q->item_add, q->qlock);                                  \
+  q->waiting_add = FALSE;                                               \
   if (q->srcresult != GST_FLOW_OK) {                                    \
     STATUS (q, q->srcpad, "received ADD wakeup");                       \
     goto label;                                                         \
@@ -161,13 +165,17 @@ enum
 } G_STMT_END
 
 #define GST_QUEUE_SIGNAL_DEL(q) G_STMT_START {                          \
-  STATUS (q, q->srcpad, "signal DEL");                                  \
-  g_cond_signal (q->item_del);                                          \
+  if (q->waiting_del) {                                                 \
+    STATUS (q, q->srcpad, "signal DEL");                                \
+    g_cond_signal (q->item_del);                                        \
+  }                                                                     \
 } G_STMT_END
 
 #define GST_QUEUE_SIGNAL_ADD(q) G_STMT_START {                          \
-  STATUS (q, q->sinkpad, "signal ADD");                                 \
-  g_cond_signal (q->item_add);                                          \
+  if (q->waiting_add) {                                                 \
+    STATUS (q, q->sinkpad, "signal ADD");                               \
+    g_cond_signal (q->item_add);                                        \
+  }                                                                     \
 } G_STMT_END
 
 #define _do_init(bla) \
