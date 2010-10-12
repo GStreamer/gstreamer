@@ -1035,6 +1035,9 @@ on_color_control_value_changed (GtkRange * range, gpointer user_data)
   gst_color_balance_set_value (balance, channel, val);
 }
 
+#ifndef GDK_KEY_F11
+#define GDK_KEY_F11 GDK_F11
+#endif
 
 gboolean
 on_key_released (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
@@ -1042,7 +1045,7 @@ on_key_released (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
   g_return_val_if_fail (event != NULL, FALSE);
 
   switch (event->keyval) {
-    case GDK_F11:
+    case GDK_KEY_F11:
 #ifdef HAVE_GST_PHOTO_IFACE_H
       gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), FALSE);
 #endif
@@ -1060,7 +1063,7 @@ on_key_pressed (GtkWidget * widget, GdkEventKey * event, gpointer user_data)
   g_return_val_if_fail (event != NULL, FALSE);
 
   switch (event->keyval) {
-    case GDK_F11:
+    case GDK_KEY_F11:
 #ifdef HAVE_GST_PHOTO_IFACE_H
       gst_photography_set_autofocus (GST_PHOTOGRAPHY (gst_videosrc), TRUE);
 #endif
