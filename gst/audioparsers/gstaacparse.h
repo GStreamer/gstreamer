@@ -90,8 +90,6 @@ struct _GstAacParse {
   gint           mpegversion;
 
   GstAacHeaderType header_type;
-
-  gboolean src_caps_set;
 };
 
 /**
