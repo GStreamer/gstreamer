@@ -95,6 +95,14 @@ enum
   /* FILL ME */
 };
 
+typedef struct _GstPadPushCache GstPadPushCache;
+
+struct _GstPadPushCache
+{
+  GstPad *peer;                 /* reffed peer pad */
+  GstCaps *caps;                /* caps for this link */
+};
+
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
 
@@ -103,6 +111,9 @@ enum
 struct _GstPadPrivate
 {
   GstPadChainListFunction chainlistfunc;
+
+  GstPadPushCache cache_slot;
+  GstPadPushCache *cache_ptr;
 };
 
 static void gst_pad_dispose (GObject * object);
@@ -2087,8 +2098,27 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
   GST_OBJECT_LOCK (sinkpad);
 
   if (result == GST_PAD_LINK_OK) {
+    GstPadPushCache *cache, *old;
+    gpointer *cache_ptr;
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
+
+    cache_ptr = (gpointer *) & srcpad->abidata.ABI.priv->cache_ptr;
+
+    /* make cache structure */
+    cache = g_slice_new (GstPadPushCache);
+    cache->peer = gst_object_ref (sinkpad);
+    cache->caps = NULL;
+
+    do {
+      old = g_atomic_pointer_get (cache_ptr);
+    } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, old, cache));
+
+    if (old) {
+      gst_object_unref (old->peer);
+      gst_caps_unref (old->caps);
+      g_slice_free (GstPadPushCache, old);
+    }
 
     /* fire off a signal to each of the pads telling them
      * that they've been linked */
@@ -4490,6 +4520,33 @@ not_negotiated:
   }
 }
 
+static GstPadPushCache *
+pad_take_cache (GstPad * pad, gpointer * cache_ptr)
+{
+  GstPadPushCache *cache;
+
+  /* try to get the cached data */
+  do {
+    cache = g_atomic_pointer_get (cache_ptr);
+    /* now try to replace the pointer with NULL to mark that we are busy
+     * with it */
+  } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache, NULL));
+
+  return cache;
+}
+
+static void
+pad_put_cache (GstPad * pad, GstPadPushCache * cache, gpointer * cache_ptr)
+{
+  /* put it back */
+  if (!g_atomic_pointer_compare_and_exchange (cache_ptr, NULL, cache)) {
+    /* something changed, clean up our cache */
+    gst_object_unref (cache->peer);
+    gst_caps_unref (cache->caps);
+    g_slice_free (GstPadPushCache, cache);
+  }
+}
+
 /**
  * gst_pad_push:
  * @pad: a source #GstPad, returns #GST_FLOW_ERROR if not.
@@ -4519,11 +4576,36 @@ not_negotiated:
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
+  GstPadPushCache *cache;
+  GstFlowReturn ret;
+  gpointer *cache_ptr;
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, TRUE, buffer);
+  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+
+  cache = pad_take_cache (pad, cache_ptr);
+
+  if (G_LIKELY (cache)) {
+    GstPad *peer = cache->peer;
+
+    /* FIXME check cookies and caps */
+
+    GST_PAD_STREAM_LOCK (peer);
+
+    /* fast path */
+    ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
+
+    GST_PAD_STREAM_UNLOCK (peer);
+
+    pad_put_cache (pad, cache, cache_ptr);
+  } else {
+    /* slow path */
+    ret = gst_pad_push_data (pad, TRUE, buffer);
+  }
+  return ret;
 }
 
 /**
