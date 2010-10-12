@@ -234,11 +234,11 @@ gst_aacparse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   }
 
   s = gst_caps_get_structure (src_caps, 0);
-  if (!gst_structure_has_field (s, "rate") && aacparse->sample_rate > 0)
+  if (aacparse->sample_rate > 0)
     gst_structure_set (s, "rate", G_TYPE_INT, aacparse->sample_rate, NULL);
-  if (!gst_structure_has_field (s, "channels") && aacparse->channels > 0)
+  if (aacparse->channels > 0)
     gst_structure_set (s, "channels", G_TYPE_INT, aacparse->channels, NULL);
-  if (!gst_structure_has_field (s, "stream-format") && stream_format)
+  if (stream_format)
     gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
@@ -300,6 +300,10 @@ gst_aacparse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
       gst_base_parse_set_passthrough (parse, TRUE);
     } else
       return FALSE;
+
+    /* caps info overrides */
+    gst_structure_get_int (structure, "rate", &aacparse->sample_rate);
+    gst_structure_get_int (structure, "channels", &aacparse->channels);
   }
 
   return TRUE;
@@ -391,6 +395,25 @@ gst_aacparse_check_adts_frame (GstAacParse * aacparse,
   return FALSE;
 }
 
+/* caller ensure sufficient data */
+static inline void
+gst_aacparse_parse_adts_header (GstAacParse * aacparse, const guint8 * data,
+    gint * rate, gint * channels, gint * object, gint * version)
+{
+
+  if (rate) {
+    gint sr_idx = (data[2] & 0x3c) >> 2;
+
+    *rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
+  }
+  if (channels)
+    *channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
+
+  if (version)
+    *version = (data[1] & 0x08) ? 2 : 4;
+  if (object)
+    *object = (data[2] & 0xc0) >> 6;
+}
 
 /**
  * gst_aacparse_detect_stream:
@@ -451,22 +474,19 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
 
   if (gst_aacparse_check_adts_frame (aacparse, data, avail,
           framesize, &need_data)) {
-    gint sr_idx;
+    gint rate, channels;
+
     GST_INFO ("ADTS ID: %d, framesize: %d", (data[1] & 0x08) >> 3, *framesize);
 
     aacparse->header_type = DSPAAC_HEADER_ADTS;
-    sr_idx = (data[2] & 0x3c) >> 2;
-
-    aacparse->sample_rate = gst_aacparse_get_sample_rate_from_index (sr_idx);
-    aacparse->mpegversion = (data[1] & 0x08) ? 2 : 4;
-    aacparse->object_type = (data[2] & 0xc0) >> 6;
-    aacparse->channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
+    gst_aacparse_parse_adts_header (aacparse, data, &rate, &channels,
+        &aacparse->object_type, &aacparse->mpegversion);
 
     gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
-        aacparse->sample_rate, 1024, 2, 2);
+        rate, 1024, 2, 2);
 
-    GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d",
-        aacparse->sample_rate, aacparse->channels, aacparse->object_type);
+    GST_DEBUG ("ADTS: samplerate %d, channels %d, objtype %d, version %d",
+        rate, channels, aacparse->object_type, aacparse->mpegversion);
 
     return TRUE;
   } else if (need_data) {
@@ -630,16 +650,27 @@ gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 {
   GstAacParse *aacparse;
   GstFlowReturn ret = GST_FLOW_OK;
+  gint rate, channels;
 
   aacparse = GST_AACPARSE (parse);
 
-  if (!aacparse->src_caps_set) {
+  gst_aacparse_parse_adts_header (aacparse, GST_BUFFER_DATA (buffer),
+      &rate, &channels, NULL, NULL);
+  GST_LOG_OBJECT (aacparse, "rate: %d, chans: %d", rate, channels);
+
+  if (G_UNLIKELY (rate != aacparse->sample_rate
+          || channels != aacparse->channels)) {
+    aacparse->sample_rate = rate;
+    aacparse->channels = channels;
+
     if (!gst_aacparse_set_src_caps (aacparse,
             GST_PAD_CAPS (GST_BASE_PARSE (aacparse)->sinkpad))) {
       /* If linking fails, we need to return appropriate error */
       ret = GST_FLOW_NOT_LINKED;
     }
-    aacparse->src_caps_set = TRUE;
+
+    gst_base_parse_set_frame_props (GST_BASE_PARSE (aacparse),
+        aacparse->sample_rate, 1024, 2, 2);
   }
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
@@ -662,7 +693,6 @@ gst_aacparse_start (GstBaseParse * parse)
 
   aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("start");
-  aacparse->src_caps_set = FALSE;
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
   gst_base_parse_set_passthrough (parse, FALSE);
   return TRUE;
