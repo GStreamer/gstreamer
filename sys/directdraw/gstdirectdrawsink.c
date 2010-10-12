@@ -134,18 +134,19 @@ gst_directdraw_sink_interface_init (GstImplementsInterfaceClass * klass)
 }
 
 static void
-gst_directdraw_sink_set_window_id (GstXOverlay * overlay, ULONG window_id)
+gst_directdraw_sink_set_window_handle (GstXOverlay * overlay,
+    guintptr window_handle)
 {
   GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (overlay);
 
   GST_OBJECT_LOCK (ddrawsink);
   /* check if we are already using this window id */
-  if (ddrawsink->video_window == (HWND) window_id) {
+  if (ddrawsink->video_window == (HWND) window_handle) {
     GST_OBJECT_UNLOCK (ddrawsink);
     return;
   }
 
-  if (window_id) {
+  if (window_handle) {
     HRESULT hres;
 
     /* If we had an internal window, close it first */
@@ -156,7 +157,7 @@ gst_directdraw_sink_set_window_id (GstXOverlay * overlay, ULONG window_id)
       PostMessage (ddrawsink->video_window, WM_QUIT, 0, 0);
     }
 
-    ddrawsink->video_window = (HWND) window_id;
+    ddrawsink->video_window = (HWND) window_handle;
     ddrawsink->our_video_window = FALSE;
     if (ddrawsink->setup) {
       /* update the clipper object with the new window */
@@ -164,7 +165,7 @@ gst_directdraw_sink_set_window_id (GstXOverlay * overlay, ULONG window_id)
           ddrawsink->video_window);
     }
   }
-  /* FIXME: Handle the case where window_id is 0 and we want the sink to 
+  /* FIXME: Handle the case where window_handle is 0 and we want the sink to
    * create a new window when playback was already started (after set_caps) */
   GST_OBJECT_UNLOCK (ddrawsink);
 }
@@ -180,7 +181,7 @@ gst_directdraw_sink_expose (GstXOverlay * overlay)
 static void
 gst_directdraw_sink_xoverlay_interface_init (GstXOverlayClass * iface)
 {
-  iface->set_xwindow_id = gst_directdraw_sink_set_window_id;
+  iface->set_window_handle = gst_directdraw_sink_set_window_handle;
   iface->expose = gst_directdraw_sink_expose;
 }
 
@@ -1547,8 +1548,8 @@ gst_directdraw_sink_window_thread (GstDirectDrawSink * ddrawsink)
   IDirectDrawClipper_SetHWnd (ddrawsink->clipper, 0, ddrawsink->video_window);
 
   /* signal application we created a window */
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (ddrawsink),
-      (gulong) ddrawsink->video_window);
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (ddrawsink),
+      (guintptr) ddrawsink->video_window);
 
   ReleaseSemaphore (ddrawsink->window_created_signal, 1, NULL);
 
