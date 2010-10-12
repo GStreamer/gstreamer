@@ -2156,7 +2156,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
     goto no_codec;
 
-  GST_LOG_OBJECT (ffmpegdec, "data:%p, size:%d, id:%d", data, size, dec_info);
+  GST_LOG_OBJECT (ffmpegdec, "data:%p, size:%d, id:%d", data, size,
+      dec_info->idx);
 
   *ret = GST_FLOW_OK;
   ffmpegdec->context->frame_number++;
@@ -2499,7 +2500,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
       GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT ", info %d",
       GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf),
-      GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration), in_info);
+      GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration), in_info->idx);
 
   /* workarounds, functions write to buffers:
    *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
