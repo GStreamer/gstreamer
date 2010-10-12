@@ -27,6 +27,9 @@
 
 #include "gstrtpmpvpay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpmpvpay_debug);
+#define GST_CAT_DEFAULT (rtpmpvpay_debug)
+
 static GstStaticPadTemplate gst_rtp_mpv_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -83,6 +86,9 @@ gst_rtp_mpv_pay_class_init (GstRTPMPVPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_mpv_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mpv_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpmpvpay_debug, "rtpmpvpay", 0,
+      "MPEG2 ES Video RTP Payloader");
 }
 
 static void
@@ -190,26 +196,30 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (duration == -1)
     duration = 0;
 
-  /* Initialize new RTP payload */
-  if (avail == 0) {
+  if (rtpmpvpay->first_ts == GST_CLOCK_TIME_NONE || avail == 0)
     rtpmpvpay->first_ts = timestamp;
+
+  if (avail == 0) {
     rtpmpvpay->duration = duration;
+  } else {
+    rtpmpvpay->duration += duration;
   }
+
+  gst_adapter_push (rtpmpvpay->adapter, buffer);
+  avail = gst_adapter_available (rtpmpvpay->adapter);
 
   /* get packet length of previous data and this new data,
    * payload length includes a 4 byte MPEG video-specific header */
   packet_len = gst_rtp_buffer_calc_packet_len (avail, 4, 0);
+  GST_LOG_OBJECT (rtpmpvpay, "available %d, rtp packet length %d", avail,
+      packet_len);
 
   if (gst_basertppayload_is_filled (basepayload,
-          packet_len, rtpmpvpay->duration + duration)) {
+          packet_len, rtpmpvpay->duration)) {
     ret = gst_rtp_mpv_pay_flush (rtpmpvpay);
+  } else {
     rtpmpvpay->first_ts = timestamp;
-    rtpmpvpay->duration = 0;
   }
-
-  gst_adapter_push (rtpmpvpay->adapter, buffer);
-
-  rtpmpvpay->duration += duration;
 
   return ret;
 }
