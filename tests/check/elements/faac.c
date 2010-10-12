@@ -112,7 +112,7 @@ do_test (gboolean adts)
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
 
   num_buffers = g_list_length (buffers);
-  fail_unless (num_buffers == nbuffers);
+  fail_unless_equals_int (num_buffers, nbuffers + 1);
 
   /* clean up buffers */
   for (i = 0; i < num_buffers; ++i) {
