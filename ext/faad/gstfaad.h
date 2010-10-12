@@ -53,6 +53,7 @@ typedef struct _GstFaad {
   guchar    *channel_positions;
 
   guint8     fake_codec_data[2];
+  guint32    last_header;
 
   GstAdapter *adapter;
 

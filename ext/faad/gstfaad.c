@@ -268,6 +268,7 @@ gst_faad_reset (GstFaad * faad)
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->error_count = 0;
+  faad->last_header = 0;
 
   gst_faad_reset_stream_state (faad);
 }
@@ -391,6 +392,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   } else if ((value = gst_structure_get_value (str, "framed")) &&
       g_value_get_boolean (value) == TRUE) {
     faad->packetised = TRUE;
+    faad->init = FALSE;
     GST_DEBUG_OBJECT (faad, "we have packetized audio");
   } else {
     faad->init = FALSE;
@@ -1098,6 +1100,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+init:
   /* init if not already done during capsnego */
   if (!faad->init) {
 #if FAAD2_MINOR_VERSION >= 7
@@ -1146,6 +1149,14 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     } else {
       if (input_size < FAAD_MIN_STREAMSIZE || info.bytesconsumed <= 0) {
         break;
+      }
+      /* faad only really parses ADTS header at Init time, not when decoding,
+       * so monitor for changes and kick faad when needed */
+      if (GST_READ_UINT32_BE (input_data) >> 4 != faad->last_header >> 4) {
+        GST_DEBUG_OBJECT (faad, "ADTS header changed, forcing Init");
+        faad->init = FALSE;
+        faad->last_header = GST_READ_UINT32_BE (input_data);
+        goto init;
       }
     }
 
