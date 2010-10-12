@@ -111,19 +111,19 @@ GST_START_TEST (test_GstDateTime_get_hour)
 {
   GstDateTime *dt;
 
-  dt = gst_date_time_new (2009, 10, 19, 15, 13, 11, 0, 0);
+  dt = gst_date_time_new (0, 2009, 10, 19, 15, 13, 11);
   assert_equals_int (15, gst_date_time_get_hour (dt));
   gst_date_time_unref (dt);
 
-  dt = gst_date_time_new (100, 10, 19, 1, 0, 0, 0, 0);
+  dt = gst_date_time_new (0, 100, 10, 19, 1, 0, 0);
   assert_equals_int (1, gst_date_time_get_hour (dt));
   gst_date_time_unref (dt);
 
-  dt = gst_date_time_new (100, 10, 19, 0, 0, 0, 0, 0);
+  dt = gst_date_time_new (0, 100, 10, 19, 0, 0, 0);
   assert_equals_int (0, gst_date_time_get_hour (dt));
   gst_date_time_unref (dt);
 
-  dt = gst_date_time_new (100, 10, 1, 23, 59, 59, 0, 0);
+  dt = gst_date_time_new (0, 100, 10, 1, 23, 59, 59);
   assert_equals_int (23, gst_date_time_get_hour (dt));
   gst_date_time_unref (dt);
 }
@@ -136,7 +136,8 @@ GST_START_TEST (test_GstDateTime_get_microsecond)
   GstDateTime *dt;
 
   g_get_current_time (&tv);
-  dt = gst_date_time_new (2010, 7, 15, 11, 12, 13, tv.tv_usec, 0);
+  dt = gst_date_time_new (0, 2010, 7, 15, 11, 12,
+      13 + (tv.tv_usec / 1000000.0));
   assert_equals_int (tv.tv_usec, gst_date_time_get_microsecond (dt));
   gst_date_time_unref (dt);
 }
@@ -147,7 +148,7 @@ GST_START_TEST (test_GstDateTime_get_minute)
 {
   GstDateTime *dt;
 
-  dt = gst_date_time_new (2009, 12, 1, 1, 31, 0, 0, 0);
+  dt = gst_date_time_new (0, 2009, 12, 1, 1, 31, 0);
   assert_equals_int (31, gst_date_time_get_minute (dt));
   gst_date_time_unref (dt);
 }
@@ -158,7 +159,7 @@ GST_START_TEST (test_GstDateTime_get_second)
 {
   GstDateTime *dt;
 
-  dt = gst_date_time_new (2009, 12, 1, 1, 31, 44, 0, 0);
+  dt = gst_date_time_new (0, 2009, 12, 1, 1, 31, 44);
   assert_equals_int (44, gst_date_time_get_second (dt));
   gst_date_time_unref (dt);
 }
@@ -169,7 +170,7 @@ GST_START_TEST (test_GstDateTime_new_full)
 {
   GstDateTime *dt;
 
-  dt = gst_date_time_new (2009, 12, 11, 12, 11, 10, 1234, 0);
+  dt = gst_date_time_new (0, 2009, 12, 11, 12, 11, 10.001234);
   assert_equals_int (2009, gst_date_time_get_year (dt));
   assert_equals_int (12, gst_date_time_get_month (dt));
   assert_equals_int (11, gst_date_time_get_day (dt));

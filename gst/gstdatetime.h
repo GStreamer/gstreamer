@@ -49,14 +49,12 @@ GstDateTime 	*gst_date_time_new_from_unix_epoch	(gint64 secs);
 GstDateTime 	*gst_date_time_new_local_time		(gint year, gint month,
 							 gint day, gint hour,
 							 gint minute,
-							 gint second,
-							 gint microsecond);
-GstDateTime 	*gst_date_time_new			(gint year, gint month,
+							 gdouble seconds);
+GstDateTime 	*gst_date_time_new			(gfloat tzoffset,
+							 gint year, gint month,
 							 gint day, gint hour,
 							 gint minute,
-							 gint second,
-							 gint microsecond,
-							 gfloat tzoffset);
+							 gdouble seconds);
 GstDateTime 	*gst_date_time_new_now_local_time (void);
 GstDateTime 	*gst_date_time_new_now_utc 	(void);
 

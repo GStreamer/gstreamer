@@ -25,6 +25,7 @@
 #include "gst_private.h"
 #include "gstdatetime.h"
 #include <glib.h>
+#include <math.h>
 
 /**
  * SECTION:gstdatetime
@@ -180,6 +181,7 @@
 
 /**
  * gst_date_time_new:
+ * @tzoffset: Offset from UTC in hours.
  * @year: the gregorian year
  * @month: the gregorian month
  * @day: the day of the gregorian month
@@ -187,7 +189,6 @@
  * @minute: the minute of the hour
  * @second: the second of the minute
  * @microsecond: the microsecond of the second
- * @tzoffset: Offset from UTC in hours.
  *
  * Creates a new #GstDateTime using the date and times in the gregorian calendar
  * in the supplied timezone.
@@ -422,20 +423,19 @@ gst_date_time_new_from_unix_epoch (gint64 secs)
   memcpy (&tm, localtime (&tt), sizeof (struct tm));
 #endif
 
-  dt = gst_date_time_new (tm.tm_year + 1900,
-      tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, 0, 0);
+  dt = gst_date_time_new (0, tm.tm_year + 1900,
+      tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   gst_date_time_set_local_timezone (dt);
   return dt;
 }
 
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
-    gint minute, gint second, gint microsecond)
+    gint minute, gdouble seconds)
 {
   GstDateTime *dt;
 
-  dt = gst_date_time_new (year, month, day, hour, minute, second, microsecond,
-      0);
+  dt = gst_date_time_new (0, year, month, day, hour, minute, seconds);
 
   gst_date_time_set_local_timezone (dt);
 
@@ -443,24 +443,25 @@ gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
 }
 
 GstDateTime *
-gst_date_time_new (gint year, gint month, gint day, gint hour,
-    gint minute, gint second, gint microsecond, gfloat tzoffset)
+gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
+    gint minute, gdouble seconds)
 {
   GstDateTime *dt;
 
   g_return_val_if_fail (hour >= 0 && hour < 24, NULL);
   g_return_val_if_fail (minute >= 0 && minute < 60, NULL);
-  g_return_val_if_fail (second >= 0 && second < 60, NULL);
-  g_return_val_if_fail (microsecond >= 0 && microsecond < 1000000, NULL);
+  g_return_val_if_fail (seconds >= 0 && seconds < 60, NULL);
+  g_return_val_if_fail (tzoffset >= -12.0 && tzoffset <= 12.0, NULL);
 
   if (!(dt = gst_date_time_new_from_date (year, month, day)))
     return NULL;
 
   dt->usec = (hour * GST_DATE_TIME_USEC_PER_HOUR)
       + (minute * GST_DATE_TIME_USEC_PER_MINUTE)
-      + (second * GST_DATE_TIME_USEC_PER_SECOND)
-      + microsecond;
-  dt->tzoffset = (gint) (60 * tzoffset);
+      + (guint64) (floor (seconds * GST_DATE_TIME_USEC_PER_SECOND + 0.5));
+
+  /* we store in minutes */
+  dt->tzoffset = (gint) tzoffset *60.0;
 
   return dt;
 }
@@ -663,10 +664,10 @@ gst_date_time_new_from_unix_epoch (gint64 secs)
 
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
-    gint minute, gint second, gint microsecond)
+    gint minute, gdouble seconds)
 {
   return gst_date_time_new_from_gdatetime (g_date_time_new_local (year, month,
-          day, hour, minute, second + (microsecond / 1000000.0)));
+          day, hour, minute, seconds));
 }
 
 GstDateTime *
@@ -690,8 +691,8 @@ priv_gst_date_time_compare (gconstpointer dt1, gconstpointer dt2)
 }
 
 GstDateTime *
-gst_date_time_new (gint year, gint month, gint day, gint hour, gint minute,
-    gint second, gint microsecond, gfloat tzoffset)
+gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
+    gint minute, gdouble seconds)
 {
   gchar buf[6];
   GTimeZone *tz;
@@ -705,8 +706,7 @@ gst_date_time_new (gint year, gint month, gint day, gint hour, gint minute,
       tzminute);
 
   tz = g_time_zone_new (buf);
-  dt = g_date_time_new (tz, year, month, day, hour, minute,
-      second + (microsecond / 1000000.0));
+  dt = g_date_time_new (tz, year, month, day, hour, minute, seconds);
   g_time_zone_unref (tz);
   return gst_date_time_new_from_gdatetime (dt);
 }

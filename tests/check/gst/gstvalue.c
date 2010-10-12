@@ -2010,7 +2010,7 @@ GST_START_TEST (test_date_time)
   gchar *str;
 
   /* utc timezone */
-  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 0, 0);
+  datetime = gst_date_time_new (0, 2010, 6, 23, 7, 40, 10);
 
   s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
       GST_TYPE_DATE_TIME, datetime, NULL);
@@ -2066,7 +2066,7 @@ GST_START_TEST (test_date_time)
   str = NULL;
 
   /* with timezone */
-  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, -3.0);
+  datetime = gst_date_time_new (-3.0, 2010, 6, 23, 7, 40, 10.000001);
 
   s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
       GST_TYPE_DATE_TIME, datetime, NULL);
@@ -2122,7 +2122,7 @@ GST_START_TEST (test_date_time)
   str = NULL;
 
   /* with positive timezone */
-  datetime = gst_date_time_new (2010, 6, 23, 7, 40, 10, 1, 2);
+  datetime = gst_date_time_new (2.0, 2010, 6, 23, 7, 40, 10.000001);
 
   s = gst_structure_new ("media/x-type", "SOME_DATE_TIME_TAG",
       GST_TYPE_DATE_TIME, datetime, NULL);

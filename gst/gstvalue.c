@@ -4376,7 +4376,7 @@ static gchar *
 gst_value_serialize_date_time (const GValue * val)
 {
   GstDateTime *date = (GstDateTime *) g_value_get_boxed (val);
-  gint offset;
+  gfloat offset;
   gint tzhour, tzminute;
 
   if (date == NULL)
@@ -4417,8 +4417,8 @@ gst_value_deserialize_date_time (GValue * dest, const gchar * s)
   } else
     return FALSE;
 
-  g_value_take_boxed (dest, gst_date_time_new (year, month, day, hour,
-          minute, second, usecond, tzoffset));
+  g_value_take_boxed (dest, gst_date_time_new (tzoffset, year, month, day, hour,
+          minute, second + (usecond / 1000000.0)));
   return TRUE;
 }
 
