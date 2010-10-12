@@ -4628,15 +4628,12 @@ slow_path:
 
     if (scache.valid) {
       GstPadPushCache *ncache;
-      gpointer *cache_ptr;
 
       GST_LOG_OBJECT (pad, "Caching push data");
 
       /* make cache structure */
       ncache = g_slice_new (GstPadPushCache);
       *ncache = scache;
-
-      cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
 
       pad_put_cache (pad, ncache, cache_ptr);
     }
