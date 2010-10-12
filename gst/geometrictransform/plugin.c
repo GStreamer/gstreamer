@@ -26,6 +26,7 @@
 #include "gstkaleidoscope.h"
 #include "gstmarble.h"
 #include "gstpinch.h"
+#include "gstrotate.h"
 #include "gstsphere.h"
 #include "gsttwirl.h"
 #include "gstwaterripple.h"
@@ -52,6 +53,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_pinch_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rotate_plugin_init (plugin))
     return FALSE;
 
   if (!gst_sphere_plugin_init (plugin))
