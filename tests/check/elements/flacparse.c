@@ -142,8 +142,19 @@ GST_END_TEST;
 
 GST_START_TEST (test_parse_flac_drain_garbage)
 {
+  /* We always output the after frame garbage too because we
+   * have no way of detecting it
+   */
+#if 0
   gst_parser_test_drain_garbage (flac_frame, sizeof (flac_frame),
       garbage_frame, sizeof (garbage_frame));
+#endif
+  guint8 frame[sizeof (flac_frame) + sizeof (garbage_frame)];
+
+  memcpy (frame, flac_frame, sizeof (flac_frame));
+  memcpy (frame + sizeof (flac_frame), garbage_frame, sizeof (garbage_frame));
+
+  gst_parser_test_drain_single (frame, sizeof (frame));
 }
 
 GST_END_TEST;
@@ -159,8 +170,20 @@ GST_END_TEST;
 
 GST_START_TEST (test_parse_flac_skip_garbage)
 {
+  /* We always include the garbage into the frame because
+   * we have no easy way for finding the real end of the
+   * frame. The decoder will later skip the garbage
+   */
+#if 0
   gst_parser_test_skip_garbage (flac_frame, sizeof (flac_frame),
       garbage_frame, sizeof (garbage_frame));
+#endif
+  guint8 frame[sizeof (flac_frame) + sizeof (garbage_frame)];
+
+  memcpy (frame, flac_frame, sizeof (flac_frame));
+  memcpy (frame + sizeof (flac_frame), garbage_frame, sizeof (garbage_frame));
+
+  gst_parser_test_normal (frame, sizeof (frame));
 }
 
 GST_END_TEST;
