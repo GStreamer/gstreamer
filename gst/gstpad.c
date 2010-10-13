@@ -4542,7 +4542,8 @@ static void
 pad_free_cache (GstPadPushCache * cache)
 {
   gst_object_unref (cache->peer);
-  gst_caps_unref (cache->caps);
+  if (cache->caps)
+    gst_caps_unref (cache->caps);
   g_slice_free (GstPadPushCache, cache);
 }
 
