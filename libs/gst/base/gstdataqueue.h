@@ -128,13 +128,16 @@ struct _GstDataQueue
   gpointer *checkdata;
 
   GMutex *qlock;                /* lock for queue (vs object lock) */
+  gboolean waiting_add;
   GCond *item_add;              /* signals buffers now available for reading */
+  gboolean waiting_del;
   GCond *item_del;              /* signals space now available for writing */
   gboolean flushing;            /* indicates whether conditions where signalled because
                                  * of external flushing */
   GstDataQueueFullCallback fullcallback;
   GstDataQueueEmptyCallback emptycallback;
-  gpointer _gst_reserved[GST_PADDING - 2];
+
+  gpointer _gst_reserved[GST_PADDING - 4];
 };
 
 struct _GstDataQueueClass
