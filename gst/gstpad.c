@@ -635,6 +635,7 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
     case GST_ACTIVATE_NONE:
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
+      pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       /* unlock blocked pads so element can resume and stop */
@@ -875,6 +876,7 @@ failure:
     GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in pull mode",
         active ? "activate" : "deactivate");
+    pad_invalidate_cache (pad);
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_ACTIVATE_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
@@ -980,6 +982,7 @@ failure:
     GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
+    pad_invalidate_cache (pad);
     GST_PAD_SET_FLUSHING (pad);
     GST_PAD_ACTIVATE_MODE (pad) = old;
     GST_OBJECT_UNLOCK (pad);
@@ -1057,6 +1060,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
   if (blocked) {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
 
+    pad_invalidate_cache (pad);
     GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
 
     if (pad->block_destroy_data && pad->block_data)
@@ -4557,11 +4561,21 @@ pad_put_cache (GstPad * pad, GstPadPushCache * cache, gpointer * cache_ptr)
   }
 }
 
+/* must be called with the pad lock */
 static void
 pad_invalidate_cache (GstPad * pad)
 {
   GstPadPushCache *cache;
   gpointer *cache_ptr;
+
+  GST_LOG_OBJECT (pad, "Invalidating pad cache");
+
+  /* we hold the pad lock here so we can get the peer and it stays
+   * alive during this call */
+  if (GST_PAD_IS_SINK (pad)) {
+    if (!(pad = GST_PAD_PEER (pad)))
+      return;
+  }
 
   cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
 
@@ -5069,6 +5083,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
    * . handle pad blocking */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
+      pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
 
       if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
@@ -5228,6 +5243,8 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       /* can't even accept a flush begin event when flushing */
       if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
+
+      pad_invalidate_cache (pad);
       GST_PAD_SET_FLUSHING (pad);
       GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
       break;
