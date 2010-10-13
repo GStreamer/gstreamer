@@ -609,7 +609,6 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
 
-  /* FIXME: aren't we either leaking events here or doing a wrong unref? */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
       gchar *lang = NULL;
@@ -636,8 +635,13 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
         g_free (lang);
       }
 
+      /* FIXME: what about stream-specific tags? */
       gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
+
+      /* handled this, don't want collectpads to forward it downstream */
+      ret = FALSE;
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -652,6 +656,7 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
   /* now GstCollectPads can take care of the rest, e.g. EOS */
   if (ret)
     ret = mux->collect_event (pad, event);
+
   gst_object_unref (mux);
 
   return ret;
