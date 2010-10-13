@@ -212,7 +212,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
   g_object_class_install_property (gobject_class, PROP_NUM_TRACKS,
       g_param_spec_int ("num-tracks", "Number of album tracks",
           "Number of remaining album tracks", 0, G_MAXINT, 0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgAnalysis:forced:
    *
@@ -234,7 +234,7 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
   g_object_class_install_property (gobject_class, PROP_FORCED,
       g_param_spec_boolean ("forced", "Forced",
           "Analyze even if ReplayGain tags exist",
-          FORCED_DEFAULT, G_PARAM_READWRITE));
+          FORCED_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgAnalysis:reference-level:
    *
@@ -264,12 +264,13 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
   g_object_class_install_property (gobject_class, PROP_REFERENCE_LEVEL,
       g_param_spec_double ("reference-level", "Reference level",
           "Reference level [dB]", 0.0, 150., RG_REFERENCE_LEVEL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MESSAGE,
       g_param_spec_boolean ("message", "Message",
           "Post statics messages",
-          DEFAULT_MESSAGE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_MESSAGE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   trans_class = (GstBaseTransformClass *) klass;
   trans_class->start = GST_DEBUG_FUNCPTR (gst_rg_analysis_start);

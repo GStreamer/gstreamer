@@ -113,7 +113,7 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
       g_param_spec_boolean ("send-config", "Send Config",
           "Send the config parameters in RTP packets as well",
-          DEFAULT_SEND_CONFIG, G_PARAM_READWRITE));
+          DEFAULT_SEND_CONFIG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_LIST,
       g_param_spec_boolean ("buffer-list", "Buffer Array",

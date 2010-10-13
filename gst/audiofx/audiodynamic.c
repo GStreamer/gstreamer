@@ -242,23 +242,26 @@ gst_audio_dynamic_class_init (GstAudioDynamicClass * klass)
           "Selects whether the ratio should be applied smooth (soft-knee) "
           "or hard (hard-knee).",
           GST_TYPE_AUDIO_DYNAMIC_CHARACTERISTICS, CHARACTERISTICS_HARD_KNEE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
           "Selects whether the filter should work on loud samples (compressor) or"
           "quiet samples (expander).",
-          GST_TYPE_AUDIO_DYNAMIC_MODE, MODE_COMPRESSOR, G_PARAM_READWRITE));
+          GST_TYPE_AUDIO_DYNAMIC_MODE, MODE_COMPRESSOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_float ("threshold", "Threshold",
           "Threshold until the filter is activated", 0.0, 1.0,
-          0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RATIO,
       g_param_spec_float ("ratio", "Ratio",
           "Ratio that should be applied", 0.0, G_MAXFLOAT,
-          1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_dynamic_setup);

@@ -141,10 +141,11 @@ gst_udpsink_class_init (GstUDPSink * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "host",
           "The host/IP/Multicast group to send the packets to",
-          UDP_DEFAULT_HOST, G_PARAM_READWRITE));
+          UDP_DEFAULT_HOST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port", "The port to send the packets to",
-          0, 65535, UDP_DEFAULT_PORT, G_PARAM_READWRITE));
+          0, 65535, UDP_DEFAULT_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 

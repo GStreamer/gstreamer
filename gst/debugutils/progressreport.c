@@ -159,16 +159,17 @@ gst_progress_report_class_init (GstProgressReportClass * g_class)
   g_object_class_install_property (gobject_class,
       ARG_UPDATE_FREQ, g_param_spec_int ("update-freq", "Update Frequency",
           "Number of seconds between reports when data is flowing", 1, G_MAXINT,
-          DEFAULT_UPDATE_FREQ, G_PARAM_READWRITE));
+          DEFAULT_UPDATE_FREQ, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       ARG_SILENT, g_param_spec_boolean ("silent",
           "Do not print output to stdout", "Do not print output to stdout",
-          DEFAULT_SILENT, G_PARAM_READWRITE));
+          DEFAULT_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       ARG_FORMAT, g_param_spec_string ("format", "format",
-          "Format to use for the querying", DEFAULT_FORMAT, G_PARAM_READWRITE));
+          "Format to use for the querying", DEFAULT_FORMAT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_progress_report_event);
   gstbasetrans_class->transform_ip =

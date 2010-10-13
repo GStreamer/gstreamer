@@ -206,7 +206,8 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
   g_object_class_install_property (gobject_class, PROP_PANORAMA,
       g_param_spec_float ("panorama", "Panorama",
           "Position in stereo panorama (-1.0 left -> 1.0 right)", -1.0, 1.0,
-          0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstAudioPanorama:method
    *
@@ -221,7 +222,7 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
           "Psychoacoustic mode keeps same perceived loudness, "
           "simple mode just controls volume of one channel.",
           GST_TYPE_AUDIO_PANORAMA_METHOD, METHOD_PSYCHOACOUSTIC,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_get_unit_size);

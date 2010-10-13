@@ -118,7 +118,7 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
       g_param_spec_uint ("skip-first-bytes",
           "Skip first bytes",
           "The amount of bytes that need to be skipped at the beginning of the payload",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 }
 

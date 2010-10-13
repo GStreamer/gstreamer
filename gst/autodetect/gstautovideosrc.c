@@ -111,7 +111,7 @@ gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter src candidates using these caps.", GST_TYPE_CAPS,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

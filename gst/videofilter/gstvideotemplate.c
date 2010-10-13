@@ -148,7 +148,7 @@ gst_videotemplate_class_init (gpointer g_class, gpointer class_data)
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEOTEMPLATE_METHOD, GST_VIDEOTEMPLATE_METHOD_1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gobject_class->set_property = gst_videotemplate_set_property;

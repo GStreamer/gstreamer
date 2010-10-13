@@ -121,7 +121,8 @@ gst_rtp_ilbc_depay_class_init (GstRTPiLBCDepayClass * klass)
   /* FIXME, mode is in the caps */
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode", "iLBC frame mode",
-          GST_TYPE_ILBC_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
+          GST_TYPE_ILBC_MODE, DEFAULT_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasertpdepayload_class->process = gst_rtp_ilbc_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_ilbc_depay_setcaps;

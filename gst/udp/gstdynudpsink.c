@@ -164,11 +164,12 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
       g_param_spec_int ("sockfd", "socket handle",
           "Socket to use for UDP sending. (-1 == allocate)",
-          -1, G_MAXINT16, UDP_DEFAULT_SOCKFD, G_PARAM_READWRITE));
+          -1, G_MAXINT16, UDP_DEFAULT_SOCKFD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CLOSEFD,
       g_param_spec_boolean ("closefd", "Close sockfd",
           "Close sockfd if passed as property on state change",
-          UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE));
+          UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_dynudpsink_change_state;
 

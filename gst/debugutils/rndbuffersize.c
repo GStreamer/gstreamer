@@ -136,13 +136,16 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
   g_object_class_install_property (gobject_class, ARG_SEED,
       g_param_spec_ulong ("seed", "random number seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
-          0, G_MAXUINT32, DEFAULT_SEED, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, DEFAULT_SEED,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MINIMUM,
       g_param_spec_long ("min", "mininum", "mininum buffer size",
-          0, G_MAXINT32, DEFAULT_MIN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT32, DEFAULT_MIN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MAXIMUM,
       g_param_spec_long ("max", "maximum", "maximum buffer size",
-          1, G_MAXINT32, DEFAULT_MAX, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          1, G_MAXINT32, DEFAULT_MAX,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void

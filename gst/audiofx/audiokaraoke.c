@@ -136,22 +136,22 @@ gst_audio_karaoke_class_init (GstAudioKaraokeClass * klass)
   g_object_class_install_property (gobject_class, PROP_LEVEL,
       g_param_spec_float ("level", "Level",
           "Level of the effect (1.0 = full)", 0.0, 1.0, DEFAULT_LEVEL,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MONO_LEVEL,
       g_param_spec_float ("mono-level", "Mono Level",
           "Level of the mono channel (1.0 = full)", 0.0, 1.0, DEFAULT_LEVEL,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FILTER_BAND,
       g_param_spec_float ("filter-band", "Filter Band",
           "The Frequency band of the filter", 0.0, 441.0, DEFAULT_FILTER_BAND,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FILTER_WIDTH,
       g_param_spec_float ("filter-width", "Filter Width",
           "The Frequency width of the filter", 0.0, 100.0, DEFAULT_FILTER_WIDTH,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_karaoke_setup);

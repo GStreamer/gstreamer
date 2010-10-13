@@ -307,7 +307,8 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
   g_object_class_install_property (gobject_class, PROP_AMPLIFICATION,
       g_param_spec_float ("amplification", "Amplification",
           "Factor of amplification", -G_MAXFLOAT, G_MAXFLOAT,
-          1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          1.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAudioAmplify:clipping-method
@@ -321,7 +322,7 @@ gst_audio_amplify_class_init (GstAudioAmplifyClass * klass)
       g_param_spec_enum ("clipping-method", "Clipping method",
           "Selects how to handle values higher than the maximum",
           GST_TYPE_AUDIO_AMPLIFY_CLIPPING_METHOD, METHOD_CLIP,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_amplify_setup);

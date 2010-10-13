@@ -189,7 +189,7 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
   g_object_class_install_property (gobject_class, ARG_ASPECT_RATIO_CROP,
       gst_param_spec_fraction ("aspect-ratio", "aspect-ratio",
           "Target aspect-ratio of video", 0, 1, G_MAXINT, 1, 0, 1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

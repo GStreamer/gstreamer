@@ -249,53 +249,60 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
-          UDP_DEFAULT_PORT, G_PARAM_READWRITE));
+          UDP_DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
       g_param_spec_string ("multicast-group", "Multicast Group",
           "The Address of multicast group to join", UDP_DEFAULT_MULTICAST_GROUP,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
       g_param_spec_string ("multicast-iface", "Multicast Interface",
           "The network interface on which to join the multicast group",
-          UDP_DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE));
+          UDP_DEFAULT_MULTICAST_IFACE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "URI",
           "URI in the form of udp://multicast_group:port", UDP_DEFAULT_URI,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+          "The caps of the source pad", GST_TYPE_CAPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
       g_param_spec_int ("sockfd", "Socket Handle",
           "Socket to use for UDP reception. (-1 == allocate)",
-          -1, G_MAXINT, UDP_DEFAULT_SOCKFD, G_PARAM_READWRITE));
+          -1, G_MAXINT, UDP_DEFAULT_SOCKFD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
       g_param_spec_int ("buffer-size", "Buffer Size",
           "Size of the kernel receive buffer in bytes, 0=default", 0, G_MAXINT,
-          UDP_DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
+          UDP_DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Post a message after timeout microseconds (0 = disabled)", 0,
-          G_MAXUINT64, UDP_DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+          G_MAXUINT64, UDP_DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_SKIP_FIRST_BYTES, g_param_spec_int ("skip-first-bytes",
           "Skip first bytes", "number of bytes to skip for each udp packet", 0,
-          G_MAXINT, UDP_DEFAULT_SKIP_FIRST_BYTES, G_PARAM_READWRITE));
+          G_MAXINT, UDP_DEFAULT_SKIP_FIRST_BYTES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CLOSEFD,
       g_param_spec_boolean ("closefd", "Close sockfd",
           "Close sockfd if passed as property on state change",
-          UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE));
+          UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SOCK,
       g_param_spec_int ("sock", "Socket Handle",
           "Socket currently in use for UDP reception. (-1 = no socket)",
-          -1, G_MAXINT, UDP_DEFAULT_SOCK, G_PARAM_READABLE));
+          -1, G_MAXINT, UDP_DEFAULT_SOCK,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AUTO_MULTICAST,
       g_param_spec_boolean ("auto-multicast", "Auto Multicast",
           "Automatically join/leave multicast groups",
-          UDP_DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
+          UDP_DEFAULT_AUTO_MULTICAST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_REUSE,
       g_param_spec_boolean ("reuse", "Reuse", "Enable reuse of the port",
-          UDP_DEFAULT_REUSE, G_PARAM_READWRITE));
+          UDP_DEFAULT_REUSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;

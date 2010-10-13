@@ -109,7 +109,7 @@ gst_rg_limiter_class_init (GstRgLimiterClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ENABLED,
       g_param_spec_boolean ("enabled", "Enabled", "Enable processing", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_rg_limiter_transform_ip);

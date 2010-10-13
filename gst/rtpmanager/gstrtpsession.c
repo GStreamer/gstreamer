@@ -533,53 +533,60 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_NTP_NS_BASE,
       g_param_spec_uint64 ("ntp-ns-base", "NTP base time",
           "The NTP base time corresponding to running_time 0 (deprecated)", 0,
-          G_MAXUINT64, DEFAULT_NTP_NS_BASE, G_PARAM_READWRITE));
+          G_MAXUINT64, DEFAULT_NTP_NS_BASE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
           "The bandwidth of the session in bytes per second (0 for auto-discover)",
-          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
           "The RTCP bandwidth of the session in bytes per second "
           "(or as a real fraction of the RTP bandwidth if < 1.0)",
-          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
+          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
       g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
           "The RTCP bandwidth used for receivers in bytes per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
       g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
           "The RTCP bandwidth used for senders in bytes per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
           "The SDES items of this session",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE));
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
       g_param_spec_uint ("num-sources", "Num Sources",
           "The number of sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_SOURCES, G_PARAM_READABLE));
+          DEFAULT_NUM_SOURCES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_ACTIVE_SOURCES,
       g_param_spec_uint ("num-active-sources", "Num Active Sources",
           "The number of active sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
+          DEFAULT_NUM_ACTIVE_SOURCES,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SESSION,
       g_param_spec_object ("internal-session", "Internal Session",
           "The internal RTPSession object", RTP_TYPE_SESSION,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
           "Use the pipeline clock to set the NTP time in the RTCP SR messages",
-          DEFAULT_USE_PIPELINE_CLOCK, G_PARAM_READWRITE));
+          DEFAULT_USE_PIPELINE_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);

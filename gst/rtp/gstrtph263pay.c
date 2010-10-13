@@ -434,7 +434,7 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
       PROP_MODE_A_ONLY, g_param_spec_boolean ("modea-only",
           "Fragment packets in mode A Only",
           "Disable packetization modes B and C", DEFAULT_MODE_A,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtph263pay_debug, "rtph263pay", 0,
       "H263 RTP Payloader");

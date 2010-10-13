@@ -213,16 +213,16 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LEFT,
       g_param_spec_int ("left", "Left", "Pixels to crop at left",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_RIGHT,
       g_param_spec_int ("right", "Right", "Pixels to crop at right",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_TOP,
       g_param_spec_int ("top", "Top", "Pixels to crop at top",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BOTTOM,
       g_param_spec_int ("bottom", "Bottom", "Pixels to crop at bottom",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basetransform_class->transform = GST_DEBUG_FUNCPTR (gst_video_crop_transform);
   basetransform_class->transform_caps =

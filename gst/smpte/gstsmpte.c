@@ -228,25 +228,27 @@ gst_smpte_class_init (GstSMPTEClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TYPE,
       g_param_spec_enum ("type", "Type", "The type of transition to use",
           GST_TYPE_SMPTE_TRANSITION_TYPE, DEFAULT_PROP_TYPE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FPS,
       g_param_spec_float ("fps", "FPS",
           "Frames per second if no input files are given (deprecated)", 0.,
-          G_MAXFLOAT, DEFAULT_PROP_FPS, G_PARAM_READWRITE));
+          G_MAXFLOAT, DEFAULT_PROP_FPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER,
       g_param_spec_int ("border", "Border",
           "The border width of the transition", 0, G_MAXINT,
-          DEFAULT_PROP_BORDER, G_PARAM_READWRITE));
+          DEFAULT_PROP_BORDER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEPTH,
       g_param_spec_int ("depth", "Depth", "Depth of the mask in bits", 1, 24,
-          DEFAULT_PROP_DEPTH, G_PARAM_READWRITE));
+          DEFAULT_PROP_DEPTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DURATION,
       g_param_spec_uint64 ("duration", "Duration",
           "Duration of the transition effect in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_PROP_DURATION, G_PARAM_READWRITE));
+          DEFAULT_PROP_DURATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INVERT,
       g_param_spec_boolean ("invert", "Invert",
-          "Invert transition mask", DEFAULT_PROP_INVERT, G_PARAM_READWRITE));
+          "Invert transition mask", DEFAULT_PROP_INVERT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
 }

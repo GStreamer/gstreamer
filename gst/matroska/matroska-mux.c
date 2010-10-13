@@ -296,20 +296,23 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_WRITING_APP,
       g_param_spec_string ("writing-app", "Writing application.",
           "The name the application that creates the matroska file.",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DOCTYPE_VERSION,
       g_param_spec_int ("version", "DocType version",
           "This parameter determines what Matroska features can be used.",
-          1, 2, DEFAULT_DOCTYPE_VERSION, G_PARAM_READWRITE));
+          1, 2, DEFAULT_DOCTYPE_VERSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MIN_INDEX_INTERVAL,
       g_param_spec_int64 ("min-index-interval", "Minimum time between index "
           "entries", "An index entry is created every so many nanoseconds.",
-          0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL, G_PARAM_READWRITE));
+          0, G_MAXINT64, DEFAULT_MIN_INDEX_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_STREAMABLE,
       g_param_spec_boolean ("streamable", "Determines whether output should "
           "be streamable", "If set to true, the output should be as if it is "
           "to be streamed and hence no indexes written or duration written.",
-          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_STREAMABLE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);

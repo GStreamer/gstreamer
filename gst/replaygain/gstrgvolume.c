@@ -189,7 +189,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
   g_object_class_install_property (gobject_class, PROP_ALBUM_MODE,
       g_param_spec_boolean ("album-mode", "Album mode",
           "Prefer album over track gain", DEFAULT_ALBUM_MODE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgVolume:headroom:
    *
@@ -209,7 +209,8 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_HEADROOM,
       g_param_spec_double ("headroom", "Headroom", "Extra headroom [dB]",
-          0., 60., DEFAULT_HEADROOM, G_PARAM_READWRITE));
+          0., 60., DEFAULT_HEADROOM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgVolume:pre-amp:
    *
@@ -226,7 +227,8 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_PRE_AMP,
       g_param_spec_double ("pre-amp", "Pre-amp", "Extra gain [dB]",
-          -60., 60., DEFAULT_PRE_AMP, G_PARAM_READWRITE));
+          -60., 60., DEFAULT_PRE_AMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgVolume:fallback-gain:
    *
@@ -235,7 +237,8 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
   g_object_class_install_property (gobject_class, PROP_FALLBACK_GAIN,
       g_param_spec_double ("fallback-gain", "Fallback gain",
           "Gain for streams missing tags [dB]",
-          -60., 60., DEFAULT_FALLBACK_GAIN, G_PARAM_READWRITE));
+          -60., 60., DEFAULT_FALLBACK_GAIN,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgVolume:result-gain:
    *
@@ -262,7 +265,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_RESULT_GAIN,
       g_param_spec_double ("result-gain", "Result-gain", "Applied gain [dB]",
-          -120., 120., 0., G_PARAM_READABLE));
+          -120., 120., 0., G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRgVolume:target-gain:
    *
@@ -284,7 +287,8 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_TARGET_GAIN,
       g_param_spec_double ("target-gain", "Target-gain",
-          "Applicable gain [dB]", -120., 120., 0., G_PARAM_READABLE));
+          "Applicable gain [dB]", -120., 120., 0.,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   element_class = (GstElementClass *) klass;
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_rg_volume_change_state);

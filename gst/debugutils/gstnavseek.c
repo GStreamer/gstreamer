@@ -94,7 +94,7 @@ gst_navseek_class_init (GstNavSeekClass * klass)
   g_object_class_install_property (gobject_class,
       ARG_SEEKOFFSET, g_param_spec_double ("seek-offset", "Seek Offset",
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_navseek_event);
   gstbasetrans_class->transform_ip =

@@ -286,48 +286,53 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_TO_SERVE,
       g_param_spec_uint64 ("bytes-to-serve", "Bytes to serve",
           "Number of bytes received to serve to clients", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_SERVED,
       g_param_spec_uint64 ("bytes-served", "Bytes served",
           "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
       g_param_spec_int ("sockfd", "Socket Handle",
           "Socket to use for UDP sending. (-1 == allocate)",
-          -1, G_MAXINT, DEFAULT_SOCKFD, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_SOCKFD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CLOSEFD,
       g_param_spec_boolean ("closefd", "Close sockfd",
           "Close sockfd if passed as property on state change",
-          DEFAULT_CLOSEFD, G_PARAM_READWRITE));
+          DEFAULT_CLOSEFD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SOCK,
       g_param_spec_int ("sock", "Socket Handle",
           "Socket currently in use for UDP sending. (-1 == no socket)",
-          -1, G_MAXINT, DEFAULT_SOCK, G_PARAM_READABLE));
+          -1, G_MAXINT, DEFAULT_SOCK,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CLIENTS,
       g_param_spec_string ("clients", "Clients",
           "A comma separated list of host:port pairs with destinations",
-          DEFAULT_CLIENTS, G_PARAM_READWRITE));
+          DEFAULT_CLIENTS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_AUTO_MULTICAST,
       g_param_spec_boolean ("auto-multicast",
           "Automatically join/leave multicast groups",
           "Automatically join/leave the multicast groups, FALSE means user"
-          " has to do it himself", DEFAULT_AUTO_MULTICAST, G_PARAM_READWRITE));
+          " has to do it himself", DEFAULT_AUTO_MULTICAST,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TTL,
       g_param_spec_int ("ttl", "Unicast TTL",
           "Used for setting the unicast TTL parameter",
-          0, 255, DEFAULT_TTL, G_PARAM_READWRITE));
+          0, 255, DEFAULT_TTL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TTL_MC,
       g_param_spec_int ("ttl-mc", "Multicast TTL",
           "Used for setting the multicast TTL parameter",
-          0, 255, DEFAULT_TTL_MC, G_PARAM_READWRITE));
+          0, 255, DEFAULT_TTL_MC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LOOP,
       g_param_spec_boolean ("loop", "Multicast Loopback",
           "Used for setting the multicast loop parameter. TRUE = enable,"
-          " FALSE = disable", DEFAULT_LOOP, G_PARAM_READWRITE));
+          " FALSE = disable", DEFAULT_LOOP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
           "Quality of Service, differentiated services code point (-1 default)",
-          -1, 63, DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
+          -1, 63, DEFAULT_QOS_DSCP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiUDPSink::send-duplicates
    *
@@ -340,7 +345,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_param_spec_boolean ("send-duplicates", "Send Duplicates",
           "When a distination/port pair is added multiple times, send packets "
           "multiple times as well", DEFAULT_SEND_DUPLICATES,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 

@@ -114,16 +114,18 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
       g_param_spec_string ("location", "File Location",
           "Pattern to create file names of input files.  File names are "
           "created by calling sprintf() with the pattern and the current "
-          "index.", DEFAULT_LOCATION, G_PARAM_READWRITE));
+          "index.", DEFAULT_LOCATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_INDEX,
       g_param_spec_int ("index", "File Index",
           "Index to use with location property to create file names.  The "
           "index is incremented by one for each buffer read.",
-          0, INT_MAX, DEFAULT_INDEX, G_PARAM_READWRITE));
+          0, INT_MAX, DEFAULT_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "Caps describing the format of the data.",
-          GST_TYPE_CAPS, G_PARAM_READWRITE));
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->dispose = gst_multi_file_src_dispose;
 

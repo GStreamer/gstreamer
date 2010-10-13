@@ -306,7 +306,7 @@ gst_avi_mux_class_init (GstAviMuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_BIGFILE,
       g_param_spec_boolean ("bigfile", "Bigfile Support (>2GB)",
           "Support for openDML-2.0 (big) AVI files", DEFAULT_BIGFILE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_avi_mux_request_new_pad);

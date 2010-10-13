@@ -130,7 +130,8 @@ gst_audio_invert_class_init (GstAudioInvertClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEGREE,
       g_param_spec_float ("degree", "Degree",
           "Degree of inversion", 0.0, 1.0,
-          0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =
       GST_DEBUG_FUNCPTR (gst_audio_invert_setup);

@@ -116,7 +116,7 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
       g_param_spec_boolean ("prefer-v1", "Prefer version 1 tag",
           "Prefer tags from ID3v1 tag at end of file when both ID3v1 "
           "and ID3v2 tags are present", DEFAULT_PREFER_V1,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_id3demux_identify_tag);
   tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_id3demux_parse_tag);

@@ -129,7 +129,8 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
       PROP_FRAGMENTATION_MODE, g_param_spec_enum ("fragmentation-mode",
           "Fragmentation Mode",
           "Packet Fragmentation Mode", GST_TYPE_FRAGMENTATION_MODE,
-          DEFAULT_FRAGMENTATION_MODE, G_PARAM_READWRITE));
+          DEFAULT_FRAGMENTATION_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
       0, "rtph263ppay (RFC 4629)");

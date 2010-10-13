@@ -203,19 +203,21 @@ gst_level_class_init (GstLevelClass * klass)
   g_object_class_install_property (gobject_class, PROP_SIGNAL_LEVEL,
       g_param_spec_boolean ("message", "message",
           "Post a level message for each passed interval",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",
-          1, G_MAXUINT64, GST_SECOND / 10, G_PARAM_READWRITE));
+          1, G_MAXUINT64, GST_SECOND / 10,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PEAK_TTL,
       g_param_spec_uint64 ("peak-ttl", "Peak TTL",
           "Time To Live of decay peak before it falls back (in nanoseconds)",
-          0, G_MAXUINT64, GST_SECOND / 10 * 3, G_PARAM_READWRITE));
+          0, G_MAXUINT64, GST_SECOND / 10 * 3,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PEAK_FALLOFF,
       g_param_spec_double ("peak-falloff", "Peak Falloff",
           "Decay rate of decay peak after TTL (in dB/sec)",
-          0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE));
+          0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 

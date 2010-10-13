@@ -162,7 +162,8 @@ gst_efence_class_init (GstEFenceClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_FENCE_TOP,
       g_param_spec_boolean ("fence-top", "Fence Top",
-          "Align buffers with top of fenced region", TRUE, G_PARAM_READWRITE));
+          "Align buffers with top of fenced region", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element

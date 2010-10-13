@@ -158,7 +158,7 @@ gst_negotiation_class_init (GstNegotiationClass * klass)
   g_object_class_install_property (gobject_class, ARG_ALLOWED_CAPS,
       g_param_spec_boxed ("allowed-caps", "Caps",
           "The range of formats allowed by " "this element's peers",
-          GST_TYPE_CAPS, G_PARAM_READABLE));
+          GST_TYPE_CAPS, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

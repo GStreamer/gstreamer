@@ -263,12 +263,14 @@ rtp_session_class_init (RTPSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
       g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
           "The RTCP bandwidth used for receivers in bytes per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
       g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
           "The RTCP bandwidth used for senders in bytes per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH, G_PARAM_READWRITE));
+          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_MTU,
       g_param_spec_uint ("rtcp-mtu", "RTCP MTU",

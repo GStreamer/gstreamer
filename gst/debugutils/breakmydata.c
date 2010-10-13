@@ -135,19 +135,22 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
   g_object_class_install_property (gobject_class, ARG_SEED,
       g_param_spec_uint ("seed", "seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
-          0, G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SET_TO,
       g_param_spec_int ("set-to", "set-to",
           "set changed bytes to this value (-1 means random value",
-          -1, G_MAXUINT8, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          -1, G_MAXUINT8, -1,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SKIP,
       g_param_spec_uint ("skip", "skip",
           "amount of bytes skipped at the beginning of stream",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PROBABILITY,
       g_param_spec_double ("probability", "probability",
           "probability for each byte in the buffer to be changed", 0.0, 1.0,
-          0.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstbasetrans_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_break_my_data_transform_ip);

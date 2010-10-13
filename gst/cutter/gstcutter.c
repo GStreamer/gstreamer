@@ -137,23 +137,25 @@ gst_cutter_class_init (GstCutterClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_THRESHOLD,
       g_param_spec_double ("threshold", "Threshold",
           "Volume threshold before trigger",
-          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_THRESHOLD_DB,
       g_param_spec_double ("threshold-dB", "Threshold (dB)",
           "Volume threshold before trigger (in dB)",
-          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_RUN_LENGTH,
       g_param_spec_uint64 ("run-length", "Run length",
           "Length of drop below threshold before cut_stop (in nanoseconds)",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PRE_LENGTH,
       g_param_spec_uint64 ("pre-length", "Pre-recording buffer length",
           "Length of pre-recording buffer (in nanoseconds)",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LEAKY,
       g_param_spec_boolean ("leaky", "Leaky",
           "do we leak buffers when below threshold ?",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (cutter_debug, "cutter", 0, "Audio cutting");
 }

@@ -155,7 +155,7 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BOUNDARY,
       g_param_spec_string ("boundary", "Boundary", "Boundary string",
-          DEFAULT_BOUNDARY, G_PARAM_READWRITE));
+          DEFAULT_BOUNDARY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad = gst_multipart_mux_request_new_pad;
   gstelement_class->change_state = gst_multipart_mux_change_state;

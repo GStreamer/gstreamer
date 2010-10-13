@@ -1415,7 +1415,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
           "Default amount of ms to buffer in the jitterbuffers", 0,
-          G_MAXUINT, DEFAULT_LATENCY_MS, G_PARAM_READWRITE));
+          G_MAXUINT, DEFAULT_LATENCY_MS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRtpBin::request-pt-map:
@@ -1622,7 +1623,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
           "The SDES items of this session",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE));
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DO_LOST,
       g_param_spec_boolean ("do-lost", "Do Lost",
@@ -1632,17 +1633,17 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_AUTOREMOVE,
       g_param_spec_boolean ("autoremove", "Auto Remove",
           "Automatically remove timed out sources", DEFAULT_AUTOREMOVE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IGNORE_PT,
       g_param_spec_boolean ("ignore-pt", "Ignore PT",
           "Do not demultiplex based on PT values", DEFAULT_IGNORE_PT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
           "Use the pipeline clock to set the NTP time in the RTCP SR messages",
-          DEFAULT_AUTOREMOVE, G_PARAM_READWRITE));
+          DEFAULT_AUTOREMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpBin::buffer-mode:
    *

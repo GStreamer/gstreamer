@@ -199,13 +199,15 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to write", NULL, G_PARAM_READWRITE));
+          "Location of the file to write", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_INDEX,
       g_param_spec_int ("index", "Index",
           "Index to use with location property to create file names.  The "
           "index is incremented by one for each buffer written.",
-          0, G_MAXINT, DEFAULT_INDEX, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiFileSink:post-messages
    *
@@ -216,7 +218,7 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
       g_param_spec_boolean ("post-messages", "Post Messages",
           "Post a message for each file with information of the buffer",
-          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE));
+          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiFileSink:next-file
    *
@@ -228,7 +230,7 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
       g_param_spec_enum ("next-file", "Next File",
           "When to start a new file",
           GST_TYPE_MULTI_FILE_SINK_NEXT, DEFAULT_NEXT_FILE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_multi_file_sink_finalize;
 
