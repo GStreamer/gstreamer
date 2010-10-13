@@ -24,7 +24,7 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include "parser.h"
+#include "elements/parser.h"
 
 
 /* context state variables */
