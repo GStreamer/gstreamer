@@ -23,7 +23,7 @@
 #define __GST_H264_PARSE_H__
 
 #include <gst/gst.h>
-#include "gstbaseparse.h"
+#include <gst/baseparse/gstbaseparse.h>
 
 #include "h264parse.h"
 

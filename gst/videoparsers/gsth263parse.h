@@ -30,7 +30,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <gstbaseparse.h>
+#include <gst/baseparse/gstbaseparse.h>
 
 #include "h263parse.h"
 
