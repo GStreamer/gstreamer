@@ -485,9 +485,12 @@ void
 gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 {
   g_return_if_fail (buffer != NULL);
+  g_return_if_fail (caps == NULL || GST_CAPS_IS_SIMPLE (caps));
+
 #if GST_VERSION_NANO == 1
   /* we enable this extra debugging in git versions only for now */
   g_warn_if_fail (gst_buffer_is_metadata_writable (buffer));
+  /* FIXME: would be nice to also check if caps are fixed here, but expensive */
 #endif
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
