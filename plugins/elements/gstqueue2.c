@@ -517,7 +517,7 @@ clean_ranges (GstQueue2 * queue)
 
 /* find a range that contains @offset or NULL when nothing does */
 static GstQueue2Range *
-find_range (GstQueue2 * queue, guint64 offset, guint64 length)
+find_range (GstQueue2 * queue, guint64 offset)
 {
   GstQueue2Range *range = NULL;
   GstQueue2Range *walk;
@@ -562,7 +562,7 @@ add_range (GstQueue2 * queue, guint64 offset)
 
   GST_DEBUG_OBJECT (queue, "find range for %" G_GUINT64_FORMAT, offset);
 
-  if ((range = find_range (queue, offset, 0))) {
+  if ((range = find_range (queue, offset))) {
     GST_DEBUG_OBJECT (queue,
         "reusing range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, range->offset,
         range->writing_pos);
@@ -1018,7 +1018,7 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
   GST_DEBUG_OBJECT (queue, "looking for offset %" G_GUINT64_FORMAT ", len %u",
       offset, length);
 
-  if ((range = find_range (queue, offset, length))) {
+  if ((range = find_range (queue, offset))) {
     if (queue->current != range) {
       GST_DEBUG_OBJECT (queue, "switching ranges, do seek to range position");
       perform_seek_to_offset (queue, range->writing_pos);
