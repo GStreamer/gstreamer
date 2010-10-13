@@ -97,7 +97,8 @@ gst_hal_audio_src_class_init (GstHalAudioSrcClass * klass)
 
   g_object_class_install_property (oklass, PROP_UDI,
       g_param_spec_string ("udi",
-          "UDI", "Unique Device Id", NULL, G_PARAM_READWRITE));
+          "UDI", "Unique Device Id", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /*

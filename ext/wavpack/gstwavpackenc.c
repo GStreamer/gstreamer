@@ -254,34 +254,35 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
       g_param_spec_enum ("mode", "Encoding mode",
           "Speed versus compression tradeoff.",
           GST_TYPE_WAVPACK_ENC_MODE, GST_WAVPACK_ENC_MODE_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Try to encode with this average bitrate (bits/sec). "
           "This enables lossy encoding, values smaller than 24000 disable it again.",
-          0, 9600000, 0, G_PARAM_READWRITE));
+          0, 9600000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BITSPERSAMPLE,
       g_param_spec_double ("bits-per-sample", "Bits per sample",
           "Try to encode with this amount of bits per sample. "
           "This enables lossy encoding, values smaller than 2.0 disable it again.",
-          0.0, 24.0, 0.0, G_PARAM_READWRITE));
+          0.0, 24.0, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CORRECTION_MODE,
       g_param_spec_enum ("correction-mode", "Correction stream mode",
           "Use this mode for the correction stream. Only works in lossy mode!",
           GST_TYPE_WAVPACK_ENC_CORRECTION_MODE, GST_WAVPACK_CORRECTION_MODE_OFF,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MD5,
       g_param_spec_boolean ("md5", "MD5",
           "Store MD5 hash of raw samples within the file.", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_EXTRA_PROCESSING,
       g_param_spec_uint ("extra-processing", "Extra processing",
           "Use better but slower filters for better compression/quality.",
-          0, 6, 0, G_PARAM_READWRITE));
+          0, 6, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_JOINT_STEREO_MODE,
       g_param_spec_enum ("joint-stereo-mode", "Joint-Stereo mode",
           "Use this joint-stereo mode.", GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE,
-          GST_WAVPACK_JS_MODE_AUTO, G_PARAM_READWRITE));
+          GST_WAVPACK_JS_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

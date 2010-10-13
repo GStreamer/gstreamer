@@ -128,7 +128,7 @@ gst_speex_dec_class_init (GstSpeexDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ENH,
       g_param_spec_boolean ("enh", "Enh", "Enable perceptual enhancement",
-          DEFAULT_ENH, G_PARAM_READWRITE));
+          DEFAULT_ENH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (speex_dec_change_state);
 

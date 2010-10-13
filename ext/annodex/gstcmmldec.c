@@ -146,7 +146,7 @@ gst_cmml_dec_class_init (GstCmmlDecClass * dec_class)
           "Wait clip end time",
           "Send a tag for a clip when the clip ends, setting its end-time. "
           "Use when you need to know both clip's start-time and end-time.",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

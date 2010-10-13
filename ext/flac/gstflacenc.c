@@ -294,72 +294,73 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "Quality",
           "Speed versus compression tradeoff",
           GST_TYPE_FLAC_ENC_QUALITY, DEFAULT_QUALITY,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_STREAMABLE_SUBSET, g_param_spec_boolean ("streamable-subset",
           "Streamable subset",
           "true to limit encoder to generating a Subset stream, else false",
-          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MID_SIDE_STEREO,
       g_param_spec_boolean ("mid-side-stereo", "Do mid side stereo",
           "Do mid side stereo (only for stereo input)",
           flacenc_params[DEFAULT_QUALITY].mid_side,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_LOOSE_MID_SIDE_STEREO, g_param_spec_boolean ("loose-mid-side-stereo",
           "Loose mid side stereo", "Loose mid side stereo",
           flacenc_params[DEFAULT_QUALITY].loose_mid_side,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Blocksize", "Blocksize in samples",
           FLAC__MIN_BLOCK_SIZE, FLAC__MAX_BLOCK_SIZE,
           flacenc_params[DEFAULT_QUALITY].blocksize,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_LPC_ORDER,
       g_param_spec_uint ("max-lpc-order", "Max LPC order",
           "Max LPC order; 0 => use only fixed predictors", 0,
           FLAC__MAX_LPC_ORDER, flacenc_params[DEFAULT_QUALITY].max_lpc_order,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_QLP_COEFF_PRECISION, g_param_spec_uint ("qlp-coeff-precision",
           "QLP coefficients precision",
           "Precision in bits of quantized linear-predictor coefficients; 0 = automatic",
           0, 32, flacenc_params[DEFAULT_QUALITY].qlp_coeff_precision,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_QLP_COEFF_PREC_SEARCH, g_param_spec_boolean ("qlp-coeff-prec-search",
           "Do QLP coefficients precision search",
           "false = use qlp_coeff_precision, "
           "true = search around qlp_coeff_precision, take best",
           flacenc_params[DEFAULT_QUALITY].qlp_coeff_prec_search,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ESCAPE_CODING,
       g_param_spec_boolean ("escape-coding", "Do Escape coding",
           "search for escape codes in the entropy coding stage "
           "for slightly better compression",
           flacenc_params[DEFAULT_QUALITY].escape_coding,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_EXHAUSTIVE_MODEL_SEARCH,
       g_param_spec_boolean ("exhaustive-model-search",
           "Do exhaustive model search",
           "do exhaustive search of LP coefficient quantization (expensive!)",
           flacenc_params[DEFAULT_QUALITY].exhaustive_model_search,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MIN_RESIDUAL_PARTITION_ORDER,
       g_param_spec_uint ("min-residual-partition-order",
           "Min residual partition order",
           "Min residual partition order (above 4 doesn't usually help much)", 0,
           16, flacenc_params[DEFAULT_QUALITY].min_residual_partition_order,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MAX_RESIDUAL_PARTITION_ORDER,
       g_param_spec_uint ("max-residual-partition-order",
           "Max residual partition order",
           "Max residual partition order (above 4 doesn't usually help much)", 0,
           16, flacenc_params[DEFAULT_QUALITY].max_residual_partition_order,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_RICE_PARAMETER_SEARCH_DIST,
       g_param_spec_uint ("rice-parameter-search-dist",
@@ -367,7 +368,7 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "0 = try only calc'd parameter k; else try all [k-dist..k+dist] "
           "parameters, use best", 0, FLAC__MAX_RICE_PARTITION_ORDER,
           flacenc_params[DEFAULT_QUALITY].rice_parameter_search_dist,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstFlacEnc:padding
@@ -381,7 +382,8 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
       g_param_spec_uint ("padding",
           "Padding",
           "Write a PADDING block with this length in bytes", 0, G_MAXUINT,
-          DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PADDING,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstFlacEnc:seekpoints
@@ -397,7 +399,8 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
           "Seekpoints",
           "Add SEEKTABLE metadata (if > 0, number of entries, if < 0, interval in sec)",
           -G_MAXINT, G_MAXINT,
-          DEFAULT_SEEKPOINTS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_SEEKPOINTS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_flac_enc_change_state;
 }

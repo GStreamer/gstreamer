@@ -182,7 +182,8 @@ gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "Silent",
-          "Produce verbose output ? (deprecated)", FALSE, G_PARAM_READWRITE));
+          "Produce verbose output ? (deprecated)", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_change_state);

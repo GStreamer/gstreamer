@@ -187,50 +187,52 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gobject_class->finalize = (GObjectFinalizeFunc) gst_shout2send_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP,
-      g_param_spec_string ("ip", "ip", "ip", DEFAULT_IP, G_PARAM_READWRITE));
+      g_param_spec_string ("ip", "ip", "ip", DEFAULT_IP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "port", 1, G_MAXUSHORT, DEFAULT_PORT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD,
       g_param_spec_string ("password", "password", "password", DEFAULT_PASSWORD,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USERNAME,
       g_param_spec_string ("username", "username", "username", DEFAULT_USERNAME,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* metadata */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PUBLIC,
       g_param_spec_boolean ("public", "public",
           "If the stream should be listed on the server's stream directory",
-          DEFAULT_PUBLIC, G_PARAM_READWRITE));
+          DEFAULT_PUBLIC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME,
       g_param_spec_string ("streamname", "streamname", "name of the stream",
-          DEFAULT_STREAMNAME, G_PARAM_READWRITE));
+          DEFAULT_STREAMNAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION,
       g_param_spec_string ("description", "description", "description",
-          DEFAULT_DESCRIPTION, G_PARAM_READWRITE));
+          DEFAULT_DESCRIPTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENRE,
       g_param_spec_string ("genre", "genre", "genre", DEFAULT_GENRE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "protocol", "Connection Protocol to use",
-          GST_TYPE_SHOUT_PROTOCOL, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
+          GST_TYPE_SHOUT_PROTOCOL, DEFAULT_PROTOCOL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
   /* icecast only */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT,
       g_param_spec_string ("mount", "mount", "mount", DEFAULT_MOUNT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_URL,
       g_param_spec_string ("url", "url", "url", DEFAULT_URL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* signals */
   gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM] =

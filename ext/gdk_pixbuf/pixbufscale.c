@@ -144,7 +144,7 @@ gst_pixbufscale_class_init (GstPixbufScaleClass * klass)
       ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_PIXBUFSCALE_METHOD, GST_PIXBUFSCALE_BILINEAR,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_pixbufscale_transform_caps);

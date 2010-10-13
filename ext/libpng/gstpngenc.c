@@ -124,19 +124,19 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_SNAPSHOT,
       g_param_spec_boolean ("snapshot", "Snapshot",
           "Send EOS after encoding a frame, useful for snapshots",
-          DEFAULT_SNAPSHOT, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_SNAPSHOT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 /*   g_object_class_install_property (gobject_class, ARG_NEWMEDIA, */
 /*       g_param_spec_boolean ("newmedia", "newmedia", */
 /*           "Send new media discontinuity after encoding each frame", */
-/*           DEFAULT_NEWMEDIA, (GParamFlags) G_PARAM_READWRITE)); */
+/*           DEFAULT_NEWMEDIA, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)); */
 
-  g_object_class_install_property
-      (gobject_class, ARG_COMPRESSION_LEVEL,
+  g_object_class_install_property (gobject_class, ARG_COMPRESSION_LEVEL,
       g_param_spec_uint ("compression-level", "compression-level",
           "PNG compression level",
           Z_NO_COMPRESSION, Z_BEST_COMPRESSION,
-          DEFAULT_COMPRESSION_LEVEL, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_COMPRESSION_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
 }

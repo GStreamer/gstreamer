@@ -173,19 +173,22 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
 
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_int ("quality", "Quality", "Quality of encoding",
-          0, 100, JPEG_DEFAULT_QUALITY, G_PARAM_READWRITE));
+          0, 100, JPEG_DEFAULT_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifdef ENABLE_SMOOTHING
   /* disabled, since it doesn't seem to work */
   g_object_class_install_property (gobject_class, PROP_SMOOTHING,
       g_param_spec_int ("smoothing", "Smoothing", "Smoothing factor",
-          0, 100, JPEG_DEFAULT_SMOOTHING, G_PARAM_READWRITE));
+          0, 100, JPEG_DEFAULT_SMOOTHING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   g_object_class_install_property (gobject_class, PROP_IDCT_METHOD,
       g_param_spec_enum ("idct-method", "IDCT Method",
           "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
-          JPEG_DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
+          JPEG_DEFAULT_IDCT_METHOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_jpegenc_change_state;
 

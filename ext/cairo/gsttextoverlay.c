@@ -158,44 +158,47 @@ gst_text_overlay_class_init (GstCairoTextOverlayClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TEXT,
       g_param_spec_string ("text", "text",
-          "Text to be display.", "", G_PARAM_WRITABLE));
+          "Text to be display.", "",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SHADING,
       g_param_spec_boolean ("shaded-background", "shaded background",
           "Whether to shade the background under the text area", FALSE,
-          G_PARAM_WRITABLE));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALIGN,
       g_param_spec_string ("valign", "vertical alignment",
           "Vertical alignment of the text. "
           "Can be either 'baseline', 'bottom', or 'top'",
-          "baseline", G_PARAM_WRITABLE));
+          "baseline", G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HALIGN,
       g_param_spec_string ("halign", "horizontal alignment",
           "Horizontal alignment of the text. "
           "Can be either 'left', 'right', or 'center'",
-          "center", G_PARAM_WRITABLE));
+          "center", G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XPAD,
       g_param_spec_int ("xpad", "horizontal paddding",
           "Horizontal paddding when using left/right alignment",
-          G_MININT, G_MAXINT, DEFAULT_XPAD, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, DEFAULT_XPAD,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_YPAD,
       g_param_spec_int ("ypad", "vertical padding",
           "Vertical padding when using top/bottom alignment",
-          G_MININT, G_MAXINT, DEFAULT_YPAD, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, DEFAULT_YPAD,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELTAX,
       g_param_spec_int ("deltax", "X position modifier",
           "Shift X position to the left or to the right. Unit is pixels.",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELTAY,
       g_param_spec_int ("deltay", "Y position modifier",
           "Shift Y position up or down. Unit is pixels.",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
           "Pango font description of font "
           "to be used for rendering. "
           "See documentation of "
           "pango_font_description_from_string"
-          " for syntax.", "", G_PARAM_WRITABLE));
+          " for syntax.", "", G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

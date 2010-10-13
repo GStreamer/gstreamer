@@ -164,7 +164,7 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
       g_param_spec_boolean ("send-messages", "Send Messages",
           "Whether to post messages containing pixbufs on the bus "
           " (deprecated, use post-messages)",
-          DEFAULT_SEND_MESSAGES, G_PARAM_READWRITE));
+          DEFAULT_SEND_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstGdkPixbuf:post-messages:
    *
@@ -175,11 +175,12 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
       g_param_spec_boolean ("post-messages", "Post Messages",
           "Whether to post messages containing pixbufs on the bus",
-          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE));
+          DEFAULT_POST_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LAST_PIXBUF,
       g_param_spec_object ("last-pixbuf", "Last Pixbuf",
-          "Last GdkPixbuf object rendered", GDK_TYPE_PIXBUF, G_PARAM_READABLE));
+          "Last GdkPixbuf object rendered", GDK_TYPE_PIXBUF,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_start);
   basesink_class->stop = GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_stop);

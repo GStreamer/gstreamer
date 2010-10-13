@@ -197,39 +197,48 @@ gst_speex_enc_class_init (GstSpeexEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_float ("quality", "Quality", "Encoding quality",
-          0.0, 10.0, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          0.0, 10.0, DEFAULT_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_int ("bitrate", "Encoding Bit-rate",
           "Specify an encoding bit-rate (in bps). (0 = automatic)",
-          0, G_MAXINT, DEFAULT_BITRATE, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode", "The encoding mode",
           GST_TYPE_SPEEX_ENC_MODE, GST_SPEEX_ENC_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VBR,
       g_param_spec_boolean ("vbr", "VBR",
-          "Enable variable bit-rate", DEFAULT_VBR, G_PARAM_READWRITE));
+          "Enable variable bit-rate", DEFAULT_VBR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ABR,
       g_param_spec_int ("abr", "ABR",
           "Enable average bit-rate (0 = disabled)",
-          0, G_MAXINT, DEFAULT_ABR, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_ABR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VAD,
       g_param_spec_boolean ("vad", "VAD",
-          "Enable voice activity detection", DEFAULT_VAD, G_PARAM_READWRITE));
+          "Enable voice activity detection", DEFAULT_VAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DTX,
       g_param_spec_boolean ("dtx", "DTX",
-          "Enable discontinuous transmission", DEFAULT_DTX, G_PARAM_READWRITE));
+          "Enable discontinuous transmission", DEFAULT_DTX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLEXITY,
       g_param_spec_int ("complexity", "Complexity",
           "Set encoding complexity",
-          0, G_MAXINT, DEFAULT_COMPLEXITY, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_COMPLEXITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NFRAMES,
       g_param_spec_int ("nframes", "NFrames",
           "Number of frames per buffer",
-          0, G_MAXINT, DEFAULT_NFRAMES, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_NFRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message",
-          "The last status message", NULL, G_PARAM_READABLE));
+          "The last status message", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_speex_enc_finalize;
 

@@ -208,29 +208,30 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port", "Port number (-1 automatic)",
-          -1, 16, DEFAULT_PORT, G_PARAM_READWRITE));
+          -1, 16, DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CHANNEL,
       g_param_spec_int ("channel", "Channel", "Channel number for listening",
-          0, 64, DEFAULT_CHANNEL, G_PARAM_READWRITE));
+          0, 64, DEFAULT_CHANNEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CONSECUTIVE,
       g_param_spec_int ("consecutive", "consecutive frames",
           "send n consecutive frames after skipping", 1, G_MAXINT,
-          DEFAULT_CONSECUTIVE, G_PARAM_READWRITE));
+          DEFAULT_CONSECUTIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SKIP,
       g_param_spec_int ("skip", "skip frames", "skip n frames",
-          0, G_MAXINT, DEFAULT_SKIP, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_SKIP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DROP_INCOMPLETE,
       g_param_spec_boolean ("drop-incomplete", "drop incomplete",
           "drop incomplete frames", DEFAULT_DROP_INCOMPLETE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_USE_AVC,
       g_param_spec_boolean ("use-avc", "Use AV/C", "Use AV/C VTR control",
-          DEFAULT_USE_AVC, G_PARAM_READWRITE));
+          DEFAULT_USE_AVC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GUID,
       g_param_spec_uint64 ("guid", "GUID",
           "select one of multiple DV devices by its GUID. use a hexadecimal "
           "like 0xhhhhhhhhhhhhhhhh. (0 = no guid)", 0, G_MAXUINT64,
-          DEFAULT_GUID, G_PARAM_READWRITE));
+          DEFAULT_GUID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstDV1394Src:device-name
    *
@@ -240,7 +241,8 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "device name",
-          "user-friendly name of the device", "Default", G_PARAM_READABLE));
+          "user-friendly name of the device", "Default",
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->negotiate = NULL;
   gstbasesrc_class->start = gst_dv1394src_start;

@@ -187,21 +187,23 @@ gst_esdmon_class_init (gpointer g_class, gpointer class_data)
   /* FIXME: add long property descriptions */
   g_object_class_install_property (gobject_class, ARG_BYTESPERREAD,
       g_param_spec_ulong ("bytes-per-read", "bytes per read", "bytes per read",
-          0, G_MAXULONG, 0, G_PARAM_READWRITE));
+          0, G_MAXULONG, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CUROFFSET,
       g_param_spec_ulong ("curoffset", "curoffset", "curoffset",
-          0, G_MAXULONG, 0, G_PARAM_READABLE));
+          0, G_MAXULONG, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DEPTH,
       g_param_spec_enum ("depth", "depth", "depth", GST_TYPE_ESDMON_DEPTHS,
-          16, G_PARAM_READWRITE));
+          16, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CHANNELS,
       g_param_spec_enum ("channels", "channels", "channels",
-          GST_TYPE_ESDMON_CHANNELS, 2, G_PARAM_READWRITE));
+          GST_TYPE_ESDMON_CHANNELS, 2,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_RATE,
       g_param_spec_int ("frequency", "frequency", "frequency",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HOST,
-      g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));
+      g_param_spec_string ("host", "host", "host", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->set_property = gst_esdmon_set_property;
   gobject_class->get_property = gst_esdmon_get_property;

@@ -150,7 +150,8 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
   /* default value is filled in the _init method */
   g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host",
-          "The host running the esound daemon", NULL, G_PARAM_READWRITE));
+          "The host running the esound daemon", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

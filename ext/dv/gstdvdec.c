@@ -194,16 +194,18 @@ gst_dvdec_class_init (GstDVDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLAMP_LUMA,
       g_param_spec_boolean ("clamp-luma", "Clamp luma", "Clamp luma",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLAMP_CHROMA,
       g_param_spec_boolean ("clamp-chroma", "Clamp chroma", "Clamp chroma",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_enum ("quality", "Quality", "Decoding quality",
-          GST_TYPE_DVDEC_QUALITY, DV_DEFAULT_QUALITY, G_PARAM_READWRITE));
+          GST_TYPE_DVDEC_QUALITY, DV_DEFAULT_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DECODE_NTH,
       g_param_spec_int ("drop-factor", "Drop Factor", "Only decode Nth frame",
-          1, G_MAXINT, DV_DEFAULT_DECODE_NTH, G_PARAM_READWRITE));
+          1, G_MAXINT, DV_DEFAULT_DECODE_NTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_dvdec_change_state;
 }

@@ -219,51 +219,54 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_LOCATION,
       g_param_spec_string ("location", "Location",
-          "Location to read from", "", G_PARAM_READWRITE));
+          "Location to read from", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_USER_AGENT,
       g_param_spec_string ("user-agent", "User-Agent",
           "Value of the User-Agent HTTP request header field",
-          DEFAULT_USER_AGENT, G_PARAM_READWRITE));
+          DEFAULT_USER_AGENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_AUTOMATIC_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
           "Automatically follow HTTP redirects (HTTP Status Code 3xx)",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
-          "HTTP proxy server URI", "", G_PARAM_READWRITE));
+          "HTTP proxy server URI", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_USER_ID,
       g_param_spec_string ("user-id", "user-id",
           "HTTP location URI user id for authentication", "",
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_USER_PW,
       g_param_spec_string ("user-pw", "user-pw",
           "HTTP location URI user password for authentication", "",
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROXY_ID,
       g_param_spec_string ("proxy-id", "proxy-id",
-          "HTTP proxy URI user id for authentication", "", G_PARAM_READWRITE));
+          "HTTP proxy URI user id for authentication", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROXY_PW,
       g_param_spec_string ("proxy-pw", "proxy-pw",
           "HTTP proxy URI user password for authentication", "",
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_COOKIES,
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
-          G_TYPE_STRV, G_PARAM_READWRITE));
+          G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "is-live", "Act like a live source",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint ("timeout", "timeout",
           "Value in seconds to timeout a blocking I/O (0 = No timeout).", 0,
-          3600, 0, G_PARAM_READWRITE));
+          3600, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_EXTRA_HEADERS,
       g_param_spec_boxed ("extra-headers", "Extra Headers",
           "Extra headers to append to the HTTP request",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE));
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -271,25 +274,29 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       g_param_spec_boolean ("iradio-mode",
           "iradio-mode",
           "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
-          "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
+          "iradio-name", "Name of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_GENRE,
       g_param_spec_string ("iradio-genre",
-          "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
+          "iradio-genre", "Genre of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_URL,
       g_param_spec_string ("iradio-url",
           "iradio-url",
-          "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
+          "Homepage URL for radio stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_TITLE,
       g_param_spec_string ("iradio-title",
           "iradio-title",
-          "Name of currently playing song", NULL, G_PARAM_READABLE));
+          "Name of currently playing song", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_soup_http_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_soup_http_src_stop);

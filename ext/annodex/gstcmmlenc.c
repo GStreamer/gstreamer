@@ -130,19 +130,22 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
       g_param_spec_int64 ("granule-rate-numerator",
           "Granulerate numerator",
           "Granulerate numerator",
-          0, G_MAXINT64, 1000, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT64, 1000,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_ENC_GRANULERATE_D,
       g_param_spec_int64 ("granule-rate-denominator",
           "Granulerate denominator",
           "Granulerate denominator",
-          0, G_MAXINT64, 1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT64, 1,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_ENC_GRANULESHIFT,
       g_param_spec_uchar ("granule-shift",
           "Granuleshift",
           "The number of lower bits to use for partitioning a granule position",
-          0, 64, 32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 64, 32,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_ELEMENT_CLASS (klass)->change_state = gst_cmml_enc_change_state;
 }

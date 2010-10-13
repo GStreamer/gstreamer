@@ -150,44 +150,44 @@ gst_mikmod_class_init (GstMikModClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SONGNAME,
       g_param_spec_string ("songname", "songname", "songname",
-          NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODTYPE,
       g_param_spec_string ("modtype", "modtype", "modtype",
-          NULL, G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUSICVOLUME,
       g_param_spec_int ("musicvolume", "musivolume", "musicvolume",
-          0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PANSEP,
       g_param_spec_int ("pansep", "pansep", "pansep",
-          0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB,
       g_param_spec_int ("reverb", "reverb", "reverb",
-          0, 15, 0, G_PARAM_READWRITE));
+          0, 15, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SNDFXVOLUME,
       g_param_spec_int ("sndfxvolume", "sndfxvolume", "sndfxvolume",
-          0, 128, 128, G_PARAM_READWRITE));
+          0, 128, 128, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VOLUME,
       g_param_spec_int ("volume", "volume", "volume",
-          0, 128, 96, G_PARAM_READWRITE));
+          0, 128, 96, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_INTERP,
       g_param_spec_boolean ("interp", "interp", "interp",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERSE,
       g_param_spec_boolean ("reverse", "reverse", "reverse",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND,
       g_param_spec_boolean ("surround", "surround", "surround",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HQMIXER,
       g_param_spec_boolean ("hqmixer", "hqmixer", "hqmixer",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_MUSIC,
       g_param_spec_boolean ("soft-music", "soft music", "soft music",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SOFT_SNDFX,
       g_param_spec_boolean ("soft-sndfx", "soft sndfx", "soft sndfx",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
   gobject_class->set_property = gst_mikmod_set_property;

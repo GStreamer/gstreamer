@@ -149,17 +149,20 @@ gst_smokeenc_class_init (GstSmokeEnc * klass)
 
   g_object_class_install_property (gobject_class, PROP_MIN_QUALITY,
       g_param_spec_int ("qmin", "Qmin", "Minimum quality",
-          0, 100, DEFAULT_PROP_MIN_QUALITY, G_PARAM_READWRITE));
+          0, 100, DEFAULT_PROP_MIN_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAX_QUALITY,
       g_param_spec_int ("qmax", "Qmax", "Maximum quality",
-          0, 100, DEFAULT_PROP_MAX_QUALITY, G_PARAM_READWRITE));
+          0, 100, DEFAULT_PROP_MAX_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold", "Threshold", "Motion estimation threshold",
-          0, 100000000, DEFAULT_PROP_THRESHOLD, G_PARAM_READWRITE));
+          0, 100000000, DEFAULT_PROP_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KEYFRAME,
       g_param_spec_int ("keyframe", "Keyframe",
           "Insert keyframe every N frames", 1, 100000,
-          DEFAULT_PROP_KEYFRAME, G_PARAM_READWRITE));
+          DEFAULT_PROP_KEYFRAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_smokeenc_change_state);

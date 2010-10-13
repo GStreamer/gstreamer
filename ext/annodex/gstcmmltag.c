@@ -100,20 +100,22 @@ gst_cmml_tag_stream_class_init (GstCmmlTagStreamClass * stream_class)
       g_param_spec_string ("base-time",
           "Base time",
           "Playback time (in seconds) of the first data packet",
-          "0", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "0", G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_STREAM_UTC,
       g_param_spec_string ("calendar-base-time",
           "Calendar base time",
           "Date and wall-clock time (expressed as UTC time in the format "
           "YYYYMMDDTHHMMSS.sssZ) associated with the base-time",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_STREAM_IMPORTS,
       g_param_spec_value_array ("input-streams",
           "Input streams",
           "List of input streams that compose this bitstream",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_CMML_TAG_STREAM,
       gst_cmml_tag_stream_value_from_string_value);
@@ -223,19 +225,22 @@ gst_cmml_tag_head_class_init (GstCmmlTagHeadClass * head_class)
       g_param_spec_string ("title",
           "Title",
           "Title of the bitstream",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_HEAD_BASE,
       g_param_spec_string ("base-uri",
           "Base URI",
           "Base URI of the bitstream. All relative URIs are relative to this",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_HEAD_META,
       g_param_spec_value_array ("meta",
           "Meta annotations",
           "Meta annotations for the complete Annodex bitstream",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_CMML_TAG_HEAD,
       gst_cmml_tag_head_value_from_string_value);
@@ -344,68 +349,77 @@ gst_cmml_tag_clip_class_init (GstCmmlTagClipClass * clip_class)
       g_param_spec_boolean ("empty",
           "Empty clip flag",
           "An empty clip only marks the end of the previous clip",
-          TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          TRUE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_ID,
       g_param_spec_string ("id",
           "Clip id",
-          "Id of the clip", NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Id of the clip", NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_TRACK,
       g_param_spec_string ("track",
           "Track number",
           "The track this clip belongs to",
-          "default", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "default",
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_START_TIME,
       g_param_spec_uint64 ("start-time",
           "Start time",
           "The start time (in seconds) of the clip",
           0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_END_TIME,
       g_param_spec_uint64 ("end-time",
           "End time",
           "The end time (in seconds) of the clip (only set if extract-mode=true)",
           0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_ANCHOR_HREF,
       g_param_spec_string ("anchor-uri",
           "Anchor URI",
           "The location of a Web resource closely connected to the clip",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_ANCHOR_TEXT,
       g_param_spec_string ("anchor-text",
           "Anchor text",
           "A short description of the resource pointed by anchor-uri",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_IMG_SRC,
       g_param_spec_string ("img-uri",
           "Image URI",
           "The URI of a representative image for the clip",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_IMG_ALT,
       g_param_spec_string ("img-alt",
           "Image alternative text",
           "Alternative text to be displayed instead of the image "
-          "specified in img-uri", NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "specified in img-uri", NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_DESC_TEXT,
       g_param_spec_string ("description",
           "Description",
           "A textual description of the content of the clip",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (klass, GST_CMML_TAG_CLIP_META,
       g_param_spec_value_array ("meta",
           "Meta annotations",
           "Meta annotations for the clip",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_CMML_TAG_CLIP,
       gst_cmml_tag_clip_value_from_string_value);
