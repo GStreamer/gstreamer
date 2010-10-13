@@ -931,7 +931,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     pad = gst_element_get_static_pad (decode_bin->typefind, "sink");
 
     /* ghost the sink pad to ourself */
-    gpad = gst_ghost_pad_new ("sink", pad);
+    gpad = gst_ghost_pad_new_from_template ("sink", pad,
+        gst_static_pad_template_get (&decoder_bin_sink_template));
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (decode_bin), gpad);
 
@@ -3401,6 +3402,7 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeChain * chain)
   GST_DEBUG_OBJECT (dbin, "making new decodepad");
   dpad =
       g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_DIRECTION (pad),
+      "template", gst_static_pad_template_get (&decoder_bin_src_template),
       NULL);
   gst_ghost_pad_construct (GST_GHOST_PAD_CAST (dpad));
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);

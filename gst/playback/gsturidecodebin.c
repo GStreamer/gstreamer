@@ -842,7 +842,8 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   decoder->numpads++;
   GST_URI_DECODE_BIN_UNLOCK (decoder);
 
-  newpad = gst_ghost_pad_new (padname, pad);
+  newpad = gst_ghost_pad_new_from_template (padname, pad,
+      gst_static_pad_template_get (&srctemplate));
   g_free (padname);
 
   /* store ref to the ghostpad so we can remove it */
