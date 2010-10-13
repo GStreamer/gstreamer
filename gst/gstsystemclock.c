@@ -142,7 +142,8 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
   g_object_class_install_property (gobject_class, PROP_CLOCK_TYPE,
       g_param_spec_enum ("clock-type", "Clock type",
           "The type of underlying clock implementation used",
-          GST_TYPE_CLOCK_TYPE, DEFAULT_CLOCK_TYPE, G_PARAM_READWRITE));
+          GST_TYPE_CLOCK_TYPE, DEFAULT_CLOCK_TYPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
   gstclock_class->get_resolution = gst_system_clock_get_resolution;
