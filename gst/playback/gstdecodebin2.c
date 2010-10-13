@@ -24,12 +24,9 @@
  * #GstBin that auto-magically constructs a decoding pipeline using available
  * decoders and demuxers via auto-plugging.
  *
- * At this stage, decodebin2 is considered UNSTABLE. The API provided in the
- * signals is expected to change in the near future.
- *
- * To try out decodebin2, you can set the USE_DECODEBIN2 environment
- * variable (USE_DECODEBIN2=1 for example). This will cause playbin to use
- * decodebin2 instead of the older #GstDecodeBin for its internal auto-plugging.
+ * decodebin2 is considered stable now and replaces the old #decodebin element.
+ * #uridecodebin uses decodebin2 internally and is often more convenient to
+ * use, as it creates a suitable source element as well.
  */
 
 /* Implementation notes:

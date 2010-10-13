@@ -26,6 +26,13 @@
  * When using decodebin in your application, connect a signal handler to
  * #GstDecodeBin::new-decoded-pad and connect your sinks from within the
  * callback function.
+ *
+ * <note>
+ * This element is deprecated and no longer supported. You should use the
+ * #uridecodebin or #decodebin2 element instead (or, even better: #playbin2).
+ * </note>
+ *
+ * Deprecated: use uridecodebin or decodebin2 instead.
  */
 
 #ifdef HAVE_CONFIG_H
