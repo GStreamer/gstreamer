@@ -170,6 +170,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
+    case PIX_FMT_YUVA420P:
+      fmt = GST_MAKE_FOURCC ('A', '4', '2', '0');
+      break;
     case PIX_FMT_NV12:
       fmt = GST_MAKE_FOURCC ('N', 'V', '1', '2');
       break;
@@ -636,6 +639,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;
           break;
+        case GST_MAKE_FOURCC ('A', '4', '2', '0'):
+          context->pix_fmt = PIX_FMT_YUVA420P;
+          break;
         case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
           context->pix_fmt = PIX_FMT_NV12;
           break;
@@ -857,6 +863,23 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       return size + 2 * size2;
       /* PIX_FMT_YVU420P = YV12: same as PIX_FMT_YUV420P, but
        *  with U and V plane swapped. Strides as in videotestsrc */
+    case PIX_FMT_YUVA420P:
+      stride = GST_ROUND_UP_4 (width);
+      h2 = ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size = stride * h2;
+      w2 = DIV_ROUND_UP_X (width, pinfo->x_chroma_shift);
+      stride2 = GST_ROUND_UP_4 (w2);
+      h2 = DIV_ROUND_UP_X (height, pinfo->y_chroma_shift);
+      size2 = stride2 * h2;
+      picture->data[0] = ptr;
+      picture->data[1] = picture->data[0] + size;
+      picture->data[2] = picture->data[1] + size2;
+      picture->data[3] = picture->data[2] + size2;
+      picture->linesize[0] = stride;
+      picture->linesize[1] = stride2;
+      picture->linesize[2] = stride2;
+      picture->linesize[3] = stride;
+      return 2 * size + 2 * size2;
     case PIX_FMT_YVU410P:
     case PIX_FMT_YVU420P:
       stride = GST_ROUND_UP_4 (width);

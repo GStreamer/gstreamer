@@ -93,6 +93,7 @@ enum PixelFormat {
     PIX_FMT_V308,      ///< Packed pixel, Y0 Cb Cr
 
     PIX_FMT_AYUV4444,  ///< Packed pixel, A0 Y0 Cb Cr
+    PIX_FMT_YUVA420P,   ///< Planar YUV 4:4:2:0 (1 Cr & Cb sample per 2x2 Y & A samples) (A420)
     PIX_FMT_NB
 };
 
