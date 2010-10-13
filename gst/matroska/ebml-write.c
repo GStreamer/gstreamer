@@ -65,7 +65,6 @@ gst_ebml_write_init (GstEbmlWrite * ebml, GstEbmlWriteClass * klass)
   ebml->streamheader = NULL;
   ebml->streamheader_pos = 0;
   ebml->writing_streamheader = FALSE;
-  ebml->current_offset = 0;
   ebml->caps = NULL;
 }
 
@@ -135,7 +134,6 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
   ebml->last_write_result = GST_FLOW_OK;
   ebml->timestamp = GST_CLOCK_TIME_NONE;
   ebml->need_newsegment = TRUE;
-  ebml->current_offset = 0;
 }
 
 
@@ -224,9 +222,8 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
   ebml->cache = NULL;
   GST_DEBUG ("Flushing cache of size %d", GST_BUFFER_SIZE (buffer));
   gst_buffer_set_caps (buffer, ebml->caps);
-  GST_BUFFER_OFFSET (buffer) = ebml->current_offset;
-  ebml->current_offset += GST_BUFFER_SIZE (buffer);
-  GST_BUFFER_OFFSET_END (buffer) = ebml->current_offset;
+  GST_BUFFER_OFFSET (buffer) = ebml->pos - GST_BUFFER_SIZE (buffer);
+  GST_BUFFER_OFFSET_END (buffer) = ebml->pos;
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
       GstEvent *ev;
@@ -406,9 +403,8 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     }
     buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf, ebml->caps);
-    GST_BUFFER_OFFSET (buf) = ebml->current_offset;
-    ebml->current_offset += GST_BUFFER_SIZE (buf);
-    GST_BUFFER_OFFSET_END (buf) = ebml->current_offset;
+    GST_BUFFER_OFFSET (buf) = ebml->pos - GST_BUFFER_SIZE (buf);
+    GST_BUFFER_OFFSET_END (buf) = ebml->pos;
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
     }
