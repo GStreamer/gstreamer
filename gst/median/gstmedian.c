@@ -123,9 +123,16 @@ gst_median_class_init (GstMedianClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));   /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE, g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LUM_ONLY, g_param_spec_boolean ("lum_only", "lum_only", "lum_only", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  /* FIXME: add long property descriptions */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE,
+      g_param_spec_boolean ("active", "active", "active", TRUE,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE,
+      g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT,
+          G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LUM_ONLY,
+      g_param_spec_boolean ("lum-only", "lum-only", "lum-only", TRUE,
+          G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_median_set_property;
   gobject_class->get_property = gst_median_get_property;
