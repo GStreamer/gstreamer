@@ -307,7 +307,7 @@ compare_date_time (ExifEntry * entry, ExifTagCheckData * testdata)
   sscanf (str, "%04d:%02d:%02d %02d:%02d:%02d", &year, &month, &day,
       &hour, &minute, &second);
   exif_datetime = gst_date_time_new_local_time (year, month, day, hour, minute,
-      second, 0);
+      second);
   fail_if (exif_datetime == NULL);
 
   fail_unless (gst_date_time_get_year (datetime) ==
@@ -928,7 +928,7 @@ GST_START_TEST (test_jifmux_tags)
   tmpfile = g_build_filename (g_get_tmp_dir (), tmp, NULL);
   g_free (tmp);
 
-  datetime = gst_date_time_new_local_time (2000, 10, 5, 8, 45, 13, 0);
+  datetime = gst_date_time_new_local_time (2000, 10, 5, 8, 45, 13);
   buffer = gst_buffer_new_and_alloc (100);
   for (i = 0; i < 100; i++) {
     GST_BUFFER_DATA (buffer)[i] = i;
