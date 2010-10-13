@@ -1247,10 +1247,11 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
       GST_BUFFER_OFFSET_END (buffer) =
           flacparse->sample_number + flacparse->block_size;
     }
-    GST_BUFFER_DURATION (buffer) =
-        GST_FRAMES_TO_CLOCK_TIME (flacparse->block_size, flacparse->samplerate);
     GST_BUFFER_OFFSET (buffer) =
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+        gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
+        flacparse->samplerate);
+    GST_BUFFER_DURATION (buffer) =
+        GST_BUFFER_OFFSET (buffer) - GST_BUFFER_TIMESTAMP (buffer);
 
     /* Minimal size of a frame header */
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), MAX (9,
