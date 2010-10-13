@@ -23,9 +23,8 @@
  * Playbin2 provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
  *
- * At this stage, playbin2 is considered UNSTABLE. The API provided in the
- * signals and properties may yet change in the near future. When playbin2
- * is stable, it will probably replace #playbin
+ * playbin2 is considered stable now. It is the prefered playback API now,
+ * and replaces the old #playbin element, which is no longer supported.
  *
  * It can handle both audio and video files and features
  * <itemizedlist>
@@ -60,7 +59,7 @@
  * <refsect2>
  * <title>Usage</title>
  * <para>
- * A playbin element can be created just like any other element using
+ * A playbin2 element can be created just like any other element using
  * gst_element_factory_make(). The file/URI to play should be set via the #GstPlayBin2:uri
  * property. This must be an absolute URI, relative file paths are not allowed.
  * Example URIs are file:///home/joe/movie.avi or http://www.joedoe.com/foo.ogg

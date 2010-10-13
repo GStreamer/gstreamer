@@ -23,6 +23,11 @@
  * Playbin provides a stand-alone everything-in-one abstraction for an
  * audio and/or video player.
  *
+ * <note>
+ * This element is deprecated and no longer supported. You should use
+ * the #playbin2 element instead.
+ * </note>
+ *
  * It can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
@@ -217,6 +222,8 @@
  * ]| This will play back title 1 of a DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * </refsect2>
+ *
+ * Deprecated: use playbin2 instead
  */
 
 #ifdef HAVE_CONFIG_H
