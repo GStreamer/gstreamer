@@ -815,6 +815,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           case PIX_FMT_YUV420P:
             fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
             break;
+          case PIX_FMT_YUVA420P:
+            fourcc = GST_MAKE_FOURCC ('A', '4', '2', '0');
+            break;
           case PIX_FMT_YUV411P:
             fourcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
             break;
@@ -1630,6 +1633,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
+    case PIX_FMT_YUVA420P:
+      fmt = GST_MAKE_FOURCC ('A', '4', '2', '0');
+      break;
     case PIX_FMT_YUYV422:
       fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
@@ -2036,6 +2042,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;
           break;
+        case GST_MAKE_FOURCC ('A', '4', '2', '0'):
+          context->pix_fmt = PIX_FMT_YUVA420P;
+          break;
         case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
           context->pix_fmt = PIX_FMT_YUV411P;
           break;
@@ -2410,6 +2419,9 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
             break;
           case GST_MAKE_FOURCC ('I', '4', '2', '0'):
             context->pix_fmt = PIX_FMT_YUV420P;
+            break;
+          case GST_MAKE_FOURCC ('A', '4', '2', '0'):
+            context->pix_fmt = PIX_FMT_YUVA420P;
             break;
           case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
             context->pix_fmt = PIX_FMT_YUV411P;
