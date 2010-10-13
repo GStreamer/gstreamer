@@ -484,6 +484,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
       GST_DEBUG_OBJECT (depayload, "prepending codec_data");
       outbuf = gst_buffer_join (rtph264depay->codec_data, outbuf);
       rtph264depay->codec_data = NULL;
+      out_delta = FALSE;
     }
     outbuf = gst_buffer_make_metadata_writable (outbuf);
 
