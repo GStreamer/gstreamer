@@ -1041,8 +1041,8 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
           GST_LOG ("UTC timezone");
 
           /* Having a Z at the end means UTC */
-          datetime = gst_date_time_new (year, month, day, hour, minute,
-              second, usecs, 0);
+          datetime = gst_date_time_new (0, year, month, day, hour, minute,
+              second + usecs / 1000000.0);
         } else {
           gchar *plus_pos = NULL;
           gchar *neg_pos = NULL;
@@ -1072,9 +1072,12 @@ read_one_tag (GstTagList * list, const gchar * tag, XmpTag * xmptag,
 
               GST_LOG ("Timezone offset: %f (%d minutes)", gmt_offset / 60.0,
                   gmt_offset);
+
               /* no way to know if it is DST or not */
-              datetime = gst_date_time_new (year, month, day, hour, minute,
-                  second, usecs, gmt_offset / 60.0f);
+              datetime =
+                  gst_date_time_new (gmt_offset / 60.0,
+                  year, month, day, hour, minute,
+                  second + usecs / ((gdouble) G_USEC_PER_SEC));
             } else {
               GST_WARNING ("Failed to parse timezone information");
             }
@@ -1416,7 +1419,7 @@ gst_value_serialize_xmp (const GValue * value)
         (gint) g_date_get_day (date));
   } else if (G_VALUE_TYPE (value) == GST_TYPE_DATE_TIME) {
     gint year, month, day, hour, min, sec, microsec;
-    gint gmt_offset = 0;
+    gfloat gmt_offset = 0;
     gint gmt_offset_hour, gmt_offset_min;
     GstDateTime *datetime = (GstDateTime *) g_value_get_boxed (value);
 
@@ -1427,14 +1430,14 @@ gst_value_serialize_xmp (const GValue * value)
     min = gst_date_time_get_minute (datetime);
     sec = gst_date_time_get_second (datetime);
     microsec = gst_date_time_get_microsecond (datetime);
-    gmt_offset = (gint) (60 * gst_date_time_get_time_zone_offset (datetime));
+    gmt_offset = gst_date_time_get_time_zone_offset (datetime);
     if (gmt_offset == 0) {
       /* UTC */
       return g_strdup_printf ("%04d-%02d-%02dT%02d:%02d:%02d.%06dZ",
           year, month, day, hour, min, sec, microsec);
     } else {
-      gmt_offset_hour = ABS (gmt_offset) / 60;
-      gmt_offset_min = ABS (gmt_offset) % 60;
+      gmt_offset_hour = ABS (gmt_offset);
+      gmt_offset_min = (ABS (gmt_offset) - gmt_offset_hour) * 60;
 
       return g_strdup_printf ("%04d-%02d-%02dT%02d:%02d:%02d.%06d%c%02d:%02d",
           year, month, day, hour, min, sec, microsec,

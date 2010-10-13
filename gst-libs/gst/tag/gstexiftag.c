@@ -1119,8 +1119,8 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     if (sscanf (str, "%04d:%02d:%02d %02d:%02d:%02d", &year, &month, &day,
             &hour, &minute, &second) > 0) {
       gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
-          gst_date_time_new_local_time (year, month, day, hour, minute, second,
-              0), NULL);
+          gst_date_time_new_local_time (year, month, day, hour, minute,
+              second), NULL);
     } else {
       GST_WARNING ("Failed to parse %s into a datetime tag", str);
     }
