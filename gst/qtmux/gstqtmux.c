@@ -2258,6 +2258,9 @@ refuse_renegotiation:
 static guint32
 adjust_rate (guint64 rate)
 {
+  if (rate == 0)
+    return 10000;
+
   while (rate >= 10000)
     rate /= 10;
 
