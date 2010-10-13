@@ -846,6 +846,8 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   client->bytes_sent = 0;
   client->dropped_buffers = 0;
   client->avg_queue_size = 0;
+  client->first_buffer_ts = GST_CLOCK_TIME_NONE;
+  client->last_buffer_ts = GST_CLOCK_TIME_NONE;
   client->new_connection = TRUE;
   client->burst_min_unit = min_unit;
   client->burst_min_value = min_value;
@@ -1036,6 +1038,8 @@ restart:
  * guint64 : time the client is/was connected (in nanoseconds)
  * guint64 : last activity time (in nanoseconds, since Epoch)
  * guint64 : buffers dropped due to recovery
+ * guint64 : timestamp of the first buffer sent (in nanoseconds)
+ * guint64 : timestamp of the last buffer sent (in nanoseconds)
  */
 GValueArray *
 gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
@@ -1054,7 +1058,7 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
     GValue value = { 0 };
     guint64 interval;
 
-    result = g_value_array_new (5);
+    result = g_value_array_new (7);
 
     g_value_init (&value, G_TYPE_UINT64);
     g_value_set_uint64 (&value, client->bytes_sent);
@@ -1087,6 +1091,14 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
     g_value_unset (&value);
     g_value_init (&value, G_TYPE_UINT64);
     g_value_set_uint64 (&value, client->dropped_buffers);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->first_buffer_ts);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->last_buffer_ts);
     result = g_value_array_append (result, &value);
   }
 
@@ -2064,6 +2076,12 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
         /* grab buffer */
         buf = g_array_index (sink->bufqueue, GstBuffer *, client->bufpos);
         client->bufpos--;
+
+        /* update stats */
+        if (client->first_buffer_ts == GST_CLOCK_TIME_NONE)
+          client->first_buffer_ts = GST_BUFFER_TIMESTAMP (buf);
+        client->last_buffer_ts = GST_BUFFER_TIMESTAMP (buf);
+
 
         /* decrease flushcount */
         if (client->flushcount != -1)
