@@ -177,7 +177,7 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
           "the lowest and 10 being the best",
           SPEEX_RESAMPLER_QUALITY_MIN, SPEEX_RESAMPLER_QUALITY_MAX,
           SPEEX_RESAMPLER_QUALITY_DEFAULT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /* FIXME 0.11: Remove this property, it's just for compatibility
    * with old audioresample
@@ -191,7 +191,8 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_FILTER_LENGTH,
       g_param_spec_int ("filter-length", "Filter length",
-          "Length of the resample filter", 0, G_MAXINT, 64, G_PARAM_READWRITE));
+          "Length of the resample filter", 0, G_MAXINT, 64,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_BASE_TRANSFORM_CLASS (klass)->start =
       GST_DEBUG_FUNCPTR (gst_audio_resample_start);

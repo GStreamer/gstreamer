@@ -175,7 +175,7 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       g_param_spec_value_array ("stream-info-value-array",
           "StreamInfo GValueArray", "value array of streaminfo",
           g_param_spec_object ("streaminfo", "StreamInfo", "Streaminfo object",
-              GST_TYPE_STREAM_INFO, G_PARAM_READABLE),
+              GST_TYPE_STREAM_INFO, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, ARG_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",

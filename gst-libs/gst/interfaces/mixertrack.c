@@ -115,7 +115,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
   g_object_class_install_property (object_klass, ARG_LABEL,
       g_param_spec_string ("label", "Track label",
           "The label assigned to the track (may be translated)", NULL,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMixerTrack:untranslated-label

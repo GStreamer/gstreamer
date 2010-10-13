@@ -331,7 +331,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SOURCE,
       g_param_spec_object ("source", "Source", "Source object used",
-          GST_TYPE_ELEMENT, G_PARAM_READABLE));
+          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",

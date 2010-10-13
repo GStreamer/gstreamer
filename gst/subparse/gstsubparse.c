@@ -205,7 +205,8 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
           "Framerate of the video stream. This is needed by some subtitle "
           "formats to synchronize subtitles and video properly. If not set "
           "and the subtitle format requires it subtitles may be out of sync.",
-          0, 1, G_MAXINT, 1, 24000, 1001, G_PARAM_READWRITE));
+          0, 1, G_MAXINT, 1, 24000, 1001,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

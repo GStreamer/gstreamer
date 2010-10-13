@@ -187,18 +187,20 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PAD_RUNNING_TIME,
       g_param_spec_int64 ("running-time", "Running time",
-          "Running time of stream on pad", 0, G_MAXINT64, 0, G_PARAM_READABLE));
+          "Running time of stream on pad", 0, G_MAXINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_TAGS,
       g_param_spec_boxed ("tags", "Tags",
           "The currently active tags on the pad", GST_TYPE_TAG_LIST,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_ACTIVE,
       g_param_spec_boolean ("active", "Active",
-          "If the pad is currently active", FALSE, G_PARAM_READABLE));
+          "If the pad is currently active", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_ALWAYS_OK,
       g_param_spec_boolean ("always-ok", "Always OK",
           "Make an inactive pad return OK instead of NOT_LINKED",
-          DEFAULT_PAD_ALWAYS_OK, G_PARAM_READWRITE));
+          DEFAULT_PAD_ALWAYS_OK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
