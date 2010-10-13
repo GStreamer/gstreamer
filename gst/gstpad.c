@@ -99,11 +99,16 @@ typedef struct _GstPadPushCache GstPadPushCache;
 
 struct _GstPadPushCache
 {
-  gboolean valid;
   GstPad *peer;                 /* reffed peer pad */
   GstCaps *caps;                /* caps for this link */
   GstPadChainFunction chainfunc;
 };
+
+static GstPadPushCache _pad_cache_invalid = { NULL, };
+
+#define PAD_CACHE_INVALID (&_pad_cache_invalid)
+
+static void pad_invalidate_cache (GstPad * pad);
 
 #define GST_PAD_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PAD, GstPadPrivate))
@@ -1729,6 +1734,8 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   if (GST_PAD_UNLINKFUNC (sinkpad)) {
     GST_PAD_UNLINKFUNC (sinkpad) (sinkpad);
   }
+
+  pad_invalidate_cache (srcpad);
 
   /* first clear peers */
   GST_PAD_PEER (srcpad) = NULL;
@@ -4157,9 +4164,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   gboolean caps_changed;
   GstFlowReturn ret;
   gboolean emit_signal;
-  gboolean do_cache;
-
-  do_cache = cache ? cache->valid : FALSE;
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -4176,7 +4180,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   /* see if the signal should be emited, we emit before caps nego as
    * we might drop the buffer and do capsnego for nothing. */
   if (G_UNLIKELY (emit_signal)) {
-    do_cache = FALSE;
+    cache = NULL;
     if (G_LIKELY (is_buffer)) {
       if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (data)))
         goto dropping;
@@ -4208,12 +4212,10 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling chainfunction &%s", GST_DEBUG_FUNCPTR_NAME (chainfunc));
 
-    if (do_cache) {
+    if (cache) {
       cache->peer = gst_object_ref (pad);
       cache->caps = caps ? gst_caps_ref (caps) : NULL;
       cache->chainfunc = chainfunc;
-    } else if (cache) {
-      cache->valid = FALSE;
     }
 
     ret = chainfunc (pad, GST_BUFFER_CAST (data));
@@ -4223,7 +4225,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
         GST_DEBUG_FUNCPTR_NAME (chainfunc), gst_flow_get_name (ret));
   } else {
     GstPadChainListFunction chainlistfunc;
-    cache->valid = FALSE;
 
     if (G_UNLIKELY ((chainlistfunc = GST_PAD_CHAINLISTFUNC (pad)) == NULL))
       goto chain_groups;
@@ -4410,8 +4411,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
   if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
-    if (cache)
-      cache->valid = FALSE;
+    cache = NULL;
     /* unlock before emitting */
     GST_OBJECT_UNLOCK (pad);
 
@@ -4531,6 +4531,10 @@ pad_take_cache (GstPad * pad, gpointer * cache_ptr)
      * with it */
   } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache, NULL));
 
+  /* we could have a leftover invalid entry */
+  if (G_UNLIKELY (cache == PAD_CACHE_INVALID))
+    cache = NULL;
+
   return cache;
 }
 
@@ -4550,6 +4554,28 @@ pad_put_cache (GstPad * pad, GstPadPushCache * cache, gpointer * cache_ptr)
     /* something changed, clean up our cache */
     pad_free_cache (cache);
   }
+}
+
+static void
+pad_invalidate_cache (GstPad * pad)
+{
+  GstPadPushCache *cache;
+  gpointer *cache_ptr;
+
+  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+
+  /* try to get the cached data */
+  do {
+    cache = g_atomic_pointer_get (cache_ptr);
+    /* now try to replace the pointer with INVALID. If nothing is busy with this
+     * caps, we get the cache and clean it up. If something is busy, we replace
+     * with INVALID so that when the function finishes and tries to put the
+     * cache back, it'll fail and cleanup */
+  } while (!g_atomic_pointer_compare_and_exchange (cache_ptr, cache,
+          PAD_CACHE_INVALID));
+
+  if (G_LIKELY (cache && cache != PAD_CACHE_INVALID))
+    pad_free_cache (cache);
 }
 
 /**
@@ -4620,13 +4646,13 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* slow path */
 slow_path:
   {
-    GstPadPushCache scache = { TRUE, NULL, NULL };
+    GstPadPushCache scache = { NULL, };
 
     GST_LOG_OBJECT (pad, "Taking slow path");
 
     ret = gst_pad_push_data (pad, TRUE, buffer, &scache);
 
-    if (scache.valid) {
+    if (scache.peer) {
       GstPadPushCache *ncache;
 
       GST_LOG_OBJECT (pad, "Caching push data");
