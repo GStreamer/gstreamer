@@ -3846,6 +3846,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         break;
       }
       case FOURCC_mp4v:
+      case FOURCC_MP4V:
       {
         const guint8 *buf;
         guint32 version;
@@ -5325,6 +5326,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     esds = NULL;
     pasp = NULL;
     mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4v);
+    if (!mp4v)
+      mp4v = qtdemux_tree_get_child_by_type (stsd, FOURCC_MP4V);
     /* H264 is MPEG-4 after all,
      * and qt seems to put MPEG-4 stuff in there as well */
     if (!mp4v)
@@ -5435,6 +5438,33 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           }
 
           break;
+        }
+        case FOURCC_mp4v:
+        case FOURCC_MP4V:
+        {
+          GNode *glbl;
+
+          GST_DEBUG_OBJECT (qtdemux, "found mp4v");
+
+          /* codec data might be in glbl extension atom */
+          glbl = qtdemux_tree_get_child_by_type (mp4v, FOURCC_glbl);
+          if (glbl) {
+            guint8 *data;
+            GstBuffer *buf;
+            gint len;
+
+            GST_DEBUG_OBJECT (qtdemux, "found glbl data in stsd");
+            data = glbl->data;
+            len = QT_UINT32 (data);
+            if (len > 0x8) {
+              len -= 0x8;
+              buf = gst_buffer_new_and_alloc (len);
+              memcpy (GST_BUFFER_DATA (buf), data + 8, len);
+              gst_caps_set_simple (stream->caps,
+                  "codec_data", GST_TYPE_BUFFER, buf, NULL);
+              gst_buffer_unref (buf);
+            }
+          }
         }
         case FOURCC_mjp2:
         {
@@ -7679,6 +7709,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-h263", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
+    case GST_MAKE_FOURCC ('M', 'P', '4', 'V'):
       _codec ("MPEG-4 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);

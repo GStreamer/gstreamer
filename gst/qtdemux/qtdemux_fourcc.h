@@ -74,6 +74,8 @@ G_BEGIN_DECLS
 #define FOURCC_hint     GST_MAKE_FOURCC('h','i','n','t')
 #define FOURCC_mp4a     GST_MAKE_FOURCC('m','p','4','a')
 #define FOURCC_mp4v     GST_MAKE_FOURCC('m','p','4','v')
+#define FOURCC_MP4V     GST_MAKE_FOURCC('M','P','4','V')
+#define FOURCC_glbl     GST_MAKE_FOURCC('g','l','b','l')
 #define FOURCC_wave     GST_MAKE_FOURCC('w','a','v','e')
 #define FOURCC_appl     GST_MAKE_FOURCC('a','p','p','l')
 #define FOURCC_esds     GST_MAKE_FOURCC('e','s','d','s')
