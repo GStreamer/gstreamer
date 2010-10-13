@@ -475,8 +475,6 @@ gst_fd_sink_set_property (GObject * object, guint prop_id,
 {
   GstFdSink *fdsink;
 
-  g_return_if_fail (GST_IS_FD_SINK (object));
-
   fdsink = GST_FD_SINK (object);
 
   switch (prop_id) {
@@ -488,6 +486,7 @@ gst_fd_sink_set_property (GObject * object, guint prop_id,
       break;
     }
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -498,8 +497,6 @@ gst_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstFdSink *fdsink;
 
-  g_return_if_fail (GST_IS_FD_SINK (object));
-
   fdsink = GST_FD_SINK (object);
 
   switch (prop_id) {
@@ -507,6 +504,7 @@ gst_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, fdsink->fd);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
