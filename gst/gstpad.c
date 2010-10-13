@@ -119,7 +119,6 @@ struct _GstPadPrivate
 {
   GstPadChainListFunction chainlistfunc;
 
-  GstPadPushCache cache_slot;
   GstPadPushCache *cache_ptr;
 };
 
