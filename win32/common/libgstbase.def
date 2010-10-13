@@ -237,6 +237,8 @@ EXPORTS
 	gst_collect_pads_stop
 	gst_collect_pads_take_buffer
 	gst_push_src_get_type
+	gst_queue_array_drop_element
+	gst_queue_array_find
 	gst_queue_array_free
 	gst_queue_array_is_empty
 	gst_queue_array_new
