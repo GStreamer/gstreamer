@@ -233,6 +233,9 @@ elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10 -lgstapp-0.1
 # parser unit test convenience lib
 noinst_LTLIBRARIES = libparser.la
 libparser_la_SOURCES = elements/parser.c elements/parser.h
+libparser_la_CFLAGS = \
+	-I$(top_srcdir)/tests/check \
+	$(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
 
 elements_aacparse_LDADD = libparser.la $(LDADD)
 
