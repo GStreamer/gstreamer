@@ -151,12 +151,12 @@ gst_oss4_source_class_init (GstOss4SourceClass * klass)
       g_param_spec_string ("device", "Device",
           "OSS4 device (e.g. /dev/oss/hdaudio0/pcm0 or /dev/dspN) "
           "(NULL = use first available device)",
-          DEFAULT_DEVICE, G_PARAM_READWRITE));
+          DEFAULT_DEVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

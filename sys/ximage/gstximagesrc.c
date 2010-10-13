@@ -1033,14 +1033,14 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
 
   g_object_class_install_property (gc, PROP_DISPLAY_NAME,
       g_param_spec_string ("display-name", "Display", "X Display Name", NULL,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gc, PROP_SCREEN_NUM,
       g_param_spec_uint ("screen-num", "Screen number", "X Screen Number",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gc, PROP_SHOW_POINTER,
       g_param_spec_boolean ("show-pointer", "Show Mouse Pointer",
           "Show mouse pointer (if XFixes extension enabled)", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstXImageSrc:use-damage
    *
@@ -1051,7 +1051,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   g_object_class_install_property (gc, PROP_USE_DAMAGE,
       g_param_spec_boolean ("use-damage", "Use XDamage",
           "Use XDamage (if XDamage extension enabled)", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstXImageSrc:startx
    *
@@ -1063,7 +1063,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   g_object_class_install_property (gc, PROP_STARTX,
       g_param_spec_uint ("startx", "Start X co-ordinate",
           "X coordinate of top left corner of area to be recorded (0 for top left of screen)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstXImageSrc:starty
    *

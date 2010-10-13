@@ -148,7 +148,7 @@ gst_sunaudiosrc_class_init (GstSunAudioSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "SunAudio device (usually /dev/audio)", DEFAULT_DEVICE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -140,7 +140,7 @@ gst_oss4_mixer_class_init (GstOss4MixerClass * klass)
       g_param_spec_string ("device", "Device",
           "OSS mixer device (e.g. /dev/oss/hdaudio0/mix0 or /dev/mixerN) "
           "(NULL = use first mixer device found)", DEFAULT_DEVICE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstOss4Mixer:device-name
@@ -152,7 +152,7 @@ gst_oss4_mixer_class_init (GstOss4MixerClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_oss4_mixer_change_state);
 }

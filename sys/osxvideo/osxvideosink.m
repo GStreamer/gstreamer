@@ -401,7 +401,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_EMBED,
       g_param_spec_boolean ("embed", "embed", "For ABI compatiblity only, do not use",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean

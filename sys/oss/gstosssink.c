@@ -205,7 +205,8 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "OSS device (usually /dev/dspN)", DEFAULT_DEVICE, G_PARAM_READWRITE));
+          "OSS device (usually /dev/dspN)", DEFAULT_DEVICE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss_sink_getcaps);
 
