@@ -44,11 +44,65 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_PHOTOGRAPHY, GstPhotographyInterface))
 
 
-/* Custom GstMessage name that will be sent to GstBus when autofocusing
-   is complete */
+/**
+ * GST_PHOTOGRAPHY_AUTOFOCUS_DONE:
+ *
+ * Name of custom GstMessage that will be posted to #GstBus when autofocusing
+ * is complete.
+ * This message contains following fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   #GstPhotographyFocusStatus
+ *   <classname>&quot;status&quot;</classname>:
+ *   Tells if focusing succeeded or failed.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #G_TYPE_INT
+ *   <classname>&quot;focus-window-rows&quot;</classname>:
+ *   Tells number of focus matrix rows.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #G_TYPE_INT
+ *   <classname>&quot;focus-window-columns&quot;</classname>:
+ *   Tells number of focus matrix columns.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   #G_TYPE_INT
+ *   <classname>&quot;focus-window-mask&quot;</classname>:
+ *   Bitmask containing rows x columns bits which mark the focus points in the
+ *   focus matrix. Lowest bit (LSB) always represents the top-left corner of the
+ *   focus matrix. This field is only valid when focusing status is SUCCESS.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
+ */
 #define GST_PHOTOGRAPHY_AUTOFOCUS_DONE "autofocus-done"
 
-/* Custom GstMessage name that will be sent to GstBus when shake risk changes */
+/**
+ * GST_PHOTOGRAPHY_SHAKE_RISK:
+ *
+ * Name of custom GstMessage that is posted to #GstBus during autofocusing
+ * process. It is posted if there is change in the risk of captured image
+ * becoming "shaken" due to camera movement and too long exposure time.
+ *
+ * This message contains following fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   #GstPhotographyShakeRisk
+ *   <classname>&quot;status&quot;</classname>:
+ *   Tells risk level of capturing shaken image.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
+ */
 #define GST_PHOTOGRAPHY_SHAKE_RISK "shake-risk"
 
 /* Maximum white point values used in #GstPhotographySettings */
@@ -97,7 +151,7 @@ typedef struct _GstPhotography GstPhotography;
  * images.
  * @GST_PHOTOGRAPHY_NOISE_REDUCTION_TEMPORAL: Multi-frame adaptive NR,
  * provided for the video mode
- * @GST_PHOTOGRAPHY_NOISE_REDUCTION_FPN: Fixed Pattern Noise refers to noise
+ * @GST_PHOTOGRAPHY_NOISE_REDUCTION_FIXED: Fixed Pattern Noise refers to noise
  * that does not change between frames. The noise is removed from the sensor
  * image, by subtracting a previously-captured black image in memory.
  * @GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA: Extra Noise Reduction. In the case
@@ -117,6 +171,19 @@ typedef enum
   GST_PHOTOGRAPHY_NOISE_REDUCTION_EXTRA = (1 << 4)
 } GstPhotographyNoiseReduction;
 
+/**
+ * GstPhotographyWhiteBalanceMode:
+ * @GST_PHOTOGRAPHY_WB_MODE_AUTO: Choose white balance mode automatically
+ * @GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT: Mode for daylight conditions
+ * @GST_PHOTOGRAPHY_WB_MODE_CLOUDY: Mode for cloudy conditions
+ * @GST_PHOTOGRAPHY_WB_MODE_SUNSET: Mode for sunset conditions
+ * @GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN: Mode for tungsten lighting
+ * @GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT: Mode for fluorescent lighting
+ * @GST_PHOTOGRAPHY_WB_MODE_MANUAL: Disable automatic white balance adjustment
+ * and keep current values.
+ *
+ * Modes for white balance control.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_WB_MODE_AUTO = 0,
@@ -128,6 +195,23 @@ typedef enum
   GST_PHOTOGRAPHY_WB_MODE_MANUAL
 } GstPhotographyWhiteBalanceMode;
 
+/**
+ * GstPhotographyColorToneMode:
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_NORMAL: No effects
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_SEPIA: Sepia
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_NEGATIVE: Negative
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_GRAYSCALE: Grayscale
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_NATURAL: Natural
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_VIVID: Vivid
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_COLORSWAP: Colorswap
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_SOLARIZE: Solarize
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_OUT_OF_FOCUS: Out of focus
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_SKY_BLUE: Sky blue
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_GRASS_GREEN: Grass green
+ * @GST_PHOTOGRAPHY_COLOR_TONE_MODE_SKIN_WHITEN: Skin whiten
+ *
+ * Modes for special color effects.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_COLOR_TONE_MODE_NORMAL = 0,
@@ -144,6 +228,19 @@ typedef enum
   GST_PHOTOGRAPHY_COLOR_TONE_MODE_SKIN_WHITEN
 } GstPhotographyColorToneMode;
 
+/**
+ * GstPhotographySceneMode:
+ * @GST_PHOTOGRAPHY_SCENE_MODE_MANUAL: Set individual options manually
+ * @GST_PHOTOGRAPHY_SCENE_MODE_CLOSEUP: Mode for close objects
+ * @GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT: Mode for portraits
+ * @GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE: Mode for landscapes
+ * @GST_PHOTOGRAPHY_SCENE_MODE_SPORT: Mode for scene with fast motion
+ * @GST_PHOTOGRAPHY_SCENE_MODE_NIGHT: Mode for night conditions
+ * @GST_PHOTOGRAPHY_SCENE_MODE_AUTO: Choose scene mode automatically
+ *
+ * Each mode contains preset #GstPhotography options in order to produce
+ * good capturing result in certain scene.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_SCENE_MODE_MANUAL = 0,
@@ -155,6 +252,18 @@ typedef enum
   GST_PHOTOGRAPHY_SCENE_MODE_AUTO
 } GstPhotographySceneMode;
 
+/**
+ * GstPhotographyFlashMode:
+ * @GST_PHOTOGRAPHY_FLASH_MODE_AUTO: Fire flash automatically according to
+ * lighting conditions.
+ * @GST_PHOTOGRAPHY_FLASH_MODE_OFF: Never fire flash
+ * @GST_PHOTOGRAPHY_FLASH_MODE_ON: Always fire flash
+ * @GST_PHOTOGRAPHY_FLASH_MODE_FILL_IN: Fill in flash
+ * @GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE: Flash mode for reducing chance of
+ * capturing red eyes
+ *
+ * Modes for flash control.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_FLASH_MODE_AUTO = 0,
@@ -164,6 +273,16 @@ typedef enum
   GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE
 } GstPhotographyFlashMode;
 
+/**
+ * GstPhotographyFocusStatus:
+ * @GST_PHOTOGRAPHY_FOCUS_STATUS_NONE: No status available
+ * @GST_PHOTOGRAPHY_FOCUS_STATUS_RUNNING: Focusing is ongoing
+ * @GST_PHOTOGRAPHY_FOCUS_STATUS_FAIL: Focusing failed
+ * @GST_PHOTOGRAPHY_FOCUS_STATUS_SUCCESS: Focusing succeeded
+ *
+ * Status of the focusing operation, used in #GST_PHOTOGRAPHY_AUTOFOCUS_DONE
+ * message.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_FOCUS_STATUS_NONE = 0,
@@ -172,6 +291,12 @@ typedef enum
   GST_PHOTOGRAPHY_FOCUS_STATUS_SUCCESS
 } GstPhotographyFocusStatus;
 
+/**
+ * GstPhotographyCaps:
+ *
+ * Bitmask that indicates which #GstPhotography interface features an instance
+ * supports.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_CAPS_NONE = (0 << 0),
@@ -192,6 +317,15 @@ typedef enum
   GST_PHOTOGRAPHY_CAPS_ALL = (~0)
 } GstPhotographyCaps;
 
+/**
+ * GstPhotographyShakeRisk:
+ * @GST_PHOTOGRAPHY_SHAKE_RISK_LOW: Low risk
+ * @GST_PHOTOGRAPHY_SHAKE_RISK_MEDIUM: Medium risk
+ * @GST_PHOTOGRAPHY_SHAKE_RISK_HIGH: High risk
+ *
+ * Risk level of captured image becoming "shaken" due to camera movement and
+ * too long exposure time. Used in #GST_PHOTOGRAPHY_SHAKE_RISK #GstMessage.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_SHAKE_RISK_LOW = 0,
@@ -199,6 +333,15 @@ typedef enum
   GST_PHOTOGRAPHY_SHAKE_RISK_HIGH,
 } GstPhotographyShakeRisk;
 
+/**
+ * GstPhotographyFlickerReductionMode:
+ * @GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF: Disable flicker reduction
+ * @GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ: 50Hz flicker reduction
+ * @GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ: 60Hz flicker reduction
+ * @GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO: Choose mode automatically
+ *
+ * Reduce flicker in video caused by light source fluctuation.
+ */
 typedef enum
 {
   GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF = 0,
@@ -207,6 +350,24 @@ typedef enum
   GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO,
 } GstPhotographyFlickerReductionMode;
 
+/**
+ * GstPhotographyFocusMode:
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_AUTO: Choose focus mode automatically
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_MACRO: Mode for focusing objects close to lens
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_PORTRAIT: Mode for portraits
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY: Mode for landscapes and far away objects
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL: Mode for maximum depth of field, keeping
+ * focus acceptable both in infinify and as close objects as possible
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED: Extended focus mode
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL: Continuous autofocus mode
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED: Extended continuous
+ * autofocus mode
+ * @GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL: Disable automatic focusing
+ * and keep current value. #GstPhotography:lens-focus property can
+ * be used to change focus manually.
+ *
+ * Choose mode for focusing algorithm.
+ */
 typedef enum {
     GST_PHOTOGRAPHY_FOCUS_MODE_AUTO = 0,
     GST_PHOTOGRAPHY_FOCUS_MODE_MACRO,
@@ -219,11 +380,24 @@ typedef enum {
     GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL
 } GstPhotographyFocusMode;
 
+/**
+ * GstPhotographyExposureMode:
+ * @GST_PHOTOGRAPHY_EXPOSURE_MODE_AUTO: Adjust exposure automatically
+ * @GST_PHOTOGRAPHY_EXPOSURE_MODE_MANUAL: Disable automatic exposure adjustment
+ * and keep current values.
+ *
+ */
 typedef enum {
     GST_PHOTOGRAPHY_EXPOSURE_MODE_AUTO = 0,
     GST_PHOTOGRAPHY_EXPOSURE_MODE_MANUAL
 } GstPhotographyExposureMode;
 
+/**
+ * GstPhotographySettings:
+ *
+ * Structure containing all #GstPhotography settings, used to set all
+ * settings in one call with @gst_photography_set_config().
+ */
 typedef struct
 {
   GstPhotographyWhiteBalanceMode wb_mode;
@@ -254,7 +428,9 @@ typedef struct
  *     Ownership of these caps stays in the element.
  *
  * This callback will be called when the element has finished preparations
- * for photo capture.
+ * and is ready for image capture. The next buffer that element produces
+ * will be of @configured_caps format, so this callback allows the application
+ * to e.g. reconfigure capsfilters in pipeline if any.
  */
 typedef void (*GstPhotographyCapturePrepared) (gpointer data,
     const GstCaps *configured_caps);

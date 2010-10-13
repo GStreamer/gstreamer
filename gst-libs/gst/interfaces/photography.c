@@ -30,6 +30,7 @@
 /**
  * SECTION:gstphotography
  * @short_description: Interface for digital image capture elements
+ * @stability: Unstable
  *
  * The interface allows access to some common digital image capture parameters.
  *
@@ -403,13 +404,14 @@ gst_photography_get_capabilities (GstPhotography * photo)
  * gst_photography_prepare_for_capture:
  * @photo: #GstPhotography interface of a #GstElement
  * @func: callback that is called after capturing has been prepared
- * @caps: #GstCaps defining the desired format of the captured image
+ * @capture_caps: #GstCaps defining the desired format of the captured image
  * @user_data: user data that will be passed to the callback @func
  *
- * Start preparations for capture. @func callback is called after
- * preparations are done.
+ * Start preparations for capture. Preparations can take indeterminate
+ * amount of time and @func callback is called after preparations are
+ * done. Image capture will begin after callback returns.
  *
- * Returns: TRUE if preparations were started (caps were OK), otherwise FALSE.
+ * Returns: %TRUE if preparations were started (caps were OK), otherwise %FALSE.
  */
 gboolean
 gst_photography_prepare_for_capture (GstPhotography * photo,
@@ -596,14 +598,26 @@ gst_photography_iface_class_init (gpointer g_class)
           "Exposure time defines how long the shutter will stay open (0 = auto)",
           0, G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* Image capture caps */
+  /**
+   * GstPhotography:image-capture-supported-caps:
+   *
+   * Query caps that describe supported formats for image capture. Sometimes
+   * element may support different formats for image capture than for video
+   * streaming.
+   */
   g_object_interface_install_property (g_class,
       g_param_spec_boxed (GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
           "Image capture supported caps",
           "Caps describing supported image capture formats", GST_TYPE_CAPS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  /* Image preview caps */
+  /**
+   * GstPhotography:image-preview-supported-caps:
+   *
+   * Query caps that describe supported formats for preview image. Sometimes
+   * element may support different formats for preview image than for video
+   * streaming.
+   */
   g_object_interface_install_property (g_class,
       g_param_spec_boxed (GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS,
           "Image preview supported caps",
