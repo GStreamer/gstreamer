@@ -25,7 +25,7 @@
 #define __GST_FLAC_PARSE_H__
 
 #include <gst/gst.h>
-#include "gstbaseparse.h"
+#include <gst/baseparse/gstbaseparse.h>
 
 G_BEGIN_DECLS
 
