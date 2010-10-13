@@ -224,7 +224,8 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
   ebml->cache = NULL;
   GST_DEBUG ("Flushing cache of size %d", GST_BUFFER_SIZE (buffer));
   gst_buffer_set_caps (buffer, ebml->caps);
-  GST_BUFFER_OFFSET (buffer) = ebml->current_offset++;
+  GST_BUFFER_OFFSET (buffer) = ebml->current_offset;
+  ebml->current_offset += GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = ebml->current_offset;
   if (ebml->last_write_result == GST_FLOW_OK) {
     if (ebml->need_newsegment) {
@@ -405,7 +406,8 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     }
     buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf, ebml->caps);
-    GST_BUFFER_OFFSET (buf) = ebml->current_offset++;
+    GST_BUFFER_OFFSET (buf) = ebml->current_offset;
+    ebml->current_offset += GST_BUFFER_SIZE (buf);
     GST_BUFFER_OFFSET_END (buf) = ebml->current_offset;
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
