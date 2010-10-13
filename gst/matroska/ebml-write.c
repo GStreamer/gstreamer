@@ -41,7 +41,6 @@ GST_BOILERPLATE_FULL (GstEbmlWrite, gst_ebml_write, GstObject, GST_TYPE_OBJECT,
 
 static void gst_ebml_write_finalize (GObject * object);
 
-
 static void
 gst_ebml_write_base_init (gpointer g_class)
 {
@@ -60,6 +59,7 @@ gst_ebml_write_init (GstEbmlWrite * ebml, GstEbmlWriteClass * klass)
 {
   ebml->srcpad = NULL;
   ebml->pos = 0;
+  ebml->last_pos = G_MAXUINT64; /* force newsegment event */
 
   ebml->cache = NULL;
   ebml->streamheader = NULL;
@@ -89,6 +89,7 @@ gst_ebml_write_finalize (GObject * object)
     gst_caps_unref (ebml->caps);
     ebml->caps = NULL;
   }
+
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
 
@@ -126,6 +127,7 @@ void
 gst_ebml_write_reset (GstEbmlWrite * ebml)
 {
   ebml->pos = 0;
+  ebml->last_pos = G_MAXUINT64; /* force newsegment event */
 
   if (ebml->cache) {
     gst_byte_writer_free (ebml->cache);
@@ -133,7 +135,6 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
   }
   ebml->last_write_result = GST_FLOW_OK;
   ebml->timestamp = GST_CLOCK_TIME_NONE;
-  ebml->need_newsegment = TRUE;
 }
 
 
@@ -204,6 +205,22 @@ gst_ebml_write_set_cache (GstEbmlWrite * ebml, guint size)
   ebml->cache_pos = ebml->pos;
 }
 
+static gboolean
+gst_ebml_writer_send_new_segment_event (GstEbmlWrite * ebml, guint64 new_pos)
+{
+  gboolean res;
+
+  GST_INFO ("seeking to %" G_GUINT64_FORMAT, new_pos);
+
+  res = gst_pad_push_event (ebml->srcpad,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, new_pos, -1, 0));
+
+  if (!res)
+    GST_WARNING ("seek to %" G_GUINT64_FORMAT "failed", new_pos);
+
+  return res;
+}
+
 /**
  * gst_ebml_write_flush_cache:
  * @ebml: a #GstEbmlWrite.
@@ -225,11 +242,9 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
   GST_BUFFER_OFFSET (buffer) = ebml->pos - GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = ebml->pos;
   if (ebml->last_write_result == GST_FLOW_OK) {
-    if (ebml->need_newsegment) {
-      GstEvent *ev;
-      ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
-      if (gst_pad_push_event (ebml->srcpad, ev))
-        ebml->need_newsegment = FALSE;
+    if (GST_BUFFER_OFFSET (buffer) != ebml->last_pos) {
+      gst_ebml_writer_send_new_segment_event (ebml, GST_BUFFER_OFFSET (buffer));
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     }
     if (ebml->writing_streamheader) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
@@ -237,6 +252,7 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
     if (!is_keyframe) {
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
+    ebml->last_pos = ebml->pos;
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buffer);
   } else {
     gst_buffer_unref (buffer);
@@ -394,13 +410,6 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
   }
 
   if (ebml->last_write_result == GST_FLOW_OK) {
-    if (ebml->need_newsegment) {
-      GstEvent *ev;
-
-      ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
-      if (gst_pad_push_event (ebml->srcpad, ev))
-        ebml->need_newsegment = FALSE;
-    }
     buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf, ebml->caps);
     GST_BUFFER_OFFSET (buf) = ebml->pos - GST_BUFFER_SIZE (buf);
@@ -409,6 +418,12 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
     }
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    if (GST_BUFFER_OFFSET (buf) != ebml->last_pos) {
+      gst_ebml_writer_send_new_segment_event (ebml, GST_BUFFER_OFFSET (buf));
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    }
+    ebml->last_pos = ebml->pos;
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
   } else {
     gst_buffer_unref (buf);
@@ -426,8 +441,6 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
 void
 gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
 {
-  GstEvent *event;
-
   if (ebml->writing_streamheader) {
     GST_DEBUG ("wanting to seek to pos %" G_GUINT64_FORMAT, pos);
     if (pos >= ebml->streamheader_pos &&
@@ -447,6 +460,7 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
     /* within bounds? */
     if (pos >= ebml->cache_pos &&
         pos <= ebml->cache_pos + ebml->cache->parent.size) {
+      GST_DEBUG ("seeking in cache to %" G_GUINT64_FORMAT, pos);
       ebml->pos = pos;
       gst_byte_writer_set_pos (ebml->cache, ebml->pos - ebml->cache_pos);
       return;
@@ -456,13 +470,7 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
     }
   }
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, pos, -1, 0);
-  if (gst_pad_push_event (ebml->srcpad, event)) {
-    GST_DEBUG ("Seek'd to offset %" G_GUINT64_FORMAT " from %" G_GUINT64_FORMAT,
-        pos, ebml->pos);
-  } else {
-    GST_WARNING ("Seek to offset %" G_GUINT64_FORMAT " failed", pos);
-  }
+  GST_INFO ("scheduling seek to %" G_GUINT64_FORMAT, pos);
   ebml->pos = pos;
 }
 
