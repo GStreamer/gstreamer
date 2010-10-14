@@ -209,7 +209,6 @@ typedef struct
   GstColourToneMode tone_mode;
   GstSceneMode scene_mode;
   GstFlashMode flash_mode;
-  guint noise_reduction;
   guint32 exposure;
   guint aperture;
   gfloat ev_compensation;
@@ -217,6 +216,7 @@ typedef struct
   gfloat zoom;
   GstFlickerReductionMode flicker_mode;
   GstFocusMode focus_mode;
+  guint noise_reduction;
 } GstPhotoSettings;
 
 /**
@@ -280,8 +280,6 @@ typedef struct _GstPhotographyInterface
       GstSceneMode * scene_mode);
     gboolean (*get_flash_mode) (GstPhotography * photo,
       GstFlashMode * flash_mode);
-    gboolean (*get_noise_reduction) (GstPhotography * photo,
-      guint * noise_reduction);
     gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
     gboolean (*get_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode * flicker_mode);
@@ -300,8 +298,6 @@ typedef struct _GstPhotographyInterface
       GstSceneMode scene_mode);
     gboolean (*set_flash_mode) (GstPhotography * photo,
       GstFlashMode flash_mode);
-    gboolean (*set_noise_reduction) (GstPhotography * photo,
-      guint noise_reduction);
     gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
     gboolean (*set_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode flicker_mode);
@@ -314,6 +310,11 @@ typedef struct _GstPhotographyInterface
   void (*set_autofocus) (GstPhotography * photo, gboolean on);
     gboolean (*set_config) (GstPhotography * photo, GstPhotoSettings * config);
     gboolean (*get_config) (GstPhotography * photo, GstPhotoSettings * config);
+
+  gboolean (*get_noise_reduction) (GstPhotography * photo,
+    guint * noise_reduction);
+  gboolean (*set_noise_reduction) (GstPhotography * photo,
+    guint noise_reduction);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
