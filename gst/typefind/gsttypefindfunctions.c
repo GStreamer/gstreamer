@@ -728,7 +728,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         caps = gst_caps_new_simple ("audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
             "mpegversion", G_TYPE_INT, mpegversion,
-            "stream-type", G_TYPE_STRING, "adts", NULL);
+            "stream-format", G_TYPE_STRING, "adts", NULL);
 
         gst_codec_utils_aac_caps_set_level_and_profile (caps, audio_config, 2);
 
