@@ -7505,7 +7505,8 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case 0xA5:                 /* AC3 */
       codec_name = "AC-3 audio";
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      caps = gst_caps_new_simple ("audio/x-ac3",
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case 0xE1:                 /* QCELP */
       /* QCELP, the codec_data is a riff tag (little endian) with
@@ -7973,7 +7974,8 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case 0x20736d:
     case GST_MAKE_FOURCC ('a', 'c', '-', '3'):
       _codec ("AC-3 audio");
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      caps = gst_caps_new_simple ("audio/x-ac3",
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       stream->sampled = TRUE;
       break;
     case GST_MAKE_FOURCC ('M', 'A', 'C', '3'):
