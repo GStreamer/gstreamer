@@ -268,48 +268,48 @@ typedef struct _GstPhotographyInterface
   GTypeInterface parent;
 
   /* virtual functions */
-    gboolean (*get_ev_compensation) (GstPhotography * photo, gfloat * ev_comp);
-    gboolean (*get_iso_speed) (GstPhotography * photo, guint * iso_speed);
-    gboolean (*get_aperture) (GstPhotography * photo, guint * aperture);
-    gboolean (*get_exposure) (GstPhotography * photo, guint32 * exposure);
-    gboolean (*get_white_balance_mode) (GstPhotography * photo,
+  gboolean (*get_ev_compensation) (GstPhotography * photo, gfloat * ev_comp);
+  gboolean (*get_iso_speed) (GstPhotography * photo, guint * iso_speed);
+  gboolean (*get_aperture) (GstPhotography * photo, guint * aperture);
+  gboolean (*get_exposure) (GstPhotography * photo, guint32 * exposure);
+  gboolean (*get_white_balance_mode) (GstPhotography * photo,
       GstWhiteBalanceMode * wb_mode);
-    gboolean (*get_colour_tone_mode) (GstPhotography * photo,
+  gboolean (*get_colour_tone_mode) (GstPhotography * photo,
       GstColourToneMode * tone_mode);
-    gboolean (*get_scene_mode) (GstPhotography * photo,
+  gboolean (*get_scene_mode) (GstPhotography * photo,
       GstSceneMode * scene_mode);
-    gboolean (*get_flash_mode) (GstPhotography * photo,
+  gboolean (*get_flash_mode) (GstPhotography * photo,
       GstFlashMode * flash_mode);
-    gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
-    gboolean (*get_flicker_mode) (GstPhotography * photo,
+  gboolean (*get_zoom) (GstPhotography * photo, gfloat * zoom);
+  gboolean (*get_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode * flicker_mode);
-    gboolean (*get_focus_mode) (GstPhotography * photo,
+  gboolean (*get_focus_mode) (GstPhotography * photo,
       GstFocusMode * focus_mode);
 
-    gboolean (*set_ev_compensation) (GstPhotography * photo, gfloat ev_comp);
-    gboolean (*set_iso_speed) (GstPhotography * photo, guint iso_speed);
-    gboolean (*set_aperture) (GstPhotography * photo, guint aperture);
-    gboolean (*set_exposure) (GstPhotography * photo, guint32 exposure);
-    gboolean (*set_white_balance_mode) (GstPhotography * photo,
+  gboolean (*set_ev_compensation) (GstPhotography * photo, gfloat ev_comp);
+  gboolean (*set_iso_speed) (GstPhotography * photo, guint iso_speed);
+  gboolean (*set_aperture) (GstPhotography * photo, guint aperture);
+  gboolean (*set_exposure) (GstPhotography * photo, guint32 exposure);
+  gboolean (*set_white_balance_mode) (GstPhotography * photo,
       GstWhiteBalanceMode wb_mode);
-    gboolean (*set_colour_tone_mode) (GstPhotography * photo,
+  gboolean (*set_colour_tone_mode) (GstPhotography * photo,
       GstColourToneMode tone_mode);
-    gboolean (*set_scene_mode) (GstPhotography * photo,
+  gboolean (*set_scene_mode) (GstPhotography * photo,
       GstSceneMode scene_mode);
-    gboolean (*set_flash_mode) (GstPhotography * photo,
+  gboolean (*set_flash_mode) (GstPhotography * photo,
       GstFlashMode flash_mode);
-    gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
-    gboolean (*set_flicker_mode) (GstPhotography * photo,
+  gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
+  gboolean (*set_flicker_mode) (GstPhotography * photo,
       GstFlickerReductionMode flicker_mode);
-    gboolean (*set_focus_mode) (GstPhotography * photo,
+  gboolean (*set_focus_mode) (GstPhotography * photo,
       GstFocusMode focus_mode);
 
-    GstPhotoCaps (*get_capabilities) (GstPhotography * photo);
-    gboolean (*prepare_for_capture) (GstPhotography * photo,
+  GstPhotoCaps (*get_capabilities) (GstPhotography * photo);
+  gboolean (*prepare_for_capture) (GstPhotography * photo,
       GstPhotoCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
   void (*set_autofocus) (GstPhotography * photo, gboolean on);
-    gboolean (*set_config) (GstPhotography * photo, GstPhotoSettings * config);
-    gboolean (*get_config) (GstPhotography * photo, GstPhotoSettings * config);
+  gboolean (*set_config) (GstPhotography * photo, GstPhotoSettings * config);
+  gboolean (*get_config) (GstPhotography * photo, GstPhotoSettings * config);
 
   gboolean (*get_noise_reduction) (GstPhotography * photo,
     guint * noise_reduction);
