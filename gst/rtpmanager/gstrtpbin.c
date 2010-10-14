@@ -1643,7 +1643,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
           "Use the pipeline clock to set the NTP time in the RTCP SR messages",
-          DEFAULT_AUTOREMOVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_USE_PIPELINE_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpBin::buffer-mode:
    *
