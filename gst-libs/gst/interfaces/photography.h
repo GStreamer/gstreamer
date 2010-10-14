@@ -312,9 +312,9 @@ typedef struct _GstPhotographyInterface
   gboolean (*get_config) (GstPhotography * photo, GstPhotoSettings * config);
 
   gboolean (*get_noise_reduction) (GstPhotography * photo,
-    guint * noise_reduction);
+    GstPhotographyNoiseReduction * noise_reduction);
   gboolean (*set_noise_reduction) (GstPhotography * photo,
-    guint noise_reduction);
+    GstPhotographyNoiseReduction noise_reduction);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
