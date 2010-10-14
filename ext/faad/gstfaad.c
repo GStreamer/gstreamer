@@ -334,6 +334,9 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   GstBuffer *buf;
   const GValue *value;
 
+  /* clean up current decoder, rather than trying to reconfigure */
+  gst_faad_close_decoder (faad);
+
   /* Assume raw stream */
   faad->packetised = FALSE;
 
@@ -365,6 +368,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
         (((cdata[0] & 0x07) << 1) | ((cdata[1] & 0x80) >> 7)),
         ((cdata[1] & 0x78) >> 3));
 
+    if (!gst_faad_open_decoder (faad))
+      goto open_failed;
     /* someone forgot that char can be unsigned when writing the API */
     if ((gint8) faacDecInit2 (faad->handle, cdata, csize, &samplerate,
             &channels) < 0)
@@ -426,6 +431,12 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
 wrong_length:
   {
     GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
+    gst_object_unref (faad);
+    return FALSE;
+  }
+open_failed:
+  {
+    GST_DEBUG_OBJECT (faad, "failed to create decoder");
     gst_object_unref (faad);
     return FALSE;
   }
@@ -1111,6 +1122,8 @@ init:
     guint8 ch;
 
     GST_DEBUG_OBJECT (faad, "initialising ...");
+    if (!gst_faad_open_decoder (faad))
+      goto open_failed;
     /* We check if the first data looks like it might plausibly contain
      * appropriate initialisation info... if not, we use our fake_codec_data
      */
@@ -1154,8 +1167,10 @@ init:
        * so monitor for changes and kick faad when needed */
       if (GST_READ_UINT32_BE (input_data) >> 4 != faad->last_header >> 4) {
         GST_DEBUG_OBJECT (faad, "ADTS header changed, forcing Init");
-        faad->init = FALSE;
         faad->last_header = GST_READ_UINT32_BE (input_data);
+        /* kick hard */
+        gst_faad_close_decoder (faad);
+        faad->init = FALSE;
         goto init;
       }
     }
@@ -1277,6 +1292,13 @@ out:
   return ret;
 
 /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("Failed to open decoder"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
 init_failed:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
@@ -1363,8 +1385,6 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_faad_open_decoder (faad))
-        return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -1378,9 +1398,9 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_faad_reset (faad);
+      gst_faad_close_decoder (faad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_faad_close_decoder (faad);
       break;
     default:
       break;
