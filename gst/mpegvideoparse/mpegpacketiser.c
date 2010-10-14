@@ -108,6 +108,16 @@ mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end)
       return cur;
     }
 
+    /* accelerate search for start code */
+    if (*cur > 1) {
+      while (cur < (end - 4) && *cur > 1)
+        if (cur[3] > 1)
+          cur += 4;
+        else
+          cur++;
+      code = 0xffffff00;
+    }
+
     /* Add the next available byte to the collected sync word */
     code |= *cur++;
   }
