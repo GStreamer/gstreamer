@@ -591,7 +591,7 @@ gst_photography_iface_class_init (gpointer g_class)
 
   /* Exposure */
   g_object_interface_install_property (g_class,
-      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_EXPOSURE,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_EXPOSURE_TIME,
           "Exposure time in milliseconds",
           "Exposure time defines how long the shutter will stay open (0 = auto)",
           0, G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -616,6 +616,83 @@ gst_photography_iface_class_init (gpointer g_class)
           "Zoom property",
           "How much the resulted image will be zoomed",
           1.0f, 10.0f, 1.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:color-temperature:
+   *
+   * Color temperature parameter for manual white balance.
+   * Control color temperature in Kelvin units.
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_COLOR_TEMPERATURE,
+          "Color temperature in Kelvin units",
+          "Color temperature in Kelvin units for manual white balance",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:white-point:
+   *
+   * White point parameter for manual white balance.
+   * Describes the color "white" as raw values.
+   *
+   * FIXME: check and document correct representation for white point
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_value_array (GST_PHOTOGRAPHY_PROP_WHITE_POINT,
+          "White point",
+          "Describe color white as raw values",
+          g_param_spec_uint ("raw-value", "Raw value",
+              "Raw value", 0, G_MAXUINT, 0,
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:analog-gain:
+   *
+   * Linear multiplicative value how much amplification is applied to the signal
+   * before A-D conversion.
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_float (GST_PHOTOGRAPHY_PROP_ANALOG_GAIN,
+          "Analog gain applied to the sensor",
+          "Analog gain applied to the sensor",
+          1.0f, G_MAXFLOAT, 1.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:lens-focus:
+   *
+   * Manual changing of lens focus in diopter units.
+   * Inteded use with GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL focus mode, otherwise
+   * to be ignored.
+   *
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_float (GST_PHOTOGRAPHY_PROP_LENS_FOCUS,
+          "Manual lens focus",
+          "Focus point in diopter units",
+          0.0f, G_MAXFLOAT, 0.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:min-exposure-time:
+   *
+   * Minimum exposure time for automatic exposure mode.
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_MIN_EXPOSURE_TIME,
+          "Minimum exposure time",
+          "Minimum exposure time for automatic exposure mode",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstPhotography:max-exposure-time:
+   *
+   * Maximum exposure time for automatic exposure mode.
+   */
+  g_object_interface_install_property (g_class,
+      g_param_spec_uint (GST_PHOTOGRAPHY_PROP_MAX_EXPOSURE_TIME,
+          "Maximum exposure time",
+          "Maximum exposure time for automatic exposure mode",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Noise Reduction, Bayer an YCC noise reduction are enabled by default */
   g_object_interface_install_property (g_class,

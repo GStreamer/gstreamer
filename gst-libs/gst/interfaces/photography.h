@@ -51,6 +51,9 @@ G_BEGIN_DECLS
 /* Custom GstMessage name that will be sent to GstBus when shake risk changes */
 #define GST_PHOTOGRAPHY_SHAKE_RISK "shake-risk"
 
+/* Maximum white point values used in #GstPhotographySettings */
+#define MAX_WHITE_POINT_VALUES 4
+
 /* Interface property names */
 #define GST_PHOTOGRAPHY_PROP_WB_MODE      "white-balance-mode"
 #define GST_PHOTOGRAPHY_PROP_COLOR_TONE   "color-tone-mode"
@@ -63,7 +66,7 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_EV_COMP      "ev-compensation"
 #define GST_PHOTOGRAPHY_PROP_ISO_SPEED    "iso-speed"
 #define GST_PHOTOGRAPHY_PROP_APERTURE     "aperture"
-#define GST_PHOTOGRAPHY_PROP_EXPOSURE     "exposure"
+#define GST_PHOTOGRAPHY_PROP_EXPOSURE_TIME     "exposure-time"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS \
     "image-capture-supported-caps"
 #define GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS \
@@ -71,6 +74,13 @@ G_BEGIN_DECLS
 #define GST_PHOTOGRAPHY_PROP_FLICKER_MODE "flicker-mode"
 #define GST_PHOTOGRAPHY_PROP_FOCUS_MODE   "focus-mode"
 #define GST_PHOTOGRAPHY_PROP_ZOOM   "zoom"
+#define GST_PHOTOGRAPHY_PROP_COLOR_TEMPERATURE "color-temperature"
+#define GST_PHOTOGRAPHY_PROP_WHITE_POINT  "white-point"
+#define GST_PHOTOGRAPHY_PROP_ANALOG_GAIN  "analog-gain"
+#define GST_PHOTOGRAPHY_PROP_EXPOSURE_MODE     "exposure-mode"
+#define GST_PHOTOGRAPHY_PROP_LENS_FOCUS   "lens-focus"
+#define GST_PHOTOGRAPHY_PROP_MIN_EXPOSURE_TIME "min-exposure-time"
+#define GST_PHOTOGRAPHY_PROP_MAX_EXPOSURE_TIME "max-exposure-time"
 
 /**
  * GstPhotography:
@@ -114,7 +124,8 @@ typedef enum
   GST_PHOTOGRAPHY_WB_MODE_CLOUDY,
   GST_PHOTOGRAPHY_WB_MODE_SUNSET,
   GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN,
-  GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT
+  GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT,
+  GST_PHOTOGRAPHY_WB_MODE_MANUAL
 } GstPhotographyWhiteBalanceMode;
 
 typedef enum
@@ -175,8 +186,9 @@ typedef enum
   GST_PHOTOGRAPHY_CAPS_APERTURE = (1 << 8),
   GST_PHOTOGRAPHY_CAPS_EXPOSURE = (1 << 9),
   GST_PHOTOGRAPHY_CAPS_SHAKE = (1 << 10),
-  GST_PHOTOGRAPHY_CAPS_NOISE_REDUCTION = (1 << 11),
-  GST_PHOTOGRAPHY_CAPS_FLICKER_REDUCTION = (1 << 12),
+  GST_PHOTOGRAPHY_CAPS_WHITE_BALANCE = (1 << 11),
+  GST_PHOTOGRAPHY_CAPS_NOISE_REDUCTION = (1 << 12),
+  GST_PHOTOGRAPHY_CAPS_FLICKER_REDUCTION = (1 << 13),
   GST_PHOTOGRAPHY_CAPS_ALL = (~0)
 } GstPhotographyCaps;
 
@@ -204,7 +216,13 @@ typedef enum {
     GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED,
     GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL,
     GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED,
+    GST_PHOTOGRAPHY_FOCUS_MODE_MANUAL
 } GstPhotographyFocusMode;
+
+typedef enum {
+    GST_PHOTOGRAPHY_EXPOSURE_MODE_AUTO = 0,
+    GST_PHOTOGRAPHY_EXPOSURE_MODE_MANUAL
+} GstPhotographyExposureMode;
 
 typedef struct
 {
@@ -212,7 +230,7 @@ typedef struct
   GstPhotographyColorToneMode tone_mode;
   GstPhotographySceneMode scene_mode;
   GstPhotographyFlashMode flash_mode;
-  guint32 exposure;
+  guint32 exposure_time;
   guint aperture;
   gfloat ev_compensation;
   guint iso_speed;
@@ -220,6 +238,13 @@ typedef struct
   GstPhotographyFlickerReductionMode flicker_mode;
   GstPhotographyFocusMode focus_mode;
   GstPhotographyNoiseReduction noise_reduction;
+  GstPhotographyExposureMode exposure_mode;
+  guint color_temperature;
+  guint white_point[MAX_WHITE_POINT_VALUES];
+  gfloat analog_gain;
+  gfloat lens_focus;
+  guint min_exposure_time;
+  guint max_exposure_time;
 } GstPhotographySettings;
 
 /**
