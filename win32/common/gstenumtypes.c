@@ -349,6 +349,7 @@ gst_element_flags_get_type (void)
     {C_FLAGS (GST_ELEMENT_IS_SINK), "GST_ELEMENT_IS_SINK", "is-sink"},
     {C_FLAGS (GST_ELEMENT_UNPARENTING), "GST_ELEMENT_UNPARENTING",
         "unparenting"},
+    {C_FLAGS (GST_ELEMENT_IS_SOURCE), "GST_ELEMENT_IS_SOURCE", "is-source"},
     {C_FLAGS (GST_ELEMENT_FLAG_LAST), "GST_ELEMENT_FLAG_LAST", "flag-last"},
     {0, NULL, NULL}
   };
