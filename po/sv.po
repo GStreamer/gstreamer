@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-06-07 18:16+0100\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-08-09 11:02+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -661,33 +661,36 @@ msgstr "geografiskt platsnamn"
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "longitud för geografisk plats"
+msgstr "förflyttningshastighet för geografisk plats"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "förflyttningshastighet för fångstenheten när mediat skapas (i meter/s)"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "höjd för geografisk plats"
+msgstr "förflyttningsriktning för geografisk plats"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indikerar riktningen som enheten förflyttas när mediat skapas. Det "
+"representeras som grader i flyttalsrepresentation, 0 betyder geografiskt "
+"nordlig riktning och ökar medsols"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "höjd för geografisk plats"
+msgstr "fångstriktning för geografisk plats"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indikerar riktningen som enheten pekar mot när mediat skapas. Det "
+"representeras som grader i flyttalsrepresentation, 0 betyder geografiskt "
+"nordlig riktning och ökar medsols"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -751,18 +754,16 @@ msgstr ""
 "användaren detta media"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "enhetstillverkare"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "version av kodaren som använts för att koda denna ström"
+msgstr "Tillverkare av enheten som använts för att skapa detta media"
 
 msgid "device model"
-msgstr ""
+msgstr "enhetsmodell"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "version av kodaren som använts för att koda denna ström"
+msgstr "Modell av enheten som använts för att skapa detta media"
 
 #, fuzzy
 msgid "application name"
@@ -770,7 +771,7 @@ msgstr "geografiskt platsnamn"
 
 #, fuzzy
 msgid "Application used to create the media"
-msgstr "version av kodaren som använts för att koda denna ström"
+msgstr "Modell av enheten som använts för att skapa detta media"
 
 msgid "application data"
 msgstr ""
@@ -779,10 +780,10 @@ msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr ""
+msgstr "bildorientering"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Hur bilden ska roteras eller vändas före visning"
 
 msgid ", "
 msgstr ", "
@@ -1157,7 +1158,7 @@ msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr ""
+msgstr "Installera inte signalhanterare för SIGUSR1 och SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"

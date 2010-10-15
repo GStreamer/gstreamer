@@ -1,14 +1,14 @@
-# translation of gstreamer-0.10.28.2.po to Español
+# translation of gstreamer-0.10.29.2.po to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 # Jorge González González <aloriel@gmail.com>, 2009, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-05-01 11:00+0200\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-08-17 20:00+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "Language: es\n"
@@ -659,33 +659,38 @@ msgstr "nombre de la geoubicación"
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "longitud de la geolocalización"
+msgstr "velocidad de movimiento de la geolocalización"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"velocidad de movimiento del dispositivo de captura mientras realiza la "
+"captura, en m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "elevación de la geolocalización"
+msgstr "dirección de movimiento de la geolocalización"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indica la dirección de movimiento del dispositivo que realiza la captura de "
+"un medio. Se representa en grados o en una representación en coma flotante, "
+"0 significa el norte geográfico y aumenta de forma horaria."
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "elevación de la geolocalización"
+msgstr "dirección de captura de la geolocalización"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indica la dirección a la que apunta el dispositivo que realiza la captura de "
+"un medio. Se representa en grados o en una representación en coma flotante, "
+"0 significa el norte geográfico y aumenta de forma horaria."
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -749,18 +754,16 @@ msgstr ""
 "gustará al usuario."
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "fabricante del dispositivo"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "versión del codificador usado para codificar este flujo"
+msgstr "Fabricante del dispositivo usado para crear este medio"
 
 msgid "device model"
-msgstr ""
+msgstr "modelo del dispositivo"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "versión del codificador usado para codificar este flujo"
+msgstr "Modelo del dispositivo usado para crear este medio"
 
 #, fuzzy
 msgid "application name"
@@ -768,7 +771,7 @@ msgstr "nombre de la geoubicación"
 
 #, fuzzy
 msgid "Application used to create the media"
-msgstr "versión del codificador usado para codificar este flujo"
+msgstr "Modelo del dispositivo usado para crear este medio"
 
 msgid "application data"
 msgstr ""
@@ -777,10 +780,10 @@ msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientación de la imagen"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Cómo se debería rotar o voltear la imagen antes de mostrarla"
 
 msgid ", "
 msgstr ", "
@@ -1156,7 +1159,7 @@ msgid "Do not install a fault handler"
 msgstr "No instalar un manejador predeterminado"
 
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr ""
+msgstr "No instalar los manejadores de señales para SIGUSR1 y SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimir la traza de asignaciones (si se activó al compilar)"

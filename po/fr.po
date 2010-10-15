@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-04-30 22:36+0200\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-09-02 21:06+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -655,33 +655,37 @@ msgstr "nom d'emplacement géographique"
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "longitude de l'emplacement"
+msgstr "vitesse de déplacement géolocalisé"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"vitesse du mouvement (en m/s) du périphérique de capture durant la capture"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "altitude de l'emplacement"
+msgstr "direction du déplacement géolocalisé"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indique la direction du déplacement du périphérique effectuant la capture "
+"d'un média. Elle est indiquée en degrés, par un nombre à virgules. 0 indique "
+"le nord géographique et le nombre augmente dans le sens horaire"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "altitude de l'emplacement"
+msgstr "direction de la capture géolocalisée"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indique la direction du périphérique au moment de la capture d'un média. "
+"Elle est indiquée en degrés, par un nombre à virgules. 0 indique le nord "
+"géographique et le nombre augmente dans le sens horaire"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -746,18 +750,16 @@ msgstr ""
 "apprécie ce média"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "fabricant du périphérique"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "version du codeur utilisé pour le codage du flux"
+msgstr "Fabricant du périphérique utilisé pour créer ce média"
 
 msgid "device model"
-msgstr ""
+msgstr "modèle du périphérique"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "version du codeur utilisé pour le codage du flux"
+msgstr "Modèle du périphérique utilisé pour créer ce média"
 
 #, fuzzy
 msgid "application name"
@@ -765,7 +767,7 @@ msgstr "nom d'emplacement géographique"
 
 #, fuzzy
 msgid "Application used to create the media"
-msgstr "version du codeur utilisé pour le codage du flux"
+msgstr "Modèle du périphérique utilisé pour créer ce média"
 
 msgid "application data"
 msgstr ""
@@ -774,10 +776,11 @@ msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientation de l'image"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr ""
+"Indique la manière de pivoter ou de retourner l'image avant de l'afficher"
 
 msgid ", "
 msgstr ", "
@@ -1153,7 +1156,7 @@ msgid "Do not install a fault handler"
 msgstr "N'installe pas de gestionnaire de dysfonctionnement"
 
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr ""
+msgstr "N'installe pas de gestionnaire de signal pour SIGUSR1 et SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Affiche les traces d'allocations (si activées lors de la compilation)"

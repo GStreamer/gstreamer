@@ -1,4 +1,4 @@
-# translation of gstreamer-0.10.28.2.po to Dutch
+# translation of gstreamer-0.10.29.2.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-04-30 15:45+0200\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-08-29 22:04+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -659,33 +659,36 @@ msgstr "naam geografische locatie"
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "breedtegraad van de geografische locatie"
+msgstr "verplaatsingssnelheid op de geografische locatie"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "verplaatsingssnelheid van het opnameapparaat tijdens de opname in m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "hoogte van de geografische locatie"
+msgstr "bewegingsrichting op de geografische locatie"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"geeft de bewegingsrichting aan van het apparaat dat de opname op het medium "
+"doet. Het wordt weergegeven in graden in drijvendekommavorm, 0 betekent het "
+"geografische noorden en neem rechtsom toe"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "hoogte van de geografische locatie"
+msgstr "opnamerichting op de geografische locatie"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"geeft de richting aan waarnaar het apparaat wijst dat de opname op het "
+"medium doet. Het wordt weergegeven in graden in drijvendekommavorm, 0 "
+"betekent het geografische noorden en neem rechtsom toe"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -749,18 +752,17 @@ msgstr ""
 "de gebruiker dit medium waardeert"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "apparaatfabrikant"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "versie van de encoder gebruikt om deze stroom te coderen"
+msgstr ""
+"Fabrikant van het apparaat dat gebruikt wordt om dit medium aan te maken"
 
 msgid "device model"
-msgstr ""
+msgstr "apparaatmodel"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "versie van de encoder gebruikt om deze stroom te coderen"
+msgstr "Model van het apparaat dat gebruikt wordt om dit medium aan te maken"
 
 #, fuzzy
 msgid "application name"
@@ -768,7 +770,7 @@ msgstr "naam geografische locatie"
 
 #, fuzzy
 msgid "Application used to create the media"
-msgstr "versie van de encoder gebruikt om deze stroom te coderen"
+msgstr "Model van het apparaat dat gebruikt wordt om dit medium aan te maken"
 
 msgid "application data"
 msgstr ""
@@ -777,10 +779,10 @@ msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr ""
+msgstr "oriëntatie van de afbeelding"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Hoe de afbeelding geroteerd moet worden of gespiegeld bij tonen"
 
 msgid ", "
 msgstr ", "
@@ -1153,7 +1155,7 @@ msgid "Do not install a fault handler"
 msgstr "Geen foutafhandelaar installeren"
 
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr ""
+msgstr "Geen signaalafhandelaars installeren voor SIGUSR1 en SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"

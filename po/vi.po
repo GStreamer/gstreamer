@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.28.2\n"
+"Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-04-27 22:59+0930\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "Language: vi\n"
@@ -649,33 +649,37 @@ msgstr "tên định vị địa lý"
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "độ kinh định vị địa lý"
+msgstr "tốc độ di chuyển theo vị trí đại lý"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"tốc độ di chuyển của thiết bị bắt trong khi thực hiện việc bắt theo miligiây"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "độ cao định vị địa lý"
+msgstr "hướng di chuyển theo vị trí đại lý"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"ngụ ý hướng di chuyển của thiết bị đang bắt phương tiện. Giá trị này được "
+"đại diện bằng độ theo dấu phẩy động: 0 là Bắc đại lý, và giá trị tăng theo "
+"chiều kim đồng hồ."
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "độ cao định vị địa lý"
+msgstr "hướng bắt theo vị trí đại lý"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"ngụ ý hướng về đó thiết bị đang chỉ khi bắt phương tiện. Giá trị này được "
+"đại diện bằng độ theo dấu phẩy động: 0 là Bắc đại lý, và giá trị tăng theo "
+"chiều kim đồng hồ."
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -740,18 +744,16 @@ msgstr ""
 "này"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "nhà chế tạo thiết bị"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
+msgstr "Nhà chế tạo của thiết bị được dùng để tạo phương tiện này"
 
 msgid "device model"
-msgstr ""
+msgstr "mẫu thiết bị"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
+msgstr "Mô hình của thiết bị được dùng để tạo phương tiện này"
 
 #, fuzzy
 msgid "application name"
@@ -759,7 +761,7 @@ msgstr "tên định vị địa lý"
 
 #, fuzzy
 msgid "Application used to create the media"
-msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
+msgstr "Mô hình của thiết bị được dùng để tạo phương tiện này"
 
 msgid "application data"
 msgstr ""
@@ -768,10 +770,10 @@ msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr ""
+msgstr "hướng ảnh"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Hướng về đó ảnh nên được quay hoặc lật trước khi hiển thị"
 
 msgid ", "
 msgstr ", "
@@ -1140,9 +1142,8 @@ msgstr "TẬP_TIN"
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Không cài đặt bộ quản lý lỗi"
+msgstr "Đừng cài đặt bộ quản lý tín hiệu cho SIGUSR1 và SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"

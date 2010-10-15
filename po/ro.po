@@ -1,0 +1,1240 @@
+# Romanian translation for gstreamer
+# This file is distributed under the same license as the gstreamer package.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2010-10-16 00:12+0100\n"
+"PO-Revision-Date: 2010-08-16 01:10+0300\n"
+"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
+"X-Generator: Virtaal 0.6.1\n"
+
+msgid "Print the GStreamer version"
+msgstr "Afișează versiunea GStreamer"
+
+msgid "Make all warnings fatal"
+msgstr "Setează toate avertizările ca fiind fatale"
+
+msgid "Print available debug categories and exit"
+msgstr "Afișează categoriile de depanare disponibile și ieși"
+
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Nivelul standard de depanare de la 1 (numai erorile) la 5 (orice) sau 0 fără "
+"afișare"
+
+msgid "LEVEL"
+msgstr "NIVEL"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Lista separată de virgule cu perechile nume_categorie:nivel pentru a seta "
+"nivelul specific pentru fiecare categorie. Exemplu: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
+
+msgid "LIST"
+msgstr "LISTĂ"
+
+msgid "Disable colored debugging output"
+msgstr "Dezactivează afișarea în culori pentru depanare"
+
+msgid "Disable debugging"
+msgstr "Dezactivează depanarea"
+
+msgid "Enable verbose plugin loading diagnostics"
+msgstr ""
+"Activează diagnosticele detaliate pentru încărcarea modulelor de extensie"
+
+msgid "Colon-separated paths containing plugins"
+msgstr "Căile către module de extensie, separate prin două puncte (:)"
+
+msgid "PATHS"
+msgstr "CĂI"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Lista modulelor de preîncărcat, separate prin virgulă, în plus față de lista "
+"stocată în variabila de mediu GST_PLUGIN_PATH"
+
+msgid "PLUGINS"
+msgstr "MODULE"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr ""
+"Dezactivează capturarea erorilor de segmentare în timpul încărcării modulelor"
+
+msgid "Disable updating the registry"
+msgstr "Dezactivează actualizarea registrului"
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr ""
+"Dezactivează lansarea de procese ajutătoare în timpul scanării registrului"
+
+msgid "GStreamer Options"
+msgstr "Opțiuni GStreamer"
+
+msgid "Show GStreamer Options"
+msgstr "Arată opțiunile GStreamer"
+
+msgid "Unknown option"
+msgstr "Opțiune necunoscută"
+
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer a întâlnit o eroare generală într-o bibliotecă principală."
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Dezvoltatorii programului GStreamer au fost prea leneși pentru a atribui un "
+"cod acestei erori."
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr "Eroare internă GStreamer: cod neimplementat."
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"Eroare GStreamer: schimbarea de stare nu a reușit și un element nu pentru a "
+"posta un mesaj de eroare corespunzător cu motivul eșecului."
+
+msgid "Internal GStreamer error: pad problem."
+msgstr "Eroare internă GStreamer: problemă de „pad”."
+
+msgid "Internal GStreamer error: thread problem."
+msgstr "Eroare internă GStreamer: problemă cu firele de execuție."
+
+msgid "Internal GStreamer error: negotiation problem."
+msgstr "Eroare internă GStreamer: problemă de negociere."
+
+msgid "Internal GStreamer error: event problem."
+msgstr "Eroare internă GStreamer: problemă legată de un eveniment."
+
+msgid "Internal GStreamer error: seek problem."
+msgstr "Eroare internă GStreamer: problemă de derulare."
+
+msgid "Internal GStreamer error: caps problem."
+msgstr "Eroare internă GStreamer: problemă de majuscule."
+
+msgid "Internal GStreamer error: tag problem."
+msgstr "Eroare internă Gstreamer: problemă de etichetă."
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "Lipsește un modul din instalarea programului GStreamer."
+
+msgid "Internal GStreamer error: clock problem."
+msgstr "Eroare internă GStreamer: problemă de ceas."
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Această aplicație încearcă să folosească o funcție a programului GStreamer "
+"care a fost dezactivată."
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer a întâlnit o eroare generală într-o bibliotecă suport."
+
+msgid "Could not initialize supporting library."
+msgstr "Nu se poate inițializa biblioteca suport."
+
+msgid "Could not close supporting library."
+msgstr "Nu se poate închide biblioteca suport."
+
+msgid "Could not configure supporting library."
+msgstr "Nu se poate configura biblioteca suport."
+
+msgid "Encoding error."
+msgstr ""
+
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer a întâlnit o eroare generală de resurse."
+
+msgid "Resource not found."
+msgstr "Resursă negăsită."
+
+msgid "Resource busy or not available."
+msgstr "Resursă ocupată sau nedisponibilă."
+
+msgid "Could not open resource for reading."
+msgstr "Nu se poate deschide resursa pentru citire."
+
+msgid "Could not open resource for writing."
+msgstr "Nu se poate deschide resursa pentru scriere."
+
+msgid "Could not open resource for reading and writing."
+msgstr "Nu se poate deschide resursa pentru citire și scriere."
+
+msgid "Could not close resource."
+msgstr "Nu se poate închide resursa."
+
+msgid "Could not read from resource."
+msgstr "Nu se poate citi din resursă."
+
+msgid "Could not write to resource."
+msgstr "Nu se poate scrie în resursă."
+
+msgid "Could not perform seek on resource."
+msgstr "Nu se poate derula în resursă."
+
+msgid "Could not synchronize on resource."
+msgstr "Nu se poate sincroniza resursa."
+
+msgid "Could not get/set settings from/on resource."
+msgstr "Nu s-au putut obține/defini configurările din/în resursă."
+
+msgid "No space left on the resource."
+msgstr "Nu mai există spațiu liber pe resursă."
+
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer a întâlnit o eroare generală de flux."
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr ""
+"Elementul nu implementează gestionarea acestui flux. Trimiteți o sesizare de "
+"defecțiune."
+
+msgid "Could not determine type of stream."
+msgstr "Nu se poate determina tipul fluxului."
+
+msgid "The stream is of a different type than handled by this element."
+msgstr "Fluxul este de un tip diferit de cel gestionat de acest element."
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Nu există niciun codec care să poată gestiona acest tip de flux."
+
+msgid "Could not decode stream."
+msgstr "Nu se poate decoda fluxul."
+
+msgid "Could not encode stream."
+msgstr "Nu se poate coda fluxul."
+
+msgid "Could not demultiplex stream."
+msgstr "Nu se poate demultiplexa fluxul."
+
+msgid "Could not multiplex stream."
+msgstr "Nu se poate multiplexa fluxul."
+
+msgid "The stream is in the wrong format."
+msgstr "Fluxul este într-un format greșit."
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "Fluxul este criptat și decriptarea nu este suportată."
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Fluxul este criptat și nu poate fi decriptat deoarece nu s-a oferit o cheie "
+"potrivită."
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Niciun mesaj de eroare pentru domeniul %s."
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "Niciun mesaj standard de eroare pentru domeniul %s și codul %d."
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr "Ceasul selectat nu poate fi utilizat în linia de asamblare."
+
+msgid "title"
+msgstr "titlu"
+
+msgid "commonly used title"
+msgstr "titlu folosit în mod obișnuit"
+
+msgid "title sortname"
+msgstr "nume de sortare al titlului"
+
+msgid "commonly used title for sorting purposes"
+msgstr "titlu folosit în mod obișnuit în scop de sortare"
+
+msgid "artist"
+msgstr "artist"
+
+msgid "person(s) responsible for the recording"
+msgstr "persoana responsabilă pentru înregistrare"
+
+msgid "artist sortname"
+msgstr "nume de sortare al artistului"
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "persoana responsabilă pentru înregistrarea în scop de sortare"
+
+msgid "album"
+msgstr "album"
+
+msgid "album containing this data"
+msgstr "album care conține aceste date"
+
+msgid "album sortname"
+msgstr "numele de sortare al albumului"
+
+msgid "album containing this data for sorting purposes"
+msgstr "album care conține aceste date în scop de sortare"
+
+msgid "album artist"
+msgstr "artist album"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "Artistul albumului întreg, așa cum ar trebui să fie afișat"
+
+msgid "album artist sortname"
+msgstr "nume de sortare al artistului albumului"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "Artistul al albumului întreg, așa cum ar trebui să fie sortat"
+
+msgid "date"
+msgstr "data"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr "data la care au fost create aceste date (ca structură GDate)"
+
+#, fuzzy
+msgid "datetime"
+msgstr "data"
+
+#, fuzzy
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr "data la care au fost create aceste date (ca structură GDate)"
+
+msgid "genre"
+msgstr "gen"
+
+msgid "genre this data belongs to"
+msgstr "genul căruia îi aparțin aceste date"
+
+msgid "comment"
+msgstr "comentariu"
+
+msgid "free text commenting the data"
+msgstr "comentariu liber pentru date"
+
+msgid "extended comment"
+msgstr "comentariu extins"
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr ""
+"text liber care comentează datele în key=valoare sau key[en]=comentariu de la"
+
+msgid "track number"
+msgstr "număr piesă"
+
+msgid "track number inside a collection"
+msgstr "numărul piesei în cadrul unei colecții"
+
+msgid "track count"
+msgstr "număr piesă"
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr "numărul pieselor în colecția din care face parte această piesă"
+
+msgid "disc number"
+msgstr "număr disc"
+
+msgid "disc number inside a collection"
+msgstr "număr disc în cadrul unei colecții"
+
+msgid "disc count"
+msgstr "numărul discurilor"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr "numărul discurilor în colecția din care face parte acest disc"
+
+msgid "location"
+msgstr "locație"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Originea fișierului media ca un URI (locație unde este stocată versiunea "
+"originală a fișierului sau fluxului)"
+
+msgid "homepage"
+msgstr "pagina de pornire"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
+"Pagina de pornire pentru acest fișier media (adică pagina de pornire a "
+"artistului sau a filmului)"
+
+msgid "description"
+msgstr "descriere"
+
+msgid "short text describing the content of the data"
+msgstr "text scurt care descrie conținutul acestor date"
+
+msgid "version"
+msgstr "versiune"
+
+msgid "version of this data"
+msgstr "versiunea acestor date"
+
+msgid "ISRC"
+msgstr "ISRC"
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+"Codul Internațional Standardizat de Înregistrări - vezi http://www.ifpi.org/"
+"isrc/"
+
+msgid "organization"
+msgstr "organizație"
+
+msgid "copyright"
+msgstr "drepturi de autor"
+
+msgid "copyright notice of the data"
+msgstr "notiță asupra drepturilor de autor pentru aceste date"
+
+msgid "copyright uri"
+msgstr "uri pentru drepturile de autor"
+
+msgid "URI to the copyright notice of the data"
+msgstr "URI către notița asupra drepturilor de autor pentru aceste date (URI)"
+
+msgid "contact"
+msgstr "contact"
+
+msgid "contact information"
+msgstr "informații de contact"
+
+msgid "license"
+msgstr "licență"
+
+msgid "license of data"
+msgstr "licența datelor"
+
+msgid "license uri"
+msgstr "uri licență"
+
+msgid "URI to the license of the data"
+msgstr "URI pentru licența acestor date"
+
+msgid "performer"
+msgstr "interpret"
+
+msgid "person(s) performing"
+msgstr "persoana care interpretează"
+
+msgid "composer"
+msgstr "compozitor"
+
+msgid "person(s) who composed the recording"
+msgstr "persoana care a compus înregistrarea"
+
+msgid "duration"
+msgstr "durata"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "durata în unitățile de timp ale programului GStreamer (nanosecunde)"
+
+msgid "codec"
+msgstr "codec"
+
+msgid "codec the data is stored in"
+msgstr "codecul cu care au fost stocate datele"
+
+msgid "video codec"
+msgstr "codec video"
+
+msgid "codec the video data is stored in"
+msgstr "codecul cu care au fost stocate datele video"
+
+msgid "audio codec"
+msgstr "codec audio"
+
+msgid "codec the audio data is stored in"
+msgstr "codec cu care au fost stocate datele audio"
+
+msgid "subtitle codec"
+msgstr "codec subtitrare"
+
+msgid "codec the subtitle data is stored in"
+msgstr "codec cu care au fost stocate datele subtitrării"
+
+msgid "container format"
+msgstr "format container"
+
+msgid "container format the data is stored in"
+msgstr "formatul containerului în care sunt stocate datele"
+
+msgid "bitrate"
+msgstr "rata de biți"
+
+msgid "exact or average bitrate in bits/s"
+msgstr "rata de biți exactă sau medie, în biți/s"
+
+msgid "nominal bitrate"
+msgstr "rata de biți nominală"
+
+msgid "nominal bitrate in bits/s"
+msgstr "rata de biți nominală în biți/s"
+
+msgid "minimum bitrate"
+msgstr "rata de biți minimă"
+
+msgid "minimum bitrate in bits/s"
+msgstr "rata de biți minimă în biți/s"
+
+msgid "maximum bitrate"
+msgstr "rata de biți maximă"
+
+msgid "maximum bitrate in bits/s"
+msgstr "rata de biți maximă în biți/s"
+
+msgid "encoder"
+msgstr "codor"
+
+msgid "encoder used to encode this stream"
+msgstr "codorul folosit pentru a coda acest flux"
+
+msgid "encoder version"
+msgstr "versiunea codorului"
+
+msgid "version of the encoder used to encode this stream"
+msgstr "versiunea codorului folosit pentru a coda acest flux"
+
+msgid "serial"
+msgstr "serial"
+
+msgid "serial number of track"
+msgstr "numărul serial al pistei"
+
+msgid "replaygain track gain"
+msgstr "câștigul replaygain al pistei"
+
+msgid "track gain in db"
+msgstr "câștigul în db al pistei"
+
+msgid "replaygain track peak"
+msgstr "vârful replaygain al pistei"
+
+msgid "peak of the track"
+msgstr "vârful pistei"
+
+msgid "replaygain album gain"
+msgstr "câștigul replaygain al albumului"
+
+msgid "album gain in db"
+msgstr "câștigul în db al albumului"
+
+msgid "replaygain album peak"
+msgstr "vârful replaygain al albumului"
+
+msgid "peak of the album"
+msgstr "vârful albumului"
+
+msgid "replaygain reference level"
+msgstr "nivelul de referință replaygain"
+
+msgid "reference level of track and album gain values"
+msgstr "nivelul de referință al valorilor câștigului pentru pistă și album"
+
+msgid "language code"
+msgstr "cod limbă"
+
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr "codul de limbă al acestui flux, conform ISO-639-1"
+
+msgid "image"
+msgstr "imagine"
+
+msgid "image related to this stream"
+msgstr "imagine în legătură cu acest flux"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr "previzualizare imagine"
+
+msgid "preview image related to this stream"
+msgstr "previzualizarea imaginii în legătură cu acest flux"
+
+msgid "attachment"
+msgstr "atașament"
+
+msgid "file attached to this stream"
+msgstr "fișier atașat la acest flux"
+
+msgid "beats per minute"
+msgstr "bătăi pe minut"
+
+msgid "number of beats per minute in audio"
+msgstr "numărul de bătăi pe minut în partea audio"
+
+msgid "keywords"
+msgstr "cuvinte cheie"
+
+msgid "comma separated keywords describing the content"
+msgstr "cuvinte cheie separate prin virgulă, care descriu conținutul"
+
+msgid "geo location name"
+msgstr "nume geo-locație"
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"nume lizibil descriptiv al locației unde a fost înregistrat sau produs acest "
+"fișier media"
+
+msgid "geo location latitude"
+msgstr "latitudine geo-locație"
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"latitudinea geo-locației unde a fost înregistrat sau produs acest fișier "
+"media conform WGS84 (zero la ecuator, valori negative pentru latitudini "
+"sudice)"
+
+msgid "geo location longitude"
+msgstr "longitudine geo-locație"
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"longitudine geo-locației unde a fost înregistrat sau produs acest fișier "
+"media în grade conform WGS84 (zero la primul meridian din Greenwich/Marea "
+"Britanie, valori negative pentru longitudini vestice)"
+
+msgid "geo location elevation"
+msgstr "altitudine geo-locație"
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"altitudinea geo-locației unde a fost înregistrat sau produs acest fișier "
+"media conform WGS84 (zero la ecuator, valori negative pentru latitudini "
+"sudice) (zero este nivelul mediu al mării)"
+
+msgid "geo location country"
+msgstr "țară geo-locație"
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr ""
+"țara (nume în limba engleză) unde a fost înregistrat sau produs acest fișier "
+"media"
+
+msgid "geo location city"
+msgstr "oraș geo-locație"
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr ""
+"oraș (nume în limba engleză) unde a fost înregistrat sau produs acest fișier "
+"media"
+
+msgid "geo location sublocation"
+msgstr "sublocație geo-locație"
+
+msgid ""
+"a location whithin a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"locație în orașul unde a fost înregistrat sau produs acest fișier media (de "
+"ex. cartierul)"
+
+#, fuzzy
+msgid "geo location horizontal error"
+msgstr "nume geo-locație"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr ""
+
+msgid "geo location movement speed"
+msgstr "viteza de circulație a geo-locației"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+"viteza de circulație a dispozitivului de capturare în timp ce desfășurau "
+"activitățile de captare în m/s"
+
+msgid "geo location movement direction"
+msgstr "direcția de circulație a geo-locației"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"indica direcția de mișcare a aparatului de captare cu care a fost "
+"înregistrat fișierul media. Acesta este reprezentat ca de grade în virgulă "
+"mobilă, 0 înseamnă nord geografic și crește în sensul acelor de ceasornic"
+
+msgid "geo location capture direction"
+msgstr "direcția de captare a geo-locației"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"indica direcția în care arăta aparatul de captare cu care a fost înregistrat "
+"fișierul media. Acesta este reprezentat ca de grade în virgulă mobilă, 0 "
+"înseamnă nord geografic și crește în sensul acelor de ceasornic"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "nume show"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr ""
+"Numele unui show tv/podcast/serial din care acest fișier media face parte"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr "arată numele de sortare"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Numele unui show tv/podcast/serial din care acest fișier media face parte, "
+"pentru sortare"
+
+msgid "episode number"
+msgstr "număr episod"
+
+msgid "The episode number in the season the media is part of"
+msgstr "Numărul episodului din care acest fișier media face parte"
+
+msgid "season number"
+msgstr "numărul sezon"
+
+msgid "The season number of the show the media is part of"
+msgstr "Numărul sezonului din care acest fișier media face parte"
+
+msgid "lyrics"
+msgstr "versuri"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "Versurile fișierului media, frecvent utilizate pentru cântece"
+
+msgid "composer sortname"
+msgstr "nume sortare compozitor"
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr "persoana care a compus înregistrarea, în scop de sortare"
+
+msgid "grouping"
+msgstr "grupare"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Grupează media înrudite care se întind pe mai multe piste, ca de ex. "
+"diferitele piese ale unui concert. Este un nivel de organizare mai ridicat "
+"decât al unei piese, dar mai coborât decât al unui album"
+
+msgid "user rating"
+msgstr "evaluare utilizator"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Evaluarea atribuită de un utilizator. Cu cât este mai mare evaluarea, cu "
+"atât mai mult i-a plăcut acelui utilizator"
+
+msgid "device manufacturer"
+msgstr "producătorul dispozitivului"
+
+msgid "Manufacturer of the device used to create this media"
+msgstr "Producătorul dispozitivului utilizat pentru a crea acest fișier media"
+
+msgid "device model"
+msgstr "model dispozitiv"
+
+msgid "Model of the device used to create this media"
+msgstr "Modelul dispozitivului utilizat pentru a crea acest fișier media"
+
+#, fuzzy
+msgid "application name"
+msgstr "nume geo-locație"
+
+#, fuzzy
+msgid "Application used to create the media"
+msgstr "Modelul dispozitivului utilizat pentru a crea acest fișier media"
+
+msgid "application data"
+msgstr ""
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr ""
+
+msgid "image orientation"
+msgstr "orientare imagine"
+
+msgid "How the image should be rotated or flipped before display"
+msgstr "Cum ar trebui rotită sau întoarsă imaginea înainte de afișare"
+
+msgid ", "
+msgstr ", "
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "EROARE: de la elementul %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Informații suplimentare pentru depanare:\n"
+"%s\n"
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "containerul gol „%s” specificat, nu este permis"
+
+#, c-format
+msgid "no bin \"%s\", skipping"
+msgstr "niciun container „%s”, se omite"
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "nicio proprietate „%s” în elementul „%s”"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "nu se poate lega %s la %s"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "niciun element „%s”"
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "nu se pot analiza majusculele „%s”"
+
+msgid "link without source element"
+msgstr "legătură fără un element sursă"
+
+msgid "link without sink element"
+msgstr "legătură fără un element derivat"
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "niciun element sursă pentru URI „%s”"
+
+#, c-format
+msgid "no element to link URI \"%s\" to"
+msgstr "niciun element pentru a lega URI „%s” la"
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "niciun element derivat pentru URI „%s”"
+
+#, c-format
+msgid "could not link sink element for URI \"%s\""
+msgstr "nu se poate lega elementul derivat pentru URI „%s”"
+
+msgid "empty pipeline not allowed"
+msgstr "linia de asamblare vidă nu este permisă"
+
+msgid "Internal clock error."
+msgstr "Eroare internă de ceas."
+
+msgid "Internal data flow error."
+msgstr "Eroare internă de flux al datelor."
+
+msgid "A lot of buffers are being dropped."
+msgstr "Multe zone de memorie tampon sunt abandonate."
+
+msgid "Internal data flow problem."
+msgstr "Problemă internă de flux al datelor."
+
+msgid "Internal data stream error."
+msgstr "Eroare internă a fluxului de date."
+
+msgid "Filter caps"
+msgstr "Filtrare majuscule"
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Restricționează capacitățile permise (NULL înseamnă ORICE). Definirea "
+"acestei proprietăți preia o referință către obiectul GstCaps furnizat."
+
+msgid "No file name specified for writing."
+msgstr "Niciun nume de fișier specificat pentru scriere."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nu s-a putut deschide fișierul „%s” pentru scriere."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Eroare la închiderea fișierului „%s”."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Eroare în timpul derulării în fișierul „%s”."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Eroare la scrierea fișierului „%s\"."
+
+msgid "No file name specified for reading."
+msgstr "Niciun nume de fișier specificat pentru citire."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nu se poate deschide fișierul „%s” pentru citire."
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "Nu se pot obține informații despre „%s”."
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "„%s” este un director."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "Fișierul „%s” este un socket."
+
+msgid "Failed after iterations as requested."
+msgstr "Eșec după numărul de iterații care a fost cerut."
+
+msgid "No Temp directory specified."
+msgstr "Niciun director temporar specificat."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nu am putut crea fișierul temporar „%s”."
+
+msgid "Error while writing to download file."
+msgstr "Eroare la scrierea în fișierul descărcat."
+
+msgid "caps"
+msgstr "majuscule"
+
+msgid "detected capabilities in stream"
+msgstr "capabilități detectate în flux"
+
+msgid "minimum"
+msgstr "minim"
+
+msgid "maximum"
+msgstr "maxim"
+
+msgid "force caps"
+msgstr "forțează caps"
+
+msgid "force caps without doing a typefind"
+msgstr "forțează caps fără a efectua un typefind"
+
+msgid "Stream contains no data."
+msgstr "Fluxul nu conține date."
+
+msgid "Implemented Interfaces:\n"
+msgstr "Interfețe implementate:\n"
+
+msgid "readable"
+msgstr "se poate citi"
+
+msgid "writable"
+msgstr "se poate scrie"
+
+msgid "controllable"
+msgstr "se poate controla"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr ""
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr ""
+
+msgid "changeable only in NULL or READY state"
+msgstr ""
+
+msgid "Blacklisted files:"
+msgstr "Fișierele de pe lista neagră:"
+
+msgid "Total count: "
+msgstr "Număr total: "
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "%d fișier pe lista neagră"
+msgstr[1] "%d fișiere pe lista neagră"
+msgstr[2] "%d de fișiere pe lista neagră"
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d modul"
+msgstr[1] "%d module"
+msgstr[2] "%d de module"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "%d intrare pe lista neagră"
+msgstr[1] "%d intrări pe lista neagră"
+msgstr[2] "%d de intrări pe lista neagră"
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d caracteristică"
+msgstr[1] "%d caracteristici"
+msgstr[2] "%d de caracteristici"
+
+msgid "Print all elements"
+msgstr "Tipărește toate elementele"
+
+msgid "Print list of blacklisted files"
+msgstr "Tipărește lista de fișiere de pe lista neagră"
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+"Tipărește o listă prelucrabilă de o mașină a caracteristicilor furnizate de "
+"modulul de extensie specificat sau de toate modulele.\n"
+"                                       Util în conexiunile către mecanisme "
+"externe de instalare automată de module de extensie"
+
+msgid "List the plugin contents"
+msgstr "Listează conținutul modulului de extensie"
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+"Tipărește schemele URI suportate, cu elementele pe care le implementează"
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Nu se poate încărca fișierul modul: %s\n"
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "Niciun astfel de element sau modul „%s”\n"
+
+msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+msgstr ""
+"Utilizare: gst-xmllaunch <fișier.xml> [ element.property=valoare ... ]\n"
+
+#, c-format
+msgid "ERROR: parse of xml file '%s' failed.\n"
+msgstr "EROARE: prelucrarea fișierului xml „%s” a eșuat.\n"
+
+#, c-format
+msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+msgstr ""
+"EROARE: niciun element de prim nivel al liniei de asamblare în fișierul "
+"„%s”.\n"
+
+msgid "WARNING: only one toplevel element is supported at this time.\n"
+msgstr ""
+"AVERTISMENT: doar un element de nivel de vârf este suportat în acest "
+"moment.\n"
+
+#, c-format
+msgid "ERROR: could not parse command line argument %d: %s.\n"
+msgstr "EROARE: nu se poate analiza argumetul %d al liniei de comandă: %s\n"
+
+#, c-format
+msgid "WARNING: element named '%s' not found.\n"
+msgstr "AVERTISMENT: elementul cu numele „%s” nu a fost găsit.\n"
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Primit mesajul #%u, de la elementul „%s” (%s):"
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Primit mesajul #%u, de la pad-ul „%s:%s” (%s):"
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Primit mesajul #%u, de la obiectul „%s” (%s):"
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "Primit mesajul #%u (%s):"
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "Primire EOS de la elementul „%s”.\n"
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "MARCAJ GĂSIT: găsit de către elementul „%s”.\n"
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "MARCAJ GĂSIT   : găsit de către pad „%s:%s”.\n"
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "MARCAJ GĂSIT   : găsit de către obiectul „%s”.\n"
+
+msgid "FOUND TAG\n"
+msgstr "MARCAJ GĂSIT\n"
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"INFORMAȚII:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "AVERTISMENT: de la elementul %s: %s\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "Preîncărcare, se așteaptă terminarea umplerii memoriei tampon...\n"
+
+msgid "buffering..."
+msgstr ""
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "Preîncărcare completă, se setează liniei de asamblare pe REDARE ...\n"
+
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "Preîncărcare, se setează linia de asamblare pe PAUZĂ ...\n"
+
+msgid "Redistribute latency...\n"
+msgstr "Se redistribuie latența...\n"
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "Se definește starea la %s după cum a fost cerut de %s...\n"
+
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
+
+msgid "Output tags (also known as metadata)"
+msgstr "Marcaje de ieșire (cunoscute și ca „metadata”)"
+
+msgid "Output status information and property notifications"
+msgstr "Informații asupra stării de ieșire și notificări proprietăți"
+
+msgid "Do not print any progress information"
+msgstr "Nu tipări niciun fel de informații de progres"
+
+msgid "Output messages"
+msgstr "Mesaje de ieșire"
+
+msgid "Do not output status information of TYPE"
+msgstr "Nu scoate informații despre stările de TIPUL"
+
+msgid "TYPE1,TYPE2,..."
+msgstr "TIP1,TIP2,..."
+
+msgid "Save xml representation of pipeline to FILE and exit"
+msgstr ""
+"Salvarea unei reprezentări xml a liniei de asamblare în FIȘIER și ieșire"
+
+msgid "FILE"
+msgstr "FIȘIER"
+
+msgid "Do not install a fault handler"
+msgstr "Nu instala un gestionar de erori"
+
+msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
+msgstr "Nu instala rutine de tratare a semnalului pentru SIGUSR1 și SIGUSR2"
+
+msgid "Print alloc trace (if enabled at compile time)"
+msgstr "Afișează căile de alocare (dacă s-a activat la momentul compilării)"
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "Forțează EOS pe surse înainte de a închide linia de asamblare"
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "EROARE: linia de asamblare nu a putut fi construită: %s.\n"
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "EROARE: linia de asamblare nu a putut fi construită.\n"
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "AVERTISMENT: linia de asamblare conține erori: %s\n"
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "EROARE: elementul „pipeline” (linie de asamblare) nu a fost găsit.\n"
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "Se setează linia de asamblare pe PAUZĂ ...\n"
+
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr "EROARE: Linia de asamblare nu vrea să fie pusă pe pauză.\n"
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "Linia de asamblare este „live” și nu necesită PREÎNCĂRCARE ...\n"
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "Linia de asamblare este PREÎNCĂRCATĂ ...\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "EROARE: linia de asamblare nu vrea să se preîncarce.\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Linia de asamblare se PREÎNCARCĂ ...\n"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Se setează linia de asamblare pe REDARE ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "EROARE: linia de asamblare nu vrea să redea.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "EOS la închidere activat -- Se forțează EOS pe linia de asamblare\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Se așteaptă EOS...\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS primit - se oprește linia de asamblare...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "A apărut o eroare în timp ce se aștepta EOS\n"
+
+msgid "Execution ended after %"
+msgstr "Execuție terminată după %"
+
+msgid "Setting pipeline to READY ...\n"
+msgstr "Se setează linia de asamblare pe PREGĂTIT ...\n"
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr "Se setează linia de asamblare pe NULL ...\n"
+
+msgid "Freeing pipeline ...\n"
+msgstr "Se eliberează linia de asamblare...\n"
