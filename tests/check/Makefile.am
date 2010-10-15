@@ -389,14 +389,19 @@ pipelines_simple_launch_lines_LDADD = \
 
 orc_adder_CFLAGS = $(ORC_CFLAGS)
 orc_adder_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_adder_SOURCES = orc/adder.c
 orc_audioconvert_CFLAGS = $(ORC_CFLAGS)
 orc_audioconvert_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_audioconvert_SOURCES = orc/audioconvert.c
 orc_volume_CFLAGS = $(ORC_CFLAGS)
 orc_volume_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_volume_SOURCES = orc/volume.c
 orc_videoscale_CFLAGS = $(ORC_CFLAGS)
 orc_videoscale_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_videoscale_SOURCES = orc/videoscale.c
 orc_videotestsrc_CFLAGS = $(ORC_CFLAGS)
 orc_videotestsrc_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_videotestsrc_SOURCES = orc/videotestsrc.c
 
 orc/adder.c: $(top_srcdir)/gst/adder/gstadderorc.orc
 	$(MKDIR_P) orc/
