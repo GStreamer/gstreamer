@@ -314,11 +314,11 @@ orc_merge_linear_u16 (orc_uint16 * d1, const orc_uint16 * s1,
     /* 0: loadw */
     var34 = ptr4[i];
     /* 2: muluwl */
-    var39.i = (orc_uint16) var34.i * (orc_uint16) var35.i;
+    var39.i = ((orc_uint16) var34.i) * ((orc_uint16) var35.i);
     /* 3: loadw */
     var36 = ptr5[i];
     /* 5: muluwl */
-    var40.i = (orc_uint16) var36.i * (orc_uint16) var37.i;
+    var40.i = ((orc_uint16) var36.i) * ((orc_uint16) var37.i);
     /* 6: addl */
     var41.i = var39.i + var40.i;
     /* 7: shrul */
@@ -363,11 +363,11 @@ _backup_orc_merge_linear_u16 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadw */
     var34 = ptr4[i];
     /* 2: muluwl */
-    var39.i = (orc_uint16) var34.i * (orc_uint16) var35.i;
+    var39.i = ((orc_uint16) var34.i) * ((orc_uint16) var35.i);
     /* 3: loadw */
     var36 = ptr5[i];
     /* 5: muluwl */
-    var40.i = (orc_uint16) var36.i * (orc_uint16) var37.i;
+    var40.i = ((orc_uint16) var36.i) * ((orc_uint16) var37.i);
     /* 6: addl */
     var41.i = var39.i + var40.i;
     /* 7: shrul */
@@ -842,8 +842,10 @@ gst_videoscale_orc_downsample_yuyv (guint8 * d1, const guint8 * s1, int n)
     var47.x2[0] = ((orc_uint8) var45.x2[0] + (orc_uint8) var46.x2[0] + 1) >> 1;
     var47.x2[1] = ((orc_uint8) var45.x2[1] + (orc_uint8) var46.x2[1] + 1) >> 1;
     /* 6: mergebw */
-    var39.x2[0] = ((orc_uint8) var44.x2[0]) | ((orc_uint8) var47.x2[0] << 8);
-    var39.x2[1] = ((orc_uint8) var44.x2[1]) | ((orc_uint8) var47.x2[1] << 8);
+    var39.x2[0] =
+        ((orc_uint8) var44.x2[0] & 0x00ff) | ((orc_uint8) var47.x2[0] << 8);
+    var39.x2[1] =
+        ((orc_uint8) var44.x2[1] & 0x00ff) | ((orc_uint8) var47.x2[1] << 8);
     /* 7: storel */
     ptr0[i] = var39;
   }
@@ -900,8 +902,10 @@ _backup_gst_videoscale_orc_downsample_yuyv (OrcExecutor * ORC_RESTRICT ex)
     var47.x2[0] = ((orc_uint8) var45.x2[0] + (orc_uint8) var46.x2[0] + 1) >> 1;
     var47.x2[1] = ((orc_uint8) var45.x2[1] + (orc_uint8) var46.x2[1] + 1) >> 1;
     /* 6: mergebw */
-    var39.x2[0] = ((orc_uint8) var44.x2[0]) | ((orc_uint8) var47.x2[0] << 8);
-    var39.x2[1] = ((orc_uint8) var44.x2[1]) | ((orc_uint8) var47.x2[1] << 8);
+    var39.x2[0] =
+        ((orc_uint8) var44.x2[0] & 0x00ff) | ((orc_uint8) var47.x2[0] << 8);
+    var39.x2[1] =
+        ((orc_uint8) var44.x2[1] & 0x00ff) | ((orc_uint8) var47.x2[1] << 8);
     /* 7: storel */
     ptr0[i] = var39;
   }
@@ -1512,23 +1516,23 @@ gst_videoscale_orc_merge_bicubic_u8 (guint8 * d1, const guint8 * s1,
     /* 0: loadb */
     var34 = ptr5[i];
     /* 2: mulubw */
-    var44.i = (orc_uint8) var34 *(orc_uint8) var35;
+    var44.i = ((orc_uint8) var34) * ((orc_uint8) var35);
     /* 3: loadb */
     var36 = ptr6[i];
     /* 5: mulubw */
-    var45.i = (orc_uint8) var36 *(orc_uint8) var37;
+    var45.i = ((orc_uint8) var36) * ((orc_uint8) var37);
     /* 6: addw */
     var46.i = var44.i + var45.i;
     /* 7: loadb */
     var38 = ptr4[i];
     /* 9: mulubw */
-    var47.i = (orc_uint8) var38 *(orc_uint8) var39;
+    var47.i = ((orc_uint8) var38) * ((orc_uint8) var39);
     /* 10: subw */
     var48.i = var46.i - var47.i;
     /* 11: loadb */
     var40 = ptr7[i];
     /* 13: mulubw */
-    var49.i = (orc_uint8) var40 *(orc_uint8) var41;
+    var49.i = ((orc_uint8) var40) * ((orc_uint8) var41);
     /* 14: subw */
     var50.i = var48.i - var49.i;
     /* 16: addw */
@@ -1595,23 +1599,23 @@ _backup_gst_videoscale_orc_merge_bicubic_u8 (OrcExecutor * ORC_RESTRICT ex)
     /* 0: loadb */
     var34 = ptr5[i];
     /* 2: mulubw */
-    var44.i = (orc_uint8) var34 *(orc_uint8) var35;
+    var44.i = ((orc_uint8) var34) * ((orc_uint8) var35);
     /* 3: loadb */
     var36 = ptr6[i];
     /* 5: mulubw */
-    var45.i = (orc_uint8) var36 *(orc_uint8) var37;
+    var45.i = ((orc_uint8) var36) * ((orc_uint8) var37);
     /* 6: addw */
     var46.i = var44.i + var45.i;
     /* 7: loadb */
     var38 = ptr4[i];
     /* 9: mulubw */
-    var47.i = (orc_uint8) var38 *(orc_uint8) var39;
+    var47.i = ((orc_uint8) var38) * ((orc_uint8) var39);
     /* 10: subw */
     var48.i = var46.i - var47.i;
     /* 11: loadb */
     var40 = ptr7[i];
     /* 13: mulubw */
-    var49.i = (orc_uint8) var40 *(orc_uint8) var41;
+    var49.i = ((orc_uint8) var40) * ((orc_uint8) var41);
     /* 14: subw */
     var50.i = var48.i - var49.i;
     /* 16: addw */
