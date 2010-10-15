@@ -241,10 +241,13 @@ pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 orc_deinterlace_CFLAGS = $(ORC_CFLAGS)
 orc_deinterlace_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_deinterlace_SOURCES = orc/deinterlace.c
 orc_videomixer_CFLAGS = $(ORC_CFLAGS)
 orc_videomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_videomixer_SOURCES = orc/videomixer.c
 orc_videobox_CFLAGS = $(ORC_CFLAGS)
 orc_videobox_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_videobox_SOURCES = orc/videobox.c
 
 orc/deinterlace.c: $(top_srcdir)/gst/deinterlace/tvtime.orc
 	$(MKDIR_P) orc/
