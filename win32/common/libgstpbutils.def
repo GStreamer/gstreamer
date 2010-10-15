@@ -57,7 +57,6 @@ EXPORTS
 	gst_discoverer_video_info_get_par_num
 	gst_discoverer_video_info_get_type
 	gst_discoverer_video_info_get_width
-	gst_install_marshal_VOID__POINTER_BOXED
 	gst_install_plugins_async
 	gst_install_plugins_context_free
 	gst_install_plugins_context_get_type

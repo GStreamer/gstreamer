@@ -10,8 +10,8 @@ headers_pbutils = \
 
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_pbutils)
-glib_enum_define = GST_INSTALL
-glib_gen_prefix = gst_install
+glib_enum_define = PB_UTILS
+glib_gen_prefix = pbutils
 glib_gen_basename = pbutils
 
 built_headers_configure = \
@@ -36,9 +36,9 @@ libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(headers_pbutils)
 nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_headers_configure) \
-	pbutils-enumtypes.h     \
-	pbutils-marshal.h
+	pbutils-enumtypes.h
 noinst_HEADERS = \
+	pbutils-marshal.h \
 	pbutils-private.h
 EXTRA_DIST = pbutils-marshal.list
 

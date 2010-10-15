@@ -222,7 +222,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   gst_discoverer_signals[SIGNAL_DISCOVERED] =
       g_signal_new ("discovered", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDiscovererClass, discovered),
-      NULL, NULL, gst_install_marshal_VOID__POINTER_BOXED,
+      NULL, NULL, pbutils_marshal_VOID__POINTER_BOXED,
       G_TYPE_NONE, 2, GST_TYPE_DISCOVERER_INFO, GST_TYPE_G_ERROR);
 }
 
