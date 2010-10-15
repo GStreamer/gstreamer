@@ -1660,7 +1660,7 @@ gst_video_format_get_component_offset (GstVideoFormat format,
       return 0;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0)
-        return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
+        return 0;
       if (component == 1)
         return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height);
       if (component == 2) {
