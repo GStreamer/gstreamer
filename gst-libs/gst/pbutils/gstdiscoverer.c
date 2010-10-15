@@ -1362,14 +1362,16 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
 
 /**
  * gst_discoverer_new:
- * @timeout: The timeout to set on the discoverer
+ * @timeout: timeout per file, in nanoseconds. Allowed are values between
+ *     one second (#GST_SECOND) and one hour (3600 * #GST_SECOND)
  * @err: a pointer to a #GError. can be %NULL
  *
  * Creates a new #GstDiscoverer with the provided timeout.
  *
  * Returns: The new #GstDiscoverer. Free with gst_object_unref() when done.
- * If an error happened when creating the discoverer, @err will be set accordingly
- * and %NULL will be returned.
+ * If an error happened when creating the discoverer, @err will be set
+ * accordingly and %NULL will be returned. If @err is set, the caller must
+ * free it when no longer needed using g_error_free().
  * 
  * Since: 0.10.31
  */
