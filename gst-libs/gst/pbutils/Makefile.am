@@ -38,7 +38,6 @@ nodist_libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_headers_configure) \
 	pbutils-enumtypes.h
 noinst_HEADERS = \
-	pbutils-marshal.h \
 	pbutils-private.h
 EXTRA_DIST = pbutils-marshal.list
 
