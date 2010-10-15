@@ -105,8 +105,6 @@ struct _GstDiscovererPrivate
   GMainContext *ctx;
   guint sourceid;
   guint timeoutid;
-
-  gpointer _reserved[GST_PADDING];
 };
 
 #define DISCO_LOCK(dc) g_mutex_lock (dc->priv->lock);
