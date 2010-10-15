@@ -21,6 +21,7 @@ typedef uint8_t orc_uint8;
 typedef uint16_t orc_uint16;
 typedef uint32_t orc_uint32;
 typedef uint64_t orc_uint64;
+#define ORC_UINT64_C(x) UINT64_C(x)
 #elif defined(_MSC_VER)
 typedef signed __int8 orc_int8;
 typedef signed __int16 orc_int16;
@@ -30,6 +31,7 @@ typedef unsigned __int8 orc_uint8;
 typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
+#define ORC_UINT64_C(x) (x##Ui64)
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -41,9 +43,11 @@ typedef unsigned int orc_uint32;
 #if INT_MAX == LONG_MAX
 typedef long long orc_int64;
 typedef unsigned long long orc_uint64;
+#define ORC_UINT64_C(x) (x##ULL)
 #else
 typedef long orc_int64;
 typedef unsigned long orc_uint64;
+#define ORC_UINT64_C(x) (x##UL)
 #endif
 #endif
 typedef union
@@ -63,6 +67,7 @@ typedef union
   orc_int64 i;
   double f;
   orc_int32 x2[2];
+  float x2f[2];
   orc_int16 x4[4];
 } orc_union64;
 #endif
@@ -102,12 +107,12 @@ void orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1,
 #define ORC_CLAMP_UL(x) ORC_CLAMP(x,ORC_UL_MIN,ORC_UL_MAX)
 #define ORC_SWAP_W(x) ((((x)&0xff)<<8) | (((x)&0xff00)>>8))
 #define ORC_SWAP_L(x) ((((x)&0xff)<<24) | (((x)&0xff00)<<8) | (((x)&0xff0000)>>8) | (((x)&0xff000000)>>24))
-#define ORC_SWAP_Q(x) ((((x)&0xffULL)<<56) | (((x)&0xff00ULL)<<40) | (((x)&0xff0000ULL)<<24) | (((x)&0xff000000ULL)<<8) | (((x)&0xff00000000ULL)>>8) | (((x)&0xff0000000000ULL)>>24) | (((x)&0xff000000000000ULL)>>40) | (((x)&0xff00000000000000ULL)>>56))
+#define ORC_SWAP_Q(x) ((((x)&ORC_UINT64_C(0xff))<<56) | (((x)&ORC_UINT64_C(0xff00))<<40) | (((x)&ORC_UINT64_C(0xff0000))<<24) | (((x)&ORC_UINT64_C(0xff000000))<<8) | (((x)&ORC_UINT64_C(0xff00000000))>>8) | (((x)&ORC_UINT64_C(0xff0000000000))>>24) | (((x)&ORC_UINT64_C(0xff000000000000))>>40) | (((x)&ORC_UINT64_C(0xff00000000000000))>>56))
 #define ORC_PTR_OFFSET(ptr,offset) ((void *)(((unsigned char *)(ptr)) + (offset)))
 #define ORC_DENORMAL(x) ((x) & ((((x)&0x7f800000) == 0) ? 0xff800000 : 0xffffffff))
 #define ORC_ISNAN(x) ((((x)&0x7f800000) == 0x7f800000) && (((x)&0x007fffff) != 0))
-#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&0x7ff0000000000000ULL) == 0) ? 0xfff0000000000000ULL : 0xffffffffffffffffULL))
-#define ORC_ISNAN_DOUBLE(x) ((((x)&0x7ff0000000000000ULL) == 0x7ff0000000000000ULL) && (((x)&0x000fffffffffffffULL) != 0))
+#define ORC_DENORMAL_DOUBLE(x) ((x) & ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == 0) ? ORC_UINT64_C(0xfff0000000000000) : ORC_UINT64_C(0xffffffffffffffff)))
+#define ORC_ISNAN_DOUBLE(x) ((((x)&ORC_UINT64_C(0x7ff0000000000000)) == ORC_UINT64_C(0x7ff0000000000000)) && (((x)&ORC_UINT64_C(0x000fffffffffffff)) != 0))
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define ORC_RESTRICT restrict
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -843,7 +848,7 @@ orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
     var40.x4[2] = p1;
     var40.x4[3] = p1;
     /* 17: loadpl */
-    var41.i = 0x7fffffff;       /* 2147483647 or 1.061e-314f */
+    var41.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -967,7 +972,7 @@ _backup_orc_blend_bgra (OrcExecutor * ORC_RESTRICT ex)
     var40.x4[2] = ex->params[24];
     var40.x4[3] = ex->params[24];
     /* 17: loadpl */
-    var41.i = 0x7fffffff;       /* 2147483647 or 1.061e-314f */
+    var41.i = 0xff000000;       /* -16777216 or 2.11371e-314f */
 
     for (i = 0; i < n; i++) {
       /* 0: loadl */
@@ -1071,7 +1076,7 @@ orc_blend_bgra (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride,
       orc_program_set_backup_function (p, _backup_orc_blend_bgra);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
-      orc_program_add_constant (p, 4, 0x7fffffff, "c1");
+      orc_program_add_constant (p, 4, 0xff000000, "c1");
       orc_program_add_constant (p, 4, 0x00000018, "c2");
       orc_program_add_constant (p, 4, 0x00000008, "c3");
       orc_program_add_parameter (p, 2, "p1");
