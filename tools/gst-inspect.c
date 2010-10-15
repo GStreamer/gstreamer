@@ -1179,7 +1179,8 @@ print_all_uri_handlers (void)
               gst_uri_handler_get_protocols (GST_URI_HANDLER (element));
           joined = g_strjoinv (", ", uri_protocols);
 
-          g_print ("%s (%s, rank %u): %s\n", GST_OBJECT_NAME (factory), dir,
+          g_print ("%s (%s, rank %u): %s\n",
+              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)), dir,
               gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory)),
               joined);
 
