@@ -42,7 +42,7 @@ BUILT_SOURCES = $(built_headers) $(built_sources)
 EXTRA_DIST = gstrtsp-marshal.list
 CLEANFILES = $(BUILT_SOURCES)
 
-glib_gen_prefix = gst_rtsp
+glib_gen_prefix = __gst_rtsp
 glib_enum_define = gst_rtsp
 glib_enum_headers = gstrtspdefs.h
 glib_gen_basename = gstrtsp
