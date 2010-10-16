@@ -219,16 +219,10 @@ gst_data_queue_new_full (GstDataQueueCheckFullFunction checkfull,
 }
 
 /**
- * gst_data_queue_new_full:
+ * gst_data_queue_new:
  * @checkfull: the callback used to tell if the element considers the queue full
  * or not.
- * @fullcallback: the callback which will be called when the queue is considered full.
- * @emptycallback: the callback which will be called when the queue is considered empty.
  * @checkdata: a #gpointer that will be given in the @checkfull callback.
- *
- * Creates a new #GstDataQueue. The difference with @gst_data_queue_new is that it will
- * not emit the 'full' and 'empty' signals, but instead calling directly @fullcallback
- * or @emptycallback.
  *
  * Returns: a new #GstDataQueue.
  */
