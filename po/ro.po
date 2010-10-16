@@ -1,294 +1,292 @@
-# Latvian translation of gst-plugins-base
-# This file is put in the public domain.
-#
-# Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
-# Rihards Priedītis <rprieditis@gmail.com>, 2010.
+# Romanian translation for gst-plugins-base
+# This file is distributed under the same license as the gst-plugins-base package.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-07-07 10:52+0100\n"
-"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
-"Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
-"Language: lv\n"
+"PO-Revision-Date: 2010-08-16 01:21+0300\n"
+"Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
+"Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
+"Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Latvian\n"
-"X-Poedit-Country: LATVIA\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
-"2);\n"
-"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
+"20)) ? 1 : 2);;\n"
 
 msgid "Master"
-msgstr "Galvenais"
+msgstr "Principal"
 
 msgid "Bass"
-msgstr "Bass"
+msgstr "Bas"
 
 msgid "Treble"
-msgstr "Diskants"
+msgstr "Înalte"
 
 msgid "PCM"
 msgstr "PCM"
 
 msgid "Synth"
-msgstr "Sintēze"
+msgstr "Synth"
 
 msgid "Line-in"
-msgstr "Line-in"
+msgstr "Linie intrare"
 
 msgid "CD"
 msgstr "CD"
 
 msgid "Microphone"
-msgstr "Mikrofons"
+msgstr "Microfon"
 
 msgid "PC Speaker"
-msgstr "Datora skaļrunis"
+msgstr "Difuzor PC"
 
 msgid "Playback"
-msgstr "Atskaņošana"
+msgstr "Redare"
 
 msgid "Capture"
-msgstr "Tveršana"
+msgstr "Captură"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai mono režīmā."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul mono."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul stereo."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai %d-kanāla režīmā."
+msgstr "Nu s-a putut deschide dispozitivul pentru redare în modul %d-canal."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Nevarēja atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
-"lietotne."
+"Nu s-a putut deschide dispozitivul audio pentru redare. Dispozitivul este "
+"folosit de o altă aplicație."
 
 msgid "Could not open audio device for playback."
-msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru redare."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Nevarēja atvērt ierīci ierakstīšanai mono režīmā."
+msgstr "Nu s-a putut deschide dispozitivul pentru înregistrare în modul mono."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Nevarēja atvērt ierīci ierakstīšanai stereo režīmā."
+msgstr ""
+"Nu s-a putut deschide dispozitivul pentru înregistrare în modul stereo."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Nevarēja atvērt ierīci ierakstīšanai %d-kanāla režīmā"
+msgstr ""
+"Nu s-a putut deschide dispozitivul pentru înregistrare în modul %d-canal"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Nevarēja atvērt audio ierīci ierakstīšanai. Ierīci pašlaik izmanto cita "
-"lietotne."
+"Nu s-a putut deschide dispozitivul audio pentru înregistrare. Dispozitivul "
+"este folosit de o altă aplicație."
 
 msgid "Could not open audio device for recording."
-msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
 
 msgid "Could not open CD device for reading."
-msgstr "Nevarēja atvērt CD ierīci lasīšanai."
+msgstr "Nu s-a putut deschide unitatea CD pentru redare."
 
 msgid "Could not seek CD."
-msgstr "Nevarēja meklēt pa CD."
+msgstr "Nu s-a putut accesa CD-ul."
 
 msgid "Could not read CD."
-msgstr "Nevarēja nolasīt CD."
+msgstr "Nu s-a putut citi CD-ul."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
+msgstr "Nu s-a putut deschide fișierul vsf „%s\" pentru scriere: %s."
 
 msgid "No filename given"
-msgstr "Nav norādīts faila nosaukums"
+msgstr "Niciun nume de fișier dat."
 
 #, c-format
 msgid "Could not close vfs file \"%s\"."
-msgstr "Nevarēja aizvērt vfs failu \"%s\"."
+msgstr "Nu s-a putut închide fișierul vsf „%s\"."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Kļūda rakstot failā \"%s\"."
+msgstr "Eroare la scrierea fișierului „%s\"."
 
 msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
+msgstr "Eroare internă a fluxului de date."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
-"Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav instalēts."
+"Un modul de extensie %s este necesar pentru a reda acest flux, dar acesta nu "
+"este instalat."
 
 msgid "This appears to be a text file"
-msgstr "Tiek atpazīts kā teksta fails"
+msgstr "Acesta pare să fie un fișier text."
 
 msgid "Could not determine type of stream"
-msgstr "Nevarēja noteikts straumes tipu"
+msgstr "Nu s-a putut determina tipul fluxului"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Nederīgs subtitru URI \"%s\", subtitri izslēgti."
+msgstr "URI subtitrare „%s” nevalid, subtitrare dezactivată."
 
 msgid "No URI specified to play from."
-msgstr "Nav norādīts neviens URI, no kā varētu spēlēt. "
+msgstr "Nu s-a specificat URI pentru redare."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Nederīgs URI \"%s\"."
+msgstr "URI „%s” nevalid."
 
 msgid "RTSP streams cannot be played yet."
-msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
+msgstr "Fluxurile RTSP nu pot fi redate încă."
 
 msgid "Could not create \"decodebin\" element."
-msgstr "Nevarēja izveidot \"decodebin\" elementu."
+msgstr "Nu se poate crea elementul „decodebin”."
 
 msgid "Source element is invalid."
-msgstr "Avota elements ir nederīgs."
+msgstr "Element sursă nevalid."
 
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
-"Tika pamanīta tikai subtitru plūsma. Vai nu jūs ielādējat subtitru failu vai "
-"cita veida teksta failu, vai arī mediju fails netika atpazīts."
+"A fost detectat doar un flux pentru subtitrare. Fie încărcați un fișier de "
+"subtitrare sau un alt tip de fișier text, sau fișierul nu a fost recunoscut."
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
-"Jums nav instalēta atkodētāja, lai apietos ar šo failu. Jums iespējams "
-"vajadzētu instalēt nepieciešamos spraudņus."
+"Nu există instalat un decodor pentru deschiderea acestui fișier. Probabil "
+"trebuie să instalați modulele de extensie necesare."
 
 msgid "This is not a media file"
-msgstr "Šis nav mediju fails"
+msgstr "Acesta nu este un fișier media"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr "Tika pamanīta subtitru plūsma, bet ne video plūsma."
+msgstr "A fost detectat un flux de subtitrare, dar nu există flux video."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Trūkst gan autovideosink, gan xvimagesink elementi."
+msgstr "Lipsesc ambele elemente autovideosink și xvimagesink."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūkst elements \"%s\" - pārbaudiet savu GStreamer instalāciju."
+msgstr "Element %s lipsă - verificați instalarea GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
+msgstr "Lipsesc ambele elemente autoaudiosink și alsasink."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Trūkst gan autovideosink, gan %s elementi."
+msgstr "Lipsește atât elementul autovideosink cât și %s."
 
 msgid "The autovideosink element is missing."
-msgstr "Trūkst autovideosink elements."
+msgstr "Elementul autovideosink lipsește."
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Konfigurētais videosink %s nestrādā."
+msgstr "Videosink-ul configurat %s nu funcționează."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Gan autovideosink, gan %s elementi nedarbojas."
+msgstr "Nu funcționează atât elementul autovideosink cât și %s."
 
 msgid "The autovideosink element is not working."
-msgstr "autovideosink elements nedarbojas."
+msgstr "Elementul autovideosink nu funcționează."
 
 msgid "Custom text sink element is not usable."
-msgstr "Pielāgots teksta iegremdēšanas elements nav lietojams."
+msgstr "Elementul sink de text personalizat nu este utilizabil."
 
 msgid "No volume control found"
-msgstr "Netika atrasta neviena skaļuma kontrole"
+msgstr "Nu s-a găsit niciun control de volum"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Trūkst gan autoaudiosink, gan %s elementi."
+msgstr "Lipsește atât elementul autoaudiosink cât și %s."
 
 msgid "The autoaudiosink element is missing."
-msgstr "Trūkst autoaudiosink elements."
+msgstr "Elementul autoaudiosink lipsește."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Konfigurētais audiosink %s nestrādā."
+msgstr "Audiosink-ul configurat %s nu funcționează."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Nedarbojas autoaudiosink un %s elementi."
+msgstr "Nu funcționează atât elementul autoaudiosink cât și %s."
 
 msgid "The autoaudiosink element is not working."
-msgstr "autoaudiosink elements nedarbojas."
+msgstr "Elementul autoaudiosink nu funcționează."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nevar atskaņot teksta failu bez video vai vizualizācijas."
+msgstr "Nu se poate reda un fișier text fără video sau vizualizări."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Nav pieejams neviens atkodētājs failu veidam \"%s\"."
+msgstr "Niciun decodor disponibil pentru tipul „%s”."
 
 msgid "This stream type cannot be played yet."
-msgstr "Šī plūsma pagaidām nevar tikt atskaņota."
+msgstr "Acest tip de flux nu poate fi redat încă."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nav izstrādāts neviens URI apstrādātājs priekš \"%s\"."
+msgstr "Nicio rutină de tratare de URI implementată pentru „%s”."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Radās kļūda nosūtot datus uz \"%s:%d\"."
+msgstr "Eroare la trimiterea datelor către „%s:%d”."
 
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
+msgstr "Eroare la trimiterea antetului gdp către „%s:%d”."
 
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
+msgstr "Eroare la trimiterea conținutului gdp către „%s:%d”."
 
 #, c-format
 msgid "Connection to %s:%d refused."
-msgstr "Savienojums ar %s:%d noraidīts."
+msgstr "Conexiunea la %s:%d a fost refuzată."
 
 msgid "Can't record audio fast enough"
-msgstr "Nevar ierakstīt audio pietiekami ātri"
+msgstr "Nu se poate înregistra sunetul destul de repede"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Neizdevās nolasīt atzīmi: nepietiek datu"
+msgstr "Citirea etichetei a eșuat: date insuficiente"
 
 msgid "track ID"
-msgstr "celiņa ID"
+msgstr "ID pistă"
 
 msgid "MusicBrainz track ID"
-msgstr "MusicBrainz celiņa ID"
+msgstr "ID pistă MusicBrainz"
 
 msgid "artist ID"
-msgstr "izpildītāja ID"
+msgstr "ID artist"
 
 msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz izpildītāja ID"
+msgstr "ID artist MusicBrainz"
 
 msgid "album ID"
-msgstr "albuma ID"
+msgstr "ID album"
 
 msgid "MusicBrainz album ID"
-msgstr "MusicBrainz albuma ID"
+msgstr "ID album MusicBrainz"
 
 msgid "album artist ID"
-msgstr "albuma izpildītāja ID"
+msgstr "ID artist album"
 
 msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz albuma izpildītāja ID"
+msgstr "ID album artist MusicBrainz"
 
 msgid "track TRM ID"
-msgstr "celiņa TRM ID"
+msgstr "TRM ID pistă"
 
 msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
 
 msgid "capturing shutter speed"
 msgstr ""
@@ -406,215 +404,197 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
 
 msgid "This CD has no audio tracks"
-msgstr "Šajā CD nav neviena audio celiņa"
+msgstr "Acest CD nu conține piste audio"
 
 msgid "ID3 tag"
-msgstr "ID3 atzīme"
+msgstr "etichetă ID3"
 
 msgid "APE tag"
-msgstr "APE atzīme"
+msgstr "etichetă APE"
 
 msgid "ICY internet radio"
-msgstr "ICY interneta radio"
+msgstr "Radio Internet ICY"
 
 msgid "Apple Lossless Audio (ALAC)"
-msgstr "Apple Lossless Audio (ALAC)"
+msgstr "Apple Audio fără pierdere (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Free Lossless Audio Codec (FLAC)"
+msgstr "Codec audio liber fără pierdere (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr "Bez zudumu True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
 
 msgid "Windows Media Speech"
-msgstr "Windows mediju runa"
+msgstr "Windows Media Speech"
 
 msgid "CYUV Lossless"
-msgstr "CYUV bez zudumu"
+msgstr "CYUV fără pierdere"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "Bez zudumu MSZH"
+msgstr "MSZH fără pierdere"
 
 msgid "Uncompressed Gray Image"
-msgstr "Neatspiests Pelēks attēls"
+msgstr "Imagine gri necomprimată"
 
 msgid "Run-length encoding"
-msgstr "Sērijas garuma kodēšana"
+msgstr "Codarea run-length"
 
 msgid "Sami subtitle format"
-msgstr "Sami subtitru formāts"
+msgstr "Format subtitrare Sami"
 
 msgid "TMPlayer subtitle format"
-msgstr "TMPlayer subtitru formāts"
+msgstr "Format subtitrare TMPlayer"
 
 msgid "Kate subtitle format"
-msgstr "Kate subtitru formāts"
+msgstr "Format subtitrare Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Nesaspiesta plakne YUV 4:2:0"
+msgstr "Planar necomprimat YUV 4:2:0"
 
 msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Nesaspiesta plakne YVU 4:2:0"
+msgstr "Planar necomprimat YVU 4:2:0"
 
 msgid "Uncompressed packed YUV 4:2:2"
-msgstr "Nesaspiests pakots YUV 4:2:2"
+msgstr "Pachet necomprimat YUV 4:2:2"
 
 msgid "Uncompressed packed YUV 4:1:0"
-msgstr "Nesaspiests pakots YUP 4:1:0"
+msgstr "Pachet necomprimat YUV 4:1:0"
 
 msgid "Uncompressed packed YVU 4:1:0"
-msgstr "Nesaspiests pakots YVU 4:1:0"
+msgstr "Pachet necomprimat YVU 4:1:0"
 
 msgid "Uncompressed packed YUV 4:1:1"
-msgstr "Nesaspiests pakots YUV 4:1:1"
+msgstr "Pachet necomprimat YUV 4:1:1"
 
 msgid "Uncompressed packed YUV 4:4:4"
-msgstr "Nesaspiests pakots YUV 4:4:4"
+msgstr "Pachet necomprimat YUV 4:4:4"
 
 msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Nesaspiesta plakne YUV 4:2:2"
+msgstr "Planar necomprimat YUV 4:2:2"
 
 msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Nesaspiesta plakne YUV 4:1:1"
+msgstr "Planar necomprimat YUV 4:1:1"
 
 msgid "Uncompressed black and white Y-plane"
-msgstr "Nesaspiests melnbaltais Y-plakne"
+msgstr "Plan-Y alb și negru necomprimat"
 
 msgid "Uncompressed YUV"
-msgstr "Nesaspiests YUV"
+msgstr "YUV necomprimat"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nesaspiests paletizēts %d-bitu %s"
+msgstr "Paletizat la %d biți necomprimat %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 versija %d"
+msgstr "DivX MPEG-4 versiunea %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
-msgstr "Jēls %d-bitu PCM audio"
+msgstr "PCM audio brut %d biți"
 
 msgid "Raw PCM audio"
-msgstr "Jēls PCM audio"
+msgstr "PCM audio brut"
 
 #, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr "Jēls %d-bitu plūstošā punkta audio"
+msgstr "Audio în virgulă mobilă brut la %d biți"
 
 msgid "Raw floating-point audio"
-msgstr "Jēls plūstošā punkta audio"
+msgstr "Audio în virgulă mobilă brut"
 
 msgid "Audio CD source"
-msgstr "Audio CD avots"
+msgstr "Sursă CD audio"
 
 msgid "DVD source"
-msgstr "DVD avots"
+msgstr "Sursă DVD"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Tiešās straumēšanas protokola (RTSP) avots"
+msgstr "Sursă RTSP (protocol pentru flux în timp real)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft Mediju Servera (MMS) protokola avots"
+msgstr "Sursă protocol Microsoft Media Server (MMS)"
 
 #, c-format
 msgid "%s protocol source"
-msgstr "%s protokola avots"
+msgstr "Sursă protocol %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "%s video RTP izkrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "%s audio RTP izskrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr "%s RTP izkrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s demuxer"
-msgstr "%s atjaucējs"
+msgstr "Demuxer %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr "%s atkodētājs"
+msgstr "Decoder %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "%s video RTP iekrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "%s audio RTP iekrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "%s RTP iekrāvējs"
+msgstr ""
 
 #, c-format
 msgid "%s muxer"
-msgstr "%s jaucējs"
+msgstr "Muxer %s"
 
 #, c-format
 msgid "%s encoder"
-msgstr "%s kodētājs"
+msgstr "codificator %s"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr "GStreamer elements %s"
+msgstr "Element GStreamer %s"
 
 msgid "Unknown source element"
-msgstr "Nezināms avota elements"
+msgstr "Element sursă necunoscut"
 
 msgid "Unknown sink element"
-msgstr "Nezināms iegremdēšanas elements"
+msgstr "Element sink necunoscut"
 
 msgid "Unknown element"
-msgstr "Nezināms elements"
+msgstr "Element necunoscut"
 
 msgid "Unknown decoder element"
-msgstr "Nezināms atkodētāja elements"
+msgstr "Element decodor necunoscut"
 
 msgid "Unknown encoder element"
-msgstr "Nezināms kodētāja elements"
+msgstr "Element codor necunoscut"
 
 msgid "Plugin or element of unknown type"
-msgstr "Nezināma veida spraudnis vai elements"
+msgstr "Modul de extensie sau element de tip necunoscut"
 
 msgid "No device specified."
-msgstr "Nav norādīta ierīce."
+msgstr "Nu s-a specificat niciun dispozitiv."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Ierīce \"%s\" neeksistē."
+msgstr "Dispozitivul „%s” nu există."
 
 #, c-format
 msgid "Device \"%s\" is already being used."
-msgstr "Ierīce \"%s\" jau tiek izmantota."
+msgstr "Dispozitivul „%s” este deja folosit."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nav iespējams izveidot  \"queue2\" elementu."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nav iespējams izveidot \"typefind\" elementu."
-
-#~ msgid "Can't play a text subtitles and subpictures."
-#~ msgstr "Nevar atskaņot teksta subtitrus un subattēlus."
-
-#~ msgid "No file name specified."
-#~ msgstr "Nav norādīts faila nosaukums."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
+msgstr "Nu s-a putut deschide dispozitivul „%s” pentru citire și scriere."

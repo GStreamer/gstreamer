@@ -1,20 +1,24 @@
 # Translation for gst-plugins-base messages to Russian
 # This file is put in the public domain.
+#
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-#
+# Yuri Kozlov <yuray@komyakino.ru>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-15 14:51+0100\n"
-"PO-Revision-Date: 2009-02-12 14:45+0200\n"
-"Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
+"POT-Creation-Date: 2010-10-16 01:03+0100\n"
+"PO-Revision-Date: 2010-09-26 21:29+0400\n"
+"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Lokalize 1.0\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Master"
 msgstr "Общий"
@@ -41,7 +45,7 @@ msgid "Microphone"
 msgstr "Микрофон"
 
 msgid "PC Speaker"
-msgstr "Внутрений динамик"
+msgstr "Внутренний динамик"
 
 msgid "Playback"
 msgstr "Воспроизведение"
@@ -125,9 +129,8 @@ msgstr ""
 msgid "This appears to be a text file"
 msgstr "Этот файл является текстовым"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Не удалось создать элемент «typefind»."
+msgstr "Не удалось определить тип потока"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
@@ -179,55 +182,51 @@ msgstr "Отсутствует элемент «%s» — проверьте пр
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Отсутствуют элементы autoaudiosink и alsasink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Отсутствуют элементы autovideosink и xvimagesink."
+msgstr "Отсутствуют элементы autovideosink и %s."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Отсутствуют элементы autovideosink и xvimagesink."
+msgstr "Отсутствует элемент autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Отсутствуют элементы autovideosink и xvimagesink."
+msgstr "Настроенный videosink %s не работает."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Отсутствуют элементы autovideosink и xvimagesink."
+msgstr "Элементы autovideosink и %s не работают."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Отсутствуют элементы autovideosink и xvimagesink."
+msgstr "Элемент autovideosink не работает."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Входной элемент пользовательского текста не работоспособен."
 
 msgid "No volume control found"
 msgstr "Не найден элемент управления громкостью"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Отсутствуют элементы autoaudiosink и alsasink."
+msgstr "Отсутствуют элементы autoaudiosink и %s."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Отсутствуют элементы autoaudiosink и alsasink."
+msgstr "Отсутствует элемент autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Отсутствуют элементы autoaudiosink и alsasink."
+msgstr "Настроенный audiosink %s не работает."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Отсутствуют элементы autoaudiosink и alsasink."
+msgstr "Элементы autoaudiosink и %s не работают."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Отсутствуют элементы autoaudiosink и alsasink."
+msgstr "Элемент autoaudiosink не работает."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Воспроизведение текстового файла без видео невозможно."
+msgstr ""
+"Воспроизведение текстового файла без видео или видеотображения невозможно."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -364,16 +363,35 @@ msgstr ""
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
 
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
 msgid "capturing flash fired"
 msgstr ""
 
-msgid "If the flash fired while capturing and image"
+msgid "If the flash fired while capturing an image"
 msgstr ""
 
 msgid "capturing flash mode"
 msgstr ""
 
-msgid "The selected flash mode while capturing and image"
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
 msgstr ""
 
 msgid "image horizontal ppi"
@@ -584,33 +602,14 @@ msgstr "Устройство «%s» уже используется."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не удалось открыть устройство «%s» для чтения и записи."
 
+#~ msgid "No file name specified."
+#~ msgstr "Не указано имя файла."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Не удалось открыть файл «%s» для чтения."
+
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Не удалось создать элемент «decodebin2»."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "Не удалось создать элемент «queue2»."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Не удалось создать элемент «typefind»."
-
-#, fuzzy
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Воспроизведение текстового файла без видео невозможно."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Не указано устройство."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Не удалось закрыть vfs-файл «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Не удалось открыть файл «%s» для чтения."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Внутренняя ошибка потока данных."
-
-#~ msgid "No file name specified."
-#~ msgstr "Не указано имя файла."

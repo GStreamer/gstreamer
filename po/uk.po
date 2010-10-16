@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-15 14:51+0100\n"
+"POT-Creation-Date: 2010-10-16 01:03+0100\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -362,16 +362,35 @@ msgstr ""
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
 
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
 msgid "capturing flash fired"
 msgstr ""
 
-msgid "If the flash fired while capturing and image"
+msgid "If the flash fired while capturing an image"
 msgstr ""
 
 msgid "capturing flash mode"
 msgstr ""
 
-msgid "The selected flash mode while capturing and image"
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
 msgstr ""
 
 msgid "image horizontal ppi"
