@@ -49,7 +49,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#undef GST_PACKAGE_RELEASE_DATETIME
+#define GST_PACKAGE_RELEASE_DATETIME "2010-10-16T14:40Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
