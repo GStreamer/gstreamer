@@ -77,7 +77,8 @@ RELEASE PROCEDURE:
          <feature>added this and that</feature>
          <feature>foodemux now supports seek in twilight mode</feature>
     - list of API additions, two useful sources:
-        - git diff RELEASE-0.10.98.. win32/common/*.def
+        - git diff RELEASE-0.10.98.. win32/common/*.def \
+            | grep "^+[^+]" | sed -e 's/[^a-z_]*/    <item>/' -e 's%$%</item>%'
         - git log RELEASE-0.10.98.. --grep=API
         - wrap like this:
              <item>gst_new_func()</item>
@@ -115,8 +116,14 @@ RELEASE PROCEDURE:
     + run /bin/data-put in www
   - change versions in www/src/htdocs/entities.gst
   - add entry on website
-    + Edit src/htdocs/news/news.xml and add a new item at the bottom.
-  - commit additions to website
+    + Edit src/htdocs/news/news.xml (in a local checkout of the www git module)
+      and add a new item at the bottom.
+  - commit additions and push changes to the server
+  - run bin/www-update in your www git module checkout. This will ssh into
+    the server and update the website based on the changes you just pushed.
+    This may require an entry for gstreamer.freedesktop.org in your
+    ~/.ssh/config (e.g. in case your local username is different from your
+    freedesktop.org username)
   - add versions and milestones in bugzilla
   - upload new core, -base and -good tarballs to gnome ftp
     + e.g:
