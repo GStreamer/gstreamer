@@ -722,10 +722,10 @@ done:
  * Caller owns returned list and contained buffers. gst_buffer_unref() each
  * buffer in the list before freeng the list after usage.
  *
- * Since: 0.10.24
- *
- * Returns: a #GSList of buffers containing the first @nbytes of the adapter, 
+ * Returns: a #GSList of buffers containing the first @nbytes of the adapter,
  * or #NULL if @nbytes bytes are not available
+ *
+ * Since: 0.10.31
  */
 GList *
 gst_adapter_take_list (GstAdapter * adapter, guint nbytes)

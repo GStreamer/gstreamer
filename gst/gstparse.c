@@ -29,7 +29,7 @@
  * These function allow to create a pipeline based on the syntax used in the
  * gst-launch utility (see man-page for syntax documentation).
  *
- * Please note that these functions take serveral meassures to create even
+ * Please note that these functions take several measures to create
  * somewhat dynamic pipelines. Due to that such pipelines are not always
  * reuseable (set the state to NULL and back to PLAYING).
  */

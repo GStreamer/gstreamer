@@ -963,6 +963,8 @@ gst_value_lcopy_int64_range (const GValue * value, guint n_collect_values,
  * @end: the end of the range
  *
  * Sets @value to the range specified by @start and @end.
+ *
+ * Since: 0.10.31
  */
 void
 gst_value_set_int64_range (GValue * value, gint64 start, gint64 end)
@@ -981,6 +983,8 @@ gst_value_set_int64_range (GValue * value, gint64 start, gint64 end)
  * Gets the minimum of the range specified by @value.
  *
  * Returns: the minimum of the range
+ *
+ * Since: 0.10.31
  */
 gint64
 gst_value_get_int64_range_min (const GValue * value)
@@ -997,6 +1001,8 @@ gst_value_get_int64_range_min (const GValue * value)
  * Gets the maximum of the range specified by @value.
  *
  * Returns: the maxumum of the range
+ *
+ * Since: 0.10.31
  */
 gint64
 gst_value_get_int64_range_max (const GValue * value)
