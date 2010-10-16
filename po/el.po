@@ -4,10 +4,10 @@
 # Simos Xenitellis <simos.lists@googlemail.com>, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.16.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2009-12-04 14:37+0200\n"
+"POT-Creation-Date: 2010-10-16 01:23+0100\n"
+"PO-Revision-Date: 2010-09-03 14:19+0200\n"
 "Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
 "Language: el\n"
@@ -26,7 +26,7 @@ msgstr "Αποτυχία αναζήτησης των δυνατοτήτων το
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "'%s' από '%s'"
 
 msgid "Internal data stream error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
@@ -91,14 +91,14 @@ msgstr ""
 "Δεν βρέθηκε καμία υποστηριζόμενη ροή. Είναι πιθανόν να πρέπει να κάνετε "
 "εγκατάσταση ένα πρόσθετο GStreamer RTSP για τις ροές Real μέσων. "
 
-#, fuzzy
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Δεν βρέθηκε καμία υποστηριζόμενη ροή. Είναι πιθανόν να σας λείπει το "
-"πρόσθετο του GStreamer RTSP."
+"Δεν βρέθηκε καμία υποστηριζόμενη ροή. Είναι πιθανόν να χρειασθεί να "
+"επιτρέψετε περισσότερα πρωτόκολλα μεταγωγής ή αλλιώς να σας λείπει το σωστό "
+"πρόσθετο RTSP του GStreamer."
 
 msgid "Internal data flow error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
@@ -110,7 +110,7 @@ msgid "Bass"
 msgstr "Μπάσα"
 
 msgid "Treble"
-msgstr ""
+msgstr "Πρίμα (treble)"
 
 msgid "Synth"
 msgstr "Synth"
@@ -140,10 +140,10 @@ msgid "Record"
 msgstr "Εγγραφή"
 
 msgid "In-gain"
-msgstr ""
+msgstr "Κέρδος εισόδου"
 
 msgid "Out-gain"
-msgstr ""
+msgstr "Κέρδος εξόδου"
 
 msgid "Line-1"
 msgstr "Γραμμή-1"
@@ -205,42 +205,42 @@ msgstr ""
 msgid "Could not open audio device for recording."
 msgstr "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. "
 
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. "
+msgstr ""
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
+"μίκτη. "
 
-#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για εγγραφή. Δεν έχετε τα "
-"δικαιώματα να ανοίξετε την συσκευή."
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για χειρισμό του ελέγχου του "
+"μίκτη. Αυτή η έκδοση του Open Sound System δεν υποστηρίζεται από αυτό οτ "
+"στοιχείο."
 
 msgid "Master"
-msgstr ""
+msgstr "Γενικός (Master)"
 
 msgid "Front"
-msgstr ""
+msgstr "Μπροστά"
 
 msgid "Rear"
-msgstr ""
+msgstr "Πίσω"
 
-#, fuzzy
 msgid "Headphones"
-msgstr "Ακουστικό"
+msgstr "Ακουστικά"
 
 msgid "Center"
-msgstr ""
+msgstr "Κέντρο"
 
 msgid "LFE"
-msgstr ""
+msgstr "Χαμηλών συχνοτήτων (LFE)"
 
 msgid "Surround"
-msgstr ""
+msgstr "Περιβάλλων (Surround)"
 
 msgid "Side"
-msgstr ""
+msgstr "Πλευρικό"
 
 msgid "Built-in Speaker"
 msgstr "Ενσωματωμένο μεγάφωνο"
@@ -251,310 +251,289 @@ msgstr "AUX 1 Out"
 msgid "AUX 2 Out"
 msgstr "AUX 2 Out"
 
-#, fuzzy
 msgid "AUX Out"
-msgstr "AUX 1 Out"
+msgstr "Έξοδος AUX"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "Βάθος 3D"
 
 msgid "3D Center"
-msgstr ""
+msgstr "Κέντρο 3D"
 
 msgid "3D Enhance"
-msgstr ""
+msgstr "Ενίσχυση 3D"
 
-#, fuzzy
 msgid "Telephone"
-msgstr "Ακουστικό"
+msgstr "Τηλέφωνο"
 
 msgid "Line Out"
 msgstr "Γραμμή εξόδου"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Γραμμή-εισόδου"
+msgstr "Είσοδος γραμμής"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Εσωτερικό CD"
 
-#, fuzzy
 msgid "Video In"
-msgstr "Βίντεο"
+msgstr "Είσοδος βίντεο"
 
-#, fuzzy
 msgid "AUX 1 In"
-msgstr "AUX 1 Out"
+msgstr "Είσοδις AUX 1"
 
-#, fuzzy
 msgid "AUX 2 In"
-msgstr "AUX 2 Out"
+msgstr "Είσοδος AUX 2"
 
 msgid "AUX In"
-msgstr ""
+msgstr "Είσοδος AUX"
 
-#, fuzzy
 msgid "Record Gain"
-msgstr "Εγγραφή"
+msgstr "Κέρδος Εγγραφής"
 
 msgid "Output Gain"
-msgstr ""
+msgstr "Κέρδος εξόδου"
 
-#, fuzzy
 msgid "Microphone Boost"
-msgstr "Μικρόφωνο"
+msgstr "Ενίσχυση μικροφώνου"
 
 msgid "Loopback"
-msgstr ""
+msgstr "Ανατροφοδότηση"
 
 msgid "Diagnostic"
-msgstr ""
+msgstr "Διαγνωστικό"
 
 msgid "Bass Boost"
-msgstr ""
+msgstr "Ενίσχυση χαμηλών"
 
 msgid "Playback Ports"
-msgstr ""
+msgstr "Θύρες Αναπαραγωγής"
 
 msgid "Input"
-msgstr ""
+msgstr "Είσοδος"
 
-#, fuzzy
 msgid "Record Source"
-msgstr "Εγγραφή"
+msgstr "Πηγή εγγραφής"
 
-#, fuzzy
 msgid "Monitor Source"
-msgstr "Οθόνη"
+msgstr "Παρακολούθηση πηγής"
 
 msgid "Keyboard Beep"
-msgstr ""
+msgstr "Ήχος πληκτρολογίου"
 
 msgid "Simulate Stereo"
-msgstr ""
+msgstr "Προσομοίωση στέρεο"
 
 msgid "Stereo"
-msgstr ""
+msgstr "Στέρεο"
 
 msgid "Surround Sound"
-msgstr ""
+msgstr "Ήχος Surround"
 
-#, fuzzy
 msgid "Microphone Gain"
-msgstr "Μικρόφωνο"
+msgstr "Κέρδος μικροφώνου"
 
-#, fuzzy
 msgid "Speaker Source"
-msgstr "Μεγάφωνο"
+msgstr "Πηγή μεγαφώνου"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "Μικρόφωνο"
+msgstr "Πηγή μικροφώνου"
 
 msgid "Jack"
-msgstr ""
+msgstr "Βύσμα"
 
 msgid "Center / LFE"
-msgstr ""
+msgstr "Κεντρικό / Χαμηλών συχνοτήτων"
 
 msgid "Stereo Mix"
-msgstr ""
+msgstr "Στερεοφωνική μίξη"
 
 msgid "Mono Mix"
-msgstr ""
+msgstr "Μονοφωνική μίξη"
 
 msgid "Input Mix"
-msgstr ""
+msgstr "Μίξη εισόδου"
 
-#, fuzzy
 msgid "SPDIF In"
-msgstr "SPDIF Out"
+msgstr "Είσδος SPDIF"
 
 msgid "SPDIF Out"
 msgstr "SPDIF Out"
 
-#, fuzzy
 msgid "Microphone 1"
-msgstr "Μικρόφωνο"
+msgstr "Μικρόφωνο 1"
 
-#, fuzzy
 msgid "Microphone 2"
-msgstr "Μικρόφωνο"
+msgstr "Μικρόφωνο 2"
 
-#, fuzzy
 msgid "Digital Out"
-msgstr "Ψηφιακό-1"
+msgstr "Ψηφιακή έξοδος"
 
-#, fuzzy
 msgid "Digital In"
-msgstr "Ψηφιακό-1"
+msgstr "Ψηφιακή είσοδος"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Τηλεφωνική συσκευή"
 
 msgid "Other"
-msgstr ""
+msgstr "Άλλο"
 
 msgid "None"
-msgstr ""
+msgstr "Κανένα"
 
 msgid "On"
-msgstr ""
+msgstr "On"
 
 msgid "Off"
-msgstr ""
+msgstr "Off"
 
 msgid "Mute"
-msgstr ""
+msgstr "Σίγαση"
 
 msgid "Fast"
-msgstr ""
+msgstr "Γρήγορα"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr ""
+msgstr "Πολύ χαμηλή"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr ""
+msgstr "Χαμηλή"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr ""
+msgstr "Μεσαία"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr ""
+msgstr "Υψηλή"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr ""
+msgstr "Πολύ υψηλή"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr ""
+msgstr "Παραγωγής"
 
-#, fuzzy
 msgid "Front Panel Microphone"
-msgstr "Μικρόφωνο"
+msgstr "Μικρόφωνο μπροστινού πάνελ"
 
 msgid "Front Panel Line In"
-msgstr ""
+msgstr "Είσοδος γραμμής μπροστινού πάνελ"
 
 msgid "Front Panel Headphones"
-msgstr ""
+msgstr "Ακουστικά μπροστινού πάνελ"
 
 msgid "Front Panel Line Out"
-msgstr ""
+msgstr "Έξοδος γραμμής μπροστινού πάνελ"
 
 msgid "Green Connector"
-msgstr ""
+msgstr "Πράσινη υποδοχή"
 
 msgid "Pink Connector"
-msgstr ""
+msgstr "Ροζ υποδοχή"
 
 msgid "Blue Connector"
-msgstr ""
+msgstr "Μπλε υποδοχή"
 
 msgid "White Connector"
-msgstr ""
+msgstr "Λευκή υποδοχή"
 
 msgid "Black Connector"
-msgstr ""
+msgstr "Μαύρη υποδοχή"
 
 msgid "Gray Connector"
-msgstr ""
+msgstr "Γκρι υποδοχή"
 
 msgid "Orange Connector"
-msgstr ""
+msgstr "Πορτοκαλί υποδοχή"
 
 msgid "Red Connector"
-msgstr ""
+msgstr "Κόκκινη υποδοχή"
 
 msgid "Yellow Connector"
-msgstr ""
+msgstr "Κίτρινη υποδοχή"
 
 msgid "Green Front Panel Connector"
-msgstr ""
+msgstr "Πράσινη υποδοχή μπροστινού πάνελ"
 
 msgid "Pink Front Panel Connector"
-msgstr ""
+msgstr "Ροζ υποδοχή μπροστινού πάνελ"
 
 msgid "Blue Front Panel Connector"
-msgstr ""
+msgstr "Μπλε υποδοχή μπροστινού πάνελ"
 
 msgid "White Front Panel Connector"
-msgstr ""
+msgstr "Λευκή υποδοχή μπροστινού πάνελ"
 
 msgid "Black Front Panel Connector"
-msgstr ""
+msgstr "Μαύρη υποδοχή μπροστινού πάνελ"
 
 msgid "Gray Front Panel Connector"
-msgstr ""
+msgstr "Γκρι υποδοχή μπροστινού πάνελ"
 
 msgid "Orange Front Panel Connector"
-msgstr ""
+msgstr "Πορτοκαλί υποδοχή μπροστινού πάνελ"
 
 msgid "Red Front Panel Connector"
-msgstr ""
+msgstr "Κόκκινη υποδοχή μπροστινού πάνελ"
 
 msgid "Yellow Front Panel Connector"
-msgstr ""
+msgstr "Κίτρινη υποδοχή μπροστινού πάνελ"
 
 msgid "Spread Output"
-msgstr ""
+msgstr "Ευρεία έξοδος"
 
 msgid "Downmix"
-msgstr ""
+msgstr "Μίξη συγχώνευσης (Downmix)"
 
 msgid "Virtual Mixer Input"
-msgstr ""
+msgstr "Είσοδος εικονικού μίκτη"
 
 msgid "Virtual Mixer Output"
-msgstr ""
+msgstr "Έξοδος εικονικού μίκτη"
 
 msgid "Virtual Mixer Channels"
-msgstr ""
+msgstr "Κανάλια εικονικού μίκτη"
 
 #. TRANSLATORS: name + number of a volume mixer control
 #, c-format
 msgid "%s %d Function"
-msgstr ""
+msgstr "Λειτουργία %s %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
 msgid "%s Function"
-msgstr ""
+msgstr "Λειτουργία %s"
 
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για αναπαραγωγή. Δεν έχετε τα "
-"δικαιώματα να ανοίξετε την συσκευή."
+"Δεν ήταν δυνατό το άνοιγμα της συσκευής ήχου για αναπαραγωγή. Αυτή η έκδοση "
+"του Open Sound System δεν υποστηρίζεται από αυτό το στοιχείο."
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Αυτή η συσκευή ήχου δεν υποστηρίζει αναπαραγωγή."
 
 msgid "Audio playback error."
-msgstr ""
+msgstr "Σφάλμα αναπαραγωγής ήχου"
 
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Αυτή η συσκευή ήχου δεν υποστηρίζει εγγραφή."
 
-#, fuzzy
 msgid "Error recording from audio device."
-msgstr "Σφάλμα κατά την ανάγνωση %d bytes απο την συσκευή '%s'."
+msgstr "Σφάλμα κατά την εγγραφή από τη συσκευή ήχου."
 
 msgid "Gain"
-msgstr ""
+msgstr "Κέρδος"
 
 msgid "Headphone"
 msgstr "Ακουστικό"
@@ -576,10 +555,12 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
+"Σφάλμα κατά τη λήψη δυνατοτήτων της συσκευής '%s': Δεν είναι οδηγός v4l2. "
+"Ελέγξτε αν είναι οδηγός v4l2."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "Αποτυχία ανίχνευσης ιδιοτήτων της εισόδου %d στη συσκευή %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
@@ -587,7 +568,7 @@ msgstr "Αποτυχία ανάγνωσης των ρυθμίσεων δέκτη
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "Αποτυχία ανίχνευσης κανονικοποίησης στη συσκευή '%s'."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
@@ -611,9 +592,9 @@ msgstr ""
 msgid "Device '%s' is not a capture device."
 msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Η συσκευή '%s' δεν είναι μια συσκευή λήψης."
+msgstr "Η συσκευή '%s' δεν είναι συσκευή εξόδου."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -653,7 +634,7 @@ msgstr "Αποτυχία ρύθμισης εισαγωγής %d στην συσ�
 
 #, c-format
 msgid "Could not enqueue buffers in device '%s'."
-msgstr ""
+msgstr "Αδυναμία θέσης σε σειρά των buffer στη συσκευή '%s'."
 
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
@@ -668,11 +649,11 @@ msgid "Could not get parameters on device '%s'"
 msgstr "Δεν ήταν δυνατή η ανάγνωση των παραμέτρων στην συσκευή '%s'"
 
 msgid "Video input device did not accept new frame rate setting."
-msgstr ""
+msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκε τη νέα ρύθμιση ταχύτητας καρέ."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr ""
+msgstr "Αδυναμία χαρτογράφησης buffer για τη συσκευή '%s'"
 
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
@@ -698,6 +679,14 @@ msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολ
 #~ msgid "Describes the selected output element."
 #~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εξαγωγής."
 
+#~| msgid "Describes the selected output element for Audio/Video Conferencing."
+#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Το audiosink του GStreamer για τηλεδιάσκεψη με εικόνα και ήχο"
+
+#~| msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgid "GStreamer audiosink for Music and Movies"
+#~ msgstr "Το audiosink του GStreamer για μουσική και ταινίες"
+
 #~ msgid ""
 #~ "GStreamer can play audio using any number of output elements. Some "
 #~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
@@ -718,14 +707,65 @@ msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολ
 #~ "xvimagesink, ximagesink, sdlvideosink και aasink. Το videosink  μπορεί να "
 #~ "γίνει εν μέρει μέσο πληροφορίας αντί ενός από τα στοιχεία."
 
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "stream in video frames. Default is goom but more visualization plugins "
+#~ "will be ported soon. The visualization plugin can be a partial pipeline "
+#~ "instead of just one element."
+#~ msgstr ""
+#~ "Το GStreamer μπορεί να βάλει τα πρόσθετα οπτικοποίησης σε δίαυλο για να "
+#~ "μετατρέψει τη ροή ήχου σε καρέ βίντεο. Η προεπιλογή είναι το gloom αλλά "
+#~ "σύντομα θα μεταφερθούν περισσότερα πρόσθετα οπτικοποίησης. Το πρόσθετο "
+#~ "οπτικοποίησης μπορεί να είναι εν μέρει δίαυλος αντί για ένα μόνο στοιχείο."
+
+#~| msgid ""
+#~| "GStreamer can play audio using any number of output elements. Some "
+#~| "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~| "a partial pipeline instead of just one element."
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Ο GStreamer μπορεί να ηχογραφήσει κάνοντας χρήση οποιουδήποτε αριθμού "
+#~ "στοιχείων εισόδου. Μερικές πιθανές επιλογές είναι τα osssrc, esdsrc και "
+#~ "alsasrc. Η πηγή ήχου μπορεί να είναι εν μέρει δίαυλος αντί για μόνο ένα "
+#~ "στοιχείο."
+
+#~| msgid ""
+#~| "GStreamer can play video using any number of output elements. Some "
+#~| "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~| "The videosink can be a partial pipeline instead of just one element."
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Ο GStreamer μπορεί να εγγράψει βίντεο κάνοντας χρήση οποιουδήποτε αριθμού "
+#~ "στοιχείων εισόδου. Μερικές πιθανές επιλογές είναι τα 4lsrc και "
+#~ "videotestsrc. Η πηγή βίντεο μπορεί να είναι εν μέρει δίαυλος αντί για ένα "
+#~ "μόνο στοιχείο."
+
 #~ msgid "default GStreamer audio source"
 #~ msgstr "προεπιλεγμένη πηγή ήχου του GStreamer"
+
+#~| msgid "default GStreamer audio source"
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "προεπιλεγμένη έξοδος ήχου του GStreamer"
 
 #~ msgid "default GStreamer video source"
 #~ msgstr "προεπιλεγμένη πηγή βίντεο του GStreamer"
 
+#~| msgid "default GStreamer video source"
+#~ msgid "default GStreamer videosink"
+#~ msgstr "προεπιλεγμένη έξοδος βίντεο του GStreamer"
+
 #~ msgid "default GStreamer visualization plugin"
 #~ msgstr "προεπιλεγμένο πρόσθετο οπτικοποίησης του GStreamer"
+
+#~| msgid "description for GStreamer audiosink for Music and Movies"
+#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr "Περιγραφή του GStreamer audiosink για μουσική και ταινίες"
 
 #~ msgid "description for GStreamer audiosink for Music and Movies"
 #~ msgstr "Περιγραφή του GStreamer audiosink για μουσική και ταινίες"
