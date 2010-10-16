@@ -1185,7 +1185,6 @@ print_all_uri_handlers (void)
               joined);
 
           g_free (joined);
-          //g_strfreev (uri_protocols);
         }
 
         gst_object_unref (element);
