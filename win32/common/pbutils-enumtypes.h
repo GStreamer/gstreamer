@@ -1,8 +1,8 @@
 
 
 
-#ifndef __GST_INSTALL_ENUM_TYPES_H__
-#define __GST_INSTALL_ENUM_TYPES_H__
+#ifndef __PB_UTILS_ENUM_TYPES_H__
+#define __PB_UTILS_ENUM_TYPES_H__
 
 #include <glib-object.h>
 
@@ -17,7 +17,7 @@ GType gst_discoverer_result_get_type (void);
 #define GST_TYPE_DISCOVERER_RESULT (gst_discoverer_result_get_type())
 G_END_DECLS
 
-#endif /* __GST_INSTALL_ENUM_TYPES_H__ */
+#endif /* __PB_UTILS_ENUM_TYPES_H__ */
 
 
 

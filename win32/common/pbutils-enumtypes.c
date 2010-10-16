@@ -4,6 +4,7 @@
 #include "pbutils-enumtypes.h"
 
 #include "pbutils.h"
+#include "codec-utils.h"
 #include "descriptions.h"
 #include "install-plugins.h"
 #include "missing-plugins.h"
