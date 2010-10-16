@@ -1,0 +1,30 @@
+= Media detail browser =
+The package contains a UI for browsing media files and showing details of the
+files.
+
+= Browsing =
+- in the preview hook of the file browser we run discover and update the details
+- if one has grillo installed we could use grillo sources in addition to local files
+- there should be a "open url" menu entry in addition
+
+= Details =
+- show container, video-tracks, audio-track, subtitle-trackes, metadata and
+  parsing messages
+- auto-play after updating the details
+  have a menu command to turn auto-play off
+- offer several commands in addition (see below)
+
+== compare ==
+- dup detail pane and allow to pick a new file
+- show differing entries in red
+- add a narrow vertical bar between the two details panes and mark blocks with a
+  delta red
+
+== analyse ==
+- play the file by using fakesinks and gather statistics:
+  - bitrate profiles for each a/mediainfo/v track
+
+== hex view ==
+- a structured hex view would be nice
+  (somehow align the parse tree with the hexdump)
+
