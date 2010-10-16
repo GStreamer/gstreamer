@@ -19,6 +19,14 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/m4 \
 	$(srcdir)/missing \
 	$(srcdir)/mkinstalldirs \
+	$(srcdir)/po/Makevars.template \
+	$(srcdir)/po/Rules-quot \
+	$(srcdir)/po/boldquot.sed \
+	$(srcdir)/po/en@boldquot.header \
+	$(srcdir)/po/en@quot.header \
+	$(srcdir)/po/insert-header.sin \
+	$(srcdir)/po/quot.sed \
+	$(srcdir)/po/remove-potcdate.sin \
 	$(srcdir)/ChangeLog
 
 -include $(top_srcdir)/git.mk
