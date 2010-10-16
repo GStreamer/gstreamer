@@ -62,7 +62,6 @@ typedef struct _GstNetTimeProviderPrivate GstNetTimeProviderPrivate;
 
 /**
  * GstNetTimeProvider:
- * @parent: the parent object structure.
  *
  * Opaque #GstNetTimeProvider structure.
  */

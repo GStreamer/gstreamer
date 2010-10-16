@@ -628,7 +628,7 @@ const guint8 * gst_byte_reader_peek_data_unchecked (GstByteReader * reader);
  */
 const guint8 * gst_byte_reader_get_data_unchecked (GstByteReader * reader, guint size);
 /**
- * gst_byte_reader_dup_data:
+ * gst_byte_reader_dup_data_unchecked:
  * @reader: a #GstByteReader instance
  * @size: Size in bytes
  *

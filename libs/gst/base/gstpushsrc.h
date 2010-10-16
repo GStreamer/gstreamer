@@ -41,7 +41,6 @@ typedef struct _GstPushSrcClass GstPushSrcClass;
 
 /**
  * GstPushSrc:
- * @parent: the parent base source object.
  *
  * The opaque #GstPushSrc data structure.
  */

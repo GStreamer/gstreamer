@@ -26,6 +26,8 @@
  * #GstDataQueue is an object that handles threadsafe queueing of objects. It
  * also provides size-related functionality. This object should be used for
  * any #GstElement that wishes to provide some sort of queueing functionality.
+ *
+ * Since: 0.10.11
  */
 
 #include <gst/gst.h>
@@ -298,6 +300,8 @@ gst_data_queue_locked_is_full (GstDataQueue * queue)
  * Flushes all the contents of the @queue. Any call to #gst_data_queue_push and
  * #gst_data_queue_pop will be released.
  * MT safe.
+ *
+ * Since: 0.10.11
  */
 void
 gst_data_queue_flush (GstDataQueue * queue)
@@ -316,6 +320,8 @@ gst_data_queue_flush (GstDataQueue * queue)
  * MT safe.
  *
  * Returns: #TRUE if @queue is empty.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_data_queue_is_empty (GstDataQueue * queue)
@@ -338,6 +344,8 @@ gst_data_queue_is_empty (GstDataQueue * queue)
  * MT safe.
  *
  * Returns: #TRUE if @queue is full.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_data_queue_is_full (GstDataQueue * queue)
@@ -363,6 +371,8 @@ gst_data_queue_is_full (GstDataQueue * queue)
  * all calls to those two functions will return #FALSE.
  *
  * MT Safe.
+ *
+ * Since: 0.10.11
  */
 void
 gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
@@ -395,6 +405,8 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
  * is returned, the caller is responsible for freeing @item and its contents.
  *
  * Returns: #TRUE if the @item was successfully pushed on the @queue.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
@@ -457,6 +469,8 @@ flushing:
  * MT safe.
  *
  * Returns: #TRUE if an @item was successfully retrieved from the @queue.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
@@ -516,6 +530,8 @@ flushing:
  * Pop and unref the head-most #GstMiniObject with the given #GType.
  *
  * Returns: TRUE if an element was removed.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_data_queue_drop_head (GstDataQueue * queue, GType type)
@@ -566,6 +582,8 @@ done:
  *
  * Inform the queue that the limits for the fullness check have changed and that
  * any blocking gst_data_queue_push() should be unblocked to recheck the limts.
+ *
+ * Since: 0.10.11
  */
 void
 gst_data_queue_limits_changed (GstDataQueue * queue)
@@ -584,6 +602,8 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
  * @level: the location to store the result
  *
  * Get the current level of the queue.
+ *
+ * Since: 0.10.11
  */
 void
 gst_data_queue_get_level (GstDataQueue * queue, GstDataQueueSize * level)

@@ -103,7 +103,6 @@ typedef struct _GstBaseTransformPrivate GstBaseTransformPrivate;
 
 /**
  * GstBaseTransform:
- * @element: the parent element.
  *
  * The opaque #GstBaseTransform data structure.
  */

@@ -44,8 +44,6 @@ void gst_byte_writer_put_uint8_unchecked (GstByteWriter *writer, guint8 val);
  * Writes a unsigned big endian 16 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_uint16_be_unchecked (GstByteWriter *writer, guint16 val);
@@ -57,8 +55,6 @@ void gst_byte_writer_put_uint16_be_unchecked (GstByteWriter *writer, guint16 val
  *
  * Writes a unsigned big endian 24 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -72,8 +68,6 @@ void gst_byte_writer_put_uint24_be_unchecked (GstByteWriter *writer, guint32 val
  * Writes a unsigned big endian 32 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_uint32_be_unchecked (GstByteWriter *writer, guint32 val);
@@ -85,8 +79,6 @@ void gst_byte_writer_put_uint32_be_unchecked (GstByteWriter *writer, guint32 val
  *
  * Writes a unsigned big endian 64 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -100,8 +92,6 @@ void gst_byte_writer_put_uint64_be_unchecked (GstByteWriter *writer, guint64 val
  * Writes a unsigned little endian 16 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_uint16_le_unchecked (GstByteWriter *writer, guint16 val);
@@ -113,8 +103,6 @@ void gst_byte_writer_put_uint16_le_unchecked (GstByteWriter *writer, guint16 val
  *
  * Writes a unsigned little endian 24 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -128,8 +116,6 @@ void gst_byte_writer_put_uint24_le_unchecked (GstByteWriter *writer, guint32 val
  * Writes a unsigned little endian 32 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_uint32_le_unchecked (GstByteWriter *writer, guint32 val);
@@ -141,8 +127,6 @@ void gst_byte_writer_put_uint32_le_unchecked (GstByteWriter *writer, guint32 val
  *
  * Writes a unsigned little endian 64 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -156,8 +140,6 @@ void gst_byte_writer_put_uint64_le_unchecked (GstByteWriter *writer, guint64 val
  * Writes a signed 8 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_int8_unchecked (GstByteWriter *writer, gint8 val);
@@ -169,8 +151,6 @@ void gst_byte_writer_put_int8_unchecked (GstByteWriter *writer, gint8 val);
  *
  * Writes a signed big endian 16 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -184,8 +164,6 @@ void gst_byte_writer_put_int16_be_unchecked (GstByteWriter *writer, gint16 val);
  * Writes a signed big endian 24 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_int24_be_unchecked (GstByteWriter *writer, gint32 val);
@@ -197,8 +175,6 @@ void gst_byte_writer_put_int24_be_unchecked (GstByteWriter *writer, gint32 val);
  *
  * Writes a signed big endian 32 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -212,8 +188,6 @@ void gst_byte_writer_put_int32_be_unchecked (GstByteWriter *writer, gint32 val);
  * Writes a signed big endian 64 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_int64_be_unchecked (GstByteWriter *writer, gint64 val);
@@ -225,8 +199,6 @@ void gst_byte_writer_put_int64_be_unchecked (GstByteWriter *writer, gint64 val);
  *
  * Writes a signed little endian 16 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -240,8 +212,6 @@ void gst_byte_writer_put_int16_le_unchecked (GstByteWriter *writer, gint16 val);
  * Writes a signed little endian 24 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_int24_le_unchecked (GstByteWriter *writer, gint32 val);
@@ -253,8 +223,6 @@ void gst_byte_writer_put_int24_le_unchecked (GstByteWriter *writer, gint32 val);
  *
  * Writes a signed little endian 32 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -268,8 +236,6 @@ void gst_byte_writer_put_int32_le_unchecked (GstByteWriter *writer, gint32 val);
  * Writes a signed little endian 64 bit integer to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_int64_le_unchecked (GstByteWriter *writer, gint64 val);
@@ -281,8 +247,6 @@ void gst_byte_writer_put_int64_le_unchecked (GstByteWriter *writer, gint64 val);
  *
  * Writes a big endian 32 bit float to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -296,8 +260,6 @@ void gst_byte_writer_put_float32_be_unchecked (GstByteWriter *writer, gfloat val
  * Writes a big endian 64 bit float to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_float64_be_unchecked (GstByteWriter *writer, gdouble val);
@@ -310,8 +272,6 @@ void gst_byte_writer_put_float64_be_unchecked (GstByteWriter *writer, gdouble va
  * Writes a little endian 32 bit float to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_float32_le_unchecked (GstByteWriter *writer, gfloat val);
@@ -323,8 +283,6 @@ void gst_byte_writer_put_float32_le_unchecked (GstByteWriter *writer, gfloat val
  *
  * Writes a little endian 64 bit float to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */
@@ -339,8 +297,6 @@ void gst_byte_writer_put_float64_le_unchecked (GstByteWriter *writer, gdouble va
  * Writes @size bytes of @data to @writer without
  * checking if there is enough free space available in the byte writer.
  *
- * Returns: %TRUE if the value could be written
- *
  * Since: 0.10.31
  */
 void gst_byte_writer_put_data_unchecked (GstByteWriter *writer, const guint8 *data, guint size);
@@ -353,8 +309,6 @@ void gst_byte_writer_put_data_unchecked (GstByteWriter *writer, const guint8 *da
  *
  * Writes @size bytes containing @value to @writer without
  * checking if there is enough free space available in the byte writer.
- *
- * Returns: %TRUE if the value could be written
  *
  * Since: 0.10.31
  */

@@ -32,8 +32,6 @@
  * Skips @nbits bits of the #GstBitReader instance without checking if there
  * are enough bits available in the bit reader.
  *
- * Returns: %TRUE if @nbits bits could be skipped, %FALSE otherwise.
- * 
  * Since: 0.10.31
  */
 void gst_bit_reader_skip_unchecked (GstBitReader * reader, guint nbits);
@@ -44,8 +42,6 @@ void gst_bit_reader_skip_unchecked (GstBitReader * reader, guint nbits);
  *
  * Skips until the next byte without checking if there are enough bits
  * available in the bit reader.
- *
- * Returns: %TRUE if successful, %FALSE otherwise.
  * 
  * Since: 0.10.31
  */
