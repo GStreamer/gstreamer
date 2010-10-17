@@ -1377,7 +1377,7 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y16:
       return width;
     case GST_VIDEO_FORMAT_A420:
-      if (component == 0 || component == 1) {
+      if (component == 0 || component == 3) {
         return width;
       } else {
         return GST_ROUND_UP_2 (width) / 2;
@@ -1451,7 +1451,7 @@ gst_video_format_get_component_height (GstVideoFormat format,
     case GST_VIDEO_FORMAT_UYVP:
       return height;
     case GST_VIDEO_FORMAT_A420:
-      if (component == 0 || component == 1) {
+      if (component == 0 || component == 3) {
         return height;
       } else {
         return GST_ROUND_UP_2 (height) / 2;
@@ -1672,7 +1672,6 @@ gst_video_format_get_component_offset (GstVideoFormat format,
         return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) +
             2 * GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
             (GST_ROUND_UP_2 (height) / 2);
-
       }
     default:
       return 0;
