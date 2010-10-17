@@ -18,24 +18,34 @@
  */
 
 using Gtk;
+using Gst;
 
 public class MediaInfo.Info : VBox
 {
   private Label uri;
+  //private Discoverer dc;
 
   public Info ()
   {
+    // configure the view
     set_homogeneous (false);
 
+    // add widgets
     uri = new Label ("");
     pack_start (uri, false, false, 0);
 
     show_all ();
+
+    // set up the gstreamer components
+    //dc = new Discoverer (Gst.SECONDS * 10, null);
   }
 
   public bool discover (string uri)
   {
     this.uri.set_text (uri);
+
+    //DiscovererInfo info = dc.discover_uri (uri, null);
+    
     return (true);
   }
 }
