@@ -25,7 +25,6 @@ public class MediaInfo.App : Window
   private FileChooserWidget chooser;
   private Info info;
 
-
   public App()
   {
     // configure the window
