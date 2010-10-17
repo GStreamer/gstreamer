@@ -21,11 +21,68 @@ using Gtk;
 
 public class MediaInfo.App : Window
 {
+  private FileChooserWidget chooser;
+  private Label info;
+
   public App()
   {
+    // configure the window
     set_title (_("GStreamer Media Info"));
-    set_default_size (300, 200);
-    this.destroy.connect (Gtk.main_quit);
+    set_default_size (400, 300);
+    destroy.connect (Gtk.main_quit);
+    
+    VBox vbox = new VBox(false, 0);
+    add (vbox);
+    
+    // add a menubar
+    vbox.pack_start (create_menu(), false, false, 0);
+    
+    // add a file-chooser with info pane as preview widget
+    chooser = new FileChooserWidget (FileChooserAction.OPEN);
+    vbox.pack_start (chooser, true, true, 3);
+
+    // FIXME: use proper widget
+    info = new Label ("");
+    chooser.set_preview_widget (info);
+    chooser.use_preview_label = false;
+    chooser.update_preview.connect (on_update_preview);
+  }
+
+  // helper
+
+  private MenuBar create_menu ()
+  {
+    MenuBar menu_bar = new MenuBar ();
+    MenuItem item;
+    Menu sub_menu;
+    AccelGroup accel_group;
+    
+    accel_group = new AccelGroup ();
+    this.add_accel_group (accel_group);
+    
+    item = new MenuItem.with_label (_("File"));
+    menu_bar.append (item);
+    
+    sub_menu = new Menu ();
+    item.set_submenu (sub_menu);
+    
+    item = new ImageMenuItem.from_stock (STOCK_QUIT, accel_group);
+    sub_menu.append (item);
+    item.activate.connect (Gtk.main_quit);
+
+    return (menu_bar);  
+  }
+
+  // signal handler
+
+  private void on_update_preview ()
+  {
+    string uri = chooser.get_preview_uri();
+
+    // FIXME: do real preview
+    info.set_text (uri);
+
+    chooser.set_preview_widget_active (true);
   }
 }
 

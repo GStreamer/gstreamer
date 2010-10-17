@@ -29,7 +29,7 @@ main(string[] args)
   Gtk.init (ref args);
 
   var app = new App ();
-  app.show ();
+  app.show_all ();
 
   Gtk.main ();
 
