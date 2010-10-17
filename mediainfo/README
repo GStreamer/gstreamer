@@ -14,6 +14,27 @@ files.
   have a menu command to turn auto-play off
 - offer several commands in addition (see below)
 
+example output from commandline tool:
+> gst-discoverer -v /home/ensonic/Musik/xotox-hypnocat.mp3 
+
+Topology:
+  audio: audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)2, parsed=(boolean)true
+    Codec:
+      audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)2, parsed=(boolean)true
+    Additional info:
+      None
+    Channels: 2
+    Sample rate: 44100
+    Depth: 16
+    Bitrate: 128000
+    Max bitrate: 0
+    Tags:
+      taglist, audio-codec=(string)"MPEG\ 1\ Audio\,\ Layer\ 3\ \(MP3\)", has-crc=(boolean)false, channel-mode=(string)stereo, bitrate=(uint)128000;
+
+Duration:
+  0:04:00.039125000
+
+
 == compare ==
 - dup detail pane and allow to pick a new file
 - show differing entries in red
