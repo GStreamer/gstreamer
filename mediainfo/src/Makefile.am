@@ -13,7 +13,8 @@ VALAFLAGS = \
 
 gst_mi_SOURCES = \
 	mi.vala \
-	mi-app.vala
+	mi-app.vala \
+	mi-info.vala
 
 gst_mi_LDADD = \
 	$(MI_LIBS)

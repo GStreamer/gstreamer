@@ -18,11 +18,12 @@
  */
 
 using Gtk;
+using MediaInfo;
 
 public class MediaInfo.App : Window
 {
   private FileChooserWidget chooser;
-  private Label info;
+  private Info info;
 
   public App()
   {
@@ -41,10 +42,9 @@ public class MediaInfo.App : Window
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
     vbox.pack_start (chooser, true, true, 3);
 
-    // FIXME: use proper widget
-    info = new Label ("");
+    info = new Info ();
     chooser.set_preview_widget (info);
-    chooser.use_preview_label = false;
+    chooser.set_use_preview_label (false);
     chooser.update_preview.connect (on_update_preview);
   }
 
@@ -78,11 +78,9 @@ public class MediaInfo.App : Window
   private void on_update_preview ()
   {
     string uri = chooser.get_preview_uri();
+    bool res = info.discover (uri);
 
-    // FIXME: do real preview
-    info.set_text (uri);
-
-    chooser.set_preview_widget_active (true);
+    chooser.set_preview_widget_active (res);
   }
 }
 
