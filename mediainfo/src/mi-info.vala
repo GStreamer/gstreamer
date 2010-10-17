@@ -46,8 +46,6 @@ public class MediaInfo.Info : VBox
     //dc = new Discoverer (Gst.SECONDS * 10, null);
 
     pb = ElementFactory.make ("playbin2", "player") as Pipeline;
-    // FIXME: need bus callback for:
-    // xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (this.drawing_area.window));
     Gst.Bus bus = pb.get_bus ();
     bus.add_signal_watch ();
     bus.message["element"].connect (on_element_message);
@@ -58,7 +56,7 @@ public class MediaInfo.Info : VBox
 
   public bool discover (string uri)
   {
-    // TODO: stop previous playback (also need destoructor)
+    // TODO: stop previous playback (also need destructor)
     
     this.uri.set_text (uri);
     
@@ -79,8 +77,10 @@ public class MediaInfo.Info : VBox
     Structure structure = message.get_structure ();
     if (structure.has_name ("prepare-xwindow-id"))
     {
-      //XOverlay xoverlay = message.src as XOverlay;
-      //xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (this.drawing_area.window));
+      XOverlay xoverlay = message.src as XOverlay;
+      xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (drawing_area.window));
+      
+      drawing_area.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
     }
   }
 }
