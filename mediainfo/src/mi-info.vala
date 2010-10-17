@@ -24,6 +24,8 @@ public class MediaInfo.Info : VBox
 {
   private Label uri;
   //private Discoverer dc;
+  private DrawingArea drawing_area;
+  private Pipeline pb;
 
   public Info ()
   {
@@ -31,6 +33,10 @@ public class MediaInfo.Info : VBox
     set_homogeneous (false);
 
     // add widgets
+    drawing_area = new DrawingArea ();
+    drawing_area.set_size_request (300, 150);
+    pack_start (drawing_area, true, true, 0);
+
     uri = new Label ("");
     pack_start (uri, false, false, 0);
 
@@ -38,14 +44,43 @@ public class MediaInfo.Info : VBox
 
     // set up the gstreamer components
     //dc = new Discoverer (Gst.SECONDS * 10, null);
+
+    pb = ElementFactory.make ("playbin2", "player") as Pipeline;
+    // FIXME: need bus callback for:
+    // xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (this.drawing_area.window));
+    Gst.Bus bus = pb.get_bus ();
+    bus.add_signal_watch ();
+    bus.message["element"].connect (on_element_message);
+
   }
+
+  // public methods
 
   public bool discover (string uri)
   {
+    // TODO: stop previous playback (also need destoructor)
+    
     this.uri.set_text (uri);
-
+    
     //DiscovererInfo info = dc.discover_uri (uri, null);
+
+    // TODO: play file
+    //pb.uri = uri;
+    //pb.set_state (State.PLAYING);
+
     
     return (true);
+  }
+
+  // signal handlers
+
+  private void on_element_message (Gst.Bus bus, Message message)
+  {
+    Structure structure = message.get_structure ();
+    if (structure.has_name ("prepare-xwindow-id"))
+    {
+      //XOverlay xoverlay = message.src as XOverlay;
+      //xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (this.drawing_area.window));
+    }
   }
 }

@@ -27,6 +27,7 @@ main(string[] args)
   Intl.textdomain (Config.GETTEXT_PACKAGE);
 
   Gtk.init (ref args);
+  Gst.init (ref args);
 
   App app = new App ();
   app.show_all ();
