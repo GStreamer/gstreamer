@@ -86,6 +86,7 @@ struct MPEGSeqHdr
 
 struct MPEGPictureHdr
 {
+  guint16 temp_ref;
   guint8 pic_type;
 };
 
