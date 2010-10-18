@@ -707,7 +707,7 @@ gst_byte_reader_get_##name (GstByteReader * reader, type * val) \
 } \
 \
 gboolean \
-gst_byte_reader_peek_##name (GstByteReader * reader, type * val) \
+gst_byte_reader_peek_##name (const GstByteReader * reader, type * val) \
 { \
   return _gst_byte_reader_peek_##name##_inline (reader, val); \
 }
@@ -886,7 +886,7 @@ gst_byte_reader_get_data (GstByteReader * reader, guint size,
  * Since: 0.10.22
  */
 gboolean
-gst_byte_reader_peek_data (GstByteReader * reader, guint size,
+gst_byte_reader_peek_data (const GstByteReader * reader, guint size,
     const guint8 ** val)
 {
   return _gst_byte_reader_peek_data_inline (reader, size, val);
@@ -957,7 +957,7 @@ gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
  * Since: 0.10.24
  */
 guint
-gst_byte_reader_masked_scan_uint32 (GstByteReader * reader, guint32 mask,
+gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader, guint32 mask,
     guint32 pattern, guint offset, guint size)
 {
   const guint8 *data;
@@ -995,7 +995,7 @@ gst_byte_reader_masked_scan_uint32 (GstByteReader * reader, guint32 mask,
 
 #define GST_BYTE_READER_SCAN_STRING(bits) \
 static guint \
-gst_byte_reader_scan_string_utf##bits (GstByteReader * reader) \
+gst_byte_reader_scan_string_utf##bits (const GstByteReader * reader) \
 { \
   guint len, off, max_len; \
   \
@@ -1141,7 +1141,8 @@ GST_BYTE_READER_SKIP_STRING (32);
  * Since: 0.10.24
  */
 gboolean
-gst_byte_reader_peek_string_utf8 (GstByteReader * reader, const gchar ** str)
+gst_byte_reader_peek_string_utf8 (const GstByteReader * reader,
+    const gchar ** str)
 {
   g_return_val_if_fail (reader != NULL, FALSE);
   g_return_val_if_fail (str != NULL, FALSE);
