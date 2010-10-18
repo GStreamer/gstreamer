@@ -256,6 +256,17 @@
   )
 )
 
+(define-function audio_clock_new_full
+  (c-name "gst_audio_clock_new_full")
+  (return-type "GstClock*")
+  (parameters
+    '("const-gchar*" "name")
+    '("GstAudioClockGetTimeFunc" "func")
+    '("gpointer" "user_data")
+    '("GDestroyNotify" "destroy_notify")
+  )
+)
+
 (define-method reset
   (of-object "GstAudioClock")
   (c-name "gst_audio_clock_reset")
@@ -282,6 +293,13 @@
   )
 )
 
+(define-function audio_clock_invalidate
+  (c-name "gst_audio_clock_invalidate")
+  (return-type "none")
+  (parameters
+    '("GstClock*" "clock")
+  )
+)
 
 ;; From gstaudiofilter.h
 
@@ -411,6 +429,21 @@
   (of-object "GstBaseAudioSink")
   (c-name "gst_base_audio_sink_get_slave_method")
   (return-type "GstBaseAudioSinkSlaveMethod")
+)
+
+(define-method set_drift_tolerance
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_set_drift_tolerance")
+  (return-type "none")
+  (parameters
+    '("gint64" "drift_tolerance")
+  )
+)
+
+(define-method get_drift_tolerance
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_get_drift_tolerance")
+  (return-type "gint64")
 )
 
 

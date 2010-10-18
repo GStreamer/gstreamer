@@ -135,6 +135,15 @@
   )
 )
 
+(define-method take_list
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_take_list")
+  (return-type "GList*")
+  (parameters
+    '("guint" "nbytes")
+  )
+)
+
 (define-method available
   (of-object "GstAdapter")
   (c-name "gst_adapter_available")
@@ -288,7 +297,7 @@
   (c-name "gst_base_sink_set_last_buffer_enabled")
   (return-type "none")
   (parameters
-   '("gboolean" "enable")
+   '("gboolean" "enabled")
   )
 )
 

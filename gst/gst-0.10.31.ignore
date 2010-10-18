@@ -1,0 +1,24 @@
+%%
+ignore
+  gst_is_initialized
+  gst_buffer_list_iterator_add_list
+  gst_element_class_set_documentation_uri
+  gst_element_class_set_icon_name
+  gst_element_class_get_documentation_uri
+  gst_element_class_get_icon_name
+  gst_element_factory_list_is_type
+  gst_element_factory_list_get_elements
+  gst_element_factory_list_filter
+  gst_plugin_Feature_rank_compare_func
+  gst_query_add_buffering_range
+  gst_query_get_n_buffering_ranges
+  gst_query_parse_nth_buffering_range
+  gst_util_fraction_compare
+  gst_value_set_int64_range
+  gst_value_get_int64_range_min
+  gst_value_get_int64_range_max
+  gst_adapter_take_list
+%%
+ignore-type
+  GstDateTime
+%%

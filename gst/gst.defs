@@ -26,6 +26,12 @@
   )
 )
 
+(define-function is_initialized
+  (c-name "gst_is_initialized")
+  (return-type "gboolean")
+)
+
+
 (define-function init_get_option_group
   (c-name "gst_init_get_option_group")
   (return-type "GOptionGroup*")
@@ -411,6 +417,15 @@
   (return-type "none")
   (parameters
     '("GstBuffer*" "buffer")
+  )
+)
+
+(define-method add_list
+  (of-object "GstBufferListIterator")
+  (c-name "gst_buffer_list_iterator_add_list")
+  (return-type "none")
+  (parameters
+    '("GList*" "list")
   )
 )
 
@@ -1199,6 +1214,122 @@
   )
 )
 
+;; From gstdatetime.h
+
+(define-method get_year
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_year")
+  (return-type "gint")
+)
+
+(define-method get_month
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_month")
+  (return-type "gint")
+)
+
+(define-method get_day
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_day")
+  (return-type "gint")
+)
+
+(define-method get_hour
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_hour")
+  (return-type "gint")
+)
+
+(define-method get_minute
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_minute")
+  (return-type "gint")
+)
+
+(define-method get_second
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_second")
+  (return-type "gint")
+)
+
+(define-method get_microsecond
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_microsecond")
+  (return-type "gint")
+)
+
+(define-method get_time_zone_offset
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_get_time_zone_offset")
+  (return-type "gfloat")
+)
+
+(define-function date_time_new_from_unix_epoch
+  (c-name "gst_date_time_new_from_unix_epoch")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+  (parameters
+    '("gint64" "secs")
+  )
+)
+
+(define-function date_time_new_local_time
+  (c-name "gst_date_time_new_local_time")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+  (parameters
+    '("gint" "year")
+    '("gint" "month")
+    '("gint" "day")
+    '("gint" "hour")
+    '("gint" "minute")
+    '("gdouble" "seconds")
+  )
+)
+
+(define-function date_time_new
+  (c-name "gst_date_time_new")
+  (is-constructor-of "GstDateTime")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+  (parameters
+    '("gfloat" "tzoffset")
+    '("gint" "year")
+    '("gint" "month")
+    '("gint" "day")
+    '("gint" "hour")
+    '("gint" "minute")
+    '("gdouble" "seconds")
+  )
+)
+
+(define-function date_time_new_now_local_time
+  (c-name "gst_date_time_new_now_local_time")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+)
+
+(define-function date_time_new_now_utc
+  (c-name "gst_date_time_new_now_utc")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+)
+
+(define-method ref
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_ref")
+  (return-type "GstDateTime*")
+)
+
+(define-method unref
+  (of-object "GstDateTime")
+  (c-name "gst_date_time_unref")
+  (return-type "none")
+)
+
+
+
+
 ;; From ../gstreamer/gst/gstdebugutils.h
 
 (define-function DEBUG_BIN_TO_DOT_FILE
@@ -1247,6 +1378,24 @@
   (of-object "GstElement")
   (c-name "gst_element_get_pad_template_list")
   (return-type "GList*")
+)
+
+(define-method set_documentation_uri
+  (of-object "GstElementClass")
+  (c-name "gst_element_class_set_documentation_uri")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method set_icon_name
+  (of-object "GstElementClass")
+  (c-name "gst_element_class_set_icon_name")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "name")
+  )
 )
 
 (define-method set_details
@@ -1744,6 +1893,18 @@
   (return-type "const-gchar*")
 )
 
+(define-method get_documentation_uri
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_get_documentation_uri")
+  (return-type "const-gchar*")
+)
+
+(define-method get_icon_name
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_get_icon_name")
+  (return-type "const-gchar*")
+)
+
 (define-method get_num_pad_templates
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_get_num_pad_templates")
@@ -1805,6 +1966,34 @@
     '("const-gchar*" "name")
     '("guint" "rank")
     '("GType" "type")
+  )
+)
+(define-method list_is_type
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_list_is_type")
+  (return-type "gboolean")
+  (parameters
+    '("GstElementFactoryListType" "type")
+  )
+)
+
+(define-function element_factory_list_get_elements
+  (c-name "gst_element_factory_list_get_elements")
+  (return-type "GList*")
+  (parameters
+    '("GstElementFactoryListType" "type")
+    '("GstRank" "minrank")
+  )
+)
+
+(define-function element_factory_list_filter
+  (c-name "gst_element_factory_list_filter")
+  (return-type "GList*")
+  (parameters
+    '("GList*" "list")
+    '("const-GstCaps*" "caps")
+    '("GstPadDirection" "direction")
+    '("gboolean" "subsetonly")
   )
 )
 
@@ -4943,6 +5132,17 @@
   )
 )
 
+(define-function util_fraction_compare
+  (c-name "gst_util_fraction_compare")
+  (return-type "gint")
+  (parameters
+    '("gint" "a_n")
+    '("gint" "a_d")
+    '("gint" "b_n")
+    '("gint" "b_d")
+  )
+)
+
 (define-function event_new_sink_message
   (c-name "gst_event_new_sink_message")
   (return-type "GstEvent*")
@@ -5402,6 +5602,16 @@
     '("guint" "min_micro")
   )
 )
+
+(define-function plugin_feature_rank_compare_func
+  (c-name "gst_plugin_feature_rank_compare_func")
+  (return-type "gint")
+  (parameters
+    '("gconstpointer" "p1")
+    '("gconstpointer" "p2")
+  )
+)
+
 
 ;; From gstpoll.h
 
@@ -6021,6 +6231,33 @@
   )
 )
 
+(define-method add_buffering_range
+  (of-object "GstQuery")
+  (c-name "gst_query_add_buffering_range")
+  (return-type "gboolean")
+  (parameters
+    '("gint64" "start")
+    '("gint64" "stop")
+  )
+)
+
+(define-method get_n_buffering_ranges
+  (of-object "GstQuery")
+  (c-name "gst_query_get_n_buffering_ranges")
+  (return-type "guint")
+)
+
+(define-method parse_nth_buffering_range
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_nth_buffering_range")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "index")
+    '("gint64*" "start")
+    '("gint64*" "stop")
+  )
+)
+
 (define-function query_new_uri
   (c-name "gst_query_new_uri")
   (caller-owns-return #t)
@@ -6516,6 +6753,26 @@
   (parameters
     '("const-gchar*" "fieldname")
     '("const-GValue*" "value")
+  )
+)
+
+(define-method id_take_value
+  (of-object "GstStructure")
+  (c-name "gst_structure_id_take_value")
+  (return-type "none")
+  (parameters
+    '("GQuark" "field")
+    '("GValue*" "value")
+  )
+)
+
+(define-method take_value
+  (of-object "GstStructure")
+  (c-name "gst_structure_take_value")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("GValue*" "value")
   )
 )
 
@@ -8771,6 +9028,32 @@
 (define-function value_get_int_range_max
   (c-name "gst_value_get_int_range_max")
   (return-type "gint")
+  (parameters
+    '("const-GValue*" "value")
+  )
+)
+
+(define-function value_set_int64_range
+  (c-name "gst_value_set_int64_range")
+  (return-type "none")
+  (parameters
+    '("GValue*" "value")
+    '("gint64" "start")
+    '("gint64" "end")
+  )
+)
+
+(define-function value_get_int64_range_min
+  (c-name "gst_value_get_int64_range_min")
+  (return-type "gint64")
+  (parameters
+    '("const-GValue*" "value")
+  )
+)
+
+(define-function value_get_int64_range_max
+  (c-name "gst_value_get_int64_range_max")
+  (return-type "gint64")
   (parameters
     '("const-GValue*" "value")
   )

@@ -55,6 +55,8 @@
     '("bgr16" "GST_VIDEO_FORMAT_BGR16")
     '("rgb15" "GST_VIDEO_FORMAT_RGB15")
     '("bgr15" "GST_VIDEO_FORMAT_BGR15")
+    '("uyvp" "GST_VIDEO_FORMAT_UYVP")
+    '("a420" "GST_VIDEO_FORMAT_A420")
   )
 )
 
@@ -330,5 +332,28 @@
   (parameters
     '("GstEvent*" "event")
     '("gboolean*" "in_still")
+  )
+)
+(define-function video_convert_frame
+  (c-name "gst_video_convert_frame")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstBuffer*" "buf")
+    '("const-GstCaps*" "to_caps")
+    '("GstClockTime" "timeout")
+    '("GError**" "error")
+  )
+)
+
+(define-function video_convert_frame_async
+  (c-name "gst_video_convert_frame_async")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buf")
+    '("const-GstCaps*" "to_caps")
+    '("GstClockTime" "timeout")
+    '("GstVideoConvertFrameCallback" "callback")
+    '("gpointer" "user_data")
+    '("GDestroyNotify" "destroy_notify")
   )
 )

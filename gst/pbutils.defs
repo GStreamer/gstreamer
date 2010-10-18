@@ -27,6 +27,156 @@
   )
 )
 
+(define-object Discoverer
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstDiscoverer")
+  (gtype-id "GST_TYPE_DISCOVERER")
+)
+
+(define-enum DiscovererResult
+  (in-module "Gst")
+  (c-name "GstDiscovererResult")
+  (gtype-id "GST_TYPE_DISCOVERER_RESULT")
+  (values
+    '("ok" "GST_DISCOVERER_OK")
+    '("uri-invalid" "GST_DISCOVERER_URI_INVALID")
+    '("error" "GST_DISCOVERER_ERROR")
+    '("timeout" "GST_DISCOVERER_TIMEOUT")
+    '("busy" "GST_DISCOVERER_BUSY")
+    '("missing-plugins" "GST_DISCOVERER_MISSING_PLUGINS")
+  )
+)
+
+(define-miniobject DiscovererInfo
+  (in-module "Gst")
+  (c-name "GstDiscovererInfo")
+  (parent "GstMiniObject")
+  (gtype-id "GST_TYPE_DISCOVERER_INFO")
+)
+
+(define-miniobject DiscovererStreamInfo
+  (in-module "Gst")
+  (c-name "GstDiscovererStreamInfo")
+  (parent "GstMiniObject")
+  (gtype-id "GST_TYPE_DISCOVERER_STREAM_INFO")
+)
+
+(define-miniobject DiscovererContainerInfo
+  (in-module "Gst")
+  (c-name "GstDiscovererContainerInfo")
+  (parent "GstDiscovererStreamInfo")
+  (gtype-id "GST_TYPE_DISCOVERER_CONTAINER_INFO")
+)
+
+(define-miniobject DiscovererAudioInfo
+  (in-module "Gst")
+  (c-name "GstDiscovererAudioInfo")
+  (parent "GstDiscovererStreamInfo")
+  (gtype-id "GST_TYPE_DISCOVERER_AUDIO_INFO")
+)
+
+(define-miniobject DiscovererVideoInfo
+  (in-module "Gst")
+  (c-name "GstDiscovererVideoInfo")
+  (parent "GstDiscovererStreamInfo")
+  (gtype-id "GST_TYPE_DISCOVERER_VIDEO_INFO")
+)
+
+;; From codec-utils.h
+
+(define-function codec_utils_aac_get_sample_rate_from_index
+  (c-name "gst_codec_utils_aac_get_sample_rate_from_index")
+  (return-type "guint")
+  (parameters
+    '("guint" "sr_idx")
+  )
+)
+
+(define-function codec_utils_aac_get_profile
+  (c-name "gst_codec_utils_aac_get_profile")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "audio_config")
+    '("guint" "len")
+  )
+)
+
+(define-function codec_utils_aac_get_level
+  (c-name "gst_codec_utils_aac_get_level")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "audio_config")
+    '("guint" "len")
+  )
+)
+
+(define-method codec_utils_aac_caps_set_level_and_profile
+  (of-object "GstCaps")
+  (c-name "gst_codec_utils_aac_caps_set_level_and_profile")
+  (return-type "gboolean")
+  (parameters
+    '("const-guint8*" "audio_config")
+    '("guint" "len")
+  )
+)
+
+(define-function codec_utils_h264_get_profile
+  (c-name "gst_codec_utils_h264_get_profile")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "sps")
+    '("guint" "len")
+  )
+)
+
+(define-function codec_utils_h264_get_level
+  (c-name "gst_codec_utils_h264_get_level")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "sps")
+    '("guint" "len")
+  )
+)
+
+(define-method codec_utils_h264_caps_set_level_and_profile
+  (of-object "GstCaps")
+  (c-name "gst_codec_utils_h264_caps_set_level_and_profile")
+  (return-type "gboolean")
+  (parameters
+    '("const-guint8*" "sps")
+    '("guint" "len")
+  )
+)
+
+(define-function codec_utils_mpeg4video_get_profile
+  (c-name "gst_codec_utils_mpeg4video_get_profile")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "vis_obj_seq")
+    '("guint" "len")
+  )
+)
+
+(define-function codec_utils_mpeg4video_get_level
+  (c-name "gst_codec_utils_mpeg4video_get_level")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint8*" "vis_obj_seq")
+    '("guint" "len")
+  )
+)
+
+(define-method codec_utils_mpeg4video_caps_set_level_and_profile
+  (of-object "GstCaps")
+  (c-name "gst_codec_utils_mpeg4video_caps_set_level_and_profile")
+  (return-type "gboolean")
+  (parameters
+    '("const-guint8*" "vis_obj_seq")
+    '("guint" "len")
+  )
+)
+
 
 ;; From descriptions.h
 
@@ -147,6 +297,353 @@
 (define-function install_plugins_supported
   (c-name "gst_install_plugins_supported")
   (return-type "gboolean")
+)
+
+
+;; From gstdiscoverer.h
+
+(define-function gst_discoverer_stream_info_get_type
+  (c-name "gst_discoverer_stream_info_get_type")
+  (return-type "GType")
+)
+
+(define-method get_previous
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_previous")
+  (return-type "GstDiscovererStreamInfo*")
+)
+
+(define-method get_next
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_next")
+  (return-type "GstDiscovererStreamInfo*")
+)
+
+(define-method get_caps
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_caps")
+  (return-type "GstCaps*")
+)
+
+(define-method get_tags
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_tags")
+  (return-type "const-GstTagList*")
+)
+
+(define-method get_misc
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_misc")
+  (return-type "const-GstStructure*")
+)
+
+(define-method get_stream_type_nick
+  (of-object "GstDiscovererStreamInfo")
+  (c-name "gst_discoverer_stream_info_get_stream_type_nick")
+  (return-type "const-gchar*")
+)
+
+(define-function gst_discoverer_container_info_get_type
+  (c-name "gst_discoverer_container_info_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_discoverer_container_info_get_streams
+  (c-name "gst_discoverer_container_info_get_streams")
+  (return-type "GList*")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_audio_info_get_type
+  (c-name "gst_discoverer_audio_info_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_discoverer_audio_info_get_channels
+  (c-name "gst_discoverer_audio_info_get_channels")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_audio_info_get_sample_rate
+  (c-name "gst_discoverer_audio_info_get_sample_rate")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_audio_info_get_depth
+  (c-name "gst_discoverer_audio_info_get_depth")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_audio_info_get_bitrate
+  (c-name "gst_discoverer_audio_info_get_bitrate")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_audio_info_get_max_bitrate
+  (c-name "gst_discoverer_audio_info_get_max_bitrate")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_type
+  (c-name "gst_discoverer_video_info_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_discoverer_video_info_get_width
+  (c-name "gst_discoverer_video_info_get_width")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_height
+  (c-name "gst_discoverer_video_info_get_height")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_depth
+  (c-name "gst_discoverer_video_info_get_depth")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_framerate_num
+  (c-name "gst_discoverer_video_info_get_framerate_num")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_framerate_denom
+  (c-name "gst_discoverer_video_info_get_framerate_denom")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_par_num
+  (c-name "gst_discoverer_video_info_get_par_num")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_par_denom
+  (c-name "gst_discoverer_video_info_get_par_denom")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_interlaced
+  (c-name "gst_discoverer_video_info_get_interlaced")
+  (return-type "gboolean")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_bitrate
+  (c-name "gst_discoverer_video_info_get_bitrate")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_max_bitrate
+  (c-name "gst_discoverer_video_info_get_max_bitrate")
+  (return-type "guint")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_video_info_get_is_image
+  (c-name "gst_discoverer_video_info_get_is_image")
+  (return-type "gboolean")
+  (parameters
+    '("GstDiscovererStreamInfo*" "info")
+  )
+)
+
+(define-function gst_discoverer_info_get_type
+  (c-name "gst_discoverer_info_get_type")
+  (return-type "GType")
+)
+
+(define-method copy
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_copy")
+  (return-type "GstDiscovererInfo*")
+)
+
+(define-method get_uri
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_uri")
+  (return-type "const-gchar*")
+)
+
+(define-method get_result
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_result")
+  (return-type "GstDiscovererResult")
+)
+
+(define-method get_stream_info
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_stream_info")
+  (return-type "GstDiscovererStreamInfo*")
+)
+
+(define-method get_stream_list
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_stream_list")
+  (return-type "GList*")
+)
+
+(define-method get_duration
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_duration")
+  (return-type "GstClockTime")
+)
+
+(define-method get_misc
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_misc")
+  (return-type "const-GstStructure*")
+)
+
+(define-method get_tags
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_tags")
+  (return-type "const-GstTagList*")
+)
+
+(define-method get_streams
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_streams")
+  (return-type "GList*")
+  (parameters
+    '("GType" "streamtype")
+  )
+)
+
+(define-method get_audio_streams
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_audio_streams")
+  (return-type "GList*")
+)
+
+(define-method get_video_streams
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_video_streams")
+  (return-type "GList*")
+)
+
+(define-method get_container_streams
+  (of-object "GstDiscovererInfo")
+  (c-name "gst_discoverer_info_get_container_streams")
+  (return-type "GList*")
+)
+
+(define-function gst_discoverer_stream_info_list_free
+  (c-name "gst_discoverer_stream_info_list_free")
+  (return-type "none")
+  (parameters
+    '("GList*" "infos")
+  )
+)
+
+(define-function gst_discoverer_get_type
+  (c-name "gst_discoverer_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_discoverer_new
+  (c-name "gst_discoverer_new")
+  (is-constructor-of "GstDiscoverer")
+  (return-type "GstDiscoverer*")
+  (parameters
+    '("GstClockTime" "timeout")
+    '("GError**" "err")
+  )
+)
+
+(define-method start
+  (of-object "GstDiscoverer")
+  (c-name "gst_discoverer_start")
+  (return-type "none")
+)
+
+(define-method stop
+  (of-object "GstDiscoverer")
+  (c-name "gst_discoverer_stop")
+  (return-type "none")
+)
+
+(define-method discover_uri_async
+  (of-object "GstDiscoverer")
+  (c-name "gst_discoverer_discover_uri_async")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-method discover_uri
+  (of-object "GstDiscoverer")
+  (c-name "gst_discoverer_discover_uri")
+  (return-type "GstDiscovererInfo*")
+  (parameters
+    '("const-gchar*" "uri")
+    '("GError**" "err")
+  )
+)
+
+;; From gstpluginsbaseversion.h
+
+(define-function plugins_base_version
+  (c-name "gst_plugins_base_version")
+  (return-type "none")
+  (parameters
+    '("guint*" "major")
+    '("guint*" "minor")
+    '("guint*" "micro")
+    '("guint*" "nano")
+  )
+)
+
+(define-function plugins_base_version_string
+  (c-name "gst_plugins_base_version_string")
+  (return-type "gchar*")
 )
 
 
