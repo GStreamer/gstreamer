@@ -26,6 +26,7 @@
 #include <pygobject.h>
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
+#include "pygst.h"
 
 void pytag_register_classes (PyObject *d);
 void pytag_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -40,6 +41,7 @@ inittag (void)
 	PyObject *m, *d;
 
 	init_pygobject ();
+	pygst_init ();
 	/* Initialize tag library */
 	gst_tag_register_musicbrainz_tags ();
 	

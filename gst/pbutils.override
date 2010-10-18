@@ -25,7 +25,7 @@ headers
 #endif
 
 #define NO_IMPORT_PYGOBJECT
-#include "common.h"
+#include "pygst.h"
 
 #include <gst/gst.h>
 
@@ -84,6 +84,7 @@ import gst.Object as PyGstObject_Type
 import gst.Structure as PyGstStructure_Type
 import gst.Element as PyGstElement_Type
 import gst.Message as PyGstMessage_Type
+import gst.MiniObject as PyGstMiniObject_Type
 %%
 include
   gstversion.override

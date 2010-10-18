@@ -28,6 +28,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/video/gstvideofilter.h>
+#include "pygst.h"
 
 void pyvideo_register_classes (PyObject *d);
 void pyvideo_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -39,9 +40,10 @@ GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
 DL_EXPORT(void)
 initvideo (void)
 {
-	PyObject *m, *d;
+        PyObject *m, *d, *gst;
 
 	init_pygobject ();
+	gst = pygst_init ();
 
 	m = Py_InitModule ("video", pyvideo_functions);
 	d = PyModule_GetDict (m);

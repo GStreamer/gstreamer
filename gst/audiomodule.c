@@ -28,6 +28,7 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/gstbaseaudiosink.h>
 #include <gst/audio/gstbaseaudiosrc.h>
+#include "pygst.h"
 
 void pyaudio_register_classes (PyObject *d);
 void pyaudio_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -42,6 +43,7 @@ initaudio (void)
 	PyObject *m, *d;
 
 	init_pygobject ();
+	pygst_init();
 
 	m = Py_InitModule ("audio", pyaudio_functions);
 	d = PyModule_GetDict (m);

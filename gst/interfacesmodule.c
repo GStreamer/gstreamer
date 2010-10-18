@@ -27,6 +27,7 @@
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygobject.h>
 #include <gst/gst.h>
+#include "pygst.h"
 
 void pyinterfaces_register_classes (PyObject *d);
 void pyinterfaces_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -39,6 +40,7 @@ initinterfaces (void)
 	PyObject *m, *d;
 
 	init_pygobject ();
+	pygst_init();
 
 	m = Py_InitModule ("interfaces", pyinterfaces_functions);
 	d = PyModule_GetDict (m);

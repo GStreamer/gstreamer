@@ -26,6 +26,7 @@
 #include <pygobject.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
+#include "pygst.h"
 
 void pypbutils_register_classes (PyObject *d);
 void pypbutils_add_constants(PyObject *module, const gchar *strip_prefix);
@@ -43,29 +44,7 @@ initpbutils (void)
 	init_pygobject ();
 
 	/* Make sure gst module is loaded and ready */
-	gst = PyImport_ImportModule("gst");
-	if (!gst) {
-	    if (PyErr_Occurred())
-		{
-		    PyObject *type, *value, *traceback;
-		    PyObject *py_orig_exc;
-		    PyErr_Fetch(&type, &value, &traceback);
-		    py_orig_exc = PyObject_Repr(value);
-		    Py_XDECREF(type);
-		    Py_XDECREF(value);
-		    Py_XDECREF(traceback);
-		    PyErr_Format(PyExc_ImportError,
-				 "could not import gst (error was: %s)",
-				 PyString_AsString(py_orig_exc));
-		    Py_DECREF(py_orig_exc);
-		} else {
-		PyErr_SetString(PyExc_ImportError,
-				"could not import gst (no error given)");
-	    }
-	    return;
-	}
-
-
+	gst = pygst_init();
 	gst_pb_utils_init ();
 	
 	m = Py_InitModule ("pbutils", pypbutils_functions);
