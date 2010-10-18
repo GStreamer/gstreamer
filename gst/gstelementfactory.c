@@ -163,8 +163,6 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     GstStaticPadTemplate *templ = item->data;
     GstCaps *caps = (GstCaps *) & (templ->static_caps);
 
-    g_free ((gchar *) templ->static_caps.string);
-
     /* FIXME: this is not threadsafe */
     if (caps->refcount == 1) {
       GstStructure *structure;
@@ -264,15 +262,18 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   for (item = klass->padtemplates; item; item = item->next) {
     GstPadTemplate *templ = item->data;
     GstStaticPadTemplate *newt;
+    gchar *caps_string = gst_caps_to_string (templ->caps);
 
     newt = g_slice_new (GstStaticPadTemplate);
     newt->name_template = g_intern_string (templ->name_template);
     newt->direction = templ->direction;
     newt->presence = templ->presence;
     newt->static_caps.caps.refcount = 0;
-    newt->static_caps.string = gst_caps_to_string (templ->caps);
+    newt->static_caps.string = g_intern_string (caps_string);
     factory->staticpadtemplates =
         g_list_append (factory->staticpadtemplates, newt);
+
+    g_free (caps_string);
   }
   factory->numpadtemplates = klass->numpadtemplates;
 

@@ -505,7 +505,7 @@ gst_registry_chunks_load_pad_template (GstElementFactory * factory, gchar ** in,
 
   /* unpack pad template strings */
   unpack_const_string (*in, template->name_template, end, fail);
-  unpack_string (*in, template->static_caps.string, end, fail);
+  unpack_const_string (*in, template->static_caps.string, end, fail);
 
   __gst_element_factory_add_static_pad_template (factory, template);
   GST_DEBUG ("Added pad_template %s", template->name_template);
