@@ -45,13 +45,10 @@ static void gst_plugin_feature_finalize (GObject * object);
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, GST_TYPE_OBJECT);
-static GstObjectClass *parent_class = NULL;
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
-  parent_class = g_type_class_peek_parent (klass);
-
   G_OBJECT_CLASS (klass)->finalize = gst_plugin_feature_finalize;
 }
 
@@ -70,7 +67,7 @@ gst_plugin_feature_finalize (GObject * object)
       GST_PLUGIN_FEATURE_NAME (feature));
   g_free (feature->name);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_plugin_feature_parent_class)->finalize (object);
 }
 
 /**
