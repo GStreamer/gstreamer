@@ -38,16 +38,25 @@ public class MediaInfo.Info : VBox
 
   public Info ()
   {
+    Label label;
+
     // configure the view
     set_homogeneous (false);
 
     // add widgets
+    // FIXME: handle aspect ration (AspectFrame.ratio)
+    // FIXME: paint it black from the start
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (300, 150);
     pack_start (drawing_area, true, true, 0);
 
-    uri = new Label ("");
+    // FIXME: some alignment issues with the strings
+    uri = new Label (null);
     pack_start (uri, false, false, 0);
+    
+    label = new Label (null);
+    label.set_markup("<b>Container</b>");
+    pack_start (label, false, false, 0);
 
     show_all ();
 
