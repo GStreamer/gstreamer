@@ -28,7 +28,7 @@
 #include <pygobject.h>
 #include <gst/gst.h>
 #include <gst/gstversion.h>
-#include "common.h"
+#include "pygst-private.h"
 #include "pygstexception.h"
 
 #include <locale.h>
@@ -133,6 +133,23 @@ fail:
   return -1;
 }
 
+struct _PyGst_Functions pygst_api_functions = {
+    pygst_caps_from_pyobject,
+    pygst_iterator_new,
+    pygstminiobject_new
+};
+
+/* for addon libraries ... */
+static void
+pygst_register_api(PyObject *d)
+{
+    PyObject *api;
+
+    api = PyCObject_FromVoidPtr(&pygst_api_functions, NULL);
+    PyDict_SetItemString(d, "_PyGst_API", api);
+    Py_DECREF(api);
+}
+
 DL_EXPORT (void)
 init_gst (void)
 {
@@ -193,6 +210,7 @@ init_gst (void)
 
   m = Py_InitModule ("_gst", pygst_functions);
   d = PyModule_GetDict (m);
+  pygst_register_api (d);
 
   /* gst version */
   gst_version (&major, &minor, &micro, &nano);

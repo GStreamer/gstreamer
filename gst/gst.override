@@ -51,6 +51,7 @@ headers
 
 #include <gst/net/gstnet.h>
 
+#include "pygst-private.h"
 #include "pygstvalue.h"
 #include "pygstminiobject.h"
 #include "pygstexception.h"

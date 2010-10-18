@@ -23,6 +23,7 @@
  * before including pygobject.h */
 #define NO_IMPORT_PYGOBJECT
 
+#include "pygst-private.h"
 #include "pygstvalue.h"
 
 static PyObject *gstvalue_class = NULL;

@@ -23,7 +23,7 @@
  * before including pygobject.h */
 #define NO_IMPORT_PYGOBJECT
 
-#include "common.h"
+#include "pygst-private.h"
 
 static void
 pygst_iterator_dealloc (PyGstIterator * self)

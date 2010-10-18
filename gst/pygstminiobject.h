@@ -27,9 +27,6 @@ typedef struct {
     PyObject *weakreflist; /* list of weak references */
 } PyGstMiniObject;
 
-PyObject *
-pygstminiobject_new(GstMiniObject *obj);
-
 #define pygstminiobject_get(v) (((PyGstMiniObject *)(v))->obj)
 #define pygstminiobject_check(v,base) (PyObject_TypeCheck(v,base))
 
@@ -45,8 +42,6 @@ pygst_miniobject_init();
 
 #ifndef _INSIDE_PYGSTMINIOBJECT_
 
-
-extern PyTypeObject PyGstMiniObject_Type;
 
 #endif /* !_INSIDE_PYGSTMINIOBJECT_ */
 
