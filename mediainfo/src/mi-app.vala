@@ -45,6 +45,8 @@ public class MediaInfo.App : Window
     info = new Info ();
     chooser.set_preview_widget (info);
     chooser.set_use_preview_label (false);
+    chooser.set_current_folder (GLib.Environment.get_home_dir ());
+    chooser.set_show_hidden (false);
     chooser.update_preview.connect (on_update_preview);
   }
 
