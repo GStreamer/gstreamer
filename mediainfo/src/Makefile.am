@@ -17,7 +17,7 @@ gst_mi_SOURCES = \
 	mi-info.vala
 
 gst_mi_LDADD = \
-	$(MI_LIBS) -lgstinterfaces-0.10 -lpbutils-0.10
+	$(MI_LIBS) -lgstinterfaces-0.10 -lgstpbutils-0.10
 	
 BUILT_SOURCES = $(gst_mi_SOURCES:.vala=.c)
 
