@@ -49,8 +49,8 @@ AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 AC_SUBST(GLIB_REQ,  2.8.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.10.18)
-AC_SUBST(GSTPB_REQ, 0.10.18)
+AC_SUBST(GST_REQ,   0.10.20)
+AC_SUBST(GSTPB_REQ, 0.10.20)
 
 AC_DISABLE_STATIC
 
@@ -111,13 +111,6 @@ dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
 
 if test "x$GST_CVS_VERSION" = "x"
 then
-  if test $GST_MINOR_VERSION -lt "20"
-  then
-    IGNORE_GST_0_10_20="gst-0.10.20.ignore"
-  else
-    IGNORE_GST_0_10_20=""
-  fi
-
   if test $GST_MINOR_VERSION -lt "21"
   then
     IGNORE_GST_0_10_21="gst-0.10.21.ignore"
@@ -233,7 +226,6 @@ then
   fi
 else
   IGNORE_GST_0_10_18=""
-  IGNORE_GST_0_10_20=""
   IGNORE_GST_0_10_21=""
   IGNORE_GST_0_10_22=""
   IGNORE_GST_0_10_23=""
@@ -254,7 +246,6 @@ else
   AC_DEFINE_UNQUOTED(HAVE_GST_TAG, 1, [We can use the gst-tag library])
 fi
 AC_DEFINE_UNQUOTED(HAVE_STREAM_VOLUME_INTERFACE, 1, [We can use the streamvolume interface])
-AC_SUBST(IGNORE_GST_0_10_20)
 AC_SUBST(IGNORE_GST_0_10_21)
 AC_SUBST(IGNORE_GST_0_10_22)
 AC_SUBST(IGNORE_GST_0_10_23)

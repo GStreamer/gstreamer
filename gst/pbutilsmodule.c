@@ -38,10 +38,36 @@ DL_EXPORT(void)
 initpbutils (void)
 {
 	PyObject *m, *d;
+	PyObject *gst;
 
 	init_pygobject ();
-	gst_pb_utils_init ();
 
+	/* Make sure gst module is loaded and ready */
+	gst = PyImport_ImportModule("gst");
+	if (!gst) {
+	    if (PyErr_Occurred())
+		{
+		    PyObject *type, *value, *traceback;
+		    PyObject *py_orig_exc;
+		    PyErr_Fetch(&type, &value, &traceback);
+		    py_orig_exc = PyObject_Repr(value);
+		    Py_XDECREF(type);
+		    Py_XDECREF(value);
+		    Py_XDECREF(traceback);
+		    PyErr_Format(PyExc_ImportError,
+				 "could not import gst (error was: %s)",
+				 PyString_AsString(py_orig_exc));
+		    Py_DECREF(py_orig_exc);
+		} else {
+		PyErr_SetString(PyExc_ImportError,
+				"could not import gst (no error given)");
+	    }
+	    return;
+	}
+
+
+	gst_pb_utils_init ();
+	
 	m = Py_InitModule ("pbutils", pypbutils_functions);
 	d = PyModule_GetDict (m);
 

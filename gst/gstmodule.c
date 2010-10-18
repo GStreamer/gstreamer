@@ -279,23 +279,16 @@ init_gst (void)
   PyModule_AddStringConstant (m, "TAG_ALBUM_GAIN", GST_TAG_ALBUM_GAIN);
   PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
   PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
-#if (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR == 10 && \
-     ((GST_VERSION_MICRO >= 6) || (GST_VERSION_MICRO == 5 && GST_VERSION_NANO > 0)))
   PyModule_AddStringConstant (m, "TAG_IMAGE", GST_TAG_IMAGE);
-#if ((GST_VERSION_MICRO >= 7) || (GST_VERSION_MICRO == 6 && GST_VERSION_NANO > 0 ))
   PyModule_AddStringConstant (m, "TAG_PREVIEW_IMAGE", GST_TAG_PREVIEW_IMAGE);
-#if ((GST_VERSION_MICRO >= 10) || (GST_VERSION_MICRO == 9 && GST_VERSION_NANO > 0 ))
   PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT",
       GST_TAG_EXTENDED_COMMENT);
-#if ((GST_VERSION_MICRO >= 12) || (GST_VERSION_MICRO == 11 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_REFERENCE_LEVEL",
       GST_TAG_REFERENCE_LEVEL);
   PyModule_AddStringConstant (m, "TAG_BEATS_PER_MINUTE",
       GST_TAG_BEATS_PER_MINUTE);
-#if ((GST_VERSION_MICRO >= 14) || (GST_VERSION_MICRO == 13 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_LICENSE_URI", GST_TAG_LICENSE_URI);
   PyModule_AddStringConstant (m, "TAG_COPYRIGHT_URI", GST_TAG_COPYRIGHT_URI);
-#if ((GST_VERSION_MICRO >= 15) || (GST_VERSION_MICRO == 14 && GST_VERSION_NANO > 0))
   PyModule_AddStringConstant (m, "TAG_COMPOSER", GST_TAG_COMPOSER);
   PyModule_AddStringConstant (m, "TAG_ARTIST_SORTNAME",
       GST_TAG_ARTIST_SORTNAME);
@@ -354,12 +347,6 @@ init_gst (void)
       GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION);
   PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_CAPTURE_DIRECTION",
       GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION);
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 #endif
 #endif

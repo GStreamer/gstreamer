@@ -25,7 +25,6 @@ defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstexception.h
 
 versioned_overrides = \
-	gst-0.10.20.ignore 	\
 	gst-0.10.21.ignore 	\
 	gst-0.10.22.ignore 	\
 	gst-0.10.23.ignore 	\
