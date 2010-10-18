@@ -1889,6 +1889,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
 
   eos = FALSE;
 
+again:
   /* else do buffer sync code */
   buffer = GST_BUFFER_CAST (obj);
 
@@ -1978,6 +1979,12 @@ eos_done:
     GST_DEBUG_OBJECT (basesink, "flushing step ended");
     stop_stepping (basesink, segment, step, rstart, rstop, eos);
     *step_end = FALSE;
+    /* re-determine running start times for adjusted segment
+     * (which has a flushed amount of running/accumulated time removed) */
+    if (!GST_IS_EVENT (obj)) {
+      GST_DEBUG_OBJECT (basesink, "refresh sync times");
+      goto again;
+    }
   }
 
   /* save times */
