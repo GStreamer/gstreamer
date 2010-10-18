@@ -47,32 +47,43 @@ public class MediaInfo.Info : VBox
 
     pb = ElementFactory.make ("playbin2", "player") as Pipeline;
     Gst.Bus bus = pb.get_bus ();
-    bus.add_signal_watch ();
-    bus.message["element"].connect (on_element_message);
+    bus.set_sync_handler (bus.sync_signal_handler);
+    bus.sync_message["element"].connect (on_element_sync_message);
 
+  }
+
+  ~Info ()
+  {
+    // stop previous playback
+    pb.set_state (State.NULL);
   }
 
   // public methods
 
   public bool discover (string uri)
   {
-    // TODO: stop previous playback (also need destructor)
-    
+    bool res = true;
+
+    // stop previous playback
+    pb.set_state (State.NULL);
+
     this.uri.set_text (uri);
-    
-    //DiscovererInfo info = dc.discover_uri (uri, null);
+    if (uri != null) {
+      //DiscovererInfo info = dc.discover_uri (uri, null);
 
-    // TODO: play file
-    //pb.uri = uri;
-    //pb.set_state (State.PLAYING);
+      // play file
+      ((GLib.Object)pb).set_property ("uri", uri);
+      pb.set_state (State.PLAYING);
 
+      res = true;
+    }
     
-    return (true);
+    return (res);
   }
 
   // signal handlers
 
-  private void on_element_message (Gst.Bus bus, Message message)
+  private void on_element_sync_message (Gst.Bus bus, Message message)
   {
     Structure structure = message.get_structure ();
     if (structure.has_name ("prepare-xwindow-id"))
