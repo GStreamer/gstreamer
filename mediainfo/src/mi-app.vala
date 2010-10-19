@@ -79,9 +79,12 @@ public class MediaInfo.App : Window
 
   private void on_update_preview ()
   {
-    string uri = chooser.get_preview_uri();
-    bool res = info.discover (uri);
+    File file = chooser.get_preview_file();
+    bool res = false;
 
+    if (file.query_file_type (FileQueryInfoFlags.NONE, null) == FileType.REGULAR) {
+      res = info.discover (chooser.get_preview_uri());
+    }
     chooser.set_preview_widget_active (res);
   }
 }

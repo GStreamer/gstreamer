@@ -131,7 +131,6 @@ public class MediaInfo.Info : VBox
     // stop previous playback
     pb.set_state (State.NULL);
 
-    // TODO: check if uri is a regular (local file)?
     if (uri != null) {
       DiscovererInfo info;
       bool uncertain;
