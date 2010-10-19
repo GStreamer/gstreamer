@@ -39,6 +39,14 @@ G_BEGIN_DECLS
 # undef GST_CAN_INLINE
 #endif
 
+#if (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L) && !defined(restrict)
+#  if defined(__GNUC__) && __GNUC__ >= 4
+#    define restrict __restrict__
+#  else
+#    define restrict
+#  endif
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_MACROS_H__ */
