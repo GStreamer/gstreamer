@@ -326,12 +326,14 @@ gst_queue2_class_init (GstQueue2Class * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
-          "Low threshold for buffering to start", 0, 100, DEFAULT_LOW_PERCENT,
+          "Low threshold for buffering to start. Only used if use-buffering is True",
+          0, 100, DEFAULT_LOW_PERCENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
-          "High threshold for buffering to finish", 0, 100,
-          DEFAULT_HIGH_PERCENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "High threshold for buffering to finish. Only used if use-buffering is True",
+          0, 100, DEFAULT_HIGH_PERCENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TEMP_TEMPLATE,
       g_param_spec_string ("temp-template", "Temporary File Template",
