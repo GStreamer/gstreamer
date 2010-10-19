@@ -115,11 +115,13 @@ gst_stereo_class_init (GstStereoClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_ACTIVE,
       g_param_spec_boolean ("active", "active", "active",
-          TRUE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          TRUE,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_STEREO,
       g_param_spec_float ("stereo", "stereo", "stereo",
-          0.0, 1.0, 0.1, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0, 1.0, 0.1,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_stereo_transform_ip);
 }
