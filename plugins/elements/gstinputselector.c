@@ -187,18 +187,20 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PAD_RUNNING_TIME,
       g_param_spec_int64 ("running-time", "Running time",
-          "Running time of stream on pad", 0, G_MAXINT64, 0, G_PARAM_READABLE));
+          "Running time of stream on pad", 0, G_MAXINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_TAGS,
       g_param_spec_boxed ("tags", "Tags",
           "The currently active tags on the pad", GST_TYPE_TAG_LIST,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_ACTIVE,
       g_param_spec_boolean ("active", "Active",
-          "If the pad is currently active", FALSE, G_PARAM_READABLE));
+          "If the pad is currently active", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PAD_ALWAYS_OK,
       g_param_spec_boolean ("always-ok", "Always OK",
           "Make an inactive pad return OK instead of NOT_LINKED",
-          DEFAULT_PAD_ALWAYS_OK, G_PARAM_READWRITE));
+          DEFAULT_PAD_ALWAYS_OK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -738,15 +740,18 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_N_PADS,
       g_param_spec_uint ("n-pads", "Number of Pads",
-          "The number of sink pads", 0, G_MAXUINT, 0, G_PARAM_READABLE));
+          "The number of sink pads", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active pad",
-          "The currently active sink pad", GST_TYPE_PAD, G_PARAM_READWRITE));
+          "The currently active sink pad", GST_TYPE_PAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SELECT_ALL,
       g_param_spec_boolean ("select-all", "Select all mode",
-          "Forwards data from all input pads", FALSE, G_PARAM_READWRITE));
+          "Forwards data from all input pads", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstInputSelector::block:

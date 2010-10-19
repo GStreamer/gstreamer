@@ -111,11 +111,12 @@ gst_output_selector_class_init (GstOutputSelectorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active pad",
-          "Currently active src pad", GST_TYPE_PAD, G_PARAM_READWRITE));
+          "Currently active src pad", GST_TYPE_PAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RESEND_LATEST,
       g_param_spec_boolean ("resend-latest", "Resend latest buffer",
           "Resend latest buffer after a switch to a new pad", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_output_selector_request_new_pad);
