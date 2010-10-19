@@ -797,7 +797,7 @@ update_buffering (GstQueue2 * queue)
   gint64 percent;
   gboolean post = FALSE;
 
-  if (!queue->use_buffering || queue->high_percent <= 0)
+  if (queue->high_percent <= 0)
     return;
 
 #define GET_PERCENT(format,alt_max) ((queue->max_level.format) > 0 ? (queue->cur_level.format) * 100 / ((alt_max) > 0 ? MIN ((alt_max), (queue->max_level.format)) : (queue->max_level.format)) : 0)
@@ -1751,7 +1751,8 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     update_cur_level (queue, queue->current);
 
     /* update the buffering status */
-    update_buffering (queue);
+    if (queue->use_buffering)
+      update_buffering (queue);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
@@ -1861,7 +1862,8 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
 
   if (item) {
     /* update the buffering status */
-    update_buffering (queue);
+    if (queue->use_buffering)
+      update_buffering (queue);
 
     if (QUEUE_IS_USING_QUEUE (queue)) {
       g_queue_push_tail (queue->queue, item);
@@ -1921,7 +1923,8 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
     /* update the byterate stats */
     update_out_rates (queue);
     /* update the buffering */
-    update_buffering (queue);
+    if (queue->use_buffering)
+      update_buffering (queue);
 
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
