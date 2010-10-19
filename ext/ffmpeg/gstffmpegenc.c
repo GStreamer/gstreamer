@@ -197,25 +197,28 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
             "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE,
-            G_PARAM_READWRITE));
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
         g_param_spec_int ("gop-size", "GOP Size",
             "Number of frames within one GOP", 0, G_MAXINT,
-            DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE));
+            DEFAULT_VIDEO_GOP_SIZE,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
         g_param_spec_enum ("me-method", "ME Method", "Motion Estimation Method",
-            GST_TYPE_ME_METHOD, ME_EPZS, G_PARAM_READWRITE));
+            GST_TYPE_ME_METHOD, ME_EPZS,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /* FIXME 0.11: Make this property read-only */
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer-size", "Buffer Size",
             "Size of the video buffers. "
             "Note: Setting this property has no effect "
-            "and is deprecated!", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+            "and is deprecated!", 0, G_MAXULONG, 0,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
         ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp-payload-size",
             "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
-            G_PARAM_READWRITE));
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /* register additional properties, possibly dependent on the exact CODEC */
     gst_ffmpeg_cfg_install_property (klass, ARG_CFG_BASE);
@@ -223,7 +226,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
             "Target Audio Bitrate", 0, G_MAXULONG, DEFAULT_AUDIO_BITRATE,
-            G_PARAM_READWRITE));
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
   gstelement_class->change_state = gst_ffmpegenc_change_state;

@@ -306,12 +306,12 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_PRELOAD,
       g_param_spec_int ("preload", "preload",
           "Set the initial demux-decode delay (in microseconds)", 0, G_MAXINT,
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAXDELAY,
       g_param_spec_int ("maxdelay", "maxdelay",
           "Set the maximum demux-decode delay (in microseconds)", 0, G_MAXINT,
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad = gst_ffmpegmux_request_new_pad;
   gstelement_class->change_state = gst_ffmpegmux_change_state;

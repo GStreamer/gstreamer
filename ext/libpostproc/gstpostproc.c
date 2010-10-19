@@ -407,17 +407,19 @@ gst_post_proc_class_init (GstPostProcClass * klass)
   g_object_class_install_property (gobject_class, PROP_QUALITY,
       g_param_spec_uint ("quality", "Quality",
           "Quality level of filter (higher is better)",
-          0, PP_QUALITY_MAX, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          0, PP_QUALITY_MAX, DEFAULT_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_AUTOQ,
       g_param_spec_boolean ("autoq", "AutoQ",
           "Automatically switch filter off if CPU too slow",
-          DEFAULT_AUTOQ, G_PARAM_READWRITE));
+          DEFAULT_AUTOQ, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SCOPE,
       g_param_spec_enum ("scope", "Scope",
           "Operate on chrominance and/or luminance",
-          GST_TYPE_PP_SCOPE, DEFAULT_SCOPE, G_PARAM_READWRITE));
+          GST_TYPE_PP_SCOPE, DEFAULT_SCOPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   ppidx = klass->filterid;
   /* per filter props */
@@ -427,12 +429,14 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     g_object_class_install_property (gobject_class, PROP_DIFF,
         g_param_spec_int ("difference", "Difference Factor",
             "Higher values mean more deblocking (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_DIFF, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_DIFF,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (gobject_class, PROP_FLAT,
         g_param_spec_int ("flatness", "Flatness Threshold",
             "Lower values mean more deblocking (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_FLAT, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_FLAT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     gobject_class->set_property =
         GST_DEBUG_FUNCPTR (gst_post_proc_deblock_set_property);
@@ -443,17 +447,20 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     g_object_class_install_property (gobject_class, PROP_T1,
         g_param_spec_int ("threshold-1", "Threshold One",
             "Higher values mean stronger filtering (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_T1, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_T1,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (gobject_class, PROP_T2,
         g_param_spec_int ("threshold-2", "Threshold Two",
             "Higher values mean stronger filtering (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_T2, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_T2,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property (gobject_class, PROP_T3,
         g_param_spec_int ("threshold-3", "Threshold Three",
             "Higher values mean stronger filtering (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_T3, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_T3,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     gobject_class->set_property =
         GST_DEBUG_FUNCPTR (gst_post_proc_tmpnoise_set_property);
@@ -463,7 +470,8 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     /* autolevels */
     g_object_class_install_property (gobject_class, PROP_RANGE,
         g_param_spec_boolean ("fully-range", "Fully Range",
-            "Stretch luminance to (0-255)", DEFAULT_RANGE, G_PARAM_READWRITE));
+            "Stretch luminance to (0-255)", DEFAULT_RANGE,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     gobject_class->set_property =
         GST_DEBUG_FUNCPTR (gst_post_proc_autolevels_set_property);
@@ -475,7 +483,8 @@ gst_post_proc_class_init (GstPostProcClass * klass)
     g_object_class_install_property (gobject_class, PROP_QUANT,
         g_param_spec_int ("quantizer", "Force Quantizer",
             "Quantizer to use (-1 = pp default)",
-            -1, G_MAXINT, DEFAULT_QUANT, G_PARAM_READWRITE));
+            -1, G_MAXINT, DEFAULT_QUANT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     gobject_class->set_property =
         GST_DEBUG_FUNCPTR (gst_post_proc_forcequant_set_property);
