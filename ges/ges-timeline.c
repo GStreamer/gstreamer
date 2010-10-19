@@ -501,6 +501,8 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
+  GList *objects, *tmp;
+
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
   /* We can only add a layer that doesn't already belong to another timeline */
@@ -521,9 +523,6 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   /* Inform the layer that it belongs to a new timeline */
   ges_timeline_layer_set_timeline (layer, timeline);
 
-  /* FIXME : GO OVER THE LIST OF ALREADY EXISTING TIMELINE OBJECTS IN THAT
-   * LAYER AND ADD THEM !!! */
-
   /* Connect to 'object-added'/'object-removed' signal from the new layer */
   g_signal_connect (layer, "object-added", G_CALLBACK (layer_object_added_cb),
       timeline);
@@ -532,6 +531,15 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 
   GST_DEBUG ("Done adding layer, emitting 'layer-added' signal");
   g_signal_emit (timeline, ges_timeline_signals[LAYER_ADDED], 0, layer);
+
+  /* add any existing timeline objects to the timeline */
+  objects = ges_timeline_layer_get_objects (layer);
+  for (tmp = objects; tmp; tmp = tmp->next) {
+    layer_object_added_cb (layer, tmp->data, timeline);
+    g_object_unref (tmp->data);
+    tmp->data = NULL;
+  }
+  g_list_free (objects);
 
   return TRUE;
 }
