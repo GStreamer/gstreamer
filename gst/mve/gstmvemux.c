@@ -1404,22 +1404,24 @@ gst_mve_mux_class_init (GstMveMuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_AUDIO_COMPRESSION,
       g_param_spec_boolean ("compression", "Audio compression",
           "Whether to compress audio data", MVE_MUX_DEFAULT_COMPRESSION,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_QUICK_ENCODING,
       g_param_spec_boolean ("quick", "Quick encoding",
           "Whether to disable expensive encoding operations", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SCREEN_WIDTH,
       g_param_spec_uint ("screen-width", "Screen width",
           "Suggested screen width", 320, 1600,
-          MVE_MUX_DEFAULT_SCREEN_WIDTH, G_PARAM_READWRITE));
+          MVE_MUX_DEFAULT_SCREEN_WIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SCREEN_HEIGHT,
       g_param_spec_uint ("screen-height", "Screen height",
           "Suggested screen height", 200, 1200,
-          MVE_MUX_DEFAULT_SCREEN_HEIGHT, G_PARAM_READWRITE));
+          MVE_MUX_DEFAULT_SCREEN_HEIGHT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad = gst_mve_mux_request_new_pad;
   gstelement_class->release_pad = gst_mve_mux_release_pad;

@@ -120,25 +120,28 @@ gst_pcap_parse_class_init (GstPcapParseClass * klass)
 
   g_object_class_install_property (gobject_class,
       PROP_SRC_IP, g_param_spec_string ("src-ip", "Source IP",
-          "Source IP to restrict to", "", G_PARAM_READWRITE));
+          "Source IP to restrict to", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DST_IP, g_param_spec_string ("dst-ip", "Destination IP",
-          "Destination IP to restrict to", "", G_PARAM_READWRITE));
+          "Destination IP to restrict to", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_SRC_PORT, g_param_spec_int ("src-port", "Source port",
           "Source port to restrict to", -1, G_MAXUINT16, -1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_DST_PORT, g_param_spec_int ("dst-port", "Destination port",
           "Destination port to restrict to", -1, G_MAXUINT16, -1,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+          "The caps of the source pad", GST_TYPE_CAPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_pcap_parse_debug, "pcapparse", 0, "pcap parser");
 }

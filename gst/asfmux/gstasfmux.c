@@ -285,33 +285,38 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
       g_param_spec_uint ("packet-size", "Packet size",
           "The ASF packets size (bytes)",
           ASF_MULTIPLE_PAYLOAD_HEADER_SIZE + 1, G_MAXUINT32,
-          DEFAULT_PACKET_SIZE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PACKET_SIZE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PREROLL,
       g_param_spec_uint64 ("preroll", "Preroll",
           "The preroll time (milisecs)",
           0, G_MAXUINT64,
-          DEFAULT_PREROLL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PREROLL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MERGE_STREAM_TAGS,
       g_param_spec_boolean ("merge-stream-tags", "Merge Stream Tags",
           "If the stream metadata (received as events in the sink) should be "
           "merged to the main file metadata.",
-          DEFAULT_MERGE_STREAM_TAGS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_MERGE_STREAM_TAGS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PADDING,
       g_param_spec_uint64 ("padding", "Padding",
           "Size of the padding object to be added to the end of the header. "
           "If this less than 24 (the smaller size of an ASF object), "
           "no padding is added.",
           0, G_MAXUINT64,
-          DEFAULT_PADDING, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_PADDING,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live (deprecated)",
           "Deprecated in 0.10.20, use 'streamable' instead",
-          DEFAULT_STREAMABLE, G_PARAM_READWRITE));
+          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Streamable",
           "If set to true, the output should be as if it is to be streamed "
           "and hence no indexes written or duration written.",
-          DEFAULT_STREAMABLE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_STREAMABLE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_asf_mux_request_new_pad);

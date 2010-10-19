@@ -134,21 +134,23 @@ gst_qt_moov_recover_class_init (GstQTMoovRecoverClass * klass)
       g_param_spec_string ("fixed-output",
           "Path to write the fixed file",
           "Path to write the fixed file to (used as output)",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_BROKEN_INPUT,
       g_param_spec_string ("broken-input",
           "Path to broken input file",
           "Path to broken input file. (If qtmux was on faststart mode, this "
-          "file is the faststart file)", NULL, G_PARAM_READWRITE));
+          "file is the faststart file)", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_RECOVERY_INPUT,
       g_param_spec_string ("recovery-input",
           "Path to recovery file",
-          "Path to recovery file (used as input)", NULL, G_PARAM_READWRITE));
+          "Path to recovery file (used as input)", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FAST_START_MODE,
       g_param_spec_boolean ("faststart-mode",
           "If the broken input is from faststart mode",
           "If the broken input is from faststart mode",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_qt_moov_recover_debug, "qtmoovrecover", 0,
       "QT Moovie Recover");

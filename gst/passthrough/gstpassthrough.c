@@ -179,7 +179,9 @@ passthrough_class_init (GstPassthroughClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT, g_param_spec_boolean ("silent", "silent", "silent", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT,
+      g_param_spec_boolean ("silent", "silent", "silent", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->set_property = passthrough_set_property;
   gobject_class->get_property = passthrough_get_property;

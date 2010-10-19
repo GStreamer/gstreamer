@@ -351,12 +351,14 @@ gst_measure_collector_class_init (GstMeasureCollectorClass * klass)
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_uint64 ("flags", "Flags",
           "Flags that control the operation of the element",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT64, 0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FILENAME,
       g_param_spec_string ("filename", "Output file name",
-          "A name of a file into which element will write the measurement \
-information", "", G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "A name of a file into which element will write the measurement"
+          " information", "",
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   trans_class->event = GST_DEBUG_FUNCPTR (gst_measure_collector_event);
 

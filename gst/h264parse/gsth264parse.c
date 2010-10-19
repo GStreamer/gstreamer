@@ -919,16 +919,16 @@ gst_h264_parse_class_init (GstH264ParseClass * klass)
   g_object_class_install_property (gobject_class, PROP_SPLIT_PACKETIZED,
       g_param_spec_boolean ("split-packetized", "Split packetized",
           "Split NAL units of packetized streams", DEFAULT_SPLIT_PACKETIZED,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_ACCESS_UNIT,
       g_param_spec_boolean ("access-unit", "Access Units",
           "Output Acess Units rather than NALUs", DEFAULT_ACCESS_UNIT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_OUTPUT_FORMAT,
       g_param_spec_enum ("output-format", "Output Format",
           "Output Format of stream (bytestream or otherwise)",
           GST_H264_PARSE_FORMAT_TYPE, DEFAULT_OUTPUT_FORMAT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
       g_param_spec_uint ("config-interval",
           "SPS PPS Send Interval",

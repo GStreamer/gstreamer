@@ -122,7 +122,8 @@ gst_videodrop_class_init (GstVideodropClass * klass)
 
   g_object_class_install_property (object_class, ARG_SPEED,
       g_param_spec_float ("speed", "Speed",
-          "Output speed (relative to input)", 0.01, 100, 1, G_PARAM_READWRITE));
+          "Output speed (relative to input)", 0.01, 100, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   object_class->set_property = gst_videodrop_set_property;
   object_class->get_property = gst_videodrop_get_property;

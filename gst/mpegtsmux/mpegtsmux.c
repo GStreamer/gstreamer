@@ -189,19 +189,22 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_M2TS_MODE,
-      g_param_spec_boolean ("m2ts_mode", "M2TS(192 bytes) Mode",
+      g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",
           "Defines what packet size to use, normal TS format ie .ts(188 bytes) "
-          "or Blue-Ray disc ie .m2ts(192 bytes).", FALSE, G_PARAM_READWRITE));
+          "or Blue-Ray disc ie .m2ts(192 bytes).", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAT_INTERVAL,
       g_param_spec_uint ("pat-interval", "PAT interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the PAT table",
-          1, G_MAXUINT, TSMUX_DEFAULT_PAT_INTERVAL, G_PARAM_READWRITE));
+          1, G_MAXUINT, TSMUX_DEFAULT_PAT_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PMT_INTERVAL,
       g_param_spec_uint ("pmt-interval", "PMT interval",
           "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
-          1, G_MAXUINT, TSMUX_DEFAULT_PMT_INTERVAL, G_PARAM_READWRITE));
+          1, G_MAXUINT, TSMUX_DEFAULT_PMT_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -126,13 +126,13 @@ gst_smooth_class_init (GstSmoothClass * klass)
   /* FIXME: add long property descriptions */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE,
       g_param_spec_boolean ("active", "active", "active", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOLERANCE,
       g_param_spec_int ("tolerance", "tolerance", "tolerance", G_MININT,
-          G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERSIZE,
       g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT,
-          G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->set_property = gst_smooth_set_property;
   gobject_class->get_property = gst_smooth_get_property;

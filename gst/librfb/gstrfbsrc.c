@@ -120,40 +120,48 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_HOST,
       g_param_spec_string ("host", "Host to connect to", "Host to connect to",
-          "127.0.0.1", G_PARAM_READWRITE));
+          "127.0.0.1", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PORT,
       g_param_spec_int ("port", "Port", "Port",
-          1, 65535, 5900, G_PARAM_READWRITE));
+          1, 65535, 5900, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_VERSION,
       g_param_spec_string ("version", "RFB protocol version",
-          "RFB protocol version", "3.3", G_PARAM_READWRITE));
+          "RFB protocol version", "3.3",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PASSWORD,
       g_param_spec_string ("password", "Password for authentication",
-          "Password for authentication", "", G_PARAM_WRITABLE));
+          "Password for authentication", "",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_OFFSET_X,
       g_param_spec_int ("offset-x", "x offset for screen scrapping",
-          "x offset for screen scrapping", 0, 65535, 0, G_PARAM_READWRITE));
+          "x offset for screen scrapping", 0, 65535, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_OFFSET_Y,
       g_param_spec_int ("offset-y", "y offset for screen scrapping",
-          "y offset for screen scrapping", 0, 65535, 0, G_PARAM_READWRITE));
+          "y offset for screen scrapping", 0, 65535, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_WIDTH,
       g_param_spec_int ("width", "width of screen", "width of screen", 0, 65535,
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HEIGHT,
       g_param_spec_int ("height", "height of screen", "height of screen", 0,
-          65535, 0, G_PARAM_READWRITE));
+          65535, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_INCREMENTAL,
       g_param_spec_boolean ("incremental", "Incremental updates",
-          "Incremental updates", TRUE, G_PARAM_READWRITE));
+          "Incremental updates", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_USE_COPYRECT,
       g_param_spec_boolean ("use-copyrect", "Use copyrect encoding",
-          "Use copyrect encoding", FALSE, G_PARAM_READWRITE));
+          "Use copyrect encoding", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SHARED,
       g_param_spec_boolean ("shared", "Share desktop with other clients",
-          "Share desktop with other clients", TRUE, G_PARAM_READWRITE));
+          "Share desktop with other clients", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_VIEWONLY,
       g_param_spec_boolean ("view-only", "Only view the desktop",
-          "only view the desktop", FALSE, G_PARAM_READWRITE));
+          "only view the desktop", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);

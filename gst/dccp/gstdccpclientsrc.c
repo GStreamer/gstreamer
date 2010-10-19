@@ -356,31 +356,32 @@ gst_dccp_client_src_class_init (GstDCCPClientSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
           "The port to receive packets from", 0, G_MAXUINT16,
-          DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          DCCP_DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host",
           "The host IP address to receive packets from", DCCP_DEFAULT_HOST,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SOCK_FD,
       g_param_spec_int ("sockfd", "Socket fd",
           "The socket file descriptor", -1, G_MAXINT, DCCP_DEFAULT_SOCK_FD,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLOSED,
       g_param_spec_boolean ("close-socket", "Close socket",
           "Close socket at the end of stream", DCCP_DEFAULT_CLOSED,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+          "The caps of the source pad", GST_TYPE_CAPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CCID,
       g_param_spec_int ("ccid", "CCID",
           "The Congestion Control IDentified to be used", 2, G_MAXINT,
-          DCCP_DEFAULT_CCID, G_PARAM_READWRITE));
+          DCCP_DEFAULT_CCID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* signals */
   /**

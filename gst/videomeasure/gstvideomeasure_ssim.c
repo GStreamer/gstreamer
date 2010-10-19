@@ -1089,23 +1089,24 @@ gst_ssim_class_init (GstSSimClass * klass)
       g_param_spec_int ("ssim-type", "SSIM type",
           "Type of the SSIM metric. 0 - canonical. 1 - with fixed mu "
           "(almost the same results, but roughly 20% faster)",
-          0, 1, 0, G_PARAM_READWRITE));
+          0, 1, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_TYPE,
       g_param_spec_int ("window-type", "Window type",
           "Type of the weighting in the window. "
           "0 - no weighting. 1 - Gaussian weighting (controlled by \"sigma\")",
-          0, 1, 1, G_PARAM_READWRITE));
+          0, 1, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
-          "Size of a window.", 1, 22, 11, G_PARAM_READWRITE));
+          "Size of a window.", 1, 22, 11,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GAUSS_SIGMA,
       g_param_spec_float ("gauss-sigma", "Deviation (for Gauss function)",
           "Used to calculate Gussian weights "
           "(only when using Gaussian window).",
-          G_MINFLOAT, 10, 1.5, G_PARAM_READWRITE));
+          G_MINFLOAT, 10, 1.5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_ssim_src_template));

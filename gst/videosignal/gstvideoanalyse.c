@@ -302,7 +302,8 @@ gst_video_analyse_class_init (gpointer klass, gpointer class_data)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MESSAGE,
       g_param_spec_boolean ("message", "Message",
           "Post statics messages",
-          DEFAULT_MESSAGE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_MESSAGE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUC | G_PARAM_STATIC_STRINGST));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_analyse_set_caps);
   trans_class->transform_ip =

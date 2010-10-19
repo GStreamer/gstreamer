@@ -255,5 +255,5 @@ gst_pnmenc_class_init (GstPnmencClass * klass)
 
   g_object_class_install_property (gobject_class, GST_PNMENC_PROP_ASCII,
       g_param_spec_boolean ("ascii", "ASCII Encoding", "The output will be "
-          "ASCII encoded", FALSE, G_PARAM_READWRITE));
+          "ASCII encoded", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

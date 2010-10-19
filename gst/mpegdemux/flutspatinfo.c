@@ -92,12 +92,12 @@ mpegts_pat_info_class_init (MpegTsPatInfoClass * klass)
   g_object_class_install_property (gobject_klass, PROP_PROGRAM_NO,
       g_param_spec_uint ("program-number", "Program Number",
           "Program Number for this program", 0, G_MAXUINT16, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_PID,
       g_param_spec_uint ("pid", "PID carrying PMT",
           "PID which carries the PMT for this program", 1, G_MAXUINT16, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

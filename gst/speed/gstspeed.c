@@ -481,7 +481,8 @@ speed_class_init (GstSpeedClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SPEED,
       g_param_spec_float ("speed", "speed", "speed",
-          0.1, 40.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0.1, 40.0, 1.0,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 }
 
 static void

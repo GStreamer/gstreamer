@@ -141,19 +141,21 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
       PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
           "Timestamp Offset",
           "Offset to add to all outgoing timestamps (-1 = random)", -1,
-          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
+          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
           "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
-          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
+          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
           "The RTP sequence number of the last processed packet",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of the packets (-1 == random)",
-          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_SSRC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_mux_request_new_pad);

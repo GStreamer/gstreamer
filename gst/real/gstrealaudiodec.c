@@ -735,28 +735,34 @@ gst_real_audio_dec_class_init (GstRealAudioDecClass * klass)
   element_class->change_state = gst_real_audio_dec_change_state;
 
   g_object_class_install_property (object_class, PROP_REAL_CODECS_PATH,
-      g_param_spec_string ("real_codecs_path",
+      g_param_spec_string ("real-codecs-path",
           "Path where to search for RealPlayer codecs",
           "Path where to search for RealPlayer codecs",
-          DEFAULT_REAL_CODECS_PATH, G_PARAM_READWRITE));
+          DEFAULT_REAL_CODECS_PATH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RACOOK_NAMES,
-      g_param_spec_string ("racook_names", "Names of cook driver",
-          "Names of cook driver", DEFAULT_RACOOK_NAMES, G_PARAM_READWRITE));
+      g_param_spec_string ("racook-names", "Names of cook driver",
+          "Names of cook driver", DEFAULT_RACOOK_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RAATRK_NAMES,
-      g_param_spec_string ("raatrk_names", "Names of atrk driver",
-          "Names of atrk driver", DEFAULT_RAATRK_NAMES, G_PARAM_READWRITE));
+      g_param_spec_string ("raatrk-names", "Names of atrk driver",
+          "Names of atrk driver", DEFAULT_RAATRK_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RA14_4_NAMES,
-      g_param_spec_string ("ra14_4_names", "Names of 14_4 driver",
-          "Names of 14_4 driver", DEFAULT_RA14_4_NAMES, G_PARAM_READWRITE));
+      g_param_spec_string ("ra14-4-names", "Names of 14_4 driver",
+          "Names of 14_4 driver", DEFAULT_RA14_4_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RA28_8_NAMES,
-      g_param_spec_string ("ra28_8_names", "Names of 28_8 driver",
-          "Names of 28_8 driver", DEFAULT_RA28_8_NAMES, G_PARAM_READWRITE));
+      g_param_spec_string ("ra28-8-names", "Names of 28_8 driver",
+          "Names of 28_8 driver", DEFAULT_RA28_8_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RASIPR_NAMES,
-      g_param_spec_string ("rasipr_names", "Names of sipr driver",
-          "Names of sipr driver", DEFAULT_RASIPR_NAMES, G_PARAM_READWRITE));
+      g_param_spec_string ("rasipr-names", "Names of sipr driver",
+          "Names of sipr driver", DEFAULT_RASIPR_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_PASSWORD,
-      g_param_spec_string ("password", "Password",
-          "Password", DEFAULT_PWD, G_PARAM_READWRITE));
+      g_param_spec_string ("password", "Password", "Password",
+          DEFAULT_PWD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (real_audio_dec_debug, "realaudiodec", 0,
       "RealAudio decoder");

@@ -114,18 +114,18 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_WRITE_V1,
       g_param_spec_boolean ("write-v1", "Write id3v1 tag",
           "Write an id3v1 tag at the end of the file", DEFAULT_WRITE_V1,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_WRITE_V2,
       g_param_spec_boolean ("write-v2", "Write id3v2 tag",
           "Write an id3v2 tag at the start of the file", DEFAULT_WRITE_V2,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_V2_MAJOR_VERSION,
       g_param_spec_int ("v2-version", "Version (3 or 4) of id3v2 tag",
           "Set version (3 for id3v2.3, 4 for id3v2.4) of id3v2 tags",
           3, 4, DEFAULT_V2_MAJOR_VERSION,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_TAG_MUX_CLASS (klass)->render_start_tag =
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v2_tag);

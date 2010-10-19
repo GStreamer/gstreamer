@@ -130,7 +130,8 @@ gst_camerabin_image_class_init (GstCameraBinImageClass * klass)
    **/
   g_object_class_install_property (gobject_class, PROP_FILENAME,
       g_param_spec_string ("filename", "Filename",
-          "Filename of the image to save", NULL, G_PARAM_READWRITE));
+          "Filename of the image to save", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -163,10 +163,11 @@ gst_nsfdec_class_init (GstNsfDec * klass)
   gobject_class->get_property = gst_nsfdec_get_property;
 
   g_object_class_install_property (gobject_class, PROP_TUNE,
-      g_param_spec_int ("tune", "tune", "tune", 1, 100, 1, G_PARAM_READWRITE));
+      g_param_spec_int ("tune", "tune", "tune", 1, 100, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FILTER,
       g_param_spec_enum ("filter", "filter", "filter", GST_TYPE_NSF_FILTER,
-          NSF_FILTER_NONE, G_PARAM_WRITABLE));
+          NSF_FILTER_NONE, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (nsfdec_debug, "nsfdec", 0,
       "NES sound file (nsf) decoder");

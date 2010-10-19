@@ -272,14 +272,17 @@ gst_mpegts_demux_class_init (GstMpegTSDemuxClass * klass)
       g_param_spec_string ("es-pids",
           "Colon separated list of PIDs containing Elementary Streams",
           "PIDs to treat as Elementary Streams in the absence of a PMT, "
-          "eg 0x10:0x11:0x20", DEFAULT_PROP_ES_PIDS, G_PARAM_READWRITE));
+          "eg 0x10:0x11:0x20", DEFAULT_PROP_ES_PIDS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CHECK_CRC,
       g_param_spec_boolean ("check-crc", "Check CRC",
-          "Enable CRC checking", DEFAULT_PROP_CHECK_CRC, G_PARAM_READWRITE));
+          "Enable CRC checking", DEFAULT_PROP_CHECK_CRC,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBER,
       g_param_spec_int ("program-number", "Program Number",
           "Program number to demux for (-1 to ignore)", -1, G_MAXINT,
-          DEFAULT_PROP_PROGRAM_NUMBER, G_PARAM_READWRITE));
+          DEFAULT_PROP_PROGRAM_NUMBER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PAT_INFO,
       g_param_spec_value_array ("pat-info",
@@ -289,14 +292,15 @@ gst_mpegts_demux_class_init (GstMpegTSDemuxClass * klass)
           "Table (PAT)",
           g_param_spec_object ("flu-pat-streaminfo", "FluPATStreamInfo",
               "Fluendo TS Demuxer PAT Stream info object",
-              MPEGTS_TYPE_PAT_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
+              MPEGTS_TYPE_PAT_INFO, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PMT_INFO,
       g_param_spec_object ("pmt-info",
           "Information about the current program",
           "GObject with properties containing information from the TS PMT "
           "about the currently selected program and its streams",
-          MPEGTS_TYPE_PMT_INFO, G_PARAM_READABLE));
+          MPEGTS_TYPE_PMT_INFO, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_mpegts_demux_change_state;
   gstelement_class->provide_clock = gst_mpegts_demux_provide_clock;
@@ -1042,8 +1046,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
        * to drop. */
       if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
           && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-          && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-              PCR_PID]->discont_PCR) {
+          && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+          discont_PCR) {
         GST_WARNING_OBJECT (demux, "middle of discont, dropping");
         goto bad_timestamp;
       }
@@ -1065,8 +1069,8 @@ gst_mpegts_demux_data_cb (GstPESFilter * filter, gboolean first,
          */
         if (stream->PMT_pid <= MPEGTS_MAX_PID && demux->streams[stream->PMT_pid]
             && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]
-            && demux->streams[demux->streams[stream->PMT_pid]->PMT.
-                PCR_PID]->last_PCR > 0) {
+            && demux->streams[demux->streams[stream->PMT_pid]->PMT.PCR_PID]->
+            last_PCR > 0) {
           GST_DEBUG_OBJECT (demux, "timestamps wrapped before noticed in PCR");
           time = MPEGTIME_TO_GSTTIME (pts) + stream->base_time +
               MPEGTIME_TO_GSTTIME ((guint64) (1) << 33);

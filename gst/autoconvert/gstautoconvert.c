@@ -204,7 +204,8 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
           "Install identity initially",
           "If true, then the identity element will be installed initially "
           "and used for event passing until the first data buffer arrives ",
-          DEFAULT_INITIAL_IDENTITY, G_PARAM_READWRITE));
+          DEFAULT_INITIAL_IDENTITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_auto_convert_change_state);

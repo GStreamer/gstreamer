@@ -158,7 +158,8 @@ gst_camerabin_video_class_init (GstCameraBinVideoClass * klass)
    **/
   g_object_class_install_property (gobject_class, PROP_FILENAME,
       g_param_spec_string ("filename", "Filename",
-          "Filename of the video to save", NULL, G_PARAM_READWRITE));
+          "Filename of the video to save", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

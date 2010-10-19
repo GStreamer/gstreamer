@@ -262,13 +262,14 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNIT_TIME,
       g_param_spec_uint ("unit-time", "Duration unittime",
           "The smallest unit (ms) the duration must be a multiple of (0 disables it)",
-          MIN_UNIT_TIME, MAX_UNIT_TIME, DEFAULT_UNIT_TIME, G_PARAM_READWRITE));
+          MIN_UNIT_TIME, MAX_UNIT_TIME, DEFAULT_UNIT_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_DURATION,
       g_param_spec_uint ("max-duration", "Maximum duration",
           "The maxumimum duration (ms) of the outgoing soundpacket. "
           "(0 = no limit)", 0, G_MAXUINT, DEFAULT_MAX_DURATION,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasertpdepayload_class->process =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_process);

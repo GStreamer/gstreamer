@@ -750,20 +750,25 @@ gst_real_video_dec_class_init (GstRealVideoDecClass * klass)
       g_param_spec_string ("real-codecs-path",
           "Path where to search for RealPlayer codecs",
           "Path where to search for RealPlayer codecs",
-          DEFAULT_REAL_CODECS_PATH, G_PARAM_READWRITE));
+          DEFAULT_REAL_CODECS_PATH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RV20_NAMES,
       g_param_spec_string ("rv20-names", "Names of rv20 driver",
-          "Names of rv20 driver", DEFAULT_RV20_NAMES, G_PARAM_READWRITE));
+          "Names of rv20 driver", DEFAULT_RV20_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RV30_NAMES,
       g_param_spec_string ("rv30-names", "Names of rv30 driver",
-          "Names of rv30 driver", DEFAULT_RV30_NAMES, G_PARAM_READWRITE));
+          "Names of rv30 driver", DEFAULT_RV30_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_RV40_NAMES,
       g_param_spec_string ("rv40-names", "Names of rv40 driver",
-          "Names of rv40 driver", DEFAULT_RV40_NAMES, G_PARAM_READWRITE));
+          "Names of rv40 driver", DEFAULT_RV40_NAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (object_class, PROP_MAX_ERRORS,
       g_param_spec_int ("max-errors", "Max errors",
           "Maximum number of consecutive errors (0 = unlimited)",
-          0, G_MAXINT, DEFAULT_MAX_ERRORS, G_PARAM_READWRITE));
+          0, G_MAXINT, DEFAULT_MAX_ERRORS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (realvideode_debug, "realvideodec", 0,
       "RealVideo decoder");

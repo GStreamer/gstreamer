@@ -125,16 +125,19 @@ gst_iir_class_init (GstIIRClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_A,
       g_param_spec_double ("A", "A", "A filter coefficient",
-          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_B,
       g_param_spec_double ("B", "B", "B filter coefficient",
-          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_GAIN,
       g_param_spec_double ("gain", "Gain", "Filter gain",
-          -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+          -G_MAXDOUBLE, G_MAXDOUBLE, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STAGES,
       g_param_spec_int ("stages", "Stages", "Number of filter stages",
-          1, G_MAXINT, 1, G_PARAM_READWRITE));
+          1, G_MAXINT, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (iir_transform_ip);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (iir_set_caps);

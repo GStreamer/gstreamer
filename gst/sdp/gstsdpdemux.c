@@ -182,23 +182,25 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
           "Dump request and response messages to stdout",
-          DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_DEBUG,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Fail transport after UDP timeout microseconds (0 = disabled)",
           0, G_MAXUINT64, DEFAULT_TIMEOUT,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_REDIRECT,
       g_param_spec_boolean ("redirect", "Redirect",
           "Sends a redirection message instead of using a custom session element",
-          DEFAULT_REDIRECT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_REDIRECT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_sdp_demux_change_state;
 

@@ -410,27 +410,29 @@ gst_dccp_server_sink_class_init (GstDCCPServerSinkClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
           "The port to listen to", 0, G_MAXUINT16,
-          DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
+          DCCP_DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_SOCK_FD,
       g_param_spec_int ("sockfd", "Socket fd",
           "The client socket file descriptor", -1, G_MAXINT,
-          DCCP_DEFAULT_CLIENT_SOCK_FD, G_PARAM_READWRITE));
+          DCCP_DEFAULT_CLIENT_SOCK_FD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLOSED,
       g_param_spec_boolean ("close-socket", "Close",
           "Close the client sockets at end of stream",
-          DCCP_DEFAULT_CLOSED, G_PARAM_READWRITE));
+          DCCP_DEFAULT_CLOSED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CCID,
       g_param_spec_int ("ccid", "CCID",
           "The Congestion Control IDentified to be used", 2, G_MAXINT,
-          DCCP_DEFAULT_CCID, G_PARAM_READWRITE));
+          DCCP_DEFAULT_CCID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_WAIT_CONNECTIONS,
       g_param_spec_boolean ("wait-connections", "Wait connections",
           "Wait for many client connections",
-          DCCP_DEFAULT_WAIT_CONNECTIONS, G_PARAM_READWRITE));
+          DCCP_DEFAULT_WAIT_CONNECTIONS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
   /* signals */

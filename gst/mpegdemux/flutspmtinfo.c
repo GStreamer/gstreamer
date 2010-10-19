@@ -84,12 +84,12 @@ mpegts_pmt_info_class_init (MpegTsPmtInfoClass * klass)
   g_object_class_install_property (gobject_klass, PROP_PROGRAM_NO,
       g_param_spec_uint ("program-number", "Program Number",
           "Program Number for this program", 0, G_MAXUINT16, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_PCR_PID,
       g_param_spec_uint ("pcr-pid", "PID carrying the PCR for this program",
           "PID which carries the PCR for this program", 1, G_MAXUINT16, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_STREAMINFO,
       g_param_spec_value_array ("stream-info",
@@ -97,13 +97,14 @@ mpegts_pmt_info_class_init (MpegTsPmtInfoClass * klass)
           "Array of GObjects containing information about the program streams",
           g_param_spec_object ("flu-pmt-streaminfo", "FluPMTStreamInfo",
               "Fluendo TS Demuxer PMT Stream info object",
-              MPEGTS_TYPE_PMT_STREAM_INFO, G_PARAM_READABLE),
-          G_PARAM_READABLE));
+              MPEGTS_TYPE_PMT_STREAM_INFO,
+              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VERSION_NO,
       g_param_spec_uint ("version-number", "Version Number",
           "Version number of this program information", 0, G_MAXUINT8, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_DESCRIPTORS,
       g_param_spec_value_array ("descriptors",
@@ -111,7 +112,8 @@ mpegts_pmt_info_class_init (MpegTsPmtInfoClass * klass)
           "Value array of strings containing program descriptors",
           g_param_spec_boxed ("descriptor",
               "descriptor",
-              "", G_TYPE_GSTRING, G_PARAM_READABLE), G_PARAM_READABLE));
+              "", G_TYPE_GSTRING, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

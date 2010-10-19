@@ -188,14 +188,15 @@ gst_vbidec_class_init (GstVBIDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VERBOSE,
       g_param_spec_boolean ("verbose", "verbose", "verbose",
-          FALSE, G_PARAM_WRITABLE));
+          FALSE, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CAPTION_TYPE,
-      g_param_spec_enum ("caption type", "caption type", "Closed Caption Type",
-          GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF, G_PARAM_READWRITE));
+      g_param_spec_enum ("caption-type", "caption type", "Closed Caption Type",
+          GST_TYPE_VBIDEC_CAPTION_TYPE_TYPE, CAPTURE_OFF,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DVD_INPUT,
-      g_param_spec_boolean ("dvd input", "dvd input",
+      g_param_spec_boolean ("dvd-input", "dvd input",
           "VBI is encapsulated in MPEG2 GOP user_data field (as on DVDs)",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

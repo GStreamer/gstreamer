@@ -152,7 +152,7 @@ gst_burn_class_init (GstBurnClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_burn_set_caps);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_burn_transform);

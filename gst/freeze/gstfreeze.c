@@ -110,7 +110,8 @@ gst_freeze_class_init (GstFreezeClass * klass)
       ARG_MAX_BUFFERS,
       g_param_spec_uint ("max-buffers",
           "max-buffers",
-          "Maximum number of buffers", 0, G_MAXUINT, 1, G_PARAM_READWRITE));
+          "Maximum number of buffers", 0, G_MAXUINT, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   object_class->dispose = gst_freeze_dispose;
 

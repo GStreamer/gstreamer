@@ -978,7 +978,7 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
       g_param_spec_boolean ("drop", "drop",
           "Drop data untill valid configuration data is received either "
           "in the stream or through caps", DEFAULT_PROP_DROP,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
       g_param_spec_uint ("config-interval",

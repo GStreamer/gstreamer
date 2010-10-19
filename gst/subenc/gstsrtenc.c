@@ -218,11 +218,13 @@ gst_srt_enc_class_init (GstSrtEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_TIMESTAMP,
       g_param_spec_int64 ("timestamp", "Offset for the starttime",
           "Offset for the starttime for the subtitles", G_MININT64, G_MAXINT64,
-          0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_DURATION,
       g_param_spec_int64 ("duration", "Offset for the duration",
           "Offset for the duration of the subtitles", G_MININT64, G_MAXINT64,
-          0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (srtenc_debug, "srtenc", 0,
       "SubRip subtitle encoder");

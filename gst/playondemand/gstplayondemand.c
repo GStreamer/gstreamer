@@ -198,33 +198,36 @@ play_on_demand_class_init (GstPlayOnDemandClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUTE,
       g_param_spec_boolean ("mute", "Silence output", "Do not output any sound",
-          FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          FALSE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_float ("buffer-time", "Buffer length in seconds",
           "Number of seconds of audio the buffer holds", 0.0, G_MAXFLOAT,
-          GST_POD_BUFFER_TIME, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          GST_POD_BUFFER_TIME,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_PLAYS,
       g_param_spec_uint ("max-plays", "Maximum simultaneous playbacks",
           "Maximum allowed number of simultaneous plays from the buffer", 1,
-          G_MAXUINT, GST_POD_MAX_PLAYS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_MAXUINT, GST_POD_MAX_PLAYS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TICK_RATE,
       g_param_spec_float ("tick-rate", "Tick rate (ticks/second)",
           "The rate of musical ticks, the smallest time unit in a song", 0,
           G_MAXFLOAT, GST_POD_TICK_RATE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TOTAL_TICKS,
       g_param_spec_uint ("total-ticks", "Total number of ticks",
           "Total number of ticks in the tick array", 1, G_MAXUINT, 1,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TICKS,
       g_param_spec_pointer ("ticks", "Ticks to play sample on",
           "An array of ticks (musical times) at which to play the sample",
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

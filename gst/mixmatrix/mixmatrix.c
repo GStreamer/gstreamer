@@ -178,15 +178,17 @@ gst_mixmatrix_class_init (GstMixMatrixClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SINKPADS,
       g_param_spec_int ("sinkpads", "Sink Pads",
-          "Number of sink pads in matrix", 0, G_MAXINT, 8, G_PARAM_READABLE));
+          "Number of sink pads in matrix", 0, G_MAXINT, 8,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SRCPADS,
       g_param_spec_int ("srcpads", "Src Pads", "Number of src pads in matrix",
-          0, G_MAXINT, 8, G_PARAM_READABLE));
+          0, G_MAXINT, 8, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MATRIXPTR,
       g_param_spec_pointer ("matrixptr", "Matrix Pointer",
-          "Pointer to gfloat mix matrix", G_PARAM_READABLE));
+          "Pointer to gfloat mix matrix",
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->set_property = gst_mixmatrix_set_property;
   gobject_class->get_property = gst_mixmatrix_get_property;

@@ -249,7 +249,8 @@ mpegts_parse_class_init (MpegTSParseClass * klass)
   g_object_class_install_property (gobject_class, PROP_PROGRAM_NUMBERS,
       g_param_spec_string ("program-numbers",
           "Program Numbers",
-          "Colon separated list of programs", "", G_PARAM_READWRITE));
+          "Colon separated list of programs", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean

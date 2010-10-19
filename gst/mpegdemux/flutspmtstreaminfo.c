@@ -84,16 +84,18 @@ mpegts_pmt_stream_info_class_init (MpegTsPmtStreamInfoClass * klass)
   g_object_class_install_property (gobject_klass, PROP_PID,
       g_param_spec_uint ("pid", "PID carrying this stream",
           "PID which carries this stream", 1, G_MAXUINT16, 1,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_LANGUAGES,
       g_param_spec_value_array ("languages", "Languages of this stream",
           "Value array of the languages of this stream",
           g_param_spec_string ("language", "language", "language", "",
-              G_PARAM_READABLE), G_PARAM_READABLE));
+              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_STREAM_TYPE,
       g_param_spec_uint ("stream-type",
-          "Stream type", "Stream type", 0, G_MAXUINT8, 0, G_PARAM_READABLE));
+          "Stream type", "Stream type", 0, G_MAXUINT8, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_DESCRIPTORS,
       g_param_spec_value_array ("descriptors",
@@ -101,7 +103,8 @@ mpegts_pmt_stream_info_class_init (MpegTsPmtStreamInfoClass * klass)
           "Value array of strings containing stream descriptors",
           g_param_spec_boxed ("descriptor",
               "descriptor",
-              "", G_TYPE_GSTRING, G_PARAM_READABLE), G_PARAM_READABLE));
+              "", G_TYPE_GSTRING, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

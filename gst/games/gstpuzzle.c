@@ -167,10 +167,12 @@ gst_puzzle_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_ROWS,
       g_param_spec_uint ("rows", "rows", "number of rows in puzzle",
-          1, G_MAXUINT, 4, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          1, G_MAXUINT, 4,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_COLUMNS,
       g_param_spec_uint ("columns", "columns", "number of columns in puzzle",
-          1, G_MAXUINT, 4, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          1, G_MAXUINT, 4,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   videofilter_class->setup = gst_puzzle_setup;
 }
