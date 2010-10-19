@@ -963,14 +963,10 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
       GST_QUEUE_MUTEX_UNLOCK (queue);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_OVERRUN], 0);
       GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
-    } else {
-      if (queue->srcresult != GST_FLOW_OK)
-        goto out_flushing;
+      /* we recheck, the signal could have changed the thresholds */
+      if (!gst_queue_is_filled (queue))
+        break;
     }
-
-    /* we recheck, the signal could have changed the thresholds */
-    if (!gst_queue_is_filled (queue))
-      break;
 
     /* how are we going to make space for this buffer? */
     switch (queue->leaky) {
@@ -1005,9 +1001,6 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
           GST_QUEUE_MUTEX_UNLOCK (queue);
           g_signal_emit (queue, gst_queue_signals[SIGNAL_RUNNING], 0);
           GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
-        } else {
-          if (queue->srcresult != GST_FLOW_OK)
-            goto out_flushing;
         }
         break;
       }
@@ -1228,15 +1221,11 @@ gst_queue_loop (GstPad * pad)
   GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
   while (gst_queue_is_empty (queue)) {
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
     if (!queue->silent) {
       GST_QUEUE_MUTEX_UNLOCK (queue);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_UNDERRUN], 0);
-      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
       GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
-    } else {
-      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
-      if (queue->srcresult != GST_FLOW_OK)
-        goto out_flushing;
     }
 
     /* we recheck, the signal could have changed the thresholds */
@@ -1244,16 +1233,12 @@ gst_queue_loop (GstPad * pad)
       GST_QUEUE_WAIT_ADD_CHECK (queue, out_flushing);
     }
 
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
     if (!queue->silent) {
       GST_QUEUE_MUTEX_UNLOCK (queue);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_RUNNING], 0);
       g_signal_emit (queue, gst_queue_signals[SIGNAL_PUSHING], 0);
-      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
       GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
-    } else {
-      GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
-      if (queue->srcresult != GST_FLOW_OK)
-        goto out_flushing;
     }
   }
 
