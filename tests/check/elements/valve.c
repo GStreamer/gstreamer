@@ -82,9 +82,7 @@ GST_START_TEST (test_valve_basic)
 
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == TRUE);
-  caps = gst_caps_new_any ();
-  fail_unless (gst_pad_alloc_buffer (src, 0, 10, caps, &buf) == GST_FLOW_OK);
-  gst_caps_unref (caps);
+  fail_unless (gst_pad_alloc_buffer (src, 0, 10, NULL, &buf) == GST_FLOW_OK);
   fail_unless (buffer_allocated == TRUE);
   gst_buffer_unref (buf);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
@@ -101,9 +99,7 @@ GST_START_TEST (test_valve_basic)
   g_object_set (valve, "drop", TRUE, NULL);
   fail_unless (gst_pad_push_event (src, gst_event_new_eos ()) == TRUE);
   fail_unless (event_received == FALSE);
-  caps = gst_caps_new_any ();
-  fail_unless (gst_pad_alloc_buffer (src, 0, 10, caps, &buf) == GST_FLOW_OK);
-  gst_caps_unref (caps);
+  fail_unless (gst_pad_alloc_buffer (src, 0, 10, NULL, &buf) == GST_FLOW_OK);
   fail_unless (buffer_allocated == FALSE);
   gst_buffer_unref (buf);
   fail_unless (gst_pad_push (src, gst_buffer_new ()) == GST_FLOW_OK);
