@@ -1525,17 +1525,12 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      GstPad *peer;
       gint64 cur;
 
       /* First, we try to ask upstream, which might know better, especially in
        * the case of DVDs, with multiple chapter */
-      if ((peer = gst_pad_get_peer (mpeg2dec->sinkpad)) != NULL) {
-        res = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-        if (res)
-          break;
-      }
+      if ((res = gst_pad_peer_query (mpeg2dec->sinkpad, query)))
+        break;
 
       /* save requested format */
       gst_query_parse_position (query, &format, NULL);
