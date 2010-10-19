@@ -24,7 +24,7 @@
  * To enable ASCII encoding, set the parameter ascii to TRUE. If you omit
  * the parameter or set it to FALSE, the output will be raw encoded.
  *
- * <refsect">
+ * <refsect>
  * <title>Example launch line</title>
  * |[
  * gst-launch videotestsrc num_buffers=1 ! ffmpegcolorspace ! "video/x-raw-gray" ! pnmenc ascii=true ! filesink location=test.pnm
