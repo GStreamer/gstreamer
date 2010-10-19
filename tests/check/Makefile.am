@@ -198,7 +198,7 @@ elements_assrender_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10 -lgstapp-0.
 
 # parser unit test convenience lib
 noinst_LTLIBRARIES = libparser.la
-libparser_la_SOURCES = elements/parser.c
+libparser_la_SOURCES = elements/parser.c elements/parser.h
 
 elements_aacparse_LDADD = libparser.la $(LDADD)
 
