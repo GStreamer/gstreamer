@@ -432,6 +432,11 @@ gst_queue2_init (GstQueue2 * queue, GstQueue2Class * g_class)
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
 
+  queue->sinktime = GST_CLOCK_TIME_NONE;
+  queue->srctime = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = TRUE;
+  queue->src_tainted = TRUE;
+
   queue->srcresult = GST_FLOW_WRONG_STATE;
   queue->sinkresult = GST_FLOW_WRONG_STATE;
   queue->is_eos = FALSE;
@@ -673,20 +678,25 @@ gst_queue2_bufferalloc (GstPad * pad, guint64 offset, guint size,
 static void
 update_time_level (GstQueue2 * queue)
 {
-  gint64 sink_time, src_time;
+  if (queue->sink_tainted) {
+    queue->sinktime =
+        gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
+        queue->sink_segment.last_stop);
+    queue->sink_tainted = FALSE;
+  }
 
-  sink_time =
-      gst_segment_to_running_time (&queue->sink_segment, GST_FORMAT_TIME,
-      queue->sink_segment.last_stop);
-
-  src_time = gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
-      queue->src_segment.last_stop);
+  if (queue->src_tainted) {
+    queue->srctime =
+        gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
+        queue->src_segment.last_stop);
+    queue->src_tainted = FALSE;
+  }
 
   GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (sink_time), GST_TIME_ARGS (src_time));
+      GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime));
 
-  if (sink_time >= src_time)
-    queue->cur_level.time = sink_time - src_time;
+  if (queue->sinktime >= queue->srctime)
+    queue->cur_level.time = queue->sinktime - queue->srctime;
   else
     queue->cur_level.time = 0;
 }
@@ -694,7 +704,8 @@ update_time_level (GstQueue2 * queue)
 /* take a NEWSEGMENT event and apply the values to segment, updating the time
  * level of queue. */
 static void
-apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment)
+apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
+    gboolean is_sink)
 {
   gboolean update;
   GstFormat format;
@@ -736,13 +747,19 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment)
   GST_DEBUG_OBJECT (queue,
       "configured NEWSEGMENT %" GST_SEGMENT_FORMAT, segment);
 
+  if (is_sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
+
   /* segment can update the time level of the queue */
   update_time_level (queue);
 }
 
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
-apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment)
+apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
+    gboolean is_sink)
 {
   GstClockTime duration, timestamp;
 
@@ -762,6 +779,11 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment)
       GST_TIME_ARGS (timestamp));
 
   gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
+
+  if (is_sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
 
   /* calc diff with other end */
   update_time_level (queue);
@@ -1449,6 +1471,8 @@ gst_queue2_locked_flush (GstQueue2 * queue)
   GST_QUEUE2_CLEAR_LEVEL (queue->cur_level);
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
+  queue->sinktime = queue->srctime = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = queue->src_tainted = TRUE;
   if (queue->starting_segment != NULL)
     gst_event_unref (queue->starting_segment);
   queue->starting_segment = NULL;
@@ -1782,7 +1806,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
     queue->bytes_in += size;
 
     /* apply new buffer to segment stats */
-    apply_buffer (queue, buffer, &queue->sink_segment);
+    apply_buffer (queue, buffer, &queue->sink_segment, TRUE);
     /* update the byterate stats */
     update_in_rates (queue);
 
@@ -1803,7 +1827,7 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
         queue->is_eos = TRUE;
         break;
       case GST_EVENT_NEWSEGMENT:
-        apply_segment (queue, event, &queue->sink_segment);
+        apply_segment (queue, event, &queue->sink_segment, TRUE);
         /* This is our first new segment, we hold it
          * as we can't save it on the temp file */
         if (!QUEUE_IS_USING_QUEUE (queue)) {
@@ -1889,7 +1913,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue)
     }
     queue->bytes_out += size;
 
-    apply_buffer (queue, buffer, &queue->src_segment);
+    apply_buffer (queue, buffer, &queue->src_segment, FALSE);
     /* update the byterate stats */
     update_out_rates (queue);
     /* update the buffering */
@@ -1907,7 +1931,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue)
         GST_QUEUE2_CLEAR_LEVEL (queue->cur_level);
         break;
       case GST_EVENT_NEWSEGMENT:
-        apply_segment (queue, event, &queue->src_segment);
+        apply_segment (queue, event, &queue->src_segment, FALSE);
         break;
       default:
         break;

@@ -83,6 +83,11 @@ struct _GstQueue2
   GstSegment sink_segment;
   GstSegment src_segment;
 
+  /* Position of src/sink */
+  GstClockTime sinktime, srctime;
+  /* TRUE if either position needs to be recalculated */
+  gboolean sink_tainted, src_tainted;
+
   /* flowreturn when srcpad is paused */
   GstFlowReturn srcresult;
   GstFlowReturn sinkresult;
