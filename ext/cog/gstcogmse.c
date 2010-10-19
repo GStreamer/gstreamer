@@ -161,10 +161,10 @@ gst_mse_class_init (GstMSEClass * klass)
 
   g_object_class_install_property (gobject_class, LUMA_PSNR,
       g_param_spec_double ("luma-psnr", "luma-psnr", "luma-psnr",
-          0, 70, 40, G_PARAM_READABLE));
+          0, 70, 40, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, CHROMA_PSNR,
       g_param_spec_double ("chroma-psnr", "chroma-psnr", "chroma-psnr",
-          0, 70, 40, G_PARAM_READABLE));
+          0, 70, 40, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
 }
 

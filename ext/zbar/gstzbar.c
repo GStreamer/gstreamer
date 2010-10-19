@@ -169,12 +169,14 @@ gst_zbar_class_init (GstZBarClass * g_class)
   g_object_class_install_property (gobject_class, PROP_MESSAGE,
       g_param_spec_boolean ("message", "mesage",
           "Post a barcode message for each detected code",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CACHE,
       g_param_spec_boolean ("cache", "cache",
           "Enable or disable the inter-image result cache",
-          TRUE, G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY));
+          TRUE,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_zbar_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_zbar_transform_ip);

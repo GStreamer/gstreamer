@@ -101,7 +101,8 @@ gst_ofa_class_init (GstOFAClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FINGERPRINT,
       g_param_spec_string ("fingerprint", "Resulting fingerprint",
-          "Resulting fingerprint", NULL, G_PARAM_READABLE));
+          "Resulting fingerprint", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ofa_finalize);
 

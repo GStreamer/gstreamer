@@ -163,20 +163,21 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location",
-          "Location to read from", "", G_PARAM_READWRITE));
+          "Location to read from", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "Proxy server to use, in the form HOSTNAME:PORT. "
           "Defaults to the http_proxy environment variable",
-          "", G_PARAM_READWRITE));
+          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_USER_AGENT,
       g_param_spec_string ("user-agent", "User-Agent",
           "Value of the User-Agent HTTP request header field",
-          "GStreamer neonhttpsrc", G_PARAM_READWRITE));
+          "GStreamer neonhttpsrc", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstNeonhttpSrc:cookies
@@ -187,41 +188,45 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_COOKIES,
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
-          G_TYPE_STRV, G_PARAM_READWRITE));
+          G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_IRADIO_MODE,
       g_param_spec_boolean ("iradio-mode", "iradio-mode",
           "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
-          "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
+          "iradio-name", "Name of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_GENRE,
       g_param_spec_string ("iradio-genre",
-          "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
+          "iradio-genre", "Genre of the stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_URL,
       g_param_spec_string ("iradio-url",
           "iradio-url",
-          "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
+          "Homepage URL for radio stream", NULL,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_AUTOMATIC_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
           "Automatically follow HTTP redirects (HTTP Status Code 3xx)",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_ACCEPT_SELF_SIGNED,
       g_param_spec_boolean ("accept-self-signed", "accept-self-signed",
           "Accept self-signed SSL/TLS certificates",
-          DEFAULT_ACCEPT_SELF_SIGNED, G_PARAM_READWRITE));
+          DEFAULT_ACCEPT_SELF_SIGNED,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstNeonhttpSrc:connect-timeout
@@ -233,7 +238,8 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONNECT_TIMEOUT,
       g_param_spec_uint ("connect-timeout", "connect-timeout",
           "Value in seconds to timeout a blocking connection (0 = default).", 0,
-          3600, DEFAULT_CONNECT_TIMEOUT, G_PARAM_READWRITE));
+          3600, DEFAULT_CONNECT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstNeonhttpSrc:read-timeout
@@ -245,14 +251,15 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_READ_TIMEOUT,
       g_param_spec_uint ("read-timeout", "read-timeout",
           "Value in seconds to timeout a blocking read (0 = default).", 0,
-          3600, DEFAULT_READ_TIMEOUT, G_PARAM_READWRITE));
+          3600, DEFAULT_READ_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifndef GST_DISABLE_GST_DEBUG
   g_object_class_install_property
       (gobject_class, PROP_NEON_HTTP_DEBUG,
       g_param_spec_boolean ("neon-http-debug", "neon-http-debug",
           "Enable Neon HTTP debug messages",
-          DEFAULT_NEON_HTTP_DEBUG, G_PARAM_READWRITE));
+          DEFAULT_NEON_HTTP_DEBUG, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_neonhttp_src_start);

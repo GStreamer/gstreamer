@@ -276,26 +276,27 @@ gst_fameenc_class_init (GstFameEncClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Target bitrate (0 = VBR)",
-          0, 5000000, 0, G_PARAM_READWRITE));
+          0, 5000000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_int ("quality", "Quality",
           "Percentage of quality of compression (versus size)", 0, 100, 75,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PATTERN,
       g_param_spec_string ("pattern", "Pattern",
           "Encoding pattern of I, P, and B frames", "IPPPPPPPPPPP",
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_FRAMES_PER_SEQUENCE,
-      g_param_spec_int ("frames_per_sequence", "Frames Per Sequence",
+      g_param_spec_int ("frames-per-sequence", "Frames Per Sequence",
           "The number of frames in one sequence", 1, G_MAXINT, 12,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_FAME_VERBOSE,
-      g_param_spec_boolean ("fame_verbose", "Fame Verbose",
-          "Make FAME produce verbose output", FALSE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("fame-verbose", "Fame Verbose",
+          "Make FAME produce verbose output", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BUFFER_SIZE,
-      g_param_spec_int ("buffer_size", "Buffer Size",
+      g_param_spec_int ("buffer-size", "Buffer Size",
           "Set the decoding output buffer size", 0, 1024 * 1024,
-          FAMEENC_BUFFER_SIZE, G_PARAM_READWRITE));
+          FAMEENC_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static GstPadLinkReturn

@@ -141,15 +141,16 @@ gst_tarkinenc_class_init (TarkinEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "bitrate", "bitrate",
-          G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 3000,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_S_MOMENTS,
-      g_param_spec_int ("s_moments", "Synthesis Moments",
+      g_param_spec_int ("s-moments", "Synthesis Moments",
           "Number of vanishing moments for the synthesis filter",
-          1, 4, 2, G_PARAM_READWRITE));
+          1, 4, 2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_A_MOMENTS,
-      g_param_spec_int ("a_moments", "Analysis Moments",
+      g_param_spec_int ("a-moments", "Analysis Moments",
           "Number of vanishing moments for the analysis filter",
-          1, 4, 2, G_PARAM_READWRITE));
+          1, 4, 2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   parent_class = g_type_class_peek_parent (klass);
 

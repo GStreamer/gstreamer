@@ -264,25 +264,28 @@ gst_faac_class_init (GstFaacClass * klass)
   /* properties */
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (bps)", "Bitrate in bits/sec",
-          8 * 1000, 320 * 1000, FAAC_DEFAULT_BITRATE, G_PARAM_READWRITE));
+          8 * 1000, 320 * 1000, FAAC_DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PROFILE,
       g_param_spec_enum ("profile", "Profile", "MPEG/AAC encoding profile",
-          GST_TYPE_FAAC_PROFILE, FAAC_DEFAULT_PROFILE, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_PROFILE, FAAC_DEFAULT_PROFILE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_TNS,
       g_param_spec_boolean ("tns", "TNS", "Use temporal noise shaping",
-          FAAC_DEFAULT_TNS, G_PARAM_READWRITE));
+          FAAC_DEFAULT_TNS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MIDSIDE,
       g_param_spec_boolean ("midside", "Midside", "Allow mid/side encoding",
-          FAAC_DEFAULT_MIDSIDE, G_PARAM_READWRITE));
+          FAAC_DEFAULT_MIDSIDE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SHORTCTL,
       g_param_spec_enum ("shortctl", "Block type",
           "Block type encorcing",
-          GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_SHORTCTL, FAAC_DEFAULT_SHORTCTL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
       g_param_spec_enum ("outputformat", "Output format",
           "Format of output frames",
           GST_TYPE_FAAC_OUTPUTFORMAT, FAAC_DEFAULT_OUTPUTFORMAT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* virtual functions */
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faac_change_state);

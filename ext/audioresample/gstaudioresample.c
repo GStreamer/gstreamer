@@ -138,8 +138,9 @@ static void gst_audioresample_class_init (AudioresampleClass * klass)
   gobject_class->dispose = gst_audioresample_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
-      g_param_spec_int ("filter_length", "filter_length", "filter_length",
-          0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_int ("filter-length", "filter_length", "filter_length",
+          0, G_MAXINT, 16,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   parent_class = g_type_class_peek_parent (klass);
 

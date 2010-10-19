@@ -176,52 +176,62 @@ gst_modplug_class_init (GstModPlugClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SONGNAME,
       g_param_spec_string ("songname", "Songname", "The song name",
-          NULL, G_PARAM_READABLE));
+          NULL, (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB,
       g_param_spec_boolean ("reverb", "reverb", "Reverb",
-          DEFAULT_REVERB, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_REVERB,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DEPTH,
       g_param_spec_int ("reverb-depth", "reverb depth", "Reverb depth",
-          0, 100, DEFAULT_REVERB_DEPTH, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, DEFAULT_REVERB_DEPTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DELAY,
       g_param_spec_int ("reverb-delay", "reverb delay", "Reverb delay",
-          0, 200, DEFAULT_REVERB_DELAY, (GParamFlags) G_PARAM_READWRITE));
+          0, 200, DEFAULT_REVERB_DELAY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS,
       g_param_spec_boolean ("megabass", "megabass", "Megabass",
-          DEFAULT_MEGABASS, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_MEGABASS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_AMOUNT,
       g_param_spec_int ("megabass-amount", "megabass amount", "Megabass amount",
-          0, 100, DEFAULT_MEGABASS_AMOUNT, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, DEFAULT_MEGABASS_AMOUNT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_RANGE,
       g_param_spec_int ("megabass-range", "megabass range", "Megabass range",
-          0, 100, DEFAULT_MEGABASS_RANGE, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, DEFAULT_MEGABASS_RANGE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND,
       g_param_spec_boolean ("surround", "surround", "Surround",
-          DEFAULT_SURROUND, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_SURROUND,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DEPTH,
       g_param_spec_int ("surround-depth", "surround depth", "Surround depth",
-          0, 100, DEFAULT_SURROUND_DEPTH, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, DEFAULT_SURROUND_DEPTH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DELAY,
       g_param_spec_int ("surround-delay", "surround delay", "Surround delay",
-          0, 40, DEFAULT_SURROUND_DELAY, (GParamFlags) G_PARAM_READWRITE));
+          0, 40, DEFAULT_SURROUND_DELAY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OVERSAMP,
       g_param_spec_boolean ("oversamp", "oversamp", "oversamp",
-          DEFAULT_OVERSAMP, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_OVERSAMP,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_REDUCTION,
       g_param_spec_boolean ("noise-reduction", "noise reduction",
           "noise reduction", DEFAULT_NOISE_REDUCTION,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gstelement_class->change_state = gst_modplug_change_state;
 }

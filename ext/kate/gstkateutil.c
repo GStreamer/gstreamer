@@ -74,24 +74,24 @@ gst_kate_util_install_decoder_base_properties (GObjectClass * gobject_class)
 {
   g_object_class_install_property (gobject_class, ARG_DEC_BASE_LANGUAGE,
       g_param_spec_string ("language", "Language", "The language of the stream",
-          "", G_PARAM_READABLE));
+          "", G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEC_BASE_CATEGORY,
       g_param_spec_string ("category", "Category", "The category of the stream",
-          "", G_PARAM_READABLE));
+          "", G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       ARG_DEC_BASE_ORIGINAL_CANVAS_WIDTH,
       g_param_spec_int ("original-canvas-width",
           "Original canvas width (0 is unspecified)",
           "The canvas width this stream was authored for", 0, G_MAXINT, 0,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       ARG_DEC_BASE_ORIGINAL_CANVAS_HEIGHT,
       g_param_spec_int ("original-canvas-height", "Original canvas height",
           "The canvas height this stream was authored for (0 is unspecified)",
-          0, G_MAXINT, 0, G_PARAM_READABLE));
+          0, G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 void

@@ -328,11 +328,13 @@ gst_bz2enc_class_init (GstBz2encClass * klass)
   gobject_class->get_property = gst_bz2enc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCK_SIZE,
-      g_param_spec_uint ("block_size", "Block size", "Block size",
-          1, 9, DEFAULT_BLOCK_SIZE, G_PARAM_READWRITE));
+      g_param_spec_uint ("block-size", "Block size", "Block size",
+          1, 9, DEFAULT_BLOCK_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
-      g_param_spec_uint ("buffer_size", "Buffer size", "Buffer size",
-          1, G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
+      g_param_spec_uint ("buffer-size", "Buffer size", "Buffer size",
+          1, G_MAXUINT, DEFAULT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (bz2enc_debug, "bz2enc", 0, "BZ2 compressor");
 }

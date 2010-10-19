@@ -2295,28 +2295,30 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_SURFACE,
       g_param_spec_pointer ("surface", "Surface",
-          "The target surface for video", G_PARAM_WRITABLE));
+          "The target surface for video",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_CONTRAST,
       g_param_spec_int ("contrast", "Contrast", "The contrast of the video",
-          0x0000, 0xFFFF, 0x8000, G_PARAM_READWRITE));
+          0x0000, 0xFFFF, 0x8000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BRIGHTNESS,
       g_param_spec_int ("brightness", "Brightness",
           "The brightness of the video", 0x0000, 0xFFFF, 0x8000,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HUE,
       g_param_spec_int ("hue", "Hue", "The hue of the video", 0x0000, 0xFFFF,
-          0x8000, G_PARAM_READWRITE));
+          0x8000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_SATURATION,
       g_param_spec_int ("saturation", "Saturation",
           "The saturation of the video", 0x0000, 0xFFFF, 0x8000,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
+          "The pixel aspect ratio of the device", "1/1",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_VSYNC,
       g_param_spec_boolean ("vsync", "Vertical synchronisation",
           "Wait for next vertical sync to draw frames", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_dfbvideosink_change_state;
 

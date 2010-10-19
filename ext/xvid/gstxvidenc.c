@@ -273,191 +273,210 @@ gst_xvidenc_class_init (GstXvidEncClass * klass)
 
   pspec = g_param_spec_enum ("profile", "Profile",
       "XviD/MPEG-4 encoding profile",
-      GST_TYPE_XVIDENC_PROFILE, 0, G_PARAM_READWRITE);
+      GST_TYPE_XVIDENC_PROFILE, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, profile);
 
   pspec = g_param_spec_enum ("quant-type", "Quantizer Type",
-      "Quantizer type", GST_TYPE_XVIDENC_QUANT_TYPE, 0, G_PARAM_READWRITE);
+      "Quantizer type", GST_TYPE_XVIDENC_QUANT_TYPE, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, quant_type);
 
   pspec = g_param_spec_enum ("pass", "Encoding pass/type",
       "Encoding pass/type",
-      GST_TYPE_XVIDENC_PASS, XVIDENC_CBR, G_PARAM_READWRITE);
+      GST_TYPE_XVIDENC_PASS, XVIDENC_CBR,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, pass);
 
   pspec = g_param_spec_int ("bitrate", "Bitrate",
       "[CBR|PASS2] Target video bitrate (bps)",
-      0, G_MAXINT, 1800000, G_PARAM_READWRITE);
+      0, G_MAXINT, 1800000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, bitrate);
 
   pspec = g_param_spec_int ("quantizer", "Quantizer",
       "[QUANT] Quantizer to apply for constant quantizer mode",
-      2, 31, 2, G_PARAM_READWRITE);
+      2, 31, 2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, quant);
 
   pspec = g_param_spec_string ("statsfile", "Statistics Filename",
       "[PASS1|PASS2] Filename to store data for 2-pass encoding",
-      "xvid-stats.log", G_PARAM_READWRITE);
+      "xvid-stats.log", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, filename);
 
   pspec = g_param_spec_int ("max-key-interval", "Max. Key Interval",
       "Maximum number of frames between two keyframes (< 0 is in sec)",
-      -100, G_MAXINT, -10, G_PARAM_READWRITE);
+      -100, G_MAXINT, -10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_key_interval);
 
   pspec = g_param_spec_boolean ("closed-gop", "Closed GOP",
-      "Closed GOP", FALSE, G_PARAM_READWRITE);
+      "Closed GOP", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, closed_gop);
 
   pspec = g_param_spec_int ("motion", "ME Quality",
-      "Quality of Motion Estimation", 0, 6, 6, G_PARAM_READWRITE);
+      "Quality of Motion Estimation", 0, 6, 6,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, motion);
 
   pspec = g_param_spec_boolean ("me-chroma", "ME Chroma",
       "Enable use of Chroma planes for Motion Estimation",
-      TRUE, G_PARAM_READWRITE);
+      TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, me_chroma);
 
   pspec = g_param_spec_int ("me-vhq", "ME DCT/Frequency",
       "Extent in which to use DCT to minimize encoding length",
-      0, 4, 1, G_PARAM_READWRITE);
+      0, 4, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, me_vhq);
 
   pspec = g_param_spec_boolean ("me-quarterpel", "ME Quarterpel",
       "Use quarter pixel precision for motion vector search",
-      FALSE, G_PARAM_READWRITE);
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, me_quarterpel);
 
   pspec = g_param_spec_boolean ("lumimasking", "Lumimasking",
       "Enable lumimasking - apply more compression to dark or bright areas",
-      FALSE, G_PARAM_READWRITE);
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, lumimasking);
 
   pspec = g_param_spec_int ("max-bframes", "Max B-Frames",
-      "Maximum B-frames in a row", 0, G_MAXINT, 1, G_PARAM_READWRITE);
+      "Maximum B-frames in a row", 0, G_MAXINT, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_bframes);
 
   pspec = g_param_spec_int ("bquant-ratio", "B-quantizer ratio",
-      "Ratio in B-frame quantizer computation", 0, 200, 150, G_PARAM_READWRITE);
+      "Ratio in B-frame quantizer computation", 0, 200, 150,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, bquant_ratio);
 
   pspec = g_param_spec_int ("bquant-offset", "B-quantizer offset",
       "Offset in B-frame quantizer computation",
-      0, 200, 100, G_PARAM_READWRITE);
+      0, 200, 100, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, bquant_offset);
 
   pspec = g_param_spec_int ("bframe-threshold", "B-Frame Threshold",
       "Higher threshold yields more chance that B-frame is used",
-      -255, 255, 0, G_PARAM_READWRITE);
+      -255, 255, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, bframe_threshold);
 
   pspec = g_param_spec_boolean ("gmc", "Global Motion Compensation",
       "Allow generation of Sprite Frames for Pan/Zoom/Rotating images",
-      FALSE, G_PARAM_READWRITE);
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, gmc);
 
   pspec = g_param_spec_boolean ("trellis", "Trellis Quantization",
-      "Enable Trellis Quantization", FALSE, G_PARAM_READWRITE);
+      "Enable Trellis Quantization", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, trellis);
 
   pspec = g_param_spec_boolean ("interlaced", "Interlaced Material",
-      "Enable for interlaced video material", FALSE, G_PARAM_READWRITE);
+      "Enable for interlaced video material", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, interlaced);
 
   pspec = g_param_spec_boolean ("cartoon", "Cartoon Material",
-      "Adjust thresholds for flat looking cartoons", FALSE, G_PARAM_READWRITE);
+      "Adjust thresholds for flat looking cartoons", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, cartoon);
 
   pspec = g_param_spec_boolean ("greyscale", "Disable Chroma",
-      "Do not write chroma data in encoded video", FALSE, G_PARAM_READWRITE);
+      "Do not write chroma data in encoded video", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, greyscale);
 
   pspec = g_param_spec_boolean ("hqacpred", "High quality AC prediction",
-      "Enable high quality AC prediction", TRUE, G_PARAM_READWRITE);
+      "Enable high quality AC prediction", TRUE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, hqacpred);
 
   pspec = g_param_spec_int ("max-iquant", "Max Quant I-Frames",
-      "Upper bound for I-frame quantization", 0, 31, 31, G_PARAM_READWRITE);
+      "Upper bound for I-frame quantization", 0, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_iquant);
 
   pspec = g_param_spec_int ("min-iquant", "Min Quant I-Frames",
-      "Lower bound for I-frame quantization", 0, 31, 2, G_PARAM_READWRITE);
+      "Lower bound for I-frame quantization", 0, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, min_iquant);
 
   pspec = g_param_spec_int ("max-pquant", "Max Quant P-Frames",
-      "Upper bound for P-frame quantization", 0, 31, 31, G_PARAM_READWRITE);
+      "Upper bound for P-frame quantization", 0, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_pquant);
 
   pspec = g_param_spec_int ("min-pquant", "Min Quant P-Frames",
-      "Lower bound for P-frame quantization", 0, 31, 2, G_PARAM_READWRITE);
+      "Lower bound for P-frame quantization", 0, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, min_pquant);
 
   pspec = g_param_spec_int ("max-bquant", "Max Quant B-Frames",
-      "Upper bound for B-frame quantization", 0, 31, 31, G_PARAM_READWRITE);
+      "Upper bound for B-frame quantization", 0, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_bquant);
 
   pspec = g_param_spec_int ("min-bquant", "Min Quant B-Frames",
-      "Lower bound for B-frame quantization", 0, 31, 2, G_PARAM_READWRITE);
+      "Lower bound for B-frame quantization", 0, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, min_bquant);
 
   pspec = g_param_spec_int ("reaction-delay-factor", "Reaction Delay Factor",
-      "[CBR] Reaction delay factor", -1, 100, -1, G_PARAM_READWRITE);
+      "[CBR] Reaction delay factor", -1, 100, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, reaction_delay_factor);
 
   pspec = g_param_spec_int ("averaging-period", "Averaging Period",
       "[CBR] Number of frames for which XviD averages bitrate",
-      -1, 100, -1, G_PARAM_READWRITE);
+      -1, 100, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, averaging_period);
 
   pspec = g_param_spec_int ("buffer", "Buffer Size",
-      "[CBR] Size of the video buffers", -1, G_MAXINT, -1, G_PARAM_READWRITE);
+      "[CBR] Size of the video buffers", -1, G_MAXINT, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, buffer);
 
   pspec = g_param_spec_int ("keyframe-boost", "Keyframe boost",
-      "[PASS2] Bitrate boost for keyframes", 0, 100, 0, G_PARAM_READWRITE);
+      "[PASS2] Bitrate boost for keyframes", 0, 100, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, keyframe_boost);
 
   pspec = g_param_spec_int ("curve-compression-high", "Curve Compression High",
       "[PASS2] Shrink factor for upper part of bitrate curve",
-      0, 100, 0, G_PARAM_READWRITE);
+      0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, curve_compression_high);
 
   pspec = g_param_spec_int ("curve-compression-low", "Curve Compression Low",
       "[PASS2] Growing factor for lower part of bitrate curve",
-      0, 100, 0, G_PARAM_READWRITE);
+      0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, curve_compression_low);
 
   pspec = g_param_spec_int ("flow-control-strength", "Flow Control Strength",
       "[PASS2] Overflow control strength per frame",
-      -1, 100, 5, G_PARAM_READWRITE);
+      -1, 100, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, overflow_control_strength);
 
   pspec =
       g_param_spec_int ("max-overflow-improvement", "Max Overflow Improvement",
       "[PASS2] Amount in % that flow control can increase frame size compared to ideal curve",
-      -1, 100, 5, G_PARAM_READWRITE);
+      -1, 100, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_overflow_improvement);
 
   pspec =
       g_param_spec_int ("max-overflow-degradation", "Max Overflow Degradation",
       "[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve",
-      -1, 100, 5, G_PARAM_READWRITE);
+      -1, 100, 5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, max_overflow_degradation);
 
   pspec = g_param_spec_int ("keyframe-reduction", "Keyframe Reduction",
       "[PASS2] Keyframe size reduction in % of those within threshold",
-      -1, 100, 20, G_PARAM_READWRITE);
+      -1, 100, 20, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, kfreduction);
 
   pspec = g_param_spec_int ("keyframe-threshold", "Keyframe Threshold",
       "[PASS2] Distance between keyframes not to be subject to reduction",
-      -1, 100, 1, G_PARAM_READWRITE);
+      -1, 100, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, kfthreshold);
 
   pspec =
       g_param_spec_int ("container-frame-overhead", "Container Frame Overhead",
       "[PASS2] Average container overhead per frame", -1, 100, -1,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_xvidenc_add_pspec (gobject_class, pspec, container_frame_overhead);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_xvidenc_change_state);

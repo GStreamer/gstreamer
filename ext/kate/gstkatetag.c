@@ -137,21 +137,23 @@ gst_kate_tag_class_init (GstKateTagClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LANGUAGE,
       g_param_spec_string ("language", "Language",
-          "Set the language of the stream", "", G_PARAM_READWRITE));
+          "Set the language of the stream", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_CATEGORY,
       g_param_spec_string ("category", "Category",
-          "Set the category of the stream", "", G_PARAM_READWRITE));
+          "Set the category of the stream", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
       g_param_spec_int ("original-canvas-width", "Original canvas width",
           "Set the width of the canvas this stream was authored for (0 is unspecified)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
       g_param_spec_int ("original-canvas-height", "Original canvas height",
           "Set the height of the canvas this stream was authored for (0 is unspecified)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstkateparse_class->parse_packet =
       GST_DEBUG_FUNCPTR (gst_kate_tag_parse_packet);

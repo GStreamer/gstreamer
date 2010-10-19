@@ -161,22 +161,22 @@ gst_pyramidsegment_class_init (GstpyramidsegmentClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
       g_param_spec_double ("threshold1", "Threshold1",
           "Error threshold for establishing links", 0, 1000, 50,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
       g_param_spec_double ("threshold2", "Threshold2",
           "Error threshold for segment clustering", 0, 1000, 60,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LEVEL,
       g_param_spec_int ("level", "Level",
           "Maximum level of the pyramid segmentation", 0, 4, 4,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element

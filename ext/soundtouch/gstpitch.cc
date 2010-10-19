@@ -135,17 +135,17 @@ gst_pitch_class_init (GstPitchClass * klass)
   g_object_class_install_property (gobject_class, ARG_PITCH,
       g_param_spec_float ("pitch", "Pitch",
           "Audio stream pitch", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, ARG_TEMPO,
       g_param_spec_float ("tempo", "Tempo",
           "Audio stream tempo", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, ARG_RATE,
       g_param_spec_float ("rate", "Rate",
           "Audio stream rate", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
 
   g_type_class_add_private (gobject_class, sizeof (GstPitchPrivate));
 }

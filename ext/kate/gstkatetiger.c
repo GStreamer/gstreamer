@@ -203,73 +203,74 @@ gst_kate_tiger_class_init (GstKateTigerClass * klass)
   g_object_class_install_property (gobject_class, ARG_QUALITY,
       g_param_spec_double ("quality", "Rendering quality",
           "Rendering quality (0 is faster, 1 is best and slower)",
-          0.0, 1.0, 1.0, G_PARAM_READWRITE));
+          0.0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_DESC,
       g_param_spec_string ("default-font-desc", "Default font description",
           "Default font description (Pango style) to render text with",
-          "", G_PARAM_READWRITE));
+          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_EFFECT,
       g_param_spec_enum ("default-font-effect", "Default font effect",
           "Whether to apply an effect to text by default, for increased readability",
           gst_kate_tiger_font_effect_get_type (),
-          tiger_font_plain, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          tiger_font_plain,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       ARG_DEFAULT_FONT_EFFECT_STRENGTH,
       g_param_spec_double ("default-font-effect-strength",
           "Default font effect strength",
           "How pronounced should the font effect be (effect dependent)", 0.0,
-          1.0, 0.5, G_PARAM_READWRITE));
+          1.0, 0.5, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_RED,
       g_param_spec_int ("default-font-red",
           "Default font color (red component)",
           "Default font color (red component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_GREEN,
       g_param_spec_int ("default-font-green",
           "Default font color (green component)",
           "Default font color (green component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_BLUE,
       g_param_spec_int ("default-font-blue",
           "Default font color (blue component)",
           "Default font color (blue component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_ALPHA,
       g_param_spec_int ("default-font-alpha",
           "Default font color (alpha component)",
           "Default font color (alpha component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_RED,
       g_param_spec_int ("default-background-red",
           "Default background color (red component)",
           "Default background color (red component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_GREEN,
       g_param_spec_int ("default-background-green",
           "Default background color (green component)",
           "Default background color (green component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_BLUE,
       g_param_spec_int ("default-background-blue",
           "Default background color (blue component)",
           "Default background color (blue component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_ALPHA,
       g_param_spec_int ("default-background-alpha",
           "Default background color (alpha component)",
           "Default background color (alpha component, between 0 and 255) to render text with",
-          0, 255, 255, G_PARAM_READWRITE));
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_tiger_change_state);

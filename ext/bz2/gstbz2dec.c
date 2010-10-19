@@ -300,13 +300,15 @@ gst_bz2dec_class_init (GstBz2decClass * klass)
   gobject_class->set_property = gst_bz2dec_set_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_FIRST_BUFFER_SIZE, g_param_spec_uint ("first_buffer_size",
+      PROP_FIRST_BUFFER_SIZE, g_param_spec_uint ("first-buffer-size",
           "Size of first buffer", "Size of first buffer (used to determine the "
           "mime type of the uncompressed data)", 1, G_MAXUINT,
-          DEFAULT_FIRST_BUFFER_SIZE, G_PARAM_READWRITE));
+          DEFAULT_FIRST_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
-      g_param_spec_uint ("buffer_size", "Buffer size", "Buffer size",
-          1, G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
+      g_param_spec_uint ("buffer-size", "Buffer size", "Buffer size",
+          1, G_MAXUINT, DEFAULT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (bz2dec_debug, "bz2dec", 0, "BZ2 decompressor");
 }

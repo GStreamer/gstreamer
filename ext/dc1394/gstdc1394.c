@@ -135,25 +135,25 @@ gst_dc1394_class_init (GstDc1394Class * klass)
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
-          G_MAXINT64, 0, G_PARAM_READWRITE));
+          G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_CAMNUM, g_param_spec_int ("camera-number",
           "The number of the camera on the firewire bus",
           "The number of the camera on the firewire bus", 0,
-          G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_BUFSIZE, g_param_spec_int ("buffer-size",
           "The number of frames in the dma ringbuffer",
           "The number of frames in the dma ringbuffer", 1,
-          G_MAXINT, 10, G_PARAM_READWRITE));
+          G_MAXINT, 10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_ISO_SPEED, g_param_spec_int ("iso-speed",
           "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)",
           "The iso bandwidth in Mbps (100, 200, 400, 800, 1600, 3200)", 100,
-          3200, 400, G_PARAM_READWRITE));
+          3200, 400, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_dc1394_getcaps;
   gstbasesrc_class->set_caps = gst_dc1394_setcaps;

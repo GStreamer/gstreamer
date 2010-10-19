@@ -237,65 +237,84 @@ gst_dirac_enc_class_init (GstDiracEncClass * klass)
   gobject_class->finalize = gst_dirac_enc_finalize;
 
   g_object_class_install_property (gobject_class, PROP_L1_SEP,
-      g_param_spec_int ("l1_sep", "l1_sep", "l1_sep",
-          1, 1000, 24, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("l1-sep", "l1_sep", "l1_sep",
+          1, 1000, 24,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_NUM_L1,
-      g_param_spec_int ("num_l1", "num_l1", "num_l1",
-          0, 1000, 1, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("num-l1", "num_l1", "num_l1",
+          0, 1000, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_XBLEN,
       g_param_spec_int ("xblen", "xblen", "xblen",
-          4, 64, 8, (GParamFlags) G_PARAM_READWRITE));
+          4, 64, 8,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_YBLEN,
       g_param_spec_int ("yblen", "yblen", "yblen",
-          4, 64, 8, (GParamFlags) G_PARAM_READWRITE));
+          4, 64, 8,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_XBSEP,
       g_param_spec_int ("xbsep", "xbsep", "xbsep",
-          4, 64, 12, (GParamFlags) G_PARAM_READWRITE));
+          4, 64, 12,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_YBSEP,
       g_param_spec_int ("ybsep", "ybsep", "ybsep",
-          4, 64, 12, (GParamFlags) G_PARAM_READWRITE));
+          4, 64, 12,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_CPD,
       g_param_spec_int ("cpd", "cpd", "cpd",
-          1, 100, 60, (GParamFlags) G_PARAM_READWRITE));
+          1, 100, 60,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_QF,
       g_param_spec_double ("qf", "qf", "qf",
-          0.0, 10.0, 7.0, (GParamFlags) G_PARAM_READWRITE));
+          0.0, 10.0, 7.0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_TARGETRATE,
       g_param_spec_int ("targetrate", "targetrate", "targetrate",
-          0, 10000, 1000, (GParamFlags) G_PARAM_READWRITE));
+          0, 10000, 1000,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_LOSSLESS,
       g_param_spec_boolean ("lossless", "lossless", "lossless",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_IWLT_FILTER,
-      g_param_spec_int ("iwlt_filter", "iwlt_filter", "iwlt_filter",
-          0, 7, 0, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("iwlt-filter", "iwlt_filter", "iwlt_filter",
+          0, 7, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_RWLT_FILTER,
-      g_param_spec_int ("rwlt_filter", "rwlt_filter", "rwlt_filter",
-          0, 7, 1, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("rwlt-filter", "rwlt_filter", "rwlt_filter",
+          0, 7, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_WLT_DEPTH,
-      g_param_spec_int ("wlt_depth", "wlt_depth", "wlt_depth",
-          1, 4, 3, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("wlt-depth", "wlt_depth", "wlt_depth",
+          1, 4, 3,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MULTI_QUANTS,
-      g_param_spec_boolean ("multi_quants", "multi_quants", "multi_quants",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("multi-quants", "multi_quants", "multi_quants",
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MV_PREC,
-      g_param_spec_int ("mv_prec", "mv_prec", "mv_prec",
-          0, 3, 1, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("mv-prec", "mv_prec", "mv_prec",
+          0, 3, 1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_NO_SPARTITION,
-      g_param_spec_boolean ("no_spartition", "no_spartition", "no_spartition",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("no-spartition", "no_spartition", "no_spartition",
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_PREFILTER,
       g_param_spec_int ("prefilter", "prefilter", "prefilter",
-          0, 3, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 3, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_PREFILTER_STRENGTH,
-      g_param_spec_int ("pf_strength", "pf_strength", "pf_strength",
-          0, 10, 0, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("pf-strength", "pf_strength", "pf_strength",
+          0, 10, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_PICTURE_CODING_MODE,
-      g_param_spec_int ("picture_coding_mode", "picture_coding_mode",
-          "picture_coding_mode", 0, 1, 0, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("picture-coding-mode", "picture_coding_mode",
+          "picture_coding_mode", 0, 1, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_USE_VLC,
-      g_param_spec_boolean ("use_vlc", "use_vlc", "use_vlc", FALSE,
-          (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("use-vlc", "use_vlc", "use_vlc", FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   basevideoencoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_dirac_enc_set_format);

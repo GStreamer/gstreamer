@@ -141,7 +141,8 @@ gst_tarkindec_class_init (TarkinDecClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "bitrate", "bitrate",
-          G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 3000,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   parent_class = g_type_class_peek_parent (klass);
 

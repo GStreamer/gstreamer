@@ -121,12 +121,13 @@ gst_nas_sink_class_init (GstNasSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_MUTE,
       g_param_spec_boolean ("mute", "mute", "Whether to mute playback",
-          DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_MUTE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_HOST,
       g_param_spec_string ("host", "host",
           "host running the NAS daemon (name of X/Terminal, default is "
           "$AUDIOSERVER or $DISPLAY)", DEFAULT_HOST,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_nas_sink_getcaps);
 

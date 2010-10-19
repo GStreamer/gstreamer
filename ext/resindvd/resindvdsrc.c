@@ -232,12 +232,12 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_string ("device", "Device", "DVD device location",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_FASTSTART,
       g_param_spec_boolean ("fast-start", "Fast start",
           "Skip straight to the DVD menu on start", DEFAULT_FASTSTART,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

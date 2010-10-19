@@ -219,11 +219,11 @@ gst_facedetect_class_init (GstfacedetectClass * klass)
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_boolean ("display", "Display",
           "Sets whether the detected faces should be highlighted in the output",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PROFILE,
       g_param_spec_string ("profile", "Profile",
           "Location of Haar cascade file to use for face detection",
-          DEFAULT_PROFILE, G_PARAM_READWRITE));
+          DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to cvHaarDetectObjects",
           GST_TYPE_OPENCV_FACE_DETECT_FLAGS, DEFAULT_FLAGS,

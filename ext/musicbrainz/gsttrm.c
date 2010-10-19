@@ -137,10 +137,11 @@ gst_trm_class_init (GstTRMClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_PROXY_ADDRESS,
       g_param_spec_string ("proxy-address", "proxy address", "proxy address",
-          DEFAULT_PROXY_ADDRESS, G_PARAM_READWRITE));
+          DEFAULT_PROXY_ADDRESS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PROXY_PORT,
       g_param_spec_uint ("proxy-port", "proxy port", "proxy port",
-          1, 65535, DEFAULT_PROXY_PORT, G_PARAM_READWRITE));
+          1, 65535, DEFAULT_PROXY_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_trm_change_state);
 }

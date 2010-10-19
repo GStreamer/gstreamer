@@ -194,40 +194,45 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
           "\n\t\t\tmyth://a.com/?channel=123"
           "\n\t\t\tmyth://a.com/?channel=Channel%203"
           "\n\t\t\ta.com/file.nuv - default scheme 'myth'",
-          "", G_PARAM_READWRITE));
+          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_VERSION,
       g_param_spec_int ("mythtv-version", "mythtv-version",
-          "Change MythTV version", 26, 30, 26, G_PARAM_READWRITE));
+          "Change MythTV version", 26, 30, 26,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_LIVEID,
       g_param_spec_int ("mythtv-live-id", "mythtv-live-id",
           "Change MythTV version",
-          0, 200, GST_GMYTHTV_ID_NUM, G_PARAM_READWRITE));
+          0, 200, GST_GMYTHTV_ID_NUM,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_LIVE_CHAINID,
       g_param_spec_string ("mythtv-live-chainid", "mythtv-live-chainid",
-          "Sets the MythTV chain ID (from TV Chain)", "", G_PARAM_READWRITE));
+          "Sets the MythTV chain ID (from TV Chain)", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_LIVE,
       g_param_spec_boolean ("mythtv-live", "mythtv-live",
-          "Enable MythTV Live TV content streaming", FALSE, G_PARAM_READWRITE));
+          "Enable MythTV Live TV content streaming", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_ENABLE_TIMING_POSITION,
       g_param_spec_boolean ("mythtv-enable-timing-position",
           "mythtv-enable-timing-position",
           "Enable MythTV Live TV content size continuous updating",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_CHANNEL_NUM,
       g_param_spec_string ("mythtv-channel", "mythtv-channel",
-          "Change MythTV channel number", "", G_PARAM_READWRITE));
+          "Change MythTV channel number", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mythtv_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mythtv_src_stop);

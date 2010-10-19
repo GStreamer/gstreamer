@@ -107,19 +107,23 @@ gst_sf_sink_class_init (GstSFSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to write", NULL, G_PARAM_READWRITE));
+          "Location of the file to write", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   pspec = g_param_spec_enum
       ("major-type", "Major type", "Major output type", GST_TYPE_SF_MAJOR_TYPES,
-      SF_FORMAT_WAV, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      SF_FORMAT_WAV,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_MAJOR_TYPE, pspec);
   pspec = g_param_spec_enum
       ("minor-type", "Minor type", "Minor output type", GST_TYPE_SF_MINOR_TYPES,
-      SF_FORMAT_FLOAT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      SF_FORMAT_FLOAT,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_MINOR_TYPE, pspec);
   pspec = g_param_spec_int
       ("buffer-frames", "Buffer frames",
       "Number of frames per buffer, in pull mode", 1, G_MAXINT,
-      DEFAULT_BUFFER_FRAMES, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      DEFAULT_BUFFER_FRAMES,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_BUFFER_FRAMES, pspec);
 
   basesink_class->get_times = NULL;

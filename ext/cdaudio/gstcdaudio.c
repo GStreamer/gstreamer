@@ -160,19 +160,19 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
 
   g_object_class_install_property (gobject_klass, PROP_DEVICE,
       g_param_spec_string ("device", "Device", "CDROM device",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VOLUME_FL,
-      g_param_spec_int ("volume_fl", "Volume fl", "Front left volume",
-          0, 255, 255, G_PARAM_READWRITE));
+      g_param_spec_int ("volume-fl", "Volume fl", "Front left volume",
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VOLUME_FR,
-      g_param_spec_int ("volume_fr", "Volume fr", "Front right volume",
-          0, 255, 255, G_PARAM_READWRITE));
+      g_param_spec_int ("volume-fr", "Volume fr", "Front right volume",
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VOLUME_BL,
-      g_param_spec_int ("volume_bl", "Volume bl", "Back left volume",
-          0, 255, 255, G_PARAM_READWRITE));
+      g_param_spec_int ("volume-bl", "Volume bl", "Back left volume",
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_klass, PROP_VOLUME_BR,
-      g_param_spec_int ("volume_br", "Volume br", "Back right volume",
-          0, 255, 255, G_PARAM_READWRITE));
+      g_param_spec_int ("volume-br", "Volume br", "Back right volume",
+          0, 255, 255, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_cdaudio_signals[TRACK_CHANGE] =
       g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass),

@@ -162,7 +162,8 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_REMOVE_MARKUP,
       g_param_spec_boolean ("remove-markup", "Remove markup",
-          "Remove markup from decoded text ?", FALSE, G_PARAM_READWRITE));
+          "Remove markup from decoded text ?", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);

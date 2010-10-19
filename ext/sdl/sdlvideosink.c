@@ -217,7 +217,8 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
       g_param_spec_boolean ("fullscreen", "Fullscreen",
-          "If true it will be Full screen", FALSE, G_PARAM_READWRITE));
+          "If true it will be Full screen", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /*gstvs_class->set_video_out = gst_sdlvideosink_set_video_out;
      gstvs_class->push_ui_event = gst_sdlvideosink_push_ui_event;

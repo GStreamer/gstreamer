@@ -314,164 +314,193 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* encoding profile */
   g_object_class_install_property (klass, ARG_FORMAT,
       g_param_spec_enum ("format", "Format", "Encoding profile format",
-          GST_TYPE_MPEG2ENC_FORMAT, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_FORMAT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* input/output stream overrides */
   g_object_class_install_property (klass, ARG_FRAMERATE,
       g_param_spec_enum ("framerate", "Framerate", "Output framerate",
-          GST_TYPE_MPEG2ENC_FRAMERATE, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_FRAMERATE, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_ASPECT,
       g_param_spec_enum ("aspect", "Aspect", "Display aspect ratio",
-          GST_TYPE_MPEG2ENC_ASPECT, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_ASPECT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_INTERLACE_MODE,
       g_param_spec_enum ("interlace-mode", "Interlace mode",
           "MPEG-2 motion estimation and encoding modes",
           GST_TYPE_MPEG2ENC_INTERLACE_MODE, 0,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* general encoding stream options */
   g_object_class_install_property (klass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 10 * 1000, DEFAULT_BITRATE, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1000, DEFAULT_BITRATE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_NONVIDEO_BITRATE,
       g_param_spec_int ("non-video-bitrate", "Non-video bitrate",
           "Assumed bitrate of non-video for sequence splitting (kbps)",
-          0, 10 * 1000, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1000, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_QUANTISATION,
       g_param_spec_int ("quantisation", "Quantisation",
           "Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst)",
-          -1, 31, 0, (GParamFlags) G_PARAM_READWRITE));
+          -1, 31, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* stills options */
   g_object_class_install_property (klass, ARG_VCD_STILL_SIZE,
       g_param_spec_int ("vcd-still-size", "VCD stills size",
           "Size of VCD stills (in KB)",
-          0, 512, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 512, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* motion estimation options */
   g_object_class_install_property (klass, ARG_MOTION_SEARCH_RADIUS,
       g_param_spec_int ("motion-search-radius", "Motion search radius",
           "Motion compensation search radius",
-          0, 32, 16, (GParamFlags) G_PARAM_READWRITE));
+          0, 32, 16,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_REDUCTION_4_4,
       g_param_spec_int ("reduction-4x4", "4x4 reduction",
           "Reduction factor for 4x4 subsampled candidate motion estimates"
           " (1=max. quality, 4=max. speed)",
-          1, 4, 2, (GParamFlags) G_PARAM_READWRITE));
+          1, 4, 2,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_REDUCTION_2_2,
       g_param_spec_int ("reduction-2x2", "2x2 reduction",
           "Reduction factor for 2x2 subsampled candidate motion estimates"
           " (1=max. quality, 4=max. speed)",
-          1, 4, 3, (GParamFlags) G_PARAM_READWRITE));
+          1, 4, 3,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_UNIT_COEFF_ELIM,
       g_param_spec_int ("unit-coeff-elim", "Unit coefficience elimination",
           "How agressively small-unit picture blocks should be skipped",
-          -40, 40, 0, (GParamFlags) G_PARAM_READWRITE));
+          -40, 40, 0, 
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* GOP options */
   g_object_class_install_property (klass, ARG_MIN_GOP_SIZE,
       g_param_spec_int ("min-gop-size", "Min. GOP size",
           "Minimal size per Group-of-Pictures (-1=default)",
-          -1, 250, -1, (GParamFlags) G_PARAM_READWRITE));
+          -1, 250, -1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_MAX_GOP_SIZE,
       g_param_spec_int ("max-gop-size", "Max. GOP size",
           "Maximal size per Group-of-Pictures (-1=default)",
-          -1, 250, -1, (GParamFlags) G_PARAM_READWRITE));
+          -1, 250, -1,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_CLOSED_GOP,
       g_param_spec_boolean ("closed-gop", "Closed GOP",
           "All Group-of-Pictures are closed (for multi-angle DVDs)",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_FORCE_B_B_P,
       g_param_spec_boolean ("force-b-b-p", "Force B-B-P",
           "Force two B frames between I/P frames when closing GOP boundaries",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_B_PER_REFFRAME,
       g_param_spec_int ("b-per-refframe", "B per ref. frame",
           "Number of B frames between each I/P frame",
-          0, 2, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 2, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* quantisation options */
   g_object_class_install_property (klass, ARG_QUANTISATION_REDUCTION,
       g_param_spec_float ("quantisation-reduction", "Quantisation reduction",
           "Max. quantisation reduction for highly active blocks",
-          -4., 10., 0., (GParamFlags) G_PARAM_READWRITE));
+          -4., 10., 0.,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_QUANT_REDUCTION_MAX_VAR,
       g_param_spec_float ("quant-reduction-max-var",
           "Max. quant. reduction variance",
           "Maximal luma variance below which quantisation boost is used",
-          0., 2500., 100., (GParamFlags) G_PARAM_READWRITE));
+          0., 2500., 100.,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_INTRA_DC_PRECISION,
       g_param_spec_int ("intra-dc-prec", "Intra. DC precision",
           "Number of bits precision for DC (base colour) in MPEG-2 blocks",
-          8, 11, 9, (GParamFlags) G_PARAM_READWRITE));
+          8, 11, 9,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_REDUCE_HF,
       g_param_spec_float ("reduce-hf", "Reduce HF",
           "How much to reduce high-frequency resolution (by increasing quantisation)",
-          0., 2., 0., (GParamFlags) G_PARAM_READWRITE));
+          0., 2., 0.,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_KEEP_HF,
       g_param_spec_boolean ("keep-hf", "Keep HF",
           "Maximize high-frequency resolution (for high-quality sources)",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_QUANTISATION_MATRIX,
       g_param_spec_enum ("quant-matrix", "Quant. matrix",
           "Quantisation matrix to use for encoding",
           GST_TYPE_MPEG2ENC_QUANTISATION_MATRIX, 0,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* general options */
   g_object_class_install_property (klass, ARG_BUFSIZE,
       g_param_spec_int ("bufsize", "Decoder buf. size",
           "Target decoders video buffer size (kB) (default depends on format)",
-          20, 4000, 46, (GParamFlags) G_PARAM_READWRITE));
+          20, 4000, 46,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* header flag settings */
   g_object_class_install_property (klass, ARG_VIDEO_NORM,
       g_param_spec_enum ("norm", "Norm",
           "Tag output for specific video norm",
-          GST_TYPE_MPEG2ENC_VIDEO_NORM, 0, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_MPEG2ENC_VIDEO_NORM, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_SEQUENCE_LENGTH,
       g_param_spec_int ("sequence-length", "Sequence length",
           "Place a sequence boundary after each <num> MB (0=disable)",
-          0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1024, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_3_2_PULLDOWN,
       g_param_spec_boolean ("pulldown-3-2", "3-2 pull down",
           "Generate header flags for 3-2 pull down 24fps movies",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_SEQUENCE_HEADER_EVERY_GOP,
       g_param_spec_boolean ("sequence-header-every-gop",
           "Sequence hdr. every GOP",
           "Include a sequence header in every GOP",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_DUMMY_SVCD_SOF,
       g_param_spec_boolean ("dummy-svcd-sof", "Dummy SVCD SOF",
           "Generate dummy SVCD scan-data (for vcdimager)",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+          TRUE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_PLAYBACK_FIELD_ORDER,
       g_param_spec_enum ("playback-field-order", "Playback field order",
           "Force specific playback field order",
           GST_TYPE_MPEG2ENC_PLAYBACK_FIELD_ORDER, Y4M_UNKNOWN,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_CORRECT_SVCD_HDS,
       g_param_spec_boolean ("correct-svcd-hds", "Correct SVCD hor. size",
           "Force SVCD width to 480 instead of 540/720",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (klass, ARG_ALTSCAN_MPEG2,
       g_param_spec_boolean ("altscan-mpeg2", "Alt. MPEG-2 scan",
           "Alternate MPEG-2 block scanning. Disabling this might "
           "make buggy players play SVCD streams",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+          TRUE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* dangerous/experimental stuff */
   g_object_class_install_property (klass, ARG_CONSTRAINTS,
       g_param_spec_boolean ("constraints", "Constraints",
           "Use strict video resolution and bitrate checks",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+          TRUE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 #if GST_MJPEGTOOLS_API >= 10800
   g_object_class_install_property (klass, ARG_DUALPRIME_MPEG2,
       g_param_spec_boolean ("dualprime", "Dual Prime Motion Estimation",
           "Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only "
           "streams.  Quite some players do not support this.",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+          FALSE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 #endif
 }
 

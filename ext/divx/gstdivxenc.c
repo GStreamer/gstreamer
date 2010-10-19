@@ -165,20 +165,23 @@ gst_divxenc_class_init (GstDivxEncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_ulong ("bitrate", "Bitrate",
-          "Target video bitrate", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+          "Target video bitrate", 0, G_MAXULONG, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAXKEYINTERVAL,
-      g_param_spec_int ("max_key_interval", "Max. Key Interval",
+      g_param_spec_int ("max-key-interval", "Max. Key Interval",
           "Maximum number of frames between two keyframes",
-          -1, G_MAXINT, -1, G_PARAM_READWRITE));
+          -1, G_MAXINT, -1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
-      g_param_spec_ulong ("buffer_size", "Buffer Size",
-          "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READABLE));
+      g_param_spec_ulong ("buffer-size", "Buffer Size",
+          "Size of the video buffers", 0, G_MAXULONG, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_int ("quality", "Quality",
-          "Amount of Motion Estimation", 1, 5, 3, G_PARAM_READWRITE));
+          "Amount of Motion Estimation", 1, 5, 3,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->dispose = gst_divxenc_dispose;
 

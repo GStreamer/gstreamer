@@ -161,7 +161,7 @@ gst_faceblur_class_init (GstfaceblurClass * klass)
   g_object_class_install_property (gobject_class, PROP_PROFILE,
       g_param_spec_string ("profile", "Profile",
           "Location of Haar cascade file to use for face blurion",
-          DEFAULT_PROFILE, G_PARAM_READWRITE));
+          DEFAULT_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 /* initialize the new element

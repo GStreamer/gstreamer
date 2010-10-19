@@ -182,45 +182,49 @@ gst_kate_enc_class_init (GstKateEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_LANGUAGE,
       g_param_spec_string ("language", "Language",
           "The language of the stream (e.g. \"fr\" or \"fr_FR\" for French)",
-          "", G_PARAM_READWRITE));
+          "", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_CATEGORY,
       g_param_spec_string ("category", "Category",
-          "The category of the stream", "", G_PARAM_READWRITE));
+          "The category of the stream", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_GRANULE_RATE_NUM,
       g_param_spec_int ("granule-rate-numerator", "Granule rate numerator",
           "The numerator of the granule rate",
-          1, G_MAXINT, 1, G_PARAM_READWRITE));
+          1, G_MAXINT, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_GRANULE_RATE_DEN,
       g_param_spec_int ("granule-rate-denominator", "Granule rate denominator",
           "The denominator of the granule rate",
-          1, G_MAXINT, 1000, G_PARAM_READWRITE));
+          1, G_MAXINT, 1000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_GRANULE_SHIFT,
       g_param_spec_int ("granule-shift", "Granule shift",
-          "The granule shift", 0, 64, 32, G_PARAM_READWRITE));
+          "The granule shift", 0, 64, 32,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
       g_param_spec_int ("original-canvas-width", "Original canvas width",
           "The width of the canvas this stream was authored for (0 is unspecified)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
       g_param_spec_int ("original-canvas-height", "Original canvas height",
           "The height of the canvas this stream was authored for (0 is unspecified)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_KEEPALIVE_MIN_TIME,
       g_param_spec_float ("keepalive-min-time", "Keepalive mimimum time",
           "Minimum time to emit keepalive packets (0 disables keepalive packets)",
-          0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME, G_PARAM_READWRITE));
+          0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, ARG_DEFAULT_SPU_DURATION,
       g_param_spec_float ("default-spu-duration", "Default SPU duration",
           "The assumed max duration (in seconds) of SPUs with no duration specified",
-          0.0f, FLT_MAX, DEFAULT_DEFAULT_SPU_DURATION, G_PARAM_READWRITE));
+          0.0f, FLT_MAX, DEFAULT_DEFAULT_SPU_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_kate_enc_change_state);

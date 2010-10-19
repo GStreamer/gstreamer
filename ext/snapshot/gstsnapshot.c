@@ -139,10 +139,10 @@ gst_snapshot_class_init (GstSnapshotClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FRAME,
       g_param_spec_long ("frame", "frame", "frame",
-          0, G_MAXLONG, 0, G_PARAM_READWRITE));
+          0, G_MAXLONG, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
       g_param_spec_string ("location", "location", "location",
-          0, G_PARAM_READWRITE));
+          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_snapshot_signals[SNAPSHOT_SIGNAL] =
       g_signal_new ("snapshot", G_TYPE_FROM_CLASS (klass),

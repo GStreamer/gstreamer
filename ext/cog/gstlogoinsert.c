@@ -168,7 +168,8 @@ gst_logoinsert_class_init (gpointer g_class, gpointer class_data)
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "location",
-          "location of PNG file to overlay", "", G_PARAM_READWRITE));
+          "location of PNG file to overlay", "",
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   base_transform_class->set_caps = gst_logoinsert_set_caps;
   base_transform_class->transform_ip = gst_logoinsert_transform_ip;

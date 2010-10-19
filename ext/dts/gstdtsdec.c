@@ -185,7 +185,8 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
-          "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+          "Use Dynamic Range Compression", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->dts_cpuflags = 0;
 

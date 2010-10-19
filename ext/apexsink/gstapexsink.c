@@ -254,25 +254,27 @@ gst_apexsink_class_init (GstApExSinkClass * klass)
 
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_HOST,
       g_param_spec_string ("host", "Host", "AirPort Express target host",
-          DEFAULT_APEX_HOST, G_PARAM_READWRITE));
+          DEFAULT_APEX_HOST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_PORT,
       g_param_spec_uint ("port", "Port", "AirPort Express target port", 0,
-          32000, DEFAULT_APEX_PORT, G_PARAM_READWRITE));
+          32000, DEFAULT_APEX_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* we need to expose the volume as a double for playbin2. Internally we keep
    * it as an int between 0 and 100, where 75 corresponds to 1.0.
    * FIXME we should store the volume as a double. */
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "AirPort Express target volume",
-          0.0, 10.0, DEFAULT_APEX_VOLUME, G_PARAM_READWRITE));
+          0.0, 10.0, DEFAULT_APEX_VOLUME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property ((GObjectClass *) klass, APEX_PROP_JACK_TYPE,
-      g_param_spec_enum ("jack_type", "Jack Type",
+      g_param_spec_enum ("jack-type", "Jack Type",
           "AirPort Express connected jack type", GST_APEX_SINK_JACKTYPE_TYPE,
-          DEFAULT_APEX_JACK_TYPE, G_PARAM_READABLE));
+          DEFAULT_APEX_JACK_TYPE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property ((GObjectClass *) klass,
-      APEX_PROP_JACK_STATUS, g_param_spec_enum ("jack_status", "Jack Status",
+      APEX_PROP_JACK_STATUS, g_param_spec_enum ("jack-status", "Jack Status",
           "AirPort Express jack connection status",
           GST_APEX_SINK_JACKSTATUS_TYPE, DEFAULT_APEX_JACK_STATUS,
-          G_PARAM_READABLE));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 /* sink plugin instance init */
