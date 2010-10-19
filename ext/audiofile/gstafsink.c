@@ -160,8 +160,13 @@ gst_afsink_class_init (GstAFSinkClass * klass)
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE, g_param_spec_enum ("type", "type", "type", GST_TYPE_AFSINK_TYPES, 0, G_PARAM_READWRITE));  /* CHECKME! */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OUTPUT_ENDIANNESS, g_param_spec_int ("endianness", "endianness", "endianness", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));       /* CHECKME */
+  /* FIXME: add long property descriptions */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
+      g_param_spec_enum ("type", "type", "type", GST_TYPE_AFSINK_TYPES, 0,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      ARG_OUTPUT_ENDIANNESS, g_param_spec_int ("endianness", "endianness",
+          "endianness", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
 
   gst_afsink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,

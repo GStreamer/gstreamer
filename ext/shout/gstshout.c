@@ -129,33 +129,52 @@ gst_icecastsend_class_init (GstIcecastSendClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP, g_param_spec_string ("ip", "ip", "ip", NULL, G_PARAM_READWRITE));    /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT, g_param_spec_int ("port", "port", "port", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  /* FIXME: add long property descriptions */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP,
+      g_param_spec_string ("ip", "ip", "ip", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+      g_param_spec_int ("port", "port", "port", G_MININT, G_MAXINT, 0,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD, g_param_spec_string ("password", "password", "password", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD,
+      g_param_spec_string ("password", "password", "password", NULL,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PUBLIC, g_param_spec_boolean ("public", "public", "public", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PUBLIC,
+      g_param_spec_boolean ("public", "public", "public", TRUE,
+          G_PARAM_READWRITE));
 
   /* metadata */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
+      g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION, g_param_spec_string ("description", "description", "description", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION,
+      g_param_spec_string ("description", "description", "description", NULL,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENRE, g_param_spec_string ("genre", "genre", "genre", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENRE,
+      g_param_spec_string ("genre", "genre", "genre", NULL, G_PARAM_READWRITE));
 
   /* icecast only */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT, g_param_spec_string ("mount", "mount", "mount", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT,
+      g_param_spec_string ("mount", "mount", "mount", NULL, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMPFILE, g_param_spec_string ("dumpfile", "dumpfile", "dumpfile", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DUMPFILE,
+      g_param_spec_string ("dumpfile", "dumpfile", "dumpfile", NULL,
+          G_PARAM_READWRITE));
 
   /* shoutcast only */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ICY, g_param_spec_boolean ("icy", "icy", "icy", FALSE, G_PARAM_READWRITE));      /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ICY,
+      g_param_spec_boolean ("icy", "icy", "icy", FALSE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AIM, g_param_spec_string ("aim", "aim", "aim", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_AIM,
+      g_param_spec_string ("aim", "aim", "aim", NULL, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ICQ, g_param_spec_string ("icq", "icq", "icq", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ICQ,
+      g_param_spec_string ("icq", "icq", "icq", NULL, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IRC, g_param_spec_string ("irc", "irc", "irc", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IRC,
+      g_param_spec_string ("irc", "irc", "irc", NULL, G_PARAM_READWRITE));
 
 
   gobject_class->set_property = gst_icecastsend_set_property;

@@ -116,9 +116,12 @@ gst_artsdsink_class_init (GstArtsdsinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));   /* CHECKME */
+  /* FIXME: add long property descriptions */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE,
+      g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
+      g_param_spec_string ("name", "name", "name", NULL, G_PARAM_READWRITE));
 
   gobject_class->set_property = gst_artsdsink_set_property;
   gobject_class->get_property = gst_artsdsink_get_property;
