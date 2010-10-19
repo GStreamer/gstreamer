@@ -726,6 +726,10 @@ custom_find_track (TrackPrivate * priv, GESTrack * track)
  * Returns: TRUE if the track was properly added, else FALSE.
  */
 
+/* FIXME: create track objects for timeline objects which have already been
+ * added to existing layers.
+ */
+
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
@@ -796,6 +800,12 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
  *
  * Returns: TRUE if the @track was properly removed, else FALSE.
  */
+
+/* FIXME: release any track objects associated with this layer. currenly this
+ * will not happen if you remove the track before removing *all*
+ * timelineobjects which have a track object in this track.
+ */
+
 gboolean
 ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
