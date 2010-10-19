@@ -686,12 +686,13 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_CONNECT,
       g_param_spec_enum ("connect", "Connect",
           "Specify how the output ports will be connected",
-          GST_TYPE_JACK_CONNECT, DEFAULT_PROP_CONNECT, G_PARAM_READWRITE));
+          GST_TYPE_JACK_CONNECT, DEFAULT_PROP_CONNECT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SERVER,
       g_param_spec_string ("server", "Server",
           "The Jack server to connect to (NULL = default)",
-          DEFAULT_PROP_SERVER, G_PARAM_READWRITE));
+          DEFAULT_PROP_SERVER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT,
       g_param_spec_boxed ("client", "JackClient", "Handle for jack client",
