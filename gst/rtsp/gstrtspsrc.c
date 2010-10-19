@@ -5163,6 +5163,8 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
 
   gst_rtsp_ext_list_parse_sdp (src->extensions, sdp, src->props);
 
+  gst_segment_init (&src->segment, GST_FORMAT_TIME);
+
   /* parse range for duration reporting. */
   {
     const gchar *range;
@@ -5221,7 +5223,6 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp)
     goto setup_failed;
 
   /* reset our state */
-  gst_segment_init (&src->segment, GST_FORMAT_TIME);
   src->need_range = TRUE;
   src->skip = FALSE;
 
