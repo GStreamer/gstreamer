@@ -1,11 +1,14 @@
 GST_SCHEMA_FILES = gstreamer-@GST_MAJORMINOR@.schemas
 
+if USE_GCONF
 schemadir = @GCONF_SCHEMA_FILE_DIR@
 schema_DATA = $(GST_SCHEMA_FILES)
+endif
 
 gstreamer-@GST_MAJORMINOR@.schemas: gstreamer.schemas
 	cp gstreamer.schemas gstreamer-@GST_MAJORMINOR@.schemas
 
+if USE_GCONF
 if GCONF_SCHEMAS_INSTALL
 install-data-local:
 	@GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) $(GCONFTOOL) \
@@ -22,6 +25,7 @@ install-data-local:
 	@echo "***************************************************************"
 	@true
 endif
+endif # USE_GCONF
 
 CLEANFILES = $(GST_SCHEMA_FILES)
 EXTRA_DIST = $(GST_SCHEMA_FILES)
