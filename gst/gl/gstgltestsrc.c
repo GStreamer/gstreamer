@@ -153,15 +153,16 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_GL_TEST_SRC_PATTERN,
-          GST_GL_TEST_SRC_SMPTE, G_PARAM_READWRITE));
+          GST_GL_TEST_SRC_SMPTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
-          G_MAXINT64, 0, G_PARAM_READWRITE));
+          G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
-          "Whether to act as a live source", FALSE, G_PARAM_READWRITE));
+          "Whether to act as a live source", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;

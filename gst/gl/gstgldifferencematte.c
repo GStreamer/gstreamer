@@ -163,7 +163,8 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
       PROP_LOCATION,
       g_param_spec_string ("location",
           "Background image location",
-          "Background image location", NULL, G_PARAM_READWRITE));
+          "Background image location", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 void

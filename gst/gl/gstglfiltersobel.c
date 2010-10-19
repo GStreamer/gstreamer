@@ -132,7 +132,7 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
       g_param_spec_boolean ("invert",
           "Invert the colors",
           "Invert colors to get dark edges on bright background",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -134,89 +134,91 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
       PROP_LOCATION,
       g_param_spec_string ("location",
           "Location of the image",
-          "Location of the image", NULL, G_PARAM_READWRITE));
+          "Location of the image", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_XPOS_PNG,
       g_param_spec_int ("xpos-png",
           "X position of overlay image in percents",
           "X position of overlay image in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_YPOS_PNG,
       g_param_spec_int ("ypos-png",
           "Y position of overlay image in percents",
           "Y position of overlay image in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_SIZE_PNG,
       g_param_spec_int ("proportion-png",
           "Relative size of overlay image, in percents",
           "Relative size of iverlay image, in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_XPOS_VIDEO,
       g_param_spec_int ("xpos-video",
           "X position of overlay video in percents",
           "X position of overlay video in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_YPOS_VIDEO,
       g_param_spec_int ("ypos-video",
           "Y position of overlay video in percents",
           "Y position of overlay video in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_SIZE_VIDEO,
       g_param_spec_int ("proportion-video",
           "Relative size of overlay video, in percents",
           "Relative size of iverlay video, in percents",
-          0, 100, 0, G_PARAM_READWRITE));
+          0, 100, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_VIDEOTOP,
       g_param_spec_boolean ("video-top",
-          "Video-top", "Video is over png image", FALSE, G_PARAM_READWRITE));
+          "Video-top", "Video is over png image", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_ROTATE_PNG,
-      g_param_spec_int ("rotate_png",
+      g_param_spec_int ("rotate-png",
           "choose rotation axis for the moment only Y axis is implemented",
           "choose rotation axis for the moment only Y axis is implemented",
-          0, 3, 0, G_PARAM_READWRITE));
+          0, 3, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_ROTATE_VIDEO,
-      g_param_spec_int ("rotate_video",
+      g_param_spec_int ("rotate-video",
           "choose rotation axis for the moment only Y axis is implemented",
           "choose rotation axis for the moment only Y axis is implemented",
-          0, 3, 0, G_PARAM_READWRITE));
+          0, 3, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_ANGLE_PNG,
-      g_param_spec_int ("angle_png",
+      g_param_spec_int ("angle-png",
           "choose angle in axis to choosen between -90 and 90",
           "choose angle in axis to choosen between -90 and 90",
-          -90, 90, 0, G_PARAM_READWRITE));
+          -90, 90, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_ANGLE_VIDEO,
-      g_param_spec_int ("angle_video",
+      g_param_spec_int ("angle-video",
           "choose angle in axis to choosen between -90 and 90",
           "choose angle in axis to choosen between -90 and 90",
-          -90, 90, 0, G_PARAM_READWRITE));
+          -90, 90, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /*
      g_object_class_install_property (gobject_class,
      PROP_STRETCH,
      g_param_spec_boolean ("stretch",
      "Stretch the image to texture size",
      "Stretch the image to fit video texture size",
-     TRUE, G_PARAM_READWRITE));
+     TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
    */
 }
 

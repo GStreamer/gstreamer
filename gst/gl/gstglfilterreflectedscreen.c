@@ -105,40 +105,41 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_reflected_screen_filter;
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_GRAPHIC_MODE,
-      g_param_spec_boolean ("active_graphic_mode",
+      g_param_spec_boolean ("active-graphic-mode",
           "Activate graphic mode",
           "Allow user to activate stencil buffer and blending.",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SEPARATED_SCREEN,
-      g_param_spec_boolean ("separated_screen",
+      g_param_spec_boolean ("separated-screen",
           "Create a separation space",
           "Allow to insert a space between the two screen. Will cancel 'show floor' if active. Value are TRUE or FALSE(default)",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SHOW_FLOOR,
-      g_param_spec_boolean ("show_floor",
+      g_param_spec_boolean ("show-floor",
           "Show the support",
           "Allow the user to show the supportive floor. Will cancel 'separated screen' if active. Value are TRUE(default) or FALSE",
-          TRUE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FOVY,
       g_param_spec_double ("fovy", "Fovy", "Field of view angle in degrees",
-          0.0, 180.0, 60, G_PARAM_WRITABLE));
+          0.0, 180.0, 60, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ASPECT,
       g_param_spec_double ("aspect", "Aspect",
-          "Field of view in the x direction", 0.0, 100, 0.0, G_PARAM_WRITABLE));
+          "Field of view in the x direction", 0.0, 100, 0.0,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZNEAR,
       g_param_spec_double ("znear", "Znear",
           "Specifies the distance from the viewer to the near clipping plane",
-          0.0, 100.0, 0.1, G_PARAM_WRITABLE));
+          0.0, 100.0, 0.1, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZFAR,
       g_param_spec_double ("zfar", "Zfar",
           "Specifies the distance from the viewer to the far clipping plane",
-          0.0, 1000.0, 100.0, G_PARAM_WRITABLE));
+          0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

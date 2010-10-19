@@ -288,7 +288,8 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_LOCATION, g_param_spec_string ("location",
           "Normal map location",
-          "Normal map location", NULL, G_PARAM_READWRITE));
+          "Normal map location", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -264,7 +264,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
       g_param_spec_boolean ("hswap",
           "Horizontal Swap",
           "Switch video texture left to right, useful with webcams",
-          FALSE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 void

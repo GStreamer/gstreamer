@@ -155,33 +155,34 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_RED,
       g_param_spec_float ("red", "Red", "Background red color",
-          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_GREEN,
       g_param_spec_float ("green", "Green", "Background reen color",
-          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BLUE,
       g_param_spec_float ("blue", "Blue", "Background blue color",
-          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE));
+          0.0f, 1.0f, 0.0f, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FOVY,
       g_param_spec_double ("fovy", "Fovy", "Field of view angle in degrees",
-          0.0, 180.0, 45.0, G_PARAM_WRITABLE));
+          0.0, 180.0, 45.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ASPECT,
       g_param_spec_double ("aspect", "Aspect",
-          "Field of view in the x direction", 0.0, 100, 0.0, G_PARAM_WRITABLE));
+          "Field of view in the x direction", 0.0, 100, 0.0,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZNEAR,
       g_param_spec_double ("znear", "Znear",
           "Specifies the distance from the viewer to the near clipping plane",
-          0.0, 100.0, 0.1, G_PARAM_WRITABLE));
+          0.0, 100.0, 0.1, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZFAR,
       g_param_spec_double ("zfar", "Zfar",
           "Specifies the distance from the viewer to the far clipping plane",
-          0.0, 1000.0, 100.0, G_PARAM_WRITABLE));
+          0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

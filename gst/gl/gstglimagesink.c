@@ -212,27 +212,29 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_DISPLAY,
       g_param_spec_string ("display", "Display", "Display name",
-          NULL, G_PARAM_READWRITE));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
-      g_param_spec_pointer ("client_reshape_callback",
+      g_param_spec_pointer ("client-reshape-callback",
           "Client reshape callback",
           "Define a custom reshape callback in a client code",
-          G_PARAM_WRITABLE));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
-      g_param_spec_pointer ("client_draw_callback", "Client draw callback",
-          "Define a custom draw callback in a client code", G_PARAM_WRITABLE));
+      g_param_spec_pointer ("client-draw-callback", "Client draw callback",
+          "Define a custom draw callback in a client code",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_DATA,
-      g_param_spec_pointer ("client_data", "Client data",
-          "Pass data to the draw and reshape callbacks", G_PARAM_WRITABLE));
+      g_param_spec_pointer ("client-data", "Client data",
+          "Pass data to the draw and reshape callbacks",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",

@@ -96,18 +96,20 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_app_filter;
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
-      g_param_spec_pointer ("client_reshape_callback",
+      g_param_spec_pointer ("client-reshape-callback",
           "Client reshape callback",
           "Define a custom reshape callback in a client code",
-          G_PARAM_WRITABLE));
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_DRAW_CALLBACK,
-      g_param_spec_pointer ("client_draw_callback", "Client draw callback",
-          "Define a custom draw callback in a client code", G_PARAM_WRITABLE));
+      g_param_spec_pointer ("client-draw-callback", "Client draw callback",
+          "Define a custom draw callback in a client code",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_DATA,
-      g_param_spec_pointer ("client_data", "Client data",
-          "Pass data to the draw and reshape callbacks", G_PARAM_WRITABLE));
+      g_param_spec_pointer ("client-data", "Client data",
+          "Pass data to the draw and reshape callbacks",
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -180,7 +182,8 @@ gst_gl_filter_app_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
         filter->fbo, filter->depthbuffer, outbuf->texture,
         app_filter->clientDrawCallback, inbuf->width, inbuf->height,
         inbuf->texture, 45, (gfloat) filter->width / (gfloat) filter->height,
-        0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, app_filter->client_data);
+        0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
+        app_filter->client_data);
   }
   //default
   else {

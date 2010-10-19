@@ -162,21 +162,25 @@ gst_gl_shader_class_init (GstGLShaderClass * klass)
       PROP_VERTEX_SRC,
       g_param_spec_string ("vertex-src",
           "Vertex Source",
-          "GLSL Vertex Shader source code", NULL, G_PARAM_READWRITE));
+          "GLSL Vertex Shader source code", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (obj_class,
       PROP_FRAGMENT_SRC,
       g_param_spec_string ("fragment-src",
           "Fragment Source",
-          "GLSL Fragment Shader source code", NULL, G_PARAM_READWRITE));
+          "GLSL Fragment Shader source code", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (obj_class,
       PROP_ACTIVE,
       g_param_spec_string ("active",
-          "Active", "Enable/Disable the shader", NULL, G_PARAM_READWRITE));
+          "Active", "Enable/Disable the shader", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (obj_class,
       PROP_COMPILED,
       g_param_spec_boolean ("compiled",
           "Compiled",
-          "Shader compile and link status", FALSE, G_PARAM_READABLE));
+          "Shader compile and link status", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 void
@@ -516,7 +520,7 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
 
 void
 gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
-    GLsizei count, GLboolean transpose, const GLfloat* value)
+    GLsizei count, GLboolean transpose, const GLfloat * value)
 {
   GstGLShaderPrivate *priv;
   GLint location = -1;
@@ -543,7 +547,8 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 }
 
 void
-gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index, const gchar * name)
+gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
+    const gchar * name)
 {
   GstGLShaderPrivate *priv;
 
