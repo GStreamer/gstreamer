@@ -26,7 +26,8 @@ we need to update the vapi for yet unreleased gstreamer api:
 cd vala/mediainfo/vapi
 vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
 vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
- 
+sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
+
 */
 
 public class MediaInfo.Info : VBox
@@ -34,6 +35,8 @@ public class MediaInfo.Info : VBox
   // ui components
   private Label mime_type;
   private Label duration;
+  private Notebook video_streams;
+  private Notebook audio_streams;
   private DrawingArea drawing_area;
   // gstreamer objects
   private Discoverer dc;
@@ -57,7 +60,7 @@ public class MediaInfo.Info : VBox
     drawing_area.set_size_request (300, 150);
     pack_start (drawing_area, true, true, 0);
 
-    table = new Table (5, 2, false);
+    table = new Table (7, 2, false);
     pack_start (table, false, false, 0);
      
     label = new Label (null);
@@ -88,7 +91,9 @@ public class MediaInfo.Info : VBox
     table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
-    // TODO: add video stream info widgets
+    video_streams = new Notebook ();
+    table.attach (video_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    row++;
 
     label = new Label (null);
     label.set_markup("<b>Audio Streams</b>");
@@ -96,9 +101,15 @@ public class MediaInfo.Info : VBox
     table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
-    // TODO: add audio stream info widgets
+    audio_streams = new Notebook ();
+    table.attach (audio_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    row++;
 
-    
+    // TODO: add container stream info widgets
+
+    // TODO: add tag list widget
+
+    // TODO: add message list widget    
     
     show_all ();
 
@@ -143,6 +154,9 @@ public class MediaInfo.Info : VBox
       }
 
       try {
+        GLib.List<DiscovererStreamInfo> l;
+        DiscovererStreamInfo sinfo;
+
         info = dc.discover_uri (uri);
 
         ClockTime dur = info.get_duration ();
@@ -155,10 +169,27 @@ public class MediaInfo.Info : VBox
 
         //stdout.printf ("Duration: %s\n", dur_str);
 
-        // TODO: get more info
-        // list = info.get_video_streams ();
-        // list = info.get_audio_streams ();
-        // list = info.get_container_streams ();
+        // get stream info
+        while (video_streams.get_n_pages() > 0) {
+          video_streams.remove_page (-1);
+        }
+        l = info.get_video_streams ();
+        for (int i = 0; i < l.length (); i++) {
+          sinfo = l.nth_data (i);
+          video_streams.append_page (new Label(sinfo.get_caps ().to_string ()),new Label (@"video $i"));
+        }
+        video_streams.show_all();
+
+        while (audio_streams.get_n_pages() > 0) {
+          audio_streams.remove_page (-1);
+        }
+        l = info.get_audio_streams ();
+        for (int i = 0; i < l.length (); i++) {
+          sinfo = l.nth_data (i);
+          audio_streams.append_page (new Label(sinfo.get_caps ().to_string ()),new Label (@"audio $i"));
+        }
+        audio_streams.show_all();
+        //l = info.get_container_streams ();
         
       } catch (Error e) {
         debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
