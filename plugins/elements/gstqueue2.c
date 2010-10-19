@@ -1792,9 +1792,9 @@ handle_error:
 
 /* enqueue an item an update the level stats */
 static void
-gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item)
+gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item, gboolean isbuffer)
 {
-  if (GST_IS_BUFFER (item)) {
+  if (isbuffer) {
     GstBuffer *buffer;
     guint size;
 
@@ -1888,7 +1888,7 @@ unexpected_event:
 
 /* dequeue an item from the queue and update level stats */
 static GstMiniObject *
-gst_queue2_locked_dequeue (GstQueue2 * queue)
+gst_queue2_locked_dequeue (GstQueue2 * queue, gboolean * is_buffer)
 {
   GstMiniObject *item;
 
@@ -1906,6 +1906,7 @@ gst_queue2_locked_dequeue (GstQueue2 * queue)
 
     buffer = GST_BUFFER_CAST (item);
     size = GST_BUFFER_SIZE (buffer);
+    *is_buffer = TRUE;
 
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "retrieved buffer %p from queue", buffer);
@@ -2034,7 +2035,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstEvent * event)
         /* refuse more events on EOS */
         if (queue->is_eos)
           goto out_eos;
-        gst_queue2_locked_enqueue (queue, event);
+        gst_queue2_locked_enqueue (queue, event, FALSE);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       } else {
         /* non-serialized events are passed upstream. */
@@ -2149,7 +2150,7 @@ gst_queue2_chain (GstPad * pad, GstBuffer * buffer)
     goto out_flushing;
 
   /* put buffer in queue now */
-  gst_queue2_locked_enqueue (queue, buffer);
+  gst_queue2_locked_enqueue (queue, buffer, TRUE);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   return GST_FLOW_OK;
@@ -2192,15 +2193,16 @@ gst_queue2_push_one (GstQueue2 * queue)
 {
   GstFlowReturn result = GST_FLOW_OK;
   GstMiniObject *data;
+  gboolean is_buffer = FALSE;
 
-  data = gst_queue2_locked_dequeue (queue);
+  data = gst_queue2_locked_dequeue (queue, &is_buffer);
   if (data == NULL)
     goto no_item;
 
 next:
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
-  if (GST_IS_BUFFER (data)) {
+  if (is_buffer) {
     GstBuffer *buffer;
     GstCaps *caps;
 
@@ -2224,8 +2226,8 @@ next:
        * queue we can push, we set a flag to make the sinkpad refuse more
        * buffers with an UNEXPECTED return value until we receive something
        * pushable again or we get flushed. */
-      while ((data = gst_queue2_locked_dequeue (queue))) {
-        if (GST_IS_BUFFER (data)) {
+      while ((data = gst_queue2_locked_dequeue (queue, &is_buffer))) {
+        if (is_buffer) {
           GST_CAT_LOG_OBJECT (queue_dataflow, queue,
               "dropping UNEXPECTED buffer %p", data);
           gst_buffer_unref (GST_BUFFER_CAST (data));
