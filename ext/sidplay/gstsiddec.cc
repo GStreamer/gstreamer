@@ -202,33 +202,38 @@ gst_siddec_class_init (GstSidDec * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TUNE,
       g_param_spec_int ("tune", "tune", "tune",
-          0, 100, DEFAULT_TUNE, (GParamFlags) G_PARAM_READWRITE));
+          0, 100, DEFAULT_TUNE,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLOCK,
       g_param_spec_enum ("clock", "clock", "clock",
-          GST_TYPE_SID_CLOCK, DEFAULT_CLOCK, (GParamFlags) G_PARAM_READWRITE));
+          GST_TYPE_SID_CLOCK, DEFAULT_CLOCK,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MEMORY,
       g_param_spec_enum ("memory", "memory", "memory", GST_TYPE_SID_MEMORY,
-          DEFAULT_MEMORY, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_MEMORY,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTER,
       g_param_spec_boolean ("filter", "filter", "filter", DEFAULT_FILTER,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MEASURED_VOLUME,
       g_param_spec_boolean ("measured_volume", "measured_volume",
           "measured_volume", DEFAULT_MEASURED_VOLUME,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MOS8580,
       g_param_spec_boolean ("mos8580", "mos8580", "mos8580", DEFAULT_MOS8580,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FORCE_SPEED,
       g_param_spec_boolean ("force_speed", "force_speed", "force_speed",
-          DEFAULT_FORCE_SPEED, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_FORCE_SPEED,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
           "Size in bytes to output per buffer", 1, G_MAXULONG,
-          DEFAULT_BLOCKSIZE, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_BLOCKSIZE,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_METADATA,
       g_param_spec_boxed ("metadata", "Metadata", "Metadata", GST_TYPE_CAPS,
-          (GParamFlags) G_PARAM_READABLE));
+          (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void

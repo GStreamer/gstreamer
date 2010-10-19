@@ -166,7 +166,8 @@ gst_a52dec_class_init (GstA52DecClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
-          "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+          "Use Dynamic Range Compression", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstA52Dec::mode
    *
@@ -176,14 +177,16 @@ gst_a52dec_class_init (GstA52DecClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Decoder Mode", "Decoding Mode (default 3f2r)",
-          GST_TYPE_A52DEC_MODE, A52_3F2R, G_PARAM_READWRITE));
+          GST_TYPE_A52DEC_MODE, A52_3F2R,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstA52Dec::lfe
    *
    * Whether to output the LFE (Low Frequency Emitter) channel of the audio stream.
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LFE,
-      g_param_spec_boolean ("lfe", "LFE", "LFE", TRUE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("lfe", "LFE", "LFE", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* If no CPU instruction based acceleration is available, end up using the
    * generic software djbfft based one when available in the used liba52 */

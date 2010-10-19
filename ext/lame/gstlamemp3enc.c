@@ -274,29 +274,32 @@ gst_lamemp3enc_class_init (GstLameMP3EncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TARGET,
       g_param_spec_enum ("target", "Target",
           "Optimize for quality or bitrate", GST_TYPE_LAMEMP3ENC_TARGET,
-          DEFAULT_TARGET, G_PARAM_READWRITE));
+          DEFAULT_TARGET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)",
           "Bitrate in kbit/sec (Only valid if target is bitrate, for CBR one "
           "of 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, "
-          "256 or 320)", 8, 320, DEFAULT_BITRATE, G_PARAM_READWRITE));
+          "256 or 320)", 8, 320, DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CBR,
       g_param_spec_boolean ("cbr", "CBR", "Enforce constant bitrate encoding "
-          "(Only valid if target is bitrate)", DEFAULT_CBR, G_PARAM_READWRITE));
+          "(Only valid if target is bitrate)", DEFAULT_CBR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality",
           "VBR Quality from 0 to 10, 0 being the best "
           "(Only valid if target is quality)", 0.0, 9.999,
-          DEFAULT_QUALITY, G_PARAM_READWRITE));
+          DEFAULT_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_ENCODING_ENGINE_QUALITY, g_param_spec_enum ("encoding-engine-quality",
           "Encoding Engine Quality", "Quality/speed of the encoding engine, "
           "this does not affect the bitrate!",
           GST_TYPE_LAMEMP3ENC_ENCODING_ENGINE_QUALITY,
-          DEFAULT_ENCODING_ENGINE_QUALITY, G_PARAM_READWRITE));
+          DEFAULT_ENCODING_ENGINE_QUALITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MONO,
       g_param_spec_boolean ("mono", "Mono", "Enforce mono encoding",
-          DEFAULT_MONO, G_PARAM_READWRITE));
+          DEFAULT_MONO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_lamemp3enc_change_state);

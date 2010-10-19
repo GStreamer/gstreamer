@@ -160,16 +160,17 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEVICE,
       g_param_spec_string ("device", "Device",
-          "DVD device location", NULL, G_PARAM_READWRITE));
+          "DVD device location", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TITLE,
       g_param_spec_int ("title", "title", "title",
-          1, 999, 1, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHAPTER,
       g_param_spec_int ("chapter", "chapter", "chapter",
-          1, 999, 1, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANGLE,
       g_param_spec_int ("angle", "angle", "angle",
-          1, 999, 1, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvd_read_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvd_read_src_stop);

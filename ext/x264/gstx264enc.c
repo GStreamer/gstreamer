@@ -546,18 +546,21 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_PASS,
       g_param_spec_enum ("pass", "Encoding pass/type",
           "Encoding pass/type", GST_X264_ENC_PASS_TYPE,
-          ARG_PASS_DEFAULT, G_PARAM_READWRITE));
+          ARG_PASS_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_QUANTIZER,
       g_param_spec_uint ("quantizer", "Constant Quantizer",
           "Constant quantizer or quality to apply",
-          1, 50, ARG_QUANTIZER_DEFAULT, G_PARAM_READWRITE));
+          1, 50, ARG_QUANTIZER_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate", "Bitrate in kbit/sec", 1,
-          100 * 1024, ARG_BITRATE_DEFAULT, G_PARAM_READWRITE));
+          100 * 1024, ARG_BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
-          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT, G_PARAM_READWRITE));
+          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifdef X264_PRESETS
   g_object_class_install_property (gobject_class, ARG_SPEED_PRESET,
@@ -565,31 +568,36 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Preset name for speed/quality tradeoff options (can affect decode "
           "compatibility - impose restrictions separately for your target decoder)",
           GST_X264_ENC_SPEED_PRESET_TYPE, ARG_SPEED_PRESET_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PSY_TUNE,
       g_param_spec_enum ("psy-tune", "Psychovisual tuning preset",
           "Preset name for psychovisual tuning options",
-          GST_X264_ENC_PSY_TUNE_TYPE, ARG_PSY_TUNE_DEFAULT, G_PARAM_READWRITE));
+          GST_X264_ENC_PSY_TUNE_TYPE, ARG_PSY_TUNE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_TUNE,
       g_param_spec_flags ("tune", "Content tuning preset",
           "Preset name for non-psychovisual tuning options",
-          GST_X264_ENC_TUNE_TYPE, ARG_TUNE_DEFAULT, G_PARAM_READWRITE));
+          GST_X264_ENC_TUNE_TYPE, ARG_TUNE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_PROFILE,
       g_param_spec_enum ("profile", "H.264 profile",
           "Apply restrictions to meet H.264 Profile constraints. This will "
           "override other properties if necessary.",
-          GST_X264_ENC_PROFILE_TYPE, ARG_PROFILE_DEFAULT, G_PARAM_READWRITE));
+          GST_X264_ENC_PROFILE_TYPE, ARG_PROFILE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif /* X264_PRESETS */
   g_object_class_install_property (gobject_class, ARG_OPTION_STRING,
       g_param_spec_string ("option-string", "Option string",
           "String of x264 options (overridden by element properties)",
-          ARG_OPTION_STRING_DEFAULT, G_PARAM_READWRITE));
+          ARG_OPTION_STRING_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* options for which we _do_ use string equivalents */
   g_object_class_install_property (gobject_class, ARG_THREADS,
       g_param_spec_uint ("threads", "Threads",
           "Number of threads used by the codec (0 for automatic)",
-          0, 4, ARG_THREADS_DEFAULT, G_PARAM_READWRITE));
+          0, 4, ARG_THREADS_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* NOTE: this first string append doesn't require the ':' delimiter but the
    * rest do */
   g_string_append_printf (x264enc_defaults, "threads=%d", ARG_THREADS_DEFAULT);
@@ -597,54 +605,59 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_SLICED_THREADS,
       g_param_spec_boolean ("sliced-threads", "Sliced Threads",
           "Low latency but lower efficiency threading",
-          ARG_SLICED_THREADS_DEFAULT, G_PARAM_READWRITE));
+          ARG_SLICED_THREADS_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":sliced-threads=%d",
       ARG_SLICED_THREADS_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_SYNC_LOOKAHEAD,
       g_param_spec_int ("sync-lookahead", "Sync Lookahead",
           "Number of buffer frames for threaded lookahead (-1 for automatic)",
-          -1, 250, ARG_SYNC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+          -1, 250, ARG_SYNC_LOOKAHEAD_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":sync-lookahead=%d",
       ARG_SYNC_LOOKAHEAD_DEFAULT);
 #endif
   g_object_class_install_property (gobject_class, ARG_STATS_FILE,
       g_param_spec_string ("stats-file", "Stats File",
           "Filename for multipass statistics (deprecated, use multipass-cache-file)",
-          ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE));
+          ARG_STATS_FILE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_MULTIPASS_CACHE_FILE,
       g_param_spec_string ("multipass-cache-file", "Multipass Cache File",
           "Filename for multipass cache file",
-          ARG_MULTIPASS_CACHE_FILE_DEFAULT, G_PARAM_READWRITE));
+          ARG_MULTIPASS_CACHE_FILE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":stats=%s",
       ARG_MULTIPASS_CACHE_FILE_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_BYTE_STREAM,
       g_param_spec_boolean ("byte-stream", "Byte Stream",
           "Generate byte stream format of NALU", ARG_BYTE_STREAM_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":annexb=%d",
       ARG_BYTE_STREAM_DEFAULT);
 #ifdef X264_INTRA_REFRESH
   g_object_class_install_property (gobject_class, ARG_INTRA_REFRESH,
       g_param_spec_boolean ("intra-refresh", "Intra Refresh",
           "Use Periodic Intra Refresh instead of IDR frames",
-          ARG_INTRA_REFRESH_DEFAULT, G_PARAM_READWRITE));
+          ARG_INTRA_REFRESH_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":intra-refresh=%d",
       ARG_INTRA_REFRESH_DEFAULT);
 #endif
   g_object_class_install_property (gobject_class, ARG_ME,
       g_param_spec_enum ("me", "Motion Estimation",
           "Integer pixel motion estimation method", GST_X264_ENC_ME_TYPE,
-          ARG_ME_DEFAULT, G_PARAM_READWRITE));
+          ARG_ME_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":me=%s",
       x264_motion_est_names[ARG_ME_DEFAULT]);
   g_object_class_install_property (gobject_class, ARG_SUBME,
       g_param_spec_uint ("subme", "Subpixel Motion Estimation",
           "Subpixel motion estimation and partition decision quality: 1=fast, 6=best",
-          1, 6, ARG_SUBME_DEFAULT, G_PARAM_READWRITE));
+          1, 6, ARG_SUBME_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":subme=%d", ARG_SUBME_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_ANALYSE,
       g_param_spec_flags ("analyse", "Analyse", "Partitions to consider",
-          GST_X264_ENC_ANALYSE_TYPE, ARG_ANALYSE_DEFAULT, G_PARAM_READWRITE));
+          GST_X264_ENC_ANALYSE_TYPE, ARG_ANALYSE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   partitions = gst_x264_enc_build_partitions (ARG_ANALYSE_DEFAULT);
   if (partitions) {
     g_string_append_printf (x264enc_defaults, ":partitions=%s", partitions);
@@ -653,27 +666,28 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_DCT8x8,
       g_param_spec_boolean ("dct8x8", "DCT8x8",
           "Adaptive spatial transform size", ARG_DCT8x8_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":8x8dct=%d", ARG_DCT8x8_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_REF,
       g_param_spec_uint ("ref", "Reference Frames",
           "Number of reference frames",
-          1, 12, ARG_REF_DEFAULT, G_PARAM_READWRITE));
+          1, 12, ARG_REF_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":ref=%d", ARG_REF_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_BFRAMES,
       g_param_spec_uint ("bframes", "B-Frames",
           "Number of B-frames between I and P",
-          0, 4, ARG_BFRAMES_DEFAULT, G_PARAM_READWRITE));
+          0, 4, ARG_BFRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":bframes=%d", ARG_BFRAMES_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_B_ADAPT,
       g_param_spec_boolean ("b-adapt", "B-Adapt",
           "Automatically decide how many B-frames to use",
-          ARG_B_ADAPT_DEFAULT, G_PARAM_READWRITE));
+          ARG_B_ADAPT_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":b-adapt=%d", ARG_B_ADAPT_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_B_PYRAMID,
       g_param_spec_boolean ("b-pyramid", "B-Pyramid",
           "Keep some B-frames as references", ARG_B_PYRAMID_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #ifdef X264_B_PYRAMID
   g_string_append_printf (x264enc_defaults, ":b-pyramid=%s",
       x264_b_pyramid_names[ARG_B_PYRAMID_DEFAULT]);
@@ -684,80 +698,89 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_WEIGHTB,
       g_param_spec_boolean ("weightb", "Weighted B-Frames",
           "Weighted prediction for B-frames", ARG_WEIGHTB_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":weightb=%d", ARG_WEIGHTB_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_SPS_ID,
       g_param_spec_uint ("sps-id", "SPS ID",
           "SPS and PPS ID number",
-          0, 31, ARG_SPS_ID_DEFAULT, G_PARAM_READWRITE));
+          0, 31, ARG_SPS_ID_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":sps-id=%d", ARG_SPS_ID_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_AU_NALU,
       g_param_spec_boolean ("aud", "AUD",
           "Use AU (Access Unit) delimiter", ARG_AU_NALU_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":aud=%d", ARG_AU_NALU_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_TRELLIS,
       g_param_spec_boolean ("trellis", "Trellis quantization",
           "Enable trellis searched quantization", ARG_TRELLIS_DEFAULT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":trellis=%d", ARG_TRELLIS_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_KEYINT_MAX,
       g_param_spec_uint ("key-int-max", "Key-frame maximal interval",
           "Maximal distance between two key-frames (0 for automatic)",
-          0, G_MAXINT, ARG_KEYINT_MAX_DEFAULT, G_PARAM_READWRITE));
+          0, G_MAXINT, ARG_KEYINT_MAX_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":keyint=%d",
       ARG_KEYINT_MAX_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_CABAC,
       g_param_spec_boolean ("cabac", "Use CABAC", "Enable CABAC entropy coding",
-          ARG_CABAC_DEFAULT, G_PARAM_READWRITE));
+          ARG_CABAC_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":cabac=%d", ARG_CABAC_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MIN,
       g_param_spec_uint ("qp-min", "Minimum Quantizer",
-          "Minimum quantizer", 1, 51, ARG_QP_MIN_DEFAULT, G_PARAM_READWRITE));
+          "Minimum quantizer", 1, 51, ARG_QP_MIN_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpmin=%d", ARG_QP_MIN_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_MAX,
       g_param_spec_uint ("qp-max", "Maximum Quantizer",
-          "Maximum quantizer", 1, 51, ARG_QP_MAX_DEFAULT, G_PARAM_READWRITE));
+          "Maximum quantizer", 1, 51, ARG_QP_MAX_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpmax=%d", ARG_QP_MAX_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_QP_STEP,
       g_param_spec_uint ("qp-step", "Maximum Quantizer Difference",
           "Maximum quantizer difference between frames",
-          1, 50, ARG_QP_STEP_DEFAULT, G_PARAM_READWRITE));
+          1, 50, ARG_QP_STEP_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":qpstep=%d", ARG_QP_STEP_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_IP_FACTOR,
       g_param_spec_float ("ip-factor", "IP-Factor",
           "Quantizer factor between I- and P-frames",
-          0, 2, ARG_IP_FACTOR_DEFAULT, G_PARAM_READWRITE));
+          0, 2, ARG_IP_FACTOR_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":ip-factor=%f",
       ARG_IP_FACTOR_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_PB_FACTOR,
       g_param_spec_float ("pb-factor", "PB-Factor",
           "Quantizer factor between P- and B-frames", 0, 2,
-          ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE));
+          ARG_PB_FACTOR_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":pb-factor=%f",
       ARG_PB_FACTOR_DEFAULT);
 #ifdef X264_MB_RC
   g_object_class_install_property (gobject_class, ARG_RC_MB_TREE,
       g_param_spec_boolean ("mb-tree", "Macroblock Tree",
           "Macroblock-Tree ratecontrol",
-          ARG_RC_MB_TREE_DEFAULT, G_PARAM_READWRITE));
+          ARG_RC_MB_TREE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":mbtree=%d",
       ARG_RC_MB_TREE_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_RC_LOOKAHEAD,
       g_param_spec_int ("rc-lookahead", "Rate Control Lookahead",
           "Number of frames for frametype lookahead", 0, 250,
-          ARG_RC_LOOKAHEAD_DEFAULT, G_PARAM_READWRITE));
+          ARG_RC_LOOKAHEAD_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":rc-lookahead=%d",
       ARG_RC_LOOKAHEAD_DEFAULT);
 #endif
   g_object_class_install_property (gobject_class, ARG_NR,
       g_param_spec_uint ("noise-reduction", "Noise Reduction",
           "Noise reduction strength",
-          0, 100000, ARG_NR_DEFAULT, G_PARAM_READWRITE));
+          0, 100000, ARG_NR_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":nr=%d", ARG_NR_DEFAULT);
   g_object_class_install_property (gobject_class, ARG_INTERLACED,
       g_param_spec_boolean ("interlaced", "Interlaced",
-          "Interlaced material", ARG_INTERLACED_DEFAULT, G_PARAM_READWRITE));
+          "Interlaced material", ARG_INTERLACED_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_string_append_printf (x264enc_defaults, ":interlaced=%d",
       ARG_INTERLACED_DEFAULT);
 

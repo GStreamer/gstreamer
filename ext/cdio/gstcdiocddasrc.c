@@ -338,7 +338,7 @@ gst_cdio_cdda_src_class_init (GstCdioCddaSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_READ_SPEED,
       g_param_spec_int ("read-speed", "Read speed",
           "Read from device at the specified speed (-1 = default)", -1, 100,
-          DEFAULT_READ_SPEED, G_PARAM_READWRITE));
+          DEFAULT_READ_SPEED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

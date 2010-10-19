@@ -181,7 +181,8 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
   g_object_class_install_property (object_class, PROP_BANDMODE,
       g_param_spec_enum ("band-mode", "Band Mode",
           "Encoding Band Mode (Kbps)", GST_AMRNBENC_BANDMODE_TYPE,
-          BANDMODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          BANDMODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbenc_state_change);
 }

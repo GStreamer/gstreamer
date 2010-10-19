@@ -139,7 +139,8 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
   g_object_class_install_property (object_class, PROP_VARIANT,
       g_param_spec_enum ("variant", "Variant",
           "The decoder variant", GST_AMRNB_VARIANT_TYPE,
-          VARIANT_DEFAULT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          VARIANT_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbdec_state_change);
 }
