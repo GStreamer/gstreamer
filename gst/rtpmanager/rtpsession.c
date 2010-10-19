@@ -2007,10 +2007,50 @@ rtp_session_process_app (RTPSession * sess, GstRTCPPacket * packet,
   GST_DEBUG ("received APP");
 }
 
+static void
+rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
+    guint32 media_ssrc, GstClockTime current_time)
+{
+  RTPSource *src;
+  guint32 round_trip = 0;
+
+  if (!sess->callbacks.request_key_unit)
+    return;
+
+  src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (sender_ssrc));
+
+  if (!src)
+    return;
+
+  if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
+      rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL,
+          &round_trip)) {
+    GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
+        GST_SECOND, 65536);
+
+    if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
+        current_time - sess->last_keyframe_request < round_trip_in_ns) {
+      GST_DEBUG ("Ignoring PLI because one was send without one RTT (%"
+          GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+          GST_TIME_ARGS (current_time - sess->last_keyframe_request),
+          GST_TIME_ARGS (round_trip_in_ns));;
+      return;
+    }
+  }
+
+  sess->last_keyframe_request = current_time;
+
+  GST_LOG ("received PLI from %X %p(%p)", sender_ssrc,
+      sess->callbacks.process_rtp, sess->callbacks.request_key_unit);
+
+  sess->callbacks.request_key_unit (sess, FALSE,
+      sess->request_key_unit_user_data);
+}
 
 static void
 rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
-    RTPArrivalStats * arrival)
+    RTPArrivalStats * arrival, GstClockTime current_time)
 {
   GstRTCPType type = gst_rtcp_packet_get_type (packet);
   GstRTCPFBType fbtype = gst_rtcp_packet_fb_get_type (packet);
@@ -2052,9 +2092,8 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       case GST_RTCP_TYPE_PSFB:
         switch (fbtype) {
           case GST_RTCP_PSFB_TYPE_PLI:
-            if (sess->callbacks.request_key_unit)
-              sess->callbacks.request_key_unit (sess, FALSE,
-                  sess->request_key_unit_user_data);
+            rtp_session_process_pli (sess, sender_ssrc, media_ssrc,
+                current_time);
             break;
           default:
             break;
@@ -2136,7 +2175,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
         break;
       case GST_RTCP_TYPE_RTPFB:
       case GST_RTCP_TYPE_PSFB:
-        rtp_session_process_feedback (sess, &packet, &arrival);
+        rtp_session_process_feedback (sess, &packet, &arrival, current_time);
         break;
       default:
         GST_WARNING ("got unknown RTCP packet");

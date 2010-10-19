@@ -221,6 +221,7 @@ struct _RTPSession {
   GstClockTime  rtcp_feedback_retention_window;
 
   GArray       *rtcp_pli_requests;
+  GstClockTime last_keyframe_request;
 };
 
 /**
