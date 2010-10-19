@@ -29,25 +29,28 @@ public class MediaInfo.App : Window
   {
     // configure the window
     set_title (_("GStreamer Media Info"));
-    set_default_size (400, 300);
+    set_default_size (500, 350);
     destroy.connect (Gtk.main_quit);
     
-    VBox vbox = new VBox(false, 0);
+    VBox vbox = new VBox( false, 0);
     add (vbox);
     
     // add a menubar
     vbox.pack_start (create_menu(), false, false, 0);
+
+    HPaned paned = new HPaned ();
+    vbox.pack_start (paned, true, true, 3);
     
     // add a file-chooser with info pane as preview widget
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
-    vbox.pack_start (chooser, true, true, 3);
+    paned.pack1 (chooser, true, true);
 
-    info = new Info ();
-    chooser.set_preview_widget (info);
-    chooser.set_use_preview_label (false);
     chooser.set_current_folder (GLib.Environment.get_home_dir ());
     chooser.set_show_hidden (false);
-    chooser.update_preview.connect (on_update_preview);
+    chooser.selection_changed.connect (on_update_preview);
+
+    info = new Info ();
+    paned.pack2 (info, true, true);
   }
 
   // helper
@@ -79,11 +82,11 @@ public class MediaInfo.App : Window
 
   private void on_update_preview ()
   {
-    File file = chooser.get_preview_file();
+    File file = chooser.get_file();
     bool res = false;
 
-    if (file.query_file_type (FileQueryInfoFlags.NONE, null) == FileType.REGULAR) {
-      res = info.discover (chooser.get_preview_uri());
+    if (file != null && file.query_file_type (FileQueryInfoFlags.NONE, null) == FileType.REGULAR) {
+      res = info.discover (chooser.get_uri());
     }
     chooser.set_preview_widget_active (res);
   }
