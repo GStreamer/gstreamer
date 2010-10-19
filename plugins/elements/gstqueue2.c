@@ -1015,6 +1015,8 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
   GstEvent *event;
   gboolean res;
 
+  GST_QUEUE2_MUTEX_UNLOCK (queue);
+
   GST_DEBUG_OBJECT (queue, "Seeking to %" G_GUINT64_FORMAT, offset);
 
   event =
@@ -1022,7 +1024,6 @@ perform_seek_to_offset (GstQueue2 * queue, guint64 offset)
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
 
-  GST_QUEUE2_MUTEX_UNLOCK (queue);
   res = gst_pad_push_event (queue->sinkpad, event);
   GST_QUEUE2_MUTEX_LOCK (queue);
 
@@ -2197,14 +2198,14 @@ gst_queue2_push_one (GstQueue2 * queue)
     goto no_item;
 
 next:
+  GST_QUEUE2_MUTEX_UNLOCK (queue);
+
   if (GST_IS_BUFFER (data)) {
     GstBuffer *buffer;
     GstCaps *caps;
 
     buffer = GST_BUFFER_CAST (data);
     caps = GST_BUFFER_CAPS (buffer);
-
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
 
     /* set caps before pushing the buffer so that core does not try to do
      * something fancy to check if this is possible. */
@@ -2255,17 +2256,16 @@ next:
     GstEvent *event = GST_EVENT_CAST (data);
     GstEventType type = GST_EVENT_TYPE (event);
 
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
-
     gst_pad_push_event (queue->srcpad, event);
 
-    GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
     /* if we're EOS, return UNEXPECTED so that the task pauses. */
     if (type == GST_EVENT_EOS) {
       GST_CAT_LOG_OBJECT (queue_dataflow, queue,
           "pushed EOS event %p, return UNEXPECTED", event);
       result = GST_FLOW_UNEXPECTED;
     }
+
+    GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   }
   return result;
 
@@ -2333,9 +2333,9 @@ out_flushing:
     GstFlowReturn ret = queue->srcresult;
 
     gst_pad_pause_task (queue->srcpad);
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
     /* let app know about us giving up if upstream is not expected to do so */
     /* UNEXPECTED is already taken care of elsewhere */
     if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_UNEXPECTED)) {
@@ -2634,8 +2634,8 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
 
   queue = GST_QUEUE2_CAST (gst_pad_get_parent (pad));
 
-  GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   length = (length == -1) ? DEFAULT_BUFFER_SIZE : length;
+  GST_QUEUE2_MUTEX_LOCK_CHECK (queue, queue->srcresult, out_flushing);
   offset = (offset == -1) ? queue->current->reading_pos : offset;
 
   GST_DEBUG_OBJECT (queue,
