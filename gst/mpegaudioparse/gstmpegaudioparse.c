@@ -321,10 +321,10 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
       g_param_spec_int ("skip", "skip", "skip",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
       g_param_spec_int ("bitrate", "Bitrate", "Bit Rate",
-          G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_mp3parse_change_state;
 

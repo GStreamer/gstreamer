@@ -170,15 +170,17 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
       g_param_spec_int ("max_scr_gap", "Max SCR gap",
           "Maximum allowed gap between expected and actual "
           "SCR values. -1 means never adjust.", -1, G_MAXINT,
-          DEFAULT_MAX_SCR_GAP, G_PARAM_READWRITE));
+          DEFAULT_MAX_SCR_GAP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTE_OFFSET,
       g_param_spec_uint64 ("byte-offset", "Byte Offset",
           "Emit reached-offset signal when the byte offset is reached.",
-          0, G_MAXUINT64, G_MAXUINT64, G_PARAM_READWRITE));
+          0, G_MAXUINT64, G_MAXUINT64,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TIME_OFFSET,
       g_param_spec_uint64 ("time-offset", "Time Offset",
           "Time offset in the stream.",
-          0, G_MAXUINT64, G_MAXUINT64, G_PARAM_READABLE));
+          0, G_MAXUINT64, G_MAXUINT64,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

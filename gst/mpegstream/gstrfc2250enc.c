@@ -123,10 +123,10 @@ gst_rfc2250_enc_class_init (GstRFC2250EncClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
       g_param_spec_uint ("bit_rate", "bit_rate", "bit_rate",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MPEG2,
       g_param_spec_boolean ("mpeg2", "mpeg2", "is this an mpeg2 stream",
-          FALSE, G_PARAM_READABLE));
+          FALSE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->get_property = gst_rfc2250_enc_get_property;
 

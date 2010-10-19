@@ -116,7 +116,7 @@ gst_pnm_src_class_init (GstPNMSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "PNM Location",
           "Location of the PNM url to read",
-          DEFAULT_LOCATION, G_PARAM_READWRITE));
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstpushsrc_class->create = gst_pnm_src_create;
 }
