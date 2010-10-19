@@ -272,7 +272,8 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INTERVAL,
       g_param_spec_uint ("interval", "Interval between tone packets",
           "Interval in ms between two tone packets", MIN_PACKET_INTERVAL,
-          MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL, G_PARAM_READWRITE));
+          MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_change_state);
