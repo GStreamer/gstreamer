@@ -115,10 +115,10 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       gst_gl_filter_prepare_output_buffer;
 
   g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
-      g_param_spec_ulong ("external_opengl_context",
+      g_param_spec_ulong ("external-opengl-context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
-          0, G_MAXULONG, 0, G_PARAM_WRITABLE));
+          0, G_MAXULONG, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   klass->set_caps = NULL;
   klass->filter = NULL;
