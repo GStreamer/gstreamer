@@ -243,7 +243,7 @@ static gint
 gst_dca_parse_find_sync (GstDcaParse * dcaparse, GstByteReader * reader,
     const GstBuffer * buf, guint32 * sync)
 {
-  guint32 best_sync;
+  guint32 best_sync = 0;
   guint best_offset = G_MAXUINT;
   gint off;
 
