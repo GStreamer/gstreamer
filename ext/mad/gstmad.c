@@ -213,7 +213,7 @@ gst_mad_class_init (GstMadClass * klass)
       g_param_spec_boolean ("half", "Half", "Generate PCM at 1/2 sample rate",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_IGNORE_CRC,
-      g_param_spec_boolean ("ignore_crc", "Ignore CRC", "Ignore CRC errors",
+      g_param_spec_boolean ("ignore-crc", "Ignore CRC", "Ignore CRC errors",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register tags */

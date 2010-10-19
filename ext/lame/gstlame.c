@@ -415,7 +415,7 @@ gst_lame_class_init (GstLameClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* compression ratio set to 0.0 by default otherwise it overrides the bitrate setting */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_COMPRESSION_RATIO, g_param_spec_float ("compression_ratio",
+      ARG_COMPRESSION_RATIO, g_param_spec_float ("compression-ratio",
           "Compression Ratio",
           "let lame choose bitrate to achieve selected compression ratio", 0.0,
           200.0, gst_lame_default_settings.compression_ratio,

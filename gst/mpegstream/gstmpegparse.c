@@ -167,7 +167,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
       gst_static_pad_template_get (&sink_factory));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_SCR_GAP,
-      g_param_spec_int ("max_scr_gap", "Max SCR gap",
+      g_param_spec_int ("max-scr-gap", "Max SCR gap",
           "Maximum allowed gap between expected and actual "
           "SCR values. -1 means never adjust.", -1, G_MAXINT,
           DEFAULT_MAX_SCR_GAP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));

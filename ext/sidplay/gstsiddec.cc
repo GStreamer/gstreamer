@@ -216,14 +216,14 @@ gst_siddec_class_init (GstSidDec * klass)
       g_param_spec_boolean ("filter", "filter", "filter", DEFAULT_FILTER,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MEASURED_VOLUME,
-      g_param_spec_boolean ("measured_volume", "measured_volume",
+      g_param_spec_boolean ("measured-volume", "measured_volume",
           "measured_volume", DEFAULT_MEASURED_VOLUME,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MOS8580,
       g_param_spec_boolean ("mos8580", "mos8580", "mos8580", DEFAULT_MOS8580,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FORCE_SPEED,
-      g_param_spec_boolean ("force_speed", "force_speed", "force_speed",
+      g_param_spec_boolean ("force-speed", "force_speed", "force_speed",
           DEFAULT_FORCE_SPEED,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
