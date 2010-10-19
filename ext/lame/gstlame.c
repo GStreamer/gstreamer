@@ -411,138 +411,159 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_int ("bitrate", "Bitrate (kb/s)",
           "Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)",
-          0, 320, gst_lame_default_settings.bitrate, G_PARAM_READWRITE));
+          0, 320, gst_lame_default_settings.bitrate,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* compression ratio set to 0.0 by default otherwise it overrides the bitrate setting */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_COMPRESSION_RATIO, g_param_spec_float ("compression_ratio",
           "Compression Ratio",
           "let lame choose bitrate to achieve selected compression ratio", 0.0,
           200.0, gst_lame_default_settings.compression_ratio,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_enum ("quality", "Quality",
           "Quality of algorithm used for encoding", GST_TYPE_LAME_QUALITY,
-          gst_lame_default_settings.quality, G_PARAM_READWRITE));
+          gst_lame_default_settings.quality,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
       g_param_spec_enum ("mode", "Mode", "Encoding mode", GST_TYPE_LAME_MODE,
-          gst_lame_default_settings.mode, G_PARAM_READWRITE));
+          gst_lame_default_settings.mode,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORCE_MS,
       g_param_spec_boolean ("force-ms", "Force ms",
           "Force ms_stereo on all frames", gst_lame_default_settings.force_ms,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREE_FORMAT,
       g_param_spec_boolean ("free-format", "Free format",
           "Produce a free format bitstream",
-          gst_lame_default_settings.free_format, G_PARAM_READWRITE));
+          gst_lame_default_settings.free_format,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COPYRIGHT,
       g_param_spec_boolean ("copyright", "Copyright", "Mark as copyright",
-          gst_lame_default_settings.copyright, G_PARAM_READWRITE));
+          gst_lame_default_settings.copyright,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ORIGINAL,
       g_param_spec_boolean ("original", "Original", "Mark as original",
-          gst_lame_default_settings.original, G_PARAM_READWRITE));
+          gst_lame_default_settings.original,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_PROTECTION,
       g_param_spec_boolean ("error-protection", "Error protection",
           "Adds 16 bit checksum to every frame",
-          gst_lame_default_settings.error_protection, G_PARAM_READWRITE));
+          gst_lame_default_settings.error_protection,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PADDING_TYPE,
       g_param_spec_enum ("padding-type", "Padding type",
           "Padding type " "(DEPRECATED: this setting has no effect)",
-          GST_TYPE_LAME_PADDING, FALSE, G_PARAM_READWRITE));
+          GST_TYPE_LAME_PADDING, FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EXTENSION,
       g_param_spec_boolean ("extension", "Extension", "Extension",
-          gst_lame_default_settings.extension, G_PARAM_READWRITE));
+          gst_lame_default_settings.extension,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STRICT_ISO,
       g_param_spec_boolean ("strict-iso", "Strict ISO",
           "Comply as much as possible to ISO MPEG spec", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       ARG_DISABLE_RESERVOIR, g_param_spec_boolean ("disable-reservoir",
           "Disable reservoir", "Disable the bit reservoir", TRUE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
       g_param_spec_enum ("vbr", "VBR", "Specify bitrate mode",
           GST_TYPE_LAME_VBRMODE, gst_lame_default_settings.vbr,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_QUALITY,
       g_param_spec_enum ("vbr-quality", "VBR Quality", "VBR Quality",
           GST_TYPE_LAME_QUALITY, gst_lame_default_settings.vbr_quality,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
       g_param_spec_int ("vbr-mean-bitrate", "VBR mean bitrate",
           "Specify mean VBR bitrate", 0, 320,
-          gst_lame_default_settings.vbr_mean_bitrate, G_PARAM_READWRITE));
+          gst_lame_default_settings.vbr_mean_bitrate,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MIN_BITRATE,
       g_param_spec_int ("vbr-min-bitrate", "VBR min bitrate",
           "Specify minimum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)", 0, 320,
-          gst_lame_default_settings.vbr_min_bitrate, G_PARAM_READWRITE));
+          gst_lame_default_settings.vbr_min_bitrate,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MAX_BITRATE,
       g_param_spec_int ("vbr-max-bitrate", "VBR max bitrate",
           "Specify maximum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)", 0, 320,
-          gst_lame_default_settings.vbr_max_bitrate, G_PARAM_READWRITE));
+          gst_lame_default_settings.vbr_max_bitrate,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_HARD_MIN,
       g_param_spec_int ("vbr-hard-min", "VBR hard min",
           "Specify whether min VBR bitrate is a hard limit. Normally, "
           "it can be violated for silence", 0, 1,
-          gst_lame_default_settings.vbr_hard_min, G_PARAM_READWRITE));
+          gst_lame_default_settings.vbr_hard_min,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_FREQ,
       g_param_spec_int ("lowpass-freq", "Lowpass freq",
           "frequency(kHz), lowpass filter cutoff above freq", 0, 50000,
-          gst_lame_default_settings.lowpass_freq, G_PARAM_READWRITE));
+          gst_lame_default_settings.lowpass_freq,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_WIDTH,
       g_param_spec_int ("lowpass-width", "Lowpass width",
           "frequency(kHz) - default 15% of lowpass freq", -1, G_MAXINT,
-          gst_lame_default_settings.lowpass_width, G_PARAM_READWRITE));
+          gst_lame_default_settings.lowpass_width,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_FREQ,
       g_param_spec_int ("highpass-freq", "Highpass freq",
           "frequency(kHz), highpass filter cutoff below freq", 0, 50000,
-          gst_lame_default_settings.highpass_freq, G_PARAM_READWRITE));
+          gst_lame_default_settings.highpass_freq,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_WIDTH,
       g_param_spec_int ("highpass-width", "Highpass width",
           "frequency(kHz) - default 15% of highpass freq", -1, G_MAXINT,
-          gst_lame_default_settings.highpass_width, G_PARAM_READWRITE));
+          gst_lame_default_settings.highpass_width,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_ONLY,
       g_param_spec_boolean ("ath-only", "ATH only",
           "Ignore GPSYCHO completely, use ATH only",
-          gst_lame_default_settings.ath_only, G_PARAM_READWRITE));
+          gst_lame_default_settings.ath_only,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_SHORT,
       g_param_spec_boolean ("ath-short", "ATH short",
           "Ignore GPSYCHO for short blocks, use ATH only",
-          gst_lame_default_settings.ath_short, G_PARAM_READWRITE));
+          gst_lame_default_settings.ath_short,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_ATH,
       g_param_spec_boolean ("no-ath", "No ath",
           "turns ATH down to a flat noise floor",
-          gst_lame_default_settings.no_ath, G_PARAM_READWRITE));
+          gst_lame_default_settings.no_ath,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_LOWER,
       g_param_spec_int ("ath-lower", "ATH lower", "lowers ATH by x dB",
           G_MININT, G_MAXINT, gst_lame_default_settings.ath_lower,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CWLIMIT,
       g_param_spec_int ("cwlimit", "Cwlimit",
           "Compute tonality up to freq (in kHz) default 8.8717 "
           "(DEPRECATED: this setting has no effect)", 0, 50000, 0,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALLOW_DIFF_SHORT,
       g_param_spec_boolean ("allow-diff-short", "Allow diff short",
           "Allow diff short", gst_lame_default_settings.allow_diff_short,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_SHORT_BLOCKS,
       g_param_spec_boolean ("no-short-blocks", "No short blocks",
           "Do not use short blocks", gst_lame_default_settings.no_short_blocks,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EMPHASIS,
       g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis",
-          gst_lame_default_settings.emphasis, G_PARAM_READWRITE));
+          gst_lame_default_settings.emphasis,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XINGHEADER,
       g_param_spec_boolean ("xingheader", "Output Xing Header",
           "Output Xing Header (BROKEN, use xingmux instead)", FALSE,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #ifdef GSTLAME_PRESET
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRESET,
       g_param_spec_enum ("preset", "Lame Preset", "Lame Preset",
           GST_TYPE_LAME_PRESET, gst_lame_default_settings.preset,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_lame_change_state);
