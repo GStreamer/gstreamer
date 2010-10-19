@@ -617,8 +617,9 @@ gst_object_set_name_default (GstObject * object)
 {
   const gchar *type_name;
   gint count;
-  gchar *name, *tmp;
+  gchar *name;
   GQuark q;
+  guint i, l;
 
   /* to ensure guaranteed uniqueness across threads, only one thread
    * may ever assign a name */
@@ -634,17 +635,20 @@ gst_object_set_name_default (GstObject * object)
 
   G_UNLOCK (object_name_mutex);
 
-  /* GstFooSink -> foosinkN */
+  /* GstFooSink -> foosink<N> */
   type_name = g_quark_to_string (q);
   if (strncmp (type_name, "Gst", 3) == 0)
     type_name += 3;
-  tmp = g_strdup_printf ("%s%d", type_name, count);
-  name = g_ascii_strdown (tmp, -1);
-  g_free (tmp);
+  l = strlen (type_name);
+  name = g_malloc (l + 6 + 1);
+  for (i = 0; i < l; i++)
+    name[i] = g_ascii_tolower (type_name[i]);
+  snprintf (&name[i], 6, "%d", count);
 
   GST_OBJECT_LOCK (object);
   if (G_UNLIKELY (object->parent != NULL))
     goto had_parent;
+
   g_free (object->name);
   object->name = name;
 
