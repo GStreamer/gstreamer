@@ -702,21 +702,22 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_RATE,
       g_param_spec_double ("rate", "Playback Rate", "Current playback rate",
-          G_MININT, G_MAXINT, 1.0, G_PARAM_READABLE));
+          G_MININT, G_MAXINT, 1.0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_STRIDE,
       g_param_spec_uint ("stride", "Stride Length",
           "Length in milliseconds to output each stride", 1, 5000, 30,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_OVERLAP,
       g_param_spec_double ("overlap", "Overlap Length",
-          "Percentage of stride to overlap", 0, 1, .2, G_PARAM_READWRITE));
+          "Percentage of stride to overlap", 0, 1, .2,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SEARCH,
       g_param_spec_uint ("search", "Search Length",
           "Length in milliseconds to search for best overlap position", 0, 500,
-          14, G_PARAM_READWRITE));
+          14, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   basetransform_class->event = GST_DEBUG_FUNCPTR (gst_scaletempo_sink_event);
   basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_scaletempo_set_caps);
