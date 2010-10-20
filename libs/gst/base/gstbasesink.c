@@ -256,6 +256,9 @@ struct _GstBaseSinkPrivate
   /* we have a pending and a current step operation */
   GstStepInfo current_step;
   GstStepInfo pending_step;
+
+  /* Cached GstClockID */
+  GstClockID cached_clock_id;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -683,6 +686,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->ts_offset = DEFAULT_TS_OFFSET;
   priv->render_delay = DEFAULT_RENDER_DELAY;
   priv->blocksize = DEFAULT_BLOCKSIZE;
+  priv->cached_clock_id = NULL;
   g_atomic_int_set (&priv->enable_last_buffer, DEFAULT_ENABLE_LAST_BUFFER);
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
@@ -2076,7 +2080,6 @@ GstClockReturn
 gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
     GstClockTimeDiff * jitter)
 {
-  GstClockID id;
   GstClockReturn ret;
   GstClock *clock;
   GstClockTime base_time;
@@ -2099,21 +2102,28 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* add base_time to running_time to get the time against the clock */
   time += base_time;
 
-  id = gst_clock_new_single_shot_id (clock, time);
+  /* Re-use existing clockid if available */
+  if (G_LIKELY (sink->priv->cached_clock_id != NULL)) {
+    if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
+            time)) {
+      gst_clock_id_unref (sink->priv->cached_clock_id);
+      sink->priv->cached_clock_id = gst_clock_new_single_shot_id (clock, time);
+    }
+  } else
+    sink->priv->cached_clock_id = gst_clock_new_single_shot_id (clock, time);
   GST_OBJECT_UNLOCK (sink);
 
   /* A blocking wait is performed on the clock. We save the ClockID
    * so we can unlock the entry at any time. While we are blocking, we
    * release the PREROLL_LOCK so that other threads can interrupt the
    * entry. */
-  sink->clock_id = id;
+  sink->clock_id = sink->priv->cached_clock_id;
   /* release the preroll lock while waiting */
   GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
 
-  ret = gst_clock_id_wait (id, jitter);
+  ret = gst_clock_id_wait (sink->priv->cached_clock_id, jitter);
 
   GST_PAD_PREROLL_LOCK (sink->sinkpad);
-  gst_clock_id_unref (id);
   sink->clock_id = NULL;
 
   return ret;
