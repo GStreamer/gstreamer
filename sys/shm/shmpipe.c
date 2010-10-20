@@ -232,10 +232,8 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
   self->perms = perms;
 
-  if (!self->shm_area) {
-    sp_close (self);
-    return NULL;
-  }
+  if (!self->shm_area)
+    RETURN_ERROR ("Could not open shm area (%d): %s", errno, strerror (errno));
 
   return self;
 }
