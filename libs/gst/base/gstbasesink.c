@@ -236,7 +236,7 @@ struct _GstBaseSinkPrivate
   gboolean have_latency;
 
   /* the last buffer we prerolled or rendered. Useful for making snapshots */
-  gboolean enable_last_buffer;
+  gint enable_last_buffer;      /* atomic */
   GstBuffer *last_buffer;
 
   /* caps for pull based scheduling */
@@ -670,7 +670,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->ts_offset = DEFAULT_TS_OFFSET;
   priv->render_delay = DEFAULT_RENDER_DELAY;
   priv->blocksize = DEFAULT_BLOCKSIZE;
-  priv->enable_last_buffer = DEFAULT_ENABLE_LAST_BUFFER;
+  g_atomic_int_set (&priv->enable_last_buffer, DEFAULT_ENABLE_LAST_BUFFER);
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -976,13 +976,11 @@ gst_base_sink_set_last_buffer_unlocked (GstBaseSink * sink, GstBuffer * buffer)
 static void
 gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
+  if (!g_atomic_int_get (&sink->priv->enable_last_buffer))
+    return;
+
   GST_OBJECT_LOCK (sink);
-  if (sink->priv->enable_last_buffer == FALSE)
-    goto out;
-
   gst_base_sink_set_last_buffer_unlocked (sink, buffer);
-
-out:
   GST_OBJECT_UNLOCK (sink);
 }
 
@@ -1001,13 +999,13 @@ gst_base_sink_set_last_buffer_enabled (GstBaseSink * sink, gboolean enabled)
 {
   g_return_if_fail (GST_IS_BASE_SINK (sink));
 
-  GST_OBJECT_LOCK (sink);
-  if (enabled != sink->priv->enable_last_buffer) {
-    sink->priv->enable_last_buffer = enabled;
-    if (!enabled)
-      gst_base_sink_set_last_buffer_unlocked (sink, NULL);
+  /* Only take lock if we change the value */
+  if (g_atomic_int_compare_and_exchange (&sink->priv->enable_last_buffer,
+          !enabled, enabled) && !enabled) {
+    GST_OBJECT_LOCK (sink);
+    gst_base_sink_set_last_buffer_unlocked (sink, NULL);
+    GST_OBJECT_UNLOCK (sink);
   }
-  GST_OBJECT_UNLOCK (sink);
 }
 
 /**
@@ -1024,15 +1022,9 @@ gst_base_sink_set_last_buffer_enabled (GstBaseSink * sink, gboolean enabled)
 gboolean
 gst_base_sink_is_last_buffer_enabled (GstBaseSink * sink)
 {
-  gboolean res;
-
   g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
 
-  GST_OBJECT_LOCK (sink);
-  res = sink->priv->enable_last_buffer;
-  GST_OBJECT_UNLOCK (sink);
-
-  return res;
+  return g_atomic_int_get (&sink->priv->enable_last_buffer);
 }
 
 /**
