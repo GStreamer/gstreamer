@@ -23,6 +23,8 @@
  */
 
 /*
+ * None of this code is thread safe, if you want to use it in a multi-threaded
+ * context, please protect it with a mutex.
  *
  * First, create a writer with sp_writer_create()
  * And selectes() on the socket from sp_get_fd()
