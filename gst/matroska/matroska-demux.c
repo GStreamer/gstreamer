@@ -4263,6 +4263,12 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
   gint i, offset, num_packets;
   guint *length, last;
 
+  if (stream->codec_priv == NULL || stream->codec_priv_size == 0) {
+    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+        ("Missing codec private data for xiph headers, broken file"));
+    return GST_FLOW_ERROR;
+  }
+
   /* start of the stream and vorbis audio or theora video, need to
    * send the codec_priv data as first three packets */
   num_packets = p[0] + 1;
