@@ -555,11 +555,11 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
   gint64 result, start, stop, time;
   gdouble abs_applied_rate;
 
-  g_return_val_if_fail (segment != NULL, -1);
-
   /* format does not matter for -1 */
   if (G_UNLIKELY (position == -1))
     return -1;
+
+  g_return_val_if_fail (segment != NULL, -1);
 
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
@@ -641,10 +641,10 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
   gint64 result;
   gint64 start, stop, accum;
 
-  g_return_val_if_fail (segment != NULL, -1);
-
   if (G_UNLIKELY (position == -1))
     return -1;
+
+  g_return_val_if_fail (segment != NULL, -1);
 
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
