@@ -187,7 +187,6 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     factory->uri_protocols = NULL;
   }
 
-  g_list_foreach (factory->interfaces, (GFunc) g_free, NULL);
   g_list_free (factory->interfaces);
   factory->interfaces = NULL;
 }
@@ -641,7 +640,8 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
   g_return_if_fail (interfacename[0] != '\0');  /* no empty string */
 
   elementfactory->interfaces =
-      g_list_prepend (elementfactory->interfaces, g_strdup (interfacename));
+      g_list_prepend (elementfactory->interfaces,
+      (gpointer) g_intern_string (interfacename));
 }
 
 /**
