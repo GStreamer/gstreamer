@@ -223,12 +223,14 @@ gst_ebml_writer_send_new_segment_event (GstEbmlWrite * ebml, guint64 new_pos)
 
 /**
  * gst_ebml_write_flush_cache:
- * @ebml: a #GstEbmlWrite.
+ * @ebml:      a #GstEbmlWrite.
+ * @timestamp: timestamp of the buffer.
  *
  * Flush the cache.
  */
 void
-gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
+gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe,
+    GstClockTime timestamp)
 {
   GstBuffer *buffer;
 
@@ -239,6 +241,7 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml, gboolean is_keyframe)
   ebml->cache = NULL;
   GST_DEBUG ("Flushing cache of size %d", GST_BUFFER_SIZE (buffer));
   gst_buffer_set_caps (buffer, ebml->caps);
+  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
   GST_BUFFER_OFFSET (buffer) = ebml->pos - GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = ebml->pos;
   if (ebml->last_write_result == GST_FLOW_OK) {
@@ -466,7 +469,7 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
       return;
     } else {
       GST_LOG ("Seek outside cache range. Clearing...");
-      gst_ebml_write_flush_cache (ebml, FALSE);
+      gst_ebml_write_flush_cache (ebml, FALSE, GST_CLOCK_TIME_NONE);
     }
   }
 
@@ -825,5 +828,5 @@ gst_ebml_write_header (GstEbmlWrite * ebml, const gchar * doctype,
   gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEVERSION, version);
   gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEREADVERSION, version);
   gst_ebml_write_master_finish (ebml, pos);
-  gst_ebml_write_flush_cache (ebml, FALSE);
+  gst_ebml_write_flush_cache (ebml, FALSE, 0);
 }
