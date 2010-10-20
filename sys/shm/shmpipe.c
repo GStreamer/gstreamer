@@ -171,8 +171,7 @@ struct CommandBuffer
   } payload;
 };
 
-static ShmArea *sp_open_shm (char *path, int id, int writer, mode_t perms,
-    size_t size);
+static ShmArea *sp_open_shm (char *path, int id, mode_t perms, size_t size);
 static void sp_close_shm (ShmPipe * self, ShmArea * area);
 static int sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf,
     ShmBuffer * prev_buf);
@@ -228,7 +227,7 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   if (listen (self->main_socket, LISTEN_BACKLOG) < 0)
     RETURN_ERROR ("listen() failed (%d): %s\n", errno, strerror (errno));
 
-  self->shm_area = sp_open_shm (NULL, ++self->next_area_id, 1, perms, size);
+  self->shm_area = sp_open_shm (NULL, ++self->next_area_id, perms, size);
 
   self->perms = perms;
 
@@ -247,14 +246,14 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
 /**
  * sp_open_shm:
- * @path: Path of the shm area, NULL if this is a writer (then it will allocate
- *  its own path)
+ * @path: Path of the shm area for a reader,
+ *  NULL if this is a writer (then it will allocate its own path)
  *
  * Opens a ShmArea
  */
 
 static ShmArea *
-sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
+sp_open_shm (char *path, int id, mode_t perms, size_t size)
 {
   ShmArea *area = spalloc_new (ShmArea);
   char tmppath[PATH_MAX];
@@ -269,10 +268,10 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
   area->shm_area_len = size;
 
 
-  if (writer)
-    flags = O_RDWR | O_CREAT | O_TRUNC | O_EXCL;
-  else
+  if (path)
     flags = O_RDONLY;
+  else
+    flags = O_RDWR | O_CREAT | O_TRUNC | O_EXCL;
 
   area->shm_fd = -1;
 
@@ -289,18 +288,17 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
     RETURN_ERROR ("shm_open failed on %s (%d): %s\n",
         path ? path : tmppath, errno, strerror (errno));
 
-  if (!path)
+  if (!path) {
     area->shm_area_name = strdup (tmppath);
 
-  if (writer)
     if (ftruncate (area->shm_fd, size))
       RETURN_ERROR ("Could not resize memory area to header size,"
           " ftruncate failed (%d): %s\n", errno, strerror (errno));
 
-  if (writer)
     prot = PROT_READ | PROT_WRITE;
-  else
+  } else {
     prot = PROT_READ;
+  }
 
   area->shm_area_buf = mmap (NULL, size, prot, MAP_SHARED, area->shm_fd, 0);
 
@@ -309,7 +307,7 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
 
   area->id = id;
 
-  if (writer)
+  if (!path)
     area->allocspace = shm_alloc_space_new (area->shm_area_len);
 
   return area;
@@ -432,7 +430,7 @@ sp_writer_resize (ShmPipe * self, size_t size)
   if (self->shm_area->shm_area_len == size)
     return 0;
 
-  newarea = sp_open_shm (NULL, ++self->next_area_id, 1, self->perms, size);
+  newarea = sp_open_shm (NULL, ++self->next_area_id, self->perms, size);
 
   if (!newarea)
     return -1;
@@ -603,7 +601,7 @@ sp_client_recv (ShmPipe * self, char **buf)
         return -3;
       }
 
-      newarea = sp_open_shm (area_name, cb.area_id, 0, 0,
+      newarea = sp_open_shm (area_name, cb.area_id, 0,
           cb.payload.new_shm_area.size);
       free (area_name);
       if (!newarea)
