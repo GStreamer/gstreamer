@@ -396,8 +396,14 @@ sp_close (ShmPipe * self)
 int
 sp_writer_setperms_shm (ShmPipe * self, mode_t perms)
 {
+  int ret = 0;
+  ShmArea *area;
+
   self->perms = perms;
-  return fchmod (self->shm_area->shm_fd, perms);
+  for (area = self->shm_area; area; area = area->next)
+    ret |= fchmod (area->shm_fd, perms);
+
+  return ret;
 }
 
 static int
