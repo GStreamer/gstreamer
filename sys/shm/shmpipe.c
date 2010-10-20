@@ -106,7 +106,7 @@ struct _ShmBuffer
   unsigned long offset;
   size_t size;
 
-  ShmAllocBlock *block;
+  ShmAllocBlock *ablock;
 
   ShmBuffer *next;
 
@@ -506,7 +506,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   unsigned long bsize = size;
   ShmBuffer *sb;
   ShmClient *client = NULL;
-  ShmAllocBlock *block = NULL;
+  ShmAllocBlock *ablock = NULL;
   int i = 0;
   int c = 0;
 
@@ -516,13 +516,13 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   for (area = self->shm_area; area; area = area->next) {
     if (buf >= area->shm_area && buf < (area->shm_area + area->shm_area_len)) {
       offset = buf - area->shm_area;
-      block = shm_alloc_space_block_get (area->allocspace, offset);
-      assert (block);
+      ablock = shm_alloc_space_block_get (area->allocspace, offset);
+      assert (ablock);
       break;
     }
   }
 
-  if (!block)
+  if (!ablock)
     return -1;
 
   sb = spalloc_alloc (sizeof (ShmBuffer) + sizeof (int) * self->num_clients);
@@ -532,7 +532,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   sb->offset = offset;
   sb->size = size;
   sb->num_clients = self->num_clients;
-  sb->block = block;
+  sb->ablock = ablock;
 
   for (client = self->clients; client; client = client->next) {
     struct CommandBuffer cb = { 0 };
@@ -550,7 +550,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   }
 
   sp_shm_area_inc (area);
-  shm_alloc_space_block_inc (block);
+  shm_alloc_space_block_inc (ablock);
 
   sb->use_count = c;
 
@@ -781,7 +781,7 @@ sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf)
     else
       self->buffers = buf->next;
 
-    shm_alloc_space_block_dec (buf->block);
+    shm_alloc_space_block_dec (buf->ablock);
     sp_shm_area_dec (self, buf->shm_area);
     spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * buf->num_clients, buf);
     return 0;
