@@ -94,7 +94,7 @@ int sp_writer_recv (ShmPipe * self, ShmClient * client);
 int sp_writer_pending_writes (ShmPipe * self);
 
 ShmPipe *sp_client_open (const char *path);
-unsigned long sp_client_recv (ShmPipe * self, char **buf);
+long int sp_client_recv (ShmPipe * self, char **buf);
 int sp_client_recv_finish (ShmPipe * self, char *buf);
 
 #ifdef __cplusplus

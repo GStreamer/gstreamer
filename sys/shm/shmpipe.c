@@ -578,7 +578,7 @@ recv_command (int fd, struct CommandBuffer *cb)
   }
 }
 
-unsigned long
+long int
 sp_client_recv (ShmPipe * self, char **buf)
 {
   char *area_name = NULL;
