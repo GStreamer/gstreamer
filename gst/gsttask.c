@@ -103,6 +103,36 @@ struct _GstTaskPrivate
   GstTaskPool *pool_id;
 };
 
+#ifdef _MSC_VER
+#include <windows.h>
+
+struct _THREADNAME_INFO
+{
+  DWORD dwType;                 // must be 0x1000
+  LPCSTR szName;                // pointer to name (in user addr space)
+  DWORD dwThreadID;             // thread ID (-1=caller thread)
+  DWORD dwFlags;                // reserved for future use, must be zero
+};
+typedef struct _THREADNAME_INFO THREADNAME_INFO;
+
+void
+SetThreadName (DWORD dwThreadID, LPCSTR szThreadName)
+{
+  THREADNAME_INFO info;
+  info.dwType = 0x1000;
+  info.szName = szThreadName;
+  info.dwThreadID = dwThreadID;
+  info.dwFlags = 0;
+
+  __try {
+    RaiseException (0x406D1388, 0, sizeof (info) / sizeof (DWORD),
+        (DWORD *) & info);
+  }
+  __except (EXCEPTION_CONTINUE_EXECUTION) {
+  }
+}
+#endif
+
 static void gst_task_finalize (GObject * object);
 
 static void gst_task_func (GstTask * task);
@@ -206,6 +236,14 @@ gst_task_configure_name (GstTask * task)
     if (prctl (PR_SET_NAME, (unsigned long int) thread_name, 0, 0, 0))
       GST_DEBUG_OBJECT (task, "Failed to set thread name");
   }
+#endif
+#ifdef _MSC_VER
+  const gchar *name;
+  name = GST_OBJECT_NAME (task);
+
+  /* set the thread name to something easily identifiable */
+  GST_DEBUG_OBJECT (task, "Setting thread name to '%s'", name);
+  SetThreadName (-1, name);
 #endif
 }
 
