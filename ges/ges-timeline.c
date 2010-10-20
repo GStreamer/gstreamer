@@ -261,6 +261,14 @@ ges_timeline_save (GESTimeline * timeline, gchar * uri)
 }
 
 static void
+add_object_to_track (GESTimelineObject * object, GESTrack * track)
+{
+  if (!ges_timeline_object_create_track_objects (object, track)) {
+    GST_WARNING ("error creating track objects");
+  }
+}
+
+static void
 add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
 {
   GList *tmp;
@@ -270,11 +278,10 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
     GESTrack *track = priv->track;
 
     GST_LOG ("Trying with track %p", track);
-    if (!ges_timeline_object_create_track_objects (object, track)) {
-      GST_WARNING ("error creating track objects");
-    }
+    add_object_to_track (object, track);
   }
 }
+
 
 static void
 do_async_start (GESTimeline * timeline)
@@ -588,6 +595,7 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * priv)
 {
   gchar *padname;
 
+
   GST_DEBUG ("track:%p, pad:%s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
   if (G_UNLIKELY (priv->pad)) {
@@ -652,6 +660,7 @@ gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
   TrackPrivate *priv;
+  GList *tmp;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
@@ -687,6 +696,21 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 
   /* emit 'track-added' */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
+
+  /* ensure that each existing timeline object has the opportunity to create a
+   * track object for this track*/
+
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
+    GList *objects, *obj;
+    objects = ges_timeline_layer_get_objects (tmp->data);
+
+    for (obj = objects; obj; obj = obj->next) {
+      add_object_to_track (obj->data, track);
+      g_object_unref (obj->data);
+      obj->data = NULL;
+    }
+    g_list_free (objects);
+  }
 
   return TRUE;
 }
