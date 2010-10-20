@@ -41,6 +41,8 @@
 #include <sys/mman.h>
 #include <assert.h>
 
+#include "shmalloc.h"
+
 /*
  * The protocol over the pipe is in packets
  *
@@ -65,7 +67,7 @@
  */
 
 
-#include "shmalloc.h"
+#define LISTEN_BACKLOG 10
 
 enum
 {
@@ -195,19 +197,16 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
 
-  if (self->main_socket < 0) {
+  if (self->main_socket < 0)
     RETURN_ERROR ("Could not create socket (%d): %s\n", errno,
         strerror (errno));
-  }
 
   flags = fcntl (self->main_socket, F_GETFL, 0);
-  if (flags < 0) {
+  if (flags < 0)
     RETURN_ERROR ("fcntl(F_GETFL) failed (%d): %s\n", errno, strerror (errno));
-  }
 
-  if (fcntl (self->main_socket, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC) < 0) {
+  if (fcntl (self->main_socket, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC) < 0)
     RETURN_ERROR ("fcntl(F_SETFL) failed (%d): %s\n", errno, strerror (errno));
-  }
 
   sun.sun_family = AF_UNIX;
   strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
@@ -226,9 +225,8 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
   self->socket_path = strdup (sun.sun_path);
 
-  if (listen (self->main_socket, 10) < 0) {
+  if (listen (self->main_socket, LISTEN_BACKLOG) < 0)
     RETURN_ERROR ("listen() failed (%d): %s\n", errno, strerror (errno));
-  }
 
   self->shm_area = sp_open_shm (NULL, ++self->next_area_id, 1, perms, size);
 
@@ -248,6 +246,14 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
   fprintf (stderr, format, __VA_ARGS__);                \
   sp_shm_area_dec (NULL, area);                         \
   return NULL;
+
+/**
+ * sp_open_shm:
+ * @path: Path of the shm area, NULL if this is a writer (then it will allocate
+ *  its own path)
+ *
+ * Opens a ShmArea
+ */
 
 static ShmArea *
 sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
@@ -281,20 +287,17 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
     } while (area->shm_fd < 0 && errno == EEXIST);
   }
 
-  if (area->shm_fd < 0) {
+  if (area->shm_fd < 0)
     RETURN_ERROR ("shm_open failed on %s (%d): %s\n",
         path ? path : tmppath, errno, strerror (errno));
-  }
 
   if (!path)
     area->shm_area_name = strdup (tmppath);
 
-  if (writer) {
-    if (ftruncate (area->shm_fd, size)) {
+  if (writer)
+    if (ftruncate (area->shm_fd, size))
       RETURN_ERROR ("Could not resize memory area to header size,"
           " ftruncate failed (%d): %s\n", errno, strerror (errno));
-    }
-  }
 
   if (writer)
     prot = PROT_READ | PROT_WRITE;
@@ -303,9 +306,8 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
 
   area->shm_area = mmap (NULL, size, prot, MAP_SHARED, area->shm_fd, 0);
 
-  if (area->shm_area == MAP_FAILED) {
+  if (area->shm_area == MAP_FAILED)
     RETURN_ERROR ("mmap failed (%d): %s\n", errno, strerror (errno));
-  }
 
   area->id = id;
 
@@ -387,9 +389,8 @@ sp_close (ShmPipe * self)
   while (self->clients)
     sp_writer_close_client (self, self->clients);
 
-  while (self->shm_area) {
+  while (self->shm_area)
     sp_shm_area_dec (self, self->shm_area);
-  }
 
   spalloc_free (ShmPipe, self);
 }
