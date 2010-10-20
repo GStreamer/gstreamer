@@ -710,10 +710,8 @@ sp_client_open (const char *path)
   memset (self, 0, sizeof (ShmPipe));
 
   self->main_socket = socket (PF_UNIX, SOCK_STREAM, 0);
-  if (self->main_socket < 0) {
-    sp_close (self);
-    return NULL;
-  }
+  if (self->main_socket < 0)
+    goto error;
 
   sun.sun_family = AF_UNIX;
   strncpy (sun.sun_path, path, sizeof (sun.sun_path) - 1);
@@ -725,7 +723,7 @@ sp_client_open (const char *path)
   return self;
 
 error:
-  spalloc_free (ShmPipe, self);
+  sp_close (self);
   return NULL;
 }
 
