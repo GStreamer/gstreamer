@@ -198,7 +198,7 @@ ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
 }
 
 /**
- * ges_formatter_set_data:
+ * ges_formatter_get_data:
  * @formatter: a pointer to a #GESFormatter
  * @length: a pointer to a location into which to store the size of the
  * data in bytes.
@@ -221,8 +221,6 @@ ges_formatter_get_data (GESFormatter * formatter, gsize * length)
  * clears the data from a #GESFormatter without freeing it. You should call
  * this before disposing or setting data on a #GESFormatter if the current data
  * pointer should not be freed.
- *
- * Returns: a pointer to the data
  */
 
 void

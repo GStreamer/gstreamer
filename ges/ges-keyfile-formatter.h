@@ -43,7 +43,6 @@
 
 /**
  * GESKeyfileFormatter:
- * @parent: parent
  *
  * Serializes a #GESTimeline to a file using #GKeyFile
  */

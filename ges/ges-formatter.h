@@ -63,7 +63,7 @@ struct _GESFormatter {
  * @can_save_uri: class method which rturns true of a #GEFormatterClass can
  * write to a given URI.
  * @load_from_uri: class method to deserialize data from a URI
- * @save_from_uri: class method to serialize data to a URI
+ * @save_to_uri: class method to serialize data to a URI
  * @save: method to save timeline data
  * @load: method to load timeline data
  * 
