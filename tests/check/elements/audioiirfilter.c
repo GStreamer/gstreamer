@@ -76,17 +76,17 @@ on_rate_changed (GstElement * element, gint rate, gpointer user_data)
   g_value_array_append (va, &v);
   g_value_reset (&v);
 
-  g_object_set (G_OBJECT (element), "a", va, NULL);
+  g_object_set (G_OBJECT (element), "b", va, NULL);
 
   g_value_array_free (va);
 
   va = g_value_array_new (6);
 
-  g_value_set_double (&v, 0.0);
+  g_value_set_double (&v, 1.0);
   g_value_array_append (va, &v);
   g_value_reset (&v);
 
-  g_object_set (G_OBJECT (element), "b", va, NULL);
+  g_object_set (G_OBJECT (element), "a", va, NULL);
 
   g_value_array_free (va);
 }

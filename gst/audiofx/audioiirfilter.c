@@ -101,14 +101,14 @@ gst_audio_iir_filter_class_init (GstAudioIIRFilterClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_A,
       g_param_spec_value_array ("a", "A",
-          "Filter coefficients (numerator of transfer function)",
+          "Filter coefficients (denominator of transfer function)",
           g_param_spec_double ("Coefficient", "Filter Coefficient",
               "Filter coefficient", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_B,
       g_param_spec_value_array ("b", "B",
-          "Filter coefficients (denominator of transfer function)",
+          "Filter coefficients (numerator of transfer function)",
           g_param_spec_double ("Coefficient", "Filter Coefficient",
               "Filter coefficient", -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),

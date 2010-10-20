@@ -201,8 +201,8 @@ gst_audio_cheb_limit_init (GstAudioChebLimit * filter)
 
 static void
 generate_biquad_coefficients (GstAudioChebLimit * filter,
-    gint p, gdouble * a0, gdouble * a1, gdouble * a2,
-    gdouble * b1, gdouble * b2)
+    gint p, gdouble * b0, gdouble * b1, gdouble * b2,
+    gdouble * a1, gdouble * a2)
 {
   gint np = filter->poles;
   gdouble ripple = filter->ripple;
@@ -329,11 +329,11 @@ generate_biquad_coefficients (GstAudioChebLimit * filter,
       k = -cos ((omega + 1.0) / 2.0) / cos ((omega - 1.0) / 2.0);
 
     d = 1.0 + y1 * k - y2 * k * k;
-    *a0 = (x0 + k * (-x1 + k * x2)) / d;
-    *a1 = (x1 + k * k * x1 - 2.0 * k * (x0 + x2)) / d;
-    *a2 = (x0 * k * k - x1 * k + x2) / d;
-    *b1 = (2.0 * k + y1 + y1 * k * k - 2.0 * y2 * k) / d;
-    *b2 = (-k * k - y1 * k + y2) / d;
+    *b0 = (x0 + k * (-x1 + k * x2)) / d;
+    *b1 = (x1 + k * k * x1 - 2.0 * k * (x0 + x2)) / d;
+    *b2 = (x0 * k * k - x1 * k + x2) / d;
+    *a1 = (2.0 * k + y1 + y1 * k * k - 2.0 * y2 * k) / d;
+    *a2 = (-k * k - y1 * k + y2) / d;
 
     if (filter->mode == MODE_HIGH_PASS) {
       *a1 = -*a1;
@@ -347,10 +347,12 @@ generate_coefficients (GstAudioChebLimit * filter)
 {
   if (GST_AUDIO_FILTER_RATE (filter) == 0) {
     gdouble *a = g_new0 (gdouble, 1);
+    gdouble *b = g_new0 (gdouble, 1);
 
     a[0] = 1.0;
+    b[0] = 1.0;
     gst_audio_fx_base_iir_filter_set_coefficients (GST_AUDIO_FX_BASE_IIR_FILTER
-        (filter), a, 1, NULL, 0);
+        (filter), a, 1, b, 1);
 
     GST_LOG_OBJECT (filter, "rate was not set yet");
     return;
@@ -358,18 +360,22 @@ generate_coefficients (GstAudioChebLimit * filter)
 
   if (filter->cutoff >= GST_AUDIO_FILTER_RATE (filter) / 2.0) {
     gdouble *a = g_new0 (gdouble, 1);
+    gdouble *b = g_new0 (gdouble, 1);
 
-    a[0] = (filter->mode == MODE_LOW_PASS) ? 1.0 : 0.0;
+    a[0] = 1.0;
+    b[0] = (filter->mode == MODE_LOW_PASS) ? 1.0 : 0.0;
     gst_audio_fx_base_iir_filter_set_coefficients (GST_AUDIO_FX_BASE_IIR_FILTER
-        (filter), a, 1, NULL, 0);
+        (filter), a, 1, b, 1);
     GST_LOG_OBJECT (filter, "cutoff was higher than nyquist frequency");
     return;
   } else if (filter->cutoff <= 0.0) {
     gdouble *a = g_new0 (gdouble, 1);
+    gdouble *b = g_new0 (gdouble, 1);
 
-    a[0] = (filter->mode == MODE_LOW_PASS) ? 0.0 : 1.0;
+    a[0] = 1.0;
+    b[0] = (filter->mode == MODE_LOW_PASS) ? 0.0 : 1.0;
     gst_audio_fx_base_iir_filter_set_coefficients (GST_AUDIO_FX_BASE_IIR_FILTER
-        (filter), a, 1, NULL, 0);
+        (filter), a, 1, b, 1);
     GST_LOG_OBJECT (filter, "cutoff is lower than zero");
     return;
   }
@@ -388,11 +394,11 @@ generate_coefficients (GstAudioChebLimit * filter)
     b[2] = 1.0;
 
     for (p = 1; p <= np / 2; p++) {
-      gdouble a0, a1, a2, b1, b2;
+      gdouble b0, b1, b2, a1, a2;
       gdouble *ta = g_new0 (gdouble, np + 3);
       gdouble *tb = g_new0 (gdouble, np + 3);
 
-      generate_biquad_coefficients (filter, p, &a0, &a1, &a2, &b1, &b2);
+      generate_biquad_coefficients (filter, p, &b0, &b1, &b2, &a1, &a2);
 
       memcpy (ta, a, sizeof (gdouble) * (np + 3));
       memcpy (tb, b, sizeof (gdouble) * (np + 3));
@@ -401,21 +407,19 @@ generate_coefficients (GstAudioChebLimit * filter)
        * to the cascade by multiplication of the transfer
        * functions */
       for (i = 2; i < np + 3; i++) {
-        a[i] = a0 * ta[i] + a1 * ta[i - 1] + a2 * ta[i - 2];
-        b[i] = tb[i] - b1 * tb[i - 1] - b2 * tb[i - 2];
+        b[i] = b0 * tb[i] + b1 * tb[i - 1] + b2 * tb[i - 2];
+        a[i] = ta[i] - a1 * ta[i - 1] - a2 * ta[i - 2];
       }
       g_free (ta);
       g_free (tb);
     }
 
-    /* Move coefficients to the beginning of the array
-     * and multiply the b coefficients with -1 to move from
+    /* Move coefficients to the beginning of the array to move from
      * the transfer function's coefficients to the difference
      * equation's coefficients */
-    b[2] = 0.0;
     for (i = 0; i <= np; i++) {
       a[i] = a[i + 2];
-      b[i] = -b[i + 2];
+      b[i] = b[i + 2];
     }
 
     /* Normalize to unity gain at frequency 0 for lowpass
@@ -433,7 +437,7 @@ generate_coefficients (GstAudioChebLimit * filter)
             -1.0, 0.0);
 
       for (i = 0; i <= np; i++) {
-        a[i] /= gain;
+        b[i] /= gain;
       }
     }
 

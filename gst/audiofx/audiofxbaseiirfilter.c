@@ -132,7 +132,7 @@ gst_audio_fx_base_iir_filter_init (GstAudioFXBaseIIRFilter * filter)
 }
 
 /* Evaluate the transfer function that corresponds to the IIR
- * coefficients at zr + zi*I and return the magnitude */
+ * coefficients at (zr + zi*I)^-1 and return the magnitude */
 gdouble
 gst_audio_fx_base_iir_filter_calculate_gain (gdouble * a, guint na, gdouble * b,
     guint nb, gdouble zr, gdouble zi)
@@ -146,9 +146,9 @@ gst_audio_fx_base_iir_filter_calculate_gain (gdouble * a, guint na, gdouble * b,
 
   gint i;
 
-  sum_ar = 0.0;
+  sum_ar = a[na - 1];
   sum_ai = 0.0;
-  for (i = na - 1; i >= 0; i--) {
+  for (i = na - 2; i >= 0; i--) {
     sum_r_old = sum_ar;
     sum_i_old = sum_ai;
 
@@ -156,22 +156,20 @@ gst_audio_fx_base_iir_filter_calculate_gain (gdouble * a, guint na, gdouble * b,
     sum_ai = (sum_r_old * zi + sum_i_old * zr) + 0.0;
   }
 
-  sum_br = 0.0;
+  sum_br = b[nb - 1];
   sum_bi = 0.0;
-  for (i = nb - 1; i >= 0; i--) {
+  for (i = nb - 2; i >= 0; i--) {
     sum_r_old = sum_br;
     sum_i_old = sum_bi;
 
-    sum_br = (sum_r_old * zr - sum_i_old * zi) - b[i];
-    sum_bi = (sum_r_old * zi + sum_i_old * zr) - 0.0;
+    sum_br = (sum_r_old * zr - sum_i_old * zi) + b[i];
+    sum_bi = (sum_r_old * zi + sum_i_old * zr) + 0.0;
   }
-  sum_br += 1.0;
-  sum_bi += 0.0;
 
   gain_r =
-      (sum_ar * sum_br + sum_ai * sum_bi) / (sum_br * sum_br + sum_bi * sum_bi);
+      (sum_br * sum_ar + sum_bi * sum_ai) / (sum_ar * sum_ar + sum_ai * sum_ai);
   gain_i =
-      (sum_ai * sum_br - sum_ar * sum_bi) / (sum_br * sum_br + sum_bi * sum_bi);
+      (sum_bi * sum_ar - sum_br * sum_ai) / (sum_ar * sum_ar + sum_ai * sum_ai);
 
   return (sqrt (gain_r * gain_r + gain_i * gain_i));
 }
@@ -201,12 +199,12 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
       if (free)
         g_free (ctx->x);
       else
-        memset (ctx->x, 0, filter->na * sizeof (gdouble));
+        memset (ctx->x, 0, filter->nb * sizeof (gdouble));
 
       if (free)
         g_free (ctx->y);
       else
-        memset (ctx->y, 0, filter->nb * sizeof (gdouble));
+        memset (ctx->y, 0, filter->na * sizeof (gdouble));
     }
 
     g_free (filter->channels);
@@ -227,8 +225,8 @@ gst_audio_fx_base_iir_filter_set_coefficients (GstAudioFXBaseIIRFilter * filter,
     for (i = 0; i < filter->nchannels; i++) {
       ctx = &filter->channels[i];
 
-      ctx->x = g_new0 (gdouble, filter->na);
-      ctx->y = g_new0 (gdouble, filter->nb);
+      ctx->x = g_new0 (gdouble, filter->nb);
+      ctx->y = g_new0 (gdouble, filter->na);
     }
   }
 
@@ -279,8 +277,8 @@ gst_audio_fx_base_iir_filter_setup (GstAudioFilter * base,
     for (i = 0; i < channels; i++) {
       ctx = &filter->channels[i];
 
-      ctx->x = g_new0 (gdouble, filter->na);
-      ctx->y = g_new0 (gdouble, filter->nb);
+      ctx->x = g_new0 (gdouble, filter->nb);
+      ctx->y = g_new0 (gdouble, filter->na);
     }
     filter->nchannels = channels;
   }
@@ -292,32 +290,33 @@ static inline gdouble
 process (GstAudioFXBaseIIRFilter * filter,
     GstAudioFXBaseIIRFilterChannelCtx * ctx, gdouble x0)
 {
-  gdouble val = filter->a[0] * x0;
+  gdouble val = filter->b[0] * x0;
   gint i, j;
 
-  for (i = 1, j = ctx->x_pos; i < filter->na; i++) {
-    val += filter->a[i] * ctx->x[j];
-    j--;
-    if (j < 0)
-      j = filter->na - 1;
-  }
-
-  for (i = 1, j = ctx->y_pos; i < filter->nb; i++) {
-    val += filter->b[i] * ctx->y[j];
+  for (i = 1, j = ctx->x_pos; i < filter->nb; i++) {
+    val += filter->b[i] * ctx->x[j];
     j--;
     if (j < 0)
       j = filter->nb - 1;
   }
 
+  for (i = 1, j = ctx->y_pos; i < filter->na; i++) {
+    val -= filter->a[i] * ctx->y[j];
+    j--;
+    if (j < 0)
+      j = filter->na - 1;
+  }
+  val /= filter->a[0];
+
   if (ctx->x) {
     ctx->x_pos++;
-    if (ctx->x_pos >= filter->na)
+    if (ctx->x_pos >= filter->nb)
       ctx->x_pos = 0;
     ctx->x[ctx->x_pos] = x0;
   }
   if (ctx->y) {
     ctx->y_pos++;
-    if (ctx->y_pos >= filter->nb)
+    if (ctx->y_pos >= filter->na)
       ctx->y_pos = 0;
 
     ctx->y[ctx->y_pos] = val;

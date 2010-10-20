@@ -209,8 +209,8 @@ gst_audio_cheb_band_init (GstAudioChebBand * filter)
 
 static void
 generate_biquad_coefficients (GstAudioChebBand * filter,
-    gint p, gdouble * a0, gdouble * a1, gdouble * a2, gdouble * a3,
-    gdouble * a4, gdouble * b1, gdouble * b2, gdouble * b3, gdouble * b4)
+    gint p, gdouble * b0, gdouble * b1, gdouble * b2, gdouble * b3,
+    gdouble * b4, gdouble * a1, gdouble * a2, gdouble * a3, gdouble * a4)
 {
   gint np = filter->poles / 2;
   gdouble ripple = filter->ripple;
@@ -349,19 +349,19 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
 
       d = 1.0 + beta * (y1 - beta * y2);
 
-      *a0 = (x0 + beta * (-x1 + beta * x2)) / d;
-      *a1 = (alpha * (-2.0 * x0 + x1 + beta * x1 - 2.0 * beta * x2)) / d;
-      *a2 =
+      *b0 = (x0 + beta * (-x1 + beta * x2)) / d;
+      *b1 = (alpha * (-2.0 * x0 + x1 + beta * x1 - 2.0 * beta * x2)) / d;
+      *b2 =
           (-x1 - beta * beta * x1 + 2.0 * beta * (x0 + x2) +
           alpha * alpha * (x0 - x1 + x2)) / d;
-      *a3 = (alpha * (x1 + beta * (-2.0 * x0 + x1) - 2.0 * x2)) / d;
-      *a4 = (beta * (beta * x0 - x1) + x2) / d;
-      *b1 = (alpha * (2.0 + y1 + beta * y1 - 2.0 * beta * y2)) / d;
-      *b2 =
+      *b3 = (alpha * (x1 + beta * (-2.0 * x0 + x1) - 2.0 * x2)) / d;
+      *b4 = (beta * (beta * x0 - x1) + x2) / d;
+      *a1 = (alpha * (2.0 + y1 + beta * y1 - 2.0 * beta * y2)) / d;
+      *a2 =
           (-y1 - beta * beta * y1 - alpha * alpha * (1.0 + y1 - y2) +
           2.0 * beta * (-1.0 + y2)) / d;
-      *b3 = (alpha * (y1 + beta * (2.0 + y1) - 2.0 * y2)) / d;
-      *b4 = (-beta * beta - beta * y1 + y2) / d;
+      *a3 = (alpha * (y1 + beta * (2.0 + y1) - 2.0 * y2)) / d;
+      *a4 = (-beta * beta - beta * y1 + y2) / d;
     } else {
       a = cos ((w1 + w0) / 2.0) / cos ((w1 - w0) / 2.0);
       b = tan (1.0 / 2.0) * tan ((w1 - w0) / 2.0);
@@ -371,19 +371,19 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
 
       d = -1.0 + beta * (beta * y2 + y1);
 
-      *a0 = (-x0 - beta * x1 - beta * beta * x2) / d;
-      *a1 = (alpha * (2.0 * x0 + x1 + beta * x1 + 2.0 * beta * x2)) / d;
-      *a2 =
+      *b0 = (-x0 - beta * x1 - beta * beta * x2) / d;
+      *b1 = (alpha * (2.0 * x0 + x1 + beta * x1 + 2.0 * beta * x2)) / d;
+      *b2 =
           (-x1 - beta * beta * x1 - 2.0 * beta * (x0 + x2) -
           alpha * alpha * (x0 + x1 + x2)) / d;
-      *a3 = (alpha * (x1 + beta * (2.0 * x0 + x1) + 2.0 * x2)) / d;
-      *a4 = (-beta * beta * x0 - beta * x1 - x2) / d;
-      *b1 = (alpha * (-2.0 + y1 + beta * y1 + 2.0 * beta * y2)) / d;
-      *b2 =
+      *b3 = (alpha * (x1 + beta * (2.0 * x0 + x1) + 2.0 * x2)) / d;
+      *b4 = (-beta * beta * x0 - beta * x1 - x2) / d;
+      *a1 = (alpha * (-2.0 + y1 + beta * y1 + 2.0 * beta * y2)) / d;
+      *a2 =
           -(y1 + beta * beta * y1 + 2.0 * beta * (-1.0 + y2) +
           alpha * alpha * (-1.0 + y1 + y2)) / d;
-      *b3 = (alpha * (beta * (-2.0 + y1) + y1 + 2.0 * y2)) / d;
-      *b4 = -(-beta * beta + beta * y1 + y2) / d;
+      *a3 = (alpha * (beta * (-2.0 + y1) + y1 + 2.0 * y2)) / d;
+      *a4 = -(-beta * beta + beta * y1 + y2) / d;
     }
   }
 }
@@ -395,20 +395,24 @@ generate_coefficients (GstAudioChebBand * filter)
 
   if (rate == 0) {
     gdouble *a = g_new0 (gdouble, 1);
+    gdouble *b = g_new0 (gdouble, 1);
 
     a[0] = 1.0;
+    b[0] = 1.0;
     gst_audio_fx_base_iir_filter_set_coefficients (GST_AUDIO_FX_BASE_IIR_FILTER
-        (filter), a, 1, NULL, 0);
+        (filter), a, 1, b, 1);
     GST_LOG_OBJECT (filter, "rate was not set yet");
     return;
   }
 
   if (filter->upper_frequency <= filter->lower_frequency) {
     gdouble *a = g_new0 (gdouble, 1);
+    gdouble *b = g_new0 (gdouble, 1);
 
-    a[0] = (filter->mode == MODE_BAND_PASS) ? 0.0 : 1.0;
+    a[0] = 1.0;
+    b[0] = (filter->mode == MODE_BAND_PASS) ? 0.0 : 1.0;
     gst_audio_fx_base_iir_filter_set_coefficients (GST_AUDIO_FX_BASE_IIR_FILTER
-        (filter), a, 1, NULL, 0);
+        (filter), a, 1, b, 1);
 
     GST_LOG_OBJECT (filter, "frequency band had no or negative dimension");
     return;
@@ -438,12 +442,12 @@ generate_coefficients (GstAudioChebBand * filter)
     b[4] = 1.0;
 
     for (p = 1; p <= np / 4; p++) {
-      gdouble a0, a1, a2, a3, a4, b1, b2, b3, b4;
+      gdouble b0, b1, b2, b3, b4, a1, a2, a3, a4;
       gdouble *ta = g_new0 (gdouble, np + 5);
       gdouble *tb = g_new0 (gdouble, np + 5);
 
-      generate_biquad_coefficients (filter, p, &a0, &a1, &a2, &a3, &a4, &b1,
-          &b2, &b3, &b4);
+      generate_biquad_coefficients (filter, p, &b0, &b1, &b2, &b3, &b4, &a1,
+          &a2, &a3, &a4);
 
       memcpy (ta, a, sizeof (gdouble) * (np + 5));
       memcpy (tb, b, sizeof (gdouble) * (np + 5));
@@ -452,25 +456,23 @@ generate_coefficients (GstAudioChebBand * filter)
        * to the cascade by multiplication of the transfer
        * functions */
       for (i = 4; i < np + 5; i++) {
-        a[i] =
-            a0 * ta[i] + a1 * ta[i - 1] + a2 * ta[i - 2] + a3 * ta[i - 3] +
-            a4 * ta[i - 4];
         b[i] =
-            tb[i] - b1 * tb[i - 1] - b2 * tb[i - 2] - b3 * tb[i - 3] -
+            b0 * tb[i] + b1 * tb[i - 1] + b2 * tb[i - 2] + b3 * tb[i - 3] +
             b4 * tb[i - 4];
+        a[i] =
+            ta[i] - a1 * ta[i - 1] - a2 * ta[i - 2] - a3 * ta[i - 3] -
+            a4 * ta[i - 4];
       }
       g_free (ta);
       g_free (tb);
     }
 
-    /* Move coefficients to the beginning of the array
-     * and multiply the b coefficients with -1 to move from
+    /* Move coefficients to the beginning of the array to move from
      * the transfer function's coefficients to the difference
      * equation's coefficients */
-    b[4] = 0.0;
     for (i = 0; i <= np; i++) {
       a[i] = a[i + 4];
-      b[i] = -b[i + 4];
+      b[i] = b[i + 4];
     }
 
     /* Normalize to unity gain at frequency 0 and frequency
@@ -489,7 +491,7 @@ generate_coefficients (GstAudioChebBand * filter)
       gain1 = sqrt (gain1 * gain2);
 
       for (i = 0; i <= np; i++) {
-        a[i] /= gain1;
+        b[i] /= gain1;
       }
     } else {
       /* gain is H(wc), wc = center frequency */
@@ -503,7 +505,7 @@ generate_coefficients (GstAudioChebBand * filter)
           zi);
 
       for (i = 0; i <= np; i++) {
-        a[i] /= gain;
+        b[i] /= gain;
       }
     }
 
