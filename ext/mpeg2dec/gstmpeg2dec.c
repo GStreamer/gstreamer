@@ -1540,6 +1540,10 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
               mpeg2dec->next_time, &format, &cur))
         goto error;
 
+      cur = gst_segment_to_stream_time (&mpeg2dec->segment, format, cur);
+      if (cur == -1)
+        goto error;
+
       gst_query_set_position (query, format, cur);
 
       GST_LOG_OBJECT (mpeg2dec,
