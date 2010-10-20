@@ -33,22 +33,30 @@
 #include <string.h>
 #include <assert.h>
 
+/* This is the allocated space to hold multiple blocks */
 struct _ShmAllocSpace
 {
+  /* The total size of this space */
   size_t size;
 
+  /* chained list of the blocks contained in this space */
   ShmAllocBlock *blocks;
 };
 
+/* A single block of data */
 struct _ShmAllocBlock
 {
   int use_count;
 
+  /* Pointer back to the AllocSpace where this block is */
   ShmAllocSpace *space;
 
+  /* The offset of this block in the alloc space */
   unsigned long offset;
+  /* The size of the block */
   unsigned long size;
 
+  /* Pointer to the next block in the chain */
   ShmAllocBlock *next;
 };
 
