@@ -88,7 +88,7 @@ struct _ShmArea
 
   int shm_fd;
 
-  char *shm_area;
+  char *shm_area_buf;
   size_t shm_area_len;
 
   char *shm_area_name;
@@ -302,9 +302,9 @@ sp_open_shm (char *path, int id, int writer, mode_t perms, size_t size)
   else
     prot = PROT_READ;
 
-  area->shm_area = mmap (NULL, size, prot, MAP_SHARED, area->shm_fd, 0);
+  area->shm_area_buf = mmap (NULL, size, prot, MAP_SHARED, area->shm_fd, 0);
 
-  if (area->shm_area == MAP_FAILED)
+  if (area->shm_area_buf == MAP_FAILED)
     RETURN_ERROR ("mmap failed (%d): %s\n", errno, strerror (errno));
 
   area->id = id;
@@ -342,8 +342,8 @@ sp_close_shm (ShmPipe * self, ShmArea * area)
     assert (item);
   }
 
-  if (area->shm_area != MAP_FAILED)
-    munmap (area->shm_area, area->shm_area_len);
+  if (area->shm_area_buf != MAP_FAILED)
+    munmap (area->shm_area_buf, area->shm_area_len);
 
   if (area->shm_fd >= 0)
     close (area->shm_fd);
@@ -488,7 +488,7 @@ sp_writer_alloc_block (ShmPipe * self, size_t size)
 char *
 sp_writer_block_get_buf (ShmBlock * block)
 {
-  return block->area->shm_area +
+  return block->area->shm_area_buf +
       shm_alloc_space_alloc_block_get_offset (block->ablock);
 }
 
@@ -518,8 +518,9 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
     return 0;
 
   for (area = self->shm_area; area; area = area->next) {
-    if (buf >= area->shm_area && buf < (area->shm_area + area->shm_area_len)) {
-      offset = buf - area->shm_area;
+    if (buf >= area->shm_area_buf &&
+        buf < (area->shm_area_buf + area->shm_area_len)) {
+      offset = buf - area->shm_area_buf;
       ablock = shm_alloc_space_block_get (area->allocspace, offset);
       assert (ablock);
       break;
@@ -630,7 +631,7 @@ sp_client_recv (ShmPipe * self, char **buf)
       assert (buf);
       for (area = self->shm_area; area; area = area->next) {
         if (area->id == cb.area_id) {
-          *buf = area->shm_area + cb.payload.buffer.offset;
+          *buf = area->shm_area_buf + cb.payload.buffer.offset;
           sp_shm_area_inc (area);
           return cb.payload.buffer.size;
         }
@@ -684,14 +685,14 @@ sp_client_recv_finish (ShmPipe * self, char *buf)
   struct CommandBuffer cb = { 0 };
 
   for (shm_area = self->shm_area; shm_area; shm_area = shm_area->next) {
-    if (buf >= shm_area->shm_area &&
-        buf < shm_area->shm_area + shm_area->shm_area_len)
+    if (buf >= shm_area->shm_area_buf &&
+        buf < shm_area->shm_area_buf + shm_area->shm_area_len)
       break;
   }
 
   assert (shm_area);
 
-  offset = buf - shm_area->shm_area;
+  offset = buf - shm_area->shm_area_buf;
 
   sp_shm_area_dec (self, shm_area);
 
