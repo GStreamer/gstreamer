@@ -4522,7 +4522,7 @@ not_negotiated:
   }
 }
 
-static GstPadPushCache *
+static inline GstPadPushCache *
 pad_take_cache (GstPad * pad, gpointer * cache_ptr)
 {
   GstPadPushCache *cache;
@@ -4541,7 +4541,7 @@ pad_take_cache (GstPad * pad, gpointer * cache_ptr)
   return cache;
 }
 
-static void
+static inline void
 pad_free_cache (GstPadPushCache * cache)
 {
   gst_object_unref (cache->peer);
@@ -4550,7 +4550,7 @@ pad_free_cache (GstPadPushCache * cache)
   g_slice_free (GstPadPushCache, cache);
 }
 
-static void
+static inline void
 pad_put_cache (GstPad * pad, GstPadPushCache * cache, gpointer * cache_ptr)
 {
   /* put it back */
