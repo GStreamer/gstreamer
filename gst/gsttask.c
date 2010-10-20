@@ -82,6 +82,9 @@
 GST_DEBUG_CATEGORY_STATIC (task_debug);
 #define GST_CAT_DEFAULT (task_debug)
 
+#define SET_TASK_STATE(t,s) (g_atomic_int_set (&GST_TASK_STATE(t), (s)))
+#define GET_TASK_STATE(t)   (g_atomic_int_get (&GST_TASK_STATE(t)))
+
 #define GST_TASK_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_TASK, GstTaskPrivate))
 
@@ -185,7 +188,7 @@ gst_task_init (GstTask * task)
   task->abidata.ABI.thread = NULL;
   task->lock = NULL;
   task->cond = g_cond_new ();
-  task->state = GST_TASK_STOPPED;
+  SET_TASK_STATE (task, GST_TASK_STOPPED);
   task->priv->prio_set = FALSE;
 
   /* use the default klass pool for this task, users can
@@ -226,6 +229,7 @@ gst_task_configure_name (GstTask * task)
   const gchar *name;
   gchar thread_name[17] = { 0, };
 
+  GST_OBJECT_LOCK (task);
   name = GST_OBJECT_NAME (task);
 
   /* set the thread name to something easily identifiable */
@@ -236,6 +240,7 @@ gst_task_configure_name (GstTask * task)
     if (prctl (PR_SET_NAME, (unsigned long int) thread_name, 0, 0, 0))
       GST_DEBUG_OBJECT (task, "Failed to set thread name");
   }
+  GST_OBJECT_UNLOCK (task);
 #endif
 #ifdef _MSC_VER
   const gchar *name;
@@ -264,7 +269,7 @@ gst_task_func (GstTask * task)
    * mark our state running so that nobody can mess with
    * the mutex. */
   GST_OBJECT_LOCK (task);
-  if (task->state == GST_TASK_STOPPED)
+  if (GET_TASK_STATE (task) == GST_TASK_STOPPED)
     goto exit;
   lock = GST_TASK_GET_LOCK (task);
   if (G_UNLIKELY (lock == NULL))
@@ -281,37 +286,38 @@ gst_task_func (GstTask * task)
 
   /* locking order is TASK_LOCK, LOCK */
   g_static_rec_mutex_lock (lock);
-  GST_OBJECT_LOCK (task);
   /* configure the thread name now */
   gst_task_configure_name (task);
 
-  while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
-    while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
-      gint t;
-
-      t = g_static_rec_mutex_unlock_full (lock);
-      if (t <= 0) {
-        g_warning ("wrong STREAM_LOCK count %d", t);
-      }
-      GST_TASK_SIGNAL (task);
-      GST_TASK_WAIT (task);
-      GST_OBJECT_UNLOCK (task);
-      /* locking order.. */
-      if (t > 0)
-        g_static_rec_mutex_lock_full (lock, t);
-
+  while (G_LIKELY (GET_TASK_STATE (task) != GST_TASK_STOPPED)) {
+    if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_PAUSED)) {
       GST_OBJECT_LOCK (task);
-      if (G_UNLIKELY (task->state == GST_TASK_STOPPED))
-        goto done;
+      while (G_UNLIKELY (GST_TASK_STATE (task) == GST_TASK_PAUSED)) {
+        gint t;
+
+        t = g_static_rec_mutex_unlock_full (lock);
+        if (t <= 0) {
+          g_warning ("wrong STREAM_LOCK count %d", t);
+        }
+        GST_TASK_SIGNAL (task);
+        GST_TASK_WAIT (task);
+        GST_OBJECT_UNLOCK (task);
+        /* locking order.. */
+        if (t > 0)
+          g_static_rec_mutex_lock_full (lock, t);
+
+        GST_OBJECT_LOCK (task);
+        if (G_UNLIKELY (GET_TASK_STATE (task) == GST_TASK_STOPPED)) {
+          GST_OBJECT_UNLOCK (task);
+          goto done;
+        }
+      }
+      GST_OBJECT_UNLOCK (task);
     }
-    GST_OBJECT_UNLOCK (task);
 
     task->func (task->data);
-
-    GST_OBJECT_LOCK (task);
   }
 done:
-  GST_OBJECT_UNLOCK (task);
   g_static_rec_mutex_unlock (lock);
 
   GST_OBJECT_LOCK (task);
@@ -610,9 +616,7 @@ gst_task_get_state (GstTask * task)
 
   g_return_val_if_fail (GST_IS_TASK (task), GST_TASK_STOPPED);
 
-  GST_OBJECT_LOCK (task);
-  result = task->state;
-  GST_OBJECT_UNLOCK (task);
+  result = GET_TASK_STATE (task);
 
   return result;
 }
@@ -684,9 +688,9 @@ gst_task_set_state (GstTask * task, GstTaskState state)
       goto no_lock;
 
   /* if the state changed, do our thing */
-  old = task->state;
+  old = GET_TASK_STATE (task);
   if (old != state) {
-    task->state = state;
+    SET_TASK_STATE (task, state);
     switch (old) {
       case GST_TASK_STOPPED:
         /* If the task already has a thread scheduled we don't have to do
@@ -810,7 +814,7 @@ gst_task_join (GstTask * task)
   GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (tself == task->abidata.ABI.thread))
     goto joining_self;
-  task->state = GST_TASK_STOPPED;
+  SET_TASK_STATE (task, GST_TASK_STOPPED);
   /* signal the state change for when it was blocked in PAUSED. */
   GST_TASK_SIGNAL (task);
   /* we set the running flag when pushing the task on the thread pool.
