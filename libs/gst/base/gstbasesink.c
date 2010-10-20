@@ -269,6 +269,19 @@ struct _GstBaseSinkPrivate
 #define UPDATE_RUNNING_AVG_P(avg,val) DO_RUNNING_AVG(avg,val,16)
 #define UPDATE_RUNNING_AVG_N(avg,val) DO_RUNNING_AVG(avg,val,4)
 
+enum
+{
+  _PR_IS_NOTHING = 1 << 0,
+  _PR_IS_BUFFER = 1 << 1,
+  _PR_IS_BUFFERLIST = 1 << 2,
+  _PR_IS_EVENT = 1 << 3
+} PrivateObjectType;
+
+#define OBJ_IS_BUFFER(a) ((a) & _PR_IS_BUFFER)
+#define OBJ_IS_BUFFERLIST(a) ((a) & _PR_IS_BUFFERLIST)
+#define OBJ_IS_EVENT(a) ((a) & _PR_IS_EVENT)
+#define OBJ_IS_BUFFERFULL(a) ((a) & (_PR_IS_BUFFER | _PR_IS_BUFFERLIST))
+
 /* BaseSink properties */
 
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
@@ -383,7 +396,7 @@ static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
     GstMiniObject * obj, GstClockTime start, GstClockTime stop,
     GstClockReturn status, GstClockTimeDiff jitter);
 static GstFlowReturn gst_base_sink_preroll_object (GstBaseSink * basesink,
-    gboolean is_list, GstMiniObject * obj);
+    guint8 obj_type, GstMiniObject * obj);
 
 static void
 gst_base_sink_class_init (GstBaseSinkClass * klass)
@@ -1819,7 +1832,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime * rsstart, GstClockTime * rsstop,
     GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync,
     gboolean * stepped, GstSegment * segment, GstStepInfo * step,
-    gboolean * step_end)
+    gboolean * step_end, guint8 obj_type)
 {
   GstBaseSinkClass *bclass;
   GstBuffer *buffer;
@@ -1836,7 +1849,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   /* start with nothing */
   start = stop = GST_CLOCK_TIME_NONE;
 
-  if (G_UNLIKELY (GST_IS_EVENT (obj))) {
+  if (G_UNLIKELY (OBJ_IS_EVENT (obj_type))) {
     GstEvent *event = GST_EVENT_CAST (obj);
 
     switch (GST_EVENT_TYPE (event)) {
@@ -2199,9 +2212,17 @@ gst_base_sink_do_preroll (GstBaseSink * sink, GstMiniObject * obj)
   GstFlowReturn ret;
 
   while (G_UNLIKELY (sink->need_preroll)) {
+    guint8 obj_type = _PR_IS_NOTHING;
     GST_DEBUG_OBJECT (sink, "prerolling object %p", obj);
 
-    ret = gst_base_sink_preroll_object (sink, FALSE, obj);
+    if (G_LIKELY (GST_IS_BUFFER (obj)))
+      obj_type = _PR_IS_BUFFER;
+    else if (GST_IS_EVENT (obj))
+      obj_type = _PR_IS_EVENT;
+    else if (GST_IS_BUFFER_LIST (obj))
+      obj_type = _PR_IS_BUFFERLIST;
+
+    ret = gst_base_sink_preroll_object (sink, obj_type, obj);
     if (ret != GST_FLOW_OK)
       goto preroll_failed;
 
@@ -2325,7 +2346,7 @@ flushing:
  */
 static GstFlowReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
-    GstMiniObject * obj, gboolean * late, gboolean * step_end)
+    GstMiniObject * obj, gboolean * late, gboolean * step_end, guint8 obj_type)
 {
   GstClockTimeDiff jitter = 0;
   gboolean syncable;
@@ -2353,7 +2374,7 @@ do_step:
   /* get timing information for this object against the render segment */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
       &sstart, &sstop, &rstart, &rstop, &do_sync, &stepped, &basesink->segment,
-      current, step_end);
+      current, step_end, obj_type);
 
   if (G_UNLIKELY (stepped))
     goto step_skipped;
@@ -2761,7 +2782,7 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
  */
 static GstFlowReturn
 gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
-    gboolean is_list, gpointer obj)
+    guint8 obj_type, gpointer obj)
 {
   GstFlowReturn ret;
   GstBaseSinkClass *bclass;
@@ -2771,7 +2792,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 
   priv = basesink->priv;
 
-  if (is_list) {
+  if (OBJ_IS_BUFFERLIST (obj_type)) {
     /*
      * If buffer list, use the first group buffer within the list
      * for syncing
@@ -2788,20 +2809,22 @@ again:
 
   /* synchronize this object, non syncable objects return OK
    * immediatly. */
-  ret = gst_base_sink_do_sync (basesink, pad, sync_obj, &late, &step_end);
+  ret =
+      gst_base_sink_do_sync (basesink, pad, sync_obj, &late, &step_end,
+      obj_type);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto sync_failed;
 
   /* and now render, event or buffer/buffer list. */
-  if (G_LIKELY (is_list || GST_IS_BUFFER (obj))) {
+  if (G_LIKELY (OBJ_IS_BUFFERFULL (obj_type))) {
     /* drop late buffers unconditionally, let's hope it's unlikely */
     if (G_UNLIKELY (late))
       goto dropped;
 
     bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-    if (G_LIKELY ((is_list && bclass->render_list) ||
-            (!is_list && bclass->render))) {
+    if (G_LIKELY ((OBJ_IS_BUFFERLIST (obj_type) && bclass->render_list) ||
+            (!OBJ_IS_BUFFERLIST (obj_type) && bclass->render))) {
       gint do_qos;
 
       /* read once, to get same value before and after */
@@ -2813,7 +2836,7 @@ again:
       if (do_qos)
         gst_base_sink_do_render_stats (basesink, TRUE);
 
-      if (!is_list) {
+      if (!OBJ_IS_BUFFERLIST (obj_type)) {
         GstBuffer *buf;
 
         /* For buffer lists do not set last buffer. Creating buffer
@@ -2842,7 +2865,7 @@ again:
 
       priv->rendered++;
     }
-  } else if (G_LIKELY (GST_IS_EVENT (obj))) {
+  } else if (G_LIKELY (OBJ_IS_EVENT (obj_type))) {
     GstEvent *event = GST_EVENT_CAST (obj);
     gboolean event_res = TRUE;
     GstEventType type;
@@ -2981,7 +3004,7 @@ flushing:
  * function does not take ownership of obj.
  */
 static GstFlowReturn
-gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
+gst_base_sink_preroll_object (GstBaseSink * basesink, guint8 obj_type,
     GstMiniObject * obj)
 {
   GstFlowReturn ret;
@@ -2989,12 +3012,12 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
   GST_DEBUG_OBJECT (basesink, "prerolling object %p", obj);
 
   /* if it's a buffer, we need to call the preroll method */
-  if (G_LIKELY (is_list || GST_IS_BUFFER (obj)) && basesink->priv->call_preroll) {
+  if (G_LIKELY (OBJ_IS_BUFFERFULL (obj_type) && basesink->priv->call_preroll)) {
     GstBaseSinkClass *bclass;
     GstBuffer *buf;
     GstClockTime timestamp;
 
-    if (is_list) {
+    if (OBJ_IS_BUFFERLIST (obj_type)) {
       buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
       g_assert (NULL != buf);
     } else {
@@ -3011,7 +3034,7 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, gboolean is_list,
      * with meaningful data can be done only with memcpy which will
      * significantly affect performance
      */
-    if (!is_list) {
+    if (!OBJ_IS_BUFFERLIST (obj_type)) {
       gst_base_sink_set_last_buffer (basesink, buf);
     }
 
@@ -3055,7 +3078,7 @@ stopping:
  */
 static GstFlowReturn
 gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
-    gboolean is_list, gpointer obj, gboolean prerollable)
+    guint8 obj_type, gpointer obj, gboolean prerollable)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gint length;
@@ -3071,7 +3094,7 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
 
     /* first prerollable item needs to finish the preroll */
     if (length == 1) {
-      ret = gst_base_sink_preroll_object (basesink, is_list, obj);
+      ret = gst_base_sink_preroll_object (basesink, obj_type, obj);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto preroll_failed;
     }
@@ -3094,13 +3117,15 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
     GST_DEBUG_OBJECT (basesink, "rendering queued object %p", o);
 
     /* do something with the return value */
-    ret = gst_base_sink_render_object (basesink, pad, FALSE, o);
+    ret =
+        gst_base_sink_render_object (basesink, pad,
+        GST_IS_BUFFER (o) ? _PR_IS_BUFFER : _PR_IS_EVENT, o);
     if (ret != GST_FLOW_OK)
       goto dequeue_failed;
   }
 
   /* now render the object */
-  ret = gst_base_sink_render_object (basesink, pad, is_list, obj);
+  ret = gst_base_sink_render_object (basesink, pad, obj_type, obj);
   basesink->preroll_queued = 0;
 
   return ret;
@@ -3136,6 +3161,8 @@ dequeue_failed:
  * the queue.
  *
  * This function takes ownership of obj.
+ *
+ * Note: Only GstEvent seem to be passed to this private method
  */
 static GstFlowReturn
 gst_base_sink_queue_object (GstBaseSink * basesink, GstPad * pad,
@@ -3151,7 +3178,7 @@ gst_base_sink_queue_object (GstBaseSink * basesink, GstPad * pad,
     goto was_eos;
 
   ret =
-      gst_base_sink_queue_object_unlocked (basesink, pad, FALSE, obj,
+      gst_base_sink_queue_object_unlocked (basesink, pad, _PR_IS_EVENT, obj,
       prerollable);
   GST_PAD_PREROLL_UNLOCK (pad);
 
@@ -3259,7 +3286,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
         /* EOS is a prerollable object, we call the unlocked version because it
          * does not check the received_eos flag. */
         ret = gst_base_sink_queue_object_unlocked (basesink, pad,
-            FALSE, GST_MINI_OBJECT_CAST (event), TRUE);
+            _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), TRUE);
         if (G_UNLIKELY (ret != GST_FLOW_OK))
           result = FALSE;
       }
@@ -3293,7 +3320,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
         ret =
             gst_base_sink_queue_object_unlocked (basesink, pad,
-            FALSE, GST_MINI_OBJECT_CAST (event), FALSE);
+            _PR_IS_EVENT, GST_MINI_OBJECT_CAST (event), FALSE);
         if (G_UNLIKELY (ret != GST_FLOW_OK))
           result = FALSE;
         else {
@@ -3404,7 +3431,7 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
  */
 static GstFlowReturn
 gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
-    gboolean is_list, gpointer obj)
+    guint8 obj_type, gpointer obj)
 {
   GstBaseSinkClass *bclass;
   GstFlowReturn result;
@@ -3418,7 +3445,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   if (G_UNLIKELY (basesink->priv->received_eos))
     goto was_eos;
 
-  if (is_list) {
+  if (OBJ_IS_BUFFERLIST (obj_type)) {
     time_buf = gst_buffer_list_get (GST_BUFFER_LIST_CAST (obj), 0, 0);
     g_assert (NULL != time_buf);
   } else {
@@ -3475,7 +3502,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
   /* now we can process the buffer in the queue, this function takes ownership
    * of the buffer */
   result = gst_base_sink_queue_object_unlocked (basesink, pad,
-      is_list, obj, TRUE);
+      obj_type, obj, TRUE);
   return result;
 
   /* ERRORS */
@@ -3504,7 +3531,7 @@ out_of_segment:
  */
 static GstFlowReturn
 gst_base_sink_chain_main (GstBaseSink * basesink, GstPad * pad,
-    gboolean is_list, gpointer obj)
+    guint8 obj_type, gpointer obj)
 {
   GstFlowReturn result;
 
@@ -3512,7 +3539,7 @@ gst_base_sink_chain_main (GstBaseSink * basesink, GstPad * pad,
     goto wrong_mode;
 
   GST_PAD_PREROLL_LOCK (pad);
-  result = gst_base_sink_chain_unlocked (basesink, pad, is_list, obj);
+  result = gst_base_sink_chain_unlocked (basesink, pad, obj_type, obj);
   GST_PAD_PREROLL_UNLOCK (pad);
 
 done:
@@ -3541,7 +3568,7 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
 
   basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
-  return gst_base_sink_chain_main (basesink, pad, FALSE, buf);
+  return gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER, buf);
 }
 
 static GstFlowReturn
@@ -3555,7 +3582,7 @@ gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (G_LIKELY (bclass->render_list)) {
-    result = gst_base_sink_chain_main (basesink, pad, TRUE, list);
+    result = gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFERLIST, list);
   } else {
     GstBufferListIterator *it;
     GstBuffer *group;
@@ -3573,13 +3600,14 @@ gst_base_sink_chain_list (GstPad * pad, GstBufferList * list)
         } else {
           GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining group");
         }
-        result = gst_base_sink_chain_main (basesink, pad, FALSE, group);
+        result = gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER, group);
       } while (result == GST_FLOW_OK
           && gst_buffer_list_iterator_next_group (it));
     } else {
       GST_CAT_INFO_OBJECT (GST_CAT_SCHEDULING, pad, "chaining empty group");
       result =
-          gst_base_sink_chain_main (basesink, pad, FALSE, gst_buffer_new ());
+          gst_base_sink_chain_main (basesink, pad, _PR_IS_BUFFER,
+          gst_buffer_new ());
     }
     gst_buffer_list_iterator_free (it);
     gst_buffer_list_unref (list);
@@ -3922,7 +3950,7 @@ gst_base_sink_loop (GstPad * pad)
   gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_BYTES, offset);
 
   GST_PAD_PREROLL_LOCK (pad);
-  result = gst_base_sink_chain_unlocked (basesink, pad, FALSE, buf);
+  result = gst_base_sink_chain_unlocked (basesink, pad, _PR_IS_BUFFER, buf);
   GST_PAD_PREROLL_UNLOCK (pad);
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto paused;
