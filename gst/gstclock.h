@@ -553,6 +553,9 @@ GstClockReturn		gst_clock_id_wait_async_full	(GstClockID id,
 							 GDestroyNotify destroy_data);
 void			gst_clock_id_unschedule		(GstClockID id);
 
+gboolean                gst_clock_single_shot_id_reinit (GstClock * clock,
+							 GstClockID id,
+							 GstClockTime time);
 
 G_END_DECLS
 

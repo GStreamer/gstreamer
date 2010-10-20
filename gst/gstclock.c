@@ -207,6 +207,43 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   return (GstClockID) entry;
 }
 
+/* WARNING : Does not modify the refoucnt
+ * WARNING : Do not use if a pending clock operation is happening on that entry */
+static gboolean
+gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
+    GstClockTime time, GstClockTime interval, GstClockEntryType type)
+{
+  g_return_val_if_fail (entry->status != GST_CLOCK_BUSY, FALSE);
+  g_return_val_if_fail (entry->clock == clock, FALSE);
+
+  entry->type = type;
+  entry->time = time;
+  entry->interval = interval;
+  entry->status = GST_CLOCK_OK;
+
+  return TRUE;
+}
+
+/**
+ * gst_clock_single_shot_id_reinit:
+ * @clock: a #GstClock
+ * @id: a #GstClockID
+ * @time: The requested time.
+ *
+ * Reinitializes the provided single shot @id to the provided time. Does not
+ * modify the reference count.
+ *
+ * Returns: %TRUE if the GstClockID could be reinitialized to the provided
+ * @time, else %FALSE.
+ */
+gboolean
+gst_clock_single_shot_id_reinit (GstClock * clock, GstClockID id,
+    GstClockTime time)
+{
+  return gst_clock_entry_reinit (clock, (GstClockEntry *) id, time,
+      GST_CLOCK_TIME_NONE, GST_CLOCK_ENTRY_SINGLE);
+}
+
 /**
  * gst_clock_id_ref:
  * @id: The #GstClockID to ref

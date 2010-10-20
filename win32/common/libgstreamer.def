@@ -224,6 +224,7 @@ EXPORTS
 	gst_clock_set_calibration
 	gst_clock_set_master
 	gst_clock_set_resolution
+	gst_clock_single_shot_id_reinit
 	gst_clock_type_get_type
 	gst_clock_unadjust_unlocked
 	gst_core_error_get_type
