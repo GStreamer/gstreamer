@@ -144,7 +144,7 @@ window_closed (GtkWidget * widget, GdkEvent * event, gpointer user_data)
     g_print ("stopping\n");
   }
   anim_state.running = FALSE;
-  gtk_widget_hide_all (widget);
+  gtk_widget_hide (widget);
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gtk_main_quit ();
 }
