@@ -203,6 +203,8 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   entry->func = NULL;
   entry->user_data = NULL;
   entry->destroy_data = NULL;
+  entry->unscheduled = FALSE;
+  entry->woken_up = FALSE;
 
   return (GstClockID) entry;
 }
