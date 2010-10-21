@@ -1569,6 +1569,8 @@ type_found (GstElement * typefind, guint probability,
   if (!gst_element_link_pads (queue, "src", dec_elem, "sink"))
     goto could_not_link;
 
+  /* PLAYING in one go might fail (see bug #632782) */
+  gst_element_set_state (dec_elem, GST_STATE_PAUSED);
   gst_element_set_state (dec_elem, GST_STATE_PLAYING);
   gst_element_set_state (queue, GST_STATE_PLAYING);
 
