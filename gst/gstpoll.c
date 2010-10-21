@@ -1101,6 +1101,7 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
 static void
 gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
 {
+  g_mutex_lock (set->lock);
   /* check if the poll/select was aborted due to a command */
   if (set->controllable) {
 #ifndef G_OS_WIN32
@@ -1132,6 +1133,7 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
     }
 #endif
   }
+  g_mutex_unlock (set->lock);
 }
 
 /**
@@ -1349,9 +1351,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
     }
 
     if (!is_timer) {
-      g_mutex_lock (set->lock);
       gst_poll_check_ctrl_commands (set, res, &restarting);
-      g_mutex_unlock (set->lock);
     }
 
     /* update the controllable state if needed */
