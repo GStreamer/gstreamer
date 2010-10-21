@@ -14,7 +14,6 @@ EXTRA_DIST = \
 	gst-discoverer.c
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la\
-	-lgstpbutils-@GST_MAJORMINOR@ \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la\
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
