@@ -477,3 +477,64 @@ _wrap_gst_message_parse_buffering_stats (PyGstMiniObject *self)
 			     pyg_enum_from_gtype (GST_TYPE_BUFFERING_MODE, mode),
 			     avg_in, avg_out, buffering_left);
 }
+%%
+override gst_message_parse_qos noargs
+static PyObject *
+_wrap_gst_message_parse_qos (PyGstMiniObject *self)
+{
+	gboolean live;
+	guint64 running_time, stream_time, timestamp, duration;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_QOS) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'qos' message");
+		return NULL;
+	}
+
+	gst_message_parse_qos (GST_MESSAGE (self->obj), &live, &running_time, &stream_time,
+			       &timestamp, &duration);
+
+	return Py_BuildValue("OKKKK",
+			     PyBool_FromLong(live), running_time, stream_time,
+			     timestamp, duration);
+}
+%%
+override gst_message_parse_qos_values noargs
+static PyObject *
+_wrap_gst_message_parse_qos_values (PyGstMiniObject *self)
+{
+	gint64 jitter;
+	gdouble proportion;
+	gint quality;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_QOS) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'qos' message");
+		return NULL;
+	}
+
+	gst_message_parse_qos_values (GST_MESSAGE (self->obj), &jitter,
+				      &proportion, &quality);
+
+	return Py_BuildValue("Ldi",
+			     jitter, proportion, quality);
+}
+%%
+override gst_message_parse_qos_stats noargs
+static PyObject *
+_wrap_gst_message_parse_qos_stats (PyGstMiniObject *self)
+{
+	GstFormat format;
+	guint64 processed;
+	guint64 dropped;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_QOS) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'qos' message");
+		return NULL;
+	}
+
+	gst_message_parse_qos_stats (GST_MESSAGE (self->obj), &format,
+				     &processed, &dropped);
+
+	return Py_BuildValue("OKK",
+			     pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
+			     processed, dropped);
+}
