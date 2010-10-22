@@ -348,12 +348,10 @@
   (return-type "GType")
 )
 
-(define-function gst_discoverer_container_info_get_streams
+(define-method container_info_get_streams
+  (of-object "GstDiscovererStreamInfo")
   (c-name "gst_discoverer_container_info_get_streams")
   (return-type "GList*")
-  (parameters
-    '("GstDiscovererStreamInfo*" "info")
-  )
 )
 
 (define-function gst_discoverer_audio_info_get_type

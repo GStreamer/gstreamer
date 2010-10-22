@@ -255,3 +255,134 @@ _wrap_gst_install_plugins_async(PyGObject *self, PyObject *args)
     py_ret = pyg_enum_from_gtype(GST_TYPE_INSTALL_PLUGINS_RETURN, ret);
     return py_ret;
 }
+%%
+override gst_plugins_base_version noargs
+static PyObject *
+_wrap_gst_plugins_base_version (PyObject *self)
+{
+    guint	major, minor, micro, nano;
+    PyObject	*py_tuple;
+
+    gst_plugins_base_version (&major, &minor, &micro, &nano);
+    py_tuple = PyTuple_New(4);
+    PyTuple_SetItem(py_tuple, 0, PyInt_FromLong(major));
+    PyTuple_SetItem(py_tuple, 1, PyInt_FromLong(minor));
+    PyTuple_SetItem(py_tuple, 2, PyInt_FromLong(micro));
+    PyTuple_SetItem(py_tuple, 3, PyInt_FromLong(nano));
+
+    return py_tuple;
+}
+%%
+override gst_discoverer_info_get_stream_list noargs
+static PyObject *
+_wrap_gst_discoverer_info_get_stream_list(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = gst_discoverer_info_get_stream_list(GST_DISCOVERER_INFO (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
+%%
+override gst_discoverer_info_get_streams kwargs
+static PyObject *
+_wrap_gst_discoverer_info_get_streams(PyGstMiniObject * self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "type", NULL };
+    GList *res, *tmp;
+    PyObject *pyres, *py_type;
+    GType ftype;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:GstDiscovererInfo.get_streams", kwlist, &py_type))
+        return NULL;
+    if ((ftype = pyg_type_from_object(py_type)) == 0)
+        return NULL;
+    res = gst_discoverer_info_get_streams(GST_DISCOVERER_INFO (self->obj), ftype);
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
+%%
+override gst_discoverer_info_get_audio_streams noargs
+static PyObject *
+_wrap_gst_discoverer_info_get_audio_streams(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = gst_discoverer_info_get_audio_streams(GST_DISCOVERER_INFO (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
+%%
+override gst_discoverer_info_get_video_streams noargs
+static PyObject *
+_wrap_gst_discoverer_info_get_video_streams(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = gst_discoverer_info_get_video_streams(GST_DISCOVERER_INFO (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
+%%
+override gst_discoverer_info_get_container_streams noargs
+static PyObject *
+_wrap_gst_discoverer_info_get_container_streams(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = gst_discoverer_info_get_container_streams(GST_DISCOVERER_INFO (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
+%%
+override gst_discoverer_container_info_get_streams noargs
+static PyObject *
+_wrap_gst_discoverer_container_info_get_streams(PyGstMiniObject * self)
+{
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    res = gst_discoverer_container_info_get_streams(GST_DISCOVERER_STREAM_INFO (self->obj));
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	PyList_Append(pyres, pygstminiobject_new((GstMiniObject*) tmp->data));
+    }
+    if (res)
+	gst_discoverer_stream_info_list_free(res);
+    return pyres;
+}
