@@ -1903,8 +1903,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   }
   GST_BUFFER_DURATION (*outbuf) = out_duration;
 
-  if (out_timestamp != -1 && out_duration != -1)
+  if (out_timestamp != -1 && out_duration != -1 && out_duration != 0)
     ffmpegdec->next_out = out_timestamp + out_duration;
+  else
+    ffmpegdec->next_out = -1;
 
   /* palette is not part of raw video frame in gst and the size
    * of the outgoing buffer needs to be adjusted accordingly */
