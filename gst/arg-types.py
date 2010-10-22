@@ -376,6 +376,7 @@ class StringArrayArg(ArgType):
 
 
 matcher.register('GstClockTime', UInt64Arg())
+matcher.register('GstElementFactoryListType', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
 matcher.register('xmlNodePtr', XmlNodeArg())
 matcher.register('xmlDocPtr', XmlDocArg())
@@ -400,7 +401,7 @@ for typename in ["gint64", "GstClockTimeDiff"]:
 	matcher.register_reverse(typename, Int64Param)
 	matcher.register_reverse_ret(typename, Int64Return)
 
-for typename in ["guint64", "GstClockTime"]:
+for typename in ["guint64", "GstClockTime", "GstElementFactoryListType"]:
 	matcher.register_reverse(typename, UInt64Param)
 	matcher.register_reverse_ret(typename, UInt64Return)
 
