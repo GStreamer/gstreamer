@@ -548,7 +548,7 @@ sp_writer_send_buf (ShmPipe * self, char *buf, size_t size)
   }
 
   if (c == 0) {
-    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * self->num_clients, sb);
+    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * sb->num_clients, sb);
     return 0;
   }
 
@@ -784,7 +784,7 @@ sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf)
 
     shm_alloc_space_block_dec (buf->ablock);
     sp_shm_area_dec (self, buf->shm_area);
-    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * buf->num_clients, buf);
+    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * sb->num_clients, buf);
     return 0;
   }
 
