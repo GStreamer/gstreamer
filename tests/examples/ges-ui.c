@@ -39,6 +39,10 @@ typedef struct App
   GESTimeline *timeline;
   GESTimelinePipeline *pipeline;
   GESTimelineLayer *layer;
+  GESTrack *audio_track;
+  GESTrack *video_track;
+  guint audio_tracks;
+  guint video_tracks;
 
   /* application state */
   gchar *pending_uri;
@@ -77,6 +81,8 @@ typedef struct App
   GtkAction *stop;
   GtkAction *move_up;
   GtkAction *move_down;
+  GtkToggleAction *audio_track_action;
+  GtkToggleAction *video_track_action;
 
   GtkComboBox *halign;
   GtkComboBox *valign;
@@ -110,6 +116,8 @@ void move_down_activate_cb (GtkAction * item, App * app);
 void add_file_activate_cb (GtkAction * item, App * app);
 void add_text_activate_cb (GtkAction * item, App * app);
 void add_test_activate_cb (GtkAction * item, App * app);
+void audio_track_activate_cb (GtkToggleAction * item, App * app);
+void video_track_activate_cb (GtkToggleAction * item, App * app);
 void add_transition_activate_cb (GtkAction * item, App * app);
 void app_selection_changed_cb (GtkTreeSelection * selection, App * app);
 void halign_changed_cb (GtkComboBox * widget, App * app);
@@ -403,6 +411,10 @@ pipeline_state_changed_cb (App * app)
   gtk_action_set_sensitive (app->add_file, !playing_or_paused);
   gtk_action_set_sensitive (app->add_title, !playing_or_paused);
   gtk_action_set_sensitive (app->add_test, !playing_or_paused);
+  gtk_action_set_sensitive ((GtkAction *) app->audio_track_action,
+      !playing_or_paused);
+  gtk_action_set_sensitive ((GtkAction *) app->video_track_action,
+      !playing_or_paused);
   gtk_widget_set_sensitive (app->properties, !playing_or_paused);
 }
 
@@ -711,7 +723,53 @@ layer_added_cb (GESTimeline * timeline, GESTimelineLayer * layer, App * app)
       G_CALLBACK (layer_notify_valid_changed_cb), app);
 }
 
+static void
+update_track_actions (App * app)
+{
+  g_signal_handlers_disconnect_by_func (app->audio_track_action,
+      audio_track_activate_cb, app);
+  g_signal_handlers_disconnect_by_func (app->video_track_action,
+      video_track_activate_cb, app);
+  gtk_toggle_action_set_active (app->audio_track_action, app->audio_tracks);
+  gtk_toggle_action_set_active (app->video_track_action, app->video_tracks);
+  gtk_action_set_sensitive ((GtkAction *) app->audio_track_action,
+      app->audio_tracks <= 1);
+  gtk_action_set_sensitive ((GtkAction *) app->video_track_action,
+      app->video_tracks <= 1);
+  g_signal_connect (G_OBJECT (app->audio_track_action), "activate",
+      G_CALLBACK (audio_track_activate_cb), app);
+  g_signal_connect (G_OBJECT (app->video_track_action), "activate",
+      G_CALLBACK (video_track_activate_cb), app);
+}
 
+static void
+track_added_cb (GESTimeline * timeline, GESTrack * track, App * app)
+{
+  if (track->type == GES_TRACK_TYPE_AUDIO) {
+    app->audio_tracks++;
+    if (!app->audio_track)
+      app->audio_track = track;
+  }
+  if (track->type == GES_TRACK_TYPE_VIDEO) {
+    app->video_tracks++;
+    if (!app->video_track)
+      app->video_track = track;
+  }
+
+
+  update_track_actions (app);
+}
+
+static void
+track_removed_cb (GESTimeline * timeline, GESTrack * track, App * app)
+{
+  if (track->type == GES_TRACK_TYPE_AUDIO)
+    app->audio_tracks--;
+  if (track->type == GES_TRACK_TYPE_VIDEO)
+    app->video_tracks--;
+
+  update_track_actions (app);
+}
 
 static gboolean
 create_ui (App * app)
@@ -728,7 +786,6 @@ create_ui (App * app)
 
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "ges-ui.glade", NULL);
-  gtk_builder_connect_signals (builder, app);
 
   /* get a bunch of widgets from the XML tree */
 
@@ -759,6 +816,8 @@ create_ui (App * app)
   GET_WIDGET (app->background_properties, "background_properties", GTK_WIDGET);
   GET_WIDGET (app->frequency, "frequency", GTK_SPIN_BUTTON);
   GET_WIDGET (app->volume, "volume", GTK_HSCALE);
+  GET_WIDGET (app->audio_track_action, "audio_track", GTK_TOGGLE_ACTION);
+  GET_WIDGET (app->video_track_action, "video_track", GTK_TOGGLE_ACTION);
 
   /* get text notifications */
 
@@ -810,6 +869,10 @@ create_ui (App * app)
 
   g_signal_connect (app->timeline, "layer-added", G_CALLBACK
       (layer_added_cb), app);
+  g_signal_connect (app->timeline, "track-added", G_CALLBACK
+      (track_added_cb), app);
+  g_signal_connect (app->timeline, "track-removed", G_CALLBACK
+      (track_removed_cb), app);
 
   /* register callbacks on GES objects */
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
@@ -817,7 +880,7 @@ create_ui (App * app)
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), app);
 
   /* success */
-
+  gtk_builder_connect_signals (builder, app);
   g_object_unref (G_OBJECT (builder));
   return TRUE;
 
@@ -1027,6 +1090,46 @@ app_save_to_uri (App * app, gchar * uri)
 }
 
 static void
+app_add_audio_track (App * app)
+{
+  if (app->audio_tracks)
+    return;
+
+  app->audio_track = ges_track_audio_raw_new ();
+  ges_timeline_add_track (app->timeline, app->audio_track);
+}
+
+static void
+app_remove_audio_track (App * app)
+{
+  if (!app->audio_tracks)
+    return;
+
+  ges_timeline_remove_track (app->timeline, app->audio_track);
+  app->audio_track = NULL;
+}
+
+static void
+app_add_video_track (App * app)
+{
+  if (app->video_tracks)
+    return;
+
+  app->video_track = ges_track_video_raw_new ();
+  ges_timeline_add_track (app->timeline, app->video_track);
+}
+
+static void
+app_remove_video_track (App * app)
+{
+  if (!app->video_tracks)
+    return;
+
+  ges_timeline_remove_track (app->timeline, app->video_track);
+  app->video_track = NULL;
+}
+
+static void
 app_dispose (App * app)
 {
   if (app) {
@@ -1104,6 +1207,8 @@ app_new (void)
   if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))
     goto fail;
 
+  ret->audio_track = a;
+  ret->video_track = v;
   return ret;
 
 fail:
@@ -1288,6 +1393,26 @@ void
 move_down_activate_cb (GtkAction * item, App * app)
 {
   app_move_selected_down (app);
+}
+
+void
+audio_track_activate_cb (GtkToggleAction * item, App * app)
+{
+  if (gtk_toggle_action_get_active (item)) {
+    app_add_audio_track (app);
+  } else {
+    app_remove_audio_track (app);
+  }
+}
+
+void
+video_track_activate_cb (GtkToggleAction * item, App * app)
+{
+  if (gtk_toggle_action_get_active (item)) {
+    app_add_video_track (app);
+  } else {
+    app_remove_video_track (app);
+  }
 }
 
 void

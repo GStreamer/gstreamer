@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <requires lib="gtk+" version="2.16"/>
   <!-- interface-naming-policy project-wide -->
@@ -59,8 +59,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="new_item">
                         <property name="label">gtk-new</property>
-                        <property name="use_underline">True</property>
                         <property name="visible">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="new_activate_cb"/>
                       </object>
@@ -68,8 +68,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="open_item">
                         <property name="label">gtk-open</property>
-                        <property name="use_underline">True</property>
                         <property name="visible">True</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <signal name="activate" handler="open_activate_cb"/>
                       </object>
@@ -84,9 +84,9 @@
                     <child>
                       <object class="GtkImageMenuItem" id="as_item">
                         <property name="label">gtk-save-as</property>
+                        <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
-                        <property name="visible">True</property>
                         <signal name="activate" handler="save_as_activate_cb"/>
                       </object>
                     </child>
@@ -126,8 +126,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="delete_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">delete</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -153,22 +153,22 @@
                     <child>
                       <object class="GtkMenuItem" id="add_file_item">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_file</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="menuitem4">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_text</property>
+                        <property name="use_action_appearance">True</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem5">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_test</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -176,8 +176,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">add_transition</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -190,8 +190,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem8">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">move_up</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -199,8 +199,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem9">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">move_down</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -214,8 +214,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">play</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -223,8 +223,8 @@
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem6">
                         <property name="visible">True</property>
-                        <property name="use_action_appearance">True</property>
                         <property name="related_action">stop</property>
+                        <property name="use_action_appearance">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -405,6 +405,41 @@
                 <property name="homogeneous">True</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkSeparatorToolItem" id="toolbutton10">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToggleToolButton" id="toolbutton11">
+                <property name="visible">True</property>
+                <property name="related_action">audio_track</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">toolbutton11</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToggleToolButton" id="toolbutton12">
+                <property name="visible">True</property>
+                <property name="related_action">video_track</property>
+                <property name="use_action_appearance">True</property>
+                <property name="label" translatable="yes">toolbutton12</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -493,7 +528,7 @@
                           <object class="GtkEntry" id="seconds">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="invisible_char">&#x25CF;</property>
+                            <property name="invisible_char">●</property>
                           </object>
                           <packing>
                             <property name="position">1</property>
@@ -665,7 +700,7 @@
                               <object class="GtkSpinButton" id="frequency">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">&#x25CF;</property>
+                                <property name="invisible_char">●</property>
                                 <property name="adjustment">adjustment2</property>
                                 <signal name="value_changed" handler="frequency_value_changed_cb"/>
                               </object>
@@ -737,7 +772,7 @@
                               <object class="GtkEntry" id="text">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
-                                <property name="invisible_char">&#x25CF;</property>
+                                <property name="invisible_char">●</property>
                               </object>
                               <packing>
                                 <property name="position">1</property>
@@ -836,16 +871,16 @@
   <object class="GtkTreeSelection" id="selection"/>
   <object class="GtkSizeGroup" id="LabelSizeGroup">
     <widgets>
-      <widget name="label4"/>
-      <widget name="label_inpoint"/>
-      <widget name="label_duration"/>
-      <widget name="label_duration"/>
-      <widget name="label_inpoint"/>
-      <widget name="label2"/>
-      <widget name="label3"/>
-      <widget name="label4"/>
-      <widget name="label5"/>
       <widget name="label6"/>
+      <widget name="label5"/>
+      <widget name="label4"/>
+      <widget name="label3"/>
+      <widget name="label2"/>
+      <widget name="label_inpoint"/>
+      <widget name="label_duration"/>
+      <widget name="label_duration"/>
+      <widget name="label_inpoint"/>
+      <widget name="label4"/>
     </widgets>
   </object>
   <object class="GtkAction" id="delete">
@@ -858,7 +893,7 @@
   <object class="GtkAction" id="add_file">
     <property name="label">Add File...</property>
     <property name="short_label">File</property>
-    <property name="icon_name">video-x-generic</property>
+    <property name="icon_name">applications-multimedia</property>
     <property name="always_show_image">True</property>
     <signal name="activate" handler="add_file_activate_cb"/>
   </object>
@@ -921,5 +956,23 @@
     <property name="short_label">Move Down</property>
     <property name="stock_id">gtk-go-down</property>
     <signal name="activate" handler="move_down_activate_cb"/>
+  </object>
+  <object class="GtkToggleAction" id="audio_track">
+    <property name="label">Audio</property>
+    <property name="short_label">Audio</property>
+    <property name="tooltip">Play Audio Track</property>
+    <property name="icon_name">audio-x-generic</property>
+    <property name="always_show_image">True</property>
+    <property name="active">True</property>
+    <signal name="activate" handler="audio_track_activate_cb"/>
+  </object>
+  <object class="GtkToggleAction" id="video_track">
+    <property name="label">Video</property>
+    <property name="short_label">Video</property>
+    <property name="tooltip">Render Video Track</property>
+    <property name="icon_name">video-x-generic</property>
+    <property name="always_show_image">True</property>
+    <property name="active">True</property>
+    <signal name="activate" handler="video_track_activate_cb"/>
   </object>
 </interface>
