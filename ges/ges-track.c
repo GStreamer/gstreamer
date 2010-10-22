@@ -88,7 +88,11 @@ ges_track_dispose (GObject * object)
 {
   GESTrack *track = (GESTrack *) object;
 
-  /* FIXME : Remove all TrackObjects ! */
+  while (track->trackobjects) {
+    GESTrackObject *trobj = GES_TRACK_OBJECT (track->trackobjects->data);
+    ges_track_remove_object (track, trobj);
+    ges_timeline_object_release_track_object (trobj->timelineobj, trobj);
+  }
 
   if (track->composition) {
     gst_bin_remove (GST_BIN (object), track->composition);
@@ -293,6 +297,8 @@ ges_track_add_object (GESTrack * track, GESTrackObject * object)
     return FALSE;
   }
 
+  track->trackobjects = g_list_append (track->trackobjects, object);
+
   return TRUE;
 }
 
@@ -325,6 +331,7 @@ ges_track_remove_object (GESTrack * track, GESTrackObject * object)
   }
 
   ges_track_object_set_track (object, NULL);
+  track->trackobjects = g_list_remove (track->trackobjects, object);
 
   return TRUE;
 }

@@ -59,6 +59,7 @@ struct _GESTrack {
 
   /*< private >*/
   GESTimeline * timeline;
+  GList * trackobjects;
 
   GstCaps * caps;
 
