@@ -221,7 +221,7 @@ img_capture_done (GstElement * camera, const gchar * fname, gpointer user_data)
 }
 
 static GstBusSyncReply
-bus_callback (GstBus * bus, GstMessage * message, gpointer data)
+sync_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   const GstStructure *st;
   const GValue *image;
@@ -234,38 +234,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
   size_t written;
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:{
-      GError *err;
-      gchar *debug;
-
-      gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s\n", err->message);
-      g_error_free (err);
-      g_free (debug);
-
-      /* Write debug graph to file */
-      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camera_bin),
-          GST_DEBUG_GRAPH_SHOW_ALL, "camerabin.error");
-
-      g_main_loop_quit (loop);
-      break;
-    }
-    case GST_MESSAGE_STATE_CHANGED:
-      if (GST_IS_BIN (GST_MESSAGE_SRC (message))) {
-        GstState oldstate, newstate;
-
-        gst_message_parse_state_changed (message, &oldstate, &newstate, NULL);
-        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "state-changed: %s -> %s",
-            gst_element_state_get_name (oldstate),
-            gst_element_state_get_name (newstate));
-      }
-      break;
-    case GST_MESSAGE_EOS:
-      /* end-of-stream */
-      GST_INFO ("got eos() - should not happen");
-      g_main_loop_quit (loop);
-      break;
-    default:
+    case GST_MESSAGE_ELEMENT:{
       st = gst_message_get_structure (message);
       if (st) {
         if (gst_structure_has_name (message->structure, "prepare-xwindow-id")) {
@@ -305,10 +274,55 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
           }
         }
       }
+      break;
+    }
+    default:
       /* unhandled message */
       break;
   }
   return GST_BUS_PASS;
+}
+
+static gboolean
+bus_callback (GstBus * bus, GstMessage * message, gpointer data)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+      g_free (debug);
+
+      /* Write debug graph to file */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (camera_bin),
+          GST_DEBUG_GRAPH_SHOW_ALL, "camerabin.error");
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_IS_BIN (GST_MESSAGE_SRC (message))) {
+        GstState oldstate, newstate;
+
+        gst_message_parse_state_changed (message, &oldstate, &newstate, NULL);
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message), "state-changed: %s -> %s",
+            gst_element_state_get_name (oldstate),
+            gst_element_state_get_name (newstate));
+      }
+      break;
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      GST_INFO ("got eos() - should not happen");
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+  return TRUE;
 }
 
 /*
@@ -456,7 +470,10 @@ setup_pipeline (void)
       NULL);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (camera_bin));
-  gst_bus_set_sync_handler (bus, bus_callback, NULL);
+  /* Add sync handler for time critical messages that need to be handled fast */
+  gst_bus_set_sync_handler (bus, sync_bus_callback, NULL);
+  /* Handle normal messages asynchronously */
+  gst_bus_add_watch (bus, bus_callback, NULL);
   gst_object_unref (bus);
 
   GST_INFO_OBJECT (camera_bin, "camerabin created");
