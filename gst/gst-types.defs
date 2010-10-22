@@ -235,6 +235,12 @@
   )
 )
 
+(define-boxed DateTime
+  (in-module "Gst")
+  (c-name "GstDateTime")
+  (gtype-id "GST_TYPE_DATE_TIME")
+)
+
 (define-object Plugin
   (in-module "Gst")
   (parent "GstObject")
