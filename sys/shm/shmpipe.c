@@ -172,7 +172,7 @@ struct CommandBuffer
 };
 
 static ShmArea *sp_open_shm (char *path, int id, mode_t perms, size_t size);
-static void sp_close_shm (ShmPipe * self, ShmArea * area);
+static void sp_close_shm (ShmArea * area);
 static int sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf,
     ShmBuffer * prev_buf);
 static void sp_shm_area_dec (ShmPipe * self, ShmArea * area);
@@ -182,7 +182,8 @@ static void sp_shm_area_dec (ShmPipe * self, ShmArea * area);
 #define RETURN_ERROR(format, ...) do {                  \
   fprintf (stderr, format, __VA_ARGS__);                \
   sp_close (self);                                      \
-  return NULL; } while (0)
+  return NULL;                                          \
+  } while (0)
 
 ShmPipe *
 sp_writer_create (const char *path, size_t size, mode_t perms)
@@ -239,10 +240,12 @@ sp_writer_create (const char *path, size_t size, mode_t perms)
 
 #undef RETURN_ERROR
 
-#define RETURN_ERROR(format, ...)                       \
-  fprintf (stderr, format, __VA_ARGS__);                \
-  sp_shm_area_dec (NULL, area);                         \
-  return NULL;
+#define RETURN_ERROR(format, ...)  do {                   \
+  fprintf (stderr, format, __VA_ARGS__);                  \
+  area->use_count--;                                      \
+  sp_close_shm (area);                                    \
+  return NULL;                                            \
+  } while (0)
 
 /**
  * sp_open_shm:
@@ -316,29 +319,12 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
 #undef RETURN_ERROR
 
 static void
-sp_close_shm (ShmPipe * self, ShmArea * area)
+sp_close_shm (ShmArea * area)
 {
   assert (area->use_count == 0);
 
   if (area->allocspace)
     shm_alloc_space_free (area->allocspace);
-
-  if (self != NULL) {
-    ShmArea *item = NULL;
-    ShmArea *prev_item = NULL;
-
-    for (item = self->shm_area; item; item = item->next) {
-      if (item == area) {
-        if (prev_item)
-          prev_item->next = item->next;
-        else
-          self->shm_area = item->next;
-        break;
-      }
-      prev_item = item;
-    }
-    assert (item);
-  }
 
   if (area->shm_area_buf != MAP_FAILED)
     munmap (area->shm_area_buf, area->shm_area_len);
@@ -367,7 +353,22 @@ sp_shm_area_dec (ShmPipe * self, ShmArea * area)
   area->use_count--;
 
   if (area->use_count == 0) {
-    sp_close_shm (self, area);
+    ShmArea *item = NULL;
+    ShmArea *prev_item = NULL;
+
+    for (item = self->shm_area; item; item = item->next) {
+      if (item == area) {
+        if (prev_item)
+          prev_item->next = item->next;
+        else
+          self->shm_area = item->next;
+        break;
+      }
+      prev_item = item;
+    }
+    assert (item);
+
+    sp_close_shm (area);
   }
 }
 
@@ -784,7 +785,7 @@ sp_shmbuf_dec (ShmPipe * self, ShmBuffer * buf, ShmBuffer * prev_buf)
 
     shm_alloc_space_block_dec (buf->ablock);
     sp_shm_area_dec (self, buf->shm_area);
-    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * sb->num_clients, buf);
+    spalloc_free1 (sizeof (ShmBuffer) + sizeof (int) * buf->num_clients, buf);
     return 0;
   }
 
