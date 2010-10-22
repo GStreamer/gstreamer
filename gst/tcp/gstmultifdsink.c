@@ -2323,10 +2323,34 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
      * - client socket input (ie, clients saying goodbye)
      * - client socket output (ie, client reads)          */
     GST_LOG_OBJECT (sink, "waiting on action on fdset");
-    result = gst_poll_wait (sink->fdset, GST_CLOCK_TIME_NONE);
 
-    /* < 0 is an error, 0 just means a timeout happened, which is impossible */
-    if (result < 0) {
+    result = gst_poll_wait (sink->fdset, sink->timeout != 0 ? sink->timeout :
+        GST_CLOCK_TIME_NONE);
+
+    /* Handle the special case in which the sink is not receiving more buffers
+     * and will not disconnect innactive client in the streaming thread. */
+    if (G_UNLIKELY (result == 0)) {
+      GstClockTime now;
+      GTimeVal nowtv;
+
+      g_get_current_time (&nowtv);
+      now = GST_TIMEVAL_TO_TIME (nowtv);
+
+      CLIENTS_LOCK (sink);
+      for (clients = sink->clients; clients; clients = next) {
+        GstTCPClient *client;
+
+        client = (GstTCPClient *) clients->data;
+        next = g_list_next (clients);
+        if (sink->timeout > 0
+            && now - client->last_activity_time > sink->timeout) {
+          client->status = GST_CLIENT_STATUS_SLOW;
+          gst_multi_fd_sink_remove_client_link (sink, clients);
+        }
+      }
+      CLIENTS_UNLOCK (sink);
+      return;
+    } else if (result < 0) {
       GST_WARNING_OBJECT (sink, "wait failed: %s (%d)", g_strerror (errno),
           errno);
       if (errno == EBADF) {
