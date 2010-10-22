@@ -2285,14 +2285,6 @@ gst_ffmpegdec_flush_pcache (GstFFMpegDec * ffmpegdec)
     gst_buffer_unref (ffmpegdec->pcache);
     ffmpegdec->pcache = NULL;
   }
-  if (ffmpegdec->pctx) {
-    GstFFMpegDecClass *oclass;
-
-    oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-
-    av_parser_close (ffmpegdec->pctx);
-    ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
-  }
 }
 
 static gboolean
