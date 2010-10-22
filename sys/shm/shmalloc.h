@@ -27,7 +27,7 @@
 #ifndef __SHMALLOC_H__
 #define __SHMALLOC_H__
 
-#ifdef GST_PACKAGE_NAME
+#ifdef SHM_PIPE_USE_GLIB
 #include <glib.h>
 
 #define spalloc_new(type) g_slice_new (type)
