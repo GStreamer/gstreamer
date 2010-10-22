@@ -229,7 +229,7 @@ typedef guint64 GstElementFactoryListType;
  *
  * Since: 0.10.31
  */
-#define  GST_ELEMENT_FACTORY_TYPE_ANY G_GUINT64_CONSTANT ((1 << 49) - 1)
+#define  GST_ELEMENT_FACTORY_TYPE_ANY ((G_GUINT64_CONSTANT (1) << 49) - 1)
 
 /**
  * GST_ELEMENT_FACTORY_TYPE_MEDIA_ANY:
