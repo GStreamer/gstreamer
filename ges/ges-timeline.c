@@ -774,10 +774,18 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
   g_signal_emit (timeline, ges_timeline_signals[TRACK_REMOVED], 0, track);
 
   /* remove track from our bin */
+  gst_object_ref (track);
   if (G_UNLIKELY (!gst_bin_remove (GST_BIN (timeline), GST_ELEMENT (track)))) {
     GST_WARNING ("Couldn't remove track to ourself (GST)");
+    gst_object_unref (track);
     return FALSE;
   }
+
+  /* set track state to NULL */
+
+  gst_element_set_state (GST_ELEMENT (track), GST_STATE_NULL);
+
+  gst_object_unref (track);
 
   g_free (priv);
 
