@@ -309,3 +309,23 @@ _wrap_gst_event_parse_new_segment_full (PyGstMiniObject *self)
 			  rate, applied_rate, pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
 			  start_value, stop_value, base);
 }
+%%
+override gst_event_parse_sink_message noargs
+static PyObject *
+_wrap_gst_event_parse_sink_message (PyGstMiniObject *self)
+{
+    GstMessage *message;
+
+     if (GST_EVENT_TYPE(self->obj) != GST_EVENT_SINK_MESSAGE) {
+	  PyErr_SetString(PyExc_TypeError, "Event is not a 'SinkMessage' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_sink_message (GST_EVENT(self->obj), &message);
+
+     if (message)
+	 return pygstminiobject_new (GST_MINI_OBJECT (message));
+
+     Py_INCREF(Py_None);
+     return Py_None;
+}
