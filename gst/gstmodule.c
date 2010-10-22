@@ -134,20 +134,20 @@ fail:
 }
 
 struct _PyGst_Functions pygst_api_functions = {
-    pygst_caps_from_pyobject,
-    pygst_iterator_new,
-    pygstminiobject_new
+  pygst_caps_from_pyobject,
+  pygst_iterator_new,
+  pygstminiobject_new
 };
 
 /* for addon libraries ... */
 static void
-pygst_register_api(PyObject *d)
+pygst_register_api (PyObject * d)
 {
-    PyObject *api;
+  PyObject *api;
 
-    api = PyCObject_FromVoidPtr(&pygst_api_functions, NULL);
-    PyDict_SetItemString(d, "_PyGst_API", api);
-    Py_DECREF(api);
+  api = PyCObject_FromVoidPtr (&pygst_api_functions, NULL);
+  PyDict_SetItemString (d, "_PyGst_API", api);
+  Py_DECREF (api);
 }
 
 DL_EXPORT (void)
@@ -365,6 +365,32 @@ init_gst (void)
       GST_TAG_GEO_LOCATION_MOVEMENT_DIRECTION);
   PyModule_AddStringConstant (m, "TAG_GEO_LOCATION_CAPTURE_DIRECTION",
       GST_TAG_GEO_LOCATION_CAPTURE_DIRECTION);
+#if ((GST_VERSION_MICRO >= 31) || (GST_VERSION_MICRO == 30 && GST_VERSION_NANO > 0))
+#define ADD_FACTORY_TYPE(a) PyModule_AddObject(m, "ELEMENT_FACTORY_TYPE_" #a,\
+      PyLong_FromUnsignedLongLong(GST_ELEMENT_FACTORY_TYPE_##a))
+  ADD_FACTORY_TYPE (DECODER);
+  ADD_FACTORY_TYPE (ENCODER);
+  ADD_FACTORY_TYPE (SINK);
+  ADD_FACTORY_TYPE (SRC);
+  ADD_FACTORY_TYPE (MUXER);
+  ADD_FACTORY_TYPE (DEMUXER);
+  ADD_FACTORY_TYPE (PARSER);
+  ADD_FACTORY_TYPE (PAYLOADER);
+  ADD_FACTORY_TYPE (DEPAYLOADER);
+  ADD_FACTORY_TYPE (FORMATTER);
+  ADD_FACTORY_TYPE (MAX_ELEMENTS);
+  ADD_FACTORY_TYPE (MEDIA_VIDEO);
+  ADD_FACTORY_TYPE (MEDIA_AUDIO);
+  ADD_FACTORY_TYPE (MEDIA_IMAGE);
+  ADD_FACTORY_TYPE (MEDIA_SUBTITLE);
+  ADD_FACTORY_TYPE (MEDIA_METADATA);
+  ADD_FACTORY_TYPE (ANY);
+  ADD_FACTORY_TYPE (MEDIA_ANY);
+  ADD_FACTORY_TYPE (VIDEO_ENCODER);
+  ADD_FACTORY_TYPE (AUDIO_ENCODER);
+  ADD_FACTORY_TYPE (AUDIOVIDEO_SINKS);
+  ADD_FACTORY_TYPE (DECODABLE);
+#endif
 #endif
 #endif
 #endif
