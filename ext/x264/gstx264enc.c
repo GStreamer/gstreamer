@@ -346,7 +346,7 @@ static const GFlagsValue tune_types[] = {
   {0x0, "No tuning", "none"},
   {0x1, "Still image", "stillimage"},
   {0x2, "Fast decode", "fastdecode"},
-  {0x4, "Zero latency", "zerolatency"},
+  {0x4, "Zero latency (requires constant framerate)", "zerolatency"},
   {0, NULL, NULL},
 };
 
@@ -1158,6 +1158,24 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
       encoder->x264param.rc.b_stat_write = 1;
       break;
   }
+
+#if X264_BUILD >= 81 && X264_BUILD < 106
+  /* When vfr is disabled, libx264 ignores buffer timestamps. This causes
+   * issues with rate control in libx264 with our nanosecond timebase. This
+   * has been fixed upstream in libx264 but this workaround is required for
+   * pre-fix versions. */
+  if (!encoder->x264param.b_vfr_input) {
+    if (encoder->x264param.i_fps_num == 0) {
+      GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
+          ("Constant framerate is required."),
+          ("The framerate caps (%d/%d) indicate VFR but VFR is disabled in libx264. (Is the zerolatency tuning in use?)",
+              encoder->x264param.i_fps_num, encoder->x264param.i_fps_den));
+      return FALSE;
+    }
+    encoder->x264param.i_timebase_num = encoder->x264param.i_fps_den;
+    encoder->x264param.i_timebase_den = encoder->x264param.i_fps_num;
+  }
+#endif
 
 #ifdef X264_PRESETS
   if (encoder->profile
