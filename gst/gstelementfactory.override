@@ -68,3 +68,86 @@ _wrap_gst_element_factory_get_static_pad_templates(PyGObject *self)
   }
   return py_list;
 }
+%%
+override gst_element_factory_list_get_elements kwargs
+static PyObject *
+_wrap_gst_element_factory_list_get_elements(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "type", "minrank", NULL };
+    PyObject *py_minrank;
+    GstRank minrank;
+    GstElementFactoryListType listype;
+    GList *res, *tmp;
+    PyObject *pyres;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"KO:element_factory_list_get_elements", kwlist,
+				     &listype, &py_minrank))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_RANK, py_minrank, (gint *)&minrank))
+        return NULL;
+    pyg_begin_allow_threads;
+    res = gst_element_factory_list_get_elements(listype, minrank);
+    pyg_end_allow_threads;
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	GstElementFactory *fact = (GstElementFactory*) tmp->data;
+	PyObject *ltmp = pygobject_new (G_OBJECT (fact));
+
+	PyList_Append(pyres, ltmp);
+    }
+    gst_plugin_feature_list_free (res);
+
+    return pyres;
+}
+%%
+override gst_element_factory_list_filter kwargs
+static PyObject *
+_wrap_gst_element_factory_list_filter(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "list", "caps", "direction", "subsetonly", NULL };
+    PyObject *py_list, *py_caps, *py_direction;
+    GList *inlist = NULL;
+    GList *res, *tmp;
+    GstCaps *caps;
+    GstPadDirection direction;
+    gboolean subsetonly, caps_is_copy;
+    PyObject *pyres;
+    guint i, n;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"OOOi:element_factory_list_filter", kwlist,
+				     &py_list, &py_caps, &py_direction, &subsetonly))
+        return NULL;
+    if (!PyList_Check (py_list))
+	return NULL;
+    if (pyg_enum_get_value(GST_TYPE_PAD_DIRECTION, py_direction, (gint *)&direction))
+        return NULL;
+    caps = pygst_caps_from_pyobject(py_caps, &caps_is_copy);
+    n = PyList_GET_SIZE(py_list);
+    for (i = 0; i < n; i++) {
+	/* Get Object */
+	inlist = g_list_append(inlist, pygobject_get (PyList_GET_ITEM (py_list, i)));
+    }
+
+    pyg_begin_allow_threads;
+    res = gst_element_factory_list_filter(inlist, caps, direction, subsetonly);
+    pyg_end_allow_threads;
+
+    pyres = PyList_New(0);
+    for (tmp = res; tmp; tmp = tmp->next) {
+	GstElementFactory *fact = (GstElementFactory*) tmp->data;
+	PyObject *ltmp = pygobject_new (G_OBJECT (fact));
+
+	PyList_Append(pyres, ltmp);
+    }
+
+    gst_plugin_feature_list_free (res);
+    if (caps && caps_is_copy)
+        gst_caps_unref (caps);
+    if (inlist)
+	g_list_free (inlist);
+
+    return pyres;
+}
+    
+    
