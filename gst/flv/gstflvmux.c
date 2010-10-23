@@ -377,6 +377,8 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         cpad->audio_codec = 4;
       else if (channels == 1 && rate == 8000)
         cpad->audio_codec = 5;
+      else
+        cpad->audio_codec = 6;
     } else {
       cpad->audio_codec = 6;
     }
