@@ -181,7 +181,10 @@ ges_track_video_transition_create_element (GESTrackTransition * object)
   oconv = gst_element_factory_make ("ffmpegcolorspace", "tr-csp-output");
 
   gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
-  mixer = gst_element_factory_make ("videomixer", NULL);
+  /* Prefer videomixer2 to videomixer */
+  mixer = gst_element_factory_make ("videomixer2", NULL);
+  if (mixer == NULL)
+    mixer = gst_element_factory_make ("videomixer", NULL);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
