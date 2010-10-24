@@ -539,7 +539,9 @@ gst_discoverer_stream_info_get_caps (GstDiscovererStreamInfo * info)
 {
   g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), NULL);
 
-  return gst_caps_ref (info->caps);
+  if (info->caps)
+    return gst_caps_ref (info->caps);
+  return NULL;
 }
 
 /**
