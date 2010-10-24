@@ -664,6 +664,28 @@ beach:
   return ret;
 }
 
+static void
+gst_flv_demux_push_tags (GstFlvDemux * demux)
+{
+  if (demux->has_audio && !demux->audio_pad) {
+    GST_DEBUG_OBJECT (demux,
+        "Waiting for audio stream pad to come up before we can push tags");
+    return;
+  }
+  if (demux->has_video && !demux->video_pad) {
+    GST_DEBUG_OBJECT (demux,
+        "Waiting for video stream pad to come up before we can push tags");
+    return;
+  }
+  if (demux->taglist) {
+    GST_DEBUG_OBJECT (demux, "pushing tags out %" GST_PTR_FORMAT,
+        demux->taglist);
+    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+    demux->taglist = gst_tag_list_new ();
+    demux->push_tags = FALSE;
+  }
+}
+
 static GstFlowReturn
 gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 {
@@ -791,6 +813,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
       demux->no_more_pads = TRUE;
+      demux->push_tags = TRUE;
     }
   }
 
@@ -808,18 +831,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio && !demux->audio_pad) &&
-      (demux->has_video && !demux->video_pad)) {
-    GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
-        "before we can push tags");
-  } else {
-    if (demux->taglist && demux->push_tags) {
-      GST_DEBUG_OBJECT (demux, "pushing tags out");
-      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-      demux->taglist = gst_tag_list_new ();
-      demux->push_tags = FALSE;
-    }
-  }
+  if (G_UNLIKELY (demux->push_tags))
+    gst_flv_demux_push_tags (demux);
 
   /* Check if we have anything to push */
   if (demux->tag_data_size <= codec_data) {
@@ -929,6 +942,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
         " after 6 seconds of audio");
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
     demux->no_more_pads = TRUE;
+    demux->push_tags = TRUE;
   }
 
   /* Push downstream */
@@ -1142,6 +1156,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
       demux->no_more_pads = TRUE;
+      demux->push_tags = TRUE;
     }
   }
 
@@ -1161,18 +1176,8 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio && !demux->audio_pad) &&
-      (demux->has_video && !demux->video_pad)) {
-    GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
-        "before we can push tags");
-  } else {
-    if (demux->taglist && demux->push_tags) {
-      GST_DEBUG_OBJECT (demux, "pushing tags out");
-      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-      demux->taglist = gst_tag_list_new ();
-      demux->push_tags = FALSE;
-    }
-  }
+  if (G_UNLIKELY (demux->push_tags))
+    gst_flv_demux_push_tags (demux);
 
   /* Check if we have anything to push */
   if (demux->tag_data_size <= codec_data) {
@@ -1285,6 +1290,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
         " after 6 seconds of video");
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
     demux->no_more_pads = TRUE;
+    demux->push_tags = TRUE;
   }
 
   /* Push downstream */
