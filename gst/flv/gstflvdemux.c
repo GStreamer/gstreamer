@@ -39,6 +39,7 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/pbutils/descriptions.h>
 
 static GstStaticPadTemplate flv_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -572,21 +573,19 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     guint32 rate, guint32 channels, guint32 width)
 {
   GstCaps *caps = NULL;
-  const gchar *codec_name = NULL;
+  gchar *codec_name = NULL;
   gboolean ret = FALSE;
 
   switch (codec_tag) {
     case 1:
       caps = gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING,
           "swf", NULL);
-      codec_name = "Shockwave ADPCM";
       break;
     case 2:
     case 14:
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-      codec_name = "MPEG 1 Audio, Layer 3 (MP3)";
       break;
     case 0:
     case 3:
@@ -597,30 +596,24 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
           "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
           "signed", G_TYPE_BOOLEAN, (width == 8) ? FALSE : TRUE,
           "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
-      codec_name = "Raw Audio";
       break;
     case 4:
     case 5:
     case 6:
       caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
-      codec_name = "Nellymoser ASAO";
       break;
     case 10:
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-      codec_name = "AAC";
       break;
     case 7:
       caps = gst_caps_new_simple ("audio/x-alaw", NULL);
-      codec_name = "A-Law";
       break;
     case 8:
       caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
-      codec_name = "Mu-Law";
       break;
     case 11:
       caps = gst_caps_new_simple ("audio/x-speex", NULL);
-      codec_name = "Speex";
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -648,11 +641,14 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     demux->channels = channels;
     demux->width = width;
 
+    codec_name = gst_pb_utils_get_codec_description (caps);
+
     if (codec_name) {
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec_name, NULL);
+      g_free (codec_name);
     }
 
     GST_DEBUG_OBJECT (demux->audio_pad, "successfully negotiated caps %"
@@ -968,29 +964,24 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
 {
   gboolean ret = FALSE;
   GstCaps *caps = NULL;
-  const gchar *codec_name = NULL;
+  gchar *codec_name = NULL;
 
   /* Generate caps for that pad */
   switch (codec_tag) {
     case 2:
       caps = gst_caps_new_simple ("video/x-flash-video", NULL);
-      codec_name = "Sorenson Video";
       break;
     case 3:
       caps = gst_caps_new_simple ("video/x-flash-screen", NULL);
-      codec_name = "Flash Screen Video";
       break;
     case 4:
       caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
-      codec_name = "On2 VP6 Video";
       break;
     case 5:
       caps = gst_caps_new_simple ("video/x-vp6-alpha", NULL);
-      codec_name = "On2 VP6 Video with alpha channel";
       break;
     case 7:
       caps = gst_caps_new_simple ("video/x-h264", NULL);
-      codec_name = "H.264/AVC Video";
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported video codec tag %u", codec_tag);
@@ -1015,11 +1006,14 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
     /* Store the caps we have set */
     demux->video_codec_tag = codec_tag;
 
+    codec_name = gst_pb_utils_get_codec_description (caps);
+
     if (codec_name) {
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_VIDEO_CODEC, codec_name, NULL);
+      g_free (codec_name);
     }
 
     GST_DEBUG_OBJECT (demux->video_pad, "successfully negotiated caps %"
