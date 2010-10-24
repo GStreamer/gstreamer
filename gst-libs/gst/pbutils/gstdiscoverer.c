@@ -508,14 +508,17 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
 
   /* Get caps */
   caps = gst_pad_get_negotiated_caps (ps->pad);
+  if (!caps) {
+    GST_WARNING ("Couldn't get negotiated caps from %s:%s",
+        GST_DEBUG_PAD_NAME (ps->pad));
+    caps = gst_pad_get_caps (ps->pad);
+  }
   if (caps) {
     GST_DEBUG ("Got caps %" GST_PTR_FORMAT, caps);
     gst_structure_id_set (st, _CAPS_QUARK, GST_TYPE_CAPS, caps, NULL);
 
     gst_caps_unref (caps);
-  } else
-    GST_WARNING ("Couldn't get negotiated caps from %s:%s",
-        GST_DEBUG_PAD_NAME (ps->pad));
+  }
   if (ps->tags)
     gst_structure_id_set (st, _TAGS_QUARK, GST_TYPE_STRUCTURE, ps->tags, NULL);
 
