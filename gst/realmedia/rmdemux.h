@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/pbutils/descriptions.h>
 
 G_BEGIN_DECLS
 

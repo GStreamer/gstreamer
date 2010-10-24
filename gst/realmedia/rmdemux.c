@@ -1281,7 +1281,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
   GstCaps *stream_caps = NULL;
   const gchar *codec_tag = NULL;
-  const gchar *codec_name = NULL;
+  gchar *codec_name = NULL;
   int version = 0;
 
   if (stream->subtype == GST_RMDEMUX_STREAM_VIDEO) {
@@ -1295,19 +1295,15 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     switch (stream->fourcc) {
       case GST_RM_VDO_RV10:
-        codec_name = "Real Video 1.0";
         version = 1;
         break;
       case GST_RM_VDO_RV20:
-        codec_name = "Real Video 2.0";
         version = 2;
         break;
       case GST_RM_VDO_RV30:
-        codec_name = "Real Video 3.0";
         version = 3;
         break;
       case GST_RM_VDO_RV40:
-        codec_name = "Real Video 4.0";
         version = 4;
         break;
       default:
@@ -1349,18 +1345,15 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     switch (stream->fourcc) {
         /* Older RealAudio Codecs */
       case GST_RM_AUD_14_4:
-        codec_name = "Real Audio 14.4kbps";
         version = 1;
         break;
 
       case GST_RM_AUD_28_8:
-        codec_name = "Real Audio 28.8kbps";
         version = 2;
         break;
 
         /* DolbyNet (Dolby AC3, low bitrate) */
       case GST_RM_AUD_DNET:
-        codec_name = "AC-3 audio";
         stream_caps =
             gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
             (int) stream->rate, NULL);
@@ -1372,7 +1365,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* MPEG-4 based */
       case GST_RM_AUD_RAAC:
       case GST_RM_AUD_RACP:
-        codec_name = "MPEG4 audio";
         stream_caps =
             gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
             (int) 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -1388,7 +1380,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* Sony ATRAC3 */
       case GST_RM_AUD_ATRC:
-        codec_name = "Sony ATRAC3";
         stream_caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
         stream->needs_descrambling = TRUE;
         stream->subpackets_needed = stream->height;
@@ -1397,7 +1388,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* RealAudio G2 audio */
       case GST_RM_AUD_COOK:
-        codec_name = "Real Audio G2 (Cook)";
         version = 8;
         stream->needs_descrambling = TRUE;
         stream->subpackets_needed = stream->height;
@@ -1406,7 +1396,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* RALF is lossless */
       case GST_RM_AUD_RALF:
-        codec_name = "Real Audio Lossless (RALF)";
         GST_DEBUG_OBJECT (rmdemux, "RALF");
         stream_caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
         break;
@@ -1420,7 +1409,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
           goto beach;
         }
 
-        codec_name = "Sipro/ACELP.NET Voice";
         GST_DEBUG_OBJECT (rmdemux, "SIPR");
         stream_caps = gst_caps_new_simple ("audio/x-sipro", NULL);
         stream->needs_descrambling = TRUE;
@@ -1506,12 +1494,15 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
 
+    codec_name = gst_pb_utils_get_codec_description (stream_caps);
+
     /* save for later, we must send the tags after the newsegment event */
-    if (codec_name != NULL && codec_tag != NULL) {
+    if (codec_tag != NULL && codec_name != NULL) {
       if (stream->pending_tags == NULL)
         stream->pending_tags = gst_tag_list_new ();
       gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_KEEP,
           codec_tag, codec_name, NULL);
+      g_free (codec_name);
     }
   }
 

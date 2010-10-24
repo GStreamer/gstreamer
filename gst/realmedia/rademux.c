@@ -301,8 +301,8 @@ gst_real_audio_demux_get_data_offset_from_header (GstRealAudioDemux * demux)
 static GstFlowReturn
 gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 {
-  const gchar *codec_name = NULL;
   const guint8 *data;
+  gchar *codec_name = NULL;
   GstCaps *caps = NULL;
   guint avail;
 
@@ -378,7 +378,6 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
     case GST_RM_AUD_14_4:
       caps = gst_caps_new_simple ("audio/x-pn-realaudio", "raversion",
           G_TYPE_INT, 1, NULL);
-      codec_name = "Real Audio 14.4kbps";
       demux->byterate_num = 1000;
       demux->byterate_denom = 1;
       break;
@@ -387,11 +386,9 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
       /* FIXME: needs descrambling */
       caps = gst_caps_new_simple ("audio/x-pn-realaudio", "raversion",
           G_TYPE_INT, 2, NULL);
-      codec_name = "Real Audio 28.8kbps";
       break;
 
     case GST_RM_AUD_DNET:
-      codec_name = "AC-3 audio";
       caps = gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
           demux->sample_rate, NULL);
       if (demux->packet_size == 0 || demux->sample_rate == 0)
@@ -402,7 +399,6 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 
       /* Sipro/ACELP.NET Voice Codec (MIME unknown) */
     case GST_RM_AUD_SIPR:
-      codec_name = "Sipro Voice";
       caps = gst_caps_new_simple ("audio/x-sipro", NULL);
       break;
 
@@ -427,6 +423,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
   demux->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (demux->srcpad);
   gst_pad_set_caps (demux->srcpad, caps);
+  codec_name = gst_pb_utils_get_codec_description (caps);
   gst_caps_unref (caps);
   gst_pad_set_event_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_src_event));
@@ -462,6 +459,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 
     gst_tag_list_add (demux->pending_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec_name, NULL);
+    g_free (codec_name);
   }
 
   gst_adapter_flush (demux->adapter, demux->data_offset - 6);
