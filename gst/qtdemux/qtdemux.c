@@ -4808,9 +4808,9 @@ out_of_samples:
   }
 corrupt_file:
   {
+    GST_OBJECT_UNLOCK (qtdemux);
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
-    GST_OBJECT_UNLOCK (qtdemux);
     return FALSE;
   }
 }
