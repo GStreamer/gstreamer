@@ -3058,12 +3058,18 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
 
   gst_event_parse_tag (event, &taglist);
 
-  if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp))
+  if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp)) {
+    GST_DEBUG_OBJECT (parse, "upstream min bitrate %d", tmp);
     parse->priv->post_min_bitrate = FALSE;
-  if (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &tmp))
+  }
+  if (gst_tag_list_get_uint (taglist, GST_TAG_BITRATE, &tmp)) {
+    GST_DEBUG_OBJECT (parse, "upstream avg bitrate %d", tmp);
     parse->priv->post_avg_bitrate = FALSE;
-  if (gst_tag_list_get_uint (taglist, GST_TAG_MAXIMUM_BITRATE, &tmp))
+  }
+  if (gst_tag_list_get_uint (taglist, GST_TAG_MAXIMUM_BITRATE, &tmp)) {
+    GST_DEBUG_OBJECT (parse, "upstream max bitrate %d", tmp);
     parse->priv->post_max_bitrate = FALSE;
+  }
 }
 
 /**
