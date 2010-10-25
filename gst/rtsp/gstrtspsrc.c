@@ -129,15 +129,24 @@ enum
   LAST_SIGNAL
 };
 
+enum _GstRtspSrcBufferMode
+{
+  BUFFER_MODE_NONE,
+  BUFFER_MODE_SLAVE,
+  BUFFER_MODE_BUFFER,
+  BUFFER_MODE_AUTO
+};
+
 #define GST_TYPE_RTSP_SRC_BUFFER_MODE (gst_rtsp_src_buffer_mode_get_type())
 static GType
 gst_rtsp_src_buffer_mode_get_type (void)
 {
   static GType buffer_mode_type = 0;
   static const GEnumValue buffer_modes[] = {
-    {0, "Only use RTP timestamps", "none"},
-    {1, "Slave receiver to sender clock", "slave"},
-    {2, "Do low/high watermark buffering", "buffer"},
+    {BUFFER_MODE_NONE, "Only use RTP timestamps", "none"},
+    {BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
+    {BUFFER_MODE_BUFFER, "Do low/high watermark buffering", "buffer"},
+    {BUFFER_MODE_AUTO, "Choose mode depending on stream live", "auto"},
     {0, NULL, NULL},
   };
 
@@ -163,7 +172,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_RTP_BLOCKSIZE    0
 #define DEFAULT_USER_ID          NULL
 #define DEFAULT_USER_PW          NULL
-#define DEFAULT_BUFFER_MODE      1
+#define DEFAULT_BUFFER_MODE      BUFFER_MODE_AUTO
 #define DEFAULT_PORT_RANGE       NULL
 
 enum
@@ -2330,8 +2339,39 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (src->session, "latency", src->latency, NULL);
 
       klass = G_OBJECT_GET_CLASS (G_OBJECT (src->session));
-      if (g_object_class_find_property (klass, "buffer-mode"))
-        g_object_set (src->session, "buffer-mode", src->buffer_mode, NULL);
+      if (g_object_class_find_property (klass, "buffer-mode")) {
+        if (src->buffer_mode != BUFFER_MODE_AUTO) {
+          g_object_set (src->session, "buffer-mode", src->buffer_mode, NULL);
+        } else {
+          gboolean need_slave;
+          GstStructure *s;
+          const gchar *encoding;
+
+          /* buffer mode pauses are handled by adding offsets to buffer times,
+           * but some depayloaders may have a hard time syncing output times
+           * with such input times, e.g. container ones, most notably ASF */
+          /* TODO alternatives are having an event that indicates these shifts,
+           * or having rtsp extensions provide suggestion on buffer mode */
+          need_slave = stream->container;
+          if (stream->caps && (s = gst_caps_get_structure (stream->caps, 0)) &&
+              (encoding = gst_structure_get_string (s, "encoding-name")))
+            need_slave = need_slave || (strcmp (encoding, "X-ASF-PF") == 0);
+          GST_DEBUG_OBJECT (src, "auto buffering mode, need_slave %d",
+              need_slave);
+          /* valid duration implies not likely live pipeline,
+           * so slaving in jitterbuffer does not make much sense
+           * (and might mess things up due to bursts) */
+          if (GST_CLOCK_TIME_IS_VALID (src->segment.duration) &&
+              src->segment.duration && !need_slave) {
+            GST_DEBUG_OBJECT (src, "selected buffer");
+            g_object_set (src->session, "buffer-mode", BUFFER_MODE_BUFFER,
+                NULL);
+          } else {
+            GST_DEBUG_OBJECT (src, "selected slave");
+            g_object_set (src->session, "buffer-mode", BUFFER_MODE_SLAVE, NULL);
+          }
+        }
+      }
 
       /* connect to signals if we did not already do so */
       GST_DEBUG_OBJECT (src, "connect to signals on session manager, stream %p",
