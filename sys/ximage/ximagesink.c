@@ -151,7 +151,9 @@ enum
   PROP_PIXEL_ASPECT_RATIO,
   PROP_FORCE_ASPECT_RATIO,
   PROP_HANDLE_EVENTS,
-  PROP_HANDLE_EXPOSE
+  PROP_HANDLE_EXPOSE,
+  PROP_WINDOW_WIDTH,
+  PROP_WINDOW_HEIGHT
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -2228,6 +2230,18 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
     case PROP_HANDLE_EXPOSE:
       g_value_set_boolean (value, ximagesink->handle_expose);
       break;
+    case PROP_WINDOW_WIDTH:
+      if (ximagesink->xwindow)
+        g_value_set_uint64 (value, ximagesink->xwindow->width);
+      else
+        g_value_set_uint64 (value, 0);
+      break;
+    case PROP_WINDOW_HEIGHT:
+      if (ximagesink->xwindow)
+        g_value_set_uint64 (value, ximagesink->xwindow->height);
+      else
+        g_value_set_uint64 (value, 0);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2393,6 +2407,14 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
           "When enabled, "
           "the current frame will always be drawn in response to X Expose "
           "events", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_WINDOW_WIDTH,
+      g_param_spec_uint64 ("window-width", "window-width",
+          "Width of the screen", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_WINDOW_HEIGHT,
+      g_param_spec_uint64 ("window-height", "window-height",
+          "Height of the screen", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_ximagesink_change_state;
 
