@@ -1140,27 +1140,30 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
   GST_LOG_OBJECT (parse, "frame bitrate %u, avg bitrate %u", frame_bitrate,
       parse->priv->avg_bitrate);
 
-  if (frame_bitrate < parse->priv->min_bitrate) {
-    parse->priv->min_bitrate = frame_bitrate;
-    update_min = TRUE;
+  if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
+    goto exit;
+  } else if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE) {
+    /* always post all at threshold time */
+    update_min = update_max = update_avg = TRUE;
+  } else {
+    if (frame_bitrate < parse->priv->min_bitrate) {
+      parse->priv->min_bitrate = frame_bitrate;
+      update_min = TRUE;
+    }
+
+    if (frame_bitrate > parse->priv->max_bitrate) {
+      parse->priv->max_bitrate = frame_bitrate;
+      update_max = TRUE;
+    }
+
+    old_avg_bitrate = parse->priv->posted_avg_bitrate;
+    if ((gint) (old_avg_bitrate - parse->priv->avg_bitrate) > update_threshold
+        || (gint) (parse->priv->avg_bitrate - old_avg_bitrate) >
+        update_threshold)
+      update_avg = TRUE;
   }
 
-  if (frame_bitrate > parse->priv->max_bitrate) {
-    parse->priv->max_bitrate = frame_bitrate;
-    update_max = TRUE;
-  }
-
-  old_avg_bitrate = parse->priv->posted_avg_bitrate;
-  if ((gint) (old_avg_bitrate - parse->priv->avg_bitrate) > update_threshold ||
-      (gint) (parse->priv->avg_bitrate - old_avg_bitrate) > update_threshold)
-    update_avg = TRUE;
-
-  /* always post all at threshold time */
-  if (parse->priv->framecount == MIN_FRAMES_TO_POST_BITRATE)
-    gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
-
-  if (parse->priv->framecount > MIN_FRAMES_TO_POST_BITRATE &&
-      (update_min || update_avg || update_max))
+  if ((update_min || update_avg || update_max))
     gst_base_parse_post_bitrates (parse, update_min, update_avg, update_max);
 
   /* If average bitrate changes that much and no valid (time) duration provided,
@@ -1170,6 +1173,9 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
           GST_CLOCK_TIME_IS_VALID (parse->priv->duration)))
     gst_element_post_message (GST_ELEMENT (parse),
         gst_message_new_duration (GST_OBJECT (parse), GST_FORMAT_TIME, -1));
+
+exit:
+  return;
 }
 
 /**
