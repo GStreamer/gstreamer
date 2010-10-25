@@ -526,6 +526,9 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
+    /* fixed src caps;
+     * so clear src caps for proper (re-)negotiation */
+    gst_pad_set_caps (ffmpegenc->srcpad, NULL);
   }
 
   /* set defaults */
