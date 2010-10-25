@@ -40,12 +40,31 @@ Duration:
 - show differing entries in red
 - add a narrow vertical bar between the two details panes and mark blocks with a
   delta red
+- diffing one (broken) file against several known working files would be nice
+  - it would build ranges for the group of files (e.g. for the video width)
+  - it would highlight fields that the are different to any of the working files
 
 == analyse ==
 - play the file by using fakesinks and gather statistics:
   - bitrate profiles for each a/mediainfo/v track
+  - media specific:
+    - audio: volume profile
+    - video: contrast profile
+  - show disconts as vertical bars
 
-== hex view ==
+== structural view/hex view ==
+- make parsing elements post structural messages (if enabled via property)
+  - message would contain:
+    - stream offset in bytes
+    - block identifier (e.g. fourcc)
+    - human readable description (if available)
+    - flags (e.g. if the block is used or skipped)
+    - indentation depth
+  - we would need a way to indicate that e.g. h264parse would be indented below
+    the containing container block
 - a structured hex view would be nice
   (somehow align the parse tree with the hexdump)
+
+== unsorted ==
+- handle chapters
 
