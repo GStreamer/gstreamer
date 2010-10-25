@@ -3596,15 +3596,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
           "the current frame will always be drawn in response to X Expose "
           "events", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_WINDOW_WIDTH,
-      g_param_spec_uint64 ("window-width", "window-width",
-          "Width of the screen", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_WINDOW_HEIGHT,
-      g_param_spec_uint64 ("window-height", "window-height",
-          "Height of the screen", 0, G_MAXUINT64, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
   /**
    * GstXvImageSink:double-buffer
    *
@@ -3651,6 +3642,30 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_boolean ("draw-borders", "Colorkey",
           "Draw black borders to fill unused area in force-aspect-ratio mode",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstXvImageSink:window-width
+   *
+   * Actual width of the video window.
+   *
+   * Since: 0.10.32
+   */
+  g_object_class_install_property (gobject_class, PROP_WINDOW_WIDTH,
+      g_param_spec_uint64 ("window-width", "window-width",
+          "Width of the window", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstXvImageSink:window-height
+   *
+   * Actual height of the video window.
+   *
+   * Since: 0.10.32
+   */
+  g_object_class_install_property (gobject_class, PROP_WINDOW_HEIGHT,
+      g_param_spec_uint64 ("window-height", "window-height",
+          "Height of the window", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
