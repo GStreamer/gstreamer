@@ -702,6 +702,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
   GstVideoFlip *vf = GST_VIDEO_FLIP (trans);
   gdouble new_x, new_y, x, y;
   GstStructure *structure;
+  gboolean ret;
 
   GST_DEBUG_OBJECT (vf, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -757,7 +758,9 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
+
+  return ret;
 }
 
 static void
