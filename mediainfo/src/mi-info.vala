@@ -60,6 +60,7 @@ public class MediaInfo.Info : VBox
     // FIXME: paint it black from the start
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (300, 150);
+    drawing_area.realize.connect (on_drawing_area_realize);
     pack_start (drawing_area, true, true, 0);
 
     table = new Table (7, 2, false);
@@ -209,19 +210,23 @@ public class MediaInfo.Info : VBox
 
   // signal handlers
 
+  private void on_drawing_area_realize (Widget widget)
+  {
+    widget.get_window ().ensure_native ();
+    widget.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+  }
+
   private void on_element_sync_message (Gst.Bus bus, Message message)
   {
     Structure structure = message.get_structure ();
     if (structure.has_name ("prepare-xwindow-id"))
     {
       XOverlay xoverlay = message.src as XOverlay;
-      xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (drawing_area.window));
+      xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (drawing_area.get_window()));
 
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
         ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
       }
-
-      drawing_area.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
     }
   }
 }
