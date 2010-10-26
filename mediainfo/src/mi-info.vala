@@ -26,8 +26,10 @@ we need to update the vapi for yet unreleased gstreamer api:
 cd vala/mediainfo/vapi
 vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
 vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
+# suse
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
-
+# ubuntu
+sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
 */
 
 public class MediaInfo.Info : VBox
