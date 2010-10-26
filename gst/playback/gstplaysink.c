@@ -2489,21 +2489,23 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
             NULL);
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
 
-      playsink->text_sinkpad_stream_synchronizer =
-          gst_element_get_request_pad (GST_ELEMENT_CAST
-          (playsink->stream_synchronizer), "sink_%d");
-      it = gst_pad_iterate_internal_links
-          (playsink->text_sinkpad_stream_synchronizer);
-      g_assert (it);
-      gst_iterator_next (it,
-          (gpointer *) & playsink->text_srcpad_stream_synchronizer);
-      g_assert (playsink->text_srcpad_stream_synchronizer);
-      gst_iterator_free (it);
+      if (!playsink->text_sinkpad_stream_synchronizer) {
+        playsink->text_sinkpad_stream_synchronizer =
+            gst_element_get_request_pad (GST_ELEMENT_CAST
+            (playsink->stream_synchronizer), "sink_%d");
+        it = gst_pad_iterate_internal_links
+            (playsink->text_sinkpad_stream_synchronizer);
+        g_assert (it);
+        gst_iterator_next (it,
+            (gpointer *) & playsink->text_srcpad_stream_synchronizer);
+        g_assert (playsink->text_srcpad_stream_synchronizer);
+        gst_iterator_free (it);
 
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
-          playsink->text_sinkpad_stream_synchronizer);
-      gst_pad_link_full (playsink->text_srcpad_stream_synchronizer,
-          playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
+        gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
+            playsink->text_sinkpad_stream_synchronizer);
+        gst_pad_link_full (playsink->text_srcpad_stream_synchronizer,
+            playsink->textchain->textsinkpad, GST_PAD_LINK_CHECK_NOTHING);
+      }
 
       if (need_vis) {
         GstPad *srcpad;
