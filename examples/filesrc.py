@@ -24,7 +24,7 @@
 # Boston, MA 02111-1307, USA.
 
 import sys
-import gobject
+import gobject; gobject.threads_init()
 import pygst
 pygst.require('0.10')
 import gst
