@@ -1869,6 +1869,24 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
   }
 }
 
+/* buf contains LIST chunk data, and will be padded to even size,
+ * since some buggy files do not account for the padding of chunks
+ * within a LIST in the size of the LIST */
+static inline void
+gst_avi_demux_roundup_list (GstAviDemux * avi, GstBuffer ** buf)
+{
+  if (G_UNLIKELY (GST_BUFFER_SIZE (*buf) & 1)) {
+    GstBuffer *obuf;
+
+    GST_DEBUG_OBJECT (avi, "rounding up dubious list size %d",
+        GST_BUFFER_SIZE (*buf));
+    obuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + 1);
+    memcpy (GST_BUFFER_DATA (obuf), GST_BUFFER_DATA (*buf),
+        GST_BUFFER_SIZE (*buf));
+    gst_buffer_replace (buf, obuf);
+  }
+}
+
 /*
  * gst_avi_demux_parse_stream:
  * @avi: calling element (used for debugging/errors).
@@ -1902,6 +1920,8 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   element = GST_ELEMENT_CAST (avi);
 
   GST_DEBUG_OBJECT (avi, "Parsing stream");
+
+  gst_avi_demux_roundup_list (avi, &buf);
 
   if (avi->num_streams >= GST_AVI_DEMUX_MAX_STREAMS) {
     GST_WARNING_OBJECT (avi,
@@ -3140,6 +3160,8 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
 
         GST_DEBUG ("'hdrl' LIST tag found. Parsing next chunk");
 
+        gst_avi_demux_roundup_list (avi, &buf);
+
         /* the hdrl starts with a 'avih' header */
         if (!gst_riff_parse_chunk (GST_ELEMENT_CAST (avi), buf, &offset, &tag,
                 &sub))
@@ -3580,6 +3602,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   }
 
   GST_DEBUG_OBJECT (avi, "hdrl LIST tag found");
+
+  gst_avi_demux_roundup_list (avi, &buf);
 
   /* the hdrl starts with a 'avih' header */
   if (!gst_riff_parse_chunk (element, buf, &offset, &tag, &sub))
