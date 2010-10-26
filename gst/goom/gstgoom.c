@@ -485,6 +485,10 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuf = NULL;
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
+  if (goom->bps == 0) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto beach;
+  }
 
   /* If we don't have an output format yet, preallocate a buffer to try and
    * set one */
