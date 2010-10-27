@@ -46,6 +46,12 @@ else
 DVB_DIR=
 endif
 
+if USE_APPLE_MEDIA
+APPLE_MEDIA_DIR=applemedia
+else
+APPLE_MEDIA_DIR=
+endif
+
 if USE_OSX_VIDEO
 OSX_VIDEO_DIR=osxvideo
 else
@@ -82,9 +88,9 @@ else
 SHM_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(SHM_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
+SUBDIRS = $(ACM_DIR) $(APPLE_MEDIA_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(SHM_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
 
-DIST_SUBDIRS = acmenc acmmp3dec directdraw directsound dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
+DIST_SUBDIRS = acmenc acmmp3dec applemedia directdraw directsound dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
 		osxvideo qtwrapper shm vcd vdpau wasapi wininet winks winscreencap
 
 include $(top_srcdir)/common/parallel-subdirs.mak

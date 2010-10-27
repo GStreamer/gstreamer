@@ -1,0 +1,711 @@
+/*
+ * Copyright (C) 2009 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include "qtkitvideosrc.h"
+
+#import <QTKit/QTKit.h>
+
+#define DEFAULT_DEVICE_INDEX  -1
+
+#define DEVICE_YUV_FOURCC     "UYVY"
+#define DEVICE_FPS_N          30
+#define DEVICE_FPS_D          1
+
+#define FRAME_QUEUE_SIZE      2
+
+GST_DEBUG_CATEGORY (gst_qtkit_video_src_debug);
+#define GST_CAT_DEFAULT gst_qtkit_video_src_debug
+
+static const GstElementDetails element_details = {
+    "QTKitVideoSrc",
+    "Source/Video",
+    "Stream data from a video capture device through QTKit",
+    "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>"
+};
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+        "video/x-raw-yuv, "
+            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+            "width = (int) 640, "
+            "height = (int) 480, "
+            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
+                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "pixel-aspect-ratio = (fraction) 1/1"
+            "; "
+        "video/x-raw-yuv, "
+            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+            "width = (int) 160, "
+            "height = (int) 120, "
+            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
+                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "pixel-aspect-ratio = (fraction) 1/1"
+            "; "
+        "video/x-raw-yuv, "
+            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+            "width = (int) 176, "
+            "height = (int) 144, "
+            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
+                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "pixel-aspect-ratio = (fraction) 12/11"
+            "; "
+        "video/x-raw-yuv, "
+            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+            "width = (int) 320, "
+            "height = (int) 240, "
+            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
+                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "pixel-aspect-ratio = (fraction) 1/1"
+            "; "
+        "video/x-raw-yuv, "
+            "format = (fourcc) " DEVICE_YUV_FOURCC ", "
+            "width = (int) 352, "
+            "height = (int) 288, "
+            "framerate = (fraction) " G_STRINGIFY (DEVICE_FPS_N) "/"
+                G_STRINGIFY (DEVICE_FPS_D) ", "
+            "pixel-aspect-ratio = (fraction) 12/11"
+            ";"
+    )
+);
+
+typedef enum _QueueState {
+  NO_FRAMES = 1,
+  HAS_FRAME_OR_STOP_REQUEST,
+} QueueState;
+
+static GstPushSrcClass * parent_class;
+
+@interface GstQTKitVideoSrcImpl : NSObject {
+  GstElement *element;
+  GstBaseSrc *baseSrc;
+  GstPushSrc *pushSrc;
+
+  int deviceIndex;
+
+  QTCaptureSession *session;
+  QTCaptureDeviceInput *input;
+  QTCaptureDecompressedVideoOutput *output;
+  QTCaptureDevice *device;
+
+  NSConditionLock *queueLock;
+  NSMutableArray *queue;
+  BOOL stopRequest;
+
+  gint width, height;
+  GstClockTime duration;
+  guint64 offset;
+  GstClockTime prev_ts;
+}
+
+- (id)init;
+- (id)initWithSrc:(GstPushSrc *)src;
+
+@property int deviceIndex;
+
+- (BOOL)openDevice;
+- (void)closeDevice;
+- (BOOL)setCaps:(GstCaps *)caps;
+- (BOOL)start;
+- (BOOL)stop;
+- (BOOL)unlock;
+- (BOOL)unlockStop;
+- (BOOL)query:(GstQuery *)query;
+- (GstStateChangeReturn)changeState:(GstStateChange)transition;
+- (GstFlowReturn)create:(GstBuffer **)buf;
+- (BOOL)timestampBuffer:(GstBuffer *)buf;
+- (void)captureOutput:(QTCaptureOutput *)captureOutput
+  didOutputVideoFrame:(CVImageBufferRef)videoFrame
+     withSampleBuffer:(QTSampleBuffer *)sampleBuffer
+       fromConnection:(QTCaptureConnection *)connection;
+
+@end
+
+@implementation GstQTKitVideoSrcImpl
+
+- (id)init
+{
+  return [self initWithSrc:NULL];
+}
+
+- (id)initWithSrc:(GstPushSrc *)src
+{
+  if ((self = [super init])) {
+    element = GST_ELEMENT_CAST (src);
+    baseSrc = GST_BASE_SRC_CAST (src);
+    pushSrc = src;
+
+    deviceIndex = DEFAULT_DEVICE_INDEX;
+
+    device = nil;
+
+    gst_base_src_set_live (baseSrc, TRUE);
+    gst_base_src_set_format (baseSrc, GST_FORMAT_TIME);
+  }
+
+  return self;
+}
+
+@synthesize deviceIndex;
+
+- (BOOL)openDevice
+{
+  NSString *mediaType;
+  NSError *error = nil;
+
+  mediaType = QTMediaTypeVideo;
+
+  if (deviceIndex == -1) {
+    device = [QTCaptureDevice defaultInputDeviceWithMediaType:mediaType];
+    if (device == nil) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                         ("No video capture devices found"), (NULL));
+      return NO;
+    }
+  } else {
+    NSArray *devices = [QTCaptureDevice inputDevicesWithMediaType:mediaType];
+    if (deviceIndex >= [devices count]) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                         ("Invalid video capture device index"), (NULL));
+      return NO;
+    }
+    device = [devices objectAtIndex:deviceIndex];
+  }
+
+  GST_INFO ("Opening '%s'", [[device localizedDisplayName] UTF8String]);
+
+  if (![device open:&error]) {
+    GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+        ("Failed to open device '%s'",
+            [[device localizedDisplayName] UTF8String]), (NULL));
+    return NO;
+  }
+
+  return YES;
+}
+
+- (void)closeDevice
+{
+  g_assert (![session isRunning]);
+
+  [session release];
+  session = nil;
+
+  [input release];
+  input = nil;
+
+  [output release];
+  output = nil;
+
+  device = nil;
+}
+
+- (BOOL)setCaps:(GstCaps *)caps
+{
+  GstStructure *s;
+  NSDictionary *outputAttrs;
+  BOOL success;
+
+  g_assert (device != nil);
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "width", &width);
+  gst_structure_get_int (s, "height", &height);
+
+  input = [[QTCaptureDeviceInput alloc] initWithDevice:device];
+
+  output = [[QTCaptureDecompressedVideoOutput alloc] init];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+  [output setAutomaticallyDropsLateVideoFrames:YES];
+#endif
+  outputAttrs = [NSDictionary dictionaryWithObjectsAndKeys:
+      [NSNumber numberWithUnsignedInt:k2vuyPixelFormat],
+          (id)kCVPixelBufferPixelFormatTypeKey,
+      [NSNumber numberWithUnsignedInt:width],
+          (id)kCVPixelBufferWidthKey,
+      [NSNumber numberWithUnsignedInt:height],
+          (id)kCVPixelBufferHeightKey,
+      nil
+  ];
+  [output setPixelBufferAttributes:outputAttrs];
+
+  session = [[QTCaptureSession alloc] init];
+  success = [session addInput:input
+                        error:nil];
+  g_assert (success);
+  success = [session addOutput:output
+                         error:nil];
+  g_assert (success);
+
+  [output setDelegate:self];
+  [session startRunning];
+
+  return YES;
+}
+
+- (BOOL)start
+{
+  queueLock = [[NSConditionLock alloc] initWithCondition:NO_FRAMES];
+  queue = [[NSMutableArray alloc] initWithCapacity:FRAME_QUEUE_SIZE];
+  stopRequest = NO;
+
+  duration = gst_util_uint64_scale (GST_SECOND, DEVICE_FPS_D, DEVICE_FPS_N);
+  offset = 0;
+  prev_ts = GST_CLOCK_TIME_NONE;
+
+  return YES;
+}
+
+- (BOOL)stop
+{
+  [session stopRunning];
+  [output setDelegate:nil];
+
+  for (id frame in queue)
+    CVBufferRelease ((CVImageBufferRef) frame);
+  [queueLock release];
+  queueLock = nil;
+  [queue release];
+  queue = nil;
+
+  return YES;
+}
+
+- (BOOL)query:(GstQuery *)query
+{
+  BOOL result = NO;
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+    if (device != nil) {
+      GstClockTime min_latency, max_latency;
+
+      min_latency = max_latency = duration; /* for now */
+      result = YES;
+
+      GST_DEBUG_OBJECT (element, "reporting latency of min %" GST_TIME_FORMAT
+          " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+    }
+  } else {
+    result = GST_BASE_SRC_CLASS (parent_class)->query (baseSrc, query);
+  }
+
+  return result;
+}
+
+- (BOOL)unlock
+{
+  [queueLock lock];
+  stopRequest = YES;
+  [queueLock unlockWithCondition:HAS_FRAME_OR_STOP_REQUEST];
+
+  return YES;
+}
+
+- (BOOL)unlockStop
+{
+  [queueLock lock];
+  stopRequest = NO;
+  [queueLock unlock];
+
+  return YES;
+}
+
+- (GstStateChangeReturn)changeState:(GstStateChange)transition
+{
+  GstStateChangeReturn ret;
+
+  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
+    if (![self openDevice])
+      return GST_STATE_CHANGE_FAILURE;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (transition == GST_STATE_CHANGE_READY_TO_NULL)
+    [self closeDevice];
+
+  return ret;
+}
+
+- (void)captureOutput:(QTCaptureOutput *)captureOutput
+  didOutputVideoFrame:(CVImageBufferRef)videoFrame
+     withSampleBuffer:(QTSampleBuffer *)sampleBuffer
+       fromConnection:(QTCaptureConnection *)connection
+{
+  [queueLock lock];
+
+  if (stopRequest) {
+    [queueLock unlock];
+    return;
+  }
+
+  if ([queue count] == FRAME_QUEUE_SIZE) {
+    CVBufferRelease ((CVImageBufferRef) [queue lastObject]);
+    [queue removeLastObject];
+  }
+
+  CVBufferRetain (videoFrame);
+  [queue insertObject:(id)videoFrame
+              atIndex:0];
+
+  [queueLock unlockWithCondition:HAS_FRAME_OR_STOP_REQUEST];
+}
+
+- (GstFlowReturn)create:(GstBuffer **)buf
+{
+  *buf = NULL;
+
+  do {
+    CVPixelBufferRef frame;
+
+    [queueLock lockWhenCondition:HAS_FRAME_OR_STOP_REQUEST];
+    if (stopRequest) {
+      [queueLock unlock];
+      return GST_FLOW_WRONG_STATE;
+    }
+
+    frame = (CVPixelBufferRef) [queue lastObject];
+    [queue removeLastObject];
+    [queueLock unlockWithCondition:
+        ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
+
+    if (*buf != NULL)
+      gst_buffer_unref (*buf);
+    *buf = gst_buffer_new_and_alloc (
+        CVPixelBufferGetBytesPerRow (frame) * CVPixelBufferGetHeight (frame));
+    CVPixelBufferLockBaseAddress (frame, 0);
+    memcpy (GST_BUFFER_DATA (*buf), CVPixelBufferGetBaseAddress (frame),
+        GST_BUFFER_SIZE (*buf));
+    CVPixelBufferUnlockBaseAddress (frame, 0);
+    CVBufferRelease (frame);
+  } while (![self timestampBuffer:*buf]);
+
+  return GST_FLOW_OK;
+}
+
+- (BOOL)timestampBuffer:(GstBuffer *)buf
+{
+  GstClock *clock;
+  GstClockTime timestamp;
+
+  GST_OBJECT_LOCK (element);
+  clock = GST_ELEMENT_CLOCK (element);
+  if (clock != NULL) {
+    gst_object_ref (clock);
+    timestamp = element->base_time;
+  } else {
+    timestamp = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (element);
+
+  if (clock != NULL) {
+
+    /* The time according to the current clock */
+    timestamp = gst_clock_get_time (clock) - timestamp;
+    if (timestamp > duration)
+      timestamp -= duration;
+    else
+      timestamp = 0;
+
+    gst_object_unref (clock);
+    clock = NULL;
+
+    /* Unless it's the first frame, align the current timestamp on a multiple
+     * of duration since the previous */
+    if (GST_CLOCK_TIME_IS_VALID (prev_ts)) {
+      GstClockTime delta;
+      guint delta_remainder, delta_offset;
+
+      if (timestamp < prev_ts) {
+        GST_DEBUG_OBJECT (element, "clock is ticking backwards");
+        return NO;
+      }
+
+      /* Round to a duration boundary */
+      delta = timestamp - prev_ts;
+      delta_remainder = delta % duration;
+
+      if (delta_remainder < duration / 3)
+        timestamp -= delta_remainder;
+      else
+        timestamp += duration - delta_remainder;
+
+      /* How many frames are we off then? */
+      delta = timestamp - prev_ts;
+      delta_offset = delta / duration;
+
+      if (delta_offset == 1)    /* perfect */
+        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+      else if (delta_offset > 1) {
+        guint lost = delta_offset - 1;
+        GST_DEBUG_OBJECT (element, "lost %d frame%s, setting discont flag",
+            lost, (lost > 1) ? "s" : "");
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      } else if (delta_offset == 0) {   /* overproduction, skip this frame */
+        GST_DEBUG_OBJECT (element, "skipping frame");
+        return NO;
+      }
+
+      offset += delta_offset;
+    }
+
+    prev_ts = timestamp;
+  }
+
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+
+  return YES;
+}
+
+@end
+
+/*
+ * Glue code
+ */
+
+enum
+{
+  PROP_0,
+  PROP_DEVICE_INDEX
+};
+
+GST_BOILERPLATE (GstQTKitVideoSrc, gst_qtkit_video_src, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
+
+static void gst_qtkit_video_src_finalize (GObject * obj);
+static void gst_qtkit_video_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_qtkit_video_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn gst_qtkit_video_src_change_state (
+    GstElement * element, GstStateChange transition);
+static gboolean gst_qtkit_video_src_set_caps (GstBaseSrc * basesrc,
+    GstCaps * caps);
+static gboolean gst_qtkit_video_src_start (GstBaseSrc * basesrc);
+static gboolean gst_qtkit_video_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_qtkit_video_src_query (GstBaseSrc * basesrc,
+    GstQuery * query);
+static gboolean gst_qtkit_video_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_qtkit_video_src_unlock_stop (GstBaseSrc * basesrc);
+static GstFlowReturn gst_qtkit_video_src_create (GstPushSrc * pushsrc,
+    GstBuffer ** buf);
+
+static void
+gst_qtkit_video_src_base_init (gpointer gclass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+
+  gst_element_class_set_details (element_class, &element_details);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+}
+
+static void
+gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+  GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
+
+  gobject_class->finalize = gst_qtkit_video_src_finalize;
+  gobject_class->get_property = gst_qtkit_video_src_get_property;
+  gobject_class->set_property = gst_qtkit_video_src_set_property;
+
+  gstelement_class->change_state = gst_qtkit_video_src_change_state;
+
+  gstbasesrc_class->set_caps = gst_qtkit_video_src_set_caps;
+  gstbasesrc_class->start = gst_qtkit_video_src_start;
+  gstbasesrc_class->stop = gst_qtkit_video_src_stop;
+  gstbasesrc_class->query = gst_qtkit_video_src_query;
+  gstbasesrc_class->unlock = gst_qtkit_video_src_unlock;
+  gstbasesrc_class->unlock_stop = gst_qtkit_video_src_unlock_stop;
+
+  gstpushsrc_class->create = gst_qtkit_video_src_create;
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
+      g_param_spec_int ("device-index", "Device Index",
+          "The zero-based device index",
+          -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (gst_qtkit_video_src_debug, "qtkitvideosrc",
+      0, "Mac OS X QTKit video source");
+}
+
+#define OBJC_CALLOUT_BEGIN() \
+  NSAutoreleasePool *pool; \
+  \
+  pool = [[NSAutoreleasePool alloc] init]
+#define OBJC_CALLOUT_END() \
+  [pool release]
+
+static void
+gst_qtkit_video_src_init (GstQTKitVideoSrc * src, GstQTKitVideoSrcClass * gclass)
+{
+  OBJC_CALLOUT_BEGIN ();
+  src->impl = [[GstQTKitVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
+  OBJC_CALLOUT_END ();
+}
+
+static void
+gst_qtkit_video_src_finalize (GObject * obj)
+{
+  OBJC_CALLOUT_BEGIN ();
+  [GST_QTKIT_VIDEO_SRC_IMPL (obj) release];
+  OBJC_CALLOUT_END ();
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
+gst_qtkit_video_src_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstQTKitVideoSrcImpl *impl = GST_QTKIT_VIDEO_SRC_IMPL (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      g_value_set_int (value, impl.deviceIndex);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_qtkit_video_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstQTKitVideoSrcImpl *impl = GST_QTKIT_VIDEO_SRC_IMPL (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      impl.deviceIndex = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstStateChangeReturn
+gst_qtkit_video_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (element) changeState: transition];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) setCaps:caps];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_start (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) start];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_stop (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) stop];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) query:query];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_unlock (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) unlock];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_qtkit_video_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (basesrc) unlockStop];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_qtkit_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
+{
+  GstFlowReturn ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_QTKIT_VIDEO_SRC_IMPL (pushsrc) create: buf];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
