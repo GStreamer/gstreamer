@@ -160,6 +160,7 @@ public class MediaInfo.Info : VBox
       try {
         GLib.List<DiscovererStreamInfo> l;
         DiscovererStreamInfo sinfo;
+        Label field;
 
         info = dc.discover_uri (uri);
 
@@ -180,7 +181,9 @@ public class MediaInfo.Info : VBox
         l = info.get_video_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-          video_streams.append_page (new Label(sinfo.get_caps ().to_string ()),new Label (@"video $i"));
+          field = new Label(sinfo.get_caps ().to_string ());
+          field.set_ellipsize (Pango.EllipsizeMode.END);
+          video_streams.append_page (field, new Label (@"video $i"));
         }
         video_streams.show_all();
 
@@ -190,7 +193,9 @@ public class MediaInfo.Info : VBox
         l = info.get_audio_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-          audio_streams.append_page (new Label(sinfo.get_caps ().to_string ()),new Label (@"audio $i"));
+          field = new Label(sinfo.get_caps ().to_string ());
+          field.set_ellipsize (Pango.EllipsizeMode.END);
+          audio_streams.append_page (field, new Label (@"audio $i"));
         }
         audio_streams.show_all();
         //l = info.get_container_streams ();
