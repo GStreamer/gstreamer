@@ -76,6 +76,7 @@ struct _GstDilate
   gint width, height;
 
   gboolean silent;
+  gboolean erode;
 };
 
 struct _GstDilateClass

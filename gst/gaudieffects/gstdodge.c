@@ -159,7 +159,7 @@ gst_dodge_class_init (GstDodgeClass * klass)
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_dodge_transform);
 }
 
-/* Initialize the new element,
+/* Initialize the element,
  * instantiate pads and add them to element,
  * set pad calback functions, and
  * initialize instance structure.
@@ -192,6 +192,7 @@ gst_dodge_get_property (GObject * object, guint prop_id,
 {
   GstDodge *filter = GST_DODGE (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_SILENT:
       g_value_set_boolean (value, filter->silent);
@@ -200,6 +201,7 @@ gst_dodge_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 /* GstElement vmethod implementations */
@@ -214,8 +216,13 @@ gst_dodge_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   gboolean ret = TRUE;
 
   structure = gst_caps_get_structure (incaps, 0);
-  ret &= gst_structure_get_int (structure, "width", &filter->width);
-  ret &= gst_structure_get_int (structure, "height", &filter->height);
+
+  GST_OBJECT_LOCK (filter);
+  if (gst_structure_get_int (structure, "width", &filter->width) &&
+      gst_structure_get_int (structure, "height", &filter->height)) {
+    ret = TRUE;
+  }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }

@@ -87,14 +87,22 @@ enum
 
 enum
 {
-  PROP_0,
+  PROP_0 = 0,
+  PROP_THRESHOLD,
+  PROP_START,
+  PROP_END,
   PROP_SILENT
 };
 
 /* Initializations */
 
+#define DEFAULT_THRESHOLD 127
+#define DEFAULT_START 50
+#define DEFAULT_END 185
+
 static gint gate_int (gint value, gint min, gint max);
-static void transform (guint32 * src, guint32 * dest, gint video_area);
+static void transform (guint32 * src, guint32 * dest, gint video_area,
+    gint threshold, gint start, gint end);
 
 /* The capabilities of the inputs and outputs. */
 
@@ -152,6 +160,21 @@ gst_solarize_class_init (GstSolarizeClass * klass)
   gobject_class->set_property = gst_solarize_set_property;
   gobject_class->get_property = gst_solarize_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_THRESHOLD,
+      g_param_spec_uint ("threshold", "Threshold",
+          "Threshold parameter", 0, 256, DEFAULT_THRESHOLD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_START,
+      g_param_spec_uint ("start", "Start",
+          "Start parameter", 0, 256, DEFAULT_START,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_END,
+      g_param_spec_uint ("end", "End",
+          "End parameter", 0, 256, DEFAULT_END,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
+
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -160,7 +183,7 @@ gst_solarize_class_init (GstSolarizeClass * klass)
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_solarize_transform);
 }
 
-/* Initialize the new element,
+/* Initialize the element,
  * instantiate pads and add them to element,
  * set pad calback functions, and
  * initialize instance structure.
@@ -168,6 +191,9 @@ gst_solarize_class_init (GstSolarizeClass * klass)
 static void
 gst_solarize_init (GstSolarize * filter, GstSolarizeClass * gclass)
 {
+  filter->threshold = DEFAULT_THRESHOLD;
+  filter->start = DEFAULT_START;
+  filter->end = DEFAULT_END;
   filter->silent = FALSE;
 }
 
@@ -181,6 +207,15 @@ gst_solarize_set_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       filter->silent = g_value_get_boolean (value);
       break;
+    case PROP_THRESHOLD:
+      filter->threshold = g_value_get_uint (value);
+      break;
+    case PROP_START:
+      filter->start = g_value_get_uint (value);
+      break;
+    case PROP_END:
+      filter->end = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -193,14 +228,25 @@ gst_solarize_get_property (GObject * object, guint prop_id,
 {
   GstSolarize *filter = GST_SOLARIZE (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case PROP_SILENT:
       g_value_set_boolean (value, filter->silent);
+      break;
+    case PROP_THRESHOLD:
+      g_value_set_uint (value, filter->threshold);
+      break;
+    case PROP_START:
+      g_value_set_uint (value, filter->start);
+      break;
+    case PROP_END:
+      g_value_set_uint (value, filter->end);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 /* GstElement vmethod implementations */
@@ -212,11 +258,15 @@ gst_solarize_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 {
   GstSolarize *filter = GST_SOLARIZE (btrans);
   GstStructure *structure;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
+  GST_OBJECT_LOCK (filter);
   structure = gst_caps_get_structure (incaps, 0);
-  ret &= gst_structure_get_int (structure, "width", &filter->width);
-  ret &= gst_structure_get_int (structure, "height", &filter->height);
+  if (gst_structure_get_int (structure, "width", &filter->width) &&
+      gst_structure_get_int (structure, "height", &filter->height)) {
+    ret = TRUE;
+  }
+  GST_OBJECT_UNLOCK (filter);
 
   return ret;
 }
@@ -227,13 +277,31 @@ gst_solarize_transform (GstBaseTransform * btrans,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
   GstSolarize *filter = GST_SOLARIZE (btrans);
-  gint video_size;
+  gint video_size, threshold, start, end;
   guint32 *src = (guint32 *) GST_BUFFER_DATA (in_buf);
   guint32 *dest = (guint32 *) GST_BUFFER_DATA (out_buf);
+  GstClockTime timestamp;
+  gint64 stream_time;
+
+  /* GstController: update the properties */
+  timestamp = GST_BUFFER_TIMESTAMP (in_buf);
+  stream_time =
+      gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (filter, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (G_OBJECT (filter), stream_time);
+
+  GST_OBJECT_LOCK (filter);
+  threshold = filter->threshold;
+  start = filter->start;
+  end = filter->end;
+  GST_OBJECT_UNLOCK (filter);
 
   video_size = filter->width * filter->height;
-
-  transform (src, dest, video_size);
+  transform (src, dest, video_size, threshold, start, end);
 
   return GST_FLOW_OK;
 }
@@ -252,7 +320,6 @@ gst_solarize_plugin_init (GstPlugin * solarize)
 }
 
 /*** Now the image processing work.... ***/
-
 /* Keep the values inbounds. */
 static gint
 gate_int (gint value, gint min, gint max)
@@ -268,14 +335,12 @@ gate_int (gint value, gint min, gint max)
 
 /* Transform processes each frame. */
 static void
-transform (guint32 * src, guint32 * dest, gint video_area)
+transform (guint32 * src, guint32 * dest, gint video_area,
+    gint threshold, gint start, gint end)
 {
   guint32 in;
   guint32 color[3];
   gint x, c;
-  gint threshold = 127;
-  gint start = 50;
-  gint end = 185;
   gint floor = 0;
   gint ceiling = 255;
 
@@ -305,6 +370,7 @@ transform (guint32 * src, guint32 * dest, gint video_area)
     color[0] = (in >> 16) & 0xff;
     color[1] = (in >> 8) & 0xff;
     color[2] = (in) & 0xff;
+
 
     /* Loop through colors. */
     for (c = 0; c < 3; c++) {

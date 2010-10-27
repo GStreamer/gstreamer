@@ -63,6 +63,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_controller_init (NULL, NULL);
   gboolean ret = TRUE;
 
   ret &= gst_burn_plugin_init (plugin);

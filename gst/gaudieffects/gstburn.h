@@ -75,6 +75,7 @@ struct _GstBurn
 
   gint width, height;
 
+  gint adjustment;
   gboolean silent;
 };
 

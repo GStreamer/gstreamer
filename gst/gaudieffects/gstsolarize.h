@@ -75,6 +75,7 @@ struct _GstSolarize
 
   gint width, height;
 
+  gint threshold, start, end;
   gboolean silent;
 };
 

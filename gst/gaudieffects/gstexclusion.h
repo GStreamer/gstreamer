@@ -75,6 +75,7 @@ struct _GstExclusion
 
   gint width, height;
 
+  gint factor;
   gboolean silent;
 };
 
