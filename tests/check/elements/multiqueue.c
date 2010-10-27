@@ -512,6 +512,155 @@ GST_START_TEST (test_output_order)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sparse_stream)
+{
+  /* This test creates a multiqueue with 2 streams. One receives
+   * a constant flow of buffers, the other only gets one buffer, and then
+   * new-segment events, and returns not-linked. The multiqueue should not fill.
+   */
+  GstElement *pipe;
+  GstElement *mq;
+  GstPad *inputpads[2];
+  GstPad *sinkpads[2];
+  GstEvent *event;
+  struct PadData pad_data[2];
+  guint32 eos_seen, max_linked_id;
+  GMutex *mutex;
+  GCond *cond;
+  gint i;
+  const gint NBUFFERS = 100;
+
+  mutex = g_mutex_new ();
+  cond = g_cond_new ();
+
+  pipe = gst_pipeline_new ("testbin");
+  mq = gst_element_factory_make ("multiqueue", NULL);
+  fail_unless (mq != NULL);
+  gst_bin_add (GST_BIN (pipe), mq);
+
+  /* 1 second limit */
+  g_object_set (mq,
+      "max-size-bytes", (guint) 0,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) GST_SECOND,
+      "extra-size-bytes", (guint) 0,
+      "extra-size-buffers", (guint) 0, "extra-size-time", (guint64) 0, NULL);
+
+  /* Construct 2 dummy output pads. */
+  for (i = 0; i < 2; i++) {
+    GstPad *mq_srcpad, *mq_sinkpad;
+    gchar *name;
+
+    name = g_strdup_printf ("dummysrc%d", i);
+    inputpads[i] = gst_pad_new (name, GST_PAD_SRC);
+    g_free (name);
+    gst_pad_set_getcaps_function (inputpads[i], mq_dummypad_getcaps);
+
+    mq_sinkpad = gst_element_get_request_pad (mq, "sink%d");
+    fail_unless (mq_sinkpad != NULL);
+    gst_pad_link (inputpads[i], mq_sinkpad);
+
+    gst_pad_set_active (inputpads[i], TRUE);
+
+    mq_srcpad = mq_sinkpad_to_srcpad (mq, mq_sinkpad);
+
+    name = g_strdup_printf ("dummysink%d", i);
+    sinkpads[i] = gst_pad_new (name, GST_PAD_SINK);
+    g_free (name);
+    gst_pad_set_chain_function (sinkpads[i], mq_dummypad_chain);
+    gst_pad_set_event_function (sinkpads[i], mq_dummypad_event);
+    gst_pad_set_getcaps_function (sinkpads[i], mq_dummypad_getcaps);
+
+    pad_data[i].pad_num = i;
+    pad_data[i].max_linked_id_ptr = &max_linked_id;
+    pad_data[i].eos_count_ptr = &eos_seen;
+    pad_data[i].is_linked = (i == 0) ? TRUE : FALSE;
+    pad_data[i].n_linked = 1;
+    pad_data[i].cond = cond;
+    pad_data[i].mutex = mutex;
+    pad_data[i].first_buf = TRUE;
+    gst_pad_set_element_private (sinkpads[i], pad_data + i);
+
+    gst_pad_link (mq_srcpad, sinkpads[i]);
+    gst_pad_set_active (sinkpads[i], TRUE);
+
+    gst_object_unref (mq_sinkpad);
+    gst_object_unref (mq_srcpad);
+  }
+
+  /* Run the test. Push 100 buffers through the multiqueue */
+  max_linked_id = 0;
+  eos_seen = 0;
+
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  /* Push 2 new segment events */
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  gst_pad_push_event (inputpads[0], gst_event_ref (event));
+  gst_pad_push_event (inputpads[1], event);
+
+  for (i = 0; i < NBUFFERS; i++) {
+    GstBuffer *buf;
+    GstFlowReturn ret;
+    GstClockTime ts;
+
+    ts = gst_util_uint64_scale_int (GST_SECOND, i, 10);
+
+    buf = gst_buffer_new_and_alloc (4);
+    g_static_mutex_lock (&_check_lock);
+    fail_if (buf == NULL);
+    g_static_mutex_unlock (&_check_lock);
+    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), i + 1);
+    GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (GST_SECOND, i, 10);
+
+    /* If i == 0, also push the buffer to the 2nd pad */
+    if (i == 0)
+      ret = gst_pad_push (inputpads[1], gst_buffer_ref (buf));
+
+    ret = gst_pad_push (inputpads[0], buf);
+    g_static_mutex_lock (&_check_lock);
+    fail_unless (ret == GST_FLOW_OK,
+        "Push on pad %d returned %d when FLOW_OK was expected", 0, ret);
+    g_static_mutex_unlock (&_check_lock);
+
+    /* Push a new segment update on the 2nd pad */
+    event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, ts, -1, ts);
+    gst_pad_push_event (inputpads[1], event);
+  }
+
+  event = gst_event_new_eos ();
+  gst_pad_push_event (inputpads[0], gst_event_ref (event));
+  gst_pad_push_event (inputpads[1], event);
+
+  /* Wait while the buffers are processed */
+  g_mutex_lock (mutex);
+  /* We wait until EOS has been pushed on all pads */
+  while (eos_seen < 2) {
+    g_cond_wait (cond, mutex);
+  }
+  g_mutex_unlock (mutex);
+
+  /* Clean up */
+  for (i = 0; i < 2; i++) {
+    GstPad *mq_input = gst_pad_get_peer (inputpads[i]);
+
+    gst_pad_unlink (inputpads[i], mq_input);
+    gst_element_release_request_pad (mq, mq_input);
+    gst_object_unref (mq_input);
+    gst_object_unref (inputpads[i]);
+
+    gst_object_unref (sinkpads[i]);
+  }
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+  gst_object_unref (pipe);
+
+  g_cond_free (cond);
+  g_mutex_free (mutex);
+}
+
+GST_END_TEST;
+
 static Suite *
 multiqueue_suite (void)
 {
@@ -527,6 +676,8 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_request_pads);
 
   tcase_add_test (tc_chain, test_output_order);
+
+  tcase_add_test (tc_chain, test_sparse_stream);
   return s;
 }
 
