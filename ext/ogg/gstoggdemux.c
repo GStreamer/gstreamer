@@ -186,6 +186,16 @@ gst_ogg_pad_dispose (GObject * object)
   g_list_free (pad->continued);
   pad->continued = NULL;
 
+  if (pad->map.caps) {
+    gst_caps_unref (pad->map.caps);
+    pad->map.caps = NULL;
+  }
+
+  if (pad->map.taglist) {
+    gst_tag_list_free (pad->map.taglist);
+    pad->map.taglist = NULL;
+  }
+
   ogg_stream_reset (&pad->map.stream);
 
   G_OBJECT_CLASS (gst_ogg_pad_parent_class)->dispose (object);
