@@ -1742,10 +1742,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
     pad->added = TRUE;
-    if (event && pad->map.taglist) {
-      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (ogg),
-          GST_PAD_CAST (pad), pad->map.taglist);
-    }
   }
   /* prefer the index bitrate over the ones encoded in the streams */
   ogg->bitrate = (idx_bitrate ? idx_bitrate : bitrate);
@@ -1774,6 +1770,14 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GstOggPad *pad;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    /* FIXME also streaming thread */
+    if (pad->map.taglist) {
+      GST_DEBUG_OBJECT (ogg, "pushing tags");
+      gst_element_found_tags_for_pad (GST_ELEMENT_CAST (ogg),
+          GST_PAD_CAST (pad), pad->map.taglist);
+      pad->map.taglist = NULL;
+    }
 
     GST_DEBUG_OBJECT (ogg, "pushing headers");
     /* push headers */
