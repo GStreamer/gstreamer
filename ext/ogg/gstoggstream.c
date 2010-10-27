@@ -277,6 +277,49 @@ packet_duration_constant (GstOggStream * pad, ogg_packet * packet)
   return pad->frame_size;
 }
 
+/* helper: extracts tags from vorbis comment ogg packet.
+ * Returns result in *tags after free'ing existing *tags (if any) */
+static gboolean
+tag_list_from_vorbiscomment_packet (ogg_packet * packet,
+    const guint8 * id_data, const guint id_data_length, GstTagList ** tags)
+{
+  GstBuffer *buf = NULL;
+  gchar *encoder = NULL;
+  GstTagList *list;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (tags != NULL, FALSE);
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
+  GST_BUFFER_SIZE (buf) = packet->bytes;
+
+  list = gst_tag_list_from_vorbiscomment_buffer (buf, id_data, id_data_length,
+      &encoder);
+
+  if (!list) {
+    GST_WARNING ("failed to decode vorbis comments");
+    ret = FALSE;
+    goto exit;
+  }
+
+  if (encoder) {
+    if (encoder[0])
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, encoder,
+          NULL);
+    g_free (encoder);
+  }
+
+exit:
+  if (*tags)
+    gst_tag_list_free (*tags);
+  *tags = list;
+
+  gst_buffer_unref (buf);
+
+  return ret;
+}
+
 /* theora */
 
 static gboolean
@@ -597,32 +640,8 @@ static gboolean
 is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
 {
   if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
-    GstBuffer *buf = NULL;
-    gchar *encoder = NULL;
-
-    buf = gst_buffer_new ();
-
-    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
-    GST_BUFFER_SIZE (buf) = packet->bytes;
-
-    if (pad->taglist)
-      gst_tag_list_free (pad->taglist);
-
-    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
-        (const guint8 *) "OVP80\2 ", 7, &encoder);
-    if (!pad->taglist) {
-      GST_ERROR_OBJECT (pad, "couldn't decode comments");
-      pad->taglist = gst_tag_list_new ();
-    }
-
-    gst_buffer_unref (buf);
-    buf = NULL;
-    if (encoder) {
-      if (encoder[0])
-        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
-            GST_TAG_ENCODER, encoder, NULL);
-      g_free (encoder);
-    }
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "OVP80\2 ", 7, &pad->taglist);
   }
 
   if (packet->bytes >= 5 && packet->packet[0] == 0x4F &&
@@ -690,32 +709,12 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
     return FALSE;
 
   if (((guint8 *) (packet->packet))[0] == 0x03) {
-    GstBuffer *buf = NULL;
-    gchar *encoder = NULL;
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "\003vorbis", 7, &pad->taglist);
 
-    buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
-    GST_BUFFER_SIZE (buf) = packet->bytes;
-
-    if (pad->taglist)
-      gst_tag_list_free (pad->taglist);
-
-    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
-        (const guint8 *) "\003vorbis", 7, &encoder);
-
-    if (!pad->taglist) {
-      GST_ERROR_OBJECT (pad, "couldn't decode comments");
+    if (!pad->taglist)
       pad->taglist = gst_tag_list_new ();
-    }
 
-    gst_buffer_unref (buf);
-    buf = NULL;
-    if (encoder) {
-      if (encoder[0])
-        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
-            GST_TAG_ENCODER, encoder, NULL);
-      g_free (encoder);
-    }
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER_VERSION, pad->version, NULL);
 
@@ -1297,32 +1296,8 @@ static gboolean
 is_header_ogm (GstOggStream * pad, ogg_packet * packet)
 {
   if (!(packet->packet[0] & 1) && (packet->packet[0] & 3 && pad->is_ogm_text)) {
-    GstBuffer *buf = NULL;
-    gchar *encoder = NULL;
-
-    buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
-    GST_BUFFER_SIZE (buf) = packet->bytes;;
-
-    if (pad->taglist)
-      gst_tag_list_free (pad->taglist);
-
-    pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
-        (const guint8 *) "\003vorbis", 7, &encoder);
-
-    if (!pad->taglist) {
-      GST_ERROR ("couldn't decode comments");
-      pad->taglist = gst_tag_list_new ();
-    }
-
-    gst_buffer_unref (buf);
-    buf = NULL;
-    if (encoder) {
-      if (encoder[0])
-        gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
-            GST_TAG_ENCODER, encoder, NULL);
-      g_free (encoder);
-    }
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "\003vorbis", 7, &pad->taglist);
   }
 
   if (packet->bytes >= 1 && (packet->packet[0] & 0x01))
