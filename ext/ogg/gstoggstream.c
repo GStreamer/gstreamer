@@ -429,6 +429,22 @@ is_header_theora (GstOggStream * pad, ogg_packet * packet)
   return (packet->bytes > 0 && (packet->packet[0] & 0x80) == 0x80);
 }
 
+static void
+extract_tags_theora (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes > 0 && packet->packet[0] == 0x81) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "\201theora", 7, &pad->taglist);
+
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new ();
+
+    if (pad->bitrate)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
+  }
+}
+
 /* dirac */
 
 static gboolean
@@ -828,6 +844,22 @@ setup_speex_mapper (GstOggStream * pad, ogg_packet * packet)
   return TRUE;
 }
 
+static void
+extract_tags_count (GstOggStream * pad, ogg_packet * packet)
+{
+  /* packet 2 must be comment packet */
+  if (packet->bytes > 0 && pad->n_header_packets_seen == 1) {
+    tag_list_from_vorbiscomment_packet (packet, NULL, 0, &pad->taglist);
+
+    if (!pad->taglist)
+      pad->taglist = gst_tag_list_new ();
+
+    if (pad->bitrate)
+      gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
+  }
+}
+
 
 /* flac */
 
@@ -935,6 +967,15 @@ packet_duration_flac (GstOggStream * pad, ogg_packet * packet)
     }
   }
   return -1;
+}
+
+static void
+extract_tags_flac (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes > 4 && ((packet->packet[0] & 0x7F) == 0x4)) {
+    tag_list_from_vorbiscomment_packet (packet,
+        packet->packet, 4, &pad->taglist);
+  }
 }
 
 /* fishead */
@@ -1705,7 +1746,7 @@ const GstOggMap mappers[] = {
     is_header_theora,
     packet_duration_constant,
     NULL,
-    NULL
+    extract_tags_theora
   },
   {
     "\001vorbis", 7, 22,
@@ -1729,7 +1770,7 @@ const GstOggMap mappers[] = {
     is_header_count,
     packet_duration_constant,
     NULL,
-    NULL
+    extract_tags_count
   },
   {
     "PCM     ", 8, 0,
@@ -1801,7 +1842,7 @@ const GstOggMap mappers[] = {
     is_header_flac,
     packet_duration_flac,
     NULL,
-    NULL
+    extract_tags_flac
   },
   {
     "AnxData", 7, 0,
@@ -1824,7 +1865,7 @@ const GstOggMap mappers[] = {
     is_header_count,
     packet_duration_constant,
     NULL,
-    NULL
+    extract_tags_count
   },
   {
     "\200kate\0\0\0", 8, 0,
