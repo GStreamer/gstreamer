@@ -444,6 +444,10 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
   guint32 rate;
   guint32 av_bps;
   guint16 blockalign;
+#if 0
+  /* missing field: */
+  guint16 bits_per_sample;
+#endif
   guint16 size;
 } gst_riff_strf_auds;
 
