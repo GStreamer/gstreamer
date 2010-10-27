@@ -352,13 +352,11 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
     } else if (!g_ascii_strncasecmp (strings[i], "StreamUrl=", 10)) {
       char *url = gst_icydemux_unicodify (strings[i] + 11);
 
-      if (url) {
-        /* 
-           gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_URL, 
-           url, NULL); 
-           found_tag = TRUE;
-         */
+      if (url && *url) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_HOMEPAGE,
+            url, NULL);
         g_free (url);
+        found_tag = TRUE;
       }
     }
   }
