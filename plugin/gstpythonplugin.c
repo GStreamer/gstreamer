@@ -44,6 +44,7 @@ np_init_pygobject (void)
   PyObject *main_module = NULL;
   PyObject *mdict = NULL;
   PyObject *pygtk = NULL;
+  PyObject *cobject;
 
   pygtk = PyImport_ImportModule ("pygtk");
   if (pygtk == NULL) {
@@ -68,7 +69,7 @@ np_init_pygobject (void)
   main_module = PyImport_AddModule ("__main__");
   mdict = PyModule_GetDict (gobject);
 
-  PyObject *cobject = PyMapping_GetItemString (mdict, "_PyGObject_API");
+  cobject = PyMapping_GetItemString (mdict, "_PyGObject_API");
   if (cobject == NULL) {
     GST_WARNING ("could not find _PyGObject_API");
     goto beach;
