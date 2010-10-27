@@ -60,6 +60,7 @@ public class MediaInfo.Info : VBox
     // FIXME: paint it black from the start
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (300, 150);
+    drawing_area.expose_event.connect (on_drawing_area_expose);
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack_start (drawing_area, true, true, 0);
@@ -129,6 +130,7 @@ public class MediaInfo.Info : VBox
     bus.set_sync_handler (bus.sync_signal_handler);
     bus.sync_message["element"].connect (on_element_sync_message);
 
+    state = State.NULL;
   }
 
   ~Info ()
@@ -215,6 +217,21 @@ public class MediaInfo.Info : VBox
   }
 
   // signal handlers
+
+  private bool on_drawing_area_expose (Widget widget, Gdk.EventExpose event)
+  {
+    if (pb.current_state < State.PAUSED) {
+      Gdk.Window w = widget.get_window();
+      Gtk.Allocation a;
+      widget.get_allocation(out a);
+      Cairo.Context cr = Gdk.cairo_create (w);
+
+      cr.set_source_rgb (0, 0, 0);
+      cr.rectangle (0, 0, a.width, a.height);
+      cr.fill ();
+    }
+    return false;
+  }
 
   private void on_drawing_area_realize (Widget widget)
   {
