@@ -605,6 +605,9 @@ is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
     GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
     GST_BUFFER_SIZE (buf) = packet->bytes;
 
+    if (pad->taglist)
+      gst_tag_list_free (pad->taglist);
+
     pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
         (const guint8 *) "OVP80\2 ", 7, &encoder);
     if (!pad->taglist) {
@@ -655,18 +658,14 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
   data += 4;
   pad->bitrate_lower = GST_READ_UINT32_LE (data);
 
-  if (pad->bitrate_nominal > 0 && pad->bitrate_nominal <= 0x7FFFFFFF)
+  if (pad->bitrate_nominal > 0)
     pad->bitrate = pad->bitrate_nominal;
 
-  if (pad->bitrate_upper > 0 && pad->bitrate_upper <= 0x7FFFFFFF)
-    if (!pad->bitrate)
-      pad->bitrate = pad->bitrate_upper;
+  if (pad->bitrate_upper > 0 && !pad->bitrate)
+    pad->bitrate = pad->bitrate_upper;
 
-  if (pad->bitrate_lower > 0 && pad->bitrate_lower <= 0x7FFFFFFF)
-    if (!pad->bitrate)
-      pad->bitrate = pad->bitrate_lower;
-
-  pad->taglist = NULL;
+  if (pad->bitrate_lower > 0 && !pad->bitrate)
+    pad->bitrate = pad->bitrate_lower;
 
   GST_LOG ("bit rate: %d", pad->bitrate);
 
@@ -693,9 +692,13 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
   if (((guint8 *) (packet->packet))[0] == 0x03) {
     GstBuffer *buf = NULL;
     gchar *encoder = NULL;
+
     buf = gst_buffer_new ();
     GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
     GST_BUFFER_SIZE (buf) = packet->bytes;
+
+    if (pad->taglist)
+      gst_tag_list_free (pad->taglist);
 
     pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
         (const guint8 *) "\003vorbis", 7, &encoder);
@@ -716,15 +719,15 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
     gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER_VERSION, pad->version, NULL);
 
-    if (pad->bitrate_nominal > 0 && pad->bitrate_nominal <= 0x7FFFFFFF)
+    if (pad->bitrate_nominal > 0)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_NOMINAL_BITRATE, (guint) pad->bitrate_nominal, NULL);
 
-    if (pad->bitrate_upper > 0 && pad->bitrate_upper <= 0x7FFFFFFF)
+    if (pad->bitrate_upper > 0)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_MAXIMUM_BITRATE, (guint) pad->bitrate_upper, NULL);
 
-    if (pad->bitrate_lower > 0 && pad->bitrate_lower <= 0x7FFFFFFF)
+    if (pad->bitrate_lower > 0)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_MINIMUM_BITRATE, (guint) pad->bitrate_lower, NULL);
 
@@ -1300,6 +1303,9 @@ is_header_ogm (GstOggStream * pad, ogg_packet * packet)
     buf = gst_buffer_new ();
     GST_BUFFER_DATA (buf) = (guint8 *) packet->packet;
     GST_BUFFER_SIZE (buf) = packet->bytes;;
+
+    if (pad->taglist)
+      gst_tag_list_free (pad->taglist);
 
     pad->taglist = gst_tag_list_from_vorbiscomment_buffer (buf,
         (const guint8 *) "\003vorbis", 7, &encoder);
