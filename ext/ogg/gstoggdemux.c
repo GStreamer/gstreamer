@@ -836,6 +836,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
       }
     }
   } else {
+    /* look for tags in header packet (before inc header count) */
+    gst_ogg_stream_extract_tags (&pad->map, packet);
     pad->map.n_header_packets_seen++;
     if (!pad->map.have_headers) {
       pad->map.headers =

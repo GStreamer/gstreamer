@@ -55,6 +55,8 @@ typedef gboolean (*GstOggMapIsHeaderPacketFunc) (GstOggStream * pad,
     ogg_packet * packet);
 typedef gint64 (*GstOggMapPacketDurationFunc) (GstOggStream * pad,
     ogg_packet * packet);
+typedef void (*GstOggMapExtractTagsFunc) (GstOggStream * pad,
+    ogg_packet * packet);
 
 typedef gint64 (*GstOggMapGranuleposToKeyGranuleFunc) (GstOggStream * pad,
     gint64 granulepos);
@@ -76,6 +78,7 @@ struct _GstOggMap
   GstOggMapIsHeaderPacketFunc is_header_func;
   GstOggMapPacketDurationFunc packet_duration_func;
   GstOggMapGranuleposToKeyGranuleFunc granulepos_to_key_granule_func;
+  GstOggMapExtractTagsFunc extract_tags_func;
 };
 
 extern const GstOggMap mappers[];
@@ -208,6 +211,18 @@ gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet * packet)
   }
 
   return mappers[pad->map].packet_duration_func (pad, packet);
+}
+
+
+void
+gst_ogg_stream_extract_tags (GstOggStream * pad, ogg_packet * packet)
+{
+  if (mappers[pad->map].extract_tags_func == NULL) {
+    GST_DEBUG ("No tag extraction");
+    return;
+  }
+
+  mappers[pad->map].extract_tags_func (pad, packet);
 }
 
 /* some generic functions */
@@ -639,16 +654,20 @@ granulepos_to_key_granule_vp8 (GstOggStream * pad, gint64 granulepos)
 static gboolean
 is_header_vp8 (GstOggStream * pad, ogg_packet * packet)
 {
-  if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
-    tag_list_from_vorbiscomment_packet (packet,
-        (const guint8 *) "OVP80\2 ", 7, &pad->taglist);
-  }
-
   if (packet->bytes >= 5 && packet->packet[0] == 0x4F &&
       packet->packet[1] == 0x56 && packet->packet[2] == 0x50 &&
       packet->packet[3] == 0x38 && packet->packet[4] == 0x30)
     return TRUE;
   return FALSE;
+}
+
+static void
+extract_tags_vp8 (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "OVP80\2 ", 7, &pad->taglist);
+  }
 }
 
 /* vorbis */
@@ -708,6 +727,19 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
   if (packet->bytes > 0 && (packet->packet[0] & 0x01) == 0)
     return FALSE;
 
+  if (packet->packet[0] == 5) {
+    parse_vorbis_setup_packet (pad, packet);
+  }
+
+  return TRUE;
+}
+
+static void
+extract_tags_vorbis (GstOggStream * pad, ogg_packet * packet)
+{
+  if (packet->bytes == 0 || (packet->packet[0] & 0x01) == 0)
+    return;
+
   if (((guint8 *) (packet->packet))[0] == 0x03) {
     tag_list_from_vorbiscomment_packet (packet,
         (const guint8 *) "\003vorbis", 7, &pad->taglist);
@@ -734,12 +766,6 @@ is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
       gst_tag_list_add (pad->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_BITRATE, (guint) pad->bitrate, NULL);
   }
-
-  if (packet->packet[0] == 5) {
-    parse_vorbis_setup_packet (pad, packet);
-  }
-
-  return TRUE;
 }
 
 static gint64
@@ -1295,15 +1321,19 @@ gst_ogg_map_search_index (GstOggStream * pad, gboolean before,
 static gboolean
 is_header_ogm (GstOggStream * pad, ogg_packet * packet)
 {
-  if (!(packet->packet[0] & 1) && (packet->packet[0] & 3 && pad->is_ogm_text)) {
-    tag_list_from_vorbiscomment_packet (packet,
-        (const guint8 *) "\003vorbis", 7, &pad->taglist);
-  }
-
   if (packet->bytes >= 1 && (packet->packet[0] & 0x01))
     return TRUE;
 
   return FALSE;
+}
+
+static void
+extract_tags_ogm (GstOggStream * pad, ogg_packet * packet)
+{
+  if (!(packet->packet[0] & 1) && (packet->packet[0] & 3 && pad->is_ogm_text)) {
+    tag_list_from_vorbiscomment_packet (packet,
+        (const guint8 *) "\003vorbis", 7, &pad->taglist);
+  }
 }
 
 static gint64
@@ -1674,6 +1704,7 @@ const GstOggMap mappers[] = {
     is_keyframe_theora,
     is_header_theora,
     packet_duration_constant,
+    NULL,
     NULL
   },
   {
@@ -1685,7 +1716,8 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_vorbis,
     packet_duration_vorbis,
-    NULL
+    NULL,
+    extract_tags_vorbis
   },
   {
     "Speex", 5, 80,
@@ -1696,6 +1728,7 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_count,
     packet_duration_constant,
+    NULL,
     NULL
   },
   {
@@ -1706,6 +1739,7 @@ const GstOggMap mappers[] = {
     NULL,
     NULL,
     is_header_count,
+    NULL,
     NULL,
     NULL
   },
@@ -1718,6 +1752,7 @@ const GstOggMap mappers[] = {
     NULL,
     is_header_count,
     NULL,
+    NULL,
     NULL
   },
   {
@@ -1728,6 +1763,7 @@ const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     NULL,
     is_header_count,
+    NULL,
     NULL,
     NULL
   },
@@ -1740,6 +1776,7 @@ const GstOggMap mappers[] = {
     NULL,
     is_header_true,
     NULL,
+    NULL,
     NULL
   },
   {
@@ -1751,6 +1788,7 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_fLaC,
     packet_duration_flac,
+    NULL,
     NULL
   },
   {
@@ -1762,11 +1800,13 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_flac,
     packet_duration_flac,
+    NULL,
     NULL
   },
   {
     "AnxData", 7, 0,
     "application/octet-stream",
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -1783,6 +1823,7 @@ const GstOggMap mappers[] = {
     NULL,
     is_header_count,
     packet_duration_constant,
+    NULL,
     NULL
   },
   {
@@ -1793,6 +1834,7 @@ const GstOggMap mappers[] = {
     granule_to_granulepos_default,
     NULL,
     is_header_count,
+    NULL,
     NULL,
     NULL
   },
@@ -1805,7 +1847,8 @@ const GstOggMap mappers[] = {
     is_keyframe_dirac,
     is_header_count,
     packet_duration_constant,
-    granulepos_to_key_granule_dirac
+    granulepos_to_key_granule_dirac,
+    NULL
   },
   {
     "OVP80\1\1", 7, 4,
@@ -1816,7 +1859,8 @@ const GstOggMap mappers[] = {
     is_keyframe_vp8,
     is_header_vp8,
     packet_duration_vp8,
-    granulepos_to_key_granule_vp8
+    granulepos_to_key_granule_vp8,
+    extract_tags_vp8
   },
   {
     "\001audio\0\0\0", 9, 53,
@@ -1827,6 +1871,7 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_ogm,
     packet_duration_ogm,
+    NULL,
     NULL
   },
   {
@@ -1838,6 +1883,7 @@ const GstOggMap mappers[] = {
     NULL,
     is_header_ogm,
     packet_duration_constant,
+    NULL,
     NULL
   },
   {
@@ -1849,7 +1895,8 @@ const GstOggMap mappers[] = {
     is_keyframe_true,
     is_header_ogm,
     packet_duration_ogm,
-    NULL
+    NULL,
+    extract_tags_ogm
   }
 };
 /* *INDENT-ON* */

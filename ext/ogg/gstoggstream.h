@@ -119,6 +119,7 @@ gboolean gst_ogg_stream_granulepos_is_key_frame (GstOggStream *pad,
     gint64 granulepos);
 gboolean gst_ogg_stream_packet_is_header (GstOggStream *pad, ogg_packet *packet);
 gint64 gst_ogg_stream_get_packet_duration (GstOggStream * pad, ogg_packet *packet);
+void gst_ogg_stream_extract_tags (GstOggStream * pad, ogg_packet * packet);
 
 gboolean gst_ogg_map_parse_fisbone (GstOggStream * pad, const guint8 * data, guint size,
     guint32 * serialno, GstOggSkeleton *type);
