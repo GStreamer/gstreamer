@@ -61,6 +61,7 @@ public class MediaInfo.Info : VBox
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (300, 150);
     drawing_area.realize.connect (on_drawing_area_realize);
+    drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack_start (drawing_area, true, true, 0);
 
     table = new Table (7, 2, false);
@@ -214,6 +215,11 @@ public class MediaInfo.Info : VBox
   {
     widget.get_window ().ensure_native ();
     widget.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+  }
+
+  private void on_drawing_area_unrealize (Widget widget)
+  {
+    pb.set_state (State.NULL);
   }
 
   private void on_element_sync_message (Gst.Bus bus, Message message)
