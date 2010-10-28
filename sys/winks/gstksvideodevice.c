@@ -1000,7 +1000,7 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, guint8 * buf,
         if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
           if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (priv->last_timestamp) &&
                   timestamp < priv->last_timestamp)) {
-            GST_WARNING ("got an old frame (last_timestamp=%" GST_TIME_FORMAT
+            GST_INFO ("got an old frame (last_timestamp=%" GST_TIME_FORMAT
                 ", timestamp=%" GST_TIME_FORMAT ")",
                 GST_TIME_ARGS (priv->last_timestamp),
                 GST_TIME_ARGS (timestamp));

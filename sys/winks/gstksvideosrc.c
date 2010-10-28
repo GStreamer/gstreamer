@@ -809,7 +809,7 @@ gst_ks_video_src_timestamp_buffer (GstKsVideoSrc * self, GstBuffer * buf,
       /* REVISIT: I've seen this happen with the GstSystemClock on Windows,
        *          scary... */
       if (timestamp < priv->prev_ts) {
-        GST_WARNING_OBJECT (self, "clock is ticking backwards");
+        GST_INFO_OBJECT (self, "clock is ticking backwards");
         return FALSE;
       }
 
