@@ -191,7 +191,7 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 2, false);
+          table = new Table (2, 6, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
@@ -202,12 +202,47 @@ public class MediaInfo.Info : VBox
           label = new Label ("Bitrate:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u/%u".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
+          str = "%u / %u bits/second".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
-            
+
+          label = new Label ("Width/Height:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u / %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+
+          label = new Label ("Framerate:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u / %u frames/second".printf (((DiscovererVideoInfo)sinfo).get_framerate_num(),((DiscovererVideoInfo)sinfo).get_framerate_denom());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+
+          label = new Label ("PixelAspect:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u : %u".printf (((DiscovererVideoInfo)sinfo).get_par_num(),((DiscovererVideoInfo)sinfo).get_par_denom());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+
+          label = new Label ("Bitdepth:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u bits/pixel".printf (((DiscovererVideoInfo)sinfo).get_depth());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
 
           video_streams.append_page (table, new Label (@"video $i"));
         }
@@ -221,7 +256,7 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 2, false);
+          table = new Table (2, 5, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
@@ -232,12 +267,39 @@ public class MediaInfo.Info : VBox
           label = new Label ("Bitrate:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u/%u".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
+          str = "%u / %u bits/second".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
-            
+
+          label = new Label ("Samplerate:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u samples/second".printf (((DiscovererAudioInfo)sinfo).get_sample_rate());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+
+          label = new Label ("Channels:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u".printf (((DiscovererAudioInfo)sinfo).get_channels());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+
+          label = new Label ("Bitdepth:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u bits/sample".printf (((DiscovererAudioInfo)sinfo).get_depth());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+  
           audio_streams.append_page (table, new Label (@"audio $i"));
         }
         audio_streams.show_all();
