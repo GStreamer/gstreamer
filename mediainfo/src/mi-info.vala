@@ -97,6 +97,7 @@ public class MediaInfo.Info : VBox
     row++;
 
     video_streams = new Notebook ();
+    video_streams.switch_page.connect (on_video_stream_switched);
     table.attach (video_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
@@ -107,6 +108,7 @@ public class MediaInfo.Info : VBox
     row++;
 
     audio_streams = new Notebook ();
+    audio_streams.switch_page.connect (on_audio_stream_switched);
     table.attach (audio_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
@@ -377,6 +379,22 @@ public class MediaInfo.Info : VBox
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
         ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
       }
+    }
+  }
+
+  private void on_video_stream_switched (NotebookPage page, uint page_num)
+  {
+    if (pb.current_state > State.PAUSED) {
+      stdout.printf ("Switching video to: %u\n", page_num);
+      ((GLib.Object)pb).set_property ("current-video", (int)page_num);
+    }
+  }
+
+  private void on_audio_stream_switched (NotebookPage page, uint page_num)
+  {
+    if (pb.current_state > State.PAUSED) {
+      stdout.printf ("Switching audio to: %u\n", page_num);
+      ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
     }
   }
 }
