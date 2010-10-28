@@ -346,6 +346,14 @@ elements_vorbistag_CFLAGS = \
 	$(VORBIS_CFLAGS) \
 	$(CFLAGS)
 
+elements_videoscale_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+elements_videoscale_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+
 gst_typefindfunctions_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 gst_typefindfunctions_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
