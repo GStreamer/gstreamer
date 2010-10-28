@@ -35,6 +35,7 @@
 #define TS_LATENCY 700
 
 #define TABLE_ID_UNSET 0xFF
+#define RUNNING_STATUS_RUNNING 4
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_parse_debug);
 #define GST_CAT_DEFAULT mpegts_parse_debug
@@ -73,6 +74,9 @@ struct _MpegTSParsePad
 
   /* the return of the latest push */
   GstFlowReturn flow_return;
+
+  GstTagList *tags;
+  guint event_id;
 };
 
 static GQuark QUARK_PROGRAMS;
@@ -135,6 +139,10 @@ static GstStateChangeReturn mpegts_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query);
 static void _extra_init (GType type);
+static void mpegts_parse_get_tags_from_sdt (MpegTSParse * parse,
+    GstStructure * sdt_info);
+static void mpegts_parse_get_tags_from_eit (MpegTSParse * parse,
+    GstStructure * eit_info);
 
 GST_BOILERPLATE_FULL (MpegTSParse, mpegts_parse, GstElement, GST_TYPE_ELEMENT,
     _extra_init);
@@ -623,6 +631,10 @@ mpegts_parse_create_tspad (MpegTSParse * parse, const gchar * pad_name)
 static void
 mpegts_parse_destroy_tspad (MpegTSParse * parse, MpegTSParsePad * tspad)
 {
+  if (tspad->tags) {
+    gst_tag_list_free (tspad->tags);
+  }
+
   /* free the wrapper */
   g_free (tspad);
 }
@@ -725,6 +737,12 @@ mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
   if (tspad->program_number != -1) {
     if (tspad->program) {
       pad_pids = tspad->program->streams;
+
+      if (tspad->tags) {
+        gst_element_found_tags_for_pad (GST_ELEMENT_CAST (parse),
+            tspad->pad, tspad->tags);
+        tspad->tags = NULL;
+      }
     } else {
       /* there's a program filter on the pad but the PMT for the program has not
        * been parsed yet, ignore the pad until we get a PMT */
@@ -1080,6 +1098,8 @@ static void
 mpegts_parse_apply_sdt (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * sdt_info)
 {
+  mpegts_parse_get_tags_from_sdt (parse, sdt_info);
+
   gst_element_post_message (GST_ELEMENT_CAST (parse),
       gst_message_new_element (GST_OBJECT (parse),
           gst_structure_copy (sdt_info)));
@@ -1089,6 +1109,8 @@ static void
 mpegts_parse_apply_eit (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * eit_info)
 {
+  mpegts_parse_get_tags_from_eit (parse, eit_info);
+
   gst_element_post_message (GST_ELEMENT_CAST (parse),
       gst_message_new_element (GST_OBJECT (parse),
           gst_structure_copy (eit_info)));
@@ -1213,6 +1235,81 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     gst_structure_free (structure);
 
   return res;
+}
+
+static void
+mpegts_parse_get_tags_from_sdt (MpegTSParse * parse, GstStructure * sdt_info)
+{
+  const GValue *services;
+  guint i;
+
+  services = gst_structure_get_value (sdt_info, "services");
+
+  for (i = 0; i < gst_value_list_get_size (services); i++) {
+    const GstStructure *service;
+    const gchar *sid_str;
+    gchar *tmp;
+    gint program_number;
+    MpegTSParseProgram *program;
+
+    service = gst_value_get_structure (gst_value_list_get_value (services, i));
+
+    /* get program_number from structure name
+     * which looks like service-%d */
+    sid_str = gst_structure_get_name (service);
+    tmp = g_strstr_len (sid_str, -1, "-");
+    if (tmp) {
+      program_number = atoi (++tmp);
+    }
+
+    program = mpegts_parse_get_program (parse, program_number);
+    if (program && program->tspad && !program->tspad->tags) {
+      program->tspad->tags = gst_tag_list_new_full (GST_TAG_ARTIST,
+          gst_structure_get_string (service, "name"), NULL);
+    }
+  }
+}
+
+static void
+mpegts_parse_get_tags_from_eit (MpegTSParse * parse, GstStructure * eit_info)
+{
+  const GValue *events;
+  guint i;
+  guint program_number;
+  MpegTSParseProgram *program;
+  gboolean present_following;
+
+  gst_structure_get_uint (eit_info, "service-id", &program_number);
+  program = mpegts_parse_get_program (parse, program_number);
+
+  gst_structure_get_boolean (eit_info, "present-following", &present_following);
+
+  if (program && program->tspad && present_following) {
+    events = gst_structure_get_value (eit_info, "events");
+
+    for (i = 0; i < gst_value_list_get_size (events); i++) {
+      const GstStructure *event;
+      const gchar *title;
+      guint status;
+      guint event_id;
+      guint duration;
+
+      event = gst_value_get_structure (gst_value_list_get_value (events, i));
+
+      title = gst_structure_get_string (event, "name");
+      gst_structure_get_uint (event, "event-id", &event_id);
+      gst_structure_get_uint (event, "running-status", &status);
+
+      if (title && event_id != program->tspad->event_id
+          && status == RUNNING_STATUS_RUNNING) {
+        gst_structure_get_uint (event, "duration", &duration);
+
+        program->tspad->event_id = event_id;
+        program->tspad->tags = gst_tag_list_new_full (GST_TAG_TITLE,
+            title, GST_TAG_DURATION, duration * GST_SECOND, NULL);
+      }
+    }
+  }
 }
 
 static gboolean
