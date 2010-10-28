@@ -162,18 +162,24 @@ public class MediaInfo.Info : VBox
       try {
         GLib.List<DiscovererStreamInfo> l;
         DiscovererStreamInfo sinfo;
-        Label field;
+        //DiscovererVideoInfo vinfo;
+        //DiscovererAudioInfo ainfo;
+        Table table;
+        Label label;
+        uint row;
+        AttachOptions fill = AttachOptions.FILL;
+        AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
+        string str;
 
         info = dc.discover_uri (uri);
 
         ClockTime dur = info.get_duration ();
-        string dur_str = "%u:%02u:%02u.%09u".printf (
+        str = "%u:%02u:%02u.%09u".printf (
           (uint) (dur / (SECOND * 60 * 60)),
           (uint) ((dur / (SECOND * 60)) % 60),
           (uint) ((dur / SECOND) % 60),
           (uint) ((dur) % SECOND));
-        this.duration.set_text (dur_str);
-
+        this.duration.set_text (str);
         //stdout.printf ("Duration: %s\n", dur_str);
 
         // get stream info
@@ -183,9 +189,27 @@ public class MediaInfo.Info : VBox
         l = info.get_video_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-          field = new Label(sinfo.get_caps ().to_string ());
-          field.set_ellipsize (Pango.EllipsizeMode.END);
-          video_streams.append_page (field, new Label (@"video $i"));
+
+          row = 0;
+          table = new Table (2, 2, false);
+
+          label = new Label(sinfo.get_caps ().to_string ());
+          label.set_ellipsize (Pango.EllipsizeMode.END);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+          row++;
+
+          label = new Label ("Bitrate:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u/%u".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+            
+
+          video_streams.append_page (table, new Label (@"video $i"));
         }
         video_streams.show_all();
 
@@ -195,9 +219,26 @@ public class MediaInfo.Info : VBox
         l = info.get_audio_streams ();
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
-          field = new Label(sinfo.get_caps ().to_string ());
-          field.set_ellipsize (Pango.EllipsizeMode.END);
-          audio_streams.append_page (field, new Label (@"audio $i"));
+
+          row = 0;
+          table = new Table (2, 2, false);
+
+          label = new Label(sinfo.get_caps ().to_string ());
+          label.set_ellipsize (Pango.EllipsizeMode.END);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+          row++;
+
+          label = new Label ("Bitrate:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = "%u/%u".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+          row++;
+            
+          audio_streams.append_page (table, new Label (@"audio $i"));
         }
         audio_streams.show_all();
         //l = info.get_container_streams ();
