@@ -184,6 +184,8 @@ public class MediaInfo.Info : VBox
         this.duration.set_text (str);
         //stdout.printf ("Duration: %s\n", dur_str);
 
+        // TODO: need caps for the container, so that we can have human readable container name
+
         // get stream info
         while (video_streams.get_n_pages() > 0) {
           video_streams.remove_page (-1);
