@@ -93,11 +93,11 @@ typedef GstMiniObjectClass GstDiscovererAudioInfoClass;
 
 GType gst_discoverer_audio_info_get_type (void);
 
-guint gst_discoverer_audio_info_get_channels(GstDiscovererStreamInfo* info);
-guint gst_discoverer_audio_info_get_sample_rate(GstDiscovererStreamInfo* info);
-guint gst_discoverer_audio_info_get_depth(GstDiscovererStreamInfo* info);
-guint gst_discoverer_audio_info_get_bitrate(GstDiscovererStreamInfo* info);
-guint gst_discoverer_audio_info_get_max_bitrate(GstDiscovererStreamInfo* info);
+guint gst_discoverer_audio_info_get_channels(GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_sample_rate(GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_depth(GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_bitrate(GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_max_bitrate(GstDiscovererAudioInfo* info);
 
 /**
  * GstDiscovererVideoInfo:
@@ -116,17 +116,17 @@ typedef struct _GstDiscovererVideoInfo GstDiscovererVideoInfo;
 typedef GstMiniObjectClass GstDiscovererVideoInfoClass;
 GType gst_discoverer_video_info_get_type (void);
 
-guint           gst_discoverer_video_info_get_width(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_height(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_depth(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_framerate_num(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_framerate_denom(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_par_num(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_par_denom(GstDiscovererStreamInfo* info);
-gboolean        gst_discoverer_video_info_get_interlaced(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_bitrate(GstDiscovererStreamInfo* info);
-guint           gst_discoverer_video_info_get_max_bitrate(GstDiscovererStreamInfo* info);
-gboolean        gst_discoverer_video_info_get_is_image(GstDiscovererStreamInfo* info);
+guint           gst_discoverer_video_info_get_width(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_height(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_depth(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_framerate_num(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_framerate_denom(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_par_num(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_par_denom(GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_get_interlaced(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_bitrate(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_max_bitrate(GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_get_is_image(GstDiscovererVideoInfo* info);
 
 /**
  * GstDiscovererResult:

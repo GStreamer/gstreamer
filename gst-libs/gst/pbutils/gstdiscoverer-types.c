@@ -471,7 +471,8 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
   if (GST_IS_DISCOVERER_AUDIO_INFO (info))
     return "audio";
   if (GST_IS_DISCOVERER_VIDEO_INFO (info)) {
-    if (gst_discoverer_video_info_get_is_image (info))
+    if (gst_discoverer_video_info_get_is_image ((GstDiscovererVideoInfo *)
+            info))
       return "video(image)";
     else
       return "video";
@@ -481,10 +482,11 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
 
 /* ACCESSORS */
 
-#define GENERIC_ACCESSOR_CODE(parent, casttype, parenttype, parentgtype, fieldname, type, failval) \
+
+#define GENERIC_ACCESSOR_CODE(parent, parenttype, parentgtype, fieldname, type, failval) \
   type parent##_get_##fieldname(parenttype info) {			\
     g_return_val_if_fail(G_TYPE_CHECK_INSTANCE_TYPE((info), parentgtype), failval); \
-    return ((casttype)info)->fieldname;				\
+    return (info)->fieldname;				\
   }
 
 /**
@@ -612,13 +614,12 @@ gst_discoverer_container_info_get_streams (GstDiscovererStreamInfo * info)
 
 #define AUDIO_INFO_ACCESSOR_CODE(fieldname, type, failval)		\
   GENERIC_ACCESSOR_CODE(gst_discoverer_audio_info, GstDiscovererAudioInfo*, \
-			GstDiscovererStreamInfo*,			\
 			GST_TYPE_DISCOVERER_AUDIO_INFO,		\
 			fieldname, type, failval)
 
 /**
  * gst_discoverer_audio_info_get_channels:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the number of channels in the stream.
  *
@@ -629,7 +630,7 @@ AUDIO_INFO_ACCESSOR_CODE (channels, guint, 0);
 
 /**
  * gst_discoverer_audio_info_get_sample_rate:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the sample rate of the stream in Hertz.
  *
@@ -640,7 +641,7 @@ AUDIO_INFO_ACCESSOR_CODE (sample_rate, guint, 0);
 
 /**
  * gst_discoverer_audio_info_get_depth:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the number of bits used per sample in each channel.
  *
@@ -651,7 +652,7 @@ AUDIO_INFO_ACCESSOR_CODE (depth, guint, 0);
 
 /**
  * gst_discoverer_audio_info_get_bitrate:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the average or nominal bitrate of the stream in bits/second.
  *
@@ -662,7 +663,7 @@ AUDIO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
 
 /**
  * gst_discoverer_audio_info_get_max_bitrate:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the maximum bitrate of the stream in bits/second.
  *
@@ -675,13 +676,12 @@ AUDIO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
 
 #define VIDEO_INFO_ACCESSOR_CODE(fieldname, type, failval)		\
   GENERIC_ACCESSOR_CODE(gst_discoverer_video_info, GstDiscovererVideoInfo*, \
-			GstDiscovererStreamInfo*,			\
 			GST_TYPE_DISCOVERER_VIDEO_INFO,			\
 			fieldname, type, failval)
 
 /**
  * gst_discoverer_video_info_get_width:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the width of the video stream in pixels.
  *
@@ -692,7 +692,7 @@ VIDEO_INFO_ACCESSOR_CODE (width, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_height:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the height of the video stream in pixels.
  *
@@ -703,7 +703,7 @@ VIDEO_INFO_ACCESSOR_CODE (height, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_depth:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the depth in bits of the video stream (only relevant for
  * video streams).
@@ -715,7 +715,7 @@ VIDEO_INFO_ACCESSOR_CODE (depth, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_framerate_num:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the framerate of the video stream (numerator).
  *
@@ -726,7 +726,7 @@ VIDEO_INFO_ACCESSOR_CODE (framerate_num, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_framerate_denom:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the framerate of the video stream (denominator).
  *
@@ -737,7 +737,7 @@ VIDEO_INFO_ACCESSOR_CODE (framerate_denom, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_par_num:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the Pixel Aspect Ratio (PAR) of the video stream (numerator).
  *
@@ -748,7 +748,7 @@ VIDEO_INFO_ACCESSOR_CODE (par_num, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_par_denom:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the Pixel Aspect Ratio (PAR) of the video stream (denominator).
  *
@@ -759,7 +759,7 @@ VIDEO_INFO_ACCESSOR_CODE (par_denom, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_interlaced:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: %TRUE if the stream is interlaced, else %FALSE.
  *
@@ -770,7 +770,7 @@ VIDEO_INFO_ACCESSOR_CODE (interlaced, gboolean, FALSE);
 
 /**
  * gst_discoverer_video_info_get_bitrate:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the average or nominal bitrate of the video stream in bits/second.
  *
@@ -781,7 +781,7 @@ VIDEO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_max_bitrate:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the maximum bitrate of the video stream in bits/second.
  *
@@ -792,7 +792,7 @@ VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
 
 /**
  * gst_discoverer_video_info_get_is_image:
- * @info: a #GstDiscovererStreamInfo
+ * @info: a #GstDiscovererVideoInfo
  *
  * Returns: #TRUE if the video stream corresponds to an image (i.e. only contains
  * one frame).
@@ -806,7 +806,6 @@ VIDEO_INFO_ACCESSOR_CODE (is_image, gboolean, FALSE);
 
 #define DISCOVERER_INFO_ACCESSOR_CODE(fieldname, type, failval)		\
   GENERIC_ACCESSOR_CODE(gst_discoverer_info, GstDiscovererInfo*,	\
-			GstDiscovererInfo*,				\
 			GST_TYPE_DISCOVERER_INFO,			\
 			fieldname, type, failval)
 
