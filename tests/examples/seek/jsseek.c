@@ -50,6 +50,13 @@
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
+#if (!GTK_CHECK_VERSION(2, 23, 0) || GTK_CHECK_VERSION(2, 90, 0)) && !GTK_CHECK_VERSION(2, 91, 1)
+#define gtk_combo_box_text_new gtk_combo_box_new_text
+#define gtk_combo_box_text_append_text gtk_combo_box_append_text
+#define gtk_combo_box_text_remove gtk_combo_box_remove_text
+#define GTK_COMBO_BOX_TEXT GTK_COMBO_BOX
+#endif
+
 #if !GTK_CHECK_VERSION (2, 17, 7)
 static void
 gtk_widget_get_allocation (GtkWidget * w, GtkAllocation * a)
@@ -2796,17 +2803,11 @@ main (int argc, char **argv)
     step = gtk_expander_new ("step options");
     hbox = gtk_hbox_new (FALSE, 0);
 
-#if (GTK_CHECK_VERSION(2, 23, 0) && !GTK_CHECK_VERSION(2, 90, 0)) || GTK_CHECK_VERSION(2, 91, 1)
     format_combo = gtk_combo_box_text_new ();
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (format_combo),
         "frames");
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (format_combo),
         "time (ms)");
-#else
-    format_combo = gtk_combo_box_new_text ();
-    gtk_combo_box_append_text (GTK_COMBO_BOX (format_combo), "frames");
-    gtk_combo_box_append_text (GTK_COMBO_BOX (format_combo), "time (ms)");
-#endif
     gtk_combo_box_set_active (GTK_COMBO_BOX (format_combo), 0);
     gtk_box_pack_start (GTK_BOX (hbox), format_combo, FALSE, FALSE, 2);
 
