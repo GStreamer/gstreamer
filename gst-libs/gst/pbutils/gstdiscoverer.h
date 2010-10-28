@@ -93,11 +93,11 @@ typedef GstMiniObjectClass GstDiscovererAudioInfoClass;
 
 GType gst_discoverer_audio_info_get_type (void);
 
-guint gst_discoverer_audio_info_get_channels(GstDiscovererAudioInfo* info);
-guint gst_discoverer_audio_info_get_sample_rate(GstDiscovererAudioInfo* info);
-guint gst_discoverer_audio_info_get_depth(GstDiscovererAudioInfo* info);
-guint gst_discoverer_audio_info_get_bitrate(GstDiscovererAudioInfo* info);
-guint gst_discoverer_audio_info_get_max_bitrate(GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_channels(const GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_sample_rate(const GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_depth(const GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_bitrate(const GstDiscovererAudioInfo* info);
+guint gst_discoverer_audio_info_get_max_bitrate(const GstDiscovererAudioInfo* info);
 
 /**
  * GstDiscovererVideoInfo:
@@ -116,17 +116,17 @@ typedef struct _GstDiscovererVideoInfo GstDiscovererVideoInfo;
 typedef GstMiniObjectClass GstDiscovererVideoInfoClass;
 GType gst_discoverer_video_info_get_type (void);
 
-guint           gst_discoverer_video_info_get_width(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_height(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_depth(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_framerate_num(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_framerate_denom(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_par_num(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_par_denom(GstDiscovererVideoInfo* info);
-gboolean        gst_discoverer_video_info_get_interlaced(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_bitrate(GstDiscovererVideoInfo* info);
-guint           gst_discoverer_video_info_get_max_bitrate(GstDiscovererVideoInfo* info);
-gboolean        gst_discoverer_video_info_get_is_image(GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_width(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_height(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_depth(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_framerate_num(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_framerate_denom(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_par_num(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_par_denom(const GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_get_interlaced(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_bitrate(const GstDiscovererVideoInfo* info);
+guint           gst_discoverer_video_info_get_max_bitrate(const GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_get_is_image(const GstDiscovererVideoInfo* info);
 
 /**
  * GstDiscovererResult:
@@ -174,13 +174,13 @@ GType gst_discoverer_info_get_type (void);
 
 GstDiscovererInfo*        gst_discoverer_info_copy (GstDiscovererInfo * ptr);
 
-const gchar*              gst_discoverer_info_get_uri(GstDiscovererInfo* info);
-GstDiscovererResult       gst_discoverer_info_get_result(GstDiscovererInfo* info);
+const gchar*              gst_discoverer_info_get_uri(const GstDiscovererInfo* info);
+GstDiscovererResult       gst_discoverer_info_get_result(const GstDiscovererInfo* info);
 GstDiscovererStreamInfo*  gst_discoverer_info_get_stream_info(GstDiscovererInfo* info);
 GList*                    gst_discoverer_info_get_stream_list(GstDiscovererInfo* info);
-GstClockTime              gst_discoverer_info_get_duration(GstDiscovererInfo* info);
-const GstStructure*       gst_discoverer_info_get_misc(GstDiscovererInfo* info);
-const GstTagList*         gst_discoverer_info_get_tags(GstDiscovererInfo* info);
+GstClockTime              gst_discoverer_info_get_duration(const GstDiscovererInfo* info);
+const GstStructure*       gst_discoverer_info_get_misc(const GstDiscovererInfo* info);
+const GstTagList*         gst_discoverer_info_get_tags(const GstDiscovererInfo* info);
 
 GList *                   gst_discoverer_info_get_streams (GstDiscovererInfo *info,
 							   GType streamtype);

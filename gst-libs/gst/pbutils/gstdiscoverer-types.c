@@ -484,7 +484,7 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
 
 
 #define GENERIC_ACCESSOR_CODE(parent, parenttype, parentgtype, fieldname, type, failval) \
-  type parent##_get_##fieldname(parenttype info) {			\
+  type parent##_get_##fieldname(const parenttype info) {			\
     g_return_val_if_fail(G_TYPE_CHECK_INSTANCE_TYPE((info), parentgtype), failval); \
     return (info)->fieldname;				\
   }
