@@ -202,7 +202,7 @@ public class MediaInfo.Info : VBox
           label = new Label ("Codec:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = pb_utils_get_codec_description( sinfo.get_caps ());
+          str = pb_utils_get_codec_description (sinfo.get_caps ());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
@@ -277,7 +277,7 @@ public class MediaInfo.Info : VBox
           label = new Label ("Codec:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = pb_utils_get_codec_description( sinfo.get_caps ());
+          str = pb_utils_get_codec_description (sinfo.get_caps ());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
