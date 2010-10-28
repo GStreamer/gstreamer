@@ -471,7 +471,7 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
   if (GST_IS_DISCOVERER_AUDIO_INFO (info))
     return "audio";
   if (GST_IS_DISCOVERER_VIDEO_INFO (info)) {
-    if (gst_discoverer_video_info_get_is_image ((GstDiscovererVideoInfo *)
+    if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
             info))
       return "video(image)";
     else
@@ -758,15 +758,20 @@ VIDEO_INFO_ACCESSOR_CODE (par_num, guint, 0);
 VIDEO_INFO_ACCESSOR_CODE (par_denom, guint, 0);
 
 /**
- * gst_discoverer_video_info_get_interlaced:
+ * gst_discoverer_video_info_is_interlaced:
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: %TRUE if the stream is interlaced, else %FALSE.
  *
  * Since 0.10.31
  */
+gboolean
+gst_discoverer_video_info_is_interlaced (const GstDiscovererVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_DISCOVERER_VIDEO_INFO (info), FALSE);
 
-VIDEO_INFO_ACCESSOR_CODE (interlaced, gboolean, FALSE);
+  return info->interlaced;
+}
 
 /**
  * gst_discoverer_video_info_get_bitrate:
@@ -791,7 +796,7 @@ VIDEO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
 VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
 
 /**
- * gst_discoverer_video_info_get_is_image:
+ * gst_discoverer_video_info_is_image:
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: #TRUE if the video stream corresponds to an image (i.e. only contains
@@ -799,8 +804,13 @@ VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
  *
  * Since 0.10.31
  */
+gboolean
+gst_discoverer_video_info_is_image (const GstDiscovererVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_DISCOVERER_VIDEO_INFO (info), FALSE);
 
-VIDEO_INFO_ACCESSOR_CODE (is_image, gboolean, FALSE);
+  return info->is_image;
+}
 
 /* GstDiscovererInfo */
 

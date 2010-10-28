@@ -149,7 +149,7 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
       gst_discoverer_video_info_get_par_denom (video_info));
 
   my_g_string_append_printf (s, "Interlaced: %s\n",
-      gst_discoverer_video_info_get_interlaced (video_info) ? "true" : "false");
+      gst_discoverer_video_info_is_interlaced (video_info) ? "true" : "false");
 
   my_g_string_append_printf (s, "Bitrate: %u\n",
       gst_discoverer_video_info_get_bitrate (video_info));

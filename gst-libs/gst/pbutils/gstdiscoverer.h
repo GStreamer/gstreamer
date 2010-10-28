@@ -123,10 +123,10 @@ guint           gst_discoverer_video_info_get_framerate_num(const GstDiscovererV
 guint           gst_discoverer_video_info_get_framerate_denom(const GstDiscovererVideoInfo* info);
 guint           gst_discoverer_video_info_get_par_num(const GstDiscovererVideoInfo* info);
 guint           gst_discoverer_video_info_get_par_denom(const GstDiscovererVideoInfo* info);
-gboolean        gst_discoverer_video_info_get_interlaced(const GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_is_interlaced(const GstDiscovererVideoInfo* info);
 guint           gst_discoverer_video_info_get_bitrate(const GstDiscovererVideoInfo* info);
 guint           gst_discoverer_video_info_get_max_bitrate(const GstDiscovererVideoInfo* info);
-gboolean        gst_discoverer_video_info_get_is_image(const GstDiscovererVideoInfo* info);
+gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo* info);
 
 /**
  * GstDiscovererResult:
