@@ -208,10 +208,11 @@ public class MediaInfo.Info : VBox
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
-          label = new Label ("Width/Height:");
+          // TODO: add named resolutions: (640x480=VGA)
+          label = new Label ("Resolution:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u / %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+          str = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
