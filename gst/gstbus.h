@@ -28,6 +28,7 @@ typedef struct _GstBusClass GstBusClass;
 
 #include <gst/gstmessage.h>
 #include <gst/gstclock.h>
+#include <gst/gstatomicqueue.h>
 
 G_BEGIN_DECLS
 
@@ -115,7 +116,7 @@ struct _GstBus
   GstObject         object;
 
   /*< private >*/
-  GQueue           *queue;
+  GstAtomicQueue   *queue;
   GMutex           *queue_lock;
 
   GstBusSyncHandler sync_handler;
