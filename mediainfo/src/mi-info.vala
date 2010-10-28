@@ -191,12 +191,21 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 6, false);
+          table = new Table (2, 7, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+          row++;
+
+          label = new Label ("Codec:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = pb_utils_get_codec_description( sinfo.get_caps ());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
           label = new Label ("Bitrate:");
@@ -257,12 +266,21 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 5, false);
+          table = new Table (2, 6, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+          row++;
+
+          label = new Label ("Codec:");
+          label.set_alignment (1.0f, 0.5f);
+          table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+          str = pb_utils_get_codec_description( sinfo.get_caps ());
+          label = new Label (str);
+          label.set_alignment (0.0f, 0.5f);
+          table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
           label = new Label ("Bitrate:");
