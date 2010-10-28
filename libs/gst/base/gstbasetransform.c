@@ -1209,13 +1209,19 @@ gst_base_transform_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME && trans->segment.format == GST_FORMAT_TIME) {
+        gint64 pos;
         ret = TRUE;
 
-        gst_query_set_position (query, format,
-            gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
-                (pad ==
-                    trans->sinkpad) ? trans->segment.last_stop : trans->priv->
-                last_stop_out));
+        if ((pad == trans->sinkpad)
+            || (trans->priv->last_stop_out == GST_CLOCK_TIME_NONE)) {
+          pos =
+              gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+              trans->segment.last_stop);
+        } else {
+          pos = gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
+              trans->priv->last_stop_out);
+        }
+        gst_query_set_position (query, format, pos);
       } else {
         ret = gst_pad_peer_query (otherpad, query);
       }
