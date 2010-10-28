@@ -5680,7 +5680,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (G_UNLIKELY (stream->timescale == 0 || qtdemux->timescale == 0))
     goto corrupt_file;
 
-  if (qtdemux->duration != G_MAXINT64 && stream->duration != G_MAXINT32) {
+  /* fragmented files may have bogus duration in moov */
+  if (!qtdemux->fragmented &&
+      qtdemux->duration != G_MAXINT64 && stream->duration != G_MAXINT32) {
     guint64 tdur1, tdur2;
 
     /* don't overflow */
