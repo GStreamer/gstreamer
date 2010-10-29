@@ -843,6 +843,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
    * up.  */
   packet->b_o_s = gst_ogg_stream_packet_is_header (&pad->map, packet);
   if (!packet->b_o_s) {
+    GST_DEBUG ("found non-header packet");
     pad->map.have_headers = TRUE;
     if (pad->start_time == GST_CLOCK_TIME_NONE) {
       gint64 duration = gst_ogg_stream_get_packet_duration (&pad->map, packet);

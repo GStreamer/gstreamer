@@ -1543,6 +1543,7 @@ setup_kate_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_LOG ("sample rate: %d", pad->granulerate_n);
 
   pad->n_header_packets = GST_READ_UINT8 (data + 11);
+  GST_LOG ("kate header packets: %d", pad->n_header_packets);
 
   if (pad->granulerate_n == 0)
     return FALSE;
