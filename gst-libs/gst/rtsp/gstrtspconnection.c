@@ -2486,7 +2486,9 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (timeout != NULL, GST_RTSP_EINVAL);
 
-  elapsed = g_timer_elapsed (conn->timer, &usec);
+  /* Because we should act before the timeout we timeout 5
+   * seconds in advance. */
+  elapsed = g_timer_elapsed (conn->timer, &usec) + 5;
   if (elapsed >= conn->timeout) {
     sec = 0;
     usec = 0;
