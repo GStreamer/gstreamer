@@ -1,8 +1,0 @@
-EXPORTS
-	gst_pb_utils_init
-	gst_pb_utils_get_source_description
-	gst_is_missing_plugin_message
-	gst_missing_decoder_message_new
-	gst_missing_element_message_new
-	gst_missing_plugin_message_get_installer_detail
-	gst_missing_uri_source_message_new
