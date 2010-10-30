@@ -44,6 +44,7 @@ static gchar *
 gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
     gint depth)
 {
+  GstDiscovererAudioInfo *audio_info;
   GString *s;
   gchar *tmp;
   int len = 400;
@@ -70,17 +71,18 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
     my_g_string_append_printf (s, "  None\n");
   }
 
+  audio_info = (GstDiscovererAudioInfo *) info;
   my_g_string_append_printf (s, "Channels: %u\n",
-      gst_discoverer_audio_info_get_channels (info));
+      gst_discoverer_audio_info_get_channels (audio_info));
   my_g_string_append_printf (s, "Sample rate: %u\n",
-      gst_discoverer_audio_info_get_sample_rate (info));
+      gst_discoverer_audio_info_get_sample_rate (audio_info));
   my_g_string_append_printf (s, "Depth: %u\n",
-      gst_discoverer_audio_info_get_depth (info));
+      gst_discoverer_audio_info_get_depth (audio_info));
 
   my_g_string_append_printf (s, "Bitrate: %u\n",
-      gst_discoverer_audio_info_get_bitrate (info));
+      gst_discoverer_audio_info_get_bitrate (audio_info));
   my_g_string_append_printf (s, "Max bitrate: %u\n",
-      gst_discoverer_audio_info_get_max_bitrate (info));
+      gst_discoverer_audio_info_get_max_bitrate (audio_info));
 
   my_g_string_append_printf (s, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
@@ -101,6 +103,7 @@ static gchar *
 gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
     gint depth)
 {
+  GstDiscovererVideoInfo *video_info;
   GString *s;
   gchar *tmp;
   int len = 500;
@@ -129,28 +132,29 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
     my_g_string_append_printf (s, "  None\n");
   }
 
+  video_info = (GstDiscovererVideoInfo *) info;
   my_g_string_append_printf (s, "Width: %u\n",
-      gst_discoverer_video_info_get_width (info));
+      gst_discoverer_video_info_get_width (video_info));
   my_g_string_append_printf (s, "Height: %u\n",
-      gst_discoverer_video_info_get_height (info));
+      gst_discoverer_video_info_get_height (video_info));
   my_g_string_append_printf (s, "Depth: %u\n",
-      gst_discoverer_video_info_get_depth (info));
+      gst_discoverer_video_info_get_depth (video_info));
 
   my_g_string_append_printf (s, "Frame rate: %u/%u\n",
-      gst_discoverer_video_info_get_framerate_num (info),
-      gst_discoverer_video_info_get_framerate_denom (info));
+      gst_discoverer_video_info_get_framerate_num (video_info),
+      gst_discoverer_video_info_get_framerate_denom (video_info));
 
   my_g_string_append_printf (s, "Pixel aspect ratio: %u/%u\n",
-      gst_discoverer_video_info_get_par_num (info),
-      gst_discoverer_video_info_get_par_denom (info));
+      gst_discoverer_video_info_get_par_num (video_info),
+      gst_discoverer_video_info_get_par_denom (video_info));
 
   my_g_string_append_printf (s, "Interlaced: %s\n",
-      gst_discoverer_video_info_get_interlaced (info) ? "true" : "false");
+      gst_discoverer_video_info_get_interlaced (video_info) ? "true" : "false");
 
   my_g_string_append_printf (s, "Bitrate: %u\n",
-      gst_discoverer_video_info_get_bitrate (info));
+      gst_discoverer_video_info_get_bitrate (video_info));
   my_g_string_append_printf (s, "Max bitrate: %u\n",
-      gst_discoverer_video_info_get_max_bitrate (info));
+      gst_discoverer_video_info_get_max_bitrate (video_info));
 
   my_g_string_append_printf (s, "Tags:\n");
   tags = gst_discoverer_stream_info_get_tags (info);
