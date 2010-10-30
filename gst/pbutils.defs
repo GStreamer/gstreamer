@@ -363,7 +363,7 @@
   (c-name "gst_discoverer_audio_info_get_channels")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererAudioInfo*" "info")
   )
 )
 
@@ -371,7 +371,7 @@
   (c-name "gst_discoverer_audio_info_get_sample_rate")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererAudioInfo*" "info")
   )
 )
 
@@ -379,7 +379,7 @@
   (c-name "gst_discoverer_audio_info_get_depth")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererAudioInfo*" "info")
   )
 )
 
@@ -387,7 +387,7 @@
   (c-name "gst_discoverer_audio_info_get_bitrate")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererAudioInfo*" "info")
   )
 )
 
@@ -395,7 +395,7 @@
   (c-name "gst_discoverer_audio_info_get_max_bitrate")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererAudioInfo*" "info")
   )
 )
 
@@ -408,7 +408,7 @@
   (c-name "gst_discoverer_video_info_get_width")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -416,7 +416,7 @@
   (c-name "gst_discoverer_video_info_get_height")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -424,7 +424,7 @@
   (c-name "gst_discoverer_video_info_get_depth")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -432,7 +432,7 @@
   (c-name "gst_discoverer_video_info_get_framerate_num")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -440,7 +440,7 @@
   (c-name "gst_discoverer_video_info_get_framerate_denom")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -448,7 +448,7 @@
   (c-name "gst_discoverer_video_info_get_par_num")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -456,15 +456,15 @@
   (c-name "gst_discoverer_video_info_get_par_denom")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
-(define-function gst_discoverer_video_info_get_interlaced
-  (c-name "gst_discoverer_video_info_get_interlaced")
+(define-function gst_discoverer_video_info_is_interlaced
+  (c-name "gst_discoverer_video_info_is_interlaced")
   (return-type "gboolean")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -472,7 +472,7 @@
   (c-name "gst_discoverer_video_info_get_bitrate")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
@@ -480,15 +480,15 @@
   (c-name "gst_discoverer_video_info_get_max_bitrate")
   (return-type "guint")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
-(define-function gst_discoverer_video_info_get_is_image
-  (c-name "gst_discoverer_video_info_get_is_image")
+(define-function gst_discoverer_video_info_is_image
+  (c-name "gst_discoverer_video_info_is_image")
   (return-type "gboolean")
   (parameters
-    '("GstDiscovererStreamInfo*" "info")
+    '("GstDiscovererVideoInfo*" "info")
   )
 )
 
