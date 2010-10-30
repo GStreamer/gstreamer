@@ -78,8 +78,6 @@ struct _GstDiscovererInfo {
   GstClockTime duration;
   GstStructure *misc;
   GstTagList *tags;
-
-  gpointer _reserved[GST_PADDING];
 };
 
 /* missing-plugins.c */
