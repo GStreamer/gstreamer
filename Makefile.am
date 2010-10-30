@@ -75,7 +75,9 @@ check: check-exports
 
 CRUFT_FILES = \
 	$(top_builddir)/common/shave \
-	$(top_builddir)/common/shave-libtool
+	$(top_builddir)/common/shave-libtool \
+	$(top_builddir)/tools/gst-discoverer
+
 
 include $(top_srcdir)/common/cruft.mak
 

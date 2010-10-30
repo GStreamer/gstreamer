@@ -5,13 +5,15 @@ man_MANS = \
         gst-visualise-@GST_MAJORMINOR@.1
 
 bin_PROGRAMS = \
-	gst-discoverer
+	gst-discoverer-@GST_MAJORMINOR@
+
+gst_discoverer_@GST_MAJORMINOR@_SOURCES = gst-discoverer.c
 
 CLEANFILES = $(man_MANS) $(bin_SCRIPTS) $(bin_PROGRAMS)
 
 EXTRA_DIST = \
-	gst-visualise-m.m gst-visualise.1.in \
-	gst-discoverer.c
+	gst-visualise-m.m gst-visualise.1.in
+
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la\
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la\
