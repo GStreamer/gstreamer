@@ -1488,6 +1488,22 @@ mergewl uvuv, uv, uv
 x2 mergebw ay, c255, y
 x2 mergewl d, ay, uvuv
 
+.function cogorc_getline_A420
+.dest 4 d guint8
+.source 1 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.source 1 a guint8
+.temp 2 uv
+.temp 2 ay
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw uv, tu, tv
+mergebw ay, a, y
+mergewl d, ay, uv
 
 .function cogorc_putline_I420
 .dest 2 y guint8
@@ -1678,4 +1694,24 @@ splitlw uv1, uv2, uvuv
 x2 avgub uv, uv1, uv2
 swapw vu, uv
 
+.function cogorc_putline_A420
+.dest 2 y guint8
+.dest 1 u guint8
+.dest 1 v guint8
+.dest 2 a guint8
+.source 8 ayuv guint8
+.temp 4 ay
+.temp 4 uv
+.temp 2 uu
+.temp 2 vv
+.temp 1 t1
+.temp 1 t2
 
+x2 splitlw uv, ay, ayuv
+x2 select1wb y, ay
+x2 select0wb a, ay
+x2 splitwb vv, uu, uv
+splitwb t1, t2, uu
+avgub u, t1, t2
+splitwb t1, t2, vv
+avgub v, t1, t2

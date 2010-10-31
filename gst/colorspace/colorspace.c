@@ -707,6 +707,27 @@ putline_UYVP (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
   }
 }
 
+static void
+getline_A420 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  cogorc_getline_A420 (dest,
+      FRAME_GET_LINE (src, 0, j),
+      FRAME_GET_LINE (src, 1, j >> 1),
+      FRAME_GET_LINE (src, 2, j >> 1),
+      FRAME_GET_LINE (src, 3, j), convert->width);
+}
+
+static void
+putline_A420 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  cogorc_putline_A420 (FRAME_GET_LINE (dest, 0, j),
+      FRAME_GET_LINE (dest, 1, j >> 1),
+      FRAME_GET_LINE (dest, 2, j >> 1),
+      FRAME_GET_LINE (dest, 3, j), src, convert->width / 2);
+}
+
 typedef struct
 {
   GstVideoFormat format;
@@ -749,8 +770,8 @@ static const ColorspaceLine lines[] = {
   //{GST_VIDEO_FORMAT_BGR16, getline_BGR16, putline_BGR16},
   //{GST_VIDEO_FORMAT_RGB15, getline_RGB15, putline_RGB15},
   //{GST_VIDEO_FORMAT_BGR15, getline_BGR15, putline_BGR15},
-  {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP}
-  //{GST_VIDEO_FORMAT_A420, getline_A420, putline_A420}
+  {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP},
+  {GST_VIDEO_FORMAT_A420, getline_A420, putline_A420}
 };
 
 static void
