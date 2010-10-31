@@ -1170,7 +1170,7 @@ typedef struct
   GstVideoFormat to_format;
   void (*convert) (ColorspaceConvert * convert, guint8 * dest, guint8 * src);
 } ColorspaceTransform;
-static ColorspaceTransform transforms[] = {
+static const ColorspaceTransform transforms[] = {
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YUY2, convert_I420_YUY2},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_UYVY, convert_I420_UYVY},
   {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_AYUV, convert_I420_AYUV},
