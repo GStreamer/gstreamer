@@ -472,10 +472,14 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
-      if (stream) {
-        GST_DEBUG_OBJECT (pad, "Have EOS for stream %d", stream->stream_number);
-        stream->is_eos = TRUE;
+      if (!stream) {
+        GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+        GST_WARNING_OBJECT (pad, "EOS for unknown stream");
+        break;
       }
+
+      GST_DEBUG_OBJECT (pad, "Have EOS for stream %d", stream->stream_number);
+      stream->is_eos = TRUE;
 
       seen_data = stream->seen_data;
       srcpad = gst_object_ref (stream->srcpad);
