@@ -27,6 +27,14 @@ G_BEGIN_DECLS
 typedef struct _ColorspaceConvert ColorspaceConvert;
 typedef struct _ColorspaceFrame ColorspaceComponent;
 
+typedef enum {
+  COLOR_SPEC_NONE = 0,
+  COLOR_SPEC_RGB,
+  COLOR_SPEC_GRAY,
+  COLOR_SPEC_YUV_BT470_6,
+  COLOR_SPEC_YUV_BT709
+} ColorSpaceColorSpec;
+
 struct _ColorspaceComponent {
   int offset;
   int stride;
@@ -37,7 +45,9 @@ struct _ColorspaceConvert {
   gboolean interlaced;
 
   GstVideoFormat from_format;
+  ColorSpaceColorSpec from_spec;
   GstVideoFormat to_format;
+  ColorSpaceColorSpec to_spec;
   guint32 *palette;
 
   guint8 *tmpline;

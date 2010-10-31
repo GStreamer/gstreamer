@@ -109,7 +109,7 @@ gst_csp_caps_remove_format_info (GstCaps * caps)
   gst_structure_set_name (yuvst, "video/x-raw-yuv");
   gst_structure_remove_fields (yuvst, "format", "endianness", "depth",
       "bpp", "red_mask", "green_mask", "blue_mask", "alpha_mask",
-      "palette_data", NULL);
+      "palette_data", "color-matrix", NULL);
 
   rgbst = gst_structure_copy (yuvst);
   gst_structure_set_name (rgbst, "video/x-raw-rgb");
@@ -214,6 +214,7 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   gboolean have_in_interlaced, have_out_interlaced;
   gboolean in_interlaced, out_interlaced;
   gboolean ret;
+  ColorSpaceColorSpec in_spec, out_spec;
 
   space = GST_CSP (btrans);
 
@@ -232,6 +233,18 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   have_in_interlaced = gst_video_format_parse_caps_interlaced (incaps,
       &in_interlaced);
 
+  if (gst_video_format_is_rgb (in_format)) {
+    in_spec = COLOR_SPEC_RGB;
+  } else if (gst_video_format_is_yuv (in_format)) {
+    const gchar *matrix = gst_video_parse_caps_color_matrix (incaps);
+
+    if (matrix && g_str_equal (matrix, "hdtv"))
+      in_spec = COLOR_SPEC_YUV_BT709;
+    else
+      in_spec = COLOR_SPEC_YUV_BT470_6;
+  } else {
+    in_spec = COLOR_SPEC_GRAY;
+  }
 
   /* output caps */
 
@@ -250,6 +263,18 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   have_out_interlaced = gst_video_format_parse_caps_interlaced (incaps,
       &out_interlaced);
 
+  if (gst_video_format_is_rgb (out_format)) {
+    out_spec = COLOR_SPEC_RGB;
+  } else if (gst_video_format_is_yuv (out_format)) {
+    const gchar *matrix = gst_video_parse_caps_color_matrix (outcaps);
+
+    if (matrix && g_str_equal (matrix, "hdtv"))
+      out_spec = COLOR_SPEC_YUV_BT709;
+    else
+      out_spec = COLOR_SPEC_YUV_BT470_6;
+  } else {
+    out_spec = COLOR_SPEC_GRAY;
+  }
 
   /* these must match */
   if (in_width != out_width || in_height != out_height ||
@@ -267,13 +292,15 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     goto format_mismatch;
 
   space->from_format = in_format;
+  space->from_spec = in_spec;
   space->to_format = out_format;
+  space->to_spec = out_spec;
   space->width = in_width;
   space->height = in_height;
   space->interlaced = in_interlaced;
 
-  space->convert = colorspace_convert_new (out_format, in_format,
-      in_width, in_height);
+  space->convert = colorspace_convert_new (out_format, out_spec, in_format,
+      in_spec, in_width, in_height);
   if (space->convert) {
     colorspace_convert_set_interlaced (space->convert, in_interlaced);
   }
