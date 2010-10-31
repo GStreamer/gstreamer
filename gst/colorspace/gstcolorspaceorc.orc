@@ -1407,11 +1407,11 @@ mergewl ayuv, ay, uv
 .dest 4 ayuv guint8
 .source 1 y guint8
 .const 1 c255 255
-.const 2 c0xffff 0xffff
+.const 2 c0x8080 0x8080
 .temp 2 ay
 
 mergebw ay, c255, y
-mergewl ayuv, ay, c0xffff
+mergewl ayuv, ay, c0x8080
 
 
 .function cogorc_getline_BGRA
