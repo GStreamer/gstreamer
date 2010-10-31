@@ -505,8 +505,8 @@ gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
 
   for (i = in_args->headers; i; i = i->next) {
     char *data = (char *) i->data;
-    char *key = data;
     char *value = strchr (data, ':');
+    char *key;
 
     if (!value)
       continue;
