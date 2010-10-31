@@ -2588,6 +2588,18 @@ gst_queue2_handle_query (GstElement * element, GstQuery * query)
   return gst_queue2_handle_src_query (GST_QUEUE2_CAST (element)->srcpad, query);
 }
 
+static void
+gst_queue2_update_upstream_size (GstQueue2 * queue)
+{
+  GstFormat fmt = GST_FORMAT_BYTES;
+  gint64 upstream_size = -1;
+
+  if (gst_pad_query_peer_duration (queue->sinkpad, &fmt, &upstream_size)) {
+    GST_INFO_OBJECT (queue, "upstream size: %" G_GINT64_FORMAT, upstream_size);
+    queue->upstream_size = upstream_size;
+  }
+}
+
 static GstFlowReturn
 gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
     GstBuffer ** buffer)
@@ -2603,6 +2615,18 @@ gst_queue2_get_range (GstPad * pad, guint64 offset, guint length,
 
   GST_DEBUG_OBJECT (queue,
       "Getting range: offset %" G_GUINT64_FORMAT ", length %u", offset, length);
+
+  /* catch any reads beyond the size of the file here to make sure queue2
+   * doesn't send seek events beyond the size of the file upstream, since
+   * that would confuse elements such as souphttpsrc and/or http servers.
+   * Demuxers often just loop until EOS at the end of the file to figure out
+   * when they've read all the end-headers or index chunks. */
+  if (G_UNLIKELY (offset >= queue->upstream_size)) {
+    gst_queue2_update_upstream_size (queue);
+    if (queue->upstream_size > 0 && offset >= queue->upstream_size)
+      goto out_unexpected;
+  }
+
   /* FIXME - function will block when the range is not yet available */
   ret = gst_queue2_create_read (queue, offset, length, buffer);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
@@ -2619,6 +2643,13 @@ out_flushing:
     GST_DEBUG_OBJECT (queue, "we are flushing");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
     return ret;
+  }
+out_unexpected:
+  {
+    GST_DEBUG_OBJECT (queue, "read beyond end of file");
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_object_unref (queue);
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -2726,7 +2757,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = !!queue->ring_buffer;
+        result = ! !queue->ring_buffer;
       } else {
         result = TRUE;
       }
@@ -2737,6 +2768,7 @@ gst_queue2_src_activate_pull (GstPad * pad, gboolean active)
       queue->sinkresult = GST_FLOW_OK;
       queue->is_eos = FALSE;
       queue->unexpected = FALSE;
+      queue->upstream_size = 0;
       GST_QUEUE2_MUTEX_UNLOCK (queue);
     } else {
       GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2928,7 +2960,7 @@ gst_queue2_set_property (GObject * object,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       queue->ring_buffer_max_size = g_value_get_uint64 (value);
-      queue->use_ring_buffer = !!queue->ring_buffer_max_size;
+      queue->use_ring_buffer = ! !queue->ring_buffer_max_size;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

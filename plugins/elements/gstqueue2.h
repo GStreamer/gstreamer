@@ -76,6 +76,9 @@ struct _GstQueue2
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  /* upstream size in bytes (if downstream is operating in pull mode) */
+  guint64 upstream_size;
+
   /* segments to keep track of timestamps */
   GstSegment sink_segment;
   GstSegment src_segment;
