@@ -2244,16 +2244,13 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
       GST_DEBUG_OBJECT (playsink, "adding video deinterlace chain");
 
-      if (playsink->videodeinterlacechain) {
-        GST_DEBUG_OBJECT (playsink, "setting up deinterlacing chain");
+      GST_DEBUG_OBJECT (playsink, "setting up deinterlacing chain");
 
-        add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
-        activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
+      add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
+      activate_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), TRUE);
 
-        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
-            playsink->videodeinterlacechain->sinkpad,
-            GST_PAD_LINK_CHECK_NOTHING);
-      }
+      gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+          playsink->videodeinterlacechain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     } else {
       if (playsink->videodeinterlacechain) {
         add_chain (GST_PLAY_CHAIN (playsink->videodeinterlacechain), FALSE);
