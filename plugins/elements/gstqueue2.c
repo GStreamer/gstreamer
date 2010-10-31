@@ -1498,14 +1498,13 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
 {
   guint8 *data, *ring_buffer;
   guint size, rb_size;
-  guint64 writing_pos, new_writing_pos, max_reading_pos;
+  guint64 writing_pos, new_writing_pos;
   GstQueue2Range *range, *prev, *next;
 
   if (QUEUE_IS_USING_RING_BUFFER (queue))
     writing_pos = queue->current->rb_writing_pos;
   else
     writing_pos = queue->current->writing_pos;
-  max_reading_pos = queue->current->max_reading_pos;
   ring_buffer = queue->ring_buffer;
   rb_size = queue->ring_buffer_max_size;
 
