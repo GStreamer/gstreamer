@@ -2642,6 +2642,7 @@ out_flushing:
 
     GST_DEBUG_OBJECT (queue, "we are flushing");
     GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_object_unref (queue);
     return ret;
   }
 out_unexpected:
