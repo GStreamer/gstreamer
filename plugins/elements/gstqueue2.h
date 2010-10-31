@@ -138,7 +138,6 @@ struct _GstQueue2
   gboolean segment_event_received;
   GstEvent *starting_segment;
 
-  gboolean use_ring_buffer;
   guint64 ring_buffer_max_size;
   guint8 * ring_buffer;
 };
