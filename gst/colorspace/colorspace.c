@@ -527,6 +527,20 @@ putline_Y800 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
 }
 
 static void
+getline_Y16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  cogorc_getline_Y16 (dest, FRAME_GET_LINE (src, 0, j), convert->width);
+}
+
+static void
+putline_Y16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  cogorc_putline_Y16 (FRAME_GET_LINE (dest, 0, j), src, convert->width);
+}
+
+static void
 getline_BGRA (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
     int j)
 {
@@ -765,7 +779,7 @@ static const ColorspaceLine lines[] = {
   //{GST_VIDEO_FORMAT_GRAY16_LE, getline_GRAY16_LE, putline_GRAY16_LE},
   {GST_VIDEO_FORMAT_v308, getline_v308, putline_v308},
   {GST_VIDEO_FORMAT_Y800, getline_Y800, putline_Y800},
-  //{GST_VIDEO_FORMAT_Y16, getline_Y16, putline_Y16},
+  {GST_VIDEO_FORMAT_Y16, getline_Y16, putline_Y16},
   //{GST_VIDEO_FORMAT_RGB16, getline_RGB16, putline_RGB16},
   //{GST_VIDEO_FORMAT_BGR16, getline_BGR16, putline_BGR16},
   //{GST_VIDEO_FORMAT_RGB15, getline_RGB15, putline_RGB15},
