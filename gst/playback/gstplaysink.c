@@ -2237,7 +2237,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
           playsink->video_sinkpad_stream_synchronizer);
 
-    if (playsink->videochain && need_deinterlace) {
+    if (need_deinterlace) {
       if (!playsink->videodeinterlacechain)
         playsink->videodeinterlacechain =
             gen_video_deinterlace_chain (playsink);
@@ -2259,21 +2259,19 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       }
     }
 
-    if (playsink->videochain) {
-      GST_DEBUG_OBJECT (playsink, "adding video chain");
-      add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
-      activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
-      /* if we are not part of vis or subtitles, set the ghostpad target */
-      if (!need_vis && !need_text && (!playsink->textchain
-              || !playsink->text_pad)) {
-        GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
-        if (need_deinterlace)
-          gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
-              playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-        else
-          gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
-              playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-      }
+    GST_DEBUG_OBJECT (playsink, "adding video chain");
+    add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
+    activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
+    /* if we are not part of vis or subtitles, set the ghostpad target */
+    if (!need_vis && !need_text && (!playsink->textchain
+            || !playsink->text_pad)) {
+      GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
+      if (need_deinterlace)
+        gst_pad_link_full (playsink->videodeinterlacechain->srcpad,
+            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
+      else
+        gst_pad_link_full (playsink->video_srcpad_stream_synchronizer,
+            playsink->videochain->sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no video needed");
