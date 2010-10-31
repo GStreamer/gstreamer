@@ -241,7 +241,7 @@ gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdset,
   }
 
   /* ask how much is available for reading on the socket */
-  if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0)
+  if (ioctl (socket, FIONREAD, &readsize) < 0)
     goto ioctl_error;
 
   if (readsize == 0)
