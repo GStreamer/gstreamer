@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2010 David Schleef <ds@schleef.org>
+ * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,17 +35,40 @@ static void colorspace_convert_lookup_getput (ColorspaceConvert * convert);
 
 
 ColorspaceConvert *
-colorspace_convert_new (GstVideoFormat to_format,
-    GstVideoFormat from_format, int width, int height)
+colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
+    GstVideoFormat from_format, ColorSpaceColorSpec from_spec,
+    int width, int height)
 {
   ColorspaceConvert *convert;
   int i;
+
+  g_return_val_if_fail (!gst_video_format_is_rgb (to_format)
+      || to_spec == COLOR_SPEC_RGB, NULL);
+  g_return_val_if_fail (!gst_video_format_is_yuv (to_format)
+      || to_spec == COLOR_SPEC_YUV_BT709
+      || to_spec == COLOR_SPEC_YUV_BT470_6, NULL);
+  g_return_val_if_fail (gst_video_format_is_rgb (to_format)
+      || gst_video_format_is_yuv (to_format)
+      || (gst_video_format_is_gray (to_format) &&
+          to_spec == COLOR_SPEC_GRAY), NULL);
+
+  g_return_val_if_fail (!gst_video_format_is_rgb (from_format)
+      || from_spec == COLOR_SPEC_RGB, NULL);
+  g_return_val_if_fail (!gst_video_format_is_yuv (from_format)
+      || from_spec == COLOR_SPEC_YUV_BT709
+      || from_spec == COLOR_SPEC_YUV_BT470_6, NULL);
+  g_return_val_if_fail (gst_video_format_is_rgb (from_format)
+      || gst_video_format_is_yuv (from_format)
+      || (gst_video_format_is_gray (from_format) &&
+          from_spec == COLOR_SPEC_GRAY), NULL);
 
   convert = g_malloc (sizeof (ColorspaceConvert));
   memset (convert, 0, sizeof (ColorspaceConvert));
 
   convert->to_format = to_format;
+  convert->to_spec = to_spec;
   convert->from_format = from_format;
+  convert->from_spec = from_spec;
   convert->height = height;
   convert->width = width;
   convert->convert = colorspace_convert_generic;
@@ -667,7 +691,7 @@ static const ColorspaceLine lines[] = {
 };
 
 static void
-matrix_rgb2yuv (ColorspaceConvert * convert)
+matrix_rgb_to_yuv_bt470_6 (ColorspaceConvert * convert)
 {
   int i;
   int r, g, b;
@@ -690,7 +714,30 @@ matrix_rgb2yuv (ColorspaceConvert * convert)
 }
 
 static void
-matrix_yuv2rgb (ColorspaceConvert * convert)
+matrix_rgb_to_yuv_bt709 (ColorspaceConvert * convert)
+{
+  int i;
+  int r, g, b;
+  int y, u, v;
+  guint8 *tmpline = convert->tmpline;
+
+  for (i = 0; i < convert->width; i++) {
+    r = tmpline[i * 4 + 1];
+    g = tmpline[i * 4 + 2];
+    b = tmpline[i * 4 + 3];
+
+    y = (47 * r + 157 * g + 16 * b + 4096) >> 8;
+    u = (-26 * r - 87 * g + 112 * b + 32768) >> 8;
+    v = (112 * r - 102 * g - 10 * b + 32768) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (v, 0, 255);
+  }
+}
+
+static void
+matrix_yuv_bt470_6_to_rgb (ColorspaceConvert * convert)
 {
   int i;
   int r, g, b;
@@ -705,6 +752,75 @@ matrix_yuv2rgb (ColorspaceConvert * convert)
     r = (298 * y + 409 * v - 57068) >> 8;
     g = (298 * y - 100 * u - 208 * v + 34707) >> 8;
     b = (298 * y + 516 * u - 70870) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
+  }
+}
+
+static void
+matrix_yuv_bt709_to_rgb (ColorspaceConvert * convert)
+{
+  int i;
+  int r, g, b;
+  int y, u, v;
+  guint8 *tmpline = convert->tmpline;
+
+  for (i = 0; i < convert->width; i++) {
+    y = tmpline[i * 4 + 1];
+    u = tmpline[i * 4 + 2];
+    v = tmpline[i * 4 + 3];
+
+    r = (298 * y + 459 * v - 63514) >> 8;
+    g = (298 * y - 55 * u - 136 * v + 19681) >> 8;
+    b = (298 * y + 541 * u - 73988) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
+  }
+}
+
+static void
+matrix_yuv_bt709_to_yuv_bt470_6 (ColorspaceConvert * convert)
+{
+  int i;
+  int r, g, b;
+  int y, u, v;
+  guint8 *tmpline = convert->tmpline;
+
+  for (i = 0; i < convert->width; i++) {
+    y = tmpline[i * 4 + 1];
+    u = tmpline[i * 4 + 2];
+    v = tmpline[i * 4 + 3];
+
+    r = (256 * y + 25 * u + 49 * v - 9536) >> 8;
+    g = (253 * u - 28 * v + 3958) >> 8;
+    b = (-19 * u + 252 * v + 2918) >> 8;
+
+    tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
+    tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
+    tmpline[i * 4 + 3] = CLAMP (b, 0, 255);
+  }
+}
+
+static void
+matrix_yuv_bt470_6_to_yuv_bt709 (ColorspaceConvert * convert)
+{
+  int i;
+  int r, g, b;
+  int y, u, v;
+  guint8 *tmpline = convert->tmpline;
+
+  for (i = 0; i < convert->width; i++) {
+    y = tmpline[i * 4 + 1];
+    u = tmpline[i * 4 + 2];
+    v = tmpline[i * 4 + 3];
+
+    r = (256 * y - 30 * u - 53 * v + 10600) >> 8;
+    g = (261 * u + 29 * v - 4367) >> 8;
+    b = (19 * u + 262 * v - 3289) >> 8;
 
     tmpline[i * 4 + 1] = CLAMP (r, 0, 255);
     tmpline[i * 4 + 2] = CLAMP (g, 0, 255);
@@ -740,15 +856,26 @@ colorspace_convert_lookup_getput (ColorspaceConvert * convert)
   }
   GST_DEBUG ("get %p put %p", convert->getline, convert->putline);
 
-  if (gst_video_format_is_rgb (convert->to_format) &&
-      gst_video_format_is_yuv (convert->from_format)) {
-    convert->matrix = matrix_yuv2rgb;
-  } else if (gst_video_format_is_yuv (convert->to_format) &&
-      gst_video_format_is_rgb (convert->from_format)) {
-    convert->matrix = matrix_rgb2yuv;
-  } else {
+  if (convert->from_spec == convert->to_spec)
     convert->matrix = matrix_identity;
-  }
+  else if (convert->from_spec == COLOR_SPEC_RGB
+      && convert->to_spec == COLOR_SPEC_YUV_BT470_6)
+    convert->matrix = matrix_rgb_to_yuv_bt470_6;
+  else if (convert->from_spec == COLOR_SPEC_RGB
+      && convert->to_spec == COLOR_SPEC_YUV_BT709)
+    convert->matrix = matrix_rgb_to_yuv_bt709;
+  else if (convert->from_spec == COLOR_SPEC_YUV_BT470_6
+      && convert->to_spec == COLOR_SPEC_RGB)
+    convert->matrix = matrix_yuv_bt470_6_to_rgb;
+  else if (convert->from_spec == COLOR_SPEC_YUV_BT709
+      && convert->to_spec == COLOR_SPEC_RGB)
+    convert->matrix = matrix_yuv_bt709_to_rgb;
+  else if (convert->from_spec == COLOR_SPEC_YUV_BT709
+      && convert->to_spec == COLOR_SPEC_YUV_BT470_6)
+    convert->matrix = matrix_yuv_bt709_to_yuv_bt470_6;
+  else if (convert->from_spec == COLOR_SPEC_YUV_BT470_6
+      && convert->to_spec == COLOR_SPEC_YUV_BT709)
+    convert->matrix = matrix_yuv_bt470_6_to_yuv_bt709;
 }
 
 static void
@@ -1240,57 +1367,94 @@ convert_I420_BGRA (ColorspaceConvert * convert, guint8 * dest,
 typedef struct
 {
   GstVideoFormat from_format;
+  ColorSpaceColorSpec from_spec;
   GstVideoFormat to_format;
+  ColorSpaceColorSpec to_spec;
+  gboolean keeps_color_spec;
   void (*convert) (ColorspaceConvert * convert, guint8 * dest,
       const guint8 * src);
 } ColorspaceTransform;
 static const ColorspaceTransform transforms[] = {
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_YUY2, convert_I420_YUY2},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_UYVY, convert_I420_UYVY},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_AYUV, convert_I420_AYUV},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y42B, convert_I420_Y42B},
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_Y444, convert_I420_Y444},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
+      COLOR_SPEC_NONE, TRUE, convert_I420_YUY2},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
+      COLOR_SPEC_NONE, TRUE, convert_I420_UYVY},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
+      COLOR_SPEC_NONE, TRUE, convert_I420_AYUV},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
+      COLOR_SPEC_NONE, TRUE, convert_I420_Y42B},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
+      COLOR_SPEC_NONE, TRUE, convert_I420_Y444},
 
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_I420, convert_YUY2_I420},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_UYVY, convert_UYVY_YUY2},    /* alias */
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_AYUV, convert_YUY2_AYUV},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y42B, convert_YUY2_Y42B},
-  {GST_VIDEO_FORMAT_YUY2, GST_VIDEO_FORMAT_Y444, convert_YUY2_Y444},
+  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
+      COLOR_SPEC_NONE, TRUE, convert_YUY2_I420},
+  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, TRUE, convert_UYVY_YUY2},    /* alias */
+  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
+      COLOR_SPEC_NONE, TRUE, convert_YUY2_AYUV},
+  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
+      COLOR_SPEC_NONE, TRUE, convert_YUY2_Y42B},
+  {GST_VIDEO_FORMAT_YUY2, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
+      COLOR_SPEC_NONE, TRUE, convert_YUY2_Y444},
 
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_I420, convert_UYVY_I420},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, convert_UYVY_YUY2},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_AYUV, convert_UYVY_AYUV},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y42B, convert_UYVY_Y42B},
-  {GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_Y444, convert_UYVY_Y444},
+  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
+      COLOR_SPEC_NONE, TRUE, convert_UYVY_I420},
+  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
+      COLOR_SPEC_NONE, TRUE, convert_UYVY_YUY2},
+  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
+      COLOR_SPEC_NONE, TRUE, convert_UYVY_AYUV},
+  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
+      COLOR_SPEC_NONE, TRUE, convert_UYVY_Y42B},
+  {GST_VIDEO_FORMAT_UYVY, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
+      COLOR_SPEC_NONE, TRUE, convert_UYVY_Y444},
 
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_I420, convert_AYUV_I420},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_YUY2, convert_AYUV_YUY2},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_UYVY, convert_AYUV_UYVY},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y42B, convert_AYUV_Y42B},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_Y444, convert_AYUV_Y444},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
+      COLOR_SPEC_NONE, TRUE, convert_AYUV_I420},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
+      COLOR_SPEC_NONE, TRUE, convert_AYUV_YUY2},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
+      COLOR_SPEC_NONE, TRUE, convert_AYUV_UYVY},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
+      COLOR_SPEC_NONE, TRUE, convert_AYUV_Y42B},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
+      COLOR_SPEC_NONE, TRUE, convert_AYUV_Y444},
 
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_I420, convert_Y42B_I420},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_YUY2, convert_Y42B_YUY2},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_UYVY, convert_Y42B_UYVY},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_AYUV, convert_Y42B_AYUV},
-  {GST_VIDEO_FORMAT_Y42B, GST_VIDEO_FORMAT_Y444, convert_Y42B_Y444},
+  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
+      COLOR_SPEC_NONE, TRUE, convert_Y42B_I420},
+  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
+      COLOR_SPEC_NONE, TRUE, convert_Y42B_YUY2},
+  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
+      COLOR_SPEC_NONE, TRUE, convert_Y42B_UYVY},
+  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
+      COLOR_SPEC_NONE, TRUE, convert_Y42B_AYUV},
+  {GST_VIDEO_FORMAT_Y42B, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y444,
+      COLOR_SPEC_NONE, TRUE, convert_Y42B_Y444},
 
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_I420, convert_Y444_I420},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_YUY2, convert_Y444_YUY2},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_UYVY, convert_Y444_UYVY},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_AYUV, convert_Y444_AYUV},
-  {GST_VIDEO_FORMAT_Y444, GST_VIDEO_FORMAT_Y42B, convert_Y444_Y42B},
+  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_I420,
+      COLOR_SPEC_NONE, TRUE, convert_Y444_I420},
+  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_YUY2,
+      COLOR_SPEC_NONE, TRUE, convert_Y444_YUY2},
+  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_UYVY,
+      COLOR_SPEC_NONE, TRUE, convert_Y444_UYVY},
+  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_AYUV,
+      COLOR_SPEC_NONE, TRUE, convert_Y444_AYUV},
+  {GST_VIDEO_FORMAT_Y444, COLOR_SPEC_NONE, GST_VIDEO_FORMAT_Y42B,
+      COLOR_SPEC_NONE, TRUE, convert_Y444_Y42B},
 
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ARGB, convert_AYUV_ARGB},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRA, convert_AYUV_BGRA},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xRGB, convert_AYUV_ARGB},    /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_BGRx, convert_AYUV_BGRA},    /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_ABGR, convert_AYUV_ABGR},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBA, convert_AYUV_RGBA},
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_xBGR, convert_AYUV_ABGR},    /* alias */
-  {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_FORMAT_RGBx, convert_AYUV_RGBA},    /* alias */
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_ARGB,
+      COLOR_SPEC_RGB, FALSE, convert_AYUV_ARGB},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
+      COLOR_SPEC_RGB, FALSE, convert_AYUV_BGRA},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_xRGB, COLOR_SPEC_RGB, FALSE, convert_AYUV_ARGB},     /* alias */
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRx, COLOR_SPEC_RGB, FALSE, convert_AYUV_BGRA},     /* alias */
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_ABGR,
+      COLOR_SPEC_RGB, FALSE, convert_AYUV_ABGR},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_RGBA,
+      COLOR_SPEC_RGB, FALSE, convert_AYUV_RGBA},
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_xBGR, COLOR_SPEC_RGB, FALSE, convert_AYUV_ABGR},     /* alias */
+  {GST_VIDEO_FORMAT_AYUV, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_RGBx, COLOR_SPEC_RGB, FALSE, convert_AYUV_RGBA},     /* alias */
 
-  {GST_VIDEO_FORMAT_I420, GST_VIDEO_FORMAT_BGRA, convert_I420_BGRA},
+  {GST_VIDEO_FORMAT_I420, COLOR_SPEC_YUV_BT470_6, GST_VIDEO_FORMAT_BGRA,
+      COLOR_SPEC_RGB, FALSE, convert_I420_BGRA},
 };
 
 static void
@@ -1300,7 +1464,10 @@ colorspace_convert_lookup_fastpath (ColorspaceConvert * convert)
 
   for (i = 0; i < sizeof (transforms) / sizeof (transforms[0]); i++) {
     if (transforms[i].to_format == convert->to_format &&
-        transforms[i].from_format == convert->from_format) {
+        transforms[i].from_format == convert->from_format &&
+        (transforms[i].keeps_color_spec ||
+            (transforms[i].from_spec == convert->from_spec &&
+                transforms[i].to_spec == convert->to_spec))) {
       convert->convert = transforms[i].convert;
       return;
     }
