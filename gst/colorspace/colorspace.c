@@ -541,6 +541,60 @@ putline_Y16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
 }
 
 static void
+getline_RGB16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint16 *srcline = (const guint16 *) FRAME_GET_LINE (src, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 1] = ((srcline[i] >> 11) & 0x1f) << 3;
+    dest[i * 4 + 2] = ((srcline[i] >> 5) & 0x3f) << 2;
+    dest[i * 4 + 3] = ((srcline[i]) & 0x1f) << 3;
+  }
+}
+
+static void
+putline_RGB16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint16 *destline = (guint16 *) FRAME_GET_LINE (dest, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    destline[i] =
+        ((src[i * 4 + 1] >> 3) << 11) | ((src[i * 4 +
+                2] >> 2) << 5) | (src[i * 4 + 3] >> 3);
+  }
+}
+
+static void
+getline_BGR16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint16 *srcline = (const guint16 *) FRAME_GET_LINE (src, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 3] = ((srcline[i] >> 11) & 0x1f) << 3;
+    dest[i * 4 + 2] = ((srcline[i] >> 5) & 0x3f) << 2;
+    dest[i * 4 + 1] = ((srcline[i]) & 0x1f) << 3;
+  }
+}
+
+static void
+putline_BGR16 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint16 *destline = (guint16 *) FRAME_GET_LINE (dest, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    destline[i] =
+        ((src[i * 4 + 3] >> 3) << 11) | ((src[i * 4 +
+                2] >> 2) << 5) | (src[i * 4 + 1] >> 3);
+  }
+}
+
+static void
 getline_BGRA (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
     int j)
 {
@@ -780,8 +834,8 @@ static const ColorspaceLine lines[] = {
   {GST_VIDEO_FORMAT_v308, getline_v308, putline_v308},
   {GST_VIDEO_FORMAT_Y800, getline_Y800, putline_Y800},
   {GST_VIDEO_FORMAT_Y16, getline_Y16, putline_Y16},
-  //{GST_VIDEO_FORMAT_RGB16, getline_RGB16, putline_RGB16},
-  //{GST_VIDEO_FORMAT_BGR16, getline_BGR16, putline_BGR16},
+  {GST_VIDEO_FORMAT_RGB16, getline_RGB16, putline_RGB16},
+  {GST_VIDEO_FORMAT_BGR16, getline_BGR16, putline_BGR16},
   //{GST_VIDEO_FORMAT_RGB15, getline_RGB15, putline_RGB15},
   //{GST_VIDEO_FORMAT_BGR15, getline_BGR15, putline_BGR15},
   {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP},
