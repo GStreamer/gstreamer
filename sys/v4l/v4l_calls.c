@@ -323,22 +323,14 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
       struct video_tuner vtun;
       gint n;
 
-      for (n = 0;; n++) {
-        if (n >= vchan.tuners) {
-          vtun.tuner = 0;       /* default */
-        } else {
-          vtun.tuner = n;
-          if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
-            continue;           /* no more tuners */
-          if (strcmp (vtun.name, vchan.name) != 0) {
-            continue;           /* not this one */
-          }
+      for (n = 0; n < vchan.tuners; n++) {
+        vtun.tuner = n;
+        if (ioctl (v4lelement->video_fd, VIDIOCGTUNER, &vtun) < 0)
+          continue;             /* no more tuners */
+        if (strcmp (vtun.name, vchan.name) != 0) {
+          continue;             /* not this one */
         }
-        /* FIXME: in the case of n >= vchan.tuners the code below accesses
-         * uninitialised fields in vtun
-         * Not sure if the codeblock below should go into the else above, but
-         * then setting vtun.tuner=0 is a bit pointless.
-         */
+
         v4lchannel->tuner = n;
         channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
         channel->freq_multiplicator =
