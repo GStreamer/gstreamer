@@ -750,12 +750,6 @@ convert_I420_YUY2 (ColorspaceConvert * convert, guint8 * dest, guint8 * src)
         FRAME_GET_LINE (src, 0, i + 1),
         FRAME_GET_LINE (src, 1, i >> 1),
         FRAME_GET_LINE (src, 2, i >> 1), (convert->width + 1) / 2);
-    cogorc_convert_I420_YUY2 (FRAME_GET_LINE (dest, 0, i),
-        FRAME_GET_LINE (dest, 0, i + 1),
-        FRAME_GET_LINE (src, 0, i),
-        FRAME_GET_LINE (src, 0, i + 1),
-        FRAME_GET_LINE (src, 1, i >> 1),
-        FRAME_GET_LINE (src, 2, i >> 1), (convert->width + 1) / 2);
   }
 }
 
