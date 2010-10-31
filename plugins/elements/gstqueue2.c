@@ -1499,7 +1499,6 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
   guint8 *data, *ring_buffer;
   guint size, rb_size;
   guint64 writing_pos, new_writing_pos, max_reading_pos;
-  gint64 space;
   GstQueue2Range *range, *prev, *next;
 
   if (QUEUE_IS_USING_RING_BUFFER (queue))
@@ -1520,6 +1519,8 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     guint to_write;
 
     if (QUEUE_IS_USING_RING_BUFFER (queue)) {
+      gint64 space;
+
       /* calculate the space in the ring buffer not used by data from
        * the current range */
       while (QUEUE_MAX_BYTES (queue) <= queue->cur_level.bytes) {
@@ -1630,7 +1631,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
         }
       }
     } else {
-      space = to_write = size;
+      to_write = size;
       new_writing_pos = writing_pos + to_write;
     }
 
