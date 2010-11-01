@@ -301,7 +301,7 @@ cogorc_memcpy_2d (orc_uint8 * d1, int d1_stride, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_memcpy_2d (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_memcpy_2d (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -349,6 +349,14 @@ cogorc_memcpy_2d (orc_uint8 * d1, int d1_stride, const orc_uint8 * s1,
       orc_program_set_backup_function (p, _backup_cogorc_memcpy_2d);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
           ORC_VAR_D1);
@@ -402,7 +410,7 @@ cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_horiz_cosite_1tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_horiz_cosite_1tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -446,6 +454,14 @@ cogorc_downsample_horiz_cosite_1tap (orc_uint8 * d1, const orc_uint16 * s1,
           _backup_cogorc_downsample_horiz_cosite_1tap);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "select0wb", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1, ORC_VAR_D1);
@@ -543,7 +559,7 @@ cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_horiz_cosite_3tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_horiz_cosite_3tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -636,6 +652,13 @@ cogorc_downsample_horiz_cosite_3tap (orc_uint8 * d1, const orc_uint16 * s1,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
       orc_program_add_constant (p, 4, 0x00000002, "c1");
+      orc_program_add_constant (p, 0, 0x00000002, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -746,7 +769,7 @@ cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_420_jpeg (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_420_jpeg (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -819,6 +842,14 @@ cogorc_downsample_420_jpeg (orc_uint8 * d1, const orc_uint16 * s1,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -896,7 +927,7 @@ cogorc_downsample_vert_halfsite_2tap (orc_uint8 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_vert_halfsite_2tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_vert_halfsite_2tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -946,6 +977,14 @@ cogorc_downsample_vert_halfsite_2tap (orc_uint8 * d1, const orc_uint8 * s1,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "avgub", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S2,
           ORC_VAR_D1);
@@ -1037,7 +1076,7 @@ cogorc_downsample_vert_cosite_3tap (orc_uint8 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_vert_cosite_3tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_vert_cosite_3tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1124,6 +1163,13 @@ cogorc_downsample_vert_cosite_3tap (orc_uint8 * d1, const orc_uint8 * s1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 4, 0x00000002, "c1");
+      orc_program_add_constant (p, 0, 0x00000002, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -1252,7 +1298,7 @@ cogorc_downsample_vert_halfsite_4tap (orc_uint8 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_downsample_vert_halfsite_4tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_downsample_vert_halfsite_4tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1359,6 +1405,11 @@ cogorc_downsample_vert_halfsite_4tap (orc_uint8 * d1, const orc_uint8 * s1,
       orc_program_add_constant (p, 4, 0x0000001a, "c1");
       orc_program_add_constant (p, 4, 0x00000006, "c2");
       orc_program_add_constant (p, 4, 0x00000020, "c3");
+      orc_program_add_constant (p, 0, 0x00000006, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -1440,7 +1491,7 @@ cogorc_upsample_horiz_cosite_1tap (guint8 * d1, const orc_uint8 * s1, int n)
 
 #else
 static void
-_backup_cogorc_upsample_horiz_cosite_1tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_upsample_horiz_cosite_1tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1486,6 +1537,14 @@ cogorc_upsample_horiz_cosite_1tap (guint8 * d1, const orc_uint8 * s1, int n)
           _backup_cogorc_upsample_horiz_cosite_1tap);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -1550,7 +1609,7 @@ cogorc_upsample_horiz_cosite (guint8 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_upsample_horiz_cosite (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_upsample_horiz_cosite (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1605,6 +1664,14 @@ cogorc_upsample_horiz_cosite (guint8 * d1, const orc_uint8 * s1,
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
       orc_program_add_temporary (p, 1, "t2");
 
@@ -1667,7 +1734,7 @@ cogorc_upsample_vert_avgub (orc_uint8 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_upsample_vert_avgub (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_upsample_vert_avgub (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1716,6 +1783,14 @@ cogorc_upsample_vert_avgub (orc_uint8 * d1, const orc_uint8 * s1,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "avgub", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S2,
           ORC_VAR_D1);
@@ -1766,7 +1841,7 @@ orc_unpack_yuyv_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_yuyv_y (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_yuyv_y (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1808,6 +1883,14 @@ orc_unpack_yuyv_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_yuyv_y);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "select0wb", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1, ORC_VAR_D1);
@@ -1860,7 +1943,7 @@ orc_unpack_yuyv_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_yuyv_u (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_yuyv_u (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -1905,6 +1988,14 @@ orc_unpack_yuyv_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_yuyv_u);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select0lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -1960,7 +2051,7 @@ orc_unpack_yuyv_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_yuyv_v (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_yuyv_v (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2005,6 +2096,14 @@ orc_unpack_yuyv_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_yuyv_v);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select1lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -2083,7 +2182,7 @@ orc_pack_yuyv (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_orc_pack_yuyv (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_yuyv (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2153,6 +2252,14 @@ orc_pack_yuyv (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -2219,7 +2326,7 @@ orc_unpack_uyvy_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_uyvy_y (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_uyvy_y (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2261,6 +2368,14 @@ orc_unpack_uyvy_y (orc_uint8 * d1, const orc_uint16 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_uyvy_y);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "select1wb", 0, ORC_VAR_D1, ORC_VAR_S1,
           ORC_VAR_D1, ORC_VAR_D1);
@@ -2313,7 +2428,7 @@ orc_unpack_uyvy_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_uyvy_u (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_uyvy_u (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2358,6 +2473,14 @@ orc_unpack_uyvy_u (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_uyvy_u);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select0lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -2413,7 +2536,7 @@ orc_unpack_uyvy_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_orc_unpack_uyvy_v (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_unpack_uyvy_v (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2458,6 +2581,14 @@ orc_unpack_uyvy_v (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_orc_unpack_uyvy_v);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select1lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -2536,7 +2667,7 @@ orc_pack_uyvy (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_orc_pack_uyvy (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_uyvy (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2606,6 +2737,14 @@ orc_pack_uyvy (orc_uint32 * d1, const guint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -2678,7 +2817,7 @@ orc_addc_convert_u8_s16 (orc_uint8 * d1, const gint16 * s1, int n)
 
 #else
 static void
-_backup_orc_addc_convert_u8_s16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_addc_convert_u8_s16 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2727,6 +2866,13 @@ orc_addc_convert_u8_s16 (orc_uint8 * d1, const gint16 * s1, int n)
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_constant (p, 4, 0x00000080, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "addw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_C1,
@@ -2785,7 +2931,7 @@ orc_subc_convert_s16_u8 (gint16 * d1, const orc_uint8 * s1, int n)
 
 #else
 static void
-_backup_orc_subc_convert_s16_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_subc_convert_s16_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2834,6 +2980,13 @@ orc_subc_convert_s16_u8 (gint16 * d1, const orc_uint8 * s1, int n)
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_constant (p, 4, 0x00000080, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "convubw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -2884,7 +3037,7 @@ orc_splat_u8_ns (orc_uint8 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_splat_u8_ns (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_splat_u8_ns (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -2923,6 +3076,14 @@ orc_splat_u8_ns (orc_uint8 * d1, int p1, int n)
       orc_program_set_name (p, "orc_splat_u8_ns");
       orc_program_set_backup_function (p, _backup_orc_splat_u8_ns);
       orc_program_add_destination (p, 1, "d1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 1, "p1");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
@@ -2971,7 +3132,7 @@ orc_splat_s16_ns (gint16 * d1, int p1, int n)
 
 #else
 static void
-_backup_orc_splat_s16_ns (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_splat_s16_ns (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -3010,6 +3171,14 @@ orc_splat_s16_ns (gint16 * d1, int p1, int n)
       orc_program_set_name (p, "orc_splat_s16_ns");
       orc_program_set_backup_function (p, _backup_orc_splat_s16_ns);
       orc_program_add_destination (p, 2, "d1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
 
       orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
@@ -3096,7 +3265,7 @@ orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
 
 #else
 static void
-_backup_orc_matrix2_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix2_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -3176,6 +3345,13 @@ orc_matrix2_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_constant (p, 4, 0x00000006, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -3302,7 +3478,7 @@ orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
 
 #else
 static void
-_backup_orc_matrix2_11_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix2_11_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -3402,6 +3578,11 @@ orc_matrix2_11_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
       orc_program_add_constant (p, 4, 0x00000010, "c1");
       orc_program_add_constant (p, 4, 0x00000080, "c2");
       orc_program_add_constant (p, 4, 0x00000008, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_temporary (p, 2, "t1");
@@ -3539,7 +3720,7 @@ orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
 
 #else
 static void
-_backup_orc_matrix2_12_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix2_12_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -3642,6 +3823,11 @@ orc_matrix2_12_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2, int p1,
       orc_program_add_constant (p, 4, 0x00000010, "c1");
       orc_program_add_constant (p, 4, 0x00000080, "c2");
       orc_program_add_constant (p, 4, 0x00000008, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_temporary (p, 2, "t1");
@@ -3777,7 +3963,7 @@ orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
 
 #else
 static void
-_backup_orc_matrix3_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix3_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -3875,6 +4061,13 @@ orc_matrix3_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 4, 0x00000006, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -4030,7 +4223,7 @@ orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
 
 #else
 static void
-_backup_orc_matrix3_100_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix3_100_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -4151,6 +4344,11 @@ orc_matrix3_100_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
       orc_program_add_constant (p, 4, 0x00000010, "c1");
       orc_program_add_constant (p, 4, 0x00000080, "c2");
       orc_program_add_constant (p, 4, 0x00000008, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -4295,7 +4493,7 @@ orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
 
 #else
 static void
-_backup_orc_matrix3_100_offset_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix3_100_offset_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -4395,6 +4593,14 @@ orc_matrix3_100_offset_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -4534,7 +4740,7 @@ orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
 
 #else
 static void
-_backup_orc_matrix3_000_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_matrix3_000_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -4631,6 +4837,14 @@ orc_matrix3_000_u8 (guint8 * d1, const guint8 * s1, const guint8 * s2,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -4734,7 +4948,7 @@ orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_orc_pack_123x (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_123x (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -4798,6 +5012,14 @@ orc_pack_123x (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -4877,7 +5099,7 @@ orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_orc_pack_x123 (OrcExecutor * ORC_RESTRICT ex)
+_backup_orc_pack_x123 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -4941,6 +5163,14 @@ orc_pack_x123 (guint32 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 1, "p1");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
@@ -5030,7 +5260,7 @@ cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_cogorc_combine2_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_combine2_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5104,6 +5334,13 @@ cogorc_combine2_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_temporary (p, 2, "t1");
@@ -5243,7 +5480,7 @@ cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
 
 #else
 static void
-_backup_cogorc_combine4_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_combine4_u8 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5361,6 +5598,12 @@ cogorc_combine4_u8 (orc_uint8 * d1, const orc_uint8 * s1, const orc_uint8 * s2,
       orc_program_add_source (p, 1, "s4");
       orc_program_add_constant (p, 4, 0x00000020, "c1");
       orc_program_add_constant (p, 4, 0x00000006, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 2, "p1");
       orc_program_add_parameter (p, 2, "p2");
       orc_program_add_parameter (p, 2, "p3");
@@ -5452,7 +5695,7 @@ cogorc_unpack_axyz_0 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_cogorc_unpack_axyz_0 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_unpack_axyz_0 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5497,6 +5740,14 @@ cogorc_unpack_axyz_0 (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_cogorc_unpack_axyz_0);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select0lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -5552,7 +5803,7 @@ cogorc_unpack_axyz_1 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_cogorc_unpack_axyz_1 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_unpack_axyz_1 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5597,6 +5848,14 @@ cogorc_unpack_axyz_1 (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_cogorc_unpack_axyz_1);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select0lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -5652,7 +5911,7 @@ cogorc_unpack_axyz_2 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_cogorc_unpack_axyz_2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_unpack_axyz_2 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5697,6 +5956,14 @@ cogorc_unpack_axyz_2 (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_cogorc_unpack_axyz_2);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select1lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -5752,7 +6019,7 @@ cogorc_unpack_axyz_3 (orc_uint8 * d1, const orc_uint32 * s1, int n)
 
 #else
 static void
-_backup_cogorc_unpack_axyz_3 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_unpack_axyz_3 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5797,6 +6064,14 @@ cogorc_unpack_axyz_3 (orc_uint8 * d1, const orc_uint32 * s1, int n)
       orc_program_set_backup_function (p, _backup_cogorc_unpack_axyz_3);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "select1lw", 0, ORC_VAR_T1, ORC_VAR_S1,
@@ -5847,7 +6122,7 @@ cogorc_resample_horiz_1tap (orc_uint8 * d1, const orc_uint8 * s1, int p1,
 
 #else
 static void
-_backup_cogorc_resample_horiz_1tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_resample_horiz_1tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5887,6 +6162,14 @@ cogorc_resample_horiz_1tap (orc_uint8 * d1, const orc_uint8 * s1, int p1,
       orc_program_set_backup_function (p, _backup_cogorc_resample_horiz_1tap);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_parameter (p, 4, "p2");
 
@@ -5943,7 +6226,7 @@ cogorc_resample_horiz_2tap (orc_uint8 * d1, const orc_uint8 * s1, int p1,
 
 #else
 static void
-_backup_cogorc_resample_horiz_2tap (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_resample_horiz_2tap (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -5988,6 +6271,14 @@ cogorc_resample_horiz_2tap (orc_uint8 * d1, const orc_uint8 * s1, int p1,
       orc_program_set_backup_function (p, _backup_cogorc_resample_horiz_2tap);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_parameter (p, 4, "p1");
       orc_program_add_parameter (p, 4, "p2");
 
@@ -6070,7 +6361,7 @@ cogorc_convert_I420_UYVY (orc_uint32 * d1, orc_uint32 * d2,
 
 #else
 static void
-_backup_cogorc_convert_I420_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_I420_UYVY (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -6145,6 +6436,14 @@ cogorc_convert_I420_UYVY (orc_uint32 * d1, orc_uint32 * d2,
       orc_program_add_source (p, 2, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_source (p, 1, "s4");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S3, ORC_VAR_S4,
@@ -6232,7 +6531,7 @@ cogorc_convert_I420_YUY2 (orc_uint32 * d1, orc_uint32 * d2,
 
 #else
 static void
-_backup_cogorc_convert_I420_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_I420_YUY2 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -6307,6 +6606,14 @@ cogorc_convert_I420_YUY2 (orc_uint32 * d1, orc_uint32 * d2,
       orc_program_add_source (p, 2, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_source (p, 1, "s4");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S3, ORC_VAR_S4,
@@ -6404,7 +6711,7 @@ cogorc_convert_I420_AYUV (orc_uint32 * d1, orc_uint32 * d2,
 
 #else
 static void
-_backup_cogorc_convert_I420_AYUV (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_I420_AYUV (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -6490,6 +6797,13 @@ cogorc_convert_I420_AYUV (orc_uint32 * d1, orc_uint32 * d2,
       orc_program_add_source (p, 1, "s3");
       orc_program_add_source (p, 1, "s4");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -6597,7 +6911,7 @@ cogorc_convert_YUY2_I420 (orc_uint16 * d1, orc_uint16 * d2, orc_uint8 * d3,
 
 #else
 static void
-_backup_cogorc_convert_YUY2_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_YUY2_I420 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -6681,6 +6995,14 @@ cogorc_convert_YUY2_I420 (orc_uint16 * d1, orc_uint16 * d2, orc_uint8 * d3,
       orc_program_add_destination (p, 1, "d4");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_source (p, 4, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -6752,7 +7074,7 @@ cogorc_convert_UYVY_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_UYVY_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_UYVY_YUY2 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -6801,6 +7123,14 @@ cogorc_convert_UYVY_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_set_backup_function (p, _backup_cogorc_convert_UYVY_YUY2);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "swapw", 1, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
           ORC_VAR_D1);
@@ -6867,7 +7197,7 @@ cogorc_planar_chroma_420_422 (orc_uint8 * d1, int d1_stride, orc_uint8 * d2,
 
 #else
 static void
-_backup_cogorc_planar_chroma_420_422 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_420_422 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -6926,6 +7256,14 @@ cogorc_planar_chroma_420_422 (orc_uint8 * d1, int d1_stride, orc_uint8 * d2,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_D1,
           ORC_VAR_D1);
@@ -6990,7 +7328,7 @@ cogorc_planar_chroma_420_444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
 
 #else
 static void
-_backup_cogorc_planar_chroma_420_444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_420_444 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7043,6 +7381,14 @@ cogorc_planar_chroma_420_444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "splatbw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -7106,7 +7452,7 @@ cogorc_planar_chroma_422_444 (orc_uint16 * d1, int d1_stride,
 
 #else
 static void
-_backup_cogorc_planar_chroma_422_444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_422_444 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7154,6 +7500,14 @@ cogorc_planar_chroma_422_444 (orc_uint16 * d1, int d1_stride,
       orc_program_set_backup_function (p, _backup_cogorc_planar_chroma_422_444);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 1, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "splatbw", 0, ORC_VAR_T1, ORC_VAR_S1, ORC_VAR_D1,
@@ -7218,7 +7572,7 @@ cogorc_planar_chroma_444_422 (orc_uint8 * d1, int d1_stride,
 
 #else
 static void
-_backup_cogorc_planar_chroma_444_422 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_444_422 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7271,6 +7625,14 @@ cogorc_planar_chroma_444_422 (orc_uint8 * d1, int d1_stride,
       orc_program_set_backup_function (p, _backup_cogorc_planar_chroma_444_422);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 1, "t1");
       orc_program_add_temporary (p, 1, "t2");
 
@@ -7348,7 +7710,7 @@ cogorc_planar_chroma_444_420 (orc_uint8 * d1, int d1_stride,
 
 #else
 static void
-_backup_cogorc_planar_chroma_444_420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_444_420 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7414,6 +7776,14 @@ cogorc_planar_chroma_444_420 (orc_uint8 * d1, int d1_stride,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -7485,7 +7855,7 @@ cogorc_planar_chroma_422_420 (orc_uint8 * d1, int d1_stride,
 
 #else
 static void
-_backup_cogorc_planar_chroma_422_420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_planar_chroma_422_420 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7540,6 +7910,14 @@ cogorc_planar_chroma_422_420 (orc_uint8 * d1, int d1_stride,
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
 
       orc_program_append_2 (p, "avgub", 0, ORC_VAR_D1, ORC_VAR_S1, ORC_VAR_S2,
           ORC_VAR_D1);
@@ -7619,7 +7997,7 @@ cogorc_convert_YUY2_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_YUY2_AYUV (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_YUY2_AYUV (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7689,6 +8067,13 @@ cogorc_convert_YUY2_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -7776,7 +8161,7 @@ cogorc_convert_UYVY_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_UYVY_AYUV (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_UYVY_AYUV (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7846,6 +8231,13 @@ cogorc_convert_UYVY_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -7930,7 +8322,7 @@ cogorc_convert_YUY2_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
 
 #else
 static void
-_backup_cogorc_convert_YUY2_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_YUY2_Y42B (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -7998,6 +8390,14 @@ cogorc_convert_YUY2_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "splitwb", 1, ORC_VAR_T1, ORC_VAR_D1, ORC_VAR_S1,
@@ -8079,7 +8479,7 @@ cogorc_convert_UYVY_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
 
 #else
 static void
-_backup_cogorc_convert_UYVY_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_UYVY_Y42B (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -8147,6 +8547,14 @@ cogorc_convert_UYVY_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "splitwb", 1, ORC_VAR_D1, ORC_VAR_T1, ORC_VAR_S1,
@@ -8234,7 +8642,7 @@ cogorc_convert_YUY2_Y444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
 
 #else
 static void
-_backup_cogorc_convert_YUY2_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_YUY2_Y444 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -8308,6 +8716,14 @@ cogorc_convert_YUY2_Y444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_destination (p, 2, "d3");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -8401,7 +8817,7 @@ cogorc_convert_UYVY_Y444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
 
 #else
 static void
-_backup_cogorc_convert_UYVY_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_UYVY_Y444 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -8475,6 +8891,14 @@ cogorc_convert_UYVY_Y444 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_destination (p, 2, "d3");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 1, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -8578,7 +9002,7 @@ cogorc_convert_UYVY_I420 (orc_uint16 * d1, orc_uint16 * d2, orc_uint8 * d3,
 
 #else
 static void
-_backup_cogorc_convert_UYVY_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_UYVY_I420 (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -8662,6 +9086,14 @@ cogorc_convert_UYVY_I420 (orc_uint16 * d1, orc_uint16 * d2, orc_uint8 * d3,
       orc_program_add_destination (p, 1, "d4");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_source (p, 4, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -8803,7 +9235,7 @@ cogorc_convert_AYUV_I420 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_I420 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -8926,6 +9358,14 @@ cogorc_convert_AYUV_I420 (orc_uint16 * d1, int d1_stride, orc_uint16 * d2,
       orc_program_add_destination (p, 1, "d4");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_source (p, 8, "s2");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 4, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -9039,7 +9479,7 @@ cogorc_convert_AYUV_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint64 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_YUY2 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9110,6 +9550,14 @@ cogorc_convert_AYUV_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint64 * s1,
       orc_program_set_backup_function (p, _backup_cogorc_convert_AYUV_YUY2);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -9202,7 +9650,7 @@ cogorc_convert_AYUV_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint64 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_UYVY (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9273,6 +9721,14 @@ cogorc_convert_AYUV_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint64 * s1,
       orc_program_set_backup_function (p, _backup_cogorc_convert_AYUV_UYVY);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -9375,7 +9831,7 @@ cogorc_convert_AYUV_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_Y42B (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9458,6 +9914,14 @@ cogorc_convert_AYUV_Y42B (orc_uint16 * d1, int d1_stride, orc_uint8 * d2,
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
       orc_program_add_source (p, 8, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 4, "t1");
       orc_program_add_temporary (p, 4, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -9549,7 +10013,7 @@ cogorc_convert_AYUV_Y444 (orc_uint8 * d1, int d1_stride, orc_uint8 * d2,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_Y444 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9618,6 +10082,14 @@ cogorc_convert_AYUV_Y444 (orc_uint8 * d1, int d1_stride, orc_uint8 * d2,
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
       orc_program_add_source (p, 4, "s1");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
@@ -9699,7 +10171,7 @@ cogorc_convert_Y42B_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y42B_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y42B_YUY2 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9764,6 +10236,14 @@ cogorc_convert_Y42B_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S2, ORC_VAR_S3,
@@ -9842,7 +10322,7 @@ cogorc_convert_Y42B_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y42B_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y42B_UYVY (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -9907,6 +10387,14 @@ cogorc_convert_Y42B_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
 
       orc_program_append_2 (p, "mergebw", 0, ORC_VAR_T1, ORC_VAR_S2, ORC_VAR_S3,
@@ -9998,7 +10486,7 @@ cogorc_convert_Y42B_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y42B_AYUV (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y42B_AYUV (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -10077,6 +10565,13 @@ cogorc_convert_Y42B_AYUV (orc_uint64 * d1, int d1_stride, const orc_uint16 * s1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 4, "t3");
@@ -10174,7 +10669,7 @@ cogorc_convert_Y444_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y444_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y444_YUY2 (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -10251,6 +10746,14 @@ cogorc_convert_Y444_YUY2 (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
       orc_program_add_source (p, 2, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -10348,7 +10851,7 @@ cogorc_convert_Y444_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y444_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y444_UYVY (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -10425,6 +10928,14 @@ cogorc_convert_Y444_UYVY (orc_uint32 * d1, int d1_stride, const orc_uint16 * s1,
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
       orc_program_add_source (p, 2, "s3");
+      orc_program_add_constant (p, 0, 0x00000000, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 4, "t2");
       orc_program_add_temporary (p, 2, "t3");
@@ -10515,7 +11026,7 @@ cogorc_convert_Y444_AYUV (orc_uint32 * d1, int d1_stride, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_convert_Y444_AYUV (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_Y444_AYUV (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -10586,6 +11097,13 @@ cogorc_convert_Y444_AYUV (orc_uint32 * d1, int d1_stride, const orc_uint8 * s1,
       orc_program_add_source (p, 1, "s2");
       orc_program_add_source (p, 1, "s3");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
+      orc_program_add_constant (p, 0, 0x00000000, "c2");
+      orc_program_add_constant (p, 0, 0x00000000, "c3");
+      orc_program_add_constant (p, 0, 0x00000000, "c4");
+      orc_program_add_constant (p, 0, 0x00000000, "c5");
+      orc_program_add_constant (p, 0, 0x00000000, "c6");
+      orc_program_add_constant (p, 0, 0x00000000, "c7");
+      orc_program_add_constant (p, 0, 0x00000000, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
 
@@ -10790,7 +11308,7 @@ cogorc_convert_AYUV_ARGB (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_ARGB (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_ARGB (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -10983,6 +11501,7 @@ cogorc_convert_AYUV_ARGB (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_constant (p, 4, 0x00000004, "c5");
       orc_program_add_constant (p, 4, 0x00000064, "c6");
       orc_program_add_constant (p, 4, 0x00000068, "c7");
+      orc_program_add_constant (p, 0, 0x00000080, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -11259,7 +11778,7 @@ cogorc_convert_AYUV_BGRA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_BGRA (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -11452,6 +11971,7 @@ cogorc_convert_AYUV_BGRA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_constant (p, 4, 0x00000004, "c5");
       orc_program_add_constant (p, 4, 0x00000064, "c6");
       orc_program_add_constant (p, 4, 0x00000068, "c7");
+      orc_program_add_constant (p, 0, 0x00000080, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -11728,7 +12248,7 @@ cogorc_convert_AYUV_ABGR (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_ABGR (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_ABGR (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -11921,6 +12441,7 @@ cogorc_convert_AYUV_ABGR (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_constant (p, 4, 0x00000004, "c5");
       orc_program_add_constant (p, 4, 0x00000064, "c6");
       orc_program_add_constant (p, 4, 0x00000068, "c7");
+      orc_program_add_constant (p, 0, 0x00000080, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -12197,7 +12718,7 @@ cogorc_convert_AYUV_RGBA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
 
 #else
 static void
-_backup_cogorc_convert_AYUV_RGBA (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_AYUV_RGBA (OrcExecutor * ex)
 {
   int i;
   int j;
@@ -12390,6 +12911,7 @@ cogorc_convert_AYUV_RGBA (orc_uint32 * d1, int d1_stride, const orc_uint32 * s1,
       orc_program_add_constant (p, 4, 0x00000004, "c5");
       orc_program_add_constant (p, 4, 0x00000064, "c6");
       orc_program_add_constant (p, 4, 0x00000068, "c7");
+      orc_program_add_constant (p, 0, 0x00000080, "c8");
       orc_program_add_temporary (p, 2, "t1");
       orc_program_add_temporary (p, 2, "t2");
       orc_program_add_temporary (p, 1, "t3");
@@ -12671,7 +13193,7 @@ cogorc_convert_I420_BGRA (orc_uint32 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_convert_I420_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_I420_BGRA (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;
@@ -13170,7 +13692,7 @@ cogorc_convert_I420_BGRA_avg (orc_uint32 * d1, const orc_uint8 * s1,
 
 #else
 static void
-_backup_cogorc_convert_I420_BGRA_avg (OrcExecutor * ORC_RESTRICT ex)
+_backup_cogorc_convert_I420_BGRA_avg (OrcExecutor * ex)
 {
   int i;
   int n = ex->n;

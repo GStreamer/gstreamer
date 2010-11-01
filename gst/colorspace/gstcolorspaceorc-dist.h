@@ -24,6 +24,7 @@ typedef uint8_t orc_uint8;
 typedef uint16_t orc_uint16;
 typedef uint32_t orc_uint32;
 typedef uint64_t orc_uint64;
+#define ORC_UINT64_C(x) UINT64_C(x)
 #elif defined(_MSC_VER)
 typedef signed __int8 orc_int8;
 typedef signed __int16 orc_int16;
@@ -33,6 +34,7 @@ typedef unsigned __int8 orc_uint8;
 typedef unsigned __int16 orc_uint16;
 typedef unsigned __int32 orc_uint32;
 typedef unsigned __int64 orc_uint64;
+#define ORC_UINT64_C(x) (x##Ui64)
 #else
 #include <limits.h>
 typedef signed char orc_int8;
@@ -44,14 +46,16 @@ typedef unsigned int orc_uint32;
 #if INT_MAX == LONG_MAX
 typedef long long orc_int64;
 typedef unsigned long long orc_uint64;
+#define ORC_UINT64_C(x) (x##ULL)
 #else
 typedef long orc_int64;
 typedef unsigned long orc_uint64;
+#define ORC_UINT64_C(x) (x##UL)
 #endif
 #endif
 typedef union { orc_int16 i; orc_int8 x2[2]; } orc_union16;
 typedef union { orc_int32 i; float f; orc_int16 x2[2]; orc_int8 x4[4]; } orc_union32;
-typedef union { orc_int64 i; double f; orc_int32 x2[2]; orc_int16 x4[4]; } orc_union64;
+typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 x4[4]; } orc_union64;
 #endif
 void cogorc_memcpy_2d (guint8 * d1, int d1_stride, const guint8 * s1, int s1_stride, int n, int m);
 void cogorc_downsample_horiz_cosite_1tap (guint8 * d1, const guint8 * s1, int n);
@@ -123,11 +127,13 @@ void cogorc_getline_YVYU (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_Y42B (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
 void cogorc_getline_Y444 (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
 void cogorc_getline_Y800 (guint8 * d1, const guint8 * s1, int n);
+void cogorc_getline_Y16 (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_BGRA (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_ABGR (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_RGBA (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_NV12 (guint8 * d1, const guint8 * s1, const guint8 * s2, int n);
 void cogorc_getline_NV21 (guint8 * d1, const guint8 * s1, const guint8 * s2, int n);
+void cogorc_getline_A420 (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, const guint8 * s4, int n);
 void cogorc_putline_I420 (guint8 * d1, guint8 * d2, guint8 * d3, const guint8 * s1, int n);
 void cogorc_putline_YUY2 (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_YVYU (guint8 * d1, const guint8 * s1, int n);
@@ -135,11 +141,13 @@ void cogorc_putline_UYVY (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_Y42B (guint8 * d1, guint8 * d2, guint8 * d3, const guint8 * s1, int n);
 void cogorc_putline_Y444 (guint8 * d1, guint8 * d2, guint8 * d3, const guint8 * s1, int n);
 void cogorc_putline_Y800 (guint8 * d1, const guint8 * s1, int n);
+void cogorc_putline_Y16 (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_BGRA (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_ABGR (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_RGBA (guint8 * d1, const guint8 * s1, int n);
 void cogorc_putline_NV12 (guint8 * d1, guint8 * d2, const guint8 * s1, int n);
 void cogorc_putline_NV21 (guint8 * d1, guint8 * d2, const guint8 * s1, int n);
+void cogorc_putline_A420 (guint8 * d1, guint8 * d2, guint8 * d3, guint8 * d4, const guint8 * s1, int n);
 
 #ifdef __cplusplus
 }
