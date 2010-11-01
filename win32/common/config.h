@@ -49,7 +49,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2010-10-22T16:48Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2010-11-01T17:24Z"
 
 /* struct v4l2_buffer missing */
 #undef GST_V4L2_MISSING_BUFDECL
@@ -383,7 +383,7 @@
 #define PACKAGE_NAME "GStreamer Good Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.25.3"
+#define PACKAGE_STRING "GStreamer Good Plug-ins 0.10.25.4"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-good"
@@ -392,7 +392,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.25.3"
+#define PACKAGE_VERSION "0.10.25.4"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -423,7 +423,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.25.3"
+#define VERSION "0.10.25.4"
 
 /* old wavpack API */
 #undef WAVPACK_OLD_API
