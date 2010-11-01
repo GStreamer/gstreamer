@@ -927,12 +927,12 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
   GST_DEBUG_OBJECT (self, "setting active pad to %s:%s",
       GST_DEBUG_PAD_NAME (new));
 
-  if (stop_time == -1 && old) {
+  if (!GST_CLOCK_TIME_IS_VALID (stop_time) && old) {
     /* no stop time given, get the latest running_time on the active pad to 
      * close and open the new segment */
     stop_time = start_time = gst_selector_pad_get_running_time (old);
-    GST_DEBUG_OBJECT (self, "using start/stop of %" G_GINT64_FORMAT,
-        start_time);
+    GST_DEBUG_OBJECT (self, "using start/stop of %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (start_time));
   }
 
   if (old && old->active && !self->pending_close && stop_time >= 0) {
@@ -940,15 +940,15 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
        segment has been pushed before. */
     memcpy (&self->segment, &old->segment, sizeof (self->segment));
 
-    GST_DEBUG_OBJECT (self, "setting stop_time to %" G_GINT64_FORMAT,
-        stop_time);
+    GST_DEBUG_OBJECT (self, "setting stop_time to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stop_time));
     gst_segment_set_stop (&self->segment, stop_time);
     self->pending_close = TRUE;
   }
 
   if (new && new->active && start_time >= 0) {
-    GST_DEBUG_OBJECT (self, "setting start_time to %" G_GINT64_FORMAT,
-        start_time);
+    GST_DEBUG_OBJECT (self, "setting start_time to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (start_time));
     /* schedule a new segment push */
     gst_segment_set_start (&new->segment, start_time);
     new->segment_pending = TRUE;
