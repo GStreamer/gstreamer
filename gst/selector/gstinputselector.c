@@ -487,7 +487,7 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
-  GST_DEBUG_OBJECT (pad, "received alloc");
+  GST_LOG_OBJECT (pad, "received alloc");
 
   GST_INPUT_SELECTOR_LOCK (sel);
   prev_active_sinkpad = sel->active_sinkpad;
@@ -565,7 +565,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (gst_input_selector_wait (sel, pad))
     goto flushing;
 
-  GST_DEBUG_OBJECT (pad, "getting active pad");
+  GST_LOG_OBJECT (pad, "getting active pad");
 
   prev_active_sinkpad = sel->active_sinkpad;
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
@@ -573,10 +573,10 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   /* update the segment on the srcpad */
   start_time = GST_BUFFER_TIMESTAMP (buf);
   if (GST_CLOCK_TIME_IS_VALID (start_time)) {
-    GST_DEBUG_OBJECT (pad, "received start time %" GST_TIME_FORMAT,
+    GST_LOG_OBJECT (pad, "received start time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start_time));
     if (GST_BUFFER_DURATION_IS_VALID (buf))
-      GST_DEBUG_OBJECT (pad, "received end time %" GST_TIME_FORMAT,
+      GST_LOG_OBJECT (pad, "received end time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (start_time + GST_BUFFER_DURATION (buf)));
 
     GST_OBJECT_LOCK (pad);
@@ -638,8 +638,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* forward */
-  GST_DEBUG_OBJECT (pad, "Forwarding buffer %p from pad %s:%s", buf,
-      GST_DEBUG_PAD_NAME (pad));
+  GST_LOG_OBJECT (pad, "Forwarding buffer %p", buf);
 
   if ((caps = GST_BUFFER_CAPS (buf))) {
     if (GST_PAD_CAPS (sel->srcpad) != caps)
