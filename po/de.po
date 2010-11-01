@@ -12,10 +12,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-05-23 23:02+0200\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-25 00:33+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -24,6 +24,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: German\n"
 "X-Poedit-Country: GERMANY\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not establish connection to sound server"
 msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
@@ -45,30 +46,29 @@ msgstr "Dekodieren des JPEG-Bildes schlug fehl"
 msgid "Could not connect to server"
 msgstr "Verbindung zum Server konnte nicht hergestellt werden"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Videoaufnahme wird nicht von Gerät »%s« unterstützt"
+msgstr "Suchlauf wird nicht vom Server unterstützt."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Verbindung zum Server konnte nicht hergestellt werden"
+msgstr "Servername konnte nicht aufgelöst werden."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Es konnte keine Verbindung zum Audio-Server hergestellt werden"
+msgstr "Es konnte keine Verbindung zum Server hergestellt werden."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Aufbau einer sichern Verbindung ist gescheitert."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Ein Netzwerkfehler ist aufgetreten, oder der Server schloss die Verbindung "
+"unerwartet."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Server gab unerwartete Daten zurück."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Keine Adresse festgelegt."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Kein oder ungültiger Eingabeton, der AVI-Strom wird fehlerhaft sein."

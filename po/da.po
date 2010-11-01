@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good-0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-06-17 23:54+0200\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-26 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -41,30 +41,28 @@ msgstr "Mislykkedes i at afkode JPEG-billede"
 msgid "Could not connect to server"
 msgstr "Kunne ikke forbinde til server"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Enhed '%s' understøtter ikke videooptagelse"
+msgstr "Server understøtter ikke søgning."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Kunne ikke forbinde til server"
+msgstr "Kunne ikke slå servernavn op."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Kunne ikke skabe kontakt til lyd-serveren"
+msgstr "Kunne ikke skabe kontakt til serveren."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Opsætning af sikker forbindelse mislykkedes."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Der opstod en netværksfejl, eller serveren lukkede uventet forbindelsen."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Server sendte ugyldige data."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Ingen adresse angivet."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller defekt inddatalyd, AVI-sekvens vil blive ødelagt."
@@ -669,75 +667,3 @@ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Kunne ikke liste mulige videoformater, som '%s' enheden kan arbejde med"
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Buffertypen er ikke understøttet, eller indeks er udenfor grænser, eller "
-#~ "der er ikke blevet tildelt buffere endnu, eller userptr eller længde er "
-#~ "defekt. enhed %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Forsøg på at hente videorammer fra enhed '%s' mislykkedes. Ikke "
-#~ "tilstrækkeligt hukommelse."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "ikke tilstrækkeligt med hukommelse til at indrangere en "
-#~ "brugerviserbuffer. enhed %s."
-
-#~ msgid "No free buffers found in the pool at index %d."
-#~ msgstr "Intet ledigt mellemlager fundet i puljen ved indeks %d."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Enhed '%s' kan ikke optage ved %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Enhed '%s' kan ikke optage i det angivet format"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Kunne ikke hente buffere fra enhed '%s'."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Kunne ikke hente tilstrækkeligt med buffere fra enhed '%s'."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Kunne ikke starte strømningsoptagelse fra enhed '%s'."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Kunne ikke stoppe strømningsoptagelse fra enhed '%s'."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Hentning af kontrolattributter for enhed '%s' fejlede."
-
-#~ msgid "Could not exchange data with device '%s'."
-#~ msgstr "Kunne ikke udveksle data med enheden '%s'."
-
-#~ msgid "Failed querying in which video format device '%s' is working with"
-#~ msgstr "Kunne ikke liste i hvilke formater, enhed '%s' kan arbejde med"
-
-#~ msgid ""
-#~ "The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
-#~ msgstr ""
-#~ "Den nærmeste størrelse fra %dx%d er %dx%d, for videoformat %s for enhed "
-#~ "'%s'"
-
-#~ msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
-#~ msgstr "Den nærmeste framerate fra %u/%u er %u/%u, på enhed '%s'"
-
-#~ msgid "Failed setting the video format for device '%s'"
-#~ msgstr "Kunne ikke indstille videoformat for enhed '%s'"
-
-#~ msgid "Could not get properties of data comming from device '%s'"
-#~ msgstr "Kunne ikke få egenskaberne for de data der kommer fra enhed '%s'"
-
-#~ msgid "Could not map memory in device '%s'."
-#~ msgstr "Kunne ikke afbilde hukommelse i enhed '%s'."

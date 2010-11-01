@@ -1,13 +1,13 @@
 # Norwegian bokmaal translation of gst-utils.
 # This file is put in the public domain.
-# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
+# Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2007-11-03 14:42+0100\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-24 21:53+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: \n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Could not establish connection to sound server"
-msgstr ""
+msgstr "Kunne ikke etablere tilkobling til lydtjener"
 
 msgid "Failed to query sound server capabilities"
 msgstr ""
@@ -24,41 +24,38 @@ msgstr ""
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr ""
+msgstr "«%s» av «%s»"
 
 msgid "Internal data stream error."
 msgstr "Intern feil i datastrøm."
 
 msgid "Failed to decode JPEG image"
-msgstr ""
+msgstr "Klarte ikke å dekode JPEG-bilde"
 
 msgid "Could not connect to server"
 msgstr "Kunne ikke koble til tjener."
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Tjener støtter ikke søking."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Kunne ikke koble til tjener."
+msgstr "Kunne ikke slå opp navn på tjener."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Kunne ikke koble til tjener."
+msgstr "Kunne ikke etablere tilkobling til tjener."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Oppsett av sikker tilkobling feilet."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Tjener sendte ugyldige data."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Ingen URL satt."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -181,18 +178,16 @@ msgid ""
 "the device."
 msgstr ""
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne lydenhet for avspilling."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne lydenhet for opptak."
 
 #, fuzzy
 msgid "Could not open audio device for mixer control handling."
@@ -204,74 +199,73 @@ msgid ""
 msgstr ""
 
 msgid "Master"
-msgstr ""
+msgstr "Hovedvolum"
 
 msgid "Front"
-msgstr ""
+msgstr "Front"
 
 msgid "Rear"
-msgstr ""
+msgstr "Bak"
 
 msgid "Headphones"
-msgstr ""
+msgstr "Hodetelefoner"
 
 msgid "Center"
-msgstr ""
+msgstr "Senter"
 
 msgid "LFE"
 msgstr ""
 
 msgid "Surround"
-msgstr ""
+msgstr "Surround"
 
 msgid "Side"
-msgstr ""
+msgstr "Side"
 
-#, fuzzy
 msgid "Built-in Speaker"
-msgstr "Høyttaler"
+msgstr "Innebygget høyttaler"
 
 msgid "AUX 1 Out"
-msgstr ""
+msgstr "AUX 1 ut"
 
 msgid "AUX 2 Out"
-msgstr ""
+msgstr "AUX 2 ut"
 
 msgid "AUX Out"
-msgstr ""
+msgstr "AUX ut"
 
 msgid "3D Depth"
-msgstr ""
+msgstr "3D dybde"
 
 msgid "3D Center"
-msgstr ""
+msgstr "3D senter"
 
 msgid "3D Enhance"
 msgstr ""
 
 msgid "Telephone"
-msgstr ""
+msgstr "Telefon"
 
 msgid "Line Out"
-msgstr ""
+msgstr "Linje ut"
 
 msgid "Line In"
-msgstr ""
+msgstr "Linje inn"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Intern CD"
 
 msgid "Video In"
-msgstr ""
+msgstr "Video inn"
 
 msgid "AUX 1 In"
-msgstr ""
+msgstr "AUX 1 inn"
 
 msgid "AUX 2 In"
-msgstr ""
+msgstr "AUX 2 inn"
 
 msgid "AUX In"
-msgstr ""
+msgstr "AUX inn"
 
 msgid "Record Gain"
 msgstr ""
@@ -310,7 +304,7 @@ msgid "Simulate Stereo"
 msgstr ""
 
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 msgid "Surround Sound"
 msgstr ""
@@ -346,67 +340,67 @@ msgid "SPDIF Out"
 msgstr ""
 
 msgid "Microphone 1"
-msgstr ""
+msgstr "Mikrofon 1"
 
 msgid "Microphone 2"
-msgstr ""
+msgstr "Mikrofon 2"
 
 msgid "Digital Out"
-msgstr ""
+msgstr "Digital ut"
 
 msgid "Digital In"
-msgstr ""
+msgstr "Digital inn"
 
 msgid "HDMI"
-msgstr ""
+msgstr "HDMI"
 
 msgid "Modem"
-msgstr ""
+msgstr "Modem"
 
 msgid "Handset"
-msgstr ""
+msgstr "Håndsett"
 
 msgid "Other"
-msgstr ""
+msgstr "Annet"
 
 msgid "None"
-msgstr ""
+msgstr "Ingen"
 
 msgid "On"
-msgstr ""
+msgstr "På"
 
 msgid "Off"
-msgstr ""
+msgstr "Av"
 
 msgid "Mute"
-msgstr ""
+msgstr "Demp"
 
 msgid "Fast"
-msgstr ""
+msgstr "Rask"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr ""
+msgstr "Meget lav"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr ""
+msgstr "Lav"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr ""
+msgstr "Middels"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr ""
+msgstr "Høy"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr ""
+msgstr "Meget høy"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr ""
+msgstr "Produksjon"
 
 msgid "Front Panel Microphone"
 msgstr ""
@@ -520,7 +514,7 @@ msgid "Gain"
 msgstr ""
 
 msgid "Headphone"
-msgstr ""
+msgstr "Hodetelefon"
 
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -641,28 +635,5 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
 
-#, fuzzy
-#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
-#~ msgstr "Enhet «%s» kan ikke fange data."
-
-#, fuzzy
-#~ msgid "Could not set parameters on device '%s'"
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
-
-#, fuzzy
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Enhet «%s» kan ikke fange data."
-
-#, fuzzy
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Enhet «%s» kan ikke fange data."
-
-#, fuzzy
-#~ msgid "Could not exchange data with device '%s'."
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
-
-#~ msgid "Disc is not an Audio CD."
-#~ msgstr "Platen er ikke en lyd-CD."
-
-#~ msgid "Could not read from CD."
-#~ msgstr "Kunne ikke lese fra CD."
+#~ msgid "Describes the selected input element."
+#~ msgstr "Beskriver valgt inndataelement."

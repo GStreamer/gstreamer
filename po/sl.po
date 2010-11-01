@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-07-01 17:40+0100\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-25 12:23+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -44,28 +44,27 @@ msgid "Could not connect to server"
 msgstr "Ni se mogoče povezati s strežnikom"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Strežnik ne podpira iskanja."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Ni se mogoče povezati s strežnikom"
+msgstr "Ni mogoče razrešiti imena strežnika."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Ni mogoče vzpostaviti povezave z zvočnim strežnikom"
+msgstr "Ni mogoče vzpostaviti povezave s strežnikom."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Nastavitev varne povezave je spodletela."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Prišlo je do omrežne napake ali pa je povezava nepričakovano prekinjena."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Strežnik je poslal slabe podatke."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Ni nastavljen naslov URL."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."

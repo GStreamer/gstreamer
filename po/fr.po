@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-06-05 21:09+0200\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-27 09:48+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -40,28 +40,28 @@ msgid "Could not connect to server"
 msgstr "Impossible de se connecter au serveur"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Le serveur ne gère pas le positionnement."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Impossible de se connecter au serveur"
+msgstr "Impossible de résoudre le nom du serveur."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Impossible d'établir une connexion vers le serveur de son"
+msgstr "Impossible d'établir une connexion vers le serveur."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "La configuration d'une connexion sécurisée a échoué."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Une erreur réseau s'est produite ou le serveur a fermé abruptement la "
+"connexion."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Le serveur a envoyé de mauvaises données."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Aucun URL défini."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrée audio absente ou non valide, le flux AVI sera corrompu."

@@ -6,10 +6,10 @@
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good-0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-07-11 20:26+0200\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-31 10:21+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.1\n"
 
 msgid "Could not establish connection to sound server"
 msgstr "Nezdařilo se navázání spojení se zvukovým serverem"
@@ -40,28 +40,26 @@ msgid "Could not connect to server"
 msgstr "Nezdařilo se spojení se serverem"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Server nepodporuje hledání."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Nezdařilo se spojení se serverem"
+msgstr "Nezdařil se překlad názvu serveru."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Nezdařilo se navázání spojení se zvukovým serverem"
+msgstr "Nezdařilo se navázání spojení se serverem."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Zabezpečené připojení selhalo."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Došlo k síťové chybě, nebo server neočekávaně ukončil spojení."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Server odeslal chybná data."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nenastaveno URL."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný zvukový vstup, proud AVI bude poškozen."

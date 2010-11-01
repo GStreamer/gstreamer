@@ -2,13 +2,14 @@
 # Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-good package.
 # Simos Xenitellis <simos.lists@googlemail.com>, 2009.
+# Michael Kotsarinis <mk73628@gmail.com>, 2010
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:23+0100\n"
-"PO-Revision-Date: 2010-09-03 14:19+0200\n"
-"Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-27 12:16+0200\n"
+"Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
@@ -37,30 +38,28 @@ msgstr "Αποτυχία αποκωδικοποίησης της εικόνας 
 msgid "Could not connect to server"
 msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Η συσκευή '%s' δεν υποστηρίζει την λήψη βίντεο "
+msgstr "Ο διακομιστής δεν υποστηρίζει αναζήτηση."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή"
+msgstr "Δεν ήταν δυνατός ο προσδιορισμός του ονόματος του διακομιστή."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή ήχου"
+msgstr "Δεν ήταν δυνατή η σύνδεση με τον διακομιστή."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Αποτυχία εκκίνησης ασφαλούς σύνδεσης."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Προέκυψε ένα σφάλμα δικτύου ή ο διακομιστής έκλεισε ξαφνικά τη σύνδεση."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Ο διακομιστής έστειλε λάθος δεδομένα."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Δεν ορίσθηκε URL."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Καμία ή άκυρη εισαγωγή ήχου, η AVI ροή θα καταρρεύσει."
@@ -678,122 +677,3 @@ msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολ
 
 #~ msgid "Describes the selected output element."
 #~ msgstr "Περιγράφει το επιλεγμένο στοιχείο εξαγωγής."
-
-#~| msgid "Describes the selected output element for Audio/Video Conferencing."
-#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "Το audiosink του GStreamer για τηλεδιάσκεψη με εικόνα και ήχο"
-
-#~| msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgid "GStreamer audiosink for Music and Movies"
-#~ msgstr "Το audiosink του GStreamer για μουσική και ταινίες"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
-#~ "a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "Ο GStreamer μπορεί να αναπαράγει ήχο κάνωντας χρήση οποιουδήποτε αριθμού "
-#~ "στοιχείων εξαγωγής. Μερικές πιθανές επιλογές είναι τα osssink, esdsink "
-#~ "και alsasink.Το audiosink  μπορεί να γίνει εν μέρει μέσο πληροφορίας αντί "
-#~ "ενός από τα στοιχεία."
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "Ο GStreamer μπορεί να αναπαράγει βίντεο κάνωντας χρήση οποιουδήποτε "
-#~ "αριθμού στοιχείων εξαγωγής. Μερικές πιθανές επιλογές είναι τα "
-#~ "xvimagesink, ximagesink, sdlvideosink και aasink. Το videosink  μπορεί να "
-#~ "γίνει εν μέρει μέσο πληροφορίας αντί ενός από τα στοιχεία."
-
-#~ msgid ""
-#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
-#~ "stream in video frames. Default is goom but more visualization plugins "
-#~ "will be ported soon. The visualization plugin can be a partial pipeline "
-#~ "instead of just one element."
-#~ msgstr ""
-#~ "Το GStreamer μπορεί να βάλει τα πρόσθετα οπτικοποίησης σε δίαυλο για να "
-#~ "μετατρέψει τη ροή ήχου σε καρέ βίντεο. Η προεπιλογή είναι το gloom αλλά "
-#~ "σύντομα θα μεταφερθούν περισσότερα πρόσθετα οπτικοποίησης. Το πρόσθετο "
-#~ "οπτικοποίησης μπορεί να είναι εν μέρει δίαυλος αντί για ένα μόνο στοιχείο."
-
-#~| msgid ""
-#~| "GStreamer can play audio using any number of output elements. Some "
-#~| "possible choices are osssink, esdsink and alsasink. The audiosink can be "
-#~| "a partial pipeline instead of just one element."
-#~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
-#~ "a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "Ο GStreamer μπορεί να ηχογραφήσει κάνοντας χρήση οποιουδήποτε αριθμού "
-#~ "στοιχείων εισόδου. Μερικές πιθανές επιλογές είναι τα osssrc, esdsrc και "
-#~ "alsasrc. Η πηγή ήχου μπορεί να είναι εν μέρει δίαυλος αντί για μόνο ένα "
-#~ "στοιχείο."
-
-#~| msgid ""
-#~| "GStreamer can play video using any number of output elements. Some "
-#~| "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~| "The videosink can be a partial pipeline instead of just one element."
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
-#~ "partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "Ο GStreamer μπορεί να εγγράψει βίντεο κάνοντας χρήση οποιουδήποτε αριθμού "
-#~ "στοιχείων εισόδου. Μερικές πιθανές επιλογές είναι τα 4lsrc και "
-#~ "videotestsrc. Η πηγή βίντεο μπορεί να είναι εν μέρει δίαυλος αντί για ένα "
-#~ "μόνο στοιχείο."
-
-#~ msgid "default GStreamer audio source"
-#~ msgstr "προεπιλεγμένη πηγή ήχου του GStreamer"
-
-#~| msgid "default GStreamer audio source"
-#~ msgid "default GStreamer audiosink"
-#~ msgstr "προεπιλεγμένη έξοδος ήχου του GStreamer"
-
-#~ msgid "default GStreamer video source"
-#~ msgstr "προεπιλεγμένη πηγή βίντεο του GStreamer"
-
-#~| msgid "default GStreamer video source"
-#~ msgid "default GStreamer videosink"
-#~ msgstr "προεπιλεγμένη έξοδος βίντεο του GStreamer"
-
-#~ msgid "default GStreamer visualization plugin"
-#~ msgstr "προεπιλεγμένο πρόσθετο οπτικοποίησης του GStreamer"
-
-#~| msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "Περιγραφή του GStreamer audiosink για μουσική και ταινίες"
-
-#~ msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgstr "Περιγραφή του GStreamer audiosink για μουσική και ταινίες"
-
-#~ msgid "description for default GStreamer audiosink"
-#~ msgstr "περιγραφή για το προεπιλεγμένο GStreamer audiosink"
-
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "περιγραφή για το προεπιλεγμένο GStreamer audiosrc"
-
-#~ msgid "Failed to enumerate possible video formats device '%s' can work with"
-#~ msgstr ""
-#~ "Αποτυχία απαρίθμησης των πιθανών μορφών βίντεο με τα οποία μπορεί να "
-#~ "λειτουργήσει η συσκευή '%s'"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'. Μη αρκετή μνήμη."
-
-#~ msgid "Device '%s' cannot capture at %dx%d"
-#~ msgstr "Η συσκευή '%s' δεν μπορεί να κάνει λήψη στο %dx%d"
-
-#~ msgid "Device '%s' cannot capture in the specified format"
-#~ msgstr "Η συκευή '%s' δεν μπορεί να κάνει λήψη στην επιλεγμένη μορφή "
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Σφάλμα κατά την εκκίνηση ροής λήψης από την συκσευή '%s'."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Σφάλμα κατά την διακοπή ροής λήψης από την συκσευή '%s'."

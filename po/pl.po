@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-05-20 08:18+0200\n"
+"POT-Creation-Date: 2010-11-01 17:27+0000\n"
+"PO-Revision-Date: 2010-10-25 07:27+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -36,28 +36,26 @@ msgid "Could not connect to server"
 msgstr "Nie udało się połączyć z serwerem"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Serwer nie obsługuje przewijania."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Nie udało się połączyć z serwerem"
+msgstr "Nie udało się rozwiązać nazwy serwera."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Nie udało się nawiązać połączenia z serwerem dźwięku"
+msgstr "Nie udało się nawiązać połączenia z serwerem."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Ustanowienie bezpiecznego połączenia nie powiodło się."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Wystąpił błąd sieciowy lub serwer nieoczekiwanie zamknął połączenie."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Serwer przysłał błędne dane."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nie ustawiono URL-a."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Brak lub niepoprawne wejście dźwięku, strumień AVI będzie uszkodzony."
