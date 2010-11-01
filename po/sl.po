@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-02 22:39+0100\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2010-07-01 17:42+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -31,6 +31,15 @@ msgstr "Napaka med odpiranjem DVD naprave '%s'."
 
 msgid "Failed to set PGC based seeking."
 msgstr "Napaka med nastavljanjem PGC iskanja."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Ni mogoče prebrati podrobnosti naslova na nosilcu DVD."
 
 msgid "No file name specified for writing."
 msgstr "Ni določenega imena datoteke za zapisovanje."

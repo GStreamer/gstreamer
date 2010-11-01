@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2009-11-20 18:12中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -27,6 +27,15 @@ msgstr "无法打开 DVD 设备“%s”。"
 
 msgid "Failed to set PGC based seeking."
 msgstr "无法设置基于 PGC 的检索。"
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "无法读取 DVD 的标题信息。"
 
 msgid "No file name specified for writing."
 msgstr "未指定写入文件名。"

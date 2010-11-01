@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2004-08-05 15:48+0200\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -26,6 +26,15 @@ msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
 
 msgid "Failed to set PGC based seeking."
 msgstr ""
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "No s'ha pogut escriure al fitxer «%s»."
 
 #, fuzzy
 msgid "No file name specified for writing."

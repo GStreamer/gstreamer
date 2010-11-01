@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -27,6 +27,15 @@ msgstr "Не могу да затворим управљачки уређај �
 
 msgid "Failed to set PGC based seeking."
 msgstr ""
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Не могу да пишем у датотеку „%s“."
 
 #, fuzzy
 msgid "No file name specified for writing."

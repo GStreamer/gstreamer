@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2010-03-08 09:20+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -30,6 +30,15 @@ msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
 
 msgid "Failed to set PGC based seeking."
 msgstr "Nepodarilo sa nastaviť PGC posun."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Nepodarilo sa prečítať titulok DVD."
 
 msgid "No file name specified for writing."
 msgstr "Nebolo zadané žiadne meno súboru pre zápis."

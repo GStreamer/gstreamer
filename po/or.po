@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -27,6 +27,15 @@ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କ�
 
 msgid "Failed to set PGC based seeking."
 msgstr ""
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
 #, fuzzy
 msgid "No file name specified for writing."

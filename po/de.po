@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2009-08-22 16:58+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -27,6 +27,15 @@ msgstr "Öffnen des DVD-Geräts »%s« schlug fehl."
 
 msgid "Failed to set PGC based seeking."
 msgstr "PGC-basiertes Suchen schlug fehl."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Die Titelinformationen der DVD konnten nicht gelesen werden."
 
 msgid "No file name specified for writing."
 msgstr "Kein Dateiname zum Schreiben angegeben."

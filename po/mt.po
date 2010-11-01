@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2008-10-26 20:27+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -27,6 +27,15 @@ msgstr "Problema biex niftaħ apparat tad-DVD '%s'."
 
 msgid "Failed to set PGC based seeking."
 msgstr ""
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "Ma stajtx naqra informazzjoni fuq it-titlu tad-DVD."
 
 msgid "No file name specified for writing."
 msgstr "L-ebda isem speċifikat biex nikteb."

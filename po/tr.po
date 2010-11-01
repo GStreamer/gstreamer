@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-08-30 15:40+0200\n"
+"POT-Creation-Date: 2010-10-19 23:33+0100\n"
 "PO-Revision-Date: 2009-08-12 19:51+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -25,6 +25,15 @@ msgstr "DVD aygıtı açılamadı '%s'."
 
 msgid "Failed to set PGC based seeking."
 msgstr "PGC temelli arama ayarı yapılamadı."
+
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+
+#, fuzzy
+msgid "Could not read DVD."
+msgstr "DVD'deki başlık bilgisi okunamıyor."
 
 msgid "No file name specified for writing."
 msgstr "Yazmak için dosya adı belirtilmedi."
