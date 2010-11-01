@@ -769,15 +769,18 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_N_PADS,
       g_param_spec_uint ("n-pads", "Number of Pads",
-          "The number of sink pads", 0, G_MAXUINT, 0, G_PARAM_READABLE));
+          "The number of sink pads", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_object ("active-pad", "Active pad",
-          "The currently active sink pad", GST_TYPE_PAD, G_PARAM_READWRITE));
+          "The currently active sink pad", GST_TYPE_PAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SELECT_ALL,
       g_param_spec_boolean ("select-all", "Select all mode",
-          "Forwards data from all input pads", FALSE, G_PARAM_READWRITE));
+          "Forwards data from all input pads", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstInputSelector::block:
