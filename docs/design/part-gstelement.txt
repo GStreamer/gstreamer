@@ -1,14 +1,5 @@
-  gstelement
-    name
-    pads
-    state
-    loopfunction
-    threadstate
-    manager
-    ghostpads
-
 GstElement
-==========
+----------
 
 The Element is the most important object in the entire GStreamer system, as it
 defines the structure of the pipeline.  Elements include sources, filters,
@@ -26,7 +17,7 @@ Element.  This allows deeply nested pipelines, and the possibility of
 "black-box" meta-elements.
 
 Name
-----
+~~~~
 
 All elements are named, and while they should ideally be unique in any given
 pipeline, they do not have to be.  The only guaranteed unique name for an
@@ -39,7 +30,7 @@ or name of an element is changed.
 
 
 Pads
-----
+~~~~
 
 GstPads are the property of a given GstElement.  They provide the connection
 capability, with allowing arbitrary structure in the graph.  For any Element
@@ -67,10 +58,12 @@ pad = gst_element_get_pad(element,"padname"):
 
 
 Ghost Pads
-----------
+~~~~~~~~~~
 
+More info in part-gstghostpad.txt.
 
 State
------
+~~~~~
 
 An element has a state. More info in part-states.txt.
+

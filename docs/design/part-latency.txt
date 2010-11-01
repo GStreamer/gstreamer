@@ -35,7 +35,7 @@ application needs (required minimal latency).
 
 
 Pipelines without latency compensation
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We show some examples to demonstrate the problem of latency in typical
 capture pipelines.
@@ -196,7 +196,7 @@ capture pipelines.
 
 
 State Changes revised
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 As a first step in a generic solution we propose to modify the state changes so
 that no sink is set to PLAYING before it is prerolled.
@@ -229,7 +229,7 @@ implications:
 
 
 Latency compensation
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 As an extension to the revised state changes we can perform latency calculation
 and compensation before we proceed to the PLAYING state. 
@@ -277,7 +277,7 @@ the same for all sinks, all sinks will render data relatively synchronised.
 
 
 Flushing a playing pipeline
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Using the new state change mechanism we can implement resynchronisation after an
 uncontrolled FLUSH in (part of) a pipeline. Indeed, when a flush is performed on
@@ -306,7 +306,7 @@ to perform additional latency calculations and adjustments before doing this.
 
 
 Dynamically adjusting latency
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An element that want to change the latency in the pipeline can do this by
 posting a LATENCY message on the bus. This message instructs the pipeline to:

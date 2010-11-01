@@ -13,7 +13,7 @@ Sinks are harder to construct than other element types as they are
 treated specially by the GStreamer core.
 
 state changes
--------------
+~~~~~~~~~~~~~
 
 A sink always returns ASYNC from the state change to PAUSED, this 
 includes a state change from READY->PAUSED and PLAYING->PAUSED. The
@@ -29,7 +29,7 @@ and take no part in the preroll procedure.
 Events other than EOS do not complete the preroll stage.
 
 sink overview
--------------
+~~~~~~~~~~~~~
 
  - TODO: PREROLL_LOCK can be removed and we can safely use the STREAM_LOCK.
 

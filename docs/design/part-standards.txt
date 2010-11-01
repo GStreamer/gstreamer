@@ -6,7 +6,7 @@ collection has many potential pitfalls as far as the pointers go. Therefore,
 some standards must be adhered to as far as who owns what.
 
 Strings
--------
+~~~~~~~
 
 Arguments passed into a function are owned by the caller, and the function 
 will make a copy of the string for its own internal use.  The string should 
@@ -21,7 +21,7 @@ original and should be freed after usage by the caller.
 
 
 Objects
--------
+~~~~~~~
 
 Objects passed into a function are owned by the caller, any additional 
 reference held to the object after leaving the function should increase the 
@@ -40,7 +40,7 @@ called should _free() or _unref() the object after usage.
 
 
 Iterators
----------
+~~~~~~~~~
 
 When retrieving multiple objects from an object an iterator should be used.
 The iterator allows you to access the objects one after another while making

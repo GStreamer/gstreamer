@@ -11,7 +11,7 @@ The time reported by the clock is called the absolute_time.
 
 
 Clock Selection
----------------
+~~~~~~~~~~~~~~~
 
 To synchronize the different elements, the GstPipeline is responsible for
 selecting and distributing a global GstClock for all the elements in it.
@@ -35,7 +35,7 @@ PLAYING and is described in part-states.txt.
 
 
 Clock features
---------------
+~~~~~~~~~~~~~~
 
 The clock supports periodic and single shot clock notifications both
 synchronous and asynchronous.
@@ -73,7 +73,7 @@ the clock is not PLAYING.
 
 
 Clock implementations
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 The GStreamer core provides a GstSystemClock based on the system time. 
 Asynchronous callbacks are scheduled from an internal thread.

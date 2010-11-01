@@ -1,10 +1,10 @@
 GstObject
-=========
+---------
 
 The base class for the entire GStreamer hierarchy is the GstObject.
 
 Parentage
----------
+~~~~~~~~~
 
 A pointer is available to store the current parent of the object.  This is one
 of the two fundamental requirements for a hierarchical system such as GStreamer
@@ -20,7 +20,8 @@ allows for new additions later.
 
 
 Naming
-------
+~~~~~~
+
 - names of objects cannot be changed when they are parented 
 - names of objects should be unique across parent
 - set_name() can fail because of this
@@ -36,7 +37,7 @@ Naming
 
 
 Locking
--------
+~~~~~~~
 
 The GstObject contains the necessary primitives to lock the object in a
 thread-safe manner.  This will be used to provide general thread-safety as
@@ -62,7 +63,7 @@ GstObject.
 
 
 Locking order
--------------
+~~~~~~~~~~~~~
 
 In parent-child situations the lock of the parent must always be taken first
 before taking the lock of the child. It is NOT allowed to hold the child
@@ -76,7 +77,7 @@ parent-child relation (eg. pads), an explictic locking order has to be defined.
 
 
 Path Generation
----------------
+~~~~~~~~~~~~~~~
 
 Due to the base nature of the GstObject, it becomes the only reasonable place
 to put this particular function (_get_path_string).  It will generate a string
@@ -84,7 +85,7 @@ describing the parent hierarchy of a given GstObject.
 
 
 Flags
------
+~~~~~
 
 Each object in the GStreamer object hierarchy can have flags associated with it,
 which are used to describe a state or a feature of the object.
@@ -92,7 +93,7 @@ GstObject has flags to mark its lifecycle: FLOATING and DISPOSING.
 
 
 Class signals
--------------
+~~~~~~~~~~~~~
 
 It is possible to know when a new object is loaded by connecting to the
 GstObjectClass signal. This feature is not very much used and might be removed

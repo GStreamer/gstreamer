@@ -7,7 +7,7 @@ GstElement. A GstBin provides a GstBus for the children and collates messages
 from them.
 
 Add/removing elements
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 The basic functionality of a bin is to add and remove GstElements to/from it.
 gst_bin_add() and gst_bin_remove() perform these operations respectively.
@@ -17,7 +17,7 @@ relations.txt).
 
 
 Retrieving elements
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 GstBin provides a number of functions to retrieve one or more children from
 itself. A few examples of the provided functions:
@@ -28,7 +28,7 @@ gst_bin_iterate_elements() returns an iterator to all the children.
 
 
 element management
-------------------
+~~~~~~~~~~~~~~~~~~
 
 The most important function of the GstBin is to distribute all GstElement
 operations on itself to all of its children. This includes:
@@ -41,7 +41,7 @@ The state change distribution is the most complex and is explained in
 part-states.txt.
 
 GstBus
-------
+~~~~~~
 
 The GstBin creates a GstBus for its children and distributes it when child
 elements are added to the bin. The bin attaches a sync handler to receive
@@ -63,7 +63,7 @@ When a bin goes to READY it will clear all cached messages.
 
 
 EOS
----
+~~~
 
 The sink elements will post an EOS message on the bus when they reach EOS. The
 EOS message is only posted to the bus when the sink element is in PLAYING.
@@ -77,7 +77,7 @@ to PLAYING again.
 
 
 SEGMENT_START/DONE
-------------------
+~~~~~~~~~~~~~~~~~~
 
 A bin collects SEGMENT_START messages but does not post them to the application.
 It counts the number of SEGMENT_START messages and posts a SEGMENT_STOP message
@@ -87,7 +87,7 @@ The cached SEGMENT_START/STOP messages are cleared when going to READY.
 
 
 DURATION
---------
+~~~~~~~~
 
 When a DURATION query is performed on a bin, it will forward the query to all
 its sink elements. The bin will calculate the total duration as the MAX of all
@@ -103,7 +103,7 @@ posted to the application, which can then fetch the updated DURATION.
 
 
 Subclassing
------------
+~~~~~~~~~~~
 
 Subclasses of GstBin are free to implement their own add/remove implementations.
 It is a good idea to update the GList of children so that the _iterate() functions

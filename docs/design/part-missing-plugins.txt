@@ -1,5 +1,5 @@
 What to do when a plugin is missing
-===================================
+-----------------------------------
 
 The mechanism and API described in this document requires GStreamer core and
 gst-plugins-base versions >= 0.10.12. Further information on some aspects of

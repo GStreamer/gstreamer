@@ -2,7 +2,8 @@ DRAFT Sparse Streams
 --------------------
 
 Introduction
-------------
+~~~~~~~~~~~~
+
 In 0.8, there was some support for Sparse Streams through the use of 
 FILLER events. These were used to mark gaps between buffers so that downstream
 elements could know not to expect any more data for that gap. 
@@ -11,7 +12,8 @@ In 0.10, segment information conveyed through NEWSEGMENT events can be used
 for the same purpose.
 
 Use cases
----------
+~~~~~~~~~
+
 1) Sub-title streams
   Sub-title information from muxed formats such as Matroska or MPEG consist of
   irregular buffers spaced far apart compared to the other streams 
@@ -37,7 +39,8 @@ Use cases
   application that uses noise-gating (to save bandwith).
 
 Details
--------
+~~~~~~~
+
 1) Sub-title streams
   The main requirement here is to avoid stalling the pipeline between sub-title
   packets, and is effectively updating the minimum-timestamp for that stream.

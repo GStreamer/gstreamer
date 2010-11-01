@@ -11,3 +11,4 @@ following features of gstreamer:
  - pad blocking (part-block.txt)
  - playback segments.
  - streaming vs application threads.
+

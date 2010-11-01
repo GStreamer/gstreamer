@@ -10,7 +10,7 @@ This design decision has implications for the usage of the API and the objects
 which this document explains.
 
 MT safety techniques
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Several design patterns are used to guarantee object consistency in GStreamer.
 This is an overview of the methods used in various GStreamer subsystems.
@@ -140,7 +140,7 @@ Compare and swap
  
 
 Objects
--------
+~~~~~~~
 
 * Locking involved:
 
@@ -414,3 +414,4 @@ Objects
       }
     }
     gst_iterator_free (it);
+

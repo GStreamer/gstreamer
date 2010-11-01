@@ -13,7 +13,7 @@ themselves to different mechanisms to achieve this goal. As it is more
 common we describe push mode negotiation first.
 
 Push-mode negotiation
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Push-mode negotiation happens when elements want to push buffers and
 need to decide on the format. This is called downstream negotiation
@@ -168,10 +168,10 @@ videotestsrc ! queue ! xvimagesink
 
    
 Pull-mode negotiation
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Rationale
-.........
+^^^^^^^^^
 
 A pipeline in pull mode has different negotiation needs than one
 activated in push mode. Push mode is optimized for two use cases:
@@ -237,7 +237,7 @@ but before the sink has spawned the pulling thread.
 
 
 Mechanism
-.........
+^^^^^^^^^
 
 The sink determines that the upstream elements support pull based scheduling by
 calling gst_pad_check_pull_range().
@@ -276,3 +276,4 @@ GST_FLOW_NOT_NEGOTIATED. Because of the low-latency requirements,
 changing caps in an activate pull-mode pipeline is not supported, as it
 might require e.g. the sound card to reconfigure its hardware buffers,
 and start capsnego again.
+

@@ -49,7 +49,7 @@ each of the above use cases. We focus mostly on the buffer allocation strategies
 and caps negotiation.
 
 Processing
-----------
+~~~~~~~~~~
 
 A transform has 2 main processing functions:
 
@@ -94,10 +94,10 @@ When no functions are provided, we can only process in passthrough mode.
 
 
 Negotiation
------------
+~~~~~~~~~~~
 
- Typical (re)negotiation of the transform element in push mode always goes from
- sink to src, this means triggers the following sequence:
+Typical (re)negotiation of the transform element in push mode always goes from
+sink to src, this means triggers the following sequence:
  
   - the sinkpad receives a buffer with new caps, this triggers the setcaps
     function on the sinkpad before handing the buffer to transform.
@@ -108,7 +108,7 @@ Negotiation
     target src caps
   - the transform processes and sets the output caps on the src pad
 
- We call this downstream negotiation (DN) and it goes roughly like this:
+We call this downstream negotiation (DN) and it goes roughly like this:
 
                sinkpad              transform               srcpad
      setcaps()    |                    |                      |
@@ -119,10 +119,10 @@ Negotiation
                   | <configure caps> <-|                      |
 
 
- These steps configure the element for a transformation from the input caps to
- the output caps.
+These steps configure the element for a transformation from the input caps to
+the output caps.
 
- The transform has 3 function to perform the negotiation:
+The transform has 3 function to perform the negotiation:
 
    - transform_caps():
      
@@ -140,17 +140,17 @@ Negotiation
      Configure the transform for a transformation between src caps and dest
      caps. Both caps are guaranteed to be fixed caps.
 
- If no transform_caps() is defined, we can only perform the identity transform,
- by default. 
+If no transform_caps() is defined, we can only perform the identity transform,
+by default. 
 
- If no set_caps() is defined, we don't care about caps. In that case we also
- assume nothing is going to write to the buffer and we don't enforce a writable
- buffer for the transform_ip function, when present.
+If no set_caps() is defined, we don't care about caps. In that case we also
+assume nothing is going to write to the buffer and we don't enforce a writable
+buffer for the transform_ip function, when present.
 
- One common function that we need for the transform element is to find the best
- transform from one format (src) to another (dest). Since the function is
- bidirectional, we will use the src->dest negotiation. Some requirements of this
- function are:
+One common function that we need for the transform element is to find the best
+transform from one format (src) to another (dest). Since the function is
+bidirectional, we will use the src->dest negotiation. Some requirements of this
+function are:
 
    - has a fixed src caps
    - finds a fixed dest caps that the transform element can transform to
@@ -158,7 +158,7 @@ Negotiation
    - the transform function prefers to make src caps == dest caps
    - the transform function can optionally fixate dest caps.
 
- The find_transform() function goes like this:
+The find_transform() function goes like this:
 
    - start from src aps, these caps are fixed.
    - check if the caps are acceptable for us as src caps. This is usually
@@ -177,8 +177,8 @@ Negotiation
    - if we run out of caps, we fail to find a transform.
    - if we found a destination caps, configure the transform with set_caps().
 
- After this negotiation process, the transform element is usually in a steady
- state. We can identify these steady states:
+After this negotiation process, the transform element is usually in a steady
+state. We can identify these steady states:
 
   - src and sink pads both have the same caps. Note that when the caps are equal
     on both pads, the input and output buffers automatically have the same size.
@@ -266,14 +266,14 @@ Negotiation
 	input buffer is transformed into the output buffer. The flow is exactly
 	the same as the case with the same-caps negotiation. (DCC)
  
- We can immeditatly observe that the copy transform states will need to
- allocate a buffer from a downstream element using pad-alloc. When the transform
- element is receiving a non-writable buffer in the in-place state, it will also
- need to perform a pad-alloc. There is no reason why the passthrough state would
- perform a pad-alloc. This is important because upstream re-negotiation can only
- happen when the transform uses pad-alloc for all outgoing buffers.
+We can immeditatly observe that the copy transform states will need to
+allocate a buffer from a downstream element using pad-alloc. When the transform
+element is receiving a non-writable buffer in the in-place state, it will also
+need to perform a pad-alloc. There is no reason why the passthrough state would
+perform a pad-alloc. This is important because upstream re-negotiation can only
+happen when the transform uses pad-alloc for all outgoing buffers.
 
- This steady state changes when one of the following actions occur:
+This steady state changes when one of the following actions occur:
 
   - the sink pad receives new caps, this triggers the above downstream
     renegotation process, see above for the flow.
@@ -284,9 +284,9 @@ Negotiation
     for example). This essentially clears the current steady state and
     triggers the downstream and upstream renegotiation process.
 
- Parallel to the downstream negotiation process there is an upstream negotiation
- process. The handling and proxy of buffer-alloc is the most comple part of the
- transform element. This upstream negotiation process has 3 cases: (UN)
+Parallel to the downstream negotiation process there is an upstream negotiation
+process. The handling and proxy of buffer-alloc is the most comple part of the
+transform element. This upstream negotiation process has 3 cases: (UN)
 
   - upstream calls the buffer-alloc function of the transform sinkpad and this
     call is proxied downstream (UNP)
@@ -295,13 +295,13 @@ Negotiation
   - the transform calls the pad-alloc function downstream to allocate a new
     output buffer (but not because of a proxied buffer-alloc) (UNA)
 
- The case where the pad-alloc is called because an output buffer must be
- generated in the chain function is handled above in the copy-transform and the
- in-place transform when the input buffer is not writable or the input buffer
- size is smaller than the output size.
+The case where the pad-alloc is called because an output buffer must be
+generated in the chain function is handled above in the copy-transform and the
+in-place transform when the input buffer is not writable or the input buffer
+size is smaller than the output size.
 
- We are left with the last case (proxy an incomming pad-alloc or not). We have 2
- possibilities here:
+We are left with the last case (proxy an incomming pad-alloc or not). We have 2
+possibilities here:
 
    - pad-alloc is called with the same caps as are currently being handled by
      the transform on the sinkcaps. Note that this will only be true when the
@@ -400,14 +400,14 @@ Negotiation
     <----------------------------------|                      |
                   |                    |                      |
 
- In order to perform passthrough buffer-alloc or pad-alloc, we need to be able
- to get the size of the output buffer after the transform.
- 
- For passthrough buffer-alloc, this is trivial: the input size equals the output
- size.
+In order to perform passthrough buffer-alloc or pad-alloc, we need to be able
+to get the size of the output buffer after the transform.
 
- For the copy transform or the in-place transform we need additional function to
- retrieve the size. There are two functions:
+For passthrough buffer-alloc, this is trivial: the input size equals the output
+size.
+
+For the copy transform or the in-place transform we need additional function to
+retrieve the size. There are two functions:
 
   - transform_size()
     
@@ -426,35 +426,35 @@ Negotiation
 
 
 Issues
-------
+~~~~~~
 
- passthrough and in-place transforms (with writable buffers) never need to
- perform a pad-alloc on the srcpad. This means that if upstream negotiation
- happens, the transform element will never know about it.
+passthrough and in-place transforms (with writable buffers) never need to
+perform a pad-alloc on the srcpad. This means that if upstream negotiation
+happens, the transform element will never know about it.
 
- The transform element will keep therefore track of the allocation pattern of
- the peer elements. We can see the following cases:
+The transform element will keep therefore track of the allocation pattern of
+the peer elements. We can see the following cases:
 
-  - upstream peer calls buffer-alloc on the sinkpad of the transform. In some
-    cases (see above) this call gets proxied or not.
+- upstream peer calls buffer-alloc on the sinkpad of the transform. In some
+  cases (see above) this call gets proxied or not.
 
-  - upstream peer does never call buffer-alloc.
+- upstream peer does never call buffer-alloc.
 
- We will keeps state about this allocation pattern and perform the following in
- each case respectively:
+We will keeps state about this allocation pattern and perform the following in
+each case respectively:
 
-  - Upstream calls buffer-alloc: In passthrough and (some) in-place we proxy
-    this call onto the downstream element. If the caps are changed, we mark
-    a flag that we will require a new pad-alloc for the output of the next
-    output buffer.
+- Upstream calls buffer-alloc: In passthrough and (some) in-place we proxy
+  this call onto the downstream element. If the caps are changed, we mark
+  a flag that we will require a new pad-alloc for the output of the next
+  output buffer.
 
-  - upstream peer does not call buffer-alloc: We always perform a pad-alloc
-    when processing buffers. We can further optimize by only looking at the
-    returned caps instead of doing a full, needless buffer copy.
+- upstream peer does not call buffer-alloc: We always perform a pad-alloc
+  when processing buffers. We can further optimize by only looking at the
+  returned caps instead of doing a full, needless buffer copy.
 
 
 Use cases
----------
+~~~~~~~~~
 
  videotestsrc ! ximagesink
   
@@ -478,7 +478,8 @@ Use cases
    - resizing the videosink makes videoscale perform the scaling.
    
 Problematic
------------
+~~~~~~~~~~~
 
     filesrc location=~/media/moveyourfeet.mov ! decodebin !
     ffmpegcolorspace ! videoscale ! ffmpegcolorspace ! ximagesink -v
+

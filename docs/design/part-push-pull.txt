@@ -23,7 +23,7 @@ srcpads implementing a getrange function will be the exception.
 
 
 state changes
--------------
+~~~~~~~~~~~~~
 
 The GstBin sets the state of all the sink elements. These are the elements
 without source pads.

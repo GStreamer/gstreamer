@@ -29,7 +29,7 @@ outside of the segment and that might therefore be discarded or clipped.
 
 
 Use case: FLUSHING seek
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
   ex.
 
@@ -95,13 +95,13 @@ Use case: FLUSHING seek
 
 
 Use case: live stream
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 
 
 
 Use case: segment looping
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
   Consider the case of a wav file with raw audio.
 

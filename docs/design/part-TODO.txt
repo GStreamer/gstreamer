@@ -1,5 +1,8 @@
+TODO - Future Development
+-------------------------
+
 API/ABI
--------
+~~~~~~~
 
 - implement return values from events in addition to the gboolean. This should
   be done by making the event contain a GstStructure with input/output values,
@@ -66,7 +69,7 @@ API/ABI
 
 
 IMPLEMENTATION
---------------
+~~~~~~~~~~~~~~
 
 - implement more QOS, see part-qos.txt.
 
@@ -76,7 +79,7 @@ IMPLEMENTATION
 
 
 DESIGN
-------
+~~~~~~
 
 - unlinking pads in the PAUSED state needs to make sure the stream thread is not
   executing code. Can this be done with a flush to unlock all downstream chain

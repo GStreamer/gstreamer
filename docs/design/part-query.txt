@@ -1,12 +1,16 @@
-DRAFT Query
------------
+Query
+-----
+
+NOTE: this is implemented as proposed
 
 Purpose
+~~~~~~~
 
-  Queries are used to get information about the stream. 
-  A query is started on a specific pad and travels up or downstream.
+Queries are used to get information about the stream. 
+A query is started on a specific pad and travels up or downstream.
 
 Types of queries
+~~~~~~~~~~~~~~~~
 
   - get length of stream
   - get position in stream
@@ -17,6 +21,7 @@ Types of queries
   - query internal links.
 
 Current implementation
+~~~~~~~~~~~~~~~~~~~~~~
 
   The current implementation of query requires pads to implement the 
   following functions:
@@ -36,12 +41,14 @@ Current implementation
 
 
 Requirements
+~~~~~~~~~~~~
 
   - multiple return values, grouped together when they make sense.
   - one pad function to perform the query
   - extensible queries.
 
 Proposition
+~~~~~~~~~~~
 
   - define GstQuery extending GstMiniObject and containing a GstStructure (see GstMessage)
   - define standard query types (see proposed types)
@@ -54,6 +61,7 @@ Proposition
     query is not supported.
 
 Proposed types
+~~~~~~~~~~~~~~
 
  - GST_QUERY_SEEKING:
    

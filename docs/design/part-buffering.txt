@@ -21,7 +21,7 @@ We want to be able to implement the following features:
  - easy (backward compatible) application notification of buffering
  - the possibility for the application to do more complex buffering
 
- Some use cases:
+Some use cases:
 
  * Stream buffering:
 
@@ -112,7 +112,7 @@ We want to be able to implement the following features:
 
 
 Messages
---------
+~~~~~~~~
 
 A GST_MESSAGE_BUFFERING must be posted on the bus when playback temporarily
 stops to buffer and when buffering finishes. When percentage field in the
@@ -137,27 +137,24 @@ are added to the buffering message:
 
   "avg-in-rate", G_TYPE_INT
       - gives the average input buffering speed in bytes/second. -1 is unknown.
-
         This is the average number of bytes per second that is received on the
 	buffering element input (sink) pads. It is a measurement of the network
 	speed in most cases.
 
   "avg-out-rate", G_TYPE_INT
       - gives the average consumption speed in bytes/second. -1 is unknown.
-
         This is the average number of bytes per second that is consumed by the
 	downstream element of the buffering element. 
 
   "buffering-left", G_TYPE_INT64
       - gives the estimated time that bufferring will take in milliseconds.
         -1 unknown.
-
-      This is measured based on the avg-in-rate and the filled level of the
-      queue. The application can use this hint to update the GUI about the
-      estimated remaining time that buffering will take.
+        This is measured based on the avg-in-rate and the filled level of the
+        queue. The application can use this hint to update the GUI about the
+        estimated remaining time that buffering will take.
 
 Application
------------
+~~~~~~~~~~~
 
 While data is buffered, the pipeline should remain in the PAUSED state. It is
 also possible that more data should be buffered while the pipeline is PLAYING,
@@ -180,7 +177,7 @@ time to resume playback to get uninterrupted playback.
 
 
 Buffering Query
----------------
+~~~~~~~~~~~~~~~
 
 In addition to the BUFFERING messages posted by the buffering elements we want
 to be able to query the same information from the application. We also want to
@@ -222,7 +219,7 @@ and newest item (expressed in "format") in the buffer.
 
 
 Defaults
---------
+~~~~~~~~
 
 Some defaults for common elements:
 

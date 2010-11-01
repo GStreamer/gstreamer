@@ -28,14 +28,14 @@ a blocking wait.
 
 
 Scheduling
-----------
+~~~~~~~~~~
 
 Live sources will not produce data in the paused state. They block in the 
 getrange function or in the loop function until they go to PLAYING.
 
 
 Latency
--------
+~~~~~~~
 
 The live source timestamps its data with the time of the clock at the
 time the data was captured. Normally it will take some time to capture
@@ -49,7 +49,7 @@ See part-latency.txt.
 
 
 Timestamps
-----------
+~~~~~~~~~~
 
 Live sources always timestamp their buffers with the running_time of the
 pipeline. This is needed to be able to match the timestamps of different live

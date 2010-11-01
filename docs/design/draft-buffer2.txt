@@ -23,7 +23,7 @@ Some examples of metadata:
 
 
 Requirements
-------------
+~~~~~~~~~~~~
 
  - It must be fast
     * allocation, free, low fragmentation
@@ -41,7 +41,7 @@ Requirements
 
 
 GstMiniObject
--------------
+~~~~~~~~~~~~~
 
 We make GstMiniObject a simple refcounted C structure and also a GLib boxed
 type. The following fields will be in the structure:
@@ -66,7 +66,7 @@ objects.
 
 
 GstEvent, GstCaps, GstQuery, GstMessage
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Have the new GstMiniObject be the first field in these objects. They will probably
 also replace the copy and free functions with their own implementations.
@@ -77,7 +77,7 @@ the custom functions.
 
 
 GstBuffer
----------
+~~~~~~~~~
 
 A GstMiniObject will be the parent instance of the GstBuffer object, which is a
 regular C structure.
@@ -105,7 +105,7 @@ Buffers point to a GstCaps structure that contains the caps of the buffer data.
 
 
 GstBufferMeta
--------------
+~~~~~~~~~~~~~
 
 A GstBufferMeta is a structure as follows:
 
@@ -208,7 +208,7 @@ GstBufferMetaMemory   |  |     next                           ---+
                          .                                       .
 
 API examples
-------------
+~~~~~~~~~~~~
 
 Buffers are created using the normal gst_buffer_new functions. The standard fields
 are initialized as usual. A memory area that is bigger than the structure size
@@ -276,7 +276,7 @@ possible simple API would look like this:
 
 
 Memory management
------------------
+~~~~~~~~~~~~~~~~~
 
 * allocation
 
@@ -316,7 +316,7 @@ Memory management
 
 
 Subbuffers
-----------
+~~~~~~~~~~
 
 Subbuffers are a first class feature of the GstBuffer. 
 
@@ -334,7 +334,7 @@ timing metadata needs to be reset to NONE when the start offset is different.
 
 
 Serialization
--------------
+~~~~~~~~~~~~~
 
 When buffer should be sent over the wire or be serialized in GDP, we need a way
 to perform custom serialization and deserialization on the metadata.
@@ -345,7 +345,7 @@ and endianness.
 
 
 Transformations
----------------
+~~~~~~~~~~~~~~~
 
 After certain transformations, the metadata on a buffer might not be relevant
 anymore.
@@ -368,7 +368,7 @@ so on).
 
 
 Other use cases
----------------
+~~~~~~~~~~~~~~~
 
 Making the GstBufferMetaMemory (for making the buffer point to the associated
 memory region) as metadata on a GstBuffer, as opposed to making it an integral
@@ -397,7 +397,7 @@ implementations add (or use, in the case of a file reader) the memory metadata.
 
 
 Relationship with GstCaps
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The difference between GstCaps, used in negotiation, and the metadata is not
 clearly defined. 
@@ -415,7 +415,7 @@ video resolution while the implementation details would be inside the metadata.
 
 
 Compatibility
--------------
+~~~~~~~~~~~~~
 
 We need to make sure that elements exchange metadata that they both understand,
 This is particulary important when the metadata describes the data layout in
@@ -436,16 +436,16 @@ that are metadata aware to set a flag on their pads; any buffer passed on that
 pad will be converted to the old layout when the flag is not set.
 
 
-Notes:
-------
+Notes
+~~~~~
 
 Some structures that we need to be able to add to buffers.
 
-  Clean Aperture
-  Arbitrary Matrix Transform
-  Aspect ratio
-  Pan/crop/zoom
-  Video strides
+* Clean Aperture
+* Arbitrary Matrix Transform
+* Aspect ratio
+* Pan/crop/zoom
+* Video strides
 
 Some of these overlap, we need to find a minimal set of metadata structures that
 allows us to define all use cases.

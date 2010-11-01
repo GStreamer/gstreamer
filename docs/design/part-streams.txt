@@ -6,7 +6,7 @@ Streams
 
 
 Stream objects
---------------
+~~~~~~~~~~~~~~
 
 The following objects are to be expected in the streaming thread:
 
@@ -21,7 +21,7 @@ and live sources.
 
 
 Typical stream
---------------
+~~~~~~~~~~~~~~
 
  A typical stream starts with a newsegment event that marks the
  buffer timestamp range. After that buffers are send one after the

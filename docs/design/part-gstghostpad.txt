@@ -1,11 +1,11 @@
 Ghostpads
 ---------
 
- GhostPads are used to build complex compound elements out of
- existing elements. They are used to expose internal element pads
- on the complex element.
+GhostPads are used to build complex compound elements out of
+existing elements. They are used to expose internal element pads
+on the complex element.
 
- Some design requirements
+Some design requirements
 
   - Must look like a real GstPad on both sides.
   - target of Ghostpad must be changeable
@@ -346,23 +346,22 @@ Ghostpads
 
 
 Activation
-==========
+~~~~~~~~~~
 
 Sometimes ghost pads should proxy activation functions. This thingie
 attempts to explain how it should work in the different cases.
 
-
-+---+     +----+                             +----+       +----+
-| A +-----+ B  |                             | C  |-------+ D  |
-+---+     +---=+                             +=---+       +----+
-            +--=-----------------------------=-+
-            |  +=---+   +----+  +----+  +---=+ |
-            |  | a  +---+ b  ====  c +--+ d  | |
-            |  +----+   +----+  +----+  +----+ |
-            |                                  |
-            +----------------------------------+
-            state change goes from right to left
-   <-----------------------------------------------------------
+  +---+     +----+                             +----+       +----+
+  | A +-----+ B  |                             | C  |-------+ D  |
+  +---+     +---=+                             +=---+       +----+
+              +--=-----------------------------=-+
+              |  +=---+   +----+  +----+  +---=+ |
+              |  | a  +---+ b  ====  c +--+ d  | |
+              |  +----+   +----+  +----+  +----+ |
+              |                                  |
+              +----------------------------------+
+              state change goes from right to left
+     <-----------------------------------------------------------
 
 All of the labeled boxes are pads. The dashes (---) show pad links, and
 the double-lines (===) are internal connections. The box around a, b, c,
@@ -375,10 +374,10 @@ Now, in the state change from READY to PAUSED, assuming the pipeline
 does not have a live source, all of the pads will end up activated at
 the end. There are 4 possible activation modes:
 
-1) AD and ab in PUSH, cd and CD in PUSH
-2) AD and ab in PUSH, cd and CD in PULL
-3) AD and ab in PULL, cd and CD in PUSH
-4) AD and ab in PULL, cd and CD in PULL
+  1) AD and ab in PUSH, cd and CD in PUSH
+  2) AD and ab in PUSH, cd and CD in PULL
+  3) AD and ab in PULL, cd and CD in PUSH
+  4) AD and ab in PULL, cd and CD in PULL
 
 When activating (1), the state change algorithm will first visit the
 parent of D and activate D in push mode. Then it visits the bin. The bin

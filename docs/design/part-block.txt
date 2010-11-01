@@ -18,66 +18,69 @@ and will succeed when the following events happen on the pad:
 
 
 Flushing
---------
+~~~~~~~~
 
- The flushing event is used to clear any data out of the
- downstream elements.
+The flushing event is used to clear any data out of the
+downstream elements.
 
-* Generic case
+Generic case
+^^^^^^^^^^^^
 
- Consider the following pipeline: 
+Consider the following pipeline: 
 
  .-----.      .-------.      .-------.
  | src |      | elem1 |\/    | elem2 |
  |    src -> sink    src -> sink    src ....
  '-----'      '-------'/\    '-------'              
 
- Where elem1.src is blocked. If the pad block is taken (the callback
- is called or the sync block returned) no data is flowing in elem2.sink.
- In this situation, the streaming thread is blocked on a GCond and is
- waiting to be unblocked.
+Where elem1.src is blocked. If the pad block is taken (the callback
+is called or the sync block returned) no data is flowing in elem2.sink.
+In this situation, the streaming thread is blocked on a GCond and is
+waiting to be unblocked.
 
- When sending a flushing seek upstream on elem1.src, the FLUSH_START and
- will temporary unblock the streaming thread and make all pad functions that
- triggers a block (_push/_alloc_buffer/_push_event/_pull_range) return
- GST_FLOW_WRONG_STATE. This will then eventually pause the streaming thread
- and release the STREAM_LOCK. 
- 
- Since no STREAM lock is taken after the pad block it is not needed to send
- the FLUSH_START event further downstream.
+When sending a flushing seek upstream on elem1.src, the FLUSH_START and
+will temporary unblock the streaming thread and make all pad functions that
+triggers a block (_push/_alloc_buffer/_push_event/_pull_range) return
+GST_FLOW_WRONG_STATE. This will then eventually pause the streaming thread
+and release the STREAM_LOCK. 
 
- The FLUSH_STOP will set the srcpad to non-flushing again and is dropped 
- for the same reason. From then on, the new data after the flushing seek 
- will be queued when the pad block is taken again.
+Since no STREAM lock is taken after the pad block it is not needed to send
+the FLUSH_START event further downstream.
 
-* Case where the stream is blocking downstream
+The FLUSH_STOP will set the srcpad to non-flushing again and is dropped 
+for the same reason. From then on, the new data after the flushing seek 
+will be queued when the pad block is taken again.
 
- The example above is only valid if the elem1.src pad is really blocking
- (callback called or sync block returned).
- 
- In the case where the stream is blocking further downstream (on elem2.src
- for example, or on a blocking queue), extra care has to be taken.
+Case where the stream is blocking downstream
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- Consider the following pipeline:
+The example above is only valid if the elem1.src pad is really blocking
+(callback called or sync block returned).
+
+In the case where the stream is blocking further downstream (on elem2.src
+for example, or on a blocking queue), extra care has to be taken.
+
+Consider the following pipeline:
 
  .-----.      .-------.      .-------.
  | src |      | elem1 |\/    | elem2 |
  |    src -> sink    src -> sink    src .... Blocking somewhere downstream
  '-----'      '-------'/\    '-------'              
 
- A pad block has been requested by the user on elem1.src , but since the stream
- is blocking somewhere downstream, the callback is not called or the sync block
- does not return.
+A pad block has been requested by the user on elem1.src , but since the stream
+is blocking somewhere downstream, the callback is not called or the sync block
+does not return.
 
- In order for the block to happen, a FLUSH_START needs to be sent directly on
- the downstream blocking element/pad so that it releases the stream lock, and it
- gives a chance for the elem1.src pad to block.
+In order for the block to happen, a FLUSH_START needs to be sent directly on
+the downstream blocking element/pad so that it releases the stream lock, and it
+gives a chance for the elem1.src pad to block.
 
 
-Use cases:
-----------
+Use cases
+~~~~~~~~~
 
-* Prerolling a partial pipeline
+Prerolling a partial pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
  .---------.      .---------.                .----------.
  | filesrc |      | demuxer |     .-----.    | decoder1 |
@@ -89,27 +92,28 @@ Use cases:
                   '---------'     '-----'    '----------' X
 
 
- The purpose is to create the pipeline dynamically up to the
- decoders but not yet connect them to a sink and without losing
- any data.
+The purpose is to create the pipeline dynamically up to the
+decoders but not yet connect them to a sink and without losing
+any data.
 
- To do this, the source pads of the decoders is blocked so that no
- events or buffers can escape and we don't interrupt the stream.
+To do this, the source pads of the decoders is blocked so that no
+events or buffers can escape and we don't interrupt the stream.
 
- When all of the dynamic pad are created (no-more-pads emited by the
- branching point, ie, the demuxer or the queues filled) and the pads
- are blocked (blocked callback received) the pipeline is completely
- prerolled.
+When all of the dynamic pad are created (no-more-pads emited by the
+branching point, ie, the demuxer or the queues filled) and the pads
+are blocked (blocked callback received) the pipeline is completely
+prerolled.
 
- It should then be possible to perform the following actions on the
- prerolled pipeline:
+It should then be possible to perform the following actions on the
+prerolled pipeline:
 
-  - query duration/position
-  - perform a flushing seek to preroll a new position
-  - connect other elements and unblock the blocked pads.
+- query duration/position
+- perform a flushing seek to preroll a new position
+- connect other elements and unblock the blocked pads.
 
 
-* dynamically switching an element in a PLAYING pipeline.
+dynamically switching an element in a PLAYING pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
   .----------.      .----------.      .----------.
@@ -121,8 +125,8 @@ Use cases:
                    sink       src                  
                     '----------'                     
 
- The purpose is to replace element2 with element4 in the PLAYING 
- pipeline. 
+The purpose is to replace element2 with element4 in the PLAYING 
+pipeline. 
 
   1) block element1 src pad. This can be done async.
   2) wait for block to happen. at that point nothing is flowing between
@@ -144,18 +148,18 @@ Use cases:
      element should at least be PAUSED.
   9) unblock element1 src
 
- The same flow can be used to replace an element in a PAUSED pipeline. Only
- special care has to be taken when performing step 2) which has to be done
- async or it might deadlock. In the async callback one can then perform the
- steps from 3). In a playing pipeline one can of course use the async block
- as well, so that there is a generic method for both PAUSED and PLAYING.
+The same flow can be used to replace an element in a PAUSED pipeline. Only
+special care has to be taken when performing step 2) which has to be done
+async or it might deadlock. In the async callback one can then perform the
+steps from 3). In a playing pipeline one can of course use the async block
+as well, so that there is a generic method for both PAUSED and PLAYING.
 
- The same flow works as well for any chain of multiple elements and might 
- be implemented with a helper function in the future.
+The same flow works as well for any chain of multiple elements and might 
+be implemented with a helper function in the future.
 
 
 Issues
-------
+~~~~~~
 
 When an EOS event has passed a pad and the pad is set to blocked, the block will
 never happen because no data is going to flow anymore. One possibility is to

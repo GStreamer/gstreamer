@@ -1,5 +1,5 @@
 Documentation conventions
-=========================
+-------------------------
 
 Due to the potential for exponential growth, several abbreviating conventions will be used throughout this 
 documentation.  These conventions have grown primarily from extremely in-depth discussions of the architecure in IRC.  
@@ -7,21 +7,21 @@ This has verified the safety of these conventions, if used properly.  There are 
 context is rigorously observed.
 
 Object classes
---------------
+~~~~~~~~~~~~~~
 
 Since everything starts with Gst, we will generally refer to objects by the shorter name, i.e. Element or Pad.  These 
 names will always have their first letter capitalized.
 
 Function names
---------------
+~~~~~~~~~~~~~~
 
 Within the context of a given object, functions defined in that object's header and/or source file will have their 
 object-specific prefix stripped.  For instance, gst_element_add_pad() would be referred to as simply _add_pad().  Note 
 that the trailing parentheses should always be present, but sometimes may not be.  A prefixing underscore (_) will 
 always tell you it's a function, however, regardless of the presence or absence of the trailing parentheses.
 
-#defines and enums
-------------------
+defines and enums
+~~~~~~~~~~~~~~~~~
 
 Values and macros defined as enums and preprocessor macros will be referred to in all capitals, as per their 
 definition.  This includes object flags and element states, as well as general enums.  Examples are the states NULL, 
@@ -31,23 +31,25 @@ element flags should be cross-checked with the header, as there are currently tw
 _FLAGS_ in the middle.
 
 Drawing conventions
-===================
+~~~~~~~~~~~~~~~~~~~
 
 When drawing pictures the folowing conventions apply:
 
 objects
--------
+^^^^^^^
 
-Objects are drawn with a box like
+Objects are drawn with a box like:
+
   +------+
   |      |
   +------+
   
 
 pointers
---------
+^^^^^^^^
 
 a pointer to an object.
+
       +-----+
  *--->|     |
       +-----+
@@ -58,7 +60,7 @@ an invalid pointer, this is a pointer that should not be used.
 
 
 elements
---------
+^^^^^^^^
 
   +----------+
   | name     |
@@ -66,16 +68,10 @@ elements
   +----------+
 
 pad links
----------
+^^^^^^^^^
 
   -----+    +---
        |    |
       src--sink
   -----+    +---
-
-
-
-
-
-
 

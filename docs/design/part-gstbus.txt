@@ -38,3 +38,4 @@ to flushing, ie. the bus will drop all existing and new messages on the bus,
 This is necessary because bus messages hold references to the bin/pipeline
 or its elements, so there are circular references that need to be broken if
 one ever wants to be able to destroy a bin or pipeline properly.
+

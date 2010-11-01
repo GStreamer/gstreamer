@@ -47,6 +47,22 @@ EXTRA_DIST = \
 	part-TODO.txt \
 	part-trickmodes.txt
 
+CLEANFILES = index.html index.txt
+
+html:
+	if ! test -z `which asciidoc`; then \
+	  echo >index.txt  "GStreamer design"; \
+	  echo >>index.txt "================"; \
+	  echo >>index.txt "The Gstreamer developers"; \
+	  echo >>index.txt "Version $(PACKAGE_VERSION)"; \
+	  echo >>index.txt ""; \
+	  ( cd $(srcdir) && \
+	  cat >>$(abs_builddir)/index.txt $(EXTRA_DIST) ); \	  
+	  asciidoc -o index.html index.txt; \
+	else \
+	  echo "need asciidoc to generate html"; \
+        fi;
+
 upload:
 	@echo nothing to upload
 

@@ -12,7 +12,7 @@ Synchronisation in a GstPipeline is achieved using the following 3 components:
 
 
 A GstClock
-----------
+~~~~~~~~~~
 
 This object provides a counter that represents the current time in nanoseconds.
 This value is called the absolute_time.
@@ -33,7 +33,7 @@ A GstClock always counts time upwards and does not necessarily start at 0.
 
 
 Running time
-------------
+~~~~~~~~~~~~
 
 After a pipeline selected a clock it will maintain the running_time based on the
 selected clock. This running_time represents the total time spent in the PLAYING
@@ -66,7 +66,7 @@ This value is monotonically increasing at the rate of the clock.
 
 
 Timestamps
-----------
+~~~~~~~~~~
  
 The GstBuffer timestamps and the preceeding NEW_SEGMENT event (See
 part-streams.txt) define a transformation of the buffer timestamps to
@@ -112,7 +112,7 @@ NS.stop and NS.accum == 0).
 
 
 Synchronisation
----------------
+~~~~~~~~~~~~~~~
 
 As we have seen, we can get a running_time:
 
@@ -161,7 +161,7 @@ synchronized buffers have the same timestamps.
 
 
 Stream time
------------
+~~~~~~~~~~~
 
 The stream time is also known as the position in the stream and is a value
 between 0 and the total duration of the media file.

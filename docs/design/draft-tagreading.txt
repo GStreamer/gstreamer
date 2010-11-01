@@ -20,7 +20,7 @@ peeked buffers (a queue element after sink, but that would change pull to push).
 
 
 Design
-------
+~~~~~~
 
 The plan is that applications can do the following:
   pipeline = "filesrc ! tagbin"
@@ -38,7 +38,8 @@ The plan is that applications can do the following:
   decodebin
 
 Interface
----------
+~~~~~~~~~
+
 * gboolean iface property "tag-reading"
   Switches the element to tagreading mode. Needed if normal element implement
   that behaviour. Elements will skip parsing unneeded data, don't build a
@@ -47,7 +48,7 @@ Interface
   Equivalent of EOS.
 
 Use Cases
----------
+~~~~~~~~~
 
 * mp3 with id3- and apetags
   * plug id3demux ! apedemux
@@ -57,7 +58,8 @@ Use Cases
   * plug vorbisdec or special vorbiscomment reader
 
 Additional Thoughts
--------------------
+~~~~~~~~~~~~~~~~~~~
+
 * would it make sense to have 2-phase tag-reading (property on tagbin and/or
   tagread elements)
   * 1st phase: get tag-data that are directly embedded in the data
@@ -73,23 +75,25 @@ Additional Thoughts
     gst_tag_cache_store_tag_data (GstTagCache *self, const gchar *uri, GstTagList *tags);
 
 Tests
------
+~~~~~
+
 * write a generic test for parsers/demuxers to ensure they send tags until they
   reached PAUSED (elements need to parse file for prerolling anyway):
   set pipeline to paused, check for tags, set to playing, error out if tags come
   after paused
 
 Code Locations
---------------
+~~~~~~~~~~~~~~
+
 * tagreadbin -> gst-plugins-base/gst/tagread
 * tagreaderiface -> gst-plugins-base/gst-libs/gst/tag
 
 Reuse
------
+~~~~~
 
-ogg : gst-plugins-base/ext/ogg
-avi : gst-plugins-good/gst/avi
-mp3 : gst-plugins-good/gst/id3demux
-wav : gst-plugins-good/gst/wavparse
-qt  : gst-plugins-bad/gst/qtdemux
+* ogg : gst-plugins-base/ext/ogg
+* avi : gst-plugins-good/gst/avi
+* mp3 : gst-plugins-good/gst/id3demux
+* wav : gst-plugins-good/gst/wavparse
+* qt  : gst-plugins-bad/gst/qtdemux
 

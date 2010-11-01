@@ -1,5 +1,5 @@
 States
-======
+------
 
 Both elements and pads can be in different states. The states of the pads are 
 linked to the state of the element so the design of the states is mainly
@@ -10,7 +10,7 @@ is initially instantiated, it is in the NULL state.
 
 
 State definitions
------------------
+~~~~~~~~~~~~~~~~~
 
  - NULL:    This is the initial state of an element. 
  - READY:   The element should be prepared to go to PAUSED.
@@ -24,7 +24,7 @@ a downwards state change.
 
 
 State transitions
------------------
+~~~~~~~~~~~~~~~~~
 
 the following state changes are possible:
 
@@ -89,7 +89,7 @@ the following state changes are possible:
 
 
 State variables
----------------
+~~~~~~~~~~~~~~~
 
 An element has 4 state variables that are protected with the object LOCK:
 
@@ -111,7 +111,7 @@ _set_state(), called the STATE_LOCK.
 
 
 Setting state on elements
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The state of an element can be changed with _element_set_state(). When chaning
 the state of an element all intermediate states will also be set on the element
@@ -147,7 +147,7 @@ is immediatly returned to the caller.
 
 
 Getting state of elements
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The _get_state() function takes 3 arguments, two pointers that will hold the
 current and pending state and one GstClockTime that holds a timeout value. The 
@@ -184,7 +184,7 @@ function returns a GstElementStateReturn.
 
 
 States in GstBin
-----------------
+~~~~~~~~~~~~~~~~
 
 A GstBin manages the state of its children. It does this by propagating the state
 changes performed on it to all of its children.  The _set_state() function on a 
@@ -221,15 +221,15 @@ current state fields when it receives state messages from the children.
 
 
 Implementing states in elements
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 READY
------
+^^^^^
 
 
 
 upward state change
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 Upward state changes always return ASYNC either if the STATE_PENDING is
 reached or not.
@@ -262,7 +262,7 @@ Bin:
       to STATE_PENDING
 
 downward state change
-----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 Downward state changes only return ASYNC if the final state is ASYNC.
 This is to make sure that it's not needed to wait for an element to
@@ -296,7 +296,7 @@ Bin:
 
 
 Locking overview (element)
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Element commiting SUCCESS
 
@@ -376,8 +376,8 @@ Locking overview (element)
                                                            | ...
                                                       STREAM_UNLOCK
 
-*********************************************
-*********************************************
+Remarks
+~~~~~~~
 
 set_state cannot be called from multiple threads at the same time. The STATE_LOCK
 prevents this.

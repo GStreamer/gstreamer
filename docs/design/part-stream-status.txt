@@ -26,7 +26,7 @@ We allow for the following scenarios:
 
 
 Use cases
----------
+~~~~~~~~~
 
  * boost the priority of the udp receiver streaming thread
 
@@ -56,7 +56,7 @@ Use cases
 
 
 Messages
---------
+~~~~~~~~
 
  The existing STREAM_STATUS message will be further defined and implemented in
  (selected) elements. The following fields will be contained in the message:
@@ -101,7 +101,7 @@ Messages
 
 
 Events
-------
+~~~~~~
 
 
 

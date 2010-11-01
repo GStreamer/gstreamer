@@ -6,7 +6,7 @@ additions.
 
 
 Supported Metadata standards
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The paragraphs below list supported native metadata standards sorted by type and
 then in alphabetical order. Some standards have been extended to support
@@ -94,7 +94,7 @@ http://wiki.creativecommons.org/Tracker_CC_Indexing
 
 
 Current Metadata handling
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When reading files, demuxers or parsers extract the metadata. It will be sent as
 a GST_MESSAGE_TAG to the GstBus and GST_EVENT_TAG to downstream elements.
@@ -130,10 +130,11 @@ metadata.
 
 
 Issues
-------
+~~~~~~
 
 Unknown/Unmapped metadata
-- - - - - - - - - - - - -
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Right now GStreamer can lose metadata when transcoding, remuxing content. This
 can happend as we don't map all metadata fields to generic ones.
 
@@ -159,7 +160,8 @@ We would basically need this for each container format.
 See also https://bugzilla.gnome.org/show_bug.cgi?id=345352
 
 Lost metadata
-- - - - - - -
+^^^^^^^^^^^^^
+
 A case slighly different from the previous is that when an application sets a
 GstTagList on a pipeline. Right elements consuming tags do not report which tags
 have been consumed.  Especially when using elements that make metadata 
@@ -181,7 +183,8 @@ of elements and their tags. As a convenience we could flatten the list of tags
 for the top-level element (if the query was sent to a bin) and add that.
 
 Tags are per Element
-- - - - - - - - - -
+^^^^^^^^^^^^^^^^^^^^
+
 In many cases we want tags per stream. Even metadata standards like mp4/3gp
 metadata supports that. Right now GST_MESSAGE_SRC(tags) is the element. We tried
 changing that to the pad, but that broke applications.
@@ -189,7 +192,7 @@ Also we miss the symmetric functionality in GstTagSetter. This interface is
 usually implemented by elements.
 
 Open bugs
-- - - - -
+^^^^^^^^^
 
 https://bugzilla.gnome.org/buglist.cgi?query_format=advanced;short_desc=tag;bug_status=UNCONFIRMED;bug_status=NEW;bug_status=ASSIGNED;bug_status=REOPENED;bug_status=NEEDINFO;short_desc_type=allwordssubstr;product=GStreamer
 

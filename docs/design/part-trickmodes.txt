@@ -1,5 +1,5 @@
 Trickmodes
-==========
+----------
 
 GStreamer provides API for performing various trickmode playback. This includes:
 
@@ -18,7 +18,7 @@ Seeking can both be done in a playback pipeline and a transcoding pipeline.
 
 
 General seeking overview
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Consider a typical playback pipeline:
 
@@ -35,56 +35,60 @@ position 0 and stopping at the total duration of the file.
 
 When performing a seek, the following steps have to be taken by the application:
 
- 1) Create a seek event:
+Create a seek event
+^^^^^^^^^^^^^^^^^^^
 
-    The seek event contains:
+The seek event contains:
 
-    - various flags describing:
-      - where to seek to (KEY_UNIT)
-      - how accurate the seek should be (ACCURATE)
-      - how to perform the seek (FLUSH) 
-      - what to do when the stop position is reached (SEGMENT).
-      - extra playback options (SKIP)
-    - a format to seek in, this can be time, bytes, units (frames, samples), ...
-    - a playback rate, 1.0 is normal playback speed, positive values bigger than 1.0
-      mean fast playback. negative values mean reverse playback. A playback speed of
-      0.0 is not allowed (but is equivalent to PAUSING the pipeline).
-    - a start position, this value has to be between 0 and the total duration of the 
-      file. It can also be relative to the previously configured start value.
-    - a stop position, this value has to be between 0 and the total duration. It can
-      also be relative to the previously configured stop value.
+- various flags describing:
+  - where to seek to (KEY_UNIT)
+  - how accurate the seek should be (ACCURATE)
+  - how to perform the seek (FLUSH) 
+  - what to do when the stop position is reached (SEGMENT).
+  - extra playback options (SKIP)
+- a format to seek in, this can be time, bytes, units (frames, samples), ...
+- a playback rate, 1.0 is normal playback speed, positive values bigger than 1.0
+  mean fast playback. negative values mean reverse playback. A playback speed of
+  0.0 is not allowed (but is equivalent to PAUSING the pipeline).
+- a start position, this value has to be between 0 and the total duration of the 
+  file. It can also be relative to the previously configured start value.
+- a stop position, this value has to be between 0 and the total duration. It can
+  also be relative to the previously configured stop value.
 
-    See also gst_event_new_seek().
+See also gst_event_new_seek().
 
 
- 2) Send the seek event to the pipeline with gst_element_send_event()
+Send the seek event
+^^^^^^^^^^^^^^^^^^^
 
-    By default the pipeline will send the event to all sink elements.
-    By default an element will forward the event upstream on all sinkpads.
-    Elements can modify the format of the seek event. The most common format is
-    GST_FORMAT_TIME.
+Send the new seek event to the pipeline with gst_element_send_event().
 
-    One element will actually perform the seek, this is usually the demuxer or
-    source element. For more information on how to perform the different seek
-    types see part-seeking.txt.
+By default the pipeline will send the event to all sink elements.
+By default an element will forward the event upstream on all sinkpads.
+Elements can modify the format of the seek event. The most common format is
+GST_FORMAT_TIME.
 
-    For client side trickmode a NEW_SEGMENT event will be sent downstream with
-    the new rate and start/stop positions. All elements prepare themselves to
-    handle the rate (see below). The applied rate of the NEW_SEGMENT event will
-    be set to 1.0 to indicate that no rate adjustment has been done.
+One element will actually perform the seek, this is usually the demuxer or
+source element. For more information on how to perform the different seek
+types see part-seeking.txt.
 
-    for server side trick mode a NEW_SEGMENT event is sent downstream with a
-    rate of 1.0 and the start/stop positions. The elements will configure themselves
-    for normal playback speed since the server will perform the rate conversions.
-    The applied rate will be set to the rate that will be applied by the server. This
-    is done to insure that the position reporting performed in the sink is aware 
-    of the trick mode.
+For client side trickmode a NEW_SEGMENT event will be sent downstream with
+the new rate and start/stop positions. All elements prepare themselves to
+handle the rate (see below). The applied rate of the NEW_SEGMENT event will
+be set to 1.0 to indicate that no rate adjustment has been done.
 
-    When the seek succeeds, the _send_event() function will return TRUE.
+for server side trick mode a NEW_SEGMENT event is sent downstream with a
+rate of 1.0 and the start/stop positions. The elements will configure themselves
+for normal playback speed since the server will perform the rate conversions.
+The applied rate will be set to the rate that will be applied by the server. This
+is done to insure that the position reporting performed in the sink is aware 
+of the trick mode.
+
+When the seek succeeds, the _send_event() function will return TRUE.
 
 
 Server side trickmode
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 The source element operates in push mode. It can reopen a server connection requesting
 a new byte or time position and a new playback speed. The capabilities can be queried
@@ -131,7 +135,7 @@ playback speed or direction.
 
 
 client side forward trickmodes 
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The seek happens as stated above. a NEW_SEGMENT event is sent downstream with a rate
 different from 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
@@ -154,7 +158,7 @@ case, the demuxer would scale the timestamps and would set an applied rate of S.
 
 
 client side backwards trickmode 
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For backwards playback the following rules apply:
 
@@ -202,7 +206,8 @@ For plugins the following rules apply:
  In SKIP mode, the same algorithm as for forward SKIP mode can be used.
 
 
-Notes:
+Notes
+~~~~~
 
  - The clock/running_time keeps running forward.
  - backwards playback potentially uses a lot of memory as frames and undecoded

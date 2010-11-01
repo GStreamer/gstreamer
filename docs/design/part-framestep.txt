@@ -26,7 +26,7 @@ segments of data in PLAYING.
 
 
 Use Cases
----------
+~~~~~~~~~
 
  * frame stepping in video only pipeline in PAUSED
 
@@ -92,10 +92,10 @@ Use Cases
 
 
 events
-------
+~~~~~~
 
- A new GST_EVENT_STEP event is introduced to start the step operation.  
- The step event is created with the following fields in the structure:
+A new GST_EVENT_STEP event is introduced to start the step operation.  
+The step event is created with the following fields in the structure:
 
   "format", GST_TYPE_FORMAT
      The format of the step units
@@ -146,29 +146,29 @@ events
      flag is passed to the corresponding GST_MESSAGE_STEP_DONE.
 
 
- The application will create a STEP event to start or stop the stepping
- operation. Both stepping in PAUSED and PLAYING can be performed by means of 
- the flush flag.
+The application will create a STEP event to start or stop the stepping
+operation. Both stepping in PAUSED and PLAYING can be performed by means of 
+the flush flag.
 
- The event is usually sent to the pipeline, which will typically distribute the
- event to all of its sinks. For some use cases, like frame stepping on video
- frames only, the event should only be sent to the video sink and upon reception
- of the STEP_DONE message, one can step the other sinks to align the streams
- again.
+The event is usually sent to the pipeline, which will typically distribute the
+event to all of its sinks. For some use cases, like frame stepping on video
+frames only, the event should only be sent to the video sink and upon reception
+of the STEP_DONE message, one can step the other sinks to align the streams
+again.
 
- For large stepping amounts, there needs to be enough queueing in front of all
- the sinks. If large steps need to be performed, they can be split up into
- smaller step operations using the "intermediate" flag on the step. 
+For large stepping amounts, there needs to be enough queueing in front of all
+the sinks. If large steps need to be performed, they can be split up into
+smaller step operations using the "intermediate" flag on the step. 
 
- Since the step event does not update the base_time of any of the elements, the
- sinks should keep track of the amount of stepped data in order to remain
- synchronized against the clock.
+Since the step event does not update the base_time of any of the elements, the
+sinks should keep track of the amount of stepped data in order to remain
+synchronized against the clock.
 
 
 messages
---------
+~~~~~~~~
 
- A GST_MESSAGE_STEP_START is created. It contains the following fields.
+A GST_MESSAGE_STEP_START is created. It contains the following fields.
 
   "active"
      If the step was queued or activated.
@@ -188,7 +188,7 @@ messages
   "intermediate", G_TYPE_BOOLEAN
      If this is an intermediate step operation that queued/activated.
 
- The STEP_START message is emited 2 times:
+The STEP_START message is emited 2 times:
  
   * first when an element received the STEP event and queued it. The "active"
     field will be FALSE in this case.
@@ -197,12 +197,12 @@ messages
     field is TRUE in this case. After this message is emited, the application
     can queue a new step operation.
 
- The purpose of this message is to find out how many elements participate in the
- step operation and to queue new step operations at the earliest possible
- moment.
+The purpose of this message is to find out how many elements participate in the
+step operation and to queue new step operations at the earliest possible
+moment.
 
- A new GST_MESSAGE_STEP_DONE message is created. It contains the following
- fields:
+A new GST_MESSAGE_STEP_DONE message is created. It contains the following
+fields:
 
   "format", GST_TYPE_FORMAT
      The format of the step units that completed.
@@ -225,25 +225,24 @@ messages
   "eos", G_TYPE_BOOLEAN
      The step ended because of EOS.
 
- The message is emited by the element that performs the step operation. The
- purpose is to return the duration in GST_FORMAT_TIME of the stepped media. This
- especially interesting to align other stream in case of stepping frames on the
- video sink element.
+The message is emited by the element that performs the step operation. The
+purpose is to return the duration in GST_FORMAT_TIME of the stepped media. This
+especially interesting to align other stream in case of stepping frames on the
+video sink element.
 
 
 Direction switch
-----------------
+~~~~~~~~~~~~~~~~
 
- When quickly switching between a forwards and a backwards step of, for example,
- one video frame, we need either:
+When quickly switching between a forwards and a backwards step of, for example,
+one video frame, we need either:
 
   a) issue a new seek to change the direction from the current position.
   b) cache a certain number of stepped frames and walk the cache.
 
- option a) might be very slow.
- For option b) we would ideally like to offload this caching functionality to a
- separate element, which means that we need to forward the STEP event upstream.
- It's unclear how this could work in a generic way. What is a demuxer supposed
- to do when it received a step event? a flushing seek to what stream position?
- 
+option a) might be very slow.
+For option b) we would ideally like to offload this caching functionality to a
+separate element, which means that we need to forward the STEP event upstream.
+It's unclear how this could work in a generic way. What is a demuxer supposed
+to do when it received a step event? a flushing seek to what stream position?
 

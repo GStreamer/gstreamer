@@ -19,7 +19,7 @@ sinks (see part-element-sink.txt)
 
 
 Committing the state
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 When going to PAUSED and PLAYING a buffer should be queued in the pad. We also
 make this requirement for going to PLAYING since a flush event in the PAUSED
@@ -39,7 +39,7 @@ blocking wait.
 
 
 Unlocking the preroll
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 The following conditions unlock the preroll:
 

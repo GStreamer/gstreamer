@@ -58,7 +58,7 @@ more important than accurately producing all frames.
 
 
 Seeking in push based elements
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -66,19 +66,21 @@ Seeking in push based elements
 
 
 Generating seeking events
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A seek event is created with gst_event_new_seek ().
 
 
 
+Seeking variants
+~~~~~~~~~~~~~~~~
 
 The different kinds of seeking methods and their internal workings are
 described below.
 
 
 FLUSH seeking
--------------
+^^^^^^^^^^^^^
 
 This is the most common way of performing a seek in a playback application.
 The application issues a seek on the pipeline and the new media is immediatly
@@ -86,7 +88,7 @@ played after the seek calls returns.
 
 
 seeking without FLUSH
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 This seek type is typically performed after issuing segment seeks to finish
 the playback of the pipeline.
@@ -97,13 +99,13 @@ sinks.
 
 
 segment seeking with FLUSH
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This seek is typically performed when starting seamless looping.
 
 
 segment seeking without FLUSH
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This seek is typically performed when continuing seamless looping.
 

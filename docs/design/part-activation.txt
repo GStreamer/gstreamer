@@ -1,5 +1,8 @@
-Pad activation
---------------
+Pad (de)activation
+------------------
+
+Activation
+~~~~~~~~~~
 
 When changing states, a bin will set the state on all of its children in
 sink-to-source order. As elements undergo the READY->PAUSED transition,
@@ -73,7 +76,7 @@ already in PAUSED with an active sink pad by the time fakesrc starts
 pushing data.
 
 Deactivation
-------------
+~~~~~~~~~~~~
 
 Pad deactivation occurs when its parent goes into the READY state or when the 
 pad is deactivated explicitly by the application or element. 
@@ -82,7 +85,8 @@ activate_push() or activate_pull() with a FALSE argument, depending on the
 activation mode of the pad.
 
 Mode switching
---------------
+~~~~~~~~~~~~~~
 
 Changing from push to pull modes needs a bit of thought. This is actually
 possible and implemented but not yet documented here.
+

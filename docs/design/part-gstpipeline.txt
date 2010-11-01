@@ -13,7 +13,7 @@ The pipeline will calculate a global latency for the elements in the pipeline.
 (See also part-latency.txt).
 
 State changes
--------------
+~~~~~~~~~~~~~
 
 In addition to the normal state change procedure of its parent class
 GstBin, the pipeline performs the following actions during a state change:
@@ -43,7 +43,7 @@ The running_time is set to 0 after a flushing seek.
 
 
 Clock selection
----------------
+~~~~~~~~~~~~~~~
 
 Since all of the children of a GstPipeline must use the same clock, the
 pipeline must select a clock. This clock selection happens when the pipeline
@@ -80,7 +80,7 @@ matic clock selection algorithm described above.
 
 
 GstBus
-------
+~~~~~~
 
 A GstPipeline provides a GstBus to the application. The bus can be retrieved
 with gst_pipeline_get_bus() and can then be used to retrieve messages posted by
