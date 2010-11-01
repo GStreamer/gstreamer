@@ -1664,12 +1664,19 @@ static void
 gst_qtdemux_stbl_free (QtDemuxStream * stream)
 {
   g_free ((gpointer) stream->stco.data);
+  stream->stco.data = NULL;
   g_free ((gpointer) stream->stsz.data);
+  stream->stsz.data = NULL;
   g_free ((gpointer) stream->stsc.data);
+  stream->stsc.data = NULL;
   g_free ((gpointer) stream->stts.data);
+  stream->stts.data = NULL;
   g_free ((gpointer) stream->stss.data);
+  stream->stss.data = NULL;
   g_free ((gpointer) stream->stps.data);
+  stream->stps.data = NULL;
   g_free ((gpointer) stream->ctts.data);
+  stream->ctts.data = NULL;
 }
 
 static GstStateChangeReturn
@@ -4829,6 +4836,8 @@ too_many_streams:
 static gboolean
 qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 {
+  stream->stbl_index = -1;      /* no samples have yet been parsed */
+
   /* time-to-sample atom */
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stts, &stream->stts))
     goto corrupt_file;
@@ -4964,8 +4973,15 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   }
 
   if (!stream->n_samples) {
-    GST_WARNING_OBJECT (qtdemux, "stream has no samples");
-    return FALSE;
+    gst_qtdemux_stbl_free (stream);
+    if (!qtdemux->fragmented) {
+      /* not quite good */
+      GST_WARNING_OBJECT (qtdemux, "stream has no samples");
+      return FALSE;
+    } else {
+      /* may pick up samples elsewhere */
+      return TRUE;
+    }
   }
 
   GST_DEBUG_OBJECT (qtdemux,
@@ -5007,8 +5023,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
             4 + 4))
       goto corrupt_file;
   }
-
-  stream->stbl_index = -1;      /* no samples have yet been parsed */
 
   return TRUE;
 
@@ -5526,6 +5540,10 @@ done:
 
     if (stream->segments == NULL)
       stream->segments = g_new (QtDemuxSegment, 1);
+
+    /* represent unknown our way */
+    if (stream_duration == 0)
+      stream_duration = -1;
 
     stream->segments[0].time = 0;
     stream->segments[0].stop_time = stream_duration;
@@ -6838,8 +6856,19 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* collect sample information */
   if (qtdemux->fragmented) {
+    /* first parse basic moov samples if any */
+    if (!qtdemux_stbl_init (qtdemux, stream, stbl))
+      goto samples_failed;
+    if (stream->n_samples &&
+        !qtdemux_parse_samples (qtdemux, stream, stream->n_samples - 1))
+      goto samples_failed;
+    /* then add fragment samples */
     if (!qtdemux_parse_mfra (qtdemux, stream))
       goto samples_failed;
+    /* prevent further parse_samples */
+    stream->stbl_index = stream->n_samples;
+    /* movie duration more reliable in this case (e.g. mehd) */
+    stream->duration = qtdemux->segment.duration;
   } else {
     if (!qtdemux_stbl_init (qtdemux, stream, stbl))
       goto samples_failed;
@@ -8021,23 +8050,13 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   /* check for fragmented file and get some (default) data */
   mvex = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvex);
   if (mvex) {
-    /* let track parsing or anyone know weird stuff might happen ... */
-    qtdemux->fragmented = TRUE;
-  }
-
-  /* parse all traks */
-  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
-  while (trak) {
-    qtdemux_parse_trak (qtdemux, trak);
-    /* iterate all siblings */
-    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
-  }
-
-  /* compensate for total duration */
-  if (mvex) {
     GNode *mehd;
     GstByteReader mehd_data;
 
+    /* let track parsing or anyone know weird stuff might happen ... */
+    qtdemux->fragmented = TRUE;
+
+    /* compensate for total duration */
     mehd = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_mehd, &mehd_data);
     if (mehd)
       qtdemux_parse_mehd (qtdemux, &mehd_data);
@@ -8047,6 +8066,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   gst_qtdemux_get_duration (qtdemux, &duration);
   if (duration)
     gst_segment_set_duration (&qtdemux->segment, GST_FORMAT_TIME, duration);
+
+  /* parse all traks */
+  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
+  while (trak) {
+    qtdemux_parse_trak (qtdemux, trak);
+    /* iterate all siblings */
+    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
+  }
 
   gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
 
