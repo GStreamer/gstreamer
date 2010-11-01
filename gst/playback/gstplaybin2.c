@@ -1472,6 +1472,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
 no_channels:
   {
     GST_PLAY_BIN_UNLOCK (playbin);
+    GST_DEBUG_OBJECT (playbin, "can't switch video, we have no channels");
     return FALSE;
   }
 }
@@ -1514,6 +1515,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
 no_channels:
   {
     GST_PLAY_BIN_UNLOCK (playbin);
+    GST_DEBUG_OBJECT (playbin, "can't switch audio, we have no channels");
     return FALSE;
   }
 }
