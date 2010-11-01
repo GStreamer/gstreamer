@@ -334,6 +334,12 @@ struct _QtDemuxStream
   guint32 ctts_sample_index;
   guint32 ctts_count;
   gint32 ctts_soffset;
+
+  /* fragmented */
+  gboolean parsed_trex;
+  guint32 def_sample_duration;
+  guint32 def_sample_size;
+  guint32 def_sample_flags;
 };
 
 enum QtDemuxState
@@ -1855,16 +1861,118 @@ extract_initial_length_and_fourcc (const guint8 * data, guint64 * plength,
 }
 
 static gboolean
+qtdemux_parse_mehd (GstQTDemux * qtdemux, GstByteReader * br)
+{
+  guint32 version;
+  guint64 duration;
+
+  if (!gst_byte_reader_get_uint32_be (br, &version))
+    goto failed;
+
+  version >>= 24;
+  if (version == 1) {
+    if (!gst_byte_reader_get_uint64_be (br, &duration))
+      goto failed;
+  } else {
+    guint32 dur;
+
+    if (!gst_byte_reader_get_uint32_be (br, &dur))
+      goto failed;
+    duration = dur;
+  }
+
+  GST_INFO_OBJECT (qtdemux, "mehd duration: %" G_GUINT64_FORMAT, duration);
+  qtdemux->duration = duration;
+
+  return TRUE;
+
+failed:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "parsing mehd failed");
+    return FALSE;
+  }
+}
+
+static gboolean
+qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    guint32 * ds_duration, guint32 * ds_size, guint32 * ds_flags)
+{
+  if (!stream->parsed_trex && qtdemux->moov_node) {
+    GNode *mvex, *trex;
+    GstByteReader trex_data;
+
+    mvex = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvex);
+    if (mvex) {
+      trex = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_trex,
+          &trex_data);
+      while (trex) {
+        guint32 id, dur, size, flags;
+
+        /* skip version/flags */
+        if (!gst_byte_reader_skip (&trex_data, 4))
+          goto next;
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &id))
+          goto next;
+        if (id != stream->track_id)
+          goto next;
+        /* sample description index; ignore */
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &dur))
+          goto next;
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &dur))
+          goto next;
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &size))
+          goto next;
+        if (!gst_byte_reader_get_uint32_be (&trex_data, &flags))
+          goto next;
+
+        GST_DEBUG_OBJECT (qtdemux, "fragment defaults for stream %d; "
+            "duration %d,  size %d, flags 0x%x", stream->track_id,
+            dur, size, flags);
+
+        stream->parsed_trex = TRUE;
+        stream->def_sample_duration = dur;
+        stream->def_sample_size = size;
+        stream->def_sample_flags = flags;
+
+      next:
+        /* iterate all siblings */
+        trex = qtdemux_tree_get_sibling_by_type_full (trex, FOURCC_trex,
+            &trex_data);
+      }
+    }
+  }
+
+  *ds_duration = stream->def_sample_duration;
+  *ds_size = stream->def_sample_size;
+  *ds_size = stream->def_sample_size;
+
+  /* even then, above values are better than random ... */
+  if (G_UNLIKELY (!stream->parsed_trex)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "failed to find fragment defaults for stream %d", stream->track_id);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
-    QtDemuxStream * stream, guint32 mdat_offset,
-    guint32 d_sample_duration, guint32 d_sample_size, guint32 * samples_count)
+    QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
+    guint32 d_sample_flags, guint32 * samples_count, gint64 * base_offset)
 {
   guint64 timestamp;
-  guint32 flags, data_offset;
+  gint32 data_offset;
+  guint32 flags, first_flags = 0;
   gint i;
   guint8 *data;
-  guint entry_size, dur_offset, size_offset;
+  guint entry_size, dur_offset, size_offset, flags_offset, ct_offset;
   QtDemuxSample *sample;
+
+  GST_LOG_OBJECT (qtdemux, "parsing trun stream %d; "
+      "default dur %d, size %d, flags 0x%x, base offset %" G_GUINT64_FORMAT,
+      stream->track_id, d_sample_duration, d_sample_size, d_sample_flags,
+      data_offset);
 
   if (!gst_byte_reader_skip (trun, 1) ||
       !gst_byte_reader_get_uint24_be (trun, &flags))
@@ -1873,40 +1981,56 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   if (!gst_byte_reader_get_uint32_be (trun, samples_count))
     goto fail;
 
-  /*FIXME: handle this flag properly */
   if (flags & TR_DATA_OFFSET) {
-    if (!gst_byte_reader_get_uint32_be (trun, &data_offset))
+    /* note this is really signed */
+    if (!gst_byte_reader_get_int32_be (trun, &data_offset))
       goto fail;
+    *base_offset += data_offset;
   }
 
-  if (flags & TR_FIRST_SAMPLE_FLAGS)
-    if (!gst_byte_reader_skip (trun, 4))
-      goto fail;
+  GST_LOG_OBJECT (qtdemux, "trun offset %d, flags 0x%x, entries %d",
+      data_offset, flags, *samples_count);
+
+  if (flags & TR_FIRST_SAMPLE_FLAGS) {
+    if (G_UNLIKELY (flags & TR_SAMPLE_FLAGS)) {
+      GST_DEBUG_OBJECT (qtdemux,
+          "invalid flags; SAMPLE and FIRST_SAMPLE present, discarding latter");
+      flags ^= TR_FIRST_SAMPLE_FLAGS;
+    } else {
+      if (!gst_byte_reader_get_uint32_be (trun, &first_flags))
+        goto fail;
+      GST_LOG_OBJECT (qtdemux, "first flags: 0x%x", first_flags);
+    }
+  }
 
   /* FIXME ? spec says other bits should also be checked to determine
    * entry size (and prefix size for that matter) */
   entry_size = 0;
   dur_offset = size_offset = 0;
   if (flags & TR_SAMPLE_DURATION) {
+    GST_LOG_OBJECT (qtdemux, "entry duration present");
     dur_offset = entry_size;
     entry_size += 4;
   }
   if (flags & TR_SAMPLE_SIZE) {
+    GST_LOG_OBJECT (qtdemux, "entry size present");
     size_offset = entry_size;
     entry_size += 4;
   }
   if (flags & TR_SAMPLE_FLAGS) {
+    GST_LOG_OBJECT (qtdemux, "entry flags present");
+    flags_offset = entry_size;
     entry_size += 4;
   }
   if (flags & TR_COMPOSITION_TIME_OFFSETS) {
+    GST_LOG_OBJECT (qtdemux, "entry ct offset present");
+    ct_offset = entry_size;
     entry_size += 4;
   }
 
   if (!qt_atom_parser_has_chunks (trun, *samples_count, entry_size))
     goto fail;
   data = (guint8 *) gst_byte_reader_peek_data_unchecked (trun);
-
-  data_offset = mdat_offset + 8;
 
   if (stream->n_samples >=
       QTDEMUX_MAX_SAMPLE_INDEX_SIZE / sizeof (QtDemuxSample))
@@ -1937,7 +2061,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   }
   sample = stream->samples + stream->n_samples;
   for (i = 0; i < *samples_count; i++) {
-    guint32 dur, size;
+    guint32 dur, size, sflags, ct;
 
     /* first read sample data */
     if (flags & TR_SAMPLE_DURATION) {
@@ -1950,16 +2074,33 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     } else {
       size = d_sample_size;
     }
+    if (flags & TR_FIRST_SAMPLE_FLAGS) {
+      if (i == 0) {
+        sflags = first_flags;
+      } else {
+        sflags = d_sample_flags;
+      }
+    } else if (flags & TR_SAMPLE_FLAGS) {
+      sflags = QT_UINT32 (data + flags_offset);
+    } else {
+      sflags = d_sample_flags;
+    }
+    if (flags & TR_COMPOSITION_TIME_OFFSETS) {
+      ct = QT_UINT32 (data + ct_offset);
+    } else {
+      ct = 0;
+    }
     data += entry_size;
 
     /* fill the sample information */
-    sample->offset = data_offset;
-    sample->pts_offset = 0;
+    sample->offset = *base_offset;
+    sample->pts_offset = ct;
     sample->size = size;
     sample->timestamp = timestamp;
     sample->duration = dur;
-    sample->keyframe = (i == 0);
-    data_offset += size;
+    /* sample-is-difference-sample */
+    sample->keyframe = !(sflags & 0x10000);
+    *base_offset += size;
     timestamp += dur;
     sample++;
   }
@@ -1991,7 +2132,8 @@ index_too_big:
 static gboolean
 qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     guint32 * track_id, guint32 * default_sample_duration,
-    guint32 * default_sample_size)
+    guint32 * default_sample_size, guint32 * default_sample_flags,
+    gint64 * base_offset)
 {
   guint32 flags;
 
@@ -2002,9 +2144,8 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
   if (!gst_byte_reader_get_uint32_be (tfhd, track_id))
     goto invalid_track;
 
-  /* FIXME: Handle TF_BASE_DATA_OFFSET properly */
   if (flags & TF_BASE_DATA_OFFSET)
-    if (!gst_byte_reader_skip (tfhd, 4))
+    if (!gst_byte_reader_get_uint64_be (tfhd, (guint64 *) base_offset))
       goto invalid_track;
 
   /* FIXME: Handle TF_SAMPLE_DESCRIPTION_INDEX properly */
@@ -2018,6 +2159,10 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
 
   if (flags & TF_DEFAULT_SAMPLE_SIZE)
     if (!gst_byte_reader_get_uint32_be (tfhd, default_sample_size))
+      goto invalid_track;
+
+  if (flags & TF_DEFAULT_SAMPLE_FLAGS)
+    if (!gst_byte_reader_get_uint32_be (tfhd, default_sample_flags))
       goto invalid_track;
 
   return TRUE;
@@ -2035,16 +2180,20 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 {
   GNode *moof_node, *traf_node, *tfhd_node, *trun_node;
   GstByteReader trun_data, tfhd_data;
-  guint32 id = 0, default_sample_size = 0, default_sample_duration = 0;
+  guint32 id = 0;
+  guint32 ds_size = 0, ds_duration = 0, ds_flags = 0;
   guint32 samples_count = 0;
-  guint64 mdat_offset;
+  gint64 base_offset;
 
-  mdat_offset = moof_offset + length;
+  /* obtain stream defaults */
+  qtdemux_parse_trex (qtdemux, stream, &ds_duration, &ds_size, &ds_flags);
 
   moof_node = g_node_new ((guint8 *) buffer);
   qtdemux_parse_node (qtdemux, moof_node, buffer, length);
   qtdemux_node_dump (qtdemux, moof_node);
 
+  /* default base offset = first byte of moof */
+  base_offset = moof_offset;
   traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
   while (traf_node) {
     /* Fragment Header node */
@@ -2053,19 +2202,26 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         &tfhd_data);
     if (!tfhd_node)
       goto missing_tfhd;
-    if (!qtdemux_parse_tfhd (qtdemux, &tfhd_data, &id, &default_sample_duration,
-            &default_sample_size))
+    if (!qtdemux_parse_tfhd (qtdemux, &tfhd_data, &id, &ds_duration,
+            &ds_size, &ds_flags, &base_offset))
       goto missing_tfhd;
     /* skip trun atoms that don't match the track ID */
-    if (id != stream->track_id)
+    if (id != stream->track_id) {
+      /* lost track of offset here */
+      base_offset = -1;
       goto next;
+    } else if (base_offset == -1) {
+      GST_WARNING_OBJECT (qtdemux, "FIXME: no base_offset for data");
+      /* FIXME modify parsing so we don't have this limitation */
+      goto missing_tfhd;
+    }
     /* Track Run node */
     trun_node =
         qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_trun,
         &trun_data);
     while (trun_node) {
-      qtdemux_parse_trun (qtdemux, &trun_data, stream, mdat_offset,
-          default_sample_duration, default_sample_size, &samples_count);
+      qtdemux_parse_trun (qtdemux, &trun_data, stream,
+          ds_duration, ds_size, ds_flags, &samples_count, &base_offset);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
@@ -7813,6 +7969,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *mvhd;
   GNode *trak;
   GNode *udta;
+  GNode *mvex;
   gint64 duration;
   guint64 creation_time;
   GstDateTime *datetime = NULL;
@@ -7861,9 +8018,12 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GST_INFO_OBJECT (qtdemux, "timescale: %u", qtdemux->timescale);
   GST_INFO_OBJECT (qtdemux, "duration: %" G_GUINT64_FORMAT, qtdemux->duration);
 
-  /* set duration in the segment info */
-  gst_qtdemux_get_duration (qtdemux, &duration);
-  gst_segment_set_duration (&qtdemux->segment, GST_FORMAT_TIME, duration);
+  /* check for fragmented file and get some (default) data */
+  mvex = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvex);
+  if (mvex) {
+    /* let track parsing or anyone know weird stuff might happen ... */
+    qtdemux->fragmented = TRUE;
+  }
 
   /* parse all traks */
   trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
@@ -7872,6 +8032,22 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     /* iterate all siblings */
     trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
   }
+
+  /* compensate for total duration */
+  if (mvex) {
+    GNode *mehd;
+    GstByteReader mehd_data;
+
+    mehd = qtdemux_tree_get_child_by_type_full (mvex, FOURCC_mehd, &mehd_data);
+    if (mehd)
+      qtdemux_parse_mehd (qtdemux, &mehd_data);
+  }
+
+  /* set duration in the segment info */
+  gst_qtdemux_get_duration (qtdemux, &duration);
+  if (duration)
+    gst_segment_set_duration (&qtdemux->segment, GST_FORMAT_TIME, duration);
+
   gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
 
   /* find and push tags, we do this after adding the pads so we can push the
