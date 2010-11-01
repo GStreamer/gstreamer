@@ -1,4 +1,4 @@
-# German translation for gstreamer 0.10.25.2
+# German translation for gstreamer 0.10.30.3
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-07-09 01:12+0200\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-25 00:05+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -162,7 +162,7 @@ msgid "Could not configure supporting library."
 msgstr "Die Unterstützungsbibliothek konnte nicht konfiguriert werden."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Fehler bei der Kodierung."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer hat einen allgemeinen Ressourcenfehler festgestellt."
@@ -318,13 +318,13 @@ msgstr "Datum"
 msgid "date the data was created (as a GDate structure)"
 msgstr "Datum, an dem die Daten erzeugt wurden (als GDate-Struktur)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "Datum"
+msgstr "DatumUhrzeit"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "Datum, an dem die Daten erzeugt wurden (als GDate-Struktur)"
+msgstr ""
+"Datum und Uhrzeit, an denen die Daten erzeugt wurden (als GstDateTime-"
+"Struktur)"
 
 msgid "genre"
 msgstr "Genre"
@@ -666,12 +666,11 @@ msgstr ""
 "ein Ort innerhalb einer Stadt, in dem das Medium aufgezeichnet oder "
 "produziert wurde"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "geologischer Ort"
+msgstr "Geografischer horizontaler Fehler"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "Erwarteter Fehler der horizontalen Positionsmessung (in Meter)"
 
 msgid "geo location movement speed"
 msgstr "Geografische Bewegungsgeschwindigkeit"
@@ -779,19 +778,17 @@ msgstr "Gerätemodell"
 msgid "Model of the device used to create this media"
 msgstr "Das Modell des Geräts zur Erstellung dieses Mediums"
 
-#, fuzzy
 msgid "application name"
-msgstr "geologischer Ort"
+msgstr "Anwendungsname"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Das Modell des Geräts zur Erstellung dieses Mediums"
+msgstr "Die zur Erstellung dieses Mediums verwendete Anwendung"
 
 msgid "application data"
-msgstr ""
+msgstr "Anwendungsdaten"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Beliebige Anwendungsdaten zur Serialisierung in das Medium"
 
 msgid "image orientation"
 msgstr "Bildorientierung"
@@ -978,13 +975,13 @@ msgid "controllable"
 msgstr "regelbar"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "änderbar in den Status NULL, BEREIT, PAUSIERT oder ABSPIELEN"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "änderbar nur in den Status NULL, BEREIT oder PAUSIERT"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "änderbar nur in den Status NULL oder BEREIT"
 
 msgid "Blacklisted files:"
 msgstr "Dateien auf der schwarzen Liste:"
@@ -1126,7 +1123,7 @@ msgstr "Zwischenspeichern läuft …"
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
-"Zwischenspeichern abgeschlossen, Leitung wird auf »PLAYING« gesetzt …\n"
+"Zwischenspeichern abgeschlossen, Leitung wird auf ABSPIELEN gesetzt …\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""

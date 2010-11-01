@@ -1,19 +1,20 @@
 # Norwegian bokmaal translation of gstreamer.
 # This file is put in the public domain.
-# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
+# Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.14\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2007-11-02 15:43+0100\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-24 21:36+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut versjonsnummer for GStreamer"
@@ -72,11 +73,10 @@ msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
 
 msgid "GStreamer Options"
-msgstr ""
+msgstr "GStreamer-flagg"
 
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "Skriv ut versjonsnummer for GStreamer"
+msgstr "Vis flagg for GStreamer"
 
 msgid "Unknown option"
 msgstr "Ukjent flagg"
@@ -137,12 +137,11 @@ msgstr "Kunne ikke initiere støttebibliotek."
 msgid "Could not close supporting library."
 msgstr "Kunne ikke lukke støttebibliotek."
 
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "Kunne ikke lukke støttebibliotek."
+msgstr "Kunne ikke konfigurere støttebibliotek."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Feil i koding."
 
 msgid "GStreamer encountered a general resource error."
 msgstr ""
@@ -210,12 +209,11 @@ msgstr "Kunne ikke bryte opp strøm."
 msgid "Could not multiplex stream."
 msgstr "Kunne ikke sette sammen strøm."
 
-#, fuzzy
 msgid "The stream is in the wrong format."
 msgstr "Strømmen er i feil format."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "Strømmen er kryptert og dekryptering er ikke støttet."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
@@ -242,9 +240,8 @@ msgstr "ofte brukt tittel"
 msgid "title sortname"
 msgstr ""
 
-#, fuzzy
 msgid "commonly used title for sorting purposes"
-msgstr "ofte brukt tittel"
+msgstr "ofte brukt tittel for sorteringsformål"
 
 msgid "artist"
 msgstr "artist"
@@ -253,11 +250,10 @@ msgid "person(s) responsible for the recording"
 msgstr "person(er) som er ansvarlige for opptaket"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "sorteringsnavn for artist"
 
-#, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "person(er) som er ansvarlige for opptaket"
+msgstr "person(er) som er ansvarlige for opptaket - til sortering"
 
 msgid "album"
 msgstr "album"
@@ -272,9 +268,8 @@ msgstr ""
 msgid "album containing this data for sorting purposes"
 msgstr "album som inneholder disse dataene"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artist"
+msgstr "albumartist"
 
 msgid "The artist of the entire album, as it should be displayed"
 msgstr ""
@@ -288,14 +283,11 @@ msgstr ""
 msgid "date"
 msgstr "dato"
 
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr ""
-"dato for oppretting av dataene (kalenderdager i den Julianske kalenderen)"
+msgstr "dato for oppretting av dataene (som en GDate-struktur)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "dato"
+msgstr "datotid"
 
 #, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
@@ -314,9 +306,8 @@ msgstr "kommentar"
 msgid "free text commenting the data"
 msgstr "fritekstkommentar som beskriver dataene"
 
-#, fuzzy
 msgid "extended comment"
-msgstr "kommentar"
+msgstr "utvidet kommentar"
 
 #, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
@@ -354,9 +345,8 @@ msgid ""
 "is hosted)"
 msgstr ""
 
-#, fuzzy
 msgid "homepage"
-msgstr "bilde"
+msgstr "hjemmeside"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
@@ -388,9 +378,8 @@ msgstr "opphavsrett"
 msgid "copyright notice of the data"
 msgstr "melding om opphavsrett for data"
 
-#, fuzzy
 msgid "copyright uri"
-msgstr "opphavsrett"
+msgstr "lenke til informasjon om opphavsrett"
 
 #, fuzzy
 msgid "URI to the copyright notice of the data"
@@ -408,9 +397,8 @@ msgstr "lisens"
 msgid "license of data"
 msgstr "lisens for data"
 
-#, fuzzy
 msgid "license uri"
-msgstr "lisens"
+msgstr "lenke til lisens"
 
 #, fuzzy
 msgid "URI to the license of the data"
@@ -423,11 +411,10 @@ msgid "person(s) performing"
 msgstr "personer som spiller"
 
 msgid "composer"
-msgstr ""
+msgstr "komponist"
 
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "person(er) som er ansvarlige for opptaket"
+msgstr "person(er) som er komponerte opptaket"
 
 msgid "duration"
 msgstr "varighet"
@@ -480,13 +467,13 @@ msgid "nominal bitrate in bits/s"
 msgstr ""
 
 msgid "minimum bitrate"
-msgstr ""
+msgstr "minste bitrate"
 
 msgid "minimum bitrate in bits/s"
-msgstr ""
+msgstr "minste bitrate i bits/s"
 
 msgid "maximum bitrate"
-msgstr ""
+msgstr "maksimal bitrate"
 
 msgid "maximum bitrate in bits/s"
 msgstr ""
@@ -498,7 +485,7 @@ msgid "encoder used to encode this stream"
 msgstr ""
 
 msgid "encoder version"
-msgstr ""
+msgstr "versjon av koder"
 
 msgid "version of the encoder used to encode this stream"
 msgstr ""
@@ -559,23 +546,22 @@ msgid "preview image related to this stream"
 msgstr ""
 
 msgid "attachment"
-msgstr ""
+msgstr "vedlegg"
 
 msgid "file attached to this stream"
 msgstr ""
 
 msgid "beats per minute"
-msgstr ""
+msgstr "slag i minuttet"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "antall slag i minuttet i lyd"
 
 msgid "keywords"
-msgstr ""
+msgstr "nøkkelord"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "kort tekst som beskriver datainnholdet"
+msgstr "kommaseparerte nøkkelord som beskriver innholdet"
 
 #, fuzzy
 msgid "geo location name"
@@ -672,7 +658,7 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "navn på program"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
@@ -685,23 +671,20 @@ msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
 
-#, fuzzy
 msgid "episode number"
-msgstr "platenummer"
+msgstr "episodenummer"
 
 msgid "The episode number in the season the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "season number"
-msgstr "platenummer"
+msgstr "sesongnummer"
 
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "lisens"
+msgstr "tekster"
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
@@ -714,7 +697,7 @@ msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "person(er) som er ansvarlige for opptaket"
 
 msgid "grouping"
-msgstr ""
+msgstr "gruppering"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
@@ -833,7 +816,7 @@ msgid "Internal clock error."
 msgstr "Feil i intern klokke"
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Intern feil med dataflyt."
 
 msgid "A lot of buffers are being dropped."
 msgstr ""
@@ -878,9 +861,9 @@ msgstr "Ingen filnavn oppgitt for lesing."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åpne fil «%s» for lesing."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
+msgstr "Kunne ikke hente informasjon om «%s»."
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -896,9 +879,9 @@ msgstr ""
 msgid "No Temp directory specified."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
+msgstr "Kunne ikke lage midlertidig fil «%s»."
 
 #, fuzzy
 msgid "Error while writing to download file."
@@ -922,12 +905,11 @@ msgstr ""
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#, fuzzy
 msgid "Stream contains no data."
-msgstr "album som inneholder disse dataene"
+msgstr "Strømmen inneholder ikke data."
 
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "Implementerte grensesnitt:\n"
 
 msgid "readable"
 msgstr "lesbar"
@@ -950,39 +932,38 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy
 msgid "Total count: "
-msgstr "antall spor"
+msgstr "Totalt antall: "
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d sortelistet fil"
+msgstr[1] "%d sortelistede filer"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d tillegg"
+msgstr[1] "%d tillegg"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d sortelisteoppføring"
+msgstr[1] "%d sortelisteoppføringer"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d funksjon"
+msgstr[1] "%d funksjoner"
 
 msgid "Print all elements"
 msgstr "Skriv ut alle elementene"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Skriv ut liste med sortelistede filer"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -997,9 +978,9 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Kunne ikke åpne fil «%s» for skriving."
+msgstr "Kunne ikke laste tilleggsfil: «%s»\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
@@ -1067,6 +1048,8 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"INFO:\n"
+"%s\n"
 
 #, fuzzy, c-format
 msgid "WARNING: from element %s: %s\n"
@@ -1189,13 +1172,5 @@ msgstr ""
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "FRIGJØR rør...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "opprinnelig lokasjon for filen som en URI"
-
-#, fuzzy
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Feil ved skriving til fil «%s»."
+msgstr "Frigjør rør ...\n"

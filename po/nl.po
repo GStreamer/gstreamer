@@ -1,4 +1,4 @@
-# translation of gstreamer-0.10.29.2.po to Dutch
+# translation of gstreamer-0.10.30.3.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
-"PO-Revision-Date: 2010-08-29 22:04+0200\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-25 19:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -162,7 +162,7 @@ msgid "Could not configure supporting library."
 msgstr "Kan ondersteunende bibliotheek niet configureren."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Coderingsfout."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer kwam een algemene fout tegen met systeembronnen."
@@ -310,13 +310,12 @@ msgstr "datum"
 msgid "date the data was created (as a GDate structure)"
 msgstr "datum waarop het stuk gemaakt is (als GDate-structuur)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "datum"
+msgstr "datum-tijd"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "datum waarop het stuk gemaakt is (als GDate-structuur)"
+msgstr ""
+"datum en tijd waarop de gegevens zijn gemaakt (als een GstDateTime-structuur)"
 
 msgid "genre"
 msgstr "genre"
@@ -652,12 +651,11 @@ msgstr ""
 "een sublocatie in een stad waar het medium is opgenomen of geproduceerd "
 "(bijv. de buurt)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "naam geografische locatie"
+msgstr "fout in horizontale geo-locatie"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "verwachte fout van de horizontale positioneringsafmetingen (in meters)"
 
 msgid "geo location movement speed"
 msgstr "verplaatsingssnelheid op de geografische locatie"
@@ -764,19 +762,19 @@ msgstr "apparaatmodel"
 msgid "Model of the device used to create this media"
 msgstr "Model van het apparaat dat gebruikt wordt om dit medium aan te maken"
 
-#, fuzzy
 msgid "application name"
-msgstr "naam geografische locatie"
+msgstr "toepassingsnaam"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Model van het apparaat dat gebruikt wordt om dit medium aan te maken"
+msgstr "Gebruikte toepassing om het medium aan te maken"
 
 msgid "application data"
-msgstr ""
+msgstr "toepassingsgegevens"
 
 msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
+"Willekeurige toepassingsgegevens die geserialiseerd moeten worden op het "
+"medium"
 
 msgid "image orientation"
 msgstr "oriëntatie van de afbeelding"
@@ -963,13 +961,13 @@ msgid "controllable"
 msgstr "controleerbaar"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "te veranderen in NUL, GEREED-, GEPAUZEERD- of SPEEL-status"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "te veranderen in NUL, GEREED- of GEPAUZEERD-status"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "alleen te veranderen in NUL of GEREED-status"
 
 msgid "Blacklisted files:"
 msgstr "Bestanden op de zwarte lijst:"

@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.29.2\n"
+"Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-06-28 20:12-0300\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-27 16:35-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "Language: pt_BR\n"
@@ -168,7 +168,7 @@ msgid "Could not configure supporting library."
 msgstr "Não foi possível configurar a biblioteca de suporte."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Erro de codificação."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "O GStreamer encontrou um erro geral nos recursos."
@@ -317,13 +317,11 @@ msgstr "data"
 msgid "date the data was created (as a GDate structure)"
 msgstr "data que os dados foram criados (estrutura GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "data"
+msgstr "data hora"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "data que os dados foram criados (estrutura GDate)"
+msgstr "data e hora que os dados foram criados (estrutura GstDateTime)"
 
 msgid "genre"
 msgstr "gênero"
@@ -659,12 +657,11 @@ msgid ""
 msgstr ""
 "localização numa cidade onde a mídia foi produzida ou criada (ex: bairro)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "nome da localização geográfica"
+msgstr "desvio horizontal da localização geográfica"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "desvio esperado nas medidas de posicionamento horizontal (em metros)"
 
 msgid "geo location movement speed"
 msgstr "velocidade de movimento na localização geográfica"
@@ -773,19 +770,17 @@ msgstr "modelo do dispositivo"
 msgid "Model of the device used to create this media"
 msgstr "Modelo do dispositivo usado para criar esta mídia"
 
-#, fuzzy
 msgid "application name"
-msgstr "nome da localização geográfica"
+msgstr "nome do aplicativo"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Modelo do dispositivo usado para criar esta mídia"
+msgstr "Aplicativo usado para criar a mídia"
 
 msgid "application data"
-msgstr ""
+msgstr "Dados do aplicativo"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Dados arbitrários do aplicativo para ser serializado na mídia"
 
 msgid "image orientation"
 msgstr "orientação de imagem"
@@ -973,13 +968,13 @@ msgid "controllable"
 msgstr "controlável"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "estado alterável para NULO, PRONTO, PAUSADO ou REPRODUZINDO"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "estado alterável apenas para NULO, PRONTO ou PAUSADO"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "estado alterável apenas para NULO ou PRONTO"
 
 msgid "Blacklisted files:"
 msgstr "Arquivos colocados na lista negra:"
@@ -1242,27 +1237,3 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Erro ao escrever no cache do registro em %s: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Erro ao re-analisar o registro %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Erro ao re-analisar o registro %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Erro interno no GStreamer: falha ao alterar estado."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Erro ao escrever no descritor \"%d\" do arquivo."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "O descritor \"%d\" do arquivo não é válido."
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "LIBERANDO a fila de processamento...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "local original do arquivo como um URI"

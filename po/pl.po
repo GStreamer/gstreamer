@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-06-28 09:46+0200\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-24 18:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -156,7 +156,7 @@ msgid "Could not configure supporting library."
 msgstr "Nie udało się skonfigurować biblioteki wspierającej."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Błąd kodowania."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer napotkał ogólny błąd zasobów."
@@ -302,13 +302,11 @@ msgstr "data"
 msgid "date the data was created (as a GDate structure)"
 msgstr "data utworzenia tych danych (jako struktura GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "data"
+msgstr "data/czas"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "data utworzenia tych danych (jako struktura GDate)"
+msgstr "data i czas utworzenia tych danych (jako struktura GstDateTime)"
 
 msgid "genre"
 msgstr "gatunek"
@@ -649,12 +647,11 @@ msgstr ""
 "miejsce wewnątrz miejscowości, w którym utwór został nagrany lub "
 "wyprodukowany (np. dzielnica)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "nazwa położenia geograficznego"
+msgstr "błąd poziomego położenia geograficznego"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "spodziewany błąd oszacowania położenia poziomego (w metrach)"
 
 msgid "geo location movement speed"
 msgstr "prędkość zmiany położenia geograficznego"
@@ -759,19 +756,17 @@ msgstr "model urządzenia"
 msgid "Model of the device used to create this media"
 msgstr "Model urządzenia użytego do utworzenia tego nagrania"
 
-#, fuzzy
 msgid "application name"
-msgstr "nazwa położenia geograficznego"
+msgstr "nazwa aplikacji"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Model urządzenia użytego do utworzenia tego nagrania"
+msgstr "Aplikacja użyta do utworzenia tego nagrania"
 
 msgid "application data"
-msgstr ""
+msgstr "dane aplikacji"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Dowolne dane aplikacji zserializowane w nagraniu"
 
 msgid "image orientation"
 msgstr "orientacja obrazu"
@@ -958,13 +953,13 @@ msgid "controllable"
 msgstr "sterowanie"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "możliwa zmiana w stanie NULL, GOTOWOŚĆ, PAUZOWANIE lub ODTWARZANIE"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "możliwa zmiana tylko w stanie NULL, GOTOWOŚĆ lub PAUZOWANIE"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "możliwa zmiana tylko w stanie NULL lub GOTOWOŚĆ"
 
 msgid "Blacklisted files:"
 msgstr "Pliki wykluczone:"

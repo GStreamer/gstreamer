@@ -7,10 +7,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.29.2\n"
+"Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 00:12+0100\n"
-"PO-Revision-Date: 2010-08-15 12:31+0400\n"
+"POT-Creation-Date: 2010-10-29 14:08+0100\n"
+"PO-Revision-Date: 2010-10-25 14:54+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -159,7 +159,7 @@ msgid "Could not configure supporting library."
 msgstr "Не удалось настроить дополнительную библиотеку."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Ошибка при кодировании."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "Обнаружена общая ошибка ресурса GStreamer."
@@ -307,13 +307,11 @@ msgstr "дата"
 msgid "date the data was created (as a GDate structure)"
 msgstr "дата создания этих данных (как структура GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "дата"
+msgstr "дата-время"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "дата создания этих данных (как структура GDate)"
+msgstr "дата и время создания этих данных (как структура GstDateTime)"
 
 msgid "genre"
 msgstr "жанр"
@@ -653,19 +651,18 @@ msgstr ""
 "место в городе, в котором производилась запись или производство данных "
 "(например, район)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "геогр. местоположение"
+msgstr "ошибка в геогр. местоположении"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "ожидаемая ошибка определения геогр. местоположения (в метрах)"
 
 msgid "geo location movement speed"
 msgstr "скорость движения"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr "скорость движения устройства съёмки в м/c"
+msgstr "скорость движения устройства съёмки в при выполнении съёмки в м/c"
 
 msgid "geo location movement direction"
 msgstr "направление движения"
@@ -760,19 +757,17 @@ msgstr "модель устройства"
 msgid "Model of the device used to create this media"
 msgstr "Модель устройства, на котором создан носитель"
 
-#, fuzzy
 msgid "application name"
-msgstr "геогр. местоположение"
+msgstr "имя приложения"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Модель устройства, на котором создан носитель"
+msgstr "Приложение с помощью которого создан носитель"
 
 msgid "application data"
-msgstr ""
+msgstr "данные приложения"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Произвольные данные приложения для преобразования в данные носителя"
 
 msgid "image orientation"
 msgstr "ориентация изображения"
@@ -958,13 +953,13 @@ msgid "controllable"
 msgstr "контролируемый"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "может быть равно состоянию NULL, READY, PAUSED или PLAYING"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "может быть равно только состоянию NULL, READY или PAUSED"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "может быть равно только состоянию NULL или READY"
 
 msgid "Blacklisted files:"
 msgstr "Файлы из чёрного списка:"
