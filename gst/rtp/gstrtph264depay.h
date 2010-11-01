@@ -55,7 +55,7 @@ struct _GstRtpH264Depay
   GstAdapter *picture_adapter;
   gboolean    picture_start;
   GstClockTime last_ts;
-  gboolean    last_delta;
+  gboolean    last_keyframe;
 };
 
 struct _GstRtpH264DepayClass

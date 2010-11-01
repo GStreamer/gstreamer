@@ -413,7 +413,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   guint8 *data;
   GstBuffer *outbuf = NULL;
   GstClockTime out_timestamp;
-  gboolean delta, out_delta;
+  gboolean keyframe, out_keyframe;
 
   size = GST_BUFFER_SIZE (nal);
   if (G_UNLIKELY (size < 5))
@@ -424,9 +424,9 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   nal_type = data[4] & 0x1f;
   GST_DEBUG_OBJECT (rtph264depay, "handle NAL type %d", nal_type);
 
-  delta = !NAL_TYPE_IS_KEY (nal_type);
+  keyframe = NAL_TYPE_IS_KEY (nal_type);
 
-  out_delta = delta;
+  out_keyframe = keyframe;
   out_timestamp = in_timestamp;
 
   if (rtph264depay->merge) {
@@ -460,9 +460,9 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
       outbuf = gst_adapter_take_buffer (rtph264depay->picture_adapter, outsize);
 
       out_timestamp = rtph264depay->last_ts;
-      out_delta = rtph264depay->last_delta;
+      out_keyframe = rtph264depay->last_keyframe;
 
-      rtph264depay->last_delta = FALSE;
+      rtph264depay->last_keyframe = FALSE;
       rtph264depay->picture_start = FALSE;
     }
 
@@ -470,7 +470,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
     GST_DEBUG_OBJECT (depayload, "adding NAL to picture adapter");
     gst_adapter_push (rtph264depay->picture_adapter, nal);
     rtph264depay->last_ts = in_timestamp;
-    rtph264depay->last_delta |= delta;
+    rtph264depay->last_keyframe |= keyframe;
     rtph264depay->picture_start |= start;
   } else {
     /* no merge, output is input nal */
@@ -484,16 +484,16 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
       GST_DEBUG_OBJECT (depayload, "prepending codec_data");
       outbuf = gst_buffer_join (rtph264depay->codec_data, outbuf);
       rtph264depay->codec_data = NULL;
-      out_delta = FALSE;
+      out_keyframe = TRUE;
     }
     outbuf = gst_buffer_make_metadata_writable (outbuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = out_timestamp;
 
-    if (out_delta)
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-    else
+    if (out_keyframe)
       GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    else
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
@@ -782,7 +782,7 @@ gst_rtp_h264_depay_change_state (GstElement * element,
       rtph264depay->wait_start = TRUE;
       gst_adapter_clear (rtph264depay->picture_adapter);
       rtph264depay->picture_start = FALSE;
-      rtph264depay->last_delta = FALSE;
+      rtph264depay->last_keyframe = FALSE;
       break;
     default:
       break;
