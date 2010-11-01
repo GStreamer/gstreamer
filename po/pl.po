@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-27 20:45+0200\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-25 07:15+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -294,119 +294,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "TRM ID wg MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "szybkość migawki"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Szybkość migawki zastosowana przy robieniu zdjęcia, w sekundach"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "współczynnik przysłony"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Przysłona (liczba f) użyta przy robieniu zdjęcia"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "ogniskowa obiektywu"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Długość ogniskowej obiektywu użyta przy robieniu zdjęcia, w mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "współczynnik powiększenia cyfrowego"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Współczynnik powiększenia cyfrowego użytego przy robieniu zdjęcia"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "czyłość ISO"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Czułość ISO użyta przy robieniu zdjęcia"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "program ekspozycji"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Program ekspozycji użyty przy robieniu zdjęcia"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "tryb ekspozycji"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Tryb ekspozycji użyty przy robieniu zdjęcia"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "Tyb sceny zdjęcia"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Tryb sceny użyty przy robieniu zdjęcia"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "korekcja zdjęcia"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Całkowita korekcja zastosowana dla zdjęcia"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "balans bieli"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Tryb balansu bieli ustawiony przy robieniu zdjęcia"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "kontrast zdjęcia"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Kierunek korekty kontrastu zastosowanej przy robieniu zdjęcia"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "nasycenie zdjęcia"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Kierunek korekty nasycenia zastosowanej przy robieniu zdjęcia"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "ostrość zdjęcia"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Kierunek korekty ostrości zastosowanej przy robieniu zdjęcia"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "użycie flesza"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Czy flesz był uruchomiony przy robieniu zdjęcia"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "tryb flesza"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Tryb flesza wybrany przy robieniu zdjęcia"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "tryb pomiaru dla zdjęcia"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Tryb pomiaru użyty przy określaniu ekspozycji dla zdjęcia"
 
 msgid "capturing source"
-msgstr ""
+msgstr "źródło zdjęcia"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Źródło lub rodzaj urządzenia użytego do zrobienia zdjęcia"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "rozdzielczość pozioma"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Rozdzielczość pozioma nośnika w pikselach na cal"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "rozdzielczość pionowa"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Rozdzielczość pionowa nośnika w pikselach na cal"
 
 msgid "This CD has no audio tracks"
 msgstr "Ta płyta CD nie ma ścieżek dźwiękowych"

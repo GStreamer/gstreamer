@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-30 22:47+0200\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-27 09:44+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -295,119 +295,133 @@ msgid "MusicBrainz TRM ID"
 msgstr "identifiant TRM MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "vitesse d'obturation de la capture"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr ""
+"Vitesse d'obturation utilisée lors de la capture de l'image, en secondes"
 
+# http://www.blog-couleur.com/?Qu-est-ce-que-l-ouverture-en
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "ouverture absolue de la capture"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Ouverture absolue (nombre f) utilisée lors de la capture de l'image"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "distance focale de la capture"
 
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr ""
+"Distance focale de l'optique utilisée pour la capture de l'image, en mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "valeur du zoom numérique de la capture"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Valeur du zoom numérique utilisé lors de la capture de l'image"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "sensibilité iso de la capture"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "La sensibilité ISO utilisée lors de la capture de l'image"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "programme d'exposition de la capture"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Le programme d'exposition utilisé lors de la capture de l'image"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "mode d'exposition de la capture"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Le mode d'exposition utilisé lors de la capture de l'image"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "type de mode scène de la capture"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Le mode scène utilisé lors de la capture de l'image"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "ajustement de gain de la capture"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "L'ajustement général de gain appliqué à une image"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "balance des blancs de la capture"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Le mode de balance des blancs défini lors de la capture d'une image"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "contraste de la capture"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr ""
+"La direction du traitement de contraste appliqué lors de la capture d'une "
+"image"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "saturation de la capture"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"La direction du traitement de saturation appliqué lors de la capture d'une "
+"image"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "netteté de la capture"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
+"La direction du traitement de netteté appliqué lors de la capture d'une image"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "flash utilisé pour la capture"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Indique si le flash a été utilisé pour capturer une image"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "mode de flash de la capture"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Le mode de flash sélectionné lors de la capture d'une image"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "mode de msure de la capture"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Le mode de mesure utilisé lors de l'évaluation de l'exposition pour la "
+"capture d'une image"
 
 msgid "capturing source"
-msgstr ""
+msgstr "source de capture"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "La source ou le type d'appareil utilisé pour la capture"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "ppp horizontal de l'image"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Densité de pixels horizontale annoncée par le média (image/vidéo), en points "
+"par pouce"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "ppp vertical de l'image"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Densité de pixels verticale annoncée par le média (image/vidéo), en points "
+"par pouce"
 
 msgid "This CD has no audio tracks"
 msgstr "Ce CD ne contient aucune piste audio"

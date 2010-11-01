@@ -4,10 +4,10 @@
 # Makoto Kato <makoto.kt@gmail.com>, 2009-2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-02-26 18:09+0900\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
@@ -188,9 +188,9 @@ msgstr "autovideosinkと%sエレメントの両方が見つかりません。"
 msgid "The autovideosink element is missing."
 msgstr "autovideosinkエレメントが見つかりません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "autovideosinkエレメントが動作していません。"
+msgstr "設定された videosink %s が動作していません。"
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -212,9 +212,9 @@ msgstr "autoaudiosinkと%sエレメントの両方が見つかりません。"
 msgid "The autoaudiosink element is missing."
 msgstr "autoaudiosinkエレメントが見つかりません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "autoaudiosinkエレメントが動作していません。"
+msgstr "設定された autoaudiosink %s が動作していません。"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -223,9 +223,8 @@ msgstr "autoaudiosinkと%sエレメントの両方が動作していません。
 msgid "The autoaudiosink element is not working."
 msgstr "autoaudiosinkエレメントが動作していません。"
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "ビデオなしでテキストファイルを再生できません。"
+msgstr "ビデオまたは視覚化なしでテキストファイルを再生できません。"
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -291,10 +290,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "キャプチャーのシャッタースピード"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "イメージをキャプチャするときに使われるシャッタースピード (秒)"
 
 msgid "capturing focal ratio"
 msgstr ""
@@ -345,25 +344,25 @@ msgid "The overall gain adjustment applied on an image"
 msgstr ""
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "キャプチャーのホワイトバランス"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "イメージをキャプチャするときのホワイトバランスモードセット"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "キャプチャーのコントラスト"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr ""
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "キャプチャーの彩度"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "キャプチャーのシャープネス"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
@@ -388,7 +387,7 @@ msgid ""
 msgstr ""
 
 msgid "capturing source"
-msgstr ""
+msgstr "キャプチャーのソース"
 
 msgid "The source or type of device used for the capture"
 msgstr ""
@@ -587,19 +586,19 @@ msgid "Plugin or element of unknown type"
 msgstr "不明な種類のプラグインまたはエレメント"
 
 msgid "No device specified."
-msgstr "デバイスが指定されていません"
+msgstr "デバイスが指定されていません。"
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "デバイス \"%s\" は存在しません"
+msgstr "デバイス \"%s\" は存在しません。"
 
 #, c-format
 msgid "Device \"%s\" is already being used."
-msgstr "デバイス \"%s\" は既に使われています"
+msgstr "デバイス \"%s\" は既に使われています。"
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした"
+msgstr "読み込み用と書き込み用にデバイス \"%s\" を開くことができませんでした。"
 
 #~ msgid "No file name specified."
 #~ msgstr "ファイル名が指定されていません"

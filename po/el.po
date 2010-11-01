@@ -1,16 +1,16 @@
 # Greek translation for gst-plugins-base.
 # This file is put in the public domain.
 #
-# Michael Kotsarinis <mk73628@gmail.com>, 2010.
 # Simos Xenitellis <simos.lists@googlemail.com>, 2010.
+# Michael Kotsarinis <mk73628@gmail.com>, 2010. 
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-09-04 15:30+0300\n"
-"Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-27 12:05+0200\n"
+"Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
@@ -370,58 +370,55 @@ msgstr ""
 "Η κατεύθυνση της επεξεργασίας του κορεσμού  που εφαρμόσθηκε κατά τη λήψη "
 "μιας εικόνας"
 
-#, fuzzy
 msgid "capturing sharpness"
-msgstr "κορεσμός λήψης"
+msgstr "ευκρίνεια λήψης"
 
-#, fuzzy
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
-"Η κατεύθυνση της επεξεργασίας του κορεσμού  που εφαρμόσθηκε κατά τη λήψη "
+"Η κατεύθυνση της επεξεργασίας της ευκρίνειας  που εφαρμόσθηκε κατά τη λήψη "
 "μιας εικόνας"
 
 msgid "capturing flash fired"
 msgstr "ενεργοποίηση φλας στη λήψη"
 
-#, fuzzy
 msgid "If the flash fired while capturing an image"
 msgstr "Αν ενεργοποιήθηκε το φλας κατά τη λήψη μιας εικόνας"
 
 msgid "capturing flash mode"
 msgstr "κατάσταση φλας λήψης"
 
-#, fuzzy
 msgid "The selected flash mode while capturing an image"
-msgstr "Η επιλεγμένη κατάσταση του φλας κατά τη λήψη μιας εικόνας"
+msgstr "Η επιλεγμένη κατάσταση λειτουργίας του φλας κατά τη λήψη μιας εικόνας"
 
-#, fuzzy
 msgid "capturing metering mode"
-msgstr "τρόπος έκθεσης λήψης"
+msgstr "τρόπος φωτομέτρησης λήψης"
 
-#, fuzzy
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr "Ο τρόπος έκθεσης που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
+msgstr "Ο τρόπος φωτομέτρησης που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
-#, fuzzy
 msgid "capturing source"
-msgstr "ταχύτητα iso λήψης"
+msgstr "πηγή λήψης"
 
-#, fuzzy
 msgid "The source or type of device used for the capture"
-msgstr "Ο τρόπος σύλληψης σκηνής που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
+msgstr ""
+"Η πηγή ή ο τύπος της συσκευής που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "οριζόντια ppi εικόνας"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Η σκοπούμενη οριζόντια πυκνότητα εικονοστοιχείων (pixel) του μέσου (εικόνα/"
+"βίντεο) σε ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "κάθετα ppi εικόνας"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Η σκοπούμενη κάθετη πυκνότητα εικονοστοιχείων (pixel) του μέσου (εικόνα/"
+"βίντεο) σε ppi"
 
 msgid "This CD has no audio tracks"
 msgstr "Αυτό το CD δεν έχει ηχητικά κομμάτια"

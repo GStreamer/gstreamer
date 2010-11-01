@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.29.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-07-02 20:45+0100\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-25 12:19+0100\n"
 "Last-Translator: Matej Urbančič <matej.urban@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -248,9 +248,9 @@ msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
 msgid "Error while sending gdp header data to \"%s:%d\"."
 msgstr "Napaka med pošiljanjem podatkov glave gdp na \"%s:%d\"."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr "Napaka med pošiljanjem podatkov pretoka gdp na \"%s:%d\"."
+msgstr "Napaka med pošiljanjem vsebine pretoka gdp na \"%s:%d\"."
 
 #, c-format
 msgid "Connection to %s:%d refused."
@@ -293,119 +293,120 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "zajemanje hitrosti zaklopke"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Hitrost zaklopke uporabljena  med zajemanjem slike"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "zajemanje goriščnega razmerja"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Goriščno razmerje (število f) uporabljeno  med zajemanjem slike"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "zajemanje goriščne razdalje"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Goriščna razdalja leč uporabljena  med zajemanjem slike"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "zajemanje razmerja digitalnega približevanja"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Razmerje digitalnega približevanja uporabljeno  med zajemanjem slike"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "zajemanje ISO ravni hitrosti"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "ISO histrost uporabljena  med zajemanjem slike"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "zajemanje programa osvetljevanja"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Program osvetlitve uporabljen  med zajemanjem slike"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "zajemanje načina osvetljevanja"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Način osvetlitve uporabljen  med zajemanjem slike"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "zajemanje vrste izbranega programa scene"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Program načina zajemanja scene uporabljenega med zajemanjem slike"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "zajemanje prilagoditev ojačitve"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Skupna prilagoditev ojačitve slike."
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "zajemanje ravnotežja bele barve"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Način ravnotežja beline določen med zajemanjem slike"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "zajemanje kontrasta"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Smer kontrasta uporabljena med zajemanjem slike"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "zajemanje nasičenosti"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Smer nasičenosti uporabljena med zajemanjem slike"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "zajemanje ostrosti"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Smer ostrenja uporabljena med zajemanjem slike"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "zajemanje podatkov sproženja bliskavice"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Ali je bila bliskavica sprožena med zajemanjem slike"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "zajemanje načina bliskavice"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Izbran način bliskavice uporabljen med zajemanjem slike"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "zajemanje načina umerjanja"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Način umerjanja uporabljen med določevanjem osvetljenosti zajemanja slike"
 
 msgid "capturing source"
-msgstr ""
+msgstr "zajemanje izvora"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Izvorna naprava ali pa vrsta napreve uporabljena  med zajemanjem slike"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "vodoravne točke slike (ppi)"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Gostota (slika/video) vodoravnih točk (v ppi)"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "navpične točke slike (ppi)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Gostota (slika/video) navpičnih točk (v ppi)"
 
 msgid "This CD has no audio tracks"
 msgstr "Vstavljeni CD nosilec nima zvočnih sledi."
@@ -503,13 +504,12 @@ msgstr "Surovi %d-bitni zvok PCM"
 msgid "Raw PCM audio"
 msgstr "Surovi zvok PCM"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr "Zvočno pretvarjanje s plavajočo vejico"
+msgstr "Surov %d-bitni zvok določen s števili plavajoče vejice"
 
-#, fuzzy
 msgid "Raw floating-point audio"
-msgstr "Zvočno pretvarjanje s plavajočo vejico"
+msgstr "Surov zvok določen s števili plavajoče vejice"
 
 msgid "Audio CD source"
 msgstr "Zvočni disk"
@@ -523,21 +523,21 @@ msgstr "Vir protokola pretakanja Real Time (RTSP)"
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Vir protokola Microsoft Media Server (MMS)"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s protocol source"
-msgstr "Izvorna datoteka:"
+msgstr "%s vir protokola"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s video RTP depayloader"
-msgstr "Največje število RTP virov"
+msgstr "%s RTP razlagalnik video vsebine"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s audio RTP depayloader"
-msgstr "Največje število RTP virov"
+msgstr "%s RTP razlagalnik zvočne vsebine"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s RTP depayloader"
-msgstr "Največje število RTP virov"
+msgstr "%s RTP razlagalnik vsebine"
 
 #, c-format
 msgid "%s demuxer"
@@ -547,17 +547,17 @@ msgstr "%s odvijalnik"
 msgid "%s decoder"
 msgstr "%s odkodirnik"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s video RTP payloader"
-msgstr "%s video RTP koristna vsebina"
+msgstr "%s RTP nalagalnik video vsebine"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s audio RTP payloader"
-msgstr "%s zvočna RTP koristna vsebina"
+msgstr "%s RTP nalagalnik zvočne vsebine"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%s RTP payloader"
-msgstr "%s RTP nalagalnik"
+msgstr "%s RTP nalagalnik vsebine"
 
 #, c-format
 msgid "%s muxer"

@@ -6,10 +6,10 @@
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.29.2\n"
+"Project-Id-Version: gst-plugins-base-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-07-11 19:47+0200\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-31 10:51+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.1\n"
 
 msgid "Master"
 msgstr "Master"
@@ -291,119 +291,122 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID stopy TRM MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "rychlost závěrky záznamu"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Rychlost závěrky při záznamu obrazu, v sekundách"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "ohnisková vzdálenost záznamu"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Clonové číslo při záznamu obrazu"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "ohnisková vzdálenost záznamu"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Ohnisková vzdálenost čoček při záznamu obrazu, v mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "stupeň digitálního přiblížení záznamu"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Stupeň digitálního přiblížení při záznamu obrazu"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "rychlost ISO záznamu"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Rychlost ISO při záznamu obrazu"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "program expozice záznamu"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Program expozice při záznamu obrazu"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "režim expozice záznamu"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Režim expozice při záznamu obrazu"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "typ zachycení scény záznamu"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Typ zachycení scény při záznamu obrazu"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "úprava zesílení záznamu"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Úprava zesílení při záznamu obrazu"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "vyvážení bílé záznamu"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Režim vyvážení bílé nastavený při záznamu obrazu"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "kontrast záznamu"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Použité zpracování kontrastu při záznamu obrazu"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "sytost záznamu"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Použité zpracování sytosti při záznamu obrazu"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "ostrost záznamu"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Použité zpracování ostrosti při záznamu obrazu"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "použití blesku při záznamu"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Zda byl při záznamu obrazu použit blesk"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "režim blesku při záznamu"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Režim blesku vybraný při záznamu obrazu"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "režim měření při záznamu"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Režim měření expozice při záznamu obrazu"
 
 msgid "capturing source"
-msgstr ""
+msgstr "zdroj záznamu"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Zdroj nebo typ zařízení použitého při záznamu"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "pixelů na palec vodorovně v obrazu"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Zamýšlená hustota pixelů multimédia (image/video) vodorovně v pixelech na "
+"palec"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "pixelů na palec svisle v obrazu"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Zamýšlená hustota pixelů multimédia (image/video) svisle v pixelech na palec"
 
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá žádné zvukové stopy"

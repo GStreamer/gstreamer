@@ -1,22 +1,23 @@
 # Norwegian bokmaal translation of gst-utils.
 # This file is put in the public domain.
-# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
+# Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.14\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2007-11-03 14:50+0100\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-24 21:44+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Master"
-msgstr ""
+msgstr "Hovedvolum"
 
 msgid "Bass"
 msgstr "Bass"
@@ -46,15 +47,13 @@ msgid "Playback"
 msgstr "Spill av"
 
 msgid "Capture"
-msgstr ""
+msgstr "Ta opp"
 
-#, fuzzy
 msgid "Could not open device for playback in mono mode."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne enheten for avspilling i mono-modus."
 
-#, fuzzy
 msgid "Could not open device for playback in stereo mode."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne enheten for avspilling i stereo-modus."
 
 #, fuzzy, c-format
 msgid "Could not open device for playback in %d-channel mode."
@@ -66,9 +65,8 @@ msgid ""
 "application."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne lydenheten for avspilling."
 
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
@@ -88,19 +86,17 @@ msgid ""
 "application."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Kunne ikke åpne CD-enheten for lesing."
+msgstr "Kunne ikke åpne lydenheten for opptak."
 
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#, fuzzy
 msgid "Could not seek CD."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke søke på CD."
 
 msgid "Could not read CD."
-msgstr ""
+msgstr "Kunne ikke lese CD."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
@@ -113,37 +109,38 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Feil under lukking av fil «%s»."
+msgstr "Feil under skriving til fil «%s»."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Intern feil i datastrøm."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
+"Et %s-tillegg kreves for å spille av denne strømmen, men det er ikke "
+"installert."
 
 msgid "This appears to be a text file"
 msgstr "Dette ser ut som en tekstfil"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke bestemme type strøm."
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
+msgstr "Ugyldig URI «%s» til undertekst. Undertekst er slått av."
 
 msgid "No URI specified to play from."
-msgstr ""
+msgstr "Ingen URI for avspilling oppgitt."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Ugyldig URI «%s»."
 
 msgid "RTSP streams cannot be played yet."
-msgstr ""
+msgstr "RTSP-strømmer kan ikke spilles av ennå."
 
 msgid "Could not create \"decodebin\" element."
 msgstr ""
@@ -161,9 +158,8 @@ msgid ""
 "install the necessary plugins."
 msgstr ""
 
-#, fuzzy
 msgid "This is not a media file"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Dette er ikke en mediefil"
 
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
@@ -200,7 +196,7 @@ msgid "Custom text sink element is not usable."
 msgstr ""
 
 msgid "No volume control found"
-msgstr ""
+msgstr "Fant ikke volumkontroll"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -257,19 +253,19 @@ msgid "Failed to read tag: not enough data"
 msgstr ""
 
 msgid "track ID"
-msgstr ""
+msgstr "spor-ID"
 
 msgid "MusicBrainz track ID"
 msgstr ""
 
 msgid "artist ID"
-msgstr ""
+msgstr "artist-ID"
 
 msgid "MusicBrainz artist ID"
 msgstr ""
 
 msgid "album ID"
-msgstr ""
+msgstr "album-ID"
 
 msgid "MusicBrainz album ID"
 msgstr ""
@@ -402,7 +398,7 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
 
 msgid "This CD has no audio tracks"
-msgstr ""
+msgstr "Denne CDen har ingen lydspor"
 
 msgid "ID3 tag"
 msgstr ""
@@ -577,10 +573,10 @@ msgid "Unknown decoder element"
 msgstr ""
 
 msgid "Unknown encoder element"
-msgstr ""
+msgstr "Ukjent element for koding"
 
 msgid "Plugin or element of unknown type"
-msgstr ""
+msgstr "Tillegg eller element av ukjent type"
 
 msgid "No device specified."
 msgstr "Ingen enhet oppgitt."
@@ -589,25 +585,10 @@ msgstr "Ingen enhet oppgitt."
 msgid "Device \"%s\" does not exist."
 msgstr "Enhet «%s» eksisterer ikke."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device \"%s\" is already being used."
-msgstr "Enhet «%s» eksisterer ikke."
+msgstr "Enhet «%s» er allerede i bruk."
 
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Ingen enhet oppgitt."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-#, fuzzy
-#~ msgid "No file name specified."
-#~ msgstr "Ingen filnavn oppgitt."

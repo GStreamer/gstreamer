@@ -1,14 +1,16 @@
-# German messages for gst-plugins-base 0.10.28.2
+# German messages for gst-plugins-base 0.10.30.3
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
+# Mario Blättermann <mariobl@gnome.org>, 2010.
 # Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-26 23:28+0200\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-30 20:41+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -154,21 +156,21 @@ msgid ""
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 "Es wurde nur ein Datenstrom mit Untertiteln erkannt. Entweder laden Sie eine "
-"Datei mit Untertiteln, eine andere Art Textdatei oder die Mediendatei wurde "
-"nicht erkannt."
+"Datei mit Untertiteln oder eine andere Art Textdatei oder die Mediendatei "
+"wurde nicht erkannt."
 
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
-"Sie haben keinen Decoder für den Umgang mit diese Datei installiert. Sie "
+"Sie haben keinen Decoder für den Umgang mit dieser Datei installiert. Sie "
 "sollten die erforderlichen Plugins installieren."
 
 msgid "This is not a media file"
 msgstr "Dies ist keine Mediendatei"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr "Ein Datenstrom mit Untertitel wurde erkannt, aber kein Videostrom."
+msgstr "Ein Datenstrom mit Untertiteln wurde erkannt, aber kein Videostrom."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
@@ -176,7 +178,7 @@ msgstr "Beide Elemente »autovideosink« und »xvimagesink« fehlen."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
-"Das Element »%s« fehlt - überprüfen Sie Ihren Installation von GStreamer."
+"Das Element »%s« fehlt - überprüfen Sie Ihre Installation von GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
@@ -188,9 +190,10 @@ msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
 msgid "The autovideosink element is missing."
 msgstr "Das Element »autovideosink« fehlt."
 
+# »Senke« hört sich echt scheußlich an.
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Die konfigurierte Videosenke »%s« funktioniert nicht."
+msgstr "Das konfigurierte Videoziel »%s« funktioniert nicht."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -214,7 +217,7 @@ msgstr "Das Element »autoaudiosink« fehlt."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Die konfigurierte Audiosenke »%s« funktioniert nicht."
+msgstr "Das konfigurierte Audioziel »%s« funktioniert nicht."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -266,11 +269,12 @@ msgstr "Titelkennung"
 msgid "MusicBrainz track ID"
 msgstr "Titelkennung von MusicBrainz"
 
+# Hach, hier haben wir ja noch mehr »Interpreten«!
 msgid "artist ID"
-msgstr "Interpretenkennung"
+msgstr "Künstlerkennung"
 
 msgid "MusicBrainz artist ID"
-msgstr "Interpretenkennung von MusicBrainz"
+msgstr "Künstlerkennung von MusicBrainz"
 
 msgid "album ID"
 msgstr "Albenkennung"
@@ -279,10 +283,10 @@ msgid "MusicBrainz album ID"
 msgstr "Albenkennung von MusicBrainz"
 
 msgid "album artist ID"
-msgstr "Kennung des Albeninterpreten"
+msgstr "Kennung des Albenkünstlers"
 
 msgid "MusicBrainz album artist ID"
-msgstr "Kennung des Albeninterpreten von MusicBrainz"
+msgstr "Kennung des Albenkünstlers von MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "TRM-Kennung verfolgen"
@@ -291,122 +295,127 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz-TRM-Kennung"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "Belichtungszeit"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Belichtungszeit bei Aufnahme eines Bildes in Sekunden"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "Blendenwert"
 
+# F-Nummer kennt bei uns kein Mensch. Oder doch...?
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Der verwendete Blendenwert bei Bildaufnahme"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "Brennweite"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Die verwendete Brennweite des Objektivs bei Bildaufnahme in mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "Digitale Vergrößerung"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Die verwendete digitale Vergrößerung bei Bildaufnahme"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "ISO-Empfindlichkeit"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Die verwendete ISO-Empfindlichkeit bei Bildaufnahme"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "Belichtungsprogramm"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Das verwendete Belichtungsprogramm bei Bildaufnahme"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "Belichtungsmodus der Aufnahme"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Der verwendete Belichtungsmodus bei Bildaufnahme"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "Motivwahl"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Die verwendete Motivwahl bei Bildaufnahme"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "Anpassung der Aufnahmebelichtung"
 
+# »Gain adjustment« kenne ich eigentlich nur bei Audiodateien. Müsste sich hier um eine Anpassung der Belichtungswerte handeln.
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Die auf das Bild angewendete Anpassung der Belichtungswerte"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "Weißabgleich"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Der eingestellte Weißabgleich bei Bildaufnahme"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "Kontrast"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Die Einstellung zur angewendeten Kontrastbearbeitung bei Bildaufnahme"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "Sättigung"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"Die Einstellung zur angewendeten Sättigungsbearbeitung bei Bildaufnahme"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "Schärfe"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Die Einstellung zur angewendeten Schärfebearbeitung bei Bildaufnahme"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "Blitzauslösung"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Gibt an, ob der Blitz bei der Bildaufnahme ausgelöst wurde"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "Blitzmodus"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Der gewählte Blitzmodus bei Bildaufnahme"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "Messmethode der Aufnahme"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Die während der Bestimmung der Belichtungszeit eingesetzte Messmethode zur "
+"Aufnahme eines Bildes"
 
 msgid "capturing source"
-msgstr ""
+msgstr "Aufnahmequelle"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Die Quelle oder der Gerätetyp, mit dem aufgenommen wird"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "Horizontale Bildauflösung"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Horizontale Auflösung des Bildes oder Videos in ppi (Pixel pro Zoll)"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "Vertikale Bildauflösung"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Vertikale Auflösung des Bildes oder Videos in ppi (Pixel pro Zoll)"
 
 msgid "This CD has no audio tracks"
-msgstr "Auf dieser CD befinden sich keine Audio-Tracks"
+msgstr "Auf dieser CD befinden sich keine Audio-Titel"
 
 msgid "ID3 tag"
 msgstr "ID3-Kennzeichnung"
@@ -454,10 +463,10 @@ msgid "Kate subtitle format"
 msgstr "Untertitel-Format Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
-msgstr "Unkomprimiertes ebenes YUV 4:2:0"
+msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
 
 msgid "Uncompressed planar YVU 4:2:0"
-msgstr "Unkomprimiertes ebenes YVU 4:2:0"
+msgstr "Unkomprimiertes ungepacktes YVU 4:2:0"
 
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
@@ -475,10 +484,10 @@ msgid "Uncompressed packed YUV 4:4:4"
 msgstr "Unkomprimiertes gepacktes  YUV 4:4:4"
 
 msgid "Uncompressed planar YUV 4:2:2"
-msgstr "Unkomprimiertes ebenes YUV 4:2:2"
+msgstr "Unkomprimiertes ungepacktes YUV 4:2:2"
 
 msgid "Uncompressed planar YUV 4:1:1"
-msgstr "Unkomprimiertes ebenes YUV 4:1:1"
+msgstr "Unkomprimiertes ungepacktes YUV 4:1:1"
 
 msgid "Uncompressed black and white Y-plane"
 msgstr "Unkomprimiertes schwarz-weißes Y-plane"
@@ -518,7 +527,7 @@ msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Real Time Streaming Protocol (RTSP)-Quelle"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft Media Server (MMS) Protokollquelle"
+msgstr "Microsoft Media Server (MMS)-Protokollquelle"
 
 #, c-format
 msgid "%s protocol source"

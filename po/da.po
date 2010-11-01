@@ -5,12 +5,14 @@
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
 # Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010.
 #
+# capture -> optage
+# shutter -> lukketid
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-27 16:38+0100\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-27 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -291,122 +293,125 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-id"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "optager hastighed for lukketid"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Lukketidshastighed brug når et billede optages, i sekunder"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "optager brændforhold"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Brændforhold (f-nummer) brugt under optagelse af billedet"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "optager brændvidde"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Brændvidde på linser brugt under optagelse af billedet, i mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "optager digitalt zoomforhold"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Digitalt zoomforhold brugt under optagelse af et billede"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "optager iso-hastighed"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "ISO-hastigheden brugt under optagelse af et billede"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "optager belysningsprogram"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Belysningsprogrammet brugt under optagelse af et billede"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "optager belysningstilstand"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Belysningstilstanden brugt under optagelse af et billede"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "optager optagelsestype for scene"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Optagelsestilstanden for scene under optagelse af et billede"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "optager forøgelsesjustering"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Den samlede forøgelsesjustering brugt på et billede"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "optager hvidbalance"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Hvidbalancetilstanden angivet under optagelse af et billede"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "optager kontrast"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Retningen på kontrastprocessen brugt under optagelse af et billede"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "optager farvemætning"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"Retningen på farvemætningsprocessen brugt under optagelse af et billede"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "optager skarphed"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Retningen på skarphedsprocessen brugt under optagelse af et billede"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "optager blitzen der blev brugt"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Hvorvidt blitzen blev brugt under optagelse af et billede"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "optager blitztilstand"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Den valgte blitztilstand under optagelse af et billede"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "optager måletilstanden"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Måletilstanden brugt under bestemmelse af belysning under optagelse af et "
+"billede"
 
 msgid "capturing source"
-msgstr ""
+msgstr "optager kilde"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Kilden eller typen af enhed brugt under optagelsen"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "billedets vandrette billedtæthed (ppi)"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Påtænkt vandret billedtæthed for medie (billede/video) i ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "billedets lodrette billedtæthed (ppi)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Påtænkt lodret billedtæthed for medie (billede/video) i ppi"
 
 msgid "This CD has no audio tracks"
-msgstr "Denne cd har ingen lyd-spor"
+msgstr "Denne cd har ingen lydspor"
 
 msgid "ID3 tag"
 msgstr "ID3-mærke"

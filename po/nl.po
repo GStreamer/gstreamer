@@ -1,20 +1,20 @@
-# translation of gst-plugins-base-0.10.28.2.po to Dutch
+# translation of gst-plugins-base-0.10.30.3.po to Dutch
 # This file is put in the public domain.
 #
 # Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-30 15:37+0200\n"
+"POT-Creation-Date: 2010-11-01 16:36+0000\n"
+"PO-Revision-Date: 2010-10-25 22:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Master"
@@ -289,119 +289,128 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-ID"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "sluitersnelheid bij het maken"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Gebruikte sluitersnelheid bij het maken van een foto, in seconden"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "F-nummer bij maken"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Gebruikte F-nummer bij het maken van de foto"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "brandpuntsafstand bij maken"
 
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr ""
+"Ge bruikte brandpuntsafstand van de lens bij het maken van de foto, in mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "digitale zoom-verhouding bij het maken"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Gebruikte digitale zoom-verhouding bij het maken van een foto"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "ISO-snelheid bij het maken"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Gebruikte ISO-snelheid bij het maken van een foto"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "belichtingsprogramma bij het maken"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Gebruikte belichtingsprogramma bij het maken van een foto"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "belichtingmodus bij het maken"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Gebruikte belichtingmodus bij het maken van een foto"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "type scene-opname bij het maken"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Gebruikte type scene-opname bij het maken van een foto"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "aanpassing versterking bij het maken"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Gebruikte aanpassing versterking bij het maken van een foto"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "witbalans bij het maken"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Gebruikte witbalans bij het maken van een foto"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "contrast bij het maken"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr ""
+"De richting van de contrastbewerking toegepast bij het nemen van een foto"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "verzadiging bij het nemen"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"De richting van de bewerking van de verzadiging toegepast bij het nemen van "
+"een foto"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "scherpte bij het nemen"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
+"De richting van de scherptebewerking toegepast bij het nemen van een foto"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "flitser gebruikt bij het nemen"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Of de flitser is gebruikt bij het nemen van een foto"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "flitsmodus bij het nemen"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Geselecteerde flitsmodus bij het nemen van een foto"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "meetmethode bij het nemen"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"Gebruikte meetmethode bij het bepalen van de belichting voor het nemen van "
+"een foto"
 
 msgid "capturing source"
-msgstr ""
+msgstr "opnameapparaat bij het nemen"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Het gebruikte opnameapparaat of type apparaat voor het nemen"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "horizontale ppi van afbeelding"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Voorgenomen horizontale pixeldichtheid van medium (afbeelding/video) in ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "verticale ppi van afbeelding"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Voorgenomen verticale pixeldichtheid van medium (afbeelding/video) in ppi"
 
 msgid "This CD has no audio tracks"
 msgstr "Deze CD heeft geen audiotracks"
