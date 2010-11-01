@@ -4954,6 +4954,11 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  if (G_UNLIKELY (GST_EVENT_SRC (event) == NULL)) {
+    GST_LOG_OBJECT (pad, "event had no source, setting pad as event source");
+    GST_EVENT_SRC (event) = gst_object_ref (pad);
+  }
+
   if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
     GST_OBJECT_UNLOCK (pad);
 
