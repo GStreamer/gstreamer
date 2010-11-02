@@ -102,10 +102,10 @@ enum
 {
   PROP_0,
   PROP_MESSAGE,
-  PROP_CACHE,
+  PROP_CACHE
 };
 
-#define DEFAULT_PROP_ZBAR  1
+#define DEFAULT_CACHE FALSE
 
 static GstStaticPadTemplate gst_zbar_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -174,7 +174,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
   g_object_class_install_property (gobject_class, PROP_CACHE,
       g_param_spec_boolean ("cache", "cache",
           "Enable or disable the inter-image result cache",
-          TRUE,
+          DEFAULT_CACHE,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
@@ -187,7 +187,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
 static void
 gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
 {
-  zbar->cache = TRUE;
+  zbar->cache = DEFAULT_CACHE;
   zbar->message = TRUE;
 
   zbar->scanner = zbar_image_scanner_create ();
