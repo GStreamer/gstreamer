@@ -229,7 +229,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
   bus = gst_element_get_bus (pipeline);
   msg = gst_bus_timed_pop_filtered (bus, (25 * GST_SECOND),
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
-  gst_bus_unref (bus);
+  gst_object_unref (bus);
 
   if (msg) {
     switch (GST_MESSAGE_TYPE (msg)) {
