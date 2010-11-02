@@ -51,6 +51,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbin.c		\
 	gstbuffer.c		\
 	gstbufferlist.c		\
+	gstbufferpool.c		\
 	gstbus.c		\
 	gstcaps.c		\
 	gstchildproxy.c		\
@@ -143,6 +144,7 @@ gst_headers =			\
 	gstbin.h		\
 	gstbuffer.h		\
 	gstbufferlist.h		\
+	gstbufferpool.h		\
 	gstbus.h		\
 	gstcaps.h		\
 	gstchildproxy.h		\
