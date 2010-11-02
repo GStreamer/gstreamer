@@ -27,7 +27,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CAPS             (gst_caps_get_type())
+extern GType _gst_caps_type;
+
+#define GST_TYPE_CAPS             (_gst_caps_type)
 #define GST_CAPS(object)          ((GstCaps*)object)
 #define GST_IS_CAPS(object)       (GST_IS_MINI_OBJECT_TYPE(object, GST_TYPE_CAPS))
 
@@ -254,7 +256,6 @@ struct _GstStaticCaps {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType             gst_caps_get_type                (void);
 GstCaps *         gst_caps_new_empty               (void);
 GstCaps *         gst_caps_new_any                 (void);
 GstCaps *         gst_caps_new_simple              (const char    *media_type,

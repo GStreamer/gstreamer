@@ -98,6 +98,7 @@ void _priv_gst_quarks_initialize (void);
  * we want enterprise edition packagers dancing on our heads) */
 void  _gst_buffer_initialize (void);
 void  _gst_buffer_list_initialize (void);
+void  _gst_caps_initialize (void);
 void  _gst_event_initialize (void);
 void  _gst_format_initialize (void);
 void  _gst_message_initialize (void);

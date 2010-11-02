@@ -32,6 +32,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstBuffer GstBuffer;
 
+extern GType _gst_buffer_type;
+
 /**
  * GST_BUFFER_TRACE_NAME:
  *
@@ -39,7 +41,7 @@ typedef struct _GstBuffer GstBuffer;
  */
 #define GST_BUFFER_TRACE_NAME           "GstBuffer"
 
-#define GST_TYPE_BUFFER                         (gst_buffer_get_type())
+#define GST_TYPE_BUFFER                         (_gst_buffer_type)
 #define GST_IS_BUFFER(obj)                      (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER))
 #define GST_BUFFER_CAST(obj)                    ((GstBuffer *)(obj))
 #define GST_BUFFER(obj)                         (GST_BUFFER_CAST(obj))
@@ -286,8 +288,6 @@ struct _GstBuffer {
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
-
-GType       gst_buffer_get_type (void);
 
 /* allocation */
 GstBuffer * gst_buffer_new               (void);

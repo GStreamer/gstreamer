@@ -128,16 +128,7 @@
 #include "gstminiobject.h"
 #include "gstversion.h"
 
-static GType _gst_buffer_type = 0;
-
-GType
-gst_buffer_get_type (void)
-{
-  if (G_UNLIKELY (_gst_buffer_type == 0)) {
-    _gst_buffer_type = gst_mini_object_register ("GstBuffer");
-  }
-  return _gst_buffer_type;
-}
+GType _gst_buffer_type = 0;
 
 /* buffer alignment in bytes
  * an alignment of 8 would be the same as malloc() guarantees
@@ -167,15 +158,14 @@ aligned_malloc (gpointer * memptr, guint size)
 void
 _gst_buffer_initialize (void)
 {
-  /* the GstMiniObject types need to be class_ref'd once before it can be
-   * done from multiple threads;
-   * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  gst_buffer_get_type ();
+  if (G_LIKELY (_gst_buffer_type == 0)) {
+    _gst_buffer_type = gst_mini_object_register ("GstBuffer");
 #ifdef HAVE_GETPAGESIZE
 #ifdef BUFFER_ALIGNMENT_PAGESIZE
-  _gst_buffer_data_alignment = getpagesize ();
+    _gst_buffer_data_alignment = getpagesize ();
 #endif
 #endif
+  }
 }
 
 /**
@@ -337,7 +327,6 @@ gst_buffer_new (void)
  * gst_buffer_try_new_and_alloc() if you want to handle this case
  * gracefully or have gotten the size to allocate from an untrusted
  * source such as a media stream.
- * 
  *
  * Note that when @size == 0, the buffer data pointer will be NULL.
  *

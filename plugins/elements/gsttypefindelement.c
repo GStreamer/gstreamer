@@ -216,7 +216,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
 
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", _("caps"),
-          _("detected capabilities in stream"), gst_caps_get_type (),
+          _("detected capabilities in stream"), GST_TYPE_CAPS,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MINIMUM,
       g_param_spec_uint ("minimum", _("minimum"),
@@ -230,7 +230,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_CAPS,
       g_param_spec_boxed ("force-caps", _("force caps"),
-          _("force caps without doing a typefind"), gst_caps_get_type (),
+          _("force caps without doing a typefind"), GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstTypeFindElement::have-type:

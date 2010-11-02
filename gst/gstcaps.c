@@ -122,19 +122,17 @@ static void gst_caps_transform_to_string (const GValue * src_value,
 static gboolean gst_caps_from_string_inplace (GstCaps * caps,
     const gchar * string);
 
-static GType _gst_caps_type = 0;
+GType _gst_caps_type = 0;
 
-GType
-gst_caps_get_type (void)
+void
+_gst_caps_initialize (void)
 {
-  if (G_UNLIKELY (_gst_caps_type == 0)) {
+  if (G_LIKELY (_gst_caps_type == 0)) {
     _gst_caps_type = gst_mini_object_register ("GstCaps");
 
     g_value_register_transform_func (_gst_caps_type,
         G_TYPE_STRING, gst_caps_transform_to_string);
   }
-
-  return _gst_caps_type;
 }
 
 static GstCaps *

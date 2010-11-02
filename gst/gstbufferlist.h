@@ -27,7 +27,9 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BUFFER_LIST      (gst_buffer_list_get_type ())
+extern GType _gst_buffer_list_type;
+
+#define GST_TYPE_BUFFER_LIST      (_gst_buffer_list_type)
 #define GST_IS_BUFFER_LIST(obj)   (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_BUFFER_LIST))
 #define GST_BUFFER_LIST_CAST(obj) ((GstBufferList *)obj)
 #define GST_BUFFER_LIST(obj)      (GST_BUFFER_LIST_CAST(obj))
@@ -103,8 +105,6 @@ typedef enum {
 typedef GstBufferListItem (*GstBufferListFunc)   (GstBuffer **buffer, guint group, guint idx,
                                                   gpointer user_data);
 
-
-GType gst_buffer_list_get_type (void);
 
 /* allocation */
 GstBufferList *gst_buffer_list_new (void);

@@ -159,14 +159,14 @@ struct _GstBufferListIterator
   GList *last_returned;
 };
 
-static GType _gst_buffer_list_type = 0;
+GType _gst_buffer_list_type = 0;
 
 void
 _gst_buffer_list_initialize (void)
 {
-  GType type = gst_buffer_list_get_type ();
-
-  _gst_buffer_list_type = type;
+  if (G_LIKELY (_gst_buffer_list_type == 0)) {
+    _gst_buffer_list_type = gst_mini_object_register ("GstBufferList");
+  }
 }
 
 static GstBufferList *
@@ -399,15 +399,6 @@ gst_buffer_list_get (GstBufferList * list, guint group, guint idx)
     tmp = g_list_next (tmp);
   }
   return NULL;
-}
-
-GType
-gst_buffer_list_get_type (void)
-{
-  if (G_UNLIKELY (_gst_buffer_list_type == 0)) {
-    _gst_buffer_list_type = gst_mini_object_register ("GstBufferList");
-  }
-  return _gst_buffer_list_type;
 }
 
 /**
