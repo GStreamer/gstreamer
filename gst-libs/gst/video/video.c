@@ -349,19 +349,22 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
     } else if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
       int depth;
       int bpp;
-      int endianness;
-      int red_mask;
-      int green_mask;
-      int blue_mask;
-      int alpha_mask;
+      int endianness = 0;
+      int red_mask = 0;
+      int green_mask = 0;
+      int blue_mask = 0;
+      int alpha_mask = 0;
       gboolean have_alpha;
 
       ok &= gst_structure_get_int (structure, "depth", &depth);
       ok &= gst_structure_get_int (structure, "bpp", &bpp);
-      ok &= gst_structure_get_int (structure, "endianness", &endianness);
-      ok &= gst_structure_get_int (structure, "red_mask", &red_mask);
-      ok &= gst_structure_get_int (structure, "green_mask", &green_mask);
-      ok &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
+
+      if (bpp != 8) {
+        ok &= gst_structure_get_int (structure, "endianness", &endianness);
+        ok &= gst_structure_get_int (structure, "red_mask", &red_mask);
+        ok &= gst_structure_get_int (structure, "green_mask", &green_mask);
+        ok &= gst_structure_get_int (structure, "blue_mask", &blue_mask);
+      }
       have_alpha = gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
 
       if (depth == 24 && bpp == 32 && endianness == G_BIG_ENDIAN) {
@@ -390,6 +393,8 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
         if (*format == GST_VIDEO_FORMAT_UNKNOWN) {
           ok = FALSE;
         }
+      } else if (depth == 8 && bpp == 8) {
+        *format = GST_VIDEO_FORMAT_RGB8_PALETTED;
       } else {
         ok = FALSE;
       }
@@ -605,6 +610,10 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         depth = 15;
         have_alpha = FALSE;
         break;
+      case GST_VIDEO_FORMAT_RGB8_PALETTED:
+        bpp = 8;
+        depth = 8;
+        have_alpha = FALSE;
       default:
         return NULL;
     }
@@ -649,21 +658,26 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         default:
           return NULL;
       }
-    } else {
+    } else if (bpp != 8) {
       return NULL;
     }
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, bpp,
         "depth", G_TYPE_INT, depth,
-        "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-        "red_mask", G_TYPE_INT, red_mask,
-        "green_mask", G_TYPE_INT, green_mask,
-        "blue_mask", G_TYPE_INT, blue_mask,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+
+    if (bpp != 8) {
+      gst_caps_set_simple (caps,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+          "red_mask", G_TYPE_INT, red_mask,
+          "green_mask", G_TYPE_INT, green_mask,
+          "blue_mask", G_TYPE_INT, blue_mask, NULL);
+    }
+
     if (have_alpha) {
       alpha_mask =
           mask >> (8 * gst_video_format_get_component_offset (format, 3,
@@ -985,6 +999,7 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return TRUE;
     default:
       return FALSE;
@@ -1038,6 +1053,7 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_RGB15:
     case GST_VIDEO_FORMAT_BGR15:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return FALSE;
     default:
       return FALSE;
@@ -1107,6 +1123,7 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return TRUE;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
@@ -1217,6 +1234,8 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
       } else {
         return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
       }
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      return GST_ROUND_UP_4 (width);
     default:
       return 0;
   }
@@ -1303,6 +1322,8 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
     case GST_VIDEO_FORMAT_UYVP:
       /* UYVP is packed at the bit level, so pixel stride doesn't make sense */
       return 0;
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      return 1;
     default:
       return 0;
   }
@@ -1375,6 +1396,7 @@ gst_video_format_get_component_width (GstVideoFormat format,
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return width;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1449,6 +1471,7 @@ gst_video_format_get_component_height (GstVideoFormat format,
     case GST_VIDEO_FORMAT_Y800:
     case GST_VIDEO_FORMAT_Y16:
     case GST_VIDEO_FORMAT_UYVP:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return height;
     case GST_VIDEO_FORMAT_A420:
       if (component == 0 || component == 3) {
@@ -1673,6 +1696,8 @@ gst_video_format_get_component_offset (GstVideoFormat format,
             2 * GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2) *
             (GST_ROUND_UP_2 (height) / 2);
       }
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
+      return 0;
     default:
       return 0;
   }
@@ -1746,6 +1771,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
       return GST_ROUND_UP_4 (width) * GST_ROUND_UP_2 (height) * 3 / 2;
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_Y800:
+    case GST_VIDEO_FORMAT_RGB8_PALETTED:
       return GST_ROUND_UP_4 (width) * height;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
@@ -1957,4 +1983,36 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
   if (in_still)
     *in_still = ev_still_state;
   return TRUE;
+}
+
+/**
+ * gst_video_parse_caps_palette:
+ * @caps: #GstCaps to parse
+ *
+ * Returns the palette data from the caps as a #GstBuffer. For
+ * #GST_VIDEO_FORMAT_RGB8_PALETTED this is containing 256 #guint32
+ * values, each containing ARGB colors in native endianness.
+ *
+ * Returns: a #GstBuffer containing the palette data. Unref after usage.
+ * Since: 0.10.32
+ */
+GstBuffer *
+gst_video_parse_caps_palette (GstCaps * caps)
+{
+  GstStructure *s;
+  const GValue *p_v;
+  GstBuffer *p;
+
+  if (!gst_caps_is_fixed (caps))
+    return NULL;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  p_v = gst_structure_get_value (s, "palette_data");
+  if (!p_v || !GST_VALUE_HOLDS_BUFFER (p_v))
+    return NULL;
+
+  p = gst_buffer_ref (gst_value_get_buffer (p_v));
+
+  return p;
 }
