@@ -853,7 +853,6 @@ GST_START_TEST (test_xmp_parsing)
 
 GST_END_TEST;
 
-
 static void
 tag_list_equals (GstTagList * taglist, GstTagList * taglist2)
 {
@@ -1238,6 +1237,8 @@ GST_START_TEST (test_exif_multiple_tags)
   g_value_unset (&value);
 
   do_exif_tag_serialization_deserialization (taglist);
+
+  gst_tag_list_free (taglist);
 }
 
 GST_END_TEST;
