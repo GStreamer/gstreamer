@@ -105,7 +105,8 @@ enum
   PROP_CACHE
 };
 
-#define DEFAULT_CACHE FALSE
+#define DEFAULT_CACHE    FALSE
+#define DEFAULT_MESSAGE  TRUE
 
 static GstStaticPadTemplate gst_zbar_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -167,9 +168,9 @@ gst_zbar_class_init (GstZBarClass * g_class)
   gobject_class->finalize = gst_zbar_finalize;
 
   g_object_class_install_property (gobject_class, PROP_MESSAGE,
-      g_param_spec_boolean ("message", "mesage",
+      g_param_spec_boolean ("message", "message",
           "Post a barcode message for each detected code",
-          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_MESSAGE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CACHE,
       g_param_spec_boolean ("cache", "cache",
@@ -188,7 +189,7 @@ static void
 gst_zbar_init (GstZBar * zbar, GstZBarClass * g_class)
 {
   zbar->cache = DEFAULT_CACHE;
-  zbar->message = TRUE;
+  zbar->message = DEFAULT_MESSAGE;
 
   zbar->scanner = zbar_image_scanner_create ();
 }
