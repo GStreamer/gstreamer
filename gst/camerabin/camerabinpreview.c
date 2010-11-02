@@ -229,6 +229,7 @@ gst_camerabin_preview_convert (GstCameraBin * camera,
   bus = gst_element_get_bus (pipeline);
   msg = gst_bus_timed_pop_filtered (bus, (25 * GST_SECOND),
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+  gst_bus_unref (bus);
 
   if (msg) {
     switch (GST_MESSAGE_TYPE (msg)) {
@@ -308,15 +309,17 @@ gst_camerabin_preview_send_event (GstCameraBin * camera, GstElement * pipeline,
     GstEvent * evt)
 {
   GstElement *src;
+  gboolean ret = FALSE;
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "prev_src");
   if (!src) {
     GST_WARNING ("Preview pipeline doesn't have src element, can't push event");
     gst_event_unref (evt);
-    return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (camera, "Pushing event %p to preview pipeline", evt);
+    ret = gst_element_send_event (src, evt);
+    gst_object_unref (src);
   }
 
-  GST_DEBUG_OBJECT (camera, "Pushing event %p to preview pipeline", evt);
-
-  return gst_element_send_event (src, evt);
+  return ret;
 }
