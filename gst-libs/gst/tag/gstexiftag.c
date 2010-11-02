@@ -1223,8 +1223,12 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
 
   tagtype = gst_tag_get_type (tag->gst_tag);
   if (tagtype == GST_TYPE_BUFFER) {
-    GstBuffer *buf = gst_buffer_new ();
-    gst_buffer_set_data (buf, data, count);
+    GstBuffer *buf;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = data;
+    GST_BUFFER_MALLOCDATA (buf) = data;
+    GST_BUFFER_SIZE (buf) = count;
     data = NULL;
 
     gst_tag_list_add (reader->taglist, GST_TAG_MERGE_APPEND, tag->gst_tag,
