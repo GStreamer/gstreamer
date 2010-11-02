@@ -46,10 +46,10 @@ typedef struct _GstMIOFindRateCtx GstMIOFindRateCtx;
 struct _GstMIOVideoFormat
 {
   TundraObjectID stream;
-  FigFormatDescription *desc;
+  CMFormatDescriptionRef desc;
 
   UInt32 type;
-  FigVideoDimensions dim;
+  CMVideoDimensions dim;
 };
 
 struct _GstMIOSetFormatCtx
@@ -553,7 +553,7 @@ gst_mio_video_device_find_closest_framerate (GstMIOVideoDevice * self,
   }
 }
 
-FigFormatDescription *
+CMFormatDescriptionRef
 gst_mio_video_device_get_selected_format (GstMIOVideoDevice * self)
 {
   return self->selected_format;
@@ -599,12 +599,12 @@ gst_mio_video_device_formats_foreach (GstMIOVideoDevice * self,
       GstMIOVideoFormat fmt;
 
       fmt.stream = stream;
-      fmt.desc = (FigFormatDescription *)
+      fmt.desc = (CMFormatDescriptionRef)
           CFArrayGetValueAtIndex (formats, fmt_idx);
-      if (cm->FigFormatDescriptionGetMediaType (fmt.desc) != kFigMediaTypeVideo)
+      if (cm->CMFormatDescriptionGetMediaType (fmt.desc) != kFigMediaTypeVideo)
         continue;
-      fmt.type = cm->FigFormatDescriptionGetMediaSubType (fmt.desc);
-      fmt.dim = cm->FigVideoFormatDescriptionGetDimensions (fmt.desc);
+      fmt.type = cm->CMFormatDescriptionGetMediaSubType (fmt.desc);
+      fmt.dim = cm->CMVideoFormatDescriptionGetDimensions (fmt.desc);
 
       func (self, &fmt, user_data);
     }
@@ -696,19 +696,19 @@ gst_mio_video_device_print_debug_info (GstMIOVideoDevice * self)
     g_print ("      <%u formats>\n", (guint) num_formats);
 
     for (fmt_idx = 0; fmt_idx != num_formats; fmt_idx++) {
-      const FigFormatDescription *fmt;
+      CMFormatDescriptionRef fmt;
       gchar *media_type;
       gchar *media_sub_type;
-      FigVideoDimensions dim;
+      CMVideoDimensions dim;
       GArray *rates;
       guint rate_idx;
 
       fmt = CFArrayGetValueAtIndex (formats, fmt_idx);
       media_type = gst_mio_fourcc_to_string
-          (cm->FigFormatDescriptionGetMediaType (fmt));
+          (cm->CMFormatDescriptionGetMediaType (fmt));
       media_sub_type = gst_mio_fourcc_to_string
-          (cm->FigFormatDescriptionGetMediaSubType (fmt));
-      dim = cm->FigVideoFormatDescriptionGetDimensions (fmt);
+          (cm->CMFormatDescriptionGetMediaSubType (fmt));
+      dim = cm->CMVideoFormatDescriptionGetDimensions (fmt);
 
       g_print ("      format[%u]: MediaType='%s' MediaSubType='%s' %ux%u\n",
           (guint) fmt_idx, media_type, media_sub_type,

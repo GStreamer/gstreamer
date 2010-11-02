@@ -66,7 +66,7 @@ struct _GstVTDec
   gint negotiated_fps_n, negotiated_fps_d;
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
-  FigFormatDescription * fmt_desc;
+  CMFormatDescriptionRef fmt_desc;
   VTDecompressionSession * session;
 
   GstBuffer * cur_inbuf;

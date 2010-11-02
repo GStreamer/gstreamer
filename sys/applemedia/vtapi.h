@@ -37,7 +37,7 @@ typedef struct _VTCompressionOutputCallback VTCompressionOutputCallback;
 typedef struct _VTDecompressionOutputCallback VTDecompressionOutputCallback;
 
 typedef VTStatus (* VTCompressionOutputCallbackFunc) (void * data, int a2,
-    int a3, int a4, FigSampleBuffer * sbuf, int a6, int a7);
+    int a3, int a4, CMSampleBufferRef sbuf, int a6, int a7);
 typedef void (* VTDecompressionOutputCallbackFunc) (void * data, gsize unk1,
     VTStatus result, gsize unk2, CVBufferRef cvbuf);
 
@@ -69,7 +69,7 @@ struct _GstVTApi
   GstDynApi parent;
 
   VTStatus (* VTCompressionSessionCompleteFrames)
-      (VTCompressionSession * session, FigTime completeUntilDisplayTimestamp);
+      (VTCompressionSession * session, CMTime completeUntilDisplayTimestamp);
   VTStatus (* VTCompressionSessionCopyProperty)
       (VTCompressionSession * session, CFTypeRef key, void* unk,
       CFTypeRef * value);
@@ -82,7 +82,7 @@ struct _GstVTApi
       VTCompressionSession ** session);
   VTStatus (* VTCompressionSessionEncodeFrame)
       (VTCompressionSession * session, CVPixelBufferRef pixelBuffer,
-      FigTime displayTimestamp, FigTime displayDuration,
+      CMTime displayTimestamp, CMTime displayDuration,
       CFDictionaryRef frameOptions, void * sourceTrackingCallback,
       void * sourceFrameRefCon);
   void (* VTCompressionSessionInvalidate)
@@ -96,12 +96,12 @@ struct _GstVTApi
       CFTypeRef propValue);
 
   VTStatus (* VTDecompressionSessionCreate)
-      (CFAllocatorRef allocator, FigFormatDescription * videoFormatDescription,
+      (CFAllocatorRef allocator, CMFormatDescriptionRef videoFormatDescription,
       CFTypeRef sessionOptions, CFDictionaryRef destinationPixelBufferAttributes,
       VTDecompressionOutputCallback * outputCallback,
       VTDecompressionSession ** session);
   VTStatus (* VTDecompressionSessionDecodeFrame)
-      (VTDecompressionSession * session, FigSampleBuffer * sbuf, gsize unk1,
+      (VTDecompressionSession * session, CMSampleBufferRef sbuf, gsize unk1,
       gsize unk2, gsize unk3);
   void (* VTDecompressionSessionInvalidate)
       (VTDecompressionSession * session);

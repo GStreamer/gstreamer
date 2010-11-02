@@ -71,9 +71,9 @@ static gboolean gst_iphone_camera_src_select_format (GstIPhoneCameraSrc * self,
 static gboolean gst_iphone_camera_src_parse_imager_format
     (GstIPhoneCameraSrc * self, guint index, CFDictionaryRef imager_format,
     GstIPhoneCameraFormat * format);
-static FigStatus gst_iphone_camera_src_set_device_property_i32
+static OSStatus gst_iphone_camera_src_set_device_property_i32
     (GstIPhoneCameraSrc * self, CFStringRef name, SInt32 value);
-static FigStatus gst_iphone_camera_src_set_device_property_cstr
+static OSStatus gst_iphone_camera_src_set_device_property_cstr
     (GstIPhoneCameraSrc * self, const gchar * name, const gchar * value);
 
 static GstPushSrcClass *parent_class;
@@ -333,7 +333,7 @@ gst_iphone_camera_src_unlock_stop (GstBaseSrc * basesrc)
 }
 
 static Boolean
-gst_iphone_camera_src_validate (FigBufferQueueRef queue, FigSampleBuffer * buf,
+gst_iphone_camera_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
     void *refCon)
 {
   GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (refCon);
@@ -351,15 +351,15 @@ gst_iphone_camera_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
   GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (pushsrc);
   GstCMApi *cm = self->ctx->cm;
-  FigSampleBuffer *sbuf = NULL;
+  CMSampleBufferRef sbuf = NULL;
   GstClock *clock;
   GstClockTime ts;
 
   BUFQUEUE_LOCK (self);
   while (self->running && !self->has_pending)
     BUFQUEUE_WAIT (self);
-  sbuf = cm->FigBufferQueueDequeueAndRetain (self->queue);
-  self->has_pending = !cm->FigBufferQueueIsEmpty (self->queue);
+  sbuf = cm->CMBufferQueueDequeueAndRetain (self->queue);
+  self->has_pending = !cm->CMBufferQueueIsEmpty (self->queue);
   BUFQUEUE_UNLOCK (self);
 
   if (G_UNLIKELY (!self->running))
@@ -414,7 +414,7 @@ gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
   GstCMApi *cm = NULL;
   GstMTApi *mt = NULL;
   GstCelApi *cel = NULL;
-  FigStatus status;
+  OSStatus status;
   FigCaptureDeviceRef device = NULL;
   FigBaseObjectRef device_base;
   FigBaseVTable *device_vt;
@@ -422,7 +422,7 @@ gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
   FigBaseObjectRef stream_base;
   FigBaseVTable *stream_vt;
   FigCaptureStreamIface *stream_iface;
-  FigBufferQueueRef queue = NULL;
+  CMBufferQueueRef queue = NULL;
 
   ctx = gst_core_media_ctx_new (GST_API_CORE_VIDEO | GST_API_CORE_MEDIA
       | GST_API_MEDIA_TOOLBOX | GST_API_CELESTIAL, &error);
@@ -435,9 +435,9 @@ gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
   status = cel->FigCreateCaptureDevicesAndStreamsForPreset (NULL,
       *(cel->kFigRecorderCapturePreset_VideoRecording), NULL,
       &device, &stream, NULL, NULL);
-  if (status == kFigResourceBusy)
+  if (status == kCelError_ResourceBusy)
     goto device_busy;
-  else if (status != kFigSuccess)
+  else if (status != noErr)
     goto unexpected_error;
 
   device_base = mt->FigCaptureDeviceGetFigBaseObject (device);
@@ -449,12 +449,12 @@ gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
 
   status = stream_vt->base->CopyProperty (stream_base,
       *(mt->kFigCaptureStreamProperty_BufferQueue), NULL, &queue);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto unexpected_error;
 
   self->has_pending = FALSE;
 
-  cm->FigBufferQueueSetValidationCallback (queue,
+  cm->CMBufferQueueSetValidationCallback (queue,
       gst_iphone_camera_src_validate, self);
 
   self->ctx = ctx;
@@ -487,7 +487,7 @@ device_busy:
 unexpected_error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-        ("unexpected error while opening device (%d)", status), (NULL));
+        ("unexpected error while opening device (%d)", (gint) status), (NULL));
     goto any_error;
   }
 any_error:
@@ -533,7 +533,7 @@ gst_iphone_camera_src_close_device (GstIPhoneCameraSrc * self)
 static void
 gst_iphone_camera_src_ensure_device_caps_and_formats (GstIPhoneCameraSrc * self)
 {
-  FigStatus status;
+  OSStatus status;
   CFArrayRef iformats = NULL;
   CFIndex format_count, i;
 
@@ -547,7 +547,7 @@ gst_iphone_camera_src_ensure_device_caps_and_formats (GstIPhoneCameraSrc * self)
   status = self->device_iface_base->CopyProperty (self->device,
       *(self->ctx->mt->kFigCaptureDeviceProperty_ImagerSupportedFormatsArray),
       NULL, (CFTypeRef *) & iformats);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   format_count = CFArrayGetCount (iformats);
@@ -601,33 +601,33 @@ gst_iphone_camera_src_select_format (GstIPhoneCameraSrc * self,
 {
   gboolean result = FALSE;
   GstMTApi *mt = self->ctx->mt;
-  FigStatus status;
+  OSStatus status;
   SInt32 framerate;
 
   status = gst_iphone_camera_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerFormatDescription), format->index);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   framerate = format->fps_n / format->fps_d;
 
   status = gst_iphone_camera_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerFrameRate), framerate);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   status = gst_iphone_camera_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerMinimumFrameRate), framerate);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   status = gst_iphone_camera_src_set_device_property_cstr (self,
       "ColorRange", "ColorRangeSDVideo");
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   status = self->stream_iface->Start (self->stream);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
   GST_DEBUG_OBJECT (self, "configured format %d (%d x %d @ %d Hz)",
@@ -648,8 +648,8 @@ gst_iphone_camera_src_parse_imager_format (GstIPhoneCameraSrc * self,
 {
   GstCMApi *cm = self->ctx->cm;
   GstMTApi *mt = self->ctx->mt;
-  const FigFormatDescription *desc;
-  FigVideoDimensions dim;
+  CMFormatDescriptionRef desc;
+  CMVideoDimensions dim;
   UInt32 subtype;
   CFNumberRef framerate_value;
   SInt32 fps_n;
@@ -659,11 +659,11 @@ gst_iphone_camera_src_parse_imager_format (GstIPhoneCameraSrc * self,
   desc = CFDictionaryGetValue (imager_format,
       *(mt->kFigImagerSupportedFormat_FormatDescription));
 
-  dim = cm->FigVideoFormatDescriptionGetDimensions (desc);
+  dim = cm->CMVideoFormatDescriptionGetDimensions (desc);
   format->width = dim.width;
   format->height = dim.height;
 
-  subtype = cm->FigFormatDescriptionGetMediaSubType (desc);
+  subtype = cm->CMFormatDescriptionGetMediaSubType (desc);
 
   switch (subtype) {
     case kComponentVideoUnsigned:
@@ -690,11 +690,11 @@ unsupported_format:
   return FALSE;
 }
 
-static FigStatus
+static OSStatus
 gst_iphone_camera_src_set_device_property_i32 (GstIPhoneCameraSrc * self,
     CFStringRef name, SInt32 value)
 {
-  FigStatus status;
+  OSStatus status;
   CFNumberRef number;
 
   number = CFNumberCreate (NULL, kCFNumberSInt32Type, &value);
@@ -704,11 +704,11 @@ gst_iphone_camera_src_set_device_property_i32 (GstIPhoneCameraSrc * self,
   return status;
 }
 
-static FigStatus
+static OSStatus
 gst_iphone_camera_src_set_device_property_cstr (GstIPhoneCameraSrc * self,
     const gchar * name, const gchar * value)
 {
-  FigStatus status;
+  OSStatus status;
   CFStringRef name_str, value_str;
 
   name_str = CFStringCreateWithCStringNoCopy (NULL, name,

@@ -407,7 +407,7 @@ gst_mio_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
   GstMIOVideoSrc *self = GST_MIO_VIDEO_SRC_CAST (pushsrc);
   GstCMApi *cm = self->ctx->cm;
-  FigFormatDescription *format;
+  CMFormatDescriptionRef format;
 
   FRAME_QUEUE_LOCK (self);
   while (self->running && g_queue_is_empty (self->queue))
@@ -418,10 +418,10 @@ gst_mio_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   if (G_UNLIKELY (!self->running))
     goto shutting_down;
 
-  format = cm->FigSampleBufferGetFormatDescription
+  format = cm->CMSampleBufferGetFormatDescription
       (GST_CORE_MEDIA_BUFFER (*buf)->sample_buf);
   if (self->prev_format != NULL &&
-      !cm->FigFormatDescriptionEqual (format, self->prev_format)) {
+      !cm->CMFormatDescriptionEqual (format, self->prev_format)) {
     goto unexpected_format;
   }
   cm->FigFormatDescriptionRelease (self->prev_format);
@@ -690,7 +690,7 @@ any_error:
 }
 
 static GstClockTime
-gst_mio_video_src_get_timestamp (GstMIOVideoSrc * self, FigSampleBuffer * sbuf)
+gst_mio_video_src_get_timestamp (GstMIOVideoSrc * self, CMSampleBufferRef sbuf)
 {
   GstClock *clock;
   GstClockTime base_time;
@@ -711,13 +711,13 @@ gst_mio_video_src_get_timestamp (GstMIOVideoSrc * self, FigSampleBuffer * sbuf)
   /*
    * If the current clock is GstSystemClock, we know that it's using the
    * CoreAudio/CoreVideo clock. As such we may use the timestamp attached
-   * to the FigSampleBuffer.
+   * to the CMSampleBuffer.
    */
   if (G_TYPE_FROM_INSTANCE (clock) == GST_TYPE_SYSTEM_CLOCK) {
     CFNumberRef number;
     UInt64 ht;
 
-    number = self->ctx->cm->FigGetAttachment (sbuf,
+    number = self->ctx->cm->CMGetAttachment (sbuf,
         *self->ctx->mio->kTundraSampleBufferAttachmentKey_HostTime, NULL);
     if (number != NULL && CFNumberGetValue (number, kCFNumberSInt64Type, &ht)) {
       timestamp = gst_util_uint64_scale_int (ht,
@@ -744,7 +744,7 @@ no_clock:
 
 static TundraStatus
 gst_mio_video_src_output_render (gpointer instance, gpointer unk1,
-    gpointer unk2, gpointer unk3, FigSampleBuffer * sample_buf)
+    gpointer unk2, gpointer unk3, CMSampleBufferRef sample_buf)
 {
   GstMIOVideoSrc *self = GST_MIO_VIDEO_SRC_CAST (instance);
   GstBuffer *buf;
@@ -755,7 +755,7 @@ gst_mio_video_src_output_render (gpointer instance, gpointer unk1,
   if (G_UNLIKELY (buf == NULL))
     goto buffer_creation_failed;
 
-  number = self->ctx->cm->FigGetAttachment (sample_buf,
+  number = self->ctx->cm->CMGetAttachment (sample_buf,
       *self->ctx->mio->kTundraSampleBufferAttachmentKey_SequenceNumber, NULL);
   if (number != NULL && CFNumberGetValue (number, kCFNumberSInt32Type, &seq)) {
     GST_BUFFER_OFFSET (buf) = seq;
@@ -844,7 +844,7 @@ gst_mio_video_src_output_available_formats (gpointer instance,
     gboolean ensure_only)
 {
   GstMIOVideoSrc *self = GST_MIO_VIDEO_SRC (instance);
-  FigFormatDescription *format_desc;
+  CMFormatDescriptionRef format_desc;
 
   GST_DEBUG_OBJECT (self, "%s: ensure_only=%d", G_STRFUNC, ensure_only);
 

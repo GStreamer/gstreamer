@@ -53,7 +53,7 @@ struct _GstMIOVideoDevice
   gchar *cached_name;
   TundraDeviceTransportType cached_transport;
   GstCaps *cached_caps;
-  FigFormatDescription *selected_format;
+  CMFormatDescriptionRef selected_format;
   gint selected_fps_n, selected_fps_d;
 };
 
@@ -76,7 +76,7 @@ void gst_mio_video_device_close (GstMIOVideoDevice * self);
 GstCaps * gst_mio_video_device_get_available_caps (GstMIOVideoDevice * self);
 gboolean gst_mio_video_device_set_caps (GstMIOVideoDevice * self,
     GstCaps * caps);
-FigFormatDescription * gst_mio_video_device_get_selected_format (
+CMFormatDescriptionRef gst_mio_video_device_get_selected_format (
     GstMIOVideoDevice * self);
 GstClockTime gst_mio_video_device_get_duration (GstMIOVideoDevice * self);
 

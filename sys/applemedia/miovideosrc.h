@@ -68,7 +68,7 @@ struct _GstMIOVideoSrc
   GMutex *qlock;
   GCond *qcond;
   guint64 prev_offset;
-  FigFormatDescription * prev_format;
+  CMFormatDescriptionRef prev_format;
 };
 
 struct _GstMIOVideoSrcClass

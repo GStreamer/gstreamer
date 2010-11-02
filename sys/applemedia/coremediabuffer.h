@@ -42,10 +42,10 @@ struct _GstCoreMediaBuffer
   GstBuffer buffer;
 
   GstCoreMediaCtx * ctx;
-  FigSampleBuffer * sample_buf;
+  CMSampleBufferRef sample_buf;
   CVImageBufferRef image_buf;
   CVPixelBufferRef pixel_buf;
-  FigBlockBuffer * block_buf;
+  CMBlockBufferRef block_buf;
 };
 
 struct _GstCoreMediaBufferClass
@@ -55,7 +55,7 @@ struct _GstCoreMediaBufferClass
 
 GType       gst_core_media_buffer_get_type (void) G_GNUC_CONST;
 GstBuffer * gst_core_media_buffer_new      (GstCoreMediaCtx * ctx,
-                                            FigSampleBuffer * sample_buf);
+                                            CMSampleBufferRef sample_buf);
 CVPixelBufferRef gst_core_media_buffer_get_pixel_buffer
                                            (GstCoreMediaBuffer * buf);
 

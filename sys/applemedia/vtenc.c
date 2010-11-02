@@ -78,9 +78,9 @@ static VTStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf);
 static VTStatus gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
-    FigSampleBuffer * sbuf, int a6, int a7);
+    CMSampleBufferRef sbuf, int a6, int a7);
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
-    FigSampleBuffer * sbuf);
+    CMSampleBufferRef sbuf);
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
@@ -362,7 +362,7 @@ gst_vtenc_is_negotiated (GstVTEnc * self)
 }
 
 static gboolean
-gst_vtenc_negotiate_downstream (GstVTEnc * self, FigSampleBuffer * sbuf)
+gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
 {
   gboolean result;
   GstCMApi *cm = self->ctx->cm;
@@ -385,15 +385,15 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, FigSampleBuffer * sbuf)
       self->negotiated_fps_n, self->negotiated_fps_d, NULL);
 
   if (self->details->format_id == kVTFormatH264) {
-    FigFormatDescription *fmt;
+    CMFormatDescriptionRef fmt;
     CFDictionaryRef atoms;
     CFStringRef avccKey;
     CFDataRef avcc;
     GstBuffer *codec_data;
 
-    fmt = cm->FigSampleBufferGetFormatDescription (sbuf);
-    atoms = cm->FigFormatDescriptionGetExtension (fmt,
-        *(cm->kFigFormatDescriptionExtension_SampleDescriptionExtensionAtoms));
+    fmt = cm->CMSampleBufferGetFormatDescription (sbuf);
+    atoms = cm->CMFormatDescriptionGetExtension (fmt,
+        *(cm->kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms));
     avccKey = CFStringCreateWithCString (NULL, "avcC", kCFStringEncodingUTF8);
     avcc = CFDictionaryGetValue (atoms, avccKey);
     CFRelease (avccKey);
@@ -720,16 +720,16 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 {
   GstCVApi *cv = self->ctx->cv;
   GstVTApi *vt = self->ctx->vt;
-  FigTime ts, duration;
+  CMTime ts, duration;
   CVPixelBufferRef pbuf = NULL;
   VTStatus vt_status;
 
   self->cur_inbuf = buf;
   self->cur_flowret = GST_FLOW_OK;
 
-  ts = self->ctx->cm->FigTimeMake
+  ts = self->ctx->cm->CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
-  duration = self->ctx->cm->FigTimeMake
+  duration = self->ctx->cm->CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_DURATION (buf)), 1000);
 
   if (GST_IS_CORE_MEDIA_BUFFER (buf)) {
@@ -789,7 +789,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   }
 
   self->ctx->vt->VTCompressionSessionCompleteFrames (self->session,
-      *(self->ctx->cm->kFigTimeInvalid));
+      *(self->ctx->cm->kCMTimeInvalid));
 
   if (!self->expect_keyframe) {
     CFDictionaryRemoveValue (self->options,
@@ -827,7 +827,7 @@ cv_error:
 
 static VTStatus
 gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
-    FigSampleBuffer * sbuf, int a6, int a7)
+    CMSampleBufferRef sbuf, int a6, int a7)
 {
   GstVTEnc *self = data;
   gboolean is_keyframe;
@@ -874,20 +874,20 @@ expected_keyframe:
 }
 
 static gboolean
-gst_vtenc_buffer_is_keyframe (GstVTEnc * self, FigSampleBuffer * sbuf)
+gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
 {
   gboolean result = FALSE;
   CFArrayRef attachments_for_sample;
 
   attachments_for_sample =
-      self->ctx->cm->FigSampleBufferGetSampleAttachmentsArray (sbuf, 0);
+      self->ctx->cm->CMSampleBufferGetSampleAttachmentsArray (sbuf, 0);
   if (attachments_for_sample != NULL) {
     CFDictionaryRef attachments;
     CFBooleanRef depends_on_others;
 
     attachments = CFArrayGetValueAtIndex (attachments_for_sample, 0);
     depends_on_others = CFDictionaryGetValue (attachments,
-        *(self->ctx->cm->kFigSampleAttachmentKey_DependsOnOthers));
+        *(self->ctx->cm->kCMSampleAttachmentKey_DependsOnOthers));
     result = (depends_on_others == kCFBooleanFalse);
   }
 

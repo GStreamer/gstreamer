@@ -55,7 +55,7 @@ struct _GstIPhoneCameraSrc
   FigCaptureStreamRef stream;
   FigBaseIface *stream_iface_base;
   FigCaptureStreamIface *stream_iface;
-  FigBufferQueueRef queue;
+  CMBufferQueueRef queue;
   GstCaps *device_caps;
   GArray *device_formats;
   GstClockTime duration;

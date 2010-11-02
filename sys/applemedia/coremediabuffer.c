@@ -44,21 +44,21 @@ gst_core_media_buffer_finalize (GstMiniObject * mini_object)
 }
 
 GstBuffer *
-gst_core_media_buffer_new (GstCoreMediaCtx * ctx, FigSampleBuffer * sample_buf)
+gst_core_media_buffer_new (GstCoreMediaCtx * ctx, CMSampleBufferRef sample_buf)
 {
   GstCVApi *cv = ctx->cv;
   GstCMApi *cm = ctx->cm;
   CVImageBufferRef image_buf;
   CVPixelBufferRef pixel_buf;
-  FigBlockBuffer *block_buf;
+  CMBlockBufferRef block_buf;
   Byte *data = NULL;
   UInt32 size;
-  FigStatus status;
+  OSStatus status;
   GstCoreMediaBuffer *buf;
 
-  image_buf = cm->FigSampleBufferGetImageBuffer (sample_buf);
+  image_buf = cm->CMSampleBufferGetImageBuffer (sample_buf);
   pixel_buf = NULL;
-  block_buf = cm->FigSampleBufferGetDataBuffer (sample_buf);
+  block_buf = cm->CMSampleBufferGetDataBuffer (sample_buf);
 
   if (image_buf != NULL &&
       CFGetTypeID (image_buf) == cv->CVPixelBufferGetTypeID ()) {
@@ -84,10 +84,10 @@ gst_core_media_buffer_new (GstCoreMediaCtx * ctx, FigSampleBuffer * sample_buf)
           cv->CVPixelBufferGetHeight (pixel_buf);
     }
   } else if (block_buf != NULL) {
-    status = cm->FigBlockBufferGetDataPointer (block_buf, 0, 0, 0, &data);
-    if (status != kFigSuccess)
+    status = cm->CMBlockBufferGetDataPointer (block_buf, 0, 0, 0, &data);
+    if (status != noErr)
       goto error;
-    size = cm->FigBlockBufferGetDataLength (block_buf);
+    size = cm->CMBlockBufferGetDataLength (block_buf);
   } else {
     goto error;
   }

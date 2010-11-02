@@ -35,19 +35,20 @@ static GstStateChangeReturn gst_vtdec_change_state (GstElement * element,
 static gboolean gst_vtdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_vtdec_chain (GstPad * pad, GstBuffer * buf);
 
-static FigFormatDescription *gst_vtdec_create_format_description
+static CMFormatDescriptionRef gst_vtdec_create_format_description
     (GstVTDec * self);
-static FigFormatDescription *gst_vtdec_create_format_description_from_codec_data
-    (GstVTDec * self, GstBuffer * codec_data);
+static CMFormatDescriptionRef
+gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
+    GstBuffer * codec_data);
 static VTDecompressionSession *gst_vtdec_create_session (GstVTDec * self,
-    FigFormatDescription * fmt_desc);
+    CMFormatDescriptionRef fmt_desc);
 static void gst_vtdec_destroy_session (GstVTDec * self,
     VTDecompressionSession ** session);
 static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
 static void gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result,
     gsize unk2, CVBufferRef cvbuf);
 
-static FigSampleBuffer *gst_vtdec_sample_buffer_from (GstVTDec * self,
+static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
     GstBuffer * buf);
 
 static void
@@ -180,7 +181,7 @@ gst_vtdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVTDec *self = GST_VTDEC_CAST (GST_PAD_PARENT (pad));
   GstStructure *structure;
-  FigFormatDescription *fmt_desc = NULL;
+  CMFormatDescriptionRef fmt_desc = NULL;
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (structure, "width", &self->negotiated_width))
@@ -298,27 +299,27 @@ pending_caps:
   return GST_FLOW_OK;
 }
 
-static FigFormatDescription *
+static CMFormatDescriptionRef
 gst_vtdec_create_format_description (GstVTDec * self)
 {
-  FigFormatDescription *fmt_desc;
-  FigStatus status;
+  CMFormatDescriptionRef fmt_desc;
+  OSStatus status;
 
-  status = self->ctx->cm->FigVideoFormatDescriptionCreate (NULL,
+  status = self->ctx->cm->CMVideoFormatDescriptionCreate (NULL,
       self->details->format_id, self->negotiated_width, self->negotiated_height,
       NULL, &fmt_desc);
-  if (status == kFigSuccess)
+  if (status == noErr)
     return fmt_desc;
   else
     return NULL;
 }
 
-static FigFormatDescription *
+static CMFormatDescriptionRef
 gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
     GstBuffer * codec_data)
 {
-  FigFormatDescription *fmt_desc;
-  FigStatus status;
+  CMFormatDescriptionRef fmt_desc;
+  OSStatus status;
 
   status =
       self->ctx->cm->
@@ -326,14 +327,14 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
       self->details->format_id, self->negotiated_width, self->negotiated_height,
       'avcC', GST_BUFFER_DATA (codec_data), GST_BUFFER_SIZE (codec_data),
       &fmt_desc);
-  if (status == kFigSuccess)
+  if (status == noErr)
     return fmt_desc;
   else
     return NULL;
 }
 
 static VTDecompressionSession *
-gst_vtdec_create_session (GstVTDec * self, FigFormatDescription * fmt_desc)
+gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
 {
   VTDecompressionSession *session = NULL;
   GstCVApi *cv = self->ctx->cv;
@@ -377,7 +378,7 @@ static GstFlowReturn
 gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
 {
   GstVTApi *vt = self->ctx->vt;
-  FigSampleBuffer *sbuf;
+  CMSampleBufferRef sbuf;
   VTStatus status;
 
   self->cur_inbuf = buf;
@@ -429,25 +430,25 @@ beach:
   return;
 }
 
-static FigSampleBuffer *
+static CMSampleBufferRef
 gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
 {
   GstCMApi *cm = self->ctx->cm;
-  FigStatus status;
-  FigBlockBuffer *bbuf = NULL;
-  FigSampleBuffer *sbuf = NULL;
+  OSStatus status;
+  CMBlockBufferRef bbuf = NULL;
+  CMSampleBufferRef sbuf = NULL;
 
   g_assert (self->fmt_desc != NULL);
 
-  status = cm->FigBlockBufferCreateWithMemoryBlock (NULL,
+  status = cm->CMBlockBufferCreateWithMemoryBlock (NULL,
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), kCFAllocatorNull, NULL,
       0, GST_BUFFER_SIZE (buf), FALSE, &bbuf);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
-  status = cm->FigSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
+  status = cm->CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
       1, 0, NULL, 0, NULL, &sbuf);
-  if (status != kFigSuccess)
+  if (status != noErr)
     goto beach;
 
 beach:

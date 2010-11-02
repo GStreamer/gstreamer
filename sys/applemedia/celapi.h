@@ -27,11 +27,16 @@ G_BEGIN_DECLS
 typedef struct _GstCelApi GstCelApi;
 typedef struct _GstCelApiClass GstCelApiClass;
 
+enum
+{
+  kCelError_ResourceBusy = -12780
+};
+
 struct _GstCelApi
 {
   GstDynApi parent;
 
-  FigStatus (* FigCreateCaptureDevicesAndStreamsForPreset)
+  OSStatus (* FigCreateCaptureDevicesAndStreamsForPreset)
       (CFAllocatorRef allocator, CFStringRef capturePreset,
       CFDictionaryRef audioOptions,
       FigCaptureDeviceRef * outVideoDevice,

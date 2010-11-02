@@ -21,7 +21,11 @@
 
 #include "dynapi-internal.h"
 
-#define CM_FRAMEWORK_PATH "/System/Library/PrivateFrameworks/" \
+#include <gmodule.h>
+
+#define CM_FRAMEWORK_PATH "/System/Library/Frameworks/" \
+    "CoreMedia.framework/CoreMedia"
+#define CM_FRAMEWORK_PATH_OLD "/System/Library/PrivateFrameworks/" \
     "CoreMedia.framework/CoreMedia"
 
 G_DEFINE_TYPE (GstCMApi, gst_cm_api, GST_TYPE_DYN_API);
@@ -44,52 +48,88 @@ gst_cm_api_obtain (GError ** error)
   static const GstDynSymSpec symbols[] = {
     SYM_SPEC (FigBaseObjectGetVTable),
 
-    SYM_SPEC (FigGetAttachment),
+    SYM_SPEC (CMGetAttachment),
 
     SYM_SPEC (FigFormatDescriptionRelease),
     SYM_SPEC (FigFormatDescriptionRetain),
-    SYM_SPEC (FigFormatDescriptionEqual),
-    SYM_SPEC (FigFormatDescriptionGetExtension),
-    SYM_SPEC (FigFormatDescriptionGetMediaType),
-    SYM_SPEC (FigFormatDescriptionGetMediaSubType),
+    SYM_SPEC (CMFormatDescriptionEqual),
+    SYM_SPEC (CMFormatDescriptionGetExtension),
+    SYM_SPEC (CMFormatDescriptionGetMediaType),
+    SYM_SPEC (CMFormatDescriptionGetMediaSubType),
 
-    SYM_SPEC (FigVideoFormatDescriptionCreate),
+    SYM_SPEC (CMVideoFormatDescriptionCreate),
     SYM_SPEC
         (FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom),
-    SYM_SPEC (FigVideoFormatDescriptionGetDimensions),
+    SYM_SPEC (CMVideoFormatDescriptionGetDimensions),
 
-    SYM_SPEC (FigTimeMake),
+    SYM_SPEC (CMTimeMake),
 
-    SYM_SPEC (FigSampleBufferCreate),
-    SYM_SPEC (FigSampleBufferDataIsReady),
-    SYM_SPEC (FigSampleBufferGetDataBuffer),
-    SYM_SPEC (FigSampleBufferGetFormatDescription),
-    SYM_SPEC (FigSampleBufferGetImageBuffer),
-    SYM_SPEC (FigSampleBufferGetNumSamples),
-    SYM_SPEC (FigSampleBufferGetSampleAttachmentsArray),
-    SYM_SPEC (FigSampleBufferGetSampleSize),
+    SYM_SPEC (CMSampleBufferCreate),
+    SYM_SPEC (CMSampleBufferDataIsReady),
+    SYM_SPEC (CMSampleBufferGetDataBuffer),
+    SYM_SPEC (CMSampleBufferGetFormatDescription),
+    SYM_SPEC (CMSampleBufferGetImageBuffer),
+    SYM_SPEC (CMSampleBufferGetNumSamples),
+    SYM_SPEC (CMSampleBufferGetSampleAttachmentsArray),
+    SYM_SPEC (CMSampleBufferGetSampleSize),
     SYM_SPEC (FigSampleBufferRelease),
     SYM_SPEC (FigSampleBufferRetain),
 
-    SYM_SPEC (FigBlockBufferCreateWithMemoryBlock),
-    SYM_SPEC (FigBlockBufferGetDataLength),
-    SYM_SPEC (FigBlockBufferGetDataPointer),
+    SYM_SPEC (CMBlockBufferCreateWithMemoryBlock),
+    SYM_SPEC (CMBlockBufferGetDataLength),
+    SYM_SPEC (CMBlockBufferGetDataPointer),
     SYM_SPEC (FigBlockBufferRelease),
     SYM_SPEC (FigBlockBufferRetain),
 
-    SYM_SPEC (FigBufferQueueDequeueAndRetain),
-    SYM_SPEC (FigBufferQueueGetBufferCount),
-    SYM_SPEC (FigBufferQueueIsEmpty),
+    SYM_SPEC (CMBufferQueueDequeueAndRetain),
+    SYM_SPEC (CMBufferQueueGetBufferCount),
+    SYM_SPEC (CMBufferQueueIsEmpty),
     SYM_SPEC (FigBufferQueueRelease),
-    SYM_SPEC (FigBufferQueueSetValidationCallback),
+    SYM_SPEC (CMBufferQueueSetValidationCallback),
 
-    SYM_SPEC (kFigFormatDescriptionExtension_SampleDescriptionExtensionAtoms),
-    SYM_SPEC (kFigSampleAttachmentKey_DependsOnOthers),
-    SYM_SPEC (kFigTimeInvalid),
+    SYM_SPEC (kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms),
+    SYM_SPEC (kCMSampleAttachmentKey_DependsOnOthers),
+    SYM_SPEC (kCMTimeInvalid),
 
     {NULL, 0},
   };
+  GstCMApi *result;
+  GModule *module;
 
-  return _gst_dyn_api_new (gst_cm_api_get_type (), CM_FRAMEWORK_PATH, symbols,
-      error);
+  /* We cannot stat() the library as it may not be present on the filesystem.
+   * This is the case on newer versions of iOS where system libraries are all
+   * part of dyld_shared_cache... */
+  module = g_module_open (CM_FRAMEWORK_PATH, 0);
+  if (module != NULL) {
+    result = _gst_dyn_api_new (gst_cm_api_get_type (), CM_FRAMEWORK_PATH,
+        symbols, error);
+    g_module_close (module);
+  } else {
+    GstDynSymSpec *old_symbols;
+    guint i;
+
+    old_symbols = g_memdup (symbols, sizeof (symbols));
+    for (i = 0; old_symbols[i].name != NULL; i++) {
+      const gchar *name = old_symbols[i].name;
+      const gchar *translated_name;
+
+      if (g_str_has_prefix (name, "CM"))
+        translated_name = g_strconcat ("Fig", name + 2, NULL);
+      else if (g_str_has_prefix (name, "kCM"))
+        translated_name = g_strconcat ("kFig", name + 3, NULL);
+      else
+        translated_name = g_strdup (name);
+
+      old_symbols[i].name = translated_name;
+    }
+
+    result = _gst_dyn_api_new (gst_cm_api_get_type (), CM_FRAMEWORK_PATH_OLD,
+        old_symbols, error);
+
+    for (i = 0; old_symbols[i].name != NULL; i++)
+      g_free ((gpointer) old_symbols[i].name);
+    g_free (old_symbols);
+  }
+
+  return result;
 }

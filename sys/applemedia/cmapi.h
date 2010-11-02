@@ -30,31 +30,21 @@ G_BEGIN_DECLS
 typedef struct _GstCMApi GstCMApi;
 typedef struct _GstCMApiClass GstCMApiClass;
 
-typedef enum _FigStatus FigStatus;
-
 typedef CFTypeRef FigBaseObjectRef;
 typedef struct _FigBaseVTable FigBaseVTable;
 typedef struct _FigBaseIface FigBaseIface;
 
-typedef struct _FigFormatDescription FigFormatDescription;
-typedef struct _FigVideoDimensions FigVideoDimensions;
-typedef struct _FigTime FigTime;
+typedef CFTypeRef CMFormatDescriptionRef;
+typedef struct _CMVideoDimensions CMVideoDimensions;
+typedef struct _CMTime CMTime;
 
-typedef CFTypeRef FigBufferQueueRef;
+typedef CFTypeRef CMBufferQueueRef;
 
-typedef struct _FigSampleBuffer FigSampleBuffer;
-typedef struct _FigDataBuffer FigDataBuffer;
-typedef struct _FigBlockBuffer FigBlockBuffer;
+typedef CFTypeRef CMSampleBufferRef;
+typedef CFTypeRef CMBlockBufferRef;
 
-typedef Boolean (* FigBufferQueueValidateFunc) (FigBufferQueueRef queue,
-    FigSampleBuffer *buf, void *refCon);
-
-enum _FigStatus
-{
-  kFigSuccess = 0,
-
-  kFigResourceBusy = -12780
-};
+typedef Boolean (* CMBufferQueueValidateFunc) (CMBufferQueueRef queue,
+    CMSampleBufferRef buf, void *refCon);
 
 enum _FigMediaType
 {
@@ -80,22 +70,22 @@ struct _FigBaseIface
   gsize unk1;
   gsize unk2;
   gsize unk3;
-  FigStatus (* Invalidate) (FigBaseObjectRef obj);
-  FigStatus (* Finalize) (FigBaseObjectRef obj);
+  OSStatus (* Invalidate) (FigBaseObjectRef obj);
+  OSStatus (* Finalize) (FigBaseObjectRef obj);
   gpointer unk4;
-  FigStatus (* CopyProperty) (FigBaseObjectRef obj, CFTypeRef key, void *unk,
+  OSStatus (* CopyProperty) (FigBaseObjectRef obj, CFTypeRef key, void *unk,
       CFTypeRef * value);
-  FigStatus (* SetProperty) (FigBaseObjectRef obj, CFTypeRef key,
+  OSStatus (* SetProperty) (FigBaseObjectRef obj, CFTypeRef key,
       CFTypeRef value);
 };
 
-struct _FigVideoDimensions
+struct _CMVideoDimensions
 {
   UInt32 width;
   UInt32 height;
 };
 
-struct _FigTime
+struct _CMTime
 {
   UInt8 data[24];
 };
@@ -106,77 +96,77 @@ struct _GstCMApi
 
   FigBaseVTable * (* FigBaseObjectGetVTable) (FigBaseObjectRef obj);
 
-  void * (* FigGetAttachment) (void * obj, CFStringRef attachmentKey,
+  void * (* CMGetAttachment) (CFTypeRef obj, CFStringRef attachmentKey,
       UInt32 * foundWherePtr);
 
-  void (* FigFormatDescriptionRelease) (FigFormatDescription * desc);
-  FigFormatDescription * (* FigFormatDescriptionRetain) (
-      FigFormatDescription * desc);
-  Boolean (* FigFormatDescriptionEqual) (FigFormatDescription * desc1,
-      FigFormatDescription * desc2);
-  CFTypeRef (* FigFormatDescriptionGetExtension) (
-      const FigFormatDescription * desc, CFStringRef extensionKey);
-  UInt32 (* FigFormatDescriptionGetMediaType) (
-      const FigFormatDescription * desc);
-  UInt32 (* FigFormatDescriptionGetMediaSubType) (
-      const FigFormatDescription * desc);
+  void (* FigFormatDescriptionRelease) (CMFormatDescriptionRef desc);
+  CMFormatDescriptionRef (* FigFormatDescriptionRetain) (
+      CMFormatDescriptionRef desc);
+  Boolean (* CMFormatDescriptionEqual) (CMFormatDescriptionRef desc1,
+      CMFormatDescriptionRef desc2);
+  CFTypeRef (* CMFormatDescriptionGetExtension) (
+      const CMFormatDescriptionRef desc, CFStringRef extensionKey);
+  UInt32 (* CMFormatDescriptionGetMediaType) (
+      const CMFormatDescriptionRef desc);
+  UInt32 (* CMFormatDescriptionGetMediaSubType) (
+      const CMFormatDescriptionRef desc);
 
-  FigStatus (* FigVideoFormatDescriptionCreate) (
+  OSStatus (* CMVideoFormatDescriptionCreate) (
       CFAllocatorRef allocator, UInt32 formatId, UInt32 width, UInt32 height,
-      CFDictionaryRef extensions, FigFormatDescription ** desc);
-  FigStatus (* FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom)
+      CFDictionaryRef extensions, CMFormatDescriptionRef * desc);
+  OSStatus (* FigVideoFormatDescriptionCreateWithSampleDescriptionExtensionAtom)
       (CFAllocatorRef allocator, UInt32 formatId, UInt32 width, UInt32 height,
       UInt32 atomId, const UInt8 * data, CFIndex len,
-      FigFormatDescription ** formatDesc);
-  FigVideoDimensions (* FigVideoFormatDescriptionGetDimensions) (
-      const FigFormatDescription * desc);
+      CMFormatDescriptionRef * formatDesc);
+  CMVideoDimensions (* CMVideoFormatDescriptionGetDimensions) (
+      const CMFormatDescriptionRef desc);
 
-  FigTime (* FigTimeMake) (UInt64 numerator, UInt32 denominator);
+  CMTime (* CMTimeMake) (int64_t value, int32_t timescale);
 
-  FigStatus (* FigSampleBufferCreate) (CFAllocatorRef allocator,
-      FigBlockBuffer * blockBuf, Boolean unkBool, UInt32 unkDW1, UInt32 unkDW2,
-      FigFormatDescription * fmtDesc, UInt32 unkCountA, UInt32 unkCountB,
+  OSStatus (* CMSampleBufferCreate) (CFAllocatorRef allocator,
+      CMBlockBufferRef blockBuf, Boolean unkBool, UInt32 unkDW1, UInt32 unkDW2,
+      CMFormatDescriptionRef fmtDesc, UInt32 unkCountA, UInt32 unkCountB,
       const void * unkTimeData, UInt32 unkCountC, const void * unkDWordData,
-      FigSampleBuffer ** sampleBuffer);
-  Boolean (* FigSampleBufferDataIsReady) (
-      const FigSampleBuffer * buf);
-  FigBlockBuffer * (* FigSampleBufferGetDataBuffer) (
-      const FigSampleBuffer * buf);
-  FigFormatDescription * (* FigSampleBufferGetFormatDescription) (
-      const FigSampleBuffer * buf);
-  CVImageBufferRef (* FigSampleBufferGetImageBuffer) (
-      const FigSampleBuffer * buf);
-  SInt32 (* FigSampleBufferGetNumSamples) (
-      const FigSampleBuffer * buf);
-  CFArrayRef (* FigSampleBufferGetSampleAttachmentsArray) (
-      const FigSampleBuffer * buf, SInt32 sampleIndex);
-  SInt32 (* FigSampleBufferGetSampleSize) (
-      const FigSampleBuffer * buf, SInt32 sampleIndex);
-  void (* FigSampleBufferRelease) (FigSampleBuffer * buf);
-  FigSampleBuffer * (* FigSampleBufferRetain) (FigSampleBuffer * buf);
+      CMSampleBufferRef * sampleBuffer);
+  Boolean (* CMSampleBufferDataIsReady) (
+      const CMSampleBufferRef buf);
+  CMBlockBufferRef (* CMSampleBufferGetDataBuffer) (
+      const CMSampleBufferRef buf);
+  CMFormatDescriptionRef (* CMSampleBufferGetFormatDescription) (
+      const CMSampleBufferRef buf);
+  CVImageBufferRef (* CMSampleBufferGetImageBuffer) (
+      const CMSampleBufferRef buf);
+  SInt32 (* CMSampleBufferGetNumSamples) (
+      const CMSampleBufferRef buf);
+  CFArrayRef (* CMSampleBufferGetSampleAttachmentsArray) (
+      const CMSampleBufferRef buf, SInt32 sampleIndex);
+  SInt32 (* CMSampleBufferGetSampleSize) (
+      const CMSampleBufferRef buf, SInt32 sampleIndex);
+  void (* FigSampleBufferRelease) (CMSampleBufferRef buf);
+  CMSampleBufferRef (* FigSampleBufferRetain) (CMSampleBufferRef buf);
 
-  FigStatus (* FigBlockBufferCreateWithMemoryBlock)
+  OSStatus (* CMBlockBufferCreateWithMemoryBlock)
       (CFAllocatorRef allocator, Byte * data, UInt32 size,
       CFAllocatorRef dataAllocator, void *unk1, UInt32 sizeA, UInt32 sizeB,
-      Boolean unkBool, FigBlockBuffer ** blockBuffer);
-  SInt32 (* FigBlockBufferGetDataLength) (const FigBlockBuffer * buf);
-  FigStatus (* FigBlockBufferGetDataPointer) (
-      const FigBlockBuffer * buf, UInt32 unk1, UInt32 unk2, UInt32 unk3,
+      Boolean unkBool, CMBlockBufferRef * blockBuffer);
+  SInt32 (* CMBlockBufferGetDataLength) (const CMBlockBufferRef buf);
+  OSStatus (* CMBlockBufferGetDataPointer) (
+      const CMBlockBufferRef buf, UInt32 unk1, UInt32 unk2, UInt32 unk3,
       Byte ** dataPtr);
-  void (* FigBlockBufferRelease) (FigBlockBuffer * buf);
-  FigBlockBuffer * (* FigBlockBufferRetain) (FigBlockBuffer * buf);
+  void (* FigBlockBufferRelease) (CMBlockBufferRef buf);
+  CMBlockBufferRef (* FigBlockBufferRetain) (CMBlockBufferRef buf);
 
-  FigSampleBuffer * (* FigBufferQueueDequeueAndRetain)
-      (FigBufferQueueRef queue);
-  CFIndex (* FigBufferQueueGetBufferCount) (FigBufferQueueRef queue);
-  Boolean (* FigBufferQueueIsEmpty) (FigBufferQueueRef queue);
-  void (* FigBufferQueueRelease) (FigBufferQueueRef queue);
-  FigStatus (* FigBufferQueueSetValidationCallback)
-      (FigBufferQueueRef queue, FigBufferQueueValidateFunc func, void *refCon);
+  CMSampleBufferRef (* CMBufferQueueDequeueAndRetain)
+      (CMBufferQueueRef queue);
+  CFIndex (* CMBufferQueueGetBufferCount) (CMBufferQueueRef queue);
+  Boolean (* CMBufferQueueIsEmpty) (CMBufferQueueRef queue);
+  void (* FigBufferQueueRelease) (CMBufferQueueRef queue);
+  OSStatus (* CMBufferQueueSetValidationCallback)
+      (CMBufferQueueRef queue, CMBufferQueueValidateFunc func, void *refCon);
 
-  CFStringRef * kFigFormatDescriptionExtension_SampleDescriptionExtensionAtoms;
-  CFStringRef * kFigSampleAttachmentKey_DependsOnOthers;
-  FigTime * kFigTimeInvalid;
+  CFStringRef * kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms;
+  CFStringRef * kCMSampleAttachmentKey_DependsOnOthers;
+  CMTime * kCMTimeInvalid;
 };
 
 struct _GstCMApiClass

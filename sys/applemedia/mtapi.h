@@ -34,8 +34,8 @@ typedef struct _FigCaptureStreamIface FigCaptureStreamIface;
 struct _FigCaptureStreamIface
 {
   gsize unk;
-  FigStatus (* Start) (FigCaptureStreamRef stream);
-  FigStatus (* Stop) (FigCaptureStreamRef stream);
+  OSStatus (* Start) (FigCaptureStreamRef stream);
+  OSStatus (* Stop) (FigCaptureStreamRef stream);
 };
 
 struct _GstMTApi

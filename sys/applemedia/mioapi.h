@@ -138,7 +138,7 @@ enum _TundraDeviceTransportType
 };
 
 typedef TundraStatus (* TundraOutputRenderFunc) (gpointer instance,
-    gpointer unk1, gpointer unk2, gpointer unk3, FigSampleBuffer * sampleBuf);
+    gpointer unk1, gpointer unk2, gpointer unk3, CMSampleBufferRef sampleBuf);
 typedef TundraStatus (* TundraOutputInitializeFunc) (gpointer instance);
 typedef TundraStatus (* TundraOutputUninitializeFunc) (gpointer instance);
 typedef TundraStatus (* TundraOutputStartFunc) (gpointer instance);
