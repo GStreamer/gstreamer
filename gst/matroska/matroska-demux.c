@@ -3441,6 +3441,12 @@ gst_matroska_demux_parse_index (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   demux->index_parsed = TRUE;
 
+  /* sanity check; empty index normalizes to no index */
+  if (demux->index->len == 0) {
+    g_array_free (demux->index, TRUE);
+    demux->index = NULL;
+  }
+
   return ret;
 }
 
