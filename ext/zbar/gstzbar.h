@@ -22,6 +22,7 @@
 #define __GST_VIDEO_ZBAR_H__
 
 #include <gst/video/gstvideofilter.h>
+#include <gst/video/video.h>
 #include <zbar.h>
 
 G_BEGIN_DECLS
@@ -51,8 +52,10 @@ struct _GstZBar
   GstVideoFilter videofilter;
 
   /* format */
-  gint width;
-  gint height;
+  gint           width;
+  gint           height;
+
+  GstVideoFormat format;
 
   /* properties */
   gboolean message;

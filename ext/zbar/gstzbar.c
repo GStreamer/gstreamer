@@ -254,14 +254,23 @@ gst_zbar_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
   GstZBar *zbar = GST_ZBAR (base);
   GstStructure *structure;
   gboolean res;
+  guint32 fourcc;
+  gint width, height;
 
   GST_DEBUG_OBJECT (zbar,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  res = gst_structure_get_int (structure, "width", &zbar->width);
-  res &= gst_structure_get_int (structure, "height", &zbar->height);
+  res = gst_structure_get_int (structure, "width", &width);
+  res &= gst_structure_get_int (structure, "height", &height);
+  res &= gst_structure_get_fourcc (structure, "format", &fourcc);
+
+  if (res) {
+    zbar->width = width;
+    zbar->height = height;
+    zbar->format = gst_video_format_from_fourcc (fourcc);
+  }
 
   return res;
 }
@@ -271,7 +280,7 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstZBar *zbar = GST_ZBAR (base);
   guint8 *data;
-  guint size;
+  guint size, rowstride;
   zbar_image_t *image;
   const zbar_symbol_t *symbol;
   int n;
@@ -283,10 +292,11 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   size = GST_BUFFER_SIZE (outbuf);
 
   image = zbar_image_create ();
+
   zbar_image_set_format (image, GST_MAKE_FOURCC ('Y', '8', '0', '0'));
-  zbar_image_set_size (image, zbar->width, zbar->height);
-  zbar_image_set_data (image, (gpointer) data, zbar->width * zbar->height,
-      NULL);
+  rowstride = gst_video_format_get_row_stride (zbar->format, 0, zbar->width);
+  zbar_image_set_size (image, rowstride, zbar->height);
+  zbar_image_set_data (image, (gpointer) data, rowstride * zbar->height, NULL);
 
   /* scan the image for barcodes */
   n = zbar_scan_image (zbar->scanner, image);
@@ -335,6 +345,10 @@ static gboolean
 gst_zbar_start (GstBaseTransform * base)
 {
   GstZBar *zbar = GST_ZBAR (base);
+
+  zbar->width = 0;
+  zbar->height = 0;
+  zbar->format = GST_VIDEO_FORMAT_UNKNOWN;
 
   /* start the cache if enabled (e.g. for filtering dupes) */
   zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);
