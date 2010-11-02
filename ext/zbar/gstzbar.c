@@ -108,18 +108,22 @@ enum
 #define DEFAULT_CACHE    FALSE
 #define DEFAULT_MESSAGE  TRUE
 
+/* FIXME: add YVU9 and YUV9 once we have a GstVideoFormat for that */
+#define ZBAR_YUV_CAPS \
+    "{ Y800, I420, YV12, NV12, NV21, Y41B, Y42B }"
+
 static GstStaticPadTemplate gst_zbar_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ Y800 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (ZBAR_YUV_CAPS))
     );
 
 static GstStaticPadTemplate gst_zbar_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ Y800 }"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV (ZBAR_YUV_CAPS))
     );
 
 static void gst_zbar_finalize (GObject * object);
@@ -293,6 +297,8 @@ gst_zbar_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   image = zbar_image_create ();
 
+  /* all formats we support start with an 8-bit Y plane. zbar doesn't need
+   * to know about the chroma plane(s) */
   zbar_image_set_format (image, GST_MAKE_FOURCC ('Y', '8', '0', '0'));
   rowstride = gst_video_format_get_row_stride (zbar->format, 0, zbar->width);
   zbar_image_set_size (image, rowstride, zbar->height);
