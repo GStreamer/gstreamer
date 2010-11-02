@@ -46,12 +46,14 @@ GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
 
-#ifndef GST_VIDEO_CAPS_RGB8_PALETTED
-#define GST_VIDEO_CAPS_RGB8_PALETTED \
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#define VIDEO_CAPS_RGB8_PALETTED \
   "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
       "width = "GST_VIDEO_SIZE_RANGE" , "                               \
       "height = " GST_VIDEO_SIZE_RANGE ", "                             \
-      "framerate = "GST_VIDEO_FPS_RANGE
+      "framerate = "GST_VIDEO_FPS_RANGE "; "
+#else
+#define VIDEO_CAPS_RGB8_PALETTED        /* no-op */
 #endif
 
 #define CSP_VIDEO_CAPS						\
@@ -72,7 +74,7 @@ GST_DEBUG_CATEGORY (colorspace_performance);
   GST_VIDEO_CAPS_BGR_16";"						\
   GST_VIDEO_CAPS_RGB_15";"						\
   GST_VIDEO_CAPS_BGR_15";"						\
-  GST_VIDEO_CAPS_RGB8_PALETTED";"                                       \
+  VIDEO_CAPS_RGB8_PALETTED                                              \
   GST_VIDEO_CAPS_GRAY8";"						\
   GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
   GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"
