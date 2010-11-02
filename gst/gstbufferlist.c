@@ -166,7 +166,6 @@ _gst_buffer_list_initialize (void)
 {
   GType type = gst_buffer_list_get_type ();
 
-  g_type_class_ref (type);
   _gst_buffer_list_type = type;
 }
 

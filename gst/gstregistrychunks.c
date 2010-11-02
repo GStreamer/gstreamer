@@ -493,7 +493,7 @@ gst_registry_chunks_load_pad_template (GstElementFactory * factory, gchar ** in,
   template = g_slice_new (GstStaticPadTemplate);
   template->presence = pt->presence;
   template->direction = pt->direction;
-  template->static_caps.caps.refcount = 0;
+  template->static_caps.caps.mini_object.refcount = 0;
 
   /* unpack pad template strings */
   unpack_const_string (*in, template->name_template, end, fail);

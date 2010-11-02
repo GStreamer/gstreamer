@@ -170,7 +170,7 @@ _gst_buffer_initialize (void)
   /* the GstMiniObject types need to be class_ref'd once before it can be
    * done from multiple threads;
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  g_type_class_ref (gst_buffer_get_type ());
+  gst_buffer_get_type ();
 #ifdef HAVE_GETPAGESIZE
 #ifdef BUFFER_ALIGNMENT_PAGESIZE
   _gst_buffer_data_alignment = getpagesize ();

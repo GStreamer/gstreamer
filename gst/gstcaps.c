@@ -110,7 +110,7 @@
 /* quick way to append a structure without checking the args */
 #define gst_caps_append_structure_unchecked(caps, structure) G_STMT_START{\
   GstStructure *__s=structure;                                      \
-  gst_structure_set_parent_refcount (__s, &caps->refcount);         \
+  gst_structure_set_parent_refcount (__s, &GST_MINI_OBJECT_REFCOUNT(caps));         \
   g_ptr_array_add (caps->structs, __s);                             \
 }G_STMT_END
 
