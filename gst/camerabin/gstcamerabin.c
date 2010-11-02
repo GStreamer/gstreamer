@@ -4054,6 +4054,8 @@ gst_camerabin_set_image_capture_caps (GstCameraBin * camera, gint width,
       "init filter caps for image capture %" GST_PTR_FORMAT, new_caps);
   gst_caps_replace (&camera->image_capture_caps, new_caps);
   camera->image_capture_caps_update = FALSE;
+  if (new_caps)
+    gst_caps_unref (new_caps);
 }
 
 static void
