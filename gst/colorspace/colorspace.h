@@ -69,7 +69,8 @@ ColorspaceConvert * colorspace_convert_new (GstVideoFormat to_format,
 void colorspace_convert_set_interlaced (ColorspaceConvert *convert,
     gboolean interlaced);
 void colorspace_convert_set_palette (ColorspaceConvert *convert,
-    guint32 *palette);
+    const guint32 *palette);
+const guint32 * colorspace_convert_get_palette (ColorspaceConvert *convert);
 void colorspace_convert_free (ColorspaceConvert * convert);
 void colorspace_convert_convert (ColorspaceConvert * convert,
     guint8 *dest, const guint8 *src);

@@ -61,6 +61,7 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
       || gst_video_format_is_yuv (from_format)
       || (gst_video_format_is_gray (from_format) &&
           from_spec == COLOR_SPEC_GRAY), NULL);
+  g_return_val_if_fail (to_format != from_format, NULL);
 
   convert = g_malloc (sizeof (ColorspaceConvert));
   memset (convert, 0, sizeof (ColorspaceConvert));
@@ -98,6 +99,30 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
 
   convert->tmpline = g_malloc (sizeof (guint32) * width * 2);
 
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+  if (to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+    /* build poor man's palette, taken from ffmpegcolorspace */
+    static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
+    guint32 *palette;
+    gint r, g, b;
+
+    convert->palette = palette = g_new (guint32, 256);
+    i = 0;
+    for (r = 0; r < 6; r++) {
+      for (g = 0; g < 6; g++) {
+        for (b = 0; b < 6; b++) {
+          palette[i++] =
+              (0xffU << 24) | (pal_value[r] << 16) | (pal_value[g] << 8) |
+              pal_value[b];
+        }
+      }
+    }
+    palette[i++] = 0;           /* 100% transparent, i == 6*6*6 */
+    while (i < 256)
+      palette[i++] = 0xff000000;
+  }
+#endif
+
   return convert;
 }
 
@@ -120,12 +145,19 @@ colorspace_convert_set_interlaced (ColorspaceConvert * convert,
 }
 
 void
-colorspace_convert_set_palette (ColorspaceConvert * convert, guint32 * palette)
+colorspace_convert_set_palette (ColorspaceConvert * convert,
+    const guint32 * palette)
 {
   if (convert->palette == NULL) {
     convert->palette = g_malloc (sizeof (guint32) * 256);
   }
   memcpy (convert->palette, palette, sizeof (guint32) * 256);
+}
+
+const guint32 *
+colorspace_convert_get_palette (ColorspaceConvert * convert)
+{
+  return convert->palette;
 }
 
 void
@@ -850,6 +882,41 @@ putline_A420 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
       FRAME_GET_LINE (dest, 3, j), src, convert->width / 2);
 }
 
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+static void
+getline_RGB8P (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint8 *srcline = FRAME_GET_LINE (src, 0, j);
+  for (i = 0; i < convert->width; i++) {
+    guint32 v = convert->palette[srcline[i]];
+    dest[i * 4 + 0] = (v >> 24) & 0xff;
+    dest[i * 4 + 1] = (v >> 16) & 0xff;
+    dest[i * 4 + 2] = (v >> 8) & 0xff;
+    dest[i * 4 + 3] = (v) & 0xff;
+  }
+}
+
+static void
+putline_RGB8P (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint8 *destline = FRAME_GET_LINE (dest, 0, j);
+  /* Use our poor man's palette, taken from ffmpegcolorspace too */
+  for (i = 0; i < convert->width; i++) {
+    /* crude approximation for alpha ! */
+    if (src[i * 4 + 0] < 0x80)
+      destline[i] = 6 * 6 * 6;
+    else
+      destline[i] =
+          ((((src[i * 4 + 1]) / 47) % 6) * 6 * 6 + (((src[i * 4 +
+                          2]) / 47) % 6) * 6 + (((src[i * 4 + 3]) / 47) % 6));
+  }
+}
+#endif
+
 typedef struct
 {
   GstVideoFormat format;
@@ -894,6 +961,9 @@ static const ColorspaceLine lines[] = {
   {GST_VIDEO_FORMAT_BGR15, getline_BGR15, putline_BGR15},
   {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP},
   {GST_VIDEO_FORMAT_A420, getline_A420, putline_A420}
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+  , {GST_VIDEO_FORMAT_RGB8_PALETTED, getline_RGB8P, putline_RGB8P}
+#endif
 };
 
 static void
