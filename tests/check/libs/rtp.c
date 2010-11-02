@@ -477,7 +477,6 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
           misc_data, 2) == TRUE);
   gst_buffer_list_iterator_free (it);
 
-  gst_buffer_list_iterator_free (it);
   it = gst_buffer_list_iterate (list);
   fail_unless (gst_buffer_list_iterator_next_group (it));
   buf = gst_buffer_list_iterator_next (it);
@@ -540,6 +539,8 @@ GST_START_TEST (test_rtp_buffer_list_set_extension)
           &appbits, 5, 0, &pointer, &size) == TRUE);
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
+
+  gst_buffer_list_unref (list);
 }
 
 GST_END_TEST;
