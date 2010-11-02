@@ -67,7 +67,7 @@ struct _GstVTDec
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
   CMFormatDescriptionRef fmt_desc;
-  VTDecompressionSession * session;
+  VTDecompressionSessionRef session;
 
   GstBuffer * cur_inbuf;
   GstFlowReturn cur_flowret;

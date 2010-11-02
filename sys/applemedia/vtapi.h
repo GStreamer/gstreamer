@@ -31,8 +31,8 @@ typedef enum _VTStatus VTStatus;
 
 typedef guint32 VTFormatId;
 
-typedef struct _VTCompressionSession VTCompressionSession;
-typedef struct _VTDecompressionSession VTDecompressionSession;
+typedef CFTypeRef VTCompressionSessionRef;
+typedef CFTypeRef VTDecompressionSessionRef;
 typedef struct _VTCompressionOutputCallback VTCompressionOutputCallback;
 typedef struct _VTDecompressionOutputCallback VTDecompressionOutputCallback;
 
@@ -69,48 +69,50 @@ struct _GstVTApi
   GstDynApi parent;
 
   VTStatus (* VTCompressionSessionCompleteFrames)
-      (VTCompressionSession * session, CMTime completeUntilDisplayTimestamp);
+      (VTCompressionSessionRef session, CMTime completeUntilDisplayTimestamp);
   VTStatus (* VTCompressionSessionCopyProperty)
-      (VTCompressionSession * session, CFTypeRef key, void* unk,
+      (VTCompressionSessionRef session, CFTypeRef key, void* unk,
       CFTypeRef * value);
   VTStatus (* VTCompressionSessionCopySupportedPropertyDictionary)
-      (VTCompressionSession * session, CFDictionaryRef * dict);
+      (VTCompressionSessionRef session, CFDictionaryRef * dict);
   VTStatus (* VTCompressionSessionCreate)
       (CFAllocatorRef allocator, gint width, gint height, VTFormatId formatId,
       gsize unk1, CFDictionaryRef sourcePixelBufferAttributes, gsize unk2,
       VTCompressionOutputCallback outputCallback,
-      VTCompressionSession ** session);
+      VTCompressionSessionRef * session);
   VTStatus (* VTCompressionSessionEncodeFrame)
-      (VTCompressionSession * session, CVPixelBufferRef pixelBuffer,
+      (VTCompressionSessionRef session, CVPixelBufferRef pixelBuffer,
       CMTime displayTimestamp, CMTime displayDuration,
       CFDictionaryRef frameOptions, void * sourceTrackingCallback,
       void * sourceFrameRefCon);
   void (* VTCompressionSessionInvalidate)
-      (VTCompressionSession * session);
+      (VTCompressionSessionRef session);
   void (* VTCompressionSessionRelease)
-      (VTCompressionSession * session);
-  VTCompressionSession * (* VTCompressionSessionRetain)
-      (VTCompressionSession * session);
+      (VTCompressionSessionRef session);
+  VTCompressionSessionRef (* VTCompressionSessionRetain)
+      (VTCompressionSessionRef session);
   VTStatus (* VTCompressionSessionSetProperty)
-      (VTCompressionSession * session, CFStringRef propName,
+      (VTCompressionSessionRef session, CFStringRef propName,
       CFTypeRef propValue);
 
   VTStatus (* VTDecompressionSessionCreate)
-      (CFAllocatorRef allocator, CMFormatDescriptionRef videoFormatDescription,
-      CFTypeRef sessionOptions, CFDictionaryRef destinationPixelBufferAttributes,
+      (CFAllocatorRef allocator,
+      CMFormatDescriptionRef videoFormatDescription,
+      CFTypeRef sessionOptions,
+      CFDictionaryRef destinationPixelBufferAttributes,
       VTDecompressionOutputCallback * outputCallback,
-      VTDecompressionSession ** session);
+      VTDecompressionSessionRef * session);
   VTStatus (* VTDecompressionSessionDecodeFrame)
-      (VTDecompressionSession * session, CMSampleBufferRef sbuf, gsize unk1,
+      (VTDecompressionSessionRef session, CMSampleBufferRef sbuf, gsize unk1,
       gsize unk2, gsize unk3);
   void (* VTDecompressionSessionInvalidate)
-      (VTDecompressionSession * session);
+      (VTDecompressionSessionRef session);
   void (* VTDecompressionSessionRelease)
-      (VTDecompressionSession * session);
-  VTDecompressionSession * (* VTDecompressionSessionRetain)
-      (VTDecompressionSession * session);
+      (VTDecompressionSessionRef session);
+  VTDecompressionSessionRef (* VTDecompressionSessionRetain)
+      (VTDecompressionSessionRef session);
   VTStatus (* VTDecompressionSessionWaitForAsynchronousFrames)
-      (VTDecompressionSession * session);
+      (VTDecompressionSessionRef session);
 
   CFStringRef * kVTCompressionPropertyKey_AllowTemporalCompression;
   CFStringRef * kVTCompressionPropertyKey_AverageDataRate;

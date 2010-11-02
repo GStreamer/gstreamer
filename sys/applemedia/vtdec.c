@@ -40,10 +40,10 @@ static CMFormatDescriptionRef gst_vtdec_create_format_description
 static CMFormatDescriptionRef
 gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
     GstBuffer * codec_data);
-static VTDecompressionSession *gst_vtdec_create_session (GstVTDec * self,
+static VTDecompressionSessionRef gst_vtdec_create_session (GstVTDec * self,
     CMFormatDescriptionRef fmt_desc);
 static void gst_vtdec_destroy_session (GstVTDec * self,
-    VTDecompressionSession ** session);
+    VTDecompressionSessionRef * session);
 static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
 static void gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result,
     gsize unk2, CVBufferRef cvbuf);
@@ -333,10 +333,10 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
     return NULL;
 }
 
-static VTDecompressionSession *
+static VTDecompressionSessionRef
 gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
 {
-  VTDecompressionSession *session = NULL;
+  VTDecompressionSessionRef session = NULL;
   GstCVApi *cv = self->ctx->cv;
   CFMutableDictionaryRef pb_attrs;
   VTDecompressionOutputCallback callback;
@@ -367,7 +367,7 @@ gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
 }
 
 static void
-gst_vtdec_destroy_session (GstVTDec * self, VTDecompressionSession ** session)
+gst_vtdec_destroy_session (GstVTDec * self, VTDecompressionSessionRef * session)
 {
   self->ctx->vt->VTDecompressionSessionInvalidate (*session);
   self->ctx->vt->VTDecompressionSessionRelease (*session);

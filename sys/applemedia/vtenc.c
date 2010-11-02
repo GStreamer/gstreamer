@@ -54,27 +54,27 @@ static void gst_vtenc_clear_cached_caps_downstream (GstVTEnc * self);
 static GstFlowReturn gst_vtenc_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_vtenc_src_event (GstPad * pad, GstEvent * event);
 
-static VTCompressionSession *gst_vtenc_create_session (GstVTEnc * self);
+static VTCompressionSessionRef gst_vtenc_create_session (GstVTEnc * self);
 static void gst_vtenc_destroy_session (GstVTEnc * self,
-    VTCompressionSession ** session);
+    VTCompressionSessionRef * session);
 static void gst_vtenc_session_dump_properties (GstVTEnc * self,
-    VTCompressionSession * session);
+    VTCompressionSessionRef session);
 static void gst_vtenc_session_configure_usage (GstVTEnc * self,
-    VTCompressionSession * session, gint usage);
+    VTCompressionSessionRef session, gint usage);
 static void gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
-    VTCompressionSession * session, gdouble framerate);
+    VTCompressionSessionRef session, gdouble framerate);
 static void gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
-    VTCompressionSession * session, gdouble duration);
+    VTCompressionSessionRef session, gdouble duration);
 static void gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
-    VTCompressionSession * session, gint interval);
+    VTCompressionSessionRef session, gint interval);
 static void gst_vtenc_session_configure_max_keyframe_interval_duration
-    (GstVTEnc * self, VTCompressionSession * session, gdouble duration);
+    (GstVTEnc * self, VTCompressionSessionRef session, gdouble duration);
 static void gst_vtenc_session_configure_bitrate (GstVTEnc * self,
-    VTCompressionSession * session, guint bitrate);
+    VTCompressionSessionRef session, guint bitrate);
 static VTStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
-    VTCompressionSession * session, CFStringRef name, gint value);
+    VTCompressionSessionRef session, CFStringRef name, gint value);
 static VTStatus gst_vtenc_session_configure_property_double (GstVTEnc * self,
-    VTCompressionSession * session, CFStringRef name, gdouble value);
+    VTCompressionSessionRef session, CFStringRef name, gdouble value);
 
 static GstFlowReturn gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf);
 static VTStatus gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
@@ -327,7 +327,7 @@ gst_vtenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVTEnc *self = GST_VTENC_CAST (GST_PAD_PARENT (pad));
   GstStructure *structure;
-  VTCompressionSession *session;
+  VTCompressionSessionRef session;
 
   GST_OBJECT_LOCK (self);
 
@@ -478,10 +478,10 @@ gst_vtenc_src_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
-static VTCompressionSession *
+static VTCompressionSessionRef
 gst_vtenc_create_session (GstVTEnc * self)
 {
-  VTCompressionSession *session = NULL;
+  VTCompressionSessionRef session = NULL;
   GstCVApi *cv = self->ctx->cv;
   GstVTApi *vt = self->ctx->vt;
   CFMutableDictionaryRef pb_attrs;
@@ -557,7 +557,7 @@ beach:
 }
 
 static void
-gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSession ** session)
+gst_vtenc_destroy_session (GstVTEnc * self, VTCompressionSessionRef * session)
 {
   self->ctx->vt->VTCompressionSessionInvalidate (*session);
   self->ctx->vt->VTCompressionSessionRelease (*session);
@@ -568,7 +568,7 @@ typedef struct
 {
   GstVTEnc *self;
   GstVTApi *vt;
-  VTCompressionSession *session;
+  VTCompressionSessionRef session;
 } GstVTDumpPropCtx;
 
 static void
@@ -609,7 +609,7 @@ gst_vtenc_session_dump_property (CFStringRef prop_name,
 
 static void
 gst_vtenc_session_dump_properties (GstVTEnc * self,
-    VTCompressionSession * session)
+    VTCompressionSessionRef session)
 {
   GstVTDumpPropCtx dpc = { self, self->ctx->vt, session };
   CFDictionaryRef dict;
@@ -631,7 +631,7 @@ error:
 
 static void
 gst_vtenc_session_configure_usage (GstVTEnc * self,
-    VTCompressionSession * session, gint usage)
+    VTCompressionSessionRef session, gint usage)
 {
   gst_vtenc_session_configure_property_int (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_Usage), usage);
@@ -639,7 +639,7 @@ gst_vtenc_session_configure_usage (GstVTEnc * self,
 
 static void
 gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
-    VTCompressionSession * session, gdouble framerate)
+    VTCompressionSessionRef session, gdouble framerate)
 {
   gst_vtenc_session_configure_property_double (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_ExpectedFrameRate), framerate);
@@ -647,7 +647,7 @@ gst_vtenc_session_configure_expected_framerate (GstVTEnc * self,
 
 static void
 gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
-    VTCompressionSession * session, gdouble duration)
+    VTCompressionSessionRef session, gdouble duration)
 {
   gst_vtenc_session_configure_property_double (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_ExpectedDuration), duration);
@@ -655,7 +655,7 @@ gst_vtenc_session_configure_expected_duration (GstVTEnc * self,
 
 static void
 gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
-    VTCompressionSession * session, gint interval)
+    VTCompressionSessionRef session, gint interval)
 {
   gst_vtenc_session_configure_property_int (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_MaxKeyFrameInterval),
@@ -664,7 +664,7 @@ gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
 
 static void
 gst_vtenc_session_configure_max_keyframe_interval_duration (GstVTEnc * self,
-    VTCompressionSession * session, gdouble duration)
+    VTCompressionSessionRef session, gdouble duration)
 {
   gst_vtenc_session_configure_property_double (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration),
@@ -673,7 +673,7 @@ gst_vtenc_session_configure_max_keyframe_interval_duration (GstVTEnc * self,
 
 static void
 gst_vtenc_session_configure_bitrate (GstVTEnc * self,
-    VTCompressionSession * session, guint bitrate)
+    VTCompressionSessionRef session, guint bitrate)
 {
   gst_vtenc_session_configure_property_int (self, session,
       *(self->ctx->vt->kVTCompressionPropertyKey_AverageDataRate), bitrate);
@@ -681,7 +681,7 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
 
 static VTStatus
 gst_vtenc_session_configure_property_int (GstVTEnc * self,
-    VTCompressionSession * session, CFStringRef name, gint value)
+    VTCompressionSessionRef session, CFStringRef name, gint value)
 {
   CFNumberRef num;
   VTStatus status;
@@ -699,7 +699,7 @@ gst_vtenc_session_configure_property_int (GstVTEnc * self,
 
 static VTStatus
 gst_vtenc_session_configure_property_double (GstVTEnc * self,
-    VTCompressionSession * session, CFStringRef name, gdouble value)
+    VTCompressionSessionRef session, CFStringRef name, gdouble value)
 {
   CFNumberRef num;
   VTStatus status;
@@ -758,7 +758,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
     gst_vtenc_clear_cached_caps_downstream (self);
 
     if (self->reset_on_force_keyframe) {
-      VTCompressionSession *session;
+      VTCompressionSessionRef session;
 
       gst_vtenc_destroy_session (self, &self->session);
 
