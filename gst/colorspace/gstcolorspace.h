@@ -54,7 +54,6 @@ struct _GstCsp {
   ColorSpaceColorSpec from_spec;
   GstVideoFormat to_format;
   ColorSpaceColorSpec to_spec;
-  guint32 *palette;
 
   ColorspaceConvert *convert;
 };

@@ -40,9 +40,19 @@
 #include "gstcolorspace.h"
 #include <gst/video/video.h>
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
+
+#ifndef GST_VIDEO_CAPS_RGB8_PALETTED
+#define GST_VIDEO_CAPS_RGB8_PALETTED \
+  "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
+      "width = "GST_VIDEO_SIZE_RANGE" , "                               \
+      "height = " GST_VIDEO_SIZE_RANGE ", "                             \
+      "framerate = "GST_VIDEO_FPS_RANGE
+#endif
 
 #define CSP_VIDEO_CAPS						\
   "video/x-raw-yuv, width = "GST_VIDEO_SIZE_RANGE" , "			\
@@ -62,10 +72,7 @@ GST_DEBUG_CATEGORY (colorspace_performance);
   GST_VIDEO_CAPS_BGR_16";"						\
   GST_VIDEO_CAPS_RGB_15";"						\
   GST_VIDEO_CAPS_BGR_15";"						\
-  "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
-      "width = "GST_VIDEO_SIZE_RANGE" , "		                \
-      "height = " GST_VIDEO_SIZE_RANGE ", "                             \
-      "framerate = "GST_VIDEO_FPS_RANGE ";"                             \
+  GST_VIDEO_CAPS_RGB8_PALETTED";"                                       \
   GST_VIDEO_CAPS_GRAY8";"						\
   GST_VIDEO_CAPS_GRAY16("BIG_ENDIAN")";"				\
   GST_VIDEO_CAPS_GRAY16("LITTLE_ENDIAN")";"
@@ -306,11 +313,34 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (space->convert) {
     colorspace_convert_set_interlaced (space->convert, in_interlaced);
   }
-
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
   /* palette, only for from data */
-  /* FIXME add palette handling */
-#if 0
-  colorspace_convert_set_palette (convert, palette);
+  if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
+      space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+    goto format_mismatch;
+  } else if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+    GstBuffer *palette;
+
+    palette = gst_video_parse_caps_palette (incaps);
+
+    if (!palette || GST_BUFFER_SIZE (palette) < 256 * 4) {
+      if (palette)
+        gst_buffer_unref (palette);
+      goto invalid_palette;
+    }
+    colorspace_convert_set_palette (space->convert,
+        (const guint32 *) GST_BUFFER_DATA (palette));
+    gst_buffer_unref (palette);
+  } else if (space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
+    const guint32 *palette;
+    GstBuffer *p_buf;
+
+    palette = colorspace_convert_get_palette (space->convert);
+    p_buf = gst_buffer_new_and_alloc (256 * 4);
+    memcpy (GST_BUFFER_DATA (p_buf), palette, 256 * 4);
+    gst_caps_set_simple (outcaps, "palette_data", GST_TYPE_BUFFER, p_buf, NULL);
+    gst_buffer_unref (p_buf);
+  }
 #endif
 
   GST_DEBUG ("reconfigured %d %d", space->from_format, space->to_format);
@@ -339,6 +369,15 @@ format_mismatch:
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
+#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+invalid_palette:
+  {
+    GST_ERROR_OBJECT (space, "invalid palette");
+    space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
+    space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
+    return FALSE;
+  }
+#endif
 }
 
 GST_BOILERPLATE (GstCsp, gst_csp, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
@@ -366,11 +405,6 @@ gst_csp_base_init (gpointer klass)
 static void
 gst_csp_finalize (GObject * obj)
 {
-  GstCsp *space = GST_CSP (obj);
-
-  if (space->palette)
-    g_free (space->palette);
-
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
@@ -398,7 +432,6 @@ gst_csp_init (GstCsp * space, GstCspClass * klass)
 {
   space->from_format = GST_VIDEO_FORMAT_UNKNOWN;
   space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
-  space->palette = NULL;
 }
 
 static gboolean
