@@ -68,3 +68,7 @@ Duration:
 == unsorted ==
 - handle chapters
 
+= TODO for discoverer =
+- get caps for container
+- get duration per stream
+
