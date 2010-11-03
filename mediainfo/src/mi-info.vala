@@ -45,6 +45,7 @@ public class MediaInfo.Info : VBox
   // gstreamer objects
   private Discoverer dc;
   private Pipeline pb;
+  private bool have_video = false;
 
   public Info ()
   {
@@ -206,6 +207,7 @@ public class MediaInfo.Info : VBox
           video_streams.remove_page (-1);
         }
         l = info.get_video_streams ();
+        have_video = (l.length () > 0);
         for (int i = 0; i < l.length (); i++) {
           sinfo = l.nth_data (i);
 
@@ -361,7 +363,8 @@ public class MediaInfo.Info : VBox
 
   private bool on_drawing_area_expose (Widget widget, Gdk.EventExpose event)
   {
-    if (pb.current_state < State.PAUSED) {
+    // redraw if not playing and if there is no video
+    if (pb.current_state < State.PAUSED || !have_video) {
       Gdk.Window w = widget.get_window();
       Gtk.Allocation a;
       widget.get_allocation(out a);
