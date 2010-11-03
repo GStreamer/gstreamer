@@ -468,7 +468,9 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         self->cur_packet_size = incl_len;
       }
     } else {
-      guint magic;
+      guint32 magic;
+      guint32 linktype;
+      guint16 major_version;
 
       if (avail < 24)
         break;
@@ -476,24 +478,43 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
       data = gst_adapter_peek (self->adapter, 24);
 
       magic = *((guint32 *) data);
+      major_version = *((guint16 *) (data + 4));
 
-      gst_adapter_flush (self->adapter, 24);
-
-      if (magic == 0xa1b2c3d4)
+      if (magic == 0xa1b2c3d4) {
         self->swap_endian = FALSE;
-      else if (magic == 0xd4c3b2a1)
+      } else if (magic == 0xd4c3b2a1) {
         self->swap_endian = TRUE;
-      else {
+        major_version = major_version << 8 | major_version >> 8;
+      } else {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
-            ("File is not a libpcap file version 2, magic is %X", magic));
+            ("File is not a libpcap file, magic is %X", magic));
         ret = GST_FLOW_ERROR;
+        goto out;
       }
 
-      if (ret == GST_FLOW_OK)
-        self->initialized = TRUE;
+      if (major_version != 2) {
+        GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
+            ("File is not a libpcap major version 2, but %u", major_version));
+        ret = GST_FLOW_ERROR;
+        goto out;
+      }
+
+      linktype = gst_pcap_parse_read_uint32 (self, data + 20);
+
+      if (linktype != 1) {
+        GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
+            ("Only Ethernet packets of type 1 understood,"
+                " type %d unknown", linktype));
+        ret = GST_FLOW_ERROR;
+        goto out;
+      }
+
+      gst_adapter_flush (self->adapter, 24);
+      self->initialized = TRUE;
     }
   }
 
+out:
   if (ret != GST_FLOW_OK)
     gst_pcap_parse_reset (self);
 
