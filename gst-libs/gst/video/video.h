@@ -66,6 +66,9 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_UYVP: packed 10-bit 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...) (Since: 0.10.31)
  * @GST_VIDEO_FORMAT_A420: planar 4:4:2:0 AYUV (Since: 0.10.31)
  * @GST_VIDEO_FORMAT_RGB8_PALETTED: 8-bit paletted RGB (Since: 0.10.32)
+ * @GST_VIDEO_FORMAT_YUV9: planar 4:1:0 YUV (Since: 0.10.32)
+ * @GST_VIDEO_FORMAT_YVU9: planar 4:1:0 YUV (like YUV9 but UV planes swapped) (Since: 0.10.32)
+ * @GST_VIDEO_FORMAT_IYU1: packed 4:1:1 YUV (Cb-Y0-Y1-Cr-Y2-Y3 ...) (Since: 0.10.32)
  *
  * Enum value describing the most common video formats.
  */
@@ -106,7 +109,10 @@ typedef enum {
   GST_VIDEO_FORMAT_BGR15,
   GST_VIDEO_FORMAT_UYVP,
   GST_VIDEO_FORMAT_A420,
-  GST_VIDEO_FORMAT_RGB8_PALETTED
+  GST_VIDEO_FORMAT_RGB8_PALETTED,
+  GST_VIDEO_FORMAT_YUV9,
+  GST_VIDEO_FORMAT_YVU9,
+  GST_VIDEO_FORMAT_IYU1
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
