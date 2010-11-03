@@ -1898,6 +1898,7 @@ gst_poll_fd_init
 gst_poll_free
 gst_poll_new
 gst_poll_new_timer
+gst_poll_get_read_gpollfd
 gst_poll_remove_fd
 gst_poll_restart
 gst_poll_set_controllable

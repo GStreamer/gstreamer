@@ -67,6 +67,8 @@ GstPoll*        gst_poll_new              (gboolean controllable);
 GstPoll*        gst_poll_new_timer        (void);
 void            gst_poll_free             (GstPoll *set);
 
+void            gst_poll_get_read_gpollfd (GstPoll *set, GPollFD *fd);
+
 void            gst_poll_fd_init          (GstPollFD *fd);
 
 gboolean        gst_poll_add_fd           (GstPoll *set, GstPollFD *fd);

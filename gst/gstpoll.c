@@ -667,6 +667,27 @@ gst_poll_free (GstPoll * set)
 }
 
 /**
+ * gst_poll_get_read_gpollfd:
+ * @set: a #GstPoll
+ * @fd: a #GPollFD
+ *
+ * Get a GPollFD for the reading part of the control socket. This is useful when
+ * integrating with a GSource and GMainLoop.
+ *
+ * Since: 0.10.32
+ */
+void
+gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
+{
+  g_return_if_fail (set != NULL);
+  g_return_if_fail (fd != NULL);
+
+  fd->fd = set->control_read_fd.fd;
+  fd->events = G_IO_IN | G_IO_HUP | G_IO_ERR;
+  fd->revents = 0;
+}
+
+/**
  * gst_poll_fd_init:
  * @fd: a #GstPollFD
  *
