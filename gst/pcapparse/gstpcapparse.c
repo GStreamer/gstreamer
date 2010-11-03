@@ -41,7 +41,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
 #include "gstpcapparse.h"
@@ -483,8 +483,11 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
         self->swap_endian = FALSE;
       else if (magic == 0xd4c3b2a1)
         self->swap_endian = TRUE;
-      else
+      else {
+        GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
+            ("File is not a libpcap file version 2, magic is %X", magic));
         ret = GST_FLOW_ERROR;
+      }
 
       if (ret == GST_FLOW_OK)
         self->initialized = TRUE;
