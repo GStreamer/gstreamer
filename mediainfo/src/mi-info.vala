@@ -38,6 +38,7 @@ public class MediaInfo.Info : VBox
   private Label container_name;
   private Label mime_type;
   private Label duration;
+  private Image icon_image;
   private Notebook video_streams;
   private Notebook audio_streams;
   private DrawingArea drawing_area;
@@ -66,14 +67,17 @@ public class MediaInfo.Info : VBox
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack_start (drawing_area, true, true, 0);
 
-    table = new Table (8, 2, false);
+    table = new Table (8, 3, false);
     pack_start (table, false, false, 0);
      
     label = new Label (null);
     label.set_markup("<b>Container</b>");
     label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
+
+    icon_image = new Image ();
+    table.attach (icon_image, 2, 3, row, row+3, fill, 0, 0, 0);
 
     label = new Label ("Format:");
     label.set_alignment (1.0f, 0.5f);
@@ -102,23 +106,23 @@ public class MediaInfo.Info : VBox
     label = new Label (null);
     label.set_markup("<b>Video Streams</b>");
     label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
     video_streams = new Notebook ();
     video_streams.switch_page.connect (on_video_stream_switched);
-    table.attach (video_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    table.attach (video_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
     label = new Label (null);
     label.set_markup("<b>Audio Streams</b>");
     label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
     audio_streams = new Notebook ();
     audio_streams.switch_page.connect (on_audio_stream_switched);
-    table.attach (audio_streams, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    table.attach (audio_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
     // TODO: add container stream info widgets
@@ -161,14 +165,15 @@ public class MediaInfo.Info : VBox
 
     if (uri != null) {
       DiscovererInfo info;
-      bool uncertain;
+      File file = File.new_for_uri(uri);
 
-      string mime_type = g_content_type_guess (uri, null, out uncertain);
-      if (uncertain) {
-        this.mime_type.set_markup (@"<i>$mime_type</i>");
-      } else {
-        this.mime_type.set_text (mime_type);
-      }
+      try {
+        FileInfo finfo = file.query_info ("standard::*", FileQueryInfoFlags.NONE, null);
+        mime_type.set_text (finfo.get_attribute_string (FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE));
+        icon_image.set_from_gicon ((Icon) finfo.get_attribute_object (FILE_ATTRIBUTE_STANDARD_ICON), IconSize.DIALOG);
+      } catch (Error e) {
+        debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
+      } 
 
       try {
         GLib.List<DiscovererStreamInfo> l;
