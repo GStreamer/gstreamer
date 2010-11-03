@@ -966,6 +966,94 @@ putline_YUV9 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
     destV[i >> 2] = src[i * 4 + 3];
   }
 }
+
+static void
+getline_IYU1 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  const guint8 *srcline = FRAME_GET_LINE (src, 0, j);
+
+  for (i = 0; i < convert->width - 3; i += 4) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 4] = 0xff;
+    dest[i * 4 + 8] = 0xff;
+    dest[i * 4 + 12] = 0xff;
+    dest[i * 4 + 1] = srcline[(i >> 2) * 6 + 1];
+    dest[i * 4 + 5] = srcline[(i >> 2) * 6 + 2];
+    dest[i * 4 + 9] = srcline[(i >> 2) * 6 + 4];
+    dest[i * 4 + 13] = srcline[(i >> 2) * 6 + 5];
+    dest[i * 4 + 2] = dest[i * 4 + 6] = dest[i * 4 + 10] = dest[i * 4 + 14] =
+        srcline[(i >> 2) * 6 + 0];
+    dest[i * 4 + 3] = dest[i * 4 + 7] = dest[i * 4 + 11] = dest[i * 4 + 15] =
+        srcline[(i >> 2) * 6 + 3];
+  }
+
+  if (i == convert->width - 3) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 4] = 0xff;
+    dest[i * 4 + 8] = 0xff;
+    dest[i * 4 + 1] = srcline[(i >> 2) * 6 + 1];
+    dest[i * 4 + 5] = srcline[(i >> 2) * 6 + 2];
+    dest[i * 4 + 9] = srcline[(i >> 2) * 6 + 4];
+    dest[i * 4 + 2] = dest[i * 4 + 6] = dest[i * 4 + 10] =
+        srcline[(i >> 2) * 6 + 0];
+    dest[i * 4 + 3] = dest[i * 4 + 7] = dest[i * 4 + 11] =
+        srcline[(i >> 2) * 6 + 3];
+  } else if (i == convert->width - 2) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 4] = 0xff;
+    dest[i * 4 + 1] = srcline[(i >> 2) * 6 + 1];
+    dest[i * 4 + 5] = srcline[(i >> 2) * 6 + 2];
+    dest[i * 4 + 2] = dest[i * 4 + 6] = srcline[(i >> 2) * 6 + 0];
+    dest[i * 4 + 3] = dest[i * 4 + 7] = srcline[(i >> 2) * 6 + 3];
+  } else if (i == convert->width - 1) {
+    dest[i * 4 + 0] = 0xff;
+    dest[i * 4 + 1] = srcline[(i >> 2) * 6 + 1];
+    dest[i * 4 + 2] = srcline[(i >> 2) * 6 + 0];
+    dest[i * 4 + 3] = srcline[(i >> 2) * 6 + 3];
+  }
+}
+
+static void
+putline_IYU1 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint8 *destline = FRAME_GET_LINE (dest, 0, j);
+
+  for (i = 0; i < convert->width - 3; i += 4) {
+    destline[(i >> 2) * 6 + 1] = src[i * 4 + 1];
+    destline[(i >> 2) * 6 + 2] = src[i * 4 + 5];
+    destline[(i >> 2) * 6 + 4] = src[i * 4 + 9];
+    destline[(i >> 2) * 6 + 5] = src[i * 4 + 13];
+    destline[(i >> 2) * 6 + 0] =
+        (src[i * 4 + 2] + src[i * 4 + 6] + src[i * 4 + 10] + src[i * 4 +
+            14]) >> 2;
+    destline[(i >> 2) * 6 + 3] =
+        (src[i * 4 + 3] + src[i * 4 + 7] + src[i * 4 + 11] + src[i * 4 +
+            15]) >> 2;
+  }
+
+  if (i == convert->width - 3) {
+    destline[(i >> 2) * 6 + 1] = src[i * 4 + 1];
+    destline[(i >> 2) * 6 + 2] = src[i * 4 + 5];
+    destline[(i >> 2) * 6 + 4] = src[i * 4 + 9];
+    destline[(i >> 2) * 6 + 0] =
+        (src[i * 4 + 2] + src[i * 4 + 6] + src[i * 4 + 10]) / 3;
+    destline[(i >> 2) * 6 + 3] =
+        (src[i * 4 + 3] + src[i * 4 + 7] + src[i * 4 + 11]) / 3;
+  } else if (i == convert->width - 2) {
+    destline[(i >> 2) * 6 + 1] = src[i * 4 + 1];
+    destline[(i >> 2) * 6 + 2] = src[i * 4 + 5];
+    destline[(i >> 2) * 6 + 0] = (src[i * 4 + 2] + src[i * 4 + 6]) >> 1;
+    destline[(i >> 2) * 6 + 3] = (src[i * 4 + 3] + src[i * 4 + 7]) >> 1;
+  } else if (i == convert->width - 1) {
+    destline[(i >> 2) * 6 + 1] = src[i * 4 + 1];
+    destline[(i >> 2) * 6 + 0] = src[i * 4 + 2];
+    destline[(i >> 2) * 6 + 3] = src[i * 4 + 3];
+  }
+}
 #endif
 
 typedef struct
@@ -1016,6 +1104,7 @@ static const ColorspaceLine lines[] = {
   , {GST_VIDEO_FORMAT_RGB8_PALETTED, getline_RGB8P, putline_RGB8P},
   {GST_VIDEO_FORMAT_YUV9, getline_YUV9, putline_YUV9},
   {GST_VIDEO_FORMAT_YVU9, getline_YUV9, putline_YUV9},  /* alias */
+  {GST_VIDEO_FORMAT_IYU1, getline_IYU1, putline_IYU1}
 #endif
 };
 
