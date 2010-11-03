@@ -35,6 +35,7 @@ sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
 public class MediaInfo.Info : VBox
 {
   // ui components
+  private Label container_name;
   private Label mime_type;
   private Label duration;
   private Notebook video_streams;
@@ -65,13 +66,21 @@ public class MediaInfo.Info : VBox
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack_start (drawing_area, true, true, 0);
 
-    table = new Table (7, 2, false);
+    table = new Table (8, 2, false);
     pack_start (table, false, false, 0);
      
     label = new Label (null);
     label.set_markup("<b>Container</b>");
     label.set_alignment (0.0f, 0.5f);
     table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    row++;
+
+    label = new Label ("Format:");
+    label.set_alignment (1.0f, 0.5f);
+    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    container_name = new Label (null);
+    container_name.set_alignment (0.0f, 0.5f);
+    table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
     label = new Label ("Mime-Type:");
@@ -185,6 +194,7 @@ public class MediaInfo.Info : VBox
         //stdout.printf ("Duration: %s\n", dur_str);
 
         // TODO: need caps for the container, so that we can have human readable container name
+        //container_name.set_text (pb_utils_get_codec_description (Caps.from_string("application/ogg")));
 
         // get stream info
         while (video_streams.get_n_pages() > 0) {
