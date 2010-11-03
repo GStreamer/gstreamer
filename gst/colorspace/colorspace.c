@@ -27,6 +27,8 @@
 #include <string.h>
 #include "gstcolorspaceorc.h"
 
+/* For GST_CHECK_PLUGINS_BASE_VERSION() */
+#include <gst/pbutils/pbutils.h>
 
 static void colorspace_convert_generic (ColorspaceConvert * convert,
     guint8 * dest, const guint8 * src);
@@ -99,7 +101,7 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
 
   convert->tmpline = g_malloc (sizeof (guint32) * width * 2);
 
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
   if (to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
     /* build poor man's palette, taken from ffmpegcolorspace */
     static const guint8 pal_value[6] = { 0x00, 0x33, 0x66, 0x99, 0xcc, 0xff };
@@ -882,7 +884,7 @@ putline_A420 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
       FRAME_GET_LINE (dest, 3, j), src, convert->width / 2);
 }
 
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
 static void
 getline_RGB8P (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
     int j)
@@ -961,7 +963,7 @@ static const ColorspaceLine lines[] = {
   {GST_VIDEO_FORMAT_BGR15, getline_BGR15, putline_BGR15},
   {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP},
   {GST_VIDEO_FORMAT_A420, getline_A420, putline_A420}
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
   , {GST_VIDEO_FORMAT_RGB8_PALETTED, getline_RGB8P, putline_RGB8P}
 #endif
 };

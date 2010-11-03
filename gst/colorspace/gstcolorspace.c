@@ -40,18 +40,18 @@
 #include "gstcolorspace.h"
 #include <gst/video/video.h>
 
+/* For GST_CHECK_PLUGINS_BASE_VERSION() */
+#include <gst/pbutils/pbutils.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
 
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if !GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
 #define VIDEO_CAPS_RGB8_PALETTED \
-  "video/x-raw-rgb, bpp = (int)8, depth = (int)8, "                     \
-      "width = "GST_VIDEO_SIZE_RANGE" , "                               \
-      "height = " GST_VIDEO_SIZE_RANGE ", "                             \
-      "framerate = "GST_VIDEO_FPS_RANGE "; "
+  GST_VIDEO_CAPS_RGB8_PALETTED "; "
 #else
 #define VIDEO_CAPS_RGB8_PALETTED        /* no-op */
 #endif
@@ -315,7 +315,7 @@ gst_csp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (space->convert) {
     colorspace_convert_set_interlaced (space->convert, in_interlaced);
   }
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
   /* palette, only for from data */
   if (space->from_format == GST_VIDEO_FORMAT_RGB8_PALETTED &&
       space->to_format == GST_VIDEO_FORMAT_RGB8_PALETTED) {
@@ -371,7 +371,7 @@ format_mismatch:
     space->to_format = GST_VIDEO_FORMAT_UNKNOWN;
     return FALSE;
   }
-#ifdef GST_VIDEO_CAPS_RGB8_PALETTED
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
 invalid_palette:
   {
     GST_ERROR_OBJECT (space, "invalid palette");
