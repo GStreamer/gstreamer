@@ -450,17 +450,9 @@ static void
 getline_Y41B (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
     int j)
 {
-  int i;
-  const guint8 *srclineY = FRAME_GET_LINE (src, 0, j);
-  const guint8 *srclineU = FRAME_GET_LINE (src, 1, j);
-  const guint8 *srclineV = FRAME_GET_LINE (src, 2, j);
-
-  for (i = 0; i < convert->width; i++) {
-    dest[i * 4 + 0] = 0xff;
-    dest[i * 4 + 1] = srclineY[i];
-    dest[i * 4 + 2] = srclineU[i >> 2];
-    dest[i * 4 + 3] = srclineV[i >> 2];
-  }
+  cogorc_getline_YUV9 (dest,
+      FRAME_GET_LINE (src, 0, j),
+      FRAME_GET_LINE (src, 1, j), FRAME_GET_LINE (src, 2, j), convert->width);
 }
 
 static void
@@ -917,6 +909,63 @@ putline_RGB8P (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
                           2]) / 47) % 6) * 6 + (((src[i * 4 + 3]) / 47) % 6));
   }
 }
+
+
+static void
+getline_YUV9 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  cogorc_getline_YUV9 (dest,
+      FRAME_GET_LINE (src, 0, j),
+      FRAME_GET_LINE (src, 1, j >> 2),
+      FRAME_GET_LINE (src, 2, j >> 2), convert->width);
+}
+
+static void
+putline_YUV9 (ColorspaceConvert * convert, guint8 * dest, const guint8 * src,
+    int j)
+{
+  int i;
+  guint8 *destY = FRAME_GET_LINE (dest, 0, j);
+  guint8 *destU = FRAME_GET_LINE (dest, 1, j >> 2);
+  guint8 *destV = FRAME_GET_LINE (dest, 2, j >> 2);
+
+  for (i = 0; i < convert->width - 3; i += 4) {
+    destY[i] = src[i * 4 + 1];
+    destY[i + 1] = src[i * 4 + 5];
+    destY[i + 2] = src[i * 4 + 9];
+    destY[i + 3] = src[i * 4 + 13];
+    if (j % 4 == 0) {
+      destU[i >> 2] =
+          (src[i * 4 + 2] + src[i * 4 + 6] + src[i * 4 + 10] + src[i * 4 +
+              14]) >> 2;
+      destV[i >> 2] =
+          (src[i * 4 + 3] + src[i * 4 + 7] + src[i * 4 + 11] + src[i * 4 +
+              15]) >> 2;
+    }
+  }
+
+  if (i == convert->width - 3) {
+    destY[i] = src[i * 4 + 1];
+    destY[i + 1] = src[i * 4 + 5];
+    destY[i + 2] = src[i * 4 + 9];
+    if (j % 4 == 0) {
+      destU[i >> 2] = (src[i * 4 + 2] + src[i * 4 + 6] + src[i * 4 + 10]) / 3;
+      destV[i >> 2] = (src[i * 4 + 3] + src[i * 4 + 7] + src[i * 4 + 11]) / 3;
+    }
+  } else if (i == convert->width - 2) {
+    destY[i] = src[i * 4 + 1];
+    destY[i + 1] = src[i * 4 + 5];
+    if (j % 4 == 0) {
+      destU[i >> 2] = (src[i * 4 + 2] + src[i * 4 + 6]) >> 1;
+      destV[i >> 2] = (src[i * 4 + 3] + src[i * 4 + 7]) >> 1;
+    }
+  } else if (i == convert->width - 1) {
+    destY[i] = src[i * 4 + 1];
+    destU[i >> 2] = src[i * 4 + 2];
+    destV[i >> 2] = src[i * 4 + 3];
+  }
+}
 #endif
 
 typedef struct
@@ -964,7 +1013,9 @@ static const ColorspaceLine lines[] = {
   {GST_VIDEO_FORMAT_UYVP, getline_UYVP, putline_UYVP},
   {GST_VIDEO_FORMAT_A420, getline_A420, putline_A420}
 #if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
-  , {GST_VIDEO_FORMAT_RGB8_PALETTED, getline_RGB8P, putline_RGB8P}
+  , {GST_VIDEO_FORMAT_RGB8_PALETTED, getline_RGB8P, putline_RGB8P},
+  {GST_VIDEO_FORMAT_YUV9, getline_YUV9, putline_YUV9},
+  {GST_VIDEO_FORMAT_YVU9, getline_YUV9, putline_YUV9},  /* alias */
 #endif
 };
 

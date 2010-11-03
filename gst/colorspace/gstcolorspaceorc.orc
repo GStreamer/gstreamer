@@ -1326,6 +1326,24 @@ mergebw uv, tu, tv
 mergebw ay, c255, y
 mergewl d, ay, uv
 
+.function cogorc_getline_YUV9
+.dest 8 d guint8
+.source 2 y guint8
+.source 1 u guint8
+.source 1 v guint8
+.const 1 c255 255
+.temp 2 tuv
+.temp 4 ay
+.temp 4 uv
+.temp 1 tu
+.temp 1 tv
+
+loadupdb tu, u
+loadupdb tv, v
+mergebw tuv, tu, tv
+mergewl uv, tuv, tuv
+x2 mergebw ay, c255, y
+x2 mergewl d, ay, uv
 
 .function cogorc_getline_YUY2
 .dest 8 ayuv guint8
