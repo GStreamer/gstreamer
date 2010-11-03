@@ -18,16 +18,38 @@
  */
 
 using MediaInfo;
+using GLib;
+
+bool version;
+const OptionEntry[] options = {
+{ "version", 0, 0, OptionArg.NONE, ref version, "Display version number", null },
+  { null }
+};
 
 int
 main(string[] args)
 {
+    
   Intl.bindtextdomain (Config.GETTEXT_PACKAGE, Config.LOCALEDIR);
   Intl.bind_textdomain_codeset (Config.GETTEXT_PACKAGE, "UTF-8");
   Intl.textdomain (Config.GETTEXT_PACKAGE);
 
-  Gtk.init (ref args);
-  Gst.init (ref args);
+  OptionContext opt_context = new OptionContext (_("<directory>"));
+  opt_context.set_help_enabled (true);
+  opt_context.add_main_entries (options, null);
+  opt_context.add_group (Gst.init_get_option_group ());
+  opt_context.add_group (Gtk.get_option_group (false));
+  try {
+    opt_context.parse (ref args);
+  } catch (Error e) {
+    stdout.printf ("%s", opt_context.get_help(true, null));
+    return (0);  
+  }
+
+  if (version) {
+	  stdout.printf ("%s\n", Config.PACKAGE_STRING);
+    return (0);
+  }
 
   App app = new App ();
   app.show_all ();
