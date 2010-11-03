@@ -81,7 +81,9 @@ G_BEGIN_DECLS
     (GST_VERSION_MAJOR > (major) || \
      (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR > (minor)) || \
      (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
-      GST_VERSION_MICRO >= (micro)))
+      GST_VERSION_MICRO >= (micro)) || \
+     (GST_VERSION_MAJOR == (major) && GST_VERSION_MINOR == (minor) && \
+      GST_VERSION_MICRO + 1 == (micro) && GST_VERSION_NANO > 0))
 
 G_END_DECLS
 
