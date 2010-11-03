@@ -1,6 +1,7 @@
 include $(top_srcdir)/common/check.mak
 
 CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
+TEST_FILES_DIRECTORY = $(top_srcdir)/tests/files
 
 GST_TOOLS_DIR = $(top_builddir)/tools
 
@@ -105,10 +106,16 @@ else
 check_orc =
 endif
 
+if USE_ZBAR
+check_zbar = elements/zbar
+else
+check_zbar =
+endif
 
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
-	elements/mplex
+	elements/mplex    \
+	elements/zbar
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = \
@@ -155,6 +162,7 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	elements/valve \
 	$(check_vp8) \
+	$(check_zbar) \
 	$(check_orc) \
         pipelines/tagschecking
 
@@ -162,7 +170,8 @@ noinst_HEADERS = elements/mxfdemux.h
 
 TESTS = $(check_PROGRAMS)
 
-AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
+AM_CFLAGS = $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
+		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\""
 LDADD = $(GST_CHECK_LIBS)
 
 elements_camerabin_CFLAGS = \

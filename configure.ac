@@ -1782,6 +1782,7 @@ sys/winks/Makefile
 sys/winscreencap/Makefile
 tests/Makefile
 tests/check/Makefile
+tests/files/Makefile
 tests/examples/Makefile
 tests/examples/camerabin/Makefile
 tests/examples/directfb/Makefile
