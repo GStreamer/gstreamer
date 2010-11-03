@@ -23,7 +23,9 @@
 /* This header is not included automatically via gst/gst.h, you need to
  * include it explicitly if you need it. */
 
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES /* so MSVC defines M_PI etc. */
+#endif
 #include <math.h>
 
 #include <glib.h>
