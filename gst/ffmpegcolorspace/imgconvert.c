@@ -1325,6 +1325,42 @@ uyvy411_to_yuv411p (AVPicture * dst, const AVPicture * src,
 }
 
 static void
+yuv411p_to_uyvy411 (AVPicture * dst, const AVPicture * src,
+    int width, int height)
+{
+  uint8_t *p, *p1;
+  const uint8_t *lum, *cr, *cb, *lum1, *cr1, *cb1;
+  int w;
+
+  p1 = dst->data[0];
+  lum1 = src->data[0];
+  cb1 = src->data[1];
+  cr1 = src->data[2];
+  for (; height > 0; height--) {
+    p = p1;
+    lum = lum1;
+    cb = cb1;
+    cr = cr1;
+    for (w = width; w >= 4; w -= 4) {
+      p[0] = cb[0];
+      p[1] = lum[0];
+      p[2] = lum[1];
+      p[3] = cr[0];
+      p[4] = lum[2];
+      p[5] = lum[3];
+      p += 6;
+      lum += 4;
+      cb++;
+      cr++;
+    }
+    p1 += dst->linesize[0];
+    lum1 += src->linesize[0];
+    cb1 += src->linesize[1];
+    cr1 += src->linesize[2];
+  }
+}
+
+static void
 yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
     int width, int height)
 {
@@ -3437,6 +3473,7 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_PAL8, PIX_FMT_ABGR32, pal8_to_abgr32},
 
   {PIX_FMT_UYVY411, PIX_FMT_YUV411P, uyvy411_to_yuv411p},
+  {PIX_FMT_YUV411P, PIX_FMT_UYVY411, yuv411p_to_uyvy411},
 
   {PIX_FMT_V308, PIX_FMT_RGB24, v308_to_rgb24},
 
