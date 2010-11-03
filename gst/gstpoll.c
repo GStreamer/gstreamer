@@ -1391,7 +1391,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
        * For other polls, we need to clear the control socket. If there was only
        * one socket with activity and it was the control socket, we need to
        * restart */
-      if (res == 1 && release_all_wakeup (set) > 0)
+      if (release_all_wakeup (set) > 0 && res == 1)
         restarting = TRUE;
     }
 
