@@ -402,14 +402,26 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
 
-    if ((s = gst_event_get_structure (event)))
-      sstr = gst_structure_to_string (s);
-    else
-      sstr = g_strdup ("");
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SINK_MESSAGE) {
+      GstMessage *msg;
 
-    sink->last_message =
-        g_strdup_printf ("event   ******* E (type: %d, %s) %p",
-        GST_EVENT_TYPE (event), sstr, event);
+      gst_event_parse_sink_message (event, &msg);
+      sstr = gst_structure_to_string (msg->structure);
+      sink->last_message =
+          g_strdup_printf ("message ******* M (type: %d, %s) %p",
+          GST_MESSAGE_TYPE (msg), sstr, msg);
+      gst_message_unref (msg);
+    } else {
+      if ((s = gst_event_get_structure (event))) {
+        sstr = gst_structure_to_string (s);
+      } else {
+        sstr = g_strdup ("");
+      }
+
+      sink->last_message =
+          g_strdup_printf ("event   ******* E (type: %d, %s) %p",
+          GST_EVENT_TYPE (event), sstr, event);
+    }
     g_free (sstr);
     GST_OBJECT_UNLOCK (sink);
 
