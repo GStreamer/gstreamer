@@ -1123,6 +1123,10 @@ mpegts_parse_apply_tdt (MpegTSParse * parse,
   gst_element_post_message (GST_ELEMENT_CAST (parse),
       gst_message_new_element (GST_OBJECT (parse),
           gst_structure_copy (tdt_info)));
+
+  gst_element_send_event (GST_ELEMENT_CAST (parse),
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_copy (tdt_info)));
 }
 
 static gboolean
