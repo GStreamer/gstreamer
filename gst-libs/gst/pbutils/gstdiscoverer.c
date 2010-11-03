@@ -443,6 +443,15 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 {
   PrivateStream *ps;
   GstPad *sinkpad = NULL;
+  GstCaps *caps;
+  static GstCaps *subs_caps = NULL;
+
+  if (!subs_caps) {
+    subs_caps = gst_caps_from_string ("text/plain; text/x-pango-markup; "
+        "subpicture/x-pgs; subpicture/x-dvb; application/x-subtitle-unknown; "
+        "application/x-ssa; application/x-ass; subtitle/x-kate; "
+        "video/x-dvd-subpicture; ");
+  }
 
   GST_DEBUG_OBJECT (dc, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -458,6 +467,16 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
 
   g_object_set (ps->sink, "silent", TRUE, NULL);
   g_object_set (ps->queue, "max-size-buffers", 1, "silent", TRUE, NULL);
+
+  caps = gst_pad_get_caps_reffed (pad);
+
+  if (gst_caps_can_intersect (caps, subs_caps)) {
+    /* Subtitle streams are sparse and don't provide any information - don't
+     * wait for data to preroll */
+    g_object_set (ps->sink, "async", FALSE, NULL);
+  }
+
+  gst_caps_unref (caps);
 
   gst_bin_add_many (dc->priv->pipeline, ps->queue, ps->sink, NULL);
 
