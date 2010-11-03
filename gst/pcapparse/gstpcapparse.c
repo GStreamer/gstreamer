@@ -319,6 +319,7 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
 }
 
 #define ETH_HEADER_LEN    14
+#define SLL_HEADER_LEN    16
 #define IP_HEADER_MIN_LEN 20
 #define UDP_HEADER_LEN     8
 
@@ -341,14 +342,29 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
   guint16 udp_dst_port;
   guint16 udp_len;
 
-  if (buf_size < ETH_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
-    return FALSE;
+  switch (self->linktype) {
+    case DLT_ETHER:
+      if (buf_size < ETH_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
+        return FALSE;
 
-  eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
-  if (eth_type != 0x800)
-    return FALSE;
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 12)));
+      if (eth_type != 0x800)
+        return FALSE;
 
-  buf_ip = buf + ETH_HEADER_LEN;
+      buf_ip = buf + ETH_HEADER_LEN;
+      break;
+    case DLT_SLL:
+      if (buf_size < SLL_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
+        return FALSE;
+
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 2)));
+
+      if (eth_type != 1)
+        return FALSE;
+
+      buf_ip = buf + SLL_HEADER_LEN;
+      break;
+  }
 
   b = *buf_ip;
   if (((b >> 4) & 0x0f) != 4)
@@ -501,13 +517,15 @@ gst_pcap_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       linktype = gst_pcap_parse_read_uint32 (self, data + 20);
 
-      if (linktype != 1) {
+      if (linktype != DLT_ETHER && linktype != DLT_SLL) {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
-            ("Only Ethernet packets of type 1 understood,"
+            ("Only dumps of type Ethernet or Linux Coooked (SLL) understood,"
                 " type %d unknown", linktype));
         ret = GST_FLOW_ERROR;
         goto out;
       }
+
+      self->linktype = linktype;
 
       gst_adapter_flush (self->adapter, 24);
       self->initialized = TRUE;
