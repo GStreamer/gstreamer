@@ -287,6 +287,20 @@ public class MediaInfo.Info : VBox
             row++;
           }
 
+          if ((s = (Structure)sinfo.get_tags ()) != null) {
+            // FIXME: use treeview inside scrolled window
+            label = new Label ("Tags:");
+            label.set_alignment (1.0f, 0.0f);
+            table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
+            str = s.to_string ();
+            str = str[8:-1].compress().replace(",","\n");
+            label = new Label(str);
+            label.set_ellipsize (Pango.EllipsizeMode.END);
+            label.set_alignment (0.0f, 0.5f);
+            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+            row++;
+          }
+
           video_streams.append_page (table, new Label (@"video $i"));
         }
         video_streams.show_all();
@@ -357,6 +371,20 @@ public class MediaInfo.Info : VBox
             label.set_alignment (1.0f, 0.5f);
             table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
             label = new Label(s.to_string ());
+            label.set_ellipsize (Pango.EllipsizeMode.END);
+            label.set_alignment (0.0f, 0.5f);
+            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+            row++;
+          }
+
+          if ((s = (Structure)sinfo.get_tags ()) != null) {
+            // FIXME: use treeview inside scrolled window
+            label = new Label ("Tags:");
+            label.set_alignment (1.0f, 0.0f);
+            table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
+            str = s.to_string ();
+            str = str[8:-1].compress().replace(",","\n");
+            label = new Label(str);
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
