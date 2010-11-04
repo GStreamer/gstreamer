@@ -26,6 +26,7 @@ we need to update the vapi for yet unreleased gstreamer api:
 cd vala/mediainfo/vapi
 vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
 vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
+git diff packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata >vapi.gstreamer-pbutils-0.10.patch
 # suse
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
 # ubuntu
@@ -200,9 +201,27 @@ public class MediaInfo.Info : VBox
         this.duration.set_text (str);
         //stdout.printf ("Duration: %s\n", dur_str);
 
-        // TODO: need caps for the container, so that we can have human readable container name
-        //container_name.set_text (pb_utils_get_codec_description (Caps.from_string("application/ogg")));
-
+        /*
+        < ensonic> bilboed-pi: is gst_discoverer_info_get_container_streams() containing the info for the conatiner or can those be multiple ones as well?
+        < bilboed-pi> ensonic, if you have DV system-stream in MXF .... you'll have two container streams
+        < bilboed-pi> (yes, they exist)
+        < bilboed-pi> I'd recommend grabbing the top-level stream_info and walking your way down
+        */
+        /*
+        l = info.get_container_streams ();
+        for (int i = 0; i < l.length (); i++) {
+          sinfo = l.nth_data (i);
+          stdout.printf ("container[%d]: %s\n", i, sinfo.get_caps ().to_string ());
+        }
+        l = info.get_stream_list ();
+        for (int i = 0; i < l.length (); i++) {
+          sinfo = l.nth_data (i);
+          stdout.printf ("stream[%d:%s]: %s\n", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
+        }
+        */
+        sinfo = info.get_stream_info ();
+        container_name.set_text (pb_utils_get_codec_description (sinfo.get_caps ()));
+          
         // get stream info
         while (video_streams.get_n_pages() > 0) {
           video_streams.remove_page (-1);
