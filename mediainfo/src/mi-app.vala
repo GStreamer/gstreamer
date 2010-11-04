@@ -25,8 +25,13 @@ public class MediaInfo.App : Window
   private FileChooserWidget chooser;
   private Info info;
 
-  public App()
+  public string directory { get; set; }
+
+  public App(string? directory)
   {
+    GLib.Object (type :  WindowType.TOPLEVEL);
+    this.directory = directory;
+
     // configure the window
     set_title (_("GStreamer Media Info"));
     set_default_size (500, 350);
@@ -45,7 +50,10 @@ public class MediaInfo.App : Window
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
     paned.pack1 (chooser, true, true);
 
-    chooser.set_current_folder (GLib.Environment.get_home_dir ());
+    if (directory != null) {
+      //chooser.set_current_folder (GLib.Environment.get_home_dir ());
+      chooser.set_current_folder (directory);
+    }
     chooser.set_show_hidden (false);
     chooser.selection_changed.connect (on_update_preview);
 

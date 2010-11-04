@@ -51,7 +51,13 @@ main(string[] args)
     return (0);
   }
 
-  App app = new App ();
+  // take remaining arg and use as default dir
+  string directory = null;  
+  if (args.length > 1) {
+    directory=args[1];
+  }
+
+  App app = new App (directory);
   app.show_all ();
 
   Gtk.main ();
