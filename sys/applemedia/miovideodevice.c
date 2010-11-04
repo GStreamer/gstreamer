@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009 Ole André Vadla Ravnås <oravnas@cisco.com>
- *               2009 Knut Inge Hvidsten <knut.inge.hvidsten@tandberg.com>
+ *               2009 Knut Inge Hvidsten <knuhvids@cisco.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

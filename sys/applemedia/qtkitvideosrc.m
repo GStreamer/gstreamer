@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
+ * Copyright (C) 2009 Ole André Vadla Ravnås <oravnas@cisco.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -36,7 +36,7 @@ static const GstElementDetails element_details = {
     "QTKitVideoSrc",
     "Source/Video",
     "Stream data from a video capture device through QTKit",
-    "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>"
+    "Ole André Vadla Ravnås <oravnas@cisco.com>"
 };
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
