@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Ole André Vadla Ravnås <oleavr@gmail.com>
+ * Copyright (C) 2010 Ole André Vadla Ravnås <oravnas@cisco.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -728,7 +728,7 @@ gst_cel_video_src_base_init (gpointer gclass)
       "iPhone camera source",
       "Source/Video",
       "Stream data from iPhone camera sensor",
-      "Ole André Vadla Ravnås <oleavr@gmail.com>");
+      "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
