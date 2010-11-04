@@ -473,11 +473,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     gst_object_unref (clock);
     clock = NULL;
-
-    offset++;
   }
 
-  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET (buf) = offset++;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
