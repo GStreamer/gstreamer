@@ -1,0 +1,16 @@
+diff --git a/mediainfo/vapi/packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata b/mediainfo/vapi/packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata
+index f873f19..114a893 100644
+--- a/mediainfo/vapi/packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata
++++ b/mediainfo/vapi/packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata
+@@ -13,3 +13,11 @@ gst_missing_decoder_installer_detail_new transfer_ownership="1"
+ gst_missing_encoder_installer_detail_new transfer_ownership="1"
+ gst_install_plugins_async.details is_array="1" no_array_length="1"
+ gst_install_plugins_async.ctx nullable="1"
++gst_discoverer_discover_uri transfer_ownership="1"
++gst_discoverer_info_get_audio_streams type_arguments="DiscovererStreamInfo" transfer_ownership="1"
++gst_discoverer_info_get_video_streams type_arguments="DiscovererStreamInfo" transfer_ownership="1"
++gst_discoverer_info_get_container_streams type_arguments="DiscovererStreamInfo" transfer_ownership="1"
++GstDiscovererInfo base_class="GstMiniObject"
++GstDiscovererInfo.mini_object hidden="1"
++GstDiscovererStreamInfo base_class="GstMiniObject"
++GstDiscovererStreamInfo.mini_object hidden="1"
