@@ -1,0 +1,797 @@
+/*
+ * Copyright (C) 2010 Ole André Vadla Ravnås <oravnas@cisco.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include "avfvideosrc.h"
+
+#import "bufferfactory.h"
+
+#import <AVFoundation/AVFoundation.h>
+#include <gst/video/video.h>
+
+#define DEFAULT_DEVICE_INDEX  -1
+#define DEFAULT_DO_STATS      FALSE
+
+#define DEVICE_VIDEO_FORMAT   GST_VIDEO_FORMAT_YUY2
+#define DEVICE_YUV_FOURCC     "YUY2"
+#define DEVICE_FPS_N          25
+#define DEVICE_FPS_D          1
+
+#define BUFFER_QUEUE_SIZE     2
+
+GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
+#define GST_CAT_DEFAULT gst_avf_video_src_debug
+
+static const GstElementDetails element_details = {
+    "AVFVideoSrc",
+    "Source/Video",
+    "Stream data from a video capture device through AVFoundation",
+    "Ole André Vadla Ravnås <oravnas@cisco.com>"
+};
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+        GST_VIDEO_CAPS_YUV (DEVICE_YUV_FOURCC))
+);
+
+typedef enum _QueueState {
+  NO_BUFFERS = 1,
+  HAS_BUFFER_OR_STOP_REQUEST,
+} QueueState;
+
+static GstPushSrcClass * parent_class;
+
+@interface GstAVFVideoSrcImpl : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
+  GstElement *element;
+  GstBaseSrc *baseSrc;
+  GstPushSrc *pushSrc;
+
+  gint deviceIndex;
+  BOOL doStats;
+
+  GstAMBufferFactory *bufferFactory;
+  AVCaptureSession *session;
+  AVCaptureDeviceInput *input;
+  AVCaptureVideoDataOutput *output;
+  AVCaptureDevice *device;
+
+  dispatch_queue_t mainQueue;
+  dispatch_queue_t workerQueue;
+  NSConditionLock *bufQueueLock;
+  NSMutableArray *bufQueue;
+  BOOL stopRequest;
+
+  gint width, height;
+  GstClockTime duration;
+  guint64 offset;
+
+  GstClockTime lastSampling;
+  guint count;
+  gint fps;
+}
+
+- (id)init;
+- (id)initWithSrc:(GstPushSrc *)src;
+- (void)finalize;
+
+@property int deviceIndex;
+@property BOOL doStats;
+@property int fps;
+
+- (BOOL)openDevice;
+- (void)closeDevice;
+- (GstCaps *)getCaps;
+- (BOOL)setCaps:(GstCaps *)caps;
+- (BOOL)start;
+- (BOOL)stop;
+- (BOOL)unlock;
+- (BOOL)unlockStop;
+- (BOOL)query:(GstQuery *)query;
+- (GstStateChangeReturn)changeState:(GstStateChange)transition;
+- (GstFlowReturn)create:(GstBuffer **)buf;
+- (void)timestampBuffer:(GstBuffer *)buf;
+- (void)updateStatistics;
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection;
+
+- (void)waitForMainQueueToDrain;
+- (void)waitForWorkerQueueToDrain;
+- (void)waitForQueueToDrain:(dispatch_queue_t)dispatchQueue;
+
+@end
+
+@implementation GstAVFVideoSrcImpl
+
+- (id)init
+{
+  return [self initWithSrc:NULL];
+}
+
+- (id)initWithSrc:(GstPushSrc *)src
+{
+  if ((self = [super init])) {
+    element = GST_ELEMENT_CAST (src);
+    baseSrc = GST_BASE_SRC_CAST (src);
+    pushSrc = src;
+
+    deviceIndex = DEFAULT_DEVICE_INDEX;
+
+    mainQueue = dispatch_get_main_queue ();
+    workerQueue =
+        dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc", NULL);
+
+    gst_base_src_set_live (baseSrc, TRUE);
+    gst_base_src_set_format (baseSrc, GST_FORMAT_TIME);
+  }
+
+  return self;
+}
+
+- (void)finalize
+{
+  mainQueue = NULL;
+  dispatch_release (workerQueue);
+  workerQueue = NULL;
+
+  [super finalize];
+}
+
+@synthesize deviceIndex, doStats, fps;
+
+- (BOOL)openDevice
+{
+  BOOL success = NO, *successPtr = &success;
+  GError *error;
+
+  bufferFactory = [[GstAMBufferFactory alloc] initWithError:&error];
+  if (bufferFactory == nil) {
+    GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("API error"),
+        ("%s", error->message));
+    g_clear_error (&error);
+    return NO;
+  }
+
+  dispatch_async (mainQueue, ^{
+    NSString *mediaType = AVMediaTypeVideo;
+    NSError *err;
+
+    if (deviceIndex == -1) {
+      device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
+      if (device == nil) {
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                           ("No video capture devices found"), (NULL));
+        return;
+      }
+    } else {
+      NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
+      if (deviceIndex >= [devices count]) {
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                           ("Invalid video capture device index"), (NULL));
+        return;
+      }
+      device = [devices objectAtIndex:deviceIndex];
+    }
+    g_assert (device != nil);
+    [device retain];
+
+    GST_INFO ("Opening '%s'", [[device localizedName] UTF8String]);
+
+    input = [AVCaptureDeviceInput deviceInputWithDevice:device
+                                                  error:&err];
+    if (input == nil) {
+      GST_ELEMENT_ERROR (element, RESOURCE, BUSY,
+          ("Failed to open device: %s",
+           [[err localizedDescription] UTF8String]),
+          (NULL));
+      [device release];
+      device = nil;
+      return;
+    }
+    [input retain];
+
+    output = [[AVCaptureVideoDataOutput alloc] init];
+    [output setSampleBufferDelegate:self
+                              queue:workerQueue];
+    output.alwaysDiscardsLateVideoFrames = YES;
+    output.minFrameDuration = kCMTimeZero; /* unlimited */
+    output.videoSettings = nil; /* device native format */
+
+    session = [[AVCaptureSession alloc] init];
+    [session addInput:input];
+    [session addOutput:output];
+
+    *successPtr = YES;
+  });
+  [self waitForMainQueueToDrain];
+
+  if (!success) {
+    [bufferFactory release];
+    bufferFactory = nil;
+  }
+
+  return success;
+}
+
+- (void)closeDevice
+{
+  dispatch_async (mainQueue, ^{
+    g_assert (![session isRunning]);
+
+    [session removeInput:input];
+    [session removeOutput:output];
+
+    [session release];
+    session = nil;
+
+    [input release];
+    input = nil;
+
+    [output release];
+    output = nil;
+
+    [device release];
+    device = nil;
+  });
+  [self waitForMainQueueToDrain];
+
+  [bufferFactory release];
+  bufferFactory = nil;
+}
+
+#define GST_AVF_CAPS_NEW(w, h) \
+    (gst_video_format_new_caps (DEVICE_VIDEO_FORMAT, w, h, \
+                                DEVICE_FPS_N, DEVICE_FPS_D, 1, 1))
+
+- (GstCaps *)getCaps
+{
+  GstCaps *result;
+
+  if (session == nil)
+    return NULL; /* BaseSrc will return template caps */
+
+  result = GST_AVF_CAPS_NEW (192, 144);
+  if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
+    gst_caps_merge (result, GST_AVF_CAPS_NEW (480, 360));
+  if ([session canSetSessionPreset:AVCaptureSessionPreset640x480])
+    gst_caps_merge (result, GST_AVF_CAPS_NEW (640, 480));
+  if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
+    gst_caps_merge (result, GST_AVF_CAPS_NEW (1280, 720));
+
+  return result;
+}
+
+- (BOOL)setCaps:(GstCaps *)caps
+{
+  GstStructure *s;
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "width", &width);
+  gst_structure_get_int (s, "height", &height);
+
+  dispatch_async (mainQueue, ^{
+    g_assert (![session isRunning]);
+
+    switch (width) {
+      case 192:
+        session.sessionPreset = AVCaptureSessionPresetLow;
+        break;
+      case 480:
+        session.sessionPreset = AVCaptureSessionPresetMedium;
+        break;
+      case 640:
+        session.sessionPreset = AVCaptureSessionPreset640x480;
+        break;
+      case 1280:
+        session.sessionPreset = AVCaptureSessionPreset1280x720;
+        break;
+      default:
+        g_assert_not_reached ();
+    }
+
+    [session startRunning];
+  });
+  [self waitForMainQueueToDrain];
+
+  return YES;
+}
+
+- (BOOL)start
+{
+  bufQueueLock = [[NSConditionLock alloc] initWithCondition:NO_BUFFERS];
+  bufQueue = [[NSMutableArray alloc] initWithCapacity:BUFFER_QUEUE_SIZE];
+  stopRequest = NO;
+
+  duration = gst_util_uint64_scale (GST_SECOND, DEVICE_FPS_D, DEVICE_FPS_N);
+  offset = 0;
+
+  lastSampling = GST_CLOCK_TIME_NONE;
+  count = 0;
+  fps = -1;
+
+  return YES;
+}
+
+- (BOOL)stop
+{
+  dispatch_async (mainQueue, ^{ [session stopRunning]; });
+  [self waitForMainQueueToDrain];
+  [self waitForWorkerQueueToDrain];
+
+  [bufQueueLock release];
+  bufQueueLock = nil;
+  [bufQueue removeAllObjects];
+  [bufQueue release];
+  bufQueue = nil;
+
+  return YES;
+}
+
+- (BOOL)query:(GstQuery *)query
+{
+  BOOL result = NO;
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+    if (device != nil) {
+      GstClockTime min_latency, max_latency;
+
+      min_latency = max_latency = duration; /* for now */
+      result = YES;
+
+      GST_DEBUG_OBJECT (element, "reporting latency of min %" GST_TIME_FORMAT
+          " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+    }
+  } else {
+    result = GST_BASE_SRC_CLASS (parent_class)->query (baseSrc, query);
+  }
+
+  return result;
+}
+
+- (BOOL)unlock
+{
+  [bufQueueLock lock];
+  stopRequest = YES;
+  [bufQueueLock unlockWithCondition:HAS_BUFFER_OR_STOP_REQUEST];
+
+  return YES;
+}
+
+- (BOOL)unlockStop
+{
+  [bufQueueLock lock];
+  stopRequest = NO;
+  [bufQueueLock unlock];
+
+  return YES;
+}
+
+- (GstStateChangeReturn)changeState:(GstStateChange)transition
+{
+  GstStateChangeReturn ret;
+
+  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
+    if (![self openDevice])
+      return GST_STATE_CHANGE_FAILURE;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  if (transition == GST_STATE_CHANGE_READY_TO_NULL)
+    [self closeDevice];
+
+  return ret;
+}
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection
+{
+  [bufQueueLock lock];
+
+  if (stopRequest) {
+    [bufQueueLock unlock];
+    return;
+  }
+
+  if ([bufQueue count] == BUFFER_QUEUE_SIZE)
+    [bufQueue removeLastObject];
+
+  [bufQueue insertObject:(id)sampleBuffer
+                 atIndex:0];
+
+  [bufQueueLock unlockWithCondition:HAS_BUFFER_OR_STOP_REQUEST];
+}
+
+- (GstFlowReturn)create:(GstBuffer **)buf
+{
+  CMSampleBufferRef sbuf;
+
+  [bufQueueLock lockWhenCondition:HAS_BUFFER_OR_STOP_REQUEST];
+  if (stopRequest) {
+    [bufQueueLock unlock];
+    return GST_FLOW_WRONG_STATE;
+  }
+
+  sbuf = (CMSampleBufferRef) [bufQueue lastObject];
+  CFRetain (sbuf);
+  [bufQueue removeLastObject];
+  [bufQueueLock unlockWithCondition:
+      ([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
+
+  *buf = [bufferFactory createGstBufferForSampleBuffer:sbuf];
+  CFRelease (sbuf);
+
+  [self timestampBuffer:*buf];
+
+  if (doStats)
+    [self updateStatistics];
+
+  return GST_FLOW_OK;
+}
+
+- (void)timestampBuffer:(GstBuffer *)buf
+{
+  GstClock *clock;
+  GstClockTime timestamp;
+
+  GST_OBJECT_LOCK (element);
+  clock = GST_ELEMENT_CLOCK (element);
+  if (clock != NULL) {
+    gst_object_ref (clock);
+    timestamp = element->base_time;
+  } else {
+    timestamp = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (element);
+
+  if (clock != NULL) {
+    timestamp = gst_clock_get_time (clock) - timestamp;
+    if (timestamp > duration)
+      timestamp -= duration;
+    else
+      timestamp = 0;
+
+    gst_object_unref (clock);
+    clock = NULL;
+
+    offset++;
+  }
+
+  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+}
+
+- (void)updateStatistics
+{
+  GstClock *clock;
+
+  GST_OBJECT_LOCK (element);
+  clock = GST_ELEMENT_CLOCK (element);
+  if (clock != NULL)
+    gst_object_ref (clock);
+  GST_OBJECT_UNLOCK (element);
+
+  if (clock != NULL) {
+    GstClockTime now = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+
+    count++;
+
+    if (GST_CLOCK_TIME_IS_VALID (lastSampling)) {
+      if (now - lastSampling >= GST_SECOND) {
+        GST_OBJECT_LOCK (element);
+        fps = count;
+        GST_OBJECT_UNLOCK (element);
+
+        g_object_notify (G_OBJECT (element), "fps");
+
+        lastSampling = now;
+        count = 0;
+      }
+    } else {
+      lastSampling = now;
+    }
+  }
+}
+
+- (void)waitForMainQueueToDrain
+{
+  [self waitForQueueToDrain:mainQueue];
+}
+
+- (void)waitForWorkerQueueToDrain
+{
+  [self waitForQueueToDrain:workerQueue];
+}
+
+- (void)waitForQueueToDrain:(dispatch_queue_t)dispatchQueue
+{
+  dispatch_sync (dispatchQueue, ^{});
+}
+
+@end
+
+/*
+ * Glue code
+ */
+
+enum
+{
+  PROP_0,
+  PROP_DEVICE_INDEX,
+  PROP_DO_STATS,
+  PROP_FPS
+};
+
+GST_BOILERPLATE (GstAVFVideoSrc, gst_avf_video_src, GstPushSrc,
+    GST_TYPE_PUSH_SRC);
+
+static void gst_avf_video_src_finalize (GObject * obj);
+static void gst_avf_video_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_avf_video_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn gst_avf_video_src_change_state (
+    GstElement * element, GstStateChange transition);
+static GstCaps * gst_avf_video_src_get_caps (GstBaseSrc * basesrc);
+static gboolean gst_avf_video_src_set_caps (GstBaseSrc * basesrc,
+    GstCaps * caps);
+static gboolean gst_avf_video_src_start (GstBaseSrc * basesrc);
+static gboolean gst_avf_video_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_avf_video_src_query (GstBaseSrc * basesrc,
+    GstQuery * query);
+static gboolean gst_avf_video_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
+static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
+    GstBuffer ** buf);
+
+static void
+gst_avf_video_src_base_init (gpointer gclass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+
+  gst_element_class_set_details (element_class, &element_details);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+}
+
+static void
+gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+  GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
+
+  gobject_class->finalize = gst_avf_video_src_finalize;
+  gobject_class->get_property = gst_avf_video_src_get_property;
+  gobject_class->set_property = gst_avf_video_src_set_property;
+
+  gstelement_class->change_state = gst_avf_video_src_change_state;
+
+  gstbasesrc_class->get_caps = gst_avf_video_src_get_caps;
+  gstbasesrc_class->set_caps = gst_avf_video_src_set_caps;
+  gstbasesrc_class->start = gst_avf_video_src_start;
+  gstbasesrc_class->stop = gst_avf_video_src_stop;
+  gstbasesrc_class->query = gst_avf_video_src_query;
+  gstbasesrc_class->unlock = gst_avf_video_src_unlock;
+  gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
+
+  gstpushsrc_class->create = gst_avf_video_src_create;
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
+      g_param_spec_int ("device-index", "Device Index",
+          "The zero-based device index",
+          -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DO_STATS,
+      g_param_spec_boolean ("do-stats", "Enable statistics",
+          "Enable logging of statistics", DEFAULT_DO_STATS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FPS,
+      g_param_spec_int ("fps", "Frames per second",
+          "Last measured framerate, if statistics are enabled",
+          -1, G_MAXINT, -1, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  GST_DEBUG_CATEGORY_INIT (gst_avf_video_src_debug, "avfvideosrc",
+      0, "iOS AVFoundation video source");
+}
+
+#define OBJC_CALLOUT_BEGIN() \
+  NSAutoreleasePool *pool; \
+  \
+  pool = [[NSAutoreleasePool alloc] init]
+#define OBJC_CALLOUT_END() \
+  [pool release]
+
+static void
+gst_avf_video_src_init (GstAVFVideoSrc * src, GstAVFVideoSrcClass * gclass)
+{
+  OBJC_CALLOUT_BEGIN ();
+  src->impl = [[GstAVFVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
+  OBJC_CALLOUT_END ();
+}
+
+static void
+gst_avf_video_src_finalize (GObject * obj)
+{
+  OBJC_CALLOUT_BEGIN ();
+  [GST_AVF_VIDEO_SRC_IMPL (obj) release];
+  OBJC_CALLOUT_END ();
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
+gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      g_value_set_int (value, impl.deviceIndex);
+      break;
+    case PROP_DO_STATS:
+      g_value_set_boolean (value, impl.doStats);
+      break;
+    case PROP_FPS:
+      GST_OBJECT_LOCK (object);
+      g_value_set_int (value, impl.fps);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_avf_video_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      impl.deviceIndex = g_value_get_int (value);
+      break;
+    case PROP_DO_STATS:
+      impl.doStats = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static GstStateChangeReturn
+gst_avf_video_src_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (element) changeState: transition];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static GstCaps *
+gst_avf_video_src_get_caps (GstBaseSrc * basesrc)
+{
+  GstCaps *ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) getCaps];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) setCaps:caps];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_start (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) start];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_stop (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) stop];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) query:query];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_unlock (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) unlock];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static gboolean
+gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  gboolean ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (basesrc) unlockStop];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_avf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
+{
+  GstFlowReturn ret;
+
+  OBJC_CALLOUT_BEGIN ();
+  ret = [GST_AVF_VIDEO_SRC_IMPL (pushsrc) create: buf];
+  OBJC_CALLOUT_END ();
+
+  return ret;
+}

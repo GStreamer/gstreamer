@@ -22,6 +22,7 @@
 #endif
 
 #ifdef HAVE_IOS
+#include "avfvideosrc.h"
 #include "iphonecamerasrc.h"
 #else
 #include "qtkitvideosrc.h"
@@ -50,7 +51,9 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
 #ifdef HAVE_IOS
-  res = gst_element_register (plugin, "iphonecamerasrc", GST_RANK_NONE,
+  res = gst_element_register (plugin, "avfvideosrc", GST_RANK_NONE,
+      GST_TYPE_AVF_VIDEO_SRC);
+  res &= gst_element_register (plugin, "iphonecamerasrc", GST_RANK_NONE,
       GST_TYPE_IPHONE_CAMERA_SRC);
 #else
   enable_mt_mode ();

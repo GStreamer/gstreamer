@@ -7,6 +7,7 @@ libgstapplemedia_la_SOURCES =			\
 	vtenc.c					\
 	vtdec.c					\
 	vtutil.c				\
+	bufferfactory.m				\
 	corevideobuffer.c			\
 	coremediabuffer.c			\
 	coremediactx.c				\
@@ -37,18 +38,21 @@ libgstapplemedia_la_LDFLAGS =			\
 	$(GST_PLUGIN_LDFLAGS)			\
 	$(GST_BASE_LDFLAGS)			\
 	$(GST_PLUGINS_BASE_LDFLAGS)		\
-	-Wl,-framework -Wl,CoreFoundation
+	-Wl,-framework -Wl,CoreFoundation	\
+	-Wl,-framework -Wl,CoreVideo
 
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
 	miovideosrc.h				\
 	miovideodevice.h			\
+	avfvideosrc.h				\
 	iphonecamerasrc.h			\
 	vth264decbin.h				\
 	vth264encbin.h				\
 	vtenc.h					\
 	vtdec.h					\
 	vtutil.h				\
+	bufferfactory.h				\
 	corevideobuffer.h			\
 	coremediabuffer.h			\
 	coremediactx.h				\
@@ -64,9 +68,15 @@ noinst_HEADERS =				\
 if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
+	avfvideosrc.m				\
 	iphonecamerasrc.c			\
 	mtapi.c					\
 	celapi.c
+
+libgstapplemedia_la_LDFLAGS +=			\
+	-Wl,-framework -Wl,CoreMedia		\
+	-Wl,-framework -Wl,Foundation		\
+	-Wl,-framework -Wl,AVFoundation
 
 else
 
@@ -78,7 +88,6 @@ libgstapplemedia_la_SOURCES +=			\
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Cocoa		\
-	-Wl,-framework -Wl,CoreVideo		\
 	-Wl,-framework -Wl,QTKit
 
 endif
