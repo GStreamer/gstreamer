@@ -375,13 +375,15 @@ static gboolean
 gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
 {
   GstICYDemux *icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
+  gboolean result;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
     GstTagList *tags;
 
     gst_event_parse_tag (event, &tags);
+    result = gst_icydemux_tag_found (icydemux, tags);
     gst_event_unref (event);
-    return gst_icydemux_tag_found (icydemux, tags);
+    return result;
   }
 
   if (icydemux->typefinding) {
