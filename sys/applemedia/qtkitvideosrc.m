@@ -187,6 +187,7 @@ static GstPushSrcClass * parent_class;
     }
     device = [devices objectAtIndex:deviceIndex];
   }
+  [device retain];
 
   GST_INFO ("Opening '%s'", [[device localizedDisplayName] UTF8String]);
 
@@ -194,6 +195,8 @@ static GstPushSrcClass * parent_class;
     GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
         ("Failed to open device '%s'",
             [[device localizedDisplayName] UTF8String]), (NULL));
+    [device release];
+    device = nil;
     return NO;
   }
 
@@ -213,6 +216,7 @@ static GstPushSrcClass * parent_class;
   [output release];
   output = nil;
 
+  [device release];
   device = nil;
 }
 
@@ -276,8 +280,6 @@ static GstPushSrcClass * parent_class;
   [session stopRunning];
   [output setDelegate:nil];
 
-  for (id frame in queue)
-    CVBufferRelease ((CVImageBufferRef) frame);
   [queueLock release];
   queueLock = nil;
   [queue release];
@@ -356,12 +358,9 @@ static GstPushSrcClass * parent_class;
     return;
   }
 
-  if ([queue count] == FRAME_QUEUE_SIZE) {
-    CVBufferRelease ((CVImageBufferRef) [queue lastObject]);
+  if ([queue count] == FRAME_QUEUE_SIZE)
     [queue removeLastObject];
-  }
 
-  CVBufferRetain (videoFrame);
   [queue insertObject:(id)videoFrame
               atIndex:0];
 
@@ -379,6 +378,7 @@ static GstPushSrcClass * parent_class;
   }
 
   frame = (CVPixelBufferRef) [queue lastObject];
+  CVBufferRetain (frame);
   [queue removeLastObject];
   [queueLock unlockWithCondition:
       ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
@@ -657,4 +657,3 @@ gst_qtkit_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 
   return ret;
 }
-
