@@ -23,7 +23,7 @@
 
 #ifdef HAVE_IOS
 #include "avfvideosrc.h"
-#include "iphonecamerasrc.h"
+#include "celvideosrc.h"
 #else
 #include "qtkitvideosrc.h"
 #include "miovideosrc.h"
@@ -53,8 +53,8 @@ plugin_init (GstPlugin * plugin)
 #ifdef HAVE_IOS
   res = gst_element_register (plugin, "avfvideosrc", GST_RANK_NONE,
       GST_TYPE_AVF_VIDEO_SRC);
-  res &= gst_element_register (plugin, "iphonecamerasrc", GST_RANK_NONE,
-      GST_TYPE_IPHONE_CAMERA_SRC);
+  res &= gst_element_register (plugin, "celvideosrc", GST_RANK_NONE,
+      GST_TYPE_CEL_VIDEO_SRC);
 #else
   enable_mt_mode ();
 

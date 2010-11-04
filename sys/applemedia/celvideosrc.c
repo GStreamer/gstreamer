@@ -17,7 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "iphonecamerasrc.h"
+#include "celvideosrc.h"
 
 #include "coremediabuffer.h"
 
@@ -31,8 +31,8 @@
     g_cond_wait (instance->cond, GST_OBJECT_GET_LOCK (instance))
 #define BUFQUEUE_NOTIFY(instance) g_cond_signal (instance->cond)
 
-GST_DEBUG_CATEGORY (gst_iphone_camera_src_debug);
-#define GST_CAT_DEFAULT gst_iphone_camera_src_debug
+GST_DEBUG_CATEGORY (gst_cel_video_src_debug);
+#define GST_CAT_DEFAULT gst_cel_video_src_debug
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -57,33 +57,32 @@ typedef struct
   gint height;
   gint fps_n;
   gint fps_d;
-} GstIPhoneCameraFormat;
+} GstCelVideoFormat;
 
-static gboolean gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self);
-static void gst_iphone_camera_src_close_device (GstIPhoneCameraSrc * self);
-static void gst_iphone_camera_src_ensure_device_caps_and_formats
-    (GstIPhoneCameraSrc * self);
-static void gst_iphone_camera_src_release_device_caps_and_formats
-    (GstIPhoneCameraSrc * self);
-static gboolean gst_iphone_camera_src_select_format (GstIPhoneCameraSrc * self,
-    GstIPhoneCameraFormat * format);
+static gboolean gst_cel_video_src_open_device (GstCelVideoSrc * self);
+static void gst_cel_video_src_close_device (GstCelVideoSrc * self);
+static void gst_cel_video_src_ensure_device_caps_and_formats
+    (GstCelVideoSrc * self);
+static void gst_cel_video_src_release_device_caps_and_formats
+    (GstCelVideoSrc * self);
+static gboolean gst_cel_video_src_select_format (GstCelVideoSrc * self,
+    GstCelVideoFormat * format);
 
-static gboolean gst_iphone_camera_src_parse_imager_format
-    (GstIPhoneCameraSrc * self, guint index, CFDictionaryRef imager_format,
-    GstIPhoneCameraFormat * format);
-static OSStatus gst_iphone_camera_src_set_device_property_i32
-    (GstIPhoneCameraSrc * self, CFStringRef name, SInt32 value);
-static OSStatus gst_iphone_camera_src_set_device_property_cstr
-    (GstIPhoneCameraSrc * self, const gchar * name, const gchar * value);
+static gboolean gst_cel_video_src_parse_imager_format
+    (GstCelVideoSrc * self, guint index, CFDictionaryRef imager_format,
+    GstCelVideoFormat * format);
+static OSStatus gst_cel_video_src_set_device_property_i32
+    (GstCelVideoSrc * self, CFStringRef name, SInt32 value);
+static OSStatus gst_cel_video_src_set_device_property_cstr
+    (GstCelVideoSrc * self, const gchar * name, const gchar * value);
 
 static GstPushSrcClass *parent_class;
 
-GST_BOILERPLATE (GstIPhoneCameraSrc, gst_iphone_camera_src, GstPushSrc,
+GST_BOILERPLATE (GstCelVideoSrc, gst_cel_video_src, GstPushSrc,
     GST_TYPE_PUSH_SRC);
 
 static void
-gst_iphone_camera_src_init (GstIPhoneCameraSrc * self,
-    GstIPhoneCameraSrcClass * gclass)
+gst_cel_video_src_init (GstCelVideoSrc * self, GstCelVideoSrcClass * gclass)
 {
   GstBaseSrc *base_src = GST_BASE_SRC_CAST (self);
 
@@ -94,15 +93,15 @@ gst_iphone_camera_src_init (GstIPhoneCameraSrc * self,
 }
 
 static void
-gst_iphone_camera_src_dispose (GObject * object)
+gst_cel_video_src_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_iphone_camera_src_finalize (GObject * object)
+gst_cel_video_src_finalize (GObject * object)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (object);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
   g_cond_free (self->cond);
 
@@ -110,10 +109,10 @@ gst_iphone_camera_src_finalize (GObject * object)
 }
 
 static void
-gst_iphone_camera_src_get_property (GObject * object, guint prop_id,
+gst_cel_video_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (object);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
   switch (prop_id) {
     case PROP_DO_STATS:
@@ -126,10 +125,10 @@ gst_iphone_camera_src_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_iphone_camera_src_set_property (GObject * object, guint prop_id,
+gst_cel_video_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (object);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
   switch (prop_id) {
     case PROP_DO_STATS:
@@ -142,15 +141,14 @@ gst_iphone_camera_src_set_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gst_iphone_camera_src_change_state (GstElement * element,
-    GstStateChange transition)
+gst_cel_video_src_change_state (GstElement * element, GstStateChange transition)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (element);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (element);
   GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_iphone_camera_src_open_device (self))
+      if (!gst_cel_video_src_open_device (self))
         goto open_failed;
       break;
     default:
@@ -161,7 +159,7 @@ gst_iphone_camera_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_iphone_camera_src_close_device (self);
+      gst_cel_video_src_close_device (self);
       break;
     default:
       break;
@@ -177,13 +175,13 @@ open_failed:
 }
 
 static GstCaps *
-gst_iphone_camera_src_get_caps (GstBaseSrc * basesrc)
+gst_cel_video_src_get_caps (GstBaseSrc * basesrc)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (basesrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
   GstCaps *result;
 
   if (self->device != NULL) {
-    gst_iphone_camera_src_ensure_device_caps_and_formats (self);
+    gst_cel_video_src_ensure_device_caps_and_formats (self);
 
     result = gst_caps_ref (self->device_caps);
   } else {
@@ -202,13 +200,13 @@ gst_iphone_camera_src_get_caps (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_iphone_camera_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
+gst_cel_video_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (basesrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
   GstVideoFormat video_format;
   gint width, height, fps_n, fps_d;
   guint i;
-  GstIPhoneCameraFormat *selected_format;
+  GstCelVideoFormat *selected_format;
 
   if (self->device == NULL)
     goto no_device;
@@ -218,14 +216,14 @@ gst_iphone_camera_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
   if (!gst_video_parse_caps_framerate (caps, &fps_n, &fps_d))
     goto invalid_format;
 
-  gst_iphone_camera_src_ensure_device_caps_and_formats (self);
+  gst_cel_video_src_ensure_device_caps_and_formats (self);
 
   selected_format = NULL;
 
   for (i = 0; i != self->device_formats->len; i++) {
-    GstIPhoneCameraFormat *format;
+    GstCelVideoFormat *format;
 
-    format = &g_array_index (self->device_formats, GstIPhoneCameraFormat, i);
+    format = &g_array_index (self->device_formats, GstCelVideoFormat, i);
     if (format->video_format == video_format &&
         format->width == width && format->height == height &&
         format->fps_n == fps_n && format->fps_d == fps_d) {
@@ -239,10 +237,10 @@ gst_iphone_camera_src_set_caps (GstBaseSrc * basesrc, GstCaps * caps)
 
   GST_DEBUG_OBJECT (self, "selecting format %u", selected_format->index);
 
-  if (!gst_iphone_camera_src_select_format (self, selected_format))
+  if (!gst_cel_video_src_select_format (self, selected_format))
     goto select_failed;
 
-  gst_iphone_camera_src_release_device_caps_and_formats (self);
+  gst_cel_video_src_release_device_caps_and_formats (self);
 
   return TRUE;
 
@@ -266,9 +264,9 @@ select_failed:
 }
 
 static gboolean
-gst_iphone_camera_src_start (GstBaseSrc * basesrc)
+gst_cel_video_src_start (GstBaseSrc * basesrc)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (basesrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
 
   self->running = TRUE;
   self->offset = 0;
@@ -277,15 +275,15 @@ gst_iphone_camera_src_start (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_iphone_camera_src_stop (GstBaseSrc * basesrc)
+gst_cel_video_src_stop (GstBaseSrc * basesrc)
 {
   return TRUE;
 }
 
 static gboolean
-gst_iphone_camera_src_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_cel_video_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (basesrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
   gboolean result = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -315,9 +313,9 @@ beach:
 }
 
 static gboolean
-gst_iphone_camera_src_unlock (GstBaseSrc * basesrc)
+gst_cel_video_src_unlock (GstBaseSrc * basesrc)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (basesrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
 
   BUFQUEUE_LOCK (self);
   self->running = FALSE;
@@ -327,16 +325,16 @@ gst_iphone_camera_src_unlock (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_iphone_camera_src_unlock_stop (GstBaseSrc * basesrc)
+gst_cel_video_src_unlock_stop (GstBaseSrc * basesrc)
 {
   return TRUE;
 }
 
 static Boolean
-gst_iphone_camera_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
+gst_cel_video_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
     void *refCon)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (refCon);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (refCon);
 
   BUFQUEUE_LOCK (self);
   self->has_pending = TRUE;
@@ -347,9 +345,9 @@ gst_iphone_camera_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
 }
 
 static GstFlowReturn
-gst_iphone_camera_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
+gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
-  GstIPhoneCameraSrc *self = GST_IPHONE_CAMERA_SRC_CAST (pushsrc);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (pushsrc);
   GstCMApi *cm = self->ctx->cm;
   CMSampleBufferRef sbuf = NULL;
   GstClock *clock;
@@ -407,7 +405,7 @@ shutting_down:
 }
 
 static gboolean
-gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
+gst_cel_video_src_open_device (GstCelVideoSrc * self)
 {
   GstCoreMediaCtx *ctx = NULL;
   GError *error = NULL;
@@ -455,7 +453,7 @@ gst_iphone_camera_src_open_device (GstIPhoneCameraSrc * self)
   self->has_pending = FALSE;
 
   cm->CMBufferQueueSetValidationCallback (queue,
-      gst_iphone_camera_src_validate, self);
+      gst_cel_video_src_validate, self);
 
   self->ctx = ctx;
 
@@ -507,9 +505,9 @@ any_error:
 }
 
 static void
-gst_iphone_camera_src_close_device (GstIPhoneCameraSrc * self)
+gst_cel_video_src_close_device (GstCelVideoSrc * self)
 {
-  gst_iphone_camera_src_release_device_caps_and_formats (self);
+  gst_cel_video_src_release_device_caps_and_formats (self);
 
   self->stream_iface->Stop (self->stream);
   self->stream_iface = NULL;
@@ -531,7 +529,7 @@ gst_iphone_camera_src_close_device (GstIPhoneCameraSrc * self)
 }
 
 static void
-gst_iphone_camera_src_ensure_device_caps_and_formats (GstIPhoneCameraSrc * self)
+gst_cel_video_src_ensure_device_caps_and_formats (GstCelVideoSrc * self)
 {
   OSStatus status;
   CFArrayRef iformats = NULL;
@@ -541,8 +539,7 @@ gst_iphone_camera_src_ensure_device_caps_and_formats (GstIPhoneCameraSrc * self)
     goto already_probed;
 
   self->device_caps = gst_caps_new_empty ();
-  self->device_formats =
-      g_array_new (FALSE, FALSE, sizeof (GstIPhoneCameraFormat));
+  self->device_formats = g_array_new (FALSE, FALSE, sizeof (GstCelVideoFormat));
 
   status = self->device_iface_base->CopyProperty (self->device,
       *(self->ctx->mt->kFigCaptureDeviceProperty_ImagerSupportedFormatsArray),
@@ -555,11 +552,11 @@ gst_iphone_camera_src_ensure_device_caps_and_formats (GstIPhoneCameraSrc * self)
 
   for (i = 0; i != format_count; i++) {
     CFDictionaryRef iformat;
-    GstIPhoneCameraFormat format;
+    GstCelVideoFormat format;
 
     iformat = CFArrayGetValueAtIndex (iformats, i);
 
-    if (gst_iphone_camera_src_parse_imager_format (self, i, iformat, &format)) {
+    if (gst_cel_video_src_parse_imager_format (self, i, iformat, &format)) {
       gst_caps_append_structure (self->device_caps,
           gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, format.fourcc,
@@ -581,8 +578,7 @@ beach:
 }
 
 static void
-gst_iphone_camera_src_release_device_caps_and_formats (GstIPhoneCameraSrc *
-    self)
+gst_cel_video_src_release_device_caps_and_formats (GstCelVideoSrc * self)
 {
   if (self->device_caps != NULL) {
     gst_caps_unref (self->device_caps);
@@ -596,32 +592,32 @@ gst_iphone_camera_src_release_device_caps_and_formats (GstIPhoneCameraSrc *
 }
 
 static gboolean
-gst_iphone_camera_src_select_format (GstIPhoneCameraSrc * self,
-    GstIPhoneCameraFormat * format)
+gst_cel_video_src_select_format (GstCelVideoSrc * self,
+    GstCelVideoFormat * format)
 {
   gboolean result = FALSE;
   GstMTApi *mt = self->ctx->mt;
   OSStatus status;
   SInt32 framerate;
 
-  status = gst_iphone_camera_src_set_device_property_i32 (self,
+  status = gst_cel_video_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerFormatDescription), format->index);
   if (status != noErr)
     goto beach;
 
   framerate = format->fps_n / format->fps_d;
 
-  status = gst_iphone_camera_src_set_device_property_i32 (self,
+  status = gst_cel_video_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerFrameRate), framerate);
   if (status != noErr)
     goto beach;
 
-  status = gst_iphone_camera_src_set_device_property_i32 (self,
+  status = gst_cel_video_src_set_device_property_i32 (self,
       *(mt->kFigCaptureDeviceProperty_ImagerMinimumFrameRate), framerate);
   if (status != noErr)
     goto beach;
 
-  status = gst_iphone_camera_src_set_device_property_cstr (self,
+  status = gst_cel_video_src_set_device_property_cstr (self,
       "ColorRange", "ColorRangeSDVideo");
   if (status != noErr)
     goto beach;
@@ -643,8 +639,8 @@ beach:
 }
 
 static gboolean
-gst_iphone_camera_src_parse_imager_format (GstIPhoneCameraSrc * self,
-    guint index, CFDictionaryRef imager_format, GstIPhoneCameraFormat * format)
+gst_cel_video_src_parse_imager_format (GstCelVideoSrc * self,
+    guint index, CFDictionaryRef imager_format, GstCelVideoFormat * format)
 {
   GstCMApi *cm = self->ctx->cm;
   GstMTApi *mt = self->ctx->mt;
@@ -691,7 +687,7 @@ unsupported_format:
 }
 
 static OSStatus
-gst_iphone_camera_src_set_device_property_i32 (GstIPhoneCameraSrc * self,
+gst_cel_video_src_set_device_property_i32 (GstCelVideoSrc * self,
     CFStringRef name, SInt32 value)
 {
   OSStatus status;
@@ -705,7 +701,7 @@ gst_iphone_camera_src_set_device_property_i32 (GstIPhoneCameraSrc * self,
 }
 
 static OSStatus
-gst_iphone_camera_src_set_device_property_cstr (GstIPhoneCameraSrc * self,
+gst_cel_video_src_set_device_property_cstr (GstCelVideoSrc * self,
     const gchar * name, const gchar * value)
 {
   OSStatus status;
@@ -724,7 +720,7 @@ gst_iphone_camera_src_set_device_property_cstr (GstIPhoneCameraSrc * self,
 }
 
 static void
-gst_iphone_camera_src_base_init (gpointer gclass)
+gst_cel_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -739,35 +735,35 @@ gst_iphone_camera_src_base_init (gpointer gclass)
 }
 
 static void
-gst_iphone_camera_src_class_init (GstIPhoneCameraSrcClass * klass)
+gst_cel_video_src_class_init (GstCelVideoSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
-  gobject_class->dispose = gst_iphone_camera_src_dispose;
-  gobject_class->finalize = gst_iphone_camera_src_finalize;
-  gobject_class->get_property = gst_iphone_camera_src_get_property;
-  gobject_class->set_property = gst_iphone_camera_src_set_property;
+  gobject_class->dispose = gst_cel_video_src_dispose;
+  gobject_class->finalize = gst_cel_video_src_finalize;
+  gobject_class->get_property = gst_cel_video_src_get_property;
+  gobject_class->set_property = gst_cel_video_src_set_property;
 
-  gstelement_class->change_state = gst_iphone_camera_src_change_state;
+  gstelement_class->change_state = gst_cel_video_src_change_state;
 
-  gstbasesrc_class->get_caps = gst_iphone_camera_src_get_caps;
-  gstbasesrc_class->set_caps = gst_iphone_camera_src_set_caps;
-  gstbasesrc_class->start = gst_iphone_camera_src_start;
-  gstbasesrc_class->stop = gst_iphone_camera_src_stop;
-  gstbasesrc_class->query = gst_iphone_camera_src_query;
-  gstbasesrc_class->unlock = gst_iphone_camera_src_unlock;
-  gstbasesrc_class->unlock_stop = gst_iphone_camera_src_unlock_stop;
+  gstbasesrc_class->get_caps = gst_cel_video_src_get_caps;
+  gstbasesrc_class->set_caps = gst_cel_video_src_set_caps;
+  gstbasesrc_class->start = gst_cel_video_src_start;
+  gstbasesrc_class->stop = gst_cel_video_src_stop;
+  gstbasesrc_class->query = gst_cel_video_src_query;
+  gstbasesrc_class->unlock = gst_cel_video_src_unlock;
+  gstbasesrc_class->unlock_stop = gst_cel_video_src_unlock_stop;
 
-  gstpushsrc_class->create = gst_iphone_camera_src_create;
+  gstpushsrc_class->create = gst_cel_video_src_create;
 
   g_object_class_install_property (gobject_class, PROP_DO_STATS,
       g_param_spec_boolean ("do-stats", "Enable statistics",
           "Enable logging of statistics", DEFAULT_DO_STATS,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_DEBUG_CATEGORY_INIT (gst_iphone_camera_src_debug, "iphonecamerasrc",
+  GST_DEBUG_CATEGORY_INIT (gst_cel_video_src_debug, "celvideosrc",
       0, "iPhone video source");
 }

@@ -46,7 +46,7 @@ noinst_HEADERS =				\
 	miovideosrc.h				\
 	miovideodevice.h			\
 	avfvideosrc.h				\
-	iphonecamerasrc.h			\
+	celvideosrc.h				\
 	vth264decbin.h				\
 	vth264encbin.h				\
 	vtenc.h					\
@@ -69,7 +69,7 @@ if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
 	avfvideosrc.m				\
-	iphonecamerasrc.c			\
+	celvideosrc.c				\
 	mtapi.c					\
 	celapi.c
 

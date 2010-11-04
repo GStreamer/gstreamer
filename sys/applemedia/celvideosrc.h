@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_IPHONE_CAMERA_SRC_H__
-#define __GST_IPHONE_CAMERA_SRC_H__
+#ifndef __GST_CEL_VIDEO_SRC_H__
+#define __GST_CEL_VIDEO_SRC_H__
 
 #include <gst/base/gstpushsrc.h>
 
@@ -26,23 +26,23 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_IPHONE_CAMERA_SRC \
-  (gst_iphone_camera_src_get_type ())
-#define GST_IPHONE_CAMERA_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_IPHONE_CAMERA_SRC, GstIPhoneCameraSrc))
-#define GST_IPHONE_CAMERA_SRC_CAST(obj) \
-  ((GstIPhoneCameraSrc *) (obj))
-#define GST_IPHONE_CAMERA_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_IPHONE_CAMERA_SRC, GstIPhoneCameraSrcClass))
-#define GST_IS_IPHONE_CAMERA_SRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_IPHONE_CAMERA_SRC))
-#define GST_IS_IPHONE_CAMERA_SRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_IPHONE_CAMERA_SRC))
+#define GST_TYPE_CEL_VIDEO_SRC \
+  (gst_cel_video_src_get_type ())
+#define GST_CEL_VIDEO_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_CEL_VIDEO_SRC, GstCelVideoSrc))
+#define GST_CEL_VIDEO_SRC_CAST(obj) \
+  ((GstCelVideoSrc *) (obj))
+#define GST_CEL_VIDEO_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_CEL_VIDEO_SRC, GstCelVideoSrcClass))
+#define GST_IS_CEL_VIDEO_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_CEL_VIDEO_SRC))
+#define GST_IS_CEL_VIDEO_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_CEL_VIDEO_SRC))
 
-typedef struct _GstIPhoneCameraSrc         GstIPhoneCameraSrc;
-typedef struct _GstIPhoneCameraSrcClass    GstIPhoneCameraSrcClass;
+typedef struct _GstCelVideoSrc         GstCelVideoSrc;
+typedef struct _GstCelVideoSrcClass    GstCelVideoSrcClass;
 
-struct _GstIPhoneCameraSrc
+struct _GstCelVideoSrc
 {
   GstPushSrc push_src;
 
@@ -67,13 +67,13 @@ struct _GstIPhoneCameraSrc
   volatile gboolean has_pending;
 };
 
-struct _GstIPhoneCameraSrcClass
+struct _GstCelVideoSrcClass
 {
   GstPushSrcClass parent_class;
 };
 
-GType gst_iphone_camera_src_get_type (void);
+GType gst_cel_video_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_IPHONE_CAMERA_SRC_H__ */
+#endif /* __GST_CEL_VIDEO_SRC_H__ */
