@@ -112,7 +112,6 @@ static GstPushSrcClass * parent_class;
   gint width, height;
   GstClockTime duration;
   guint64 offset;
-  GstClockTime prev_ts;
 }
 
 - (id)init;
@@ -130,7 +129,7 @@ static GstPushSrcClass * parent_class;
 - (BOOL)query:(GstQuery *)query;
 - (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
-- (BOOL)timestampBuffer:(GstBuffer *)buf;
+- (void)timestampBuffer:(GstBuffer *)buf;
 - (void)captureOutput:(QTCaptureOutput *)captureOutput
   didOutputVideoFrame:(CVImageBufferRef)videoFrame
      withSampleBuffer:(QTSampleBuffer *)sampleBuffer
@@ -268,7 +267,6 @@ static GstPushSrcClass * parent_class;
 
   duration = gst_util_uint64_scale (GST_SECOND, DEVICE_FPS_D, DEVICE_FPS_N);
   offset = 0;
-  prev_ts = GST_CLOCK_TIME_NONE;
 
   return YES;
 }
@@ -372,37 +370,33 @@ static GstPushSrcClass * parent_class;
 
 - (GstFlowReturn)create:(GstBuffer **)buf
 {
-  *buf = NULL;
+  CVPixelBufferRef frame;
 
-  do {
-    CVPixelBufferRef frame;
+  [queueLock lockWhenCondition:HAS_FRAME_OR_STOP_REQUEST];
+  if (stopRequest) {
+    [queueLock unlock];
+    return GST_FLOW_WRONG_STATE;
+  }
 
-    [queueLock lockWhenCondition:HAS_FRAME_OR_STOP_REQUEST];
-    if (stopRequest) {
-      [queueLock unlock];
-      return GST_FLOW_WRONG_STATE;
-    }
+  frame = (CVPixelBufferRef) [queue lastObject];
+  [queue removeLastObject];
+  [queueLock unlockWithCondition:
+      ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
 
-    frame = (CVPixelBufferRef) [queue lastObject];
-    [queue removeLastObject];
-    [queueLock unlockWithCondition:
-        ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
+  *buf = gst_buffer_new_and_alloc (
+      CVPixelBufferGetBytesPerRow (frame) * CVPixelBufferGetHeight (frame));
+  CVPixelBufferLockBaseAddress (frame, 0);
+  memcpy (GST_BUFFER_DATA (*buf), CVPixelBufferGetBaseAddress (frame),
+      GST_BUFFER_SIZE (*buf));
+  CVPixelBufferUnlockBaseAddress (frame, 0);
+  CVBufferRelease (frame);
 
-    if (*buf != NULL)
-      gst_buffer_unref (*buf);
-    *buf = gst_buffer_new_and_alloc (
-        CVPixelBufferGetBytesPerRow (frame) * CVPixelBufferGetHeight (frame));
-    CVPixelBufferLockBaseAddress (frame, 0);
-    memcpy (GST_BUFFER_DATA (*buf), CVPixelBufferGetBaseAddress (frame),
-        GST_BUFFER_SIZE (*buf));
-    CVPixelBufferUnlockBaseAddress (frame, 0);
-    CVBufferRelease (frame);
-  } while (![self timestampBuffer:*buf]);
+  [self timestampBuffer:*buf];
 
   return GST_FLOW_OK;
 }
 
-- (BOOL)timestampBuffer:(GstBuffer *)buf
+- (void)timestampBuffer:(GstBuffer *)buf
 {
   GstClock *clock;
   GstClockTime timestamp;
@@ -418,8 +412,6 @@ static GstPushSrcClass * parent_class;
   GST_OBJECT_UNLOCK (element);
 
   if (clock != NULL) {
-
-    /* The time according to the current clock */
     timestamp = gst_clock_get_time (clock) - timestamp;
     if (timestamp > duration)
       timestamp -= duration;
@@ -428,55 +420,12 @@ static GstPushSrcClass * parent_class;
 
     gst_object_unref (clock);
     clock = NULL;
-
-    /* Unless it's the first frame, align the current timestamp on a multiple
-     * of duration since the previous */
-    if (GST_CLOCK_TIME_IS_VALID (prev_ts)) {
-      GstClockTime delta;
-      guint delta_remainder, delta_offset;
-
-      if (timestamp < prev_ts) {
-        GST_DEBUG_OBJECT (element, "clock is ticking backwards");
-        return NO;
-      }
-
-      /* Round to a duration boundary */
-      delta = timestamp - prev_ts;
-      delta_remainder = delta % duration;
-
-      if (delta_remainder < duration / 3)
-        timestamp -= delta_remainder;
-      else
-        timestamp += duration - delta_remainder;
-
-      /* How many frames are we off then? */
-      delta = timestamp - prev_ts;
-      delta_offset = delta / duration;
-
-      if (delta_offset == 1)    /* perfect */
-        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-      else if (delta_offset > 1) {
-        guint lost = delta_offset - 1;
-        GST_DEBUG_OBJECT (element, "lost %d frame%s, setting discont flag",
-            lost, (lost > 1) ? "s" : "");
-        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-      } else if (delta_offset == 0) {   /* overproduction, skip this frame */
-        GST_DEBUG_OBJECT (element, "skipping frame");
-        return NO;
-      }
-
-      offset += delta_offset;
-    }
-
-    prev_ts = timestamp;
   }
 
-  GST_BUFFER_OFFSET (buf) = offset;
+  GST_BUFFER_OFFSET (buf) = offset++;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
-
-  return YES;
 }
 
 @end
