@@ -357,7 +357,8 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
         tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
       else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
         tfs->supportedformats |= GES_TRACK_TYPE_VIDEO;
-        if (gst_discoverer_video_info_get_is_image (sinf)) {
+        if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
+                sinf)) {
           tfs->supportedformats |= GES_TRACK_TYPE_AUDIO;
           is_image = TRUE;
         }
