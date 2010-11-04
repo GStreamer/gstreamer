@@ -187,6 +187,7 @@ public class MediaInfo.Info : VBox
         AttachOptions fill = AttachOptions.FILL;
         AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
         string str;
+        Structure s;
 
         info = dc.discover_uri (uri);
 
@@ -212,7 +213,7 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 7, false);
+          table = new Table (2, 8, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
@@ -275,6 +276,17 @@ public class MediaInfo.Info : VBox
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
+          if ((s = sinfo.get_misc ()) != null) {
+            label = new Label ("Details:");
+            label.set_alignment (1.0f, 0.5f);
+            table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+            label = new Label(s.to_string ());
+            label.set_ellipsize (Pango.EllipsizeMode.END);
+            label.set_alignment (0.0f, 0.5f);
+            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+            row++;
+          }
+
           video_streams.append_page (table, new Label (@"video $i"));
         }
         video_streams.show_all();
@@ -287,7 +299,7 @@ public class MediaInfo.Info : VBox
           sinfo = l.nth_data (i);
 
           row = 0;
-          table = new Table (2, 6, false);
+          table = new Table (2, 7, false);
 
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
@@ -340,6 +352,17 @@ public class MediaInfo.Info : VBox
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
   
+          if ((s = sinfo.get_misc ()) != null) {
+            label = new Label ("Details:");
+            label.set_alignment (1.0f, 0.5f);
+            table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+            label = new Label(s.to_string ());
+            label.set_ellipsize (Pango.EllipsizeMode.END);
+            label.set_alignment (0.0f, 0.5f);
+            table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+            row++;
+          }
+
           audio_streams.append_page (table, new Label (@"audio $i"));
         }
         audio_streams.show_all();
