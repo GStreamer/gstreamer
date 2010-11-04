@@ -794,7 +794,7 @@ find_func (QtDemuxSample * s1, guint64 * media_time, gpointer user_data)
 }
 
 /* find the index of the sample that includes the data for @media_time using a
- * binary search
+ * binary search.  Only to be called in optimized cases of linear search below.
  *
  * Returns the index of the sample.
  */
@@ -808,7 +808,7 @@ gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
   /* convert media_time to mov format */
   media_time = gst_util_uint64_scale (media_time, str->timescale, GST_SECOND);
 
-  result = gst_util_array_binary_search (str->samples, str->n_samples,
+  result = gst_util_array_binary_search (str->samples, str->stbl_index + 1,
       sizeof (QtDemuxSample), (GCompareDataFunc) find_func,
       GST_SEARCH_MODE_BEFORE, &media_time, NULL);
 
@@ -821,7 +821,8 @@ gst_qtdemux_find_index (GstQTDemux * qtdemux, QtDemuxStream * str,
 }
 
 /* find the index of the sample that includes the data for @media_time using a
- * linear search
+ * linear search, and keeping in mind that not all samples may have been parsed
+ * yet.  If possible, it will delegate to binary search.
  *
  * Returns the index of the sample.
  */
@@ -829,26 +830,29 @@ static guint32
 gst_qtdemux_find_index_linear (GstQTDemux * qtdemux, QtDemuxStream * str,
     guint64 media_time)
 {
-  QtDemuxSample *result = str->samples;
   guint32 index = 0;
+  guint64 mov_time;
 
   /* convert media_time to mov format */
-  media_time =
+  mov_time =
       gst_util_uint64_scale_ceil (media_time, str->timescale, GST_SECOND);
 
-  if (media_time == result->timestamp)
+  if (mov_time == str->samples[0].timestamp)
     return index;
 
-  result++;
+  /* use faster search if requested time in already parsed range */
+  if (str->stbl_index >= 0 &&
+      mov_time <= str->samples[str->stbl_index].timestamp)
+    return gst_qtdemux_find_index (qtdemux, str, media_time);
+
   while (index < str->n_samples - 1) {
     if (!qtdemux_parse_samples (qtdemux, str, index + 1))
       goto parse_failed;
 
-    if (media_time < result->timestamp)
+    if (mov_time < str->samples[index + 1].timestamp)
       break;
 
     index++;
-    result++;
   }
   return index;
 
@@ -1003,7 +1007,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
     media_start = seg->media_start + seg_time;
 
     /* get the index of the sample with media time */
-    index = gst_qtdemux_find_index (qtdemux, str, media_start);
+    index = gst_qtdemux_find_index_linear (qtdemux, str, media_start);
     GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
         GST_TIME_ARGS (media_start), index);
 
@@ -2733,7 +2737,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
       media_start = seg->media_start + seg_time;
 
       /* get the index of the sample with media time */
-      index = gst_qtdemux_find_index (qtdemux, str, media_start);
+      index = gst_qtdemux_find_index_linear (qtdemux, str, media_start);
       GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
           GST_TIME_ARGS (media_start), index);
 
@@ -2972,14 +2976,14 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto eos;
 
-  /* now get the info for the sample we're at */
-  sample = &stream->samples[stream->sample_index];
-
   if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
     GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!",
         stream->sample_index);
     return FALSE;
   }
+
+  /* now get the info for the sample we're at */
+  sample = &stream->samples[stream->sample_index];
 
   *timestamp = QTSAMPLE_PTS (stream, sample);
   *offset = sample->offset;
@@ -3031,14 +3035,14 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   if (G_UNLIKELY (stream->sample_index >= stream->n_samples))
     goto next_segment;
 
-  /* get next sample */
-  sample = &stream->samples[stream->sample_index];
-
   if (!qtdemux_parse_samples (qtdemux, stream, stream->sample_index)) {
     GST_LOG_OBJECT (qtdemux, "Parsing of index %u failed!",
         stream->sample_index);
     return;
   }
+
+  /* get next sample */
+  sample = &stream->samples[stream->sample_index];
 
   /* see if we are past the segment */
   if (G_UNLIKELY (gst_util_uint64_scale (sample->timestamp,
