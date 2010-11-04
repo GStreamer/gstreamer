@@ -84,7 +84,7 @@ gst_vtdec_base_init (GstVTDecClass * klass)
       min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL);
   if (codec_details->format_id == kVTFormatH264) {
     gst_structure_set (gst_caps_get_structure (sink_caps, 0),
-        "stream-format", G_TYPE_STRING, "avc-sample", NULL);
+        "stream-format", G_TYPE_STRING, "avc", NULL);
   }
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       sink_caps);
