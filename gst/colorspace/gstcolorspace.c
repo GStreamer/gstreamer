@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY (colorspace_debug);
 #define GST_CAT_DEFAULT colorspace_debug
 GST_DEBUG_CATEGORY (colorspace_performance);
 
-#if !GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
+#if GST_CHECK_PLUGINS_BASE_VERSION(0, 10, 32)
 #define VIDEO_CAPS_RGB8_PALETTED \
   GST_VIDEO_CAPS_RGB8_PALETTED "; "
 #else
