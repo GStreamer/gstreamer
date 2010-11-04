@@ -478,9 +478,8 @@ gst_qtkit_video_src_base_init (gpointer gclass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_set_details_simple (element_class,
-      "QTKitVideoSrc",
-      "Source/Video",
-      "Stream data from a video capture device through QTKit",
+      "Video Source (QTKit)", "Source/Video",
+      "Reads frames from a Mac OS X QTKit device",
       "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
   gst_element_class_add_pad_template (element_class,
