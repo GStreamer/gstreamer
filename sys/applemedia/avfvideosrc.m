@@ -337,7 +337,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   [bufQueueLock release];
   bufQueueLock = nil;
-  [bufQueue removeAllObjects];
   [bufQueue release];
   bufQueue = nil;
 
