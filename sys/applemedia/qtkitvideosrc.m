@@ -19,6 +19,8 @@
 
 #include "qtkitvideosrc.h"
 
+#import "bufferfactory.h"
+
 #import <QTKit/QTKit.h>
 
 #define DEFAULT_DEVICE_INDEX  -1
@@ -100,6 +102,7 @@ static GstPushSrcClass * parent_class;
 
   int deviceIndex;
 
+  GstAMBufferFactory *bufferFactory;
   QTCaptureSession *session;
   QTCaptureDeviceInput *input;
   QTCaptureDecompressedVideoOutput *output;
@@ -166,24 +169,31 @@ static GstPushSrcClass * parent_class;
 
 - (BOOL)openDevice
 {
-  NSString *mediaType;
+  GError *gerror;
+  NSString *mediaType = QTMediaTypeVideo;
   NSError *error = nil;
 
-  mediaType = QTMediaTypeVideo;
+  bufferFactory = [[GstAMBufferFactory alloc] initWithError:&gerror];
+  if (bufferFactory == nil) {
+    GST_ELEMENT_ERROR (element, RESOURCE, FAILED, ("API error"),
+        ("%s", gerror->message));
+    g_clear_error (&gerror);
+    goto openFailed;
+  }
 
   if (deviceIndex == -1) {
     device = [QTCaptureDevice defaultInputDeviceWithMediaType:mediaType];
     if (device == nil) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
                          ("No video capture devices found"), (NULL));
-      return NO;
+      goto openFailed;
     }
   } else {
     NSArray *devices = [QTCaptureDevice inputDevicesWithMediaType:mediaType];
     if (deviceIndex >= [devices count]) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
                          ("Invalid video capture device index"), (NULL));
-      return NO;
+      goto openFailed;
     }
     device = [devices objectAtIndex:deviceIndex];
   }
@@ -195,12 +205,22 @@ static GstPushSrcClass * parent_class;
     GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
         ("Failed to open device '%s'",
             [[device localizedDisplayName] UTF8String]), (NULL));
-    [device release];
-    device = nil;
-    return NO;
+    goto openFailed;
   }
 
   return YES;
+
+  /* ERRORS */
+openFailed:
+  {
+    [device release];
+    device = nil;
+
+    [bufferFactory release];
+    bufferFactory = nil;
+
+    return NO;
+  }
 }
 
 - (void)closeDevice
@@ -218,6 +238,9 @@ static GstPushSrcClass * parent_class;
 
   [device release];
   device = nil;
+
+  [bufferFactory release];
+  bufferFactory = nil;
 }
 
 - (BOOL)setCaps:(GstCaps *)caps
@@ -383,12 +406,7 @@ static GstPushSrcClass * parent_class;
   [queueLock unlockWithCondition:
       ([queue count] == 0) ? NO_FRAMES : HAS_FRAME_OR_STOP_REQUEST];
 
-  *buf = gst_buffer_new_and_alloc (
-      CVPixelBufferGetBytesPerRow (frame) * CVPixelBufferGetHeight (frame));
-  CVPixelBufferLockBaseAddress (frame, 0);
-  memcpy (GST_BUFFER_DATA (*buf), CVPixelBufferGetBaseAddress (frame),
-      GST_BUFFER_SIZE (*buf));
-  CVPixelBufferUnlockBaseAddress (frame, 0);
+  *buf = [bufferFactory createGstBufferForCoreVideoBuffer:frame];
   CVBufferRelease (frame);
 
   [self timestampBuffer:*buf];
