@@ -38,7 +38,7 @@ main(string[] args)
   opt_context.set_help_enabled (true);
   opt_context.add_main_entries (options, null);
   opt_context.add_group (Gst.init_get_option_group ());
-  opt_context.add_group (Gtk.get_option_group (false));
+  opt_context.add_group (Gtk.get_option_group (true));
   try {
     opt_context.parse (ref args);
   } catch (Error e) {
