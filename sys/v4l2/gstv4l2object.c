@@ -1454,6 +1454,10 @@ done:
 }
 
 
+static gboolean
+gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
+    guint32 pixelformat, gint * width, gint * height, gboolean * interlaced);
+
 
 /* The frame interval enumeration code first appeared in Linux 2.6.19. */
 #ifdef VIDIOC_ENUM_FRAMEINTERVALS
@@ -1467,6 +1471,14 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
   guint32 num, denom;
   GstStructure *s;
   GValue rates = { 0, };
+  gboolean interlaced;
+  gint int_width = width;
+  gint int_height = height;
+
+  /* interlaced detection using VIDIOC_TRY/S_FMT */
+  if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat,
+          &int_width, &int_height, &interlaced))
+    return NULL;
 
   memset (&ival, 0, sizeof (struct v4l2_frmivalenum));
   ival.index = 0;
@@ -1624,7 +1636,8 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
 return_data:
   s = gst_structure_copy (template);
   gst_structure_set (s, "width", G_TYPE_INT, (gint) width,
-      "height", G_TYPE_INT, (gint) height, NULL);
+      "height", G_TYPE_INT, (gint) height,
+      "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
 
   if (G_IS_VALUE (&rates)) {
     /* only change the framerate on the template when we have a valid probed new
@@ -1671,10 +1684,6 @@ sort_by_frame_size (GstStructure * s1, GstStructure * s2)
   return ((w2 * h2) - (w1 * h1));
 }
 #endif
-
-static gboolean
-gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
-    guint32 pixelformat, gint * width, gint * height);
 
 GstCaps *
 gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
@@ -1831,18 +1840,19 @@ default_frame_sizes:
 #endif /* defined VIDIOC_ENUM_FRAMESIZES */
   {
     gint min_w, max_w, min_h, max_h, fix_num = 0, fix_denom = 0;
+    gboolean interlaced;
 
     /* This code is for Linux < 2.6.19 */
     min_w = min_h = 1;
     max_w = max_h = GST_V4L2_MAX_SIZE;
     if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat, &min_w,
-            &min_h)) {
+            &min_h, &interlaced)) {
       GST_WARNING_OBJECT (v4l2object->element,
           "Could not probe minimum capture size for pixelformat %"
           GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
     }
     if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat, &max_w,
-            &max_h)) {
+            &max_h, &interlaced)) {
       GST_WARNING_OBJECT (v4l2object->element,
           "Could not probe maximum capture size for pixelformat %"
           GST_FOURCC_FORMAT, GST_FOURCC_ARGS (pixelformat));
@@ -1885,6 +1895,8 @@ default_frame_sizes:
     else
       gst_structure_set (tmp, "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
+    gst_structure_set (tmp, "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
+
     gst_caps_append_structure (ret, tmp);
 
     return ret;
@@ -1893,7 +1905,7 @@ default_frame_sizes:
 
 static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
-    guint32 pixelformat, gint * width, gint * height)
+    guint32 pixelformat, gint * width, gint * height, gboolean * interlaced)
 {
   struct v4l2_format fmt;
   int fd;
@@ -1962,6 +1974,22 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 
   *width = fmt.fmt.pix.width;
   *height = fmt.fmt.pix.height;
+
+  switch (fmt.fmt.pix.field) {
+    case V4L2_FIELD_NONE:
+      *interlaced = FALSE;
+      break;
+    case V4L2_FIELD_INTERLACED:
+    case V4L2_FIELD_INTERLACED_TB:
+    case V4L2_FIELD_INTERLACED_BT:
+      *interlaced = TRUE;
+      break;
+    default:
+      GST_WARNING_OBJECT (v4l2object->element,
+          "Unsupported field type for %" GST_FOURCC_FORMAT "@%ux%u",
+          GST_FOURCC_ARGS (pixelformat), width, height);
+      return FALSE;
+  }
 
   return TRUE;
 }
