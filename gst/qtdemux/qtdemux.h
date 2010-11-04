@@ -75,6 +75,7 @@ struct _GstQTDemux {
   gboolean fragmented;
   /* offset of the mfra atom */
   guint64 mfra_offset;
+  guint64 moof_offset;
 
   gint state;
 
