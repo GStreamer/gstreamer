@@ -1,0 +1,67 @@
+Plan for 0.11
+=============
+
+First attempt at making a list of tasks in rougly chronological order.
+
+
+* General cleanup
+
+  - Remove deprecated methods
+  - Cleanup structs + PADDING
+  - ..
+
+* Add GstFlowReturn for events (and query)
+
+* add return structure for events and query
+
+* Make GstMiniObject a simple boxed type
+
+  - Move copy and free function to structure
+  - convert GstBuffer, GstEvent, GstMessage, GstQuery,
+    
+* Convert GstCaps to GstMiniObject
+
+* Incremental caps
+
+  - Remove array from caps ?
+  - make caps iterator
+
+* Make GstBufferMetadata
+
+  - Make functions to register metadata
+  - Make common metadata: timeinfo, memory data, video data
+  - Remove GstBuffer Fields
+  - Make methods to add metadata to buffers.
+
+* Negotiation of metadata
+
+  - figure out if we need to negotiate the metadata on the caps or if we can
+    gracefully degrade when an element doesn't understand the metadata.
+
+* Rework reverse negotiation
+
+  - _alloc_buffer() never returns changed caps. It can return a return
+     value when the caller should recheck the allowed caps.
+
+  - _alloc_buffer() takes input GstBuffer prototype (or NULL)
+
+  - upstream event to notify of a downstream caps change
+
+* Incremental event progation
+
+  - certain events would be sticky on a pad like for caps
+  - rules for pushing an event downstream
+     - right before pushing a buffer
+     - after link operation
+  - activate for most serialized downstream events
+
+* GstSegment changes
+
+  - remove segment accumulation
+  - add accumulated time to the event
+  - apply segment info to pads
+  - add method on pads to get/adjust sync offset
+  - add method on pads to query current running_time 
+
+
+  
