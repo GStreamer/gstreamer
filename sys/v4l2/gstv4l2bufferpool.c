@@ -30,6 +30,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "gst/video/video.h"
+
 #include <gstv4l2bufferpool.h>
 #include "gstv4l2src.h"
 #include "gstv4l2sink.h"
@@ -544,6 +546,12 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool)
         pool->num_live_buffers);
 
     GST_V4L2_BUFFER_POOL_UNLOCK (pool);
+
+    /* set top/bottom field first if v4l2_buffer has the information */
+    if (buffer.field == V4L2_FIELD_INTERLACED_TB)
+      GST_BUFFER_FLAG_SET (pool_buffer, GST_VIDEO_BUFFER_TFF);
+    if (buffer.field == V4L2_FIELD_INTERLACED_BT)
+      GST_BUFFER_FLAG_UNSET (pool_buffer, GST_VIDEO_BUFFER_TFF);
 
     /* this can change at every frame, esp. with jpeg */
     GST_BUFFER_SIZE (pool_buffer) = buffer.bytesused;
