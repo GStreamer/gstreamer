@@ -1683,6 +1683,27 @@ gst_qtdemux_stbl_free (QtDemuxStream * stream)
   stream->ctts.data = NULL;
 }
 
+static void
+gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  while (stream->buffers) {
+    gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
+    stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
+  }
+  if (stream->pad)
+    gst_element_remove_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
+  g_free (stream->samples);
+  if (stream->caps)
+    gst_caps_unref (stream->caps);
+  g_free (stream->segments);
+  if (stream->pending_tags)
+    gst_tag_list_free (stream->pending_tags);
+  g_free (stream->redirect_uri);
+  /* free stbl sub-atoms */
+  gst_qtdemux_stbl_free (stream);
+  g_free (stream);
+}
+
 static GstStateChangeReturn
 gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1725,25 +1746,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->element_index = NULL;
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
-        QtDemuxStream *stream = qtdemux->streams[n];
-
-        while (stream->buffers) {
-          gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
-          stream->buffers =
-              g_slist_delete_link (stream->buffers, stream->buffers);
-        }
-        if (stream->pad)
-          gst_element_remove_pad (element, stream->pad);
-        g_free (stream->samples);
-        if (stream->caps)
-          gst_caps_unref (stream->caps);
-        g_free (stream->segments);
-        if (stream->pending_tags)
-          gst_tag_list_free (stream->pending_tags);
-        g_free (stream->redirect_uri);
-        /* free stbl sub-atoms */
-        gst_qtdemux_stbl_free (stream);
-        g_free (stream);
+        gst_qtdemux_stream_free (qtdemux, qtdemux->streams[n]);
+        qtdemux->streams[n] = NULL;
       }
       qtdemux->major_brand = 0;
       qtdemux->n_streams = 0;
