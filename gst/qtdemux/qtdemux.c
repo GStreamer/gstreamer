@@ -1385,7 +1385,8 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
     }
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
-      } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams) {
+      } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams &&
+          !qtdemux->fragmented) {
         res = gst_qtdemux_do_push_seek (qtdemux, pad, event);
       } else {
         GST_DEBUG_OBJECT (qtdemux,
@@ -3159,7 +3160,8 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
         continue;
     } else {
       /* push mode is byte position based */
-      if (stream->samples[stream->n_samples - 1].offset >= demux->offset)
+      if (stream->n_samples &&
+          stream->samples[stream->n_samples - 1].offset >= demux->offset)
         continue;
     }
 
@@ -3836,13 +3838,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         guint32 fourcc;
         guint64 size;
 
-        /* prepare newsegment to send when streaming actually starts */
-        if (!demux->pending_newsegment) {
-          demux->pending_newsegment =
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-              0, GST_CLOCK_TIME_NONE, 0);
-        }
-
         data = gst_adapter_peek (demux->adapter, demux->neededbytes);
 
         /* get fourcc/length, set neededbytes */
@@ -3862,6 +3857,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             /* we have the headers, start playback */
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry_size (demux);
+            demux->mdatleft = size;
 
             /* Only post, event on pads is done after newsegment */
             qtdemux_post_global_tags (demux);
@@ -3942,6 +3938,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
           demux->got_moov = TRUE;
 
+          /* prepare newsegment to send when streaming actually starts */
+          if (!demux->pending_newsegment) {
+            demux->pending_newsegment =
+                gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                0, GST_CLOCK_TIME_NONE, 0);
+          }
+
           qtdemux_parse_moov (demux, data, demux->neededbytes);
           qtdemux_node_dump (demux, demux->moov_node);
           qtdemux_parse_tree (demux);
@@ -3950,6 +3953,15 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           g_node_destroy (demux->moov_node);
           demux->moov_node = NULL;
           GST_DEBUG_OBJECT (demux, "Finished parsing the header");
+        } else if (fourcc == FOURCC_moof) {
+          if (demux->got_moov && demux->fragmented) {
+            GST_DEBUG_OBJECT (demux, "Parsing [moof]");
+            if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
+                    demux->offset, NULL))
+              return GST_FLOW_ERROR;
+          } else {
+            GST_DEBUG_OBJECT (demux, "Discarding [moof]");
+          }
         } else if (fourcc == FOURCC_ftyp) {
           GST_DEBUG_OBJECT (demux, "Parsing [ftyp]");
           qtdemux_parse_ftyp (demux, data, demux->neededbytes);
@@ -3975,12 +3987,11 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           buf = gst_adapter_take_buffer (demux->adapter,
               gst_adapter_available (demux->adapter));
           gst_adapter_clear (demux->adapter);
-          gst_adapter_push (demux->adapter, demux->mdatbuffer);
-          gst_adapter_push (demux->adapter, buf);
           demux->mdatbuffer = NULL;
           demux->offset = demux->mdatoffset;
           demux->neededbytes = next_entry_size (demux);
           demux->state = QTDEMUX_STATE_MOVIE;
+          demux->mdatleft = gst_adapter_available (demux->adapter);
 
           /* Only post, event on pads is done after newsegment */
           qtdemux_post_global_tags (demux);
@@ -4037,6 +4048,33 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         GST_DEBUG_OBJECT (demux,
             "BEGIN // in MOVIE for offset %" G_GUINT64_FORMAT, demux->offset);
+
+        if (demux->fragmented) {
+          GST_DEBUG_OBJECT (demux, "mdat remaining %" G_GUINT64_FORMAT,
+              demux->mdatleft);
+          if (G_LIKELY (demux->todrop < demux->mdatleft)) {
+            /* if needed data starts within this atom,
+             * then it should not exceed this atom */
+            if (G_UNLIKELY (demux->neededbytes > demux->mdatleft)) {
+              GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+                  (_("This file is invalid and cannot be played.")),
+                  ("sample data crosses atom boundary"));
+              ret = GST_FLOW_ERROR;
+              break;
+            }
+            demux->mdatleft -= demux->neededbytes;
+          } else {
+            GST_DEBUG_OBJECT (demux, "data atom emptied; resuming atom scan");
+            /* so we are dropping more than left in this atom */
+            demux->todrop -= demux->mdatleft;
+            demux->neededbytes -= demux->mdatleft;
+            demux->mdatleft = 0;
+            /* need to resume atom parsing so we do not miss any other pieces */
+            demux->state = QTDEMUX_STATE_INITIAL;
+            demux->neededbytes = 16;
+            break;
+          }
+        }
 
         if (demux->todrop) {
           GST_LOG_OBJECT (demux, "Dropping %d bytes", demux->todrop);
@@ -4104,8 +4142,16 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GST_LOG_OBJECT (demux, "offset is now %" G_GUINT64_FORMAT,
             demux->offset);
 
-        if ((demux->neededbytes = next_entry_size (demux)) == -1)
+        if ((demux->neededbytes = next_entry_size (demux)) == -1) {
+          if (demux->fragmented) {
+            GST_DEBUG_OBJECT (demux, "(temporarily) out of fragmented samples");
+            /* there may be more to follow, only finish this atom */
+            demux->todrop = demux->mdatleft;
+            demux->neededbytes = demux->todrop;
+            break;
+          }
           goto eos;
+        }
         break;
       }
       default:
@@ -7155,7 +7201,10 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
       qtdemux->moof_offset = 0;
     }
 
-    if (G_UNLIKELY (!stream->n_samples)) {
+    /* in pull mode, we should have parsed some sample info by now;
+     * and quite some code will not handle no samples.
+     * in push mode, we'll just have to deal with it */
+    if (G_UNLIKELY (qtdemux->pullbased && !stream->n_samples)) {
       GST_DEBUG_OBJECT (qtdemux, "no samples for stream; discarding");
       gst_qtdemux_stream_free (qtdemux, stream);
       memmove (&(qtdemux->streams[i]), &(qtdemux->streams[i + 1]),

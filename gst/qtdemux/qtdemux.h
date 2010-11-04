@@ -87,6 +87,7 @@ struct _GstQTDemux {
   guint todrop;
   GstAdapter *adapter;
   GstBuffer *mdatbuffer;
+  guint64 mdatleft;
 
   /* offset of the media data (i.e.: Size of header) */
   guint64 offset;
