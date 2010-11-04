@@ -37,13 +37,6 @@
 GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
 #define GST_CAT_DEFAULT gst_avf_video_src_debug
 
-static const GstElementDetails element_details = {
-    "AVFVideoSrc",
-    "Source/Video",
-    "Stream data from a video capture device through AVFoundation",
-    "Ole André Vadla Ravnås <oravnas@cisco.com>"
-};
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -569,7 +562,11 @@ gst_avf_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "AVFVideoSrc",
+      "Source/Video",
+      "Stream data from a video capture device through AVFoundation",
+      "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));

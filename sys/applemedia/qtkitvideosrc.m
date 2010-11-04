@@ -34,13 +34,6 @@
 GST_DEBUG_CATEGORY (gst_qtkit_video_src_debug);
 #define GST_CAT_DEFAULT gst_qtkit_video_src_debug
 
-static const GstElementDetails element_details = {
-    "QTKitVideoSrc",
-    "Source/Video",
-    "Stream data from a video capture device through QTKit",
-    "Ole André Vadla Ravnås <oravnas@cisco.com>"
-};
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -484,7 +477,11 @@ gst_qtkit_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class,
+      "QTKitVideoSrc",
+      "Source/Video",
+      "Stream data from a video capture device through QTKit",
+      "Ole André Vadla Ravnås <oravnas@cisco.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
