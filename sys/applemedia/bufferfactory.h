@@ -28,6 +28,7 @@
 - (id)initWithError:(GError **)error;
 - (void)finalize;
 
+- (GstBuffer *)createGstBufferForCoreVideoBuffer:(CFTypeRef)cvbuf;
 - (GstBuffer *)createGstBufferForSampleBuffer:(CFTypeRef)sbuf;
 
 @end

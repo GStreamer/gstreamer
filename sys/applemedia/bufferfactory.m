@@ -20,6 +20,7 @@
 #import "bufferfactory.h"
 
 #include "coremediabuffer.h"
+#include "corevideobuffer.h"
 
 @implementation GstAMBufferFactory
 
@@ -45,6 +46,11 @@
   g_object_unref (coreMediaCtx);
 
   [super finalize];
+}
+
+- (GstBuffer *)createGstBufferForCoreVideoBuffer:(CFTypeRef)cvbuf
+{
+  return gst_core_video_buffer_new (coreMediaCtx, (CVBufferRef) cvbuf);
 }
 
 - (GstBuffer *)createGstBufferForSampleBuffer:(CFTypeRef)sbuf
