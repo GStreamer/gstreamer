@@ -764,5 +764,5 @@ gst_cel_video_src_class_init (GstCelVideoSrcClass * klass)
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_cel_video_src_debug, "celvideosrc",
-      0, "iPhone video source");
+      0, "iOS Celestial video source");
 }
