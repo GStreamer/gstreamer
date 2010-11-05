@@ -121,6 +121,7 @@ void cogorc_convert_AYUV_RGBA (guint8 * d1, int d1_stride, const guint8 * s1, in
 void cogorc_convert_I420_BGRA (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
 void cogorc_convert_I420_BGRA_avg (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, const guint8 * s4, const guint8 * s5, int n);
 void cogorc_getline_I420 (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
+void cogorc_getline_YUV9 (guint8 * d1, const guint8 * s1, const guint8 * s2, const guint8 * s3, int n);
 void cogorc_getline_YUY2 (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_UYVY (guint8 * d1, const guint8 * s1, int n);
 void cogorc_getline_YVYU (guint8 * d1, const guint8 * s1, int n);
