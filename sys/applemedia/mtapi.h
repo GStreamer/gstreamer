@@ -29,7 +29,14 @@ typedef struct _GstMTApiClass GstMTApiClass;
 
 typedef struct _FigCaptureDevice * FigCaptureDeviceRef;
 typedef struct _FigCaptureStream * FigCaptureStreamRef;
+typedef struct _FigCaptureDeviceIface FigCaptureDeviceIface;
 typedef struct _FigCaptureStreamIface FigCaptureStreamIface;
+
+struct _FigCaptureDeviceIface
+{
+  gsize unk;
+  OSStatus (* Func1) (FigCaptureDeviceRef stream);
+};
 
 struct _FigCaptureStreamIface
 {
@@ -47,15 +54,32 @@ struct _GstMTApi
   FigBaseObjectRef (* FigCaptureStreamGetFigBaseObject)
     (FigCaptureStreamRef stream);
 
-  CFStringRef * kFigCaptureDeviceProperty_ImagerFormatDescription;
-  CFStringRef * kFigCaptureDeviceProperty_ImagerFrameRate;
-  CFStringRef * kFigCaptureDeviceProperty_ImagerMinimumFrameRate;
-  CFStringRef * kFigCaptureDeviceProperty_ImagerSupportedFormatsArray;
+  CFStringRef * kFigCaptureDeviceProperty_Clock;
+  CFStringRef * kFigCaptureDeviceProperty_StreamArray;
+  CFStringRef * kFigCaptureStreamProperty_AudioLevelArray;
+  CFStringRef * kFigCaptureStreamProperty_AudioLevelMeteringEnable;
+  CFStringRef * kFigCaptureStreamProperty_AudioLevelUnits;
+  CFStringRef * kFigCaptureStreamProperty_AutoAENow;
+  CFStringRef * kFigCaptureStreamProperty_AutoFocusNow;
+  CFStringRef * kFigCaptureStreamProperty_BufferAllocator;
   CFStringRef * kFigCaptureStreamProperty_BufferQueue;
-  CFStringRef * kFigImagerSupportedFormat_FormatDescription;
-  CFStringRef * kFigImagerSupportedFormat_IsBinned;
-  CFStringRef * kFigImagerSupportedFormat_MaxFrameRate;
-  CFStringRef * kFigImagerSupportedFormat_ScaleFactor;
+  CFStringRef * kFigCaptureStreamProperty_FixedFrameRate;
+  CFStringRef * kFigCaptureStreamProperty_FormatDescription;
+  CFStringRef * kFigCaptureStreamProperty_FormatIndex;
+  CFStringRef * kFigCaptureStreamProperty_FrameDuration;
+  CFStringRef * kFigCaptureStreamProperty_MaximumFrameRate;
+  CFStringRef * kFigCaptureStreamProperty_MinimumFrameRate;
+  CFStringRef * kFigCaptureStreamProperty_NeedSampleBufferDurations;
+  CFStringRef * kFigCaptureStreamProperty_StillImageBufferQueue;
+  CFStringRef * kFigCaptureStreamProperty_StillImageCaptureNow;
+  CFStringRef * kFigCaptureStreamProperty_SupportedFormatsArray;
+  CFStringRef * kFigSupportedFormat_AudioMaxSampleRate;
+  CFStringRef * kFigSupportedFormat_AudioMinSampleRate;
+  CFStringRef * kFigSupportedFormat_FormatDescription;
+  CFStringRef * kFigSupportedFormat_VideoIsBinned;
+  CFStringRef * kFigSupportedFormat_VideoMaxFrameRate;
+  CFStringRef * kFigSupportedFormat_VideoMinFrameRate;
+  CFStringRef * kFigSupportedFormat_VideoScaleFactor;
 };
 
 struct _GstMTApiClass
