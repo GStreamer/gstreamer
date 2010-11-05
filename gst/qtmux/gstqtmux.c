@@ -1125,13 +1125,21 @@ flush_failed:
     GST_ELEMENT_ERROR (qtmux, RESOURCE, WRITE,
         ("Failed to flush temporary file"), GST_ERROR_SYSTEM);
     ret = GST_FLOW_ERROR;
-    return ret;
+    goto fail;
   }
 seek_failed:
   {
     GST_ELEMENT_ERROR (qtmux, RESOURCE, SEEK,
         ("Failed to seek temporary file"), GST_ERROR_SYSTEM);
     ret = GST_FLOW_ERROR;
+    goto fail;
+  }
+fail:
+  {
+    /* clear descriptor so we don't remove temp file later on,
+     * might be possible to recover */
+    fclose (qtmux->fast_start_file);
+    qtmux->fast_start_file = NULL;
     return ret;
   }
 }
