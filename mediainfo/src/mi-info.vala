@@ -19,6 +19,7 @@
 
 using Gtk;
 using Gst;
+using Gee;
 
 /*
 we need to update the vapi for yet unreleased gstreamer api:
@@ -48,6 +49,8 @@ public class MediaInfo.Info : VBox
   private Pipeline pb;
   private bool have_video = false;
 
+  private HashMap<string, string> resolutions;
+
   public Info ()
   {
     Label label;
@@ -59,9 +62,38 @@ public class MediaInfo.Info : VBox
     // configure the view
     set_homogeneous (false);
 
+    // setup lookup tables
+    // video resolutions: http://upload.wikimedia.org/wikipedia/mediainfo/commons/e/e5/Vector_Video_Standards2.svg
+    // FIXME: these are only for PAR = 1:1
+    // we could have another list for CIF (http://en.wikipedia.org/wiki/Common_Intermediate_Format)
+    resolutions = new HashMap<string, string> ();
+    // 5:4
+    resolutions["1280 x 1024"] = "SXGA";
+    resolutions["2560 x 2048"] = "QSXGA";
+    // 4:3
+    resolutions["320 x 240"] = "QVGA";
+    resolutions["640 x 480"] = "VGA";
+    resolutions["768 x 576"] = "PAL";
+    resolutions["800 x 600"] = "SVGA";
+    resolutions["1024 x 768"] = "XGA";
+    resolutions["1400 x 1050"] = "SXGA+";
+    resolutions["1600 x 1200"] = "UXGA";
+    resolutions["2048 x 1536"] = "QXGA";
+    // 8:5 (16:10)
+    resolutions["320 x 200"] = "CGA";
+    resolutions["1280 x 800"] = "WXGA";
+    resolutions["1680 x 1050"] = "WXGA+";
+    resolutions["1920 x 1200"] = "WUXGA";
+    // 5:3
+    resolutions["800 x 480"] = "WVGA";
+    resolutions["1280 x 768"] = "WXGA";
+    // 16:9
+    resolutions["854 x 480"] = "WVGA";
+    resolutions["1280 x 720"] = "HD 720";
+    resolutions["1920 x 1080"] = "HD 1080";
+
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
-    // FIXME: paint it black from the start
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (300, 150);
     drawing_area.expose_event.connect (on_drawing_area_expose);
@@ -262,7 +294,13 @@ public class MediaInfo.Info : VBox
           label = new Label ("Resolution:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-          str = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+          string resolution = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+          string named_res = resolutions[resolution];
+          if (named_res != null) {
+            str = "%s (%s)".printf (named_res, resolution);
+          } else {
+            str = resolution;
+          }
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
@@ -367,6 +405,7 @@ public class MediaInfo.Info : VBox
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
+          // TODO: check channel layouts, can we have some nice names here ?
           label = new Label ("Channels:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
