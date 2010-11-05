@@ -51,10 +51,14 @@ struct _GstCelVideoSrc
   GstCoreMediaCtx *ctx;
 
   FigCaptureDeviceRef device;
-  FigBaseIface *device_iface_base;
+  FigCaptureDeviceIface *device_iface;
+  FigBaseObjectRef device_base;
+  FigBaseIface *device_base_iface;
   FigCaptureStreamRef stream;
-  FigBaseIface *stream_iface_base;
   FigCaptureStreamIface *stream_iface;
+  FigBaseObjectRef stream_base;
+  FigBaseIface *stream_base_iface;
+
   CMBufferQueueRef queue;
   GstCaps *device_caps;
   GArray *device_formats;

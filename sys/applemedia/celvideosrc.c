@@ -68,13 +68,13 @@ static void gst_cel_video_src_release_device_caps_and_formats
 static gboolean gst_cel_video_src_select_format (GstCelVideoSrc * self,
     GstCelVideoFormat * format);
 
-static gboolean gst_cel_video_src_parse_imager_format
-    (GstCelVideoSrc * self, guint index, CFDictionaryRef imager_format,
+static gboolean gst_cel_video_src_parse_stream_format
+    (GstCelVideoSrc * self, guint index, CFDictionaryRef stream_format,
     GstCelVideoFormat * format);
-static OSStatus gst_cel_video_src_set_device_property_i32
+static OSStatus gst_cel_video_src_set_stream_property_i32
     (GstCelVideoSrc * self, CFStringRef name, SInt32 value);
-static OSStatus gst_cel_video_src_set_device_property_cstr
-    (GstCelVideoSrc * self, const gchar * name, const gchar * value);
+static OSStatus gst_cel_video_src_set_stream_property_value
+    (GstCelVideoSrc * self, CFStringRef name, CFTypeRef value);
 
 static GstPushSrcClass *parent_class;
 
@@ -419,7 +419,6 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   FigCaptureStreamRef stream = NULL;
   FigBaseObjectRef stream_base;
   FigBaseVTable *stream_vt;
-  FigCaptureStreamIface *stream_iface;
   CMBufferQueueRef queue = NULL;
 
   ctx = gst_core_media_ctx_new (GST_API_CORE_VIDEO | GST_API_CORE_MEDIA
@@ -443,7 +442,6 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
 
   stream_base = mt->FigCaptureStreamGetFigBaseObject (stream);
   stream_vt = cm->FigBaseObjectGetVTable (stream_base);
-  stream_iface = stream_vt->derived;
 
   status = stream_vt->base->CopyProperty (stream_base,
       *(mt->kFigCaptureStreamProperty_BufferQueue), NULL, &queue);
@@ -458,12 +456,15 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   self->ctx = ctx;
 
   self->device = device;
-  self->device_iface_base = device_vt->base;
+  self->device_iface = device_vt->derived;
+  self->device_base = device_base;
+  self->device_base_iface = device_vt->base;
   self->stream = stream;
-  self->stream_iface_base = stream_vt->base;
-  self->stream_iface = stream_iface;
-  self->queue = queue;
+  self->stream_iface = stream_vt->derived;
+  self->stream_base = stream_base;
+  self->stream_base_iface = stream_vt->base;
 
+  self->queue = queue;
   self->duration = GST_CLOCK_TIME_NONE;
 
   return TRUE;
@@ -510,16 +511,19 @@ gst_cel_video_src_close_device (GstCelVideoSrc * self)
   gst_cel_video_src_release_device_caps_and_formats (self);
 
   self->stream_iface->Stop (self->stream);
-  self->stream_iface = NULL;
-  self->stream_iface_base->Finalize (self->stream);
-  self->stream_iface_base = NULL;
+  self->stream_base_iface->Finalize (self->stream_base);
   CFRelease (self->stream);
   self->stream = NULL;
+  self->stream_iface = NULL;
+  self->stream_base = NULL;
+  self->stream_base_iface = NULL;
 
-  self->device_iface_base->Finalize (self->device);
-  self->device_iface_base = NULL;
+  self->device_base_iface->Finalize (self->device_base);
   CFRelease (self->device);
   self->device = NULL;
+  self->device_iface = NULL;
+  self->device_base = NULL;
+  self->device_base_iface = NULL;
 
   self->ctx->cm->FigBufferQueueRelease (self->queue);
   self->queue = NULL;
@@ -532,7 +536,7 @@ static void
 gst_cel_video_src_ensure_device_caps_and_formats (GstCelVideoSrc * self)
 {
   OSStatus status;
-  CFArrayRef iformats = NULL;
+  CFArrayRef stream_formats = NULL;
   CFIndex format_count, i;
 
   if (self->device_caps != NULL)
@@ -541,22 +545,22 @@ gst_cel_video_src_ensure_device_caps_and_formats (GstCelVideoSrc * self)
   self->device_caps = gst_caps_new_empty ();
   self->device_formats = g_array_new (FALSE, FALSE, sizeof (GstCelVideoFormat));
 
-  status = self->device_iface_base->CopyProperty (self->device,
-      *(self->ctx->mt->kFigCaptureDeviceProperty_ImagerSupportedFormatsArray),
-      NULL, (CFTypeRef *) & iformats);
+  status = self->stream_base_iface->CopyProperty (self->stream_base,
+      *(self->ctx->mt->kFigCaptureStreamProperty_SupportedFormatsArray),
+      NULL, (CFTypeRef *) & stream_formats);
   if (status != noErr)
     goto beach;
 
-  format_count = CFArrayGetCount (iformats);
+  format_count = CFArrayGetCount (stream_formats);
   GST_DEBUG_OBJECT (self, "device supports %d formats", (gint) format_count);
 
   for (i = 0; i != format_count; i++) {
-    CFDictionaryRef iformat;
+    CFDictionaryRef sformat;
     GstCelVideoFormat format;
 
-    iformat = CFArrayGetValueAtIndex (iformats, i);
+    sformat = CFArrayGetValueAtIndex (stream_formats, i);
 
-    if (gst_cel_video_src_parse_imager_format (self, i, iformat, &format)) {
+    if (gst_cel_video_src_parse_stream_format (self, i, sformat, &format)) {
       gst_caps_append_structure (self->device_caps,
           gst_structure_new ("video/x-raw-yuv",
               "format", GST_TYPE_FOURCC, format.fourcc,
@@ -570,7 +574,7 @@ gst_cel_video_src_ensure_device_caps_and_formats (GstCelVideoSrc * self)
     }
   }
 
-  CFRelease (iformats);
+  CFRelease (stream_formats);
 
 already_probed:
 beach:
@@ -597,28 +601,30 @@ gst_cel_video_src_select_format (GstCelVideoSrc * self,
 {
   gboolean result = FALSE;
   GstMTApi *mt = self->ctx->mt;
+  GstCelApi *cel = self->ctx->cel;
   OSStatus status;
   SInt32 framerate;
 
-  status = gst_cel_video_src_set_device_property_i32 (self,
-      *(mt->kFigCaptureDeviceProperty_ImagerFormatDescription), format->index);
+  status = gst_cel_video_src_set_stream_property_i32 (self,
+      *(mt->kFigCaptureStreamProperty_FormatIndex), format->index);
   if (status != noErr)
     goto beach;
 
   framerate = format->fps_n / format->fps_d;
 
-  status = gst_cel_video_src_set_device_property_i32 (self,
-      *(mt->kFigCaptureDeviceProperty_ImagerFrameRate), framerate);
+  status = gst_cel_video_src_set_stream_property_i32 (self,
+      *(mt->kFigCaptureStreamProperty_MinimumFrameRate), framerate);
   if (status != noErr)
     goto beach;
 
-  status = gst_cel_video_src_set_device_property_i32 (self,
-      *(mt->kFigCaptureDeviceProperty_ImagerMinimumFrameRate), framerate);
+  status = gst_cel_video_src_set_stream_property_i32 (self,
+      *(mt->kFigCaptureStreamProperty_MaximumFrameRate), framerate);
   if (status != noErr)
     goto beach;
 
-  status = gst_cel_video_src_set_device_property_cstr (self,
-      "ColorRange", "ColorRangeSDVideo");
+  status = gst_cel_video_src_set_stream_property_value (self,
+      *(cel->kFigCaptureStreamProperty_ColorRange),
+      *(cel->kFigCapturePropertyValue_ColorRangeSDVideo));
   if (status != noErr)
     goto beach;
 
@@ -639,8 +645,8 @@ beach:
 }
 
 static gboolean
-gst_cel_video_src_parse_imager_format (GstCelVideoSrc * self,
-    guint index, CFDictionaryRef imager_format, GstCelVideoFormat * format)
+gst_cel_video_src_parse_stream_format (GstCelVideoSrc * self,
+    guint index, CFDictionaryRef stream_format, GstCelVideoFormat * format)
 {
   GstCMApi *cm = self->ctx->cm;
   GstMTApi *mt = self->ctx->mt;
@@ -652,8 +658,8 @@ gst_cel_video_src_parse_imager_format (GstCelVideoSrc * self,
 
   format->index = index;
 
-  desc = CFDictionaryGetValue (imager_format,
-      *(mt->kFigImagerSupportedFormat_FormatDescription));
+  desc = CFDictionaryGetValue (stream_format,
+      *(mt->kFigSupportedFormat_FormatDescription));
 
   dim = cm->CMVideoFormatDescriptionGetDimensions (desc);
   format->width = dim.width;
@@ -674,8 +680,8 @@ gst_cel_video_src_parse_imager_format (GstCelVideoSrc * self,
       goto unsupported_format;
   }
 
-  framerate_value = CFDictionaryGetValue (imager_format,
-      *(mt->kFigImagerSupportedFormat_MaxFrameRate));
+  framerate_value = CFDictionaryGetValue (stream_format,
+      *(mt->kFigSupportedFormat_VideoMaxFrameRate));
   CFNumberGetValue (framerate_value, kCFNumberSInt32Type, &fps_n);
   format->fps_n = fps_n;
   format->fps_d = 1;
@@ -687,36 +693,25 @@ unsupported_format:
 }
 
 static OSStatus
-gst_cel_video_src_set_device_property_i32 (GstCelVideoSrc * self,
+gst_cel_video_src_set_stream_property_i32 (GstCelVideoSrc * self,
     CFStringRef name, SInt32 value)
 {
   OSStatus status;
   CFNumberRef number;
 
   number = CFNumberCreate (NULL, kCFNumberSInt32Type, &value);
-  status = self->device_iface_base->SetProperty (self->device, name, number);
+  status = self->stream_base_iface->SetProperty (self->stream_base, name,
+      number);
   CFRelease (number);
 
   return status;
 }
 
 static OSStatus
-gst_cel_video_src_set_device_property_cstr (GstCelVideoSrc * self,
-    const gchar * name, const gchar * value)
+gst_cel_video_src_set_stream_property_value (GstCelVideoSrc * self,
+    CFStringRef name, CFTypeRef value)
 {
-  OSStatus status;
-  CFStringRef name_str, value_str;
-
-  name_str = CFStringCreateWithCStringNoCopy (NULL, name,
-      kCFStringEncodingUTF8, kCFAllocatorNull);
-  value_str = CFStringCreateWithCStringNoCopy (NULL, value,
-      kCFStringEncodingUTF8, kCFAllocatorNull);
-  status = self->device_iface_base->SetProperty (self->device,
-      name_str, value_str);
-  CFRelease (value_str);
-  CFRelease (name_str);
-
-  return status;
+  return self->stream_base_iface->SetProperty (self->stream_base, name, value);
 }
 
 static void
