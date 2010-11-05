@@ -44,7 +44,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_DO_STATS
+  PROP_DO_STATS,
+  PROP_FPS
 };
 
 typedef struct
@@ -117,6 +118,11 @@ gst_cel_video_src_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DO_STATS:
       g_value_set_boolean (value, self->do_stats);
+      break;
+    case PROP_FPS:
+      GST_OBJECT_LOCK (object);
+      g_value_set_int (value, self->fps);
+      GST_OBJECT_UNLOCK (object);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -271,6 +277,10 @@ gst_cel_video_src_start (GstBaseSrc * basesrc)
   self->running = TRUE;
   self->offset = 0;
 
+  self->last_sampling = GST_CLOCK_TIME_NONE;
+  self->count = 0;
+  self->fps = -1;
+
   return TRUE;
 }
 
@@ -344,24 +354,11 @@ gst_cel_video_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
   return FALSE;
 }
 
-static GstFlowReturn
-gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
+static void
+gst_cel_video_src_timestamp_buffer (GstCelVideoSrc * self, GstBuffer * buf)
 {
-  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (pushsrc);
-  GstCMApi *cm = self->ctx->cm;
-  CMSampleBufferRef sbuf = NULL;
   GstClock *clock;
   GstClockTime ts;
-
-  BUFQUEUE_LOCK (self);
-  while (self->running && !self->has_pending)
-    BUFQUEUE_WAIT (self);
-  sbuf = cm->CMBufferQueueDequeueAndRetain (self->queue);
-  self->has_pending = !cm->CMBufferQueueIsEmpty (self->queue);
-  BUFQUEUE_UNLOCK (self);
-
-  if (G_UNLIKELY (!self->running))
-    goto shutting_down;
 
   GST_OBJECT_LOCK (self);
   if ((clock = GST_ELEMENT_CLOCK (self)) != NULL) {
@@ -381,18 +378,75 @@ gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
   }
   GST_OBJECT_UNLOCK (self);
 
-  *buf = gst_core_media_buffer_new (self->ctx, sbuf);
-  GST_BUFFER_OFFSET (*buf) = self->offset;
-  GST_BUFFER_OFFSET_END (*buf) = self->offset + 1;
-  GST_BUFFER_TIMESTAMP (*buf) = ts;
-  GST_BUFFER_DURATION (*buf) = self->duration;
+  GST_BUFFER_OFFSET (buf) = self->offset;
+  GST_BUFFER_OFFSET_END (buf) = self->offset + 1;
+  GST_BUFFER_TIMESTAMP (buf) = ts;
+  GST_BUFFER_DURATION (buf) = self->duration;
 
-  if (self->offset == 0) {
-    GST_BUFFER_FLAG_SET (*buf, GST_BUFFER_FLAG_DISCONT);
-  }
+  if (self->offset == 0)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+
   self->offset++;
+}
+
+static void
+gst_cel_video_src_update_statistics (GstCelVideoSrc * self)
+{
+  GstClock *clock;
+
+  GST_OBJECT_LOCK (self);
+  clock = GST_ELEMENT_CLOCK (self);
+  if (clock != NULL)
+    gst_object_ref (clock);
+  GST_OBJECT_UNLOCK (self);
+
+  if (clock != NULL) {
+    GstClockTime now = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+
+    self->count++;
+
+    if (GST_CLOCK_TIME_IS_VALID (self->last_sampling)) {
+      if (now - self->last_sampling >= GST_SECOND) {
+        GST_OBJECT_LOCK (self);
+        self->fps = self->count;
+        GST_OBJECT_UNLOCK (self);
+
+        g_object_notify (G_OBJECT (self), "fps");
+
+        self->last_sampling = now;
+        self->count = 0;
+      }
+    } else {
+      self->last_sampling = now;
+    }
+  }
+}
+
+static GstFlowReturn
+gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
+{
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (pushsrc);
+  GstCMApi *cm = self->ctx->cm;
+  CMSampleBufferRef sbuf = NULL;
+
+  BUFQUEUE_LOCK (self);
+  while (self->running && !self->has_pending)
+    BUFQUEUE_WAIT (self);
+  sbuf = cm->CMBufferQueueDequeueAndRetain (self->queue);
+  self->has_pending = !cm->CMBufferQueueIsEmpty (self->queue);
+  BUFQUEUE_UNLOCK (self);
+
+  if (G_UNLIKELY (!self->running))
+    goto shutting_down;
+
+  *buf = gst_core_media_buffer_new (self->ctx, sbuf);
+  gst_cel_video_src_timestamp_buffer (self, *buf);
 
   cm->FigSampleBufferRelease (sbuf);
+
+  if (self->do_stats)
+    gst_cel_video_src_update_statistics (self);
 
   return GST_FLOW_OK;
 
@@ -757,6 +811,10 @@ gst_cel_video_src_class_init (GstCelVideoSrcClass * klass)
       g_param_spec_boolean ("do-stats", "Enable statistics",
           "Enable logging of statistics", DEFAULT_DO_STATS,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FPS,
+      g_param_spec_int ("fps", "Frames per second",
+          "Last measured framerate, if statistics are enabled",
+          -1, G_MAXINT, -1, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_cel_video_src_debug, "celvideosrc",
       0, "iOS Celestial video source");

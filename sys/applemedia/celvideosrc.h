@@ -69,6 +69,10 @@ struct _GstCelVideoSrc
 
   GCond *cond;
   volatile gboolean has_pending;
+
+  GstClockTime last_sampling;
+  guint count;
+  gint fps;
 };
 
 struct _GstCelVideoSrcClass
