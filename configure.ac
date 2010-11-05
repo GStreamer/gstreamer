@@ -206,17 +206,19 @@ AC_SUBST(GSTPB_PREFIX)
 
 dnl GTK is optional and used in examples
 HAVE_GTK=NO
-AC_MSG_CHECKING([which gtk+ version to compile examples against (optional)])
-AC_ARG_WITH([gtk],
-  AC_HELP_STRING([--with-gtk=3.0|2.0],
-                 [which gtk+ version to compile against (default: 2.0)]),
-  [case "$with_gtk" in
-      2.0|3.0) ;;
-      *) AC_MSG_ERROR([invalid gtk+ version specified]);;
-  esac],
-  [with_gtk=2.0])
-AC_MSG_RESULT([$with_gtk])
-PKG_CHECK_MODULES(GTK, gtk+-x11-$with_gtk, HAVE_GTK=yes, HAVE_GTK=no)
+if test "x$BUILD_EXAMPLES" = "xyes"; then
+  AC_MSG_CHECKING([which gtk+ version to compile examples against (optional)])
+  AC_ARG_WITH([gtk],
+    AC_HELP_STRING([--with-gtk=3.0|2.0],
+                   [which gtk+ version to compile against (default: 2.0)]),
+    [case "$with_gtk" in
+        2.0|3.0) ;;
+        *) AC_MSG_ERROR([invalid gtk+ version specified]);;
+    esac],
+    [with_gtk=2.0])
+  AC_MSG_RESULT([$with_gtk])
+  PKG_CHECK_MODULES(GTK, gtk+-x11-$with_gtk, HAVE_GTK=yes, HAVE_GTK=no)
+fi
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl Needed for GtkBuilder to autoconnect signals
