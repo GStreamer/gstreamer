@@ -941,41 +941,13 @@ gst_deinterlace_do_qos (GstDeinterlace * self, GstClockTime timestamp)
 }
 
 static GstFlowReturn
-gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
+gst_deinterlace_output_frame (GstDeinterlace * self)
 {
-  GstDeinterlace *self = GST_DEINTERLACE (GST_PAD_PARENT (pad));
   GstClockTime timestamp;
   GstFlowReturn ret = GST_FLOW_OK;
   gint fields_required = 0;
   gint cur_field_idx = 0;
-  GstBuffer *outbuf;
-
-  GST_OBJECT_LOCK (self);
-  if (self->reconfigure) {
-    if (self->new_fields != -1)
-      self->fields = self->new_fields;
-    if (self->new_mode != -1)
-      self->mode = self->new_mode;
-    self->new_mode = self->new_fields = -1;
-
-    self->reconfigure = FALSE;
-    GST_OBJECT_UNLOCK (self);
-    if (GST_PAD_CAPS (self->srcpad))
-      gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
-  } else {
-    GST_OBJECT_UNLOCK (self);
-  }
-
-  if (self->still_frame_mode || self->passthrough)
-    return gst_pad_push (self->srcpad, buf);
-
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
-    GST_DEBUG_OBJECT (self, "DISCONT buffer, resetting history");
-    gst_deinterlace_reset_history (self);
-  }
-
-  gst_deinterlace_push_history (self, buf);
-  buf = NULL;
+  GstBuffer *buf, *outbuf;
 
   fields_required = gst_deinterlace_method_get_fields_required (self->method);
 
@@ -1149,6 +1121,41 @@ gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
   }
 
   return ret;
+}
+
+static GstFlowReturn
+gst_deinterlace_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstDeinterlace *self = GST_DEINTERLACE (GST_PAD_PARENT (pad));
+
+  GST_OBJECT_LOCK (self);
+  if (self->reconfigure) {
+    if (self->new_fields != -1)
+      self->fields = self->new_fields;
+    if (self->new_mode != -1)
+      self->mode = self->new_mode;
+    self->new_mode = self->new_fields = -1;
+
+    self->reconfigure = FALSE;
+    GST_OBJECT_UNLOCK (self);
+    if (GST_PAD_CAPS (self->srcpad))
+      gst_deinterlace_setcaps (self->sinkpad, GST_PAD_CAPS (self->sinkpad));
+  } else {
+    GST_OBJECT_UNLOCK (self);
+  }
+
+  if (self->still_frame_mode || self->passthrough)
+    return gst_pad_push (self->srcpad, buf);
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (self, "DISCONT buffer, resetting history");
+    gst_deinterlace_reset_history (self);
+  }
+
+  gst_deinterlace_push_history (self, buf);
+  buf = NULL;
+
+  return gst_deinterlace_output_frame (self);
 }
 
 static gint
