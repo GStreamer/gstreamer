@@ -2593,24 +2593,14 @@ atom_trak_set_id (AtomTRAK * trak, guint32 id)
   trak->tkhd.track_ID = id;
 }
 
-void
-atom_moov_add_trak (AtomMOOV * moov, AtomTRAK * trak)
-{
-  atom_trak_set_id (trak, moov->mvhd.next_track_id++);
-  moov->traks = g_list_append (moov->traks, trak);
-}
-
-void
+static void
 atom_moov_add_trex (AtomMOOV * moov, AtomTREX * trex)
 {
   moov->mvex.trexs = g_list_append (moov->mvex.trexs, trex);
 }
 
-AtomTREX *
-atom_trex_new (AtomsContext * context, AtomTRAK * trak,
-    guint32 default_sample_description_index,
-    guint32 default_sample_duration, guint32 default_sample_size,
-    guint32 default_sample_flags)
+static AtomTREX *
+atom_trex_new (AtomTRAK * trak)
 {
   guint8 flags[3] = { 0, 0, 0 };
   AtomTREX *trex = g_new0 (AtomTREX, 1);
@@ -2618,12 +2608,21 @@ atom_trex_new (AtomsContext * context, AtomTRAK * trak,
   atom_full_init (&trex->header, FOURCC_trex, 0, 0, 0, flags);
 
   trex->track_ID = trak->tkhd.track_ID;
-  trex->default_sample_description_index = default_sample_description_index;
-  trex->default_sample_duration = default_sample_duration;
-  trex->default_sample_size = default_sample_size;
-  trex->default_sample_flags = default_sample_flags;
+  trex->default_sample_description_index = 1;
+  trex->default_sample_duration = 0;
+  trex->default_sample_size = 0;
+  trex->default_sample_flags = 0;
 
   return trex;
+}
+
+void
+atom_moov_add_trak (AtomMOOV * moov, AtomTRAK * trak)
+{
+  atom_trak_set_id (trak, moov->mvhd.next_track_id++);
+  moov->traks = g_list_append (moov->traks, trak);
+  /* additional trak means also new trex */
+  atom_moov_add_trex (moov, atom_trex_new (trak));
 }
 
 static guint64

@@ -694,10 +694,6 @@ void       atom_stbl_add_samples       (AtomSTBL * stbl, guint32 nsamples,
                                         guint64 chunk_offset, gboolean sync,
                                         gboolean do_pts, gint64 pts_offset);
 
-AtomTREX*  atom_trex_new               (AtomsContext *context, AtomTRAK *trak,
-                                        guint32 default_sample_description_index,
-                                        guint32 default_sample_duration, guint32 default_sample_size,
-                                        guint32 default_sample_flags);
 AtomMOOV*  atom_moov_new               (AtomsContext *context);
 void       atom_moov_free              (AtomMOOV *moov);
 guint64    atom_moov_copy_data         (AtomMOOV *atom, guint8 **buffer, guint64 *size, guint64* offset);
@@ -707,7 +703,6 @@ void       atom_moov_set_64bits        (AtomMOOV *moov, gboolean large_file);
 void       atom_moov_set_fragmented    (AtomMOOV *moov, gboolean fragmented);
 void       atom_moov_chunks_add_offset (AtomMOOV *moov, guint32 offset);
 void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);
-void       atom_moov_add_trex          (AtomMOOV *moov, AtomTREX *trex);
 
 guint64    atom_mvhd_copy_data         (AtomMVHD * atom, guint8 ** buffer,
                                         guint64 * size, guint64 * offset);

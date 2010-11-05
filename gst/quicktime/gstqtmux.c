@@ -271,23 +271,6 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->trak = NULL;
 }
 
-static AtomTRAK *
-gst_qt_mux_add_trak (GstQTMux * qtmux)
-{
-  AtomTRAK *trak;
-
-  trak = atom_trak_new (qtmux->context);
-  atom_moov_add_trak (qtmux->moov, trak);
-  if (qtmux->fragmented) {
-    AtomTREX *trex;
-
-    trex = atom_trex_new (qtmux->context, trak, 1, 0, 0, 0);
-    atom_moov_add_trex (qtmux->moov, trex);
-  }
-
-  return trak;
-}
-
 /*
  * Takes GstQTMux back to its initial state
  */
@@ -348,7 +331,8 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
     for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
       GstQTPad *qtpad = (GstQTPad *) walk->data;
 
-      qtpad->trak = gst_qt_mux_add_trak (qtmux);
+      qtpad->trak = atom_trak_new (qtmux->context);
+      atom_moov_add_trak (qtmux->moov, qtpad->trak);
     }
   }
 }
@@ -1476,7 +1460,6 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
       timescale);
   atom_moov_update_timescale (qtmux->moov, timescale);
   atom_moov_set_64bits (qtmux->moov, large_file);
-  atom_moov_set_fragmented (qtmux->moov, qtmux->fragmented);
 
   atom_moov_update_duration (qtmux->moov);
 
@@ -2714,8 +2697,9 @@ gst_qt_mux_request_new_pad (GstElement * element,
       (GstCollectDataDestroyNotify) (gst_qt_mux_pad_reset));
   /* set up pad */
   gst_qt_mux_pad_reset (collect_pad);
+  collect_pad->trak = atom_trak_new (qtmux->context);
+  atom_moov_add_trak (qtmux->moov, collect_pad->trak);
 
-  collect_pad->trak = gst_qt_mux_add_trak (qtmux);
   qtmux->sinkpads = g_slist_append (qtmux->sinkpads, collect_pad);
 
   /* set up pad functions */
