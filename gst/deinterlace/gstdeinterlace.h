@@ -92,7 +92,8 @@ struct _GstDeinterlace
 
   GstDeinterlaceFields fields;
 
-  GstDeinterlaceMethods method_id;
+  GstDeinterlaceMethods method_id; /* current state (differs when flushing) */
+  GstDeinterlaceMethods user_set_method_id; /* property value */
   GstDeinterlaceMethod *method;
 
   GstVideoFormat format;
