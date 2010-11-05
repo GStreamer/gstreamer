@@ -1571,7 +1571,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
   /* if needed, send mdat atom and move buffered data into it */
   if (qtmux->fast_start_file) {
-    /* mdat size = accumulated (buffered data) + mdat atom header */
+    /* mdat_size = accumulated (buffered data) */
     ret = gst_qt_mux_send_mdat_header (qtmux, NULL, qtmux->mdat_size,
         large_file);
     if (ret != GST_FLOW_OK)
