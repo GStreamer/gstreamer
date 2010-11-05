@@ -15,14 +15,15 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp # $(srcdir)/gst-plugins-bad.supp
 clean-local: clean-local-check
 
 check_PROGRAMS = \
-	ges/basic	\
-	ges/filesource	\
-	ges/layer	\
-	ges/simplelayer	\
-	ges/transition	\
-	ges/timelineobject	\
 	ges/backgroundsource\
+	ges/basic	\
+	ges/layer	\
+	ges/effects	\
+	ges/filesource	\
+	ges/simplelayer	\
+	ges/timelineobject	\
 	ges/titles\
+	ges/transition	\
 	ges/overlays\
 	ges/text_properties\
 	ges/save_and_load

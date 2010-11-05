@@ -697,3 +697,22 @@ GES_KEYFILE_FORMATTER_GET_CLASS
 GES_TYPE_KEYFILE_FORMATTER
 ges_keyfile_formatter_get_type
 </SECTION>
+
+<SECTION>
+<FILE>ges-track-effect</FILE>
+<TITLE>GESTrackEffect</TITLE>
+GESTrackEffect
+GESTrackEffectClass
+ges_track_effect_new
+ges_track_effect_new_with_name 
+ges_track_effect_set_human_name
+ges_track_effect_get_human_name
+<SUBSECTION Standard>
+GES_IS_TRACK_EFFECT
+GES_IS_TRACK_EFFECT_CLASS
+GES_TRACK_EFFECT
+GES_TRACK_EFFECT_CLASS
+GES_TRACK_EFFECT_GET_CLASS
+GES_TYPE_TRACK_EFFECT
+ges_track_effect_get_type
+</SECTION>
