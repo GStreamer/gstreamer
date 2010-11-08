@@ -9,22 +9,47 @@ First attempt at making a list of tasks in rougly chronological order.
   - Remove deprecated methods
   - Cleanup structs + PADDING
   - ..
+  
+  This should allow us to continue expanding later in the same way that 0.10 was
+  exapanded.
 
 * Add GstFlowReturn for events (and query)
 
+  This would allow us to know more precisely what went wrong.
+
 * add return structure for events and query
+
+  Make events return more information. (a seek event might want to return the
+  final position of the keyframe seek and the accuracy of the seek)
+
+  Make bindings easiers. Currently the writability of a query depends on the
+  refcount being exactly 1. If the query is not writable, it simply cannot be
+  answered.
 
 * Make GstMiniObject a simple boxed type
 
   - Move copy and free function to structure
   - convert GstBuffer, GstEvent, GstMessage, GstQuery,
+
+  We don't need to subclass miniobjects when we have arbitrary metadata. 
+
+  Allocation should be more efficient and buffer/metadata/data can be allocated
+  and pooled in one contiguous memory area.
+
+  Typechecking of various types is much more efficient when there is only
+  one class.
     
 * Convert GstCaps to GstMiniObject
+
+  Currently it has its own refcounting and flags.
 
 * Incremental caps
 
   - Remove array from caps ?
-  - make caps iterator
+  - make caps iterator or is the array the cache for iterator ?
+
+  We need to perform less caps operations when negotiating formats. One way is
+  to only handle small caps objects incrementally.
 
 * Make GstBufferMetadata
 
@@ -32,21 +57,35 @@ First attempt at making a list of tasks in rougly chronological order.
   - Make common metadata: timeinfo, memory data, video data
   - Remove GstBuffer Fields
   - Make methods to add metadata to buffers.
+  
+  More flexible metadata for buffers.
 
 * Negotiation of metadata
 
   - figure out if we need to negotiate the metadata on the caps or if we can
     gracefully degrade when an element doesn't understand the metadata.
 
+  We need to avoid that elements put metadata on buffers that is essential in
+  handling the buffer contents but that is then not understood by other
+  elements.
+
 * Rework reverse negotiation
 
-  - _alloc_buffer() never returns changed caps. It can return a return
-     value when the caller should recheck the allowed caps.
-
-  - _alloc_buffer() takes input GstBuffer prototype (or NULL)
-
   - upstream event to notify of a downstream caps change
+  - _alloc_buffer() takes input GstBuffer prototype (or NULL)
+  - _alloc_buffer() never returns changed caps.
 
+  One of the performance problems in 0.10 is that transform elements need to
+  call gst_pad_alloc_buffer() downstream to check if the caps changed. This
+  usually also results in a useless memory allocation. 
+  
+  We would make a new upstream event to notify downstream elements that new caps
+  are possible somewhere downstream.
+
+  gst_pad_alloc_buffer() would take a GstBuffer as an input argument to make the
+  API easier, we can then use metadata to specify additional contraints for the
+  new buffer (such as strides, etc)
+  
 * Incremental event progation
 
   - certain events would be sticky on a pad like for caps
@@ -54,6 +93,9 @@ First attempt at making a list of tasks in rougly chronological order.
      - right before pushing a buffer
      - after link operation
   - activate for most serialized downstream events
+
+  This would allow an application to have more control over the state of the
+  dataflow in a pipeline. 
 
 * GstSegment changes
 
@@ -63,5 +105,6 @@ First attempt at making a list of tasks in rougly chronological order.
   - add method on pads to get/adjust sync offset
   - add method on pads to query current running_time 
 
+  The goal is to make the timing model more comprehensible and thus make dynamic
+  pipeline plugging easier.
 
-  
