@@ -13,6 +13,13 @@ First attempt at making a list of tasks in rougly chronological order.
   This should allow us to continue expanding later in the same way that 0.10 was
   exapanded.
 
+* Review GstCaps fields
+
+  - go over caps fields for audio, video, compressed media-type etc
+
+  We need to express things with less fields. This would speed up caps, make
+  them less verbose and speed up some elements.
+
 * Add GstFlowReturn for events (and query)
 
   This would allow us to know more precisely what went wrong.
