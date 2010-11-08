@@ -5122,6 +5122,23 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     }
   }
 
+  /* sample size */
+  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsz, &stream->stsz))
+    goto no_samples;
+
+  /* copy atom data into a new buffer for later use */
+  stream->stsz.data = g_memdup (stream->stsz.data, stream->stsz.size);
+
+  /* skip version + flags */
+  if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
+      !gst_byte_reader_get_uint32_be (&stream->stsz, &stream->sample_size))
+    goto corrupt_file;
+
+  if (!gst_byte_reader_get_uint32_be (&stream->stsz, &stream->n_samples))
+    goto corrupt_file;
+
+  if (!stream->n_samples)
+    goto no_samples;
 
   /* sample-to-chunk atom */
   if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsc, &stream->stsc))
@@ -5142,19 +5159,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* make sure there's enough data */
   if (!qt_atom_parser_has_chunks (&stream->stsc, stream->n_samples_per_chunk,
           12))
-    goto corrupt_file;
-
-
-  /* sample size */
-  if (!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stsz, &stream->stsz))
-    goto corrupt_file;
-
-  /* copy atom data into a new buffer for later use */
-  stream->stsz.data = g_memdup (stream->stsz.data, stream->stsz.size);
-
-  /* skip version + flags */
-  if (!gst_byte_reader_skip (&stream->stsz, 1 + 3) ||
-      !gst_byte_reader_get_uint32_be (&stream->stsz, &stream->sample_size))
     goto corrupt_file;
 
 
@@ -5181,9 +5185,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     if (!gst_byte_reader_skip (&stream->stco, 4))
       goto corrupt_file;
 
-    if (!gst_byte_reader_get_uint32_be (&stream->stsz, &stream->n_samples))
-      goto corrupt_file;
-
     /* make sure there are enough data in the stsz atom */
     if (!stream->sample_size) {
       /* different sizes for each sample */
@@ -5194,18 +5195,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     /* treat chunks as samples */
     if (!gst_byte_reader_get_uint32_be (&stream->stco, &stream->n_samples))
       goto corrupt_file;
-  }
-
-  if (!stream->n_samples) {
-    gst_qtdemux_stbl_free (stream);
-    if (!qtdemux->fragmented) {
-      /* not quite good */
-      GST_WARNING_OBJECT (qtdemux, "stream has no samples");
-      return FALSE;
-    } else {
-      /* may pick up samples elsewhere */
-      return TRUE;
-    }
   }
 
   GST_DEBUG_OBJECT (qtdemux,
@@ -5255,6 +5244,18 @@ corrupt_file:
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
     return FALSE;
+  }
+no_samples:
+  {
+    gst_qtdemux_stbl_free (stream);
+    if (!qtdemux->fragmented) {
+      /* not quite good */
+      GST_WARNING_OBJECT (qtdemux, "stream has no samples");
+      return FALSE;
+    } else {
+      /* may pick up samples elsewhere */
+      return TRUE;
+    }
   }
 }
 
