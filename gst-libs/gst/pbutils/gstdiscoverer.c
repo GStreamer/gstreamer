@@ -1318,8 +1318,7 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  *
  * A copy of @uri will be done internally, the caller can safely g_free() afterwards.
  *
- * Returns: (transfer none): see #GstDiscovererInfo. The caller must free this structure
- * after use.
+ * Returns: see #GstDiscovererInfo. The caller must unref this structure after use.
  * 
  * Since: 0.10.31
  */
