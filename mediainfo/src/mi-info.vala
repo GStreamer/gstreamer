@@ -50,6 +50,7 @@ public class MediaInfo.Info : VBox
   private bool have_video = false;
 
   private HashMap<string, string> resolutions;
+  private HashSet<string> tag_black_list;
 
   public Info ()
   {
@@ -91,6 +92,12 @@ public class MediaInfo.Info : VBox
     resolutions["854 x 480"] = "WVGA";
     resolutions["1280 x 720"] = "HD 720";
     resolutions["1920 x 1080"] = "HD 1080";
+
+    // tags to skip (already extraced to specific discoverer fields)
+    tag_black_list = new HashSet<string> ();
+    tag_black_list.add ("bitrate");
+    tag_black_list.add ("maximum-bitrate");
+    tag_black_list.add ("container-format");
 
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
@@ -527,10 +534,23 @@ public class MediaInfo.Info : VBox
 
   private string build_taglist_info (Structure s)
   {
-    // FIXME: properly loop over taglist items and serialize them
-    // this allows to properly newline them and to avoid the types in the result
-    string str = s.to_string ();
-    str = str[8:-1].compress().replace(",","\n");
+    uint i;
+    string str, fn, vstr;
+    Gst.Value v;
+
+    // TODO: remove some binary tags
+
+    str = "";
+    for (i = 0; i < s.n_fields(); i++) {
+      fn = s.nth_field_name (i);
+      if (tag_black_list.contains (fn))
+        continue;
+      if (str.length > 0)
+        str += "\n";
+      v = s.get_value (fn);
+      vstr = v.serialize ().compress ();
+      str += fn + " = " + vstr;
+    }
 
     return str;
   }
