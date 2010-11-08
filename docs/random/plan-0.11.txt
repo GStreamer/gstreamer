@@ -1,8 +1,7 @@
 Plan for 0.11
 =============
 
-First attempt at making a list of tasks in rougly chronological order.
-
+First attempt at making a list of tasks in roughly chronological order.
 
 * General cleanup
 
@@ -13,6 +12,7 @@ First attempt at making a list of tasks in rougly chronological order.
   This should allow us to continue expanding later in the same way that 0.10 was
   exapanded.
 
+
 * Review GstCaps fields
 
   - go over caps fields for audio, video, compressed media-type etc
@@ -20,9 +20,13 @@ First attempt at making a list of tasks in rougly chronological order.
   We need to express things with less fields. This would speed up caps, make
   them less verbose and speed up some elements.
 
+
 * Add GstFlowReturn for events (and query)
 
   This would allow us to know more precisely what went wrong.
+
+  http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=events2
+
 
 * add return structure for events and query
 
@@ -32,6 +36,7 @@ First attempt at making a list of tasks in rougly chronological order.
   Make bindings easiers. Currently the writability of a query depends on the
   refcount being exactly 1. If the query is not writable, it simply cannot be
   answered.
+
 
 * Make GstMiniObject a simple boxed type
 
@@ -45,10 +50,16 @@ First attempt at making a list of tasks in rougly chronological order.
 
   Typechecking of various types is much more efficient when there is only
   one class.
-    
+
+  http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=miniobject2
+
+
 * Convert GstCaps to GstMiniObject
 
   Currently it has its own refcounting and flags.
+
+  http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=miniobject2
+
 
 * Incremental caps
 
@@ -57,6 +68,9 @@ First attempt at making a list of tasks in rougly chronological order.
 
   We need to perform less caps operations when negotiating formats. One way is
   to only handle small caps objects incrementally.
+
+  http://cgit.freedesktop.org/~ensonic/gstreamer/log/?h=lazycaps
+
 
 * Make GstBufferMetadata
 
@@ -67,6 +81,9 @@ First attempt at making a list of tasks in rougly chronological order.
   
   More flexible metadata for buffers.
 
+  http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=buffermeta
+
+
 * Negotiation of metadata
 
   - figure out if we need to negotiate the metadata on the caps or if we can
@@ -75,6 +92,7 @@ First attempt at making a list of tasks in rougly chronological order.
   We need to avoid that elements put metadata on buffers that is essential in
   handling the buffer contents but that is then not understood by other
   elements.
+
 
 * Rework reverse negotiation
 
@@ -93,6 +111,7 @@ First attempt at making a list of tasks in rougly chronological order.
   API easier, we can then use metadata to specify additional contraints for the
   new buffer (such as strides, etc)
   
+
 * Incremental event progation
 
   - certain events would be sticky on a pad like for caps
@@ -103,6 +122,7 @@ First attempt at making a list of tasks in rougly chronological order.
 
   This would allow an application to have more control over the state of the
   dataflow in a pipeline. 
+
 
 * GstSegment changes
 
