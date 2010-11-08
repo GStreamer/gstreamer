@@ -52,6 +52,11 @@ enum _CVPixelFormatType
   kCVPixelFormatType_422YpCbCr8                   = '2vuy'
 };
 
+enum _CVPixelBufferLockFlags
+{
+  kCVPixelBufferLock_ReadOnly = 0x00000001
+};
+
 struct _GstCVApi
 {
   GstDynApi parent;

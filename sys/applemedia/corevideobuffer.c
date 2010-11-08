@@ -33,8 +33,10 @@ gst_core_video_buffer_finalize (GstMiniObject * mini_object)
   GstCoreVideoBuffer *self = GST_CORE_VIDEO_BUFFER_CAST (mini_object);
   GstCVApi *cv = self->ctx->cv;
 
-  if (self->pixbuf != NULL)
-    cv->CVPixelBufferUnlockBaseAddress (self->pixbuf, 0);
+  if (self->pixbuf != NULL) {
+    cv->CVPixelBufferUnlockBaseAddress (self->pixbuf,
+        kCVPixelBufferLock_ReadOnly);
+  }
 
   cv->CVBufferRelease (self->cvbuf);
 
@@ -56,8 +58,10 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf)
   if (CFGetTypeID (cvbuf) == cv->CVPixelBufferGetTypeID ()) {
     pixbuf = (CVPixelBufferRef) cvbuf;
 
-    if (cv->CVPixelBufferLockBaseAddress (pixbuf, 0) != kCVReturnSuccess)
+    if (cv->CVPixelBufferLockBaseAddress (pixbuf,
+            kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
       goto error;
+    }
     data = cv->CVPixelBufferGetBaseAddress (pixbuf);
     size = cv->CVPixelBufferGetBytesPerRow (pixbuf) *
         cv->CVPixelBufferGetHeight (pixbuf);

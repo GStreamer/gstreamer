@@ -34,7 +34,8 @@ gst_core_media_buffer_finalize (GstMiniObject * mini_object)
 
   if (self->image_buf != NULL) {
     GstCVApi *cv = self->ctx->cv;
-    cv->CVPixelBufferUnlockBaseAddress (self->image_buf, 0);
+    cv->CVPixelBufferUnlockBaseAddress (self->image_buf,
+        kCVPixelBufferLock_ReadOnly);
   }
   self->ctx->cm->FigSampleBufferRelease (self->sample_buf);
   g_object_unref (self->ctx);
@@ -64,8 +65,10 @@ gst_core_media_buffer_new (GstCoreMediaCtx * ctx, CMSampleBufferRef sample_buf)
       CFGetTypeID (image_buf) == cv->CVPixelBufferGetTypeID ()) {
     pixel_buf = (CVPixelBufferRef) image_buf;
 
-    if (cv->CVPixelBufferLockBaseAddress (pixel_buf, 0) != kCVReturnSuccess)
+    if (cv->CVPixelBufferLockBaseAddress (pixel_buf,
+            kCVPixelBufferLock_ReadOnly) != kCVReturnSuccess) {
       goto error;
+    }
 
     if (cv->CVPixelBufferIsPlanar (pixel_buf)) {
       gint plane_count, plane_idx;
