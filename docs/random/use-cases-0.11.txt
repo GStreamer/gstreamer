@@ -1,0 +1,21 @@
+Use cases for 0.11
+------------------
+
+- improve performance 
+
+  * incremental caps
+  * cleanup caps fields
+  * Make miniobject a simple boxed type
+  * reverse negotiation with an event
+
+- buffer metadata
+
+  * Handle strides for video
+  * express crop, scaling, region of interest, ...
+  * Better support for foreign objects such as Cairo, OpenGL, OMX, ...
+
+- make dynamic pipelines easier
+
+  * sticky event propagation
+  * newsegment simplifications
+  * per-pad time offsets
