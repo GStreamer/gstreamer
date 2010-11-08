@@ -96,8 +96,9 @@ public class MediaInfo.Info : VBox
     // tags to skip (already extraced to specific discoverer fields)
     tag_black_list = new HashSet<string> ();
     tag_black_list.add ("bitrate");
-    tag_black_list.add ("maximum-bitrate");
     tag_black_list.add ("container-format");
+    tag_black_list.add ("duration");
+    tag_black_list.add ("maximum-bitrate");
 
     // add widgets
     // FIXME: handle aspect ratio (AspectFrame.ratio)
@@ -538,13 +539,18 @@ public class MediaInfo.Info : VBox
     string str, fn, vstr;
     Gst.Value v;
 
-    // TODO: remove some binary tags
+    // TODO: add special handling for certain tags
+    // image, uris, ...
 
     str = "";
     for (i = 0; i < s.n_fields(); i++) {
       fn = s.nth_field_name (i);
+      // skip a few tags
       if (tag_black_list.contains (fn))
         continue;
+      if (fn.has_prefix("private-"))
+        continue;
+
       if (str.length > 0)
         str += "\n";
       v = s.get_value (fn);
