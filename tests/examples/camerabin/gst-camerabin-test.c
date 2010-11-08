@@ -602,8 +602,8 @@ run_pipeline (gpointer user_data)
 {
   GstCaps *preview_caps = NULL;
   gchar *filename_str = NULL;
-  GString *filename_buffer = NULL;
   GstElement *video_source = NULL;
+  const gchar *filename_suffix;
 
   g_object_set (camera_bin, "mode", mode, NULL);
 
@@ -618,19 +618,17 @@ run_pipeline (gpointer user_data)
 
   set_metadata (camera_bin);
 
-  filename_str = g_strdup_printf ("/test_%04u", capture_count);
-  filename_buffer = g_string_new (filename->str);
-  filename_buffer = g_string_append (filename_buffer, filename_str);
-
+  /* Construct filename */
   if (mode == 1)
-    filename_buffer = g_string_append (filename_buffer, ".mp4");
+    filename_suffix = ".mp4";
   else
-    filename_buffer = g_string_append (filename_buffer, ".jpg");
-
-  g_object_set (camera_bin, "filename", filename_buffer->str, NULL);
-  g_string_free (filename_buffer, FALSE);
+    filename_suffix = ".jpg";
+  filename_str =
+      g_strdup_printf ("%s/test_%04u%s", filename->str, capture_count,
+      filename_suffix);
+  GST_DEBUG ("Setting filename: %s", filename_str);
+  g_object_set (camera_bin, "filename", filename_str, NULL);
   g_free (filename_str);
-
 
   g_object_get (camera_bin, "video-source", &video_source, NULL);
   if (video_source) {
