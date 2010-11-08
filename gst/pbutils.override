@@ -376,7 +376,7 @@ _wrap_gst_discoverer_container_info_get_streams(PyGstMiniObject * self)
     GList *res, *tmp;
     PyObject *pyres;
 
-    res = gst_discoverer_container_info_get_streams(GST_DISCOVERER_STREAM_INFO (self->obj));
+    res = gst_discoverer_container_info_get_streams(GST_DISCOVERER_CONTAINER_INFO (self->obj));
 
     pyres = PyList_New(0);
     for (tmp = res; tmp; tmp = tmp->next) {

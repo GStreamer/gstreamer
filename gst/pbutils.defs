@@ -348,8 +348,8 @@
   (return-type "GType")
 )
 
-(define-method container_info_get_streams
-  (of-object "GstDiscovererStreamInfo")
+(define-method get_streams
+  (of-object "GstDiscovererContainerInfo")
   (c-name "gst_discoverer_container_info_get_streams")
   (return-type "GList*")
 )
