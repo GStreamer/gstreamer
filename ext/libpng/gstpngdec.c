@@ -343,6 +343,7 @@ pause:
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
       gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
     }
+    png_error (png_ptr, "Internal data stream error.");
     return;
   }
 short_buffer:
