@@ -1,0 +1,98 @@
+Effects
+-------
+
+Summary
+-------
+1. Basic ideas
+2. Problems
+3. Propositions  to solve those problems
+  A. The registry
+  B. Effects configurability
+  C. Keyframes
+4. Use-cases
+
+The goal of this proposal is to find a simple way to handle effects through an
+API which would allow developers to handle any use-case
+
+1. Basic ideas
+----------------
+
+  * Effects are actually descendant of GESTrackOperation
+  * You can add effects wherever you want
+  * Effects are configurable and those could change during time
+  * We should be able to handle the gnome-video-effects standard
+  * We can implement complexe effects
+
+2. Problems
+----------
+  * We should be able to handle list of available effects on the system at
+    runtime.
+
+  * We should be able to configure effects through an API in GES and
+    not directly configuring the corresponding GstElement properties.
+
+  * We should be able to handle complexe effects.
+
+  * We should be able to implement complexe effects directly in GES
+
+  * We should be able to configure effects in the time -> Keyframes without
+    duplicating code from GStreamer
+
+
+3. Propositions to solve those problems
+---------------------------------------
+
+A. The registry
+
+  We could implement a GESEffectRegistry which would actually
+  retrieve elements from the GSTRegistry which actually are effects,
+  as well as effects from gnome-video-effects. This way the developers
+  could have the list of all the effects that are installed on the système
+  pretty easily.
+
+B. Effects configurability
+
+  The idea to be able to configure effects through a simple API in GES would
+  be to create a class GESEffect which would actually be a mapping between
+  a GESTrackOperation and the properties of the GstElements contained in the
+  GESTrackOperation.
+  Basicly it would allow the retrieving of all configurable elements properties:
+    * names
+    * human readable names
+    * types
+    * possible values
+    * ...
+  We would also have a method to set those properties easily
+
+  The problem which also happens is that in the case of gnome-video-effects,
+  we should be able to allow access to some properties whiches have been
+  specified. We will need to improve the current standard in order to handle
+  this use-case.
+
+C. Keyframes
+  We may want to handle this use-case directly in GES and for any kind of
+  time related configuration? FIXME
+    => Special specifications for that?
+
+4. Use-cases
+-----------
+
+  The user wants to add an effect to an entire clip => GESTimelineObject new API
+
+  The user wants to add an effect to an entire layer => GESTimelineLayer API.
+
+  The developer wants to allow his users to configure effects => mapping between 
+  GESTrackEffect and the configurable properties of elements (GESEffect).
+
+  The user wants to add an effect on a special portion of a clip, we should 
+  allow him to configure that thanks to a system of keyframes. FIXME
+
+  We want to implement an effect which isn't only composed by a bin, but is more
+  complexe than that (ex: "effect '24'") => we have the GESTrackOperation
+  which is the base class (abstract) for this kind of implementation. We should 
+  also have a GESPropertiesMapping abstract class which would be the base 
+  class of GESEffect and could be used in this use-case.
+
+  A developer wants to implement effect which handle music and video at the same
+  time, Would the solution be to implement a GESTimelineEffect to handle this
+  special usecase? FIXME
