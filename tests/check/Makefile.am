@@ -143,6 +143,7 @@ check_PROGRAMS = \
 	elements/y4menc \
 	pipelines/simple-launch-lines \
 	pipelines/effectv \
+	pipelines/wavenc \
 	$(check_flac) \
 	$(check_gdkpixbuf) \
         $(check_jpeg) \
@@ -235,6 +236,9 @@ elements_gdkpixbufsink_CFLAGS = \
 elements_gdkpixbufsink_LDADD = \
 	$(LDADD) $(GDK_PIXBUF_LIBS)
 
+
+pipelines_wavenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+pipelines_wavenc_LDADD  = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
 pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)

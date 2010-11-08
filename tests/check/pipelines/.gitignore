@@ -2,5 +2,6 @@
 effectv
 flacdec
 simple-launch-lines
+wavenc
 wavpack
 *.check.xml
