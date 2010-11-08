@@ -48,7 +48,7 @@ static GstStaticPadTemplate vth264encbin_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("NV12"))
     );
 
 static GstStaticPadTemplate vth264encbin_src_template =

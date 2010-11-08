@@ -57,7 +57,7 @@ static GstStaticPadTemplate vth264decbin_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("NV12"))
     );
 
 #define TAA_VT_H264_DEC_BIN_GET_PRIVATE(obj)  \

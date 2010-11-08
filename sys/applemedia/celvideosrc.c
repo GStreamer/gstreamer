@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY (gst_cel_video_src_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("NV12") ";"
         GST_VIDEO_CAPS_YUV ("YUY2"))
     );
 
@@ -727,8 +727,8 @@ gst_cel_video_src_parse_stream_format (GstCelVideoSrc * self,
       format->fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
     case kYUV420vCodecType:
-      format->video_format = GST_VIDEO_FORMAT_I420;
-      format->fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+      format->video_format = GST_VIDEO_FORMAT_NV12;
+      format->fourcc = GST_MAKE_FOURCC ('N', 'V', '1', '2');
       break;
     default:
       goto unsupported_format;
