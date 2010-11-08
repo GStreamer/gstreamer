@@ -323,7 +323,7 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, const guint8 * data, guint size,
 static GstFlowReturn
 gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (gst_pad_get_parent (pad));
+  GstRsvgDec *rsvg = GST_RSVG_DEC (GST_PAD_PARENT (pad));
   gboolean completed = FALSE;
   const guint8 *data;
   guint size;
@@ -410,8 +410,6 @@ gst_rsvg_dec_chain (GstPad * pad, GstBuffer * buffer)
       break;
     }
   }
-
-  gst_object_unref (rsvg);
 
   return GST_FLOW_OK;
 }
