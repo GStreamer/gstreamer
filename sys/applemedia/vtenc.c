@@ -508,14 +508,6 @@ gst_vtenc_create_session (GstVTEnc * self)
   if (status != kVTSuccess)
     goto beach;
 
-  GST_OBJECT_LOCK (self);
-  if (GST_ELEMENT_CLOCK (self) != NULL) {
-    self->last_create_session = gst_clock_get_time (GST_ELEMENT_CLOCK (self));
-  } else {
-    self->last_create_session = GST_CLOCK_TIME_NONE;
-  }
-  GST_OBJECT_UNLOCK (self);
-
   if (self->dump_properties) {
     gst_vtenc_session_dump_properties (self, session);
 
@@ -752,31 +744,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
   self->expect_keyframe = CFDictionaryContainsKey (self->options,
       *(vt->kVTEncodeFrameOptionKey_ForceKeyFrame));
-  if (self->expect_keyframe) {
+  if (self->expect_keyframe)
     gst_vtenc_clear_cached_caps_downstream (self);
-
-    if (self->reset_on_force_keyframe) {
-      VTCompressionSessionRef session;
-
-      gst_vtenc_destroy_session (self, &self->session);
-
-      if (GST_CLOCK_TIME_IS_VALID (self->last_create_session) &&
-          GST_ELEMENT_CLOCK (self) != NULL) {
-        GstClockTime now = gst_clock_get_time (GST_ELEMENT_CLOCK (self));
-        GstClockTimeDiff diff = GST_CLOCK_DIFF (self->last_create_session, now);
-        if (diff < VTENC_MIN_RESET_INTERVAL) {
-          GST_OBJECT_UNLOCK (self);
-          goto skip_frame;
-        }
-      }
-
-      GST_OBJECT_UNLOCK (self);
-      session = gst_vtenc_create_session (self);
-      GST_OBJECT_LOCK (self);
-
-      self->session = session;
-    }
-  }
 
   vt_status = self->ctx->vt->VTCompressionSessionEncodeFrame (self->session,
       pbuf, ts, duration, self->options, NULL, NULL);
@@ -789,11 +758,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   self->ctx->vt->VTCompressionSessionCompleteFrames (self->session,
       *(self->ctx->cm->kCMTimeInvalid));
 
-  if (!self->expect_keyframe) {
-    CFDictionaryRemoveValue (self->options,
-        *(self->ctx->vt->kVTEncodeFrameOptionKey_ForceKeyFrame));
-  }
-
   GST_OBJECT_UNLOCK (self);
 
   cv->CVPixelBufferRelease (pbuf);
@@ -803,17 +767,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
   return self->cur_flowret;
 
-skip_frame:
-  {
-    GST_DEBUG_OBJECT (self, "skipping frame");
-
-    cv->CVPixelBufferRelease (pbuf);
-
-    gst_buffer_unref (buf);
-    self->cur_inbuf = NULL;
-
-    return GST_FLOW_OK;
-  }
 cv_error:
   {
     gst_buffer_unref (buf);
@@ -835,13 +788,17 @@ gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
   if (sbuf == NULL)
     goto beach;
 
+  is_keyframe = gst_vtenc_buffer_is_keyframe (self, sbuf);
+  if (self->expect_keyframe) {
+    if (!is_keyframe)
+      goto beach;
+    CFDictionaryRemoveValue (self->options,
+        *(self->ctx->vt->kVTEncodeFrameOptionKey_ForceKeyFrame));
+  }
+  self->expect_keyframe = FALSE;
+
   if (!gst_vtenc_negotiate_downstream (self, sbuf))
     goto beach;
-
-  is_keyframe = gst_vtenc_buffer_is_keyframe (self, sbuf);
-  if (self->expect_keyframe && !is_keyframe)
-    goto expected_keyframe;
-  self->expect_keyframe = FALSE;
 
   buf = gst_core_media_buffer_new (self->ctx, sbuf);
   gst_buffer_set_caps (buf, GST_PAD_CAPS (self->srcpad));
@@ -857,18 +814,8 @@ gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
   self->cur_flowret = gst_pad_push (self->srcpad, buf);
   GST_OBJECT_LOCK (self);
 
-  return kVTSuccess;
-
 beach:
   return kVTSuccess;
-
-expected_keyframe:
-  {
-    GST_INFO_OBJECT (self, "expected keyframe but output was not, "
-        "enabling reset_on_force_keyframe");
-    self->reset_on_force_keyframe = TRUE;
-    return kVTSuccess;
-  }
 }
 
 static gboolean

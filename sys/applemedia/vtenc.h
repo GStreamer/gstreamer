@@ -67,8 +67,6 @@ struct _GstVTEnc
 
   gboolean dump_properties;
   gboolean dump_attributes;
-  gboolean reset_on_force_keyframe;
-  GstClockTime last_create_session;
 
   gint negotiated_width, negotiated_height;
   gint negotiated_fps_n, negotiated_fps_d;
