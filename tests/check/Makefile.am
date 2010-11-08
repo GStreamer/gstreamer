@@ -146,7 +146,7 @@ check_PROGRAMS = \
 	pipelines/wavenc \
 	$(check_flac) \
 	$(check_gdkpixbuf) \
-        $(check_jpeg) \
+	$(check_jpeg) \
 	$(check_soup) \
 	$(check_sunaudio) \
 	$(check_taglib) \
@@ -200,7 +200,7 @@ elements_interleave_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_interleave_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(LDADD)
 
 elements_imagefreeze_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-0.10
+elements_imagefreeze_LDADD = $(GST_BASE_LIBS) $(LDADD) -lgstvideo-$(GST_MAJORMINOR)
 
 elements_level_LDADD = $(LDADD) $(LIBM)
 
