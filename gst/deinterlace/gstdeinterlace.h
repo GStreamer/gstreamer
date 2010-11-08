@@ -129,10 +129,6 @@ struct _GstDeinterlace
   gdouble proportion;
   GstClockTime earliest_time;
 
-  /* Upstream negotiation stuff */
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-
   GstCaps *request_caps;
 
   gboolean reconfigure;
