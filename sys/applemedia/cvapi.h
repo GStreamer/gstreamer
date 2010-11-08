@@ -47,8 +47,9 @@ enum _CVReturn
 
 enum _CVPixelFormatType
 {
-  kCVPixelFormatType_422YpCbCr8Deprecated   = 'yuvs',
-  kCVPixelFormatType_422YpCbCr8             = '2vuy'
+  kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange = '420v',
+  kCVPixelFormatType_422YpCbCr8Deprecated         = 'yuvs',
+  kCVPixelFormatType_422YpCbCr8                   = '2vuy'
 };
 
 struct _GstCVApi
