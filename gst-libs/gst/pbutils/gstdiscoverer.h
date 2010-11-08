@@ -72,7 +72,7 @@ typedef GstMiniObjectClass GstDiscovererContainerInfoClass;
 
 GType gst_discoverer_container_info_get_type (void);
 
-GList *gst_discoverer_container_info_get_streams(GstDiscovererStreamInfo *info);
+GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *info);
 
 
 /**

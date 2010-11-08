@@ -229,7 +229,9 @@ print_topology (GstDiscovererStreamInfo * info, gint depth)
   } else if (GST_IS_DISCOVERER_CONTAINER_INFO (info)) {
     GList *tmp, *streams;
 
-    streams = gst_discoverer_container_info_get_streams (info);
+    streams =
+        gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+        (info));
     for (tmp = streams; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *tmpinf = (GstDiscovererStreamInfo *) tmp->data;
       print_topology (tmpinf, depth + 1);

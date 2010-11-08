@@ -595,14 +595,13 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
  */
 
 GList *
-gst_discoverer_container_info_get_streams (GstDiscovererStreamInfo * info)
+gst_discoverer_container_info_get_streams (GstDiscovererContainerInfo * info)
 {
   GList *res = NULL, *tmp;
 
   g_return_val_if_fail (GST_IS_DISCOVERER_CONTAINER_INFO (info), NULL);
 
-  for (tmp = GST_DISCOVERER_CONTAINER_INFO (info)->streams; tmp;
-      tmp = tmp->next)
+  for (tmp = info->streams; tmp; tmp = tmp->next)
     res =
         g_list_append (res,
         gst_discoverer_stream_info_ref ((GstDiscovererStreamInfo *) tmp->data));
