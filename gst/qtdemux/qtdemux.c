@@ -1978,7 +1978,8 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static gboolean
 qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     QtDemuxStream * stream, guint32 d_sample_duration, guint32 d_sample_size,
-    guint32 d_sample_flags, gint64 * base_offset)
+    guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
+    gint64 * base_offset)
 {
   guint64 timestamp;
   gint32 data_offset;
@@ -2004,8 +2005,24 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     /* note this is really signed */
     if (!gst_byte_reader_get_int32_be (trun, &data_offset))
       goto fail;
+    GST_LOG_OBJECT (qtdemux, "trun data offset %d", data_offset);
+    /* default base offset = first byte of moof */
+    if (*base_offset == -1) {
+      GST_LOG_OBJECT (qtdemux, "base_offset at moof");
+      *base_offset = moof_offset;
+    }
     *base_offset += data_offset;
+  } else {
+    /* if no offset at all, that would mean data starts at moof start,
+     * which is a bit wrong and is ismv crappy way, so compensate
+     * assuming data is in mdat following moof */
+    if (*base_offset == -1) {
+      *base_offset = moof_offset + moof_length + 8;
+      GST_LOG_OBJECT (qtdemux, "base_offset assumed in mdat after moof");
+    }
   }
+
+  GST_LOG_OBJECT (qtdemux, "base offset now %" G_GINT64_FORMAT, *base_offset);
 
   GST_LOG_OBJECT (qtdemux, "trun offset %d, flags 0x%x, entries %d",
       data_offset, flags, samples_count);
@@ -2249,8 +2266,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   qtdemux_parse_node (qtdemux, moof_node, buffer, length);
   qtdemux_node_dump (qtdemux, moof_node);
 
-  /* default base offset = first byte of moof */
-  base_offset = moof_offset;
+  /* unknown base_offset to start with */
+  base_offset = -1;
   traf_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_traf);
   while (traf_node) {
     /* Fragment Header node */
@@ -2268,7 +2285,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
         &trun_data);
     while (trun_node) {
       qtdemux_parse_trun (qtdemux, &trun_data, stream,
-          ds_duration, ds_size, ds_flags, &base_offset);
+          ds_duration, ds_size, ds_flags, moof_offset, length, &base_offset);
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
