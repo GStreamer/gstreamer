@@ -235,6 +235,8 @@ struct _GstBaseParsePrivate
   GstClockTime next_ts;
   GstClockTime prev_ts;
   GstClockTime frame_duration;
+  gboolean seen_keyframe;
+  gboolean is_video;
 
   guint64 framecount;
   guint64 bytecount;
@@ -544,6 +546,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->upstream_has_duration = FALSE;
   parse->priv->idx_interval = 0;
   parse->priv->exact_position = TRUE;
+  parse->priv->seen_keyframe = FALSE;
 
   parse->priv->last_ts = GST_CLOCK_TIME_NONE;
   parse->priv->last_offset = 0;
@@ -849,6 +852,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       parse->priv->next_ts = next_ts;
       parse->priv->last_ts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
+      parse->priv->seen_keyframe = FALSE;
       break;
     }
 
@@ -1265,8 +1269,10 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
       2, (const GstIndexAssociation *) &associations);
   GST_OBJECT_UNLOCK (parse);
 
-  parse->priv->index_last_offset = offset;
-  parse->priv->index_last_ts = ts;
+  if (key) {
+    parse->priv->index_last_offset = offset;
+    parse->priv->index_last_ts = ts;
+  }
 
   ret = TRUE;
 
@@ -1344,6 +1350,26 @@ gst_base_parse_check_upstream (GstBaseParse * parse)
 
   GST_DEBUG_OBJECT (parse, "upstream_has_duration: %d",
       parse->priv->upstream_has_duration);
+}
+
+/* checks src caps to determine if dealing with audio or video */
+/* TODO maybe forego automagic stuff and let subclass configure it ? */
+static void
+gst_base_parse_check_media (GstBaseParse * parse)
+{
+  GstCaps *caps;
+  GstStructure *s;
+
+  caps = GST_PAD_CAPS (parse->srcpad);
+  if (G_LIKELY (caps) && (s = gst_caps_get_structure (caps, 0))) {
+    parse->priv->is_video =
+        g_str_has_prefix (gst_structure_get_name (s), "video");
+  } else {
+    /* historical default */
+    parse->priv->is_video = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (parse, "media is video == %d", parse->priv->is_video);
 }
 
 /**
@@ -1576,6 +1602,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
         parse->priv->pad_mode == GST_ACTIVATE_PULL ? "loop" : "chain");
     gst_pad_push_event (parse->srcpad, parse->pending_segment);
     parse->pending_segment = NULL;
+
+    /* have caps; check identity */
+    gst_base_parse_check_media (parse);
   }
 
   /* update bitrates and optionally post corresponding tags
@@ -1597,6 +1626,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   else
     ret = GST_BASE_PARSE_FLOW_CLIP;
 
+  parse->priv->seen_keyframe |= parse->priv->is_video &&
+      !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
   if (ret == GST_BASE_PARSE_FLOW_CLIP) {
     if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.stop) &&
@@ -1609,8 +1641,13 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
         GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
         GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer) +
         parse->priv->lead_in_ts < parse->segment.start) {
-      GST_LOG_OBJECT (parse, "Dropped frame, before segment");
-      ret = GST_BASE_PARSE_FLOW_DROPPED;
+      if (parse->priv->seen_keyframe) {
+        GST_LOG_OBJECT (parse, "Frame before segment, after keyframe");
+        ret = GST_FLOW_OK;
+      } else {
+        GST_LOG_OBJECT (parse, "Dropped frame, before segment");
+        ret = GST_BASE_PARSE_FLOW_DROPPED;
+      }
     } else {
       ret = GST_FLOW_OK;
     }
@@ -3289,6 +3326,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
           "mark DISCONT, we did a seek to another position");
       parse->priv->offset = seekpos;
       parse->priv->last_offset = seekpos;
+      parse->priv->seen_keyframe = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->next_ts = start_ts;
       parse->priv->last_ts = GST_CLOCK_TIME_NONE;
