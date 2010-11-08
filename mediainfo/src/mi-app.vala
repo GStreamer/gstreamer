@@ -78,10 +78,16 @@ public class MediaInfo.App : Window
     
     sub_menu = new Menu ();
     item.set_submenu (sub_menu);
+
+    // TODO: add "open uri" item
+    // -> dialog with text entry
+    // -> discover that uri and clear selection in browser
     
     item = new ImageMenuItem.from_stock (STOCK_QUIT, accel_group);
     sub_menu.append (item);
     item.activate.connect (Gtk.main_quit);
+
+    // TODO: add "help" menu with "about" item
 
     return (menu_bar);  
   }

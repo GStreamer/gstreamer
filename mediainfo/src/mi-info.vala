@@ -290,7 +290,7 @@ public class MediaInfo.Info : VBox
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
-          // TODO: add named resolutions: (640x480=VGA)
+          // add named resolutions: (640x480=VGA)
           label = new Label ("Resolution:");
           label.set_alignment (1.0f, 0.5f);
           table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
@@ -349,8 +349,7 @@ public class MediaInfo.Info : VBox
             label = new Label ("Tags:");
             label.set_alignment (1.0f, 0.0f);
             table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-            str = s.to_string ();
-            str = str[8:-1].compress().replace(",","\n");
+            str = build_taglist_info (s);
             label = new Label(str);
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
@@ -440,8 +439,7 @@ public class MediaInfo.Info : VBox
             label = new Label ("Tags:");
             label.set_alignment (1.0f, 0.0f);
             table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-            str = s.to_string ();
-            str = str[8:-1].compress().replace(",","\n");
+            str = build_taglist_info (s);
             label = new Label(str);
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
@@ -525,5 +523,15 @@ public class MediaInfo.Info : VBox
       stdout.printf ("Switching audio to: %u\n", page_num);
       ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
     }
+  }
+
+  private string build_taglist_info (Structure s)
+  {
+    // FIXME: properly loop over taglist items and serialize them
+    // this allows to properly newline them and to avoid the types in the result
+    string str = s.to_string ();
+    str = str[8:-1].compress().replace(",","\n");
+
+    return str;
   }
 }

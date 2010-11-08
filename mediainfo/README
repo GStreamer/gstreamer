@@ -67,9 +67,13 @@ Duration:
 
 == unsorted ==
 - handle chapters
-- if there is a "language-code" in the tags (or subtitles?) use flag icons
+- tag lists
+  - if there is a "language-code" in the tags (or subtitles?) use flag icons
+  - handle album art in tag lists
+  - make urls clickable
+  - geo-tags: map-widget?, link to google-maps?
+  - artist: links to {last.fm,wikipedia}
 
 = TODO for discoverer =
 - get duration per stream
   - this would need individual queries on the demuxer src pads
-
