@@ -47,6 +47,7 @@ enum _CVReturn
 
 enum _CVPixelFormatType
 {
+  kCVPixelFormatType_420YpCbCr8Planar             = 'y420',
   kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange = '420v',
   kCVPixelFormatType_422YpCbCr8Deprecated         = 'yuvs',
   kCVPixelFormatType_422YpCbCr8                   = '2vuy'
@@ -67,6 +68,15 @@ struct _GstCVApi
   CVReturn (* CVPixelBufferCreateWithBytes)
       (CFAllocatorRef allocator, size_t width, size_t height,
       OSType pixelFormatType, void * baseAddress, size_t bytesPerRow,
+      CVPixelBufferReleaseBytesCallback releaseCallback,
+      void * releaseRefCon, CFDictionaryRef pixelBufferAttributes,
+      CVPixelBufferRef * pixelBufferOut);
+  CVReturn (* CVPixelBufferCreateWithPlanarBytes)
+      (CFAllocatorRef allocator, size_t width, size_t height,
+      OSType pixelFormatType, void * dataPtr, size_t dataSize,
+      size_t numberOfPlanes, void *planeBaseAddress[],
+      size_t planeWidth[], size_t planeHeight[],
+      size_t planeBytesPerRow[],
       CVPixelBufferReleaseBytesCallback releaseCallback,
       void * releaseRefCon, CFDictionaryRef pixelBufferAttributes,
       CVPixelBufferRef * pixelBufferOut);
@@ -97,6 +107,7 @@ struct _GstCVApi
   CFStringRef * kCVPixelBufferWidthKey;
   CFStringRef * kCVPixelBufferHeightKey;
   CFStringRef * kCVPixelBufferBytesPerRowAlignmentKey;
+  CFStringRef * kCVPixelBufferPlaneAlignmentKey;
 };
 
 struct _GstCVApiClass

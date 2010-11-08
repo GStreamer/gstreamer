@@ -46,6 +46,7 @@ gst_cv_api_obtain (GError ** error)
     SYM_SPEC (CVBufferRetain),
 
     SYM_SPEC (CVPixelBufferCreateWithBytes),
+    SYM_SPEC (CVPixelBufferCreateWithPlanarBytes),
     SYM_SPEC (CVPixelBufferGetBaseAddress),
     SYM_SPEC (CVPixelBufferGetBaseAddressOfPlane),
     SYM_SPEC (CVPixelBufferGetBytesPerRow),
@@ -64,6 +65,7 @@ gst_cv_api_obtain (GError ** error)
     SYM_SPEC (kCVPixelBufferWidthKey),
     SYM_SPEC (kCVPixelBufferHeightKey),
     SYM_SPEC (kCVPixelBufferBytesPerRowAlignmentKey),
+    SYM_SPEC (kCVPixelBufferPlaneAlignmentKey),
 
     {NULL, 0},
   };
