@@ -6353,6 +6353,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GstBuffer *buf;
         gint version = 1;
         /* from http://msdn.microsoft.com/en-us/library/dd757720(VS.85).aspx */
+        /* FIXME this should also be gst_riff_strf_auds,
+         * but the latter one is actually missing bits-per-sample :( */
         typedef struct
         {
           gint16 wFormatTag;
@@ -6394,10 +6396,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         gst_caps_set_simple (stream->caps,
             "codec_data", GST_TYPE_BUFFER, buf,
             "wmaversion", G_TYPE_INT, version,
-            "block_align", G_TYPE_INT, wfex->nBlockAlign,
-            "bitrate", G_TYPE_INT, wfex->nAvgBytesPerSec,
-            "width", G_TYPE_INT, wfex->wBitsPerSample,
-            "depth", G_TYPE_INT, wfex->wBitsPerSample, NULL);
+            "block_align", G_TYPE_INT, GST_READ_UINT16_LE (&wfex->nBlockAlign),
+            "bitrate", G_TYPE_INT, GST_READ_UINT32_LE (&wfex->nAvgBytesPerSec),
+            "width", G_TYPE_INT, GST_READ_UINT16_LE (&wfex->wBitsPerSample),
+            "depth", G_TYPE_INT, GST_READ_UINT16_LE (&wfex->wBitsPerSample),
+            NULL);
         gst_buffer_unref (buf);
 
         if (codec_name) {
