@@ -206,8 +206,8 @@ gst_mpeg_audio_parse_reset (GstMpegAudioParse * mp3parse)
   mp3parse->vbri_total_time = 0;
   mp3parse->vbri_bytes = 0;
   mp3parse->vbri_seek_points = 0;
-  mp3parse->vbri_seek_table = NULL;
   g_free (mp3parse->vbri_seek_table);
+  mp3parse->vbri_seek_table = NULL;
 }
 
 static void
