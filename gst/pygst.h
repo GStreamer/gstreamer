@@ -52,7 +52,7 @@ pygst_init(void)
 {
   PyObject *gstobject, *cobject;
 
-  gstobject = PyImport_ImportModule("_gst");
+  gstobject = PyImport_ImportModule("gst._gst");
   if (!gstobject) {
     if (PyErr_Occurred())
       {
