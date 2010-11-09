@@ -30,29 +30,29 @@
 #include <gst/audio/gstbaseaudiosrc.h>
 #include "pygst.h"
 
-void pyaudio_register_classes (PyObject *d);
-void pyaudio_add_constants(PyObject *module, const gchar *strip_prefix);
-		
+void pyaudio_register_classes (PyObject * d);
+void pyaudio_add_constants (PyObject * module, const gchar * strip_prefix);
+
 extern PyMethodDef pyaudio_functions[];
 
-GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
+GST_DEBUG_CATEGORY (pygst_debug);       /* for python code */
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 initaudio (void)
 {
-	PyObject *m, *d;
+  PyObject *m, *d;
 
-	init_pygobject ();
-	pygst_init();
+  init_pygobject ();
+  pygst_init ();
 
-	m = Py_InitModule ("audio", pyaudio_functions);
-	d = PyModule_GetDict (m);
+  m = Py_InitModule ("audio", pyaudio_functions);
+  d = PyModule_GetDict (m);
 
-	pyaudio_register_classes (d);
-	pyaudio_add_constants (m, "GST_");
-	
-	if (PyErr_Occurred ()) {
-	    PyErr_Print ();
-	    Py_FatalError ("can't initialize module gst.audio");
-	}
+  pyaudio_register_classes (d);
+  pyaudio_add_constants (m, "GST_");
+
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.audio");
+  }
 }

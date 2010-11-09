@@ -33,235 +33,237 @@ PyObject *PyGstExc_ElementNotFoundError = NULL;
 
 
 static PyObject *
-call_exception_init(PyObject *args)
+call_exception_init (PyObject * args)
 {
-    PyObject *parent_init = NULL;
-    PyObject *res = NULL;
+  PyObject *parent_init = NULL;
+  PyObject *res = NULL;
 
-    /* get Exception.__init__ */
-    parent_init = PyObject_GetAttrString(PyExc_Exception, "__init__");
-    if (parent_init == NULL)
-        goto exception;
-   
-    /* call Exception.__init__. This will set self.args */
-    res = PyObject_CallObject(parent_init, args);
-    if (res == NULL)
-        goto exception;
-    
-    Py_DECREF(parent_init);
-    
-    return res;
+  /* get Exception.__init__ */
+  parent_init = PyObject_GetAttrString (PyExc_Exception, "__init__");
+  if (parent_init == NULL)
+    goto exception;
+
+  /* call Exception.__init__. This will set self.args */
+  res = PyObject_CallObject (parent_init, args);
+  if (res == NULL)
+    goto exception;
+
+  Py_DECREF (parent_init);
+
+  return res;
 
 exception:
-    Py_XDECREF(parent_init);
-    Py_XDECREF(res);
-    
-    return NULL;
+  Py_XDECREF (parent_init);
+  Py_XDECREF (res);
+
+  return NULL;
 }
 
 static int
-add_method(PyObject *klass, PyObject *dict, PyMethodDef *method) {
-    PyObject *module = NULL;
-    PyObject *func = NULL;
-    PyObject *meth = NULL;
+add_method (PyObject * klass, PyObject * dict, PyMethodDef * method)
+{
+  PyObject *module = NULL;
+  PyObject *func = NULL;
+  PyObject *meth = NULL;
 
-    module = PyString_FromString("gst");
-    if (module == NULL)
-        goto exception;
-  
-    func = PyCFunction_NewEx(method, NULL, module);
-    if (func == NULL)
-        goto exception;
-    Py_DECREF(module);
-  
-    meth = PyMethod_New(func, NULL, klass);
-    if (meth == NULL)
-        goto exception;
-    Py_DECREF(func);
-  
-    if (PyDict_SetItemString(dict, method->ml_name, meth) < 0)
-        goto exception;
-    Py_DECREF(meth);
-  
-    return 0;
- 
+  module = PyString_FromString ("gst");
+  if (module == NULL)
+    goto exception;
+
+  func = PyCFunction_NewEx (method, NULL, module);
+  if (func == NULL)
+    goto exception;
+  Py_DECREF (module);
+
+  meth = PyMethod_New (func, NULL, klass);
+  if (meth == NULL)
+    goto exception;
+  Py_DECREF (func);
+
+  if (PyDict_SetItemString (dict, method->ml_name, meth) < 0)
+    goto exception;
+  Py_DECREF (meth);
+
+  return 0;
+
 exception:
-    Py_XDECREF(module);
-    Py_XDECREF(func);
-    Py_XDECREF(meth);
+  Py_XDECREF (module);
+  Py_XDECREF (func);
+  Py_XDECREF (meth);
 
-    return -1;
+  return -1;
 }
 
 static PyObject *
-link_error_init(PyObject *self, PyObject *args)
+link_error_init (PyObject * self, PyObject * args)
 {
-    PyObject *err_type = NULL;
-    int status;
-   
-    if (!PyArg_ParseTuple(args, "O|O:__init__", &self, &err_type))
-        return NULL;
-   
-    if (err_type == NULL)
-        err_type = Py_None;
-    Py_INCREF(err_type);
-    
-    /* set self.error */
-    status = PyObject_SetAttrString(self, "error", err_type);
-    Py_DECREF(err_type);
-    if (status < 0)
-        return NULL;
-    
-    return call_exception_init(args);
+  PyObject *err_type = NULL;
+  int status;
+
+  if (!PyArg_ParseTuple (args, "O|O:__init__", &self, &err_type))
+    return NULL;
+
+  if (err_type == NULL)
+    err_type = Py_None;
+  Py_INCREF (err_type);
+
+  /* set self.error */
+  status = PyObject_SetAttrString (self, "error", err_type);
+  Py_DECREF (err_type);
+  if (status < 0)
+    return NULL;
+
+  return call_exception_init (args);
 }
 
 static PyObject *
-element_not_found_error_init(PyObject *self, PyObject *args)
+element_not_found_error_init (PyObject * self, PyObject * args)
 {
-    PyObject *element_name = NULL;
-    int status;
+  PyObject *element_name = NULL;
+  int status;
 
-    if (!PyArg_ParseTuple(args, "O|O:__init__", &self, &element_name))
-        return NULL;
+  if (!PyArg_ParseTuple (args, "O|O:__init__", &self, &element_name))
+    return NULL;
 
-    if (element_name == NULL)
-        element_name = Py_None;
-    Py_INCREF(element_name);
-    
-    /* set self.name */
-    status = PyObject_SetAttrString(self, "name", element_name);
-    Py_DECREF(element_name);
-    if (status < 0)
-        return NULL;
+  if (element_name == NULL)
+    element_name = Py_None;
+  Py_INCREF (element_name);
 
-    return call_exception_init(args);
+  /* set self.name */
+  status = PyObject_SetAttrString (self, "name", element_name);
+  Py_DECREF (element_name);
+  if (status < 0)
+    return NULL;
+
+  return call_exception_init (args);
 }
 
-static PyMethodDef link_error_init_method = {"__init__",
-    link_error_init, METH_VARARGS
+static PyMethodDef link_error_init_method = { "__init__",
+  link_error_init, METH_VARARGS
 };
 
-static PyMethodDef element_not_found_error_init_method = {"__init__",
-    element_not_found_error_init, METH_VARARGS
+static PyMethodDef element_not_found_error_init_method = { "__init__",
+  element_not_found_error_init, METH_VARARGS
 };
 
 void
-pygst_exceptions_register_classes(PyObject *d)
+pygst_exceptions_register_classes (PyObject * d)
 {
-    PyObject *dict = NULL;
-   
-    /* register gst.LinkError */ 
-    dict = PyDict_New();
-    if (dict == NULL)
-        goto exception;
-   
-    PyGstExc_LinkError = PyErr_NewException("gst.LinkError", 
-            PyExc_Exception, dict);
-    if (PyGstExc_LinkError == NULL)
-        goto exception;
-    
-    if (add_method(PyGstExc_LinkError, dict, &link_error_init_method) < 0)
-        goto exception;
-    
-    Py_DECREF(dict);
-    
-    if (PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError) < 0)
-        goto exception;
-   
-    Py_DECREF(PyGstExc_LinkError);
-    
-    /* register gst.AddError */
-    PyGstExc_AddError = PyErr_NewException("gst.AddError",
-            PyExc_Exception, NULL);
-    if (PyGstExc_AddError == NULL)
-        goto exception;
-    
-    if (PyDict_SetItemString(d, "AddError", PyGstExc_AddError) < 0)
-        goto exception;
+  PyObject *dict = NULL;
 
-    Py_DECREF(PyGstExc_AddError);
-    
-    /* register gst.RemoveError */
-    PyGstExc_RemoveError = PyErr_NewException("gst.RemoveError",
-            PyExc_Exception, NULL);
-    if (PyGstExc_RemoveError == NULL)
-        goto exception;
-    
-    if (PyDict_SetItemString(d, "RemoveError", PyGstExc_RemoveError) < 0)
-        goto exception;
-    
-    Py_DECREF(PyGstExc_RemoveError);
+  /* register gst.LinkError */
+  dict = PyDict_New ();
+  if (dict == NULL)
+    goto exception;
 
-    /* register gst.QueryError */
-    PyGstExc_QueryError = PyErr_NewException("gst.QueryError",
-            PyExc_Exception, NULL);
-    if (PyGstExc_QueryError == NULL)
-        goto exception;
-    
-    if (PyDict_SetItemString(d, "QueryError", PyGstExc_QueryError) < 0)
-        goto exception;
-    
-    Py_DECREF(PyGstExc_QueryError);
-   
+  PyGstExc_LinkError = PyErr_NewException ("gst.LinkError",
+      PyExc_Exception, dict);
+  if (PyGstExc_LinkError == NULL)
+    goto exception;
+
+  if (add_method (PyGstExc_LinkError, dict, &link_error_init_method) < 0)
+    goto exception;
+
+  Py_DECREF (dict);
+
+  if (PyDict_SetItemString (d, "LinkError", PyGstExc_LinkError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_LinkError);
+
+  /* register gst.AddError */
+  PyGstExc_AddError = PyErr_NewException ("gst.AddError",
+      PyExc_Exception, NULL);
+  if (PyGstExc_AddError == NULL)
+    goto exception;
+
+  if (PyDict_SetItemString (d, "AddError", PyGstExc_AddError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_AddError);
+
+  /* register gst.RemoveError */
+  PyGstExc_RemoveError = PyErr_NewException ("gst.RemoveError",
+      PyExc_Exception, NULL);
+  if (PyGstExc_RemoveError == NULL)
+    goto exception;
+
+  if (PyDict_SetItemString (d, "RemoveError", PyGstExc_RemoveError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_RemoveError);
+
+  /* register gst.QueryError */
+  PyGstExc_QueryError = PyErr_NewException ("gst.QueryError",
+      PyExc_Exception, NULL);
+  if (PyGstExc_QueryError == NULL)
+    goto exception;
+
+  if (PyDict_SetItemString (d, "QueryError", PyGstExc_QueryError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_QueryError);
+
 /* FIXME: remove this method in 0.11; element_factory_make deals with element
    factories, not plug-ins */
-   
-    /* register gst.PluginNotFoundError */
-    dict = PyDict_New();
-    if (dict == NULL)
-        goto exception;
-    
-    PyGstExc_PluginNotFoundError = \
-        PyErr_NewException("gst.PluginNotFoundError", PyExc_Exception, dict);
-    if (PyGstExc_PluginNotFoundError == NULL)
-        goto exception;
-    
-    if (add_method(PyGstExc_PluginNotFoundError,
-                dict, &element_not_found_error_init_method) < 0)
-        goto exception;
 
-    Py_DECREF(dict);
-    
-    if (PyDict_SetItemString(d, "PluginNotFoundError",
-                PyGstExc_PluginNotFoundError) < 0)
-        goto exception;
+  /* register gst.PluginNotFoundError */
+  dict = PyDict_New ();
+  if (dict == NULL)
+    goto exception;
 
-    Py_DECREF(PyGstExc_PluginNotFoundError);
+  PyGstExc_PluginNotFoundError =
+      PyErr_NewException ("gst.PluginNotFoundError", PyExc_Exception, dict);
+  if (PyGstExc_PluginNotFoundError == NULL)
+    goto exception;
 
-    /* register gst.ElementNotFoundError */
-    dict = PyDict_New();
-    if (dict == NULL)
-        goto exception;
-    
-    PyGstExc_ElementNotFoundError = \
-        PyErr_NewException("gst.ElementNotFoundError", PyGstExc_PluginNotFoundError, dict);
-    if (PyGstExc_ElementNotFoundError == NULL)
-        goto exception;
-    
-    if (add_method(PyGstExc_ElementNotFoundError,
-                dict, &element_not_found_error_init_method) < 0)
-        goto exception;
+  if (add_method (PyGstExc_PluginNotFoundError,
+          dict, &element_not_found_error_init_method) < 0)
+    goto exception;
 
-    Py_DECREF(dict);
-    
-    if (PyDict_SetItemString(d, "ElementNotFoundError",
-                PyGstExc_ElementNotFoundError) < 0)
-        goto exception;
+  Py_DECREF (dict);
 
-    Py_DECREF(PyGstExc_ElementNotFoundError);
-    
-    return;
-        
-    return;
-    
+  if (PyDict_SetItemString (d, "PluginNotFoundError",
+          PyGstExc_PluginNotFoundError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_PluginNotFoundError);
+
+  /* register gst.ElementNotFoundError */
+  dict = PyDict_New ();
+  if (dict == NULL)
+    goto exception;
+
+  PyGstExc_ElementNotFoundError =
+      PyErr_NewException ("gst.ElementNotFoundError",
+      PyGstExc_PluginNotFoundError, dict);
+  if (PyGstExc_ElementNotFoundError == NULL)
+    goto exception;
+
+  if (add_method (PyGstExc_ElementNotFoundError,
+          dict, &element_not_found_error_init_method) < 0)
+    goto exception;
+
+  Py_DECREF (dict);
+
+  if (PyDict_SetItemString (d, "ElementNotFoundError",
+          PyGstExc_ElementNotFoundError) < 0)
+    goto exception;
+
+  Py_DECREF (PyGstExc_ElementNotFoundError);
+
+  return;
+
+  return;
+
 exception:
-    Py_XDECREF(dict);
-    Py_XDECREF(PyGstExc_LinkError);
-    Py_XDECREF(PyGstExc_AddError);
-    Py_XDECREF(PyGstExc_RemoveError);
-    Py_XDECREF(PyGstExc_QueryError);
-    Py_XDECREF(PyGstExc_PluginNotFoundError);
-    Py_XDECREF(PyGstExc_ElementNotFoundError);
+  Py_XDECREF (dict);
+  Py_XDECREF (PyGstExc_LinkError);
+  Py_XDECREF (PyGstExc_AddError);
+  Py_XDECREF (PyGstExc_RemoveError);
+  Py_XDECREF (PyGstExc_QueryError);
+  Py_XDECREF (PyGstExc_PluginNotFoundError);
+  Py_XDECREF (PyGstExc_ElementNotFoundError);
 
-    return;
+  return;
 }

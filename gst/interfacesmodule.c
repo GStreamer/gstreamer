@@ -29,27 +29,27 @@
 #include <gst/gst.h>
 #include "pygst.h"
 
-void pyinterfaces_register_classes (PyObject *d);
-void pyinterfaces_add_constants(PyObject *module, const gchar *strip_prefix);
-		
+void pyinterfaces_register_classes (PyObject * d);
+void pyinterfaces_add_constants (PyObject * module, const gchar * strip_prefix);
+
 extern PyMethodDef pyinterfaces_functions[];
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 initinterfaces (void)
 {
-	PyObject *m, *d;
+  PyObject *m, *d;
 
-	init_pygobject ();
-	pygst_init();
+  init_pygobject ();
+  pygst_init ();
 
-	m = Py_InitModule ("interfaces", pyinterfaces_functions);
-	d = PyModule_GetDict (m);
+  m = Py_InitModule ("interfaces", pyinterfaces_functions);
+  d = PyModule_GetDict (m);
 
-	pyinterfaces_register_classes (d);
-	pyinterfaces_add_constants (m, "GST_");
-	
-	if (PyErr_Occurred ()) {
-	    PyErr_Print ();
-	    Py_FatalError ("can't initialize module gst.interfaces");
-	}
+  pyinterfaces_register_classes (d);
+  pyinterfaces_add_constants (m, "GST_");
+
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.interfaces");
+  }
 }

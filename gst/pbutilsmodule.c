@@ -28,33 +28,33 @@
 #include <gst/pbutils/pbutils.h>
 #include "pygst.h"
 
-void pypbutils_register_classes (PyObject *d);
-void pypbutils_add_constants(PyObject *module, const gchar *strip_prefix);
-		
+void pypbutils_register_classes (PyObject * d);
+void pypbutils_add_constants (PyObject * module, const gchar * strip_prefix);
+
 extern PyMethodDef pypbutils_functions[];
 
-GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
+GST_DEBUG_CATEGORY (pygst_debug);       /* for python code */
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 initpbutils (void)
 {
-	PyObject *m, *d;
-	PyObject *gst;
+  PyObject *m, *d;
+  PyObject *gst;
 
-	init_pygobject ();
+  init_pygobject ();
 
-	/* Make sure gst module is loaded and ready */
-	gst = pygst_init();
-	gst_pb_utils_init ();
-	
-	m = Py_InitModule ("pbutils", pypbutils_functions);
-	d = PyModule_GetDict (m);
+  /* Make sure gst module is loaded and ready */
+  gst = pygst_init ();
+  gst_pb_utils_init ();
 
-	pypbutils_register_classes (d);
-	pypbutils_add_constants (m, "GST_");
-	
-	if (PyErr_Occurred ()) {
-	    PyErr_Print ();
-	    Py_FatalError ("can't initialize module gst.pbutils");
-	}
+  m = Py_InitModule ("pbutils", pypbutils_functions);
+  d = PyModule_GetDict (m);
+
+  pypbutils_register_classes (d);
+  pypbutils_add_constants (m, "GST_");
+
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.pbutils");
+  }
 }

@@ -30,29 +30,29 @@
 #include <gst/video/gstvideofilter.h>
 #include "pygst.h"
 
-void pyvideo_register_classes (PyObject *d);
-void pyvideo_add_constants(PyObject *module, const gchar *strip_prefix);
-		
+void pyvideo_register_classes (PyObject * d);
+void pyvideo_add_constants (PyObject * module, const gchar * strip_prefix);
+
 extern PyMethodDef pyvideo_functions[];
 
-GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
+GST_DEBUG_CATEGORY (pygst_debug);       /* for python code */
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 initvideo (void)
 {
-        PyObject *m, *d, *gst;
+  PyObject *m, *d, *gst;
 
-	init_pygobject ();
-	gst = pygst_init ();
+  init_pygobject ();
+  gst = pygst_init ();
 
-	m = Py_InitModule ("video", pyvideo_functions);
-	d = PyModule_GetDict (m);
+  m = Py_InitModule ("video", pyvideo_functions);
+  d = PyModule_GetDict (m);
 
-	pyvideo_register_classes (d);
-	pyvideo_add_constants (m, "GST_");
-	
-	if (PyErr_Occurred ()) {
-	    PyErr_Print ();
-	    Py_FatalError ("can't initialize module gst.video");
-	}
+  pyvideo_register_classes (d);
+  pyvideo_add_constants (m, "GST_");
+
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.video");
+  }
 }

@@ -35,32 +35,31 @@
  * and NULL is returned.
  */
 GstCaps *
-pygst_caps_from_pyobject (PyObject *object, gboolean *copy)
+pygst_caps_from_pyobject (PyObject * object, gboolean * copy)
 {
-  if (pyg_boxed_check(object, GST_TYPE_CAPS)) {
-    GstCaps *caps = pyg_boxed_get(object, GstCaps);
+  if (pyg_boxed_check (object, GST_TYPE_CAPS)) {
+    GstCaps *caps = pyg_boxed_get (object, GstCaps);
     if (copy) {
       *copy = FALSE;
       return caps;
     } else {
       return gst_caps_copy (caps);
     }
-  } else if (pyg_boxed_check(object, GST_TYPE_STRUCTURE)) {
-    GstStructure *structure = pyg_boxed_get(object, GstStructure);
+  } else if (pyg_boxed_check (object, GST_TYPE_STRUCTURE)) {
+    GstStructure *structure = pyg_boxed_get (object, GstStructure);
     if (copy)
       *copy = TRUE;
     return gst_caps_new_full (gst_structure_copy (structure), NULL);
   } else if (PyString_Check (object)) {
     GstCaps *caps = gst_caps_from_string (PyString_AsString (object));
     if (!caps) {
-      PyErr_SetString(PyExc_TypeError, "could not convert string to GstCaps");
+      PyErr_SetString (PyExc_TypeError, "could not convert string to GstCaps");
       return NULL;
     }
     if (copy)
       *copy = TRUE;
     return caps;
   }
-  PyErr_SetString(PyExc_TypeError, "could not convert to GstCaps");
+  PyErr_SetString (PyExc_TypeError, "could not convert to GstCaps");
   return NULL;
 }
-

@@ -28,31 +28,31 @@
 #include <gst/tag/tag.h>
 #include "pygst.h"
 
-void pytag_register_classes (PyObject *d);
-void pytag_add_constants(PyObject *module, const gchar *strip_prefix);
-		
+void pytag_register_classes (PyObject * d);
+void pytag_add_constants (PyObject * module, const gchar * strip_prefix);
+
 extern PyMethodDef pytag_functions[];
 
-GST_DEBUG_CATEGORY (pygst_debug); /* for python code */
+GST_DEBUG_CATEGORY (pygst_debug);       /* for python code */
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 inittag (void)
 {
-	PyObject *m, *d;
+  PyObject *m, *d;
 
-	init_pygobject ();
-	pygst_init ();
-	/* Initialize tag library */
-	gst_tag_register_musicbrainz_tags ();
-	
-	m = Py_InitModule ("tag", pytag_functions);
-	d = PyModule_GetDict (m);
+  init_pygobject ();
+  pygst_init ();
+  /* Initialize tag library */
+  gst_tag_register_musicbrainz_tags ();
 
-	pytag_register_classes (d);
-	pytag_add_constants (m, "GST_");
+  m = Py_InitModule ("tag", pytag_functions);
+  d = PyModule_GetDict (m);
 
-	if (PyErr_Occurred ()) {
-	    PyErr_Print ();
-	    Py_FatalError ("can't initialize module gst.tag");
-	}
+  pytag_register_classes (d);
+  pytag_add_constants (m, "GST_");
+
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.tag");
+  }
 }
