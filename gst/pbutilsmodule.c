@@ -45,6 +45,11 @@ initpbutils (void)
 
   /* Make sure gst module is loaded and ready */
   gst = pygst_init ();
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    Py_FatalError ("can't initialize module gst.pbutils");
+  }
+
   gst_pb_utils_init ();
 
   m = Py_InitModule ("pbutils", pypbutils_functions);
