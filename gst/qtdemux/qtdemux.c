@@ -1988,6 +1988,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
   guint8 *data;
   guint entry_size, dur_offset, size_offset, flags_offset, ct_offset;
   QtDemuxSample *sample;
+  gboolean ismv = FALSE;
 
   GST_LOG_OBJECT (qtdemux, "parsing trun stream %d; "
       "default dur %d, size %d, flags 0x%x, base offset %" G_GINT64_FORMAT,
@@ -2019,6 +2020,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     if (*base_offset == -1) {
       *base_offset = moof_offset + moof_length + 8;
       GST_LOG_OBJECT (qtdemux, "base_offset assumed in mdat after moof");
+      ismv = TRUE;
     }
   }
 
@@ -2135,7 +2137,9 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     sample->timestamp = timestamp;
     sample->duration = dur;
     /* sample-is-difference-sample */
-    sample->keyframe = !(sflags & 0x10000);
+    /* ismv seems to use 0x40 for keyframe, 0xc0 for non-keyframe,
+     * now idea how it relates to bitfield other than massive LE/BE confusion */
+    sample->keyframe = ismv ? ((sflags & 0xff) == 0x40) : !(sflags & 0x10000);
     *base_offset += size;
     timestamp += dur;
     sample++;
