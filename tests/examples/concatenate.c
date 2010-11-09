@@ -61,7 +61,9 @@ make_profile_from_info (GstDiscovererInfo * info)
     profile = gst_encoding_profile_new ((gchar *) "concatenate",
         gst_discoverer_stream_info_get_caps (sinfo), NULL, FALSE);
 
-    substreams = gst_discoverer_container_info_get_streams (sinfo);
+    substreams =
+        gst_discoverer_container_info_get_streams ((GstDiscovererContainerInfo
+            *) sinfo);
 
     /* For each on the formats add stream profiles */
     for (tmp = substreams; tmp; tmp = tmp->next) {
