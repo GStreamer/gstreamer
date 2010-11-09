@@ -1321,6 +1321,50 @@ gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
   return gst_qt_mux_send_ftyp (qtmux, &qtmux->header_size);
 }
 
+/* either calculates size of extra atoms or pushes them */
+static GstFlowReturn
+gst_qt_mux_send_extra_atoms (GstQTMux * qtmux, gboolean send, guint64 * offset,
+    gboolean mind_fast)
+{
+  GSList *walk;
+  guint64 loffset = 0, size = 0;
+  guint8 *data;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
+    AtomInfo *ainfo = (AtomInfo *) walk->data;
+
+    loffset = size = 0;
+    data = NULL;
+    if (!ainfo->copy_data_func (ainfo->atom,
+            send ? &data : NULL, &size, &loffset))
+      goto serialize_error;
+
+    if (send) {
+      GstBuffer *buf;
+
+      GST_DEBUG_OBJECT (qtmux,
+          "Pushing extra top-level atom %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (ainfo->atom->type));
+      buf = _gst_buffer_new_take_data (data, loffset);
+      ret = gst_qt_mux_send_buffer (qtmux, buf, offset, mind_fast);
+      if (ret != GST_FLOW_OK)
+        break;
+    } else {
+      if (offset)
+        *offset += loffset;
+    }
+  }
+
+  return ret;
+
+serialize_error:
+  {
+    g_free (data);
+    return GST_FLOW_ERROR;
+  }
+}
+
 static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
@@ -1431,7 +1475,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   gboolean ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
   guint64 offset = 0, size = 0;
-  guint8 *data;
+  guint8 *data = NULL;
   GSList *walk;
   gboolean large_file;
   guint32 timescale;
@@ -1531,17 +1575,12 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     offset += qtmux->header_size + (large_file ? 16 : 8);
 
     /* sum up with the extra atoms size */
-    for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
-      guint64 extra_size = 0, extra_offset = 0;
-      AtomInfo *ainfo = (AtomInfo *) walk->data;
-
-      if (!ainfo->copy_data_func (ainfo->atom, NULL, &extra_size,
-              &extra_offset))
-        goto serialize_error;
-      offset += extra_offset;
-    }
-  } else
+    ret = gst_qt_mux_send_extra_atoms (qtmux, FALSE, &offset, FALSE);
+    if (ret != GST_FLOW_OK)
+      return ret;
+  } else {
     offset = qtmux->header_size;
+  }
   atom_moov_chunks_add_offset (qtmux->moov, offset);
 
   /* serialize moov */
@@ -1555,22 +1594,14 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* note: as of this point, we no longer care about tracking written data size,
    * since there is no more use for it anyway */
   GST_DEBUG_OBJECT (qtmux, "Pushing movie atoms");
-  gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+  ret = gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
-  /* push extra top-level atoms */
-  for (walk = qtmux->extra_atoms; walk; walk = g_slist_next (walk)) {
-    AtomInfo *ainfo = (AtomInfo *) walk->data;
-
-    offset = size = 0;
-    data = NULL;
-    if (!ainfo->copy_data_func (ainfo->atom, &data, &size, &offset))
-      goto serialize_error;
-
-    buffer = _gst_buffer_new_take_data (data, offset);
-    GST_DEBUG_OBJECT (qtmux, "Pushing extra top-level atom %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (ainfo->atom->type));
-    gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
-  }
+  /* extra atoms */
+  ret = gst_qt_mux_send_extra_atoms (qtmux, TRUE, NULL, FALSE);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   /* if needed, send mdat atom and move buffered data into it */
   if (qtmux->fast_start_file) {
@@ -1596,7 +1627,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* ERRORS */
 serialize_error:
   {
-    gst_buffer_unref (buffer);
+    g_free (data);
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Failed to serialize moov"));
     return GST_FLOW_ERROR;
