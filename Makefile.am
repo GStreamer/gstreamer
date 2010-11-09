@@ -37,6 +37,7 @@ endif
 
 include $(top_srcdir)/common/coverage/lcov.mak
 
+check: check-exports
 
 # cruft: plugins that have been merged or moved or renamed
 
