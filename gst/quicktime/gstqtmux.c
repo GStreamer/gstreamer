@@ -1321,6 +1321,59 @@ gst_qt_mux_prepare_and_send_ftyp (GstQTMux * qtmux)
   return gst_qt_mux_send_ftyp (qtmux, &qtmux->header_size);
 }
 
+static void
+gst_qt_mux_configure_moov (GstQTMux * qtmux, guint32 * _timescale)
+{
+  gboolean large_file;
+  guint32 timescale;
+
+  g_return_if_fail (_timescale != NULL);
+
+  GST_OBJECT_LOCK (qtmux);
+  *_timescale = timescale = qtmux->timescale;
+  large_file = qtmux->large_file;
+  GST_OBJECT_UNLOCK (qtmux);
+
+  /* inform lower layers of our property wishes, and determine duration.
+   * Let moov take care of this using its list of traks;
+   * so that released pads are also included */
+  GST_DEBUG_OBJECT (qtmux, "Large file support: %d", large_file);
+  GST_DEBUG_OBJECT (qtmux, "Updating timescale to %" G_GUINT32_FORMAT,
+      timescale);
+  atom_moov_update_timescale (qtmux->moov, timescale);
+  atom_moov_set_64bits (qtmux->moov, large_file);
+
+  atom_moov_update_duration (qtmux->moov);
+}
+
+static GstFlowReturn
+gst_qt_mux_send_moov (GstQTMux * qtmux, guint64 * _offset, gboolean mind_fast)
+{
+  guint64 offset = 0, size = 0;
+  guint8 *data;
+  GstBuffer *buf;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  /* serialize moov */
+  offset = size = 0;
+  data = NULL;
+  GST_LOG_OBJECT (qtmux, "Copying movie header into buffer");
+  if (!atom_moov_copy_data (qtmux->moov, &data, &size, &offset))
+    goto serialize_error;
+
+  buf = _gst_buffer_new_take_data (data, offset);
+  GST_DEBUG_OBJECT (qtmux, "Pushing moov atoms");
+  ret = gst_qt_mux_send_buffer (qtmux, buf, _offset, mind_fast);
+
+  return ret;
+
+serialize_error:
+  {
+    g_free (data);
+    return GST_FLOW_ERROR;
+  }
+}
+
 /* either calculates size of extra atoms or pushes them */
 static GstFlowReturn
 gst_qt_mux_send_extra_atoms (GstQTMux * qtmux, gboolean send, guint64 * offset,
@@ -1347,7 +1400,7 @@ gst_qt_mux_send_extra_atoms (GstQTMux * qtmux, gboolean send, guint64 * offset,
           "Pushing extra top-level atom %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (ainfo->atom->type));
       buf = _gst_buffer_new_take_data (data, loffset);
-      ret = gst_qt_mux_send_buffer (qtmux, buf, offset, mind_fast);
+      ret = gst_qt_mux_send_buffer (qtmux, buf, offset, FALSE);
       if (ret != GST_FLOW_OK)
         break;
     } else {
@@ -1473,9 +1526,7 @@ static GstFlowReturn
 gst_qt_mux_stop_file (GstQTMux * qtmux)
 {
   gboolean ret = GST_FLOW_OK;
-  GstBuffer *buffer = NULL;
   guint64 offset = 0, size = 0;
-  guint8 *data = NULL;
   GSList *walk;
   gboolean large_file;
   guint32 timescale;
@@ -1498,21 +1549,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
           gst_flow_get_name (ret));
   }
 
-  GST_OBJECT_LOCK (qtmux);
-  timescale = qtmux->timescale;
-  large_file = qtmux->large_file;
-  GST_OBJECT_UNLOCK (qtmux);
-
-  /* inform lower layers of our property wishes, and determine duration.
-   * Let moov take care of this using its list of traks;
-   * so that released pads are also included */
-  GST_DEBUG_OBJECT (qtmux, "Large file support: %d", large_file);
-  GST_DEBUG_OBJECT (qtmux, "Updating timescale to %" G_GUINT32_FORMAT,
-      timescale);
-  atom_moov_update_timescale (qtmux->moov, timescale);
-  atom_moov_set_64bits (qtmux->moov, large_file);
-
-  atom_moov_update_duration (qtmux->moov);
+  gst_qt_mux_configure_moov (qtmux, &timescale);
 
   /* check for late streams */
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
@@ -1583,18 +1620,10 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   }
   atom_moov_chunks_add_offset (qtmux->moov, offset);
 
-  /* serialize moov */
-  offset = size = 0;
-  data = NULL;
-  GST_LOG_OBJECT (qtmux, "Copying movie header into buffer");
-  if (!atom_moov_copy_data (qtmux->moov, &data, &size, &offset))
-    goto serialize_error;
-
-  buffer = _gst_buffer_new_take_data (data, offset);
+  /* moov */
   /* note: as of this point, we no longer care about tracking written data size,
    * since there is no more use for it anyway */
-  GST_DEBUG_OBJECT (qtmux, "Pushing movie atoms");
-  ret = gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+  ret = gst_qt_mux_send_moov (qtmux, NULL, FALSE);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -1627,7 +1656,6 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   /* ERRORS */
 serialize_error:
   {
-    g_free (data);
     GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
         ("Failed to serialize moov"));
     return GST_FLOW_ERROR;
