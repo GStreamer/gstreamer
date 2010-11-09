@@ -1016,6 +1016,18 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
   }
 }
 
+static inline GstBuffer *
+_gst_buffer_new_take_data (guint8 * data, guint size)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+  GST_BUFFER_SIZE (buf) = size;
+
+  return buf;
+}
+
 static GstFlowReturn
 gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
     gboolean mind_fast)
@@ -1179,10 +1191,7 @@ gst_qt_mux_send_mdat_header (GstQTMux * qtmux, guint64 * off, guint64 size,
   if (atom_copy_data (node_header, &data, &size, &offset) == 0)
     goto serialize_error;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = offset;
-
+  buf = _gst_buffer_new_take_data (data, offset);
   g_free (node_header);
 
   GST_LOG_OBJECT (qtmux, "Pushing mdat start");
@@ -1248,9 +1257,7 @@ gst_qt_mux_send_ftyp (GstQTMux * qtmux, guint64 * off)
   if (!atom_ftyp_copy_data (qtmux->ftyp, &data, &size, &offset))
     goto serialize_error;
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
-  GST_BUFFER_SIZE (buf) = offset;
+  buf = _gst_buffer_new_take_data (data, offset);
 
   GST_LOG_OBJECT (qtmux, "Pushing ftyp");
   return gst_qt_mux_send_buffer (qtmux, buf, off, FALSE);
@@ -1544,9 +1551,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
   if (!atom_moov_copy_data (qtmux->moov, &data, &size, &offset))
     goto serialize_error;
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer) = data;
-  GST_BUFFER_SIZE (buffer) = offset;
+  buffer = _gst_buffer_new_take_data (data, offset);
   /* note: as of this point, we no longer care about tracking written data size,
    * since there is no more use for it anyway */
   GST_DEBUG_OBJECT (qtmux, "Pushing movie atoms");
@@ -1561,9 +1566,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     if (!ainfo->copy_data_func (ainfo->atom, &data, &size, &offset))
       goto serialize_error;
 
-    buffer = gst_buffer_new ();
-    GST_BUFFER_MALLOCDATA (buffer) = GST_BUFFER_DATA (buffer) = data;
-    GST_BUFFER_SIZE (buffer) = offset;
+    buffer = _gst_buffer_new_take_data (data, offset);
     GST_DEBUG_OBJECT (qtmux, "Pushing extra top-level atom %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (ainfo->atom->type));
     gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
