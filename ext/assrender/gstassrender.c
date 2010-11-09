@@ -480,7 +480,7 @@ blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
   gint height = render->height; \
   gint dst_stride = GST_ROUND_UP_4 (width * bpp); \
   gint dst_skip; \
-  gint src_stride, src_skip; \
+  gint src_skip; \
   \
   while (ass_image) { \
     if (ass_image->dst_y > height || ass_image->dst_x > width) \
@@ -496,7 +496,6 @@ blit_##name (GstAssRender * render, ASS_Image * ass_image, GstBuffer * buffer) \
     \
     w = MIN (ass_image->w, width - ass_image->dst_x); \
     h = MIN (ass_image->h, height - ass_image->dst_y); \
-    src_stride = ass_image->stride; \
     src_skip = ass_image->stride - w; \
     dst_skip = dst_stride - w * bpp; \
     \
