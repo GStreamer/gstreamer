@@ -145,6 +145,7 @@ struct _GstRTSPStream {
 
   /* destination */
   gchar        *destination;
+  gboolean      is_multicast;
   guint         ttl;
 };
 

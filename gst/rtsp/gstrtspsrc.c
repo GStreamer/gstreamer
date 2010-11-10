@@ -915,9 +915,14 @@ gst_rtspsrc_do_stream_connection (GstRTSPSrc * src, GstRTSPStream * stream,
   else
     return;
 
-  /* save address, FIXME, check for multicast */
+  /* save address */
   g_free (stream->destination);
   stream->destination = g_strdup (conn->address);
+
+  /* check for multicast */
+  stream->is_multicast =
+      gst_sdp_address_is_multicast (conn->nettype, conn->addrtype,
+      conn->address);
   stream->ttl = conn->ttl;
 }
 
@@ -4848,6 +4853,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     }
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->conninfo.location);
+
+    /* if we have a multicast connection, only suggest multicast from now on */
+    if (stream->is_multicast)
+      protocols &= GST_RTSP_LOWER_TRANS_UDP_MCAST;
 
   next_protocol:
     /* first selectable protocol */
