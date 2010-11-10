@@ -91,6 +91,8 @@ struct _GstCVApi
   size_t (* CVPixelBufferGetHeight) (CVPixelBufferRef pixelBuffer);
   size_t (* CVPixelBufferGetHeightOfPlane)
       (CVPixelBufferRef pixelBuffer, size_t planeIndex);
+  void * (* CVPixelBufferGetIOSurface)
+      (CVPixelBufferRef pixelBuffer);
   size_t (* CVPixelBufferGetPlaneCount)
       (CVPixelBufferRef pixelBuffer);
   CFTypeID (* CVPixelBufferGetTypeID) (void);

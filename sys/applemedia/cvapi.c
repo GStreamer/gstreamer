@@ -53,6 +53,7 @@ gst_cv_api_obtain (GError ** error)
     SYM_SPEC (CVPixelBufferGetBytesPerRowOfPlane),
     SYM_SPEC (CVPixelBufferGetHeight),
     SYM_SPEC (CVPixelBufferGetHeightOfPlane),
+    SYM_SPEC (CVPixelBufferGetIOSurface),
     SYM_SPEC (CVPixelBufferGetPlaneCount),
     SYM_SPEC (CVPixelBufferGetTypeID),
     SYM_SPEC (CVPixelBufferIsPlanar),
