@@ -1,0 +1,103 @@
+GStreamer Editing Services
+
+TODO
+
+FUNDAMENTAL GOALS:
+
+ 1) API must be easy to use for simple use-cases. Use and abuse
+ convenience methods.
+ 2) API must allow as many use-cases as possible, not just the simple
+ ones.
+
+* Project file load/save support (GESFormatter)
+
+  Problems:
+   Timelines can be stored in many different formats, we need to
+   ensure it is as easy/trivial as possible for users to load/save
+   those timelines.
+   Some timeline formats might have format-specific
+   sources/objects/effects which need to be handled in certain ways
+   and therefore provide their own classes.
+
+  The object that can save/load GESTimeline are Formatters.
+
+  Formatters can offer support for load-only/save-only formats.
+
+  There must be a list of well-known GES classes that all formatters
+  must be able to cope with. If a subclass of one of those classes is
+  present in a timeline, the formatter will do its best to store a
+  compatible information.
+
+  A Formatter can ask a pre-render of classes that it doesn't
+  understand (See Proxy section).
+
+  Formatters can provide subclasses of well-known GES classes when
+  filling in the timeline to offer format-specific features.
+
+
+* Grouping/Linking of Multiple TrackObjects
+
+  Problems:
+   In order to make the usage of timelines at the Layer level as easy
+   as possible, we must be able to group any TrackObject together as
+   one TimelineObject.
+   
+
+ ** Selection support
+
+* Effects support
+  * in the Layers
+  * as TrackObjects
+
+* Source Material object
+
+  Problems:
+   Several TimelineSource for a same uri actually share a lot
+   in common. That information will mostly come from GstDiscoverer,
+   but could also contain extra information provided by 3rd party
+   modules.
+
+  Definition:
+   Material: n, The substance or substances out of which a thing is or
+   can be made.
+
+  In order to avoid duplicating that information in every single
+  TimelineSource, a 'Material' object needs to be made available.
+
+  A Material object contains all the information which is independent
+  of the usage of that material in a timeline.
+
+  A Material object can specify the TimelineSource class to use in a
+  Layer.
+
+
+* Proxy support
+
+  Problems:
+   A certain content might be impossible to edit on a certain setup
+   due to many reasons (too complex to decode in realtime, not in
+   digital format, not available locally, ...).
+
+   In order to be able to store/export timelines to some formats, one
+   might need to have to create a pre-render of some items of the
+   timeline, while retaining as much information as possible.
+
+   Content here is not limited to single materials, it could very well
+   be a complex combination of materials/effects like a timeline or a
+   collection of images.
+
+  To solve this problem, we need a notion of ProxyMaterial.
+
+  It is a subclass of Material and as such provides all the same
+  features as Material.
+
+  It should be made easy to create one from an existing TimelineSource
+  (and it's associated Material(s)), with specifiable rendering
+  settings and output location.
+
+  The user should have the possibility to switch from Proxy materials
+  to original (in order to use the lower
+  resolution/quality/... version for the editing phase and the
+  original material for final rendering phase).
+
+  
