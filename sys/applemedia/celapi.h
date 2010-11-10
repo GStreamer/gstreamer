@@ -45,6 +45,10 @@ struct _GstCelApi
       FigCaptureStreamRef * outAudioStream);
 
   CFStringRef * kFigCaptureDeviceProperty_MultiplexStreams;
+  CFStringRef * kFigCapturePortType_Bottom;
+  CFStringRef * kFigCapturePortType_Camera;
+  CFStringRef * kFigCapturePortType_FrontFacingCamera;
+  CFStringRef * kFigCapturePortType_Top;
   CFStringRef * kFigCapturePropertyValue_AFEarlyOutAllowPeakAtStart;
   CFStringRef * kFigCapturePropertyValue_AFEarlyOutDecrementAmount;
   CFStringRef * kFigCapturePropertyValue_AFEarlyOutEnable;

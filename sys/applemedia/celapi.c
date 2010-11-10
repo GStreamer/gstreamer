@@ -45,6 +45,10 @@ gst_cel_api_obtain (GError ** error)
     SYM_SPEC (FigCreateCaptureDevicesAndStreamsForPreset),
 
     SYM_SPEC (kFigCaptureDeviceProperty_MultiplexStreams),
+    SYM_SPEC (kFigCapturePortType_Bottom),
+    SYM_SPEC (kFigCapturePortType_Camera),
+    SYM_SPEC (kFigCapturePortType_FrontFacingCamera),
+    SYM_SPEC (kFigCapturePortType_Top),
     SYM_SPEC (kFigCapturePropertyValue_AFEarlyOutAllowPeakAtStart),
     SYM_SPEC (kFigCapturePropertyValue_AFEarlyOutDecrementAmount),
     SYM_SPEC (kFigCapturePropertyValue_AFEarlyOutEnable),
