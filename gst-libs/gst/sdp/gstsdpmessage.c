@@ -1368,7 +1368,7 @@ gst_sdp_media_as_text (const GstSDPMedia * media)
           conn->addrtype, conn->address);
       if (gst_sdp_address_is_multicast (conn->nettype, conn->addrtype,
               conn->address)) {
-        /* only add ttl for IP4 multicast */
+        /* only add TTL for IP4 multicast */
         if (strcmp (conn->addrtype, "IP4") == 0)
           g_string_append_printf (lines, "/%u", conn->ttl);
         if (conn->addr_number > 1)
@@ -1954,7 +1954,9 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       READ_STRING (conn.nettype);
       READ_STRING (conn.addrtype);
       READ_STRING (conn.address);
-      READ_UINT (conn.ttl);
+      /* only read TTL for IP4 */
+      if (strcmp (conn.addrtype, "IP4") == 0)
+        READ_UINT (conn.ttl);
       READ_UINT (conn.addr_number);
 
       if (c->state == SDP_SESSION) {
