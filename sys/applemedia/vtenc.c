@@ -523,7 +523,7 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   status = vt->VTCompressionSessionSetProperty (session,
       *(vt->kVTCompressionPropertyKey_ProfileLevel),
-      *(vt->kVTProfileLevel_H264_Baseline_1_3));
+      *(vt->kVTProfileLevel_H264_Baseline_3_0));
   GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_ProfileLevel => %d",
       status);
 
