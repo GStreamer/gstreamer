@@ -74,6 +74,12 @@ Duration:
   - geo-tags: map-widget?, link to google-maps?
   - artist: links to {last.fm,wikipedia}
 
+== deep scan mode ==
+- update fields when playing
+  - listen for duration messages on the bus
+
 = TODO for discoverer =
 - get duration per stream
   - this would need individual queries on the demuxer src pads
+  - or duration as part of per stream tags
+

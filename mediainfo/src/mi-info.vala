@@ -517,6 +517,9 @@ public class MediaInfo.Info : VBox
     }
   }
 
+  /* FIXME: discoverer not neccesarily return the stream in the same order as
+   * playbin2 sees them: https://bugzilla.gnome.org/show_bug.cgi?id=634407
+   */
   private void on_video_stream_switched (NotebookPage page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
