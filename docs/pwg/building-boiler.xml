@@ -95,17 +95,22 @@ Resolving deltas: 100% (240/240), done.
       </listitem>
     </orderedlist>
     <para>
-      Note that capitalization is important for the name of the plugin. Under
-      some operating systems, capitalization is also important when specifying
-      directory names. For example, the following commands create the
-      MyFilter plugin based on the plugin template and put the output files
-      in the <filename class="directory">gst-template/gst-plugin/src</filename>
+      For example, the following commands create the MyFilter plugin based on
+      the plugin template and put the output files in the
+      <filename class="directory">gst-template/gst-plugin/src</filename>
       directory:
     </para>
     <screen>
 <prompt>shell $ </prompt><userinput>cd gst-template/gst-plugin/src</userinput>
 <prompt>shell $ </prompt><userinput>../tools/make_element MyFilter</userinput>
     </screen>
+    <note>
+      <para>
+        Capitalization is important for the name of the plugin. Keep in mind
+        that under some operating systems, capitalization is also important
+        when specifying directory and file names in general.
+      </para>
+    </note>
     <para>
       The last command creates two files:
       <filename>gstexamplefilter.c</filename> and
@@ -120,9 +125,10 @@ Resolving deltas: 100% (240/240), done.
     </note>
     <para>
       Now one needs to adjust the <filename>Makefile.am</filename> to use the
-      new filenames and run <filename>autogen.sh</filename> to bootstrap the
-      build environment. After that the project can be built using the well
-      known <userinput>make &amp;&amp; sudo make install</userinput>. 
+      new filenames and run <filename>autogen.sh</filename> from the parent
+      directory to bootstrap the build environment. After that, the project
+      can be built and installed using the well known
+      <userinput>make &amp;&amp; sudo make install</userinput> commands.
     </para>
     <note>
       <para>
@@ -209,9 +215,8 @@ GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
   <sect1 id="section-boiler-details">
     <title>GstElementDetails</title>
     <para>
-      The GstElementDetails structure gives a hierarchical type for the element,
-      a human-readable description of the element, as well as author and version
-      data. The entries are:
+      The GstElementDetails structure provides a hierarchical type for element
+      information. The entries are:
     </para>
     <itemizedlist>
       <listitem><para>
