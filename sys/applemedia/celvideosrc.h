@@ -46,6 +46,7 @@ struct _GstCelVideoSrc
 {
   GstPushSrc push_src;
 
+  gint device_index;
   gboolean do_stats;
 
   GstCoreMediaCtx *ctx;

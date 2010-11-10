@@ -23,7 +23,8 @@
 
 #include <gst/video/video.h>
 
-#define DEFAULT_DO_STATS FALSE
+#define DEFAULT_DEVICE_INDEX  -1
+#define DEFAULT_DO_STATS      FALSE
 
 #define BUFQUEUE_LOCK(instance) GST_OBJECT_LOCK (instance)
 #define BUFQUEUE_UNLOCK(instance) GST_OBJECT_UNLOCK (instance)
@@ -44,6 +45,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
+  PROP_DEVICE_INDEX,
   PROP_DO_STATS,
   PROP_FPS
 };
@@ -116,6 +118,9 @@ gst_cel_video_src_get_property (GObject * object, guint prop_id,
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
   switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      g_value_set_int (value, self->device_index);
+      break;
     case PROP_DO_STATS:
       g_value_set_boolean (value, self->do_stats);
       break;
@@ -137,6 +142,9 @@ gst_cel_video_src_set_property (GObject * object, guint prop_id,
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
   switch (prop_id) {
+    case PROP_DEVICE_INDEX:
+      self->device_index = g_value_get_int (value);
+      break;
     case PROP_DO_STATS:
       self->do_stats = g_value_get_boolean (value);
       break;
@@ -470,6 +478,8 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   FigCaptureDeviceRef device = NULL;
   FigBaseObjectRef device_base;
   FigBaseVTable *device_vt;
+  CFArrayRef stream_array = NULL;
+  CFIndex stream_index;
   FigCaptureStreamRef stream = NULL;
   FigBaseObjectRef stream_base;
   FigBaseVTable *stream_vt;
@@ -493,6 +503,25 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
 
   device_base = mt->FigCaptureDeviceGetFigBaseObject (device);
   device_vt = cm->FigBaseObjectGetVTable (device_base);
+
+  status = device_vt->base->CopyProperty (device_base,
+      *(mt->kFigCaptureDeviceProperty_StreamArray), NULL,
+      (CFTypeRef *) & stream_array);
+  if (status != noErr)
+    goto unexpected_error;
+
+  if (self->device_index >= 0)
+    stream_index = self->device_index;
+  else
+    stream_index = 0;
+
+  if (stream_index >= CFArrayGetCount (stream_array))
+    goto invalid_device_index;
+
+  CFRelease (stream);
+  stream = (FigCaptureStreamRef) CFArrayGetValueAtIndex (stream_array,
+      stream_index);
+  CFRetain (stream);
 
   stream_base = mt->FigCaptureStreamGetFigBaseObject (stream);
   stream_vt = cm->FigBaseObjectGetVTable (stream_base);
@@ -521,6 +550,8 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   self->queue = queue;
   self->duration = GST_CLOCK_TIME_NONE;
 
+  CFRelease (stream_array);
+
   return TRUE;
 
   /* ERRORS */
@@ -537,6 +568,12 @@ device_busy:
         ("device is already in use"), (NULL));
     goto any_error;
   }
+invalid_device_index:
+  {
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("invalid video capture device index"), (NULL));
+    goto any_error;
+  }
 unexpected_error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
@@ -547,6 +584,8 @@ any_error:
   {
     if (stream != NULL)
       CFRelease (stream);
+    if (stream_array != NULL)
+      CFRelease (stream_array);
     if (device != NULL)
       CFRelease (device);
 
@@ -807,6 +846,11 @@ gst_cel_video_src_class_init (GstCelVideoSrcClass * klass)
 
   gstpushsrc_class->create = gst_cel_video_src_create;
 
+  g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
+      g_param_spec_int ("device-index", "Device Index",
+          "The zero-based device index",
+          -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DO_STATS,
       g_param_spec_boolean ("do-stats", "Enable statistics",
           "Enable logging of statistics", DEFAULT_DO_STATS,
