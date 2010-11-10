@@ -146,6 +146,8 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
         | GST_API_VIDEO_TOOLBOX, &error);
     if (error != NULL)
       goto api_error;
+
+    self->cur_outbufs = g_ptr_array_new ();
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -160,6 +162,9 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
     self->negotiated_fps_n = self->negotiated_fps_d = 0;
     self->caps_width = self->caps_height = 0;
     self->caps_fps_n = self->caps_fps_d = 0;
+
+    g_ptr_array_free (self->cur_outbufs, TRUE);
+    self->cur_outbufs = NULL;
 
     g_object_unref (self->ctx);
     self->ctx = NULL;
@@ -380,10 +385,10 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   GstVTApi *vt = self->ctx->vt;
   CMSampleBufferRef sbuf;
   VTStatus status;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint i;
 
   self->cur_inbuf = buf;
-  self->cur_flowret = GST_FLOW_OK;
-
   sbuf = gst_vtdec_sample_buffer_from (self, buf);
 
   status = vt->VTDecompressionSessionDecodeFrame (self->session, sbuf, 0, 0, 0);
@@ -399,11 +404,20 @@ gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
   }
 
   self->ctx->cm->FigSampleBufferRelease (sbuf);
-
-  gst_buffer_unref (buf);
   self->cur_inbuf = NULL;
+  gst_buffer_unref (buf);
 
-  return self->cur_flowret;
+  for (i = 0; i != self->cur_outbufs->len; i++) {
+    GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
+
+    if (ret == GST_FLOW_OK)
+      ret = gst_pad_push (self->srcpad, buf);
+    else
+      gst_buffer_unref (buf);
+  }
+  g_ptr_array_set_size (self->cur_outbufs, 0);
+
+  return ret;
 }
 
 static void
@@ -413,7 +427,7 @@ gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
   GstVTDec *self = GST_VTDEC_CAST (data);
   GstBuffer *buf;
 
-  if (result != kVTSuccess || self->cur_flowret != GST_FLOW_OK)
+  if (result != kVTSuccess)
     goto beach;
 
   if (!gst_vtdec_negotiate_downstream (self))
@@ -424,7 +438,7 @@ gst_vtdec_output_frame (void *data, gsize unk1, VTStatus result, gsize unk2,
   gst_buffer_copy_metadata (buf, self->cur_inbuf,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
 
-  self->cur_flowret = gst_pad_push (self->srcpad, buf);
+  g_ptr_array_add (self->cur_outbufs, buf);
 
 beach:
   return;

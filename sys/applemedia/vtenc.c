@@ -286,6 +286,8 @@ gst_vtenc_change_state (GstElement * element, GstStateChange transition)
         | GST_API_VIDEO_TOOLBOX, &error);
     if (error != NULL)
       goto api_error;
+
+    self->cur_outbufs = g_ptr_array_new ();
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -306,6 +308,9 @@ gst_vtenc_change_state (GstElement * element, GstStateChange transition)
     gst_vtenc_clear_cached_caps_downstream (self);
 
     GST_OBJECT_UNLOCK (self);
+
+    g_ptr_array_free (self->cur_outbufs, TRUE);
+    self->cur_outbufs = NULL;
 
     g_object_unref (self->ctx);
     self->ctx = NULL;
@@ -713,9 +718,10 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   CMTime ts, duration;
   CVPixelBufferRef pbuf = NULL;
   VTStatus vt_status;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint i;
 
   self->cur_inbuf = buf;
-  self->cur_flowret = GST_FLOW_OK;
 
   ts = self->ctx->cm->CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
@@ -761,16 +767,25 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
   GST_OBJECT_UNLOCK (self);
 
   cv->CVPixelBufferRelease (pbuf);
-
-  gst_buffer_unref (buf);
   self->cur_inbuf = NULL;
+  gst_buffer_unref (buf);
 
-  return self->cur_flowret;
+  for (i = 0; i != self->cur_outbufs->len; i++) {
+    GstBuffer *buf = g_ptr_array_index (self->cur_outbufs, i);
+
+    if (ret == GST_FLOW_OK)
+      ret = gst_pad_push (self->srcpad, buf);
+    else
+      gst_buffer_unref (buf);
+  }
+  g_ptr_array_set_size (self->cur_outbufs, 0);
+
+  return ret;
 
 cv_error:
   {
-    gst_buffer_unref (buf);
     self->cur_inbuf = NULL;
+    gst_buffer_unref (buf);
 
     return GST_FLOW_ERROR;
   }
@@ -810,9 +825,7 @@ gst_vtenc_output_buffer (void *data, int a2, int a3, int a4,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
-  GST_OBJECT_UNLOCK (self);
-  self->cur_flowret = gst_pad_push (self->srcpad, buf);
-  GST_OBJECT_LOCK (self);
+  g_ptr_array_add (self->cur_outbufs, buf);
 
 beach:
   return kVTSuccess;

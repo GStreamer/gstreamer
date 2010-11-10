@@ -76,7 +76,7 @@ struct _GstVTEnc
   CFMutableDictionaryRef options;
 
   GstBuffer * cur_inbuf;
-  GstFlowReturn cur_flowret;
+  GPtrArray * cur_outbufs;
   gboolean expect_keyframe;
 };
 

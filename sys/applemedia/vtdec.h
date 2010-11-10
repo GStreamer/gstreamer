@@ -70,7 +70,7 @@ struct _GstVTDec
   VTDecompressionSessionRef session;
 
   GstBuffer * cur_inbuf;
-  GstFlowReturn cur_flowret;
+  GPtrArray * cur_outbufs;
 };
 
 void gst_vtdec_register_elements (GstPlugin * plugin);
