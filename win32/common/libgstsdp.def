@@ -1,4 +1,5 @@
 EXPORTS
+	gst_sdp_address_is_multicast
 	gst_sdp_media_add_attribute
 	gst_sdp_media_add_bandwidth
 	gst_sdp_media_add_connection

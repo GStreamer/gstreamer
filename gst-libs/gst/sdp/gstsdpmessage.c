@@ -322,33 +322,56 @@ gst_sdp_message_free (GstSDPMessage * msg)
   return GST_SDP_OK;
 }
 
-static gboolean
-is_multicast_address (const gchar * host_name, guint * family)
+/**
+ * gst_sdp_address_is_multicast:
+ * @nettype: a network type
+ * @addrtype: an address type
+ * @addr: an address
+ *
+ * Check if the given @addr is a multicast address.
+ *
+ * Returns: TRUE when @addr is multicast.
+ *
+ * Since: 0.10.32
+ */
+gboolean
+gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
+    const gchar * addr)
 {
   struct addrinfo hints;
   struct addrinfo *ai;
   struct addrinfo *res;
   gboolean ret = FALSE;
 
+  g_return_val_if_fail (addr, FALSE);
+
+  /* we only support IN */
+  if (nettype && strcmp (nettype, "IN") != 0)
+    return FALSE;
+
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_DGRAM;
 
-  g_return_val_if_fail (host_name, FALSE);
+  /* set the address type as a hint */
+  if (addrtype) {
+    if (!strcmp (addrtype, "IP4"))
+      hints.ai_family = AF_INET;
+    else if (!strcmp (addrtype, "IP6"))
+      hints.ai_family = AF_INET6;
+  }
 
-  if (getaddrinfo (host_name, NULL, &hints, &res) < 0)
+  if (getaddrinfo (addr, NULL, &hints, &res) < 0)
     return FALSE;
 
   for (ai = res; !ret && ai; ai = ai->ai_next) {
     if (ai->ai_family == AF_INET)
       ret =
-          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
-              s_addr));
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->
+              sin_addr.s_addr));
     else
       ret =
-          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
-          sin6_addr);
-    if (ret && family)
-      *family = ai->ai_family;
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->
+              ai_addr)->sin6_addr);
   }
 
   freeaddrinfo (res);
@@ -408,12 +431,12 @@ gst_sdp_message_as_text (const GstSDPMessage * msg)
 
   if (msg->connection.nettype && msg->connection.addrtype &&
       msg->connection.address) {
-    guint family;
-
     g_string_append_printf (lines, "c=%s %s %s", msg->connection.nettype,
         msg->connection.addrtype, msg->connection.address);
-    if (is_multicast_address (msg->connection.address, &family)) {
-      if (family == AF_INET)
+    if (gst_sdp_address_is_multicast (msg->connection.nettype,
+            msg->connection.addrtype, msg->connection.address)) {
+      /* only add ttl for IP4 */
+      if (strcmp (msg->connection.addrtype, "IP4") == 0)
         g_string_append_printf (lines, "/%u", msg->connection.ttl);
       if (msg->connection.addr_number > 1)
         g_string_append_printf (lines, "/%u", msg->connection.addr_number);
@@ -1341,12 +1364,12 @@ gst_sdp_media_as_text (const GstSDPMedia * media)
     const GstSDPConnection *conn = gst_sdp_media_get_connection (media, i);
 
     if (conn->nettype && conn->addrtype && conn->address) {
-      guint family;
-
       g_string_append_printf (lines, "c=%s %s %s", conn->nettype,
           conn->addrtype, conn->address);
-      if (is_multicast_address (conn->address, &family)) {
-        if (family == AF_INET)
+      if (gst_sdp_address_is_multicast (conn->nettype, conn->addrtype,
+              conn->address)) {
+        /* only add ttl for IP4 multicast */
+        if (strcmp (conn->addrtype, "IP4") == 0)
           g_string_append_printf (lines, "/%u", conn->ttl);
         if (conn->addr_number > 1)
           g_string_append_printf (lines, "/%u", conn->addr_number);

@@ -286,6 +286,9 @@ gchar*                  gst_sdp_message_as_text             (const GstSDPMessage
 GstSDPResult            gst_sdp_message_parse_uri           (const gchar *uri, GstSDPMessage *msg);
 gchar*                  gst_sdp_message_as_uri              (const gchar *scheme, const GstSDPMessage *msg);
 
+/* utils */
+gboolean                gst_sdp_address_is_multicast        (const gchar *nettype, const gchar *addrtype,
+                                                             const gchar *addr);
 /* v=.. */
 const gchar*            gst_sdp_message_get_version         (const GstSDPMessage *msg);
 GstSDPResult            gst_sdp_message_set_version         (GstSDPMessage *msg, const gchar *version);
