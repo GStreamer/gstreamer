@@ -26,11 +26,11 @@
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DO_STATS      FALSE
 
-#define BUFQUEUE_LOCK(instance) GST_OBJECT_LOCK (instance)
-#define BUFQUEUE_UNLOCK(instance) GST_OBJECT_UNLOCK (instance)
-#define BUFQUEUE_WAIT(instance) \
-    g_cond_wait (instance->cond, GST_OBJECT_GET_LOCK (instance))
-#define BUFQUEUE_NOTIFY(instance) g_cond_signal (instance->cond)
+#define QUEUE_READY_LOCK(instance) GST_OBJECT_LOCK (instance)
+#define QUEUE_READY_UNLOCK(instance) GST_OBJECT_UNLOCK (instance)
+#define QUEUE_READY_WAIT(instance) \
+    g_cond_wait (instance->ready_cond, GST_OBJECT_GET_LOCK (instance))
+#define QUEUE_READY_NOTIFY(instance) g_cond_signal (instance->ready_cond)
 
 GST_DEBUG_CATEGORY (gst_cel_video_src_debug);
 #define GST_CAT_DEFAULT gst_cel_video_src_debug
@@ -92,7 +92,7 @@ gst_cel_video_src_init (GstCelVideoSrc * self, GstCelVideoSrcClass * gclass)
   gst_base_src_set_live (base_src, TRUE);
   gst_base_src_set_format (base_src, GST_FORMAT_TIME);
 
-  self->cond = g_cond_new ();
+  self->ready_cond = g_cond_new ();
 }
 
 static void
@@ -106,7 +106,7 @@ gst_cel_video_src_finalize (GObject * object)
 {
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (object);
 
-  g_cond_free (self->cond);
+  g_cond_free (self->ready_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -282,7 +282,7 @@ gst_cel_video_src_start (GstBaseSrc * basesrc)
 {
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
 
-  self->running = TRUE;
+  g_atomic_int_set (&self->is_running, TRUE);
   self->offset = 0;
 
   self->last_sampling = GST_CLOCK_TIME_NONE;
@@ -335,10 +335,11 @@ gst_cel_video_src_unlock (GstBaseSrc * basesrc)
 {
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (basesrc);
 
-  BUFQUEUE_LOCK (self);
-  self->running = FALSE;
-  BUFQUEUE_NOTIFY (self);
-  BUFQUEUE_UNLOCK (self);
+  g_atomic_int_set (&self->is_running, FALSE);
+
+  QUEUE_READY_LOCK (self);
+  QUEUE_READY_NOTIFY (self);
+  QUEUE_READY_UNLOCK (self);
 
   return TRUE;
 }
@@ -349,18 +350,16 @@ gst_cel_video_src_unlock_stop (GstBaseSrc * basesrc)
   return TRUE;
 }
 
-static Boolean
-gst_cel_video_src_validate (CMBufferQueueRef queue, CMSampleBufferRef buf,
-    void *refCon)
+static void
+gst_cel_video_src_on_queue_ready (void *triggerRefcon,
+    CMBufferQueueTriggerToken triggerToken)
 {
-  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (refCon);
+  GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (triggerRefcon);
 
-  BUFQUEUE_LOCK (self);
-  self->has_pending = TRUE;
-  BUFQUEUE_NOTIFY (self);
-  BUFQUEUE_UNLOCK (self);
-
-  return FALSE;
+  QUEUE_READY_LOCK (self);
+  self->queue_is_ready = TRUE;
+  QUEUE_READY_NOTIFY (self);
+  QUEUE_READY_UNLOCK (self);
 }
 
 static void
@@ -437,16 +436,24 @@ gst_cel_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buf)
 {
   GstCelVideoSrc *self = GST_CEL_VIDEO_SRC_CAST (pushsrc);
   GstCMApi *cm = self->ctx->cm;
-  CMSampleBufferRef sbuf = NULL;
+  CMSampleBufferRef sbuf;
 
-  BUFQUEUE_LOCK (self);
-  while (self->running && !self->has_pending)
-    BUFQUEUE_WAIT (self);
   sbuf = cm->CMBufferQueueDequeueAndRetain (self->queue);
-  self->has_pending = !cm->CMBufferQueueIsEmpty (self->queue);
-  BUFQUEUE_UNLOCK (self);
 
-  if (G_UNLIKELY (!self->running))
+  while (sbuf == NULL) {
+    QUEUE_READY_LOCK (self);
+    while (!self->queue_is_ready && g_atomic_int_get (&self->is_running))
+      QUEUE_READY_WAIT (self);
+    self->queue_is_ready = FALSE;
+    QUEUE_READY_UNLOCK (self);
+
+    if (G_UNLIKELY (!g_atomic_int_get (&self->is_running)))
+      goto shutting_down;
+
+    sbuf = cm->CMBufferQueueDequeueAndRetain (self->queue);
+  }
+
+  if (G_UNLIKELY (!g_atomic_int_get (&self->is_running)))
     goto shutting_down;
 
   *buf = gst_core_media_buffer_new (self->ctx, sbuf);
@@ -485,6 +492,7 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   FigBaseObjectRef stream_base;
   FigBaseVTable *stream_vt;
   CMBufferQueueRef queue = NULL;
+  CMTime ignored_time;
 
   ctx = gst_core_media_ctx_new (GST_API_CORE_VIDEO | GST_API_CORE_MEDIA
       | GST_API_MEDIA_TOOLBOX | GST_API_CELESTIAL, &error);
@@ -532,10 +540,15 @@ gst_cel_video_src_open_device (GstCelVideoSrc * self)
   if (status != noErr)
     goto unexpected_error;
 
-  self->has_pending = FALSE;
+  self->queue_is_ready = FALSE;
 
-  cm->CMBufferQueueSetValidationCallback (queue,
-      gst_cel_video_src_validate, self);
+  ignored_time = cm->CMTimeMake (1, 1);
+  status = cm->CMBufferQueueInstallTrigger (queue,
+      gst_cel_video_src_on_queue_ready, self,
+      kCMBufferQueueTrigger_WhenDataBecomesReady, ignored_time,
+      &self->ready_trigger);
+  if (status != noErr)
+    goto unexpected_error;
 
   self->ctx = ctx;
 
@@ -619,7 +632,9 @@ gst_cel_video_src_close_device (GstCelVideoSrc * self)
   self->device_base = NULL;
   self->device_base_iface = NULL;
 
+  self->ctx->cm->CMBufferQueueRemoveTrigger (self->queue, self->ready_trigger);
   self->ctx->cm->FigBufferQueueRelease (self->queue);
+  self->ready_trigger = NULL;
   self->queue = NULL;
 
   g_object_unref (self->ctx);

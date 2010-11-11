@@ -61,15 +61,16 @@ struct _GstCelVideoSrc
   FigBaseIface *stream_base_iface;
 
   CMBufferQueueRef queue;
+  CMBufferQueueTriggerToken ready_trigger;
   GstCaps *device_caps;
   GArray *device_formats;
   GstClockTime duration;
 
-  volatile gboolean running;
+  volatile gint is_running;
   guint64 offset;
 
-  GCond *cond;
-  volatile gboolean has_pending;
+  GCond *ready_cond;
+  volatile gboolean queue_is_ready;
 
   GstClockTime last_sampling;
   guint count;
