@@ -1372,15 +1372,16 @@ gst_caps_can_intersect (const GstCaps * caps1, const GstCaps * caps2)
    * This algorithm zigzags over the caps structures as demonstrated in
    * the folowing matrix:
    *
-   *          caps1
-   *       +-------------
-   *       | 1  2  4  7
-   * caps2 | 3  5  8 10
-   *       | 6  9 11 12
+   *          caps1                              0  1  2  3
+   *       +-------------     total distance:  +-------------
+   *       | 1  2  4  7                      0 | 0  1  2  3
+   * caps2 | 3  5  8 10                      1 | 1  2  3  4
+   *       | 6  9 11 12                      2 | 2  3  4  5
    *
    * First we iterate over the caps1 structures (top line) intersecting
    * the structures diagonally down, then we iterate over the caps2
-   * structures.
+   * structures. The result is that the intersections are ordered based on the
+   * sum of the indexes in the list.
    */
   len1 = caps1->structs->len;
   len2 = caps2->structs->len;
