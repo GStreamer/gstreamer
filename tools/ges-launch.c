@@ -207,7 +207,7 @@ create_timeline (int nbargs, gchar ** argv)
 
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
-      g_print ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
+      g_printerr ("Adding <pattern:%s> duration %" GST_TIME_FORMAT "\n",
           arg0, GST_TIME_ARGS (duration));
     }
 
@@ -222,7 +222,7 @@ create_timeline (int nbargs, gchar ** argv)
 
       g_object_set (G_OBJECT (obj), "duration", duration, NULL);
 
-      g_print ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n",
+      g_printerr ("Adding <transition:%s> duration %" GST_TIME_FORMAT "\n",
           arg0, GST_TIME_ARGS (duration));
 
     }
@@ -232,7 +232,7 @@ create_timeline (int nbargs, gchar ** argv)
 
       g_object_set (obj, "duration", duration, "text", arg0, NULL);
 
-      g_print ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n",
+      g_printerr ("Adding <title:%s> duration %" GST_TIME_FORMAT "\n",
           arg0, GST_TIME_ARGS (duration));
     }
 
@@ -250,7 +250,7 @@ create_timeline (int nbargs, gchar ** argv)
       g_object_set (obj,
           "in-point", (guint64) inpoint, "duration", (guint64) duration, NULL);
 
-      g_print ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%"
+      g_printerr ("Adding %s inpoint:%" GST_TIME_FORMAT " duration:%"
           GST_TIME_FORMAT "\n", uri, GST_TIME_ARGS (inpoint),
           GST_TIME_ARGS (duration));
 
@@ -281,20 +281,23 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_print ("ERROR\n");
+      g_printerr ("ERROR\n");
       seenerrors = TRUE;
       g_main_loop_quit (mainloop);
       break;
     case GST_MESSAGE_EOS:
       if (repeat > 0) {
-        g_print ("Looping again\n");
-        /* No need to change state before */
-        gst_element_seek_simple (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-            GST_SEEK_FLAG_FLUSH, 0);
+        g_printerr ("Looping again\n");
+        if (!gst_element_seek_simple (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+                GST_SEEK_FLAG_FLUSH, 0))
+          g_printerr ("seeking failed\n");
+        else
+          g_printerr ("seeking succeeded\n");
         gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+        g_printerr ("Looping set\n");
         repeat -= 1;
       } else {
-        g_print ("Done\n");
+        g_printerr ("Done\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -413,7 +416,7 @@ main (int argc, gchar ** argv)
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", err->message);
+    g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
     exit (1);
   }
@@ -475,7 +478,7 @@ main (int argc, gchar ** argv)
 
   if (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_print ("Failed to start the encoding\n");
+    g_printerr ("Failed to start the encoding\n");
     return 1;
   }
   g_main_loop_run (mainloop);
