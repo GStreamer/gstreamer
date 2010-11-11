@@ -337,6 +337,7 @@ gst_cel_video_src_unlock (GstBaseSrc * basesrc)
 
   BUFQUEUE_LOCK (self);
   self->running = FALSE;
+  BUFQUEUE_NOTIFY (self);
   BUFQUEUE_UNLOCK (self);
 
   return TRUE;
