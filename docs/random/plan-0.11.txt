@@ -61,6 +61,10 @@ First attempt at making a list of tasks in roughly chronological order.
   http://cgit.freedesktop.org/~wtay/gstreamer/log/?h=miniobject2
 
 
+* GVariant registry
+
+  - allow for mmaped registy (tpm)
+
 * Incremental caps
 
   - Remove array from caps ?
