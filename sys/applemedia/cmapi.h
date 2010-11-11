@@ -39,11 +39,14 @@ typedef struct _CMVideoDimensions CMVideoDimensions;
 typedef struct _CMTime CMTime;
 
 typedef CFTypeRef CMBufferQueueRef;
-
+typedef SInt32 CMBufferQueueTriggerCondition;
+typedef struct _CMBufferQueueTriggerToken *CMBufferQueueTriggerToken;
 typedef CFTypeRef CMSampleBufferRef;
 typedef CFTypeRef CMBlockBufferRef;
 
-typedef Boolean (* CMBufferQueueValidateFunc) (CMBufferQueueRef queue,
+typedef void (* CMBufferQueueTriggerCallback) (void *triggerRefcon,
+    CMBufferQueueTriggerToken triggerToken);
+typedef Boolean (* CMBufferQueueValidationCallback) (CMBufferQueueRef queue,
     CMSampleBufferRef buf, void *refCon);
 
 enum _FigMediaType
@@ -56,6 +59,21 @@ enum _FigCodecType
   kComponentVideoUnsigned           = 'yuvs',
   kFigVideoCodecType_JPEG_OpenDML   = 'dmb1',
   kYUV420vCodecType                 = '420v'
+};
+
+enum _CMBufferQueueTriggerCondition
+{
+  kCMBufferQueueTrigger_WhenDurationBecomesLessThan             = 1,
+  kCMBufferQueueTrigger_WhenDurationBecomesLessThanOrEqualTo    = 2,
+  kCMBufferQueueTrigger_WhenDurationBecomesGreaterThan          = 3,
+  kCMBufferQueueTrigger_WhenDurationBecomesGreaterThanOrEqualTo = 4,
+  kCMBufferQueueTrigger_WhenMinPresentationTimeStampChanges     = 5,
+  kCMBufferQueueTrigger_WhenMaxPresentationTimeStampChanges     = 6,
+  kCMBufferQueueTrigger_WhenDataBecomesReady                    = 7,
+  kCMBufferQueueTrigger_WhenEndOfDataReached                    = 8,
+  kCMBufferQueueTrigger_WhenReset                               = 9,
+  kCMBufferQueueTrigger_WhenBufferCountBecomesLessThan          = 10,
+  kCMBufferQueueTrigger_WhenBufferCountBecomesGreaterThan       = 11
 };
 
 struct _FigBaseVTable
@@ -159,10 +177,16 @@ struct _GstCMApi
   CMSampleBufferRef (* CMBufferQueueDequeueAndRetain)
       (CMBufferQueueRef queue);
   CFIndex (* CMBufferQueueGetBufferCount) (CMBufferQueueRef queue);
+  OSStatus (* CMBufferQueueInstallTrigger) (CMBufferQueueRef queue,
+      CMBufferQueueTriggerCallback triggerCallback, void * triggerRefCon,
+      CMBufferQueueTriggerCondition triggerCondition, CMTime triggerTime,
+      CMBufferQueueTriggerToken * triggerTokenOut);
   Boolean (* CMBufferQueueIsEmpty) (CMBufferQueueRef queue);
   void (* FigBufferQueueRelease) (CMBufferQueueRef queue);
-  OSStatus (* CMBufferQueueSetValidationCallback)
-      (CMBufferQueueRef queue, CMBufferQueueValidateFunc func, void *refCon);
+  OSStatus (* CMBufferQueueRemoveTrigger) (CMBufferQueueRef queue,
+      CMBufferQueueTriggerToken triggerToken);
+  OSStatus (* CMBufferQueueSetValidationCallback) (CMBufferQueueRef queue,
+      CMBufferQueueValidationCallback func, void *refCon);
 
   CFStringRef * kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms;
   CFStringRef * kCMSampleAttachmentKey_DependsOnOthers;

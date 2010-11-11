@@ -83,8 +83,10 @@ gst_cm_api_obtain (GError ** error)
 
     SYM_SPEC (CMBufferQueueDequeueAndRetain),
     SYM_SPEC (CMBufferQueueGetBufferCount),
+    SYM_SPEC (CMBufferQueueInstallTrigger),
     SYM_SPEC (CMBufferQueueIsEmpty),
     SYM_SPEC (FigBufferQueueRelease),
+    SYM_SPEC (CMBufferQueueRemoveTrigger),
     SYM_SPEC (CMBufferQueueSetValidationCallback),
 
     SYM_SPEC (kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms),
