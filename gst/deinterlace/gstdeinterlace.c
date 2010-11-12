@@ -1492,6 +1492,10 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_new_segment_full (event, &is_update, &rate, &applied_rate,
           &fmt, &start, &end, &base);
+
+      gst_deinterlace_reset_qos (self);
+      gst_deinterlace_reset_history (self, FALSE);
+
       if (fmt == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (pad,
             "Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
@@ -1503,8 +1507,6 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
         gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       }
 
-      gst_deinterlace_reset_qos (self);
-      gst_deinterlace_reset_history (self, FALSE);
       res = gst_pad_push_event (self->srcpad, event);
       break;
     }
