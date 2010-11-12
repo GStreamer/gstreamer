@@ -1479,7 +1479,8 @@ gst_deinterlace_sink_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
   GstDeinterlace *self = GST_DEINTERLACE (gst_pad_get_parent (pad));
 
-  GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (pad, "received %s event: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
