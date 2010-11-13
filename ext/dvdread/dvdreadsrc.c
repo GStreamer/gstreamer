@@ -620,7 +620,7 @@ gst_dvd_read_src_get_next_cell (GstDvdReadSrc * src, pgc_t * pgc, gint cell)
   while (pgc->cell_playback[cell].block_mode != BLOCK_MODE_LAST_CELL)
     ++cell;
 
-  return cell + 1;              /* really +1? (tpm) */
+  return cell + 1;
 }
 
 /* Returns true if the pack is a NAV pack */
