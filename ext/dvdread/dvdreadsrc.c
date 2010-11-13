@@ -617,7 +617,7 @@ gst_dvd_read_src_get_next_cell (GstDvdReadSrc * src, pgc_t * pgc, gint cell)
   if (pgc->cell_playback[cell].block_type != BLOCK_TYPE_ANGLE_BLOCK)
     return (cell + 1);
 
-  while (pgc->cell_playback[cell].block_mode == BLOCK_MODE_LAST_CELL)
+  while (pgc->cell_playback[cell].block_mode != BLOCK_MODE_LAST_CELL)
     ++cell;
 
   return cell + 1;              /* really +1? (tpm) */
