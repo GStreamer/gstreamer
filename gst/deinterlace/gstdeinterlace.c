@@ -1376,6 +1376,8 @@ gst_deinterlace_getcaps (GstPad * pad)
 
   GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
 
+  gst_object_unref (self);
+
   return ret;
 
 error:
