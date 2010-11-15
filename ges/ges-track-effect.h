@@ -36,17 +36,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TRACK_EFFECT))
 #define GES_TRACK_EFFECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_EFFECT, GESTrackEffectClass))
+
+
+typedef struct _GESTrackEffectPrivate   GESTrackEffectPrivate;
+
 /**
  * GESTrackEffect:
  *
  */
-    struct _GESTrackEffect
+struct _GESTrackEffect
 {
   GESTrackOperation parent;
 
   /*< private > */
-  gchar *bin_description;
-  gchar *human_name;
+  GESTrackEffectPrivate *priv;
 };
 
 /**
@@ -63,13 +66,7 @@ struct _GESTrackEffectClass
 
 GType ges_track_effect_get_type (void);
 
-void ges_track_effect_set_human_name (GESTrackEffect * self,
-    const gchar * human_name);
-gchar *ges_track_effect_get_human_name (GESTrackEffect * self);
-
 GESTrackEffect *ges_track_effect_new (const gchar * bin_description);
-GESTrackEffect *ges_track_effect_new_with_name (const gchar * bin_description,
-    const gchar * human_name);
 
 G_END_DECLS
 #endif /* _GES_TRACK_EFFECT */

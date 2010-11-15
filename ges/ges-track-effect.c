@@ -81,6 +81,8 @@ ges_track_effect_class_init (GESTrackEffectClass * klass)
 
   g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
 
+  g_type_class_add_private (klass, sizeof (GESTrackEffectPrivate));
+
   object_class->get_property = ges_track_effect_get_property;
   object_class->set_property = ges_track_effect_set_property;
   object_class->dispose = ges_track_effect_dispose;

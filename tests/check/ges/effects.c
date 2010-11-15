@@ -11,7 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
+ * You should have received track_audio copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
@@ -30,10 +30,52 @@ GST_START_TEST (test_effect_basic)
   effect = ges_track_effect_new ("identity");
   fail_unless (effect != NULL);
   g_object_unref (effect);
+}
 
-  effect = ges_track_effect_new_with_name ("identity", "Identity effect");
-  fail_unless (effect != NULL);
-  g_object_unref (effect);
+GST_END_TEST;
+
+GST_START_TEST (test_add_effect_to_tl_object)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GESTrack *track_audio, *track_video;
+  GESTrackEffect *effect_track;
+  GESTimelineTestSource *source;
+  gboolean effect_added = FALSE;
+
+  ges_init ();
+
+  timeline = ges_timeline_new ();
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  track_audio = ges_track_audio_raw_new ();
+  track_video = ges_track_video_raw_new ();
+
+  ges_timeline_add_track (timeline, track_audio);
+  ges_timeline_add_track (timeline, track_video);
+  ges_timeline_add_layer (timeline, layer);
+
+  source = ges_timeline_test_source_new ();
+
+  g_object_set (source, "duration", 10 * GST_SECOND, NULL);
+
+  ges_simple_timeline_layer_add_object ((GESSimpleTimelineLayer *) (layer),
+      (GESTimelineObject *) source, 0);
+
+  GST_DEBUG ("Adding effect");
+  ges_timeline_object_add_effect (GES_TIMELINE_OBJECT (source),
+      "identity", track_video);
+
+  effect_track =
+      GES_TRACK_EFFECT (ges_timeline_object_find_track_object
+      (GES_TIMELINE_OBJECT (source), track_video, GES_TYPE_TRACK_EFFECT));
+
+  assert_equals_int (GES_TRACK_OBJECT (effect_track)->active, TRUE);
+  fail_unless (GES_IS_TRACK_EFFECT (effect_track));
+
+  ges_timeline_layer_remove_object (layer, (GESTimelineObject *) source);
+
+  g_object_unref (effect_track);
+  g_object_unref (timeline);
 }
 
 GST_END_TEST;
@@ -47,6 +89,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_effect_basic);
+  tcase_add_test (tc_chain, test_add_effect_to_tl_object);
 
   return s;
 }
