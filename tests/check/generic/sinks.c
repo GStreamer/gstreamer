@@ -691,6 +691,8 @@ GST_START_TEST (test_added_async2)
 
   /* add source, don't add sink yet */
   gst_bin_add (GST_BIN (pipeline), src);
+  /* need to lock state here or the pipeline might go in error */
+  gst_element_set_locked_state (src, TRUE);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
