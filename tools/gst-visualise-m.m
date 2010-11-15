@@ -7,8 +7,6 @@
 
 ### packages
 
-use File::Basename;
-
 
 my (%pipes, %cfg);
 
