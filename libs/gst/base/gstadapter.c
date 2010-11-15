@@ -826,8 +826,10 @@ gst_adapter_available_fast (GstAdapter * adapter)
  * @distance is given, the amount of bytes between the timestamp and the current
  * position is returned.
  *
- * The timestamp is reset to GST_CLOCK_TIME_NONE when the adapter is first
- * created or when it is cleared.
+ * The timestamp is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+ * the adapter is first created or when it is cleared. This also means that before
+ * the first byte with a timestamp is removed from the adapter, the timestamp
+ * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
  * Returns: The previously seen timestamp.
  *
