@@ -312,6 +312,7 @@ AG_GST_CHECK_PLUGIN(id3tag)
 AG_GST_CHECK_PLUGIN(interlace)
 AG_GST_CHECK_PLUGIN(invtelecine)
 AG_GST_CHECK_PLUGIN(ivfparse)
+AG_GST_CHECK_PLUGIN(jp2kdecimator)
 AG_GST_CHECK_PLUGIN(jpegformat)
 AG_GST_CHECK_PLUGIN(legacyresample)
 AG_GST_CHECK_PLUGIN(librfb)
@@ -1736,6 +1737,7 @@ gst/id3tag/Makefile
 gst/interlace/Makefile
 gst/invtelecine/Makefile
 gst/ivfparse/Makefile
+gst/jp2kdecimator/Makefile
 gst/jpegformat/Makefile
 gst/legacyresample/Makefile
 gst/librfb/Makefile
