@@ -23,6 +23,10 @@
 # SDP or RTSP.
 AUDIO_CAPS="application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)PCMA"
 
+AUDIO_DEC="rtppcmadepay ! alawdec"
+
+AUDIO_SINK="audioconvert ! audioresample ! autoaudisink"
+
 # the destination machine to send RTCP to. This is the address of the sender and
 # is used to send back the RTCP reports of this receiver. If the data is sent
 # from another machine, change this address.
@@ -30,6 +34,6 @@ DEST=127.0.0.1
 
 gst-launch -v gstrtpbin name=rtpbin                                                \
 	   udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
-	         rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
+	         rtpbin. ! $AUDIO_DEC ! $AUDIO_SINK                                \
            udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \
          rtpbin.send_rtcp_src_0 ! udpsink port=5007 host=$DEST sync=false async=false
