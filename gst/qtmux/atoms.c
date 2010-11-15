@@ -130,6 +130,14 @@ atom_full_free (AtomFull * full)
   g_free (full);
 }
 
+static void
+atom_full_set_flags_as_uint (AtomFull * full, guint32 flags_as_uint)
+{
+  full->flags[2] = flags_as_uint & 0xFF;
+  full->flags[1] = (flags_as_uint & 0xFF00) >> 8;
+  full->flags[0] = (flags_as_uint & 0xFF0000) >> 16;
+}
+
 static AtomInfo *
 build_atom_info_wrapper (Atom * atom, gpointer copy_func, gpointer free_func)
 {
@@ -1134,9 +1142,7 @@ atom_tag_new (guint32 fourcc, guint32 flags_as_uint)
 
   tag->header.type = fourcc;
   atom_tag_data_init (&tag->data);
-  tag->data.header.flags[2] = flags_as_uint & 0xFF;
-  tag->data.header.flags[1] = (flags_as_uint & 0xFF00) >> 8;
-  tag->data.header.flags[0] = (flags_as_uint & 0xFF0000) >> 16;
+  atom_full_set_flags_as_uint (&tag->data.header, flags_as_uint);
   return tag;
 }
 
