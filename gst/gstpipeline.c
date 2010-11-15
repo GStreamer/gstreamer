@@ -343,7 +343,13 @@ pipeline_update_start_time (GstElement * element)
     GST_OBJECT_LOCK (element);
     /* store the current running time */
     if (GST_ELEMENT_START_TIME (pipeline) != GST_CLOCK_TIME_NONE) {
-      GST_ELEMENT_START_TIME (pipeline) = now - element->base_time;
+      if (now != GST_CLOCK_TIME_NONE)
+        GST_ELEMENT_START_TIME (pipeline) = now - element->base_time;
+      else
+        GST_WARNING_OBJECT ("Clock %s returned invalid time, can't calculate "
+            "running_time when going to the PAUSED state",
+            GST_OBJECT_NAME (clock));
+
       /* we went to PAUSED, when going to PLAYING select clock and new
        * base_time */
       pipeline->priv->update_clock = TRUE;
