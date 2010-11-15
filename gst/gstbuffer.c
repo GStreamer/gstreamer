@@ -289,7 +289,7 @@ _gst_buffer_copy (GstBuffer * buffer)
 static void
 _gst_buffer_free (GstBuffer * buffer)
 {
-  GList *walk;
+  GstBufferMetaItem *walk, *next;
 
   g_return_if_fail (buffer != NULL);
 
@@ -304,8 +304,9 @@ _gst_buffer_free (GstBuffer * buffer)
   if (buffer->parent)
     gst_buffer_unref (buffer->parent);
 
+
   /* free metadata */
-  for (walk = buffer->priv; walk; walk = walk->next) {
+  for (walk = buffer->priv; walk; walk = next) {
     GstBufferMeta *meta = &walk->meta;
     const GstBufferMetaInfo *info = meta->info;
 
@@ -313,7 +314,8 @@ _gst_buffer_free (GstBuffer * buffer)
     if (info->free_func)
       info->free_func (meta, buffer);
     /* and free the slice */
-    g_slice_free1 (ITEM_SIZE (info), meta);
+    next = walk->next;
+    g_slice_free (GstBufferMetaItem, walk);
   }
 
   g_slice_free1 (GST_MINI_OBJECT_SIZE (buffer), buffer);
