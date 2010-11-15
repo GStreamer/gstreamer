@@ -55,7 +55,7 @@ struct _GstPulseSrc
 {
   GstAudioSrc src;
 
-  gchar *server, *device;
+  gchar *server, *device, *client_name;
 
   pa_threaded_mainloop *mainloop;
 
@@ -68,7 +68,6 @@ struct _GstPulseSrc
   size_t read_buffer_length;
 
   gchar *device_description;
-
   GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
 

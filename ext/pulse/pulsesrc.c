@@ -61,6 +61,7 @@ enum
   PROP_SERVER,
   PROP_DEVICE,
   PROP_DEVICE_NAME,
+  PROP_CLIENT,
   PROP_STREAM_PROPERTIES,
   PROP_LAST
 };
@@ -247,6 +248,20 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstPulseSink:client
+   *
+   * The PulseAudio client name to use.
+   *
+   * Since: 0.10.27
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CLIENT,
+      g_param_spec_string ("client", "Client",
+          "The PulseAudio client_name_to_use", gst_pulse_client_name (),
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  /**
    * GstPulseSrc:stream-properties
    *
    * List of pulseaudio stream properties. A list of defined properties can be
@@ -275,6 +290,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 {
   pulsesrc->server = NULL;
   pulsesrc->device = NULL;
+  pulsesrc->client_name = gst_pulse_client_name ();
   pulsesrc->device_description = NULL;
 
   pulsesrc->context = NULL;
@@ -340,6 +356,7 @@ gst_pulsesrc_finalize (GObject * object)
 
   g_free (pulsesrc->server);
   g_free (pulsesrc->device);
+  g_free (pulsesrc->client_name);
 
   if (pulsesrc->properties)
     gst_structure_free (pulsesrc->properties);
@@ -463,6 +480,15 @@ gst_pulsesrc_set_property (GObject * object,
       g_free (pulsesrc->device);
       pulsesrc->device = g_value_dup_string (value);
       break;
+    case PROP_CLIENT:
+      g_free (pulsesrc->client_name);
+      if (!g_value_get_string (value)) {
+        GST_WARNING_OBJECT (pulsesrc,
+            "Empty PulseAudio client name not allowed. Resetting to default value");
+        pulsesrc->client_name = gst_pulse_client_name ();
+      } else
+        pulsesrc->client_name = g_value_dup_string (value);
+      break;
     case PROP_STREAM_PROPERTIES:
       if (pulsesrc->properties)
         gst_structure_free (pulsesrc->properties);
@@ -494,6 +520,9 @@ gst_pulsesrc_get_property (GObject * object,
       break;
     case PROP_DEVICE_NAME:
       g_value_take_string (value, gst_pulsesrc_device_description (pulsesrc));
+      break;
+    case PROP_CLIENT:
+      g_value_set_string (value, pulsesrc->client_name);
       break;
     case PROP_STREAM_PROPERTIES:
       gst_value_set_structure (value, pulsesrc->properties);
@@ -599,7 +628,6 @@ static gboolean
 gst_pulsesrc_open (GstAudioSrc * asrc)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
-  gchar *name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
@@ -610,7 +638,7 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
 
   if (!(pulsesrc->context =
           pa_context_new (pa_threaded_mainloop_get_api (pulsesrc->mainloop),
-              name))) {
+              pulsesrc->client_name))) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Failed to create context"),
         (NULL));
     goto unlock_and_fail;
@@ -649,7 +677,6 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
-  g_free (name);
   return TRUE;
 
   /* ERRORS */
@@ -659,7 +686,6 @@ unlock_and_fail:
 
     pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
-    g_free (name);
     return FALSE;
   }
 }
