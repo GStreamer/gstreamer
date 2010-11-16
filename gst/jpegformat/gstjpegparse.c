@@ -691,7 +691,7 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
 error:
   GST_WARNING_OBJECT (parse,
-      "Error parsing image header (need more that %u bytes available)",
+      "Error parsing image header (need more than %u bytes available)",
       gst_byte_reader_get_remaining (&reader));
   return FALSE;
 }
