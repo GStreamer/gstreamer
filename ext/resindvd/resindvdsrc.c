@@ -36,6 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (rsndvdsrc_debug);
 
 #define DEFAULT_DEVICE "/dev/dvd"
 #define DEFAULT_FASTSTART TRUE
+#define DEFAULT_LANG "en"
 
 #define GST_FLOW_WOULD_BLOCK GST_FLOW_CUSTOM_SUCCESS
 
@@ -354,6 +355,8 @@ static gboolean
 rsn_dvdsrc_start (GstBaseSrc * bsrc)
 {
   resinDvdSrc *src = RESINDVDSRC (bsrc);
+  const gchar *const *langs, *const *cur;
+  gchar lang[8];
 
   g_mutex_lock (src->dvd_lock);
   if (!read_vts_info (src)) {
@@ -373,6 +376,21 @@ rsn_dvdsrc_start (GstBaseSrc * bsrc)
         (_("Failed to set PGC based seeking.")), GST_ERROR_SYSTEM);
     goto fail;
   }
+
+  /* Attempt to set DVD menu, audio and spu languages */
+  langs = g_get_language_names ();
+  strncpy (lang, DEFAULT_LANG, 8);
+  for (cur = langs; *cur != NULL; cur++) {
+    /* Look for a 2 char iso-639 lang */
+    if (strlen (*cur) == 2) {
+      strncpy (lang, *cur, 8);
+      break;
+    }
+  }
+  /* Set the user's preferred language */
+  dvdnav_menu_language_select (src->dvdnav, lang);
+  dvdnav_audio_language_select (src->dvdnav, lang);
+  dvdnav_spu_language_select (src->dvdnav, lang);
 
   if (src->faststart) {
     if (dvdnav_title_play (src->dvdnav, 1) != DVDNAV_STATUS_OK ||
@@ -1058,11 +1076,11 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       dvdnav_audio_stream_change_event_t *event =
           (dvdnav_audio_stream_change_event_t *) data;
 
+      rsn_dvdsrc_prepare_audio_stream_event (src,
+          event->logical, event->physical);
       GST_DEBUG_OBJECT (src, "  physical: %d", event->physical);
       GST_DEBUG_OBJECT (src, "  logical: %d", event->logical);
 
-      rsn_dvdsrc_prepare_audio_stream_event (src,
-          event->logical, event->physical);
       break;
     }
     case DVDNAV_SPU_STREAM_CHANGE:{
@@ -2369,7 +2387,7 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
       GST_LOG_OBJECT (src, "handling seek event");
 
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-      src->flushing_seek = ! !(flags & GST_SEEK_FLAG_FLUSH);
+      src->flushing_seek = !!(flags & GST_SEEK_FLAG_FLUSH);
       GST_DEBUG_OBJECT (src, "%s seek event",
           src->flushing_seek ? "flushing" : "non-flushing");
 
