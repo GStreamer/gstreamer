@@ -882,6 +882,60 @@ error:
   return FALSE;
 }
 
+static gboolean
+gst_flac_parse_handle_seektable (GstFlacParse * flacparse, GstBuffer * buffer)
+{
+
+  GST_DEBUG_OBJECT (flacparse, "storing seektable");
+  /* only store for now;
+   * offset of the first frame is needed to get real info */
+  flacparse->seektable = gst_buffer_ref (buffer);
+
+  return TRUE;
+}
+
+static void
+gst_flac_parse_process_seektable (GstFlacParse * flacparse, gint64 boffset)
+{
+  GstByteReader br;
+  gint64 offset, samples;
+
+  GST_DEBUG_OBJECT (flacparse,
+      "parsing seektable; base offset %" G_GINT64_FORMAT, boffset);
+
+  if (boffset <= 0)
+    goto done;
+
+  gst_byte_reader_init_from_buffer (&br, flacparse->seektable);
+  /* skip header */
+  if (!gst_byte_reader_skip (&br, 4))
+    goto done;
+
+  /* seekpoints */
+  while (gst_byte_reader_get_remaining (&br)) {
+    if (!gst_byte_reader_get_int64_be (&br, &samples))
+      break;
+    if (!gst_byte_reader_get_int64_be (&br, &offset))
+      break;
+    if (!gst_byte_reader_skip (&br, 2))
+      break;
+
+    GST_LOG_OBJECT (flacparse, "samples %" G_GINT64_FORMAT " -> offset %"
+        G_GINT64_FORMAT, samples, offset);
+
+    /* sanity check */
+    if (G_LIKELY (offset > 0 && samples > 0)) {
+      gst_base_parse_add_index_entry (GST_BASE_PARSE (flacparse),
+          boffset + offset, gst_util_uint64_scale (samples, GST_SECOND,
+              flacparse->samplerate), TRUE, FALSE);
+    }
+  }
+
+done:
+  gst_buffer_unref (flacparse->seektable);
+  flacparse->seektable = NULL;
+}
+
 static void
 _value_array_append_buffer (GValue * array_val, GstBuffer * buf)
 {
@@ -1152,7 +1206,8 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
           return GST_FLOW_ERROR;
         break;
       case 3:                  /* SEEKTABLE */
-        /* TODO: handle seektables */
+        if (!gst_flac_parse_handle_seektable (flacparse, buffer))
+          return GST_FLOW_ERROR;
         break;
       case 4:                  /* VORBIS_COMMENT */
         if (!gst_flac_parse_handle_vorbiscomment (flacparse, buffer))
@@ -1208,6 +1263,9 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
       GST_ERROR_OBJECT (flacparse, "Unparsed frame");
       return GST_FLOW_ERROR;
     }
+
+    if (flacparse->seektable)
+      gst_flac_parse_process_seektable (flacparse, GST_BUFFER_OFFSET (buffer));
 
     if (flacparse->state == GST_FLAC_PARSE_STATE_GENERATE_HEADERS) {
       if (flacparse->blocking_strategy == 1) {
