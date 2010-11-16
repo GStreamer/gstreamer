@@ -549,6 +549,85 @@ get_tag_list (GstJpegParse * parse)
   return parse->priv->tags;
 }
 
+static inline void
+extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
+    GstTagList * (*tag_func) (const GstBuffer * buff))
+{
+  GstTagList *tags;
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = data;
+  GST_BUFFER_SIZE (buf) = size;
+
+  tags = tag_func (buf);
+  gst_buffer_unref (buf);
+
+  if (tags) {
+    GstTagList *taglist = parse->priv->tags;
+    if (taglist) {
+      gst_tag_list_insert (taglist, tags, GST_TAG_MERGE_REPLACE);
+      gst_tag_list_free (tags);
+    } else {
+      parse->priv->tags = tags;
+    }
+  }
+}
+
+static inline gboolean
+gst_jpeg_parse_app1 (GstJpegParse * parse, GstByteReader * reader)
+{
+  guint16 size;
+  const gchar *id_str;
+  const guint8 *data = NULL;
+
+  if (!gst_byte_reader_get_uint16_be (reader, &size))
+    return FALSE;
+
+  size -= 2;                    /* 2 bytes for the mark */
+  if (!gst_byte_reader_peek_string_utf8 (reader, &id_str))
+    return FALSE;
+
+  if (!strncmp (id_str, "Exif", 4)) {
+
+    /* skip id + NUL + padding */
+    if (!gst_byte_reader_skip (reader, 6))
+      return FALSE;
+
+    /* handle exif metadata */
+    if (!gst_byte_reader_get_data (reader, size, &data))
+      return FALSE;
+
+    extract_and_queue_tags (parse, size, (guint8 *) data,
+        gst_tag_list_from_exif_buffer_with_tiff_header);
+
+    GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
+        APP1, id_str, size);
+
+  } else if (!strncmp (id_str, "http://ns.adobe.com/xap/1.0/", 28)) {
+
+    /* skip the id + NUL */
+    if (!gst_byte_reader_skip (reader, 29))
+      return FALSE;
+
+    /* handle xmp metadata */
+    if (!gst_byte_reader_get_data (reader, size, &data))
+      return FALSE;
+
+    extract_and_queue_tags (parse, size, (guint8 *) data,
+        gst_tag_list_from_xmp_buffer);
+
+    GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
+        APP1, id_str, size);
+
+  } else {
+    if (!gst_jpeg_parse_skip_marker (parse, reader, APP1))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
 static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
@@ -606,82 +685,10 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
         break;
       }
 
-      case APP1:{
-        const gchar *id_str;
-        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+      case APP1:
+        if (!gst_jpeg_parse_app1 (parse, &reader))
           goto error;
-        if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
-          goto error;
-
-        if (!strcmp (id_str, "Exif")) {
-          const guint8 *exif_data = NULL;
-          guint exif_size = size - 2 - 6;       /* 6 bytes for "Exif\0\0 id" */
-          GstTagList *tags;
-          GstBuffer *buf;
-
-          /* skip padding */
-          gst_byte_reader_skip (&reader, 1);
-
-          /* handle exif metadata */
-          if (!gst_byte_reader_get_data (&reader, exif_size, &exif_data))
-            goto error;
-
-          buf = gst_buffer_new ();
-          GST_BUFFER_DATA (buf) = (guint8 *) exif_data;
-          GST_BUFFER_SIZE (buf) = exif_size;
-          tags = gst_tag_list_from_exif_buffer_with_tiff_header (buf);
-          gst_buffer_unref (buf);
-
-          if (tags) {
-            GST_INFO_OBJECT (parse, "got exif metadata");
-            if (parse->priv->tags) {
-              gst_tag_list_insert (parse->priv->tags, tags,
-                  GST_TAG_MERGE_REPLACE);
-              gst_tag_list_free (tags);
-            } else {
-              parse->priv->tags = tags;
-            }
-          }
-
-          GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
-              marker, id_str, size - 2);
-        } else if (!strcmp (id_str, "http://ns.adobe.com/xap/1.0/")) {
-          const guint8 *xmp_data = NULL;
-          guint xmp_size = size - 2 - 29;       /* 29 bytes for the id */
-          GstTagList *tags;
-          GstBuffer *buf;
-
-          /* handle xmp metadata */
-          if (!gst_byte_reader_get_data (&reader, xmp_size, &xmp_data))
-            goto error;
-
-          buf = gst_buffer_new ();
-          GST_BUFFER_DATA (buf) = (guint8 *) xmp_data;
-          GST_BUFFER_SIZE (buf) = xmp_size;
-          tags = gst_tag_list_from_xmp_buffer (buf);
-          gst_buffer_unref (buf);
-
-          if (tags) {
-            GST_INFO_OBJECT (parse, "got xmp metadata");
-            if (parse->priv->tags) {
-              gst_tag_list_insert (parse->priv->tags, tags,
-                  GST_TAG_MERGE_REPLACE);
-              gst_tag_list_free (tags);
-            } else {
-              parse->priv->tags = tags;
-            }
-          }
-
-          GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
-              marker, id_str, size - 2);
-        } else {
-          if (!gst_byte_reader_skip (&reader, size - 3 - strlen (id_str)))
-            goto error;
-          GST_LOG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
-              marker, id_str, size - 2);
-        }
         break;
-      }
 
       case DHT:
       case DQT:
