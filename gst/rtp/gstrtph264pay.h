@@ -21,6 +21,7 @@
 #define __GST_RTP_H264_PAY_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include <gst/rtp/gstbasertppayload.h>
 
 G_BEGIN_DECLS
@@ -60,6 +61,8 @@ struct _GstRtpH264Pay
   gchar *sprop_parameter_sets;
   gboolean update_caps;
   GstH264ScanMode scan_mode;
+
+  GstAdapter *adapter;
 
   guint spspps_interval;
   gboolean send_spspps;

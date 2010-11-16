@@ -66,7 +66,7 @@ gst_h264_scan_mode_get_type (void)
   static GType h264_scan_mode_type = 0;
   static const GEnumValue h264_scan_modes[] = {
     {GST_H264_SCAN_MODE_BYTESTREAM,
-          "Scan complete bytestream for NALUs (not implemented)",
+          "Scan complete bytestream for NALUs",
         "bytestream"},
     {GST_H264_SCAN_MODE_MULTI_NAL, "Buffers contain multiple complete NALUs",
         "multiple"},
@@ -235,6 +235,11 @@ gst_rtp_h264_pay_finalize (GObject * object)
   gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
 
   g_free (rtph264pay->sprop_parameter_sets);
+
+  if (rtph264pay->adapter) {
+    g_object_unref (rtph264pay->adapter);
+    rtph264pay->adapter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -911,16 +916,30 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint8 *data, *nal_data;
   GstClockTime timestamp;
   GArray *nal_queue;
+  guint pushed;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
   /* the input buffer contains one or more NAL units */
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  ret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+  if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM) {
+    timestamp = gst_adapter_prev_timestamp (rtph264pay->adapter, 0);
+    gst_adapter_push (rtph264pay->adapter, buffer);
+    size = gst_adapter_available (rtph264pay->adapter);
+    data = gst_adapter_peek (rtph264pay->adapter, size);
+    GST_DEBUG_OBJECT (basepayload, "got %d bytes (%d)", size,
+        GST_BUFFER_SIZE (buffer));
+
+    if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+      timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  } else {
+    size = GST_BUFFER_SIZE (buffer);
+    data = GST_BUFFER_DATA (buffer);
+    timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+  }
+
+  ret = GST_FLOW_OK;
 
   /* now loop over all NAL units and put them in a packet
    * FIXME, we should really try to pack multiple NAL units into one RTP packet
@@ -999,6 +1018,12 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
          * data is unchanged by the call to next_start_code()
          */
         next = next_start_code (data, size);
+
+        if (next == size
+            && rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM) {
+          /* Didn't find the start of next NAL, handle it next time */
+          break;
+        }
       }
 
       /* nal length is distance to next start code */
@@ -1045,6 +1070,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     /* second pass to payload and push */
     data = nal_data;
+    pushed = 0;
+
     for (i = 0; i < nal_queue->len; i++) {
       guint size;
 
@@ -1057,9 +1084,10 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
        * starts with 0x000001 so all the 0x00 bytes at the end of this one are
        * trailing 0x0 that can be discarded */
       size = nal_len;
-      if (i + 1 != nal_queue->len)
-        for ( ; size > 1 && data[size - 1] == 0x0; size--)
-          /* skip */;
+      if (i + 1 != nal_queue->len
+          || rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM)
+        for (; size > 1 && data[size - 1] == 0x0; size--)
+          /* skip */ ;
 
       /* put the data in one or more RTP packets */
       ret =
@@ -1072,11 +1100,15 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       /* move to next NAL packet */
       data += nal_len;
       size -= nal_len;
+      pushed += nal_len + 3;
     }
     g_array_set_size (nal_queue, 0);
   }
 
-  gst_buffer_unref (buffer);
+  if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM)
+    gst_adapter_flush (rtph264pay->adapter, pushed);
+  else
+    gst_buffer_unref (buffer);
 
   return ret;
 
@@ -1122,6 +1154,8 @@ gst_basertppayload_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       rtph264pay->send_spspps = FALSE;
+      if (rtph264pay->adapter)
+        gst_adapter_clear (rtph264pay->adapter);
       break;
     default:
       break;
@@ -1130,6 +1164,24 @@ gst_basertppayload_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
+}
+
+static void
+gst_rtp_h264_pay_set_scan_mode (GstRtpH264Pay * rtph264pay,
+    GstH264ScanMode scan_mode)
+{
+  if (rtph264pay->scan_mode == scan_mode)
+    return;
+
+  if (rtph264pay->adapter) {
+    g_object_unref (rtph264pay->adapter);
+    rtph264pay->adapter = NULL;
+  }
+
+  rtph264pay->scan_mode = scan_mode;
+  if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM) {
+    rtph264pay->adapter = gst_adapter_new ();
+  }
 }
 
 static void
@@ -1149,7 +1201,7 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
       rtph264pay->update_caps = TRUE;
       break;
     case PROP_SCAN_MODE:
-      rtph264pay->scan_mode = g_value_get_enum (value);
+      gst_rtp_h264_pay_set_scan_mode (rtph264pay, g_value_get_enum (value));
       break;
     case PROP_BUFFER_LIST:
       rtph264pay->buffer_list = g_value_get_boolean (value);
