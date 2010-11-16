@@ -1508,24 +1508,17 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   }
 
   /* and should then also be linked downstream, so safe to send some events */
-  if (parse->priv->pad_mode == GST_ACTIVATE_PULL) {
-    if (G_UNLIKELY (parse->close_segment)) {
-      GST_DEBUG_OBJECT (parse, "loop sending close segment");
-      gst_pad_push_event (parse->srcpad, parse->close_segment);
-      parse->close_segment = NULL;
-    }
-
-    if (G_UNLIKELY (parse->pending_segment)) {
-      GST_DEBUG_OBJECT (parse, "loop push pending segment");
-      gst_pad_push_event (parse->srcpad, parse->pending_segment);
-      parse->pending_segment = NULL;
-    }
-  } else {
-    if (G_UNLIKELY (parse->pending_segment)) {
-      GST_DEBUG_OBJECT (parse, "chain pushing a pending segment");
-      gst_pad_push_event (parse->srcpad, parse->pending_segment);
-      parse->pending_segment = NULL;
-    }
+  if (G_UNLIKELY (parse->close_segment)) {
+    /* only set up by loop */
+    GST_DEBUG_OBJECT (parse, "loop sending close segment");
+    gst_pad_push_event (parse->srcpad, parse->close_segment);
+    parse->close_segment = NULL;
+  }
+  if (G_UNLIKELY (parse->pending_segment)) {
+    GST_DEBUG_OBJECT (parse, "%s push pending segment",
+        parse->priv->pad_mode == GST_ACTIVATE_PULL ? "loop" : "chain");
+    gst_pad_push_event (parse->srcpad, parse->pending_segment);
+    parse->pending_segment = NULL;
   }
 
   /* update bitrates and optionally post corresponding tags
