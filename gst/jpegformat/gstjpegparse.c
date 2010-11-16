@@ -499,6 +499,23 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
   return TRUE;
 }
 
+static inline gboolean
+gst_jpeg_parse_skip_marker (GstJpegParse * parse,
+    GstByteReader * reader, guint8 marker)
+{
+  guint16 size;
+
+  if (!gst_byte_reader_get_uint16_be (reader, &size))
+    return FALSE;
+
+  if (!gst_byte_reader_skip (reader, size - 2))
+    return FALSE;
+
+  GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker, size);
+
+  return TRUE;
+}
+
 static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
@@ -629,12 +646,8 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
       case DHT:
       case DQT:
         /* Ignore these codes */
-        if (!gst_byte_reader_get_uint16_be (&reader, &size))
+        if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
           goto error;
-        if (!gst_byte_reader_skip (&reader, size - 2))
-          goto error;
-        GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
-            size - 2);
         break;
 
       case SOF2:
@@ -670,12 +683,8 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
           if (!gst_byte_reader_set_pos (&reader, pos - size))
             goto error;
 #else
-          if (!gst_byte_reader_get_uint16_be (&reader, &size))
+          if (!gst_jpeg_parse_skip_marker (parse, &reader, marker))
             goto error;
-          if (!gst_byte_reader_skip (&reader, size - 2))
-            goto error;
-          GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
-              size - 2);
 #endif
         } else {
           GST_WARNING_OBJECT (parse, "unhandled marker %x, leaving", marker);
