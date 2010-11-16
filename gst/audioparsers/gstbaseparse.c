@@ -2072,34 +2072,19 @@ exit:
   return ret;
 }
 
-/**
- * gst_base_parse_loop:
- * @pad: GstPad
- *
- * Loop that is used in pull mode to retrieve data from upstream.
- */
-static void
-gst_base_parse_loop (GstPad * pad)
+/* PULL mode:
+ * pull and scan for next frame starting from current offset
+ * ajusts sync, drain and offset going along */
+static GstFlowReturn
+gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
+    GstBuffer ** buf, gboolean full)
 {
-  GstBaseParse *parse;
-  GstBaseParseClass *klass;
   GstBuffer *buffer, *outbuf;
-  GstFlowReturn ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint fsize = 0, min_size;
   gint skip = 0;
 
-  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  /* reverse playback:
-   * first fragment (closest to stop time) is handled normally below,
-   * then we pull in fragments going backwards */
-  if (parse->segment.rate < 0.0) {
-    if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_ts)) {
-      ret = gst_base_parse_handle_previous_fragment (parse);
-      goto done;
-    }
-  }
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   while (TRUE) {
 
@@ -2131,7 +2116,7 @@ gst_base_parse_loop (GstPad * pad)
       skip = 1;
     if (skip > 0) {
       GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", skip);
-      if (parse->segment.rate < 0.0 && !parse->priv->buffers_queued) {
+      if (full && parse->segment.rate < 0.0 && !parse->priv->buffers_queued) {
         /* reverse playback, and no frames found yet, so we are skipping
          * the leading part of a fragment, which may form the tail of
          * fragment coming later, hopefully subclass skips efficiently ... */
@@ -2162,8 +2147,10 @@ gst_base_parse_loop (GstPad * pad)
     ret = gst_base_parse_pull_range (parse, fsize, &outbuf);
     if (ret != GST_FLOW_OK)
       goto done;
-    if (GST_BUFFER_SIZE (outbuf) < fsize)
-      goto eos;
+    if (GST_BUFFER_SIZE (outbuf) < fsize) {
+      gst_buffer_unref (outbuf);
+      ret = GST_FLOW_UNEXPECTED;
+    }
   }
 
   parse->priv->offset += fsize;
@@ -2171,6 +2158,43 @@ gst_base_parse_loop (GstPad * pad)
   /* Does the subclass want to skip too? */
   if (skip > 0)
     parse->priv->offset += skip;
+
+  *buf = outbuf;
+
+done:
+  return ret;
+}
+
+/**
+ * gst_base_parse_loop:
+ * @pad: GstPad
+ *
+ * Loop that is used in pull mode to retrieve data from upstream.
+ */
+static void
+gst_base_parse_loop (GstPad * pad)
+{
+  GstBaseParse *parse;
+  GstBaseParseClass *klass;
+  GstBuffer *outbuf;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
+  klass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  /* reverse playback:
+   * first fragment (closest to stop time) is handled normally below,
+   * then we pull in fragments going backwards */
+  if (parse->segment.rate < 0.0) {
+    if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_ts)) {
+      ret = gst_base_parse_handle_previous_fragment (parse);
+      goto done;
+    }
+  }
+
+  ret = gst_base_parse_scan_frame (parse, klass, &outbuf, TRUE);
+  if (ret != GST_FLOW_OK)
+    goto done;
 
   /* This always unrefs the outbuf, even if error occurs */
   ret = gst_base_parse_handle_and_push_buffer (parse, klass, outbuf);
