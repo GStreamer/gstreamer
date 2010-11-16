@@ -79,6 +79,12 @@
 /* if the sample index is larger than this, something is likely wrong */
 #define QTDEMUX_MAX_SAMPLE_INDEX_SIZE (50*1024*1024)
 
+/* For converting qt creation times to unix epoch times */
+#define QTDEMUX_SECONDS_PER_DAY (60 * 60 * 24)
+#define QTDEMUX_LEAP_YEARS_FROM_1904_TO_1970 17
+#define QTDEMUX_SECONDS_FROM_1904_TO_1970 (((1970 - 1904) * (guint64) 365 + \
+    QTDEMUX_LEAP_YEARS_FROM_1904_TO_1970) * QTDEMUX_SECONDS_PER_DAY)
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 /*typedef struct _QtNode QtNode; */
@@ -4239,7 +4245,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup (stream->stss.data, stream->stss.size);
@@ -4257,7 +4263,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup (stream->stps.data, stream->stps.size);
@@ -4381,7 +4387,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->ctts.data = g_memdup (stream->ctts.data, stream->ctts.size);
@@ -7004,7 +7010,8 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   }
 
   GST_DEBUG_OBJECT (qtdemux, "new tag list");
-  qtdemux->tag_list = gst_tag_list_new ();
+  if (!qtdemux->tag_list)
+    qtdemux->tag_list = gst_tag_list_new ();
 
   i = 0;
   while (i < G_N_ELEMENTS (add_funcs)) {
@@ -7255,6 +7262,8 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GNode *trak;
   GNode *udta;
   gint64 duration;
+  guint64 creation_time;
+  GstDateTime *datetime = NULL;
   gint version;
 
   mvhd = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_mvhd);
@@ -7265,14 +7274,36 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   version = QT_UINT8 ((guint8 *) mvhd->data + 8);
   if (version == 1) {
+    creation_time = QT_UINT64 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 28);
     qtdemux->duration = QT_UINT64 ((guint8 *) mvhd->data + 32);
   } else if (version == 0) {
+    creation_time = QT_UINT32 ((guint8 *) mvhd->data + 12);
     qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
     qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
   } else {
     GST_WARNING_OBJECT (qtdemux, "Unhandled mvhd version %d", version);
     return FALSE;
+  }
+
+  /* Moving qt creation time (secs since 1904) to unix time */
+  if (creation_time != 0) {
+    if (creation_time > QTDEMUX_SECONDS_FROM_1904_TO_1970) {
+      creation_time -= QTDEMUX_SECONDS_FROM_1904_TO_1970;
+      datetime = gst_date_time_new_from_unix_epoch_local_time (creation_time);
+    } else {
+      GST_WARNING_OBJECT (qtdemux, "Can't handle datetimes before 1970 yet, "
+          "please file a bug at http://bugzilla.gnome.org");
+    }
+  }
+  if (datetime) {
+    if (!qtdemux->tag_list)
+      qtdemux->tag_list = gst_tag_list_new ();
+
+    /* Use KEEP as explicit tags should have a higher priority than mvhd tag */
+    gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_KEEP, GST_TAG_DATE_TIME,
+        datetime, NULL);
+    gst_date_time_unref (datetime);
   }
 
   GST_INFO_OBJECT (qtdemux, "timescale: %u", qtdemux->timescale);
