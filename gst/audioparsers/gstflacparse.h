@@ -78,6 +78,7 @@ struct _GstFlacParse {
   GstTagList *tags;
 
   GList *headers;
+  GstBuffer *seektable;
 };
 
 struct _GstFlacParseClass {
