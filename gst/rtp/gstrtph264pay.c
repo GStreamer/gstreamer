@@ -210,6 +210,8 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
   rtph264pay->scan_mode = GST_H264_SCAN_MODE_MULTI_NAL;
   rtph264pay->buffer_list = DEFAULT_BUFFER_LIST;
   rtph264pay->spspps_interval = DEFAULT_CONFIG_INTERVAL;
+
+  rtph264pay->adapter = gst_adapter_new ();
 }
 
 static void
@@ -236,10 +238,7 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   g_free (rtph264pay->sprop_parameter_sets);
 
-  if (rtph264pay->adapter) {
-    g_object_unref (rtph264pay->adapter);
-    rtph264pay->adapter = NULL;
-  }
+  g_object_unref (rtph264pay->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -484,7 +483,7 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
 }
 
 static guint
-next_start_code (guint8 * data, guint size)
+next_start_code (const guint8 * data, guint size)
 {
   /* Boyer-Moore string matching algorithm, in a degenerative
    * sense because our search 'alphabet' is binary - 0 & 1 only.
@@ -524,9 +523,9 @@ next_start_code (guint8 * data, guint size)
 
 static gboolean
 gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
-    guint8 * data, guint size, GstClockTime timestamp)
+    const guint8 * data, guint size, GstClockTime timestamp)
 {
-  guint8 *sps = NULL, *pps = NULL;
+  const guint8 *sps = NULL, *pps = NULL;
   guint sps_len = 0, pps_len = 0;
   guint8 header, type;
   guint len;
@@ -640,8 +639,9 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 }
 
 static GstFlowReturn
-gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
-    guint size, GstClockTime timestamp, GstBuffer * buffer_orig);
+gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
+    const guint8 * data, guint size, GstClockTime timestamp,
+    GstBuffer * buffer_orig);
 
 static GstFlowReturn
 gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
@@ -682,8 +682,9 @@ gst_rtp_h264_pay_send_sps_pps (GstBaseRTPPayload * basepayload,
 }
 
 static GstFlowReturn
-gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload, guint8 * data,
-    guint size, GstClockTime timestamp, GstBuffer * buffer_orig)
+gst_rtp_h264_pay_payload_nal (GstBaseRTPPayload * basepayload,
+    const guint8 * data, guint size, GstClockTime timestamp,
+    GstBuffer * buffer_orig)
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
@@ -913,17 +914,17 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
   guint size, nal_len, i;
-  guint8 *data, *nal_data;
+  const guint8 *data, *nal_data;
   GstClockTime timestamp;
   GArray *nal_queue;
-  guint pushed;
+  guint pushed = 0;
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
   /* the input buffer contains one or more NAL units */
 
   if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM) {
-    timestamp = gst_adapter_prev_timestamp (rtph264pay->adapter, 0);
+    timestamp = gst_adapter_prev_timestamp (rtph264pay->adapter, NULL);
     gst_adapter_push (rtph264pay->adapter, buffer);
     size = gst_adapter_available (rtph264pay->adapter);
     data = gst_adapter_peek (rtph264pay->adapter, size);
@@ -1154,8 +1155,7 @@ gst_basertppayload_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       rtph264pay->send_spspps = FALSE;
-      if (rtph264pay->adapter)
-        gst_adapter_clear (rtph264pay->adapter);
+      gst_adapter_clear (rtph264pay->adapter);
       break;
     default:
       break;
@@ -1164,24 +1164,6 @@ gst_basertppayload_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
-}
-
-static void
-gst_rtp_h264_pay_set_scan_mode (GstRtpH264Pay * rtph264pay,
-    GstH264ScanMode scan_mode)
-{
-  if (rtph264pay->scan_mode == scan_mode)
-    return;
-
-  if (rtph264pay->adapter) {
-    g_object_unref (rtph264pay->adapter);
-    rtph264pay->adapter = NULL;
-  }
-
-  rtph264pay->scan_mode = scan_mode;
-  if (rtph264pay->scan_mode == GST_H264_SCAN_MODE_BYTESTREAM) {
-    rtph264pay->adapter = gst_adapter_new ();
-  }
 }
 
 static void
@@ -1201,7 +1183,7 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
       rtph264pay->update_caps = TRUE;
       break;
     case PROP_SCAN_MODE:
-      gst_rtp_h264_pay_set_scan_mode (rtph264pay, g_value_get_enum (value));
+      rtph264pay->scan_mode = g_value_get_enum (value);
       break;
     case PROP_BUFFER_LIST:
       rtph264pay->buffer_list = g_value_get_boolean (value);
