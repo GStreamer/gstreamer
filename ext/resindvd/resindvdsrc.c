@@ -61,7 +61,7 @@ typedef enum
   RSN_BTN_LEFT = 0x01,
   RSN_BTN_RIGHT = 0x02,
   RSN_BTN_UP = 0x04,
-  RSN_BTN_DOWN = 0x04
+  RSN_BTN_DOWN = 0x08
 } RsnBtnMask;
 
 enum
