@@ -259,6 +259,7 @@ struct _GstBaseParsePrivate
   /* seek table entries only maintained if upstream is BYTE seekable */
   gboolean upstream_seekable;
   gboolean upstream_has_duration;
+  gint64 upstream_size;
   /* minimum distance between two index entries */
   GstClockTimeDiff idx_interval;
   /* ts and offset of last entry added */
@@ -530,6 +531,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->index_last_ts = 0;
   parse->priv->index_last_offset = 0;
   parse->priv->upstream_seekable = FALSE;
+  parse->priv->upstream_size = 0;
   parse->priv->upstream_has_duration = FALSE;
   parse->priv->idx_interval = 0;
   parse->priv->exact_position = TRUE;
@@ -537,8 +539,10 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->last_ts = GST_CLOCK_TIME_NONE;
   parse->priv->last_offset = 0;
 
-  if (parse->pending_segment)
+  if (parse->pending_segment) {
     gst_event_unref (parse->pending_segment);
+    parse->pending_segment = NULL;
+  }
 
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
       NULL);
@@ -1295,6 +1299,7 @@ done:
   GST_DEBUG_OBJECT (parse, "seekable: %d (%" G_GUINT64_FORMAT " - %"
       G_GUINT64_FORMAT ")", seekable, start, stop);
   parse->priv->upstream_seekable = seekable;
+  parse->priv->upstream_size = seekable ? stop : 0;
 
   GST_DEBUG_OBJECT (parse, "idx_interval: %ums", idx_interval);
   parse->priv->idx_interval = idx_interval * GST_MSECOND;
@@ -1574,9 +1579,9 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     ret = GST_FLOW_OK;
   } else if (ret == GST_FLOW_OK) {
     if (parse->segment.rate > 0.0) {
+      ret = gst_pad_push (parse->srcpad, buffer);
       GST_LOG_OBJECT (parse, "frame (%d bytes) pushed: %s",
           GST_BUFFER_SIZE (buffer), gst_flow_get_name (ret));
-      ret = gst_pad_push (parse->srcpad, buffer);
     } else {
       GST_LOG_OBJECT (parse, "frame (%d bytes) queued for now",
           GST_BUFFER_SIZE (buffer));
@@ -2855,7 +2860,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       GST_TIME_FORMAT, gst_format_get_name (format), rate,
       cur_type, GST_TIME_ARGS (cur), stop_type, GST_TIME_ARGS (stop));
 
-  /* no negative rates yet */
+  /* no negative rates in push mode */
   if (rate < 0.0 && parse->priv->pad_mode == GST_ACTIVATE_PUSH)
     goto negative_rate;
 
@@ -2937,6 +2942,8 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       if (parse->srcpad) {
         GST_DEBUG_OBJECT (parse, "sending flush start");
         gst_pad_push_event (parse->srcpad, gst_event_new_flush_start ());
+        /* unlock upstream pull_range */
+        gst_pad_push_event (parse->sinkpad, gst_event_new_flush_start ());
       }
     } else {
       gst_pad_pause_task (parse->sinkpad);
@@ -2957,6 +2964,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     if (flush) {
       GST_DEBUG_OBJECT (parse, "sending flush stop");
       gst_pad_push_event (parse->srcpad, gst_event_new_flush_stop ());
+      gst_pad_push_event (parse->sinkpad, gst_event_new_flush_stop ());
       gst_base_parse_clear_queues (parse);
     } else {
       if (parse->close_segment)
@@ -3022,6 +3030,8 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
        seek event (in bytes) to upstream. Segment / flush handling happens
        in corresponding src event handlers */
     GST_DEBUG_OBJECT (parse, "seek in PUSH mode");
+    if (seekstop >= 0 && seekpos <= seekpos)
+      seekstop = seekpos;
     new_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flush,
         GST_SEEK_TYPE_SET, seekpos, stop_type, seekstop);
 
