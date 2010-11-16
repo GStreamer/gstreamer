@@ -1174,10 +1174,10 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
     GST_BUFFER_OFFSET (buffer) = 0;
     GST_BUFFER_OFFSET_END (buffer) = 0;
 
-    if (is_last) {
-      flacparse->headers =
-          g_list_append (flacparse->headers, gst_buffer_ref (buffer));
+    flacparse->headers =
+        g_list_append (flacparse->headers, gst_buffer_ref (buffer));
 
+    if (is_last) {
       if (!gst_flac_parse_handle_headers (flacparse))
         return GST_FLOW_ERROR;
 
@@ -1185,14 +1185,10 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), MAX (9,
               flacparse->min_framesize));
       flacparse->state = GST_FLAC_PARSE_STATE_DATA;
-
-      /* DROPPED because we pushed all headers manually already */
-      return GST_BASE_PARSE_FLOW_DROPPED;
-    } else {
-      flacparse->headers =
-          g_list_append (flacparse->headers, gst_buffer_ref (buffer));
-      return GST_BASE_PARSE_FLOW_DROPPED;
     }
+
+    /* DROPPED because we pushed already or will push all headers manually */
+    return GST_BASE_PARSE_FLOW_DROPPED;
   } else {
     if (flacparse->offset != GST_BUFFER_OFFSET (buffer)) {
       FrameHeaderCheckReturn ret;
@@ -1290,5 +1286,5 @@ gst_flac_parse_pre_push_buffer (GstBaseParse * parse, GstBuffer * buf)
     flacparse->tags = NULL;
   }
 
-  return GST_FLOW_OK;
+  return GST_BASE_PARSE_FLOW_CLIP;
 }
