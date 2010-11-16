@@ -3231,7 +3231,6 @@ gst_base_sink_flush_start (GstBaseSink * basesink, GstPad * pad)
     gst_element_lost_state (GST_ELEMENT_CAST (basesink));
   } else {
     basesink->priv->have_latency = TRUE;
-    basesink->need_preroll = FALSE;
   }
   gst_base_sink_set_last_buffer (basesink, NULL);
   GST_PAD_STREAM_UNLOCK (pad);
