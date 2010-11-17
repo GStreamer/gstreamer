@@ -1264,8 +1264,17 @@
   (return-type "gfloat")
 )
 
-(define-function date_time_new_from_unix_epoch
-  (c-name "gst_date_time_new_from_unix_epoch")
+(define-function date_time_new_from_unix_epoch_local_time
+  (c-name "gst_date_time_new_from_unix_epoch_local_time")
+  (return-type "GstDateTime*")
+  (caller-owns-return #t)
+  (parameters
+    '("gint64" "secs")
+  )
+)
+
+(define-function date_time_new_from_unix_epoch_utc
+  (c-name "gst_date_time_new_from_unix_epoch_utc")
   (return-type "GstDateTime*")
   (caller-owns-return #t)
   (parameters
