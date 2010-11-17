@@ -568,6 +568,11 @@ gst_aacparse_detect_stream (GstAacParse * aacparse,
 
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 512);
 
+    /* arrange for metadata and get out of the way */
+    gst_aacparse_set_src_caps (aacparse,
+        GST_PAD_CAPS (GST_BASE_PARSE_SINK_PAD (aacparse)));
+    gst_base_parse_set_passthrough (GST_BASE_PARSE (aacparse), TRUE);
+
     *framesize = avail;
     return TRUE;
   }
@@ -654,6 +659,9 @@ gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 
   aacparse = GST_AACPARSE (parse);
 
+  if (G_UNLIKELY (aacparse->header_type != DSPAAC_HEADER_ADTS))
+    return ret;
+
   gst_aacparse_parse_adts_header (aacparse, GST_BUFFER_DATA (buffer),
       &rate, &channels, NULL, NULL);
   GST_LOG_OBJECT (aacparse, "rate: %d, chans: %d", rate, channels);
@@ -673,7 +681,6 @@ gst_aacparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
         aacparse->sample_rate, 1024, 2, 2);
   }
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
   return ret;
 }
 
