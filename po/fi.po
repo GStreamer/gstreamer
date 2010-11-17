@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-06-30 11:47+0300\n"
+"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "Language: fi\n"
@@ -159,7 +159,7 @@ msgid "Could not configure supporting library."
 msgstr "Tukikirjastoa ei voitu konfiguroida."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Koodausvirhe."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer kohtasi yleisen resurssivirheen."
@@ -306,13 +306,11 @@ msgstr "päiväys"
 msgid "date the data was created (as a GDate structure)"
 msgstr "päiväys, jolloin data luotiin (GDate-muodossa)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "päiväys"
+msgstr "päiväysaika"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "päiväys, jolloin data luotiin (GDate-muodossa)"
+msgstr "päiväys ja aika, jolloin data luotiin (GstDateTime-muodossa)"
 
 msgid "genre"
 msgstr "laji"
@@ -649,12 +647,11 @@ msgid ""
 "the neighborhood)"
 msgstr "sijainti kaupungin sisällä, jossa media on nauhoitettu tai tuotettu"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "maantietellisen sijainnin nimi"
+msgstr "maantietellisen sijainnin virhe vaakasuorassa"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "odotettu virhe paikannuksen vaakasuorassa mittauksessa (metreinä)"
 
 msgid "geo location movement speed"
 msgstr "maantieteellisen sijainnin liikenopeus"
@@ -761,19 +758,17 @@ msgstr "laitemalli"
 msgid "Model of the device used to create this media"
 msgstr "Tämän median luomiseen käytetyn laitteen malli"
 
-#, fuzzy
 msgid "application name"
-msgstr "maantietellisen sijainnin nimi"
+msgstr "sovelluksen nimi"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Tämän median luomiseen käytetyn laitteen malli"
+msgstr "Tämän median luomiseen käytetty sovellus"
 
 msgid "application data"
-msgstr ""
+msgstr "sovellusdata"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Mielivaltainen sovellusdata joka serialisoidaan mediaan"
 
 msgid "image orientation"
 msgstr "kuvasuunta"
@@ -959,13 +954,13 @@ msgid "controllable"
 msgstr "ohjattavissa"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "vaihdettavissa TYHJÄ-, VALMIS-, TAUOLLA- tai SOI-tiloissa"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "vaihdettavissa vain TYHJÄ-, VALMIS- tai TAUOLLA-tiloissa"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "vaihdettavissa vain TYHJÄ- tai VALMIS--tiloissa"
 
 msgid "Blacklisted files:"
 msgstr "Mustalistatut tiedostot:"

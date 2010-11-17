@@ -6,10 +6,10 @@
 # Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.26.2\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2010-03-08 09:33+0100\n"
+"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
@@ -171,7 +171,7 @@ msgid "Could not configure supporting library."
 msgstr "Nepodarilo sa nastaviť podpornú knižnicu."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Chyba pri kódovaní."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer narazil na všeobecnú chybu zdrojov."
@@ -321,13 +321,12 @@ msgstr "dátum"
 msgid "date the data was created (as a GDate structure)"
 msgstr "dátum, kedy boli tieto údaje vytvorené (ako štruktúra GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "dátum"
+msgstr "dátum a čas"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "dátum, kedy boli tieto údaje vytvorené (ako štruktúra GDate)"
+msgstr ""
+"dátum a čas, kedy boli tieto údaje vytvorené (ako štruktúra GstDateTime)"
 
 msgid "genre"
 msgstr "žáner"
@@ -597,7 +596,7 @@ msgid "comma separated keywords describing the content"
 msgstr "kľúčové slová, opisujúce obsah, oddelené čiarkou"
 
 msgid "geo location name"
-msgstr "geografické umiestnenie"
+msgstr "geografická poloha"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
@@ -638,67 +637,64 @@ msgstr ""
 "zemepisná nadmorská výška  miesta, kde boli tieto médiá nahraté alebo "
 "produkované, v metroch podľa WGS84 (0 je priemerná hladina mora)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "zemepisná dĺžka"
+msgstr "zemepisná poloha krajina"
 
-#, fuzzy
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"opis miesta, v ľudskej reči, kde boli tieto médiá nahraté alebo produkované"
+msgstr "krajina (v angličtine), kde bolo toto médium nahraté alebo produkované"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "zemepisná šírka"
+msgstr "zemepisná poloha mesto"
 
-#, fuzzy
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"opis miesta, v ľudskej reči, kde boli tieto médiá nahraté alebo produkované"
+msgstr "mesto (v angličtine), kde bolo toto médium nahraté alebo produkované"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "zemepisná nadmorská výška"
+msgstr "zemepisná poloha upresnenie"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"umiestnenie v rámci mesta, kde bolo toto médium vyprodukované alebo "
+"vytvorené (napr. v susedstve)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "geografické umiestnenie"
+msgstr "geografická poloha vodorovná odchýlka"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "očakávaná odchýlka vodorovného umiestnenia (v metroch)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "zemepisná dĺžka"
+msgstr "zemepisná poloha rýchlosť pohybu"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
+msgstr "rýchlosť pohybu zachytávajúceho zariadenia počas zachytávania v m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "zemepisná nadmorská výška"
+msgstr "zemepisná poloha smer pohybu"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"ukazuje smer pohybu zariadenia, ktoré vykonávalo zachytávanie média. Je "
+"reprezentovaný ako stupne v neceločíselnej reprezentácii, 0 znamená "
+"geografický sever, a zvyšuje sa v smere hodinových ručičiek"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "zemepisná nadmorská výška"
+msgstr "zemepisná poloha smer zachytávania"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"ukazuje smer, kam zariadenie smerovalo počas zachytávania média. Je "
+"reprezentovaný ako stupne v neceločíselnej reprezentácii, 0 znamená "
+"geografický sever, a zvyšuje sa v smere hodinových ručičiek"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
@@ -751,48 +747,44 @@ msgstr ""
 "Zoskupí súvisiace médiá, ktoré zaberajú viacero stôp, ako napríklad rôzne "
 "časti koncertu. Toto je vyššia úroveň než stopa, ale nižšia než album."
 
-#, fuzzy
 msgid "user rating"
-msgstr "trvanie"
+msgstr "hodnotenie používateľa"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Hodnotenie podľa používateľa. Čím vyššie, tým viac sa toto médium páči."
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "výrobca zariadenia"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "verzia kodéru používaného pre kódovanie tohto prúdu"
+msgstr "Výrobca zariadenia použitého na vytvorenie tohto média"
 
 msgid "device model"
-msgstr ""
+msgstr "model zariadenia"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "verzia kodéru používaného pre kódovanie tohto prúdu"
+msgstr "Model zariadenia použitého na vytvorenie tohto média"
 
-#, fuzzy
 msgid "application name"
-msgstr "geografické umiestnenie"
+msgstr "názov aplikácie"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "verzia kodéru používaného pre kódovanie tohto prúdu"
+msgstr "Aplikácia použitá pri tvorbe tohto média"
 
 msgid "application data"
-msgstr ""
+msgstr "dáta aplikácie"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Ľubovoľné údaje aplikácie, ktoré sa majú serializovať do média"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientácia obrázku"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Ako má byť obrázok otočený alebo prevrátený pred jeho zobrazením"
 
 msgid ", "
 msgstr ", "
@@ -935,9 +927,8 @@ msgstr "Nebol určený dočasný priečinok (Temp)."
 msgid "Could not create temp file \"%s\"."
 msgstr "Nepodarilo sa získať informácie o \"%s\"."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "Chyba pri zápise do súboru \"%s\"."
+msgstr "Chyba pri zápise do sťahovaného súboru."
 
 msgid "caps"
 msgstr "schopnosti"
@@ -1166,9 +1157,8 @@ msgstr "SÚBOR"
 msgid "Do not install a fault handler"
 msgstr "Neinštalovať obsluhu výnimiek"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "Neinštalovať obsluhu výnimiek"
+msgstr "Neinštalovať obsluhu signálov SIGUSR1 a SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"

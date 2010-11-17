@@ -1,14 +1,14 @@
 # Catalan translation for gstreamer.
-# Copyright © 2004, 2005 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same licence as the gstreamer package.
-# Jordi Mallach <jordi@sindominio.net>, 2004, 2005.
+# Jordi Mallach <jordi@sindominio.net>, 2004, 2005, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-23 20:57+0100\n"
-"PO-Revision-Date: 2005-12-02 17:43+0100\n"
+"POT-Creation-Date: 2010-11-17 23:54+0000\n"
+"PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "Language: ca\n"
@@ -77,10 +77,11 @@ msgstr ""
 "connectors"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Inhabilita l'actualització del registre"
 
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
+"Inhabilita el llançament d'un procés auxiliar mentre s'analitza el registre"
 
 msgid "GStreamer Options"
 msgstr "Opcions del GStreamer"
@@ -107,10 +108,11 @@ msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"S'ha produït un error del GStreamer: el canvi d'estat ha fallat i algun "
+"element no ha pogut enviar un missatge d'error amb la raó de la fallida."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
-"S'ha produït un error intern de GStreamer: problema de punt de connexió."
+msgstr "S'ha produït un error intern de GStreamer: problema de ceŀla."
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "S'ha produït un error intern de GStreamer: problema de fils."
@@ -140,22 +142,23 @@ msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
+"Aquesta aplicació està tractant d'emprar funcionalitat del GStreamer que "
+"s'ha inhabilitat."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr "GStreamer ha trobat un error general de la biblioteca de suport."
+msgstr "GStreamer ha trobat un error general de la biblioteca de recolzament."
 
 msgid "Could not initialize supporting library."
-msgstr "No s'ha pogut inicialitzar la biblioteca de suport."
+msgstr "No s'ha pogut inicialitzar la biblioteca de recolzament."
 
 msgid "Could not close supporting library."
-msgstr "No s'ha pogut tancar la biblioteca de suport."
+msgstr "No s'ha pogut tancar la biblioteca de recolzament."
 
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "No s'ha pogut tancar la biblioteca de suport."
+msgstr "No s'ha pogut configurar la biblioteca de recolzament."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "S'ha produït un error de codificació."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer ha trobat un error general de recursos."
@@ -194,7 +197,7 @@ msgid "Could not get/set settings from/on resource."
 msgstr "No s'ha pogut obtenir/establir els paràmetres des del/al recurs."
 
 msgid "No space left on the resource."
-msgstr ""
+msgstr "No resta espai al recurs."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer ha trobat un error general de flux."
@@ -225,17 +228,18 @@ msgstr "No s'ha pogut demultiplexar el flux."
 msgid "Could not multiplex stream."
 msgstr "No s'ha pogut multiplexar el flux."
 
-#, fuzzy
 msgid "The stream is in the wrong format."
 msgstr "El flux és en el format erroni."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "El flux és xifrat i no s'ha implementat el desxifratge."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
+"El flux és xifrat i no es pot desxifrar perquè no s'ha proveït una clau "
+"adequada."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -247,7 +251,7 @@ msgstr ""
 "No s'ha trobat cap missatge d'error estàndard per al domini %s i el codi %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "El rellotge seleccionat no es pot emprar al conducte."
 
 msgid "title"
 msgstr "títol"
@@ -256,11 +260,10 @@ msgid "commonly used title"
 msgstr "títol usat habitualment"
 
 msgid "title sortname"
-msgstr ""
+msgstr "nom d'ordenació del títol"
 
-#, fuzzy
 msgid "commonly used title for sorting purposes"
-msgstr "títol usat habitualment"
+msgstr "títol usat habitualment per a l'ordenació"
 
 msgid "artist"
 msgstr "artista"
@@ -269,11 +272,10 @@ msgid "person(s) responsible for the recording"
 msgstr "persones responsables de la gravació"
 
 msgid "artist sortname"
-msgstr ""
+msgstr "nom d'ordenació de l'artista"
 
-#, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "persones responsables de la gravació"
+msgstr "persones responsables de la gravació per a l'ordenació"
 
 msgid "album"
 msgstr "àlbum"
@@ -282,24 +284,22 @@ msgid "album containing this data"
 msgstr "àlbum que conté aquesta dades"
 
 msgid "album sortname"
-msgstr ""
+msgstr "nom d'ordenació de l'àlbum"
 
-#, fuzzy
 msgid "album containing this data for sorting purposes"
-msgstr "àlbum que conté aquesta dades"
+msgstr "àlbum que conté aquesta dades per a l'ordenació"
 
-#, fuzzy
 msgid "album artist"
-msgstr "artista"
+msgstr "artista de l'àlbum"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr ""
+msgstr "L'artista de l'àlbum sencer, tal i com s'hauria de mostrar"
 
 msgid "album artist sortname"
-msgstr ""
+msgstr "nom d'ordenació de l'artista de l'àlbum"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr ""
+msgstr "L'artista de l'àlbum sencer, tal i com s'hauria d'ordenar"
 
 msgid "date"
 msgstr "data"
@@ -307,13 +307,12 @@ msgstr "data"
 msgid "date the data was created (as a GDate structure)"
 msgstr "data en la qual es van crear les dades (com a una estructura GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "data"
+msgstr "datahora"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "data en la qual es van crear les dades (com a una estructura GDate)"
+msgstr ""
+"data i hora en què es van crear les dades (com a una estructura GstDateTime)"
 
 msgid "genre"
 msgstr "gènere"
@@ -327,13 +326,12 @@ msgstr "comentari"
 msgid "free text commenting the data"
 msgstr "text lliure comentant les dades"
 
-#, fuzzy
 msgid "extended comment"
-msgstr "comentari"
+msgstr "comentari estés"
 
-#, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "text lliure comentant les dades"
+msgstr ""
+"text lliure comentant les dades en forma clau=valor o clau[ca]=comentari"
 
 msgid "track number"
 msgstr "número de pista"
@@ -366,12 +364,15 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"Origen del medi com a URI (ubicació, on s'allotja el fitxer o flux original)"
 
 msgid "homepage"
-msgstr ""
+msgstr "pàgina principal"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
+"Pàgina principal d'aquest medi (p. ex. la pàgina principal de l'artista o "
+"peŀlícula)"
 
 msgid "description"
 msgstr "descripció"
@@ -401,19 +402,17 @@ msgstr "copyright"
 msgid "copyright notice of the data"
 msgstr "nota de copyright de les dades"
 
-#, fuzzy
 msgid "copyright uri"
-msgstr "copyright"
+msgstr "uri del copyright"
 
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "nota de copyright de les dades"
+msgstr "URI a la nota del copyright de les dades"
 
 msgid "contact"
 msgstr "contacte"
 
 msgid "contact information"
-msgstr "informació de contactec"
+msgstr "informació de contacte"
 
 msgid "license"
 msgstr "llicència"
@@ -421,13 +420,11 @@ msgstr "llicència"
 msgid "license of data"
 msgstr "llicència de les dades"
 
-#, fuzzy
 msgid "license uri"
-msgstr "llicència"
+msgstr "uri de la llicència"
 
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "llicència de les dades"
+msgstr "URI a la llicència de les dades"
 
 msgid "performer"
 msgstr "músic"
@@ -436,17 +433,16 @@ msgid "person(s) performing"
 msgstr "persones que toquen"
 
 msgid "composer"
-msgstr ""
+msgstr "compositor"
 
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "persones responsables de la gravació"
+msgstr "persones que composaren la gravació"
 
 msgid "duration"
-msgstr "duració"
+msgstr "durada"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "duració en la unitat de temps de GStreamer (nanosegons)"
+msgstr "durada en la unitat de temps de GStreamer (nanosegons)"
 
 msgid "codec"
 msgstr "còdec"
@@ -466,21 +462,17 @@ msgstr "còdec d'àudio"
 msgid "codec the audio data is stored in"
 msgstr "còdec en el qual estan emmagatzemades les dades d'àudio"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "còdec de vídeo"
+msgstr "còdec de subtítols"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "còdel en el qual estan emmagatzemades les dades de vídeo"
+msgstr "còdel en el qual estan emmagatzemades les dades de subtítols"
 
-#, fuzzy
 msgid "container format"
-msgstr "informació de contactec"
+msgstr "format del contenidor"
 
-#, fuzzy
 msgid "container format the data is stored in"
-msgstr "còdec en el qual estan emmagatzemades les dades"
+msgstr "format de contenidor en què estan emmagatzemades les dades"
 
 msgid "bitrate"
 msgstr "ràtio de bits"
@@ -548,12 +540,11 @@ msgstr "cim de l'àlbum del replaygain"
 msgid "peak of the album"
 msgstr "cim de l'àlbum"
 
-#, fuzzy
 msgid "replaygain reference level"
-msgstr "cim de les pistes del replaygain"
+msgstr "nivell de referència del replaygain"
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "nivell de referència dels valors de guany de la pista i àlbum"
 
 msgid "language code"
 msgstr "codi de la llengua"
@@ -562,225 +553,230 @@ msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "codi de la llengua per a aquest flux, conformant amb ISO-639-1"
 
 msgid "image"
-msgstr ""
+msgstr "imatge"
 
-#, fuzzy
 msgid "image related to this stream"
-msgstr "codificador utilitzat per a codificar aquest flux"
+msgstr "imatge relacionada amb aquest flux"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr ""
+msgstr "previsualització de la imatge"
 
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "previsualització de la imatge relacionada amb aquest flux"
 
 msgid "attachment"
-msgstr ""
+msgstr "adjunt"
 
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "codificador utilitzat per a codificar aquest flux"
+msgstr "fitxer adjuntat a aquest flux"
 
 msgid "beats per minute"
-msgstr ""
+msgstr "cops per minut"
 
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "nombre de cops per minut a l'àudio"
 
 msgid "keywords"
-msgstr ""
+msgstr "paraules clau"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "text curt descrivint el contingut de les dades"
+msgstr "paraules clau separades per comes que descriuen el contingut"
 
-#, fuzzy
 msgid "geo location name"
-msgstr "ubicació"
+msgstr "nom de la geolocalització"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
+"ubicació descriptiva llegible pels humans del lloc on s'ha enregistrat o "
+"produït el medi"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "latitud de la geolocalització"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"latitud de la geolocalització del lloc on s'ha enregistrat o produït el "
+"medi, en graus concordants a WGS84 (zero a l'equador, valors negatius per a "
+"latituds al sud)"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "longitud de la geolocalització"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"longitud de la geolocalització del lloc on s'ha enregistrat o produït el "
+"medi, en graus concordants a WGS84 (zero al meridià inicial a Greenwich/UK, "
+"valors negatius per a longituds occidentals)"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "elevació de la geolocalització"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"elevació de la geolocalització del lloc on s'ha enregistrat o produït el "
+"medi, en graus concordants a WGS84 (zero és el nivell del mar mitjà)"
 
-#, fuzzy
 msgid "geo location country"
-msgstr "ubicació"
+msgstr "estat de la geolocalització"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "estat (nom en anglès) del lloc on s'ha enregistrat o produït el medi"
 
-#, fuzzy
 msgid "geo location city"
-msgstr "ubicació"
+msgstr "ciutat de la geolocalització"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
+msgstr "ciutat (nom en anglès) del lloc on s'ha enregistrat o produït el medi"
 
-#, fuzzy
 msgid "geo location sublocation"
-msgstr "ubicació"
+msgstr "sububicació de la geolocalització"
 
 msgid ""
 "a location whithin a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"una ubicació dins de la ciutat on s'ha enregistrat o produït el medi (p. ex. "
+"el barri)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "ubicació"
+msgstr "error horitzontal de la geolocalització"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "error esperat de les mesures de posicionament horitzonat (en metres)"
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "ubicació"
+msgstr "velocitat del moviment de la geolocalització"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
+"velocitat del moviment del dispositiu de captura mentre es prenia la captura "
+"en m/s"
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "ubicació"
+msgstr "direcció del moviment de la geolocalització"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
+"indica la direcció del moviment del dispositiu que prenia la captura d'un "
+"medi. Es representa en graus en representació de coma flotant, 0 vol dir el "
+"nord geogràfic, i augmenta en sentit de les agulles del rellotge"
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "ubicació"
+msgstr "direcció de la captura de la geolocalització"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
+"indica la direcció on apunta el dispositiu mentre captura un medi. Es "
+"representa en graus en representació de coma flotant, 0 vol dir el nord "
+"geogràfic, i augmenta en sentit de les agulles del rellotge"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr ""
+msgstr "nom del programa"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr ""
+msgstr "Nom del programa de TV/podcast/sèrie al qual pertany el medi"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr ""
+msgstr "nom d'ordenació del programa"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
+"Nom programa de TV/podcast/sèrie al qual pertany el medi, per a l'ordenació"
 
-#, fuzzy
 msgid "episode number"
-msgstr "número de disc"
+msgstr "número d'episodi"
 
 msgid "The episode number in the season the media is part of"
-msgstr ""
+msgstr "El número d'episodi de la temporada al qual pertany el medi"
 
-#, fuzzy
 msgid "season number"
-msgstr "número de disc"
+msgstr "número de temporada"
 
 msgid "The season number of the show the media is part of"
-msgstr ""
+msgstr "El número de temporada del programa al qual pertany el medi"
 
-#, fuzzy
 msgid "lyrics"
-msgstr "llicència"
+msgstr "lletres"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr ""
+msgstr "Les lletres del medi, habitualment emprat per a cançons"
 
 msgid "composer sortname"
-msgstr ""
+msgstr "nom d'ordenació del compositor"
 
-#, fuzzy
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "persones responsables de la gravació"
+msgstr "persones que composaren la gravació, per a l'ordenació"
 
 msgid "grouping"
-msgstr ""
+msgstr "agrupació"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
+"medis agrupats que es composen de diverses pistes, com les diferents peces "
+"d'un concert. És de nivell més alt que una pista, però més baix que un àlbum"
 
-#, fuzzy
 msgid "user rating"
-msgstr "duració"
+msgstr "valoració de l'usuari"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
+"Valoració atribuïda per un usuari. Com més alta és, més li agrada el medi a "
+"l'usuari"
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "fabricant del dispositiu"
 
-#, fuzzy
 msgid "Manufacturer of the device used to create this media"
-msgstr "versió del codificador utilitzat per a codificar aquest flux"
+msgstr "Fabricant del dispositiu emprat per a crear aquest medi"
 
 msgid "device model"
-msgstr ""
+msgstr "model del dispositiu"
 
-#, fuzzy
 msgid "Model of the device used to create this media"
-msgstr "versió del codificador utilitzat per a codificar aquest flux"
+msgstr "Model del dispositiu emprat per a crear aquest medi"
 
-#, fuzzy
 msgid "application name"
-msgstr "ubicació"
+msgstr "nom de l'aplicació"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "versió del codificador utilitzat per a codificar aquest flux"
+msgstr "Aplicació emprada per a crear el medi"
 
 msgid "application data"
-msgstr ""
+msgstr "dades de l'aplicació"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr ""
+msgstr "Dades arbitràries de l'aplicació a serialitzar al medi"
 
 msgid "image orientation"
-msgstr ""
+msgstr "orientació de la imatge"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr ""
+msgstr "Com s'hauria de rotar o girar la imatge abans de mostrar-la"
 
 msgid ", "
 msgstr ", "
@@ -850,30 +846,30 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#, fuzzy
 msgid "Internal clock error."
-msgstr "S'ha produït un error intern de flux de dades."
+msgstr "S'ha produït un error intern del rellotge."
 
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
 msgid "A lot of buffers are being dropped."
-msgstr ""
+msgstr "S'estan descartant moltes memòries intermèdies."
 
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
-#, fuzzy
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
 
 msgid "Filter caps"
-msgstr ""
+msgstr "Filtra les capacitats"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
+"Restringeix les capacitats que es poden permetre (NUL vol dir QUALSEVOL). "
+"Establir aquesta propietat pren una referència a l'objecte GstCaps proveït."
 
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
@@ -886,9 +882,9 @@ msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 msgid "Error closing file \"%s\"."
 msgstr "S'ha produït un error en tancar el fitxer «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "S'ha produït un error en escriure al fitxer «%s»."
+msgstr "S'ha produït un error en cercar al fitxer «%s»."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
@@ -901,9 +897,9 @@ msgstr "No s'ha especificat cap fitxer per a llegir."
 msgid "Could not open file \"%s\" for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "no s'ha pogut obtenir informació sobre «%s»."
+msgstr "No s'ha pogut obtenir informació sobre «%s»."
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -917,15 +913,14 @@ msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 
 msgid "No Temp directory specified."
-msgstr ""
+msgstr "No s'ha especificat un directori temporal."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "no s'ha pogut obtenir informació sobre «%s»."
+msgstr "No s'ha pogut crear el fitxer temporal «%s»."
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "S'ha produït un error en escriure al fitxer «%s»."
+msgstr "S'ha produït un error en escriure al fitxer de baixada."
 
 msgid "caps"
 msgstr "capacitats"
@@ -940,73 +935,70 @@ msgid "maximum"
 msgstr "màxim"
 
 msgid "force caps"
-msgstr ""
+msgstr "força les capacitats"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "força les capacitats sense fer un «typefind»"
 
-#, fuzzy
 msgid "Stream contains no data."
-msgstr "àlbum que conté aquesta dades"
+msgstr "El flux no conté dades."
 
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "Interfícies implementades:\n"
 
 msgid "readable"
-msgstr ""
+msgstr "llegible"
 
-#, fuzzy
 msgid "writable"
-msgstr "títol"
+msgstr "escrivible"
 
 msgid "controllable"
-msgstr ""
+msgstr "controlable"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "es pot canviar als estats NUL, PREPARAT, EN PAUSA o REPRODUINT"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "es pot canviar als estats NUL, PREPARAT o EN PAUSA"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "es pot canviar als estats NUL o PREPARAT"
 
 msgid "Blacklisted files:"
-msgstr ""
+msgstr "Fitxers a la llista negra:"
 
-#, fuzzy
 msgid "Total count: "
-msgstr "compte de pistes"
+msgstr "Compte total: "
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d fitxer a la llista negra"
+msgstr[1] "%d fitxers a la llista negra"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d connector"
+msgstr[1] "%d connectors"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%d entrada de la llista negra"
+msgstr[1] "%d entrades de la llista negra"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "funcionalitat"
-msgstr[1] "funcionalitats"
+msgstr[0] "%d funcionalitat"
+msgstr[1] "%d funcionalitats"
 
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 
 msgid "Print list of blacklisted files"
-msgstr ""
+msgstr "Mostra una llista de fitxers a la llista negra"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1014,23 +1006,28 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
+"Mostra una llista analitzable per màquines de funcionalitats que proveeixen "
+"el connector o especificat, o tots els connectors.\n"
+"                                       Útil amb connexions amb mecanismes "
+"externs d'instaŀlació de connectors"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Mostra el contingut d'un connector"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
+"Mostra els esquemes d'URI implementats, amb els elements que els implementen"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
+msgstr "No s'ha pogut carregar el fitxer de connector: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "no hi ha cap element font per a l'URI «%s»"
+msgstr "L'element o connector «%s» no existeix\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Forma d'ús: gst-xmllaunch <file.xml> [ element.propietat=valor ... ]\n"
+msgstr "Forma d'ús: gst-xmllaunch <file.xml> [ element.propietat=valor … ]\n"
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
@@ -1040,9 +1037,8 @@ msgstr "ERROR: l'anàlisi del fitxer xml «%s» ha fallat.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERROR: no hi ha cap conducte de nivell superior en el fitxer «%s».\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "AVÍS: només es gestiona un element de primer nivell ara mateix."
+msgstr "AVÍS: només es gestiona un element de primer nivell ara mateix.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -1053,21 +1049,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVÍS: no s'ha trobat l'element anomenat «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+msgstr "S'ha rebut el missatge #%u de l'element «%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+msgstr "S'ha rebut el missatge #%u de la ceŀla «%s:%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+msgstr "S'ha rebut el missatge #%u de l'objecte «%s» (%s): "
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got message #%u (%s): "
-msgstr "S'ha rebut un missatge de l'element «%s»: (%s): "
+msgstr "S'ha rebut el missatge %u: (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -1077,51 +1073,54 @@ msgstr "S'ha obtingut un final del flux de l'element «%s».\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+msgstr "MARCADOR TROBAT: trobat per la ceŀla «%s:%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "MARCADOR TROBAT: trobat per l'element «%s».\n"
+msgstr "MARCADOR TROBAT: trobat per l'objecte «%s».\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "MARCADOR TROBAT\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"INFO:\n"
+"%s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "ERROR: des de l'element %s: %s\n"
+msgstr "AVÍS: des de l'element %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
+"S'ha preparat, s'està esperant a que s'òmpliga la memòria intermèdial…\n"
 
 msgid "buffering..."
-msgstr ""
+msgstr "s'està omplint la memòria intermèdia…"
 
-#, fuzzy
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "S'està establint el conducte a REPRODUCCIÓ ...\n"
-
-#, fuzzy
-msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "S'està establint el conducte a EN PAUSA ...\n"
-
-msgid "Redistribute latency...\n"
 msgstr ""
+"S'està omplert la memòria intermèdia, s'estableix el conducte REPRODUINT…\n"
+
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr ""
+"S'està omplint la memòria intermèdia, s'estableix el conducte a EN PAUSA…\n"
+
+# S'està redistribuint? jm
+msgid "Redistribute latency...\n"
+msgstr "Redistribució de la latència…\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "S'està establint l'estat a %s a petició de %s…\n"
 
-#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "S'està establint el conducte a NUL ...\n"
+msgstr "Interrupció: S'està aturant el conducte…\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mostra els marcadors (també coneguts com metadades)"
@@ -1129,9 +1128,8 @@ msgstr "Mostra els marcadors (també coneguts com metadades)"
 msgid "Output status information and property notifications"
 msgstr "Mostra la informació d'estat i notificacions de propietats"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "No mostres informació d'estat de TIPUS"
+msgstr "No mostres informació del progrés"
 
 msgid "Output messages"
 msgstr "Missatges de sortida"
@@ -1140,7 +1138,7 @@ msgid "Do not output status information of TYPE"
 msgstr "No mostres informació d'estat de TIPUS"
 
 msgid "TYPE1,TYPE2,..."
-msgstr "TIPUS1,TIPUS2,..."
+msgstr "TIPUS1,TIPUS2,…"
 
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Desa la representació xml del conducte a FITXER i surt"
@@ -1151,15 +1149,14 @@ msgstr "FITXER"
 msgid "Do not install a fault handler"
 msgstr "No instal·les un gestor de fallades"
 
-#, fuzzy
 msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-msgstr "No instal·les un gestor de fallades"
+msgstr "No instaŀles gestors de senyals per a SIGUSR1 i SIGUSR2"
 
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Força el final del flux abans de tancar el conducte"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1176,56 +1173,54 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: l'element «conducte» no s'ha trobat.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "S'està establint el conducte a EN PAUSA ...\n"
+msgstr "S'està establint el conducte a EN PAUSA…\n"
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERROR: el conducte no es vol posar en pausa.\n"
 
-#, fuzzy
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "El conducte s'ha PREPARAT ...\n"
+msgstr "El conducte és en directe i no necessita PREPARACIÓ…\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "El conducte s'està PREPARANT ...\n"
+msgstr "El conducte s'està PREPARANT…\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERROR: el conducte no vol preparar-se.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "El conducte s'ha PREPARAT ...\n"
+msgstr "El conducte s'ha PREPARAT…\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "S'està establint el conducte a REPRODUCCIÓ ...\n"
+msgstr "S'està establint el conducte a REPRODUINT…\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: el conducte no vol reproduir-se.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
+"S'ha habilitat el final del flux en tancar -- S'està forçant un final del "
+"flux al conducte\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "S'està esperant al final del flux…\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "S'ha rebut un final del flux - s'està aturant el conducte…\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "S'ha produït un error en esperar al final del flux\n"
 
 msgid "Execution ended after %"
 msgstr "L'execució ha finalitzat després de %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
-"S'està establint el conducte a LLEST ...\n"
-"\n"
+msgstr "S'està establint el conducte a PREPARAT…\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "S'està establint el conducte a NUL ...\n"
+msgstr "S'està establint el conducte a NUL…\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "S'està establint el conducte a NUL ...\n"
+msgstr "S'està alliberant el conducte…\n"
 
 #~ msgid "Internal GStreamer error: state change failed."
 #~ msgstr ""
@@ -1247,25 +1242,26 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #~ msgstr " ns.\n"
 
 #~ msgid "FREEING pipeline ...\n"
-#~ msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
+#~ msgstr "S'ESTÀ ALLIBERANT el conducte…\n"
 
 #~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr " El conducte NO ES PREPARA ...\n"
+#~ msgstr "Conducte SENSE PREPARACIÓ…\n"
 
 #~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "El conducte es PREPARA ...\n"
+#~ msgstr "Conducte en PREPARACIÓ…\n"
 
+# Argh, PREROLLED vs READY. jm
 #~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "El conducte està PREPARAT ...\n"
+#~ msgstr "Conducte PREPARAT…\n"
 
 #~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "S'ESTÀ EXECUTANT el conducte ...\n"
+#~ msgstr "Conducte EN EXECUCIÓ…\n"
 
 #~ msgid "READY pipeline ...\n"
-#~ msgstr "LLEST el conducte ...\n"
+#~ msgstr "Conducte PREPARAT…\n"
 
 #~ msgid "NULL pipeline ...\n"
-#~ msgstr "ANUL·LAT el conducte ...\n"
+#~ msgstr "Conducte NUL…\n"
 
 #~ msgid ""
 #~ "GStreamer developers were too lazy to assign an error code to this "
@@ -1284,11 +1280,6 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #~ msgstr ""
 #~ "S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat. "
 #~ "Envieu un informe d'error."
-
-#~ msgid "Internal GStreamer error: pad problem.  File a bug."
-#~ msgstr ""
-#~ "S'ha produït un error intern de GStreamer: problema de separació. Envieu "
-#~ "un informe d'error."
 
 #~ msgid "Internal GStreamer error: thread problem.  File a bug."
 #~ msgstr ""
@@ -1335,9 +1326,6 @@ msgstr "S'està establint el conducte a NUL ...\n"
 
 #~ msgid "detected type of stream"
 #~ msgstr "s'ha detectat el tipus de flux"
-
-#~ msgid "could not parse capabilities \"%s\""
-#~ msgstr "no s'han pogut analitzar les capacitats «%s»"
 
 #~ msgid "Added plugin %s with %d feature.\n"
 #~ msgid_plural "Added plugin %s with %d features.\n"
@@ -1399,10 +1387,10 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #~ msgstr "S'ha afegit el camí %s a %s\n"
 
 #~ msgid "Rebuilding %s (%s) ...\n"
-#~ msgstr "S'està reconstruint %s (%s) ...\n"
+#~ msgstr "S'està reconstruint %s (%s)…\n"
 
 #~ msgid "Trying to load %s ...\n"
-#~ msgstr "S'està intentant carregar %s ...\n"
+#~ msgstr "S'està intentant carregar %s…\n"
 
 #~ msgid "Error loading %s\n"
 #~ msgstr "S'ha produït un error en carregar %s\n"
