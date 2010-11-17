@@ -2268,7 +2268,7 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
   g_return_val_if_fail (dest_format != NULL, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_format == src_format) {
+  if (*dest_format == src_format || src_val == -1) {
     *dest_val = src_val;
     return TRUE;
   }
@@ -3069,7 +3069,7 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
   g_return_val_if_fail (dest_format != NULL, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_format == src_format) {
+  if (*dest_format == src_format || src_val == -1) {
     *dest_val = src_val;
     return TRUE;
   }
