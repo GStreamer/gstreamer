@@ -1016,6 +1016,14 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   h264parse->picture_start = FALSE;
   h264parse->idr_offset = -1;
 
+  if (h264parse->pending_segment)
+    gst_event_unref (h264parse->pending_segment);
+  h264parse->pending_segment = NULL;
+
+  g_list_foreach (h264parse->pending_events, (GFunc) gst_event_unref, NULL);
+  g_list_free (h264parse->pending_events);
+  h264parse->pending_events = NULL;
+
   gst_caps_replace (&h264parse->src_caps, NULL);
 }
 
@@ -1039,6 +1047,13 @@ gst_h264_parse_finalize (GObject * object)
     if (h264parse->pps_buffers[i] != NULL)
       g_slice_free (GstH264Pps, h264parse->pps_buffers[i]);
   }
+
+  if (h264parse->pending_segment)
+    gst_event_replace (&h264parse->pending_segment, NULL);
+
+  g_list_foreach (h264parse->pending_events, (GFunc) gst_event_unref, NULL);
+  g_list_free (h264parse->pending_events);
+  h264parse->pending_events = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1369,8 +1384,10 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   /* save as new caps, caps will be set when pushing data */
   /* avoid replacing caps by a mere identical copy, thereby triggering
    * negotiating (which e.g. some container might not appreciate) */
-  if (modified)
+  if (modified) {
     gst_caps_replace (&h264parse->src_caps, src_caps);
+    gst_pad_set_caps (h264parse->srcpad, h264parse->src_caps);
+  }
   gst_caps_unref (src_caps);
 
   return TRUE;
@@ -1598,6 +1615,23 @@ static GstFlowReturn
 gst_h264_parse_push_buffer (GstH264Parse * h264parse, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+
+  /* We can send pending events if this is the first call, since we now have
+   * caps for the srcpad */
+  if (G_UNLIKELY (h264parse->pending_segment != NULL)) {
+    gst_pad_push_event (h264parse->srcpad, h264parse->pending_segment);
+    h264parse->pending_segment = NULL;
+
+    if (G_UNLIKELY (h264parse->pending_events != NULL)) {
+      GList *l;
+
+      for (l = h264parse->pending_events; l != NULL; l = l->next)
+        gst_pad_push_event (h264parse->srcpad, GST_EVENT (l->data));
+
+      g_list_free (h264parse->pending_events);
+      h264parse->pending_events = NULL;
+    }
+  }
 
   /* start of picture is good time to slip in codec_data NALUs
    * (when outputting NALS and transforming to bytestream) */
@@ -2583,6 +2617,11 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (h264parse, "received EOS");
+      if (h264parse->pending_segment) {
+        /* Send pending newsegment before EOS */
+        gst_pad_push_event (h264parse->srcpad, h264parse->pending_segment);
+        h264parse->pending_segment = NULL;
+      }
       if (h264parse->segment.rate < 0.0) {
         gst_h264_parse_chain_reverse (h264parse, TRUE, NULL);
         gst_h264_parse_flush_decode (h264parse);
@@ -2595,6 +2634,7 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stop, pos;
       gboolean update;
+      GstEvent **ev;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
@@ -2604,17 +2644,35 @@ gst_h264_parse_sink_event (GstPad * pad, GstEvent * event)
           rate, applied_rate, format, start, stop, pos);
 
       GST_DEBUG_OBJECT (h264parse,
-          "Pushing newseg rate %g, applied rate %g, format %d, start %"
+          "Keeping newseg rate %g, applied rate %g, format %d, start %"
           G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, applied_rate, format, start, stop, pos);
 
+      ev = &h264parse->pending_segment;
+      gst_event_replace (ev, event);
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    }
+    case GST_EVENT_FLUSH_START:
+    {
       res = gst_pad_push_event (h264parse->srcpad, event);
       break;
     }
     default:
-      res = gst_pad_push_event (h264parse->srcpad, event);
-      break;
+    {
+      if (G_UNLIKELY (h264parse->src_caps == NULL ||
+              h264parse->pending_segment)) {
+        /* We don't yet have enough data to set caps on the srcpad, so collect
+         * non-critical events till we do */
+        h264parse->pending_events = g_list_append (h264parse->pending_events,
+            event);
+        res = TRUE;
+      } else
+        res = gst_pad_push_event (h264parse->srcpad, event);
 
+      break;
+    }
   }
   gst_object_unref (h264parse);
 
