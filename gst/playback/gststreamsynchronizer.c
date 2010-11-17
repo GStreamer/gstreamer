@@ -52,6 +52,8 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
+static const gboolean passthrough = TRUE;
+
 GST_BOILERPLATE (GstStreamSynchronizer, gst_stream_synchronizer,
     GstElement, GST_TYPE_ELEMENT);
 
@@ -190,6 +192,9 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
   GstPad *opad;
   gboolean ret = FALSE;
 
+  if (passthrough)
+    goto skip_adjustments;
+
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), event->structure);
 
@@ -242,6 +247,8 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+skip_adjustments:
+
   opad = gst_stream_get_other_pad_from_pad (pad);
   if (opad) {
     ret = gst_pad_push_event (opad, event);
@@ -262,6 +269,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_SYNCHRONIZER (gst_pad_get_parent (pad));
   GstPad *opad;
   gboolean ret = FALSE;
+
+  if (passthrough)
+    goto skip_adjustments;
 
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), event->structure);
@@ -521,6 +531,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+skip_adjustments:
+
   opad = gst_stream_get_other_pad_from_pad (pad);
   if (opad) {
     ret = gst_pad_push_event (opad, event);
@@ -563,6 +575,15 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstStream *stream;
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime timestamp_end = GST_CLOCK_TIME_NONE;
+
+  if (passthrough) {
+    opad = gst_stream_get_other_pad_from_pad (pad);
+    if (opad) {
+      ret = gst_pad_push (opad, buffer);
+      gst_object_unref (opad);
+    }
+    goto done;
+  }
 
   GST_LOG_OBJECT (pad, "Handling buffer %p: size=%u, timestamp=%"
       GST_TIME_FORMAT " duration=%" GST_TIME_FORMAT
@@ -660,6 +681,8 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstBuffer * buffer)
     }
     GST_STREAM_SYNCHRONIZER_UNLOCK (self);
   }
+
+done:
 
   gst_object_unref (self);
 
