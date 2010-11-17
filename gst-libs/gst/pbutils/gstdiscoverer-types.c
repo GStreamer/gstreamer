@@ -443,7 +443,7 @@ gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
  * Finds all the #GstDiscovererContainerInfo contained in @info
  *
  * Returns: A #GList of matching #GstDiscovererStreamInfo. The caller should
- * free it with #g_list_free.
+ * free it with #gst_discoverer_stream_info_list_free.
  *
  * Since 0.10.31
  */
