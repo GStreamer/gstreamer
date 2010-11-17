@@ -420,7 +420,7 @@ need_more_data:
   }
 }
 
-static gboolean
+static inline gboolean
 gst_jpeg_parse_sof (GstJpegParse * parse, GstByteReader * reader)
 {
   guint8 numcomps = 0;          /* Number of components in image
