@@ -1429,6 +1429,12 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
     parse->priv->next_ts = GST_CLOCK_TIME_NONE;
   }
 
+  if (parse->priv->upstream_seekable && parse->priv->exact_position &&
+      GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    gst_base_parse_add_index_entry (parse, offset,
+        GST_BUFFER_TIMESTAMP (buffer),
+        !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT), FALSE);
+
   /* First buffers are dropped, this means that the subclass needs more
    * frames to decide on the format and queues them internally */
   /* convert internal flow to OK and mark discont for the next buffer. */
@@ -1588,12 +1594,6 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
     g_list_free (parse->priv->pending_events);
     parse->priv->pending_events = NULL;
   }
-
-  if (parse->priv->upstream_seekable && parse->priv->exact_position &&
-      GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    gst_base_parse_add_index_entry (parse, GST_BUFFER_OFFSET (buffer),
-        GST_BUFFER_TIMESTAMP (buffer),
-        !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT), FALSE);
 
   if (klass->pre_push_buffer)
     ret = klass->pre_push_buffer (parse, buffer);
