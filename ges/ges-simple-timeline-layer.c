@@ -25,7 +25,7 @@
  * #GESSimpleTimelineLayer allows using #GESTimelineObject(s) with a list-like
  * API. Clients can add any type of GESTimelineObject to a
  * GESSimpleTimelineLayer, and the layer will automatically compute the
- * appropriate start times. 
+ * appropriate start times.
  *
  * Users should be aware that GESTimelineTransition objects are considered to
  * have a negative duration for the purposes of positioning GESTimelineSource
@@ -57,6 +57,15 @@ static GList *get_objects (GESTimelineLayer * layer);
 G_DEFINE_TYPE (GESSimpleTimelineLayer, ges_simple_timeline_layer,
     GES_TYPE_TIMELINE_LAYER);
 
+struct _GESSimpleTimelineLayerPrivate
+{
+  /* Sorted list of objects */
+  GList *objects;
+
+  gboolean adding_object;
+  gboolean valid;
+};
+
 enum
 {
   OBJECT_MOVED,
@@ -81,7 +90,7 @@ ges_simple_timeline_layer_get_property (GObject * object,
 
   switch (property_id) {
     case PROP_VALID:
-      g_value_set_boolean (value, self->valid);
+      g_value_set_boolean (value, self->priv->valid);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -115,6 +124,8 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineLayerClass *layer_class = GES_TIMELINE_LAYER_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (GESSimpleTimelineLayerPrivate));
 
   object_class->get_property = ges_simple_timeline_layer_get_property;
   object_class->set_property = ges_simple_timeline_layer_set_property;
@@ -159,7 +170,10 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
 static void
 ges_simple_timeline_layer_init (GESSimpleTimelineLayer * self)
 {
-  self->objects = NULL;
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerPrivate);
+
+  self->priv->objects = NULL;
 }
 
 static void
@@ -173,16 +187,17 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
   GESTimelineObject *prev_object = NULL;
   GESTimelineObject *prev_transition = NULL;
   gboolean valid = TRUE;
+  GESSimpleTimelineLayerPrivate *priv = self->priv;
 
   priority = GES_TIMELINE_LAYER (self)->min_gnl_priority + 2;
 
   GST_DEBUG ("recalculating values");
 
-  if (self->objects && GES_IS_TIMELINE_TRANSITION (self->objects->data)) {
+  if (priv->objects && GES_IS_TIMELINE_TRANSITION (priv->objects->data)) {
     valid = FALSE;
   }
 
-  for (tmp = self->objects; tmp; tmp = tmp->next) {
+  for (tmp = priv->objects; tmp; tmp = tmp->next) {
     GESTimelineObject *obj;
     guint64 dur;
     GList *l_next;
@@ -272,8 +287,8 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
 
   GES_TIMELINE_LAYER (self)->max_gnl_priority = priority;
 
-  if (valid != self->valid) {
-    self->valid = valid;
+  if (valid != self->priv->valid) {
+    self->priv->valid = valid;
     g_object_notify (G_OBJECT (self), "valid");
   }
 }
@@ -287,7 +302,7 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
  * Adds the object at the given position in the layer. The position is where
  * the object will be inserted. To put the object before all objects, use
  * position 0. To put after all objects, use position -1.
- * 
+ *
  * When adding transitions, it is important that the adjacent objects
  * (objects at position, and position + 1) be (1) A derivative of
  * GESTimelineSource or other non-transition, and (2) have a duration at least
@@ -303,10 +318,11 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
 {
   gboolean res;
   GList *nth;
+  GESSimpleTimelineLayerPrivate *priv = layer->priv;
 
   GST_DEBUG ("layer:%p, object:%p, position:%d", layer, object, position);
 
-  nth = g_list_nth (layer->objects, position);
+  nth = g_list_nth (priv->objects, position);
 
   if (GES_IS_TIMELINE_TRANSITION (object)) {
     GList *lprev = g_list_previous (nth);
@@ -323,21 +339,21 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer * layer,
   }
 
 
-  layer->adding_object = TRUE;
+  priv->adding_object = TRUE;
 
   res = ges_timeline_layer_add_object ((GESTimelineLayer *) layer, object);
 
   /* Add to layer */
   if (G_UNLIKELY (!res)) {
-    layer->adding_object = FALSE;
+    priv->adding_object = FALSE;
     return FALSE;
   }
 
-  layer->adding_object = FALSE;
+  priv->adding_object = FALSE;
 
   GST_DEBUG ("Adding object %p to the list", object);
 
-  layer->objects = g_list_insert (layer->objects, object, position);
+  priv->objects = g_list_insert (priv->objects, object, position);
 
   g_signal_connect (G_OBJECT (object), "notify::height", G_CALLBACK
       (timeline_object_height_changed_cb), layer);
@@ -366,6 +382,7 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
     GESTimelineObject * object, gint newposition)
 {
   gint idx;
+  GESSimpleTimelineLayerPrivate *priv = layer->priv;
 
   GST_DEBUG ("layer:%p, object:%p, newposition:%d", layer, object, newposition);
 
@@ -375,7 +392,7 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
   }
 
   /* Find it's current position */
-  idx = g_list_index (layer->objects, object);
+  idx = g_list_index (priv->objects, object);
   if (G_UNLIKELY (idx == -1)) {
     GST_WARNING ("TimelineObject not controlled by this layer");
     return FALSE;
@@ -388,10 +405,10 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
     return TRUE;
 
   /* pop it off the list */
-  layer->objects = g_list_remove (layer->objects, object);
+  priv->objects = g_list_remove (priv->objects, object);
 
   /* re-add it at the proper position */
-  layer->objects = g_list_insert (layer->objects, object, newposition);
+  priv->objects = g_list_insert (priv->objects, object, newposition);
 
   /* recalculate positions */
   gstl_recalculate (layer);
@@ -415,6 +432,23 @@ ges_simple_timeline_layer_new (void)
   return g_object_new (GES_TYPE_SIMPLE_TIMELINE_LAYER, NULL);
 }
 
+
+/**
+ * ges_simple_timeline_layer_is_valid:
+ *
+ * FALSE when the arrangement of objects in the layer would cause errors or
+ * unexpected output during playback. Do not set the containing pipeline
+ * state to PLAYING when this property is FALSE.
+ *
+ * Returns: #True if current arrangement of the layer is valid, #False
+ * otherwise
+ */
+gboolean
+ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer * layer)
+{
+  return layer->priv->valid;
+}
+
 static void
 ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
     GESTimelineObject * object)
@@ -422,7 +456,7 @@ ges_simple_timeline_layer_object_removed (GESTimelineLayer * layer,
   GESSimpleTimelineLayer *sl = (GESSimpleTimelineLayer *) layer;
 
   /* remove object from our list */
-  sl->objects = g_list_remove (sl->objects, object);
+  sl->priv->objects = g_list_remove (sl->priv->objects, object);
   gstl_recalculate (sl);
 }
 
@@ -432,9 +466,9 @@ ges_simple_timeline_layer_object_added (GESTimelineLayer * layer,
 {
   GESSimpleTimelineLayer *sl = (GESSimpleTimelineLayer *) layer;
 
-  if (sl->adding_object == FALSE) {
+  if (sl->priv->adding_object == FALSE) {
     /* remove object from our list */
-    sl->objects = g_list_append (sl->objects, object);
+    sl->priv->objects = g_list_append (sl->priv->objects, object);
     gstl_recalculate (sl);
   }
   g_signal_connect_swapped (object, "notify::duration",
@@ -456,7 +490,7 @@ get_objects (GESTimelineLayer * l)
   GList *tmp;
   GESSimpleTimelineLayer *layer = (GESSimpleTimelineLayer *) l;
 
-  ret = g_list_copy (layer->objects);
+  ret = g_list_copy (layer->priv->objects);
 
   for (tmp = ret; tmp; tmp = tmp->next) {
     g_object_ref (tmp->data);

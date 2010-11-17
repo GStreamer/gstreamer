@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_SIMPLE_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SIMPLE_TIMELINE_LAYER, GESSimpleTimelineLayerClass))
 
+typedef struct _GESSimpleTimelineLayerPrivate GESSimpleTimelineLayerPrivate;
+
 /**
  * GESSimpleTimelineLayer:
  * 
@@ -53,11 +55,7 @@ struct _GESSimpleTimelineLayer {
   GESTimelineLayer parent;
 
   /*< private >*/
-  /* Sorted list of objects */
-  GList *objects;
-
-  gboolean adding_object;
-  gboolean valid;
+  GESSimpleTimelineLayerPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -92,6 +90,9 @@ ges_simple_timeline_layer_add_object (GESSimpleTimelineLayer *layer,
 gboolean
 ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer *layer,
 				       GESTimelineObject *object, gint newposition);
+
+gboolean
+ges_simple_timeline_layer_is_valid (GESSimpleTimelineLayer *layer);
 
 G_END_DECLS
 

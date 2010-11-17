@@ -1004,27 +1004,35 @@ app_delete_objects (App * app, GList * objects)
 static void
 app_move_selected_up (App * app)
 {
-  GESSimpleTimelineLayer *layer;
+  GList *objects, *tmp;
   gint pos;
 
-  layer = GES_SIMPLE_TIMELINE_LAYER (app->layer);
-  pos = g_list_index (layer->objects, app->selected_objects->data);
+  objects = ges_timeline_layer_get_objects (app->layer);
+  pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+       GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+
+  for (tmp = objects; tmp; tmp = tmp->next) {
+    g_object_unref (tmp->data);
+  }
 }
 
 static void
 app_move_selected_down (App * app)
 {
-  GESSimpleTimelineLayer *layer;
+  GList *objects, *tmp;
   gint pos;
 
-  layer = GES_SIMPLE_TIMELINE_LAYER (app->layer);
-  pos = g_list_index (layer->objects, app->selected_objects->data);
+  objects = ges_timeline_layer_get_objects (app->layer);
+  pos = g_list_index (objects, app->selected_objects->data);
 
   ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER (app->layer),
-      GES_TIMELINE_OBJECT (app->selected_objects->data), pos + 2);
+       GES_TIMELINE_OBJECT (app->selected_objects->data), pos - 1);
+
+  for (tmp = objects; tmp; tmp = tmp->next) {
+    g_object_unref (tmp->data);
+  }
 }
 
 static void
