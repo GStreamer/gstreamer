@@ -45,7 +45,8 @@ gint	gst_date_time_get_second 	(const GstDateTime * datetime);
 gint	gst_date_time_get_microsecond 	(const GstDateTime * datetime);
 gfloat	gst_date_time_get_time_zone_offset (const GstDateTime * datetime);
 
-GstDateTime 	*gst_date_time_new_from_unix_epoch	(gint64 secs);
+GstDateTime 	*gst_date_time_new_from_unix_epoch_local_time (gint64 secs);
+GstDateTime 	*gst_date_time_new_from_unix_epoch_utc  (gint64 secs);
 GstDateTime 	*gst_date_time_new_local_time		(gint year, gint month,
 							 gint day, gint hour,
 							 gint minute,

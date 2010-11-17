@@ -374,6 +374,7 @@ AC_MSG_RESULT($have_tm_gmtoff)
 dnl *** checks for library functions ***
 
 AC_CHECK_FUNCS([gmtime_r])
+AC_CHECK_FUNCS([localtime_r])
 AC_CHECK_FUNCS([sigaction])
 
 dnl check for fseeko()

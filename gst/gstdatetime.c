@@ -146,11 +146,23 @@
  */
 
 /**
- * gst_date_time_new_from_unix_epoch:
+ * gst_date_time_new_from_unix_epoch_local_time:
  * @secs: seconds from the Unix epoch
  *
  * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
  * @secs. The #GstDateTime is in the local timezone.
+ *
+ * Return value: the newly created #GstDateTime
+ *
+ * Since: 0.10.31
+ */
+
+/**
+ * gst_date_time_new_from_unix_epoch_utc:
+ * @secs: seconds from the Unix epoch
+ *
+ * Creates a new #GstDateTime using the time since Jan 1, 1970 specified by
+ * @secs. The #GstDateTime is in the UTC timezone.
  *
  * Return value: the newly created #GstDateTime
  *
@@ -408,7 +420,7 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
 }
 
 GstDateTime *
-gst_date_time_new_from_unix_epoch (gint64 secs)
+gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
 {
   GstDateTime *dt;
   struct tm tm;
@@ -426,6 +438,27 @@ gst_date_time_new_from_unix_epoch (gint64 secs)
   dt = gst_date_time_new (0, tm.tm_year + 1900,
       tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   gst_date_time_set_local_timezone (dt);
+  return dt;
+}
+
+GstDateTime *
+gst_date_time_new_from_unix_epoch_utc (gint64 secs)
+{
+  GstDateTime *dt;
+  struct tm tm;
+  time_t tt;
+
+  memset (&tm, 0, sizeof (tm));
+  tt = (time_t) secs;
+
+#ifdef HAVE_GMTIME_R
+  gmtime_r (&tt, &tm);
+#else
+  memcpy (&tm, gmtime (&tt), sizeof (struct tm));
+#endif
+
+  dt = gst_date_time_new (0, tm.tm_year + 1900,
+      tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   return dt;
 }
 
@@ -473,7 +506,7 @@ gst_date_time_new_now_local_time (void)
   GTimeVal tv;
   g_get_current_time (&tv);
 
-  datetime = gst_date_time_new_from_unix_epoch (tv.tv_sec);
+  datetime = gst_date_time_new_from_unix_epoch_local_time (tv.tv_sec);
   datetime->usec += tv.tv_usec;
   gst_date_time_set_local_timezone (datetime);
   return datetime;
@@ -656,10 +689,17 @@ gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
 }
 
 GstDateTime *
-gst_date_time_new_from_unix_epoch (gint64 secs)
+gst_date_time_new_from_unix_epoch_local_time (gint64 secs)
 {
   return
       gst_date_time_new_from_gdatetime (g_date_time_new_from_unix_local (secs));
+}
+
+GstDateTime *
+gst_date_time_new_from_unix_epoch_utc (gint64 secs)
+{
+  return
+      gst_date_time_new_from_gdatetime (g_date_time_new_from_unix_utc (secs));
 }
 
 GstDateTime *
