@@ -193,6 +193,7 @@
 #include "gstbaseparse.h"
 
 #define MIN_FRAMES_TO_POST_BITRATE 10
+#define TARGET_DIFFERENCE          (20 * GST_SECOND)
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_parse_debug);
 #define GST_CAT_DEFAULT gst_base_parse_debug
@@ -239,6 +240,8 @@ struct _GstBaseParsePrivate
   guint64 bytecount;
   guint64 data_bytecount;
   guint64 acc_duration;
+  GstClockTime first_frame_ts;
+  gint64 first_frame_offset;
 
   gboolean post_min_bitrate;
   gboolean post_avg_bitrate;
@@ -265,6 +268,7 @@ struct _GstBaseParsePrivate
   /* ts and offset of last entry added */
   GstClockTime index_last_ts;
   guint64 index_last_offset;
+  gboolean index_last_valid;
 
   /* timestamps currently produced are accurate, e.g. started from 0 onwards */
   gboolean exact_position;
@@ -362,6 +366,8 @@ static void gst_base_parse_post_bitrates (GstBaseParse * parse,
 
 static gint64 gst_base_parse_find_offset (GstBaseParse * parse,
     GstClockTime time, gboolean before, GstClockTime * _ts);
+static GstFlowReturn gst_base_parse_locate_time (GstBaseParse * parse,
+    GstClockTime * _time, gint64 * _offset);
 
 static GstFlowReturn gst_base_parse_process_fragment (GstBaseParse * parse,
     gboolean push_only);
@@ -517,6 +523,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->framecount = 0;
   parse->priv->bytecount = 0;
   parse->priv->acc_duration = 0;
+  parse->priv->first_frame_ts = GST_CLOCK_TIME_NONE;
+  parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->next_ts = 0;
   parse->priv->passthrough = FALSE;
@@ -530,6 +538,7 @@ gst_base_parse_reset (GstBaseParse * parse)
 
   parse->priv->index_last_ts = 0;
   parse->priv->index_last_offset = 0;
+  parse->priv->index_last_valid = TRUE;
   parse->priv->upstream_seekable = FALSE;
   parse->priv->upstream_size = 0;
   parse->priv->upstream_has_duration = FALSE;
@@ -1216,6 +1225,8 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
       goto exit;
     }
 
+    /* FIXME need better helper data structure that handles these issues
+     * related to ongoing collecting of index entries */
     if (parse->priv->index_last_offset >= offset) {
       GST_DEBUG_OBJECT (parse, "already have entries up to offset "
           "0x%08" G_GINT64_MODIFIER "x", parse->priv->index_last_offset);
@@ -1227,6 +1238,21 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
       GST_DEBUG_OBJECT (parse, "entry too close to last time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (parse->priv->index_last_ts));
       goto exit;
+    }
+
+    /* if last is not really the last one */
+    if (!parse->priv->index_last_valid) {
+      GstClockTime prev_ts;
+
+      gst_base_parse_find_offset (parse, ts, TRUE, &prev_ts);
+      if (GST_CLOCK_DIFF (prev_ts, ts) < parse->priv->idx_interval) {
+        GST_DEBUG_OBJECT (parse,
+            "entry too close to existing entry %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (prev_ts));
+        parse->priv->index_last_offset = offset;
+        parse->priv->index_last_ts = ts;
+        goto exit;
+      }
     }
   }
 
@@ -1341,6 +1367,7 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
     GstBaseParseClass * klass, GstBuffer * buffer)
 {
   GstFlowReturn ret;
+  gint64 offset;
 
   if (parse->priv->discont) {
     GST_DEBUG_OBJECT (parse, "marking DISCONT");
@@ -1360,7 +1387,34 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
       GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer),
       GST_BUFFER_SIZE (buffer));
 
+  /* store offset as it might get overwritten */
+  offset = GST_BUFFER_OFFSET (buffer);
   ret = klass->parse_frame (parse, buffer);
+
+  /* check initial frame to determine if subclass/format can provide ts.
+   * If so, that allows and enables extra seek and duration determining options */
+  if (G_UNLIKELY (parse->priv->first_frame_offset < 0 && ret == GST_FLOW_OK)) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+      parse->priv->first_frame_offset = offset;
+      parse->priv->first_frame_ts = GST_BUFFER_TIMESTAMP (buffer);
+      GST_DEBUG_OBJECT (parse, "subclass provided ts %" GST_TIME_FORMAT
+          " for first frame at offset %" G_GINT64_FORMAT,
+          GST_TIME_ARGS (parse->priv->first_frame_ts),
+          parse->priv->first_frame_offset);
+      if (!GST_CLOCK_TIME_IS_VALID (parse->priv->duration)) {
+        gint64 off;
+        GstClockTime last_ts = G_MAXINT64;
+
+        GST_DEBUG_OBJECT (parse, "no duration; trying scan to determine");
+        gst_base_parse_locate_time (parse, &last_ts, &off);
+        if (GST_CLOCK_TIME_IS_VALID (last_ts))
+          gst_base_parse_set_duration (parse, GST_FORMAT_TIME, last_ts, 0);
+      }
+    } else {
+      /* disable further checks */
+      parse->priv->first_frame_offset = 0;
+    }
+  }
 
   /* re-use default handler to add missing metadata as-much-as-possible */
   gst_base_parse_parse_frame (parse, buffer);
@@ -2799,6 +2853,203 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+/* scans for a cluster start from @pos,
+ * return GST_FLOW_OK and frame position/time in @pos/@time if found */
+static GstFlowReturn
+gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
+    GstClockTime * time, GstClockTime * duration)
+{
+  GstBaseParseClass *klass;
+  gint64 orig_offset;
+  gboolean orig_drain, orig_discont;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *buf = NULL;
+
+  g_return_val_if_fail (GST_FLOW_ERROR, pos != NULL);
+  g_return_val_if_fail (GST_FLOW_ERROR, time != NULL);
+  g_return_val_if_fail (GST_FLOW_ERROR, duration != NULL);
+
+  klass = GST_BASE_PARSE_GET_CLASS (parse);
+
+  *time = GST_CLOCK_TIME_NONE;
+  *duration = GST_CLOCK_TIME_NONE;
+
+  /* save state */
+  orig_offset = parse->priv->offset;
+  orig_discont = parse->priv->discont;
+  orig_drain = parse->priv->drain;
+
+  GST_DEBUG_OBJECT (parse, "scanning for frame starting at %" G_GINT64_FORMAT
+      " (%#" G_GINT64_MODIFIER "x)", *pos, *pos);
+
+  /* jump elsewhere and locate next frame */
+  parse->priv->offset = *pos;
+  ret = gst_base_parse_scan_frame (parse, klass, &buf, FALSE);
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  GST_LOG_OBJECT (parse,
+      "peek parsing frame at offset %" G_GUINT64_FORMAT
+      " (%#" G_GINT64_MODIFIER "x) of size %d",
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf), GST_BUFFER_SIZE (buf));
+
+  /* get offset first, subclass parsing might dump other stuff in there */
+  *pos = GST_BUFFER_OFFSET (buf);
+  ret = klass->parse_frame (parse, buf);
+
+  /* but it should provide proper time */
+  *time = GST_BUFFER_TIMESTAMP (buf);
+  *duration = GST_BUFFER_DURATION (buf);
+  gst_buffer_unref (buf);
+
+  GST_LOG_OBJECT (parse,
+      "frame with time %" GST_TIME_FORMAT " at offset %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (*time), *pos);
+
+done:
+  /* restore state */
+  parse->priv->offset = orig_offset;
+  parse->priv->discont = orig_discont;
+  parse->priv->drain = orig_drain;
+
+  return ret;
+}
+
+/* bisect and scan through file for frame starting before @time,
+ * returns OK and @time/@offset if found, NONE and/or error otherwise
+ * If @time == G_MAXINT64, scan for duration ( == last frame) */
+static GstFlowReturn
+gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
+    gint64 * _offset)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint64 lpos, hpos, newpos;
+  GstClockTime time, ltime, htime, newtime, dur;
+  gboolean cont = TRUE;
+  const GstClockTime tolerance = TARGET_DIFFERENCE;
+  const guint chunk = 4 * 1024;
+
+  g_return_val_if_fail (_time != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (_offset != NULL, GST_FLOW_ERROR);
+
+  /* TODO also make keyframe aware if useful some day */
+
+  time = *_time;
+
+  /* basic cases */
+  if (time == 0) {
+    *_offset = 0;
+    return GST_FLOW_OK;
+  }
+
+  if (time == -1) {
+    *_offset = -1;
+    return GST_FLOW_OK;
+  }
+
+  /* do not know at first */
+  *_offset = -1;
+
+  /* need initial positions; start and end */
+  lpos = parse->priv->first_frame_offset;
+  ltime = parse->priv->first_frame_ts;
+  htime = parse->priv->duration;
+  hpos = parse->priv->upstream_size;
+
+  /* check preconditions are satisfied;
+   * start and end are needed, except for special case where we scan for
+   * last frame to determine duration */
+  if (parse->priv->pad_mode != GST_ACTIVATE_PULL || !hpos ||
+      !GST_CLOCK_TIME_IS_VALID (ltime) ||
+      (!GST_CLOCK_TIME_IS_VALID (htime) && time != G_MAXINT64)) {
+    return GST_FLOW_OK;
+  }
+
+  /* shortcut cases */
+  if (time < ltime) {
+    goto exit;
+  } else if (time < ltime + tolerance) {
+    *_offset = lpos;
+    *_time = ltime;
+    goto exit;
+  } else if (time >= htime) {
+    *_offset = hpos;
+    *_time = htime;
+    goto exit;
+  }
+
+  while (htime > ltime && cont) {
+    GST_LOG_OBJECT (parse,
+        "lpos: %" G_GUINT64_FORMAT ", ltime: %" GST_TIME_FORMAT, lpos,
+        GST_TIME_ARGS (ltime));
+    GST_LOG_OBJECT (parse,
+        "hpos: %" G_GUINT64_FORMAT ", htime: %" GST_TIME_FORMAT, hpos,
+        GST_TIME_ARGS (htime));
+    if (G_UNLIKELY (time == G_MAXINT64)) {
+      newpos = hpos;
+    } else if (G_LIKELY (hpos > lpos)) {
+      newpos =
+          gst_util_uint64_scale (hpos - lpos, time - ltime, htime - ltime) +
+          lpos - chunk;
+    } else {
+      newpos = lpos;
+      /* we check this case once, but not forever, so break loop */
+      cont = FALSE;
+    }
+
+    /* ensure */
+    newpos = CLAMP (newpos, lpos, hpos);
+    GST_LOG_OBJECT (parse,
+        "estimated _offset for %" GST_TIME_FORMAT ": %" G_GINT64_FORMAT,
+        GST_TIME_ARGS (time), newpos);
+
+    ret = gst_base_parse_find_frame (parse, &newpos, &newtime, &dur);
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* heuristic HACK */
+      hpos = MAX (lpos, hpos - chunk);
+      continue;
+    } else if (ret != GST_FLOW_OK) {
+      goto exit;
+    }
+
+    if (newtime == -1 || newpos == -1) {
+      GST_DEBUG_OBJECT (parse, "subclass did not provide metadata; aborting");
+      break;
+    }
+
+    if (G_UNLIKELY (time == G_MAXINT64)) {
+      *_offset = newpos;
+      *_time = newtime;
+      if (GST_CLOCK_TIME_IS_VALID (dur))
+        *_time += dur;
+      break;
+    } else if (newtime > time) {
+      /* overshoot */
+      newpos -= newpos == hpos ? chunk : 0;
+      hpos = CLAMP (newpos, lpos, hpos);
+      htime = newtime;
+    } else if (newtime + tolerance > time) {
+      /* close enough undershoot */
+      *_offset = newpos;
+      *_time = newtime;
+      break;
+    } else if (newtime < ltime) {
+      /* so a position beyond lpos resulted in earlier time than ltime ... */
+      GST_DEBUG_OBJECT (parse, "non-ascending time; aborting");
+    } else {
+      /* undershoot too far */
+      newpos += newpos == hpos ? chunk : 0;
+      lpos = CLAMP (newpos, lpos, hpos);
+      ltime = newtime;
+    }
+  }
+
+exit:
+  GST_LOG_OBJECT (parse, "return offset %" G_GINT64_FORMAT ", time %"
+      GST_TIME_FORMAT, *_offset, GST_TIME_ARGS (*_time));
+  return ret;
+}
+
 static gint64
 gst_base_parse_find_offset (GstBaseParse * parse, GstClockTime time,
     gboolean before, GstClockTime * _ts)
@@ -2914,11 +3165,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   accurate = flags & GST_SEEK_FLAG_ACCURATE;
 
   /* maybe we can be accurate for (almost) free */
-  if (seeksegment.last_stop <= parse->priv->index_last_ts + 20 * GST_SECOND) {
-    GST_DEBUG_OBJECT (parse,
-        "seek position %" GST_TIME_FORMAT " <= %" GST_TIME_FORMAT
-        "accurate seek possible", GST_TIME_ARGS (seeksegment.last_stop),
-        GST_TIME_ARGS (parse->priv->index_last_ts));
+  gst_base_parse_find_offset (parse, seeksegment.last_stop, TRUE, &start_ts);
+  if (seeksegment.last_stop <= start_ts + TARGET_DIFFERENCE) {
+    GST_DEBUG_OBJECT (parse, "accurate seek possible");
     accurate = TRUE;
   }
   if (accurate) {
@@ -3020,6 +3269,24 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
         GST_TIME_ARGS (parse->segment.start),
         GST_TIME_ARGS (parse->segment.stop),
         GST_TIME_ARGS (parse->segment.start));
+
+    /* one last chance in pull mode to stay accurate;
+     * maybe scan and subclass can find where to go */
+    if (!accurate) {
+      gint64 scanpos;
+      GstClockTime ts = seeksegment.last_stop;
+
+      gst_base_parse_locate_time (parse, &ts, &scanpos);
+      if (scanpos >= 0) {
+        accurate = TRUE;
+        seekpos = scanpos;
+        /* running collected index now consists of several intervals,
+         * so optimized check no longer possible */
+        parse->priv->index_last_valid = FALSE;
+        parse->priv->index_last_offset = 0;
+        parse->priv->index_last_ts = 0;
+      }
+    }
 
     /* mark discont if we are going to stream from another position. */
     if (seekpos != parse->priv->offset) {
