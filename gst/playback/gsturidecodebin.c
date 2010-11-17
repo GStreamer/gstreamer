@@ -832,6 +832,7 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
     GstURIDecodeBin * decoder)
 {
   GstPad *newpad;
+  GstPadTemplate *pad_tmpl;
   gchar *padname;
 
   GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>. Last: %d",
@@ -842,8 +843,9 @@ new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
   decoder->numpads++;
   GST_URI_DECODE_BIN_UNLOCK (decoder);
 
-  newpad = gst_ghost_pad_new_from_template (padname, pad,
-      gst_static_pad_template_get (&srctemplate));
+  pad_tmpl = gst_static_pad_template_get (&srctemplate);
+  newpad = gst_ghost_pad_new_from_template (padname, pad, pad_tmpl);
+  gst_object_unref (pad_tmpl);
   g_free (padname);
 
   /* store ref to the ghostpad so we can remove it */

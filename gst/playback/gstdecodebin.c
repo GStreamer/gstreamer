@@ -392,6 +392,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     g_warning ("can't find typefind element, decodebin will not work");
   } else {
     GstPad *pad, *gpad;
+    GstPadTemplate *pad_tmpl;
 
     /* add the typefind element */
     if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind)) {
@@ -403,12 +404,15 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     /* get the sinkpad */
     pad = gst_element_get_static_pad (decode_bin->typefind, "sink");
 
+    /* get the pad template */
+    pad_tmpl = gst_static_pad_template_get (&decoder_bin_sink_template);
+
     /* ghost the sink pad to ourself */
-    gpad = gst_ghost_pad_new_from_template ("sink", pad,
-        gst_static_pad_template_get (&decoder_bin_sink_template));
+    gpad = gst_ghost_pad_new_from_template ("sink", pad, pad_tmpl);
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (decode_bin), gpad);
 
+    gst_object_unref (pad_tmpl);
     gst_object_unref (pad);
 
     /* connect a signal to find out when the typefind element found
