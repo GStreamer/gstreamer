@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 # Alexander Shopov <ash@kambanaria.org>, 2007, 2008, 2009, 2010.
 #
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-01-29 14:49+0200\n"
+"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"PO-Revision-Date: 2010-11-04 14:23+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "Language: bg\n"
@@ -38,28 +39,26 @@ msgid "Could not connect to server"
 msgstr "Не може да се осъществи връзка към сървър."
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Сървърът не поддържа търсене."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Не може да се осъществи връзка към сървър."
+msgstr "Сървърът не може да се открие по име."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Не може да се осъществи връзка към звуковия сървър."
+msgstr "Не може да се осъществи връзка към сървъра."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Неуспешно осъществяване на шифрирана връзка."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Възникна мрежова грешка или сървърът неочаквано прекъсна връзката."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Сървърът изпрати лоши данни."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Не е зададен адрес."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Аудио входът липсва или е грешен. Потокът с AVI ще бъде повреден."
@@ -145,13 +144,13 @@ msgid "Out-gain"
 msgstr "Изходно усилване"
 
 msgid "Line-1"
-msgstr "Линия-1"
+msgstr "Вход-1"
 
 msgid "Line-2"
-msgstr "Линия-2"
+msgstr "Вход-2"
 
 msgid "Line-3"
-msgstr "Линия-3"
+msgstr "Вход-3"
 
 msgid "Digital-1"
 msgstr "Цифрова-1"
@@ -203,15 +202,14 @@ msgid "Could not open audio device for recording."
 msgstr "Аудио устройството не може да се отвори за запис."
 
 msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"Аудио устройството не може да бъде отворено за управление на смесването."
+msgstr "Аудио устройството не може да се отвори за управление на смесването."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"Аудио устройството не може да бъде отворено за управление на смесването. "
-"Тази версия на Open Sound System не се поддържа от този елемент."
+"Аудио устройството не може да се отвори за управление на смесването. "
+"Елементът не поддържа тази версия на OSS."
 
 msgid "Master"
 msgstr "Основна"
@@ -395,39 +393,39 @@ msgstr "Бързо"
 
 #. TRANSLATORS: "Very Low" is a quality setting here
 msgid "Very Low"
-msgstr "Много ниски"
+msgstr "Много ниско"
 
 #. TRANSLATORS: "Low" is a quality setting here
 msgid "Low"
-msgstr "Ниски"
+msgstr "Ниско"
 
 #. TRANSLATORS: "Medium" is a quality setting here
 msgid "Medium"
-msgstr "Средни"
+msgstr "Средно"
 
 #. TRANSLATORS: "High" is a quality setting here
 msgid "High"
-msgstr "Високи"
+msgstr "Високо"
 
 #. TRANSLATORS: "Very High" is a quality setting here
 msgid "Very High"
-msgstr "Много високи"
+msgstr "Много високо"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr "Производство"
+msgstr "Професионално"
 
 msgid "Front Panel Microphone"
 msgstr "Микрофон на предния панел"
 
 msgid "Front Panel Line In"
-msgstr "Входящ канал на предния панел"
+msgstr "Вход на предния панел"
 
 msgid "Front Panel Headphones"
 msgstr "Слушалки на предния панел"
 
 msgid "Front Panel Line Out"
-msgstr "Входящ канал на предния панел"
+msgstr "Изход на предния панел"
 
 msgid "Green Connector"
 msgstr "Зелено гнездо"
@@ -475,7 +473,7 @@ msgid "Gray Front Panel Connector"
 msgstr "Сиво гнездо на предния панел"
 
 msgid "Orange Front Panel Connector"
-msgstr "Оранжево гнездо на предни панел"
+msgstr "Оранжево гнездо на предния панел"
 
 msgid "Red Front Panel Connector"
 msgstr "Червено гнездо на предния панел"
@@ -499,9 +497,9 @@ msgid "Virtual Mixer Channels"
 msgstr "Канали на виртуален смесител"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "Функция на %s"
+msgstr "Функция на %s № %d"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -512,8 +510,8 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Аудио устройството не може да бъде отворено за изпълнение. Тази версия на "
-"Open Sound System не се поддържа от този елемент."
+"Аудио устройството не може да се отвори за изпълнение. Елементът не поддържа "
+"тази версия на OSS."
 
 msgid "Playback is not supported by this audio device."
 msgstr "Това аудио устройство не поддържа изпълнение."

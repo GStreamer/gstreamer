@@ -9,10 +9,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.22.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-05-23 21:23+0300\n"
+"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "Language: fi\n"
@@ -42,28 +42,26 @@ msgid "Could not connect to server"
 msgstr "Palvelimeen ei saatu yhteyttä"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Pavelin ei tue kelausta."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Palvelimeen ei saatu yhteyttä"
+msgstr "Palvelimen nimeä ei saatu selvitettyä."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Yhteyttä äänipalvelimeen ei voitu avata"
+msgstr "Yhteyttä palvelimeen ei voitu avata."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Turvallisen yhteyden avaus epäonnistui."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Tapahtui verkkovirhe tai palvelin sulki yhteyden yllättäen."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Palvelin lähetti virheellistä dataa."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Ei URL:ää asetettuna."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""

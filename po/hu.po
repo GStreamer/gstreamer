@@ -6,10 +6,10 @@
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-02-01 12:46+0100\n"
+"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"PO-Revision-Date: 2010-11-04 01:21+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -42,28 +42,27 @@ msgid "Could not connect to server"
 msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "A kiszolgáló nem támogatja a tekerést."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Nem lehet csatlakozni a kiszolgálóhoz"
+msgstr "Nem lehet feloldani a kiszolgáló nevét."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Nem hozható létre kapcsolat a hangkiszolgálóhoz"
+msgstr "Nem hozható létre kapcsolat a kiszolgálóhoz."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "A biztonságos kapcsolat kialakítása meghiúsult."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Hálózati hiba történt, vagy a kiszolgáló váratlanul lezárta a kapcsolatot."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "A kiszolgáló hibás adatokat küldött."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nincs beállítva URL."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."
@@ -209,29 +208,29 @@ msgid "Could not open audio device for recording."
 msgstr "Nem nyitható meg hangeszköz a felvételhez."
 
 msgid "Could not open audio device for mixer control handling."
-msgstr "A hangeszköz nem nyitható meg a keverő vezérlőinek kezeléséhez."
+msgstr "Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez."
 
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
-"A hangeszköz nem nyitható meg a keverő vezérlőinek kezeléséhez. A Nyílt "
-"hangrendszer ezen verzióját nem támogatja az elem."
+"Nem nyitható meg hangeszköz a keverővezérlő kezeléséhez. Az Open Sound "
+"System ezen verzióját az elem nem támogatja."
 
 msgid "Master"
-msgstr "Master"
+msgstr "Fő hangerő"
 
 msgid "Front"
-msgstr "Elöl"
+msgstr "Elülső"
 
 msgid "Rear"
-msgstr "Hátul"
+msgstr "Hátsó"
 
 msgid "Headphones"
-msgstr "Fülhallgatók"
+msgstr "Fülhallgató"
 
 msgid "Center"
-msgstr "Közép"
+msgstr "Középső"
 
 msgid "LFE"
 msgstr "LFE"
@@ -240,7 +239,7 @@ msgid "Surround"
 msgstr "Térhatású"
 
 msgid "Side"
-msgstr "Oldalt"
+msgstr "Oldalsó"
 
 msgid "Built-in Speaker"
 msgstr "Beépített hangszóró"
@@ -255,13 +254,13 @@ msgid "AUX Out"
 msgstr "AUX ki"
 
 msgid "3D Depth"
-msgstr "3D mélység"
+msgstr "3D mély"
 
 msgid "3D Center"
-msgstr "3D közép"
+msgstr "3D középső"
 
 msgid "3D Enhance"
-msgstr "3D bővítés"
+msgstr "3D javítás"
 
 msgid "Telephone"
 msgstr "Telefon"
@@ -276,7 +275,7 @@ msgid "Internal CD"
 msgstr "Belső CD"
 
 msgid "Video In"
-msgstr "Videó be"
+msgstr "Video be"
 
 msgid "AUX 1 In"
 msgstr "1. AUX be"
@@ -288,13 +287,13 @@ msgid "AUX In"
 msgstr "AUX be"
 
 msgid "Record Gain"
-msgstr "Felvétel-erősítés"
+msgstr "Felvételerősítés"
 
 msgid "Output Gain"
-msgstr "Kimenet-erősítés"
+msgstr "Kimeneterősítés"
 
 msgid "Microphone Boost"
-msgstr "Mikrofon-erősítés"
+msgstr "Mikrofonerősítés"
 
 msgid "Loopback"
 msgstr "Visszacsatolás"
@@ -303,7 +302,7 @@ msgid "Diagnostic"
 msgstr "Diagnosztika"
 
 msgid "Bass Boost"
-msgstr "Mély erősítése"
+msgstr "Basszuskiemelés"
 
 msgid "Playback Ports"
 msgstr "Lejátszási portok"
@@ -312,13 +311,13 @@ msgid "Input"
 msgstr "Bemenet"
 
 msgid "Record Source"
-msgstr "Forrás felvétele"
+msgstr "Felvétel forrása"
 
 msgid "Monitor Source"
-msgstr "Forrás figyelése"
+msgstr "Monitor forrása"
 
 msgid "Keyboard Beep"
-msgstr "Billentyűzethang"
+msgstr "Billentyűzetcsengő"
 
 msgid "Simulate Stereo"
 msgstr "Sztereó szimulálása"
@@ -330,30 +329,28 @@ msgid "Surround Sound"
 msgstr "Térhatású hang"
 
 msgid "Microphone Gain"
-msgstr "Mikrofon erősítése"
+msgstr "Mikrofonerősítés"
 
 msgid "Speaker Source"
-msgstr "Hangszóróforrás"
+msgstr "Hangfalforrás"
 
-#, fuzzy
 msgid "Microphone Source"
-msgstr "1. mikrofon"
+msgstr "Mikrofonforrás"
 
 msgid "Jack"
-msgstr ""
+msgstr "Jack"
 
 msgid "Center / LFE"
-msgstr "Közép/LFE"
+msgstr "Középső / LFE"
 
 msgid "Stereo Mix"
-msgstr "Sztereó keverő"
+msgstr "Sztereó keverés"
 
 msgid "Mono Mix"
-msgstr "Mono keverő"
+msgstr "Monó keverés"
 
-#, fuzzy
 msgid "Input Mix"
-msgstr "Bemenet"
+msgstr "Bemeneti keverés"
 
 msgid "SPDIF In"
 msgstr "SPDIF be"
@@ -380,7 +377,7 @@ msgid "Modem"
 msgstr "Modem"
 
 msgid "Handset"
-msgstr "Kagyló"
+msgstr "Mobiltelefon"
 
 msgid "Other"
 msgstr "Egyéb"
@@ -422,7 +419,7 @@ msgstr "Nagyon magas"
 
 #. TRANSLATORS: "Production" is a quality setting here
 msgid "Production"
-msgstr "Előállítás"
+msgstr "Éles"
 
 msgid "Front Panel Microphone"
 msgstr "Előlapi mikrofon"
@@ -464,34 +461,34 @@ msgid "Yellow Connector"
 msgstr "Sárga csatlakozó"
 
 msgid "Green Front Panel Connector"
-msgstr "Zöld előlapi csatlakozó"
+msgstr "Zöld előoldali csatlakozó"
 
 msgid "Pink Front Panel Connector"
-msgstr "Rózsaszín előlapi csatlakozó"
+msgstr "Rózsaszín előoldali csatlakozó"
 
 msgid "Blue Front Panel Connector"
-msgstr "Kék előlapi csatlakozó"
+msgstr "Kék előoldali csatlakozó"
 
 msgid "White Front Panel Connector"
-msgstr "Fehér előlapi csatlakozó"
+msgstr "Fehér előoldali csatlakozó"
 
 msgid "Black Front Panel Connector"
-msgstr "Fekete előlapi csatlakozó"
+msgstr "Fekete előoldali csatlakozó"
 
 msgid "Gray Front Panel Connector"
-msgstr "Szürke előlapi csatlakozó"
+msgstr "Szürke előoldali csatlakozó"
 
 msgid "Orange Front Panel Connector"
-msgstr "Narancs előlapi csatlakozó"
+msgstr "Narancs előoldali csatlakozó"
 
 msgid "Red Front Panel Connector"
-msgstr "Vörös előlapi csatlakozó"
+msgstr "Vörös előoldali csatlakozó"
 
 msgid "Yellow Front Panel Connector"
-msgstr "Sárga előlapi csatlakozó"
+msgstr "Sárga előoldali csatlakozó"
 
 msgid "Spread Output"
-msgstr "Kimenet szórása"
+msgstr "Szóráskimenet"
 
 msgid "Downmix"
 msgstr "Lekeverés"
@@ -506,9 +503,9 @@ msgid "Virtual Mixer Channels"
 msgstr "Virtuális keverőcsatornák"
 
 #. TRANSLATORS: name + number of a volume mixer control
-#, fuzzy, c-format
+#, c-format
 msgid "%s %d Function"
-msgstr "%s funkció"
+msgstr "%s %d funkció"
 
 #. TRANSLATORS: name of a volume mixer control
 #, c-format
@@ -519,17 +516,17 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Nem nyitható meg hangeszköz a lejátszáshoz. A Nyílt hangrendszer ezen "
-"verzióját nem támogatja az elem."
+"Nem nyitható meg hangeszköz a lejátszáshoz. Az Open Sound System ezen "
+"verzióját az elem nem támogatja."
 
 msgid "Playback is not supported by this audio device."
-msgstr "A hangeszköz nem támogatja a lejátszást."
+msgstr "Ez a hangeszköz nem támogatja a lejátszást."
 
 msgid "Audio playback error."
 msgstr "Hanglejátszási hiba."
 
 msgid "Recording is not supported by this audio device."
-msgstr "A hangeszköz nem támogatja a felvételt."
+msgstr "Ez a hangeszköz nem támogatja a felvételt."
 
 msgid "Error recording from audio device."
 msgstr "Hiba a hangeszközről való felvételkor."

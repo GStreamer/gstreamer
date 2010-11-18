@@ -1,12 +1,12 @@
-# translation of gst-plugins-good-0.10.23.2.po to Turkish
+# translation of gst-plugins-good-0.10.25.3.po to Turkish
 # This file is put in the public domain.
 # Server Acim <serveracim@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-09-12 00:08+0100\n"
-"PO-Revision-Date: 2010-07-03 16:51+0200\n"
+"POT-Creation-Date: 2010-11-18 00:43+0000\n"
+"PO-Revision-Date: 2010-11-16 16:41+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -34,30 +34,29 @@ msgstr "JPEG görüntüsünü çözümlenemedi"
 msgid "Could not connect to server"
 msgstr "Sunucuya bağlanamıyor"
 
-#, fuzzy
 msgid "Server does not support seeking."
-msgstr "Aygıt '%s' görüntü yakalamayı desteklemiyor"
+msgstr "Sunucu aramayı desteklemiyor."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Sunucuya bağlanamıyor"
+msgstr "Sunucu adı çözümlenemiyor."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Ses sunucusuyla bağlantı kurulumayor"
+msgstr "Sunucuyla bağlantı kurulumayor."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Güvenli bağlantı ayarı yapılamadı."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
+"Bir ağ hatası meydana geldi, veya sunucu bağlantıyı beklenmeyen bir şekilde "
+"kesti."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Sunucu yetersiz veri gönderdi."
 
 msgid "No URL set."
-msgstr ""
+msgstr "Hiç bir URL ayarlanmamış."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
