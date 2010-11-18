@@ -43,6 +43,8 @@ struct _GstRtpJ2KPay
 {
   GstBaseRTPPayload payload;
 
+  gboolean buffer_list;
+
   gint height;
   gint width;
 };
