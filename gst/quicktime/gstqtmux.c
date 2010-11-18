@@ -283,6 +283,9 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
     qtpad->traf = NULL;
   }
   atom_array_clear (&qtpad->fragment_buffers);
+
+  /* reference owned elsewhere */
+  qtpad->tfra = NULL;
 }
 
 /*
@@ -309,6 +312,10 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
   if (qtmux->moov) {
     atom_moov_free (qtmux->moov);
     qtmux->moov = NULL;
+  }
+  if (qtmux->mfra) {
+    atom_mfra_free (qtmux->mfra);
+    qtmux->mfra = NULL;
   }
   if (qtmux->fast_start_file) {
     fclose (qtmux->fast_start_file);
@@ -1532,13 +1539,16 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       /* prepare moov and/or tags */
       gst_qt_mux_configure_moov (qtmux, NULL);
       gst_qt_mux_setup_metadata (qtmux);
-      ret = gst_qt_mux_send_moov (qtmux, NULL, FALSE);
+      ret = gst_qt_mux_send_moov (qtmux, &qtmux->header_size, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
       /* extra atoms */
-      ret = gst_qt_mux_send_extra_atoms (qtmux, TRUE, NULL, FALSE);
+      ret =
+          gst_qt_mux_send_extra_atoms (qtmux, TRUE, &qtmux->header_size, FALSE);
       if (ret != GST_FLOW_OK)
         return ret;
+      /* prepare index */
+      qtmux->mfra = atom_mfra_new (qtmux->context);
     } else {
       /* extended to ensure some spare space */
       ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, 0, TRUE);
@@ -1594,6 +1604,20 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
   if (qtmux->fragment_sequence) {
     GstEvent *event;
+
+    if (qtmux->mfra) {
+      guint8 *data = NULL;
+      GstBuffer *buf;
+
+      size = offset = 0;
+      GST_DEBUG_OBJECT (qtmux, "adding mfra");
+      if (!atom_mfra_copy_data (qtmux->mfra, &data, &size, &offset))
+        goto serialize_error;
+      buf = _gst_buffer_new_take_data (data, offset);
+      ret = gst_qt_mux_send_buffer (qtmux, buf, NULL, FALSE);
+      if (ret != GST_FLOW_OK)
+        return ret;
+    }
 
     timescale = qtmux->timescale;
     /* only mvex duration is updated,
@@ -1732,8 +1756,9 @@ ftyp_error:
 
 static GstFlowReturn
 gst_qt_mux_pad_fragment_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
-    GstBuffer * buf, gboolean force, guint32 nsamples, guint32 delta,
-    guint32 size, gboolean sync, gboolean do_pts, gint64 pts_offset)
+    GstBuffer * buf, gboolean force, guint32 nsamples, gint64 dts,
+    guint32 delta, guint32 size, gboolean sync, gboolean do_pts,
+    gint64 pts_offset)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1752,6 +1777,10 @@ flush:
     GstBuffer *buffer;
     guint i, total_size;
 
+    /* now we know where moof ends up, update offset in tfra */
+    if (pad->tfra)
+      atom_tfra_update_offset (pad->tfra, qtmux->header_size);
+
     moof = atom_moof_new (qtmux->context, qtmux->fragment_sequence);
     /* takes ownership */
     atom_moof_add_traf (moof, pad->traf);
@@ -1759,7 +1788,7 @@ flush:
     atom_moof_copy_data (moof, &data, &size, &offset);
     buffer = _gst_buffer_new_take_data (data, offset);
     GST_LOG_OBJECT (qtmux, "writing moof size %d", GST_BUFFER_SIZE (buffer));
-    ret = gst_qt_mux_send_buffer (qtmux, buffer, NULL, FALSE);
+    ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->header_size, FALSE);
 
     /* and actual data */
     total_size = 0;
@@ -1771,11 +1800,13 @@ flush:
     GST_LOG_OBJECT (qtmux, "writing %d buffers, total_size %d",
         atom_array_get_len (&pad->fragment_buffers), total_size);
     if (ret == GST_FLOW_OK)
-      ret = gst_qt_mux_send_mdat_header (qtmux, NULL, total_size, FALSE);
+      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, total_size,
+          FALSE);
     for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++) {
       if (G_LIKELY (ret == GST_FLOW_OK))
         ret = gst_qt_mux_send_buffer (qtmux,
-            atom_array_index (&pad->fragment_buffers, i), NULL, FALSE);
+            atom_array_index (&pad->fragment_buffers, i), &qtmux->header_size,
+            FALSE);
       else
         gst_buffer_unref (atom_array_index (&pad->fragment_buffers, i));
     }
@@ -1793,12 +1824,24 @@ init:
     atom_array_init (&pad->fragment_buffers, 512);
     pad->fragment_duration = gst_util_uint64_scale (qtmux->fragment_duration,
         atom_trak_get_timescale (pad->trak), 1000);
+
+    if (G_UNLIKELY (qtmux->mfra && !pad->tfra)) {
+      pad->tfra = atom_tfra_new (qtmux->context, atom_trak_get_id (pad->trak));
+      atom_mfra_add_tfra (qtmux->mfra, pad->tfra);
+    }
   }
 
   /* add buffer and metadata */
   atom_traf_add_samples (pad->traf, delta, size, sync, do_pts, pts_offset);
   atom_array_append (&pad->fragment_buffers, buf, 256);
   pad->fragment_duration -= delta;
+
+  if (pad->tfra) {
+    guint32 sn = atom_traf_get_sample_num (pad->traf);
+
+    if ((sync && pad->sync) || (sn == 1 && !pad->sync))
+      atom_tfra_add_entry (pad->tfra, dts, sn);
+  }
 
   if (G_UNLIKELY (force))
     goto flush;
@@ -2049,8 +2092,8 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   if (qtmux->fragment_sequence) {
     /* ensure that always sync samples are marked as such */
     return gst_qt_mux_pad_fragment_add_buffer (qtmux, pad, last_buf,
-        buf == NULL, nsamples, scaled_duration, sample_size, !pad->sync || sync,
-        do_pts, pts_offset);
+        buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
+        !pad->sync || sync, do_pts, pts_offset);
   } else {
     atom_trak_add_samples (pad->trak, nsamples, scaled_duration, sample_size,
         chunk_offset, sync, do_pts, pts_offset);

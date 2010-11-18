@@ -113,6 +113,8 @@ struct _GstQTPad
   ATOM_ARRAY (GstBuffer *) fragment_buffers;
   /* running fragment duration */
   gint64 fragment_duration;
+  /* optional fragment index book-keeping */
+  AtomTFRA *tfra;
 
   /* if nothing is set, it won't be called */
   GstQTPadPrepareBufferFunc prepare_buf_func;
@@ -153,6 +155,9 @@ struct _GstQTMux
   AtomMOOV *moov;
   GSList *extra_atoms; /* list of extra top-level atoms (e.g. UUID for xmp)
                         * Stored as AtomInfo structs */
+
+  /* fragmented file index */
+  AtomMFRA *mfra;
 
   /* fast start */
   FILE *fast_start_file;
