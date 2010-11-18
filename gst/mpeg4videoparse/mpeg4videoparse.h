@@ -54,6 +54,8 @@ struct _GstMpeg4VParse {
   GstPad * sinkpad;
   GstPad * srcpad;
 
+  GstCaps *sink_caps;
+
   guint interval;
   GstClockTime last_report;
 

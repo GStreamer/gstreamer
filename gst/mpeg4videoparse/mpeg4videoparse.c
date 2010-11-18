@@ -65,9 +65,15 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
     gint aspect_ratio_width, gint aspect_ratio_height, gint width, gint height)
 {
   gboolean res;
-  GstCaps *out_caps = gst_caps_new_simple ("video/mpeg",
-      "mpegversion", G_TYPE_INT, 4,
-      "systemstream", G_TYPE_BOOLEAN, FALSE,
+  GstCaps *out_caps;
+
+  if (parse->sink_caps) {
+    out_caps = gst_caps_copy (parse->sink_caps);
+  } else {
+    out_caps = gst_caps_new_simple ("video/mpeg",
+        "mpegversion", G_TYPE_INT, 4, NULL);
+  }
+  gst_caps_set_simple (out_caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (parse->profile != 0) {
@@ -710,6 +716,7 @@ gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *value;
 
   GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
+  parse->sink_caps = gst_caps_ref (caps);
 
   s = gst_caps_get_structure (caps, 0);
 
@@ -860,6 +867,10 @@ gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
 static void
 gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
 {
+  if (parse->sink_caps) {
+    gst_caps_unref (parse->sink_caps);
+    parse->sink_caps = NULL;
+  }
   if (parse->adapter) {
     gst_adapter_clear (parse->adapter);
   }
