@@ -906,6 +906,7 @@ gst_element_factory_list_filter (GList * list,
             (!subsetonly && gst_caps_can_intersect (caps, tmpl_caps))) {
           /* non empty intersection, we can use this element */
           result = g_list_prepend (result, gst_object_ref (factory));
+          gst_caps_unref (tmpl_caps);
           break;
         }
         gst_caps_unref (tmpl_caps);
