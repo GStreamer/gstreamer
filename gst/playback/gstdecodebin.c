@@ -899,6 +899,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
    * create a ghostpad for this pad. It's possible that the caps are not
    * fixed. */
   if (mimetype_is_raw (mimetype)) {
+    GstPadTemplate *tmpl;
     gchar *padname;
     GstPad *ghost;
     PadProbeData *data;
@@ -919,8 +920,10 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     decode_bin->numpads++;
 
     /* make it a ghostpad */
-    ghost = gst_ghost_pad_new_from_template (padname, pad,
-        gst_static_pad_template_get (&decoder_bin_src_template));
+    tmpl = gst_static_pad_template_get (&decoder_bin_src_template);
+    ghost = gst_ghost_pad_new_from_template (padname, pad, tmpl);
+    gst_object_unref (tmpl);
+
     gst_pad_set_active (ghost, TRUE);
     gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
 
