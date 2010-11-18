@@ -3643,10 +3643,236 @@ atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
       pts_offset);
 }
 
+guint32
+atom_traf_get_sample_num (AtomTRAF * traf)
+{
+  AtomTRUN *trun;
+
+  if (G_UNLIKELY (!traf->truns))
+    return 0;
+
+  trun = traf->truns->data;
+  return atom_array_get_len (&trun->entries);
+}
+
 void
 atom_moof_add_traf (AtomMOOF * moof, AtomTRAF * traf)
 {
   moof->trafs = g_list_append (moof->trafs, traf);
+}
+
+static void
+atom_tfra_free (AtomTFRA * tfra)
+{
+  atom_full_clear (&tfra->header);
+  atom_array_clear (&tfra->entries);
+  g_free (tfra);
+}
+
+AtomMFRA *
+atom_mfra_new (AtomsContext * context)
+{
+  AtomMFRA *mfra = g_new0 (AtomMFRA, 1);
+
+  atom_header_set (&mfra->header, FOURCC_mfra, 0, 0);
+  return mfra;
+}
+
+void
+atom_mfra_add_tfra (AtomMFRA * mfra, AtomTFRA * tfra)
+{
+  mfra->tfras = g_list_append (mfra->tfras, tfra);
+}
+
+void
+atom_mfra_free (AtomMFRA * mfra)
+{
+  GList *walker;
+
+  walker = mfra->tfras;
+  while (walker) {
+    atom_tfra_free ((AtomTFRA *) walker->data);
+    walker = g_list_next (walker);
+  }
+  g_list_free (mfra->tfras);
+  mfra->tfras = NULL;
+
+  atom_clear (&mfra->header);
+  g_free (mfra);
+}
+
+static void
+atom_tfra_init (AtomTFRA * tfra, guint32 track_ID)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+
+  atom_full_init (&tfra->header, FOURCC_tfra, 0, 0, 0, flags);
+  tfra->track_ID = track_ID;
+  atom_array_init (&tfra->entries, 512);
+}
+
+AtomTFRA *
+atom_tfra_new (AtomsContext * context, guint32 track_ID)
+{
+  AtomTFRA *tfra = g_new0 (AtomTFRA, 1);
+
+  atom_tfra_init (tfra, track_ID);
+  return tfra;
+
+}
+
+static inline gint
+need_bytes (guint32 num)
+{
+  gint n = 0;
+
+  while (num >>= 8)
+    n++;
+
+  return n;
+}
+
+void
+atom_tfra_add_entry (AtomTFRA * tfra, guint64 dts, guint32 sample_num)
+{
+  TFRAEntry entry;
+
+  entry.time = dts;
+  /* fill in later */
+  entry.moof_offset = 0;
+  /* always write a single trun in a single traf */
+  entry.traf_number = 1;
+  entry.trun_number = 1;
+  entry.sample_number = sample_num;
+
+  /* auto-use 64 bits if needed */
+  if (dts > G_MAXUINT32)
+    tfra->header.version = 1;
+
+  /* 1 byte will always do for traf and trun number,
+   * check how much sample_num needs */
+  tfra->lengths = (tfra->lengths & 0xfc) ||
+      MAX (tfra->lengths, need_bytes (sample_num));
+
+  atom_array_append (&tfra->entries, entry, 256);
+}
+
+void
+atom_tfra_update_offset (AtomTFRA * tfra, guint64 offset)
+{
+  gint i;
+
+  /* auto-use 64 bits if needed */
+  if (offset > G_MAXUINT32)
+    tfra->header.version = 1;
+
+  for (i = atom_array_get_len (&tfra->entries) - 1; i >= 0; i--) {
+    TFRAEntry *entry = &atom_array_index (&tfra->entries, i);
+
+    if (entry->moof_offset)
+      break;
+    entry->moof_offset = offset;
+  }
+}
+
+static guint64
+atom_tfra_copy_data (AtomTFRA * tfra, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+  guint32 i;
+  TFRAEntry *entry;
+  guint32 data;
+  guint bytes;
+  guint version;
+
+  if (!atom_full_copy_data (&tfra->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  prop_copy_uint32 (tfra->track_ID, buffer, size, offset);
+  prop_copy_uint32 (tfra->lengths, buffer, size, offset);
+  prop_copy_uint32 (atom_array_get_len (&tfra->entries), buffer, size, offset);
+
+  version = tfra->header.version;
+  for (i = 0; i < atom_array_get_len (&tfra->entries); ++i) {
+    entry = &atom_array_index (&tfra->entries, i);
+    if (version) {
+      prop_copy_uint64 (entry->time, buffer, size, offset);
+      prop_copy_uint64 (entry->moof_offset, buffer, size, offset);
+    } else {
+      prop_copy_uint32 (entry->time, buffer, size, offset);
+      prop_copy_uint32 (entry->moof_offset, buffer, size, offset);
+    }
+
+    bytes = (tfra->lengths & (0x3 << 4)) + 1;
+    data = GUINT32_TO_BE (entry->traf_number);
+    prop_copy_fixed_size_string (((guint8 *) & data) + 4 - bytes, bytes,
+        buffer, size, offset);
+
+    bytes = (tfra->lengths & (0x3 << 2)) + 1;
+    data = GUINT32_TO_BE (entry->trun_number);
+    prop_copy_fixed_size_string (((guint8 *) & data) + 4 - bytes, bytes,
+        buffer, size, offset);
+
+    bytes = (tfra->lengths & (0x3)) + 1;
+    data = GUINT32_TO_BE (entry->sample_number);
+    prop_copy_fixed_size_string (((guint8 *) & data) + 4 - bytes, bytes,
+        buffer, size, offset);
+
+  }
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
+atom_mfro_copy_data (guint32 s, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+  guint8 flags[3] = { 0, 0, 0 };
+  AtomFull mfro;
+
+  atom_full_init (&mfro, FOURCC_mfro, 0, 0, 0, flags);
+
+  if (!atom_full_copy_data (&mfro, buffer, size, offset)) {
+    return 0;
+  }
+
+  prop_copy_uint32 (s, buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+
+  return *offset - original_offset;
+}
+
+
+guint64
+atom_mfra_copy_data (AtomMFRA * mfra, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+  GList *walker;
+
+  if (!atom_copy_data (&mfra->header, buffer, size, offset))
+    return 0;
+
+  walker = g_list_first (mfra->tfras);
+  while (walker != NULL) {
+    if (!atom_tfra_copy_data ((AtomTFRA *) walker->data, buffer, size, offset)) {
+      return 0;
+    }
+    walker = g_list_next (walker);
+  }
+
+  /* 16 is the size of the mfro atom */
+  if (!atom_mfro_copy_data (*offset - original_offset + 16, buffer,
+          size, offset))
+    return 0;
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
 }
 
 /* some sample description construction helpers */

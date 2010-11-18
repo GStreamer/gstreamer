@@ -729,6 +729,33 @@ typedef struct _AtomWAVE
   GList *extension_atoms;
 } AtomWAVE;
 
+typedef struct _TFRAEntry
+{
+  guint64 time;
+  guint64 moof_offset;
+  guint32 traf_number;
+  guint32 trun_number;
+  guint32 sample_number;
+} TFRAEntry;
+
+typedef struct _AtomTFRA
+{
+  AtomFull header;
+
+  guint32 track_ID;
+  guint32 lengths;
+  /* array of entries */
+  ATOM_ARRAY (TFRAEntry) entries;
+} AtomTFRA;
+
+typedef struct _AtomMFRA
+{
+  Atom header;
+
+  /* list of tfra */
+  GList *tfras;
+} AtomMFRA;
+
 /*
  * Function to serialize an atom
  */
@@ -812,7 +839,17 @@ void       atom_traf_free              (AtomTRAF * traf);
 void       atom_traf_add_samples       (AtomTRAF * traf, guint32 delta,
                                         guint32 size, gboolean sync,
                                         gboolean do_pts, gint64 pts_offset);
+guint32    atom_traf_get_sample_num    (AtomTRAF * traf);
 void       atom_moof_add_traf          (AtomMOOF *moof, AtomTRAF *traf);
+
+AtomMFRA*  atom_mfra_new               (AtomsContext *context);
+void       atom_mfra_free              (AtomMFRA *mfra);
+AtomTFRA*  atom_tfra_new               (AtomsContext *context, guint32 track_ID);
+void       atom_tfra_add_entry         (AtomTFRA *tfra, guint64 dts, guint32 sample_num);
+void       atom_tfra_update_offset     (AtomTFRA * tfra, guint64 offset);
+void       atom_mfra_add_tfra          (AtomMFRA *mfra, AtomTFRA *tfra);
+guint64    atom_mfra_copy_data         (AtomMFRA *mfra, guint8 **buffer, guint64 *size, guint64* offset);
+
 
 /* media sample description related helpers */
 
