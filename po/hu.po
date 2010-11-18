@@ -1,15 +1,15 @@
 # Hungarian translation of gst-plugins-base
 # This file is distributed under the same license as the gst-plugins-base package.
-# Copyright (C) 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.24.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2009-10-21 23:53+0200\n"
+"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -189,9 +189,9 @@ msgstr "Az autovideosink és a(z) %s elem is hiányzik."
 msgid "The autovideosink element is missing."
 msgstr "Az autovideosink elem hiányzik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Az autovideosink elem nem működik."
+msgstr "A beállított %s videosink elem nem működik."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -213,9 +213,9 @@ msgstr "Az autoaudiosink és a(z) %s elem is hiányzik."
 msgid "The autoaudiosink element is missing."
 msgstr "Az autoaudiosink elem hiányzik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Az autoaudiosink elem nem működik."
+msgstr "A beállított %s audiosink elem nem működik."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -224,9 +224,8 @@ msgstr "Sem az autoaudiosink, sem a(z) %s elem nem működik."
 msgid "The autoaudiosink element is not working."
 msgstr "Az autoaudiosink elem nem működik."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "A szövegfájl nem játszható le videó nélkül."
+msgstr "A szövegfájl nem játszható le videó vagy vizualizációk nélkül."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -292,119 +291,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz szám TRM azonosítója"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "felvétel zársebessége"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Kép felvételéhez használt zársebesség másodpercben"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "felvétel fókuszaránya"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "A kép felvételéhez használt fókuszarány (f-szám)"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "felvétel fókusztávolsága"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "A kép felvételéhez használt lencse fókusztávolsága mm-ben"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "felvétel digitális nagyítási aránya"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt digitális nagyítási arány"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "felvétel ISO sebessége"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt ISO sebesség"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "felvétel expozíciós programja"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt expozíciós program"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "felvétel expozíciós módja"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt expozíciós mód"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "felvétel helyszínfelvételi módja"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt helyszínfelvételi mód"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "felvétel erősítésmódosítása"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "A képre alkalmazott általános erősítésmódosítás"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "felvétel fehéregyensúlya"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt fehéregyensúlymód"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "felvétel kontrasztja"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "A kép felvételekor használt kontrasztfeldolgozás iránya"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "felvétel telítettsége"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "A kép felvételekor alkalmazott telítettségfeldolgozás iránya"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "felvétel élessége"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "A kép felvételekor alkalmazott élességfeldolgozás iránya"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "felvétel vakuja"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt vaku"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "felvétel vakumódja"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "A kép felvételéhez használt kijelölt vakumód"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "felvétel mérési módja"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "A kép felvételekor az expozíció meghatározásához használt mérési mód"
 
 msgid "capturing source"
-msgstr ""
+msgstr "felvétel forrása"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "A felvételhez használt forrás vagy eszköz típusa"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "kép vízszintes ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "A média (kép/videó) tervezett vízszintes képpontsűrűsége ppi-ben"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "kép függőleges ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "A média (kép/videó) tervezett függőleges képpontsűrűsége ppi-ben"
 
 msgid "This CD has no audio tracks"
 msgstr "Ez a CD nem rendelkezik hangsávokkal"
@@ -601,27 +600,3 @@ msgstr "Az eszköz („%s”) már használatban van."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nem hozható létre „decodebin2” elem."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nem hozható létre „queue2” elem."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nem hozható létre „typefind” elem."
-
-#~ msgid "Can't display both text subtitles and subpictures."
-#~ msgstr "Nem jeleníthető meg együtt a szöveges felirat és a részképek."
-
-#~ msgid "No Temp directory specified."
-#~ msgstr "Nincs megadva ideiglenes könyvtár."
-
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Nem hozható létre a(z) „%s” átmeneti fájl."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "A(z) „%s” fájl nem nyitható meg olvasásra."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Belső adatfolyam-hiba."

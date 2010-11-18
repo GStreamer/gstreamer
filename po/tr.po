@@ -1,12 +1,12 @@
-# translation of gst-plugins-base-0.10.22.2.po to Turkish
+# translation of gst-plugins-base-0.10.30.3.po to Turkish
 # This file is put in the public domain.
-# Server Acim <serveracim@gmail.com>, 2009.
+# Server Acim <serveracim@gmail.com>, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-04-26 23:50+0200\n"
+"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"PO-Revision-Date: 2010-11-16 16:38+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -283,119 +283,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM BAŞLIĞI"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "objektif hızını yakalıyor"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Saniye bazında, bir resim çekerken kullanılan objektif hızı"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "odaksal oranı yakalıyor"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Resim çekerken kullanılan odaksal oran (f-numarası)"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "odaksal uzunluğu yakalıyor"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Mm bazında, resim çekerken kullanılan odaksal uzunluk"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "sayısal zum oranını yakalıyor"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan sayısal yakınlaştırma oranı"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "iso hızını yakalıyor"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kulllanılan ISO hızı"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "pozlandırma programını yakalıyor"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan pozlandırma programı"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "pozlandırma kipini yakalıyor"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "manzara çekme türünü yakalıyor"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan manzara yakalama kipi"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "kazanç ayarı yakalanıyor"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Bir resime uygulanan kapsamlı kazanç ayarı"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "beyaz dengesi yakalanıyor"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan beyaz dengesi kipi"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "zıtlık yakalanıyor"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken uygulanan zıtlık işleminin yönü"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "canlılık yakalanıyor"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken uygulanan doygunluk işleminin yönü"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "keskinlik yakalanıyor"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken uygulanan keskinlik işleminin yönü"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "flaşın yanışı yakalanıyor"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken eğer flaş patlamışsa"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "flaş kipi yakalanıyor"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Bir resim çekerken kullanılan flaş kipi"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "metreleme kipi yakalanıyor"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Bir resim çekmek için pozlandırmanın metreleme kipi"
 
 msgid "capturing source"
-msgstr ""
+msgstr "kaynak yakalanıyor"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Resim çekerken kullanılan aygıtın kaynak türü"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "yatay resim ppi değeri"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Medya (resim/vidyo)'nın ppi değerinden yatay piksel yoğunluğu"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "resim dikey ppi değeri"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Medya (resim/vidyo)'nun ppi değerinden dikey piksel yoğunluğu"
 
 msgid "This CD has no audio tracks"
 msgstr "Bu CD hiç ses izi içermiyor"

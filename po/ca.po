@@ -1,14 +1,14 @@
 # Catalan translation of gst-plugins-base.
-# Copyright © 2005 Free Software Foundation, Inc.
+# Copyright © 2005, 2010 Free Software Foundation, Inc.
 # This file is put in the public domain.
-# Jordi Mallach <jordi@sindominio.net>, 2005.
+# Jordi Mallach <jordi@sindominio.net>, 2005, 2010.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.9.7\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2005-12-04 22:00+0100\n"
+"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"PO-Revision-Date: 2010-11-04 23:13+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "Language: ca\n"
@@ -49,61 +49,59 @@ msgstr "Reproducció"
 msgid "Capture"
 msgstr "Captura"
 
-#, fuzzy
 msgid "Could not open device for playback in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode mono."
 
-#, fuzzy
 msgid "Could not open device for playback in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode estèreo."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a reproduir en mode %d-canals."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"No s'ha pogut obrir el dispositiu d'àudio per a reproduir. El dispositiu "
+"està en ús per una altra aplicació."
 
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu d'àudio per a reproduir."
 
-#, fuzzy
 msgid "Could not open device for recording in mono mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode mono."
 
-#, fuzzy
 msgid "Could not open device for recording in stereo mode."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode estèreo."
 
-#, fuzzy, c-format
+# FIXME Trailing dot. jm
+#, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu per a enregistrar en mode %d-canals"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
+"No s'ha pogut obrir el dispositiu d'àudio per a enregistrar. El dispositiu "
+"està en ús per una altra aplicació."
 
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
+msgstr "No s'ha pogut obrir el dispositiu d'àudio per a enregistrar."
 
 msgid "Could not open CD device for reading."
 msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
 
-#, fuzzy
 msgid "Could not seek CD."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
+msgstr "No s'ha pogut cercar el CD."
 
 msgid "Could not read CD."
-msgstr ""
+msgstr "No s'ha pogut llegir el CD."
 
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
+msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
 
 msgid "No filename given"
 msgstr "No s'ha donat cap nom de fitxer"
@@ -114,7 +112,7 @@ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr ""
+msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
@@ -122,17 +120,18 @@ msgstr "S'ha produït un error intern de flux de dades."
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
+"Es requereix un connector %s per a reproduir aquest flux, però no és "
+"instaŀlat."
 
 msgid "This appears to be a text file"
-msgstr ""
+msgstr "Açò sembla ser un fitxer de text"
 
-#, fuzzy
 msgid "Could not determine type of stream"
-msgstr "No s'ha pogut crear l'element «decodebin»."
+msgstr "No s'ha pogut determinar el tipus de flux"
 
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
+msgstr "L'URI de subtítols «%s» és invàlida, s'inhabiliten els subtítols."
 
 msgid "No URI specified to play from."
 msgstr "No s'ha especificat cap URL des d'on reproduir."
@@ -142,99 +141,96 @@ msgid "Invalid URI \"%s\"."
 msgstr "L'URI «%s» és invàlid."
 
 msgid "RTSP streams cannot be played yet."
-msgstr ""
+msgstr "Encara no es poden reproduir els fluxes RTSP."
 
 msgid "Could not create \"decodebin\" element."
 msgstr "No s'ha pogut crear l'element «decodebin»."
 
 msgid "Source element is invalid."
-msgstr ""
+msgstr "L'element font és invàlid."
 
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
+"Només s'ha detectat un flux de subtítols. O bé esteu carregant un fitxer de "
+"subtítols o qualsevol altre tipus de fitxer de text, o no s'ha reconegut el "
+"fitxer de medi."
 
-#, fuzzy
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
-"No teniu un decodificador instal·lat per a gestionar «%s». És possible que "
-"necessiteu instal·lar el connector corresponent."
+"No teniu un decodificador instaŀlat per a gestionar aquest fitxer. És "
+"possible que necessiteu instaŀlar els connectors necessaris."
 
-#, fuzzy
 msgid "This is not a media file"
-msgstr "«%s» no és un fitxer de medi"
+msgstr "Aquest no és un fitxer de medi"
 
 msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
+msgstr "S'ha detectat un flux de subtítols, però no un flux de vídeo."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "Manquen l'element autovideosink i el xvimagesink."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Manca l'element «%s» - comproveu la vostra instaŀlació del GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "Manquen l'element autoaudiosink i l'alsasink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "Manquen els elements autovideosink i %s."
 
-#, fuzzy
 msgid "The autovideosink element is missing."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "Manca l'element autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "El videosink configurat %s no funciona."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "Tant l'element autovideosink com el %s no funcionen."
 
-#, fuzzy
 msgid "The autovideosink element is not working."
-msgstr "Manca tant l'element autovideosink com el xvimagesink."
+msgstr "L'element autovideosink no funciona."
 
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "L'element sortida personalitzat de text no es pot emprar."
 
 msgid "No volume control found"
-msgstr ""
+msgstr "No s'ha trobat un control de volum"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "Manquen els elements autoaudiosink i %s."
 
-#, fuzzy
 msgid "The autoaudiosink element is missing."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "Manca l'element autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "L'audiosink configurat %s no funciona."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "No funcionen tant l'element autoaudiosink com el %s."
 
-#, fuzzy
 msgid "The autoaudiosink element is not working."
-msgstr "Manca tant l'element autoaudiosink com el alsasink."
+msgstr "L'element autoaudiosink no funciona."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr ""
+msgstr "No es pot reproduir un fitxer de text sense vídeo o visualitzacions."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr ""
+msgstr "No hi ha un decodificador disponible per al tipus «%s»."
 
 msgid "This stream type cannot be played yet."
-msgstr ""
+msgstr "Encara no es pot reproduir aquest tipus de flux."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
@@ -242,58 +238,59 @@ msgstr "No hi ha cap gestor d'URI implementat per a «%s»."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr ""
+msgstr "S'ha produït un error en enviar dades a «%s:%d»."
 
 #, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr ""
+msgstr "S'ha produït un error en enviar dades de la capçalera gdp a «%s:%d»."
 
+# Payload -> càrrega en molts àmbits. jm
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
-msgstr ""
+msgstr "S'ha produït un error en enviar la càrrega de dades de gdp a «%s:%d»."
 
 #, c-format
 msgid "Connection to %s:%d refused."
-msgstr ""
+msgstr "S'ha refusat la connexió amb %s:%d."
 
 msgid "Can't record audio fast enough"
-msgstr ""
+msgstr "No es pot enregistrar l'àudio el suficientment ràpid"
 
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "No s'ha pogut llegir l'etiqueta: no hi ha dades suficients"
 
 msgid "track ID"
-msgstr ""
+msgstr "ID de la pista"
 
 msgid "MusicBrainz track ID"
-msgstr ""
+msgstr "ID de la pista al MusicBrainz"
 
 msgid "artist ID"
-msgstr ""
+msgstr "ID de l'artista"
 
 msgid "MusicBrainz artist ID"
-msgstr ""
+msgstr "ID de l'artista al MusicBrainz"
 
 msgid "album ID"
-msgstr ""
+msgstr "ID de l'àlbum"
 
 msgid "MusicBrainz album ID"
-msgstr ""
+msgstr "ID de l'àlbum al MusicBrainz"
 
 msgid "album artist ID"
-msgstr ""
+msgstr "ID de l'artista de l'àlbum"
 
 msgid "MusicBrainz album artist ID"
-msgstr ""
+msgstr "ID de l'artista de l'àlbum al MusicBrainz"
 
 msgid "track TRM ID"
-msgstr ""
+msgstr "ID TRM de la pista"
 
 msgid "MusicBrainz TRM ID"
-msgstr ""
+msgstr "ID TRM al MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "velocitat de l'obturador de la captura"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr ""
@@ -396,64 +393,64 @@ msgid "The source or type of device used for the capture"
 msgstr ""
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "ppi horitzontal de la imatge"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Densitat horitzontal de píxels del medi (imatge/vídeo), en ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "ppi vertical de la imatge"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Densitat vertical de píxels del medi (imatge/vídeo), en ppi"
 
 msgid "This CD has no audio tracks"
-msgstr ""
+msgstr "Aquest CD no té pistes d'àudio"
 
 msgid "ID3 tag"
-msgstr ""
+msgstr "Etiqueta ID3"
 
 msgid "APE tag"
-msgstr ""
+msgstr "Etiqueta APE"
 
 msgid "ICY internet radio"
-msgstr ""
+msgstr "Emisora de ràdio per Internet ICY"
 
 msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
+msgstr "Apple Lossless Audio (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
+msgstr "Free Lossless Audio Codec (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr ""
+msgstr "Lossless True Audio (TTA)"
 
 msgid "Windows Media Speech"
-msgstr ""
+msgstr "Windows Media Speech"
 
 msgid "CYUV Lossless"
-msgstr ""
+msgstr "CYUV sense pèrdua"
 
 msgid "FFMpeg v1"
-msgstr ""
+msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr ""
+msgstr "MSZH sense pèrdua"
 
 msgid "Uncompressed Gray Image"
-msgstr ""
+msgstr "Imatge en escala de grisos no comprimida"
 
 msgid "Run-length encoding"
 msgstr ""
 
 msgid "Sami subtitle format"
-msgstr ""
+msgstr "Format de subtítols Sami"
 
 msgid "TMPlayer subtitle format"
-msgstr ""
+msgstr "Format de subtítols TMPlayer"
 
 msgid "Kate subtitle format"
-msgstr ""
+msgstr "Format de subtítols Kate"
 
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr ""
@@ -486,7 +483,7 @@ msgid "Uncompressed black and white Y-plane"
 msgstr ""
 
 msgid "Uncompressed YUV"
-msgstr ""
+msgstr "YUV sense comprimir"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
@@ -494,138 +491,114 @@ msgstr ""
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
-msgstr ""
+msgstr "DivX MPEG-4 versió %d"
 
 #, c-format
 msgid "Raw %d-bit PCM audio"
-msgstr ""
+msgstr "Àudio en cru de %d-bit"
 
 msgid "Raw PCM audio"
-msgstr ""
+msgstr "Àudio PCM en cru"
 
 #, c-format
 msgid "Raw %d-bit floating-point audio"
-msgstr ""
+msgstr "Àudio en cru de %d-bit en coma flotant"
 
 msgid "Raw floating-point audio"
-msgstr ""
+msgstr "Àudio en cru en coma flotant"
 
 msgid "Audio CD source"
-msgstr ""
+msgstr "Font de CD d'àudio"
 
 msgid "DVD source"
-msgstr ""
+msgstr "Font de DVD"
 
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
+msgstr "Font del Real Time Streaming Protocol (RTSP)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
+msgstr "Font del protocol Microsoft Media Server (MMS)"
 
 #, c-format
 msgid "%s protocol source"
-msgstr ""
+msgstr "Font del protocol %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr ""
+msgstr "Descarregador de vídeo RTP %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr ""
+msgstr "Descarregador d'àudio RTP %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr ""
+msgstr "Descarregador RTP %s"
 
 #, c-format
 msgid "%s demuxer"
-msgstr ""
+msgstr "Demultiplexor %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr ""
+msgstr "Decodificador %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr ""
+msgstr "Carregador de vídeo RTP %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr ""
+msgstr "Carregador d'àudio RTP %s"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr ""
+msgstr "Carregador RTP %s"
 
 #, c-format
 msgid "%s muxer"
-msgstr ""
+msgstr "Multiplexor %s"
 
 #, c-format
 msgid "%s encoder"
-msgstr ""
+msgstr "Codificador %s"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr ""
+msgstr "Element del GStreamer %s"
 
 msgid "Unknown source element"
-msgstr ""
+msgstr "L'element de font és desconegut"
 
 msgid "Unknown sink element"
-msgstr ""
+msgstr "L'element de sortida és desconegut"
 
 msgid "Unknown element"
-msgstr ""
+msgstr "L'element és desconegut"
 
 msgid "Unknown decoder element"
-msgstr ""
+msgstr "L'element decodificador és desconegut"
 
 msgid "Unknown encoder element"
-msgstr ""
+msgstr "L'element codificador és desconegut"
 
 msgid "Plugin or element of unknown type"
-msgstr ""
+msgstr "El connector o element és de tipus desconegut"
 
 msgid "No device specified."
-msgstr ""
+msgstr "No s'ha especificat un dispositiu."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr ""
+msgstr "El dispositiu «%s» no existeix."
 
 #, c-format
 msgid "Device \"%s\" is already being used."
-msgstr ""
+msgstr "El dispositiu «%s» ja és en ús."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open device \"%s\" for reading and writing."
-msgstr "No s'ha pogut obrir el dispositiu del CD per a lectura."
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#, fuzzy
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "No s'ha pogut crear l'element «decodebin»."
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-#, fuzzy
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a escriptura: %s."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "S'ha produït un error intern de flux de dades."
+msgstr "No s'ha pogut obrir el dispositiu «%s» per a llegir i escriure."
 
 #~ msgid "discid"
 #~ msgstr "id del disc"

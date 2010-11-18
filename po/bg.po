@@ -3,12 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
 #
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.25.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-01-29 14:48+0200\n"
+"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"PO-Revision-Date: 2010-11-04 14:24+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "Language: bg\n"
@@ -172,32 +173,34 @@ msgid "A subtitle stream was detected, but no video stream."
 msgstr "Открит е поток със субтитри, липсва видео поток."
 
 msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr "Едновременно липсват елементите „autovideosink“ и „xvimagesink“."
+msgstr ""
+"Едновременно липсват елементите-приемници „autovideosink“ и „xvimagesink“."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
 
 msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr "Едновременно липсват елементите „autoaudiosink“ и „alsasink“."
+msgstr ""
+"Едновременно липсват елементите-приемници „autoaudiosink“ и „alsasink“."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Едновременно липсват елементите „autovideosink“ и „%s“."
+msgstr "Едновременно липсват елементите-приемници „autovideosink“ и „%s“."
 
 msgid "The autovideosink element is missing."
-msgstr "Липсва елементът „autovideosink“."
+msgstr "Липсва елементът-приемник „autovideosink“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Елементът „autovideosink“ не работи."
+msgstr "Настроеният елемент-приемник за видео %s не работи."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
-msgstr "Едновременно не работят елементите „autovideosink“ и „%s“."
+msgstr "Едновременно не работят елементите-приемници „autovideosink“ и „%s“."
 
 msgid "The autovideosink element is not working."
-msgstr "Елементът „autovideosink“ не работи."
+msgstr "Елементът-приемник за автоматично видео „autovideosink“ не работи."
 
 msgid "Custom text sink element is not usable."
 msgstr "Потребителският елемент-приемник за текст е неизползваем."
@@ -207,14 +210,14 @@ msgstr "Липсва управление на силата на звука"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
-msgstr "Едновременно липсват елементите „autoaudiosink“ и „%s“."
+msgstr "Едновременно липсват елементите-приемници „autoaudiosink“ и „%s“."
 
 msgid "The autoaudiosink element is missing."
 msgstr "Липсва елементът „autoaudiosink“."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Елементът „autoaudiosink“ не работи."
+msgstr "Настроеният елемент-приемник за аудио %s не работи."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -223,9 +226,8 @@ msgstr "Едновременно не работят елементите „aut
 msgid "The autoaudiosink element is not working."
 msgstr "Елементът „autoaudiosink“ не работи."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Не може да се изпълни текстов файл без видео."
+msgstr "Текстов файл не може да се изпълни без видео или визуализация."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -291,119 +293,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "индустриален идентификатор на песен според MusicBrainz (TRM)"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "скорост на затвора"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Скорост на затвора при заснемане в секунди"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "относителна бленда"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Относителна бленда при заснемане"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "фокусно разстояние"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Фокусно разстояние на обектива при заснемане в милиметри"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "цифрово увеличение"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Цифрово увеличение при заснемане"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "светлочувствителност по ISO"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Светлочувствителност по ISO при заснемане"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "програма на експозиция"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Програма на експозиция при заснемане"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "режим на експозиция"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Режим на експозиция при заснемане"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "вид сцена"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Вид сцена при заснемане"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "корекция с усилване"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Общата корекция с усилване при заснемане "
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "баланс на бялото"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Режим на баланс на бялото при заснемане"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "контраст"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Посоката на обработката за контраст при заснемане"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "наситеност"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Посоката на обработката за наситеност при заснемане"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "острота"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Посоката на обработката за острота при заснемане"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "светкавица"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Дали е ползвана светкавица при заснемане"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "режим на светкавица"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Режимът на светкавица при заснемане"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "режим на заснемане"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Режим на заснемане при определянето на експозиция"
 
 msgid "capturing source"
-msgstr ""
+msgstr "източник"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Видът на устройството-източник при заснемане"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "точки на инч по хоризонтал"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Целевата разделителна способност на медията по хоризонтал"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "точки на инч по вертикал"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Целевата разделителна способност на медията по вертикал"
 
 msgid "This CD has no audio tracks"
 msgstr "В това CD липсва аудио"
@@ -600,12 +602,3 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Не може да се създаде елемент „decodebin2“."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Не може да се създаде елемент „queue2“."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Не може да се създаде елемент „typefind“."

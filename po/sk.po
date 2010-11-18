@@ -4,10 +4,10 @@
 # Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008, 2009, 2010.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2010-10-16 01:03+0100\n"
-"PO-Revision-Date: 2010-03-08 09:21+0100\n"
+"POT-Creation-Date: 2010-11-18 00:35+0000\n"
+"PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "Language: sk\n"
@@ -189,9 +189,9 @@ msgstr "Chýbajú prvky autovideosink aj %s."
 msgid "The autovideosink element is missing."
 msgstr "Chýba prvok autovideosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Nefunguje prvok autovideosink."
+msgstr "Nastavený videosink %s nefunguje."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
@@ -213,9 +213,9 @@ msgstr "Chýbajú prvky autoaudiosink aj %s."
 msgid "The autoaudiosink element is missing."
 msgstr "Chýba prvok autoaudiosink."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Nefunguje prvok autoaudiosink."
+msgstr "Nastavený audiosink %s nefunguje."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
@@ -224,9 +224,8 @@ msgstr "Nefungujú prvky autoaudiosink aj %s."
 msgid "The autoaudiosink element is not working."
 msgstr "Nefunguje prvok autoaudiosink."
 
-#, fuzzy
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nemôžem prehrať textový súbor bez videa."
+msgstr "Nemôžem prehrať textový súbor bez videa alebo vizualizácií."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -292,119 +291,119 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "zachytávacia rýchlosť uzávierky"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Rýchlosť uzávierky použitá pri zachytávaní obrázku, v sekundách"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "zachytávacií pomer F"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Pomer (číslo F) použitý pri zachytávaní obrázku"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "zachytávacia ohnisková vzdialenosť"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "zachytávací pomer digitálneho priblíženia"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Pomer digitálneho priblíženia použitý pri zachytávaní obrázku"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "zachytávacia rýchlosť ISO"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Rýchlosť ISO použítá pri zachytávaní obrázku"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "zachytávací program expozície"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Program expozície použitý pri zachytávaní obrázko"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "zachytávací režim expozície"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Režim expozície použitý pri zachytávaní obrázku"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "zachytávací typ zachytenia scény"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Režim zachytenia scény použitý pri zachytávaní obrázku"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "zachytávacie nastavenie zisku"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Celkové nastavenie zisku aplikovaného na obrázok"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "zachytávacie vyváženie bielej"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Režim vyváženia bielej nastavený pri zachytávaní obrázku"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "zachytávací kontrast"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Smerovanie spracovania kontrastu použitého pri zachytávaní obrázku"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "zachytávacia sýtosť"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Smerovanie spracovania sýtosti použitého pri zachytávaní obrázku"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "zachytávacia ostrosť"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Smerovanie spracovania ostrosti použitého pri zachytávaní obrázku"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "zachytávací blesk"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Bol alebo nebol použitý blesk pri zachytávaní obrázku"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "zachytávací režim blesku"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Vybraný režim blesku pri zachytávaní obrázku"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "zachytávacie meranie blesku"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Režim merania blesku pri zisťovaní expozície pre zachytenie obrázku"
 
 msgid "capturing source"
-msgstr ""
+msgstr "zachytávací zdroj"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Zdroj alebo typ zariadenia použitý na zachytenie"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "vodorovné ppi obrázku"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
+msgstr "Cieľová vodorovná hustota pixlov média (obrázku/videa) v ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "zvislé ppi obrázku"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
+msgstr "Cieľová zvislá hustota pixlov média (obrázku/videa) v ppi"
 
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá zvukové stopy"
