@@ -100,6 +100,8 @@ struct TsMuxStreamBuffer
   gint64 pts;
   gint64 dts;
 
+  gboolean random_access;
+
   void *user_data;
 };
 
@@ -372,6 +374,13 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_WRITE_PTS;
   }
 
+  if (stream->buffers) {
+    TsMuxStreamBuffer *buf = (TsMuxStreamBuffer *) (stream->buffers->data);
+    if (buf->random_access) {
+      stream->pi.flags |= TSMUX_PACKET_FLAG_RANDOM_ACCESS;
+    }
+  }
+
   return TRUE;
 }
 
@@ -589,6 +598,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
  * @user_data: user data to pass to release func
  * @pts: PTS of access unit in @data
  * @dts: DTS of access unit in @data
+ * @random_access: TRUE if random access point (keyframe)
  *
  * Submit @len bytes of @data into @stream. @pts and @dts can be set to the
  * timestamp (against a 90Hz clock) of the first access unit in @data. A
@@ -599,7 +609,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
  */
 void
 tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
-    void *user_data, gint64 pts, gint64 dts)
+    void *user_data, gint64 pts, gint64 dts, gboolean random_access)
 {
   TsMuxStreamBuffer *packet;
 
@@ -609,6 +619,7 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
   packet->data = data;
   packet->size = len;
   packet->user_data = user_data;
+  packet->random_access = random_access;
 
   packet->pts = pts;
   packet->dts = dts;

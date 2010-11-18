@@ -712,7 +712,7 @@ mpegtsmux_collected (GstCollectPads * pads, MpegTsMux * mux)
     }
 
     tsmux_stream_add_data (best->stream, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf), buf, pts, -1);
+        GST_BUFFER_SIZE (buf), buf, pts, -1, !delta);
     best->queued_buf = NULL;
 
     mux->is_delta = delta;
