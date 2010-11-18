@@ -86,7 +86,6 @@ static void gst_camerabin_video_set_property (GObject * object, guint prop_id,
 static void gst_camerabin_video_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstClock *gst_camerabin_video_provide_clock (GstElement * elem);
 static GstStateChangeReturn
 gst_camerabin_video_change_state (GstElement * element,
     GstStateChange transition);
@@ -142,8 +141,6 @@ gst_camerabin_video_class_init (GstCameraBinVideoClass * klass)
   gobject_class->dispose =
       (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_camerabin_video_dispose);
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_camerabin_video_change_state);
-
-  eklass->provide_clock = GST_DEBUG_FUNCPTR (gst_camerabin_video_provide_clock);
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_camerabin_video_set_property);
@@ -283,19 +280,6 @@ gst_camerabin_video_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
-  }
-}
-
-/* GstElement methods implementation */
-
-static GstClock *
-gst_camerabin_video_provide_clock (GstElement * elem)
-{
-  GstElement *aud_src = GST_CAMERABIN_VIDEO (elem)->aud_src;
-  if (aud_src) {
-    return gst_element_provide_clock (aud_src);
-  } else {
-    return NULL;
   }
 }
 

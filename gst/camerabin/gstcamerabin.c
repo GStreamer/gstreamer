@@ -355,6 +355,7 @@ static void gst_camerabin_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn
 gst_camerabin_change_state (GstElement * element, GstStateChange transition);
 
+static GstClock *gst_camerabin_provide_clock (GstElement * element);
 
 /*
  * GstBin function declarations
@@ -3240,6 +3241,9 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_camerabin_change_state);
 
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_camerabin_provide_clock);
+
   /* gstbin */
   /* override handle_message to peek when video or image bin reaches eos */
   gstbin_class->handle_message =
@@ -3872,6 +3876,33 @@ done:
       gst_element_state_change_return_get_name (ret));
 
   return ret;
+}
+
+static GstClock *
+gst_camerabin_provide_clock (GstElement * element)
+{
+  GstClock *clock = NULL;
+  GstClock *vidbin_clock = NULL;
+  GstCameraBin *camera = GST_CAMERABIN (element);
+  GstElement *aud_src = GST_CAMERABIN_VIDEO (camera->vidbin)->aud_src;
+
+  if (aud_src)
+    vidbin_clock = gst_element_provide_clock (aud_src);
+
+  if (camera->capturing && camera->mode == MODE_VIDEO && vidbin_clock)
+    clock = vidbin_clock;
+  else {
+    clock = GST_ELEMENT_CLASS (parent_class)->provide_clock (element);
+    if (clock == vidbin_clock) {
+      /* Do not reuse vidbin_clock if it was current clock */
+      clock = gst_system_clock_obtain ();
+    }
+  }
+
+  GST_INFO_OBJECT (camera, "Reset pipeline clock to %p(%s)",
+      clock, GST_ELEMENT_NAME (clock));
+
+  return clock;
 }
 
 static gboolean
