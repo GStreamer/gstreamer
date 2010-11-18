@@ -73,6 +73,10 @@ struct _GstMpeg4VParse {
   GstClockTime frame_duration;
 
   gboolean drop;
+
+  gboolean have_src_caps;
+  GstEvent *pending_segment;
+  GList *pending_events;
 };
 
 struct _GstMpeg4VParseClass {
