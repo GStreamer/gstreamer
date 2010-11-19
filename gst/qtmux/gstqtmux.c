@@ -411,6 +411,8 @@ gst_qt_mux_finalize (GObject * object)
   atoms_context_free (qtmux->context);
   gst_object_unref (qtmux->collect);
 
+  g_slist_free (qtmux->sinkpads);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
