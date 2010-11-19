@@ -27,6 +27,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+
 #include <cv.h>
 
 gboolean
@@ -38,5 +40,7 @@ gboolean gst_opencv_parse_iplimage_params_from_caps
 gboolean gst_opencv_parse_iplimage_params_from_structure
     (GstStructure * structure, gint * width, gint * height, gint * depth,
     gint * channels, GError ** err);
+
+GstCaps * gst_opencv_caps_from_cv_image_type (int cv_type);
 
 #endif /* __GST_OPENCV_UTILS__ */

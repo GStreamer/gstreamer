@@ -62,6 +62,7 @@
 
 #include <gst/gst.h>
 
+#include "gstopencvutils.h"
 #include "gsttextwrite.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_textwrite_debug);
@@ -104,13 +105,13 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 GST_BOILERPLATE (Gsttextwrite, gst_textwrite, GstElement, GST_TYPE_ELEMENT);

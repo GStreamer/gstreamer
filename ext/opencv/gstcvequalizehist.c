@@ -47,6 +47,7 @@
 
 #include <gst/gst.h>
 
+#include "gstopencvutils.h"
 #include "gstcvequalizehist.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_equalize_hist_debug);
@@ -55,12 +56,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_equalize_hist_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-gray, depth=(int)8, bpp=(int)8"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-gray, depth=(int)8, bpp=(int)8"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8));
 
 GST_BOILERPLATE (GstCvEqualizeHist, gst_cv_equalize_hist,
     GstOpencvVideoFilter, GST_TYPE_OPENCV_VIDEO_FILTER);

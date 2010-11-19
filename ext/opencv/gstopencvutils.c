@@ -92,3 +92,33 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
       gst_opencv_parse_iplimage_params_from_structure (gst_caps_get_structure
       (caps, 0), width, height, ipldepth, channels, err);
 }
+
+GstCaps *
+gst_opencv_caps_from_cv_image_type (int cv_type)
+{
+  GstCaps * caps = gst_caps_new_empty ();
+  switch (cv_type) {
+    case CV_8UC1:
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY8));
+      break;
+    case CV_8UC3:
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_RGB));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_BGR));
+      break;
+    case CV_8UC4:
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_RGBx));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_xRGB));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_BGRx));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_xBGR));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_RGBA));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_ARGB));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_BGRA));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_ABGR));
+      break;
+    case CV_16UC1:
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY16("1234")));
+      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY16("4321")));
+      break;
+  }
+  return caps;
+}

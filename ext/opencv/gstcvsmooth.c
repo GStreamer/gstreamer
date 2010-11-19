@@ -47,24 +47,11 @@
 
 #include <gst/gst.h>
 
+#include "gstopencvutils.h"
 #include "gstcvsmooth.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_smooth_debug);
 #define GST_CAT_DEFAULT gst_cv_smooth_debug
-
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
-        "video/x-raw-gray, depth=(int)8, bpp=(int)8")
-    );
-
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
-        "video/x-raw-gray, depth=(int)8, bpp=(int)8")
-    );
 
 /* Filter signals and args */
 enum
@@ -146,17 +133,25 @@ static void
 gst_cv_smooth_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  GstCaps *caps;
+  GstPadTemplate *templ;
 
   gst_element_class_set_details_simple (element_class,
       "cvsmooth",
       "Transform/Effect/Video",
       "Applies cvSmooth OpenCV function to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
+
+  /* add sink and source pad templates */
+  caps = gst_opencv_caps_from_cv_image_type (CV_8UC3);
+  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC1));
+  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_caps_ref (caps));
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
+  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
 }
 
 /* initialize the cvsmooth's class */

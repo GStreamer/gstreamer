@@ -52,6 +52,7 @@
 
 #include <gst/gst.h>
 
+#include "gstopencvutils.h"
 #include "gstcvdilateerode.h"
 
 /*
@@ -59,19 +60,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_erode_debug);
 #define GST_CAT_DEFAULT gst_cv_dilate_erode_debug
 */
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
-        "video/x-raw-gray")
-    );
-
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, depth=(int)24, bpp=(int)24;"
-        "video/x-raw-gray")
-    );
 
 /* Filter signals and args */
 enum
@@ -143,11 +131,21 @@ static void
 gst_cv_dilate_erode_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GstCaps *caps;
+  GstPadTemplate *templ;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  /* add sink and source pad templates */
+  caps = gst_opencv_caps_from_cv_image_type (CV_16UC1);
+  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC4));
+  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC3));
+  gst_caps_append (caps, gst_opencv_caps_from_cv_image_type (CV_8UC1));
+  templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      gst_caps_ref (caps));
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
+  templ = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
 }
 
 /* initialize the cvdilate_erode's class */

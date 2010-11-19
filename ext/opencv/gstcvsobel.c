@@ -47,6 +47,7 @@
 
 #include <gst/gst.h>
 
+#include "gstopencvutils.h"
 #include "gstcvsobel.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_sobel_debug);
@@ -55,14 +56,19 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_sobel_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-gray, depth=(int)8, bpp=(int)8")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY8)
     );
+
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  #define BYTE_ORDER_STRING "BIG_ENDIAN"
+#else
+  #define BYTE_ORDER_STRING "LITTLE_ENDIAN"
+#endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS
-    ("video/x-raw-gray, depth=(int)16, bpp=(int)16, endianness=(int)4321")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_GRAY16 (BYTE_ORDER_STRING))
     );
 
 /* Filter signals and args */
@@ -188,14 +194,18 @@ gst_cv_sobel_transform_caps (GstBaseTransform * trans, GstPadDirection dir,
         structure = gst_caps_get_structure (output, i);
         gst_structure_set (structure,
             "depth", G_TYPE_INT, 16,
-            "bpp", G_TYPE_INT, 16, "endianness", G_TYPE_INT, 4321, NULL);
+            "bpp", G_TYPE_INT, 16,
+            "endianness", G_TYPE_INT, G_BYTE_ORDER,
+            NULL);
       }
       break;
     case GST_PAD_SRC:
       for (i = 0; i < gst_caps_get_size (output); i++) {
         structure = gst_caps_get_structure (output, i);
         gst_structure_set (structure,
-            "depth", G_TYPE_INT, 8, "bpp", G_TYPE_INT, 8, NULL);
+            "depth", G_TYPE_INT, 8,
+            "bpp", G_TYPE_INT, 8,
+            NULL);
         gst_structure_remove_field (structure, "endianness");
       }
       break;
