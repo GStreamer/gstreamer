@@ -684,6 +684,17 @@ typedef struct _AtomTRUN
   ATOM_ARRAY (TRUNSampleEntry) entries;
 } AtomTRUN;
 
+typedef struct _AtomSDTP
+{
+  AtomFull header;
+
+  /* not serialized */
+  guint32 sample_count;
+
+  /* array of fields */
+  ATOM_ARRAY (guint8) entries;
+} AtomSDTP;
+
 typedef struct _AtomTRAF
 {
   Atom header;
@@ -692,6 +703,8 @@ typedef struct _AtomTRAF
 
   /* list of AtomTRUN */
   GList *truns;
+  /* list of AtomSDTP */
+  GList *sdtps;
 } AtomTRAF;
 
 typedef struct _AtomMOOF
@@ -839,7 +852,8 @@ AtomTRAF * atom_traf_new               (AtomsContext * context, guint32 track_ID
 void       atom_traf_free              (AtomTRAF * traf);
 void       atom_traf_add_samples       (AtomTRAF * traf, guint32 delta,
                                         guint32 size, gboolean sync,
-                                        gboolean do_pts, gint64 pts_offset);
+                                        gboolean do_pts, gint64 pts_offset,
+                                        gboolean sdtp_sync);
 guint32    atom_traf_get_sample_num    (AtomTRAF * traf);
 void       atom_moof_add_traf          (AtomMOOF *moof, AtomTRAF *traf);
 

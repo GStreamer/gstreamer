@@ -1875,7 +1875,8 @@ init:
   }
 
   /* add buffer and metadata */
-  atom_traf_add_samples (pad->traf, delta, size, sync, do_pts, pts_offset);
+  atom_traf_add_samples (pad->traf, delta, size, sync, do_pts, pts_offset,
+      pad->sync && sync);
   atom_array_append (&pad->fragment_buffers, buf, 256);
   pad->fragment_duration -= delta;
 
