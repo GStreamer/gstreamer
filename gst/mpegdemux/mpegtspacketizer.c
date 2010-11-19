@@ -2208,7 +2208,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
     section->complete = TRUE;
     res = TRUE;
     GST_DEBUG ("TDT section pid:%d table_id:%d section_length: %d\n",
-        packet->pid, table_id, section_length);
+        packet->pid, table_id, section->section_length);
     goto out;
   }
 
