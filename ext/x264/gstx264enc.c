@@ -578,7 +578,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   g_object_class_install_property (gobject_class, ARG_VBV_BUF_CAPACITY,
       g_param_spec_uint ("vbv-buf-capacity", "VBV buffer capacity",
           "Size of the VBV buffer in milliseconds",
-          300, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
+          0, 10000, ARG_VBV_BUF_CAPACITY_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #ifdef X264_PRESETS
