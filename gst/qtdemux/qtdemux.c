@@ -755,8 +755,12 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
     if ((pad = stream->pad)) {
       has_valid_stream = TRUE;
 
-      if (etype == GST_EVENT_EOS)
+      if (etype == GST_EVENT_EOS) {
+        /* let's not send twice */
+        if (stream->sent_eos)
+          continue;
         stream->sent_eos = TRUE;
+      }
 
       gst_pad_push_event (pad, gst_event_ref (event));
     }
