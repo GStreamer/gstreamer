@@ -2197,6 +2197,21 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
   sub_buf = gst_buffer_create_sub (packet->buffer,
       data - GST_BUFFER_DATA (packet->buffer), packet->data_end - data);
 
+  /* TDT and TOT sections (see ETSI EN 300 468 5.2.5)
+   *  these sections do not extend to several packets so we don't need to use the
+   *  sections filter. */
+  if (packet->pid == 0x14) {
+    table_id = *data++;
+    section->section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+    section->buffer = sub_buf;
+    section->table_id = table_id;
+    section->complete = TRUE;
+    res = TRUE;
+    GST_DEBUG ("TDT section pid:%d table_id:%d section_length: %d\n",
+        packet->pid, table_id, section_length);
+    goto out;
+  }
+
   stream = packetizer->streams[packet->pid];
   if (stream == NULL) {
     stream = mpegts_packetizer_stream_new ();
