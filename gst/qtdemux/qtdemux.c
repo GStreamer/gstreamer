@@ -3059,12 +3059,6 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   *duration = QTSAMPLE_DUR_PTS (stream, sample, *timestamp);
   *keyframe = QTSAMPLE_KEYFRAME (stream, sample);
 
-  /* update dummy segment duration */
-  if (stream->sample_index == stream->n_samples - 1 && stream->n_segments == 1) {
-    stream->segments[0].duration = stream->segments[0].stop_time =
-        stream->segments[0].media_stop = *timestamp + *duration;
-  }
-
   return TRUE;
 
   /* special cases */
