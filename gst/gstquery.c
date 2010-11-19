@@ -27,9 +27,11 @@
  *                     to create queries, and to set and parse values in them.
  * @see_also: #GstPad, #GstElement
  *
- * GstQuery functions are used to register a new query types to the gstreamer
- * core.
- * Query types can be used to perform queries on pads and elements.
+ * GstQuery functions are used to register new query types to the gstreamer
+ * core and use them.
+ * Queries can be performed on pads (gst_pad_query()) and elements
+ * (gst_element_query()). Please note that some queries might need a running
+ * pipeline to work.
  *
  * Queries can be created using the gst_query_new_*() functions.
  * Query values can be set using gst_query_set_*(), and parsed using

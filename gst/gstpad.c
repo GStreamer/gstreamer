@@ -3668,12 +3668,15 @@ no_iter:
  * @query: the #GstQuery to perform.
  *
  * Dispatches a query to a pad. The query should have been allocated by the
- * caller via one of the type-specific allocation functions in gstquery.h. The
- * element is responsible for filling the query with an appropriate response,
- * which should then be parsed with a type-specific query parsing function.
+ * caller via one of the type-specific allocation functions. The element that
+ * the pad belongs to is responsible for filling the query with an appropriate
+ * response, which should then be parsed with a type-specific query parsing
+ * function.
  *
  * Again, the caller is responsible for both the allocation and deallocation of
  * the query structure.
+ *
+ * Please also note that some queries might need a running pipeline to work.
  *
  * Returns: TRUE if the query could be performed.
  */

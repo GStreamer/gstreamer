@@ -1648,6 +1648,8 @@ gst_element_default_query (GstElement * element, GstQuery * query)
  * forwards the query to a random srcpad or to the peer of a
  * random linked sinkpad of this element.
  *
+ * Please note that some queries might need a running pipeline to work.
+ *
  * Returns: TRUE if the query could be performed.
  *
  * MT safe.
