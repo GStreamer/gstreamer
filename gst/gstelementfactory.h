@@ -120,14 +120,14 @@ struct _GstElementFactory {
   /* FIXME-0.11: deprecate this in favour of meta_data */
   GstElementDetails     details;
 
-  GList *               staticpadtemplates;
+  GList *               staticpadtemplates;     /* GstStaticPadTemplate list */
   guint                 numpadtemplates;
 
   /* URI interface stuff */
   guint                 uri_type;
   gchar **              uri_protocols;
 
-  GList *               interfaces;             /* interfaces this element implements */
+  GList *               interfaces;             /* interface type names this element implements */
 
   /*< private >*/
   /* FIXME-0.11: move up and replace details */
