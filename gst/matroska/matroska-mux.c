@@ -2500,21 +2500,22 @@ gst_matroska_mux_stop_streamheader (GstMatroskaMux * mux)
 
   streamheader_buffer = gst_ebml_stop_streamheader (ebml);
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
-    caps = gst_caps_from_string ("video/webm");
+    caps = gst_caps_new_simple ("video/webm", NULL);
   } else {
-    caps = gst_caps_from_string ("video/x-matroska");
+    caps = gst_caps_new_simple ("video/x-matroska", NULL);
   }
   s = gst_caps_get_structure (caps, 0);
   g_value_init (&streamheader, GST_TYPE_ARRAY);
   g_value_init (&bufval, GST_TYPE_BUFFER);
+  GST_BUFFER_FLAG_SET (streamheader_buffer, GST_BUFFER_FLAG_IN_CAPS);
   gst_value_set_buffer (&bufval, streamheader_buffer);
   gst_value_array_append_value (&streamheader, &bufval);
   g_value_unset (&bufval);
   gst_structure_set_value (s, "streamheader", &streamheader);
   g_value_unset (&streamheader);
-  gst_caps_unref (ebml->caps);
+  gst_caps_replace (&ebml->caps, caps);
   gst_buffer_unref (streamheader_buffer);
-  ebml->caps = caps;
+  gst_caps_unref (caps);
 }
 
 /**
