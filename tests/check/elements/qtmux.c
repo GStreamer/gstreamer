@@ -215,6 +215,99 @@ check_qtmux_pad (GstStaticPadTemplate * srctemplate, const gchar * sinkname)
   cleanup_qtmux (qtmux, sinkname);
 }
 
+static void
+check_qtmux_pad_fragmented (GstStaticPadTemplate * srctemplate,
+    const gchar * sinkname, gboolean streamable)
+{
+  GstElement *qtmux;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  int num_buffers;
+  int i;
+  guint8 data0[12] = "\000\000\000\024ftypqt  ";
+  guint8 data1[4] = "mdat";
+  guint8 data2[4] = "moov";
+  guint8 data3[4] = "moof";
+  guint8 data4[4] = "mfra";
+
+  qtmux = setup_qtmux (srctemplate, sinkname);
+  g_object_set (qtmux, "fragment-duration", 2000, NULL);
+  g_object_set (qtmux, "streamable", streamable, NULL);
+  fail_unless (gst_element_set_state (qtmux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (1);
+  caps = gst_caps_copy (gst_pad_get_pad_template_caps (mysrcpad));
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_DURATION (inbuffer) = 40 * GST_MSECOND;
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* send eos to have all written */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
+
+  num_buffers = g_list_length (buffers);
+  /* at least expect ftyp, moov, moof, mdat header, buffer chunk
+   * and optionally mfra */
+  fail_unless (num_buffers >= 5);
+
+  for (i = 0; i < num_buffers; ++i) {
+    outbuffer = GST_BUFFER (buffers->data);
+    fail_if (outbuffer == NULL);
+    buffers = g_list_remove (buffers, outbuffer);
+
+    switch (i) {
+      case 0:
+      {
+        /* ftyp header */
+        guint8 *data = GST_BUFFER_DATA (outbuffer);
+
+        fail_unless (GST_BUFFER_SIZE (outbuffer) >= 20);
+        fail_unless (memcmp (data, data0, sizeof (data0)) == 0);
+        fail_unless (memcmp (data + 16, data0 + 8, 4) == 0);
+        break;
+      }
+      case 1:                  /* moov */
+        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
+        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data2,
+                sizeof (data2)) == 0);
+        break;
+      case 2:                  /* moof */
+        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
+        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data3,
+                sizeof (data3)) == 0);
+        break;
+      case 3:                  /* mdat header */
+        fail_unless (GST_BUFFER_SIZE (outbuffer) == 8);
+        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data1,
+                sizeof (data1)) == 0);
+        break;
+      case 4:                  /* buffer we put in */
+        fail_unless (GST_BUFFER_SIZE (outbuffer) == 1);
+        break;
+      case 5:                  /* mfra */
+        fail_unless (GST_BUFFER_SIZE (outbuffer) > 8);
+        fail_unless (memcmp (GST_BUFFER_DATA (outbuffer) + 4, data4,
+                sizeof (data4)) == 0);
+        break;
+      default:
+        break;
+    }
+
+    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
+    gst_buffer_unref (outbuffer);
+    outbuffer = NULL;
+  }
+
+  g_list_free (buffers);
+  buffers = NULL;
+
+  cleanup_qtmux (qtmux, sinkname);
+}
+
 
 GST_START_TEST (test_video_pad)
 {
@@ -223,10 +316,40 @@ GST_START_TEST (test_video_pad)
 
 GST_END_TEST;
 
-
 GST_START_TEST (test_audio_pad)
 {
   check_qtmux_pad (&srcaudiotemplate, "audio_%d");
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_pad_frag)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", FALSE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_video_pad_frag_streamable)
+{
+  check_qtmux_pad_fragmented (&srcvideotemplate, "video_%d", TRUE);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_audio_pad_frag_streamable)
+{
+  check_qtmux_pad_fragmented (&srcaudiotemplate, "audio_%d", TRUE);
 }
 
 GST_END_TEST;
@@ -241,6 +364,10 @@ qtmux_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_video_pad);
   tcase_add_test (tc_chain, test_audio_pad);
+  tcase_add_test (tc_chain, test_video_pad_frag);
+  tcase_add_test (tc_chain, test_audio_pad_frag);
+  tcase_add_test (tc_chain, test_video_pad_frag_streamable);
+  tcase_add_test (tc_chain, test_audio_pad_frag_streamable);
 
   return s;
 }
