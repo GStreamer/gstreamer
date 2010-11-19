@@ -251,7 +251,8 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_FRAGMENT_DURATION,
       g_param_spec_uint ("fragment-duration", "Fragment duration",
           "Fragment durations in ms (produce a fragmented file if > 0)",
-          0, G_MAXUINT32, DEFAULT_FRAGMENT_DURATION,
+          0, G_MAXUINT32, klass->format == GST_QT_MUX_FORMAT_ISML ?
+          2000 : DEFAULT_FRAGMENT_DURATION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Streamable",
