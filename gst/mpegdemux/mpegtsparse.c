@@ -1262,9 +1262,7 @@ mpegts_parse_get_tags_from_sdt (MpegTSParse * parse, GstStructure * sdt_info)
      * which looks like service-%d */
     sid_str = gst_structure_get_name (service);
     tmp = g_strstr_len (sid_str, -1, "-");
-    if (tmp) {
-      program_number = atoi (++tmp);
-    }
+    program_number = atoi (++tmp);
 
     program = mpegts_parse_get_program (parse, program_number);
     if (program && program->tspad && !program->tspad->tags) {
