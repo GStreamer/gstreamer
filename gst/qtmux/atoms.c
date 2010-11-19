@@ -3324,6 +3324,14 @@ atom_trun_free (AtomTRUN * trun)
   g_free (trun);
 }
 
+static void
+atom_sdtp_free (AtomSDTP * sdtp)
+{
+  atom_full_clear (&sdtp->header);
+  atom_array_clear (&sdtp->entries);
+  g_free (sdtp);
+}
+
 void
 atom_traf_free (AtomTRAF * traf)
 {
@@ -3336,6 +3344,14 @@ atom_traf_free (AtomTRAF * traf)
   }
   g_list_free (traf->truns);
   traf->truns = NULL;
+
+  walker = traf->sdtps;
+  while (walker) {
+    atom_sdtp_free ((AtomSDTP *) walker->data);
+    walker = g_list_next (walker);
+  }
+  g_list_free (traf->sdtps);
+  traf->sdtps = NULL;
 
   g_free (traf);
 }
@@ -3453,6 +3469,24 @@ atom_trun_copy_data (AtomTRUN * trun, guint8 ** buffer, guint64 * size,
 }
 
 static guint64
+atom_sdtp_copy_data (AtomSDTP * sdtp, guint8 ** buffer, guint64 * size,
+    guint64 * offset)
+{
+  guint64 original_offset = *offset;
+
+  if (!atom_full_copy_data (&sdtp->header, buffer, size, offset)) {
+    return 0;
+  }
+
+  /* all entries at once */
+  prop_copy_fixed_size_string (&atom_array_index (&sdtp->entries, 0),
+      atom_array_get_len (&sdtp->entries), buffer, size, offset);
+
+  atom_write_size (buffer, size, offset, original_offset);
+  return *offset - original_offset;
+}
+
+static guint64
 atom_traf_copy_data (AtomTRAF * traf, guint8 ** buffer, guint64 * size,
     guint64 * offset, guint32 * data_offset)
 {
@@ -3470,6 +3504,14 @@ atom_traf_copy_data (AtomTRAF * traf, guint8 ** buffer, guint64 * size,
   while (walker != NULL) {
     if (!atom_trun_copy_data ((AtomTRUN *) walker->data, buffer, size, offset,
             data_offset)) {
+      return 0;
+    }
+    walker = g_list_next (walker);
+  }
+
+  walker = g_list_first (traf->sdtps);
+  while (walker != NULL) {
+    if (!atom_sdtp_copy_data ((AtomSDTP *) walker->data, buffer, size, offset)) {
       return 0;
     }
     walker = g_list_next (walker);
@@ -3551,6 +3593,38 @@ atom_trun_new (void)
 }
 
 static void
+atom_sdtp_init (AtomSDTP * sdtp)
+{
+  guint8 flags[3] = { 0, 0, 0 };
+
+  atom_full_init (&sdtp->header, FOURCC_sdtp, 0, 0, 0, flags);
+  atom_array_init (&sdtp->entries, 512);
+}
+
+static AtomSDTP *
+atom_sdtp_new (AtomsContext * context)
+{
+  AtomSDTP *sdtp = g_new0 (AtomSDTP, 1);
+
+  atom_sdtp_init (sdtp);
+  return sdtp;
+}
+
+static void
+atom_traf_add_sdtp (AtomTRAF * traf, AtomSDTP * sdtp)
+{
+  traf->sdtps = g_list_append (traf->sdtps, sdtp);
+}
+
+static void
+atom_sdtp_add_samples (AtomSDTP * sdtp, guint8 val)
+{
+  /* it does not make much/any sense according to specs,
+   * but that's how MS isml samples seem to do it */
+  atom_array_append (&sdtp->entries, val, 256);
+}
+
+static void
 atom_trun_add_samples (AtomTRUN * trun, guint32 delta, guint32 size,
     guint32 flags, gboolean do_pts, gint64 pts_offset)
 {
@@ -3574,6 +3648,9 @@ atom_traf_init (AtomTRAF * traf, AtomsContext * context, guint32 track_ID)
   atom_header_set (&traf->header, FOURCC_traf, 0, 0);
   atom_tfhd_init (&traf->tfhd, track_ID);
   traf->truns = NULL;
+
+  if (context->flavor == ATOMS_TREE_FLAVOR_ISML)
+    atom_traf_add_sdtp (traf, atom_sdtp_new (context));
 }
 
 AtomTRAF *
@@ -3593,14 +3670,14 @@ atom_traf_add_trun (AtomTRAF * traf, AtomTRUN * trun)
 
 void
 atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
-    gboolean sync, gboolean do_pts, gint64 pts_offset)
+    gboolean sync, gboolean do_pts, gint64 pts_offset, gboolean sdtp_sync)
 {
   AtomTRUN *trun;
   guint32 flags;
 
   /* 0x10000 is sample-is-difference-sample flag
    * low byte stuff is what ismv uses */
-  flags = sync ? 0x0040 : 0x1000c;
+  flags = (sync ? 0x0 : 0x10000) | (sdtp_sync ? 0x40 : 0xc0);
 
   if (G_UNLIKELY (!traf->truns)) {
     trun = atom_trun_new ();
@@ -3641,6 +3718,9 @@ atom_traf_add_samples (AtomTRAF * traf, guint32 delta, guint32 size,
 
   atom_trun_add_samples (traf->truns->data, delta, size, flags, do_pts,
       pts_offset);
+
+  if (traf->sdtps)
+    atom_sdtp_add_samples (traf->sdtps->data, 0x10 | ((flags & 0xff) >> 4));
 }
 
 guint32
