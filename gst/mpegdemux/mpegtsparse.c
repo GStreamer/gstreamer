@@ -1135,8 +1135,8 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
   gboolean res = TRUE;
   GstStructure *structure = NULL;
 
-  /* table ids 0x70 - 0x72 do not have a crc */
-  if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x72)) {
+  /* table ids 0x70 - 0x73 do not have a crc */
+  if (G_LIKELY (section->table_id < 0x70 || section->table_id > 0x73)) {
     if (G_UNLIKELY (mpegts_parse_calc_crc32 (GST_BUFFER_DATA (section->buffer),
                 GST_BUFFER_SIZE (section->buffer)) != 0)) {
       GST_WARNING_OBJECT (parse, "bad crc in psi pid 0x%x", section->pid);
