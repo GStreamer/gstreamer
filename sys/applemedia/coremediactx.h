@@ -46,9 +46,6 @@ G_BEGIN_DECLS
 #define GST_IS_CORE_MEDIA_CTX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_CORE_MEDIA_CTX))
 
-#define GST_DYN_SYM_SPEC(type, name) \
-  { G_STRINGIFY (name), G_STRUCT_OFFSET (type, name) }
-
 typedef struct _GstCoreMediaCtx GstCoreMediaCtx;
 typedef struct _GstCoreMediaCtxClass GstCoreMediaCtxClass;
 

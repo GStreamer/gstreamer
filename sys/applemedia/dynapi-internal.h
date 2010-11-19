@@ -30,6 +30,7 @@ struct _GstDynSymSpec
 {
   const gchar * name;
   guint offset;
+  gboolean is_required;
 };
 
 gpointer _gst_dyn_api_new (GType derived_type, const gchar * filename,

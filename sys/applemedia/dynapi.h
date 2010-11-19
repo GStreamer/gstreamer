@@ -38,7 +38,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DYN_API))
 
 #define GST_DYN_SYM_SPEC(type, name) \
-  { G_STRINGIFY (name), G_STRUCT_OFFSET (type, name) }
+  { G_STRINGIFY (name), G_STRUCT_OFFSET (type, name), TRUE }
+#define GST_DYN_SYM_SPEC_OPTIONAL(type, name) \
+  { G_STRINGIFY (name), G_STRUCT_OFFSET (type, name), FALSE }
 
 typedef struct _GstDynApi GstDynApi;
 typedef struct _GstDynApiClass GstDynApiClass;
