@@ -256,9 +256,10 @@ gst_pad_template_dispose (GObject * object)
  * 'sink%d' template is automatically selected), so we need to restrict their
  * naming.
  */
-static gboolean
+static inline gboolean
 name_is_valid (const gchar * name, GstPadPresence presence)
 {
+#ifndef G_DISABLE_ASSERT
   const gchar *str;
 
   if (presence == GST_PAD_ALWAYS) {
@@ -284,7 +285,7 @@ name_is_valid (const gchar * name, GstPadPresence presence)
       return FALSE;
     }
   }
-
+#endif
   return TRUE;
 }
 
