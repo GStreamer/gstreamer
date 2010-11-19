@@ -83,6 +83,12 @@ static void gst_camerabin_image_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_camerabin_image_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean metadata_write_probe (GstPad * pad, GstBuffer * buffer,
+    gpointer u_data);
+static gboolean prepare_element (GList ** result,
+    const gchar * default_element_name, GstElement * app_elem,
+    GstElement ** res_elem);
+
 
 GST_BOILERPLATE (GstCameraBinImage, gst_camerabin_image, GstBin, GST_TYPE_BIN);
 
@@ -141,6 +147,7 @@ gst_camerabin_image_init (GstCameraBinImage * img,
   img->filename = g_string_new ("");
 
   img->post = NULL;
+  img->csp = NULL;
   img->enc = NULL;
   img->app_enc = NULL;
   img->meta_mux = NULL;
@@ -150,7 +157,6 @@ gst_camerabin_image_init (GstCameraBinImage * img,
   img->sinkpad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (img), img->sinkpad);
 
-  img->elements_created = FALSE;
   img->flags = DEFAULT_FLAGS;
 }
 
@@ -162,12 +168,45 @@ gst_camerabin_image_dispose (GstCameraBinImage * img)
   g_string_free (img->filename, TRUE);
   img->filename = NULL;
 
+  if (img->elements) {
+    g_list_free (img->elements);
+    img->elements = NULL;
+  }
+
+  if (img->sink) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->sink), GST_OBJECT_REFCOUNT_VALUE (img->sink));
+    gst_object_unref (img->sink);
+    img->sink = NULL;
+  }
+
+  if (img->meta_mux) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->meta_mux),
+        GST_OBJECT_REFCOUNT_VALUE (img->meta_mux));
+    gst_object_unref (img->meta_mux);
+    img->meta_mux = NULL;
+  }
+
+  if (img->enc) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->enc), GST_OBJECT_REFCOUNT_VALUE (img->enc));
+    gst_object_unref (img->enc);
+    img->enc = NULL;
+  }
+
+
   if (img->app_enc) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->app_enc),
+        GST_OBJECT_REFCOUNT_VALUE (img->app_enc));
     gst_object_unref (img->app_enc);
     img->app_enc = NULL;
   }
 
   if (img->post) {
+    GST_LOG_OBJECT (img, "disposing %s with refcount %d",
+        GST_ELEMENT_NAME (img->post), GST_OBJECT_REFCOUNT_VALUE (img->post));
     gst_object_unref (img->post);
     img->post = NULL;
   }
@@ -308,6 +347,85 @@ gst_camerabin_image_get_property (GObject * object, guint prop_id,
 }
 
 /*
+ * gst_camerabin_image_prepare_elements:
+ * @imagebin: a pointer to #GstCameraBinImage object
+ *
+ * This function creates an ordered list of elements configured for imagebin
+ * pipeline and creates the elements if necessary. It also stores pointers
+ * to created elements for re-using them.
+ *
+ * Image bin:
+ *  img->sinkpad ! [ post process !] [ csp !] encoder ! metadata ! filesink
+ *
+ * Returns: %FALSE if there was error creating element, %TRUE otherwise
+ */
+gboolean
+gst_camerabin_image_prepare_elements (GstCameraBinImage * imagebin)
+{
+  gboolean ret = FALSE;
+  GstPad *sinkpad = NULL;
+
+  g_return_val_if_fail (imagebin != NULL, FALSE);
+
+  GST_DEBUG_OBJECT (imagebin, "preparing image capture elements");
+
+  if (imagebin->elements != NULL) {
+    g_list_free (imagebin->elements);
+    imagebin->elements = NULL;
+  }
+
+  /* Create file sink element */
+  if (!prepare_element (&imagebin->elements, DEFAULT_SINK, NULL,
+          &imagebin->sink)) {
+    goto done;
+  } else {
+    g_object_set (G_OBJECT (imagebin->sink), "location",
+        imagebin->filename->str, "async", FALSE, "buffer-mode", 2,
+        /* non buffered io */ NULL);
+  }
+
+  /* Create metadata muxer element */
+  if (!prepare_element (&imagebin->elements, DEFAULT_META_MUX, NULL,
+          &imagebin->meta_mux)) {
+    goto done;
+  } else if (!imagebin->metadata_probe_id) {
+    /* Add probe for default XMP metadata writing */
+    sinkpad = gst_element_get_static_pad (imagebin->meta_mux, "sink");
+    imagebin->metadata_probe_id =
+        gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (metadata_write_probe),
+        imagebin);
+    gst_object_unref (sinkpad);
+  }
+
+  /* Create image encoder element */
+  if (!prepare_element (&imagebin->elements, DEFAULT_ENC, imagebin->app_enc,
+          &imagebin->enc)) {
+    goto done;
+  }
+
+  /* Create optional colorspace conversion element */
+  if (imagebin->flags & GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION) {
+    if (!prepare_element (&imagebin->elements, "ffmpegcolorspace", NULL,
+            &imagebin->csp)) {
+      goto done;
+    }
+  }
+
+  /* Add optional image post processing element */
+  if (!prepare_element (&imagebin->elements, NULL, imagebin->post,
+          &imagebin->post)) {
+    goto done;
+  }
+
+  ret = TRUE;
+
+done:
+  GST_DEBUG_OBJECT (imagebin, "preparing finished %s", ret ? "OK" : "NOK");
+  return ret;
+}
+
+
+/*
  * static helper functions implementation
  */
 
@@ -377,113 +495,169 @@ done:
   return TRUE;
 }
 
-
 /*
- * gst_camerabin_image_create_elements:
- * @img: a pointer to #GstCameraBinImage object
+ * prepare_element:
+ * @result: result list address
+ * @default_element_name: name of default element to be created
+ * @app_elem: pointer to application set element
+ * @res_elem: pointer to current element to be replaced if needed
  *
- * This function creates needed #GstElements and resources to capture images.
- * Use gst_camerabin_image_destroy_elements to release these resources.
+ * This function chooses given image capture element or creates a new one and
+ * and prepends it to @result list.
  *
- * Image bin:
- *  img->sinkpad ! [ post process !] csp ! encoder ! metadata ! filesink
- *
- * Returns: %TRUE if succeeded or FALSE if failed
+ * Returns: %FALSE if there was error creating new element, %TRUE otherwise
  */
 static gboolean
-gst_camerabin_image_create_elements (GstCameraBinImage * img)
+prepare_element (GList ** result, const gchar * default_element_name,
+    GstElement * app_elem, GstElement ** res_elem)
 {
-  GstPad *sinkpad = NULL, *img_sinkpad = NULL;
-  gboolean ret = FALSE;
-  GstBin *imgbin = NULL;
-  GstElement *csp = NULL;
+  GstElement *elem = NULL;
+  gboolean ret = TRUE;
 
-  g_return_val_if_fail (img != NULL, FALSE);
-
-  GST_DEBUG ("creating image capture elements");
-
-  imgbin = GST_BIN (img);
-
-  if (img->elements_created) {
-    GST_WARNING ("elements already created");
-    ret = TRUE;
-    goto done;
-  } else {
-    img->elements_created = TRUE;
-  }
-
-  /* Create image pre/post-processing element if any */
-  if (img->post) {
-    if (!gst_camerabin_add_element (imgbin, img->post)) {
-      goto done;
+  if (app_elem) {
+    /* Prefer application set element */
+    elem = app_elem;
+  } else if (*res_elem) {
+    /* Use existing element if any */
+    elem = *res_elem;
+  } else if (default_element_name) {
+    /* Create new element */
+    if (!(elem = gst_element_factory_make (default_element_name, NULL))) {
+      GST_WARNING ("creating %s failed", default_element_name);
+      ret = FALSE;
     }
-    img_sinkpad = gst_element_get_static_pad (img->post, "sink");
   }
 
-  if (img->flags & GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION) {
-    /* Add colorspace converter */
-    if (!(csp =
-            gst_camerabin_create_and_add_element (imgbin,
-                "ffmpegcolorspace"))) {
-      goto done;
-    }
-    if (!img_sinkpad)
-      img_sinkpad = gst_element_get_static_pad (csp, "sink");
+  if (*res_elem != elem) {
+    /* Keep reference and store pointer to chosen element, which can be re-used
+       until imagebin is disposed or new image capture element is chosen. */
+    gst_object_replace ((GstObject **) res_elem, (GstObject *) elem);
   }
-
-  if (img->app_enc) {
-    img->enc = img->app_enc;
-    if (!gst_camerabin_add_element (imgbin, img->enc)) {
-      goto done;
-    }
-  } else if (!(img->enc =
-          gst_camerabin_create_and_add_element (imgbin, DEFAULT_ENC))) {
-    goto done;
-  }
-
-  /* Create metadata element */
-  if (!(img->meta_mux =
-          gst_camerabin_create_and_add_element (imgbin, DEFAULT_META_MUX))) {
-    goto done;
-  }
-  /* Add probe for XMP metadata writing */
-  sinkpad = gst_element_get_static_pad (img->meta_mux, "sink");
-  gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (metadata_write_probe), img);
-  gst_object_unref (sinkpad);
-  /* Set "Intel" exif byte-order if possible */
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (img->meta_mux),
-          "exif-byte-order")) {
-    g_object_set (G_OBJECT (img->meta_mux), "exif-byte-order", 1, NULL);
-  }
-
-  /* Add sink element for storing the image */
-  if (!(img->sink =
-          gst_camerabin_create_and_add_element (imgbin, DEFAULT_SINK))) {
-    goto done;
-  }
-  g_object_set (G_OBJECT (img->sink), "location", img->filename->str, "async", FALSE, "buffer-mode", 2, /* non buffered io */
-      NULL);
-
-  /* Set up sink ghost pad for image bin */
-  if (!img_sinkpad) {
-    img_sinkpad = gst_element_get_static_pad (img->enc, "sink");
-  }
-  gst_ghost_pad_set_target (GST_GHOST_PAD (img->sinkpad), img_sinkpad);
-
-  ret = TRUE;
-
-done:
-
-  if (img_sinkpad) {
-    gst_object_unref (img_sinkpad);
-  }
-  if (!ret) {
-    gst_camerabin_image_destroy_elements (img);
+  if (elem) {
+    *result = g_list_prepend (*result, elem);
   }
 
   return ret;
 }
 
+/*
+ * gst_camerabin_image_link_first_element:
+ * @img: a pointer to #GstCameraBinImage object
+ * @elem: first element to be linked on imagebin
+ *
+ * Adds given element to imagebin and links it to imagebin's ghost sink pad.
+ *
+ * Returns: %TRUE if adding and linking succeeded, %FALSE otherwise
+ */
+static gboolean
+gst_camerabin_image_link_first_element (GstCameraBinImage * imagebin,
+    GstElement * elem)
+{
+  GstPad *first_sinkpad = NULL;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (imagebin != NULL, FALSE);
+  /* Link given element to imagebin ghost sink pad */
+  if (gst_bin_add (GST_BIN (imagebin), elem)) {
+    first_sinkpad = gst_element_get_static_pad (elem, "sink");
+    if (first_sinkpad) {
+      if (gst_ghost_pad_set_target (GST_GHOST_PAD (imagebin->sinkpad),
+              first_sinkpad)) {
+        ret = TRUE;
+      } else {
+        GST_WARNING ("linking first element failed");
+      }
+      gst_object_unref (first_sinkpad);
+    } else {
+      GST_WARNING ("no sink pad in first element");
+    }
+  } else {
+    GST_WARNING ("adding element failed");
+  }
+  return ret;
+}
+
+/*
+ * gst_camerabin_image_link_elements:
+ * @imagebin: a pointer to #GstCameraBinImage object
+ *
+ * Link elements configured to imagebin elements list.
+ *
+ * Returns %TRUE if linking succeeded, %FALSE otherwise.
+ */
+static gboolean
+gst_camerabin_image_link_elements (GstCameraBinImage * imagebin)
+{
+  GList *prev = NULL;
+  GList *next = NULL;
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (imagebin, "linking image elements");
+
+  if (!imagebin->elements) {
+    GST_WARNING ("no elements to link");
+    goto done;
+  }
+
+  /* Link the elements in list */
+  prev = imagebin->elements;
+  next = g_list_next (imagebin->elements);
+  for (; next != NULL; next = g_list_next (next)) {
+    /* Link first element in list to imagebin ghost sink pad */
+    if (prev == imagebin->elements
+        && !gst_camerabin_image_link_first_element (imagebin,
+            GST_ELEMENT (prev->data))) {
+      goto done;
+    }
+    if (!gst_bin_add (GST_BIN (imagebin), GST_ELEMENT (next->data))) {
+      GST_WARNING_OBJECT (imagebin, "adding element failed");
+      goto done;
+    }
+    GST_LOG_OBJECT (imagebin, "linking %s - %s",
+        GST_ELEMENT_NAME (GST_ELEMENT (prev->data)),
+        GST_ELEMENT_NAME (GST_ELEMENT (next->data)));
+    if (!gst_element_link (GST_ELEMENT (prev->data), GST_ELEMENT (next->data))) {
+      GST_WARNING_OBJECT (imagebin, "linking element failed");
+      goto done;
+    }
+
+    prev = next;
+  }
+
+  ret = TRUE;
+
+done:
+
+  if (!ret) {
+    gst_camerabin_remove_elements_from_bin (GST_BIN (imagebin));
+  }
+
+  GST_DEBUG_OBJECT (imagebin, "linking finished %s", ret ? "OK" : "NOK");
+
+  return ret;
+}
+
+/*
+ * gst_camerabin_image_create_elements:
+ * @img: a pointer to #GstCameraBinImage object
+ *
+ * This function creates needed elements, adds them to
+ * imagebin and links them.
+ *
+ * Returns %TRUE if success, %FALSE otherwise.
+ */
+static gboolean
+gst_camerabin_image_create_elements (GstCameraBinImage * img)
+{
+  gboolean ret = FALSE;
+  g_return_val_if_fail (img != NULL, FALSE);
+
+  if (gst_camerabin_image_prepare_elements (img)) {
+    ret = gst_camerabin_image_link_elements (img);
+  }
+
+  return ret;
+}
 
 /*
  * gst_camerabin_image_destroy_elements:
@@ -501,12 +675,6 @@ gst_camerabin_image_destroy_elements (GstCameraBinImage * img)
   gst_ghost_pad_set_target (GST_GHOST_PAD (img->sinkpad), NULL);
 
   gst_camerabin_remove_elements_from_bin (GST_BIN (img));
-
-  img->enc = NULL;
-  img->meta_mux = NULL;
-  img->sink = NULL;
-
-  img->elements_created = FALSE;
 }
 
 void

@@ -48,14 +48,18 @@ struct _GstCameraBinImage
   /* Ghost pads of image bin */
   GstPad *sinkpad;
 
+  /* Ordered list of elements configured to imagebin */
+  GList *elements;
+  /* Imagebin elements */
   GstElement *post;
+  GstElement *csp;
   GstElement *enc;
   GstElement *app_enc;
   GstElement *meta_mux;
   GstElement *sink;
 
-  gboolean elements_created;
   GstCameraBinFlags flags;
+  gulong metadata_probe_id;
 };
 
 struct _GstCameraBinImageClass
@@ -79,6 +83,8 @@ gst_camerabin_image_set_flags (GstCameraBinImage * img,
 GstElement *gst_camerabin_image_get_encoder (GstCameraBinImage * img);
 
 GstElement *gst_camerabin_image_get_postproc (GstCameraBinImage * img);
+
+gboolean gst_camerabin_image_prepare_elements (GstCameraBinImage * imagebin);
 
 G_END_DECLS
 #endif /* #ifndef __CAMERABIN_IMAGE_H__ */

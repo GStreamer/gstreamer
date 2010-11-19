@@ -1039,6 +1039,10 @@ gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
         camera->active_bin = camera->vidbin;
       }
       gst_camerabin_reset_to_view_finder (camera);
+    } else if (camera->mode == MODE_IMAGE) {
+      /* Prepare needed elements for image processing */
+      gst_camerabin_image_prepare_elements (GST_CAMERABIN_IMAGE
+          (camera->imgbin));
     }
   }
 }
