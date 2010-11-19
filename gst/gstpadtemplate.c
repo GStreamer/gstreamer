@@ -309,6 +309,7 @@ gst_static_pad_template_get_type (void)
  *
  * Returns: a new #GstPadTemplate.
  */
+/* FIXME0.11: rename to gst_pad_template_new_from_static_pad_template() */
 GstPadTemplate *
 gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
 {
