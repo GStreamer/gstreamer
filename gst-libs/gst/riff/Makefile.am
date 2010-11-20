@@ -46,6 +46,7 @@ GstRiff-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_MAJORMINO
 		--pkg gstreamer-tag-0.10 \
 		--pkg gstreamer-audio-0.10 \
 		--pkg gstreamer-interfaces-0.10 \
+		--pkg-export gstreamer-riff-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

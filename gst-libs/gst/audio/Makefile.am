@@ -86,6 +86,7 @@ GstAudio-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_MAJORMI
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-base-0.10 \
 		--pkg gstreamer-interfaces-0.10 \
+		--pkg-export gstreamer-audio-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

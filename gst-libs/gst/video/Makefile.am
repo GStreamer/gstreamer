@@ -53,6 +53,7 @@ GstVideo-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_MAJORMI
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-base-0.10 \
+		--pkg-export gstreamer-video-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

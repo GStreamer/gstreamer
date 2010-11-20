@@ -75,6 +75,7 @@ GstRtsp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_MAJORMINO
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-sdp-0.10 \
+		--pkg-export gsteamer-rtsp-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

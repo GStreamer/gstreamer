@@ -42,6 +42,7 @@ GstRtp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_MAJORMINOR@
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-base-0.10 \
+		--pkg-export gstreamer-rtp-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

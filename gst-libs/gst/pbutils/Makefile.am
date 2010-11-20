@@ -85,6 +85,7 @@ GstPbutils-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_MAJ
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-video-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-pbutils-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

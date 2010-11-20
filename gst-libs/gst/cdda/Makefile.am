@@ -39,6 +39,7 @@ GstCdda-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcdda-@GST_MAJORMINO
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-base-0.10 \
 		--pkg gstreamer-tag-0.10 \
+		--pkg-export gstreamer-cdda-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

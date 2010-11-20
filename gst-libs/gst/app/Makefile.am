@@ -55,6 +55,7 @@ GstApp-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_MAJORMINOR@
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
 		--pkg gstreamer-base-0.10 \
+		--pkg-export gstreamer-app-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
