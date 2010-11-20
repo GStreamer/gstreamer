@@ -51,6 +51,7 @@ GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@G
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
+		--pkg-export gstreamer-controller-0.10 \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

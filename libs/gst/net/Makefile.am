@@ -42,6 +42,7 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		--include=Gst-0.10 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-0.10 \
+		--pkg-export="gstreamer-net-0.10" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)
