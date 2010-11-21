@@ -520,10 +520,23 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
   if (!gst_byte_reader_get_uint16_be (reader, &size))
     return FALSE;
 
+#ifndef GST_DISABLE_DEBUG
+  /* We'd pry the id of the skipped application segment */
+  if (marker >= APP0 && marker <= APP15) {
+    const gchar *id_str = NULL;
+
+    if (!gst_byte_reader_peek_string_utf8 (reader, &id_str))
+      return FALSE;
+
+    GST_LOG_OBJECT (parse, "unhandled marker %x: '%s' skiping %u bytes",
+        marker, id_str ? id_str : "(NULL)", size);
+  }
+#else
+  GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker, size);
+#endif // GST_DISABLE_DEBUG
+
   if (!gst_byte_reader_skip (reader, size - 2))
     return FALSE;
-
-  GST_LOG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker, size);
 
   return TRUE;
 }
