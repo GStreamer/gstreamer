@@ -528,6 +528,14 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
   return TRUE;
 }
 
+static inline GstTagList *
+get_tag_list (GstJpegParse * parse)
+{
+  if (!parse->priv->tags)
+    parse->priv->tags = gst_tag_list_new ();
+  return parse->priv->tags;
+}
+
 static gboolean
 gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 {
@@ -941,9 +949,8 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstEvent * event)
 
         gst_event_parse_tag (event, &taglist);
         /* Hold on to the tags till the srcpad caps are definitely set */
-        if (!parse->priv->tags)
-          parse->priv->tags = gst_tag_list_new ();
-        gst_tag_list_insert (parse->priv->tags, taglist, GST_TAG_MERGE_REPLACE);
+        gst_tag_list_insert (get_tag_list (parse), taglist,
+            GST_TAG_MERGE_REPLACE);
         gst_event_unref (event);
       }
       break;
