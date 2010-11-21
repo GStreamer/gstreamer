@@ -72,6 +72,8 @@ struct _GstOggParse
   ogg_sync_state sync;          /* Ogg page synchronisation */
 
   GstCaps *caps;                /* Our src caps */
+
+  GstOggStream *video_stream;   /* Stream used to construct delta_unit flags */
 };
 
 struct _GstOggParseClass
@@ -155,6 +157,9 @@ gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
   ret = ogg_stream_packetout (&stream->stream, &packet);
   if (ret == 1) {
     gst_ogg_stream_setup_map (stream, &packet);
+    if (stream->is_video) {
+      parser->video_stream = stream;
+    }
   }
 
   parser->oggstreams = g_slist_append (parser->oggstreams, stream);
@@ -345,7 +350,7 @@ gst_ogg_parse_is_header (GstOggParse * ogg, GstOggStream * stream,
 
 static GstBuffer *
 gst_ogg_parse_buffer_from_page (ogg_page * page,
-    guint64 offset, gboolean delta, GstClockTime timestamp)
+    guint64 offset, gboolean keyframe, GstClockTime timestamp)
 {
   int size = page->header_len + page->body_len;
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
@@ -356,6 +361,9 @@ gst_ogg_parse_buffer_from_page (ogg_page * page,
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + size;
+  if (!keyframe) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
 
   return buf;
 }
@@ -402,6 +410,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 #endif
       guint64 startoffset = ogg->offset;
       GstOggStream *stream;
+      gboolean keyframe;
 
       serialno = ogg_page_serialno (&page);
       stream = gst_ogg_parse_find_stream (ogg, serialno);
@@ -409,10 +418,24 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
       GST_LOG_OBJECT (ogg, "Timestamping outgoing buffer as %" GST_TIME_FORMAT,
           GST_TIME_ARGS (buffertimestamp));
 
-      buffertimestamp = gst_ogg_stream_get_end_time_for_granulepos (stream,
-          granule);
-      pagebuffer = gst_ogg_parse_buffer_from_page (&page, startoffset, FALSE,
-          buffertimestamp);
+      if (stream) {
+        buffertimestamp = gst_ogg_stream_get_end_time_for_granulepos (stream,
+            granule);
+        if (ogg->video_stream) {
+          if (stream == ogg->video_stream) {
+            keyframe = gst_ogg_stream_granulepos_is_key_frame (stream, granule);
+          } else {
+            keyframe = FALSE;
+          }
+        } else {
+          keyframe = TRUE;
+        }
+      } else {
+        buffertimestamp = GST_CLOCK_TIME_NONE;
+        keyframe = TRUE;
+      }
+      pagebuffer = gst_ogg_parse_buffer_from_page (&page, startoffset,
+          keyframe, buffertimestamp);
 
       /* We read out 'ret' bytes, so we set the next offset appropriately */
       ogg->offset += ret;
@@ -420,9 +443,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
       GST_LOG_OBJECT (ogg,
           "processing ogg page (serial %08x, pageno %ld, "
           "granule pos %" G_GUINT64_FORMAT ", bos %d, offset %"
-          G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT ")",
+          G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT ") keyframe=%d",
           serialno, ogg_page_pageno (&page),
-          granule, bos, startoffset, ogg->offset);
+          granule, bos, startoffset, ogg->offset, keyframe);
 
       if (ogg_page_bos (&page)) {
         /* If we've seen this serialno before, this is technically an error,

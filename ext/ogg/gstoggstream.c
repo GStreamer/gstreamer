@@ -173,10 +173,8 @@ gst_ogg_stream_granule_to_granulepos (GstOggStream * pad, gint64 granule,
       keyframe_granule);
 }
 
-#if 0
 gboolean
-gst_ogg_stream_packet_granulepos_is_key_frame (GstOggStream * pad,
-    gint64 granulepos)
+gst_ogg_stream_granulepos_is_key_frame (GstOggStream * pad, gint64 granulepos)
 {
   if (granulepos == -1) {
     return FALSE;
@@ -189,7 +187,6 @@ gst_ogg_stream_packet_granulepos_is_key_frame (GstOggStream * pad,
 
   return mappers[pad->map].is_key_frame_func (pad, granulepos);
 }
-#endif
 
 gboolean
 gst_ogg_stream_packet_is_header (GstOggStream * pad, ogg_packet * packet)
@@ -304,6 +301,7 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granuleshift = ((GST_READ_UINT8 (data + 40) & 0x03) << 3) +
       (GST_READ_UINT8 (data + 41) >> 5);
 
+  pad->is_video = TRUE;
   pad->n_header_packets = 3;
   pad->frame_size = 1;
 
@@ -362,7 +360,7 @@ is_keyframe_theora (GstOggStream * pad, gint64 granulepos)
   if (granulepos == (gint64) - 1)
     return FALSE;
 
-  frame_mask = (1 << (pad->granuleshift + 1)) - 1;
+  frame_mask = (1 << pad->granuleshift) - 1;
 
   return ((granulepos & frame_mask) == 0);
 }
@@ -388,6 +386,7 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
     return FALSE;
   }
 
+  pad->is_video = TRUE;
   pad->granulerate_n = header.frame_rate_numerator * 2;
   pad->granulerate_d = header.frame_rate_denominator;
   pad->granuleshift = 22;
@@ -508,6 +507,7 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
   fps_n = GST_READ_UINT32_BE (packet->packet + 18);
   fps_d = GST_READ_UINT32_BE (packet->packet + 22);
 
+  pad->is_video = TRUE;
   pad->is_vp8 = TRUE;
   pad->granulerate_n = fps_n;
   pad->granulerate_d = fps_d;
@@ -1276,6 +1276,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
   GST_DEBUG ("time unit %d", GST_READ_UINT32_LE (data + 16));
   GST_DEBUG ("samples per unit %d", GST_READ_UINT32_LE (data + 24));
 
+  pad->is_video = TRUE;
   pad->granulerate_n = 10000000;
   time_unit = GST_READ_UINT64_LE (data + 17);
   if (time_unit > G_MAXINT || time_unit < G_MININT) {
