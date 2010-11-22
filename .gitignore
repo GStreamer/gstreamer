@@ -48,3 +48,5 @@ gst-libs
 log
 
 m4/*
+
+/gst/__init__.py
