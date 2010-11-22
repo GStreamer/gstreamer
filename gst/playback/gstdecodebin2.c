@@ -33,8 +33,9 @@
  *
  * The following section describes how decodebin2 works internally.
  *
- * The first part of decodebin2 is it's typefind element, which tries
- * to get the type of the input stream. If the type is found autoplugging starts.
+ * The first part of decodebin2 is its typefind element, which tries
+ * to determine the media type of the input stream. If the type is found
+ * autoplugging starts.
  *
  * decodebin2 internally organizes the elements it autoplugged into GstDecodeChains
  * and GstDecodeGroups. A decode chain is a single chain of decoding, this
@@ -47,23 +48,27 @@
  * A decode group combines a number of chains that are created by a
  * demuxer element. All those chains are connected through a multiqueue to
  * the demuxer. A new group for the same demuxer is only created if the
- * demuxer has signaled no-more pads, in which case all following pads
+ * demuxer has signaled no-more-pads, in which case all following pads
  * create a new chain in the new group.
  *
  * This continues until the top-level decode chain is complete. A decode
  * chain is complete if it either ends with a blocked endpad, if autoplugging
  * stopped because no suitable plugins could be found or if the active group
- * is complete. A decode group OTOH is complete if all child chains are complete.
+ * is complete. A decode group on the other hand is complete if all child
+ * chains are complete.
  *
  * If this happens at some point, all endpads of all active groups are exposed.
  * For this decodebin2 adds the endpads, signals no-more-pads and then unblocks
  * them. Now playback starts.
  *
- * If one of the chains that end on a endpad receives EOS decodebin2 checks upwards
- * via the parent pointers if all chains and groups are drained. In that case
- * everything goes into EOS.
- * If there is a chain where the active group is drained but there exist next groups
- * the active group is hidden (endpads are removed) and the next group is exposed.
+ * If one of the chains that end on a endpad receives EOS decodebin2 checks
+ * if all chains and groups are drained. In that case everything goes into EOS.
+ * If there is a chain where the active group is drained but there exist next
+ * groups, the active group is hidden (endpads are removed) and the next group
+ * is exposed. This means that in some cases more pads may be created even
+ * after the initial no-more-pads signal. This happens for example with
+ * so-called "chained oggs", most commonly found among ogg/vorbis internet
+ * radio streams.
  *
  * Note 1: If we're talking about blocked endpads this really means that the
  * *target* pads of the endpads are blocked. Pads that are exposed to the outside
@@ -3416,8 +3421,7 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeChain * chain)
   pad_tmpl = gst_static_pad_template_get (&decoder_bin_src_template);
   dpad =
       g_object_new (GST_TYPE_DECODE_PAD, "direction", GST_PAD_DIRECTION (pad),
-      "template", pad_tmpl,
-      NULL);
+      "template", pad_tmpl, NULL);
   gst_ghost_pad_construct (GST_GHOST_PAD_CAST (dpad));
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
   dpad->chain = chain;
