@@ -106,7 +106,7 @@ struct _GstInterlace
   int field_index;              /* index of the next field to push, 0=top 1=bottom */
   GstClockTime timebase;
   int fields_since_timebase;
-
+  guint pattern_offset;         /* initial offset into the pattern */
 };
 
 struct _GstInterlaceClass
@@ -119,6 +119,7 @@ enum
   PROP_0,
   PROP_TOP_FIELD_FIRST,
   PROP_PATTERN,
+  PROP_PATTERN_OFFSET,
   PROP_ALLOW_RFF
 };
 
@@ -255,6 +256,11 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           GST_INTERLACE_PATTERN_2_3,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_PATTERN_OFFSET,
+      g_param_spec_uint ("pattern-offset", "Pattern offset",
+          "The initial field pattern offset. Counts from 0.",
+          0, 12, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (object_class, PROP_ALLOW_RFF,
       g_param_spec_boolean ("allow-rff", "Allow Repeat-First-Field flags",
           "Allow generation of buffers with RFF flag set, i.e., duration of 3 fields",
@@ -265,7 +271,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
 static void
 gst_interlace_reset (GstInterlace * interlace)
 {
-  interlace->phase_index = 0;
+  interlace->phase_index = interlace->pattern_offset;
   interlace->timebase = GST_CLOCK_TIME_NONE;
   interlace->field_index = 0;
 }
@@ -291,6 +297,7 @@ gst_interlace_init (GstInterlace * interlace)
   interlace->top_field_first = FALSE;
   interlace->allow_rff = FALSE;
   interlace->pattern = GST_INTERLACE_PATTERN_2_3;
+  interlace->pattern_offset = 0;
   gst_interlace_reset (interlace);
 }
 
@@ -498,6 +505,8 @@ gst_interlace_setcaps (GstPad * pad, GstCaps * caps)
   interlace->width = width;
   interlace->height = height;
 
+  interlace->phase_index = interlace->pattern_offset;
+
   if (pad == interlace->sinkpad) {
     gst_caps_replace (&interlace->srccaps, othercaps);
     interlace->src_fps_n = fps_n * pdformat->ratio_n;
@@ -664,18 +673,20 @@ gst_interlace_chain (GstPad * pad, GstBuffer * buffer)
 
   format = &formats[interlace->pattern];
 
-  if (interlace->stored_fields == 0 && interlace->phase_index == 0
+  if (interlace->stored_fields == 0
+      && interlace->phase_index == interlace->pattern_offset
       && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
     interlace->timebase = GST_BUFFER_TIMESTAMP (buffer);
     interlace->fields_since_timebase = 0;
   }
 
-  current_fields = format->n_fields[interlace->phase_index];
-  /* increment the phase index */
-  interlace->phase_index++;
   if (!format->n_fields[interlace->phase_index]) {
     interlace->phase_index = 0;
   }
+
+  current_fields = format->n_fields[interlace->phase_index];
+  /* increment the phase index */
+  interlace->phase_index++;
   GST_DEBUG ("incoming buffer assigned %d fields", current_fields);
 
   num_fields = interlace->stored_fields + current_fields;
@@ -769,6 +780,9 @@ gst_interlace_set_property (GObject * object,
     case PROP_PATTERN:
       interlace->pattern = g_value_get_enum (value);
       break;
+    case PROP_PATTERN_OFFSET:
+      interlace->pattern_offset = g_value_get_uint (value);
+      break;
     case PROP_ALLOW_RFF:
       interlace->allow_rff = g_value_get_boolean (value);
       break;
@@ -790,6 +804,9 @@ gst_interlace_get_property (GObject * object,
       break;
     case PROP_PATTERN:
       g_value_set_enum (value, interlace->pattern);
+      break;
+    case PROP_PATTERN_OFFSET:
+      g_value_set_uint (value, interlace->pattern_offset);
       break;
     case PROP_ALLOW_RFF:
       g_value_set_boolean (value, interlace->allow_rff);
