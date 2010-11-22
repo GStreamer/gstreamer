@@ -63,7 +63,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/flacparse \
 	$(top_srcdir)/gst/imagefreeze \
 	$(top_srcdir)/gst/shapewipe \
-	$(top_srcdir)/tests/examples/shapewipe
+	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/ext/alsaspdif \
 	$(top_srcdir)/ext/ivorbis \
 	$(top_srcdir)/ext/metadata 
