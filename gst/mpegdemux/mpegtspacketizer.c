@@ -2192,18 +2192,14 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
 
     data += pointer;
   }
-  /* create a sub buffer from the start of the section (table_id and
-   * section_length included) to the end */
-  sub_buf = gst_buffer_create_sub (packet->buffer,
-      data - GST_BUFFER_DATA (packet->buffer), packet->data_end - data);
-
   /* TDT and TOT sections (see ETSI EN 300 468 5.2.5)
    *  these sections do not extend to several packets so we don't need to use the
    *  sections filter. */
   if (packet->pid == 0x14) {
-    table_id = *data++;
-    section->section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
-    section->buffer = sub_buf;
+    table_id = data[0];
+    section->section_length = GST_READ_UINT24_BE (data) & 0x000FFF;
+    section->buffer = gst_buffer_create_sub (packet->buffer,
+        data - GST_BUFFER_DATA (packet->buffer), section->section_length + 3);
     section->table_id = table_id;
     section->complete = TRUE;
     res = TRUE;
@@ -2211,6 +2207,12 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
         packet->pid, table_id, section->section_length);
     goto out;
   }
+
+  /* create a sub buffer from the start of the section (table_id and
+   * section_length included) to the end */
+  sub_buf = gst_buffer_create_sub (packet->buffer,
+      data - GST_BUFFER_DATA (packet->buffer), packet->data_end - data);
+
 
   stream = packetizer->streams[packet->pid];
   if (stream == NULL) {
