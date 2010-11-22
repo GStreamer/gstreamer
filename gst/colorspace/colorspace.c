@@ -63,7 +63,6 @@ colorspace_convert_new (GstVideoFormat to_format, ColorSpaceColorSpec to_spec,
       || gst_video_format_is_yuv (from_format)
       || (gst_video_format_is_gray (from_format) &&
           from_spec == COLOR_SPEC_GRAY), NULL);
-  g_return_val_if_fail (to_format != from_format, NULL);
 
   convert = g_malloc (sizeof (ColorspaceConvert));
   memset (convert, 0, sizeof (ColorspaceConvert));
