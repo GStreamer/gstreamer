@@ -251,8 +251,8 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class, PROP_PATTERN,
-      g_param_spec_enum ("pattern", "Telecine pattern",
-          "Pattern of fields to be used for telecine", GST_INTERLACE_PATTERN,
+      g_param_spec_enum ("field-pattern", "Field pattern",
+          "The output field pattern", GST_INTERLACE_PATTERN,
           GST_INTERLACE_PATTERN_2_3,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
