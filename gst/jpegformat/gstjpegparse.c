@@ -594,11 +594,13 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
           if (tags) {
             GST_INFO_OBJECT (parse, "got exif metadata");
-            if (!parse->priv->tags)
-              parse->priv->tags = gst_tag_list_new ();
-            gst_tag_list_insert (parse->priv->tags, tags,
-                GST_TAG_MERGE_REPLACE);
-            gst_tag_list_free (tags);
+            if (parse->priv->tags) {
+              gst_tag_list_insert (parse->priv->tags, tags,
+                  GST_TAG_MERGE_REPLACE);
+              gst_tag_list_free (tags);
+            } else {
+              parse->priv->tags = tags;
+            }
           }
 
           GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
@@ -621,11 +623,13 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
           if (tags) {
             GST_INFO_OBJECT (parse, "got xmp metadata");
-            if (!parse->priv->tags)
-              parse->priv->tags = gst_tag_list_new ();
-            gst_tag_list_insert (parse->priv->tags, tags,
-                GST_TAG_MERGE_REPLACE);
-            gst_tag_list_free (tags);
+            if (parse->priv->tags) {
+              gst_tag_list_insert (parse->priv->tags, tags,
+                  GST_TAG_MERGE_REPLACE);
+              gst_tag_list_free (tags);
+            } else {
+              parse->priv->tags = tags;
+            }
           }
 
           GST_LOG_OBJECT (parse, "parsed marker %x: '%s' %u bytes",
