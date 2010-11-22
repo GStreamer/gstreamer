@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstrsvg.la
 
-libgstrsvg_la_SOURCES = gstrsvg.c gstrsvgdec.c
+libgstrsvg_la_SOURCES = gstrsvg.c gstrsvgdec.c gstrsvgoverlay.c
 libgstrsvg_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
@@ -13,4 +13,4 @@ libgstrsvg_la_LIBADD = \
 libgstrsvg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 libgstrsvg_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstrsvgdec.h 
+noinst_HEADERS = gstrsvgdec.h gstrsvgoverlay.h
