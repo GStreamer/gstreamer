@@ -61,8 +61,8 @@ topsrcdir = os.path.abspath(os.path.join('..'))
 if topsrcdir.endswith('_build'):
     topsrcdir = os.path.dirname(topsrcdir)
 
-# gst's __init__.py is in topsrcdir/gst
-path = os.path.abspath(os.path.join(topsrcdir, 'gst'))
+# gst's __init__.py is in topbuilddir/gst
+path = os.path.abspath(os.path.join(topbuilddir, 'gst'))
 import gst
 file = gst.__file__
 assert file.startswith(path), 'bad gst path: %s' % file
