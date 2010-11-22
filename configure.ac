@@ -421,4 +421,5 @@ AC_OUTPUT([
   testsuite/Makefile
   win32/common/config.h
   gst-python.spec
+  gst/__init__.py
 ])
