@@ -327,13 +327,14 @@ static void
 gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
     int n_fields)
 {
+  /* field duration = src_fps_d / (2 * src_fps_n) */
   GST_BUFFER_TIMESTAMP (buf) = interlace->timebase +
       gst_util_uint64_scale (GST_SECOND,
       interlace->src_fps_d * interlace->fields_since_timebase,
-      interlace->src_fps_n);
+      interlace->src_fps_n * 2);
   GST_BUFFER_DURATION (buf) =
       gst_util_uint64_scale (GST_SECOND, interlace->src_fps_d * n_fields,
-      interlace->src_fps_n);
+      interlace->src_fps_n * 2);
   /* increment the buffer timestamp by duration for the next buffer */
   gst_buffer_set_caps (buf, interlace->srccaps);
 
