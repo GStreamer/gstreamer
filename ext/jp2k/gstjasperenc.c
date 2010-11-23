@@ -422,7 +422,7 @@ gst_jasper_enc_get_data (GstJasperEnc * enc, guint8 * data, GstBuffer ** outbuf)
 
   GST_LOG_OBJECT (enc, "all components written");
 
-  if (jas_image_encode (enc->image, stream, enc->fmt, (char *) ""))
+  if (jas_image_encode (enc->image, stream, enc->fmt, (char *) "sop"))
     goto fail_encode;
 
   GST_LOG_OBJECT (enc, "image encoded");
