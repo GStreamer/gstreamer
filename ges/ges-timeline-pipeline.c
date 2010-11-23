@@ -55,6 +55,8 @@ static OutputChain *get_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
 static OutputChain *new_output_chain_for_track (GESTimelinePipeline * self,
     GESTrack * track);
+static gboolean play_sink_multiple_seeks_send_event (GstElement * element,
+    GstEvent * event);
 
 static void
 ges_timeline_pipeline_dispose (GObject * object)
@@ -103,6 +105,8 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
 static void
 ges_timeline_pipeline_init (GESTimelinePipeline * self)
 {
+  GstElementClass *playsinkclass;
+
   GST_INFO_OBJECT (self, "Creating new 'playsink'");
 
   self->playsink = gst_element_factory_make ("playsink", "internal-sinks");
@@ -114,10 +118,19 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
       "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0,
       "use-smartencoder", TRUE, NULL);
 
-  if (G_UNLIKELY (self->playsink == NULL))
+  if (G_UNLIKELY (self->playsink == NULL)) {
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
-  if (G_UNLIKELY (self->encodebin == NULL))
+    return;
+  }
+  if (G_UNLIKELY (self->encodebin == NULL)) {
     GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
+    return;
+  }
+
+  /* HACK : Intercept events going through playsink */
+  playsinkclass = GST_ELEMENT_GET_CLASS (self->playsink);
+  /* Replace playsink's GstBin::send_event with our own */
+  playsinkclass->send_event = play_sink_multiple_seeks_send_event;
 
   ges_timeline_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
 }
@@ -821,4 +834,16 @@ ges_timeline_pipeline_get_thumbnail_rgb24 (GESTimelinePipeline * self,
   ret = ges_timeline_pipeline_get_thumbnail_buffer (self, caps);
   gst_caps_unref (caps);
   return ret;
+}
+
+static gboolean
+play_sink_multiple_seeks_send_event (GstElement * element, GstEvent * event)
+{
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+
+  GST_DEBUG ("%s", GST_EVENT_TYPE_NAME (event));
+
+  return
+      GST_ELEMENT_CLASS (g_type_class_peek_parent (klass))->send_event (element,
+      event);
 }
