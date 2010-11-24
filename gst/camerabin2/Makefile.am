@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstcamerabin2.la
 
-libgstcamerabin2_la_SOURCES = gstviewfinderbin.c
+libgstcamerabin2_la_SOURCES = gstviewfinderbin.c \
+				gstplugin.c
 
 libgstcamerabin2_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

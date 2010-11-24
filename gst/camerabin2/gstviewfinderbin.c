@@ -165,16 +165,9 @@ gst_viewfinder_bin_change_state (GstElement * element, GstStateChange trans)
   return ret;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_viewfinder_bin_plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "viewfinderbin", GST_RANK_NONE,
+  return gst_element_register (plugin, "viewfinderbin", GST_RANK_NONE,
       gst_viewfinder_bin_get_type ());
-
-  return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "viewfinderbin", "viewfinder bin of camerabin2",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
