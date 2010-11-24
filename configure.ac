@@ -293,6 +293,7 @@ AG_GST_CHECK_PLUGIN(audioparsers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(camerabin)
+AG_GST_CHECK_PLUGIN(camerabin2)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(coloreffects)
 AG_GST_CHECK_PLUGIN(colorspace)
@@ -1719,6 +1720,7 @@ gst/audioparsers/Makefile
 gst/autoconvert/Makefile
 gst/bayer/Makefile
 gst/camerabin/Makefile
+gst/camerabin2/Makefile
 gst/cdxaparse/Makefile
 gst/colorspace/Makefile
 gst/coloreffects/Makefile
