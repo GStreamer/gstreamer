@@ -66,10 +66,16 @@ switch_cb (gpointer user_data)
 
 }
 
+static void
+on_bin_element_added (GstBin * bin, GstElement * element, gpointer user_data)
+{
+  g_object_set (G_OBJECT (element), "sync", FALSE, "async", FALSE, NULL);
+}
+
 gint
 main (gint argc, gchar * argv[])
 {
-  GstElement *pipeline, *src, *toverlay, *osel, *sink1, *sink2, *convert;
+  GstElement *pipeline, *src, *toverlay, *osel, *sink1, *sink2, *c1, *c2, *c0;
   GstPad *sinkpad;
   GstBus *bus;
 
@@ -80,54 +86,66 @@ main (gint argc, gchar * argv[])
   /* create elements */
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
   src = gst_element_factory_make ("videotestsrc", "src");
+  c0 = gst_element_factory_make ("ffmpegcolorspace", NULL);
   toverlay = gst_element_factory_make ("timeoverlay", "timeoverlay");
   osel = gst_element_factory_make ("output-selector", "osel");
-  convert = gst_element_factory_make ("ffmpegcolorspace", "convert");
-  sink1 = gst_element_factory_make ("xvimagesink", "sink1");
-  sink2 = gst_element_factory_make ("ximagesink", "sink2");
+  c1 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  c2 = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  sink1 = gst_element_factory_make ("autovideosink", "sink1");
+  sink2 = gst_element_factory_make ("autovideosink", "sink2");
 
-  if (!pipeline || !src || !toverlay || !osel || !convert || !sink1 || !sink2) {
+  if (!pipeline || !src || !c0 || !toverlay || !osel || !c1 || !c2 || !sink1 ||
+      !sink2) {
     g_print ("missing element\n");
     return -1;
   }
 
   /* add them to bin */
-  gst_bin_add_many (GST_BIN (pipeline), src, toverlay, osel, convert, sink1,
+  gst_bin_add_many (GST_BIN (pipeline), src, c0, toverlay, osel, c1, sink1, c2,
       sink2, NULL);
 
   /* set properties */
   g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
   g_object_set (G_OBJECT (src), "do-timestamp", TRUE, NULL);
   g_object_set (G_OBJECT (src), "num-buffers", NUM_VIDEO_BUFFERS, NULL);
-  g_object_set (G_OBJECT (sink1), "sync", FALSE, "async", FALSE, NULL);
-  g_object_set (G_OBJECT (sink2), "sync", FALSE, "async", FALSE, NULL);
   g_object_set (G_OBJECT (osel), "resend-latest", TRUE, NULL);
 
+  /* handle deferred properties */
+  g_signal_connect (G_OBJECT (sink1), "element-added",
+      G_CALLBACK (on_bin_element_added), NULL);
+  g_signal_connect (G_OBJECT (sink2), "element-added",
+      G_CALLBACK (on_bin_element_added), NULL);
+
   /* link src ! timeoverlay ! osel */
-  if (!gst_element_link_many (src, toverlay, osel, NULL)) {
+  if (!gst_element_link_many (src, c0, toverlay, osel, NULL)) {
     g_print ("linking failed\n");
     return -1;
   }
 
   /* link output 1 */
-  sinkpad = gst_element_get_static_pad (sink1, "sink");
+  sinkpad = gst_element_get_static_pad (c1, "sink");
   osel_src1 = gst_element_get_request_pad (osel, "src%d");
   if (gst_pad_link (osel_src1, sinkpad) != GST_PAD_LINK_OK) {
+    g_print ("linking output 1 converter failed\n");
+    return -1;
+  }
+  gst_object_unref (sinkpad);
+
+  if (!gst_element_link (c1, sink1)) {
     g_print ("linking output 1 failed\n");
     return -1;
   }
-  gst_object_unref (sinkpad);
 
   /* link output 2 */
-  sinkpad = gst_element_get_static_pad (convert, "sink");
+  sinkpad = gst_element_get_static_pad (c2, "sink");
   osel_src2 = gst_element_get_request_pad (osel, "src%d");
   if (gst_pad_link (osel_src2, sinkpad) != GST_PAD_LINK_OK) {
-    g_print ("linking output 2 failed\n");
+    g_print ("linking output 2 converter failed\n");
     return -1;
   }
   gst_object_unref (sinkpad);
 
-  if (!gst_element_link (convert, sink2)) {
+  if (!gst_element_link (c2, sink2)) {
     g_print ("linking output 2 failed\n");
     return -1;
   }
