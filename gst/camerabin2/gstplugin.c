@@ -24,11 +24,14 @@
 #endif
 
 #include "gstviewfinderbin.h"
+#include "gstimagecapturebin.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_viewfinder_bin_plugin_init (plugin))
+    return FALSE;
+  if (!gst_image_capture_bin_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstcamerabin2.la
 
 libgstcamerabin2_la_SOURCES = gstviewfinderbin.c \
+				gstimagecapturebin.c \
 				gstplugin.c
 
 libgstcamerabin2_la_CFLAGS = \
@@ -13,4 +14,5 @@ libgstcamerabin2_la_LIBADD = \
 libgstcamerabin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcamerabin2_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstviewfinderbin.h
+noinst_HEADERS = gstviewfinderbin.h \
+		gstimagecapturebin.h
