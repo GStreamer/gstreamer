@@ -1655,7 +1655,6 @@ remove_source (GstURIDecodeBin * bin)
   if (source) {
     GST_DEBUG_OBJECT (bin, "removing old src element");
     gst_element_set_state (source, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (bin), source);
 
     if (bin->src_np_sig_id) {
       g_signal_handler_disconnect (source, bin->src_np_sig_id);
@@ -1665,6 +1664,7 @@ remove_source (GstURIDecodeBin * bin)
       g_signal_handler_disconnect (source, bin->src_nmp_sig_id);
       bin->src_nmp_sig_id = 0;
     }
+    gst_bin_remove (GST_BIN_CAST (bin), source);
     bin->source = NULL;
   }
   if (bin->queue) {
