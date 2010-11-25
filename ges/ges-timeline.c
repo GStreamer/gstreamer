@@ -638,15 +638,13 @@ custom_find_track (TrackPrivate * priv, GESTrack * track)
 gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
-  GList *tmp;
   TrackPrivate *priv;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
-  if (G_UNLIKELY ((tmp =
-              g_list_find_custom (timeline->tracks, (gconstpointer) track,
-                  (GCompareFunc) custom_find_track)))) {
+  if (G_UNLIKELY (g_list_find_custom (timeline->tracks, (gconstpointer) track,
+              (GCompareFunc) custom_find_track))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
   }
