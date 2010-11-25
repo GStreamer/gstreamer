@@ -136,11 +136,9 @@ static void
 gst_opencv_video_filter_class_init (GstOpencvVideoFilterClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseTransformClass *basetrans_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   basetrans_class = (GstBaseTransformClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 
@@ -238,7 +236,7 @@ gst_opencv_video_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   if (klass->cv_set_caps) {
     if (!klass->cv_set_caps (transform, in_width, in_height, in_depth,
-        in_channels, out_width, out_height, out_depth, out_channels))
+            in_channels, out_width, out_height, out_depth, out_channels))
       return FALSE;
   }
 

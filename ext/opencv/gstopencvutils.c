@@ -96,7 +96,7 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
 GstCaps *
 gst_opencv_caps_from_cv_image_type (int cv_type)
 {
-  GstCaps * caps = gst_caps_new_empty ();
+  GstCaps *caps = gst_caps_new_empty ();
   switch (cv_type) {
     case CV_8UC1:
       gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY8));
@@ -116,8 +116,10 @@ gst_opencv_caps_from_cv_image_type (int cv_type)
       gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_ABGR));
       break;
     case CV_16UC1:
-      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY16("1234")));
-      gst_caps_append (caps, gst_caps_from_string (GST_VIDEO_CAPS_GRAY16("4321")));
+      gst_caps_append (caps,
+          gst_caps_from_string (GST_VIDEO_CAPS_GRAY16 ("1234")));
+      gst_caps_append (caps,
+          gst_caps_from_string (GST_VIDEO_CAPS_GRAY16 ("4321")));
       break;
   }
   return caps;

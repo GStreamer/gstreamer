@@ -153,12 +153,8 @@ static void
 gst_cv_dilate_erode_class_init (GstCvDilateErodeClass * klass)
 {
   GObjectClass *gobject_class;
-  GstOpencvVideoFilterClass *gstopencvbasefilter_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

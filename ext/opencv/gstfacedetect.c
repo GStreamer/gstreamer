@@ -201,11 +201,9 @@ static void
 gst_facedetect_class_init (GstfacedetectClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
   parent_class = g_type_class_peek_parent (klass);
 

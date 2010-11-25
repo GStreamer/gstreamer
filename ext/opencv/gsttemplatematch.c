@@ -140,10 +140,8 @@ static void
 gst_templatematch_class_init (GstTemplateMatchClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = gst_templatematch_finalize;
   gobject_class->set_property = gst_templatematch_set_property;
