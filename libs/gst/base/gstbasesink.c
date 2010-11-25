@@ -4369,58 +4369,34 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   return result;
 }
 
-/* get the end position of the last seen object, this is used
- * for EOS and for making sure that we don't report a position we
- * have not reached yet. With LOCK. */
 static gboolean
-gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
+gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     gint64 * cur, gboolean * upstream)
 {
-  GstFormat oformat;
+  GstClock *clock = NULL;
+  gboolean res = FALSE;
+  GstFormat oformat, tformat;
   GstSegment *segment;
-  gboolean ret = TRUE;
+  GstClockTime now, latency;
+  GstClockTimeDiff base;
+  gint64 time, accum, duration;
+  gdouble rate;
+  gint64 last;
+  gboolean last_seen, with_clock, in_paused;
 
-  segment = &basesink->segment;
-  oformat = segment->format;
+  GST_OBJECT_LOCK (basesink);
+  /* we can only get the segment when we are not NULL or READY */
+  if (!basesink->have_newsegment)
+    goto wrong_state;
 
-  if (oformat == GST_FORMAT_TIME) {
-    /* return last observed stream time, we keep the stream time around in the
-     * time format. */
-    *cur = basesink->priv->current_sstop;
-  } else {
-    /* convert last stop to stream time */
-    *cur = gst_segment_to_stream_time (segment, oformat, segment->last_stop);
+  in_paused = FALSE;
+  /* when not in PLAYING or when we're busy with a state change, we
+   * cannot read from the clock so we report time based on the
+   * last seen timestamp. */
+  if (GST_STATE (basesink) != GST_STATE_PLAYING ||
+      GST_STATE_PENDING (basesink) != GST_STATE_VOID_PENDING) {
+    in_paused = TRUE;
   }
-
-  if (*cur != -1 && oformat != format) {
-    GST_OBJECT_UNLOCK (basesink);
-    /* convert to the target format if we need to, release lock first */
-    ret =
-        gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
-    if (!ret) {
-      *cur = -1;
-      *upstream = TRUE;
-    }
-    GST_OBJECT_LOCK (basesink);
-  }
-
-  GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (*cur));
-
-  return ret;
-}
-
-/* get the position when we are PAUSED, this is the stream time of the buffer
- * that prerolled. If no buffer is prerolled (we are still flushing), this
- * value will be -1. With LOCK. */
-static gboolean
-gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur, gboolean * upstream)
-{
-  gboolean res;
-  gint64 time;
-  GstSegment *segment;
-  GstFormat oformat;
 
   /* we don't use the clip segment in pull mode, when seeking we update the
    * main segment directly with the new segment values without it having to be
@@ -4429,171 +4405,167 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
     segment = basesink->abidata.ABI.clip_segment;
   else
     segment = &basesink->segment;
-  oformat = segment->format;
 
-  if (oformat == GST_FORMAT_TIME) {
-    *cur = basesink->priv->current_sstart;
-    if (segment->rate < 0.0 &&
-        GST_CLOCK_TIME_IS_VALID (basesink->priv->current_sstop)) {
-      /* for reverse playback we prefer the stream time stop position if we have
-       * one */
-      *cur = basesink->priv->current_sstop;
-    }
-  } else {
-    *cur = gst_segment_to_stream_time (segment, oformat, segment->last_stop);
-  }
-
-  time = segment->time;
-
-  if (*cur != -1) {
-    *cur = MAX (*cur, time);
-    GST_DEBUG_OBJECT (basesink, "POSITION as max: %" GST_TIME_FORMAT
-        ", time %" GST_TIME_FORMAT, GST_TIME_ARGS (*cur), GST_TIME_ARGS (time));
-  } else {
-    /* we have no buffer, use the segment times. */
-    if (segment->rate >= 0.0) {
-      /* forward, next position is always the time of the segment */
-      *cur = time;
-      GST_DEBUG_OBJECT (basesink, "POSITION as time: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (*cur));
-    } else {
-      /* reverse, next expected timestamp is segment->stop. We use the function
-       * to get things right for negative applied_rates. */
-      *cur = gst_segment_to_stream_time (segment, oformat, segment->stop);
-      GST_DEBUG_OBJECT (basesink, "reverse POSITION: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (*cur));
-    }
-  }
-
-  res = (*cur != -1);
-  if (res && oformat != format) {
-    GST_OBJECT_UNLOCK (basesink);
-    res =
-        gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
-    if (!res) {
-      *cur = -1;
-      *upstream = TRUE;
-    }
-    GST_OBJECT_LOCK (basesink);
-  }
-
-  return res;
-}
-
-static gboolean
-gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur, gboolean * upstream)
-{
-  GstClock *clock;
-  gboolean res = FALSE;
-  GstFormat oformat, tformat;
-  GstClockTime now, latency;
-  GstClockTimeDiff base;
-  gint64 time, accum, duration;
-  gdouble rate;
-  gint64 last;
-
-  GST_OBJECT_LOCK (basesink);
   /* our intermediate time format */
   tformat = GST_FORMAT_TIME;
   /* get the format in the segment */
-  oformat = basesink->segment.format;
+  oformat = segment->format;
 
-  /* can only give answer based on the clock if not EOS */
-  if (G_UNLIKELY (basesink->eos))
-    goto in_eos;
+  /* report with last seen position when EOS */
+  last_seen = basesink->eos;
 
-  /* we can only get the segment when we are not NULL or READY */
-  if (!basesink->have_newsegment)
-    goto wrong_state;
-
-  /* when not in PLAYING or when we're busy with a state change, we
-   * cannot read from the clock so we report time based on the
-   * last seen timestamp. */
-  if (GST_STATE (basesink) != GST_STATE_PLAYING ||
-      GST_STATE_PENDING (basesink) != GST_STATE_VOID_PENDING)
-    goto in_pause;
-
-  /* we need to sync on the clock. */
+  /* assume we will use the clock for getting the current position */
+  with_clock = TRUE;
   if (basesink->sync == FALSE)
-    goto no_sync;
+    with_clock = FALSE;
 
   /* and we need a clock */
   if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
-    goto no_sync;
+    with_clock = FALSE;
+  else
+    gst_object_ref (clock);
 
   /* collect all data we need holding the lock */
-  if (GST_CLOCK_TIME_IS_VALID (basesink->segment.time))
-    time = basesink->segment.time;
+  if (GST_CLOCK_TIME_IS_VALID (segment->time))
+    time = segment->time;
   else
     time = 0;
 
-  if (GST_CLOCK_TIME_IS_VALID (basesink->segment.stop))
-    duration = basesink->segment.stop - basesink->segment.start;
+  if (GST_CLOCK_TIME_IS_VALID (segment->stop))
+    duration = segment->stop - segment->start;
   else
     duration = 0;
 
-  base = GST_ELEMENT_CAST (basesink)->base_time;
-  accum = basesink->segment.accum;
-  rate = basesink->segment.rate * basesink->segment.applied_rate;
+  accum = segment->accum;
+  rate = segment->rate * segment->applied_rate;
   latency = basesink->priv->latency;
 
-  gst_object_ref (clock);
+  if (oformat == GST_FORMAT_TIME) {
+    gint64 start, stop;
 
-  /* this function might release the LOCK */
-  gst_base_sink_get_position_last (basesink, format, &last, upstream);
+    start = basesink->priv->current_sstart;
+    stop = basesink->priv->current_sstop;
+
+    if (in_paused) {
+      /* in paused we use the last position as a lower bound */
+      if (stop == -1 || segment->rate > 0.0)
+        last = start;
+      else
+        last = stop;
+    } else {
+      /* in playing, use last stop time as upper bound */
+      if (start == -1 || segment->rate > 0.0)
+        last = stop;
+      else
+        last = start;
+    }
+  } else {
+    /* convert last stop to stream time */
+    last = gst_segment_to_stream_time (segment, oformat, segment->last_stop);
+  }
+
+  if (in_paused) {
+    /* in paused, use start_time */
+    base = GST_ELEMENT_START_TIME (basesink);
+    GST_DEBUG_OBJECT (basesink, "in paused, using start time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base));
+  } else if (with_clock) {
+    /* else use clock when needed */
+    base = GST_ELEMENT_CAST (basesink)->base_time;
+    GST_DEBUG_OBJECT (basesink, "using clock and base time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base));
+  } else {
+    /* else, no sync or clock -> no base time */
+    GST_DEBUG_OBJECT (basesink, "no sync or no clock");
+    base = -1;
+  }
+
+  /* no base, we can't calculate running_time, use last seem timestamp to report
+   * time */
+  if (base == -1)
+    last_seen = TRUE;
 
   /* need to release the object lock before we can get the time,
    * a clock might take the LOCK of the provider, which could be
    * a basesink subclass. */
   GST_OBJECT_UNLOCK (basesink);
 
-  now = gst_clock_get_time (clock);
+  if (last_seen) {
+    /* in EOS or when no valid stream_time, report the value of last seen
+     * timestamp */
+    if (last == -1) {
+      /* no timestamp, we need to ask upstream */
+      GST_DEBUG_OBJECT (basesink, "no last seen timestamp, asking upstream");
+      res = FALSE;
+      *upstream = TRUE;
+      goto done;
+    }
+    GST_DEBUG_OBJECT (basesink, "using last seen timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (last));
+    *cur = last;
+  } else {
+    if (oformat != tformat) {
+      /* convert accum, time and duration to time */
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, accum, &tformat,
+              &accum))
+        goto convert_failed;
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, duration,
+              &tformat, &duration))
+        goto convert_failed;
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, time, &tformat,
+              &time))
+        goto convert_failed;
+      if (!gst_pad_query_convert (basesink->sinkpad, oformat, last, &tformat,
+              &last))
+        goto convert_failed;
 
-  if (oformat != tformat) {
-    /* convert accum, time and duration to time */
-    if (!gst_pad_query_convert (basesink->sinkpad, oformat, accum, &tformat,
-            &accum))
-      goto convert_failed;
-    if (!gst_pad_query_convert (basesink->sinkpad, oformat, duration, &tformat,
-            &duration))
-      goto convert_failed;
-    if (!gst_pad_query_convert (basesink->sinkpad, oformat, time, &tformat,
-            &time))
-      goto convert_failed;
+      /* assume time format from now on */
+      oformat = tformat;
+    }
+
+    if (!in_paused && with_clock) {
+      now = gst_clock_get_time (clock);
+    } else {
+      now = base;
+      base = 0;
+    }
+
+    /* subtract base time and accumulated time from the clock time.
+     * Make sure we don't go negative. This is the current time in
+     * the segment which we need to scale with the combined
+     * rate and applied rate. */
+    base += accum;
+    base += latency;
+    if (GST_CLOCK_DIFF (base, now) < 0)
+      base = now;
+
+    /* for negative rates we need to count back from the segment
+     * duration. */
+    if (rate < 0.0)
+      time += duration;
+
+    *cur = time + gst_guint64_to_gdouble (now - base) * rate;
+
+    if (in_paused) {
+      /* never report less than segment values in paused */
+      if (last != -1)
+        *cur = MAX (last, *cur);
+    } else {
+      /* never report more than last seen position in playing */
+      if (last != -1)
+        *cur = MIN (last, *cur);
+    }
+
+    GST_DEBUG_OBJECT (basesink,
+        "now %" GST_TIME_FORMAT " - base %" GST_TIME_FORMAT " - accum %"
+        GST_TIME_FORMAT " + time %" GST_TIME_FORMAT "  last %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (now), GST_TIME_ARGS (base), GST_TIME_ARGS (accum),
+        GST_TIME_ARGS (time), GST_TIME_ARGS (last));
   }
 
-  /* subtract base time and accumulated time from the clock time.
-   * Make sure we don't go negative. This is the current time in
-   * the segment which we need to scale with the combined
-   * rate and applied rate. */
-  base += accum;
-  base += latency;
-  if (GST_CLOCK_DIFF (base, now) < 0)
-    base = now;
-
-  /* for negative rates we need to count back from the segment
-   * duration. */
-  if (rate < 0.0)
-    time += duration;
-
-  *cur = time + gst_guint64_to_gdouble (now - base) * rate;
-
-  /* never report more than last seen position */
-  if (last != -1)
-    *cur = MIN (last, *cur);
-
-  gst_object_unref (clock);
-
-  GST_DEBUG_OBJECT (basesink,
-      "now %" GST_TIME_FORMAT " - base %" GST_TIME_FORMAT " - accum %"
-      GST_TIME_FORMAT " + time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (now), GST_TIME_ARGS (base),
-      GST_TIME_ARGS (accum), GST_TIME_ARGS (time));
-
   if (oformat != format) {
-    /* convert time to final format */
-    if (!gst_pad_query_convert (basesink->sinkpad, tformat, *cur, &format, cur))
+    /* convert to final format */
+    if (!gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur))
       goto convert_failed;
   }
 
@@ -4602,23 +4574,13 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 done:
   GST_DEBUG_OBJECT (basesink, "res: %d, POSITION: %" GST_TIME_FORMAT,
       res, GST_TIME_ARGS (*cur));
+
+  if (clock)
+    gst_object_unref (clock);
+
   return res;
 
   /* special cases */
-in_eos:
-  {
-    GST_DEBUG_OBJECT (basesink, "position in EOS");
-    res = gst_base_sink_get_position_last (basesink, format, cur, upstream);
-    GST_OBJECT_UNLOCK (basesink);
-    goto done;
-  }
-in_pause:
-  {
-    GST_DEBUG_OBJECT (basesink, "position in PAUSED");
-    res = gst_base_sink_get_position_paused (basesink, format, cur, upstream);
-    GST_OBJECT_UNLOCK (basesink);
-    goto done;
-  }
 wrong_state:
   {
     /* in NULL or READY we always return FALSE and -1 */
@@ -4628,24 +4590,12 @@ wrong_state:
     GST_OBJECT_UNLOCK (basesink);
     goto done;
   }
-no_sync:
-  {
-    /* report last seen timestamp if any, else ask upstream to answer */
-    if ((*cur = basesink->priv->current_sstart) != -1)
-      res = TRUE;
-    else
-      *upstream = TRUE;
-
-    GST_DEBUG_OBJECT (basesink, "no sync, res %d, POSITION %" GST_TIME_FORMAT,
-        res, GST_TIME_ARGS (*cur));
-    GST_OBJECT_UNLOCK (basesink);
-    return res;
-  }
 convert_failed:
   {
     GST_DEBUG_OBJECT (basesink, "convert failed, try upstream");
     *upstream = TRUE;
-    return FALSE;
+    res = FALSE;
+    goto done;
   }
 }
 

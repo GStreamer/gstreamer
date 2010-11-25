@@ -838,7 +838,7 @@ GST_START_TEST (test_position)
   qformat = GST_FORMAT_TIME;
   qret = gst_element_query_position (sink, &qformat, &qcur);
   fail_unless (qret == TRUE);
-  fail_unless (qcur == 2 * GST_SECOND);
+  fail_unless (qcur >= 4 * GST_SECOND);
 
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);

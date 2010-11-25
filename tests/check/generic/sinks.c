@@ -1143,7 +1143,7 @@ GST_START_TEST (test_async_done)
   gst_element_query_position (sink, &format, &position);
   GST_DEBUG ("last buffer position %" GST_TIME_FORMAT,
       GST_TIME_ARGS (position));
-  fail_unless (position == 210 * GST_SECOND, "position is wrong");
+  fail_unless (position == 310 * GST_SECOND, "position is wrong");
 
   gst_object_unref (sinkpad);
 
