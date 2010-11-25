@@ -1131,7 +1131,7 @@ gst_base_parse_update_bitrates (GstBaseParse * parse, GstBuffer * buffer)
 
   /* duration should be valid by now,
    * either set by subclass or maybe based on fps settings */
-  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+  if (GST_BUFFER_DURATION_IS_VALID (buffer) && parse->priv->acc_duration != 0) {
     /* Calculate duration of a frame from buffer properties */
     frame_dur = GST_BUFFER_DURATION (buffer);
     parse->priv->avg_bitrate = (8 * parse->priv->data_bytecount * GST_SECOND) /
