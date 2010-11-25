@@ -74,8 +74,6 @@ static const gint block_size_wb[16] =
 #define AMR_FRAME_DURATION (GST_SECOND/AMR_FRAMES_PER_SECOND)
 #define AMR_MIME_HEADER_SIZE 9
 
-static void gst_amrparse_finalize (GObject * object);
-
 gboolean gst_amrparse_start (GstBaseParse * parse);
 gboolean gst_amrparse_stop (GstBaseParse * parse);
 
@@ -126,10 +124,7 @@ gst_amrparse_base_init (gpointer klass)
 static void
 gst_amrparse_class_init (GstAmrParseClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
-
-  object_class->finalize = gst_amrparse_finalize;
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_amrparse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_amrparse_stop);
@@ -153,21 +148,6 @@ gst_amrparse_init (GstAmrParse * amrparse, GstAmrParseClass * klass)
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (amrparse), 62);
   GST_DEBUG ("initialized");
 
-}
-
-
-/**
- * gst_amrparse_finalize:
- * @object:
- *
- */
-static void
-gst_amrparse_finalize (GObject * object)
-{
-  GstAmrParse *amrparse;
-
-  amrparse = GST_AMRPARSE (object);
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
@@ -352,10 +332,6 @@ gst_amrparse_check_valid_frame (GstBaseParse * parse,
 GstFlowReturn
 gst_amrparse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 {
-  GstAmrParse *amrparse;
-
-  amrparse = GST_AMRPARSE (parse);
-
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
   return GST_FLOW_OK;
 }
