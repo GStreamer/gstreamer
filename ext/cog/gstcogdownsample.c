@@ -147,11 +147,9 @@ gst_cogdownsample_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *base_transform_class;
-  GstCogdownsampleClass *downsample_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
   base_transform_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  downsample_class = GST_COGDOWNSAMPLE_CLASS (g_class);
 
   gobject_class->set_property = gst_cogdownsample_set_property;
   gobject_class->get_property = gst_cogdownsample_get_property;
