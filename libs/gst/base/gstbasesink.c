@@ -2288,7 +2288,7 @@ gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
     GST_DEBUG_OBJECT (sink, "checking preroll");
 
     /* first wait for the playing state before we can continue */
-    if (G_UNLIKELY (sink->need_preroll)) {
+    while (G_UNLIKELY (sink->need_preroll)) {
       ret = gst_base_sink_wait_preroll (sink);
       if ((ret != GST_FLOW_OK) && (ret != GST_FLOW_STEP))
         goto flushing;
