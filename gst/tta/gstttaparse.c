@@ -319,7 +319,6 @@ gst_tta_parse_activate_pull (GstPad * pad, gboolean active)
 static GstFlowReturn
 gst_tta_parse_parse_header (GstTtaParse * ttaparse)
 {
-  GstFlowReturn res;
   guchar *data;
   GstBuffer *buf = NULL;
   guint32 crc;
@@ -330,8 +329,7 @@ gst_tta_parse_parse_header (GstTtaParse * ttaparse)
   guint32 offset;
   GstEvent *discont;
 
-  if ((res = gst_pad_pull_range (ttaparse->sinkpad,
-              0, 22, &buf)) != GST_FLOW_OK)
+  if (gst_pad_pull_range (ttaparse->sinkpad, 0, 22, &buf) != GST_FLOW_OK)
     goto pull_fail;
   data = GST_BUFFER_DATA (buf);
   ttaparse->channels = GST_READ_UINT16_LE (data + 6);
@@ -349,8 +347,8 @@ gst_tta_parse_parse_header (GstTtaParse * ttaparse)
 
   ttaparse->index =
       (GstTtaIndex *) g_malloc (num_frames * sizeof (GstTtaIndex));
-  if ((res = gst_pad_pull_range (ttaparse->sinkpad,
-              22, num_frames * 4 + 4, &buf)) != GST_FLOW_OK)
+  if (gst_pad_pull_range (ttaparse->sinkpad,
+          22, num_frames * 4 + 4, &buf) != GST_FLOW_OK)
     goto pull_fail;
   data = GST_BUFFER_DATA (buf);
 

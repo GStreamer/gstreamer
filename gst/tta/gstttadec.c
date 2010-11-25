@@ -199,10 +199,8 @@ static void
 gst_tta_dec_class_init (GstTtaDecClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   parent = g_type_class_peek_parent (klass);
 
