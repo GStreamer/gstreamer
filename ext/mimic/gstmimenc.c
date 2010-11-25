@@ -140,10 +140,8 @@ gst_mim_enc_base_init (gpointer klass)
 static void
 gst_mim_enc_class_init (GstMimEncClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_mim_enc_change_state);
 
