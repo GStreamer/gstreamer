@@ -1085,6 +1085,9 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   if (G_UNLIKELY (!buf->acquired))
     goto not_acquired;
 
+  if (G_UNLIKELY (g_atomic_int_get (&buf->abidata.ABI.may_start) == FALSE))
+    goto may_not_start;
+
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
@@ -1134,6 +1137,12 @@ flushing:
 not_acquired:
   {
     GST_DEBUG_OBJECT (buf, "we are not acquired");
+    GST_OBJECT_UNLOCK (buf);
+    return FALSE;
+  }
+may_not_start:
+  {
+    GST_DEBUG_OBJECT (buf, "we may not start");
     GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
