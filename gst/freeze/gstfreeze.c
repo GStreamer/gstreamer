@@ -233,7 +233,6 @@ static GstFlowReturn
 gst_freeze_play (GstPad * pad, GstBuffer * buff)
 {
   GstFreeze *freeze;
-  guint64 cur_offset;
   GstFlowReturn ret = GST_FLOW_OK;
 
   freeze = GST_FREEZE (gst_pad_get_parent (pad));
@@ -243,7 +242,6 @@ gst_freeze_play (GstPad * pad, GstBuffer * buff)
     return GST_FLOW_WRONG_STATE;
   }
 
-  cur_offset = freeze->offset;
   /* If it is working in push mode this function will be called by "_chain"
      and buff will never be NULL. In pull mode this function will be called
      by _loop and buff will be NULL */
@@ -303,10 +301,6 @@ gst_freeze_loop (GstPad * pad)
 static gboolean
 gst_freeze_sink_activate (GstPad * sinkpad)
 {
-  GstFreeze *freeze;
-
-  freeze = GST_FREEZE (GST_PAD_PARENT (sinkpad));
-
   if (gst_pad_check_pull_range (sinkpad)) {
     return gst_pad_activate_pull (sinkpad, TRUE);
   } else {
