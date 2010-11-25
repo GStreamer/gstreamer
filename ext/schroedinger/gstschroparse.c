@@ -100,8 +100,6 @@ enum
   ARG_0
 };
 
-static void gst_schro_parse_finalize (GObject * object);
-
 static gboolean gst_schro_parse_start (GstBaseVideoParse * base_video_parse);
 static gboolean gst_schro_parse_stop (GstBaseVideoParse * base_video_parse);
 static gboolean gst_schro_parse_reset (GstBaseVideoParse * base_video_parse);
@@ -152,15 +150,9 @@ gst_schro_parse_base_init (gpointer g_class)
 static void
 gst_schro_parse_class_init (GstSchroParseClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class;
   GstBaseVideoParseClass *base_video_parse_class;
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
   base_video_parse_class = GST_BASE_VIDEO_PARSE_CLASS (klass);
-
-  gobject_class->finalize = gst_schro_parse_finalize;
 
   base_video_parse_class->start = GST_DEBUG_FUNCPTR (gst_schro_parse_start);
   base_video_parse_class->stop = GST_DEBUG_FUNCPTR (gst_schro_parse_stop);
@@ -191,24 +183,9 @@ gst_schro_parse_init (GstSchroParse * schro_parse, GstSchroParseClass * klass)
 static gboolean
 gst_schro_parse_reset (GstBaseVideoParse * base_video_parse)
 {
-  GstSchroParse *schro_parse;
-
-  schro_parse = GST_SCHRO_PARSE (base_video_parse);
-
   GST_DEBUG ("reset");
 
   return TRUE;
-}
-
-static void
-gst_schro_parse_finalize (GObject * object)
-{
-  GstSchroParse *schro_parse;
-
-  g_return_if_fail (GST_IS_SCHRO_PARSE (object));
-  schro_parse = GST_SCHRO_PARSE (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -490,9 +467,6 @@ gst_schro_parse_shape_output_mpeg_ts (GstBaseVideoParse * base_video_parse,
     GstVideoFrame * frame)
 {
   GstBuffer *buf = frame->src_buffer;
-  const GstVideoState *state;
-
-  state = gst_base_video_parse_get_state (base_video_parse);
 
   return gst_base_video_parse_push (base_video_parse, buf);
 }

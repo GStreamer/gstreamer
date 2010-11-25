@@ -133,10 +133,8 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseVideoDecoderClass *base_video_decoder_class;
-  GstElementClass *element_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
   base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
 
   gobject_class->set_property = gst_schro_dec_set_property;
@@ -656,13 +654,10 @@ gst_schro_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
   GstSchroDec *schro_dec;
   int schro_ret;
   SchroBuffer *input_buffer;
-  GstVideoState *state;
 
   schro_dec = GST_SCHRO_DEC (base_video_decoder);
 
   GST_DEBUG ("handle frame");
-
-  state = gst_base_video_decoder_get_state (base_video_decoder);
 
   gst_base_video_decoder_set_src_caps (base_video_decoder);
 
