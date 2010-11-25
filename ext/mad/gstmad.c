@@ -1330,10 +1330,6 @@ gst_mad_flush_decode (GstMad * mad)
   /* now send queued data downstream */
   while (mad->queued) {
     GstBuffer *buf = GST_BUFFER_CAST (mad->queued->data);
-    GstClockTime timestamp, duration;
-
-    timestamp = GST_BUFFER_TIMESTAMP (buf);
-    duration = GST_BUFFER_DURATION (buf);
 
     GST_DEBUG_OBJECT (mad, "pushing buffer %p of size %u, "
         "time %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT, buf,
