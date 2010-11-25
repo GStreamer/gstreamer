@@ -120,11 +120,8 @@ gst_measure_collector_collect (GstMeasureCollector * mc, GstEvent * gstevent)
 static void
 gst_measure_collector_post_message (GstMeasureCollector * mc)
 {
-  GstBaseTransform *trans;
   GstMessage *m;
   guint64 i;
-
-  trans = GST_BASE_TRANSFORM_CAST (mc);
 
   g_return_if_fail (mc->metric);
 

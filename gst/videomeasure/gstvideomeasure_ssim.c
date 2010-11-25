@@ -866,14 +866,11 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
 static gboolean
 forward_event (GstSSim * ssim, GstEvent * event)
 {
-  gboolean ret;
   GstIterator *it;
   GValue vret = { 0 };
 
   GST_LOG_OBJECT (ssim, "Forwarding event %p (%s)", event,
       GST_EVENT_TYPE_NAME (event));
-
-  ret = TRUE;
 
   g_value_init (&vret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&vret, TRUE);
@@ -883,9 +880,7 @@ forward_event (GstSSim * ssim, GstEvent * event)
   gst_iterator_free (it);
   gst_event_unref (event);
 
-  ret = g_value_get_boolean (&vret);
-
-  return ret;
+  return g_value_get_boolean (&vret);
 }
 
 static gboolean
