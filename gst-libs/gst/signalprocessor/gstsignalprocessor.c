@@ -803,14 +803,11 @@ gst_signal_processor_update_outputs (GstSignalProcessor * self,
 static gboolean
 gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
 {
-  GstElement *elem;
   GstSignalProcessorClass *klass;
 
   /* check if we have buffers enqueued */
   g_return_val_if_fail (self->pending_in == 0, FALSE);
   g_return_val_if_fail (self->pending_out == 0, FALSE);
-
-  elem = GST_ELEMENT (self);
 
   /* check how much input is available and prepare output buffers */
   nframes = gst_signal_processor_prepare (self, nframes);
@@ -1046,10 +1043,8 @@ gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = TRUE;
   GstSignalProcessor *self;
-  GstSignalProcessorClass *bclass;
 
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
-  bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   if (active) {
     if (self->mode == GST_ACTIVATE_NONE) {
@@ -1085,10 +1080,8 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean result = TRUE;
   GstSignalProcessor *self;
-  GstSignalProcessorClass *bclass;
 
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
-  bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   if (active) {
     if (self->mode == GST_ACTIVATE_NONE) {
