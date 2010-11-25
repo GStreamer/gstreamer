@@ -865,14 +865,11 @@ configure_format (GstV4l2CameraSrc * self, GstCaps * caps)
 {
   GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC (self);
   GstStructure *st;
-  gint width, height;
 
   st = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (st, "width", &width);
-  gst_structure_get_int (st, "height", &height);
-
-  g_object_set (self, "width", width, "height", height, NULL);
+  gst_structure_get_int (st, "width", &bcamsrc->width);
+  gst_structure_get_int (st, "height", &bcamsrc->height);
 
   if (gst_structure_has_field_typed (st, "framerate", GST_TYPE_FRACTION)) {
     gst_structure_get_fraction (st, "framerate", &bcamsrc->fps_n,
