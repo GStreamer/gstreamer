@@ -385,14 +385,13 @@ is_multicast_address (const gchar * host_name)
   struct addrinfo *ai;
   struct addrinfo *res;
   gboolean ret = FALSE;
-  int err;
 
   memset (&hints, 0, sizeof (hints));
   hints.ai_socktype = SOCK_DGRAM;
 
   g_return_val_if_fail (host_name, FALSE);
 
-  if ((err = getaddrinfo (host_name, NULL, &hints, &res)) < 0)
+  if (getaddrinfo (host_name, NULL, &hints, &res) < 0)
     return FALSE;
 
   for (ai = res; !ret && ai; ai = ai->ai_next) {
@@ -415,7 +414,7 @@ static GstSDPStream *
 gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
 {
   GstSDPStream *stream;
-  const gchar *payload, *rtcp;
+  const gchar *payload;
   const GstSDPMedia *media;
   const GstSDPConnection *conn;
 
@@ -464,7 +463,7 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
   stream->multicast = is_multicast_address (stream->destination);
 
   stream->rtp_port = gst_sdp_media_get_port (media);
-  if ((rtcp = gst_sdp_media_get_attribute_val (media, "rtcp"))) {
+  if (gst_sdp_media_get_attribute_val (media, "rtcp")) {
     /* FIXME, RFC 3605 */
     stream->rtcp_port = stream->rtp_port + 1;
   } else {
