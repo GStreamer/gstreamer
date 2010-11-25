@@ -77,8 +77,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_aacparse_debug);
 
 #define AAC_FRAME_DURATION(parse) (GST_SECOND/parse->frames_per_sec)
 
-static void gst_aacparse_finalize (GObject * object);
-
 gboolean gst_aacparse_start (GstBaseParse * parse);
 gboolean gst_aacparse_stop (GstBaseParse * parse);
 
@@ -148,10 +146,7 @@ gst_aacparse_base_init (gpointer klass)
 static void
 gst_aacparse_class_init (GstAacParseClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
-
-  object_class->finalize = gst_aacparse_finalize;
 
   parse_class->start = GST_DEBUG_FUNCPTR (gst_aacparse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_aacparse_stop);
@@ -174,21 +169,6 @@ static void
 gst_aacparse_init (GstAacParse * aacparse, GstAacParseClass * klass)
 {
   GST_DEBUG ("initialized");
-}
-
-
-/**
- * gst_aacparse_finalize:
- * @object:
- *
- */
-static void
-gst_aacparse_finalize (GObject * object)
-{
-  GstAacParse *aacparse;
-
-  aacparse = GST_AACPARSE (object);
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
@@ -716,9 +696,6 @@ gst_aacparse_start (GstBaseParse * parse)
 gboolean
 gst_aacparse_stop (GstBaseParse * parse)
 {
-  GstAacParse *aacparse;
-
-  aacparse = GST_AACPARSE (parse);
   GST_DEBUG ("stop");
   return TRUE;
 }
