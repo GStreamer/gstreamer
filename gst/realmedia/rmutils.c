@@ -181,7 +181,7 @@ gst_rm_utils_swap_nibbles (guint8 * data, gint idx1, gint idx2, gint len)
     }
   } else {
     /* preload nibbles from source */
-    tmp2n = tmp1 = tmp1n = *d1;
+    tmp2n = *d1;
     tmp2 = *d2;
 
     for (; len > 1; len -= 2) {
