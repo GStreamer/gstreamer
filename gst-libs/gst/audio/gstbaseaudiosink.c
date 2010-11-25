@@ -417,13 +417,6 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
 
       GST_DEBUG_OBJECT (basesink, "latency query");
 
-      if (!basesink->ringbuffer || !basesink->ringbuffer->spec.rate) {
-        GST_DEBUG_OBJECT (basesink,
-            "we are not yet negotiated, can't report latency yet");
-        res = FALSE;
-        goto done;
-      }
-
       /* ask parent first, it will do an upstream query for us. */
       if ((res =
               gst_base_sink_query_latency (GST_BASE_SINK_CAST (basesink), &live,
@@ -434,6 +427,15 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
         if (live && us_live) {
           GstRingBufferSpec *spec;
 
+          GST_OBJECT_LOCK (basesink);
+          if (!basesink->ringbuffer || !basesink->ringbuffer->spec.rate) {
+            GST_OBJECT_UNLOCK (basesink);
+
+            GST_DEBUG_OBJECT (basesink,
+                "we are not yet negotiated, can't report latency yet");
+            res = FALSE;
+            goto done;
+          }
           spec = &basesink->ringbuffer->spec;
 
           basesink->priv->us_latency = min_l;
@@ -441,6 +443,7 @@ gst_base_audio_sink_query (GstElement * element, GstQuery * query)
           min_latency =
               gst_util_uint64_scale_int (spec->seglatency * spec->segsize,
               GST_SECOND, spec->rate * spec->bytes_per_sample);
+          GST_OBJECT_UNLOCK (basesink);
 
           /* we cannot go lower than the buffer size and the min peer latency */
           min_latency = min_latency + min_l;
