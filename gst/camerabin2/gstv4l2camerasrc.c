@@ -613,9 +613,6 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   } else {
     set_capsfilter_caps (self, self->image_capture_caps);
   }
-
-//XXX  g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
-//XXX      "active-pad", camera->pad_src_img, NULL);
 }
 
 static void
@@ -676,8 +673,6 @@ start_image_capture (GstV4l2CameraSrc * self)
         self->image_capture_caps, self);
 
   } else {
-//XXX    g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
-//XXX        "active-pad", camera->pad_src_img, NULL);
     ret = TRUE;
   }
 

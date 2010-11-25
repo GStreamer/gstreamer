@@ -58,7 +58,6 @@ struct _GstV4l2CameraSrc
   GstElement *src_zoom_crop;
   GstElement *src_zoom_scale;
   GstElement *src_zoom_filter;
-  GstElement *src_out_sel;
 
   /* srcpads of tee */
   GstPad *tee_vf_srcpad;
