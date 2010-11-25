@@ -95,10 +95,8 @@ static void
 gst_ivf_parse_class_init (GstIvfParseClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->dispose = gst_ivf_parse_dispose;
 }
