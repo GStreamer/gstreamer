@@ -90,7 +90,6 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
 {
   fd_set testfds;
   int maxfdp1;
-  int ret;
   gssize bytes_read;
 #ifndef G_OS_WIN32
   int readsize;
@@ -108,7 +107,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   maxfdp1 = socket + 1;
 
   /* no action (0) is also an error in our case */
-  if ((ret = select (maxfdp1, &testfds, NULL, NULL, 0)) <= 0) {
+  if (select (maxfdp1, &testfds, NULL, NULL, 0) <= 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("select failed: %s", g_strerror (errno)));
     return GST_FLOW_ERROR;
@@ -116,11 +115,11 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
 
   /* ask how much is available for reading on the socket */
 #ifndef G_OS_WIN32
-  if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0) {
+  if (ioctl (socket, FIONREAD, &readsize) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("read FIONREAD value failed: %s", g_strerror (errno)));
 #else
-  if ((ret = ioctlsocket (socket, FIONREAD, &readsize)) == SOCKET_ERROR) {
+  if (ioctlsocket (socket, FIONREAD, &readsize) == SOCKET_ERROR) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("read FIONREAD value failed: %s", g_strerror (WSAGetLastError ())));
 #endif
