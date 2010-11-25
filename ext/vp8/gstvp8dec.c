@@ -91,7 +91,6 @@ gst_vp8_dec_post_processing_flags_get_type (void)
 
 #undef C_FLAGS
 
-static void gst_vp8_dec_finalize (GObject * object);
 static void gst_vp8_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_vp8_dec_get_property (GObject * object, guint prop_id,
@@ -142,16 +141,13 @@ static void
 gst_vp8_dec_class_init (GstVP8DecClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *element_class;
   GstBaseVideoDecoderClass *base_video_decoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
   base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
 
   gobject_class->set_property = gst_vp8_dec_set_property;
   gobject_class->get_property = gst_vp8_dec_get_property;
-  gobject_class->finalize = gst_vp8_dec_finalize;
 
   g_object_class_install_property (gobject_class, PROP_POST_PROCESSING,
       g_param_spec_boolean ("post-processing", "Post Processing",
@@ -196,19 +192,6 @@ gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec, GstVP8DecClass * klass)
   gst_vp8_dec->post_processing_flags = DEFAULT_POST_PROCESSING_FLAGS;
   gst_vp8_dec->deblocking_level = DEFAULT_DEBLOCKING_LEVEL;
   gst_vp8_dec->noise_level = DEFAULT_NOISE_LEVEL;
-}
-
-static void
-gst_vp8_dec_finalize (GObject * object)
-{
-  GstVP8Dec *gst_vp8_dec;
-
-  GST_DEBUG_OBJECT (object, "finalize");
-
-  g_return_if_fail (GST_IS_VP8_DEC (object));
-  gst_vp8_dec = GST_VP8_DEC (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
