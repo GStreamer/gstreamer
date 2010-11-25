@@ -56,8 +56,6 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   int h_shift, v_shift;
   int chroma_width;
   int chroma_height;
-  int ext_width;
-  int ext_height;
 
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
@@ -67,9 +65,6 @@ cog_frame_new_and_alloc_extended (CogMemoryDomain * domain,
   frame->height = height;
   frame->domain = domain;
   frame->extension = extension;
-
-  ext_width = width + extension * 2;
-  ext_height = height + extension * 2;
 
   if (COG_FRAME_IS_PACKED (format)) {
     g_return_val_if_fail (extension == 0, NULL);
