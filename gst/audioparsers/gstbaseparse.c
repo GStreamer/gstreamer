@@ -944,9 +944,6 @@ static gboolean
 gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
 {
   gboolean handled = FALSE;
-  GstBaseParseClass *bclass;
-
-  bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -2728,11 +2725,9 @@ static gboolean
 gst_base_parse_query (GstPad * pad, GstQuery * query)
 {
   GstBaseParse *parse;
-  GstBaseParseClass *klass;
   gboolean res = FALSE;
 
   parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
 
   GST_LOG_OBJECT (parse, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -3107,7 +3102,6 @@ exit:
 static gboolean
 gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
 {
-  GstBaseParseClass *klass;
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
@@ -3117,8 +3111,6 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   GstSegment seeksegment = { 0, };
   GstFormat dstformat;
   GstClockTime start_ts;
-
-  klass = GST_BASE_PARSE_GET_CLASS (parse);
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
