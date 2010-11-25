@@ -137,10 +137,8 @@ static void
 gst_dvd_spu_class_init (GstDVDSpuClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->dispose = (GObjectFinalizeFunc) gst_dvd_spu_dispose;
   gobject_class->finalize = (GObjectFinalizeFunc) gst_dvd_spu_finalize;
