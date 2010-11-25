@@ -73,6 +73,7 @@ ges_timeline_object_get_property (GObject * object, guint property_id,
       break;
     case PROP_PRIORITY:
       g_value_set_uint (value, tobj->priority);
+      break;
     case PROP_HEIGHT:
       g_value_set_uint (value, tobj->height);
       break;
