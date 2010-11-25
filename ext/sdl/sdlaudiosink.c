@@ -157,15 +157,11 @@ static void
 gst_sdlaudio_sink_class_init (GstSDLAudioSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
   GstAudioSinkClass *gstaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_sdlaudio_sink_dispose);
@@ -206,14 +202,8 @@ gst_sdlaudio_sink_init (GstSDLAudioSink * sdlaudiosink,
 static GstCaps *
 gst_sdlaudio_sink_getcaps (GstBaseSink * bsink)
 {
-  GstSDLAudioSink *sdlaudiosink;
-  GstCaps *caps = NULL;
-
-  sdlaudiosink = GST_SDLAUDIOSINK (bsink);
-
-  caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
+  return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
           (bsink)));
-  return caps;
 }
 
 static gint
