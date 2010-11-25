@@ -210,11 +210,9 @@ static void
 gst_vp8_enc_class_init (GstVP8EncClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *element_class;
   GstBaseVideoEncoderClass *base_video_encoder_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
   base_video_encoder_class = GST_BASE_VIDEO_ENCODER_CLASS (klass);
 
   gobject_class->set_property = gst_vp8_enc_set_property;
@@ -442,11 +440,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_vp8_enc_start (GstBaseVideoEncoder * base_video_encoder)
 {
-  GstVP8Enc *encoder;
-
   GST_DEBUG_OBJECT (base_video_encoder, "start");
-
-  encoder = GST_VP8_ENC (base_video_encoder);
 
   return TRUE;
 }
@@ -485,11 +479,7 @@ static gboolean
 gst_vp8_enc_set_format (GstBaseVideoEncoder * base_video_encoder,
     GstVideoState * state)
 {
-  GstVP8Enc *encoder;
-
   GST_DEBUG_OBJECT (base_video_encoder, "set_format");
-
-  encoder = GST_VP8_ENC (base_video_encoder);
 
   return TRUE;
 }
@@ -499,7 +489,6 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
 {
   GstCaps *caps;
   const GstVideoState *state;
-  GstVP8Enc *encoder;
   GstTagList *tags = NULL;
   const GstTagList *iface_tags;
   GstBuffer *stream_hdr, *vorbiscomment;
@@ -507,8 +496,6 @@ gst_vp8_enc_get_caps (GstBaseVideoEncoder * base_video_encoder)
   GstStructure *s;
   GValue array = { 0 };
   GValue value = { 0 };
-
-  encoder = GST_VP8_ENC (base_video_encoder);
 
   state = gst_base_video_encoder_get_state (base_video_encoder);
 
@@ -713,7 +700,6 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
 {
   GstVP8Enc *encoder;
   const GstVideoState *state;
-  guint8 *src;
   vpx_codec_err_t status;
   int flags = 0;
   vpx_codec_iter_t iter = NULL;
@@ -724,7 +710,6 @@ gst_vp8_enc_handle_frame (GstBaseVideoEncoder * base_video_encoder,
   GST_DEBUG_OBJECT (base_video_encoder, "handle_frame");
 
   encoder = GST_VP8_ENC (base_video_encoder);
-  src = GST_BUFFER_DATA (frame->sink_buffer);
 
   state = gst_base_video_encoder_get_state (base_video_encoder);
   encoder->n_frames++;
