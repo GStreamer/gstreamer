@@ -318,15 +318,17 @@ print_transition_list (void)
   tr = ges_timeline_transition_new (GES_VIDEO_TRANSITION_TYPE_CROSSFADE);
   klass = GES_TIMELINE_TRANSITION_GET_CLASS (tr);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype");
+  if ((pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vtype"))) {
 
-  smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+    smpte_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
 
-  for (v = smpte_class->values; v->value != 0; v++) {
-    g_print ("%s\n", v->value_nick);
+    for (v = smpte_class->values; v->value != 0; v++) {
+      g_print ("%s\n", v->value_nick);
+    }
+
+    g_type_class_unref (smpte_class);
   }
 
-  g_type_class_unref (smpte_class);
   g_object_unref (tr);
 }
 
@@ -342,15 +344,17 @@ print_pattern_list (void)
   tr = ges_timeline_test_source_new ();
   klass = GES_TIMELINE_TEST_SOURCE_GET_CLASS (tr);
 
-  pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern");
+  if ((pspec =
+          g_object_class_find_property (G_OBJECT_CLASS (klass), "vpattern"))) {
 
-  enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
+    enum_class = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
 
-  for (v = enum_class->values; v->value_nick != NULL; v++) {
-    g_print ("%s\n", v->value_nick);
+    for (v = enum_class->values; v->value_nick != NULL; v++) {
+      g_print ("%s\n", v->value_nick);
+    }
+
+    g_type_class_unref (enum_class);
   }
-
-  g_type_class_unref (enum_class);
   g_object_unref (tr);
 
 }
