@@ -241,10 +241,7 @@ gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
 static void
 gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 {
-  GstRTPMuxClass *klass;
   GstRTPMuxPadPrivate *padpriv = g_slice_new0 (GstRTPMuxPadPrivate);
-
-  klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
 
   /* setup some pad functions */
   gst_pad_set_setcaps_function (sinkpad, gst_rtp_mux_setcaps);
