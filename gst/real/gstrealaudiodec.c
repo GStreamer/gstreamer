@@ -383,7 +383,6 @@ gst_real_audio_dec_getcaps (GstPad * pad)
     GValue version = { 0 };
 
     GST_LOG_OBJECT (dec, "constructing caps");
-    res = gst_caps_new_empty ();
 
     g_value_init (&versions, GST_TYPE_LIST);
     g_value_init (&version, G_TYPE_INT);
