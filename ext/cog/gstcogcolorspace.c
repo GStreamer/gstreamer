@@ -144,7 +144,6 @@ gst_cogcolorspace_class_init (GstCogcolorspaceClass * colorspace_class)
 
   gobject_class = G_OBJECT_CLASS (colorspace_class);
   base_transform_class = GST_BASE_TRANSFORM_CLASS (colorspace_class);
-  colorspace_class = GST_COGCOLORSPACE_CLASS (colorspace_class);
 
   gobject_class->set_property = gst_cogcolorspace_set_property;
   gobject_class->get_property = gst_cogcolorspace_get_property;
