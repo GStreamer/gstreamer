@@ -29,6 +29,11 @@
  *
  * The output type is determined by the #GESTrack that are set on
  * the #GESTimeline.
+ *
+ * To save/load a timeline, you can use the ges_timeline_load_from_uri() and
+ * ges_timeline_save_to_uri() methods to use the default format. If you wish
+ * to specify the format to save/load the timeline from, please consult the
+ * documentation about #GESFormatter.
  */
 
 #include "gesmarshal.h"
@@ -237,6 +242,10 @@ ges_timeline_new_from_uri (gchar * uri)
 {
   GESTimeline *ret;
 
+  /* FIXME : we should have a GError** argument so the user can know why
+   * it wasn't able to load the uri 
+   */
+
   ret = ges_timeline_new ();
 
   if (!ges_timeline_load_from_uri (ret, uri)) {
@@ -264,6 +273,10 @@ ges_timeline_load_from_uri (GESTimeline * timeline, gchar * uri)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;
+
+  /* FIXME : we should have a GError** argument so the user can know why
+   * it wasn't able to load the uri 
+   */
 
   if (!(p = ges_formatter_new_for_uri (uri))) {
     GST_ERROR ("unsupported uri '%s'", uri);
@@ -299,6 +312,17 @@ ges_timeline_save_to_uri (GESTimeline * timeline, gchar * uri)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;
+
+  /* FIXME : How will the user be able to chose the format he
+   * wishes to store to ? */
+
+  /* FIXME : How will we ensure a timeline loaded with a certain format
+   * will be saved with the same one by default ? We need to make this
+   * easy from an API perspective */
+
+  /* FIXME : we should have a GError** argument so the user can know why
+   * it wasn't able to save
+   */
 
   if (!(p = ges_formatter_new_for_uri (uri))) {
     GST_ERROR ("unsupported uri '%s'", uri);
