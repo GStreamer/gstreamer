@@ -37,8 +37,6 @@
 
 
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
-//#define CAMERABIN_MAX_VF_WIDTH 848
-//#define CAMERABIN_MAX_VF_HEIGHT 848
 
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1

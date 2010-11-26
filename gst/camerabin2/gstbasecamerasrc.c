@@ -281,55 +281,6 @@ gst_base_camera_src_set_property (GObject * object,
         gst_base_camera_src_setup_zoom (self);
       break;
     }
-    case ARG_IMAGE_CAPTURE_WIDTH:{
-      gint width = g_value_get_int (value);
-
-      if (width != self->image_capture_width) {
-        self->image_capture_width = width;
-//XXX        self->image_capture_caps_update = TRUE;
-      }
-      break;
-    }
-    case ARG_IMAGE_CAPTURE_HEIGHT:{
-      gint height = g_value_get_int (value);
-
-      if (height != self->image_capture_height) {
-        self->image_capture_height = height;
-//XXX        self->image_capture_caps_update = TRUE;
-      }
-      break;
-    }
-    case ARG_VIDEO_CAPTURE_WIDTH:{
-      gint width = g_value_get_int (value);
-
-      if (width != self->width) {
-        self->width = width;
-//XXX        self->video_capture_caps_update = TRUE;
-      }
-      break;
-    }
-    case ARG_VIDEO_CAPTURE_HEIGHT:{
-      gint height = g_value_get_int (value);
-
-      if (height != self->height) {
-        self->height = height;
-//XXX        self->video_capture_caps_update = TRUE;
-      }
-      break;
-    }
-    case ARG_VIDEO_CAPTURE_FRAMERATE:{
-      gint fps_n, fps_d;
-
-      fps_n = gst_value_get_fraction_numerator (value);
-      fps_d = gst_value_get_fraction_denominator (value);
-
-      if (fps_n != self->fps_n || fps_d != self->fps_d) {
-        self->fps_n = fps_n;
-        self->fps_d = fps_d;
-//XXX        self->video_capture_caps_update = TRUE;
-      }
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
       break;
@@ -345,21 +296,6 @@ gst_base_camera_src_get_property (GObject * object,
   switch (prop_id) {
     case ARG_ZOOM:
       g_value_set_int (value, g_atomic_int_get (&self->zoom));
-      break;
-    case ARG_IMAGE_CAPTURE_WIDTH:
-      g_value_set_int (value, self->image_capture_width);
-      break;
-    case ARG_IMAGE_CAPTURE_HEIGHT:
-      g_value_set_int (value, self->image_capture_height);
-      break;
-    case ARG_VIDEO_CAPTURE_WIDTH:
-      g_value_set_int (value, self->width);
-      break;
-    case ARG_VIDEO_CAPTURE_HEIGHT:
-      g_value_set_int (value, self->height);
-      break;
-    case ARG_VIDEO_CAPTURE_FRAMERATE:
-      gst_value_set_fraction (value, self->fps_n, self->fps_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (self, prop_id, pspec);
