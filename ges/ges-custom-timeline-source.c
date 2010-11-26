@@ -32,6 +32,12 @@
 #include "ges-custom-timeline-source.h"
 #include "ges-timeline-source.h"
 
+struct _GESCustomTimelineSourcePrivate
+{
+  FillTrackObjectUserFunc filltrackobjectfunc;
+  gpointer user_data;
+};
+
 G_DEFINE_TYPE (GESCustomTimelineSource, ges_cust_timeline_src,
     GES_TYPE_TIMELINE_SOURCE);
 
@@ -77,6 +83,8 @@ ges_cust_timeline_src_class_init (GESCustomTimelineSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *tlobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESCustomTimelineSourcePrivate));
+
   object_class->get_property = ges_cust_timeline_src_get_property;
   object_class->set_property = ges_cust_timeline_src_set_property;
   object_class->dispose = ges_cust_timeline_src_dispose;
@@ -88,6 +96,8 @@ ges_cust_timeline_src_class_init (GESCustomTimelineSourceClass * klass)
 static void
 ges_cust_timeline_src_init (GESCustomTimelineSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourcePrivate);
 }
 
 static gboolean
@@ -95,13 +105,13 @@ ges_cust_timeline_src_fill_track_object (GESTimelineObject * object,
     GESTrackObject * trobject, GstElement * gnlobj)
 {
   gboolean res;
+  GESCustomTimelineSourcePrivate *priv;
 
   GST_DEBUG ("Calling callback (timelineobj:%p, trackobj:%p, gnlobj:%p)",
       object, trobject, gnlobj);
 
-  res =
-      GES_CUSTOM_TIMELINE_SOURCE (object)->filltrackobjectfunc (object,
-      trobject, gnlobj, GES_CUSTOM_TIMELINE_SOURCE (object)->user_data);
+  priv = GES_CUSTOM_TIMELINE_SOURCE (object)->priv;
+  res = priv->filltrackobjectfunc (object, trobject, gnlobj, priv->user_data);
 
   GST_DEBUG ("Returning res:%d", res);
 
@@ -124,8 +134,8 @@ ges_custom_timeline_source_new (FillTrackObjectUserFunc func,
   GESCustomTimelineSource *src;
 
   src = g_object_new (GES_TYPE_CUSTOM_TIMELINE_SOURCE, NULL);
-  src->filltrackobjectfunc = func;
-  src->user_data = user_data;
+  src->priv->filltrackobjectfunc = func;
+  src->priv->user_data = user_data;
 
   return src;
 }

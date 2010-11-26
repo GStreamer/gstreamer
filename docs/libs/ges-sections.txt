@@ -380,6 +380,7 @@ FillTrackObjectUserFunc
 ges_custom_timeline_source_new
 <SUBSECTION Standard>
 ges_cust_timeline_src_get_type
+GESCustomTimelineSourcePrivate
 GES_CUSTOM_TIMELINE_SOURCE
 GES_CUSTOM_TIMELINE_SOURCE_CLASS
 GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS

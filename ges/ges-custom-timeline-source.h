@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_CUSTOM_TIMELINE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_CUSTOM_TIMELINE_SOURCE, GESCustomTimelineSourceClass))
 
+typedef struct _GESCustomTimelineSourcePrivate   GESCustomTimelineSourcePrivate;
+
 /**
  * FillTrackObjectUserFunc:
  * @object: the #GESTimelineObject controlling the track object
@@ -73,8 +75,7 @@ struct _GESCustomTimelineSource {
   GESTimelineSource parent;
 
   /*< private >*/
-  FillTrackObjectUserFunc filltrackobjectfunc;
-  gpointer user_data;
+  GESCustomTimelineSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
