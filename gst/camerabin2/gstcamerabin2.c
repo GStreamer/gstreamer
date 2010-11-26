@@ -20,14 +20,6 @@
  * SECTION:element-gstcamerabin
  *
  * The gstcamerabin element does FIXME stuff.
- *
- * <refsect2>
- * <title>Example launch line</title>
- * |[
- * gst-launch -v videotestsrc ! camerabin
- * ]|
- * FIXME Describe what the pipeline does.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -129,9 +121,60 @@ gst_camera_bin_init (GstCameraBin * camerabin)
 {
 }
 
+/**
+ * gst_camera_bin_create_elements:
+ * @param camera: the #GstCameraBin
+ *
+ * Creates all elements inside #GstCameraBin
+ *
+ * Each of the pads on the camera source is linked as follows:
+ * .pad ! queue ! capsfilter ! correspondingbin
+ *
+ * Where 'correspondingbin' is the bin appropriate for
+ * the camera source pad.
+ */
 static gboolean
 gst_camera_bin_create_elements (GstCameraBin * camera)
 {
+  GstElement *src;
+  GstElement *vid;
+  GstElement *img;
+  GstElement *vf;
+  GstElement *vid_queue;
+  GstElement *img_queue;
+  GstElement *vf_queue;
+  GstElement *vid_capsfilter;
+  GstElement *img_capsfilter;
+  GstElement *vf_capsfilter;
+
+  if (camera->elements_created)
+    return TRUE;
+
+  src = gst_element_factory_make ("v4l2camerasrc", "camerasrc");
+  vid = gst_element_factory_make ("videorecordingbin", "video-rec-bin");
+  img = gst_element_factory_make ("imagecapturebin", "image-cap-bin");
+  vf = gst_element_factory_make ("viewfinderbin", "vf-bin");
+
+  vid_queue = gst_element_factory_make ("queue", "video-queue");
+  img_queue = gst_element_factory_make ("queue", "image-queue");
+  vf_queue = gst_element_factory_make ("queue", "vf-queue");
+
+  vid_capsfilter = gst_element_factory_make ("capsfilter", "video-capsfilter");
+  img_capsfilter = gst_element_factory_make ("capsfilter", "image-capsfilter");
+  vf_capsfilter = gst_element_factory_make ("capsfilter", "vf-capsfilter");
+
+  gst_bin_add_many (GST_BIN_CAST (camera), src, vid, img, vf, vid_queue,
+      img_queue, vf_queue, vid_capsfilter, img_capsfilter, vf_capsfilter, NULL);
+
+  /* Linking can be optimized TODO */
+  gst_element_link_many (vid_queue, vid_capsfilter, vid, NULL);
+  gst_element_link_many (img_queue, img_capsfilter, img, NULL);
+  gst_element_link_many (vf_queue, vf_capsfilter, vf, NULL);
+  gst_element_link_pads (src, "vfsrc", vf_queue, "sink");
+  gst_element_link_pads (src, "imgsrc", img_queue, "sink");
+  gst_element_link_pads (src, "vidsrc", vid_queue, "sink");
+
+  camera->elements_created = TRUE;
   return TRUE;
 }
 
