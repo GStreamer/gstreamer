@@ -125,7 +125,7 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * icbin)
   if (!sink)
     goto error;
 
-  g_object_set (sink, "location", "cap_%03d.jpg", NULL);
+  g_object_set (sink, "location", "cap_%03d.jpg", "async", FALSE, NULL);
 
   /* add and link */
   gst_bin_add_many (GST_BIN_CAST (icbin), csp, enc, mux, sink, NULL);

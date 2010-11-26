@@ -126,7 +126,7 @@ gst_video_recording_bin_create_elements (GstVideoRecordingBin * vrbin)
   if (!sink)
     goto error;
 
-  g_object_set (sink, "location", "cap.ogg", NULL);
+  g_object_set (sink, "location", "cap.ogg", "async", FALSE, NULL);
 
   /* add and link */
   gst_bin_add_many (GST_BIN_CAST (vrbin), csp, enc, mux, sink, NULL);
