@@ -232,6 +232,10 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   /* Inform the object it's now in this layer */
   ges_timeline_object_set_layer (object, layer);
 
+  GST_DEBUG ("current object priority : %d, layer min/max : %d/%d",
+      GES_TIMELINE_OBJECT_PRIORITY (object),
+      layer->min_gnl_priority, layer->max_gnl_priority);
+
   /* Set the priority. */
   if (GES_TIMELINE_OBJECT_PRIORITY (object) > (layer->max_gnl_priority)) {
     ges_timeline_object_set_priority (object, layer->max_gnl_priority);
