@@ -20,10 +20,7 @@
 
 /**
  * SECTION:ges-keyfile-formatter
- * @short_description: Base Class for loading and saving #GESTimeline data.
- *
- * Responsible for loading and/or saving the contents of a #GESTimeline to/from
- * various formats.
+ * @short_description: GKeyFile formatter
  **/
 
 #include <gst/gst.h>
@@ -50,7 +47,6 @@ ges_keyfile_formatter_class_init (GESKeyfileFormatterClass * klass)
 
   object_class = G_OBJECT_CLASS (klass);
   formatter_klass = GES_FORMATTER_CLASS (klass);
-
 
   object_class->dispose = ges_keyfile_formatter_dispose;
   object_class->finalize = ges_keyfile_formatter_finalize;

@@ -53,54 +53,109 @@ struct _GESFormatter {
   /*< private >*/
   gchar    *data;
   gsize    length;
+
+  gpointer _ges_reserved[GST_PADDING];
 };
+
+typedef gboolean (*GESFormatterCanLoadURIMethod) (gchar * uri);
+typedef gboolean (*GESFormatterCanSaveURIMethod) (gchar * uri);
+
+/**
+ * GESFormatterLoadFromURIMethod:
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
+ * @uri: the URI to load from
+ *
+ * Virtual method for loading a timeline from a given URI.
+ *
+ * Every #GESFormatter subclass needs to implement this method.
+ *
+ * Returns: TRUE if the @timeline was properly loaded from the given @uri,
+ * else FALSE.
+ **/
+typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
+						     GESTimeline *timeline,
+						     gchar * uri);
+
+/**
+ * GESFormatterSaveToURIMethod:
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
+ * @uri: the URI to save to
+ *
+ * Virtual method for saving a timeline to a uri.
+ *
+ * Every #GESFormatter subclass needs to implement this method.
+ *
+ * Returns: TRUE if the @timeline was properly stored to the given @uri,
+ * else FALSE.
+ */
+typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
+						   GESTimeline *timeline,
+						   gchar * uri);
+typedef gboolean (*GESFormatterSaveMethod) (GESFormatter * formatter,
+					      GESTimeline * timeline);
+typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
+					      GESTimeline * timeline);
 
 /**
  * GESFormatterClass:
- * @parent_class: parent class
- * @can_load_uri: class method which returns true if a #GESFormatterClass can read
- * from a given URI. 
- * @can_save_uri: class method which rturns true of a #GEFormatterClass can
- * write to a given URI.
+ * @parent_class: the parent class structure
+ * @can_load_uri: Whether the URI can be loaded
+ * @can_save_uri: Whether the URI can be saved
  * @load_from_uri: class method to deserialize data from a URI
  * @save_to_uri: class method to serialize data to a URI
- * @save: method to save timeline data
- * @load: method to load timeline data
- * 
+ * @save: Save the contents of the timeline to the internal data pointer.
+ * @load: Load the timeline with the contents of the internal data pointer.
+ *
+ * GES Formatter class. Override the vmethods to implement the formatter functionnality.
  */
 
 struct _GESFormatterClass {
   GObjectClass parent_class;
 
-  gboolean (*can_load_uri) (gchar * uri);
-  gboolean (*can_save_uri) (gchar * uri);
-  gboolean (*load_from_uri) (GESFormatter *, GESTimeline *, gchar * uri);
-  gboolean (*save_to_uri) (GESFormatter *, GESTimeline *, gchar * uri);
-  gboolean (*save) (GESFormatter * formatter, GESTimeline * timeline);
-  gboolean (*load) (GESFormatter * formatter, GESTimeline * timeline);
+  /* FIXME : formatter name */
+  /* FIXME : formatter description */
+  /* FIXME : format name/mime-type */
+
+  GESFormatterCanLoadURIMethod can_load_uri;
+  GESFormatterCanSaveURIMethod can_save_uri;
+  GESFormatterLoadFromURIMethod load_from_uri;
+  GESFormatterSaveToURIMethod save_to_uri;
+  GESFormatterSaveMethod save;
+  GESFormatterLoadMethod load;
+
+  gpointer _ges_reserved[GST_PADDING];
 };
 
 GType ges_formatter_get_type (void);
 
+/* Main Formatter methods */
 GESFormatter *ges_formatter_new_for_uri (gchar *uri);
 GESFormatter *ges_default_formatter_new (void);
 
-gboolean ges_formatter_can_load_uri (gchar * uri);
-gboolean ges_formatter_can_save_uri (gchar * uri);
+gboolean ges_formatter_can_load_uri     (gchar * uri);
+gboolean ges_formatter_can_save_uri     (gchar * uri);
 
-gboolean ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline
-    *timeline, gchar *uri);
+gboolean ges_formatter_load_from_uri    (GESFormatter * formatter,
+					 GESTimeline  *timeline,
+					 gchar *uri);
 
-gboolean ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *timeline,
-    gchar *uri);
+gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
+					 GESTimeline *timeline,
+					 gchar *uri);
 
-void ges_formatter_set_data (GESFormatter * formatter, void *data, gsize
-    length);
+/* Non-standard methods */
+gboolean ges_formatter_load             (GESFormatter * formatter,
+					 GESTimeline * timeline);
+gboolean ges_formatter_save             (GESFormatter * formatter,
+					 GESTimeline * timeline);
 
-void *ges_formatter_get_data (GESFormatter *formatter, gsize *length);
-void ges_formatter_clear_data (GESFormatter *formatter);
+void ges_formatter_set_data             (GESFormatter * formatter,
+					 void *data, gsize length);
+void *ges_formatter_get_data            (GESFormatter *formatter,
+					 gsize *length);
+void ges_formatter_clear_data           (GESFormatter *formatter);
 
-gboolean ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline);
-gboolean ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline);
 
 #endif /* _GES_FORMATTER */

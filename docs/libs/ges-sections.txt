@@ -204,6 +204,7 @@ GESTimeline
 GESTimelineClass
 ges_timeline_new
 ges_timeline_new_audio_video
+ges_timeline_new_from_uri
 ges_timeline_add_layer
 ges_timeline_remove_layer
 ges_timeline_add_track
@@ -443,7 +444,6 @@ GES_TIMELINE_TITLE_SOURCE_GET_CLASS
 GESTimelineTextOverlay
 GESTimelineTextOverlayClass
 ges_timeline_text_overlay_new
-ges_timeline_new_from_uri
 <SUBSECTION Standard>
 ges_tl_text_overlay_get_type
 GES_IS_TIMELINE_TEXT_OVERLAY
@@ -536,17 +536,14 @@ GES_TYPE_TRACK_TEXT_OVERLAY
 <TITLE>GESFormatter</TITLE>
 GESFormatter
 GESFormatterClass
+GESFormatterLoadFromURIMethod
+GESFormatterSaveToURIMethod
 ges_default_formatter_new
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri
 ges_formatter_new_for_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
-ges_formatter_load
-ges_formatter_save
-ges_formatter_set_data
-ges_formatter_clear_data
-ges_formatter_get_data
 <SUBSECTION Standard>
 ges_formatter_get_type
 GES_FORMATTER
@@ -555,11 +552,21 @@ GES_FORMATTER_GET_CLASS
 GES_IS_FORMATTER
 GES_IS_FORMATTER_CLASS
 GES_TYPE_FORMATTER
+<SUBSECTION Private>
+ges_formatter_load
+ges_formatter_save
+ges_formatter_set_data
+ges_formatter_clear_data
+ges_formatter_get_data
+GESFormatterCanLoadURIMethod
+GESFormatterCanSaveURIMethod
+GESFormatterLoadMethod
+GESFormatterSaveMethod
 </SECTION>
 
 <SECTION>
 <FILE>ges-keyfile-formatter</FILE>
-<TITLE>GESFormatter</TITLE>
+<TITLE>GESKeyFileFormatter</TITLE>
 GESKeyfileFormatter
 GESKeyfileFormatterClass
 ges_keyfile_formatter_new

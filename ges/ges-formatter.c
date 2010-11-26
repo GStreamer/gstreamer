@@ -20,27 +20,41 @@
 
 /**
  * SECTION:ges-formatter
- * @short_description: Base Class for loading and saving #GESTimeline data.
+ * @short_description: Timeline saving and loading.
  *
- * Responsible for loading and/or saving the contents of a #GESTimeline to/from
- * various formats.
+ * The #GESFormatter is the object responsible for loading and/or saving the contents
+ * of a #GESTimeline to/from various formats.
+ *
+ * In order to save a #GESTimeline, you can either let GES pick a default formatter by
+ * using ges_timeline_save_to_uri(), or pick your own formatter and use
+ * ges_formatter_save_to_uri().
+ *
+ * To load a #GESTimeline, you might want to be able to track the progress of the loading,
+ * in which case you should create an empty #GESTimeline, connect to the relevant signals
+ * and call ges_formatter_load_from_uri().
+ *
+ * If you do not care about tracking the loading progress, you can use the convenience
+ * ges_timeline_new_from_uri() method.
+ *
+ * Support for saving or loading new formats can be added by creating a subclass of
+ * #GESFormatter and implement the various vmethods of #GESFormatterClass.
  **/
 
 #include <gst/gst.h>
 #include <stdlib.h>
 #include "ges-formatter.h"
-#include "ges.h"
+#include "ges-keyfile-formatter.h"
 #include "ges-internal.h"
 
 G_DEFINE_TYPE (GESFormatter, ges_formatter, G_TYPE_OBJECT);
 
 static void ges_formatter_dispose (GObject * object);
-static void ges_formatter_finalize (GObject * object);
 static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
     timeline, gchar * uri);
 static gboolean save_to_uri (GESFormatter * formatter, GESTimeline *
     timeline, gchar * uri);
-
+static gboolean default_can_load_uri (gchar * uri);
+static gboolean default_can_save_uri (gchar * uri);
 
 static void
 ges_formatter_class_init (GESFormatterClass * klass)
@@ -48,8 +62,9 @@ ges_formatter_class_init (GESFormatterClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = ges_formatter_dispose;
-  object_class->finalize = ges_formatter_finalize;
 
+  klass->can_load_uri = default_can_load_uri;
+  klass->can_save_uri = default_can_save_uri;
   klass->load_from_uri = load_from_uri;
   klass->save_to_uri = save_to_uri;
 }
@@ -70,18 +85,13 @@ ges_formatter_dispose (GObject * object)
   }
 }
 
-static void
-ges_formatter_finalize (GObject * formatter)
-{
-}
-
 /**
  * ges_formatter_new_for_uri:
  * @uri: a #gchar * pointing to the uri
  *
  * Creates a #GESFormatter that can handle the given URI.
  *
- * Returns: A GESFormatter or subclass that can load the given uri, or NULL if
+ * Returns: A GESFormatter that can load the given uri, or NULL if
  * the uri is not supported.
  */
 
@@ -94,7 +104,7 @@ ges_formatter_new_for_uri (gchar * uri)
 }
 
 /**
- * ges_formatter_default_new:
+ * ges_default_formatter_new:
  *
  * Creates a new instance of the default GESFormatter type on this system
  * (currently #GESKeyFileFormatter).
@@ -108,15 +118,29 @@ ges_default_formatter_new (void)
   return GES_FORMATTER (ges_keyfile_formatter_new ());
 }
 
+static gboolean
+default_can_load_uri (gchar * uri)
+{
+  GST_ERROR ("No 'can_load_uri' vmethod implementation");
+  return FALSE;
+}
+
+static gboolean
+default_can_save_uri (gchar * uri)
+{
+  GST_ERROR ("No 'can_save_uri' vmethod implementation");
+  return FALSE;
+}
+
 /**
  * ges_formatter_can_load_uri:
  * @uri: a #gchar * pointing to the URI
  * 
- * Returns true if there is a #GESFormatterClass derivative registered with
- * the system which can load data from the given URI.
+ * Checks if there is a #GESFormatter available which can load a #GESTimeline
+ * from the given URI.
  *
- * Returns: TRUE if the given uri is supported or FALSE if the uri is 
- * not supported.
+ * Returns: TRUE if there is a #GESFormatter that can support the given uri
+ * or FALSE if not.
  */
 
 gboolean
@@ -142,14 +166,13 @@ ges_formatter_can_load_uri (gchar * uri)
 }
 
 /**
- * ges_formatter_can_load_uri:
+ * ges_formatter_can_save_uri:
  * @uri: a #gchar * pointing to a URI
  * 
- * Returns TRUE if thereis a #GESFormatterClass derivative registered with the
- * system which can save data to the given URI.
+ * Returns TRUE if there is a #GESFormatter available which can save a
+ * #GESTimeline to the given URI.
  *
- * Returns: TRUE if the given uri is supported or FALSE if the given URI is
- * not suported.
+ * Returns: TRUE if the given @uri is supported, else FALSE.
  */
 
 gboolean
@@ -172,19 +195,18 @@ ges_formatter_can_save_uri (gchar * uri)
    * handle the URI.*/
 
   return TRUE;
-  return FALSE;
 }
 
 /**
  * ges_formatter_set_data:
- * @formatter: a pointer to a #GESFormatter instance or subclass
- * @data: a pointer to the data to be set on the formatter
- * @length: a #gsize indicating the length of the data in bytes
+ * @formatter: a #GESFormatter
+ * @data: the data to be set on the formatter
+ * @length: the length of the data in bytes
  *
  * Set the data that this formatter will use for loading. The formatter will
  * takes ownership of the data and will free the data if
- * ges_formatter_set_data is called again or when the formatter itself is
- * disposed. You should calle ges_formatter_clear_data () if you do not wish
+ * @ges_formatter_set_data is called again or when the formatter itself is
+ * disposed. You should call @ges_formatter_clear_data () if you do not wish
  * this to happen.
  */
 
@@ -199,9 +221,8 @@ ges_formatter_set_data (GESFormatter * formatter, void *data, gsize length)
 
 /**
  * ges_formatter_get_data:
- * @formatter: a pointer to a #GESFormatter
- * @length: a pointer to a location into which to store the size of the
- * data in bytes.
+ * @formatter: a #GESFormatter
+ * @length: location into which to store the size of the data in bytes.
  *
  * Returns: a pointer to the data.
  */
@@ -216,7 +237,7 @@ ges_formatter_get_data (GESFormatter * formatter, gsize * length)
 
 /**
  * ges_formatter_clear_data:
- * @formatter: a pointer to a #GESFormatter
+ * @formatter: a #GESFormatter
  *
  * clears the data from a #GESFormatter without freeing it. You should call
  * this before disposing or setting data on a #GESFormatter if the current data
@@ -232,12 +253,12 @@ ges_formatter_clear_data (GESFormatter * formatter)
 
 /**
  * ges_formatter_load:
- * @formatter: a pointer to a #GESFormatter instance or subclass.
- * @timeline: a pointer to a #GESTimeline
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
  *
  * Loads data from formatter to into timeline. You should first call
- * ges_formatter_set_data () with the location and size of a block of data
- * from which to read. This method is only implemented in subclasses. 
+ * ges_formatter_set_data() with the location and size of a block of data
+ * from which to read.
  *
  * Returns: TRUE if the data was successfully loaded into timeline
  * or FALSE if an error occured during loading.
@@ -258,12 +279,11 @@ ges_formatter_load (GESFormatter * formatter, GESTimeline * timeline)
 
 /**
  * ges_formatter_save:
- * @formatter: a pointer to a #GESFormatter instance or subclass.
- * @timeline: a pointer to a #GESTimeline
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
  *
  * Save data from timeline into a block of data. You can retrieve the location
- * and size of this data with ges_formatter_get_data(). This method is only
- * implemented in subclasses.
+ * and size of this data with ges_formatter_get_data().
  *
  * Returns: TRUE if the timeline data was successfully saved for FALSE if
  * an error occured during saving.
@@ -289,20 +309,14 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 
 /**
  * ges_formatter_load_from_uri:
- * @formatter: a pointer to a #GESFormatter instance or subclass
- * @timeline: a pointer to a #GESTimeline
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
  * @uri: a #gchar * pointing to a URI
  * 
- * Load data from the given URI into timeline. The default implementation
- * loads the entire contents of the uri with g_file_get_contents, then calls
- * ges_formatter_load(). It works only on valid URIs pointing to local files.
+ * Load data from the given URI into timeline.
  *
- * Subclasses should override the class method load_from_uri if they want to
- * handle other types of URIs. They should also override the class method
- * can_load_uri() to indicate that they can handle other types of URI.
- *
- * Returns: TRUE if the timeline data was successfully loaded from the URI or
- * FALSE if an error occured during loading.
+ * Returns: TRUE if the timeline data was successfully loaded from the URI,
+ * else FALSE.
  */
 
 gboolean
@@ -352,21 +366,14 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline, gchar * uri)
 
 /**
  * ges_formatter_save_to_uri:
- * @formatter: a pointer to a #GESFormatter instance or subclass
- * @timeline: a pointer to a #GESTimeline
+ * @formatter: a #GESFormatter
+ * @timeline: a #GESTimeline
  * @uri: a #gchar * pointing to a URI
  *
- * Save data from timeline to the given URI. The default implementation first
- * calls ges_formatter_save () and then writes the entire contents of the data
- * field to a local file using g_file_set_contents. It works only for local
- * files.
+ * Save data from timeline to the given URI.
  *
- * Subclasses should override the class method save_to_uri if they want to
- * handle other types of URIs. They should also override the class method
- * can_save_uri to return true for custom URIs.
- *
- * Returns: TRUE if the timeline data was successfully saved to the URI or
- * FALSE if an error occured during saving.
+ * Returns: TRUE if the timeline data was successfully saved to the URI
+ * else FALSE.
  */
 
 gboolean
