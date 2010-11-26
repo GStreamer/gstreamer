@@ -33,12 +33,60 @@
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_MODE
 };
+
+enum
+{
+  /* action signals */
+  START_CAPTURE_SIGNAL,
+  STOP_CAPTURE_SIGNAL,
+  /* emit signals */
+  LAST_SIGNAL
+};
+static guint camerabin_signals[LAST_SIGNAL];
+
+#define DEFAULT_MODE MODE_IMAGE
 
 /********************************
  * Standard GObject boilerplate *
+ * and GObject types            *
  ********************************/
+
+#define GST_TYPE_CAMERABIN_MODE (gst_camerabin_mode_get_type ())
+/**
+ * GstCameraBinMode:
+ * @MODE_PREVIEW: preview only (no capture) mode
+ * @MODE_IMAGE: image capture
+ * @MODE_VIDEO: video capture
+ *
+ * Capture mode to use.
+ */
+typedef enum
+{
+  MODE_PREVIEW = 0,             /* TODO do we have an use for this? */
+  MODE_IMAGE = 1,
+  MODE_VIDEO = 2,
+} GstCameraBinMode;
+
+static GType
+gst_camerabin_mode_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {MODE_IMAGE, "Still image capture (default)", "mode-image"},
+      {MODE_VIDEO, "Video recording", "mode-video"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstCameraBin2Mode", values);
+  }
+  return gtype;
+}
+
 
 static GstPipelineClass *parent_class;
 static void gst_camera_bin_class_init (GstCameraBinClass * klass);
@@ -74,13 +122,60 @@ gst_camera_bin_get_type (void)
   return gst_camera_bin_type;
 }
 
+/* GObject class functions */
+static void gst_camerabin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_camerabin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 /* Element class functions */
 static GstStateChangeReturn
 gst_camera_bin_change_state (GstElement * element, GstStateChange trans);
 
+
+/* Camerabin functions */
+
+static void
+gst_camera_bin_start_capture (GstCameraBin * camerabin)
+{
+  g_mutex_lock (camerabin->capture_mutex);
+  if (!camerabin->capturing) {
+    g_object_set (camerabin->src, "mode", camerabin->mode, NULL);
+    camerabin->capturing = TRUE;
+  } else {
+    GST_WARNING_OBJECT (camerabin, "Capture already ongoing");
+  }
+  g_mutex_unlock (camerabin->capture_mutex);
+}
+
+static void
+gst_camera_bin_stop_capture (GstCameraBin * camerabin)
+{
+  g_mutex_lock (camerabin->capture_mutex);
+  if (camerabin->capturing) {
+    g_object_set (camerabin->src, "mode", MODE_PREVIEW, NULL);
+    camerabin->capturing = FALSE;
+  }
+  g_mutex_unlock (camerabin->capture_mutex);
+}
+
+static void
+gst_camera_bin_change_mode (GstCameraBin * camerabin, gint mode)
+{
+  /* stop any ongoing capture */
+  gst_camera_bin_stop_capture (camerabin);
+
+  camerabin->mode = mode;
+}
+
 static void
 gst_camera_bin_dispose (GObject * object)
 {
+  GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
+
+  gst_object_unref (camerabin->src);
+
+  g_mutex_free (camerabin->capture_mutex);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -112,13 +207,56 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 
   object_class->dispose = gst_camera_bin_dispose;
   object_class->finalize = gst_camera_bin_finalize;
+  object_class->set_property = gst_camerabin_set_property;
+  object_class->get_property = gst_camerabin_get_property;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_camera_bin_change_state);
+
+  klass->start_capture = gst_camera_bin_start_capture;
+  klass->stop_capture = gst_camera_bin_stop_capture;
+
+  /**
+   * GstCameraBin:mode:
+   *
+   * Set the mode of operation: still image capturing or video recording.
+   */
+  g_object_class_install_property (object_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "The capture mode (still image capture or video recording)",
+          GST_TYPE_CAMERABIN_MODE, DEFAULT_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstCameraBin::capture-start:
+   * @camera: the camera bin element
+   *
+   * Starts image capture or video recording depending on the Mode.
+   */
+  camerabin_signals[START_CAPTURE_SIGNAL] =
+      g_signal_new ("start-capture",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstCameraBinClass, start_capture),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  /**
+   * GstCameraBin::capture-stop:
+   * @camera: the camera bin element
+   */
+  camerabin_signals[STOP_CAPTURE_SIGNAL] =
+      g_signal_new ("stop-capture",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstCameraBinClass, stop_capture),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 static void
 gst_camera_bin_init (GstCameraBin * camerabin)
 {
+  camerabin->capturing = FALSE;
+  camerabin->capture_mutex = g_mutex_new ();
+  camerabin->mode = MODE_IMAGE;
 }
 
 /**
@@ -154,6 +292,8 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   vid = gst_element_factory_make ("videorecordingbin", "video-rec-bin");
   img = gst_element_factory_make ("imagecapturebin", "image-cap-bin");
   vf = gst_element_factory_make ("viewfinderbin", "vf-bin");
+
+  camera->src = gst_object_ref (src);
 
   vid_queue = gst_element_factory_make ("queue", "video-queue");
   img_queue = gst_element_factory_make ("queue", "image-queue");
@@ -204,6 +344,38 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
   }
 
   return ret;
+}
+
+static void
+gst_camerabin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCameraBin *camera = GST_CAMERA_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      gst_camera_bin_change_mode (camera, g_value_get_enum (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_camerabin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCameraBin *camera = GST_CAMERA_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, camera->mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 gboolean

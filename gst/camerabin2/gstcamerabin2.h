@@ -37,7 +37,14 @@ struct _GstCameraBin
 {
   GstPipeline pipeline;
 
-  GstPad *ghostpad;
+  GstElement *src;
+
+  /* concurrency control */
+  GMutex *capture_mutex;
+  gboolean capturing;
+
+  /* properties */
+  gint mode;
 
   gboolean elements_created;
 };
@@ -45,6 +52,10 @@ struct _GstCameraBin
 struct _GstCameraBinClass
 {
   GstPipelineClass pipeline_class;
+
+  /* Action signals */
+  void (*start_capture) (GstCameraBin * camera);
+  void (*stop_capture) (GstCameraBin * camera);
 };
 
 GType gst_camera_bin_get_type (void);
