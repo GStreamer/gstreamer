@@ -41,9 +41,6 @@
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
 
-/* FIXME: this is v4l2camsrc specific */
-#define DEFAULT_V4L2CAMSRC_DRIVER_NAME "omap3cam"
-
 //GST_DEBUG_CATEGORY (v4l2_camera_src_debug);
 //#define GST_CAT_DEFAULT v4l2_camera_src_debug
 
@@ -268,21 +265,6 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc,
    * prefer leaking view finder buffers instead. */
   g_object_set (G_OBJECT (queue), "leaky", 2, "max-size-buffers", 1, NULL);
 #endif
-
-  /* Set default "driver-name" for v4l2camsrc if not set */
-  /* FIXME: v4l2camsrc specific */
-  {
-    gchar *driver_name = NULL;
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (self->src_vid_src),
-            "driver-name")) {
-      g_object_get (G_OBJECT (self->src_vid_src), "driver-name",
-          &driver_name, NULL);
-      if (!driver_name) {
-        g_object_set (G_OBJECT (self->src_vid_src), "driver-name",
-            DEFAULT_V4L2CAMSRC_DRIVER_NAME, NULL);
-      }
-    }
-  }
 
   ret = TRUE;
 done:
