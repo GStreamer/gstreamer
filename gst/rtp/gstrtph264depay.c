@@ -542,6 +542,9 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (rtph264depay, "receiving %d bytes", payload_len);
 
+    if (payload_len == 0)
+      return NULL;
+
     /* +---------------+
      * |0|1|2|3|4|5|6|7|
      * +-+-+-+-+-+-+-+-+
