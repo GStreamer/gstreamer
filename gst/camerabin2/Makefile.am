@@ -7,6 +7,7 @@ libgstcamerabin2_la_SOURCES = gstviewfinderbin.c \
 				gstbasecamerasrc.c \
 				gstcamerabin-enum.c \
 				gstv4l2camerasrc.c \
+				gstcamerabin2.c \
 				gstplugin.c
 
 libgstcamerabin2_la_CFLAGS = \
@@ -28,4 +29,5 @@ noinst_HEADERS = gstviewfinderbin.h \
 		camerabingeneral.h \
 		gstbasecamerasrc.h \
 		gstv4l2camerasrc.h \
+		gstcamerabin2.h \
 		gstcamerabin-enum.h
