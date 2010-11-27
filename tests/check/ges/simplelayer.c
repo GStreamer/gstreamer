@@ -450,9 +450,9 @@ GST_START_TEST (test_gsl_with_transitions)
 
   g_object_get (G_OBJECT (layer), "valid", &valid, NULL);
   fail_unless (!valid);
-  fail_unless_equals_int (count, 4)
+  fail_unless_equals_int (count, 4);
 
-      fail_unless (ges_timeline_layer_remove_object (layer,
+  fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source2)));
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source3)));
