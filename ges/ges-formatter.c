@@ -274,11 +274,16 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 {
   GESFormatterClass *klass;
 
+  /* Saving an empty timeline is not allowed */
+  g_return_val_if_fail (timeline->layers != NULL, FALSE);
+
   klass = GES_FORMATTER_GET_CLASS (formatter);
 
   if (klass->save)
     return klass->save (formatter, timeline);
+
   GST_ERROR ("not implemented!");
+
   return FALSE;
 }
 
@@ -369,6 +374,9 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
     timeline, gchar * uri)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
+
+  /* Saving an empty timeline is not allowed */
+  g_return_val_if_fail (timeline->layers != NULL, FALSE);
 
   if (klass->save_to_uri)
     return klass->save_to_uri (formatter, timeline, uri);
