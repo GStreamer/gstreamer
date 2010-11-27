@@ -123,8 +123,7 @@ static void type_as_function ## _init	       (type          *object,	\
                                                 type ## Class *g_class);\
 static parent_type ## Class *parent_class = NULL;			\
 static void								\
-type_as_function ## _class_init_trampoline (gpointer g_class,		\
-					    gpointer data)		\
+type_as_function ## _class_init_trampoline (gpointer g_class)		\
 {									\
   parent_class = (parent_type ## Class *)				\
       g_type_class_peek_parent (g_class);				\
@@ -145,7 +144,7 @@ type_as_function ## _get_type (void)					\
 	sizeof (type ## Class),						\
         type_as_function ## _base_init,					\
         NULL,		  /* base_finalize */				\
-        type_as_function ## _class_init_trampoline,			\
+        (GClassInitFunc) type_as_function ## _class_init_trampoline,    \
         NULL,		  /* class_finalize */				\
         NULL,               /* class_data */				\
         sizeof (type),							\
