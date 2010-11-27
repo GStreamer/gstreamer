@@ -1808,6 +1808,7 @@ tests/check/Makefile
 tests/files/Makefile
 tests/examples/Makefile
 tests/examples/camerabin/Makefile
+tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile

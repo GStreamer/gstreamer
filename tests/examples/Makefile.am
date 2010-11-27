@@ -4,7 +4,7 @@ JACK_EXAMPLES=jack
 else
 JACK_EXAMPLES=
 endif
-GTK_EXAMPLES=camerabin mxf scaletempo
+GTK_EXAMPLES=camerabin mxf scaletempo camerabin2
 else
 GTK_EXAMPLES=
 endif
@@ -16,4 +16,4 @@ DIRECTFB_DIR=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES) switch
-DIST_SUBDIRS= camerabin directfb jack mxf scaletempo switch
+DIST_SUBDIRS= camerabin camerabin2 directfb jack mxf scaletempo switch
