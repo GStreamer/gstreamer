@@ -489,7 +489,9 @@ main (int   argc,
       <listitem>
         <para>
           <classname>GST_STATE_NULL</classname>: this is the default state.
-          This state will deallocate all resources held by the element.
+          No resources are allocated in this state, so, transitioning to it
+          will free all resources. The element must be in this state when
+          its refcount reaches 0 and it is freed.
         </para>
       </listitem>
       <listitem>
