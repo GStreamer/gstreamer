@@ -222,16 +222,11 @@ GST_END_TEST;
 
 /* do action for every item and then free the list */
 
-#define LIST_FREE(list, action) \
-{\
-  GList *temp_;\
-  for (temp_=(list); temp_; temp_ = temp_->next) \
-  {\
-    action;\
-    temp_->data = NULL;\
-  }\
-  g_list_free (list);\
-}
+#define g_list_free_all(list)				\
+  {							\
+    g_list_foreach(list, (GFunc) g_object_unref, NULL);	\
+    g_list_free(list);					\
+  }
 
 /* print out a helpful error message when a comparison fails. Works with the
  * TIMELINE_COMPARE_*, LAYER*, SIMPLE_LAYER*, abd TRACK, macros below to give
@@ -258,7 +253,7 @@ GST_END_TEST;
 static gboolean
 ges_objs_equal (GObject * a, GObject * b)
 {
-  GType at, bt;
+  GType at;
   GObjectClass *klass;
   GParamSpec **props = NULL, **iter = NULL;
   guint n_props, i;
@@ -271,8 +266,9 @@ ges_objs_equal (GObject * a, GObject * b)
   if (a == b)
     return TRUE;
 
-  if (!((at = G_TYPE_FROM_INSTANCE (a)) == (bt = G_TYPE_FROM_INSTANCE (b))))
-    goto fail;
+  at = G_TYPE_FROM_INSTANCE (a);
+
+  fail_unless (at == G_TYPE_FROM_INSTANCE (b));
 
   typename = (gchar *) g_type_name (at);
 
@@ -380,8 +376,8 @@ ges_layers_equal (GESTimelineLayer * a, GESTimelineLayer * b)
 
 fail:
 
-  LIST_FREE (a_objs, g_object_unref (temp_->data));
-  LIST_FREE (b_objs, g_object_unref (temp_->data));
+  g_list_free_all (a_objs);
+  g_list_free_all (b_objs);
 
   return ret;
 }
@@ -398,8 +394,6 @@ ges_timelines_equal (GESTimeline * a, GESTimeline * b)
     CMP_FAIL (b, "%p and %p are not of the same type");
     return FALSE;
   }
-
-  a_tracks = b_tracks = NULL;
 
   a_tracks = ges_timeline_get_tracks (a);
   b_tracks = ges_timeline_get_tracks (b);
@@ -439,8 +433,9 @@ ges_timelines_equal (GESTimeline * a, GESTimeline * b)
 
 fail:
 
-  LIST_FREE (a_tracks, g_object_unref (temp_->data));
-  LIST_FREE (b_tracks, g_object_unref (temp_->data));
+  g_list_free_all (a_tracks);
+  g_list_free_all (b_tracks);
+
   return ret;
 }
 
