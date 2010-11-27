@@ -465,10 +465,10 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
             if (ximagesrc->endx > ximagesrc->startx &&
                 ximagesrc->endy > ximagesrc->starty) {
               /* see if damage area intersects */
-              if (rects[i].x + rects[i].width < ximagesrc->startx ||
+              if (rects[i].x + rects[i].width - 1 < ximagesrc->startx ||
                   rects[i].x > ximagesrc->endx) {
                 /* trivial reject */
-              } else if (rects[i].y + rects[i].height < ximagesrc->starty ||
+              } else if (rects[i].y + rects[i].height - 1 < ximagesrc->starty ||
                   rects[i].y > ximagesrc->endy) {
                 /* trivial reject */
               } else {
@@ -479,12 +479,12 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
                     rects[i].x;
                 starty = (rects[i].y < ximagesrc->starty) ? ximagesrc->starty :
                     rects[i].y;
-                width = (rects[i].x + rects[i].width < ximagesrc->endx) ?
+                width = (rects[i].x + rects[i].width - 1 < ximagesrc->endx) ?
                     rects[i].x + rects[i].width - startx :
-                    ximagesrc->endx - startx;
-                height = (rects[i].y + rects[i].height < ximagesrc->endy) ?
+                    ximagesrc->endx - startx + 1;
+                height = (rects[i].y + rects[i].height - 1 < ximagesrc->endy) ?
                     rects[i].y + rects[i].height - starty : ximagesrc->endy -
-                    starty;
+                    starty + 1;
 
                 GST_LOG_OBJECT (ximagesrc,
                     "Retrieving damaged sub-region @ %d,%d size %dx%d as intersect region",
@@ -943,27 +943,36 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
 
   width = xcontext->width;
   height = xcontext->height;
-  if (s->endx > s->startx && s->endy > s->starty) {
+
+  /* property comments say 0 means right/bottom, means we can't capture
+     the top left pixel alone */
+  if (s->endx == 0)
+    s->endx = width - 1;
+  if (s->endy == 0)
+    s->endy = height - 1;
+
+  if (s->endx >= s->startx && s->endy >= s->starty) {
     /* this means user has put in values */
     if (s->startx < xcontext->width && s->endx < xcontext->width &&
-        s->starty < xcontext->height && s->endy < xcontext->height) {
+        s->starty < xcontext->height && s->endy < xcontext->height &&
+        s->startx >= 0 && s->starty >= 0) {
       /* values are fine */
-      s->width = width = s->endx - s->startx;
-      s->height = height = s->endy - s->starty;
+      s->width = width = s->endx - s->startx + 1;
+      s->height = height = s->endy - s->starty + 1;
     } else {
       GST_WARNING
           ("User put in co-ordinates overshooting the X resolution, setting to full screen");
       s->startx = 0;
       s->starty = 0;
-      s->endx = 0;
-      s->endy = 0;
+      s->endx = width - 1;
+      s->endy = height - 1;
     }
   } else {
     GST_WARNING ("User put in bogus co-ordinates, setting to full screen");
     s->startx = 0;
     s->starty = 0;
-    s->endx = 0;
-    s->endy = 0;
+    s->endx = width - 1;
+    s->endy = height - 1;
   }
   GST_DEBUG ("width = %d, height=%d", width, height);
   return gst_caps_new_simple ("video/x-raw-rgb",
