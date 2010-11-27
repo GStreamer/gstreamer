@@ -1904,7 +1904,7 @@ static gboolean inline
 gst_qtmux_check_difference (GstQTMux * qtmux, GstClockTime a,
     GstClockTime b, GstClockTime magn)
 {
-  return ((a - b >= (magn >> 1)) || (b - a >= (magn >> 1)));
+  return ((a >= b) ? (a - b >= (magn >> 1)) : (b - a >= (magn >> 1)));
 }
 
 /*
