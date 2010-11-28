@@ -78,7 +78,8 @@ GST_START_TEST (test_gsl_add)
 
   fail_unless (ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER
           (layer), GES_TIMELINE_OBJECT (source), -1));
-  fail_unless (GES_TIMELINE_OBJECT (source)->layer == layer);
+  fail_unless (ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (source)) ==
+      layer);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (source), GST_SECOND);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source), 0);
 

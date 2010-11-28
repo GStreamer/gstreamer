@@ -221,7 +221,7 @@ ges_tl_text_overlay_init (GESTimelineTextOverlay * self)
 static void
 ges_tl_text_overlay_set_text (GESTimelineTextOverlay * self, const gchar * text)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
@@ -231,20 +231,24 @@ ges_tl_text_overlay_set_text (GESTimelineTextOverlay * self, const gchar * text)
 
   self->text = g_strdup (text);
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_text (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->text);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
     font_desc)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
@@ -254,13 +258,17 @@ ges_tl_text_overlay_set_font_desc (GESTimelineTextOverlay * self, const gchar *
 
   self->font_desc = g_strdup (font_desc);
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_font_desc (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->font_desc);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 
 }
 
@@ -268,20 +276,24 @@ static void
 ges_tl_text_overlay_set_halign (GESTimelineTextOverlay * self,
     GESTextHAlign halign)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->halign = halign;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_halignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->halign);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 
 }
 
@@ -289,20 +301,24 @@ static void
 ges_tl_text_overlay_set_valign (GESTimelineTextOverlay * self,
     GESTextVAlign valign)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->valign = valign;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_VIDEO)
       ges_track_text_overlay_set_valignment (GES_TRACK_TEXT_OVERLAY
           (trackobject), self->valign);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 
 }
 

@@ -63,17 +63,21 @@ static void
 ges_timeline_transition_update_vtype_internal (GESTimelineObject * self,
     GESVideoTransitionType value)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineTransition *trself = (GESTimelineTransition *) self;
 
-  for (tmp = self->trackobjects; tmp; tmp = g_list_next (tmp)) {
+  trackobjects = ges_timeline_object_get_track_objects (self);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackVideoTransition *obj;
     if (GES_IS_TRACK_VIDEO_TRANSITION (tmp->data)) {
       obj = (GESTrackVideoTransition *) tmp->data;
       if (!ges_track_video_transition_set_type (obj, value))
         return;
     }
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 
   trself->vtype = value;
   return;

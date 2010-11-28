@@ -77,11 +77,13 @@ print_transition_data (GESTimelineObject * tr)
   guint64 start, duration;
   gint priority;
   char *name;
+  GList *trackobjects, *tmp;
 
   if (!tr)
     return FALSE;
 
-  trackobj = GES_TRACK_OBJECT (tr->trackobjects->data);
+  trackobjects = ges_timeline_object_get_track_objects (tr);
+  trackobj = GES_TRACK_OBJECT (trackobjects->data);
   gnlobj = trackobj->gnlobject;
 
   g_object_get (gnlobj, "start", &start, "duration", &duration,
@@ -89,6 +91,12 @@ print_transition_data (GESTimelineObject * tr)
   g_print ("gnlobject for %s: %f %f %d\n", name,
       ((gfloat) start) / GST_SECOND,
       ((gfloat) duration) / GST_SECOND, priority);
+
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+
+  g_list_free (trackobjects);
 
   return FALSE;
 }

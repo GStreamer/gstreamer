@@ -45,6 +45,17 @@ track_object_priority_offset_changed_cb (GESTrackObject * child,
 
 G_DEFINE_TYPE (GESTimelineObject, ges_timeline_object, G_TYPE_OBJECT);
 
+struct _GESTimelineObjectPrivate
+{
+  /*< public > */
+  GESTimelineLayer *layer;
+
+  /*< private > */
+  /* A list of TrackObject controlled by this TimelineObject */
+  GList *trackobjects;
+
+};
+
 enum
 {
   PROP_0,
@@ -53,6 +64,7 @@ enum
   PROP_DURATION,
   PROP_PRIORITY,
   PROP_HEIGHT,
+  PROP_LAYER,
 };
 
 static void
@@ -76,6 +88,9 @@ ges_timeline_object_get_property (GObject * object, guint property_id,
       break;
     case PROP_HEIGHT:
       g_value_set_uint (value, tobj->height);
+      break;
+    case PROP_LAYER:
+      g_value_set_object (value, tobj->priv->layer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -123,6 +138,8 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineObjectPrivate));
+
   object_class->get_property = ges_timeline_object_get_property;
   object_class->set_property = ges_timeline_object_set_property;
   object_class->dispose = ges_timeline_object_dispose;
@@ -164,7 +181,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
 
   /**
    * GESTimelineObject:priority
-   * 
+   *
    * The layer priority of the timeline object.
    */
 
@@ -183,14 +200,28 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
           "The span of priorities this object occupies", 0, G_MAXUINT, 1,
           G_PARAM_READABLE));
 
+  /* GESSimpleTimelineLayer:layer
+   *
+   * The GESTimelineLayer where this object is being used.
+   */
+
+  g_object_class_install_property (object_class, PROP_LAYER,
+      g_param_spec_object ("layer", "Layer",
+          "The GESTimelineLayer where this object is being used.",
+          GES_TYPE_TIMELINE_LAYER, G_PARAM_READABLE));
+
   klass->need_fill_track = TRUE;
 }
 
 static void
 ges_timeline_object_init (GESTimelineObject * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectPrivate);
   self->duration = GST_SECOND;
   self->height = 1;
+  self->priv->trackobjects = NULL;
+  self->priv->layer = NULL;
 }
 
 /**
@@ -274,7 +305,7 @@ ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
  * ges_timeline_object_add_track_object:
  * @object: a #GESTimelineObject
  * @trobj: the GESTrackObject
- * 
+ *
  * Add a track object to the timeline object. Should only be called by
  * subclasses implementing the create_track_objects (plural) vmethod.
  *
@@ -295,7 +326,8 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
 
   GST_DEBUG ("Adding TrackObject to the list of controlled track objects");
   /* We steal the initial reference */
-  object->trackobjects = g_list_append (object->trackobjects, trobj);
+  object->priv->trackobjects =
+      g_list_append (object->priv->trackobjects, trobj);
 
   GST_DEBUG ("Setting properties on newly created TrackObject");
 
@@ -323,14 +355,15 @@ ges_timeline_object_release_track_object (GESTimelineObject * object,
 {
   GST_DEBUG ("object:%p, trackobject:%p", object, trobj);
 
-  if (!(g_list_find (object->trackobjects, trobj))) {
+  if (!(g_list_find (object->priv->trackobjects, trobj))) {
     GST_WARNING ("TrackObject isn't controlled by this object");
     return FALSE;
   }
 
   /* FIXME : Do we need to tell the subclasses ? If so, add a new virtual-method */
 
-  object->trackobjects = g_list_remove (object->trackobjects, trobj);
+  object->priv->trackobjects =
+      g_list_remove (object->priv->trackobjects, trobj);
 
   ges_track_object_set_timeline_object (trobj, NULL);
 
@@ -345,7 +378,7 @@ ges_timeline_object_set_layer (GESTimelineObject * object,
 {
   GST_DEBUG ("object:%p, layer:%p", object, layer);
 
-  object->layer = layer;
+  object->priv->layer = layer;
 }
 
 gboolean
@@ -389,10 +422,10 @@ ges_timeline_object_set_start (GESTimelineObject * object, guint64 start)
   GST_DEBUG ("object:%p, start:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (start));
 
-  if (G_LIKELY (object->trackobjects)) {
+  if (G_LIKELY (object->priv->trackobjects)) {
     GList *tmp;
 
-    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
       /* call set_start_internal on each trackobject */
       ges_track_object_set_start_internal (GES_TRACK_OBJECT (tmp->data), start);
 
@@ -408,10 +441,10 @@ ges_timeline_object_set_inpoint (GESTimelineObject * object, guint64 inpoint)
   GST_DEBUG ("object:%p, inpoint:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (inpoint));
 
-  if (G_LIKELY (object->trackobjects)) {
+  if (G_LIKELY (object->priv->trackobjects)) {
     GList *tmp;
 
-    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
       /* call set_inpoint_internal on each trackobject */
       ges_track_object_set_inpoint_internal (GES_TRACK_OBJECT (tmp->data),
           inpoint);
@@ -429,10 +462,10 @@ ges_timeline_object_set_duration (GESTimelineObject * object, guint64 duration)
   GST_DEBUG ("object:%p, duration:%" GST_TIME_FORMAT,
       object, GST_TIME_ARGS (duration));
 
-  if (G_LIKELY (object->trackobjects)) {
+  if (G_LIKELY (object->priv->trackobjects)) {
     GList *tmp;
 
-    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
       /* call set_duration_internal on each trackobject */
       ges_track_object_set_duration_internal (GES_TRACK_OBJECT (tmp->data),
           duration);
@@ -449,10 +482,10 @@ ges_timeline_object_set_priority (GESTimelineObject * object, guint priority)
 {
   GST_DEBUG ("object:%p, priority:%d", object, priority);
 
-  if (G_LIKELY (object->trackobjects)) {
+  if (G_LIKELY (object->priv->trackobjects)) {
     GList *tmp;
 
-    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
       /* call set_priority_internal on each trackobject */
       ges_track_object_set_priority_internal (GES_TRACK_OBJECT (tmp->data),
           priority);
@@ -485,10 +518,10 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
 {
   GESTrackObject *ret = NULL;
 
-  if (G_LIKELY (object->trackobjects)) {
+  if (G_LIKELY (object->priv->trackobjects)) {
     GList *tmp;
 
-    for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp))
+    for (tmp = object->priv->trackobjects; tmp; tmp = g_list_next (tmp))
       if (GES_TRACK_OBJECT (tmp->data)->track == track) {
         if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data,
                 type))
@@ -498,6 +531,52 @@ ges_timeline_object_find_track_object (GESTimelineObject * object,
         g_object_ref (ret);
         break;
       }
+  }
+
+  return ret;
+}
+
+/**
+ * ges_timeline_object_get_layer:
+ * @object: a #GESTimelineObject
+ *
+ * Note: The reference count of the returned #GESTimelineLayer will be increased,
+ * The user is responsible for unreffing it.
+ *
+ * Returns: The #GESTimelineLayer where this @object is being used, #NULL if 
+ * it is not used on any layer.
+ */
+GESTimelineLayer *
+ges_timeline_object_get_layer (GESTimelineObject * object)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+
+  if (object->priv->layer != NULL)
+    g_object_ref (G_OBJECT (object->priv->layer));
+
+  return object->priv->layer;
+}
+
+/**
+ * ges_timeline_object_get_track_objects:
+ * @obj: a #GESTimelineObject
+ *
+ * Returns: The list of trackobject contained in @object.
+ * The user is responsible for unreffing the contained objects 
+ * and freeing the list.
+ */
+GList *
+ges_timeline_object_get_track_objects (GESTimelineObject * object)
+{
+  GList *ret;
+  GList *tmp;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
+
+  ret = g_list_copy (object->priv->trackobjects);
+
+  for (tmp = ret; tmp; tmp = tmp->next) {
+    g_object_ref (tmp->data);
   }
 
   return ret;

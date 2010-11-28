@@ -551,14 +551,15 @@ static void
 layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTimeline * timeline)
 {
-  GList *tmp, *next;
+  GList *tmp, *next, *trackobjects;
 
   GST_DEBUG ("TimelineObject %p removed from layer %p", object, layer);
 
   /* Go over the object's track objects and figure out which one belongs to
    * the list of tracks we control */
 
-  for (tmp = object->trackobjects; tmp; tmp = next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
     next = g_list_next (tmp);
@@ -572,7 +573,10 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
 
       ges_timeline_object_release_track_object (object, trobj);
     }
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 
   GST_DEBUG ("Done");
 }

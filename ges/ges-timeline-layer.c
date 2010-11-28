@@ -228,10 +228,14 @@ gboolean
 ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
+  GESTimelineLayer *tl_obj_layer;
+
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
-  if (G_UNLIKELY (object->layer)) {
+  tl_obj_layer = ges_timeline_object_get_layer (object);
+  if (G_UNLIKELY (tl_obj_layer)) {
     GST_WARNING ("TimelineObject %p already belongs to another layer");
+    g_object_unref (tl_obj_layer);
     return FALSE;
   }
 
@@ -278,12 +282,17 @@ gboolean
 ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
+  GESTimelineLayer *tl_obj_layer;
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
-  if (G_UNLIKELY (object->layer != layer)) {
+  tl_obj_layer = ges_timeline_object_get_layer (object);
+  if (G_UNLIKELY (tl_obj_layer != layer)) {
     GST_WARNING ("TimelineObject doesn't belong to this layer");
+    if (tl_obj_layer != NULL)
+      g_object_unref (tl_obj_layer);
     return FALSE;
   }
+  g_object_unref (tl_obj_layer);
 
   /* emit 'object-removed' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_REMOVED], 0, object);

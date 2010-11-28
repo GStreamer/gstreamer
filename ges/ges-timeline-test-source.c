@@ -204,7 +204,7 @@ ges_timeline_test_source_init (GESTimelineTestSource * self)
 static void
 ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
@@ -212,62 +212,78 @@ ges_timeline_test_source_set_mute (GESTimelineTestSource * self, gboolean mute)
   self->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_AUDIO)
       ges_track_object_set_active (trackobject, !mute);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_timeline_test_source_set_vpattern (GESTimelineTestSource * self,
     GESVideoTestPattern vpattern)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   self->vpattern = vpattern;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_VIDEO_TEST_SOURCE (trackobject))
       ges_track_video_test_source_set_pattern (
           (GESTrackVideoTestSource *) trackobject, vpattern);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_timeline_test_source_set_freq (GESTimelineTestSource * self, gdouble freq)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   self->freq = freq;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
       ges_track_audio_test_source_set_freq (
           (GESTrackAudioTestSource *) trackobject, freq);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_timeline_test_source_set_volume (GESTimelineTestSource * self,
     gdouble volume)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   self->volume = volume;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
     if (GES_IS_TRACK_AUDIO_TEST_SOURCE (trackobject))
       ges_track_audio_test_source_set_volume (
           (GESTrackAudioTestSource *) trackobject, volume);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static GESTrackObject *

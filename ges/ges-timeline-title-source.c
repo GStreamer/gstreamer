@@ -239,7 +239,7 @@ ges_tl_title_src_init (GESTimelineTitleSource * self)
 static void
 ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, text:%s", self, text);
@@ -249,20 +249,24 @@ ges_tl_title_src_set_text (GESTimelineTitleSource * self, const gchar * text)
 
   self->text = g_strdup (text);
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_text (GES_TRACK_TITLE_SOURCE
           (trackobject), self->text);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
     font_desc)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
@@ -272,59 +276,70 @@ ges_tl_title_src_set_font_desc (GESTimelineTitleSource * self, const gchar *
 
   self->font_desc = g_strdup (font_desc);
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_font_desc (GES_TRACK_TITLE_SOURCE
           (trackobject), self->font_desc);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_tl_title_src_set_halign (GESTimelineTitleSource * self,
     GESTextHAlign halign)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, halign:%d", self, halign);
 
   self->halign = halign;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_halignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->halign);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static void
 ges_tl_title_src_set_valign (GESTimelineTitleSource * self,
     GESTextVAlign valign)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, valign:%d", self, valign);
 
   self->valign = valign;
 
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (GES_IS_TRACK_TITLE_SOURCE (trackobject))
       ges_track_title_source_set_valignment (GES_TRACK_TITLE_SOURCE
           (trackobject), self->valign);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
 }
 
 static void
 ges_tl_title_src_set_mute (GESTimelineTitleSource * self, gboolean mute)
 {
-  GList *tmp;
+  GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
   GST_DEBUG ("self:%p, mute:%d", self, mute);
@@ -332,12 +347,16 @@ ges_tl_title_src_set_mute (GESTimelineTitleSource * self, gboolean mute)
   self->mute = mute;
 
   /* Go over tracked objects, and update 'active' status on all audio objects */
-  for (tmp = object->trackobjects; tmp; tmp = tmp->next) {
+  trackobjects = ges_timeline_object_get_track_objects (object);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trackobject = (GESTrackObject *) tmp->data;
 
     if (trackobject->track->type == GES_TRACK_TYPE_AUDIO)
       ges_track_object_set_active (trackobject, !mute);
+
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
   }
+  g_list_free (trackobjects);
 }
 
 static GESTrackObject *

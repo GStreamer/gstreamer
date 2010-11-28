@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
+typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
+
 /**
  * FillTrackObjectFunc:
  * @object: the #GESTimelineObject controlling the track object
@@ -59,8 +61,8 @@ G_BEGIN_DECLS
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
 typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
-					 GESTrackObject * trobject,
-					 GstElement * gnlobj);
+                    GESTrackObject * trobject,
+                    GstElement * gnlobj);
 
 /**
  * CreateTrackObjectFunc:
@@ -68,7 +70,7 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  * @track: a #GESTrack
  *
  * Creates the 'primary track object for this @object.
- * 
+ *
  * Implementors should override this function if they only interested in
  * creating a single custom track object per track.
  *
@@ -81,13 +83,13 @@ typedef gboolean (*FillTrackObjectFunc) (GESTimelineObject * object,
  * Returns: the #GESTrackObject to be used, or %NULL.
  */
 typedef GESTrackObject* (*CreateTrackObjectFunc) (GESTimelineObject * object,
-						  GESTrack * track);
+                         GESTrack * track);
 
 /**
  * CreateTrackObjectsFunc:
  * @object: a #GESTimelineObject
  * @track: a #GESTrack
- * 
+ *
  * Create all track objects this object handles for this type of track.
  *
  * Returns: %TRUE on success %FALSE on failure.
@@ -144,17 +146,17 @@ typedef gboolean (*CreateTrackObjectsFunc) (GESTimelineObject * object,
 struct _GESTimelineObject {
   GObject parent;
 
-  /*< public >*/
-  GESTimelineLayer * layer;
 
   /*< private >*/
-  GList *trackobjects;	/* A list of TrackObject controlled by this TimelineObject */
 
-  /* start, inpoint, duration and fullduration are in nanoseconds */
-  guint64 start;	/* position (in time) of the object in the layer */
-  guint64 inpoint;	/* in-point */
-  guint64 duration;	/* duration of the object used in the layer */
-  guint32 priority;	/* priority of the object in the layer (0:top priority) */
+  GESTimelineObjectPrivate *priv;
+  
+  /* We don't add those properties to the priv struct for optimization purposes
+   * start, inpoint, duration and fullduration are in nanoseconds */
+  guint64 start;    /* position (in time) of the object in the layer */
+  guint64 inpoint;  /* in-point */
+  guint64 duration; /* duration of the object used in the layer */
+  guint32 priority; /* priority of the object in the layer (0:top priority) */
   guint32 height;       /* the span of priorities this object needs */
 
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
@@ -182,7 +184,7 @@ struct _GESTimelineObjectClass {
   CreateTrackObjectsFunc create_track_objects;
 
   /* FIXME : might need a release_track_object */
-  FillTrackObjectFunc	fill_track_object;
+  FillTrackObjectFunc  fill_track_object;
   gboolean need_fill_track;
 
   /*< private >*/
@@ -198,28 +200,33 @@ void ges_timeline_object_set_duration (GESTimelineObject * object, guint64 durat
 void ges_timeline_object_set_priority (GESTimelineObject * object, guint priority);
 
 void ges_timeline_object_set_layer (GESTimelineObject * object,
-				    GESTimelineLayer * layer);
+                   GESTimelineLayer * layer);
 
 GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
-					 GESTrack * track);
+                    GESTrack * track);
 
 gboolean ges_timeline_object_create_track_objects (GESTimelineObject *
     object, GESTrack * track);
 
 gboolean
 ges_timeline_object_release_track_object (GESTimelineObject * object,
-					  GESTrackObject * trackobject);
+                     GESTrackObject * trackobject);
 
 gboolean
 ges_timeline_object_fill_track_object (GESTimelineObject * object,
-				       GESTrackObject * trackobj,
-				       GstElement * gnlobj);
+                      GESTrackObject * trackobj,
+                      GstElement * gnlobj);
 
 GESTrackObject *
 ges_timeline_object_find_track_object (GESTimelineObject * object,
-				       GESTrack * track,
-                                       GType type);
+                       GESTrack * track, GType type);
+
+GList *
+ges_timeline_object_get_track_objects (GESTimelineObject *object);
+
+GESTimelineLayer *
+ges_timeline_object_get_layer (GESTimelineObject *object);
 
 gboolean
 ges_timeline_object_add_track_object (GESTimelineObject *object, GESTrackObject

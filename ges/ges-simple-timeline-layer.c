@@ -383,13 +383,19 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
 {
   gint idx;
   GESSimpleTimelineLayerPrivate *priv = layer->priv;
+  GESTimelineLayer *tl_obj_layer;
 
   GST_DEBUG ("layer:%p, object:%p, newposition:%d", layer, object, newposition);
 
-  if (G_UNLIKELY (object->layer != (GESTimelineLayer *) layer)) {
+  tl_obj_layer = ges_timeline_object_get_layer (object);
+  if (G_UNLIKELY (tl_obj_layer != (GESTimelineLayer *) layer)) {
     GST_WARNING ("TimelineObject doesn't belong to this layer");
+    if (tl_obj_layer != NULL)
+      g_object_unref (tl_obj_layer);
     return FALSE;
   }
+  if (tl_obj_layer != NULL)
+    g_object_unref (tl_obj_layer);
 
   /* Find it's current position */
   idx = g_list_index (priv->objects, object);

@@ -34,7 +34,7 @@ my_fill_track_func (GESTimelineObject * object,
 {
   GstElement *src;
 
-  GST_DEBUG ("timelineobj:%p, trackobjec:%p, gnlobj:%p",
+  GST_DEBUG ("timelineobj:%p, trackobject:%p, gnlobj:%p",
       object, trobject, gnlobj);
 
   /* Let's just put a fakesource in for the time being */
@@ -45,10 +45,11 @@ my_fill_track_func (GESTimelineObject * object,
 GST_START_TEST (test_ges_scenario)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *source;
   GESTrackObject *trackobject;
+  GList *trackobjects, *tmp;
 
   ges_init ();
   /* This is the simplest scenario ever */
@@ -89,23 +90,37 @@ GST_START_TEST (test_ges_scenario)
   GST_DEBUG ("Adding the source to the timeline layer");
   fail_unless (ges_timeline_layer_add_object (layer,
           GES_TIMELINE_OBJECT (source)));
-  fail_unless (GES_TIMELINE_OBJECT (source)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (source));
+  fail_unless (tmp_layer == layer);
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
-  /* Make sure the associated TrackObject is in the Track */
-  fail_unless (GES_TIMELINE_OBJECT (source)->trackobjects != NULL);
+  g_object_unref (tmp_layer);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
 
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (source)->trackobjects)->data);
+  /* Make sure the associated TrackObject is in the Track */
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (source));
+  fail_unless (trackobjects != NULL);
+  trackobject = GES_TRACK_OBJECT (trackobjects->data);
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
 
   GST_DEBUG ("Remove the TimelineObject from the layer");
   /* Now remove the timelineobject */
   g_object_ref (source);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
   fail_unless (ges_timeline_layer_remove_object (layer,
           GES_TIMELINE_OBJECT (source)));
   ASSERT_OBJECT_REFCOUNT (source, "source", 1);
-  fail_unless (GES_TIMELINE_OBJECT (source)->layer == NULL);
-  fail_unless (GES_TIMELINE_OBJECT (source)->trackobjects == NULL);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 1);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (source));
+  fail_unless (tmp_layer == NULL);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (source));
+  fail_unless (trackobjects == NULL);   /* No unreffing then */
   g_object_unref (source);
 
   GST_DEBUG ("Removing track from the timeline");
@@ -140,9 +155,10 @@ GST_END_TEST;
 GST_START_TEST (test_ges_timeline_add_layer)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
+  GList *trackobjects, *tmp;
   GESTrackObject *trackobject;
 
   ges_init ();
@@ -172,19 +188,28 @@ GST_START_TEST (test_ges_timeline_add_layer)
   s1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s1 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s1)));
-  fail_unless (GES_TIMELINE_OBJECT (s1)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s1));
+  fail_unless (tmp_layer == layer);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s2 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s2)));
-  fail_unless (GES_TIMELINE_OBJECT (s2)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s2));
+  fail_unless (tmp_layer == layer);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s3 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s3)));
-  fail_unless (GES_TIMELINE_OBJECT (s3)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s3));
+  fail_unless (tmp_layer == layer);
+  ASSERT_OBJECT_REFCOUNT (layer, "layer", 2);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -194,20 +219,35 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (g_list_find (timeline->layers, layer) != NULL);
 
   /* Make sure the associated TrackObjects are in the Track */
-  fail_unless (GES_TIMELINE_OBJECT (s1)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s2)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s3)->trackobjects != NULL);
-
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s1)->trackobjects)->data);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
+  fail_unless (trackobjects != NULL);
+  trackobject = GES_TRACK_OBJECT (trackobjects->data);
+  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 2);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
 
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s2)->trackobjects)->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
+  trackobject = GES_TRACK_OBJECT (trackobjects->data);
+  fail_unless (trackobjects != NULL);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
+  ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (trackobject), "trackobject", 1);
 
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s3)->trackobjects)->data);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
+  trackobject = GES_TRACK_OBJECT (trackobjects->data);
+  fail_unless (trackobjects != NULL);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
 
   /* theoretically this is all we need to do to ensure cleanup */
@@ -221,10 +261,10 @@ GST_END_TEST;
 GST_START_TEST (test_ges_timeline_add_layer_first)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
-  GESTrackObject *trackobject;
+  GList *trackobjects, *tmp;
 
   ges_init ();
 
@@ -246,19 +286,25 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   s1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s1 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s1)));
-  fail_unless (GES_TIMELINE_OBJECT (s1)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s1));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s2 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s2)));
-  fail_unless (GES_TIMELINE_OBJECT (s2)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s2));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s3 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s3)));
-  fail_unless (GES_TIMELINE_OBJECT (s3)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s3));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -274,21 +320,32 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackObjects are in the Track */
-  fail_unless (GES_TIMELINE_OBJECT (s1)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s2)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s3)->trackobjects != NULL);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
+  fail_unless (trackobjects != NULL);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
 
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s1)->trackobjects)->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
+  fail_unless (trackobjects != NULL);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
 
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s2)->trackobjects)->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
-
-  trackobject =
-      GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s3)->trackobjects)->data);
-  ASSERT_OBJECT_REFCOUNT (trackobject, "trackobject", 1);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
+  fail_unless (trackobjects != NULL);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 2);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
 
   /* theoretically this is all we need to do to ensure cleanup */
   g_object_unref (timeline);
@@ -299,10 +356,11 @@ GST_END_TEST;
 GST_START_TEST (test_ges_timeline_remove_track)
 {
   GESTimeline *timeline;
-  GESTimelineLayer *layer;
+  GESTimelineLayer *layer, *tmp_layer;
   GESTrack *track;
   GESCustomTimelineSource *s1, *s2, *s3;
   GESTrackObject *t1, *t2, *t3;
+  GList *trackobjects, *tmp;
 
   ges_init ();
 
@@ -324,19 +382,25 @@ GST_START_TEST (test_ges_timeline_remove_track)
   s1 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s1 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s1)));
-  fail_unless (GES_TIMELINE_OBJECT (s1)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s1));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s2 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s2 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s2)));
-  fail_unless (GES_TIMELINE_OBJECT (s2)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s2));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
   s3 = ges_custom_timeline_source_new (my_fill_track_func, NULL);
   fail_unless (s3 != NULL);
   fail_unless (ges_timeline_layer_add_object (layer, GES_TIMELINE_OBJECT (s3)));
-  fail_unless (GES_TIMELINE_OBJECT (s3)->layer == layer);
+  tmp_layer = ges_timeline_object_get_layer (GES_TIMELINE_OBJECT (s3));
+  fail_unless (tmp_layer == layer);
+  g_object_unref (tmp_layer);
 
   GST_DEBUG ("Add the layer to the timeline");
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -352,20 +416,40 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless ((gpointer) GST_ELEMENT_PARENT (track) == (gpointer) timeline);
 
   /* Make sure the associated TrackObjects are in the Track */
-  fail_unless (GES_TIMELINE_OBJECT (s1)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s2)->trackobjects != NULL);
-  fail_unless (GES_TIMELINE_OBJECT (s3)->trackobjects != NULL);
-
-  t1 = GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s1)->trackobjects)->data);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s1));
+  fail_unless (trackobjects != NULL);
+  t1 = GES_TRACK_OBJECT ((trackobjects)->data);
   g_object_ref (t1);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (t1, "trackobject", 2);
 
-  t2 = GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s2)->trackobjects)->data);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s2));
+  fail_unless (trackobjects != NULL);
+  t2 = GES_TRACK_OBJECT (trackobjects->data);
   g_object_ref (t2);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (t2, "t2", 2);
 
-  t3 = GES_TRACK_OBJECT ((GES_TIMELINE_OBJECT (s3)->trackobjects)->data);
+  trackobjects =
+      ges_timeline_object_get_track_objects (GES_TIMELINE_OBJECT (s3));
+  fail_unless (trackobjects != NULL);
+  t3 = GES_TRACK_OBJECT (trackobjects->data);
   g_object_ref (t3);
+  for (tmp = trackobjects; tmp; tmp = tmp->next) {
+    ASSERT_OBJECT_REFCOUNT (GES_TRACK_OBJECT (tmp->data), "trackobject", 3);
+    g_object_unref (GES_TRACK_OBJECT (tmp->data));
+  }
+  g_list_free (trackobjects);
   ASSERT_OBJECT_REFCOUNT (t3, "t3", 2);
 
   /* remove the track and check that the track objects have been released */

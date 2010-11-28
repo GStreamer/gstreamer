@@ -282,8 +282,9 @@ ges_objs_equal (GObject * a, GObject * b)
     , bv = {
     0};
 
-    /* ignore name property */
-    if (!g_strcmp0 ("name", (*iter)->name))
+    /* ignore name and layer properties */
+    if (!g_strcmp0 ("name", (*iter)->name) ||
+        !g_strcmp0 ("layer", (*iter)->name))
       continue;
 
     /* special case caps property */
