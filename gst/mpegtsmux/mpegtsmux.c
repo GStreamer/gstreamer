@@ -211,8 +211,7 @@ static void
 mpegtsmux_init (MpegTsMux * mux, MpegTsMuxClass * g_class)
 {
   mux->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mpegtsmux_src_factory), "src");
+      gst_pad_new_from_static_template (&mpegtsmux_src_factory, "src");
   gst_pad_use_fixed_caps (mux->srcpad);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
@@ -496,6 +495,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
   }
 
 beach:
+  gst_caps_unref (caps);
   return ret;
 }
 
@@ -993,6 +993,7 @@ mpegtsdemux_set_header_on_caps (MpegTsMux * mux)
   gst_structure_set_value (structure, "streamheader", &array);
   gst_pad_set_caps (mux->srcpad, caps);
   g_value_unset (&array);
+  gst_caps_unref (caps);
 }
 
 static gboolean
