@@ -216,17 +216,13 @@ gst_pnmenc_init (GstPnmenc * s, GstPnmencClass * klass)
 {
   GstPad *pad;
 
-  pad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_pad_template), "sink");
+  pad = gst_pad_new_from_static_template (&sink_pad_template, "sink");
   gst_pad_set_setcaps_function (pad, gst_pnmenc_setcaps_func_sink);
   gst_pad_set_chain_function (pad, gst_pnmenc_chain);
   gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 
-  s->src =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_pad_template), "src");
+  s->src = gst_pad_new_from_static_template (&src_pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (s), s->src);
 }
 

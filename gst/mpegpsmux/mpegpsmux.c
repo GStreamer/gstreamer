@@ -140,9 +140,8 @@ mpegpsmux_class_init (MpegPsMuxClass * klass)
 static void
 mpegpsmux_init (MpegPsMux * mux, MpegPsMuxClass * g_class)
 {
-  mux->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mpegpsmux_src_factory), "src");
+  mux->srcpad = gst_pad_new_from_static_template (&mpegpsmux_src_factory,
+      "src");
   gst_pad_use_fixed_caps (mux->srcpad);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 

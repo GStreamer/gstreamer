@@ -191,11 +191,8 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
 static void
 gst_live_adder_init (GstLiveAdder * adder, GstLiveAdderClass * klass)
 {
-  GstPadTemplate *template;
-
-  template = gst_static_pad_template_get (&gst_live_adder_src_template);
-  adder->srcpad = gst_pad_new_from_template (template, "src");
-  gst_object_unref (template);
+  adder->srcpad =
+      gst_pad_new_from_static_template (&gst_live_adder_src_template, "src");
   gst_pad_set_getcaps_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (adder->srcpad,
