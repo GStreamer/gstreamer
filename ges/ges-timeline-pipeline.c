@@ -48,6 +48,21 @@ typedef struct
 
 G_DEFINE_TYPE (GESTimelinePipeline, ges_timeline_pipeline, GST_TYPE_PIPELINE);
 
+struct _GESTimelinePipelinePrivate
+{
+  GESTimeline *timeline;
+  GstElement *playsink;
+  GstElement *encodebin;
+  /* Note : urisink is only created when a URI has been provided */
+  GstElement *urisink;
+
+  GESPipelineFlags mode;
+
+  GList *chains;
+
+  GstEncodingProfile *profile;
+};
+
 static GstStateChangeReturn ges_timeline_pipeline_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -63,25 +78,25 @@ ges_timeline_pipeline_dispose (GObject * object)
 {
   GESTimelinePipeline *self = GES_TIMELINE_PIPELINE (object);
 
-  if (self->playsink) {
-    if (self->mode & (TIMELINE_MODE_PREVIEW))
-      gst_bin_remove (GST_BIN (object), self->playsink);
+  if (self->priv->playsink) {
+    if (self->priv->mode & (TIMELINE_MODE_PREVIEW))
+      gst_bin_remove (GST_BIN (object), self->priv->playsink);
     else
-      gst_object_unref (self->playsink);
-    self->playsink = NULL;
+      gst_object_unref (self->priv->playsink);
+    self->priv->playsink = NULL;
   }
 
-  if (self->encodebin) {
-    if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
-      gst_bin_remove (GST_BIN (object), self->encodebin);
+  if (self->priv->encodebin) {
+    if (self->priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      gst_bin_remove (GST_BIN (object), self->priv->encodebin);
     else
-      gst_object_unref (self->encodebin);
-    self->encodebin = NULL;
+      gst_object_unref (self->priv->encodebin);
+    self->priv->encodebin = NULL;
   }
 
-  if (self->profile) {
-    gst_encoding_profile_free (self->profile);
-    self->profile = NULL;
+  if (self->priv->profile) {
+    gst_encoding_profile_free (self->priv->profile);
+    self->priv->profile = NULL;
   }
 
   G_OBJECT_CLASS (ges_timeline_pipeline_parent_class)->dispose (object);
@@ -92,6 +107,8 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  g_type_class_add_private (klass, sizeof (GESTimelinePipelinePrivate));
 
   object_class->dispose = ges_timeline_pipeline_dispose;
 
@@ -108,27 +125,27 @@ ges_timeline_pipeline_init (GESTimelinePipeline * self)
   GstElementClass *playsinkclass;
 
   GST_INFO_OBJECT (self, "Creating new 'playsink'");
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelinePrivate);
 
-  self->playsink = gst_element_factory_make ("playsink", "internal-sinks");
-  self->encodebin =
+  self->priv->playsink =
+      gst_element_factory_make ("playsink", "internal-sinks");
+  self->priv->encodebin =
       gst_element_factory_make ("encodebin", "internal-encodebin");
   /* Limit encodebin buffering to 1 buffer since we know the various
    * stream fed to it are decoupled already */
-  g_object_set (self->encodebin, "queue-buffers-max", (guint32) 1,
+  g_object_set (self->priv->encodebin, "queue-buffers-max", (guint32) 1,
       "queue-bytes-max", (guint32) 0, "queue-time-max", (guint64) 0,
       "use-smartencoder", TRUE, NULL);
 
-  if (G_UNLIKELY (self->playsink == NULL)) {
+  if (G_UNLIKELY (self->priv->playsink == NULL))
     GST_ERROR_OBJECT (self, "Can't create playsink instance !");
-    return;
-  }
-  if (G_UNLIKELY (self->encodebin == NULL)) {
+  if (G_UNLIKELY (self->priv->encodebin == NULL))
     GST_ERROR_OBJECT (self, "Can't create encodebin instance !");
-    return;
-  }
+  return;
 
   /* HACK : Intercept events going through playsink */
-  playsinkclass = GST_ELEMENT_GET_CLASS (self->playsink);
+  playsinkclass = GST_ELEMENT_GET_CLASS (self->priv->playsink);
   /* Replace playsink's GstBin::send_event with our own */
   playsinkclass->send_event = play_sink_multiple_seeks_send_event;
 
@@ -158,12 +175,12 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
 {
   GList *ltrack, *tracks, *lstream;
 
-  if (!self->profile)
+  if (!self->priv->profile)
     return TRUE;
 
   GST_DEBUG ("Updating track caps");
 
-  tracks = ges_timeline_get_tracks (self->timeline);
+  tracks = ges_timeline_get_tracks (self->priv->timeline);
 
   /* Take each stream of the encoding profile and find a matching
    * track to set the caps on */
@@ -171,13 +188,13 @@ ges_timeline_pipeline_update_caps (GESTimelinePipeline * self)
     GESTrack *track = (GESTrack *) ltrack->data;
 
     /* Find a matching stream setting */
-    for (lstream = self->profile->encodingprofiles; lstream;
+    for (lstream = self->priv->profile->encodingprofiles; lstream;
         lstream = lstream->next) {
       GstStreamEncodingProfile *prof =
           (GstStreamEncodingProfile *) lstream->data;
 
       if (TRACK_COMPATIBLE_PROFILE (track->type, prof->type)) {
-        if (self->mode == TIMELINE_MODE_SMART_RENDER) {
+        if (self->priv->mode == TIMELINE_MODE_SMART_RENDER) {
           GstCaps *ocaps, *rcaps;
 
           GST_DEBUG ("Smart Render mode, setting output caps");
@@ -228,13 +245,14 @@ ges_timeline_pipeline_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (G_UNLIKELY (self->timeline == NULL)) {
+      if (G_UNLIKELY (self->priv->timeline == NULL)) {
         GST_ERROR_OBJECT (element,
             "No GESTimeline set on the pipeline, cannot play !");
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->
+          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -272,7 +290,7 @@ get_output_chain_for_track (GESTimelinePipeline * self, GESTrack * track)
 {
   GList *tmp;
 
-  for (tmp = self->chains; tmp; tmp = tmp->next) {
+  for (tmp = self->priv->chains; tmp; tmp = tmp->next) {
     OutputChain *chain = (OutputChain *) tmp->data;
     if (chain->track == track)
       return chain;
@@ -353,22 +371,22 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
       GST_DEBUG_PAD_NAME (pad), GST_PAD_CAPS (pad));
 
   if (G_UNLIKELY (!(track =
-              ges_timeline_get_track_for_pad (self->timeline, pad)))) {
+              ges_timeline_get_track_for_pad (self->priv->timeline, pad)))) {
     GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
     return;
   }
 
   /* Don't connect track if it's not going to be used */
   if (track->type == GES_TRACK_TYPE_VIDEO &&
-      !(self->mode & TIMELINE_MODE_PREVIEW_VIDEO) &&
-      !(self->mode & TIMELINE_MODE_RENDER) &&
-      !(self->mode & TIMELINE_MODE_SMART_RENDER)) {
+      !(self->priv->mode & TIMELINE_MODE_PREVIEW_VIDEO) &&
+      !(self->priv->mode & TIMELINE_MODE_RENDER) &&
+      !(self->priv->mode & TIMELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Video track... but we don't need it. Not linking");
   }
   if (track->type == GES_TRACK_TYPE_AUDIO &&
-      !(self->mode & TIMELINE_MODE_PREVIEW_AUDIO) &&
-      !(self->mode & TIMELINE_MODE_RENDER) &&
-      !(self->mode & TIMELINE_MODE_SMART_RENDER)) {
+      !(self->priv->mode & TIMELINE_MODE_PREVIEW_AUDIO) &&
+      !(self->priv->mode & TIMELINE_MODE_RENDER) &&
+      !(self->priv->mode & TIMELINE_MODE_SMART_RENDER)) {
     GST_DEBUG_OBJECT (self, "Audio track... but we don't need it. Not linking");
   }
 
@@ -388,7 +406,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   gst_object_unref (sinkpad);
 
   /* Connect playsink */
-  if (self->mode & TIMELINE_MODE_PREVIEW) {
+  if (self->priv->mode & TIMELINE_MODE_PREVIEW) {
     const gchar *sinkpad_name;
     GstPad *tmppad;
 
@@ -412,7 +430,8 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
     /* Request a sinkpad from playsink */
     if (G_UNLIKELY (!(sinkpad =
-                gst_element_get_request_pad (self->playsink, sinkpad_name)))) {
+                gst_element_get_request_pad (self->priv->playsink,
+                    sinkpad_name)))) {
       GST_ERROR_OBJECT (self, "Couldn't get a pad from the playsink !");
       goto error;
     }
@@ -429,7 +448,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     GST_DEBUG ("Reconfiguring playsink");
 
     /* reconfigure playsink */
-    g_signal_emit_by_name (self->playsink, "reconfigure", &reconfigured);
+    g_signal_emit_by_name (self->priv->playsink, "reconfigure", &reconfigured);
     GST_DEBUG ("'reconfigure' returned %d", reconfigured);
 
     /* We still hold a reference on the sinkpad */
@@ -437,18 +456,19 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   }
 
   /* Connect to encodebin */
-  if (self->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) {
+  if (self->priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) {
     GstPad *tmppad;
     GST_DEBUG_OBJECT (self, "Connecting to encodebin");
 
     if (!chain->encodebinpad) {
       /* Check for unused static pads */
-      sinkpad = get_compatible_unlinked_pad (self->encodebin, pad);
+      sinkpad = get_compatible_unlinked_pad (self->priv->encodebin, pad);
 
       if (sinkpad == NULL) {
         GstCaps *caps = gst_pad_get_caps_reffed (pad);
         /* If no compatible static pad is available, request a pad */
-        g_signal_emit_by_name (self->encodebin, "request-pad", caps, &sinkpad);
+        g_signal_emit_by_name (self->priv->encodebin, "request-pad", caps,
+            &sinkpad);
         gst_caps_unref (caps);
         if (G_UNLIKELY (sinkpad == NULL)) {
           GST_ERROR_OBJECT (self, "Couldn't get a pad from encodebin !");
@@ -471,7 +491,7 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
 
   /* If chain wasn't already present, insert it in list */
   if (!get_output_chain_for_track (self, track))
-    self->chains = g_list_append (self->chains, chain);
+    self->priv->chains = g_list_append (self->priv->chains, chain);
 
   GST_DEBUG ("done");
   return;
@@ -497,7 +517,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   GST_DEBUG_OBJECT (self, "pad removed %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   if (G_UNLIKELY (!(track =
-              ges_timeline_get_track_for_pad (self->timeline, pad)))) {
+              ges_timeline_get_track_for_pad (self->priv->timeline, pad)))) {
     GST_WARNING_OBJECT (self, "Couldn't find coresponding track !");
     return;
   }
@@ -512,7 +532,8 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     peer = gst_pad_get_peer (chain->encodebinpad);
     gst_pad_unlink (peer, chain->encodebinpad);
     gst_object_unref (peer);
-    gst_element_release_request_pad (self->encodebin, chain->encodebinpad);
+    gst_element_release_request_pad (self->priv->encodebin,
+        chain->encodebinpad);
   }
 
   /* Unlink playsink */
@@ -520,7 +541,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     peer = gst_pad_get_peer (chain->playsinkpad);
     gst_pad_unlink (peer, chain->playsinkpad);
     gst_object_unref (peer);
-    gst_element_release_request_pad (self->playsink, chain->playsinkpad);
+    gst_element_release_request_pad (self->priv->playsink, chain->playsinkpad);
     gst_object_unref (chain->playsinkpad);
   }
 
@@ -531,7 +552,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
   gst_element_set_state (chain->tee, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (self), chain->tee);
 
-  self->chains = g_list_remove (self->chains, chain);
+  self->priv->chains = g_list_remove (self->priv->chains, chain);
   g_free (chain);
 
   GST_DEBUG ("done");
@@ -553,7 +574,7 @@ gboolean
 ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
     GESTimeline * timeline)
 {
-  g_return_val_if_fail (pipeline->timeline == NULL, FALSE);
+  g_return_val_if_fail (pipeline->priv->timeline == NULL, FALSE);
   g_return_val_if_fail (timeline != NULL, FALSE);
 
   GST_DEBUG ("pipeline:%p, timeline:%p", timeline, pipeline);
@@ -562,7 +583,7 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
               GST_ELEMENT (timeline)))) {
     return FALSE;
   }
-  pipeline->timeline = timeline;
+  pipeline->priv->timeline = timeline;
 
   /* Connect to pipeline */
   g_signal_connect (timeline, "pad-added", (GCallback) pad_added_cb, pipeline);
@@ -595,25 +616,25 @@ ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
   /* Clear previous URI sink if it existed */
   /* FIXME : We should figure out if it was added to the pipeline,
    * and if so, remove it. */
-  if (pipeline->urisink) {
-    g_object_unref (pipeline->urisink);
-    pipeline->urisink = NULL;
+  if (pipeline->priv->urisink) {
+    g_object_unref (pipeline->priv->urisink);
+    pipeline->priv->urisink = NULL;
   }
 
-  pipeline->urisink =
+  pipeline->priv->urisink =
       gst_element_make_from_uri (GST_URI_SINK, output_uri, "urisink");
-  if (G_UNLIKELY (pipeline->urisink == NULL)) {
+  if (G_UNLIKELY (pipeline->priv->urisink == NULL)) {
     GST_ERROR_OBJECT (pipeline, "Couldn't not create sink for URI %s",
         output_uri);
     return FALSE;
   }
 
-  if (pipeline->profile)
-    gst_encoding_profile_free (pipeline->profile);
-  g_object_set (pipeline->encodebin, "use-smartencoder",
-      !(!(pipeline->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
-  g_object_set (pipeline->encodebin, "profile", profile, NULL);
-  pipeline->profile = gst_encoding_profile_copy (profile);
+  if (pipeline->priv->profile)
+    gst_encoding_profile_free (pipeline->priv->profile);
+  g_object_set (pipeline->priv->encodebin, "use-smartencoder",
+      !(!(pipeline->priv->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
+  g_object_set (pipeline->priv->encodebin, "profile", profile, NULL);
+  pipeline->priv->profile = gst_encoding_profile_copy (profile);
 
   return TRUE;
 }
@@ -636,11 +657,11 @@ gboolean
 ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
     GESPipelineFlags mode)
 {
-  GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d", pipeline->mode,
-      mode);
+  GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d",
+      pipeline->priv->mode, mode);
 
   /* fast-path, nothing to change */
-  if (mode == pipeline->mode)
+  if (mode == pipeline->priv->mode)
     return TRUE;
 
   /* FIXME: It would be nice if we are only (de)activating preview
@@ -651,55 +672,58 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
   gst_element_set_state (GST_ELEMENT_CAST (pipeline), GST_STATE_NULL);
 
   /* remove no-longer needed components */
-  if (pipeline->mode & TIMELINE_MODE_PREVIEW && !(mode & TIMELINE_MODE_PREVIEW)) {
+  if (pipeline->priv->mode & TIMELINE_MODE_PREVIEW &&
+      !(mode & TIMELINE_MODE_PREVIEW)) {
     /* Disable playsink */
     GST_DEBUG ("Disabling playsink");
-    g_object_ref (pipeline->playsink);
-    gst_bin_remove (GST_BIN_CAST (pipeline), pipeline->playsink);
+    g_object_ref (pipeline->priv->playsink);
+    gst_bin_remove (GST_BIN_CAST (pipeline), pipeline->priv->playsink);
   }
-  if ((pipeline->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
+  if ((pipeline->priv->mode &
+          (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
       !(mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
-    g_object_ref (pipeline->encodebin);
-    g_object_ref (pipeline->urisink);
+    g_object_ref (pipeline->priv->encodebin);
+    g_object_ref (pipeline->priv->urisink);
     gst_bin_remove_many (GST_BIN_CAST (pipeline),
-        pipeline->encodebin, pipeline->urisink, NULL);
+        pipeline->priv->encodebin, pipeline->priv->urisink, NULL);
   }
 
   /* Add new elements */
-  if (!(pipeline->mode & TIMELINE_MODE_PREVIEW) &&
+  if (!(pipeline->priv->mode & TIMELINE_MODE_PREVIEW) &&
       (mode & TIMELINE_MODE_PREVIEW)) {
     /* Add playsink */
     GST_DEBUG ("Adding playsink");
 
-    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->playsink)) {
+    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->playsink)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add playsink");
       return FALSE;
     }
   }
-  if (!(pipeline->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
+  if (!(pipeline->priv->mode &
+          (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
       (mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
     /* Adding render bin */
     GST_DEBUG ("Adding render bin");
 
-    if (G_UNLIKELY (pipeline->urisink == NULL)) {
+    if (G_UNLIKELY (pipeline->priv->urisink == NULL)) {
       GST_ERROR_OBJECT (pipeline, "Output URI not set !");
       return FALSE;
     }
-    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->encodebin)) {
+    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->encodebin)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add encodebin");
       return FALSE;
     }
-    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->urisink)) {
+    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->urisink)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
       return FALSE;
     }
-    g_object_set (pipeline->encodebin, "use-smartencoder",
+    g_object_set (pipeline->priv->encodebin, "use-smartencoder",
         !(!(mode & TIMELINE_MODE_SMART_RENDER)), NULL);
 
-    gst_element_link_pads_full (pipeline->encodebin, "src", pipeline->urisink,
-        "sink", GST_PAD_LINK_CHECK_NOTHING);
+    gst_element_link_pads_full (pipeline->priv->encodebin, "src",
+        pipeline->priv->urisink, "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
 
   /* FIXUPS */
@@ -707,7 +731,7 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
    * If we are rendering, set playsink to sync=False,
    * If we are NOT rendering, set playsink to sync=TRUE */
 
-  pipeline->mode = mode;
+  pipeline->priv->mode = mode;
 
   return TRUE;
 }
@@ -733,7 +757,7 @@ ges_timeline_pipeline_get_thumbnail_buffer (GESTimelinePipeline * self,
   GstElement *sink;
   GstBuffer *buf;
 
-  sink = self->playsink;
+  sink = self->priv->playsink;
   if (!sink) {
     GST_WARNING ("thumbnailing can only be done if we have a playsink");
     return NULL;

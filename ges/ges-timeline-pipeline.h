@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_PIPELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_PIPELINE, GESTimelinePipelineClass))
 
+typedef struct _GESTimelinePipelinePrivate GESTimelinePipelinePrivate;
+
 /**
  * GESPipelineFlags:
  * @TIMELINE_MODE_PREVIEW_AUDIO: output audio to the soundcard
@@ -70,18 +72,8 @@ typedef enum {
 struct _GESTimelinePipeline {
   GstPipeline parent;
 
-  /*< private >*/
-  GESTimeline * timeline;
-  GstElement * playsink;
-  GstElement * encodebin;
-  /* Note : urisink is only created when a URI has been provided */
-  GstElement * urisink;
-
-  GESPipelineFlags mode;
-
-  GList *chains;
-
-  GstEncodingProfile *profile;
+  /* <private> */
+  GESTimelinePipelinePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
