@@ -591,9 +591,9 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 #endif /* HAVE_XSHM */
     {
       GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XGetImage");
-      ximage->ximage = XGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+      XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
           ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
-          ximagesrc->height, AllPlanes, ZPixmap);
+          ximagesrc->height, AllPlanes, ZPixmap, ximage->ximage, 0, 0);
     }
 #ifdef HAVE_XDAMAGE
   }
