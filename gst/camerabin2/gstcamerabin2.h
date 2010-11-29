@@ -38,6 +38,7 @@ struct _GstCameraBin
   GstPipeline pipeline;
 
   GstElement *src;
+  gulong src_mode_notify_id;
 
   /* concurrency control */
   GMutex *capture_mutex;
