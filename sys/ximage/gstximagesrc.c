@@ -69,7 +69,8 @@ enum
   PROP_STARTX,
   PROP_STARTY,
   PROP_ENDX,
-  PROP_ENDY
+  PROP_ENDY,
+  PROP_REMOTE,
 };
 
 GST_BOILERPLATE (GstXImageSrc, gst_ximage_src, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -591,9 +592,16 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 #endif /* HAVE_XSHM */
     {
       GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XGetImage");
-      XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-          ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
-          ximagesrc->height, AllPlanes, ZPixmap, ximage->ximage, 0, 0);
+      if (ximagesrc->remote) {
+        XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+            ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
+            ximagesrc->height, AllPlanes, ZPixmap, ximage->ximage, 0, 0);
+      } else {
+        ximage->ximage =
+            XGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+            ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
+            ximagesrc->height, AllPlanes, ZPixmap);
+      }
     }
 #ifdef HAVE_XDAMAGE
   }
@@ -824,6 +832,9 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
     case PROP_ENDY:
       src->endy = g_value_get_uint (value);
       break;
+    case PROP_REMOTE:
+      src->remote = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -863,6 +874,9 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ENDY:
       g_value_set_uint (value, src->endy);
+      break;
+    case PROP_REMOTE:
+      g_value_set_uint (value, src->remote);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1110,6 +1124,19 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
           "Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
+  /**
+   * GstXImageSrc:remote
+   *
+   * Whether the X display is remote. The element will try to use alternate calls
+   * known to work better with remote displays.
+   *
+   * Since: 0.10.26
+   **/
+  g_object_class_install_property (gc, PROP_REMOTE,
+      g_param_spec_boolean ("remote", "Remote dispay",
+          "Whether the display is remote", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   parent_class = g_type_class_peek_parent (klass);
 
   push_class->create = gst_ximage_src_create;
@@ -1136,6 +1163,7 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
   ximagesrc->starty = 0;
   ximagesrc->endx = 0;
   ximagesrc->endy = 0;
+  ximagesrc->remote = FALSE;
 }
 
 static gboolean

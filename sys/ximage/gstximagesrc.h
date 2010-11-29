@@ -83,6 +83,9 @@ struct _GstXImageSrc
   guint endx;
   guint endy;
 
+  /* whether to use remote friendly calls */
+  gboolean remote;
+
 #ifdef HAVE_XFIXES
   int fixes_event_base;
   XFixesCursorImage *cursor_image;
