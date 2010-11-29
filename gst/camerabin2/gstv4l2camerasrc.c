@@ -70,8 +70,8 @@ gst_v4l2_camera_src_set_property (GObject * object,
 
   switch (prop_id) {
     case ARG_MODE:
-      self->mode = g_value_get_enum (value);
-      gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self), self->mode);
+      gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self),
+          g_value_get_enum (value));
       break;
     case ARG_FILTER_CAPS:
       GST_OBJECT_LOCK (self);
@@ -168,8 +168,36 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  gboolean ret = FALSE;
+
   GST_DEBUG_OBJECT (self, "pass buffer: %d", self->mode == MODE_VIDEO);
-  return self->mode == MODE_VIDEO;
+
+  /* TODO do we want to lock for every buffer? */
+  /*
+   * Note that we can use gst_pad_push_event here because we are a buffer
+   * probe.
+   */
+  if (self->mode == MODE_VIDEO) {
+    GST_OBJECT_LOCK (self);
+    if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
+      /* send the newseg */
+      gst_pad_push_event (pad, gst_event_new_new_segment (FALSE, 1.0,
+              GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1, 0));
+      self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
+      ret = TRUE;
+    } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {
+      /* send eos */
+      gst_pad_push_event (pad, gst_event_new_eos ());
+      self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
+      self->mode = MODE_PREVIEW;
+      g_object_notify (G_OBJECT (self), "mode");
+    } else {
+      ret = TRUE;
+    }
+    GST_OBJECT_UNLOCK (self);
+  }
+
+  return ret;
 }
 
 /**
@@ -678,6 +706,7 @@ gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
+  gint ret = TRUE;
 
   if (photography) {
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (photography),
@@ -686,20 +715,34 @@ gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
     }
   }
 
-  self->mode = mode;
-
   switch (mode) {
     case MODE_PREVIEW:
-      return TRUE;              // XXX
+      if (self->mode == MODE_VIDEO) {
+        GST_OBJECT_LOCK (self);
+        if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING)
+          self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
+        else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_RUNNING)
+          self->video_rec_status = GST_VIDEO_RECORDING_STATUS_FINISHING;
+        GST_OBJECT_UNLOCK (self);
+      }
+      break;
     case MODE_IMAGE:
-      return start_image_capture (GST_V4L2_CAMERA_SRC (bcamsrc));
+      ret = start_image_capture (GST_V4L2_CAMERA_SRC (bcamsrc));
+      break;
     case MODE_VIDEO:
-      return TRUE;              // XXX
+      GST_OBJECT_LOCK (self);
+      if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE)
+        self->video_rec_status = GST_VIDEO_RECORDING_STATUS_STARTING;
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      g_assert_not_reached ();
+      ret = FALSE;
   }
 
-  g_assert_not_reached ();
-
-  return FALSE;
+  if (ret)
+    self->mode = mode;
+  return ret;
 }
 
 static gboolean
@@ -1058,7 +1101,9 @@ static void
 gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
     GstV4l2CameraSrcClass * klass)
 {
+  /* TODO where are variables reset? */
   self->mode = MODE_PREVIEW;
+  self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
 }
 
 gboolean

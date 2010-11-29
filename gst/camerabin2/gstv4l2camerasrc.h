@@ -41,6 +41,13 @@ G_BEGIN_DECLS
 typedef struct _GstV4l2CameraSrc GstV4l2CameraSrc;
 typedef struct _GstV4l2CameraSrcClass GstV4l2CameraSrcClass;
 
+enum GstVideoRecordingStatus {
+  GST_VIDEO_RECORDING_STATUS_DONE,
+  GST_VIDEO_RECORDING_STATUS_STARTING,
+  GST_VIDEO_RECORDING_STATUS_RUNNING,
+  GST_VIDEO_RECORDING_STATUS_FINISHING
+};
+
 
 /**
  * GstV4l2CameraSrc:
@@ -51,6 +58,9 @@ struct _GstV4l2CameraSrc
   GstBaseCameraSrc parent;
 
   GstCameraBinMode mode;
+
+  /* video recording controls */
+  gint video_rec_status;
 
   /* source elements */
   GstElement *src_vid_src;
