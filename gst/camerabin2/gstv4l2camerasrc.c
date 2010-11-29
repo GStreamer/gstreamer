@@ -41,8 +41,8 @@
 /* Using "bilinear" as default zoom method */
 #define CAMERABIN_DEFAULT_ZOOM_METHOD 1
 
-//GST_DEBUG_CATEGORY (v4l2_camera_src_debug);
-//#define GST_CAT_DEFAULT v4l2_camera_src_debug
+GST_DEBUG_CATEGORY (v4l2_camera_src_debug);
+#define GST_CAT_DEFAULT v4l2_camera_src_debug
 
 GST_BOILERPLATE (GstV4l2CameraSrc, gst_v4l2_camera_src, GstBaseCameraSrc,
     GST_TYPE_BASE_CAMERA_SRC);
@@ -999,8 +999,8 @@ gst_v4l2_camera_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-//  GST_DEBUG_CATEGORY_INIT (v4l2_camera_src_debug, "v4l2_camera_src", 0,
-//      "V4l2 camera src");
+  GST_DEBUG_CATEGORY_INIT (v4l2_camera_src_debug, "v4l2camerasrc", 0,
+      "V4l2 camera src");
 
   gst_element_class_set_details_simple (gstelement_class,
       "V4l2 camera src element for camerabin", "Source/Video",

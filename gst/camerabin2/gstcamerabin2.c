@@ -28,8 +28,10 @@
 
 #include "gstcamerabin2.h"
 
-/* prototypes */
+GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
+#define GST_CAT_DEFAULT gst_camera_bin_debug
 
+/* prototypes */
 
 enum
 {
@@ -138,8 +140,10 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans);
 static void
 gst_camera_bin_start_capture (GstCameraBin * camerabin)
 {
+  GST_DEBUG_OBJECT (camerabin, "Received start-capture");
   g_mutex_lock (camerabin->capture_mutex);
   if (!camerabin->capturing) {
+    GST_INFO_OBJECT (camerabin, "Starting capture, mode: %d", camerabin->mode);
     g_object_set (camerabin->src, "mode", camerabin->mode, NULL);
     camerabin->capturing = TRUE;
   } else {
@@ -381,6 +385,8 @@ gst_camerabin_get_property (GObject * object, guint prop_id,
 gboolean
 gst_camera_bin_plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_camera_bin_debug, "camerabin2", 0, "CameraBin2");
+
   return gst_element_register (plugin, "camerabin2", GST_RANK_NONE,
       gst_camera_bin_get_type ());
 }

@@ -31,8 +31,6 @@
 #include "camerabingeneral.h"
 #include <glib.h>
 
-GST_DEBUG_CATEGORY (gst_camerabin_debug);
-
 /**
  * gst_camerabin_add_element:
  * @bin: add an element to this bin

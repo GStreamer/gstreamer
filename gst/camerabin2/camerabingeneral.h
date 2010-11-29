@@ -35,8 +35,4 @@ void gst_camerabin_remove_elements_from_bin (GstBin * bin);
 
 gboolean gst_camerabin_drop_eos_probe (GstPad * pad, GstEvent * event, gpointer u_data);
 
-/* debug logging category */
-GST_DEBUG_CATEGORY_EXTERN (gst_camerabin_debug);
-#define GST_CAT_DEFAULT gst_camerabin_debug
-
 #endif /* #ifndef __CAMERABIN_GENERAL_H_ */
