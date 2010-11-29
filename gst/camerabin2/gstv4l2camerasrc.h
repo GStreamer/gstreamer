@@ -94,11 +94,6 @@ struct _GstV4l2CameraSrc
   /* Caps applied to capsfilters when taking still image */
   GstCaps *image_capture_caps;
   gboolean image_capture_caps_update; // XXX where does this get set..
-
-  /* if GstV4l2CameraSrc is moved into camerabin plugin, then this isn't
-   * needed:
-   */
-  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 
@@ -109,11 +104,6 @@ struct _GstV4l2CameraSrc
 struct _GstV4l2CameraSrcClass
 {
   GstBaseCameraSrcClass parent;
-
-  /* if GstV4l2CameraSrc is moved into camerabin plugin, then this isn't
-   * needed:
-   */
-  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 gboolean gst_v4l2_camera_src_plugin_init (GstPlugin * plugin);
