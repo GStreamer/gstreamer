@@ -230,6 +230,9 @@ static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
 static gboolean gst_rtspsrc_send_event (GstElement * element, GstEvent * event);
 static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
 
+static gboolean gst_rtspsrc_setup_auth (GstRTSPSrc * src,
+    GstRTSPMessage * response);
+
 static void gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd,
     gboolean flush);
 static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
@@ -3651,6 +3654,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   gboolean restart = FALSE;
   GstRTSPResult res;
   GstRTSPMessage message = { 0 };
+  gint retry = 0;
 
   GST_OBJECT_LOCK (src);
   if (src->loop_cmd == CMD_STOP)
@@ -3668,6 +3672,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
           (gint) tv_timeout.tv_sec);
 
+      gst_rtsp_message_unset (&message);
       /* we should continue reading the TCP socket because the server might
        * send us requests. When the session timeout expires, we need to send a
        * keep-alive request to keep the session open. */
@@ -3719,6 +3724,15 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           GST_DEBUG_OBJECT (src, "ignoring response message");
           if (src->debug)
             gst_rtsp_message_dump (&message);
+          if (message.type_data.response.code == GST_RTSP_STS_UNAUTHORIZED) {
+            GST_DEBUG_OBJECT (src, "but is Unauthorized response ...");
+            if (gst_rtspsrc_setup_auth (src, &message) && !(retry++)) {
+              GST_DEBUG_OBJECT (src, "so retrying keep-alive");
+              gst_rtspsrc_send_keep_alive (src);
+            }
+          } else {
+            retry = 0;
+          }
           break;
         case GST_RTSP_MESSAGE_DATA:
           /* we ignore response and data messages */
@@ -4013,13 +4027,16 @@ gst_rtsp_decode_quoted_string (gchar * quoted_string)
  */
 static void
 gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
-    const gchar * header)
+    const gchar * header, gboolean * stale)
 {
   GSList *list = NULL, *iter;
   const gchar *end;
   gchar *item, *eq, *name_end, *value;
 
+  g_return_if_fail (stale != NULL);
+
   gst_rtsp_connection_clear_auth_params (conn);
+  *stale = FALSE;
 
   /* Parse a header whose content is described by RFC2616 as
    * "#something", where "something" does not itself contain commas,
@@ -4055,6 +4072,8 @@ gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
     } else
       value = NULL;
 
+    if ((strcmp (item, "stale") == 0) && (strcmp (value, "TRUE") == 0))
+      *stale = TRUE;
     gst_rtsp_connection_set_auth_param (conn, item, value);
     g_free (item);
   }
@@ -4072,12 +4091,13 @@ gst_rtspsrc_parse_digest_challenge (GstRTSPConnection * conn,
  * even parse out the realm */
 static void
 gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods,
-    GstRTSPConnection * conn)
+    GstRTSPConnection * conn, gboolean * stale)
 {
   gchar *start;
 
   g_return_if_fail (hdr != NULL);
   g_return_if_fail (methods != NULL);
+  g_return_if_fail (stale != NULL);
 
   /* Skip whitespace at the start of the string */
   for (start = hdr; start[0] != '\0' && g_ascii_isspace (start[0]); start++);
@@ -4086,7 +4106,7 @@ gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods,
     *methods |= GST_RTSP_AUTH_BASIC;
   else if (g_ascii_strncasecmp (start, "digest ", 7) == 0) {
     *methods |= GST_RTSP_AUTH_DIGEST;
-    gst_rtspsrc_parse_digest_challenge (conn, &start[7]);
+    gst_rtspsrc_parse_digest_challenge (conn, &start[7], stale);
   }
 }
 
@@ -4115,21 +4135,24 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
   GstRTSPUrl *url;
   GstRTSPConnection *conn;
   gchar *hdr;
+  gboolean stale = FALSE;
 
   conn = src->conninfo.connection;
 
   /* Identify the available auth methods and see if any are supported */
   if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
           &hdr, 0) == GST_RTSP_OK) {
-    gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods, conn);
+    gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods, conn, &stale);
   }
 
   if (avail_methods == GST_RTSP_AUTH_NONE)
     goto no_auth_available;
 
-  /* FIXME: For digest auth, if the response indicates that the session
+  /* For digest auth, if the response indicates that the session
    * data are stale, we just update them in the connection object and
    * return TRUE to retry the request */
+  if (stale)
+    src->tried_url_auth = FALSE;
 
   url = gst_rtsp_connection_get_url (conn);
 
