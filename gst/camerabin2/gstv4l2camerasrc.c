@@ -69,6 +69,10 @@ gst_v4l2_camera_src_set_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
+    case ARG_MODE:
+      self->mode = g_value_get_enum (value);
+      gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self), self->mode);
+      break;
     case ARG_FILTER_CAPS:
       GST_OBJECT_LOCK (self);
       gst_caps_replace (&self->view_finder_caps,
@@ -112,6 +116,9 @@ gst_v4l2_camera_src_get_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
+    case ARG_MODE:
+      g_value_set_enum (value, self->mode);
+      break;
     case ARG_FILTER_CAPS:
       gst_value_set_caps (value, self->view_finder_caps);
       break;
@@ -1022,6 +1029,12 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
   gobject_class->get_property = gst_v4l2_camera_src_get_property;
 
   // g_object_class_install_property ....
+  g_object_class_install_property (gobject_class, ARG_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "The capture mode (still image capture, video recording or "
+          "viewfinder)",
+          GST_TYPE_CAMERABIN_MODE, MODE_PREVIEW,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasecamerasrc_class->construct_pipeline =
       gst_v4l2_camera_src_construct_pipeline;
