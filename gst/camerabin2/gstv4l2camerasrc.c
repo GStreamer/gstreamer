@@ -147,8 +147,15 @@ gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  gboolean ret;
   GST_DEBUG_OBJECT (self, "pass buffer: %d", self->mode == MODE_IMAGE);
-  return self->mode == MODE_IMAGE;
+
+  ret = self->mode == MODE_IMAGE;
+  if (ret) {
+    self->mode = MODE_PREVIEW;
+    g_object_notify (G_OBJECT (self), "mode");
+  }
+  return ret;
 }
 
 /**
