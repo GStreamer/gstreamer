@@ -64,6 +64,9 @@ struct _GESTimelineFileSource {
   /* The formats supported by this filesource
    * TODO : Could maybe be moved to a parent class */
   GESTrackType supportedformats;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -74,7 +77,10 @@ struct _GESTimelineFileSource {
 struct _GESTimelineFileSourceClass {
   GESTimelineSourceClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_tl_filesource_get_type (void);

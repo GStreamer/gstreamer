@@ -62,6 +62,9 @@ struct _GESTimeline {
   GList *pendingobjects;
   /* Whether we are changing state asynchronously or not */
   gboolean async_pending;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -78,6 +81,9 @@ struct _GESTimelineClass {
   void (*track_removed)	(GESTimeline *timeline, GESTrack * track);
   void (*layer_added)	(GESTimeline *timeline, GESTimelineLayer *layer);
   void (*layer_removed)	(GESTimeline *timeline, GESTimelineLayer *layer);
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_get_type (void);

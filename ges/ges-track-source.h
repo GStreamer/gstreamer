@@ -54,10 +54,13 @@ G_BEGIN_DECLS
  */
 
 struct _GESTrackSource {
-  /*< public >*/
   GESTrackObject parent;
+
   /*< private >*/
   GstElement *element;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -70,7 +73,12 @@ struct _GESTrackSource {
 
 struct _GESTrackSourceClass {
   GESTrackObjectClass parent_class;
+
   GstElement *(*create_element) (GESTrackSource *);
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_source_get_type (void);

@@ -69,7 +69,8 @@ struct _GESTrackVideoTransition {
   gdouble                       start_value;
   gdouble                       end_value;
 
-  /*< public >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -81,7 +82,9 @@ struct _GESTrackVideoTransition {
 struct _GESTrackVideoTransitionClass {
   GESTrackTransitionClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_video_transition_get_type (void);

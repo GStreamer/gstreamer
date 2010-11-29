@@ -54,7 +54,8 @@ G_BEGIN_DECLS
 struct _GESTrack {
   GstBin parent;
 
-  /*< public >*/ /* READ-ONLY */
+  /*< public >*/
+  /* READ-ONLY */
   GESTrackType type;
 
   /*< private >*/
@@ -65,6 +66,9 @@ struct _GESTrack {
 
   GstElement * composition;	/* The composition associated with this track */
   GstPad * srcpad;		/* The source GhostPad */
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -74,6 +78,10 @@ struct _GESTrack {
 
 struct _GESTrackClass {
   GstBinClass parent_class;
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_get_type (void);

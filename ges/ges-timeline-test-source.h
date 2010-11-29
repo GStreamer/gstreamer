@@ -59,6 +59,9 @@ struct _GESTimelineTestSource {
   GESVideoTestPattern vpattern;
   gdouble freq;
   gdouble volume;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -69,7 +72,9 @@ struct _GESTimelineTestSource {
 struct _GESTimelineTestSourceClass {
   GESTimelineSourceClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_test_source_get_type (void);

@@ -53,6 +53,10 @@ struct _GESTrackFileSource {
 
   /*< public >*/
   gchar *uri;
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -63,7 +67,9 @@ struct _GESTrackFileSource {
 struct _GESTrackFileSourceClass {
   GESTrackSourceClass parent_class;
 
-  /* <public> */
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_filesource_get_type (void);

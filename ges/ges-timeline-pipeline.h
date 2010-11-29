@@ -70,7 +70,7 @@ typedef enum {
 struct _GESTimelinePipeline {
   GstPipeline parent;
 
-  /* <private> */
+  /*< private >*/
   GESTimeline * timeline;
   GstElement * playsink;
   GstElement * encodebin;
@@ -82,6 +82,9 @@ struct _GESTimelinePipeline {
   GList *chains;
 
   GstEncodingProfile *profile;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -92,7 +95,10 @@ struct _GESTimelinePipeline {
 
 struct _GESTimelinePipelineClass {
   GstPipelineClass parent_class;
-  /* <public> */
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_pipeline_get_type (void);

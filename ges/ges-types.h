@@ -21,6 +21,11 @@
 #ifndef __GES_TYPES_H__
 #define __GES_TYPES_H__
 
+/* Padding */
+#define GES_PADDING		4
+
+/* Type definitions */
+
 typedef struct _GESCustomTimelineSource GESCustomTimelineSource;
 typedef struct _GESCustomTimelineSourceClass GESCustomTimelineSourceClass;
 

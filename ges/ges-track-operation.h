@@ -54,10 +54,13 @@ G_BEGIN_DECLS
  */
 
 struct _GESTrackOperation {
-  /*< public >*/
   GESTrackObject parent;
+
   /*< private >*/
   GstElement *element;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -69,7 +72,12 @@ struct _GESTrackOperation {
 
 struct _GESTrackOperationClass {
   GESTrackObjectClass parent_class;
+
   GstElement *(*create_element) (GESTrackOperation *);
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_operation_get_type (void);

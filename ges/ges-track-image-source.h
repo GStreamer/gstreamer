@@ -53,6 +53,9 @@ struct _GESTrackImageSource {
 
   /*< public >*/
   gchar *uri;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -64,6 +67,9 @@ struct _GESTrackImageSourceClass {
   GESTrackSourceClass parent_class;
 
   /* <public> */
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_image_source_get_type (void);

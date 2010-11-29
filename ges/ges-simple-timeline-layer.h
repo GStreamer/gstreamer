@@ -58,6 +58,9 @@ struct _GESSimpleTimelineLayer {
 
   gboolean adding_object;
   gboolean valid;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -73,6 +76,9 @@ struct _GESSimpleTimelineLayerClass {
   void (*object_moved) (GESTimelineLayer * layer, GESTimelineObject * object,
       gint old_position, gint new_position);
   /*< private >*/
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_simple_timeline_layer_get_type (void);

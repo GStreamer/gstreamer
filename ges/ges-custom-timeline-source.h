@@ -75,6 +75,9 @@ struct _GESCustomTimelineSource {
   /*< private >*/
   FillTrackObjectUserFunc filltrackobjectfunc;
   gpointer user_data;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -85,6 +88,10 @@ struct _GESCustomTimelineSource {
 
 struct _GESCustomTimelineSourceClass {
   GESTimelineSourceClass parent_class;
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_cust_timeline_src_get_type (void);

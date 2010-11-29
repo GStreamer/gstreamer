@@ -58,6 +58,9 @@ struct _GESTrackTextOverlay {
   GESTextHAlign halign;
   GESTextVAlign valign;
   GstElement    *text_el;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -69,6 +72,9 @@ struct _GESTrackTextOverlayClass {
   GESTrackOperationClass parent_class;
 
   /*< private >*/
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_text_overlay_get_type (void);

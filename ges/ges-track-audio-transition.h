@@ -61,7 +61,8 @@ struct _GESTrackAudioTransition {
   GstController                 *b_controller;
   GstInterpolationControlSource *b_control_source;
 
-  /*< public >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -73,7 +74,9 @@ struct _GESTrackAudioTransition {
 struct _GESTrackAudioTransitionClass {
   GESTrackTransitionClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_audio_transition_get_type (void);

@@ -52,8 +52,7 @@ struct _GESTimelineLayer {
 
   /*< public >*/
 
-  GESTimeline *timeline;	/* The timeline where this layer is being used
-				 */
+  GESTimeline *timeline;
 
   /*< private >*/
   GSList * objects_start;	/* The TimelineObjects sorted by start and
@@ -63,21 +62,33 @@ struct _GESTimelineLayer {
 				 * containing timeline */
 
   guint32 min_gnl_priority, max_gnl_priority;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
  * GESTimelineLayerClass:
- * @parent_class: parent class
+ * @parent_class: layer parent class
+ * @get_objects: method to get the objects contained in the layer
  *
+ * Subclasses can override the @get_objects if they can provide a more
+ * efficient way of providing the list of contained #GESTimelineObject(s).
  */
 struct _GESTimelineLayerClass {
   GObjectClass parent_class;
 
+  /*< public >*/
+  /* virtual methods for subclasses */
   GList *(*get_objects) (GESTimelineLayer * layer);
 
-  /*< signals >*/
+  /*< private >*/
+  /* Signals */
   void	(*object_added)		(GESTimelineLayer * layer, GESTimelineObject * object);
   void	(*object_removed)	(GESTimelineLayer * layer, GESTimelineObject * object);
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_layer_get_type (void);

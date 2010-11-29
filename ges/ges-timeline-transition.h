@@ -51,8 +51,13 @@ G_BEGIN_DECLS
  */
 struct _GESTimelineTransition {
   GESTimelineObject parent;
+
   /*< public >*/
   GESVideoTransitionType vtype;
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -63,7 +68,10 @@ struct _GESTimelineTransition {
 
 struct _GESTimelineTransitionClass {
   GESTimelineObjectClass parent_class;
-  /*< public >*/
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_transition_get_type (void);

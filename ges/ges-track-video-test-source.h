@@ -53,6 +53,9 @@ struct _GESTrackVideoTestSource {
 
   /*< private >*/
   GESVideoTestPattern pattern;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -63,7 +66,9 @@ struct _GESTrackVideoTestSource {
 struct _GESTrackVideoTestSourceClass {
   GESTrackSourceClass parent_class;
 
-  /* <public> */
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_video_test_source_get_type (void);

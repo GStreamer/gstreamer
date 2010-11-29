@@ -158,6 +158,9 @@ struct _GESTimelineObject {
   guint32 height;       /* the span of priorities this object needs */
 
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -174,12 +177,17 @@ struct _GESTimelineObject {
 struct _GESTimelineObjectClass {
   GObjectClass parent_class;
 
+  /*< public >*/
   CreateTrackObjectFunc create_track_object;
   CreateTrackObjectsFunc create_track_objects;
 
   /* FIXME : might need a release_track_object */
   FillTrackObjectFunc	fill_track_object;
   gboolean need_fill_track;
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_object_get_type (void);

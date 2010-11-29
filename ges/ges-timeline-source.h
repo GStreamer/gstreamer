@@ -53,12 +53,14 @@ G_BEGIN_DECLS
 struct _GESTimelineSource {
   GESTimelineObject parent;
 
-  /*< private *>*/
+  /*< private >*/
   gchar *text;
   gchar *font_desc;
   GESTextHAlign halign;
   GESTextVAlign valign;
- /*< public >*/
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -68,7 +70,10 @@ struct _GESTimelineSource {
 
 struct _GESTimelineSourceClass {
   GESTimelineObjectClass parent_class;
-  /*< public >*/
+
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_timeline_source_get_type (void);

@@ -54,7 +54,8 @@ struct _GESFormatter {
   gchar    *data;
   gsize    length;
 
-  gpointer _ges_reserved[GST_PADDING];
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 typedef gboolean (*GESFormatterCanLoadURIMethod) (gchar * uri);
@@ -125,7 +126,9 @@ struct _GESFormatterClass {
   GESFormatterSaveMethod save;
   GESFormatterLoadMethod load;
 
-  gpointer _ges_reserved[GST_PADDING];
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_formatter_get_type (void);

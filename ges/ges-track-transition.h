@@ -62,7 +62,9 @@ struct _GESTrackTransition
 {
   GESTrackObject parent;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -71,10 +73,14 @@ struct _GESTrackTransition
  */
 
 struct _GESTrackTransitionClass {
-    GESTrackObjectClass parent_class;
+  GESTrackObjectClass parent_class;
+  
+  /*< public >*/
+  GstElement* (*create_element) (GESTrackTransition *self);
 
-    /* <public> */
-    GstElement* (*create_element) (GESTrackTransition *self);
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_transition_get_type (void);

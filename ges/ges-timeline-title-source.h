@@ -59,6 +59,9 @@ struct _GESTimelineTitleSource {
   gchar *font_desc;
   GESTextVAlign halign;
   GESTextHAlign valign;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -69,7 +72,9 @@ struct _GESTimelineTitleSource {
 struct _GESTimelineTitleSourceClass {
   GESTimelineSourceClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_tl_title_src_get_type (void);

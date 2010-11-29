@@ -132,6 +132,9 @@ struct _GESTrackObject {
 
 
   GstElement *gnlobject;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -150,10 +153,6 @@ struct _GESTrackObject {
 struct _GESTrackObjectClass {
   GObjectClass parent_class;
 
-  /*< private >*/
-  /* signals */
-  void	(*changed)	(GESTrackObject * object);
-
   /*< public >*/
   /* virtual methods for subclasses */
   gboolean (*create_gnl_object) (GESTrackObject * object);
@@ -163,6 +162,13 @@ struct _GESTrackObjectClass {
   void (*gnl_priority_changed) (GESTrackObject *object, guint priority);
   void (*duration_changed) (GESTrackObject *object, guint64 duration);
   void (*active_changed) (GESTrackObject *object, gboolean active);
+
+  /*< private >*/
+  /* signals */
+  void	(*changed)	(GESTrackObject * object);
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_object_get_type (void);

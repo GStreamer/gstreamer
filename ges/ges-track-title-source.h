@@ -58,6 +58,9 @@ struct _GESTrackTitleSource {
   GESTextVAlign valign;
   GstElement    *text_el;
   GstElement    *background_el;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -69,6 +72,9 @@ struct _GESTrackTitleSourceClass {
   GESTrackSourceClass parent_class;
 
   /*< private >*/
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_title_src_get_type (void);

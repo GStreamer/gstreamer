@@ -55,6 +55,9 @@ struct _GESTrackAudioTestSource {
   /*< private >*/
   gdouble freq;
   gdouble volume;
+
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -66,7 +69,9 @@ struct _GESTrackAudioTestSource {
 struct _GESTrackAudioTestSourceClass {
   GESTrackSourceClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_track_audio_test_source_get_type (void);

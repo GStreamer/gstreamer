@@ -50,7 +50,9 @@
 struct _GESKeyfileFormatter {
   GESFormatter parent;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -61,7 +63,9 @@ struct _GESKeyfileFormatter {
 struct _GESKeyfileFormatterClass {
   GESFormatterClass parent_class;
 
-  /*< public >*/
+  /*< private >*/
+  /* Padding for API extension */
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_keyfile_formatter_get_type (void);
