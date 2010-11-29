@@ -1469,7 +1469,15 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
           ES_stream->flags |= MPEGTS_STREAM_FLAG_IS_VIDEO;
 
         /* set adaptor */
+        GST_LOG ("Initializing PES filter for PID %u", ES_stream->PID);
         gst_pes_filter_init (&ES_stream->filter, NULL, NULL);
+        if (ES_stream->stream_type == ST_PRIVATE_DATA) {
+          GST_FIXME ("Stream type is ST_PRIVATE_DATA, setting "
+              "filter->gather_pes as a HACK");
+          /* FIXME: There's another place where pes filters could get
+           * initialized. Might need similar temporary hack there as well */
+          ES_stream->filter.gather_pes = TRUE;
+        }
         gst_pes_filter_set_callbacks (&ES_stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
             (GstPESFilterResync) gst_mpegts_demux_resync_cb, ES_stream);
@@ -2298,6 +2306,7 @@ gst_mpegts_demux_parse_stream (GstMpegTSDemux * demux, GstMpegTSStream * stream,
         }
 
         /* Initialise our PES filter */
+        GST_LOG ("Initializing PES filter for PID %u", stream->PID);
         gst_pes_filter_init (&stream->filter, NULL, NULL);
         gst_pes_filter_set_callbacks (&stream->filter,
             (GstPESFilterData) gst_mpegts_demux_data_cb,
