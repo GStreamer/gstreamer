@@ -309,6 +309,7 @@ ks_video_append_video_stream_cfg_fields (GstStructure * structure,
     const KS_VIDEO_STREAM_CONFIG_CAPS * vscc)
 {
   GValue val = { 0, };
+  gint64 min_n, min_d;
   gint64 max_n, max_d;
 
   g_return_val_if_fail (structure, FALSE);
@@ -335,16 +336,13 @@ ks_video_append_video_stream_cfg_fields (GstStructure * structure,
   }
 
   /* framerate */
+  compress_fraction (NANOSECONDS, vscc->MinFrameInterval, &min_n, &min_d);
   compress_fraction (NANOSECONDS, vscc->MaxFrameInterval, &max_n, &max_d);
 
-  if (vscc->MinFrameInterval == vscc->MaxFrameInterval) {
+  if (min_n == max_n && min_d == max_d) {
     g_value_init (&val, GST_TYPE_FRACTION);
     gst_value_set_fraction (&val, max_n, max_d);
   } else {
-    gint64 min_n, min_d;
-
-    compress_fraction (NANOSECONDS, vscc->MinFrameInterval, &min_n, &min_d);
-
     g_value_init (&val, GST_TYPE_FRACTION_RANGE);
     gst_value_set_fraction_range_full (&val, max_n, max_d, min_n, min_d);
   }
