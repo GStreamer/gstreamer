@@ -27,6 +27,7 @@
 #endif
 
 #include "gstcamerabin2.h"
+#include "gstcamerabin-enum.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
 #define GST_CAT_DEFAULT gst_camera_bin_debug
@@ -55,40 +56,6 @@ static guint camerabin_signals[LAST_SIGNAL];
  * Standard GObject boilerplate *
  * and GObject types            *
  ********************************/
-
-#define GST_TYPE_CAMERABIN_MODE (gst_camerabin_mode_get_type ())
-/**
- * GstCameraBinMode:
- * @MODE_PREVIEW: preview only (no capture) mode
- * @MODE_IMAGE: image capture
- * @MODE_VIDEO: video capture
- *
- * Capture mode to use.
- */
-typedef enum
-{
-  MODE_PREVIEW = 0,             /* TODO do we have an use for this? */
-  MODE_IMAGE = 1,
-  MODE_VIDEO = 2,
-} GstCameraBinMode;
-
-static GType
-gst_camerabin_mode_get_type (void)
-{
-  static GType gtype = 0;
-
-  if (gtype == 0) {
-    static const GEnumValue values[] = {
-      {MODE_IMAGE, "Still image capture (default)", "mode-image"},
-      {MODE_VIDEO, "Video recording", "mode-video"},
-      {0, NULL, NULL}
-    };
-
-    gtype = g_enum_register_static ("GstCameraBin2Mode", values);
-  }
-  return gtype;
-}
-
 
 static GstPipelineClass *parent_class;
 static void gst_camera_bin_class_init (GstCameraBinClass * klass);

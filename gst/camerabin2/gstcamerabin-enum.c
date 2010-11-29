@@ -72,7 +72,7 @@ gst_camerabin_mode_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstCameraBinMode", values);
+    gtype = g_enum_register_static ("GstCameraBin2Mode", values);
   }
   return gtype;
 }
