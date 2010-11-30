@@ -373,6 +373,7 @@ public class MediaInfo.Info : VBox
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
             label.set_selectable(true);
+            label.set_use_markup(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
@@ -471,6 +472,7 @@ public class MediaInfo.Info : VBox
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
             label.set_selectable(true);
+            label.set_use_markup(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
@@ -578,6 +580,9 @@ public class MediaInfo.Info : VBox
         str += "\n";
       v = s.get_value (fn);
       vstr = v.serialize ().compress ();
+      if (vstr.has_prefix("http://") || vstr.has_prefix("https://")) {
+        vstr = "<a href=\"" + vstr + "\">" + vstr + "</a>";
+      }
       str += fn + " = " + vstr;
     }
 
