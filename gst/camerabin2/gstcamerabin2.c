@@ -25,6 +25,26 @@
  * development.
  */
 
+/*
+ * Detail Topics:
+ *
+ * videorecordingbin state management (for now on vidbin)
+ * - The problem: keeping vidbin state in sync with camerabin will make it
+ *                go to playing when it might not be used, causing its internal
+ *                filesink to open a file that might be left blank.
+ * - The solution: vidbin state is set to locked upon its creation and camerabin
+ *                 registers itself on the notify::ready-for-capture of the src.
+ *                 Whenever the src readyness goes to FALSE it means a new
+ *                 capture is starting. If we are on video mode, the vidbin's
+ *                 state is set to NULL and then PLAYING (in between this we
+ *                 have room to set the destination filename).
+ *                 There is no problem to leave it on playing after an EOS, so
+ *                 no action is taken on stop-capture.
+ * - TODO: What happens when an error pops?
+ *
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -133,12 +153,35 @@ gst_camera_bin_change_mode (GstCameraBin * camerabin, gint mode)
 }
 
 static void
+gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
+    gpointer user_data)
+{
+  GstCameraBin *camera = GST_CAMERA_BIN_CAST (user_data);
+  gboolean ready;
+
+  if (camera->mode == MODE_VIDEO) {
+    g_object_get (camera->src, "ready-for-capture", &ready, NULL);
+    if (!ready) {
+      /* a video recording is about to start, we reset the videobin */
+      gst_element_set_state (camera->vidbin, GST_STATE_NULL);
+      gst_element_set_state (camera->vidbin, GST_STATE_PLAYING);
+    }
+  }
+}
+
+static void
 gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
+  if (camerabin->src_capture_notify_id)
+    g_signal_handler_disconnect (camerabin->src,
+        camerabin->src_capture_notify_id);
   if (camerabin->src)
     gst_object_unref (camerabin->src);
+
+  if (camerabin->vidbin)
+    gst_object_unref (camerabin->vidbin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -256,6 +299,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   vf = gst_element_factory_make ("viewfinderbin", "vf-bin");
 
   camera->src = gst_object_ref (src);
+  camera->vidbin = gst_object_ref (vid);
 
   vid_queue = gst_element_factory_make ("queue", "video-queue");
   img_queue = gst_element_factory_make ("queue", "image-queue");
@@ -275,6 +319,20 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   gst_element_link_pads (src, "vfsrc", vf_queue, "sink");
   gst_element_link_pads (src, "imgsrc", img_queue, "sink");
   gst_element_link_pads (src, "vidsrc", vid_queue, "sink");
+
+  /*
+   * Video can't get into playing as its internal filesink will open
+   * a file for writing and leave it empty if unused.
+   *
+   * Its state is managed using the current mode and the source's
+   * ready-for-capture notify callback. When we are at video mode and
+   * the source's ready-for-capture goes to FALSE it means it is
+   * starting recording, so we should prepare the video bin.
+   */
+  gst_element_set_locked_state (vid, TRUE);
+  camera->src_capture_notify_id = g_signal_connect (G_OBJECT (src),
+      "notify::ready-for-capture",
+      G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
   camera->elements_created = TRUE;
   return TRUE;

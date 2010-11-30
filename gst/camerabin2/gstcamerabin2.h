@@ -38,6 +38,9 @@ struct _GstCameraBin
   GstPipeline pipeline;
 
   GstElement *src;
+  gulong src_capture_notify_id;
+
+  GstElement *vidbin;
 
   /* properties */
   gint mode;
