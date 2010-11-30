@@ -36,6 +36,17 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>0.10.31</revision>
+   <branch>0.10</branch>
+   <name>Dance Like It's 1982</name>
+   <created>2010-11-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.31.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.31.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.30</revision>
    <branch>0.10</branch>
    <name>Difficult Birth</name>

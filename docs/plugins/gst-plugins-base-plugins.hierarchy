@@ -1,27 +1,91 @@
 GObject
+  GInputStream
+  GOutputStream
+  GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
-    GstPad
-      GstPlaybin2SelectorPad
-    GstPadTemplate
-    GstPluginFeature
-      GstElementFactory
-      GstTypeFindFactory
-      GstIndexFactory
+    GstBus
+    GstClock
+      GstSystemClock
+        GstAudioClock
     GstElement
+      GstAdder
+      GstAlsaMixerElement
+      GstAudioRate
+      GstBaseSink
+        GstAppSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
+        GstGioBaseSink
+          GstGioSink
+          GstGioStreamSink
+        GstGnomeVFSSink
+        GstMultiFdSink
+          GstTCPServerSink
+        GstTCPClientSink
+        GstVideoSink
+          GstXImageSink
+          GstXvImageSink
+      GstBaseSrc
+        GstAppSrc
+        GstAudioTestSrc
+        GstGioBaseSrc
+          GstGioSrc
+          GstGioStreamSrc
+        GstGnomeVFSSrc
+        GstPushSrc
+          GstBaseAudioSrc
+            GstAudioSrc
+              GstAlsaSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
+          GstTCPClientSrc
+          GstTCPServerSrc
+          GstV4lElement
+            GstV4lSrc
+          GstVideoTestSrc
+      GstBaseTransform
+        GstAudioConvert
+        GstAudioFilter
+          GstVolume
+        GstAudioResample
+        GstVideoFilter
+          GstFFMpegCsp
+          GstVideoScale
       GstBin
+        GstDecodeBin
+        GstDecodeBin2
         GstPipeline
           GstPlayBaseBin
             GstPlayBin
           GstPlayBin2
-        GstDecodeBin2
-        GstURIDecodeBin
-        GstDecodeBin
         GstPlaySink
         GstSubtitleOverlay
-      GstVorbisEnc
-      GstVorbisDec
-      GstVorbisParse
-        GstVorbisTag
+        GstURIDecodeBin
+      GstGDPDepay
+      GstGDPPay
+      GstOggAviParse
+      GstOggDemux
+      GstOggMux
+      GstOggParse
+      GstOgmParse
+        GstOgmAudioParse
+        GstOgmTextParse
+        GstOgmVideoParse
+      GstPlaybin2InputSelector
+      GstSsaParse
+      GstStreamSelector
+      GstSubParse
+      GstTextOverlay
+        GstClockOverlay
+        GstTimeOverlay
+      GstTextRender
+      GstTheoraDec
+      GstTheoraEnc
+      GstTheoraParse
+      GstVideoRate
       GstVisual
         GstVisualbumpscope
         GstVisualcorona
@@ -31,108 +95,45 @@ GObject
         GstVisuallv_analyzer
         GstVisuallv_scope
         GstVisualoinksie
-      GstBaseSrc
-        GstPushSrc
-          GstCddaBaseSrc
-            GstCdParanoiaSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstAlsaSrc
-          GstV4lElement
-            GstV4lSrc
-          GstVideoTestSrc
-          GstTCPClientSrc
-          GstTCPServerSrc
-        GstGioBaseSrc
-          GstGioSrc
-          GstGioStreamSrc
-        GstGnomeVFSSrc
-        GstAppSrc
-        GstAudioTestSrc
-      GstBaseSink
-        GstGioBaseSink
-          GstGioSink
-          GstGioStreamSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
-        GstGnomeVFSSink
-        GstVideoSink
-          GstXImageSink
-          GstXvImageSink
-        GstAppSink
-        GstTCPClientSink
-        GstMultiFdSink
-          GstTCPServerSink
-      GstTextOverlay
-        GstTimeOverlay
-        GstClockOverlay
-      GstTextRender
-      GstAlsaMixerElement
-      GstTheoraDec
-      GstTheoraEnc
-      GstTheoraParse
-      GstOggDemux
-      GstOggMux
-      GstOgmParse
-        GstOgmAudioParse
-        GstOgmVideoParse
-        GstOgmTextParse
-      GstOggParse
-      GstOggAviParse
-      GstAdder
-      GstBaseTransform
-        GstVideoFilter
-          GstVideoScale
-          GstFFMpegCsp
-        GstAudioFilter
-          GstVolume
-        GstAudioConvert
-        GstAudioResample
-      GstVideoRate
-      GstStreamSelector
-      GstPlaybin2InputSelector
-      GstGDPDepay
-      GstGDPPay
-      GstSubParse
-      GstSsaParse
-      GstAudioRate
-    GstBus
-    GstTask
-    GstTaskPool
-    GstClock
-      GstSystemClock
-        GstAudioClock
+      GstVorbisDec
+      GstVorbisEnc
+      GstVorbisParse
+        GstVorbisTag
+    GstPad
+      GstPlaybin2SelectorPad
+    GstPadTemplate
     GstPlugin
+    GstPluginFeature
+      GstElementFactory
+      GstIndexFactory
+      GstTypeFindFactory
     GstRegistry
     GstRingBuffer
-      GstAudioSrcRingBuffer
       GstAudioSinkRingBuffer
+      GstAudioSrcRingBuffer
+    GstTask
+    GstTaskPool
   GstSignalObject
-  GstMixerTrack
   GstStreamInfo
-  GstColorBalanceChannel
-  GstTunerNorm
   GstTunerChannel
+  GstTunerNorm
+  PangoContext
   PangoFontMap
     PangoFcFontMap
       PangoCairoFcFontMap
-  PangoContext
-  GInputStream
-  GOutputStream
 GInterface
+  GFile
   GTypePlugin
   GstChildProxy
-  GstURIHandler
-  GstTagSetter
-  GstPreset
+  GstColorBalance
   GstImplementsInterface
   GstMixer
-  GstPropertyProbe
-  GstTuner
-  GstXOverlay
-  GstColorBalance
   GstNavigation
+  GstPreset
+  GstPropertyProbe
   GstStreamVolume
+  GstTagSetter
+  GstTuner
+  GstURIHandler
+  GstXOverlay
   PangoCairoFontMap
-  GFile

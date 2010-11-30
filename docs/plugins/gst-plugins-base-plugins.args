@@ -334,7 +334,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Color Specification</NICK>
-<BLURB>Generate video in the given color specification.</BLURB>
+<BLURB>Generate video in the given color specification (Deprecated: use a caps filter with video/x-raw-yuv,color-matrix="sdtv" or "hdtv" instead).</BLURB>
 <DEFAULT>ITU-R Rec. BT.601</DEFAULT>
 </ARG>
 
@@ -404,7 +404,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoneplate x*y product phase</NICK>
-<BLURB>Zoneplate x*t product phase.</BLURB>
+<BLURB>Zoneplate x*y product phase.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -455,6 +455,36 @@
 <FLAGS>rw</FLAGS>
 <NICK>Zoneplate 2nd order products y offset</NICK>
 <BLURB>Zoneplate 2nd order products y offset.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::background-color</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background Color</NICK>
+<BLURB>Background color to use (big-endian ARGB).</BLURB>
+<DEFAULT>4278190080</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::foreground-color</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Foreground Color</NICK>
+<BLURB>Foreground color to use (big-endian ARGB).</BLURB>
+<DEFAULT>4294967295</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoTestSrc::horizontal-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal Speed</NICK>
+<BLURB>Scroll image number of pixels per frame (positive is scroll to the left).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -704,7 +734,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Protocol</NICK>
-<BLURB>The protocol to wrap data in.</BLURB>
+<BLURB>The protocol to wrap data in. GDP protocol here is deprecated. Please use gdppay element.</BLURB>
 <DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
 </ARG>
 
@@ -1201,7 +1231,7 @@
 <ARG>
 <NAME>GstTheoraEnc::speed-level</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,2]</RANGE>
+<RANGE>[0,3]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed level</NICK>
 <BLURB>Controls the amount of motion vector searching done while encoding.  This property requires libtheora version >= 1.0.</BLURB>
@@ -1256,6 +1286,26 @@
 <NICK>VP3 Compatible</NICK>
 <BLURB>Disables non-VP3 compatible features.  This property requires libtheora version >= 1.1.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::multipass-cache-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multipass Cache File</NICK>
+<BLURB>Multipass cache file.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraEnc::multipass-mode</NAME>
+<TYPE>GstTheoraEncMultipassMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multipass mode</NICK>
+<BLURB>Single pass or first/second pass.</BLURB>
+<DEFAULT>Single pass</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1379,6 +1429,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAlsaSrc::card-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Card name</NICK>
+<BLURB>Human-readable name of the sound card.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAlsaSink::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -1395,6 +1455,16 @@
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
 <BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaSink::card-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Card name</NICK>
+<BLURB>Human-readable name of the sound card.</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -1486,6 +1556,16 @@
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
 <DEFAULT>Bilinear</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoScale::add-borders</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Add Borders</NICK>
+<BLURB>Add black borders if necessary to keep the display aspect ratio.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1849,6 +1929,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstTextOverlay::color</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color</NICK>
+<BLURB>Color to use for text (big-endian ARGB).</BLURB>
+<DEFAULT>4294967295</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::xpos</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>horizontal position</NICK>
+<BLURB>Horizontal position when using position alignment.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::ypos</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>vertical position</NICK>
+<BLURB>Vertical position when using position alignment.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>CDParanoia::abort-on-skip</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -2125,7 +2235,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Version</NICK>
 <BLURB>Version of the GStreamer Data Protocol.</BLURB>
-<DEFAULT>GDP Version 1.0</DEFAULT>
+<DEFAULT>GST_DP_VERSION_1_0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2336,6 +2446,16 @@
 <NICK>Expose All Streams</NICK>
 <BLURB>Expose all streams, including those of unknown type or that don't match the 'caps' property.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin::ring-buffer-max-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXUINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. ring buffer size (bytes)</NICK>
+<BLURB>Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2715,6 +2835,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>AV Offset</NICK>
 <BLURB>The synchronisation offset between audio and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin2::ring-buffer-max-size</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXUINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. ring buffer size (bytes)</NICK>
+<BLURB>Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
