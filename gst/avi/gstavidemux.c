@@ -3380,9 +3380,12 @@ header_wrong_avih:
 }
 
 static void
-gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d)
+gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d,
+    gint h, gint min, gint s)
 {
   GDate *date;
+  GstDateTime *dt;
+
   date = g_date_new_dmy (d, m, y);
   if (!g_date_valid (date)) {
     /* bogus date */
@@ -3391,12 +3394,19 @@ gst_avi_demux_add_date_tag (GstAviDemux * avi, gint y, gint m, gint d)
     return;
   }
 
+  dt = gst_date_time_new_local_time (y, m, d, h, min, s);
+
   if (avi->globaltags == NULL)
     avi->globaltags = gst_tag_list_new ();
 
   gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date,
       NULL);
   g_date_free (date);
+  if (dt) {
+    gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
+        dt, NULL);
+    gst_date_time_unref (dt);
+  }
 }
 
 static void
@@ -3410,7 +3420,7 @@ gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data)
     GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
     return;
   }
-  gst_avi_demux_add_date_tag (avi, y, m, d);
+  gst_avi_demux_add_date_tag (avi, y, m, d, 0, 0, 0);
 }
 
 static gint
@@ -3461,7 +3471,7 @@ gst_avi_demux_parse_idit_text (GstAviDemux * avi, gchar * data)
     return;
   }
   month = get_month_num (monthstr, strlen (monthstr));
-  gst_avi_demux_add_date_tag (avi, year, month, day);
+  gst_avi_demux_add_date_tag (avi, year, month, day, hour, min, sec);
 }
 
 static void
