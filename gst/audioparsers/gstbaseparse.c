@@ -1970,6 +1970,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     /* Subclass may want to know the data offset */
     GST_BUFFER_OFFSET (outbuf) = parse->priv->offset;
     parse->priv->offset += fsize;
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
 
     /* move along with upstream timestamp (if any),
      * but interpolate in between */
@@ -2192,6 +2193,7 @@ gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
   if (fsize <= GST_BUFFER_SIZE (buffer)) {
     outbuf = gst_buffer_create_sub (buffer, 0, fsize);
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer);
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     gst_buffer_unref (buffer);
   } else {
     gst_buffer_unref (buffer);
