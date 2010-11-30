@@ -1463,7 +1463,9 @@ dvb_sub_feed_with_pts (DvbSub * dvb_sub, guint64 pts, guint8 * data, gint len)
           segment_len, len - pos);
       return -2;
     }
-    // TODO: Parse the segment per type
+    // TODO: Parse the segment per type  (this is probably a leftover TODO that is now done?)
+    /* FIXME: Handle differing PTS values - all segments of a given display set must be with the same PTS,
+     * FIXME: but we let it slip and just take it for granted in end_of_display_set */
     switch (segment_type) {
       case DVB_SUB_SEGMENT_PAGE_COMPOSITION:
         dvb_log (DVB_LOG_PACKET, G_LOG_LEVEL_DEBUG,
