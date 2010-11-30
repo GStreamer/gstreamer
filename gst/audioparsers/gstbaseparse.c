@@ -2944,6 +2944,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
 
   /* do not know at first */
   *_offset = -1;
+  *_time = GST_CLOCK_TIME_NONE;
 
   /* need initial positions; start and end */
   lpos = parse->priv->first_frame_offset;
