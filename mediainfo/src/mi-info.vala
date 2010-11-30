@@ -126,6 +126,7 @@ public class MediaInfo.Info : VBox
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     container_name = new Label (null);
     container_name.set_alignment (0.0f, 0.5f);
+    container_name.set_selectable(true);
     table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -134,6 +135,7 @@ public class MediaInfo.Info : VBox
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     mime_type = new Label (null);
     mime_type.set_alignment (0.0f, 0.5f);
+    mime_type.set_selectable(true);
     table.attach (mime_type, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -142,6 +144,7 @@ public class MediaInfo.Info : VBox
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     duration = new Label (null);
     duration.set_alignment (0.0f, 0.5f);
+    duration.set_selectable(true);
     table.attach (duration, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -277,6 +280,7 @@ public class MediaInfo.Info : VBox
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
           row++;
 
@@ -286,6 +290,7 @@ public class MediaInfo.Info : VBox
           str = pb_utils_get_codec_description (sinfo.get_caps ());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -295,6 +300,7 @@ public class MediaInfo.Info : VBox
           str = "%u / %u bits/second".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -311,6 +317,7 @@ public class MediaInfo.Info : VBox
           }
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -320,6 +327,7 @@ public class MediaInfo.Info : VBox
           str = "%u / %u frames/second".printf (((DiscovererVideoInfo)sinfo).get_framerate_num(),((DiscovererVideoInfo)sinfo).get_framerate_denom());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -329,6 +337,7 @@ public class MediaInfo.Info : VBox
           str = "%u : %u".printf (((DiscovererVideoInfo)sinfo).get_par_num(),((DiscovererVideoInfo)sinfo).get_par_denom());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -338,6 +347,7 @@ public class MediaInfo.Info : VBox
           str = "%u bits/pixel".printf (((DiscovererVideoInfo)sinfo).get_depth());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -348,6 +358,7 @@ public class MediaInfo.Info : VBox
             label = new Label(s.to_string ());
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
+            label.set_selectable(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
@@ -361,6 +372,7 @@ public class MediaInfo.Info : VBox
             label = new Label(str);
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
+            label.set_selectable(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
@@ -382,6 +394,7 @@ public class MediaInfo.Info : VBox
           label = new Label(sinfo.get_caps ().to_string ());
           label.set_ellipsize (Pango.EllipsizeMode.END);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
           row++;
 
@@ -391,6 +404,7 @@ public class MediaInfo.Info : VBox
           str = pb_utils_get_codec_description (sinfo.get_caps ());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -400,6 +414,7 @@ public class MediaInfo.Info : VBox
           str = "%u / %u bits/second".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -409,6 +424,7 @@ public class MediaInfo.Info : VBox
           str = "%u samples/second".printf (((DiscovererAudioInfo)sinfo).get_sample_rate());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -419,6 +435,7 @@ public class MediaInfo.Info : VBox
           str = "%u".printf (((DiscovererAudioInfo)sinfo).get_channels());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
 
@@ -428,6 +445,7 @@ public class MediaInfo.Info : VBox
           str = "%u bits/sample".printf (((DiscovererAudioInfo)sinfo).get_depth());
           label = new Label (str);
           label.set_alignment (0.0f, 0.5f);
+          label.set_selectable(true);
           table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
           row++;
   
@@ -438,6 +456,7 @@ public class MediaInfo.Info : VBox
             label = new Label(s.to_string ());
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
+            label.set_selectable(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
@@ -451,6 +470,7 @@ public class MediaInfo.Info : VBox
             label = new Label(str);
             label.set_ellipsize (Pango.EllipsizeMode.END);
             label.set_alignment (0.0f, 0.5f);
+            label.set_selectable(true);
             table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
             row++;
           }
