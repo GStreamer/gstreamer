@@ -124,7 +124,6 @@ typedef struct {
 
 GType    dvb_sub_get_type      (void) G_GNUC_CONST;
 DvbSub  *dvb_sub_new           (void);
-gint     dvb_sub_feed          (DvbSub *dvb_sub, guint8 *data, gint len);
 gint     dvb_sub_feed_with_pts (DvbSub *dvb_sub, guint64 pts, guint8 *data, gint len);
 void     dvb_sub_set_callbacks (DvbSub *dvb_sub, DvbSubCallbacks *callbacks, gpointer user_data);
 
