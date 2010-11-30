@@ -66,7 +66,7 @@ gst_camerabin_mode_get_type (void)
 
   if (gtype == 0) {
     static const GEnumValue values[] = {
-      {MODE_PREVIEW, "Preview mode (should be default?)", "mode-preview"},
+      /* {MODE_PREVIEW, "Preview mode (should be default?)", "mode-preview"}, */
       {MODE_IMAGE, "Still image capture (default)", "mode-image"},
       {MODE_VIDEO, "Video recording", "mode-video"},
       {0, NULL, NULL}

@@ -108,35 +108,25 @@ static void
 gst_camera_bin_start_capture (GstCameraBin * camerabin)
 {
   GST_DEBUG_OBJECT (camerabin, "Received start-capture");
-  g_mutex_lock (camerabin->capture_mutex);
-  if (!camerabin->capturing) {
-    GST_INFO_OBJECT (camerabin, "Starting capture, mode: %d", camerabin->mode);
-    g_object_set (camerabin->src, "mode", camerabin->mode, NULL);
-    camerabin->capturing = TRUE;
-  } else {
-    GST_WARNING_OBJECT (camerabin, "Capture already ongoing");
-  }
-  g_mutex_unlock (camerabin->capture_mutex);
+  g_signal_emit_by_name (camerabin->src, "start-capture", NULL);
 }
 
 static void
 gst_camera_bin_stop_capture (GstCameraBin * camerabin)
 {
-  /* TODO do we need a lock here? it is just an if */
-  if (camerabin->capturing) {
-    /* Capturing is cleaned on the notify function because it works
-     * both for images and videos */
-    g_object_set (camerabin->src, "mode", MODE_PREVIEW, NULL);
-  }
+  g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 }
 
 static void
 gst_camera_bin_change_mode (GstCameraBin * camerabin, gint mode)
 {
+  if (mode == camerabin->mode)
+    return;
+
   /* stop any ongoing capture */
   gst_camera_bin_stop_capture (camerabin);
-
   camerabin->mode = mode;
+  g_object_set (camerabin->src, "mode", mode, NULL);
 }
 
 static void
@@ -144,12 +134,9 @@ gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
-  if (camerabin->src_mode_notify_id)
-    g_signal_handler_disconnect (camerabin->src, camerabin->src_mode_notify_id);
   if (camerabin->src)
     gst_object_unref (camerabin->src);
 
-  g_mutex_free (camerabin->capture_mutex);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -228,26 +215,7 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 static void
 gst_camera_bin_init (GstCameraBin * camerabin)
 {
-  camerabin->capturing = FALSE;
-  camerabin->capture_mutex = g_mutex_new ();
   camerabin->mode = MODE_IMAGE;
-}
-
-static void
-gst_camera_bin_src_notify_mode (GObject * src, GParamSpec * pspec,
-    gpointer data)
-{
-  GstCameraBin *camera = GST_CAMERA_BIN_CAST (data);
-  gint mode;
-
-  g_object_get (src, "mode", &mode, NULL);
-
-  if (mode == MODE_PREVIEW) {
-    g_mutex_lock (camera->capture_mutex);
-    g_assert (camera->capturing);
-    camera->capturing = FALSE;
-    g_mutex_unlock (camera->capture_mutex);
-  }
 }
 
 /**
@@ -285,8 +253,6 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   vf = gst_element_factory_make ("viewfinderbin", "vf-bin");
 
   camera->src = gst_object_ref (src);
-  camera->src_mode_notify_id = g_signal_connect (src, "notify::mode",
-      (GCallback) gst_camera_bin_src_notify_mode, camera);
 
   vid_queue = gst_element_factory_make ("queue", "video-queue");
   img_queue = gst_element_factory_make ("queue", "image-queue");

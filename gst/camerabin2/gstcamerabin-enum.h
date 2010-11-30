@@ -113,7 +113,6 @@ GType gst_camerabin_flags_get_type (void);
 
 /**
  * GstCameraBinMode:
- * @MODE_PREVIEW: preview only (no capture) mode
  * @MODE_IMAGE: image capture
  * @MODE_VIDEO: video capture
  *
@@ -121,12 +120,7 @@ GType gst_camerabin_flags_get_type (void);
  */
 typedef enum
 {
-  /* note:  changed to align with 'capture-mode' property (even though
-   * I have no idea where this property comes from..)  But it somehow
-   * seems more logical for preview to be mode==0 even if it is an ABI
-   * break..
-   */
-  MODE_PREVIEW = 0,
+  /* MODE_PREVIEW = 0, No use for this */
   MODE_IMAGE = 1,
   MODE_VIDEO = 2,
 } GstCameraBinMode;
