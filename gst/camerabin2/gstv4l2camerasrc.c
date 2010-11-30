@@ -133,6 +133,9 @@ gst_v4l2_camera_src_get_property (GObject * object,
     case ARG_MODE:
       g_value_set_enum (value, self->mode);
       break;
+    case ARG_READY_FOR_CAPTURE:
+      g_value_set_boolean (value, !self->capturing);
+      break;
     case ARG_FILTER_CAPS:
       gst_value_set_caps (value, self->view_finder_caps);
       break;
@@ -168,8 +171,10 @@ gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
   if (self->image_capture_count > 0) {
     ret = TRUE;
     self->image_capture_count--;
-    if (self->image_capture_count == 0)
+    if (self->image_capture_count == 0) {
       self->capturing = FALSE;
+      g_object_notify (G_OBJECT (self), "ready-for-capture");
+    }
   }
   g_mutex_unlock (self->capturing_mutex);
   return ret;
@@ -206,6 +211,7 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     gst_pad_push_event (pad, gst_event_new_eos ());
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
     self->capturing = FALSE;
+    g_object_notify (G_OBJECT (self), "ready-for-capture");
   } else {
     ret = TRUE;
   }
@@ -1059,6 +1065,8 @@ gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
     g_assert_not_reached ();
     src->capturing = FALSE;
   }
+  if (src->capturing)
+    g_object_notify (G_OBJECT (src), "ready-for-capture");
   g_mutex_unlock (src->capturing_mutex);
 }
 
@@ -1083,6 +1091,7 @@ gst_v4l2_camera_src_stop_capture (GstV4l2CameraSrc * src)
   } else {
     src->image_capture_count = 0;
     src->capturing = FALSE;
+    g_object_notify (G_OBJECT (src), "ready-for-capture");
   }
   g_mutex_unlock (src->capturing_mutex);
 }
@@ -1120,6 +1129,22 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
           "The capture mode (still image capture or video recording)",
           GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstV4l2CameraSrc:ready-for-capture:
+   *
+   * When TRUE new capture can be prepared. If FALSE capturing is ongoing
+   * and starting a new capture immediately is not possible.
+   *
+   * Note that calling start-capture from the notify callback of this property
+   * will cause a deadlock. If you need to react like this on the notify
+   * function, please schedule a new thread to do it. If you're using glib's
+   * mainloop you can use g_idle_add() for example.
+   */
+  g_object_class_install_property (gobject_class, ARG_READY_FOR_CAPTURE,
+      g_param_spec_boolean ("ready-for-capture", "Ready for capture",
+          "Informs this element is ready for starting another capture",
+          TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /* Signals */
   v4l2camerasrc_signals[START_CAPTURE_SIGNAL] =
