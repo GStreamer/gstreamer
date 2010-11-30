@@ -115,9 +115,9 @@ gst_camera_bin_get_type (void)
 }
 
 /* GObject class functions */
-static void gst_camerabin_set_property (GObject * object, guint prop_id,
+static void gst_camera_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_camerabin_get_property (GObject * object, guint prop_id,
+static void gst_camera_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 /* Element class functions */
@@ -214,8 +214,8 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 
   object_class->dispose = gst_camera_bin_dispose;
   object_class->finalize = gst_camera_bin_finalize;
-  object_class->set_property = gst_camerabin_set_property;
-  object_class->get_property = gst_camerabin_get_property;
+  object_class->set_property = gst_camera_bin_set_property;
+  object_class->get_property = gst_camera_bin_get_property;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_camera_bin_change_state);
 
@@ -367,7 +367,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 }
 
 static void
-gst_camerabin_set_property (GObject * object, guint prop_id,
+gst_camera_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstCameraBin *camera = GST_CAMERA_BIN_CAST (object);
@@ -383,7 +383,7 @@ gst_camerabin_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_camerabin_get_property (GObject * object, guint prop_id,
+gst_camera_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstCameraBin *camera = GST_CAMERA_BIN_CAST (object);
