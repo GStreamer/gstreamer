@@ -40,6 +40,17 @@ hierarchy, and a set of media-agnostic core elements.
 
  <release>
   <Version>
+   <revision>0.10.31</revision>
+   <branch>0.10</branch>
+   <name>Safety Pins</name>
+   <created>2010-11-30</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.31.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.31.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.30</revision>
    <branch>0.10</branch>
    <name>Safety First</name>
