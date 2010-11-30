@@ -901,22 +901,18 @@ gst_dvbsub_overlay_setcaps_text (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
-#define CLOCK_BASE 9LL
-#define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
-            CLOCK_BASE, GST_MSECOND/10))
-
 static void
-gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer)
+gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
+    guint64 pts)
 {
-  /* FIXME: Locking in this function */
+  /* FIXME: Locking in this function? */
   guint8 *data = (guint8 *) GST_BUFFER_DATA (buffer);
   guint size = GST_BUFFER_SIZE (buffer);
-  guint64 pts = GSTTIME_TO_MPEGTIME (GST_BUFFER_TIMESTAMP (buffer));
 
   GST_DEBUG_OBJECT (overlay,
-      "Processing subtitles with running time %" GST_TIME_FORMAT
-      " which is PTS=%" G_GUINT64_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)), pts);
+      "Processing subtitles with fake PTS=%" G_GUINT64_FORMAT
+      " which is a running time of %" GST_TIME_FORMAT,
+      pts, GST_TIME_ARGS (pts));
   GST_DEBUG_OBJECT (overlay, "Feeding %u bytes to libdvbsub", size);
   g_mutex_lock (overlay->dvbsub_mutex); /* FIXME: Use standard lock? */
   dvb_sub_feed_with_pts (overlay->dvb_sub, pts, data, size);
@@ -931,7 +927,8 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, guint64 pts, DVBSubtitles * subs,
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (user_data);
   GST_INFO_OBJECT (overlay,
       "New DVB subtitles arrived with a page_time_out of %d and %d regions for PTS=%"
-      G_GUINT64_FORMAT "\n", page_time_out, subs->num_rects, pts);
+      G_GUINT64_FORMAT ", which should be at running time %" GST_TIME_FORMAT,
+      page_time_out, subs->num_rects, pts, GST_TIME_ARGS (pts));
   //GST_OBJECT_LOCK (overlay);
   overlay->subtitle_buffer = subs->num_rects;
   //GST_OBJECT_UNLOCK (overlay);
@@ -965,6 +962,7 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
   gint64 clip_start = 0, clip_stop = 0;
   gboolean in_seg = FALSE;
+  GstClockTime sub_running_time;
 
   GST_INFO_OBJECT (overlay, "private/x-dvbsub buffer with size %u",
       GST_BUFFER_SIZE (buffer));
@@ -985,10 +983,9 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
 
   GST_LOG_OBJECT (overlay,
       "Video segment: %" GST_SEGMENT_FORMAT " --- Subtitle segment: %"
-      GST_SEGMENT_FORMAT " --- BUFFER: ts=%" GST_TIME_FORMAT " -- PTS: %"
-      G_GUINT64_FORMAT, &overlay->video_segment, &overlay->subtitle_segment,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GSTTIME_TO_MPEGTIME (GST_BUFFER_TIMESTAMP (buffer)));
+      GST_SEGMENT_FORMAT " --- BUFFER: ts=%" GST_TIME_FORMAT,
+      &overlay->video_segment, &overlay->subtitle_segment,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   /* DVB subtitle packets are required to carry the PTS */
   if (G_UNLIKELY (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))) {
@@ -1041,12 +1038,20 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
   gst_segment_set_last_stop (&overlay->subtitle_segment, GST_FORMAT_TIME,
       clip_start);
 
+  sub_running_time =
+      gst_segment_to_running_time (&overlay->subtitle_segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+
+  GST_DEBUG_OBJECT (overlay, "SUBTITLE real running time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (sub_running_time));
+
   overlay->subtitle_buffer = 0; /*buffer FIXME: Need to do buffering elsewhere */
 
   /* That's a new text buffer we need to render */
   /*overlay->need_render = TRUE; *//* FIXME: Actually feed it to libdvbsub and set need_render on a callback */
 
-  gst_dvbsub_overlay_process_text (overlay, buffer);
+  /* FIXME: We are abusing libdvbsub pts value for tracking our gstreamer running time instead of real PTS. Should be mostly fine though... */
+  gst_dvbsub_overlay_process_text (overlay, buffer, sub_running_time);
 
   /* in case the video chain is waiting for a text buffer, wake it up */
   GST_DVBSUB_OVERLAY_BROADCAST (overlay);
@@ -1069,11 +1074,10 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   start = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_LOG_OBJECT (overlay,
-      "Video last_stop: %" GST_TIME_FORMAT " --- Subtitle last_stop: %"
-      GST_TIME_FORMAT " --- BUFFER: ts=%" GST_TIME_FORMAT " -- PTS: %"
-      G_GUINT64_FORMAT, &overlay->video_segment.last_stop,
-      &overlay->subtitle_segment.last_stop, GST_TIME_ARGS (start),
-      GSTTIME_TO_MPEGTIME (start));
+      "Video segment: %" GST_SEGMENT_FORMAT " --- Subtitle last_stop: %"
+      GST_TIME_FORMAT " --- BUFFER: ts=%" GST_TIME_FORMAT,
+      &overlay->video_segment, &overlay->subtitle_segment.last_stop,
+      GST_TIME_ARGS (start));
 
   /* ignore buffers that are outside of the current segment */
   if (!GST_BUFFER_DURATION_IS_VALID (buffer)) {
