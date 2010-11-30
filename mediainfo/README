@@ -69,16 +69,27 @@ Duration:
 - handle chapters
 - tag lists
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
+    - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
   - handle album art in tag lists
-  - make urls clickable
   - geo-tags: map-widget?, link to google-maps?
   - artist: links to {last.fm,wikipedia}
+- show level meters for audio
 
 == deep scan mode ==
 - update fields when playing
   - listen for duration messages on the bus
+- get bit-rate over time
+  - specify window size, get min,max,avg bitrate for each window
+  - gst-mi can draw them as a graph
+- get key-frame statistics
+  - number of keyframes
+  - min,max,avg keyframe intervall
+- raw data statistics
+  - audio: level, ...
+  - video: histogram, ...
 
 = TODO for discoverer =
+- add deep-scan mode (see above)
 - get duration per stream
   - this would need individual queries on the demuxer src pads
   - or duration as part of per stream tags
