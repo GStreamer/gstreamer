@@ -266,7 +266,7 @@ dnl -Waggregate-return - libexif returns aggregates
 dnl -Wundef - Windows headers check _MSC_VER unconditionally
 AG_GST_SET_ERROR_CFLAGS($GST_GIT, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls
-    -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
+    -Wwrite-strings -Wformat-security -Wold-style-definition
     -Winit-self -Wmissing-include-dirs -Waddress -Wno-multichar
     -Wnested-externs])
 

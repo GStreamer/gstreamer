@@ -41,8 +41,11 @@
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_LOCATION
 };
+
+#define DEFAULT_LOCATION "img_%d"
 
 /* pad templates */
 
@@ -62,6 +65,41 @@ static GstStateChangeReturn
 gst_image_capture_bin_change_state (GstElement * element, GstStateChange trans);
 
 static void
+gst_image_capture_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstImageCaptureBin *imgbin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      imgbin->location = g_value_dup_string (value);
+      if (imgbin->sink) {
+        g_object_set (imgbin, "location", imgbin->location, NULL);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_image_capture_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstImageCaptureBin *imgbin = GST_IMAGE_CAPTURE_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      g_value_set_string (value, imgbin->location);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_image_capture_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -77,12 +115,23 @@ gst_image_capture_bin_base_init (gpointer g_class)
 static void
 gst_image_capture_bin_class_init (GstImageCaptureBinClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_image_capture_bin_set_property;
+  gobject_class->get_property = gst_image_capture_bin_get_property;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_image_capture_bin_change_state);
+
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "Location to save the captured files. A %%d can be used as a "
+          "placeholder for a capture count",
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -94,6 +143,8 @@ gst_image_capture_bin_init (GstImageCaptureBin * image_capturebin,
       gst_static_pad_template_get (&sink_template));
   gst_element_add_pad (GST_ELEMENT_CAST (image_capturebin),
       image_capturebin->ghostpad);
+
+  image_capturebin->location = g_strdup (DEFAULT_LOCATION);
 }
 
 static gboolean
@@ -125,7 +176,8 @@ gst_image_capture_bin_create_elements (GstImageCaptureBin * icbin)
   if (!sink)
     goto error;
 
-  g_object_set (sink, "location", "cap_%03d.jpg", "async", FALSE, NULL);
+  icbin->sink = gst_object_ref (sink);
+  g_object_set (sink, "location", icbin->location, "async", FALSE, NULL);
 
   /* add and link */
   gst_bin_add_many (GST_BIN_CAST (icbin), csp, enc, mux, sink, NULL);

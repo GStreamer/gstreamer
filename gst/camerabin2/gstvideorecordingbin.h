@@ -38,6 +38,10 @@ struct _GstVideoRecordingBin
   GstBin bin;
 
   GstPad *ghostpad;
+  GstElement *sink;
+
+  /* props */
+  gchar *location;
 
   gboolean elements_created;
 };

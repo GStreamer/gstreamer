@@ -41,8 +41,11 @@
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_LOCATION
 };
+
+#define DEFAULT_LOCATION "vidcap"
 
 /* pad templates */
 
@@ -63,6 +66,41 @@ gst_video_recording_bin_change_state (GstElement * element,
     GstStateChange trans);
 
 static void
+gst_video_recording_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoRecordingBin *vidbin = GST_VIDEO_RECORDING_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      vidbin->location = g_value_dup_string (value);
+      if (vidbin->sink) {
+        g_object_set (vidbin, "location", vidbin->location, NULL);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_recording_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoRecordingBin *vidbin = GST_VIDEO_RECORDING_BIN_CAST (object);
+
+  switch (prop_id) {
+    case PROP_LOCATION:
+      g_value_set_string (value, vidbin->location);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_video_recording_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -78,12 +116,22 @@ gst_video_recording_bin_base_init (gpointer g_class)
 static void
 gst_video_recording_bin_class_init (GstVideoRecordingBinClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_video_recording_bin_set_property;
+  gobject_class->get_property = gst_video_recording_bin_get_property;
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_video_recording_bin_change_state);
+
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "Location to save the captured files.",
+          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -95,6 +143,8 @@ gst_video_recording_bin_init (GstVideoRecordingBin * video_recordingbin,
       gst_static_pad_template_get (&sink_template));
   gst_element_add_pad (GST_ELEMENT_CAST (video_recordingbin),
       video_recordingbin->ghostpad);
+
+  video_recordingbin->location = g_strdup (DEFAULT_LOCATION);
 }
 
 static gboolean
@@ -126,7 +176,8 @@ gst_video_recording_bin_create_elements (GstVideoRecordingBin * vrbin)
   if (!sink)
     goto error;
 
-  g_object_set (sink, "location", "cap.ogg", "async", FALSE, NULL);
+  vrbin->sink = gst_object_ref (sink);
+  g_object_set (sink, "location", vrbin->location, "async", FALSE, NULL);
 
   /* add and link */
   gst_bin_add_many (GST_BIN_CAST (vrbin), csp, enc, mux, sink, NULL);

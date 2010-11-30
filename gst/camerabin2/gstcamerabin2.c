@@ -60,7 +60,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_camera_bin_debug);
 enum
 {
   PROP_0,
-  PROP_MODE
+  PROP_MODE,
+  PROP_LOCATION
 };
 
 enum
@@ -74,6 +75,8 @@ enum
 static guint camerabin_signals[LAST_SIGNAL];
 
 #define DEFAULT_MODE MODE_IMAGE
+#define DEFAULT_VID_LOCATION "vid_%d"
+#define DEFAULT_IMG_LOCATION "img_%d"
 
 /********************************
  * Standard GObject boilerplate *
@@ -162,8 +165,13 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
   if (camera->mode == MODE_VIDEO) {
     g_object_get (camera->src, "ready-for-capture", &ready, NULL);
     if (!ready) {
+      gchar *location;
+
       /* a video recording is about to start, we reset the videobin */
       gst_element_set_state (camera->vidbin, GST_STATE_NULL);
+      location = g_strdup_printf (camera->vid_location, camera->vid_index++);
+      g_object_set (camera->vidbin, "location", location, NULL);
+      g_free (location);
       gst_element_set_state (camera->vidbin, GST_STATE_PLAYING);
     }
   }
@@ -174,6 +182,9 @@ gst_camera_bin_dispose (GObject * object)
 {
   GstCameraBin *camerabin = GST_CAMERA_BIN_CAST (object);
 
+  g_free (camerabin->img_location);
+  g_free (camerabin->vid_location);
+
   if (camerabin->src_capture_notify_id)
     g_signal_handler_disconnect (camerabin->src,
         camerabin->src_capture_notify_id);
@@ -182,6 +193,9 @@ gst_camera_bin_dispose (GObject * object)
 
   if (camerabin->vidbin)
     gst_object_unref (camerabin->vidbin);
+
+  if (camerabin->imgbin)
+    gst_object_unref (camerabin->imgbin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -233,6 +247,13 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
           GST_TYPE_CAMERABIN_MODE, DEFAULT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (object_class, PROP_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "Location to save the captured files. A %d might be used on the"
+          "filename as a placeholder for a numeric index of the capture."
+          "Default for images is img_%d and vid_%d for videos",
+          DEFAULT_IMG_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstCameraBin::capture-start:
    * @camera: the camera bin element
@@ -261,7 +282,9 @@ gst_camera_bin_class_init (GstCameraBinClass * klass)
 static void
 gst_camera_bin_init (GstCameraBin * camerabin)
 {
-  camerabin->mode = MODE_IMAGE;
+  camerabin->mode = DEFAULT_MODE;
+  camerabin->vid_location = g_strdup (DEFAULT_VID_LOCATION);
+  camerabin->img_location = g_strdup (DEFAULT_IMG_LOCATION);
 }
 
 /**
@@ -300,6 +323,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
 
   camera->src = gst_object_ref (src);
   camera->vidbin = gst_object_ref (vid);
+  camera->imgbin = gst_object_ref (img);
 
   vid_queue = gst_element_factory_make ("queue", "video-queue");
   img_queue = gst_element_factory_make ("queue", "image-queue");
@@ -334,6 +358,9 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
       "notify::ready-for-capture",
       G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
+  g_object_set (vid, "location", camera->vid_location, NULL);
+  g_object_set (img, "location", camera->img_location, NULL);
+
   camera->elements_created = TRUE;
   return TRUE;
 }
@@ -367,6 +394,19 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 }
 
 static void
+gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
+{
+  if (camera->mode == MODE_IMAGE) {
+    g_object_set (camera->imgbin, "location", location, NULL);
+    g_free (camera->img_location);
+    camera->img_location = g_strdup (location);
+  } else {
+    g_free (camera->vid_location);
+    camera->vid_location = g_strdup (location);
+  }
+}
+
+static void
 gst_camera_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -375,6 +415,9 @@ gst_camera_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_MODE:
       gst_camera_bin_change_mode (camera, g_value_get_enum (value));
+      break;
+    case PROP_LOCATION:
+      gst_camera_bin_set_location (camera, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -391,6 +434,13 @@ gst_camera_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_MODE:
       g_value_set_enum (value, camera->mode);
+      break;
+    case PROP_LOCATION:
+      if (camera->mode == MODE_VIDEO) {
+        g_value_set_string (value, camera->vid_location);
+      } else {
+        g_value_set_string (value, camera->img_location);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
