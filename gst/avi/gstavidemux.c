@@ -2095,6 +2095,9 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         }
         GST_DEBUG_OBJECT (avi, "stream name: %s", stream->name);
         break;
+      case GST_RIFF_IDIT:
+        gst_avi_demux_parse_idit (avi, sub);
+        break;
       default:
         if (tag == GST_MAKE_FOURCC ('i', 'n', 'd', 'x') ||
             tag == GST_MAKE_FOURCC ('i', 'x', '0' + avi->num_streams / 10,
