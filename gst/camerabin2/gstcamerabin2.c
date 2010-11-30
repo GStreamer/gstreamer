@@ -17,9 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:element-gstcamerabin
+ * SECTION:element-gstcamerabin2
  *
- * The gstcamerabin element does FIXME stuff.
+ * The gstcamerabin2 element does FIXME stuff.
+ *
+ * Note that camerabin2 is still UNSTABLE, EXPERIMENTAL and under heavy
+ * development.
  */
 
 #ifdef HAVE_CONFIG_H
