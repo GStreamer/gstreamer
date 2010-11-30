@@ -840,22 +840,25 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_TIMESTAMP (field1) = timestamp;
   GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
-  if (repeated)
-    GST_BUFFER_TIMESTAMP (field2) += self->field_duration;
 
   if (repeated) {
-    self->field_history[0].buf = field2;
-    self->field_history[0].flags = field2_flags;
-    self->field_history[1].buf = gst_buffer_ref (field1);
-    GST_BUFFER_TIMESTAMP (self->field_history[1].buf) += self->field_duration;
-    self->field_history[1].flags = field1_flags;
     self->field_history[2].buf = field1;
     self->field_history[2].flags = field1_flags;
+
+    self->field_history[1].buf = field2;
+    self->field_history[1].flags = field2_flags;
+
+    self->field_history[0].buf =
+        gst_buffer_make_metadata_writable (gst_buffer_ref (field1));
+    GST_BUFFER_TIMESTAMP (self->field_history[0].buf) +=
+        2 * self->field_duration;
+    self->field_history[0].flags = field1_flags;
   } else if (!onefield) {
-    self->field_history[0].buf = field2;
-    self->field_history[0].flags = field2_flags;
     self->field_history[1].buf = field1;
     self->field_history[1].flags = field1_flags;
+
+    self->field_history[0].buf = field2;
+    self->field_history[0].flags = field2_flags;
   } else {                      /* onefield */
     self->field_history[0].buf = field1;
     self->field_history[0].flags = field1_flags;
