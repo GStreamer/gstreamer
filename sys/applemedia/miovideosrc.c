@@ -481,10 +481,10 @@ gst_mio_video_src_open_device (GstMIOVideoSrc * self)
     gboolean match;
 
     if (self->device_uid != NULL) {
-      match = g_strcasecmp (gst_mio_video_device_get_uid (device),
+      match = g_ascii_strcasecmp (gst_mio_video_device_get_uid (device),
           self->device_uid) == 0;
     } else if (self->device_name != NULL) {
-      match = g_strcasecmp (gst_mio_video_device_get_name (device),
+      match = g_ascii_strcasecmp (gst_mio_video_device_get_name (device),
           self->device_name) == 0;
     } else if (self->device_index >= 0) {
       match = device_idx == self->device_index;
