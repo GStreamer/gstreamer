@@ -234,6 +234,9 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render,
   render->subtitle_mutex = g_mutex_new ();
   render->subtitle_cond = g_cond_new ();
 
+  render->current_subtitle = NULL;
+  render->pending_subtitles = g_queue_new ();
+
   render->renderer_init_ok = FALSE;
   render->enable = TRUE;
 
@@ -269,6 +272,11 @@ gst_dvbsub_overlay_finalize (GObject * object)
 
   if (overlay->subtitle_cond)
     g_cond_free (overlay->subtitle_cond);
+
+  if (overlay->pending_subtitles) {
+    /* FIXME: Free up contents */
+    g_queue_free (overlay->pending_subtitles);
+  }
 
   if (overlay->dvb_sub) {
     g_object_unref (overlay->dvb_sub);
@@ -930,7 +938,7 @@ new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
       subs->page_time_out, subs->num_rects, subs->pts,
       GST_TIME_ARGS (subs->pts));
   //GST_OBJECT_LOCK (overlay);
-  overlay->subtitle_buffer = subs->num_rects;
+  g_queue_push_tail (overlay->pending_subtitles, subs);
   //GST_OBJECT_UNLOCK (overlay);
 }
 
@@ -1045,8 +1053,6 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG_OBJECT (overlay, "SUBTITLE real running time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (sub_running_time));
 
-  overlay->subtitle_buffer = 0; /*buffer FIXME: Need to do buffering elsewhere */
-
   /* That's a new text buffer we need to render */
   /*overlay->need_render = TRUE; *//* FIXME: Actually feed it to libdvbsub and set need_render on a callback */
 
@@ -1067,6 +1073,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 start, stop;
+  GstClockTime vid_running_time;
 
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     goto missing_timestamp;
@@ -1086,13 +1093,29 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
     stop = start + GST_BUFFER_DURATION (buffer);
   }
 
+  vid_running_time =
+      gst_segment_to_running_time (&overlay->video_segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
+
+  GST_DEBUG_OBJECT (overlay, "Video running time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (vid_running_time));
+
   /* FIXME: Probably update last_stop somewhere */
 
   /* FIXME: Segment clipping code */
 
-  if (overlay->subtitle_buffer > 0) {
-    GST_DEBUG_OBJECT (overlay, "Should be rendering %u regions",
-        overlay->subtitle_buffer);
+  if (!g_queue_is_empty (overlay->pending_subtitles)) {
+    DVBSubtitles *pending_sub = g_queue_peek_head (overlay->pending_subtitles);
+    if (vid_running_time >= pending_sub->pts) {
+      GST_DEBUG_OBJECT (overlay,
+          "Time to show the next subtitle page (%" GST_TIME_FORMAT " >= %"
+          GST_TIME_FORMAT ") - it has %u regions",
+          GST_TIME_ARGS (vid_running_time), GST_TIME_ARGS (pending_sub->pts),
+          pending_sub->num_rects);
+      dvb_subtitles_free (overlay->current_subtitle);
+      overlay->current_subtitle = g_queue_pop_head (overlay->pending_subtitles);
+      /* FIXME: Pre-convert current_subtitle to a quick-blend format, num_rects=0 means that there are no regions, e.g, a subtitle "clear" happened */
+    }
   }
 
   ret = gst_pad_push (overlay->srcpad, buffer);
@@ -1216,6 +1239,8 @@ gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (render, "begin flushing");
+
+      /* FIXME: Reset subtitles queue and any other state */
 #if 0                           // FIXME
       g_mutex_lock (render->ass_mutex);
       if (render->ass_track) {

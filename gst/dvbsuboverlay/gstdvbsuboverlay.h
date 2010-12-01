@@ -54,14 +54,10 @@ struct _GstDVBSubOverlay
   gint fps_n, fps_d;
   GstAssRenderBlitFunction blit;
 
-  guint subtitle_buffer; /* FIXME: This should hold the pre-rendered
-			  * subtitle regions for fast blending on top
-			  * of each frame. Currently just a number of
-			  * active regions that ought to get blended,
-			  * to get all the timing code working,
-			  * leaving the actual conversion from
-			  * libdvbsub to a suitable cache format and
-			  * blending to later */
+  DVBSubtitles *current_subtitle; /* The currently active set of subtitle regions, if any */
+  GQueue *pending_subtitles; /* A queue of raw subtitle region sets with
+			      * metadata that are waiting their running time */
+
   GMutex *subtitle_mutex;
   GCond *subtitle_cond; /* to signal removal of a queued text
 			 * buffer, arrival of a text buffer,
