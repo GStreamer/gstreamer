@@ -1371,6 +1371,9 @@ dvb_subtitles_free (DVBSubtitles * sub)
   int i;
   DVBSubtitleRect *rect;
 
+  if (sub == NULL)
+    return;
+
   /* Now free up all the temporary memory we allocated */
   for (i = 0; i < sub->num_rects; ++i) {
     rect = sub->rects[i];
