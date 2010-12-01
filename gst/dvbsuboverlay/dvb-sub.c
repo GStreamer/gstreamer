@@ -1352,9 +1352,23 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
 
   sub->num_rects = i;
 
-  if (priv->callbacks.new_data)
+  if (priv->callbacks.new_data) {
     priv->callbacks.new_data (dvb_sub, pts, sub, priv->page_time_out,
         priv->user_data);
+  } else {
+    /* No-one responsible to clean up memory, so do it ourselves */
+    /* FIXME: Just don't bother with all this palette image creation in the first place then... */
+    dvb_subtitles_free (sub);
+  }
+
+  return 1;                     /* FIXME: The caller of this function is probably supposed to do something with the return value */
+}
+
+void
+dvb_subtitles_free (DVBSubtitles * sub)
+{
+  int i;
+  DVBSubtitleRect *rect;
 
   /* Now free up all the temporary memory we allocated */
   for (i = 0; i < sub->num_rects; ++i) {
@@ -1366,8 +1380,6 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   }
   g_free (sub->rects);
   g_slice_free (DVBSubtitles, sub);
-
-  return 1;                     /* FIXME: The caller of this function is probably supposed to do something with the return value */
 }
 
 /**

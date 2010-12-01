@@ -111,7 +111,8 @@ typedef struct DVBSubtitles {
  *    is the #DvbSub instance this callback originates from; @subs is the set of
  *    subtitle objects that should be display for no more than @page_time_out
  *    seconds at @pts; @user_data is the same user_data as was passed through
- *    dvb_sub_set_callbacks();
+ *    dvb_sub_set_callbacks(); The callback handler is responsible for eventually
+ *    cleaning up the subpicture data @subs with a call to dvb_subtitles_free()
  *
  * A set of callbacks that can be installed on the #DvbSub with
  * dvb_sub_set_callbacks().
@@ -126,6 +127,7 @@ GType    dvb_sub_get_type      (void) G_GNUC_CONST;
 DvbSub  *dvb_sub_new           (void);
 gint     dvb_sub_feed_with_pts (DvbSub *dvb_sub, guint64 pts, guint8 *data, gint len);
 void     dvb_sub_set_callbacks (DvbSub *dvb_sub, DvbSubCallbacks *callbacks, gpointer user_data);
+void     dvb_subtitles_free    (DVBSubtitles *sub);
 
 void dvb_sub_set_global_log_cb (void (*log_cb) (GLogLevelFlags log_level, const gchar *format, va_list args, gpointer user_data),
                                 gpointer user_data);
