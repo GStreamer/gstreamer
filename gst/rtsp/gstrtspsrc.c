@@ -5804,7 +5804,6 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
       g_free (hval);
-      src->need_range = FALSE;
     }
 
     if (segment->rate != 1.0) {
@@ -5856,6 +5855,8 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
     if (control)
       break;
   }
+  /* set again when needed */
+  src->need_range = FALSE;
 
   /* configure the caps of the streams after we parsed all headers. */
   gst_rtspsrc_configure_caps (src, segment);
