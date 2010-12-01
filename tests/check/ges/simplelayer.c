@@ -157,13 +157,21 @@ GST_START_TEST (test_gsl_move_simple)
   fail_unless_equals_int (info.new, 0);
   fail_unless_equals_int (info.old, 1);
 
-  /* Move source2 to end (newpos:-1) */
+  /* Move source2 after source 1 (newpos:0) */
   fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
-          (layer), GES_TIMELINE_OBJECT (source2), -1));
+          (layer), GES_TIMELINE_OBJECT (source2), 1));
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), 0);
   fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), GST_SECOND);
+  fail_unless_equals_int (info.new, 1);
+  fail_unless_equals_int (info.old, 0);
+
+  /* Move source1 to end (newpos:-1) */
+  fail_unless (ges_simple_timeline_layer_move_object (GES_SIMPLE_TIMELINE_LAYER
+          (layer), GES_TIMELINE_OBJECT (source1), -1));
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source1), GST_SECOND);
+  fail_unless_equals_uint64 (GES_TIMELINE_OBJECT_START (source2), 0);
   /* position will be decremented, this is expected */
-  fail_unless_equals_int (info.new, -2);
+  fail_unless_equals_int (info.new, -1);
   fail_unless_equals_int (info.old, 0);
 
   /* remove source1, source2 should be moved to the beginning */

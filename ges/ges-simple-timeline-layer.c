@@ -390,9 +390,6 @@ ges_simple_timeline_layer_move_object (GESSimpleTimelineLayer * layer,
   /* pop it off the list */
   layer->objects = g_list_remove (layer->objects, object);
 
-  newposition = (newposition >= 0 && newposition < idx) ? newposition :
-      newposition - 1;
-
   /* re-add it at the proper position */
   layer->objects = g_list_insert (layer->objects, object, newposition);
 
