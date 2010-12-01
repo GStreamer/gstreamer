@@ -4,6 +4,8 @@ GObject
   GstCmmlTagHead
   GstCmmlTagStream
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   GstObject
     GstBus
     GstClock
@@ -26,6 +28,7 @@ GObject
         GstRtpAC3Depay
         GstRtpAMRDepay
         GstRtpCELTDepay
+        GstRtpG722Depay
         GstRtpG723Depay
         GstRtpG726Depay
         GstRtpG729Depay
@@ -58,6 +61,7 @@ GObject
           GstRTPBVPay
           GstRTPILBCPay
           GstRTPSirenPay
+          GstRtpG722Pay
           GstRtpG726Pay
           GstRtpL16Pay
           GstRtpPcmuPay
@@ -216,7 +220,6 @@ GObject
       GstMatroskaDemux
       GstMatroskaMux
         GstWebMMux
-      GstMonoscope
       GstMuLawDec
       GstMuLawEnc
       GstMultipartDemux
@@ -275,6 +278,7 @@ GObject
   GstTunerNorm
   RTPSession
 GInterface
+  GIcon
   GTypePlugin
   GstChildProxy
   GstColorBalance

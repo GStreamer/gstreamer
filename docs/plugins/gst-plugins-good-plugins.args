@@ -625,7 +625,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Protocols</NICK>
 <BLURB>Allowed lower transport protocols.</BLURB>
-<DEFAULT>UDP Unicast Mode|UDP Multicast Mode|TCP interleaved mode</DEFAULT>
+<DEFAULT>GST_RTSP_LOWER_TRANS_UDP|GST_RTSP_LOWER_TRANS_UDP_MCAST|GST_RTSP_LOWER_TRANS_TCP</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1423,8 +1423,8 @@
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>frame_time</NICK>
-<BLURB>frame_time.</BLURB>
+<NICK>frame time</NICK>
+<BLURB>frame time.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1433,8 +1433,8 @@
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>frames_displayed</NICK>
-<BLURB>frames_displayed.</BLURB>
+<NICK>frames displayed</NICK>
+<BLURB>frames displayed.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1623,7 +1623,7 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>drop_incomplete</NICK>
+<NICK>drop incomplete</NICK>
 <BLURB>drop incomplete frames.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>

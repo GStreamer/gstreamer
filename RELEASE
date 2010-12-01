@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.25 "Woe to You Oh Earth and Sea"
+Release notes for GStreamer Good Plug-ins 0.10.26 "Escapades"
         
 
 
@@ -54,67 +54,125 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * v4l2src: massive performance improvement in many cases
-      * streaming mode fixes for avi and matroska/webm
-      * seeking in matroska and webm files that don't have an index
-      * new cpureport element for debugging
-      * avidemux: improve VBR audio stream handling
-      * avidemux: streaming mode fixes: use proper offset for movi-based index, handle 0-size data chunks
-      * debugutils: new element cpureport, posts "cpu-report" element messages on bus
-      * flacdec, rtspsrc, rtph264pay, rtpmp4vdepay: memory leak fixes
-      * gconfvideosrc: use correct GConf key (ie. not the audiosrc key)
-      * gdkpixbuf: remove gdkpixbuf3 plugin again, gdk-pixbuf was split out of gtk+ and will stay at 2.x
-      * id3v2mux: write beats-per-minute tag using TBPM frame
-      * jpegdec: fix markers parsing regression
-      * matroskademux: do not error out on a block with unknown tracknumber
-      * matroskademux: fix streaming in case where the size in bytes is unknown
-      * matroskademux: handle bogus files storing ADTS AAC data
-      * matroskademux: support seeking in local files even if they don't have an index
-      * matroskamux: don't try to seek back and fix up headers if streamable=TRUE
-      * pulsesink: fix race when creating multiple pulsesinks at the same time
-      * qtdemux: also calculate PAR using track width and height for QT files
-      * qtdemux: fix the max/avg in btrt atom reading
-      * qtdemux: improve reverse playback
-      * qtdemux: parse 64-bit version of mvhd atom as well instead of erroring out
-      * qtdemux: prevent reading past avc1 atom when parsing
-      * rtpg729pay: avoid basertppayload perfect-rtptime mode
-      * rtph263pdepay: allow more clock-rates as input
-      * rtpL16depay: also parse encoding-params for the number of channels
-      * rtpL16depay: default to 1 channel if number of channels not specified
-      * rtpmp4gpay: implement perfect timestamps
-      * rtspsrc: add "port-range" property, useful for setups with firewall/ipsec
-      * rtspsrc: don't reuse udp sockets (avoids odd errors when data from previous streams is received)
-      * udpsrc: add "reuse" property to enable or disable port reuse (enabled by default, but disabled in rtspsrc)
-      * v4l2: sort formats in the right order so that non-emulated formats are prefered
-      * videobalance: fix wrong locking order that could lead to a deadlock
-      * videomixer: only reset QoS information and send a NEWSEGMENT event downstream for NEWSEGMENT events on the master pad
+      * alphacolor: make passthrough work
+      * avidemux: reverse playback fixes; prevent overlap of subsequent fragments
+      * deinterlace: remove assembly code in favor of orc
+      * dvdemux: parse SMPTE time codes
+      * flvdemux: parse and use cts (fixes jittery H.264 playback in some cases)
+      * flvmux: resend onMetada tag when tags changes in streamable mode
+      * g729pay: extend from right parent
+      * gconf: Don't install schemas when GConf is disabled
+      * goom, goom2k1: add latency compensation code, report latency correctly
+      * gstrtpjpegpay: Added Define Restart Interval (DRI) Marker
+      * h264depay: always mark the codec_data as keyframe
+      * icydemux: forward tag events
+      * id3v2mux: Add mapping for album artist
+      * imagefreeze: generate a perfectly timestamped stream
+      * level: avoid division by zero on silence
+      * matroskademux: more robustness for parse errors and corner-cases
+      * matroskademux: extract H.264 profile and level and set on caps
+      * matroskamux: reduce newsegment event spam and set discont flag where needed
+      * pulse: allow setting of pulse stream properties
+      * pulse: fix device_description in READY
+      * pulsesink: Add "client" property to set the PA client name
+      * pulsesink: share the PA context between all clients with the same name
+      * qtdemux: export AAC/MPEG-4/H.264 profile and level in caps
+      * rtp: add G722 payloader and depayloader elements
+      * rtpamr(de)pay: support AMR-WB SID frame
+      * rtpamrpay: proper duration for multiple frame payload; properly support perfect-rtptime
+      * rtpbin: add "ntp-sync" property and "use-pipeline-clock" properties
+      * rtpg729pay: properly support perfect-rtptime
+      * rtph264depay: only set delta unit on all-non-key units
+      * rtpmanager: provide additional statistics
+      * rtpmp4adepay: grab the sampling rate and put into caps
+      * rtpmparobustdepay: properly insert dummy buffers; use valid bitrate for dummy frame
+      * rtpmpvpay: fix timestamping of rtp buffers
+      * rtpsession: Add the option to auto-discover the RTP bandwidth
+      * rtpsession: Calculate RTCP bandwidth as a fraction of the RTP bandwidth
+      * rtpsession: Count sent RTCP packets after they have been finished
+      * rtpsession: relax third-party collision detection
+      * rtpstats: Rectify description of current_time in RTPArrivalStats
+      * rtspext: stop configuration on first failure
+      * rtspsrc: Add property to configure udpsrc buffer size
+      * rtspsrc: add rtsp-sdp protocol support
+      * rtspsrc: don't add /UDP in the transport, it's the default
+      * rtspsrc: fix duration reporting
+      * rtspsrc: handle stale digest authentication session data
+      * rtspsrc: use sdp uri parse method
+      * shapewipe: add optional border parameter and slowdown animation
+      * shapewipe: Force format to AYUV in the example pipeline for the same reason
+      * shapewipe: Force the input to AYUV to prevent negotiation failures in videomixer
+      * spectrum: only aggregate magnitude/phase if user asks for it, performance fixes
+      * v4l2src: add controllable colorbalance parameters, add decimate property
+      * v4l2src: fix using mpegts via the mmap interface; use GstBaseSrc::block-size as fallback size
+      * videomixer2: new videomixer2 element that behaves better than videomixer
+      * vrawdepay: handle invalid payload better
 
 Bugs fixed in this release
      
+      * 625825 : cannot link rtpmp4adepay ! aacparse
+      * 629047 : segfault in seek matroskademux
+      * 537544 : [pulse] allow setting pa context properties
+      * 628996 : pulsesink broken after shared context patch (bug #624338)
+      * 529672 : Big latency and bad framerate while mixing multiple live streams
+      * 581294 : rtspext: extensions configure_stream methods conflict
+      * 598915 : qtdemux: propagate jpeg2000 header data in image/x-j2c
+      * 612313 : qtdemux: Post AAC profile/level in caps
+      * 616521 : qtdemux: Export MPEG-4 video profile and level in stream caps
+      * 617318 : matroskademux, qtdemux: Use pbutils for H.264 profile/level extraction
+      * 620790 : [matroskademux] general stream error when trying to play certain .mkv file
+      * 622390 : [v4l2] add controllable color balance properties / programmable camera
+      * 624338 : [pulsesink] Handle pulse context separate from the ringbuffers and share them
+      * 625547 : imagefreeze unit test fails occasionally
+      * 626048 : [videomixer] needs mode that syncs streams based on timestamps
+      * 626518 : [imagefreeze] better caps negotiation
+      * 627162 : [pulse] better fallback return value for gst_pulse_client_name()
+      * 627174 : [pulsesink] new property to tune the PA client name
+      * 627289 : souphttpsrc: tweak error messages
+      * 627341 : wavparse: strange handling of files less than 12 bytes
+      * 627796 : rtpbin: add ntp clock sync
+      * 628020 : [pulsesink] assertion failure in change_state NULL- > READY
+      * 628058 : Need a way to set the SO_RCVBUF property on rtsp-based sockets.
+      * 628127 : jpeg rtp payloader crashes when there is corruption in the jpeg byte stream.
+      * 628214 : Add support to RTSP initiation through SDP files
+      * 628349 : [v4l2src] Doesn't support capturing mpegts using mmap
+      * 628454 : Matroska demuxer doesn't handle DATE tag if it contains only a year number
+      * 628608 : [alphacolor] element classification is wrong
+      * 629018 : rtpjpegpay: unable to build because of uninitialized variable warning
+      * 629522 : [rtpjpegpay] add support for Define Restart Interval (DRI)
+      * 629839 : [qtdemux] Update xmp tags parsing
+      * 629896 : Error compiling raw1394 (without iec61883)
+      * 630088 : [flvdemux] jerky h.264 video playback
+      * 630205 : [icydemux] Forward tag events downstrem
+      * 630256 : rtph264-pay/depay: doesn't respect timestamps from incomming buffers
+      * 630317 : Getting pulsesink device names doesn't work like for alsasink
+      * 630378 : speexenc/speexdec crash with MSVC
+      * 630446 : rtpmanager: provide additional statistics
+      * 630447 : rtpsession: relax third-party collision detection
+      * 630449 : rtpbin: Unlock before adding pad in new_payload_found
+      * 630451 : rtpbin: Handle rysnc of iterator when looking for free pad name
+      * 630452 : rtpbin: Make cleaning up sources in rtp_session_on_timeout MT safe
+      * 630457 : rtpmanager: packet lost should not be a warning.
+      * 630458 : level: avoid division by zero on silence
+      * 630500 : [rtspsrc] does rtsp setup message always need " /UDP " string?
+      * 630888 : v4l2sink does not cope with v4l2loopback kernel module
+      * 631082 : rtpjitterbuffer: improve document reference
+      * 631303 : [goom] qos warnings if source is GstAudioSrc
+      * 631330 : [flvmux][PATCH] Resend updated onMetada tag when tags changes in streamable mode
+      * 631996 : [h264depay] regression: rtsp://stream.zoovision.com/KibaEp1n900.3gp
+      * 632548 : [rtspsrc] regression; fails to report duration
+      * 632553 : --disable-gconf still tries to install schemas
+      * 632682 : [matroskademux] Handle missing CodecPrivate for Vorbis/Theora
+      * 632945 : rtph264depay in access-unit=true mode does not aggregate the delta unit flag correctly
+      * 633205 : Fix for navigation events in videoflip
+      * 633212 : [goom] Return not-negotiated when bps is unknown
+      * 633970 : [icydemux] broken taglist handling
+      * 635532 : rtspsrc: unexpected eos when using authentication (regression)
+      * 635843 : [rtph264depay] segfault on empty payload
+      * 636179 : [deinterlace] Fields in wrong order
       * 626463 : [matroskademux] " reading large block of size 14688496 not supported " 
-      * 593117 : [avidemux] Support AVF files
-      * 618535 : [avidemux] fails to stream eva_2010_2.22_promo1.avi
-      * 621520 : [id3v2mux] write beats-per-minute tag
-      * 622017 : [GstRtpMP4GDepay] Packet payload was too short.
-      * 622577 : rtspsrc has confusing error messages
-      * 623209 : bug in rtpL16depay
-      * 623357 : avidemux: push mode doesn't work for some http streaming avi files
-      * 623629 : Reverse Playback Issue in QtDemux
-      * 624173 : [qtdemux] qt file with dimension data in tkhd does not get pixel-aspect-ratio in caps
-      * 624331 : videobalance: deadlocks/freezes when changing " brightness " property
-      * 624455 : The matroska muxer seeks even when used with streamable=TRUE
-      * 624770 : rtspsrc: memory leak in gst_rtspsrc_handle_request
-      * 625002 : [examples] Don't use GdkDraw
-      * 625153 : rtspsrc: add property to set client port range
-      * 625302 : [qtdemux] Set the pixel-aspect-ratio field also for par=1/1
-      * 625371 : [matroskademux] critical warnings when playing live webm with progressive download enabled
-      * 625442 : pulsesink: crash -  pa_threaded_mainloop_stop is called from the pa thread
-      * 625452 : [videomixer] Pipeline from the docs doesn't work anymore
-      * 626467 : matroskademux: CRITICAL **: file matroska-demux.c: line 578 (gst_matroska_demux_get_length): should not be reached
-      * 626609 : [qtdemux] segfault when parsing avc1 atom
-      * 626619 : [imagefreeze] Incorrect seek behaviour
-      * 627689 : [deinterlace] Broken timestamps
-      * 617368 : [matroska] Implement push-mode seeking and non-cue seeking
+      * 628894 : [matroskademux] sloppy reverse playback
+      * 633294 : deinterlace breaks some DVD menu scenarios
 
 Download
 
@@ -144,17 +202,34 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
+      * American Dynamics
       * Andoni Morales Alastruey
-      * Arnaud Vrac
+      * Arun Raghavan
+      * Bastien Nocera
+      * David Hoyt
       * David Schleef
+      * Edward Hervey
+      * Havard Graff
+      * IOhannes m zmölnig
+      * Jan Schmidt
       * Jonathan Matthew
       * Mark Nauwelaerts
+      * Olivier Crête
+      * Pascal Buhler
+      * Pavel Kostyuchenko
+      * Philip Jägenstedt
       * Philippe Normand
+      * René Stadler
+      * Robert Swain
       * Sebastian Dröge
       * Sjoerd Simons
       * Stefan Kost
       * Thiago Santos
+      * Thibault Saunier
+      * Thijs Vermeir
       * Tim-Philipp Müller
+      * Trond Andersen
+      * Vladimir Eremeev
       * Wim Taymans
       * Zaheer Abbas Merali
  

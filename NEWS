@@ -1,4 +1,126 @@
-This is GStreamer Good Plug-ins 0.10.25, "Woe to You Oh Earth and Sea"
+This is GStreamer Good Plug-ins 0.10.26, "Escapades"
+
+Changes since 0.10.25:
+
+      * alphacolor: make passthrough work
+      * avidemux: reverse playback fixes; prevent overlap of subsequent fragments
+      * deinterlace: remove assembly code in favor of orc
+      * dvdemux: parse SMPTE time codes
+      * flvdemux: parse and use cts (fixes jittery H.264 playback in some cases)
+      * flvmux: resend onMetada tag when tags changes in streamable mode
+      * g729pay: extend from right parent
+      * gconf: Don't install schemas when GConf is disabled
+      * goom, goom2k1: add latency compensation code, report latency correctly
+      * gstrtpjpegpay: Added Define Restart Interval (DRI) Marker
+      * h264depay: always mark the codec_data as keyframe
+      * icydemux: forward tag events
+      * id3v2mux: Add mapping for album artist
+      * imagefreeze: generate a perfectly timestamped stream
+      * level: avoid division by zero on silence
+      * matroskademux: more robustness for parse errors and corner-cases
+      * matroskademux: extract H.264 profile and level and set on caps
+      * matroskamux: reduce newsegment event spam and set discont flag where needed
+      * pulse: allow setting of pulse stream properties
+      * pulse: fix device_description in READY
+      * pulsesink: Add "client" property to set the PA client name
+      * pulsesink: share the PA context between all clients with the same name
+      * qtdemux: export AAC/MPEG-4/H.264 profile and level in caps
+      * rtp: add G722 payloader and depayloader elements
+      * rtpamr(de)pay: support AMR-WB SID frame
+      * rtpamrpay: proper duration for multiple frame payload; properly support perfect-rtptime
+      * rtpbin: add "ntp-sync" property and "use-pipeline-clock" properties
+      * rtpg729pay: properly support perfect-rtptime
+      * rtph264depay: only set delta unit on all-non-key units
+      * rtpmanager: provide additional statistics
+      * rtpmp4adepay: grab the sampling rate and put into caps
+      * rtpmparobustdepay: properly insert dummy buffers; use valid bitrate for dummy frame
+      * rtpmpvpay: fix timestamping of rtp buffers
+      * rtpsession: Add the option to auto-discover the RTP bandwidth
+      * rtpsession: Calculate RTCP bandwidth as a fraction of the RTP bandwidth
+      * rtpsession: Count sent RTCP packets after they have been finished
+      * rtpsession: relax third-party collision detection
+      * rtpstats: Rectify description of current_time in RTPArrivalStats
+      * rtspext: stop configuration on first failure
+      * rtspsrc: Add property to configure udpsrc buffer size
+      * rtspsrc: add rtsp-sdp protocol support
+      * rtspsrc: don't add /UDP in the transport, it's the default
+      * rtspsrc: fix duration reporting
+      * rtspsrc: handle stale digest authentication session data
+      * rtspsrc: use sdp uri parse method
+      * shapewipe: add optional border parameter and slowdown animation
+      * shapewipe: Force format to AYUV in the example pipeline for the same reason
+      * shapewipe: Force the input to AYUV to prevent negotiation failures in videomixer
+      * spectrum: only aggregate magnitude/phase if user asks for it, performance fixes
+      * v4l2src: add controllable colorbalance parameters, add decimate property
+      * v4l2src: fix using mpegts via the mmap interface; use GstBaseSrc::block-size as fallback size
+      * videomixer2: new videomixer2 element that behaves better than videomixer
+      * vrawdepay: handle invalid payload better
+
+Bugs fixed since 0.10.25:
+
+      * 625825 : cannot link rtpmp4adepay ! aacparse
+      * 629047 : segfault in seek matroskademux
+      * 537544 : [pulse] allow setting pa context properties
+      * 628996 : pulsesink broken after shared context patch (bug #624338)
+      * 529672 : Big latency and bad framerate while mixing multiple live streams
+      * 581294 : rtspext: extensions configure_stream methods conflict
+      * 598915 : qtdemux: propagate jpeg2000 header data in image/x-j2c
+      * 612313 : qtdemux: Post AAC profile/level in caps
+      * 616521 : qtdemux: Export MPEG-4 video profile and level in stream caps
+      * 617318 : matroskademux, qtdemux: Use pbutils for H.264 profile/level extraction
+      * 620790 : [matroskademux] general stream error when trying to play certain .mkv file
+      * 622390 : [v4l2] add controllable color balance properties / programmable camera
+      * 624338 : [pulsesink] Handle pulse context separate from the ringbuffers and share them
+      * 625547 : imagefreeze unit test fails occasionally
+      * 626048 : [videomixer] needs mode that syncs streams based on timestamps
+      * 626518 : [imagefreeze] better caps negotiation
+      * 627162 : [pulse] better fallback return value for gst_pulse_client_name()
+      * 627174 : [pulsesink] new property to tune the PA client name
+      * 627289 : souphttpsrc: tweak error messages
+      * 627341 : wavparse: strange handling of files less than 12 bytes
+      * 627796 : rtpbin: add ntp clock sync
+      * 628020 : [pulsesink] assertion failure in change_state NULL- > READY
+      * 628058 : Need a way to set the SO_RCVBUF property on rtsp-based sockets.
+      * 628127 : jpeg rtp payloader crashes when there is corruption in the jpeg byte stream.
+      * 628214 : Add support to RTSP initiation through SDP files
+      * 628349 : [v4l2src] Doesn't support capturing mpegts using mmap
+      * 628454 : Matroska demuxer doesn't handle DATE tag if it contains only a year number
+      * 628608 : [alphacolor] element classification is wrong
+      * 629018 : rtpjpegpay: unable to build because of uninitialized variable warning
+      * 629522 : [rtpjpegpay] add support for Define Restart Interval (DRI)
+      * 629839 : [qtdemux] Update xmp tags parsing
+      * 629896 : Error compiling raw1394 (without iec61883)
+      * 630088 : [flvdemux] jerky h.264 video playback
+      * 630205 : [icydemux] Forward tag events downstrem
+      * 630256 : rtph264-pay/depay: doesn't respect timestamps from incomming buffers
+      * 630317 : Getting pulsesink device names doesn't work like for alsasink
+      * 630378 : speexenc/speexdec crash with MSVC
+      * 630446 : rtpmanager: provide additional statistics
+      * 630447 : rtpsession: relax third-party collision detection
+      * 630449 : rtpbin: Unlock before adding pad in new_payload_found
+      * 630451 : rtpbin: Handle rysnc of iterator when looking for free pad name
+      * 630452 : rtpbin: Make cleaning up sources in rtp_session_on_timeout MT safe
+      * 630457 : rtpmanager: packet lost should not be a warning.
+      * 630458 : level: avoid division by zero on silence
+      * 630500 : [rtspsrc] does rtsp setup message always need " /UDP " string?
+      * 630888 : v4l2sink does not cope with v4l2loopback kernel module
+      * 631082 : rtpjitterbuffer: improve document reference
+      * 631303 : [goom] qos warnings if source is GstAudioSrc
+      * 631330 : [flvmux][PATCH] Resend updated onMetada tag when tags changes in streamable mode
+      * 631996 : [h264depay] regression: rtsp://stream.zoovision.com/KibaEp1n900.3gp
+      * 632548 : [rtspsrc] regression; fails to report duration
+      * 632553 : --disable-gconf still tries to install schemas
+      * 632682 : [matroskademux] Handle missing CodecPrivate for Vorbis/Theora
+      * 632945 : rtph264depay in access-unit=true mode does not aggregate the delta unit flag correctly
+      * 633205 : Fix for navigation events in videoflip
+      * 633212 : [goom] Return not-negotiated when bps is unknown
+      * 633970 : [icydemux] broken taglist handling
+      * 635532 : rtspsrc: unexpected eos when using authentication (regression)
+      * 635843 : [rtph264depay] segfault on empty payload
+      * 636179 : [deinterlace] Fields in wrong order
+      * 626463 : [matroskademux] " reading large block of size 14688496 not supported "
+      * 628894 : [matroskademux] sloppy reverse playback
+      * 633294 : deinterlace breaks some DVD menu scenarios
 
 Changes since 0.10.24:
 
