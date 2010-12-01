@@ -636,10 +636,10 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
         color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - (color & 0xff);
-        r = (color >> 24) & 0xff;
-        g = (color >> 16) & 0xff;
-        b = (color >> 8) & 0xff;
+        alpha = 255 - ((color >> 24) & 0xff);
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
         Y = rgb_to_y (r, g, b);
         U = rgb_to_u (r, g, b);
@@ -678,10 +678,10 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
         color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - (color & 0xff);
-        r = (color >> 24) & 0xff;
-        g = (color >> 16) & 0xff;
-        b = (color >> 8) & 0xff;
+        alpha = 255 - ((color >> 24) & 0xff);
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
         Y = rgb_to_y (r, g, b);
         U = rgb_to_u (r, g, b);
@@ -719,10 +719,10 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
         color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - (color & 0xff);
-        r = (color >> 24) & 0xff;
-        g = (color >> 16) & 0xff;
-        b = (color >> 8) & 0xff;
+        alpha = 255 - ((color >> 24) & 0xff);
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
         Y = rgb_to_y (r, g, b);
         U = rgb_to_u (r, g, b);
@@ -750,10 +750,10 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
         color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - (color & 0xff);
-        r = (color >> 24) & 0xff;
-        g = (color >> 16) & 0xff;
-        b = (color >> 8) & 0xff;
+        alpha = 255 - ((color >> 24) & 0xff);
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
         Y = rgb_to_y (r, g, b);
         U = rgb_to_u (r, g, b);
