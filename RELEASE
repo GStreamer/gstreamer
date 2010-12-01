@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.19 "Insert Casablanca quote here"
+Release notes for GStreamer Python bindings 0.10.20 "What Abitbol said before dying"
         
 
 
@@ -17,17 +17,25 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Wrap new gstreamer API up to 0.10.30
       * Parallel installability with 0.8.x series
+      * libpython loading fixes
+      * MacOSX standard python support
       * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 572766 : gst.Bus.set_sync_handler() leaks and can't be unset
-      * 589582 : Missing gst.Buffer.size setter in python bindings
-      * 590735 : [gst.GhostPad] can't unset target
-      * 617068 : Adding xmp functions to python
-      * 530417 : Add a nicer constructor for GstElements
+      * 339772 : Python example showing segment seeking and looping
+      * 402044 : Doesn't compile with some features disabled in core
+      * 590348 : [audio (and other modules)] can't use pygstminiobject !
+      * 620067 : Add bindings gst.util_uint64_scale_ceil and friends
+      * 623105 : gstpythonplugin.c does not import user's gobject module
+      * 624592 : gst-python: plugin: attempt to load plugin " python " fails with KeyError
+      * 624882 : Add support for gst.Fraction property getters
+      * 625660 : gstpythonplugin: fails to refresh plugin registry when installed Python plugins change
+      * 633033 : filesrc.py example segfaults
+      * 633141 : MSVC cannot compile gstpythonplugin.c
+      * 633555 : discoverer: use specific types in getters, rename some boolean getters
+      * 634365 : gst.pbutils.get_codec_description segfaults
 
 Download
 
@@ -57,11 +65,11 @@ Applications
 Contributors to this release
     
       * Alessandro Decina
-      * Benjamin Otte
+      * David Hoyt
       * David Schleef
       * Edward Hervey
-      * Emilio Pozuelo Monfort
-      * Olivier Aubert
+      * Jan Schmidt
+      * Leo Singer
       * Sebastian Dröge
       * Stefan Kost
       * Thiago Santos

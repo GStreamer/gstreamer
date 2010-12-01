@@ -1,4 +1,9 @@
-This is GStreamer Python Bindings 0.10.19, "Insert Casablanca quote here"
+This is GStreamer Python Bindings 0.10.20, "What Abitbol said before dying"
+
+Changes since 0.10.19:
+
+      * libpython loading fixes
+      * MacOSX standard python support
 
 Changes since 0.10.18:
 

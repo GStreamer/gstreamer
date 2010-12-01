@@ -1,9 +1,385 @@
-=== release 0.10.19 ===
+=== release 0.10.20 ===
 
-2010-07-15  Edward Hervey <bilboed@bilboed.com>
+2010-12-01  Edward Hervey <bilboed@bilboed.com>
 
 	* configure.ac:
-	  releasing 0.10.19, "Insert Casablanca quote here"
+	  releasing 0.10.20, "What Abitbol said before dying"
+
+2010-11-22 13:27:15 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* .gitignore:
+	* configure.ac:
+	  0.10.19.5 pre-release
+
+2010-11-22 14:18:05 +0100  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/Makefile.am:
+	* testsuite/common.py:
+	  Fix distcheck some more.
+	  In testsuite/common.py look for gst/__init__.py in builddir now.
+	  Clean gst/__init__.pyc after make check.
+
+2010-11-22 13:41:17 +0100  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/__init__.py:
+	* gst/__init__.py.in:
+	  Fix distcheck.
+	  Before this change gst/__init__.py wasn't being copied to
+	  $(top_builddir)/gst/, making make check fail to import gst.
+
+2010-11-17 09:36:44 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* gst/gst.defs:
+	  gst: updating datetime functions
+	  Updating datetime _from_unix functions for the new 2 variants (utc/local)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=635031
+
+2010-11-09 10:58:04 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutilsmodule.c:
+	  pbutils: Check that pygst_init() succeeded
+
+2010-11-09 11:00:16 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/audiomodule.c:
+	* gst/gst-argtypes.c:
+	* gst/interfacesmodule.c:
+	* gst/pbutilsmodule.c:
+	* gst/pygstexception.c:
+	* gst/pygstiterator.c:
+	* gst/pygstminiobject.c:
+	* gst/tagmodule.c:
+	* gst/videomodule.c:
+	  gst: run gst-indent all C files
+	  We hadn't done it since the switch to git... whoops
+
+2010-11-09 10:57:31 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pygst.h:
+	  pygst: Get the _PyGst_API symbol from the proper module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=634365
+
+2010-11-08 19:01:50 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutils.defs:
+	* gst/pbutils.override:
+	  pbutils: Update for latest API change in gstdiscoverer
+
+2010-11-01 19:37:03 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure.ac: 0.10.19.4 pre-release
+	  Skip .3 to align number with the other pre-releases.
+
+2010-10-30 16:18:59 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/pbutils.defs:
+	  pbutils: update for discoverer API changes in last gst-plugins-base pre-release
+	  https://bugzilla.gnome.org/show_bug.cgi?id=633311
+
+2010-10-27 16:58:12 +0200  David Hoyt <dhoyt@llnl.gov>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: Fix build on MSVC
+	  Fixes #633141
+
+2010-10-27 13:17:57 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7bbd708 to 011bcc8
+
+2010-10-26 17:53:42 +0100  Jan Schmidt <thaytan@noraisin.net>
+
+	* examples/filesrc.py:
+	  filesrc.py: Call gobject.threads_init() in the example
+	  Fixes: #633033
+
+2010-10-22 18:17:34 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  configure.ac: 0.10.19.2 pre-release
+
+2010-10-22 13:28:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/pbutils.defs:
+	* gst/pbutils.override:
+	  pbutils: Overrides for GstDiscoverer API
+
+2010-10-22 13:27:33 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmodule.c:
+	  gst: Register new GST_ELEMENT_FACTORY_LIST_TYPE constants
+
+2010-10-22 13:27:02 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstmessage.override:
+	  gst: Add override for new qos messages
+
+2010-10-22 13:26:44 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstevent.override:
+	  gst: Add override for gst_event_parse_sink_message
+
+2010-10-22 13:26:21 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstelementfactory.override:
+	  gst: Add overrides for new GstElementFactoryList functions
+
+2010-10-22 13:25:45 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/arg-types.py:
+	  arg-types: GstElementFactoryListType is a guint64
+
+2010-10-22 13:25:22 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gst-types.defs:
+	  gst: Add GstDateTime as a boxed
+
+2010-10-18 11:59:03 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/audio.override:
+	* gst/audiomodule.c:
+	* gst/interfaces.override:
+	* gst/interfacesmodule.c:
+	* gst/pbutils.override:
+	* gst/pbutilsmodule.c:
+	* gst/tag.override:
+	* gst/tagmodule.c:
+	* gst/video.override:
+	* gst/videomodule.c:
+	  gst: Make all libraries use shared PyGst_API
+	  Fixes #590348
+
+2010-10-18 11:50:19 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/Makefile.am:
+	* gst/common.h:
+	* gst/gst.override:
+	* gst/gstmodule.c:
+	* gst/pygst-private.h:
+	* gst/pygst.h:
+	* gst/pygstiterator.c:
+	* gst/pygstminiobject.h:
+	* gst/pygstvalue.c:
+	  gst: Export some pygst API to be used by external modules
+	  Partially fixes #590348
+
+2010-10-18 10:14:19 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.20.ignore:
+	* gst/gst.override:
+	* gst/gstmodule.c:
+	* gst/gstversion.override.in:
+	* gst/pbutilsmodule.c:
+	  gst: Bump required core/base to 0.10.20
+	  And clean up code accordingly
+
+2010-10-18 09:36:13 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/audio.defs:
+	* gst/base.defs:
+	* gst/gst-0.10.31.ignore:
+	* gst/gst-pb-0.10.31.ignore:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	* gst/pbutils.defs:
+	* gst/video.defs:
+	  gst: Update to latest 0.10.31 core/base API
+
+2010-10-14 12:32:36 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5a668bf to 7bbd708
+
+2010-10-08 12:45:07 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From c4a8adc to 5a668bf
+
+2010-10-08 12:56:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 5e3c9bf to c4a8adc
+
+2010-09-21 18:34:55 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From aa0d1d0 to 5e3c9bf
+
+2010-09-07 14:28:14 +0300  Артём Попов <artfwo@gmail.com>
+
+	* examples/segments.py:
+	  examples: add an example to show looping using segments
+	  Fixes #339772.
+
+2010-09-07 11:43:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From c2e10bf to aa0d1d0
+
+2010-09-05 18:59:06 -0700  David Schleef <ds@schleef.org>
+
+	* common:
+	  Automatic update of common submodule
+	  From d3d9acf to c2e10bf
+
+2010-09-05 12:21:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ec60217 to d3d9acf
+
+2010-08-30 17:12:12 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* acinclude.m4:
+	  acinclude.m4: also look in ${py_prefix}/lib for libpythonX.Y.so.
+	  Fixes loading the python plugin loader in gentoo.
+
+2010-08-30 11:57:07 +0200  Leo Singer <lsinger@calltech.edu>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: fix spurious exceptions in pygst_require. Fixes #624592.
+
+2010-08-30 11:52:58 +0200  Leo Singer <lsinger@caltech.edu>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: refresh the plugin registry when plugins change.
+
+2010-08-27 13:20:24 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: call pygtk.require("2.0") before importing pygobject. Fixes #623105.
+	  Based on a patch from Leo Singer.
+
+2010-08-27 12:43:09 +0200  Leo Singer <lsinger@caltech.edu>
+
+	* gst/gst.defs:
+	  gst: add bindings for more gst.util_uint64_scale_*
+
+2010-08-27 01:16:43 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: remove an unneeded PyType_Check call. Makes it work on centos for real.
+
+2010-08-26 23:34:04 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: declare _PyGstElement_Type as void*.
+	  Declaring _PyGstElement_Type as PyTypeObject makes the loader on centos fail
+	  because of a missing symbol.
+
+2010-08-26 17:14:32 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* acinclude.m4:
+	* plugin/Makefile.am:
+	* plugin/gstpythonplugin.c:
+	  Make the plugin loader work on OSX with the standard python install.
+
+2010-08-26 14:45:06 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-python
+
+2010-08-26 12:14:33 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* plugin/Makefile.am:
+	  plugin: don't link to libpython
+
+2010-08-26 12:13:34 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* acinclude.m4:
+	  acinclude.m4: use a better way to find the correct PYTHON_LIB_LOC.
+
+2010-08-26 12:09:31 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: refactor the initialization code.
+	  Remove references to global python objects from the initialization code. This
+	  makes it possible to avoid linking to libpython.
+
+2010-08-25 12:36:14 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* acinclude.m4:
+	* plugin/Makefile.am:
+	  plugin: fix the manual loading of libpythonX.Y.so.
+
+2010-08-25 11:08:15 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugin/gstpythonplugin.c:
+	  plugin: check for _Py_NoneStruct instead of Py_None.
+	  When checking if CPython is already loaded, don't check for Py_None which is a
+	  macro but use _Py_NoneStruct which is a real symbol.
+
+2010-08-13 17:25:05 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3e8db1d to ec60217
+
+2010-08-10 10:59:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From bd2054b to 3e8db1d
+
+2010-08-06 23:18:02 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/gststructure.override:
+	* gst/pygstvalue.c:
+	* testsuite/test_caps.py:
+	  gst.Structure: raise TypeError when assigning None to a key
+
+2010-08-05 13:57:53 +0300  Stefan Kost <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From a519571 to bd2054b
+
+2010-08-04 19:31:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Check if the compiler supports ISO C89 or C99 and which parameters are required
+	  This first checks what is required for ISO C99 support and sets the relevant
+	  compiler parameters and if no C99 compiler is found, it checks for a
+	  C89 compiler. This enables us to check for and use C89/C99 functions
+	  that gcc hides from us without the correct compiler parameters.
+
+2010-07-26 19:41:43 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* testsuite/test_fraction.py:
+	  test_fraction: add a test for gobject property marshalling.
+
+2010-07-26 19:29:53 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/gstmodule.c:
+	  gst: implement getters and setters for GST_TYPE_FRACTION properties. Fixes #624882.
+
+2010-07-16 12:44:46 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* configure.ac:
+	  Back to development.
+
+=== release 0.10.19 ===
+
+2010-07-15 21:01:35 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 0.10.19 "Insert Casablanca quote here"
 
 2010-07-14 12:33:58 +0200  Alessandro Decina <alessandro.decina@collabora.co.uk>
 
@@ -4695,16 +5071,4 @@
 	  back to HEAD
 	  Original commit message from CVS:
 	  back to HEAD
-
-=== release 0.10.0 ===
-
-2005-12-05 18:04:34 +0000  Thomas Vander Stichele <thomas@apestaart.org>
-
-	* ChangeLog:
-	* NEWS:
-	* RELEASE:
-	* configure.ac:
-	  releasing 0.10.0
-	  Original commit message from CVS:
-	  releasing 0.10.0
 
