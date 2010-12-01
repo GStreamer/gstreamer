@@ -84,6 +84,10 @@
 #define off_t guint64
 #endif
 
+#ifdef _MSC_VER
+#define ftruncate g_win32_ftruncate
+#endif
+
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
