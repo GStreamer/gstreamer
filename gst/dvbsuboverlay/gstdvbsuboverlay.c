@@ -1130,6 +1130,12 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
     overlay->current_subtitle = NULL;
   }
 
+  /* Now render it */
+  if (overlay->current_subtitle && overlay->current_subtitle->num_rects > 0) {
+    buffer = gst_buffer_make_writable (buffer);
+    blit_i420 (overlay, overlay->current_subtitle, buffer);
+  }
+
   ret = gst_pad_push (overlay->srcpad, buffer);
 
   return ret;
