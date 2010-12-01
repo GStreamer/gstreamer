@@ -46,6 +46,17 @@
  * applied, followed by the user-set properties, fast first pass restrictions and
  * finally the profile restrictions.
  *
+ * <note>Some settings, including the default settings, may lead to quite
+ * some latency (i.e. frame buffering) in the encoder. This may cause problems
+ * with pipeline stalling in non-trivial pipelines, because the encoder latency
+ * is often considerably higher than the default size of a simple queue
+ * element. Such problems are caused by one of the queues in the other
+ * non-x264enc streams/branches filling up and blocking upstream. They can
+ * be fixed by relaxing the default time/size/buffer limits on the queue
+ * elements in the non-x264 branches, or using a (single) multiqueue element
+ * for all branches. Also see the last example below.
+ * </note>
+ *
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
@@ -66,6 +77,14 @@
  * constant quality at around Q25 using the 'medium' speed/quality preset and
  * restricting the options used so that the output is H.264 Baseline Profile
  * compliant and finally multiplexing the output in Quicktime mov format.
+ * |[
+ * gst-launch -v videotestsrc num-buffers=1000 ! tee name=t ! queue ! xvimagesink \
+ *   t. ! queue ! x264enc rc-lookahead=5 ! fakesink
+ * ]| This example pipeline will encode a test video source to H264 while
+ * displaying the input material at the same time.  As mentioned above,
+ * specific settings are needed in this case to avoid pipeline stalling.
+ * Depending on goals and context, other approaches are possible, e.g.
+ * tune=zerolatency might be configured, or queue sizes increased.
  * </refsect2>
  */
 
