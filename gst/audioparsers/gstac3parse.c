@@ -148,13 +148,14 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) true, "
         " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ]; "
-        "audio/ac3, framed = (boolean) true, "
+        "audio/x-eac3, framed = (boolean) true, "
         " channels = (int) [ 1, 6 ], rate = (int) [ 32000, 48000 ] "));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-ac3, framed = (boolean) false; "
+        "audio/x-eac3, framed = (boolean) false; "
         "audio/ac3, framed = (boolean) false "));
 
 static void gst_ac3_parse_finalize (GObject * object);
@@ -206,6 +207,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
 {
   ac3parse->channels = -1;
   ac3parse->sample_rate = -1;
+  ac3parse->eac = FALSE;
 }
 
 static void
@@ -347,7 +349,8 @@ gst_ac3_parse_frame_header_eac3 (GstAc3Parse * ac3parse, GstBuffer * buf,
 
 static gboolean
 gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
-    guint * framesize, guint * rate, guint * chans, guint * blocks, guint * sid)
+    guint * framesize, guint * rate, guint * chans, guint * blocks,
+    guint * sid, gboolean * eac)
 {
   GstBitReader bits = GST_BIT_READER_INIT_FROM_BUFFER (buf);
   guint16 sync;
@@ -365,9 +368,13 @@ gst_ac3_parse_frame_header (GstAc3Parse * parse, GstBuffer * buf,
   GST_LOG_OBJECT (parse, "bsid = %d", bsid);
 
   if (bsid <= 10) {
+    if (eac)
+      *eac = FALSE;
     return gst_ac3_parse_frame_header_ac3 (parse, buf, framesize, rate, chans,
         blocks, sid);
   } else if (bsid <= 16) {
+    if (eac)
+      *eac = TRUE;
     return gst_ac3_parse_frame_header_eac3 (parse, buf, framesize, rate, chans,
         blocks, sid);
   } else {
@@ -407,7 +414,7 @@ gst_ac3_parse_check_valid_frame (GstBaseParse * parse, GstBuffer * buf,
 
   /* make sure the values in the frame header look sane */
   if (!gst_ac3_parse_frame_header (ac3parse, buf, framesize, NULL, NULL,
-          NULL, NULL)) {
+          NULL, NULL, NULL)) {
     *skipsize = off + 2;
     return FALSE;
   }
@@ -448,9 +455,10 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
   guint fsize, rate, chans, blocks, sid;
+  gboolean eac;
 
   if (!gst_ac3_parse_frame_header (ac3parse, buf, &fsize, &rate, &chans,
-          &blocks, &sid))
+          &blocks, &sid, &eac))
     goto broken_header;
 
   GST_LOG_OBJECT (parse, "size: %u, rate: %u, chans: %u", fsize, rate, chans);
@@ -460,8 +468,9 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
     GST_BUFFER_FLAG_SET (buf, GST_BASE_PARSE_BUFFER_FLAG_NO_FRAME);
   }
 
-  if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans)) {
-    GstCaps *caps = gst_caps_new_simple ("audio/x-ac3",
+  if (G_UNLIKELY (ac3parse->sample_rate != rate || ac3parse->channels != chans
+          || ac3parse->eac != ac3parse->eac)) {
+    GstCaps *caps = gst_caps_new_simple (eac ? "audio/x-eac3" : "audio/x-ac3",
         "framed", G_TYPE_BOOLEAN, TRUE, "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, chans, NULL);
     gst_buffer_set_caps (buf, caps);
@@ -470,6 +479,7 @@ gst_ac3_parse_parse_frame (GstBaseParse * parse, GstBuffer * buf)
 
     ac3parse->sample_rate = rate;
     ac3parse->channels = chans;
+    ac3parse->eac = eac;
 
     gst_base_parse_set_frame_props (parse, rate, 256 * blocks, 2, 2);
   }
