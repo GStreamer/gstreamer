@@ -330,7 +330,7 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     const guint8 * buf,
     gint buf_size, const guint8 ** payload, gint * payload_size)
 {
-  const guint8 *buf_ip;
+  const guint8 *buf_ip = 0;
   const guint8 *buf_udp;
   guint16 eth_type;
   guint8 b;

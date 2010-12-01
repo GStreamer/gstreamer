@@ -24,6 +24,8 @@
 #define MIO_FRAMEWORK_PATH "/System/Library/PrivateFrameworks/" \
     "CoreMediaIOServices.framework/CoreMediaIOServices"
 
+GType gst_mio_api_get_type (void);
+
 G_DEFINE_TYPE (GstMIOApi, gst_mio_api, GST_TYPE_DYN_API);
 
 static void
