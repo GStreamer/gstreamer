@@ -101,6 +101,8 @@ typedef struct DVBSubtitleRect {
  * A structure representing a set of subtitle objects.
  */
 typedef struct DVBSubtitles {
+	guint64 pts;
+	guint8 page_time_out;
 	unsigned int num_rects;
 	DVBSubtitleRect **rects;
 } DVBSubtitles;
@@ -118,7 +120,7 @@ typedef struct DVBSubtitles {
  * dvb_sub_set_callbacks().
  */
 typedef struct {
-	void     (*new_data) (DvbSub *dvb_sub, guint64 pts, DVBSubtitles * subs, guint8 page_time_out, gpointer user_data);
+	void     (*new_data) (DvbSub *dvb_sub, DVBSubtitles * subs, gpointer user_data);
 	/*< private >*/
 	gpointer _dvb_sub_reserved[3];
 } DvbSubCallbacks;

@@ -1350,11 +1350,12 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
     ++i;
   }
 
+  sub->pts = pts;
+  sub->page_time_out = priv->page_time_out;
   sub->num_rects = i;
 
   if (priv->callbacks.new_data) {
-    priv->callbacks.new_data (dvb_sub, pts, sub, priv->page_time_out,
-        priv->user_data);
+    priv->callbacks.new_data (dvb_sub, sub, priv->user_data);
   } else {
     /* No-one responsible to clean up memory, so do it ourselves */
     /* FIXME: Just don't bother with all this palette image creation in the first place then... */

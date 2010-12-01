@@ -120,8 +120,8 @@ static gboolean gst_dvbsub_overlay_event_video (GstPad * pad, GstEvent * event);
 static gboolean gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event);
 static gboolean gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event);
 
-static void new_dvb_subtitles_cb (DvbSub * dvb_sub, guint64 pts,
-    DVBSubtitles * subs, guint8 page_time_out, gpointer user_data);
+static void new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs,
+    gpointer user_data);
 
 static GstFlowReturn gst_dvbsub_overlay_bufferalloc_video (GstPad * pad,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buffer);
@@ -921,14 +921,14 @@ gst_dvbsub_overlay_process_text (GstDVBSubOverlay * overlay, GstBuffer * buffer,
 }
 
 static void
-new_dvb_subtitles_cb (DvbSub * dvb_sub, guint64 pts, DVBSubtitles * subs,
-    guint8 page_time_out, gpointer user_data)
+new_dvb_subtitles_cb (DvbSub * dvb_sub, DVBSubtitles * subs, gpointer user_data)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (user_data);
   GST_INFO_OBJECT (overlay,
       "New DVB subtitles arrived with a page_time_out of %d and %d regions for PTS=%"
       G_GUINT64_FORMAT ", which should be at running time %" GST_TIME_FORMAT,
-      page_time_out, subs->num_rects, pts, GST_TIME_ARGS (pts));
+      subs->page_time_out, subs->num_rects, subs->pts,
+      GST_TIME_ARGS (subs->pts));
   //GST_OBJECT_LOCK (overlay);
   overlay->subtitle_buffer = subs->num_rects;
   //GST_OBJECT_UNLOCK (overlay);
