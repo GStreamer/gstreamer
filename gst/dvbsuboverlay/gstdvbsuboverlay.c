@@ -566,8 +566,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 {
   guint counter;
   DVBSubtitleRect *sub_region;
-  gint alpha, r, g, b, k, k2;
-  gint Y, U, V;
+  gint alpha, alpha2, r, g, b, r2, g2, b2, k, k2;
+  gint Y, U, V, Y2, U2, V2;
   guint32 color, color2;
   const guint8 *src;
   guint8 *dst_y, *dst_u, *dst_v;
@@ -631,12 +631,12 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         buffer->data + v_offset + ((sub_region->y + 1) / 2) * v_stride +
         (sub_region->x + 1) / 2;
 
+    /* FIXME: This whole blending business will need a refactor */
+    /* FIXME: Also interpolation for Cr and Cb channels missing */
     for (y = 0; y < h - 1; y += 2) {
       for (x = 0; x < w - 1; x += 2) {
-        /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
-        color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - ((color >> 24) & 0xff);
+        alpha = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
@@ -645,24 +645,54 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         U = rgb_to_u (r, g, b);
         V = rgb_to_v (r, g, b);
 
-        k = src[0] * alpha / 255;
+        color2 = sub_region->pict.palette[src[1]];
+        alpha2 = (color2 >> 24) & 0xff;
+        r2 = (color2 >> 16) & 0xff;
+        g2 = (color2 >> 8) & 0xff;
+        b2 = color2 & 0xff;
+
+        Y2 = rgb_to_y (r2, g2, b2);
+        U2 = rgb_to_u (r2, g2, b2);
+        V2 = rgb_to_v (r2, g2, b2);
+
+        k = alpha;
         k2 = k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
-        k = src[1] * alpha / 255;
+        k = alpha2;
         k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
 
         src += src_stride;
         dst_y += y_stride;
 
-        k = src[0] * alpha / 255;
+        color = sub_region->pict.palette[src[0]];
+        alpha = (color >> 24) & 0xff;
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
+
+        Y = rgb_to_y (r, g, b);
+        U = rgb_to_u (r, g, b);
+        V = rgb_to_v (r, g, b);
+
+        color2 = sub_region->pict.palette[src[1]];
+        alpha2 = (color2 >> 24) & 0xff;
+        r2 = (color2 >> 16) & 0xff;
+        g2 = (color2 >> 8) & 0xff;
+        b2 = color2 & 0xff;
+
+        Y2 = rgb_to_y (r2, g2, b2);
+        U2 = rgb_to_u (r2, g2, b2);
+        V2 = rgb_to_v (r2, g2, b2);
+
+        k = alpha;
         k2 += k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
-        k = src[1] * alpha / 255;
+        k = alpha2;
         k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
 
         k2 /= 4;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
@@ -675,10 +705,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
       }
 
       if (x < w) {
-        /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
-        color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - ((color >> 24) & 0xff);
+        alpha = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
@@ -687,14 +715,14 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         U = rgb_to_u (r, g, b);
         V = rgb_to_v (r, g, b);
 
-        k = src[0] * alpha / 255;
+        k = alpha;
         k2 = k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
         src += src_stride;
         dst_y += y_stride;
 
-        k = src[0] * alpha / 255;
+        k = alpha;
         k2 += k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
@@ -716,10 +744,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 
     if (y < h) {
       for (x = 0; x < w - 1; x += 2) {
-        /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
-        color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - ((color >> 24) & 0xff);
+        alpha = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
@@ -728,13 +754,23 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         U = rgb_to_u (r, g, b);
         V = rgb_to_v (r, g, b);
 
-        k = src[0] * alpha / 255;
+        color2 = sub_region->pict.palette[src[1]];
+        alpha2 = (color2 >> 24) & 0xff;
+        r2 = (color2 >> 16) & 0xff;
+        g2 = (color2 >> 8) & 0xff;
+        b2 = color2 & 0xff;
+
+        Y2 = rgb_to_y (r2, g2, b2);
+        U2 = rgb_to_u (r2, g2, b2);
+        V2 = rgb_to_v (r2, g2, b2);
+
+        k = alpha;
         k2 = k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
-        k = src[1] * alpha / 255;
+        k = alpha2;
         k2 += k;
-        dst_y[1] = (k * Y + (255 - k) * dst_y[1]) / 255;
+        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
 
         k2 /= 2;
         dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
@@ -747,10 +783,8 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
       }
 
       if (x < w) {
-        /* FIXME: Completely wrong blending code */
         color = sub_region->pict.palette[src[0]];
-        color2 = sub_region->pict.palette[src[1]];
-        alpha = 255 - ((color >> 24) & 0xff);
+        alpha = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
@@ -759,7 +793,7 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         U = rgb_to_u (r, g, b);
         V = rgb_to_v (r, g, b);
 
-        k = src[0] * alpha / 255;
+        k = alpha;
         k2 = k;
         dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
 
