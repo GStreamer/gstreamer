@@ -1118,6 +1118,18 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+  /* Check that we haven't hit the fallback timeout for current subtitle page */
+  if (overlay->current_subtitle
+      && vid_running_time >
+      (overlay->current_subtitle->pts +
+          (overlay->current_subtitle->page_time_out * GST_SECOND))) {
+    GST_INFO_OBJECT (overlay,
+        "Subtitle page not redefined before fallback page_time_out of %u seconds (missed data?) - deleting current page",
+        overlay->current_subtitle->page_time_out);
+    dvb_subtitles_free (overlay->current_subtitle);
+    overlay->current_subtitle = NULL;
+  }
+
   ret = gst_pad_push (overlay->srcpad, buffer);
 
   return ret;
