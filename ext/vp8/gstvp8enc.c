@@ -961,6 +961,13 @@ gst_vp8_enc_shape_output (GstBaseVideoEncoder * base_video_encoder,
     encoder->keyframe_distance++;
   }
 
+  GST_BUFFER_OFFSET_END (buf) =
+      _to_granulepos (frame->presentation_frame_number + 1, 0,
+      encoder->keyframe_distance);
+  GST_BUFFER_OFFSET (buf) =
+      gst_util_uint64_scale (frame->presentation_frame_number + 1,
+      GST_SECOND * state->fps_d, state->fps_n);
+
   ret = gst_pad_push (GST_BASE_VIDEO_CODEC_SRC_PAD (base_video_encoder), buf);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (encoder, "flow error %d", ret);
