@@ -81,38 +81,6 @@ enum
 
 
 /**
- * GstCameraBinFlags:
- * @GST_CAMERABIN_FLAG_SOURCE_RESIZE: enable video crop and scale
- *   after capture
- * @GST_CAMERABIN_FLAG_SOURCE_COLOR_CONVERSION: enable conversion
- *   of native video format by enabling ffmpegcolorspace
- * @GST_CAMERABIN_FLAG_VIEWFINDER_COLOR_CONVERSION: enable color
- *   conversion for viewfinder element
- * @GST_CAMERABIN_FLAG_VIEWFINDER_SCALE: enable scaling in
- *   viewfinder element retaining aspect ratio
- * @GST_CAMERABIN_FLAG_AUDIO_CONVERSION:  enable audioconvert and
- *   audioresample elements
- * @GST_CAMERABIN_FLAG_DISABLE_AUDIO:  disable audio elements
- * @GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION:  enable color
- *   conversion for image output element
- *
- * Extra flags to configure the behaviour of the sinks.
- */
-typedef enum {
-  GST_CAMERABIN_FLAG_SOURCE_RESIZE               = (1 << 0),
-  GST_CAMERABIN_FLAG_SOURCE_COLOR_CONVERSION     = (1 << 1),
-  GST_CAMERABIN_FLAG_VIEWFINDER_COLOR_CONVERSION = (1 << 2),
-  GST_CAMERABIN_FLAG_VIEWFINDER_SCALE            = (1 << 3),
-  GST_CAMERABIN_FLAG_AUDIO_CONVERSION            = (1 << 4),
-  GST_CAMERABIN_FLAG_DISABLE_AUDIO               = (1 << 5),
-  GST_CAMERABIN_FLAG_IMAGE_COLOR_CONVERSION      = (1 << 6)
-} GstCameraBinFlags;
-
-#define GST_TYPE_CAMERABIN_FLAGS (gst_camerabin_flags_get_type())
-GType gst_camerabin_flags_get_type (void);
-
-
-/**
  * GstCameraBinMode:
  * @MODE_IMAGE: image capture
  * @MODE_VIDEO: video capture
