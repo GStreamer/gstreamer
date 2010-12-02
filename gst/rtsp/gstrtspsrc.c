@@ -1663,6 +1663,9 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   /* for tcp interleaved case */
   if (base_time != -1)
     gst_element_set_base_time (GST_ELEMENT_CAST (src), base_time);
+  /* to manage jitterbuffer buffer mode */
+  if (src->session)
+    gst_element_set_base_time (GST_ELEMENT_CAST (src->session), base_time);
 }
 
 static GstRTSPResult
