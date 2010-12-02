@@ -140,7 +140,8 @@ gst_camera_bin_start_capture (GstCameraBin * camerabin)
 static void
 gst_camera_bin_stop_capture (GstCameraBin * camerabin)
 {
-  g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
+  if (camerabin->src)
+    g_signal_emit_by_name (camerabin->src, "stop-capture", NULL);
 }
 
 static void
@@ -152,7 +153,8 @@ gst_camera_bin_change_mode (GstCameraBin * camerabin, gint mode)
   /* stop any ongoing capture */
   gst_camera_bin_stop_capture (camerabin);
   camerabin->mode = mode;
-  g_object_set (camerabin->src, "mode", mode, NULL);
+  if (camerabin->src)
+    g_object_set (camerabin->src, "mode", mode, NULL);
 }
 
 static void
@@ -358,6 +360,7 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
       "notify::ready-for-capture",
       G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
+  g_object_set (src, "mode", camera->mode, NULL);
   g_object_set (vid, "location", camera->vid_location, NULL);
   g_object_set (img, "location", camera->img_location, NULL);
 
@@ -385,6 +388,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_element_set_state (camera->vidbin, GST_STATE_NULL);
       break;
     default:
       break;
@@ -397,7 +401,8 @@ static void
 gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
 {
   if (camera->mode == MODE_IMAGE) {
-    g_object_set (camera->imgbin, "location", location, NULL);
+    if (camera->imgbin)
+      g_object_set (camera->imgbin, "location", location, NULL);
     g_free (camera->img_location);
     camera->img_location = g_strdup (location);
   } else {

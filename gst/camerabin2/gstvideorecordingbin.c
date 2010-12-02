@@ -75,7 +75,7 @@ gst_video_recording_bin_set_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       vidbin->location = g_value_dup_string (value);
       if (vidbin->sink) {
-        g_object_set (vidbin, "location", vidbin->location, NULL);
+        g_object_set (vidbin->sink, "location", vidbin->location, NULL);
       }
       break;
     default:
