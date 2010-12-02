@@ -1154,6 +1154,10 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   sq = gst_pad_get_element_private (pad);
   mq = sq->mqueue;
 
+  /* if eos, we are always full, so avoid hanging incoming indefinitely */
+  if (sq->is_eos)
+    goto was_eos;
+
   /* Get a unique incrementing id */
   curid = mq->counter++;
 
@@ -1182,6 +1186,12 @@ flushing:
         sq->id, gst_flow_get_name (sq->srcresult));
     gst_multi_queue_item_destroy (item);
     goto done;
+  }
+was_eos:
+  {
+    GST_DEBUG_OBJECT (mq, "we are EOS, dropping buffer, return UNEXPECTED");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -1250,6 +1260,10 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  /* if eos, we are always full, so avoid hanging incoming indefinitely */
+  if (sq->is_eos)
+    goto was_eos;
+
   /* Get an unique incrementing id. protected with the STREAM_LOCK, unserialized
    * events already got pushed and don't end up in the queue. */
   curid = mq->counter++;
@@ -1292,6 +1306,13 @@ flushing:
     if (sref)
       gst_event_unref (sref);
     gst_multi_queue_item_destroy (item);
+    goto done;
+  }
+was_eos:
+  {
+    GST_DEBUG_OBJECT (mq, "we are EOS, dropping event, return FALSE");
+    gst_event_unref (event);
+    res = FALSE;
     goto done;
   }
 }
