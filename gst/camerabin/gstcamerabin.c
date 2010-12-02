@@ -3923,7 +3923,17 @@ gst_camerabin_imgbin_finished (gpointer u_data)
   /* Close the file of saved image */
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
   GST_DEBUG_OBJECT (camera, "Image pipeline set to READY");
-  CAMERABIN_PROCESSING_DEC (camera);
+
+  g_mutex_lock (camera->capture_mutex);
+  if (camera->processing_counter) {
+    CAMERABIN_PROCESSING_DEC_UNLOCKED (camera);
+  } else {
+    /* Camerabin state change to READY may have reset processing counter to
+     * zero. This is possible as this functions is scheduled from g_idle_add
+     */
+    GST_WARNING_OBJECT (camera, "camerabin has been forced to idle");
+  }
+  g_mutex_unlock (camera->capture_mutex);
 
   /* Send image-done signal */
   gst_camerabin_image_capture_continue (camera, filename);
