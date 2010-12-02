@@ -19,14 +19,14 @@
 /**
  * SECTION:element-gstviewfinderbin
  *
- * The gstviewfinderbin element does FIXME stuff.
+ * The gstviewfinderbin element is a displaying element for camerabin2.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
  * gst-launch -v videotestsrc ! viewfinderbin
  * ]|
- * FIXME Describe what the pipeline does.
+ * Feeds the viewfinderbin with video test data.
  * </refsect2>
  */
 
@@ -35,6 +35,9 @@
 #endif
 
 #include "gstviewfinderbin.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_viewfinder_bin_debug);
+#define GST_CAT_DEFAULT gst_viewfinder_bin_debug
 
 /* prototypes */
 
@@ -97,10 +100,13 @@ gst_viewfinder_bin_init (GstViewfinderBin * viewfinderbin,
 static gboolean
 gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
 {
-  GstElement *csp;
-  GstElement *videoscale;
-  GstElement *sink;
+  GstElement *csp = NULL;
+  GstElement *videoscale = NULL;
+  GstElement *sink = NULL;
   GstPad *pad = NULL;
+  gboolean added = FALSE;
+
+  GST_DEBUG_OBJECT (vfbin, "Creating internal elements");
 
   if (vfbin->elements_created)
     return TRUE;
@@ -118,8 +124,11 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
   if (!sink)
     goto error;
 
+  GST_DEBUG_OBJECT (vfbin, "Internal elements created, proceding to linking");
+
   /* add and link */
   gst_bin_add_many (GST_BIN_CAST (vfbin), csp, videoscale, sink, NULL);
+  added = TRUE;
   if (!gst_element_link_many (csp, videoscale, sink, NULL))
     goto error;
 
@@ -129,11 +138,23 @@ gst_viewfinder_bin_create_elements (GstViewfinderBin * vfbin)
     goto error;
 
   vfbin->elements_created = TRUE;
+  GST_DEBUG_OBJECT (vfbin, "Elements succesfully created and linked");
   return TRUE;
 
 error:
+  GST_WARNING_OBJECT (vfbin, "Creating internal elements failed");
   if (pad)
     gst_object_unref (pad);
+  if (!added) {
+    if (csp)
+      gst_object_unref (csp);
+    if (videoscale)
+      gst_object_unref (videoscale);
+    if (sink)
+      gst_object_unref (sink);
+  } else {
+    gst_bin_remove_many (GST_BIN_CAST (vfbin), csp, videoscale, sink, NULL);
+  }
   return FALSE;
 }
 
@@ -168,6 +189,8 @@ gst_viewfinder_bin_change_state (GstElement * element, GstStateChange trans)
 gboolean
 gst_viewfinder_bin_plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_viewfinder_bin_debug, "viewfinderbin", 0,
+      "ViewFinderBin");
   return gst_element_register (plugin, "viewfinderbin", GST_RANK_NONE,
       gst_viewfinder_bin_get_type ());
 }
