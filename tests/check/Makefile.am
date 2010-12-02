@@ -128,9 +128,6 @@ VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
 # these tests don't even pass
-# camerabin: temporarily disabled because it fails with current core -git
-# (which will be release before the next -bad release though, and chances are
-# changes to fix this are needed in the camerabin test)
 # neon: too flaky (almost always fails 'the first time')
 noinst_PROGRAMS = \
 	$(check_neon)
