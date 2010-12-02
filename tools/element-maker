@@ -51,16 +51,16 @@ fi
 
 PREFIX=$(echo $prefix | sed -e 's/\(.*\)/\U\1/')
 NAME=$(echo $name | sed -e 's/\(.*\)/\U\1/')
-Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/' -e 's/^\(.\)/\U\1/')
-Name=$(echo $name | sed -e 's/_\(.\)/\U\1/' -e 's/^\(.\)/\U\1/')
+Prefix=$(echo $prefix | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
+Name=$(echo $name | sed -e 's/_\(.\)/\U\1/g' -e 's/^\(.\)/\U\1/')
 
 GST_IS_REPLACE=${PREFIX}_IS_${NAME}
 GST_REPLACE=${PREFIX}_${NAME}
 GST_TYPE_REPLACE=${PREFIX}_TYPE_${NAME}
 GstReplace=${Prefix}${Name}
 gst_replace=${prefix}_${name}
-gstreplace=${prefix}$(echo $name | sed -e 's/_//')
-replace=$(echo $name | sed -e 's/_//')
+gstreplace=${prefix}$(echo $name | sed -e 's/_//g')
+replace=$(echo $name | sed -e 's/_//g')
 
 if [ "$REAL_NAME" = "" ] ; then
   REAL_NAME=FIXME
