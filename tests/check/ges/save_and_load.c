@@ -236,10 +236,10 @@ GST_END_TEST;
 #define CMP_FAIL(obj, ...) \
 {\
   gchar *file, *func;\
-  guint64 line;\
+  guint line;\
   file = g_object_get_data (G_OBJECT(obj), "file");\
   func = g_object_get_data (G_OBJECT(obj), "function");\
-  line = (guint64) g_object_get_data (G_OBJECT(obj), "line");\
+  line = GPOINTER_TO_UINT(g_object_get_data (G_OBJECT(obj), "line"));\
   gst_debug_log (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, func,\
       line, G_OBJECT(obj), __VA_ARGS__);\
 }
