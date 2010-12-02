@@ -614,6 +614,7 @@ gst_video_format_new_caps (GstVideoFormat format, int width,
         bpp = 8;
         depth = 8;
         have_alpha = FALSE;
+        break;
       default:
         return NULL;
     }
