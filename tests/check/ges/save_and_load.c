@@ -112,7 +112,7 @@ GST_START_TEST (test_keyfile_save)
   source = (GESTimelineObject *) ges_timeline_test_source_new ();
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
       source, -1);
-  g_object_set (G_OBJECT (source), "duration", 2 * GST_SECOND, NULL);
+  g_object_set (G_OBJECT (source), "duration", (guint64) 2 * GST_SECOND, NULL);
 
   KEY ("Object0", "type", "GESTimelineTestSource");
   KEY ("Object0", "start", "0");
@@ -132,7 +132,7 @@ GST_START_TEST (test_keyfile_save)
   source = (GESTimelineObject *)
       ges_timeline_transition_new_for_nick ((gchar *) "bar-wipe-lr");
 
-  g_object_set (G_OBJECT (source), "duration", GST_SECOND / 2, NULL);
+  g_object_set (G_OBJECT (source), "duration", (guint64) GST_SECOND / 2, NULL);
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
       source, -1);
 
@@ -146,7 +146,7 @@ GST_START_TEST (test_keyfile_save)
 
   GST_DEBUG ("Adding second source");
   source = (GESTimelineObject *) ges_timeline_test_source_new ();
-  g_object_set (G_OBJECT (source), "duration", 2 * GST_SECOND, NULL);
+  g_object_set (G_OBJECT (source), "duration", (guint64) 2 * GST_SECOND, NULL);
   ges_simple_timeline_layer_add_object (GES_SIMPLE_TIMELINE_LAYER (layer),
       source, -1);
 
