@@ -601,22 +601,23 @@ GST_START_TEST (test_keyfile_load)
     SIMPLE_LAYER_BEGIN (0) {
 
       SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TEST_SOURCE), -1,
-          "duration", 2 * GST_SECOND);
+          "duration", (guint64) 2 * GST_SECOND);
 
       SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TRANSITION), -1,
-          "duration", GST_SECOND / 2,
+          "duration", (guint64) GST_SECOND / 2,
           "vtype", GES_VIDEO_TRANSITION_TYPE_BAR_WIPE_LR);
 
       SIMPLE_LAYER_OBJECT ((GES_TYPE_TIMELINE_TEST_SOURCE), -1,
-          "duration", 2 * GST_SECOND);
+          "duration", (guint64) 2 * GST_SECOND);
 
     } LAYER_END;
 
     LAYER_BEGIN (1) {
 
       LAYER_OBJECT (GES_TYPE_TIMELINE_TITLE_SOURCE,
-          "start", 5 * GST_SECOND,
-          "duration", GST_SECOND, "priority", 2, "text", "the quick brown fox");
+          "start", (guint64) 5 * GST_SECOND,
+          "duration", (guint64) GST_SECOND, "priority", 2, "text",
+          "the quick brown fox");
 
     } LAYER_END;
 
@@ -653,8 +654,8 @@ GST_START_TEST (test_keyfile_identity)
     LAYER_BEGIN (5) {
 
       LAYER_OBJECT (GES_TYPE_TIMELINE_TEXT_OVERLAY,
-          "start", GST_SECOND,
-          "duration", 2 * GST_SECOND,
+          "start", (guint64) GST_SECOND,
+          "duration", (guint64) 2 * GST_SECOND,
           "priority", 1,
           "text", "Hello, world!",
           "font-desc", "Sans 9",
@@ -662,15 +663,15 @@ GST_START_TEST (test_keyfile_identity)
           "valignment", GES_TEXT_VALIGN_TOP);
 
       LAYER_OBJECT (GES_TYPE_TIMELINE_TEST_SOURCE,
-          "start", 0,
-          "duration", 5 * GST_SECOND,
+          "start", (guint64) 0,
+          "duration", (guint64) 5 * GST_SECOND,
           "priority", 2,
           "freq", (gdouble) 500,
           "volume", 1.0, "vpattern", GES_VIDEO_TEST_PATTERN_WHITE);
 
       LAYER_OBJECT (GES_TYPE_TIMELINE_TEXT_OVERLAY,
-          "start", 7 * GST_SECOND,
-          "duration", 2 * GST_SECOND,
+          "start", (guint64) 7 * GST_SECOND,
+          "duration", (guint64) 2 * GST_SECOND,
           "priority", 2,
           "text", "Hello, world!",
           "font-desc", "Sans 9",
@@ -678,8 +679,8 @@ GST_START_TEST (test_keyfile_identity)
           "valignment", GES_TEXT_VALIGN_TOP);
 
       LAYER_OBJECT (GES_TYPE_TIMELINE_TEST_SOURCE,
-          "start", 6 * GST_SECOND,
-          "duration", 5 * GST_SECOND,
+          "start", (guint64) 6 * GST_SECOND,
+          "duration", (guint64) 5 * GST_SECOND,
           "priority", 3,
           "freq", (gdouble) 600,
           "volume", 1.0, "vpattern", GES_VIDEO_TEST_PATTERN_RED);
