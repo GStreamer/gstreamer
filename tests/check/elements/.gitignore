@@ -14,6 +14,7 @@ flacparse
 gdpdepay
 gdppay
 id3mux
+imagecapturebin
 interleave
 jifmux
 jpegparse
@@ -36,6 +37,7 @@ spectrum
 timidity
 y4menc
 valve
+videorecordingbin
 vp8dec
 vp8enc
 zbar

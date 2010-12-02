@@ -150,6 +150,7 @@ check_PROGRAMS = \
 	elements/camerabin \
 	elements/dataurisrc \
 	elements/flacparse \
+	elements/imagecapturebin \
 	elements/legacyresample \
         $(check_jifmux) \
 	elements/jpegparse \
@@ -164,6 +165,7 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	$(check_schro) \
 	elements/valve \
+	elements/videorecordingbin \
 	$(check_vp8) \
 	$(check_zbar) \
 	$(check_orc) \
