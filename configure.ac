@@ -205,7 +205,7 @@ AC_CHECK_TYPE([struct ip_mreqn], [
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.18])
+AG_GST_GLIB_CHECK([2.20])
 
 dnl Orc
 ORC_CHECK([0.4.11])
