@@ -427,16 +427,28 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
     default:
     {
       GSList *walk;
+      GSList *pads = NULL;
 
       res = TRUE;
+      /* need local snapshot of pads;
+       * should not push downstream while holding lock as that might deadlock
+       * with stuff traveling upstream tyring to get this lock while holding
+       * other (stream)lock */
       GST_PAD_LOCK (demux);
       for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
         GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
-        gst_event_ref (event);
-        res &= gst_pad_push_event (pad->rtp_pad, event);
+        pads = g_slist_prepend (pads, gst_object_ref (pad->rtp_pad));
       }
       GST_PAD_UNLOCK (demux);
+      for (walk = pads; walk; walk = g_slist_next (walk)) {
+        GstPad *pad = (GstPad *) walk->data;
+
+        gst_event_ref (event);
+        res &= gst_pad_push_event (pad, event);
+        gst_object_unref (pad);
+      }
+      g_slist_free (pads);
       gst_event_unref (event);
       break;
     }
@@ -459,16 +471,24 @@ gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
     default:
     {
       GSList *walk;
+      GSList *pads = NULL;
 
       res = TRUE;
       GST_PAD_LOCK (demux);
       for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
         GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
-        gst_event_ref (event);
-        res &= gst_pad_push_event (pad->rtcp_pad, event);
+        pads = g_slist_prepend (pads, gst_object_ref (pad->rtcp_pad));
       }
       GST_PAD_UNLOCK (demux);
+      for (walk = pads; walk; walk = g_slist_next (walk)) {
+        GstPad *pad = (GstPad *) walk->data;
+
+        gst_event_ref (event);
+        res &= gst_pad_push_event (pad, event);
+        gst_object_unref (pad);
+      }
+      g_slist_free (pads);
       gst_event_unref (event);
       break;
     }
