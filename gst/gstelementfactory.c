@@ -566,6 +566,9 @@ static G_CONST_RETURN gchar *
 gst_element_factory_get_meta_data (GstElementFactory * factory,
     const gchar * key)
 {
+  if (!factory->meta_data)
+    return NULL;
+
   /* FIXME: do we want to support other types? */
   return gst_structure_get_string ((GstStructure *) factory->meta_data, key);
 }
