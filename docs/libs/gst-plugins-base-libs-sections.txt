@@ -191,6 +191,8 @@ gst_base_audio_sink_set_provide_clock
 gst_base_audio_sink_get_provide_clock
 gst_base_audio_sink_set_slave_method
 gst_base_audio_sink_get_slave_method
+gst_base_audio_sink_get_drift_tolerance
+gst_base_audio_sink_set_drift_tolerance
 <SUBSECTION Standard>
 GST_BASE_AUDIO_SINK
 GST_IS_BASE_AUDIO_SINK
@@ -549,6 +551,7 @@ gst_mixer_get_type
 gst_mixer_type_get_type
 gst_mixer_flags_get_type
 gst_mixer_message_type_get_type
+gst_stream_volume_format_get_type
 </SECTION>
 
 <SECTION>
@@ -789,6 +792,8 @@ GstXOverlay
 GstXOverlayClass
 gst_x_overlay_set_xwindow_id
 gst_x_overlay_got_xwindow_id
+gst_x_overlay_got_window_handle
+gst_x_overlay_set_window_handle
 gst_x_overlay_prepare_xwindow_id
 gst_x_overlay_expose
 gst_x_overlay_handle_events
@@ -1392,10 +1397,32 @@ gst_rtsp_strresult
 gst_rtsp_method_as_text
 gst_rtsp_version_as_text
 gst_rtsp_header_as_text
+gst_rtsp_header_allow_multiple
 gst_rtsp_status_as_text
 gst_rtsp_options_as_text
 gst_rtsp_find_header_field
 gst_rtsp_find_method
+<SUBSECTION Standard>
+GST_TYPE_RTSP_AUTH_METHOD
+GST_TYPE_RTSP_EVENT
+GST_TYPE_RTSP_FAMILY
+GST_TYPE_RTSP_HEADER_FIELD
+GST_TYPE_RTSP_LOWER_TRANS
+GST_TYPE_RTSP_METHOD
+GST_TYPE_RTSP_RESULT
+GST_TYPE_RTSP_STATE
+GST_TYPE_RTSP_STATUS_CODE
+GST_TYPE_RTSP_URL
+GST_TYPE_RTSP_VERSION
+gst_rtsp_event_get_type
+gst_rtsp_auth_method_get_type
+gst_rtsp_family_get_type
+gst_rtsp_method_get_type
+gst_rtsp_result_get_type
+gst_rtsp_state_get_type
+gst_rtsp_status_code_get_type
+gst_rtsp_version_get_type
+gst_rtsp_header_field_get_type
 </SECTION>
 
 <SECTION>
@@ -1413,6 +1440,8 @@ gst_rtsp_transport_as_text
 gst_rtsp_transport_get_mime
 gst_rtsp_transport_get_manager
 gst_rtsp_transport_free
+<SUBSECTION Standard>
+gst_rtsp_lower_trans_get_type
 </SECTION>
 
 <SECTION>
@@ -1427,6 +1456,7 @@ gst_rtsp_base64_decode_ip
 <INCLUDE>gst/rtsp/gstrtspconnection.h</INCLUDE>
 GstRTSPConnection
 gst_rtsp_connection_create
+gst_rtsp_connection_create_from_fd
 gst_rtsp_connection_accept
 gst_rtsp_connection_connect
 gst_rtsp_connection_close
@@ -1461,6 +1491,11 @@ gst_rtsp_connection_is_tunneled
 gst_rtsp_connection_get_tunnelid
 gst_rtsp_connection_do_tunnel
 
+gst_rtsp_connection_get_readfd
+gst_rtsp_connection_get_writefd
+gst_rtsp_connection_set_http_mode
+gst_rtsp_connection_set_proxy
+
 GstRTSPWatch
 GstRTSPWatchFuncs
 gst_rtsp_watch_new
@@ -1468,13 +1503,31 @@ gst_rtsp_watch_unref
 gst_rtsp_watch_attach
 gst_rtsp_watch_reset
 gst_rtsp_watch_queue_message
+gst_rtsp_watch_queue_data
+gst_rtsp_watch_send_message
+gst_rtsp_watch_write_data
 </SECTION>
 
 <SECTION>
 <FILE>gstrtspextension</FILE>
 <INCLUDE>gst/rtsp/gstrtspextension.h</INCLUDE>
+GstRTSPExtension
 GstRTSPExtensionInterface
 <SUBSECTION Standard>
+GST_IS_RTSP_EXTENSION
+GST_RTSP_EXTENSION
+GST_RTSP_EXTENSION_GET_IFACE
+GST_TYPE_RTSP_EXTENSION
+gst_rtsp_extension_after_send
+gst_rtsp_extension_before_send
+gst_rtsp_extension_configure_stream
+gst_rtsp_extension_detect_server
+gst_rtsp_extension_get_transports
+gst_rtsp_extension_parse_sdp
+gst_rtsp_extension_receive_request
+gst_rtsp_extension_send
+gst_rtsp_extension_setup_media
+gst_rtsp_extension_stream_select
 gst_rtsp_extension_get_type
 </SECTION>
 
@@ -1932,8 +1985,13 @@ gst_video_parse_caps_framerate
 gst_video_parse_caps_pixel_aspect_ratio
 gst_video_parse_caps_color_matrix
 gst_video_parse_caps_chroma_site
+GstVideoConvertFrameCallback
 gst_video_convert_frame
 gst_video_convert_frame_async
+gst_video_event_new_still_frame
+gst_video_event_parse_still_frame
+<SUBSECTION Standard>
+gst_video_format_get_type
 </SECTION>
 
 <SECTION>

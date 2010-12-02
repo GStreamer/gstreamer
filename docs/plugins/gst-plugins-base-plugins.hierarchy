@@ -85,15 +85,6 @@ GObject
       GstTheoraEnc
       GstTheoraParse
       GstVideoRate
-      GstVisual
-        GstVisualbumpscope
-        GstVisualcorona
-        GstVisualinfinite
-        GstVisualjakdaw
-        GstVisualjess
-        GstVisuallv_analyzer
-        GstVisuallv_scope
-        GstVisualoinksie
       GstVorbisDec
       GstVorbisEnc
       GstVorbisParse
