@@ -230,6 +230,7 @@ struct _GstRTSPSrc {
 
   /* supported methods */
   gint               methods;
+  gboolean           seekable;
 
   /* session management */
   GstElement      *session;

@@ -2033,6 +2033,11 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
         gboolean seekable =
             src->cur_protocols != GST_RTSP_LOWER_TRANS_UDP_MCAST;
 
+        /* seeking without duration is unlikely */
+        seekable = seekable && src->seekable && src->segment.duration &&
+            GST_CLOCK_TIME_IS_VALID (src->segment.duration);
+
+        /* FIXME ?? should we have 0 and segment.duration here; see demuxers */
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
             src->segment.start, src->segment.stop);
         res = TRUE;
@@ -4604,6 +4609,8 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
   /* always assume PLAY, FIXME, extensions should be able to override
    * this */
   src->methods |= GST_RTSP_PLAY;
+  /* also assume it will support Range */
+  src->seekable = TRUE;
 
   /* we need describe and setup */
   if (!(src->methods & GST_RTSP_DESCRIBE))
@@ -5777,6 +5784,20 @@ gen_range_header (GstRTSPSrc * src, GstSegment * segment)
   return res;
 }
 
+static void
+clear_rtp_base (GstRTSPSrc * src, GstRTSPStream * stream)
+{
+  stream->timebase = -1;
+  stream->seqbase = -1;
+  if (stream->caps) {
+    GstStructure *s;
+
+    stream->caps = gst_caps_make_writable (stream->caps);
+    s = gst_caps_get_structure (stream->caps, 0);
+    gst_structure_remove_fields (s, "clock-base", "seqnum-base", NULL);
+  }
+}
+
 static gboolean
 gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 {
@@ -5860,6 +5881,28 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 
     if (gst_rtspsrc_send (src, conn, &request, &response, NULL) < 0)
       goto send_error;
+
+    /* seek may have silently failed as it is not supported */
+    if (!(src->methods & GST_RTSP_PLAY)) {
+      GST_DEBUG_OBJECT (src, "PLAY Range not supported; re-enable PLAY");
+      /* obviously it is supported as we made it here */
+      src->methods |= GST_RTSP_PLAY;
+      src->seekable = FALSE;
+      /* but there is nothing to parse in the response,
+       * so convey we have no idea and not to expect anything particular */
+      clear_rtp_base (src, stream);
+      if (control) {
+        GList *run;
+
+        /* need to do for all streams */
+        for (run = src->streams; run; run = g_list_next (run))
+          clear_rtp_base (src, (GstRTSPStream *) run->data);
+      }
+      /* NOTE the above also disables npt based eos detection */
+      /* and below forces position to 0,
+       * which is visible feedback we lost the plot */
+      segment->start = segment->last_stop = 0;
+    }
 
     gst_rtsp_message_unset (&request);
 
