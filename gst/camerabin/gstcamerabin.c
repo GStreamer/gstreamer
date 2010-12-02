@@ -42,6 +42,7 @@
  * <refsect2>
  * <title>Image capture</title>
  * <para>
+ * Image capture is selected by switching #GstCameraBin:mode to %MODE_IMAGE.
  * Taking still images is initiated with the #GstCameraBin::capture-start action
  * signal. Once the image has been captured, "image-captured" gst message is
  * posted to the bus and capturing another image is possible. If application 
@@ -63,7 +64,8 @@
  * <refsect2>
  * <title>Video capture</title>
  * <para>
- * Video capture is started with the #GstCameraBin::capture-start action signal
+ * Video capture is selected by switching #GstCameraBin:mode to %MODE_VIDEO.
+ * The capture is started with the #GstCameraBin::capture-start action signal
  * too. In addition to image capture one can use #GstCameraBin::capture-pause to
  * pause recording and #GstCameraBin::capture-stop to end recording.
  * 
@@ -87,17 +89,18 @@
  * <refsect2>
  * <title>Video and image previews</title>
  * <para>
- * GstCameraBin contains "preview-caps" property, which is used to determine
- * whether the application wants a preview image of the captured picture or
- * video. When set, a GstMessage named "preview-image" will be sent. This
- * message will contain a GstBuffer holding the preview image, converted
+ * GstCameraBin contains #GstCameraBin:preview-caps property, which is used to
+ * determine whether the application wants a preview image of the captured
+ * picture or video. When set, a GstMessage named "preview-image" will be sent.
+ * This message will contain a GstBuffer holding the preview image, converted
  * to a format defined by those preview caps. The ownership of the preview
  * image is kept in GstCameraBin, so application should ref the preview buffer
  * object if it needs to use it elsewhere than in message handler.
  * 
- * Defining preview caps is done by selecting the capturing mode first and
- * then setting the property. Camerabin remembers caps separately for both
- * modes, so it is not necessary to set the caps again after changing the mode.
+ * Defining preview caps is done by selecting the capturing #GstCameraBin:mode
+ * first and then setting the property. Camerabin remembers caps separately for
+ * both modes, so it is not necessary to set the caps again after changing the
+ * mode.
  * </para>
  * </refsect2>
  * <refsect2>
