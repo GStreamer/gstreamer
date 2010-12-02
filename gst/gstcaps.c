@@ -1336,7 +1336,7 @@ gst_caps_structure_can_intersect (const GstStructure * struct1,
  * @caps1: a #GstCaps to intersect
  * @caps2: a #GstCaps to intersect
  *
- * Tries intersecting @caps1 and @caps2 and reports wheter the result would not
+ * Tries intersecting @caps1 and @caps2 and reports whether the result would not
  * be empty
  *
  * Returns: %TRUE if intersection would be not empty
