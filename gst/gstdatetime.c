@@ -494,7 +494,7 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
       + (guint64) (floor (seconds * GST_DATE_TIME_USEC_PER_SECOND + 0.5));
 
   /* we store in minutes */
-  dt->tzoffset = (gint) tzoffset *60.0;
+  dt->tzoffset = (gint) (tzoffset * 60.0);
 
   return dt;
 }
@@ -684,8 +684,8 @@ gst_date_time_get_microsecond (const GstDateTime * datetime)
 gfloat
 gst_date_time_get_time_zone_offset (const GstDateTime * datetime)
 {
-  return g_date_time_get_utc_offset (datetime->datetime) /
-      (G_USEC_PER_SEC * G_GINT64_CONSTANT (3600));
+  return (g_date_time_get_utc_offset (datetime->datetime) /
+      G_USEC_PER_SEC) / 3600.0;
 }
 
 GstDateTime *
@@ -746,6 +746,7 @@ gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
       tzminute);
 
   tz = g_time_zone_new (buf);
+
   dt = g_date_time_new (tz, year, month, day, hour, minute, seconds);
   g_time_zone_unref (tz);
   return gst_date_time_new_from_gdatetime (dt);
