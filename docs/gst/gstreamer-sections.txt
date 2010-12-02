@@ -238,6 +238,7 @@ gst_buffer_list_iterator_free
 gst_buffer_list_iterator_n_buffers
 gst_buffer_list_iterator_add
 gst_buffer_list_iterator_add_group
+gst_buffer_list_iterator_add_list
 gst_buffer_list_iterator_next
 gst_buffer_list_iterator_next_group
 gst_buffer_list_iterator_remove
@@ -689,6 +690,21 @@ GST_IS_ELEMENT_FACTORY_CLASS
 GST_TYPE_ELEMENT_FACTORY
 <SUBSECTION Private>
 gst_element_factory_get_type
+GST_ELEMENT_FACTORY_KLASS_DECODER
+GST_ELEMENT_FACTORY_KLASS_DEMUXER
+GST_ELEMENT_FACTORY_KLASS_DEPAYLOADER
+GST_ELEMENT_FACTORY_KLASS_ENCODER
+GST_ELEMENT_FACTORY_KLASS_FORMATTER
+GST_ELEMENT_FACTORY_KLASS_MEDIA_AUDIO
+GST_ELEMENT_FACTORY_KLASS_MEDIA_IMAGE
+GST_ELEMENT_FACTORY_KLASS_MEDIA_METADATA
+GST_ELEMENT_FACTORY_KLASS_MEDIA_SUBTITLE
+GST_ELEMENT_FACTORY_KLASS_MEDIA_VIDEO
+GST_ELEMENT_FACTORY_KLASS_MUXER
+GST_ELEMENT_FACTORY_KLASS_PARSER
+GST_ELEMENT_FACTORY_KLASS_PAYLOADER
+GST_ELEMENT_FACTORY_KLASS_SINK
+GST_ELEMENT_FACTORY_KLASS_SRC
 </SECTION>
 
 
@@ -1844,7 +1860,7 @@ gst_plugin_feature_get_name
 gst_plugin_feature_load
 gst_plugin_feature_list_copy
 gst_plugin_feature_list_free
-gst_plugin_feature_list_debug
+GST_PLUGIN_FEATURE_LIST_DEBUG
 gst_plugin_feature_check_version
 gst_plugin_feature_rank_compare_func
 <SUBSECTION Standard>
@@ -1859,6 +1875,7 @@ GST_TYPE_PLUGIN_FEATURE
 GST_TYPE_RANK
 <SUBSECTION Private>
 gst_plugin_feature_get_type
+gst_plugin_feature_list_debug
 gst_rank_get_type
 </SECTION>
 
