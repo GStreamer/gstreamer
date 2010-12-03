@@ -21,6 +21,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/multichannel.h>
 
 static gboolean
 bus_handler (GstBus * bus, GstMessage * message, gpointer data)
@@ -64,10 +65,12 @@ static void
 make_n_channel_wav (const gint channels, const GValueArray * arr)
 {
   GstElement *pipeline;
-  GstElement *audiotestsrc[channels], *interleave, *wavenc, *fakesink;
+  GstElement **audiotestsrc, *interleave, *wavenc, *fakesink;
   GstBus *bus;
   GMainLoop *loop;
   guint i;
+
+  audiotestsrc = g_new0 (GstElement *, channels);
 
   pipeline = gst_pipeline_new ("pipeline");
   fail_unless (pipeline != NULL);
@@ -107,6 +110,8 @@ make_n_channel_wav (const gint channels, const GValueArray * arr)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
   gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  g_free (audiotestsrc);
 }
 
 GST_START_TEST (test_encode_stereo)
@@ -128,6 +133,7 @@ GST_START_TEST (test_encode_stereo)
 
 GST_END_TEST;
 
+#if 0
 GST_START_TEST (test_encode_multichannel)
 {
   GValueArray *arr;
@@ -158,7 +164,7 @@ GST_START_TEST (test_encode_multichannel)
 }
 
 GST_END_TEST;
-
+#endif
 
 static Suite *
 wavenc_suite (void)
