@@ -43,23 +43,34 @@
 
 
 /**
- * SECTION:gstqtmux
+ * SECTION:element-qtmux
  * @short_description: Muxer for quicktime(.mov) files
  *
+ * This element merges streams (audio and video) into QuickTime(.mov) files.
+ *
+ * The following background intends to explain why various similar muxers
+ * are present in this plugin.
+ *
+ * The <ulink url="http://www.apple.com/quicktime/resources/qtfileformat.pdf">
+ * QuickTime file format specification</ulink> served as basis for the MP4 file
+ * format specification (mp4mux), and as such the QuickTime file structure is
+ * nearly identical to the so-called ISO Base Media file format defined in
+ * ISO 14496-12 (except for some media specific parts).
+ * In turn, the latter ISO Base Media format was further specialized as a
+ * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
+ * and in various 3GPP(2) specs (gppmux).
+ * The fragmented file features defined (only) in ISO Base Media are used by
+ * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
+ *
  * <refsect2>
- * <para>
- * This element merges streams (audio and video) into qt(.mov) files.
- * </para>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch v4l2src num-buffers=500 ! video/x-raw-yuv,width=320,height=240 ! ffmpegcolorspace ! qtmux ! filesink location=video.mov
- * </programlisting>
+ * ]|
  * Records a video stream captured from a v4l2 device and muxes it into a qt file.
- * </para>
  * </refsect2>
  *
- * Last reviewed on 2008-08-27
+ * Last reviewed on 2010-12-03
  */
 
 /*
