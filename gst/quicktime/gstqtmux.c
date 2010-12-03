@@ -118,7 +118,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_LARGE_FILE,
   PROP_MOVIE_TIMESCALE,
   PROP_TRAK_TIMESCALE,
   PROP_DO_CTTS,
@@ -133,7 +132,6 @@ enum
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
 #define MAX_TOLERATED_LATENESS          (GST_SECOND / 10)
 
-#define DEFAULT_LARGE_FILE              FALSE
 #define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_TRAK_TIMESCALE          0
 #define DEFAULT_DO_CTTS                 FALSE
@@ -229,11 +227,6 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gobject_class->get_property = gst_qt_mux_get_property;
   gobject_class->set_property = gst_qt_mux_set_property;
 
-  g_object_class_install_property (gobject_class, PROP_LARGE_FILE,
-      g_param_spec_boolean ("large-file", "Support for large files",
-          "Uses 64bits to some fields instead of 32bits, "
-          "providing support for large files",
-          DEFAULT_LARGE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
       g_param_spec_uint ("movie-timescale", "Movie timescale",
           "Timescale to use in the movie (units per second)",
@@ -1405,23 +1398,20 @@ gst_qt_mux_set_header_on_caps (GstQTMux * mux, GstBuffer * buf)
 static void
 gst_qt_mux_configure_moov (GstQTMux * qtmux, guint32 * _timescale)
 {
-  gboolean large_file, fragmented;
+  gboolean fragmented;
   guint32 timescale;
 
   GST_OBJECT_LOCK (qtmux);
   timescale = qtmux->timescale;
-  large_file = qtmux->large_file;
   fragmented = qtmux->fragment_sequence > 0;
   GST_OBJECT_UNLOCK (qtmux);
 
   /* inform lower layers of our property wishes, and determine duration.
    * Let moov take care of this using its list of traks;
    * so that released pads are also included */
-  GST_DEBUG_OBJECT (qtmux, "Large file support: %d", large_file);
   GST_DEBUG_OBJECT (qtmux, "Updating timescale to %" G_GUINT32_FORMAT,
       timescale);
   atom_moov_update_timescale (qtmux->moov, timescale);
-  atom_moov_set_64bits (qtmux->moov, large_file);
   atom_moov_set_fragmented (qtmux->moov, fragmented);
 
   atom_moov_update_duration (qtmux->moov);
@@ -3075,9 +3065,6 @@ gst_qt_mux_get_property (GObject * object,
 
   GST_OBJECT_LOCK (qtmux);
   switch (prop_id) {
-    case PROP_LARGE_FILE:
-      g_value_set_boolean (value, qtmux->large_file);
-      break;
     case PROP_MOVIE_TIMESCALE:
       g_value_set_uint (value, qtmux->timescale);
       break;
@@ -3130,9 +3117,6 @@ gst_qt_mux_set_property (GObject * object,
 
   GST_OBJECT_LOCK (qtmux);
   switch (prop_id) {
-    case PROP_LARGE_FILE:
-      qtmux->large_file = g_value_get_boolean (value);
-      break;
     case PROP_MOVIE_TIMESCALE:
       qtmux->timescale = g_value_get_uint (value);
       break;

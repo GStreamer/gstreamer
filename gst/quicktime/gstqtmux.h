@@ -173,7 +173,6 @@ struct _GstQTMux
   guint32 trak_timescale;
   AtomsTreeFlavor flavor;
   gboolean fast_start;
-  gboolean large_file;
   gboolean guess_pts;
   gchar *fast_start_file_path;
   gchar *moov_recov_file_path;
