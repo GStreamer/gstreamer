@@ -1252,11 +1252,11 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
       break;
 
     if (c.data[0] == 0x0b && c.data[1] == 0x77) {
-      guint bsid = (c.data[5] >> 3) & 0x1F;
+      guint bsid = c.data[5] >> 3;
 
       if (bsid <= 8) {
         /* ac3 */
-        guint fscod = (c.data[4] >> 6) & 0x03;
+        guint fscod = c.data[4] >> 6;
         guint frmsizecod = c.data[4] & 0x3f;
 
         if (fscod < 3 && frmsizecod < 38) {
@@ -1270,7 +1270,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
             data_scan_ctx_advance (tf, &c_next, frame_size * 2);
 
             if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
-              guint fscod2 = (c_next.data[4] >> 6) & 0x03;
+              guint fscod2 = c_next.data[4] >> 6;
               guint frmsizecod2 = c_next.data[4] & 0x3f;
 
               if (fscod == fscod2 && frmsizecod == frmsizecod2) {
@@ -1295,7 +1295,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
         DataScanCtx c_next = c;
         guint frame_size;
 
-        frame_size = (((c.data[2] & 0x07) << 8) + (c.data[3] & 0xff)) + 1;
+        frame_size = (((c.data[2] & 0x07) << 8) + c.data[3]) + 1;
         GST_LOG ("possible E-AC3 frame sync at offset %"
             G_GUINT64_FORMAT ", size=%u", c.offset, frame_size);
         if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
