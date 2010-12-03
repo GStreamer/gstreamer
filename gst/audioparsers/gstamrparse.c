@@ -25,17 +25,14 @@
  * @short_description: AMR parser
  * @see_also: #GstAmrnbDec, #GstAmrnbEnc
  *
- * <refsect2>
- * <para>
  * This is an AMR parser capable of handling both narrow-band and wideband
  * formats.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.amr ! amrparse ! amrdec ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 
