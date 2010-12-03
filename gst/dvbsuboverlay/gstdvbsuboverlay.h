@@ -34,7 +34,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstDVBSubOverlay GstDVBSubOverlay;
 typedef struct _GstDVBSubOverlayClass GstDVBSubOverlayClass;
-typedef void (*GstAssRenderBlitFunction) (GstDVBSubOverlay *overlay, DVBSubtitles *subs, GstBuffer *buffer);
 
 struct _GstDVBSubOverlay
 {
@@ -52,26 +51,14 @@ struct _GstDVBSubOverlay
   GstVideoFormat format;
   gint width, height;
   gint fps_n, fps_d;
-  GstAssRenderBlitFunction blit;
+  gint par_n, par_d;
 
   DVBSubtitles *current_subtitle; /* The currently active set of subtitle regions, if any */
   GQueue *pending_subtitles; /* A queue of raw subtitle region sets with
 			      * metadata that are waiting their running time */
 
-  GMutex *subtitle_mutex;
-  GCond *subtitle_cond; /* to signal removal of a queued text
-			 * buffer, arrival of a text buffer,
-			 * a text segment update, or a change
-			 * in status (e.g. shutdown, flushing)
-			 * FIXME: Update comment for dvbsub case */
-  GstBuffer *subtitle_pending;
-  gboolean subtitle_flushing;
-  gboolean subtitle_eos;
-
   GMutex *dvbsub_mutex; /* FIXME: Do we need a mutex lock in case of libdvbsub? Probably, but... */
   DvbSub *dvb_sub;
-
-  gboolean renderer_init_ok;
 };
 
 struct _GstDVBSubOverlayClass
