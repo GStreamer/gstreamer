@@ -128,6 +128,7 @@ struct _GstPoll
   GArray *active_fds;
 
 #ifndef G_OS_WIN32
+  gchar buf[1];
   GstPollFD control_read_fd;
   GstPollFD control_write_fd;
 #else
@@ -160,6 +161,14 @@ static gboolean gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd);
 #define TEST_REBUILD(s)     (g_atomic_int_compare_and_exchange(&(s)->rebuild, 1, 0))
 #define MARK_REBUILD(s)     (g_atomic_int_set(&(s)->rebuild, 1))
 
+#ifndef G_OS_WIN32
+#define WAKE_EVENT(s)       (write ((s)->control_write_fd.fd, "W", 1) == 1)
+#define RELEASE_EVENT(s)    (read ((s)->control_read_fd.fd, (s)->buf, 1) == 1)
+#else
+#define WAKE_EVENT(s)       (SetEvent ((s)->wakeup_event))
+#define RELEASE_EVENT(s)    (ResetEvent ((s)->wakeup_event))
+#endif
+
 /* the poll/select call is also performed on a control socket, that way
  * we can send special commands to control it */
 static inline gboolean
@@ -168,27 +177,22 @@ raise_wakeup (GstPoll * set)
   gboolean result = TRUE;
 
   if (g_atomic_int_exchange_and_add (&set->control_pending, 1) == 0) {
-#ifndef G_OS_WIN32
-    result = (write (set->control_write_fd.fd, "W", 1) == 1);
-#else
-    result = SetEvent (set->wakeup_event);
-#endif
+    /* raise when nothing pending */
+    result = WAKE_EVENT (set);
   }
   return result;
 }
 
+/* note how bad things can happen when the 2 threads both raise and release the
+ * wakeup. This is however not a problem because you must always pair a raise
+ * with a release */
 static inline gboolean
 release_wakeup (GstPoll * set)
 {
   gboolean result = TRUE;
 
   if (g_atomic_int_dec_and_test (&set->control_pending)) {
-#ifndef G_OS_WIN32
-    gchar buf[1];
-    result = (read (set->control_read_fd.fd, buf, 1) == 1);
-#else
-    result = ResetEvent (set->wakeup_event);
-#endif
+    result = RELEASE_EVENT (set);
   }
   return result;
 }
@@ -207,12 +211,7 @@ release_all_wakeup (GstPoll * set)
     /* try to remove all pending control messages */
     if (g_atomic_int_compare_and_exchange (&set->control_pending, old, 0)) {
       /* we managed to remove all messages, read the control socket */
-#ifndef G_OS_WIN32
-      gchar buf[1];
-      result = (read (set->control_read_fd.fd, buf, 1) == 1);
-#else
-      result = ResetEvent (set->wakeup_event);
-#endif
+      result = RELEASE_EVENT (set);
       break;
     }
   }
