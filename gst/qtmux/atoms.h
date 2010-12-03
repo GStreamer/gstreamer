@@ -821,7 +821,6 @@ void       atom_moov_free              (AtomMOOV *moov);
 guint64    atom_moov_copy_data         (AtomMOOV *atom, guint8 **buffer, guint64 *size, guint64* offset);
 void       atom_moov_update_timescale  (AtomMOOV *moov, guint32 timescale);
 void       atom_moov_update_duration   (AtomMOOV *moov);
-void       atom_moov_set_64bits        (AtomMOOV *moov, gboolean large_file);
 void       atom_moov_set_fragmented    (AtomMOOV *moov, gboolean fragmented);
 void       atom_moov_chunks_add_offset (AtomMOOV *moov, guint32 offset);
 void       atom_moov_add_trak          (AtomMOOV *moov, AtomTRAK *trak);

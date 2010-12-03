@@ -613,7 +613,7 @@ atom_co64_init (AtomSTCO64 * co64)
 {
   guint8 flags[3] = { 0, 0, 0 };
 
-  atom_full_init (&co64->header, FOURCC_co64, 0, 0, 0, flags);
+  atom_full_init (&co64->header, FOURCC_stco, 0, 0, 0, flags);
   atom_array_init (&co64->entries, 256);
 }
 
@@ -2520,6 +2520,8 @@ static void
 atom_stco64_add_entry (AtomSTCO64 * stco64, guint64 entry)
 {
   atom_array_append (&stco64->entries, entry, 256);
+  if (entry > G_MAXUINT32)
+    stco64->header.header.type = FOURCC_co64;
 }
 
 static void
@@ -2706,41 +2708,6 @@ atom_moov_update_duration (AtomMOOV * moov)
   }
   moov->mvhd.time_info.duration = duration;
   moov->mvex.mehd.fragment_duration = duration;
-}
-
-static void
-atom_set_type (Atom * atom, guint32 fourcc)
-{
-  atom->type = fourcc;
-}
-
-static void
-atom_stbl_set_64bits (AtomSTBL * stbl, gboolean use)
-{
-  if (use) {
-    atom_set_type (&stbl->stco64.header.header, FOURCC_co64);
-  } else {
-    atom_set_type (&stbl->stco64.header.header, FOURCC_stco);
-  }
-}
-
-static void
-atom_trak_set_64bits (AtomTRAK * trak, gboolean use)
-{
-  atom_stbl_set_64bits (&trak->mdia.minf.stbl, use);
-}
-
-void
-atom_moov_set_64bits (AtomMOOV * moov, gboolean large_file)
-{
-  GList *traks = moov->traks;
-
-  while (traks) {
-    AtomTRAK *trak = (AtomTRAK *) traks->data;
-
-    atom_trak_set_64bits (trak, large_file);
-    traks = g_list_next (traks);
-  }
 }
 
 void
