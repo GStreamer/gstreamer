@@ -28,6 +28,7 @@ EXPORTS
 	gst_video_parse_caps_chroma_site
 	gst_video_parse_caps_color_matrix
 	gst_video_parse_caps_framerate
+	gst_video_parse_caps_palette
 	gst_video_parse_caps_pixel_aspect_ratio
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
