@@ -10,3 +10,4 @@ include $(GSTREAMER_TOP)/android/metadata.mk
 include $(GSTREAMER_TOP)/android/qtmux.mk
 include $(GSTREAMER_TOP)/android/aacparse.mk
 include $(GSTREAMER_TOP)/android/amrparse.mk
+include $(GSTREAMER_TOP)/sys/audioflingersink/Android.mk
