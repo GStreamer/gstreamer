@@ -120,13 +120,20 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       break;
     }
     case GST_MESSAGE_ERROR:{
-      //print_error_message (message);
-      //me_gst_cleanup_element ();
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s : %s\n", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+
       gtk_main_quit ();
       break;
     }
     case GST_MESSAGE_EOS:
       /* end-of-stream */
+      g_print ("Eos\n");
       gtk_main_quit ();
       break;
     case GST_MESSAGE_ELEMENT:
