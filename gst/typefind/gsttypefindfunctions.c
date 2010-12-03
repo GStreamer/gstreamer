@@ -1270,13 +1270,14 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
             data_scan_ctx_advance (tf, &c_next, frame_size * 2);
 
             if (c_next.data[0] == 0x0b && c_next.data[1] == 0x77) {
-              guint fscod2 = c_next.data[4] >> 6;
-              guint frmsizecod2 = c_next.data[4] & 0x3f;
+              fscod = c_next.data[4] >> 6;
+              frmsizecod = c_next.data[4] & 0x3f;
 
-              if (fscod == fscod2 && frmsizecod == frmsizecod2) {
+              if (fscod < 3 && frmsizecod < 38) {
                 GstTypeFindProbability prob;
 
-                GST_LOG ("found second AC3 frame, looks good");
+                GST_LOG ("found second AC3 frame (size=%u), looks good",
+                    ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod]);
                 if (c.offset == 0)
                   prob = GST_TYPE_FIND_MAXIMUM;
                 else
