@@ -95,6 +95,8 @@
 static GstAllocTrace *_gst_object_trace;
 #endif
 
+#include <stdio.h>
+
 #define DEBUG_REFCOUNT
 
 /* Object signals and args */
