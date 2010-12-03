@@ -29,10 +29,17 @@ xml_decode ($)
 
 # main
 my $output = shift @ARGV;
+my $outputname;
 
 # strip path parts
-$output =~ m/.*\/(.*)$/;
-my $outputname = $1;
+if ($output =~ m/.*\/(.*)$/)
+{
+  $outputname = $1;
+}
+else
+{
+  $outputname = $output;
+}
 
 $found = 0;
 %blocks = ();
