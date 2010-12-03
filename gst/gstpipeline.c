@@ -346,7 +346,8 @@ pipeline_update_start_time (GstElement * element)
       if (now != GST_CLOCK_TIME_NONE)
         GST_ELEMENT_START_TIME (pipeline) = now - element->base_time;
       else
-        GST_WARNING_OBJECT ("Clock %s returned invalid time, can't calculate "
+        GST_WARNING_OBJECT (element,
+            "Clock %s returned invalid time, can't calculate "
             "running_time when going to the PAUSED state",
             GST_OBJECT_NAME (clock));
 
