@@ -364,6 +364,20 @@ gst_dc1394_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-dcaparse</FILE>
+<TITLE>dcaparse</TITLE>
+GstDCAParse
+<SUBSECTION Standard>
+GstDCAParseClass
+GST_DCA_PARSE
+GST_DCA_PARSE_CLASS
+GST_IS_DCA_PARSE
+GST_IS_DCA_PARSE_CLASS
+GST_TYPE_DCA_PARSE
+gst_dca_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-dccpclientsink</FILE>
 <TITLE>dccpclientsink</TITLE>
 GstDCCPClientSink

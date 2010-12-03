@@ -41,6 +41,7 @@
     <xi:include href="xml/element-cvsobel.xml" />
     <xi:include href="xml/element-dataurisrc.xml" />
     <!--xi:include href="xml/element-dc1394.xml" /-->
+    <xi:include href="xml/element-dcaparse.xml" />
     <xi:include href="xml/element-dccpclientsink.xml" />
     <xi:include href="xml/element-dccpclientsrc.xml" />
     <xi:include href="xml/element-dccpserversink.xml" />

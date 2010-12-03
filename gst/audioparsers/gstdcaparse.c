@@ -22,16 +22,13 @@
  * @short_description: DCA (DTS Coherent Acoustics) parser
  * @see_also: #GstAmrParse, #GstAACParse, #GstAc3Parse
  *
- * <refsect2>
- * <para>
  * This is a DCA (DTS Coherent Acoustics) parser.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.dts ! dcaparse ! dtsdec ! audioresample ! audioconvert ! autoaudiosink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 
