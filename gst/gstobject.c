@@ -95,8 +95,6 @@
 static GstAllocTrace *_gst_object_trace;
 #endif
 
-#include <stdio.h>
-
 #define DEBUG_REFCOUNT
 
 /* Object signals and args */
@@ -645,7 +643,7 @@ gst_object_set_name_default (GstObject * object)
   name = g_malloc (l + 6 + 1);
   for (i = 0; i < l; i++)
     name[i] = g_ascii_tolower (type_name[i]);
-  snprintf (&name[i], 6, "%d", count);
+  g_snprintf (&name[i], 6, "%d", count);
 
   GST_OBJECT_LOCK (object);
   if (G_UNLIKELY (object->parent != NULL))
