@@ -24,16 +24,13 @@
  * @short_description: MPEG audio parser
  * @see_also: #GstAmrParse, #GstAACParse
  *
- * <refsect2>
- * <para>
  * Parses and frames mpeg1 audio streams. Provides seeking.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch filesrc location=test.mp3 ! mp3parse ! mad ! autoaudiosink
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch filesrc location=test.mp3 ! mpegaudioparse ! mad ! autoaudiosink
+ * ]|
  * </refsect2>
  */
 

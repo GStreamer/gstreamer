@@ -141,6 +141,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audioparsers/gstamrparse.h \
 	$(top_srcdir)/gst/audioparsers/gstflacparse.h \
 	$(top_srcdir)/gst/audioparsers/gstdcaparse.h \
+	$(top_srcdir)/gst/audioparsers/gstmpegaudioparse.h \
 	$(top_srcdir)/gst/autoconvert/gstautoconvert.h \
 	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
 	$(top_srcdir)/gst/coloreffects/gstcoloreffects.h \

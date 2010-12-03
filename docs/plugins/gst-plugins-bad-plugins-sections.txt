@@ -1071,6 +1071,20 @@ gst_modplug_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mpegaudioparse</FILE>
+<TITLE>mpegaudioparse</TITLE>
+GstMpegAudioParse
+<SUBSECTION Standard>
+GstMpegAudioParseClass
+GST_MPEG_AUDIO_PARSE
+GST_MPEG_AUDIO_PARSE_CLASS
+GST_IS_MPEG_AUDIO_PARSE
+GST_IS_MPEG_AUDIO_PARSE_CLASS
+GST_TYPE_MPEG_AUDIO_PARSE
+gst_mpeg_audio_parse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mpeg2enc</FILE>
 <TITLE>mpeg2enc</TITLE>
 GstMpeg2enc
