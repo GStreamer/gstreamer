@@ -24,24 +24,17 @@
  * @short_description: AAC parser
  * @see_also: #GstAmrParse
  *
+ * This is an AAC parser which handles both ADIF and ADTS stream formats.
+ *
+ * As ADIF format is not framed, it is not seekable and stream duration cannot
+ * be determined either. However, ADTS format AAC clips can be seeked, and parser
+ * can also estimate playback position and clip duration.
+ *
  * <refsect2>
- * <para>
- * This is an AAC parser. It can handle both ADIF and ADTS stream formats.
- * The parser inherits from #GstBaseParse and therefore in only needs to
- * implement AAC-specific functionality.
- * </para>
- * <para>
- * As ADIF format is not framed, it is not seekable. From the same reason
- * stream duration cannot be calculated either. Instead, AAC clips that are
- * in ADTS format can be seeked, and parser also is able to calculate their
- * playback position and clip duration.
- * </para>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.aac ! aacparse ! faad ! audioresample ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

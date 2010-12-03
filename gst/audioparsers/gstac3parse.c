@@ -24,16 +24,13 @@
  * @short_description: AC3 parser
  * @see_also: #GstAmrParse, #GstAACParse
  *
- * <refsect2>
- * <para>
  * This is an AC3 parser.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=abc.ac3 ! ac3parse ! a52dec ! audioresample ! audioconvert ! autoaudiosink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 
