@@ -170,6 +170,32 @@ _dvbsub_log_cb (GLogLevelFlags level, const gchar * fmt, va_list args,
 }
 
 static void
+gst_dvbsub_overlay_flush_subtitles (GstDVBSubOverlay * render)
+{
+  DVBSubtitles *subs;
+
+  g_mutex_lock (render->dvbsub_mutex);
+  while ((subs = g_queue_pop_head (render->pending_subtitles))) {
+    dvb_subtitles_free (subs);
+  }
+
+  if (render->dvb_sub)
+    g_object_unref (render->dvb_sub);
+  render->dvb_sub = dvb_sub_new ();
+  if (!render->dvb_sub) {
+    GST_WARNING_OBJECT (render, "cannot create dvbsub instance");
+    g_assert_not_reached ();
+  }
+
+  {
+    DvbSubCallbacks dvbsub_callbacks = { &new_dvb_subtitles_cb, };
+    dvb_sub_set_callbacks (render->dvb_sub, &dvbsub_callbacks, render);
+  }
+
+  g_mutex_unlock (render->dvbsub_mutex);
+}
+
+static void
 gst_dvbsub_overlay_init (GstDVBSubOverlay * render,
     GstDVBSubOverlayClass * gclass)
 {
@@ -219,21 +245,11 @@ gst_dvbsub_overlay_init (GstDVBSubOverlay * render,
 
   render->enable = TRUE;
 
+  render->dvbsub_mutex = g_mutex_new ();
+  gst_dvbsub_overlay_flush_subtitles (render);
+
   gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
   gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
-
-  render->dvbsub_mutex = g_mutex_new ();
-
-  render->dvb_sub = dvb_sub_new ();
-  if (!render->dvb_sub) {
-    GST_WARNING_OBJECT (render, "cannot create dvbsub instance");
-    g_assert_not_reached ();
-  }
-
-  {
-    DvbSubCallbacks dvbsub_callbacks = { &new_dvb_subtitles_cb, };
-    dvb_sub_set_callbacks (render->dvb_sub, &dvbsub_callbacks, render);
-  }
 
   GST_DEBUG_OBJECT (render, "init complete");
 }
@@ -313,6 +329,11 @@ gst_dvbsub_overlay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_dvbsub_overlay_flush_subtitles (render);
+      gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
+      gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
+      render->format = GST_VIDEO_FORMAT_UNKNOWN;
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
@@ -353,7 +374,7 @@ gst_dvbsub_overlay_event_src (GstPad * pad, GstEvent * event)
       if (flags & GST_SEEK_FLAG_FLUSH)
         gst_pad_push_event (render->srcpad, gst_event_new_flush_start ());
 
-      /* FIXME: flush subtitles */
+      gst_dvbsub_overlay_flush_subtitles (render);
 
       /* Seek on each sink pad */
       gst_event_ref (event);
@@ -848,6 +869,9 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   gint64 start, stop;
   GstClockTime vid_running_time;
 
+  if (overlay->format == GST_VIDEO_FORMAT_UNKNOWN)
+    return GST_FLOW_NOT_NEGOTIATED;
+
   if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     goto missing_timestamp;
 
@@ -1017,14 +1041,14 @@ gst_dvbsub_overlay_event_text (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (render, "stop flushing");
+      gst_dvbsub_overlay_flush_subtitles (render);
       gst_segment_init (&render->subtitle_segment, GST_FORMAT_TIME);
       gst_event_unref (event);
       ret = TRUE;
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (render, "begin flushing");
-
-      /* FIXME: Reset subtitles queue and any other state */
       gst_event_unref (event);
       ret = TRUE;
       break;
