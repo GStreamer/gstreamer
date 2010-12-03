@@ -222,6 +222,8 @@ gst_clock_entry_reinit (GstClock * clock, GstClockEntry * entry,
   entry->time = time;
   entry->interval = interval;
   entry->status = GST_CLOCK_OK;
+  entry->unscheduled = FALSE;
+  entry->woken_up = FALSE;
 
   return TRUE;
 }
