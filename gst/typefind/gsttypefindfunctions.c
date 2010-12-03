@@ -1311,6 +1311,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
               prob = GST_TYPE_FIND_NEARLY_CERTAIN;
 
             gst_type_find_suggest (tf, prob, EAC3_CAPS);
+            return;
           } else {
             GST_LOG ("no second E-AC3 frame found, false sync");
           }
