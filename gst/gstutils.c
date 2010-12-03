@@ -3234,6 +3234,7 @@ gst_pad_add_data_probe_full (GstPad * pad, GCallback handler,
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
       "adding data probe, now %d data, %d event probes",
       GST_PAD_DO_BUFFER_SIGNALS (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
+  _priv_gst_pad_invalidate_cache (pad);
   GST_OBJECT_UNLOCK (pad);
 
   return sigid;
@@ -3291,6 +3292,7 @@ gst_pad_add_event_probe_full (GstPad * pad, GCallback handler,
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "adding event probe, now %d probes",
       GST_PAD_DO_EVENT_SIGNALS (pad));
+  _priv_gst_pad_invalidate_cache (pad);
   GST_OBJECT_UNLOCK (pad);
 
   return sigid;
@@ -3348,6 +3350,7 @@ gst_pad_add_buffer_probe_full (GstPad * pad, GCallback handler,
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "adding buffer probe, now %d probes",
       GST_PAD_DO_BUFFER_SIGNALS (pad));
+  _priv_gst_pad_invalidate_cache (pad);
   GST_OBJECT_UNLOCK (pad);
 
   return sigid;

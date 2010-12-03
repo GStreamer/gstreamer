@@ -48,6 +48,9 @@ extern const char             g_log_domain_gstreamer[];
 /* for the flags in the GstPluginDep structure below */
 #include "gstplugin.h"
 
+/* for the pad cache */
+#include "gstpad.h"
+
 G_BEGIN_DECLS
 
 /* used by gstparse.c and grammar.y */
@@ -107,6 +110,8 @@ void  _gst_value_initialize (void);
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 void _priv_gst_registry_cleanup (void);
 gboolean _gst_plugin_loader_client_run (void);
+
+void _priv_gst_pad_invalidate_cache (GstPad *pad);
 
 /* used in both gststructure.c and gstcaps.c; numbers are completely made up */
 #define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + (s)->fields->len * 22)
