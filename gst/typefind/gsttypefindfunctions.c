@@ -1291,7 +1291,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
             }
           }
         }
-      } else {
+      } else if (bsid <= 16 && bsid > 10) {
         /* eac3 */
         DataScanCtx c_next = c;
         guint frame_size;
@@ -1317,6 +1317,8 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
             GST_LOG ("no second E-AC3 frame found, false sync");
           }
         }
+      } else {
+        GST_LOG ("invalid AC3 BSID: %u", bsid);
       }
     }
     data_scan_ctx_advance (tf, &c, 1);
