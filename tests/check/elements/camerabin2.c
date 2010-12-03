@@ -44,8 +44,15 @@ make_test_file_name (const gchar * base_name, gint num)
 {
   static gchar file_name[1000];
 
-  g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
-      "gstcamerabin2test_%s_%03d.cap", g_get_tmp_dir (), base_name, num);
+  /* num == -1 means to keep the %d in the resulting string to be used on
+   * multifilesink like location */
+  if (num == -1) {
+    g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
+        "gstcamerabin2test_%s_%%03d.cap", g_get_tmp_dir (), base_name);
+  } else {
+    g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S
+        "gstcamerabin2test_%s_%03d.cap", g_get_tmp_dir (), base_name, num);
+  }
 
   GST_INFO ("capturing to: %s", file_name);
   return file_name;
@@ -140,9 +147,19 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = (GMainLoop *) data;
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_ERROR:{
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &err, &debug);
+
+      GST_ERROR ("Error: %s : %s", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+
       fail_if (TRUE, "validating captured data failed");
       g_main_loop_quit (loop);
+    }
       break;
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
@@ -192,7 +209,7 @@ GST_START_TEST (test_single_image_capture)
 
   /* set still image mode */
   g_object_set (camera, "mode", 1,
-      "location", make_test_file_name (IMAGE_FILENAME, 0), NULL);
+      "location", make_test_file_name (IMAGE_FILENAME, -1), NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -220,7 +237,7 @@ GST_START_TEST (test_video_recording)
 
   /* Set video recording mode */
   g_object_set (camera, "mode", 2,
-      "location", make_test_file_name (VIDEO_FILENAME, 0), NULL);
+      "location", make_test_file_name (VIDEO_FILENAME, -1), NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
@@ -255,10 +272,10 @@ GST_START_TEST (test_image_video_cycle)
 
   /* set filepaths for image and videos */
   g_object_set (camera, "mode", 1, NULL);
-  g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, 0),
+  g_object_set (camera, "location", make_test_file_name (IMAGE_FILENAME, -1),
       NULL);
   g_object_set (camera, "mode", 2, NULL);
-  g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, 0),
+  g_object_set (camera, "location", make_test_file_name (VIDEO_FILENAME, -1),
       NULL);
 
   if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) ==
@@ -281,6 +298,9 @@ GST_START_TEST (test_image_video_cycle)
     g_signal_emit_by_name (camera, "start-capture", NULL);
     g_usleep (G_USEC_PER_SEC * 5);
     g_signal_emit_by_name (camera, "stop-capture", NULL);
+
+    /* wait for capture to finish */
+    g_usleep (G_USEC_PER_SEC);
   }
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
