@@ -166,7 +166,6 @@ gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
   gboolean ret = FALSE;
 
-  GST_DEBUG_OBJECT (self, "pass buffer: %d", self->mode == MODE_IMAGE);
   g_mutex_lock (self->capturing_mutex);
   if (self->image_capture_count > 0) {
     ret = TRUE;
@@ -202,12 +201,14 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     /* NOP */
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
     /* send the newseg */
+    GST_DEBUG_OBJECT (self, "Starting video recording, pushing newsegment");
     gst_pad_push_event (pad, gst_event_new_new_segment (FALSE, 1.0,
             GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer), -1, 0));
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
     ret = TRUE;
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {
     /* send eos */
+    GST_DEBUG_OBJECT (self, "Finishing video recording, pushing eos");
     gst_pad_push_event (pad, gst_event_new_eos ());
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
     self->capturing = FALSE;
@@ -1081,7 +1082,7 @@ gst_v4l2_camera_src_stop_capture (GstV4l2CameraSrc * src)
   }
   if (src->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
-      GST_DEBUG_OBJECT (src, "Aborting not started recording");
+      GST_DEBUG_OBJECT (src, "Aborting, had not started recording");
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
 
     } else if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_RUNNING) {

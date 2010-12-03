@@ -150,6 +150,8 @@ gst_camera_bin_change_mode (GstCameraBin * camerabin, gint mode)
   if (mode == camerabin->mode)
     return;
 
+  GST_DEBUG_OBJECT (camerabin, "Changing mode to %d", mode);
+
   /* stop any ongoing capture */
   gst_camera_bin_stop_capture (camerabin);
   camerabin->mode = mode;
@@ -172,6 +174,7 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
       /* a video recording is about to start, we reset the videobin */
       gst_element_set_state (camera->vidbin, GST_STATE_NULL);
       location = g_strdup_printf (camera->vid_location, camera->vid_index++);
+      GST_DEBUG_OBJECT (camera, "Switching vidbin location to %s", location);
       g_object_set (camera->vidbin, "location", location, NULL);
       g_free (location);
       gst_element_set_state (camera->vidbin, GST_STATE_PLAYING);
@@ -400,6 +403,8 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
 static void
 gst_camera_bin_set_location (GstCameraBin * camera, const gchar * location)
 {
+  GST_DEBUG_OBJECT (camera, "Setting mode %d location to %s", camera->mode,
+      location);
   if (camera->mode == MODE_IMAGE) {
     if (camera->imgbin)
       g_object_set (camera->imgbin, "location", location, NULL);
