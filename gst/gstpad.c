@@ -101,7 +101,6 @@ struct _GstPadPushCache
 {
   GstPad *peer;                 /* reffed peer pad */
   GstCaps *caps;                /* caps for this link */
-  GstPadChainFunction chainfunc;
 };
 
 static GstPadPushCache _pad_cache_invalid = { NULL, };
@@ -4216,7 +4215,6 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
     if (cache) {
       cache->peer = gst_object_ref (pad);
       cache->caps = caps ? gst_caps_ref (caps) : NULL;
-      cache->chainfunc = chainfunc;
     }
 
     ret = chainfunc (pad, GST_BUFFER_CAST (data));
@@ -4647,7 +4645,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   GST_PAD_STREAM_LOCK (peer);
 
-  ret = cache->chainfunc (peer, buffer);
+  ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
 
   GST_PAD_STREAM_UNLOCK (peer);
 
