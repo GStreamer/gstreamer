@@ -1295,8 +1295,7 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
         DataScanCtx c_next = c;
         guint frame_size;
 
-        frame_size = ((((c.data[2] & 0x07) << 8) +
-                (c.data[3] & 0xff)) + 1) << 1;
+        frame_size = (((c.data[2] & 0x07) << 8) + (c.data[3] & 0xff)) + 1;
         GST_LOG ("possible E-AC3 frame sync at offset %"
             G_GUINT64_FORMAT ", size=%u", c.offset, frame_size);
         if (data_scan_ctx_ensure_data (tf, &c_next, (frame_size * 2) + 5)) {
