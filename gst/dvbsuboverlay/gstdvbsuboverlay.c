@@ -802,8 +802,6 @@ static GstFlowReturn
 gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
 {
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
-  gint64 clip_start = 0, clip_stop = 0;
-  gboolean in_seg = FALSE;
   GstClockTime sub_running_time;
 
   GST_INFO_OBJECT (overlay, "private/x-dvbsub buffer with size %u",
@@ -823,11 +821,6 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
     return GST_FLOW_OK;
   }
 
-  /* FIXME: Is the faking of a zero duration buffer correct here? Probably a better way to check segment inclusion then than to clip as a side effect */
-  in_seg = gst_segment_clip (&overlay->subtitle_segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer), &clip_start,
-      &clip_stop);
-
   /* As the passed start and stop is equal, we shouldn't need to care about out of segment at all,
    * the subtitle data for the PTS is completely out of interest to us. A given display set must
    * carry the same PTS value. */
@@ -835,18 +828,8 @@ gst_dvbsub_overlay_chain_text (GstPad * pad, GstBuffer * buffer)
    * FIXME: does our waiting + render code work when there are more than one packets before
    * FIXME: rendering callback will get called? */
 
-  if (!in_seg) {
-    GST_DEBUG_OBJECT (overlay,
-        "Subtitle timestamp (%" GST_TIME_FORMAT
-        ") outside of the subtitle segment (%" GST_SEGMENT_FORMAT "), dropping",
-        GST_BUFFER_TIMESTAMP (buffer), &overlay->subtitle_segment);
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
-  }
-
-  /* FIXME: How is this useful? */
   gst_segment_set_last_stop (&overlay->subtitle_segment, GST_FORMAT_TIME,
-      clip_start);
+      GST_BUFFER_TIMESTAMP (buffer));
 
   sub_running_time =
       gst_segment_to_running_time (&overlay->subtitle_segment, GST_FORMAT_TIME,
@@ -867,6 +850,8 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   GstDVBSubOverlay *overlay = GST_DVBSUB_OVERLAY (GST_PAD_PARENT (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 start, stop;
+  gint64 cstart, cstop;
+  gboolean in_seg;
   GstClockTime vid_running_time;
 
   if (overlay->format == GST_VIDEO_FORMAT_UNKNOWN)
@@ -890,16 +875,27 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
     stop = start + GST_BUFFER_DURATION (buffer);
   }
 
+  in_seg = gst_segment_clip (&overlay->video_segment, GST_FORMAT_TIME,
+      start, stop, &cstart, &cstop);
+  if (!in_seg) {
+    GST_DEBUG_OBJECT (overlay, "Buffer outside configured segment -- dropping");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+  buffer = gst_buffer_make_metadata_writable (buffer);
+  GST_BUFFER_TIMESTAMP (buffer) = cstart;
+  if (GST_BUFFER_DURATION_IS_VALID (buffer))
+    GST_BUFFER_DURATION (buffer) = cstop - cstart;
+
   vid_running_time =
       gst_segment_to_running_time (&overlay->video_segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer));
-
   GST_DEBUG_OBJECT (overlay, "Video running time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (vid_running_time));
 
-  /* FIXME: Probably update last_stop somewhere */
-
-  /* FIXME: Segment clipping code */
+  gst_segment_set_last_stop (&overlay->video_segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buffer));
 
   g_mutex_lock (overlay->dvbsub_mutex);
   if (!g_queue_is_empty (overlay->pending_subtitles)) {
