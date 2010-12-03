@@ -899,16 +899,39 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
 
   g_mutex_lock (overlay->dvbsub_mutex);
   if (!g_queue_is_empty (overlay->pending_subtitles)) {
-    DVBSubtitles *pending_sub = g_queue_peek_head (overlay->pending_subtitles);
-    if (vid_running_time >= pending_sub->pts) {
-      GST_DEBUG_OBJECT (overlay,
-          "Time to show the next subtitle page (%" GST_TIME_FORMAT " >= %"
-          GST_TIME_FORMAT ") - it has %u regions",
-          GST_TIME_ARGS (vid_running_time), GST_TIME_ARGS (pending_sub->pts),
-          pending_sub->num_rects);
-      dvb_subtitles_free (overlay->current_subtitle);
-      overlay->current_subtitle = g_queue_pop_head (overlay->pending_subtitles);
-      /* FIXME: Pre-convert current_subtitle to a quick-blend format, num_rects=0 means that there are no regions, e.g, a subtitle "clear" happened */
+    DVBSubtitles *pending_sub = NULL;
+
+    while (!g_queue_is_empty (overlay->pending_subtitles)) {
+      pending_sub = g_queue_peek_head (overlay->pending_subtitles);
+
+      if (pending_sub->pts +
+          pending_sub->page_time_out * GST_SECOND *
+          overlay->subtitle_segment.abs_rate < vid_running_time) {
+        /* Drop all subpictures that are too late anyway */
+        dvb_subtitles_free (pending_sub);
+        g_queue_pop_head (overlay->pending_subtitles);
+        pending_sub = NULL;
+      } else if (pending_sub->num_rects == 0) {
+        /* Clear screen */
+        if (overlay->current_subtitle)
+          dvb_subtitles_free (overlay->current_subtitle);
+        overlay->current_subtitle = NULL;
+        dvb_subtitles_free (pending_sub);
+        g_queue_pop_head (overlay->pending_subtitles);
+      } else if (vid_running_time >= pending_sub->pts) {
+        GST_DEBUG_OBJECT (overlay,
+            "Time to show the next subtitle page (%" GST_TIME_FORMAT " >= %"
+            GST_TIME_FORMAT ") - it has %u regions",
+            GST_TIME_ARGS (vid_running_time), GST_TIME_ARGS (pending_sub->pts),
+            pending_sub->num_rects);
+        dvb_subtitles_free (overlay->current_subtitle);
+        overlay->current_subtitle =
+            g_queue_pop_head (overlay->pending_subtitles);
+        /* FIXME: Pre-convert current_subtitle to a quick-blend format, num_rects=0 means that there are no regions, e.g, a subtitle "clear" happened */
+      } else {
+        /* Keep old */
+        break;
+      }
     }
   }
 
@@ -916,7 +939,8 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   if (overlay->current_subtitle
       && vid_running_time >
       (overlay->current_subtitle->pts +
-          (overlay->current_subtitle->page_time_out * GST_SECOND))) {
+          overlay->current_subtitle->page_time_out * GST_SECOND *
+          overlay->subtitle_segment.abs_rate)) {
     GST_INFO_OBJECT (overlay,
         "Subtitle page not redefined before fallback page_time_out of %u seconds (missed data?) - deleting current page",
         overlay->current_subtitle->page_time_out);
@@ -925,7 +949,7 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstBuffer * buffer)
   }
 
   /* Now render it */
-  if (overlay->current_subtitle && overlay->current_subtitle->num_rects > 0) {
+  if (overlay->current_subtitle) {
     buffer = gst_buffer_make_writable (buffer);
     blit_i420 (overlay, overlay->current_subtitle, buffer);
   }
