@@ -3416,14 +3416,21 @@ static void
 gst_avi_demux_parse_idit_nums_only (GstAviDemux * avi, gchar * data)
 {
   gint y, m, d;
+  gint hr = 0, min = 0, sec = 0;
   gint ret;
 
-  ret = sscanf (data, "%d:%d:%d", &y, &m, &d);
-  if (ret != 3) {
-    GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
-    return;
+  GST_DEBUG ("data : '%s'", data);
+
+  ret = sscanf (data, "%d:%d:%d %d:%d:%d", &y, &m, &d, &hr, &min, &sec);
+  if (ret < 3) {
+    /* Attempt YYYY/MM/DD/ HH:MM variant (found in CASIO cameras) */
+    ret = sscanf (data, "%04d/%02d/%02d/ %d:%d", &y, &m, &d, &hr, &min);
+    if (ret < 3) {
+      GST_WARNING_OBJECT (avi, "Failed to parse IDIT tag");
+      return;
+    }
   }
-  gst_avi_demux_add_date_tag (avi, y, m, d, 0, 0, 0);
+  gst_avi_demux_add_date_tag (avi, y, m, d, hr, min, sec);
 }
 
 static gint
