@@ -4715,11 +4715,69 @@ slow_path:
 GstFlowReturn
 gst_pad_push_list (GstPad * pad, GstBufferList * list)
 {
+  GstBuffer *buf;
+  GstPadPushCache *cache;
+  GstFlowReturn ret;
+  gpointer *cache_ptr;
+  GstPad *peer;
+  GstCaps *caps;
+
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad, FALSE, list, NULL);
+  cache_ptr = (gpointer *) & pad->abidata.ABI.priv->cache_ptr;
+
+  cache = pad_take_cache (pad, cache_ptr);
+
+  if (G_UNLIKELY (cache == NULL))
+    goto slow_path;
+
+  /* check caps */
+  if ((buf = gst_buffer_list_get (list, 0, 0)))
+    caps = GST_BUFFER_CAPS (buf);
+  else
+    caps = NULL;
+
+  if (G_UNLIKELY (caps && caps != cache->caps)) {
+    pad_free_cache (cache);
+    goto slow_path;
+  }
+
+  peer = cache->peer;
+
+  GST_PAD_STREAM_LOCK (peer);
+
+  ret = GST_PAD_CHAINLISTFUNC (peer) (peer, list);
+
+  GST_PAD_STREAM_UNLOCK (peer);
+
+  pad_put_cache (pad, cache, cache_ptr);
+
+  return ret;
+
+  /* slow path */
+slow_path:
+  {
+    GstPadPushCache scache = { NULL, };
+
+    GST_LOG_OBJECT (pad, "Taking slow path");
+
+    ret = gst_pad_push_data (pad, FALSE, list, &scache);
+
+    if (scache.peer) {
+      GstPadPushCache *ncache;
+
+      GST_LOG_OBJECT (pad, "Caching push data");
+
+      /* make cache structure */
+      ncache = g_slice_new (GstPadPushCache);
+      *ncache = scache;
+
+      pad_put_cache (pad, ncache, cache_ptr);
+    }
+    return ret;
+  }
 }
 
 /**
