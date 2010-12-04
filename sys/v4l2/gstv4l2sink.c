@@ -689,6 +689,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
   gint w = 0, h = 0;
+  gboolean interlaced;
   struct v4l2_fmtdesc *format;
   guint fps_n, fps_d;
   guint size;
@@ -724,7 +725,7 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   /* we want our own v4l2 type of fourcc codes */
   if (!gst_v4l2_object_get_caps_info (v4l2sink->v4l2object, caps,
-          &format, &w, &h, &fps_n, &fps_d, &size)) {
+          &format, &w, &h, &interlaced, &fps_n, &fps_d, &size)) {
     GST_DEBUG_OBJECT (v4l2sink, "can't get capture format from caps %p", caps);
     return FALSE;
   }
@@ -734,8 +735,8 @@ gst_v4l2sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     return FALSE;
   }
 
-  if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat, w,
-          h)) {
+  if (!gst_v4l2_object_set_format (v4l2sink->v4l2object, format->pixelformat,
+          w, h, interlaced)) {
     /* error already posted */
     return FALSE;
   }

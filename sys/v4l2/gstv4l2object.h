@@ -181,7 +181,7 @@ GstCaps*      gst_v4l2_object_probe_caps_for_format (GstV4l2Object *v4l2object, 
 
 gboolean      gst_v4l2_object_get_caps_info (GstV4l2Object *v4l2object, GstCaps *caps,
                                              struct v4l2_fmtdesc **format, gint *w, gint *h,
-                                             guint *fps_n, guint *fps_d, guint *size);
+                                             gboolean * interlaced, guint *fps_n, guint *fps_d, guint *size);
 
 
 GSList*       gst_v4l2_object_get_format_list  (GstV4l2Object *v4l2object);
@@ -190,7 +190,7 @@ GstCaps*      gst_v4l2_object_get_all_caps (void);
 
 GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
-gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, guint32 pixelformat, guint32 width, guint32 height);
+gboolean      gst_v4l2_object_set_format (GstV4l2Object *v4l2object, guint32 pixelformat, guint32 width, guint32 height, gboolean interlaced);
 
 gboolean      gst_v4l2_object_start_streaming (GstV4l2Object *v4l2object);
 gboolean      gst_v4l2_object_stop_streaming (GstV4l2Object *v4l2object);

@@ -1361,8 +1361,8 @@ gst_v4l2_object_get_all_caps (void)
  */
 gboolean
 gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
-    struct v4l2_fmtdesc ** format, gint * w, gint * h, guint * fps_n,
-    guint * fps_d, guint * size)
+    struct v4l2_fmtdesc ** format, gint * w, gint * h,
+    gboolean * interlaced, guint * fps_n, guint * fps_d, guint * size)
 {
   GstStructure *structure;
   const GValue *framerate;
@@ -1390,6 +1390,9 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
 
   if (!gst_structure_get_int (structure, "height", h))
     return FALSE;
+
+  if (!gst_structure_get_boolean (structure, "interlaced", interlaced))
+    *interlaced = FALSE;
 
   framerate = gst_structure_get_value (structure, "framerate");
   if (!framerate)
@@ -1987,15 +1990,15 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   fmt.fmt.pix.width = *width;
   fmt.fmt.pix.height = *height;
   fmt.fmt.pix.pixelformat = pixelformat;
-  fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+  fmt.fmt.pix.field = V4L2_FIELD_NONE;
 
   r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
   if (r < 0 && errno == EINVAL) {
-    /* try again with progressive video */
+    /* try again with interlaced video */
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
     fmt.fmt.pix.pixelformat = pixelformat;
-    fmt.fmt.pix.field = V4L2_FIELD_NONE;
+    fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
     r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
   }
 
@@ -2037,6 +2040,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   *height = fmt.fmt.pix.height;
 
   switch (fmt.fmt.pix.field) {
+    case V4L2_FIELD_ANY:
     case V4L2_FIELD_NONE:
       *interlaced = FALSE;
       break;
@@ -2058,10 +2062,22 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 
 gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
-    guint32 width, guint32 height)
+    guint32 width, guint32 height, gboolean interlaced)
 {
   gint fd = v4l2object->video_fd;
   struct v4l2_format format;
+  enum v4l2_field field;
+
+  if (interlaced) {
+    GST_DEBUG_OBJECT (v4l2object->element, "interlaced video");
+    /* ideally we would differentiate between types of interlaced video
+     * but there is not sufficient information in the caps..
+     */
+    field = V4L2_FIELD_SEQ_TB;
+  } else {
+    GST_DEBUG_OBJECT (v4l2object->element, "progressive video");
+    field = V4L2_FIELD_NONE;
+  }
 
   GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
       "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
@@ -2081,7 +2097,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   if (format.type == v4l2object->type &&
       format.fmt.pix.width == width &&
       format.fmt.pix.height == height &&
-      format.fmt.pix.pixelformat == pixelformat) {
+      format.fmt.pix.pixelformat == pixelformat &&
+      format.fmt.pix.field == field) {
     /* Nothing to do. We want to succeed immediately
      * here because setting the same format back
      * can still fail due to EBUSY. By short-circuiting
@@ -2098,25 +2115,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, guint32 pixelformat,
   format.fmt.pix.width = width;
   format.fmt.pix.height = height;
   format.fmt.pix.pixelformat = pixelformat;
-  /* FIXME: request whole frames; need to use gstreamer interlace support
-   * (INTERLACED mode returns frames where the fields have already been
-   *  combined, there are other modes for requesting fields individually) */
-  format.fmt.pix.field = V4L2_FIELD_INTERLACED;
+  format.fmt.pix.field = field;
 
   if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
-    /* we might also get EBUSY here */
-    if (errno != EINVAL)
-      goto set_fmt_failed;
-
-    GST_DEBUG_OBJECT (v4l2object->element, "trying again...");
-
-    /* try again with progressive video */
-    format.fmt.pix.width = width;
-    format.fmt.pix.height = height;
-    format.fmt.pix.pixelformat = pixelformat;
-    format.fmt.pix.field = V4L2_FIELD_NONE;
-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
-      goto set_fmt_failed;
+    goto set_fmt_failed;
   }
 
   if (format.fmt.pix.width != width || format.fmt.pix.height != height)

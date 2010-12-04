@@ -611,6 +611,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstV4l2Src *v4l2src;
   gint w = 0, h = 0;
+  gboolean interlaced;
   struct v4l2_fmtdesc *format;
   guint fps_n, fps_d;
   guint size;
@@ -632,7 +633,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   /* we want our own v4l2 type of fourcc codes */
   if (!gst_v4l2_object_get_caps_info (v4l2src->v4l2object, caps, &format, &w,
-          &h, &fps_n, &fps_d, &size)) {
+          &h, &interlaced, &fps_n, &fps_d, &size)) {
     GST_INFO_OBJECT (v4l2src,
         "can't get capture format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
@@ -641,8 +642,8 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   GST_DEBUG_OBJECT (v4l2src, "trying to set_capture %dx%d at %d/%d fps, "
       "format %s", w, h, fps_n, fps_d, format->description);
 
-  if (!gst_v4l2src_set_capture (v4l2src, format->pixelformat, w, h, fps_n,
-          fps_d))
+  if (!gst_v4l2src_set_capture (v4l2src, format->pixelformat, w, h,
+          interlaced, fps_n, fps_d))
     /* error already posted */
     return FALSE;
 

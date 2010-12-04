@@ -214,7 +214,8 @@ too_many_trials:
  ******************************************************/
 gboolean
 gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
-    guint32 width, guint32 height, guint fps_n, guint fps_d)
+    guint32 width, guint32 height, gboolean interlaced,
+    guint fps_n, guint fps_d)
 {
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_streamparm stream;
@@ -223,7 +224,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
     return TRUE;
 
   if (!gst_v4l2_object_set_format (v4l2src->v4l2object, pixelformat, width,
-          height)) {
+          height, interlaced)) {
     /* error already reported */
     return FALSE;
   }
