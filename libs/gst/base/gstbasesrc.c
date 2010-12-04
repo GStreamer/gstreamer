@@ -240,6 +240,7 @@ struct _GstBaseSrcPrivate
 
   /* pending tags to be pushed in the data stream */
   GList *pending_tags;
+  volatile gint have_tags;
 
   /* QoS *//* with LOCK */
   gboolean qos_enabled;
@@ -436,6 +437,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
   basesrc->data.ABI.typefind = DEFAULT_TYPEFIND;
   basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
+  g_atomic_int_set (&basesrc->priv->have_tags, FALSE);
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
   GST_OBJECT_FLAG_SET (basesrc, GST_ELEMENT_IS_SOURCE);
@@ -1582,6 +1584,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* Insert tag in the dataflow */
       GST_OBJECT_LOCK (src);
       src->priv->pending_tags = g_list_append (src->priv->pending_tags, event);
+      g_atomic_int_set (&src->priv->have_tags, TRUE);
       GST_OBJECT_UNLOCK (src);
       event = NULL;
       result = TRUE;
@@ -2348,7 +2351,7 @@ gst_base_src_loop (GstPad * pad)
   gint64 position;
   gboolean eos;
   gulong blocksize;
-  GList *tags, *tmp;
+  GList *tags = NULL, *tmp;
 
   eos = FALSE;
 
@@ -2405,11 +2408,14 @@ gst_base_src_loop (GstPad * pad)
   }
   src->priv->newsegment_pending = FALSE;
 
-  GST_OBJECT_LOCK (src);
-  /* take the tags */
-  tags = src->priv->pending_tags;
-  src->priv->pending_tags = NULL;
-  GST_OBJECT_UNLOCK (src);
+  if (g_atomic_int_get (&src->priv->have_tags)) {
+    GST_OBJECT_LOCK (src);
+    /* take the tags */
+    tags = src->priv->pending_tags;
+    src->priv->pending_tags = NULL;
+    g_atomic_int_set (&src->priv->have_tags, FALSE);
+    GST_OBJECT_UNLOCK (src);
+  }
 
   /* Push out pending tags if any */
   if (G_UNLIKELY (tags != NULL)) {
