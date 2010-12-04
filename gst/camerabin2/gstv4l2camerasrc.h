@@ -57,8 +57,6 @@ struct _GstV4l2CameraSrc
 {
   GstBaseCameraSrc parent;
 
-  GstCameraBinMode mode;
-
   gboolean capturing;
   GMutex *capturing_mutex;
 

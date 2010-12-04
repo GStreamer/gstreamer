@@ -125,7 +125,11 @@ gst_base_camera_src_set_mode (GstBaseCameraSrc * self, GstCameraBinMode mode)
 
   g_return_val_if_fail (bclass->set_mode, FALSE);
 
-  return bclass->set_mode (self, mode);
+  if (bclass->set_mode (self, mode)) {
+    self->mode = mode;
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -274,6 +278,10 @@ gst_base_camera_src_set_property (GObject * object,
   GstBaseCameraSrc *self = GST_BASE_CAMERA_SRC (object);
 
   switch (prop_id) {
+    case ARG_MODE:
+      gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self),
+          g_value_get_enum (value));
+      break;
     case ARG_ZOOM:{
       g_atomic_int_set (&self->zoom, g_value_get_int (value));
       /* does not set it if in NULL, the src is not created yet */
@@ -294,6 +302,9 @@ gst_base_camera_src_get_property (GObject * object,
   GstBaseCameraSrc *self = GST_BASE_CAMERA_SRC (object);
 
   switch (prop_id) {
+    case ARG_MODE:
+      g_value_set_enum (value, self->mode);
+      break;
     case ARG_ZOOM:
       g_value_set_int (value, g_atomic_int_get (&self->zoom));
       break;
@@ -414,6 +425,11 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
   gobject_class->get_property = gst_base_camera_src_get_property;
 
   // g_object_class_install_property ....
+  g_object_class_install_property (gobject_class, ARG_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "The capture mode (still image capture or video recording)",
+          GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_base_camera_src_change_state;
 
@@ -437,6 +453,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
   self->zoom = DEFAULT_ZOOM;
   self->image_capture_width = 0;
   self->image_capture_height = 0;
+  self->mode = MODE_IMAGE;
 
   self->night_mode = FALSE;
 

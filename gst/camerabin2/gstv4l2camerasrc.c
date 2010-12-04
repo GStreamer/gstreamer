@@ -83,10 +83,6 @@ gst_v4l2_camera_src_set_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_MODE:
-      gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self),
-          g_value_get_enum (value));
-      break;
     case ARG_FILTER_CAPS:
       GST_OBJECT_LOCK (self);
       gst_caps_replace (&self->view_finder_caps,
@@ -130,9 +126,6 @@ gst_v4l2_camera_src_get_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_MODE:
-      g_value_set_enum (value, self->mode);
-      break;
     case ARG_READY_FOR_CAPTURE:
       g_value_set_boolean (value, !self->capturing);
       break;
@@ -724,7 +717,6 @@ start_image_capture (GstV4l2CameraSrc * self)
 static gboolean
 gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
 {
-  GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (bcamsrc);
   GstPhotography *photography = gst_base_camera_src_get_photography (bcamsrc);
 
   if (photography) {
@@ -733,8 +725,6 @@ gst_v4l2_camera_src_set_mode (GstBaseCameraSrc * bcamsrc, GstCameraBinMode mode)
       g_object_set (G_OBJECT (photography), "capture-mode", mode, NULL);
     }
   }
-
-  self->mode = mode;
   return TRUE;
 }
 
@@ -1047,6 +1037,7 @@ gst_v4l2_camera_src_finish_image_capture (GstBaseCameraSrc * bcamsrc)
 static void
 gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
 {
+  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (src);
   g_mutex_lock (src->capturing_mutex);
   if (src->capturing) {
     GST_WARNING_OBJECT (src, "Capturing already ongoing");
@@ -1055,10 +1046,11 @@ gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
   }
 
   src->capturing = TRUE;
-  if (src->mode == MODE_IMAGE) {
+  /* TODO should we use a macro? */
+  if (camerasrc->mode == MODE_IMAGE) {
     src->image_capture_count = 1;
     start_image_capture (src);
-  } else if (src->mode == MODE_VIDEO) {
+  } else if (camerasrc->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_STARTING;
     }
@@ -1074,13 +1066,14 @@ gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
 static void
 gst_v4l2_camera_src_stop_capture (GstV4l2CameraSrc * src)
 {
+  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (src);
   g_mutex_lock (src->capturing_mutex);
   if (!src->capturing) {
     GST_DEBUG_OBJECT (src, "No ongoing capture");
     g_mutex_unlock (src->capturing_mutex);
     return;
   }
-  if (src->mode == MODE_VIDEO) {
+  if (camerasrc->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
       GST_DEBUG_OBJECT (src, "Aborting, had not started recording");
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
@@ -1125,11 +1118,6 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
   gobject_class->get_property = gst_v4l2_camera_src_get_property;
 
   /* g_object_class_install_property .... */
-  g_object_class_install_property (gobject_class, ARG_MODE,
-      g_param_spec_enum ("mode", "Mode",
-          "The capture mode (still image capture or video recording)",
-          GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstV4l2CameraSrc:ready-for-capture:
@@ -1181,7 +1169,6 @@ gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
     GstV4l2CameraSrcClass * klass)
 {
   /* TODO where are variables reset? */
-  self->mode = MODE_IMAGE;
   self->image_capture_count = 0;
   self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
   self->capturing_mutex = g_mutex_new ();

@@ -41,7 +41,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_CAMERA_SRC))
 #define GST_IS_BASE_CAMERA_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_CAMERA_SRC))
-    GType gst_base_camera_src_get_type (void);
+#define GST_BASE_CAMERA_SRC_CAST(obj) \
+  ((GstBaseCameraSrc *) (obj))
+GType gst_base_camera_src_get_type (void);
 
 typedef struct _GstBaseCameraSrc GstBaseCameraSrc;
 typedef struct _GstBaseCameraSrcClass GstBaseCameraSrcClass;
@@ -57,6 +59,8 @@ struct _GstBaseCameraSrc
   GstPad *vfsrc;
   GstPad *imgsrc;
   GstPad *vidsrc;
+
+  gint mode;
 
   /* XXX preview pads? */
 
