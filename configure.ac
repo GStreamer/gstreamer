@@ -236,7 +236,7 @@ AC_LANG_PUSH([C++])
 AC_TRY_COMPILE([ class Foo { int bar; };], , working_cxx=yes, working_cxx=no)
 AC_LANG_POP([C++])
 AC_MSG_NOTICE([working c++ compiler found: $working_cxx])
-AM_CONDITIONAL(HAVE_CXX, test "x$working_cxx" == "xyes")
+AM_CONDITIONAL(HAVE_CXX, test "x$working_cxx" = "xyes")
 
 dnl Perl is used in building documentation and in the version checks
 AC_PATH_PROG(PERL_PATH, perl, no)
