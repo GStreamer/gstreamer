@@ -18,10 +18,16 @@ API which would allow developers to handle any use-case
 ----------------
 
   * Effects are actually descendant of GESTrackOperation
-  * You can add effects wherever you want
+
+  * You can add effects on any clip, layer or on part of them
+
   * Effects are configurable and those could change during time
+
   * We should be able to handle the gnome-video-effects standard
-  * We can implement complexe effects
+
+  * We can implement complexe effects. It means effects that are more
+    than adding GstElement-s to the timeline. It can also mean effects
+    that are both: video and audio at the same time
 
 2. Problems
 ----------
@@ -30,6 +36,9 @@ API which would allow developers to handle any use-case
 
   * We should be able to configure effects through an API in GES and
     not directly configuring the corresponding GstElement properties.
+
+  * We should also expose the GstElement-s contained in an effect so
+    it is possible for people to control their properties as they wish.
 
   * We should be able to handle complexe effects.
 
@@ -45,10 +54,11 @@ API which would allow developers to handle any use-case
 A. The registry
 
   We could implement a GESEffectRegistry which would actually
-  retrieve elements from the GSTRegistry which actually are effects,
-  as well as effects from gnome-video-effects. This way the developers
-  could have the list of all the effects that are installed on the système
-  pretty easily.
+  retrieve elements (effects) from the GSTRegistry and any other mean
+  such as gnome-video-effects to let us get all the effects that are present
+  on the system....
+  This way the developers could have the list of all the effects
+  that are installed on the system pretty easily.
 
 B. Effects configurability
 
@@ -81,16 +91,16 @@ C. Keyframes
 
   The user wants to add an effect to an entire layer => GESTimelineLayer API.
 
-  The developer wants to allow his users to configure effects => mapping between 
+  The developer wants to allow his users to configure effects => mapping between
   GESTrackEffect and the configurable properties of elements (GESEffect).
 
-  The user wants to add an effect on a special portion of a clip, we should 
+  The user wants to add an effect on a special portion of a clip, we should
   allow him to configure that thanks to a system of keyframes. FIXME
 
   We want to implement an effect which isn't only composed by a bin, but is more
   complexe than that (ex: "effect '24'") => we have the GESTrackOperation
-  which is the base class (abstract) for this kind of implementation. We should 
-  also have a GESPropertiesMapping abstract class which would be the base 
+  which is the base class (abstract) for this kind of implementation. We should
+  also have a GESPropertiesMapping abstract class which would be the base
   class of GESEffect and could be used in this use-case.
 
   A developer wants to implement effect which handle music and video at the same
