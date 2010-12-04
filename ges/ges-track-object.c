@@ -50,6 +50,12 @@ static GQuark _priority_quark;
 G_DEFINE_TYPE_WITH_CODE (GESTrackObject, ges_track_object, G_TYPE_OBJECT,
     _do_init);
 
+struct _GESTrackObjectPrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -159,6 +165,8 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackObjectPrivate));
+
   object_class->get_property = ges_track_object_get_property;
   object_class->set_property = ges_track_object_set_property;
   object_class->dispose = ges_track_object_dispose;
@@ -239,6 +247,9 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
 static void
 ges_track_object_init (GESTrackObject * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_OBJECT, GESTrackObjectPrivate);
+
   /* Sane default values */
   self->pending_start = 0;
   self->pending_inpoint = 0;
@@ -302,7 +313,7 @@ ges_track_object_set_duration_internal (GESTrackObject * object,
 /* NOTE: we handle priority differently than other properties! the gnlpriority
  * is object->base_priority + object->priority_offset! A change to either one
  * will trigger an update to the gnonlin priority and a subsequent property
- * notification. 
+ * notification.
  */
 
 gboolean

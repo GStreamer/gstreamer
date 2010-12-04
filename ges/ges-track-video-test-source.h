@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_VIDEO_TEST_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourceClass))
 
+typedef struct _GESTrackVideoTestSourcePrivate GESTrackVideoTestSourcePrivate;
+
 /** 
  * GESTrackVideoTestSource:
  */
@@ -53,6 +55,8 @@ struct _GESTrackVideoTestSource {
 
   /*< private >*/
   GESVideoTestPattern pattern;
+
+  GESTrackVideoTestSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

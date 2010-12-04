@@ -35,7 +35,13 @@
 #define DEFAULT_PROP_FONT_DESC "Serif 36"
 #define DEFAULT_PROP_VALIGNMENT GES_TEXT_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT GES_TEXT_HALIGN_CENTER
-#
+
+struct _GESTimelineSourcePrivate
+{
+  /*  dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -140,6 +146,8 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineSourcePrivate));
+
   object_class->get_property = ges_timeline_source_get_property;
   object_class->set_property = ges_timeline_source_set_property;
   object_class->dispose = ges_timeline_source_dispose;
@@ -198,6 +206,9 @@ ges_timeline_source_class_init (GESTimelineSourceClass * klass)
 static void
 ges_timeline_source_init (GESTimelineSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_SOURCE, GESTimelineSourcePrivate);
+
   self->halign = DEFAULT_PROP_HALIGNMENT;
   self->valign = DEFAULT_PROP_VALIGNMENT;
 }

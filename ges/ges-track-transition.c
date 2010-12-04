@@ -31,6 +31,12 @@
 
 G_DEFINE_TYPE (GESTrackTransition, ges_track_transition, GES_TYPE_TRACK_OBJECT);
 
+struct _GESTrackTransitionPrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 GstElement *ges_track_transition_create_element (GESTrackTransition * self);
 
 static void
@@ -106,6 +112,8 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackTransitionPrivate));
+
   object_class->get_property = ges_track_transition_get_property;
   object_class->set_property = ges_track_transition_set_property;
   object_class->dispose = ges_track_transition_dispose;
@@ -118,4 +126,7 @@ ges_track_transition_class_init (GESTrackTransitionClass * klass)
 static void
 ges_track_transition_init (GESTrackTransition * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_TRANSITION, GESTrackTransitionPrivate);
+
 }

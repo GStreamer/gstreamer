@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK, GESTrackClass))
 
+typedef struct _GESTrackPrivate GESTrackPrivate;
+
 /**
  * GESTrack:
  * @type: a #GESTrackType indicting the basic type of the track.
@@ -66,6 +68,8 @@ struct _GESTrack {
 
   GstElement * composition;	/* The composition associated with this track */
   GstPad * srcpad;		/* The source GhostPad */
+
+  GESTrackPrivate * priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

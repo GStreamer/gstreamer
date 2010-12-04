@@ -35,6 +35,12 @@
 
 G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_OBJECT);
 
+struct _GESTimelineLayerPrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -108,6 +114,8 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineLayerPrivate));
+
   object_class->get_property = ges_timeline_layer_get_property;
   object_class->set_property = ges_timeline_layer_set_property;
   object_class->dispose = ges_timeline_layer_dispose;
@@ -156,6 +164,9 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
 static void
 ges_timeline_layer_init (GESTimelineLayer * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_LAYER, GESTimelineLayerPrivate);
+
   /* TODO : Keep those 3 values in sync */
   self->priority = 0;
   self->min_gnl_priority = 0;

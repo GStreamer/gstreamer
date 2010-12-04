@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_AUDIO_TEST_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSourceClass))
 
+typedef struct _GESTrackAudioTestSourcePrivate GESTrackAudioTestSourcePrivate;
+
 /** 
  * GESTrackAudioTestSource:
  *
@@ -55,6 +57,8 @@ struct _GESTrackAudioTestSource {
   /*< private >*/
   gdouble freq;
   gdouble volume;
+
+  GESTrackAudioTestSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

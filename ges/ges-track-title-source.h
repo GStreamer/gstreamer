@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_TITLE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourceClass))
 
+typedef struct _GESTrackTitleSourcePrivate GESTrackTitleSourcePrivate;
+
 /** 
  * GESTrackTitleSource:
  *
@@ -58,6 +60,8 @@ struct _GESTrackTitleSource {
   GESTextVAlign valign;
   GstElement    *text_el;
   GstElement    *background_el;
+
+  GESTrackTitleSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

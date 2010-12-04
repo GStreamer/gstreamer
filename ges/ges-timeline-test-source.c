@@ -38,6 +38,12 @@
 G_DEFINE_TYPE (GESTimelineTestSource, ges_timeline_test_source,
     GES_TYPE_TIMELINE_SOURCE);
 
+struct _GESTimelineTestSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -131,6 +137,8 @@ ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineTestSourcePrivate));
+
   object_class->get_property = ges_timeline_test_source_get_property;
   object_class->set_property = ges_timeline_test_source_set_property;
   object_class->dispose = ges_timeline_test_source_dispose;
@@ -185,6 +193,9 @@ ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
 static void
 ges_timeline_test_source_init (GESTimelineTestSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_TEST_SOURCE, GESTimelineTestSourcePrivate);
+
   self->freq = 0;
   self->volume = 0;
   GES_TIMELINE_OBJECT (self)->duration = 0;

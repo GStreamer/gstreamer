@@ -50,6 +50,8 @@ G_BEGIN_DECLS
     (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TRANSITION,\
         GESTrackTransitionClass))
 
+typedef struct _GESTrackTransitionPrivate GESTrackTransitionPrivate;
+
 /**
  * GESTrackTransition:
  *
@@ -63,6 +65,8 @@ struct _GESTrackTransition
   GESTrackObject parent;
 
   /*< private >*/
+  GESTrackTransitionPrivate *priv;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

@@ -29,6 +29,12 @@
 
 G_DEFINE_TYPE (GESTrackOperation, ges_track_operation, GES_TYPE_TRACK_OBJECT);
 
+struct _GESTrackOperationPrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 static void
 ges_track_operation_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -97,6 +103,8 @@ ges_track_operation_class_init (GESTrackOperationClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackOperationPrivate));
+
   object_class->get_property = ges_track_operation_get_property;
   object_class->set_property = ges_track_operation_set_property;
   object_class->dispose = ges_track_operation_dispose;
@@ -109,4 +117,6 @@ ges_track_operation_class_init (GESTrackOperationClass * klass)
 static void
 ges_track_operation_init (GESTrackOperation * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_OPERATION, GESTrackOperationPrivate);
 }

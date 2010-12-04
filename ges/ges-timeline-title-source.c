@@ -44,6 +44,12 @@ G_DEFINE_TYPE (GESTimelineTitleSource, ges_tl_title_src,
 #define GES_TIMELINE_TITLE_SRC_VALIGN_TYPE (ges_timeline_title_source_valign_get_type())
 #define GES_TIMELINE_TITLE_SRC_HALIGN_TYPE (ges_timeline_title_source_halign_get_type())
 
+struct _GESTimelineTitleSourcePrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -154,6 +160,8 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineTitleSourcePrivate));
+
   object_class->get_property = ges_tl_title_src_get_property;
   object_class->set_property = ges_tl_title_src_set_property;
   object_class->dispose = ges_tl_title_src_dispose;
@@ -216,6 +224,9 @@ ges_tl_title_src_class_init (GESTimelineTitleSourceClass * klass)
 static void
 ges_tl_title_src_init (GESTimelineTitleSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_TITLE_SOURCE, GESTimelineTitleSourcePrivate);
+
   GES_TIMELINE_OBJECT (self)->duration = 0;
   /* Not 100% required since a new gobject's content will always be memzero'd */
   self->mute = FALSE;

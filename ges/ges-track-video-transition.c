@@ -31,6 +31,12 @@
 G_DEFINE_TYPE (GESTrackVideoTransition, ges_track_video_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+struct _GESTrackVideoTransitionPrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -69,6 +75,8 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   GESTrackObjectClass *toclass;
   GESTrackTransitionClass *pclass;
 
+  g_type_class_add_private (klass, sizeof (GESTrackVideoTransitionPrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_OBJECT_CLASS (klass);
   pclass = GES_TRACK_TRANSITION_CLASS (klass);
@@ -86,6 +94,9 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
 static void
 ges_track_video_transition_init (GESTrackVideoTransition * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_VIDEO_TRANSITION, GESTrackVideoTransitionPrivate);
+
   self->controller = NULL;
   self->control_source = NULL;
   self->smpte = NULL;

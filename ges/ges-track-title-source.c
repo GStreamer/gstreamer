@@ -31,6 +31,12 @@
 
 G_DEFINE_TYPE (GESTrackTitleSource, ges_track_title_src, GES_TYPE_TRACK_SOURCE);
 
+struct _GESTrackTitleSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -54,6 +60,8 @@ ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
   GObjectClass *object_class;
   GESTrackSourceClass *bg_class;
 
+  g_type_class_add_private (klass, sizeof (GESTrackTitleSourcePrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
@@ -68,6 +76,9 @@ ges_track_title_src_class_init (GESTrackTitleSourceClass * klass)
 static void
 ges_track_title_src_init (GESTrackTitleSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_TITLE_SOURCE, GESTrackTitleSourcePrivate);
+
   self->text = NULL;
   self->font_desc = NULL;
   self->text_el = NULL;

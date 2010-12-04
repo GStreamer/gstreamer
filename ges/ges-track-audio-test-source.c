@@ -34,6 +34,12 @@
 G_DEFINE_TYPE (GESTrackAudioTestSource, ges_track_audio_test_source,
     GES_TYPE_TRACK_SOURCE);
 
+struct _GESTrackAudioTestSourcePrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -58,6 +64,8 @@ ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
   GObjectClass *object_class;
   GESTrackSourceClass *bg_class;
 
+  g_type_class_add_private (klass, sizeof (GESTrackAudioTestSourcePrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_SOURCE_CLASS (klass);
 
@@ -72,6 +80,9 @@ ges_track_audio_test_source_class_init (GESTrackAudioTestSourceClass * klass)
 static void
 ges_track_audio_test_source_init (GESTrackAudioTestSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_AUDIO_TEST_SOURCE, GESTrackAudioTestSourcePrivate);
+
   self->freq = 440;
   self->volume = 0;
 }

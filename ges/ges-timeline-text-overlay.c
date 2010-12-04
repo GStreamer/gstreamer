@@ -39,6 +39,13 @@ G_DEFINE_TYPE (GESTimelineTextOverlay, ges_tl_text_overlay,
 #define DEFAULT_PROP_VALIGNMENT GES_TEXT_VALIGN_BASELINE
 #define DEFAULT_PROP_HALIGNMENT GES_TEXT_HALIGN_CENTER
 #
+
+struct _GESTimelineTextOverlayPrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -142,6 +149,8 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineTextOverlayPrivate));
+
   object_class->get_property = ges_tl_text_overlay_get_property;
   object_class->set_property = ges_tl_text_overlay_set_property;
   object_class->dispose = ges_tl_text_overlay_dispose;
@@ -198,6 +207,9 @@ ges_tl_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
 static void
 ges_tl_text_overlay_init (GESTimelineTextOverlay * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_TEXT_OVERLAY, GESTimelineTextOverlayPrivate);
+
   GES_TIMELINE_OBJECT (self)->duration = 0;
   /* Not 100% needed since gobject contents are memzero'd when created */
   self->text = NULL;

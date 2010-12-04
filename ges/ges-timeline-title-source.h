@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_TITLE_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TITLE_SOURCE, GESTimelineTitleSourceClass))
 
+typedef struct _GESTimelineTitleSourcePrivate GESTimelineTitleSourcePrivate;
+
 /**
  * GESTimelineTitleSource:
  * 
@@ -59,6 +61,8 @@ struct _GESTimelineTitleSource {
   gchar *font_desc;
   GESTextVAlign halign;
   GESTextHAlign valign;
+
+  GESTimelineTitleSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

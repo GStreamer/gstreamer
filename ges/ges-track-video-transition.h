@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_VIDEO_TRANSITION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_VIDEO_TRANSITION, GESTrackVideoTransitionClass))
 
+typedef struct _GESTrackVideoTransitionPrivate GESTrackVideoTransitionPrivate;
+
 /** 
  * GESTrackVideoTransition:
  */
@@ -68,6 +70,8 @@ struct _GESTrackVideoTransition {
    * is used */
   gdouble                       start_value;
   gdouble                       end_value;
+
+  GESTrackVideoTransitionPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

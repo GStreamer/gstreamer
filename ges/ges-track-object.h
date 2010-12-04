@@ -87,6 +87,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_OBJECT_PRIORITY_OFFSET(obj)\
     (((GESTrackObject*)obj)->priority_offset)
 
+typedef struct _GESTrackObjectPrivate GESTrackObjectPrivate;
+
 /**
  * GESTrackObject:
  * @timelineobj: The #GESTimelineObject to which this object belongs.
@@ -132,6 +134,8 @@ struct _GESTrackObject {
 
 
   GstElement *gnlobject;
+
+  GESTrackObjectPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

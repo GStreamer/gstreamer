@@ -30,6 +30,12 @@
 G_DEFINE_TYPE (GESTrackAudioTransition, ges_track_audio_transition,
     GES_TYPE_TRACK_TRANSITION);
 
+struct _GESTrackAudioTransitionPrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -61,6 +67,8 @@ ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
   GESTrackObjectClass *toclass;
   GESTrackTransitionClass *pclass;
 
+  g_type_class_add_private (klass, sizeof (GESTrackAudioTransitionPrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   toclass = GES_TRACK_OBJECT_CLASS (klass);
   pclass = GES_TRACK_TRANSITION_CLASS (klass);
@@ -79,6 +87,10 @@ ges_track_audio_transition_class_init (GESTrackAudioTransitionClass * klass)
 static void
 ges_track_audio_transition_init (GESTrackAudioTransition * self)
 {
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionPrivate);
+
   self->a_controller = NULL;
   self->a_control_source = NULL;
 

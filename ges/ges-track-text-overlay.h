@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_TEXT_OVERLAY_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayClass))
 
+typedef struct _GESTrackTextOverlayPrivate GESTrackTextOverlayPrivate;
+
 /** 
  * GESTrackTextOverlay:
  *
@@ -58,6 +60,8 @@ struct _GESTrackTextOverlay {
   GESTextHAlign halign;
   GESTextVAlign valign;
   GstElement    *text_el;
+
+  GESTrackTextOverlayPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

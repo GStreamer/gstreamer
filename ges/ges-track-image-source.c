@@ -35,6 +35,12 @@
 G_DEFINE_TYPE (GESTrackImageSource, ges_track_image_source,
     GES_TYPE_TRACK_SOURCE);
 
+struct _GESTrackImageSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -153,6 +159,8 @@ ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackSourceClass *source_class = GES_TRACK_SOURCE_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackImageSourcePrivate));
+
   object_class->get_property = ges_track_image_source_get_property;
   object_class->set_property = ges_track_image_source_set_property;
   object_class->dispose = ges_track_image_source_dispose;
@@ -172,6 +180,8 @@ ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
 static void
 ges_track_image_source_init (GESTrackImageSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_IMAGE_SOURCE, GESTrackImageSourcePrivate);
 }
 
 GESTrackImageSource *

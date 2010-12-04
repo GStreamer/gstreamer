@@ -42,6 +42,11 @@
 #include "ges-track-video-transition.h"
 #include "ges-track-audio-transition.h"
 
+struct _GESTimelineTransitionPrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
 
 enum
 {
@@ -122,6 +127,8 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTimelineObjectClass *timobj_class = GES_TIMELINE_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTimelineTransitionPrivate));
+
   object_class->get_property = ges_timeline_transition_get_property;
   object_class->set_property = ges_timeline_transition_set_property;
   object_class->dispose = ges_timeline_transition_dispose;
@@ -146,6 +153,10 @@ ges_timeline_transition_class_init (GESTimelineTransitionClass * klass)
 static void
 ges_timeline_transition_init (GESTimelineTransition * self)
 {
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionPrivate);
+
   self->vtype = GES_VIDEO_TRANSITION_TYPE_NONE;
 }
 

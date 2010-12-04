@@ -46,6 +46,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_TEST_SOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TEST_SOURCE, GESTimelineTestSourceClass))
 
+typedef struct _GESTimelineTestSourcePrivate GESTimelineTestSourcePrivate;
+
 /**
  * GESTimelineTestSource:
  * 
@@ -59,6 +61,8 @@ struct _GESTimelineTestSource {
   GESVideoTestPattern vpattern;
   gdouble freq;
   gdouble volume;
+  
+  GESTimelineTestSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

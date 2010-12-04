@@ -29,6 +29,12 @@
 
 G_DEFINE_TYPE (GESTrackSource, ges_track_source, GES_TYPE_TRACK_OBJECT);
 
+struct _GESTrackSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 static void
 ges_track_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -97,6 +103,8 @@ ges_track_source_class_init (GESTrackSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackSourcePrivate));
+
   object_class->get_property = ges_track_source_get_property;
   object_class->set_property = ges_track_source_set_property;
   object_class->dispose = ges_track_source_dispose;
@@ -109,6 +117,8 @@ ges_track_source_class_init (GESTrackSourceClass * klass)
 static void
 ges_track_source_init (GESTrackSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_SOURCE, GESTrackSourcePrivate);
 }
 
 GESTrackSource *

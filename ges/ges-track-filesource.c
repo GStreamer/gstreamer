@@ -32,6 +32,12 @@
 
 G_DEFINE_TYPE (GESTrackFileSource, ges_track_filesource, GES_TYPE_TRACK_SOURCE);
 
+struct _GESTrackFileSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -101,6 +107,8 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GESTrackObjectClass *track_class = GES_TRACK_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackFileSourcePrivate));
+
   object_class->get_property = ges_track_filesource_get_property;
   object_class->set_property = ges_track_filesource_set_property;
   object_class->dispose = ges_track_filesource_dispose;
@@ -120,6 +128,8 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
 static void
 ges_track_filesource_init (GESTrackFileSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourcePrivate);
 }
 
 GESTrackFileSource *

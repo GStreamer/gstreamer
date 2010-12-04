@@ -43,6 +43,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_TRANSITION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_TRANSITION, GESTimelineTransitionClass))
 
+typedef struct _GESTimelineTransitionPrivate GESTimelineTransitionPrivate;
+
 /**
  * GESTimelineTransition:
  * @vtype: a #GESVideoTransitionType indicating the type of video transition
@@ -56,6 +58,8 @@ struct _GESTimelineTransition {
   GESVideoTransitionType vtype;
 
   /*< private >*/
+  GESTimelineTransitionPrivate *priv;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

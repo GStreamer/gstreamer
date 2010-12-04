@@ -35,6 +35,12 @@
 
 G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
 
+struct _GESTrackPrivate
+{
+  /* Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   ARG_0,
@@ -118,6 +124,8 @@ ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GESTrackPrivate));
+
   object_class->get_property = ges_track_get_property;
   object_class->set_property = ges_track_set_property;
   object_class->dispose = ges_track_dispose;
@@ -156,6 +164,9 @@ ges_track_class_init (GESTrackClass * klass)
 static void
 ges_track_init (GESTrack * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK, GESTrackPrivate);
+
   self->composition = gst_element_factory_make ("gnlcomposition", NULL);
 
   g_signal_connect (self->composition, "pad-added", (GCallback) pad_added_cb,

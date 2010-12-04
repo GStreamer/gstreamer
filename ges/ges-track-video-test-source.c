@@ -30,6 +30,12 @@
 G_DEFINE_TYPE (GESTrackVideoTestSource, ges_track_video_test_source,
     GES_TYPE_TRACK_SOURCE);
 
+struct _GESTrackVideoTestSourcePrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -54,6 +60,8 @@ ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
   GObjectClass *object_class;
   GESTrackSourceClass *track_source_class;
 
+  g_type_class_add_private (klass, sizeof (GESTrackVideoTestSourcePrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   track_source_class = GES_TRACK_SOURCE_CLASS (klass);
 
@@ -69,6 +77,9 @@ ges_track_video_test_source_class_init (GESTrackVideoTestSourceClass * klass)
 static void
 ges_track_video_test_source_init (GESTrackVideoTestSource * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_VIDEO_TEST_SOURCE, GESTrackVideoTestSourcePrivate);
+
   self->pattern = GES_VIDEO_TEST_PATTERN_BLACK;
 }
 

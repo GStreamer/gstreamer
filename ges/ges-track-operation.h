@@ -45,6 +45,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_OPERATION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_OPERATION, GESTrackOperationClass))
 
+typedef struct _GESTrackOperationPrivate GESTrackOperationPrivate;
+
 /**
  * GESTrackOperation:
  * @parent: parent
@@ -58,6 +60,8 @@ struct _GESTrackOperation {
 
   /*< private >*/
   GstElement *element;
+
+  GESTrackOperationPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

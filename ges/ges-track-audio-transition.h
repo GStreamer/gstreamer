@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TRACK_AUDIO_TRANSITION_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_AUDIO_TRANSITION, GESTrackAudioTransitionClass))
 
+typedef struct _GESTrackAudioTransitionPrivate GESTrackAudioTransitionPrivate;
+
 /** 
  * GESTrackAudioTransition:
  *
@@ -60,6 +62,8 @@ struct _GESTrackAudioTransition {
 
   GstController                 *b_controller;
   GstInterpolationControlSource *b_control_source;
+
+  GESTrackAudioTransitionPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

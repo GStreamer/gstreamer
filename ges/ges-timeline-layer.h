@@ -43,6 +43,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_LAYER_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_LAYER, GESTimelineLayerClass))
 
+typedef struct _GESTimelineLayerPrivate GESTimelineLayerPrivate;
+
 /**
  * GESTimelineLayer:
  * @timeline: the #GESTimeline where this layer is being used.
@@ -62,6 +64,8 @@ struct _GESTimelineLayer {
 				 * containing timeline */
 
   guint32 min_gnl_priority, max_gnl_priority;
+
+  GESTimelineLayerPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

@@ -33,6 +33,12 @@
 G_DEFINE_TYPE (GESTrackTextOverlay, ges_track_text_overlay,
     GES_TYPE_TRACK_OPERATION);
 
+struct _GESTrackTextOverlayPrivate
+{
+  /*  Dummy variable */
+  void *nothing;
+};
+
 enum
 {
   PROP_0,
@@ -57,6 +63,8 @@ ges_track_text_overlay_class_init (GESTrackTextOverlayClass * klass)
   GObjectClass *object_class;
   GESTrackOperationClass *bg_class;
 
+  g_type_class_add_private (klass, sizeof (GESTrackTextOverlayPrivate));
+
   object_class = G_OBJECT_CLASS (klass);
   bg_class = GES_TRACK_OPERATION_CLASS (klass);
 
@@ -71,6 +79,9 @@ ges_track_text_overlay_class_init (GESTrackTextOverlayClass * klass)
 static void
 ges_track_text_overlay_init (GESTrackTextOverlay * self)
 {
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_TRACK_TEXT_OVERLAY, GESTrackTextOverlayPrivate);
+
   self->text = NULL;
   self->font_desc = NULL;
   self->text_el = NULL;

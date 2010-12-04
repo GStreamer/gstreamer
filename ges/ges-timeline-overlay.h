@@ -44,6 +44,8 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OVERLAY_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OVERLAY, GESTimelineOverlayClass))
 
+typedef struct _GESTimelineOverlayPrivate GESTimelineOverlayPrivate;
+
 /**
  * GESTimelineOverlay:
  */
@@ -52,6 +54,9 @@ struct _GESTimelineOverlay {
   GESTimelineObject parent;
 
   /*< private >*/
+
+  GESTimelineOverlayPrivate *priv;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };

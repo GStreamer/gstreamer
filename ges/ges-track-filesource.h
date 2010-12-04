@@ -43,6 +43,9 @@ G_BEGIN_DECLS
 
 #define GES_TRACK_FILESOURCE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TRACK_FILESOURCE, GESTrackFileSourceClass))
+
+typedef struct _GESTrackFileSourcePrivate GESTrackFileSourcePrivate;
+
 /** 
  * GESTrackFileSource:
  * @uri: #gchar *, the URI of the media file to play
@@ -55,6 +58,8 @@ struct _GESTrackFileSource {
   gchar *uri;
 
   /*< private >*/
+  GESTrackFileSourcePrivate *priv;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
