@@ -57,7 +57,7 @@ html:
 	  echo >>index.txt "Version $(PACKAGE_VERSION)"; \
 	  echo >>index.txt ""; \
 	  ( cd $(srcdir) && \
-	  cat >>$(abs_builddir)/index.txt $(EXTRA_DIST) ); \	  
+	  cat >>$(abs_builddir)/index.txt $(EXTRA_DIST) ); \
 	  asciidoc -o index.html index.txt; \
 	else \
 	  echo "need asciidoc to generate html"; \
