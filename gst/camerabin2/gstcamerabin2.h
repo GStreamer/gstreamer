@@ -41,6 +41,9 @@ struct _GstCameraBin
   gulong src_capture_notify_id;
 
   GstElement *vidbin;
+  GstElement *vid_queue;
+  GstElement *vid_capsfilter;
+
   GstElement *imgbin;
 
   gint vid_index;

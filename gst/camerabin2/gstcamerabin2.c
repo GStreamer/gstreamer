@@ -171,13 +171,18 @@ gst_camera_bin_src_notify_readyforcapture (GObject * obj, GParamSpec * pspec,
     if (!ready) {
       gchar *location;
 
-      /* a video recording is about to start, we reset the videobin */
+      /* a video recording is about to start, we reset the videobin to clear eos/flushing state
+       * also need to clean the queue ! capsfilter before it */
       gst_element_set_state (camera->vidbin, GST_STATE_NULL);
+      gst_element_set_state (camera->vid_queue, GST_STATE_NULL);
+      gst_element_set_state (camera->vid_capsfilter, GST_STATE_NULL);
       location = g_strdup_printf (camera->vid_location, camera->vid_index++);
       GST_DEBUG_OBJECT (camera, "Switching vidbin location to %s", location);
       g_object_set (camera->vidbin, "location", location, NULL);
       g_free (location);
       gst_element_set_state (camera->vidbin, GST_STATE_PLAYING);
+      gst_element_set_state (camera->vid_capsfilter, GST_STATE_PLAYING);
+      gst_element_set_state (camera->vid_queue, GST_STATE_PLAYING);
     }
   }
 }
@@ -198,6 +203,10 @@ gst_camera_bin_dispose (GObject * object)
 
   if (camerabin->vidbin)
     gst_object_unref (camerabin->vidbin);
+  if (camerabin->vid_queue)
+    gst_object_unref (camerabin->vid_queue);
+  if (camerabin->vid_capsfilter)
+    gst_object_unref (camerabin->vid_capsfilter);
 
   if (camerabin->imgbin)
     gst_object_unref (camerabin->imgbin);
@@ -348,6 +357,9 @@ gst_camera_bin_create_elements (GstCameraBin * camera)
   gst_element_link_pads (src, "vfsrc", vf_queue, "sink");
   gst_element_link_pads (src, "imgsrc", img_queue, "sink");
   gst_element_link_pads (src, "vidsrc", vid_queue, "sink");
+
+  camera->vid_queue = gst_object_ref (vid_queue);
+  camera->vid_capsfilter = gst_object_ref (vid_capsfilter);
 
   /*
    * Video can't get into playing as its internal filesink will open
