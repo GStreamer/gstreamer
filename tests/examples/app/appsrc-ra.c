@@ -30,11 +30,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-/* FIXME: remove once we depend on GLib >= 2.22 */
-#if !GLIB_CHECK_VERSION (2, 21, 3)
-#define g_mapped_file_unref g_mapped_file_free
-#endif
-
 GST_DEBUG_CATEGORY (appsrc_playbin_debug);
 #define GST_CAT_DEFAULT appsrc_playbin_debug
 
