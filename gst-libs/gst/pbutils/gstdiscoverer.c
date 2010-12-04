@@ -1198,9 +1198,8 @@ gst_discoverer_start (GstDiscoverer * discoverer)
   discoverer->priv->async = TRUE;
   discoverer->priv->running = TRUE;
 
-#if GLIB_CHECK_VERSION(2, 22, 0)
   ctx = g_main_context_get_thread_default ();
-#endif
+
   /* Connect to bus signals */
   if (ctx == NULL)
     ctx = g_main_context_default ();

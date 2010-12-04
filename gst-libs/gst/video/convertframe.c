@@ -615,9 +615,8 @@ gst_video_convert_frame_async (GstBuffer * buf, const GstCaps * to_caps,
   g_return_if_fail (GST_BUFFER_CAPS (buf) != NULL);
   g_return_if_fail (callback != NULL);
 
-#if GLIB_CHECK_VERSION(2,22,0)
   context = g_main_context_get_thread_default ();
-#endif
+
   if (!context)
     context = g_main_context_default ();
 
