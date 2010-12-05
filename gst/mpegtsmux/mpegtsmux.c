@@ -800,28 +800,15 @@ static void
 mpegtsmux_release_pad (GstElement * element, GstPad * pad)
 {
   MpegTsMux *mux = GST_MPEG_TSMUX (element);
-  MpegTsPadData *pad_data = NULL;
 
   GST_DEBUG_OBJECT (mux, "Pad %" GST_PTR_FORMAT " being released", pad);
 
-  /* Get the MpegTsPadData out of the pad */
-  GST_OBJECT_LOCK (pad);
-  pad_data = (MpegTsPadData *) gst_pad_get_element_private (pad);
-  if (G_LIKELY (pad_data)) {
-    /* Free codec data reference if any */
-    if (pad_data->codec_data) {
-      GST_DEBUG_OBJECT (element, "releasing codec_data reference");
-      gst_buffer_unref (pad_data->codec_data);
-      pad_data->codec_data = NULL;
-    }
-    if (pad_data->prepare_data && pad_data->free_func) {
-      pad_data->free_func (pad_data->prepare_data);
-      pad_data->prepare_data = pad_data->free_func = NULL;
-    }
+  if (mux->collect) {
+    gst_collect_pads_remove_pad (mux->collect, pad);
   }
-  GST_OBJECT_UNLOCK (pad);
 
-  gst_collect_pads_remove_pad (mux->collect, pad);
+  /* chain up */
+  gst_element_remove_pad (element, pad);
 }
 
 static gboolean
