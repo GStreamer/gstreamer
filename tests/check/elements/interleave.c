@@ -218,6 +218,9 @@ GST_START_TEST (test_interleave_2ch)
 
   fail_unless (have_data == 2);
 
+  gst_element_set_state (interleave, GST_STATE_NULL);
+  gst_element_set_state (queue, GST_STATE_NULL);
+
   gst_object_unref (mysrcpads[0]);
   gst_object_unref (mysrcpads[1]);
   gst_object_unref (mysinkpad);
@@ -227,8 +230,6 @@ GST_START_TEST (test_interleave_2ch)
   gst_element_release_request_pad (interleave, sink1);
   gst_object_unref (sink1);
 
-  gst_element_set_state (interleave, GST_STATE_NULL);
-  gst_element_set_state (queue, GST_STATE_NULL);
   gst_object_unref (interleave);
   gst_object_unref (queue);
   gst_object_unref (bus);
@@ -335,6 +336,9 @@ GST_START_TEST (test_interleave_2ch_1eos)
 
   fail_unless (have_data == 2);
 
+  gst_element_set_state (interleave, GST_STATE_NULL);
+  gst_element_set_state (queue, GST_STATE_NULL);
+
   gst_object_unref (mysrcpads[0]);
   gst_object_unref (mysrcpads[1]);
   gst_object_unref (mysinkpad);
@@ -344,8 +348,6 @@ GST_START_TEST (test_interleave_2ch_1eos)
   gst_element_release_request_pad (interleave, sink1);
   gst_object_unref (sink1);
 
-  gst_element_set_state (interleave, GST_STATE_NULL);
-  gst_element_set_state (queue, GST_STATE_NULL);
   gst_object_unref (interleave);
   gst_object_unref (queue);
   gst_object_unref (bus);
