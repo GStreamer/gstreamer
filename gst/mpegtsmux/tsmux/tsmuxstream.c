@@ -378,6 +378,7 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
     TsMuxStreamBuffer *buf = (TsMuxStreamBuffer *) (stream->buffers->data);
     if (buf->random_access) {
       stream->pi.flags |= TSMUX_PACKET_FLAG_RANDOM_ACCESS;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_ADAPTATION;
     }
   }
 
