@@ -362,6 +362,9 @@ gst_pad_class_init (GstPadClass * klass)
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_iterate_internal_links_default);
   GST_DEBUG_REGISTER_FUNCPTR (gst_pad_acceptcaps_default);
 
+  /* from gstutils.c */
+  GST_DEBUG_REGISTER_FUNCPTR (gst_pad_get_fixed_caps_func);
+
   klass->have_data = default_have_data;
 }
 
