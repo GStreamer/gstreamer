@@ -575,7 +575,7 @@ gst_bin_dispose (GObject * object)
     gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
   }
   if (G_UNLIKELY (bin->children != NULL)) {
-    g_critical ("could not remove elements from bin %s",
+    g_critical ("could not remove elements from bin '%s'",
         GST_STR_NULL (GST_OBJECT_NAME (object)));
   }
 
@@ -701,7 +701,8 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
       {
         GstElement *child = GST_ELEMENT_CAST (data);
 
-        GST_DEBUG_OBJECT (bin, "setting index on %s", GST_ELEMENT_NAME (child));
+        GST_DEBUG_OBJECT (bin, "setting index on '%s'",
+            GST_ELEMENT_NAME (child));
         gst_element_set_index (child, index);
 
         gst_object_unref (child);
@@ -1161,13 +1162,13 @@ no_state_recalc:
 adding_itself:
   {
     GST_OBJECT_LOCK (bin);
-    g_warning ("Cannot add bin %s to itself", GST_ELEMENT_NAME (bin));
+    g_warning ("Cannot add bin '%s' to itself", GST_ELEMENT_NAME (bin));
     GST_OBJECT_UNLOCK (bin);
     return FALSE;
   }
 duplicate_name:
   {
-    g_warning ("Name %s is not unique in bin %s, not adding",
+    g_warning ("Name '%s' is not unique in bin '%s', not adding",
         elem_name, GST_ELEMENT_NAME (bin));
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
@@ -1175,7 +1176,7 @@ duplicate_name:
   }
 had_parent:
   {
-    g_warning ("Element %s already has parent", elem_name);
+    g_warning ("Element '%s' already has parent", elem_name);
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
     return FALSE;
@@ -1223,7 +1224,7 @@ gst_bin_add (GstBin * bin, GstElement * element)
   /* ERROR handling */
 no_function:
   {
-    g_warning ("adding elements to bin %s is not supported",
+    g_warning ("adding elements to bin '%s' is not supported",
         GST_ELEMENT_NAME (bin));
     return FALSE;
   }
@@ -1464,7 +1465,7 @@ no_state_recalc:
   /* ERROR handling */
 not_in_bin:
   {
-    g_warning ("Element %s is not in bin %s", elem_name,
+    g_warning ("Element '%s' is not in bin '%s'", elem_name,
         GST_ELEMENT_NAME (bin));
     GST_OBJECT_UNLOCK (bin);
     g_free (elem_name);
@@ -1522,7 +1523,7 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   /* ERROR handling */
 no_function:
   {
-    g_warning ("removing elements from bin %s is not supported",
+    g_warning ("removing elements from bin '%s' is not supported",
         GST_ELEMENT_NAME (bin));
     return FALSE;
   }
@@ -1982,7 +1983,7 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
       if (bit->best_deg != 0 && !bit->dirty) {
         /* we don't fail on this one yet */
         GST_WARNING_OBJECT (bin, "loop dected in graph");
-        g_warning ("loop detected in the graph of bin %s!!",
+        g_warning ("loop detected in the graph of bin '%s'!!",
             GST_ELEMENT_NAME (bin));
       }
       /* best unhandled element, schedule as next element */
