@@ -4939,6 +4939,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       priv->current_sstart = GST_CLOCK_TIME_NONE;
       priv->current_sstop = GST_CLOCK_TIME_NONE;
       priv->have_latency = FALSE;
+      if (priv->cached_clock_id) {
+        gst_clock_id_unref (priv->cached_clock_id);
+        priv->cached_clock_id = NULL;
+      }
       GST_OBJECT_UNLOCK (basesink);
 
       gst_base_sink_set_last_buffer (basesink, NULL);
