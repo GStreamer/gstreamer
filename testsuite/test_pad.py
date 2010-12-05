@@ -198,11 +198,11 @@ class PadPushEventLinkedTest(TestCase):
         gst.debug('pushed event on linked pad, no probe')
         # one refcount is held by our scope
         self.assertEquals(self.event.__grefcount__, 1)
-        # the event has reffed the sink pad as the src of the event
-        self.assertEquals(self.sink.__grefcount__, 2)
+        # the event has reffed the src pad as the src of the event
+        self.assertEquals(self.src.__grefcount__, 2)
         # clear it
         self.event = None
-        self.assertEquals(self.sink.__grefcount__, 1)
+        self.assertEquals(self.src.__grefcount__, 1)
 
     def testFalseProbe(self):
         probe_id = self.src.add_event_probe(self._probe_handler, False)
@@ -215,6 +215,12 @@ class PadPushEventLinkedTest(TestCase):
         # one ref in our local scope, another in self.events
         self.assertEquals(self.event.__grefcount__, 2)
         self.assertEquals(self.sink.__grefcount__, 1)
+        # the event has reffed the src pad as the src of the event
+        self.assertEquals(self.src.__grefcount__, 2)
+        # remove the event from existence
+        self.event = None
+        self.events = None
+        self.assertEquals(self.src.__grefcount__, 1)
         self.src.remove_buffer_probe(probe_id)
 
     def testTrueProbe(self):
@@ -242,11 +248,11 @@ class PadPushEventLinkedTest(TestCase):
         self.events = None
         self.assertEquals(self.event.__grefcount__, 1)
 
-        # the event has reffed the sink pad as the src of the event
-        self.assertEquals(self.sink.__grefcount__, 2)
+        # the event has reffed the src pad as the src of the event
+        self.assertEquals(self.src.__grefcount__, 2)
         # clear it
         self.event = None
-        self.assertEquals(self.sink.__grefcount__, 1)
+        self.assertEquals(self.src.__grefcount__, 1)
 
     def _probe_handler(self, pad, event, ret):
         gst.debug("probed, pad %r, event %r" % (pad, event))
