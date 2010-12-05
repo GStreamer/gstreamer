@@ -35,16 +35,6 @@
 #include "camerabingeneral.h"
 #include "gstcamerabin-enum.h"
 
-enum
-{
-  /* action signals */
-  START_CAPTURE_SIGNAL,
-  STOP_CAPTURE_SIGNAL,
-  /* emit signals */
-  IMG_DONE_SIGNAL,
-  LAST_SIGNAL
-};
-
 #define CAMERABIN_DEFAULT_VF_CAPS "video/x-raw-yuv,format=(fourcc)I420"
 
 /* Using "bilinear" as default zoom method */
@@ -52,8 +42,6 @@ enum
 
 GST_DEBUG_CATEGORY (v4l2_camera_src_debug);
 #define GST_CAT_DEFAULT v4l2_camera_src_debug
-
-static guint v4l2camerasrc_signals[LAST_SIGNAL];
 
 GST_BOILERPLATE (GstV4l2CameraSrc, gst_v4l2_camera_src, GstBaseCameraSrc,
     GST_TYPE_BASE_CAMERA_SRC);
@@ -64,9 +52,6 @@ static void set_capsfilter_caps (GstV4l2CameraSrc * self, GstCaps * new_caps);
 static void
 gst_v4l2_camera_src_dispose (GObject * object)
 {
-  GstV4l2CameraSrc *src = GST_V4L2_CAMERA_SRC (object);
-
-  g_mutex_free (src->capturing_mutex);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -126,9 +111,6 @@ gst_v4l2_camera_src_get_property (GObject * object,
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (object);
 
   switch (prop_id) {
-    case ARG_READY_FOR_CAPTURE:
-      g_value_set_boolean (value, !self->capturing);
-      break;
     case ARG_FILTER_CAPS:
       gst_value_set_caps (value, self->view_finder_caps);
       break;
@@ -157,18 +139,18 @@ gst_v4l2_camera_src_imgsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC (data);
   gboolean ret = FALSE;
 
-  g_mutex_lock (self->capturing_mutex);
+  g_mutex_lock (camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {
     ret = TRUE;
     self->image_capture_count--;
     if (self->image_capture_count == 0) {
-      self->capturing = FALSE;
-      g_object_notify (G_OBJECT (self), "ready-for-capture");
+      gst_base_camera_src_finish_capture (camerasrc);
     }
   }
-  g_mutex_unlock (self->capturing_mutex);
+  g_mutex_unlock (camerasrc->capturing_mutex);
   return ret;
 }
 
@@ -182,6 +164,7 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     gpointer data)
 {
   GstV4l2CameraSrc *self = GST_V4L2_CAMERA_SRC (data);
+  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (self);
   gboolean ret = FALSE;
 
   /* TODO do we want to lock for every buffer? */
@@ -189,7 +172,8 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
    * Note that we can use gst_pad_push_event here because we are a buffer
    * probe.
    */
-  g_mutex_lock (self->capturing_mutex);
+  /* TODO shouldn't access this directly */
+  g_mutex_lock (camerasrc->capturing_mutex);
   if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
     /* NOP */
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
@@ -204,12 +188,11 @@ gst_v4l2_camera_src_vidsrc_probe (GstPad * pad, GstBuffer * buffer,
     GST_DEBUG_OBJECT (self, "Finishing video recording, pushing eos");
     gst_pad_push_event (pad, gst_event_new_eos ());
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
-    self->capturing = FALSE;
-    g_object_notify (G_OBJECT (self), "ready-for-capture");
+    gst_base_camera_src_finish_capture (camerasrc);
   } else {
     ret = TRUE;
   }
-  g_mutex_unlock (self->capturing_mutex);
+  g_mutex_unlock (camerasrc->capturing_mutex);
   return ret;
 }
 
@@ -1034,19 +1017,12 @@ gst_v4l2_camera_src_finish_image_capture (GstBaseCameraSrc * bcamsrc)
   }
 }
 
-static void
-gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
+static gboolean
+gst_v4l2_camera_src_start_capture (GstBaseCameraSrc * camerasrc)
 {
-  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (src);
-  g_mutex_lock (src->capturing_mutex);
-  if (src->capturing) {
-    GST_WARNING_OBJECT (src, "Capturing already ongoing");
-    g_mutex_unlock (src->capturing_mutex);
-    return;
-  }
+  GstV4l2CameraSrc *src = GST_V4L2_CAMERA_SRC (camerasrc);
 
-  src->capturing = TRUE;
-  /* TODO should we use a macro? */
+  /* TODO shoud we access this directly? Maybe a macro is better? */
   if (camerasrc->mode == MODE_IMAGE) {
     src->image_capture_count = 1;
     start_image_capture (src);
@@ -1056,23 +1032,17 @@ gst_v4l2_camera_src_start_capture (GstV4l2CameraSrc * src)
     }
   } else {
     g_assert_not_reached ();
-    src->capturing = FALSE;
+    return FALSE;
   }
-  if (src->capturing)
-    g_object_notify (G_OBJECT (src), "ready-for-capture");
-  g_mutex_unlock (src->capturing_mutex);
+  return TRUE;
 }
 
 static void
-gst_v4l2_camera_src_stop_capture (GstV4l2CameraSrc * src)
+gst_v4l2_camera_src_stop_capture (GstBaseCameraSrc * camerasrc)
 {
-  GstBaseCameraSrc *camerasrc = GST_BASE_CAMERA_SRC_CAST (src);
-  g_mutex_lock (src->capturing_mutex);
-  if (!src->capturing) {
-    GST_DEBUG_OBJECT (src, "No ongoing capture");
-    g_mutex_unlock (src->capturing_mutex);
-    return;
-  }
+  GstV4l2CameraSrc *src = GST_V4L2_CAMERA_SRC (camerasrc);
+
+  /* TODO shoud we access this directly? Maybe a macro is better? */
   if (camerasrc->mode == MODE_VIDEO) {
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
       GST_DEBUG_OBJECT (src, "Aborting, had not started recording");
@@ -1084,10 +1054,7 @@ gst_v4l2_camera_src_stop_capture (GstV4l2CameraSrc * src)
     }
   } else {
     src->image_capture_count = 0;
-    src->capturing = FALSE;
-    g_object_notify (G_OBJECT (src), "ready-for-capture");
   }
-  g_mutex_unlock (src->capturing_mutex);
 }
 
 static void
@@ -1119,40 +1086,6 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
 
   /* g_object_class_install_property .... */
 
-  /**
-   * GstV4l2CameraSrc:ready-for-capture:
-   *
-   * When TRUE new capture can be prepared. If FALSE capturing is ongoing
-   * and starting a new capture immediately is not possible.
-   *
-   * Note that calling start-capture from the notify callback of this property
-   * will cause a deadlock. If you need to react like this on the notify
-   * function, please schedule a new thread to do it. If you're using glib's
-   * mainloop you can use g_idle_add() for example.
-   */
-  g_object_class_install_property (gobject_class, ARG_READY_FOR_CAPTURE,
-      g_param_spec_boolean ("ready-for-capture", "Ready for capture",
-          "Informs this element is ready for starting another capture",
-          TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
-  /* Signals */
-  v4l2camerasrc_signals[START_CAPTURE_SIGNAL] =
-      g_signal_new ("start-capture",
-      G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstV4l2CameraSrcClass, start_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  v4l2camerasrc_signals[STOP_CAPTURE_SIGNAL] =
-      g_signal_new ("stop-capture",
-      G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstV4l2CameraSrcClass, stop_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-
-  klass->start_capture = gst_v4l2_camera_src_start_capture;
-  klass->stop_capture = gst_v4l2_camera_src_stop_capture;
-
   gstbasecamerasrc_class->construct_pipeline =
       gst_v4l2_camera_src_construct_pipeline;
   gstbasecamerasrc_class->setup_pipeline = gst_v4l2_camera_src_setup_pipeline;
@@ -1162,6 +1095,8 @@ gst_v4l2_camera_src_class_init (GstV4l2CameraSrcClass * klass)
       gst_v4l2_camera_src_get_allowed_input_caps;
   gstbasecamerasrc_class->finish_image_capture =
       gst_v4l2_camera_src_finish_image_capture;
+  gstbasecamerasrc_class->start_capture = gst_v4l2_camera_src_start_capture;
+  gstbasecamerasrc_class->stop_capture = gst_v4l2_camera_src_stop_capture;
 }
 
 static void
@@ -1171,8 +1106,6 @@ gst_v4l2_camera_src_init (GstV4l2CameraSrc * self,
   /* TODO where are variables reset? */
   self->image_capture_count = 0;
   self->video_rec_status = GST_VIDEO_RECORDING_STATUS_DONE;
-  self->capturing_mutex = g_mutex_new ();
-  self->capturing = FALSE;
 }
 
 gboolean

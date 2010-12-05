@@ -34,6 +34,17 @@
 
 #include "gstbasecamerasrc.h"
 
+enum
+{
+  /* action signals */
+  START_CAPTURE_SIGNAL,
+  STOP_CAPTURE_SIGNAL,
+  /* emit signals */
+  LAST_SIGNAL
+};
+
+static guint basecamerasrc_signals[LAST_SIGNAL];
+
 GST_DEBUG_CATEGORY (base_camera_src_debug);
 #define GST_CAT_DEFAULT base_camera_src_debug
 
@@ -256,12 +267,65 @@ gst_base_camera_src_find_better_framerate (GstBaseCameraSrc * self,
   return framerate;
 }
 
+static void
+gst_base_camera_src_start_capture (GstBaseCameraSrc * src)
+{
+  GstBaseCameraSrcClass *klass = GST_BASE_CAMERA_SRC_GET_CLASS (src);
+
+  g_return_if_fail (klass->start_capture != NULL);
+
+  g_mutex_lock (src->capturing_mutex);
+  if (src->capturing) {
+    GST_WARNING_OBJECT (src, "Capturing already ongoing");
+    g_mutex_unlock (src->capturing_mutex);
+    return;
+  }
+
+  if (klass->start_capture (src)) {
+    src->capturing = TRUE;
+    g_object_notify (G_OBJECT (src), "ready-for-capture");
+  } else {
+    GST_WARNING_OBJECT (src, "Failed to start capture");
+  }
+  g_mutex_unlock (src->capturing_mutex);
+}
+
+static void
+gst_base_camera_src_stop_capture (GstBaseCameraSrc * src)
+{
+  GstBaseCameraSrcClass *klass = GST_BASE_CAMERA_SRC_GET_CLASS (src);
+
+  g_return_if_fail (klass->stop_capture != NULL);
+
+  g_mutex_lock (src->capturing_mutex);
+  if (!src->capturing) {
+    GST_DEBUG_OBJECT (src, "No ongoing capture");
+    g_mutex_unlock (src->capturing_mutex);
+    return;
+  }
+  klass->stop_capture (src);
+  g_mutex_unlock (src->capturing_mutex);
+}
+
+void
+gst_base_camera_src_finish_capture (GstBaseCameraSrc * self)
+{
+  g_return_if_fail (self->capturing);
+  self->capturing = FALSE;
+  g_object_notify (G_OBJECT (self), "ready-for-capture");
+}
+
+
 /**
  *
  */
 static void
 gst_base_camera_src_dispose (GObject * object)
 {
+  GstBaseCameraSrc *src = GST_BASE_CAMERA_SRC_CAST (object);
+
+  g_mutex_free (src->capturing_mutex);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -304,6 +368,9 @@ gst_base_camera_src_get_property (GObject * object,
   switch (prop_id) {
     case ARG_MODE:
       g_value_set_enum (value, self->mode);
+      break;
+    case ARG_READY_FOR_CAPTURE:
+      g_value_set_boolean (value, !self->capturing);
       break;
     case ARG_ZOOM:
       g_value_set_int (value, g_atomic_int_get (&self->zoom));
@@ -431,8 +498,46 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
           GST_TYPE_CAMERABIN_MODE, MODE_IMAGE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->change_state = gst_base_camera_src_change_state;
+  /**
+   * GstBaseCameraSrc:ready-for-capture:
+   *
+   * When TRUE new capture can be prepared. If FALSE capturing is ongoing
+   * and starting a new capture immediately is not possible.
+   *
+   * Note that calling start-capture from the notify callback of this property
+   * will cause a deadlock. If you need to react like this on the notify
+   * function, please schedule a new thread to do it. If you're using glib's
+   * mainloop you can use g_idle_add() for example.
+   */
+  g_object_class_install_property (gobject_class, ARG_READY_FOR_CAPTURE,
+      g_param_spec_boolean ("ready-for-capture", "Ready for capture",
+          "Informs this element is ready for starting another capture",
+          TRUE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+
+  /* Signals */
+  basecamerasrc_signals[START_CAPTURE_SIGNAL] =
+      g_signal_new ("start-capture",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstBaseCameraSrcClass, private_start_capture),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  basecamerasrc_signals[STOP_CAPTURE_SIGNAL] =
+      g_signal_new ("stop-capture",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstBaseCameraSrcClass, private_stop_capture),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  /* TODO these should be moved to a private struct
+   * that is allocated sequentially to the main struct as said at:
+   * http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#g-type-add-class-private
+   */
+  klass->private_start_capture = gst_base_camera_src_start_capture;
+  klass->private_stop_capture = gst_base_camera_src_stop_capture;
+
+  gstelement_class->change_state = gst_base_camera_src_change_state;
 }
 
 static void
@@ -459,4 +564,7 @@ gst_base_camera_src_init (GstBaseCameraSrc * self,
 
   self->fps_n = DEFAULT_FPS_N;
   self->fps_d = DEFAULT_FPS_D;
+
+  self->capturing = FALSE;
+  self->capturing_mutex = g_mutex_new ();
 }

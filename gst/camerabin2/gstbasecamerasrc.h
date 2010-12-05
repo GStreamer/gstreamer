@@ -62,6 +62,9 @@ struct _GstBaseCameraSrc
 
   gint mode;
 
+  gboolean capturing;
+  GMutex *capturing_mutex;
+
   /* XXX preview pads? */
 
   /* Resolution of the buffers configured to camerabin */
@@ -127,6 +130,12 @@ struct _GstBaseCameraSrcClass
   void        (*finish_image_capture) (GstBaseCameraSrc * self);
 
 
+  void (*private_start_capture) (GstBaseCameraSrc * src);
+  void (*private_stop_capture) (GstBaseCameraSrc * src);
+  gboolean (*start_capture) (GstBaseCameraSrc * src);
+  void (*stop_capture) (GstBaseCameraSrc * src);
+
+
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
@@ -144,6 +153,9 @@ GstCaps * gst_base_camera_src_get_allowed_input_caps (GstBaseCameraSrc * self);
 void gst_base_camera_src_finish_image_capture (GstBaseCameraSrc * self);
 const GValue * gst_base_camera_src_find_better_framerate (
     GstBaseCameraSrc * self, GstStructure * st, const GValue * orig_framerate);
+
+void gst_base_camera_src_finish_capture (GstBaseCameraSrc *self);
+
 
 // XXX add methods to get/set img capture and vid capture caps..
 

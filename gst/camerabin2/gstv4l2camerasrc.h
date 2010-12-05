@@ -57,9 +57,6 @@ struct _GstV4l2CameraSrc
 {
   GstBaseCameraSrc parent;
 
-  gboolean capturing;
-  GMutex *capturing_mutex;
-
   /* video recording controls */
   gint video_rec_status;
 
@@ -108,9 +105,6 @@ struct _GstV4l2CameraSrc
 struct _GstV4l2CameraSrcClass
 {
   GstBaseCameraSrcClass parent;
-
-  void (*start_capture) (GstV4l2CameraSrc * src);
-  void (*stop_capture) (GstV4l2CameraSrc * src);
 };
 
 gboolean gst_v4l2_camera_src_plugin_init (GstPlugin * plugin);
