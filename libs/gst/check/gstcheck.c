@@ -244,7 +244,10 @@ gst_check_teardown_pad_by_name (GstElement * element, const gchar * name)
 
   /* clean up floating src pad */
   pad_element = gst_element_get_static_pad (element, name);
-  ASSERT_OBJECT_REFCOUNT (pad_element, "pad", 2);
+  /* We don't check the refcount here since there *might* be
+   * a pad cache holding an extra reference on pad_element.
+   * To get to a state where no pad cache will exist,
+   * we first unlink that pad. */
   pad_peer = gst_pad_get_peer (pad_element);
 
   if (pad_peer) {
