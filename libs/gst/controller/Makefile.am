@@ -47,11 +47,11 @@ GstController-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@G
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
-		--library=libgstcontroller-0.10.la \
-		--include=Gst-0.10 \
+		--library=libgstcontroller-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg-export gstreamer-controller-0.10 \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg-export gstreamer-controller-@GST_MAJORMINOR@ \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

@@ -2,7 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 #------------------------------------
 #  include section 
 #-----------------------------------
-gst_controller_COPY_HEADERS_TO := gstreamer-0.10/gst/controller
+gst_controller_COPY_HEADERS_TO := gstreamer-0.11/gst/controller
 gst_controller_COPY_HEADERS := \
 		../libs/gst/controller/gstcontroller.h                 \
 		../libs/gst/controller/gstcontrolsource.h              \
@@ -14,7 +14,7 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-GST_MAJORMINOR:= 0.10
+GST_MAJORMINOR:= 0.11
 
 controller_LOCAL_SRC_FILES:= \
     libs/gst/controller/lib.c \
@@ -28,7 +28,7 @@ controller_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(controller_LOCAL_SRC_FILES))
         	
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10     \
+    libgstreamer-0.11     \
     libglib-2.0           \
     libgthread-2.0        \
     libgmodule-2.0        \

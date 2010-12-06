@@ -3,7 +3,7 @@ LOCAL_PATH:= $(call my-dir)
 #------------------------------------
 #  include section 
 #-----------------------------------
-gst_base_COPY_HEADERS_TO := gstreamer-0.10/gst/base
+gst_base_COPY_HEADERS_TO := gstreamer-0.11/gst/base
 gst_base_COPY_HEADERS := \
 		../libs/gst/base/gstadapter.h         \
 		../libs/gst/base/gstbasesink.h        \
@@ -21,7 +21,7 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-GST_MAJORMINOR:= 0.10
+GST_MAJORMINOR:= 0.11
 
 base_LOCAL_SRC_FILES:= \
     libs/gst/base/gstadapter.c          \
@@ -40,7 +40,7 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(base_LOCAL_SRC_FILES))
          
         	
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
+    libgstreamer-0.11       \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \

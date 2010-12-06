@@ -2,7 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 #------------------------------------
 #  include section 
 #-----------------------------------
-gst_dataprotocol_COPY_HEADERS_TO := gstreamer-0.10/gst/dataprotocol
+gst_dataprotocol_COPY_HEADERS_TO := gstreamer-0.11/gst/dataprotocol
 gst_dataprotocol_COPY_HEADERS := \
 		../libs/gst/dataprotocol/dataprotocol.h
 
@@ -10,7 +10,7 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-GST_MAJORMINOR:= 0.10
+GST_MAJORMINOR:= 0.11
 
 dataprotocol_LOCAL_SRC_FILES:= \
     libs/gst/dataprotocol/dataprotocol.c
@@ -19,7 +19,7 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(dataprotocol_LOCAL_SRC_FILES))
          
         	
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
+    libgstreamer-0.11       \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \

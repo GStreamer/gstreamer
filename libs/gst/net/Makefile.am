@@ -38,11 +38,11 @@ GstNet-@GST_MAJORMINOR@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_MAJORMINOR@
 		-I$(top_srcdir) \
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
-		--library=libgstnet-0.10.la \
-		--include=Gst-0.10 \
+		--library=libgstnet-@GST_MAJORMINOR@.la \
+		--include=Gst-@GST_MAJORMINOR@ \
 		--libtool="$(top_builddir)/libtool" \
-		--pkg gstreamer-0.10 \
-		--pkg-export="gstreamer-net-0.10" \
+		--pkg gstreamer-@GST_MAJORMINOR@ \
+		--pkg-export="gstreamer-net-@GST_MAJORMINOR@" \
 		--output $@ \
 		$(gir_headers) \
 		$(gir_sources)

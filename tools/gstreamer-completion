@@ -6,8 +6,8 @@ _gst_launch()
 {
   local cur
 
-  : ${GST_REGISTRY:=~/.gstreamer-0.10/registry.xml}
-  : ${GST_COMPLETE:=~/.gstreamer-0.10/complete}
+  : ${GST_REGISTRY:=~/.gstreamer-0.11/registry.xml}
+  : ${GST_COMPLETE:=~/.gstreamer-0.11/complete}
 
   if [ ! -f "${GST_REGISTRY}" ] ; then
     return 0

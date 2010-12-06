@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-GST_MAJORMINOR:= 0.10
+GST_MAJORMINOR:= 0.11
 
 indexers_LOCAL_SRC_FILES:= \
     plugins/indexers/gstindexers.c \
@@ -17,16 +17,16 @@ LOCAL_STATIC_LIBRARIES := \
 		libxml2   	
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstbase-0.10       \
-    libgstreamer-0.10       \
+    libgstbase-0.11       \
+    libgstreamer-0.11       \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
 LOCAL_MODULE:= libgstcoreindexers
-#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.10
-LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.10
+#It's a gstreamer plugins, and it must be installed on ..../lib/gstreamer-0.11
+LOCAL_MODULE_PATH := $(TARGET_OUT)/lib/gstreamer-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..       				\

@@ -49,7 +49,7 @@ do
   echo
 done
 
-for mm in 0.9 0.10
+for mm in 0.9 0.10 0.11
 do
   for module in gstreamer gstreamer-base gstreamer-check gstreamer-controller\
                 gstreamer-dataprotocol gstreamer-plugins-base gstreamer-net\
@@ -69,7 +69,7 @@ command_output "gst-inspect"
 command_output "gst-inspect fakesrc"
 command_output "gst-inspect fakesink"
 command_output "gst-launch fakesrc num-buffers=5 ! fakesink"
-for mm in 0.6 0.7 0.8 0.9 0.10
+for mm in 0.6 0.7 0.8 0.9 0.10 0.11
 do
   echo "+   GSTREAMER INFORMATION ($mm)"
   command_output "which gst-inspect-$mm"
@@ -94,7 +94,7 @@ done
 
 echo "+   GSTREAMER PLUG-INS INFORMATION"
 command_output "gst-inspect volume"
-for mm in 0.6 0.7 0.8 0.9 0.10
+for mm in 0.6 0.7 0.8 0.9 0.10 0.11
 do
   command_output "gst-inspect-$mm volume"
 done

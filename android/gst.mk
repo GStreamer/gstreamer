@@ -3,7 +3,7 @@ LOCAL_PATH:= $(call my-dir)
 #------------------------------------
 #  include section 
 #-----------------------------------
-gst_COPY_HEADERS_TO := gstreamer-0.10/gst
+gst_COPY_HEADERS_TO := gstreamer-0.11/gst
 gst_COPY_HEADERS_BASE := \
 		glib-compat.h       \
 		gst.h 				\
@@ -74,7 +74,7 @@ include $(CLEAR_VARS)
 
 LOCAL_ARM_MODE := arm
 
-GST_MAJORMINOR:= 0.10
+GST_MAJORMINOR:= 0.11
 
 gst_LOCAL_SRC_FILES_BASE:= \
 	gst.c 				\
