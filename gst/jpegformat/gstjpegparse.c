@@ -562,16 +562,25 @@ gst_jpeg_parse_read_header (GstJpegParse * parse, GstBuffer * buffer)
 
       case COM:{               /* read comment and post as tag */
         const guint8 *comment = NULL;
+        const gchar *comm;
+        const gchar *env_vars[] = { "GST_JPEG_TAG_ENCODING",
+          "GST_TAG_ENCODING", NULL
+        };
 
         if (!gst_byte_reader_get_uint16_be (&reader, &size))
           goto error;
         if (!gst_byte_reader_get_data (&reader, size - 2, &comment))
           goto error;
 
-        if (!parse->priv->tags)
-          parse->priv->tags = gst_tag_list_new ();
-        gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
-            GST_TAG_COMMENT, comment, NULL);
+        comm = (const gchar *) comment;
+        comm = gst_tag_freeform_string_to_utf8 (comm, size - 2, env_vars);
+
+        if (comm) {
+          if (!parse->priv->tags)
+            parse->priv->tags = gst_tag_list_new ();
+          gst_tag_list_add (parse->priv->tags, GST_TAG_MERGE_REPLACE,
+              GST_TAG_COMMENT, comm, NULL);
+        }
         break;
       }
 
