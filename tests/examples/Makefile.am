@@ -15,5 +15,11 @@ else
 DIRECTFB_DIR=
 endif
 
+if BUILD_EXPERIMENTAL
+CAMERABIN2=camerabin2
+else
+CAMERABIN2=
+endif
+
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(JACK_EXAMPLES) switch
-DIST_SUBDIRS= camerabin camerabin2 directfb jack mxf scaletempo switch
+DIST_SUBDIRS= camerabin $(CAMERABIN2) directfb jack mxf scaletempo switch

@@ -127,6 +127,12 @@ VALGRIND_TO_FIX = \
 VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
+if BUILD_EXPERIMENTAL
+EXPERIMENTAL_CHECKS=elements/camerabin2 \
+		elements/imagecapturebin \
+		elements/videorecordingbin
+endif
+
 # these tests don't even pass
 # neon: too flaky (almost always fails 'the first time')
 noinst_PROGRAMS = \
@@ -148,10 +154,8 @@ check_PROGRAMS = \
 	elements/autoconvert \
 	elements/asfmux \
 	elements/camerabin \
-	elements/camerabin2 \
 	elements/dataurisrc \
 	elements/flacparse \
-	elements/imagecapturebin \
 	elements/legacyresample \
         $(check_jifmux) \
 	elements/jpegparse \
@@ -166,11 +170,11 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	$(check_schro) \
 	elements/valve \
-	elements/videorecordingbin \
 	$(check_vp8) \
 	$(check_zbar) \
 	$(check_orc) \
-        pipelines/tagschecking
+        pipelines/tagschecking \
+	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h
 
