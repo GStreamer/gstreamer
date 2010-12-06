@@ -81,6 +81,7 @@ enum
   ARG_0,
   ARG_UPDATE_FREQ,
   ARG_SILENT,
+  ARG_DO_QUERY,
   ARG_FORMAT
 };
 
@@ -98,6 +99,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 #define DEFAULT_UPDATE_FREQ  5
 #define DEFAULT_SILENT       FALSE
+#define DEFAULT_DO_QUERY     TRUE
 #define DEFAULT_FORMAT       "auto"
 
 static void gst_progress_report_set_property (GObject * object, guint prop_id,
@@ -167,6 +169,12 @@ gst_progress_report_class_init (GstProgressReportClass * g_class)
           DEFAULT_SILENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
+      ARG_DO_QUERY, g_param_spec_boolean ("do-query",
+          "Use a query instead of buffer metadata to determine stream position",
+          "Use a query instead of buffer metadata to determine stream position",
+          DEFAULT_DO_QUERY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
       ARG_FORMAT, g_param_spec_string ("format", "format",
           "Format to use for the querying", DEFAULT_FORMAT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -186,6 +194,7 @@ gst_progress_report_init (GstProgressReport * report,
 
   report->update_freq = DEFAULT_UPDATE_FREQ;
   report->silent = DEFAULT_SILENT;
+  report->do_query = DEFAULT_DO_QUERY;
   report->format = g_strdup (DEFAULT_FORMAT);
 }
 
@@ -222,7 +231,7 @@ gst_progress_report_post_progress (GstProgressReport * filter,
 
 static gboolean
 gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
-    gint hh, gint mm, gint ss)
+    gint hh, gint mm, gint ss, GstBuffer * buf)
 {
   const gchar *format_name = NULL;
   GstPad *sink_pad;
@@ -233,9 +242,24 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
   GST_LOG_OBJECT (filter, "querying using format %d (%s)", format,
       gst_format_get_name (format));
 
-  if (!gst_pad_query_peer_position (sink_pad, &format, &cur) ||
-      !gst_pad_query_peer_duration (sink_pad, &format, &total)) {
-    return FALSE;
+  if (filter->do_query || !buf) {
+    GST_LOG_OBJECT (filter, "using upstream query");
+    if (!gst_pad_query_peer_position (sink_pad, &format, &cur) ||
+        !gst_pad_query_peer_duration (sink_pad, &format, &total)) {
+      return FALSE;
+    }
+  } else {
+    GstBaseTransform *base = GST_BASE_TRANSFORM (filter);
+
+    GST_LOG_OBJECT (filter, "using buffer metadata");
+    if (format == GST_FORMAT_TIME && base->have_newsegment &&
+        base->segment.format == GST_FORMAT_TIME) {
+      cur = gst_segment_to_stream_time (&base->segment, format,
+          GST_BUFFER_TIMESTAMP (buf));
+      total = base->segment.duration;
+    } else {
+      return FALSE;
+    }
   }
 
   switch (format) {
@@ -300,7 +324,8 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
 }
 
 static void
-gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
+gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time,
+    GstBuffer * buf)
 {
   GstFormat try_formats[] = { GST_FORMAT_TIME, GST_FORMAT_BYTES,
     GST_FORMAT_PERCENT, GST_FORMAT_BUFFERS,
@@ -325,12 +350,13 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
   }
 
   if (format != GST_FORMAT_UNDEFINED) {
-    done = gst_progress_report_do_query (filter, format, hh, mm, ss);
+    done = gst_progress_report_do_query (filter, format, hh, mm, ss, buf);
   } else {
     gint i;
 
     for (i = 0; i < G_N_ELEMENTS (try_formats); ++i) {
-      done = gst_progress_report_do_query (filter, try_formats[i], hh, mm, ss);
+      done = gst_progress_report_do_query (filter, try_formats[i], hh, mm, ss,
+          buf);
       if (done)
         break;
     }
@@ -361,7 +387,7 @@ gst_progress_report_event (GstBaseTransform * trans, GstEvent * event)
     GTimeVal cur_time;
 
     g_get_current_time (&cur_time);
-    gst_progress_report_report (filter, cur_time);
+    gst_progress_report_report (filter, cur_time, NULL);
   }
   return GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 }
@@ -384,7 +410,7 @@ gst_progress_report_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GST_OBJECT_UNLOCK (filter);
 
   if (need_update) {
-    gst_progress_report_report (filter, cur_time);
+    gst_progress_report_report (filter, cur_time, buf);
     GST_OBJECT_LOCK (filter);
     filter->last_report = cur_time;
     GST_OBJECT_UNLOCK (filter);
@@ -432,6 +458,11 @@ gst_progress_report_set_property (GObject * object, guint prop_id,
       filter->silent = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (filter);
       break;
+    case ARG_DO_QUERY:
+      GST_OBJECT_LOCK (filter);
+      filter->do_query = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (filter);
+      break;
     case ARG_FORMAT:
       GST_OBJECT_LOCK (filter);
       g_free (filter->format);
@@ -462,6 +493,11 @@ gst_progress_report_get_property (GObject * object, guint prop_id,
     case ARG_SILENT:
       GST_OBJECT_LOCK (filter);
       g_value_set_boolean (value, filter->silent);
+      GST_OBJECT_UNLOCK (filter);
+      break;
+    case ARG_DO_QUERY:
+      GST_OBJECT_LOCK (filter);
+      g_value_set_boolean (value, filter->do_query);
       GST_OBJECT_UNLOCK (filter);
       break;
     case ARG_FORMAT:
