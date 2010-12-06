@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_audio_COPY_HEADERS_TO := gstreamer-0.10/gst/audio
+gst_audio_COPY_HEADERS_TO := gstreamer-0.11/gst/audio
 gst_audio_COPY_HEADERS_BASE := \
 	gst-libs/gst/audio/audio.h \
 	gst-libs/gst/audio/gstaudioclock.h \
@@ -44,15 +44,15 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(audio_LOCAL_SRC_FILES_BASE)) \
 				  $(addprefix ../android/,$(audio_LOCAL_SRC_FILES_ANDROID))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 			\
-	libgstinterfaces-0.10
+	libgstinterfaces-0.11
 
-LOCAL_MODULE:= libgstaudio-0.10
+LOCAL_MODULE:= libgstaudio-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../gst-libs/gst/audio \
@@ -60,7 +60,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..            		\
     $(LOCAL_PATH)      			 		\
 	$(LOCAL_PATH)/gst-libs/gst/audio   	\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10 \
+    $(TARGET_OUT_HEADERS)/gstreamer-0.11 \
 	$(TARGET_OUT_HEADERS)/glib-2.0 		\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib \
 	external/libxml2/include

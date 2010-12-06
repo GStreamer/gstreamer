@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_riffs_COPY_HEADERS_TO := gstreamer-0.10/gst/riff
+gst_riffs_COPY_HEADERS_TO := gstreamer-0.11/gst/riff
 gst_riffs_COPY_HEADERS := \
 	../gst-libs/gst/riff/riff-ids.h \
 	../gst-libs/gst/riff/riff-media.h \
@@ -19,17 +19,17 @@ riff_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(riff_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0 			\
-	libgsttag-0.10          \
-    libgstaudio-0.10     
+	libgsttag-0.11          \
+    libgstaudio-0.11     
 
 
-LOCAL_MODULE:= libgstriff-0.10
+LOCAL_MODULE:= libgstriff-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../gst-libs/gst/riff  \
@@ -37,7 +37,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..         			\
     $(LOCAL_PATH)   	  				\
 	$(LOCAL_PATH)/gst/tcp    			\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10 \
+    $(TARGET_OUT_HEADERS)/gstreamer-0.11 \
 	$(TARGET_OUT_HEADERS)/glib-2.0 		\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib \
 	external/libxml2/include

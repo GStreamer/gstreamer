@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_tag_COPY_HEADERS_TO := gstreamer-0.10/gst/tag
+gst_tag_COPY_HEADERS_TO := gstreamer-0.11/gst/tag
 gst_tag_COPY_HEADERS := \
 	../gst-libs/gst/tag/gsttagdemux.h \
 	../gst-libs/gst/tag/tag.h
@@ -20,21 +20,21 @@ tag_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(tag_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgsttag-0.10
+LOCAL_MODULE:= libgsttag-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../gst/tag  				\
     $(LOCAL_PATH)/../gst-libs 				\
     $(LOCAL_PATH)/.. 	     				\
 	$(LOCAL_PATH)      						\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10    \
+    $(TARGET_OUT_HEADERS)/gstreamer-0.11    \
 	$(TARGET_OUT_HEADERS)/glib-2.0 			\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib     \
 	external/libxml2/include

@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_rtsp_COPY_HEADERS_TO := gstreamer-0.10/gst/rtsp
+gst_rtsp_COPY_HEADERS_TO := gstreamer-0.11/gst/rtsp
 gst_rtsp_COPY_HEADERS_BASE := \
 	gst-libs/gst/rtsp/gstrtspbase64.h \
 	gst-libs/gst/rtsp/gstrtspdefs.h \
@@ -38,14 +38,14 @@ LOCAL_SRC_FILES:= $(addprefix ../,$(rtsp_LOCAL_SRC_FILES_BASE)) \
 				  $(addprefix ../android/,$(rtsp_LOCAL_SRC_FILES_ANDROID))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgstrtsp-0.10
+LOCAL_MODULE:= libgstrtsp-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../gst-libs/gst/rtsp  \
@@ -53,7 +53,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..            		\
     $(LOCAL_PATH)      			 		\
 	$(LOCAL_PATH)/gst-libs/gst/rtsp     \
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10 \
+    $(TARGET_OUT_HEADERS)/gstreamer-0.11 \
 	$(TARGET_OUT_HEADERS)/glib-2.0 		\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib \
 	external/libxml2/include

@@ -1,7 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
 #----------------------------------------
 # include 
-gst_sdp_COPY_HEADERS_TO := gstreamer-0.10/gst/sdp
+gst_sdp_COPY_HEADERS_TO := gstreamer-0.11/gst/sdp
 gst_sdp_COPY_HEADERS := \
 	../gst-libs/gst/sdp/gstsdp.h \
 	../gst-libs/gst/sdp/gstsdpmessage.h
@@ -16,14 +16,14 @@ sdp_LOCAL_SRC_FILES:= \
 LOCAL_SRC_FILES:= $(addprefix ../,$(sdp_LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := \
-    libgstreamer-0.10       \
-    libgstbase-0.10         \
+    libgstreamer-0.11       \
+    libgstbase-0.11         \
     libglib-2.0             \
     libgthread-2.0          \
     libgmodule-2.0          \
     libgobject-2.0
 
-LOCAL_MODULE:= libgstsdp-0.10
+LOCAL_MODULE:= libgstsdp-0.11
 
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../gst-libs/gst/sdp 	\
@@ -31,7 +31,7 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/..         			\
     $(LOCAL_PATH)   	  				\
 	$(LOCAL_PATH)/gst/tcp    			\
-    $(TARGET_OUT_HEADERS)/gstreamer-0.10 \
+    $(TARGET_OUT_HEADERS)/gstreamer-0.11 \
 	$(TARGET_OUT_HEADERS)/glib-2.0 		\
     $(TARGET_OUT_HEADERS)/glib-2.0/glib \
 	external/libxml2/include 
