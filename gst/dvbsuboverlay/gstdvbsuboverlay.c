@@ -472,11 +472,14 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
 {
   guint counter;
   DVBSubtitleRect *sub_region;
-  gint alpha, alpha2, r, g, b, r2, g2, b2, k, k2;
-  gint Y, U, V, Y2, U2, V2;
-  guint32 color, color2;
-  const guint8 *src;
-  guint8 *dst_y, *dst_u, *dst_v;
+  gint r, g, b;
+  gint a1, a2, a3, a4;
+  gint y1, y2, y3, y4;
+  gint u1, u2, u3, u4;
+  gint v1, v2, v3, v4;
+  guint32 color;
+  const guint8 *src, *src2;
+  guint8 *dst_y, *dst_y2, *dst_u, *dst_v;
   gint x, y, w, h;
   gint w2, h2;
   gint width = overlay->width;
@@ -529,7 +532,11 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
     src_stride = sub_region->pict.rowstride;
 
     src = sub_region->pict.data;
+    src2 = sub_region->pict.data + src_stride;
     dst_y = buffer->data + y_offset + sub_region->y * y_stride + sub_region->x;
+    dst_y2 =
+        buffer->data + y_offset + (sub_region->y + 1) * y_stride +
+        sub_region->x;
     dst_u =
         buffer->data + u_offset + ((sub_region->y + 1) / 2) * u_stride +
         (sub_region->x + 1) / 2;
@@ -537,174 +544,169 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
         buffer->data + v_offset + ((sub_region->y + 1) / 2) * v_stride +
         (sub_region->x + 1) / 2;
 
-    /* FIXME: This whole blending business will need a refactor */
-    /* FIXME: Also interpolation for Cr and Cb channels missing */
     for (y = 0; y < h - 1; y += 2) {
       for (x = 0; x < w - 1; x += 2) {
         color = sub_region->pict.palette[src[0]];
-        alpha = (color >> 24) & 0xff;
+        a1 = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
 
-        Y = rgb_to_y (r, g, b);
-        U = rgb_to_u (r, g, b);
-        V = rgb_to_v (r, g, b);
+        y1 = rgb_to_y (r, g, b);
+        u1 = rgb_to_u (r, g, b);
+        v1 = rgb_to_v (r, g, b);
 
-        color2 = sub_region->pict.palette[src[1]];
-        alpha2 = (color2 >> 24) & 0xff;
-        r2 = (color2 >> 16) & 0xff;
-        g2 = (color2 >> 8) & 0xff;
-        b2 = color2 & 0xff;
-
-        Y2 = rgb_to_y (r2, g2, b2);
-        U2 = rgb_to_u (r2, g2, b2);
-        V2 = rgb_to_v (r2, g2, b2);
-
-        k = alpha;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
-
-        k = alpha2;
-        k2 += k;
-        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
-
-        src += src_stride;
-        dst_y += y_stride;
-
-        color = sub_region->pict.palette[src[0]];
-        alpha = (color >> 24) & 0xff;
+        color = sub_region->pict.palette[src[1]];
+        a2 = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
 
-        Y = rgb_to_y (r, g, b);
-        U = rgb_to_u (r, g, b);
-        V = rgb_to_v (r, g, b);
+        y2 = rgb_to_y (r, g, b);
+        u2 = rgb_to_u (r, g, b);
+        v2 = rgb_to_v (r, g, b);
 
-        color2 = sub_region->pict.palette[src[1]];
-        alpha2 = (color2 >> 24) & 0xff;
-        r2 = (color2 >> 16) & 0xff;
-        g2 = (color2 >> 8) & 0xff;
-        b2 = color2 & 0xff;
+        color = sub_region->pict.palette[src2[0]];
+        a3 = (color >> 24) & 0xff;
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
-        Y2 = rgb_to_y (r2, g2, b2);
-        U2 = rgb_to_u (r2, g2, b2);
-        V2 = rgb_to_v (r2, g2, b2);
+        y3 = rgb_to_y (r, g, b);
+        u3 = rgb_to_u (r, g, b);
+        v3 = rgb_to_v (r, g, b);
 
-        k = alpha;
-        k2 += k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        color = sub_region->pict.palette[src2[1]];
+        a4 = (color >> 24) & 0xff;
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
-        k = alpha2;
-        k2 += k;
-        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
+        y4 = rgb_to_y (r, g, b);
+        u4 = rgb_to_u (r, g, b);
+        v4 = rgb_to_v (r, g, b);
 
-        k2 /= 4;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
+        dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
+        dst_y[1] = (a2 * y2 + (255 - a2) * dst_y[1]) / 255;
+        dst_y2[0] = (a3 * y3 + (255 - a3) * dst_y2[0]) / 255;
+        dst_y2[1] = (a4 * y4 + (255 - a4) * dst_y2[1]) / 255;
 
-        src += -src_stride + 2;
-        dst_y += -y_stride + 2;
+        a1 = (a1 + a2 + a3 + a4) / 4;
+        dst_u[0] =
+            (a1 * ((u1 + u2 + u3 + u4) / 4) + (255 - a1) * dst_u[0]) / 255;
+        dst_v[0] =
+            (a1 * ((v1 + v2 + v3 + v4) / 4) + (255 - a1) * dst_v[0]) / 255;
+
+        src += 2;
+        src2 += 2;
+        dst_y += 2;
+        dst_y2 += 2;
+        dst_u += 1;
+        dst_v += 1;
       }
 
+      /* Odd width */
       if (x < w) {
         color = sub_region->pict.palette[src[0]];
-        alpha = (color >> 24) & 0xff;
+        a1 = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
 
-        Y = rgb_to_y (r, g, b);
-        U = rgb_to_u (r, g, b);
-        V = rgb_to_v (r, g, b);
+        y1 = rgb_to_y (r, g, b);
+        u1 = rgb_to_u (r, g, b);
+        v1 = rgb_to_v (r, g, b);
 
-        k = alpha;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        color = sub_region->pict.palette[src2[0]];
+        a3 = (color >> 24) & 0xff;
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
-        src += src_stride;
-        dst_y += y_stride;
+        y3 = rgb_to_y (r, g, b);
+        u3 = rgb_to_u (r, g, b);
+        v3 = rgb_to_v (r, g, b);
 
-        k = alpha;
-        k2 += k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
+        dst_y2[0] = (a3 * y3 + (255 - a3) * dst_y2[0]) / 255;
 
-        k2 /= 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
+        a1 = (a1 + a3) / 2;
+        dst_u[0] = (a1 * ((u1 + u3) / 2) + (255 - a1) * dst_u[0]) / 255;
+        dst_v[0] = (a1 * ((v1 + v3) / 2) + (255 - a1) * dst_v[0]) / 255;
 
-        src += -src_stride + 1;
-        dst_y += -y_stride + 1;
+        src += 1;
+        src2 += 1;
+        dst_y += 1;
+        dst_y2 += 1;
+        dst_u += 1;
+        dst_v += 1;
       }
 
       src += src_stride + (src_stride - w);
+      src2 += src_stride + (src_stride - w);
       dst_y += y_stride + (y_stride - w);
+      dst_y2 += y_stride + (y_stride - w);
       dst_u += u_stride - w2;
       dst_v += v_stride - w2;
     }
 
+    /* Odd height */
     if (y < h) {
       for (x = 0; x < w - 1; x += 2) {
         color = sub_region->pict.palette[src[0]];
-        alpha = (color >> 24) & 0xff;
+        a1 = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
 
-        Y = rgb_to_y (r, g, b);
-        U = rgb_to_u (r, g, b);
-        V = rgb_to_v (r, g, b);
+        y1 = rgb_to_y (r, g, b);
+        u1 = rgb_to_u (r, g, b);
+        v1 = rgb_to_v (r, g, b);
 
-        color2 = sub_region->pict.palette[src[1]];
-        alpha2 = (color2 >> 24) & 0xff;
-        r2 = (color2 >> 16) & 0xff;
-        g2 = (color2 >> 8) & 0xff;
-        b2 = color2 & 0xff;
+        color = sub_region->pict.palette[src[1]];
+        a2 = (color >> 24) & 0xff;
+        r = (color >> 16) & 0xff;
+        g = (color >> 8) & 0xff;
+        b = color & 0xff;
 
-        Y2 = rgb_to_y (r2, g2, b2);
-        U2 = rgb_to_u (r2, g2, b2);
-        V2 = rgb_to_v (r2, g2, b2);
+        y2 = rgb_to_y (r, g, b);
+        u2 = rgb_to_u (r, g, b);
+        v2 = rgb_to_v (r, g, b);
 
-        k = alpha;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
+        dst_y[1] = (a2 * y2 + (255 - a2) * dst_y[1]) / 255;
 
-        k = alpha2;
-        k2 += k;
-        dst_y[1] = (k * Y2 + (255 - k) * dst_y[1]) / 255;
-
-        k2 /= 2;
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
-        dst_u++;
-        dst_v++;
+        a1 = (a1 + a2) / 2;
+        dst_u[0] = (a1 * ((u1 + u2) / 2) + (255 - a1) * dst_u[0]) / 255;
+        dst_v[0] = (a1 * ((v1 + v2) / 2) + (255 - a1) * dst_v[0]) / 255;
 
         src += 2;
         dst_y += 2;
+        dst_u += 1;
+        dst_v += 1;
       }
 
+      /* Odd height and width */
       if (x < w) {
         color = sub_region->pict.palette[src[0]];
-        alpha = (color >> 24) & 0xff;
+        a1 = (color >> 24) & 0xff;
         r = (color >> 16) & 0xff;
         g = (color >> 8) & 0xff;
         b = color & 0xff;
 
-        Y = rgb_to_y (r, g, b);
-        U = rgb_to_u (r, g, b);
-        V = rgb_to_v (r, g, b);
+        y1 = rgb_to_y (r, g, b);
+        u1 = rgb_to_u (r, g, b);
+        v1 = rgb_to_v (r, g, b);
 
-        k = alpha;
-        k2 = k;
-        dst_y[0] = (k * Y + (255 - k) * dst_y[0]) / 255;
+        dst_y[0] = (a1 * y1 + (255 - a1) * dst_y[0]) / 255;
 
-        dst_u[0] = (k2 * U + (255 - k2) * dst_u[0]) / 255;
-        dst_v[0] = (k2 * V + (255 - k2) * dst_v[0]) / 255;
+        dst_u[0] = (a1 * u1 + (255 - a1) * dst_u[0]) / 255;
+        dst_v[0] = (a1 * v1 + (255 - a1) * dst_v[0]) / 255;
+
+        src += 1;
+        dst_y += 1;
+        dst_u += 1;
+        dst_v += 1;
       }
     }
   }
