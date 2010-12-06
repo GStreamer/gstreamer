@@ -2,7 +2,7 @@ AC_PREREQ(2.60)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(Gst-RTSP, 0.10.7.1,
+AC_INIT(Gst-RTSP, 0.11.0.1,
     http://gstreamer.net/,
     gst-rtsp)
 
@@ -35,14 +35,14 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.10
+GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.29
-GSTPB_REQ=0.10.29
+GST_REQ=0.11.0
+GSTPB_REQ=0.11.0
 
 dnl *** autotools stuff ****
 
