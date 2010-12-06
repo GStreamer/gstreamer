@@ -518,8 +518,6 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
   v_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420, 2, width);
 
   for (counter = 0; counter < subs->num_rects; counter++) {
-    gint dw, dh;
-
     sub_region = subs->rects[counter];
     if (sub_region->y > height || sub_region->x > width)
       continue;
@@ -527,13 +525,6 @@ blit_i420 (GstDVBSubOverlay * overlay, DVBSubtitles * subs, GstBuffer * buffer)
     /* blend subtitles onto the video frame */
     w = MIN (sub_region->w, width - sub_region->x);
     h = MIN (sub_region->h, height - sub_region->y);
-
-    /* TODO
-       dw = MIN (sub_region->dw, width - sub_region->x);
-       dh = MIN (sub_region->dh, height - sub_region->y);
-     */
-    dw = w;
-    dh = h + 10;
 
     w2 = (w + 1) / 2;
     h2 = (h + 1) / 2;
