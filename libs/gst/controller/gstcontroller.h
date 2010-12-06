@@ -132,24 +132,6 @@ void gst_object_set_control_rate (GObject * object, GstClockTime control_rate);
 gboolean gst_controller_init (int * argc, char ***argv);
 
 
-/* FIXME: deprecated functions */
-#ifndef GST_DISABLE_DEPRECATED
-gboolean gst_controller_set (GstController * self, const gchar * property_name,
-    GstClockTime timestamp, GValue * value);
-gboolean gst_controller_set_from_list (GstController * self,
-    const gchar * property_name, GSList * timedvalues);
-
-gboolean gst_controller_unset (GstController * self, const gchar * property_name,
-    GstClockTime timestamp);
-gboolean gst_controller_unset_all (GstController * self, const gchar * property_name);
-
-const GList *gst_controller_get_all (GstController * self,
-    const gchar * property_name);
-
-gboolean gst_controller_set_interpolation_mode (GstController * self,
-    const gchar * property_name, GstInterpolateMode mode);
-#endif /* GST_DISABLE_DEPRECATED */
-
 G_END_DECLS
 
 #endif /* __GST_CONTROLLER_H__ */

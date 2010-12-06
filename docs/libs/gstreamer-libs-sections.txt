@@ -38,10 +38,6 @@ gst_dp_crc
 gst_dp_header_payload_length
 gst_dp_header_payload_type
 
-gst_dp_header_from_buffer
-gst_dp_packet_from_caps
-gst_dp_packet_from_event
-
 gst_dp_buffer_from_header
 gst_dp_caps_from_packet
 gst_dp_event_from_packet
@@ -75,12 +71,6 @@ gst_controller_set_control_source
 gst_controller_get
 gst_controller_get_value_arrays
 gst_controller_get_value_array
-gst_controller_set
-gst_controller_set_from_list
-gst_controller_unset
-gst_controller_unset_all
-gst_controller_get_all
-gst_controller_set_interpolation_mode
 <SUBSECTION Standard>
 GstControllerClass
 GstControllerPrivate

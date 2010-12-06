@@ -139,27 +139,6 @@ guint32		gst_dp_header_payload_length	(const guint8 * header);
 GstDPPayloadType
 		gst_dp_header_payload_type	(const guint8 * header);
 
-/* converting from GstBuffer/GstEvent/GstCaps */
-#ifndef GST_DISABLE_DEPRECATED
-gboolean	gst_dp_header_from_buffer	(const GstBuffer * buffer,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header);
-#endif
-#ifndef GST_DISABLE_DEPRECATED
-gboolean	gst_dp_packet_from_caps		(const GstCaps * caps,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header,
-						guint8 ** payload);
-#endif
-#ifndef GST_DISABLE_DEPRECATED
-gboolean	gst_dp_packet_from_event	(const GstEvent * event,
-						GstDPHeaderFlag flags,
-						guint * length,
-						guint8 ** header,
-						guint8 ** payload);
-#endif
 /* converting to GstBuffer/GstEvent/GstCaps */
 GstBuffer *	gst_dp_buffer_from_header	(guint header_length,
 						const guint8 * header);
