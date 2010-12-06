@@ -365,34 +365,6 @@ gst_dp_header_payload_type (const guint8 * header)
 
 /*** PACKETIZER FUNCTIONS ***/
 
-/**
- * gst_dp_header_from_buffer:
- * @buffer: a #GstBuffer to create a header for
- * @flags: the #GstDPHeaderFlag to create the header with
- * @length: a guint pointer to store the header length in
- * @header: a guint8 * pointer to store a newly allocated header byte array in
- *
- * Creates a GDP header from the given buffer.
- *
- * Deprecated: use a #GstDPPacketizer
- *
- * Returns: %TRUE if the header was successfully created.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean
-gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header);
-#endif
-gboolean
-gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header)
-{
-  return gst_dp_header_from_buffer_any (buffer, flags, length, header,
-      GST_DP_VERSION_0_2);
-}
-#endif
-
 static gboolean
 gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
@@ -401,35 +373,6 @@ gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
       GST_DP_VERSION_1_0);
 }
 
-/**
- * gst_dp_packet_from_caps:
- * @caps: a #GstCaps to create a packet for
- * @flags: the #GstDPHeaderFlag to create the header with
- * @length: a guint pointer to store the header length in
- * @header: a guint8 pointer to store a newly allocated header byte array in
- * @payload: a guint8 pointer to store a newly allocated payload byte array in
- *
- * Creates a GDP packet from the given caps.
- *
- * Deprecated: use a #GstDPPacketizer
- *
- * Returns: %TRUE if the packet was successfully created.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean
-gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header, guint8 ** payload);
-#endif
-gboolean
-gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header, guint8 ** payload)
-{
-  return gst_dp_packet_from_caps_any (caps, flags, length, header, payload,
-      GST_DP_VERSION_0_2);
-}
-#endif
-
 static gboolean
 gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
@@ -437,105 +380,6 @@ gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
   return gst_dp_packet_from_caps_any (caps, flags, length, header, payload,
       GST_DP_VERSION_1_0);
 }
-
-/**
- * gst_dp_packet_from_event:
- * @event: a #GstEvent to create a packet for
- * @flags: the #GstDPHeaderFlag to create the header with
- * @length: a guint pointer to store the header length in
- * @header: a guint8 pointer to store a newly allocated header byte array in
- * @payload: a guint8 pointer to store a newly allocated payload byte array in
- *
- * Creates a GDP packet from the given event.
- *
- * Deprecated: use a #GstDPPacketizer
- *
- * Returns: %TRUE if the packet was successfully created.
- */
-#ifndef GST_REMOVE_DEPRECATED
-#ifdef GST_DISABLE_DEPRECATED
-gboolean
-gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header, guint8 ** payload);
-#endif
-gboolean
-gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
-    guint * length, guint8 ** header, guint8 ** payload)
-{
-  guint8 *h;
-  guint pl_length;              /* length of payload */
-
-  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
-  g_return_val_if_fail (length, FALSE);
-  g_return_val_if_fail (header, FALSE);
-  g_return_val_if_fail (payload, FALSE);
-
-  /* first construct payload, since we need the length */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_UNKNOWN:
-      GST_WARNING ("Unknown event, ignoring");
-      return FALSE;
-    case GST_EVENT_EOS:
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_NEWSEGMENT:
-      pl_length = 0;
-      *payload = NULL;
-      break;
-    case GST_EVENT_SEEK:
-    {
-      gdouble rate;
-      GstFormat format;
-      GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
-
-      gst_event_parse_seek ((GstEvent *) event, &rate, &format, &flags,
-          &cur_type, &cur, &stop_type, &stop);
-
-      pl_length = 4 + 4 + 4 + 8 + 4 + 8;
-      *payload = g_malloc0 (pl_length);
-      /* FIXME write rate */
-      GST_WRITE_UINT32_BE (*payload, (guint32) format);
-      GST_WRITE_UINT32_BE (*payload + 4, (guint32) flags);
-      GST_WRITE_UINT32_BE (*payload + 8, (guint32) cur_type);
-      GST_WRITE_UINT64_BE (*payload + 12, (guint64) cur);
-      GST_WRITE_UINT32_BE (*payload + 20, (guint32) stop_type);
-      GST_WRITE_UINT64_BE (*payload + 24, (guint64) stop);
-      break;
-    }
-    case GST_EVENT_QOS:
-    case GST_EVENT_NAVIGATION:
-    case GST_EVENT_TAG:
-      GST_WARNING ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
-      return FALSE;
-    default:
-      GST_WARNING ("Unknown event type %d, ignoring", GST_EVENT_TYPE (event));
-      return FALSE;
-  }
-
-  /* now we can create and fill the header */
-  h = g_malloc0 (GST_DP_HEADER_LENGTH);
-  *length = GST_DP_HEADER_LENGTH;
-
-  /* version, flags, type */
-  GST_DP_INIT_HEADER (h, GST_DP_VERSION_0_2, flags,
-      GST_DP_PAYLOAD_EVENT_NONE + GST_EVENT_TYPE (event));
-
-  /* length */
-  GST_WRITE_UINT32_BE (h + 6, (guint32) pl_length);
-  /* timestamp */
-  GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
-
-  GST_DP_SET_CRC (h, flags, *payload, pl_length);
-
-  GST_LOG ("created header from event:");
-  gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
-
-  *header = h;
-  return TRUE;
-}
-#endif
 
 static gboolean
 gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
@@ -888,13 +732,6 @@ gst_dp_packetizer_new (GstDPVersion version)
   ret->version = version;
 
   switch (version) {
-#ifndef GST_REMOVE_DEPRECATED
-    case GST_DP_VERSION_0_2:
-      ret->header_from_buffer = gst_dp_header_from_buffer;
-      ret->packet_from_caps = gst_dp_packet_from_caps;
-      ret->packet_from_event = gst_dp_packet_from_event;
-      break;
-#endif
     case GST_DP_VERSION_1_0:
       ret->header_from_buffer = gst_dp_header_from_buffer_1_0;
       ret->packet_from_caps = gst_dp_packet_from_caps_1_0;
