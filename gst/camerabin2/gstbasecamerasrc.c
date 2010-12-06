@@ -465,7 +465,7 @@ gst_base_camera_src_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class,
       "Base class for camerabin src bin", "Source/Video",
-      "Abstracts capture device for camerabin", "Rob Clark <rob@ti.com>");
+      "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vfsrc_template));

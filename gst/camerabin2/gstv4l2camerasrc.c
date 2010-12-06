@@ -230,36 +230,22 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc,
     }
   }
 
-#if 0
-  /* XXX srcbin needs to know of some flags, perhaps?? */
-  if (camera->flags & GST_CAMERABIN_FLAG_SOURCE_COLOR_CONVERSION) {
-#else
-  if (1) {
-#endif
-    if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
-      goto done;
-  }
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
+    goto done;
 
   if (!(self->src_filter =
           gst_camerabin_create_and_add_element (cbin, "capsfilter")))
     goto done;
 
-#if 0
-  /* XXX srcbin needs to know of some flags, perhaps?? */
-  if (camera->flags & GST_CAMERABIN_FLAG_SOURCE_RESIZE) {
-#else
-  if (1) {
-#endif
-    if (!(self->src_zoom_crop =
-            gst_camerabin_create_and_add_element (cbin, "videocrop")))
-      goto done;
-    if (!(self->src_zoom_scale =
-            gst_camerabin_create_and_add_element (cbin, "videoscale")))
-      goto done;
-    if (!(self->src_zoom_filter =
-            gst_camerabin_create_and_add_element (cbin, "capsfilter")))
-      goto done;
-  }
+  if (!(self->src_zoom_crop =
+          gst_camerabin_create_and_add_element (cbin, "videocrop")))
+    goto done;
+  if (!(self->src_zoom_scale =
+          gst_camerabin_create_and_add_element (cbin, "videoscale")))
+    goto done;
+  if (!(self->src_zoom_filter =
+          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
+    goto done;
 
   if (self->app_video_filter) {
     if (!gst_camerabin_add_element (cbin, self->app_video_filter)) {
@@ -282,27 +268,6 @@ gst_v4l2_camera_src_construct_pipeline (GstBaseCameraSrc * bcamsrc,
   *vfsrc = self->tee_vf_srcpad;
   *imgsrc = self->tee_image_srcpad;
   *vidsrc = self->tee_video_srcpad;
-
-#if 0
-  /* XXX another idea... put common parts in GstBaseCameraSrc.. perhaps
-   * derived class could use some flags, or something like this, to
-   * indicate which pads in needs vscale and queue on.. (but I think it
-   * doesn't hurt ot have on all..)
-   */
-  /* XXX perhaps we should keep queues and vscale's in camerabin itself,
-   * because GstOmxCameraSrc would also probably need the queues.. and
-   * maybe some OMX camera implementations would want the vscale's (and
-   * at least the vscale's should become pass-through if OMX camera can
-   * negotiate the requested sizes..
-   */
-  queue = gst_element_factory_make ("queue", "viewfinder-queue");
-  if (!gst_camerabin_add_element (cbin, queue)) {
-    goto error;
-  }
-  /* Set queue leaky, we don't want to block video encoder feed, but
-   * prefer leaking view finder buffers instead. */
-  g_object_set (G_OBJECT (queue), "leaky", 2, "max-size-buffers", 1, NULL);
-#endif
 
   ret = TRUE;
 done:
@@ -549,17 +514,8 @@ adapt_image_capture (GstV4l2CameraSrc * self, GstCaps * in_caps)
   /* If new fields have been added, we need to copy them */
   gst_structure_foreach (in_st, copy_missing_fields, new_st);
 
-#if 0
-  /* XXX srcbin needs to know of some flags, perhaps?? */
-  if (!(camera->flags & GST_CAMERABIN_FLAG_SOURCE_RESIZE)) {
-#else
-  if (1) {
-#endif
-    GST_DEBUG_OBJECT (self,
-        "source-resize flag disabled, unable to adapt resolution");
-    gst_structure_set (new_st, "width", G_TYPE_INT, in_width, "height",
-        G_TYPE_INT, in_height, NULL);
-  }
+  gst_structure_set (new_st, "width", G_TYPE_INT, in_width, "height",
+      G_TYPE_INT, in_height, NULL);
 
   GST_LOG_OBJECT (self, "new image capture caps: %" GST_PTR_FORMAT, new_st);
 
