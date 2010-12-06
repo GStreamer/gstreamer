@@ -681,7 +681,11 @@ gst_poll_get_read_gpollfd (GstPoll * set, GPollFD * fd)
   g_return_if_fail (set != NULL);
   g_return_if_fail (fd != NULL);
 
+#ifndef G_OS_WIN32
   fd->fd = set->control_read_fd.fd;
+#else
+  fd->fd = set->wakeup_event;
+#endif
   fd->events = G_IO_IN | G_IO_HUP | G_IO_ERR;
   fd->revents = 0;
 }
