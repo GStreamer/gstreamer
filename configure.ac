@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/pre
-AC_INIT(GStreamer Good Plug-ins, 0.10.26.1,
+AC_INIT(GStreamer Good Plug-ins, 0.11.0.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-good)
 
@@ -40,7 +40,7 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.10
+GST_MAJORMINOR=0.11
 AC_SUBST(GST_MAJORMINOR)
 
 dnl FIXME: this macro doesn't actually work;
@@ -52,8 +52,8 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.31
-GSTPB_REQ=0.10.31
+GST_REQ=0.11.0
+GSTPB_REQ=0.11.0
 
 dnl *** autotools stuff ****
 
