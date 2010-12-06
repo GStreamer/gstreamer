@@ -4645,7 +4645,15 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   GST_PAD_STREAM_LOCK (peer);
 
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "calling chainfunction &%s",
+      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)));
+
   ret = GST_PAD_CHAINFUNC (peer) (peer, buffer);
+
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+      "called chainfunction &%s, returned %s",
+      GST_DEBUG_FUNCPTR_NAME (GST_PAD_CHAINFUNC (peer)),
+      gst_flow_get_name (ret));
 
   GST_PAD_STREAM_UNLOCK (peer);
 
