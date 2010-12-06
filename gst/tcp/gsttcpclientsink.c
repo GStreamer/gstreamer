@@ -57,9 +57,7 @@ enum
 {
   ARG_0,
   ARG_HOST,
-  ARG_PORT,
-  ARG_PROTOCOL
-      /* FILL ME */
+  ARG_PORT
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -154,10 +152,6 @@ gst_tcp_client_sink_class_init (GstTCPClientSink * klass)
       g_param_spec_int ("port", "Port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, ARG_PROTOCOL,
-      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = gst_tcp_client_sink_change_state;
 
@@ -174,7 +168,6 @@ gst_tcp_client_sink_init (GstTCPClientSink * this)
   this->port = TCP_DEFAULT_PORT;
 
   this->sock_fd.fd = -1;
-  this->protocol = GST_TCP_PROTOCOL_NONE;
   GST_OBJECT_FLAG_UNSET (this, GST_TCP_CLIENT_SINK_OPEN);
 }
 
@@ -195,41 +188,7 @@ gst_tcp_client_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   sink = GST_TCP_CLIENT_SINK (bsink);
 
-  /* write the buffer header if we have one */
-  switch (sink->protocol) {
-    case GST_TCP_PROTOCOL_NONE:
-      break;
-
-    case GST_TCP_PROTOCOL_GDP:
-      /* if we haven't send caps yet, send them first */
-      if (!sink->caps_sent) {
-        const GstCaps *caps;
-        gchar *string;
-
-        caps = GST_PAD_CAPS (GST_PAD_PEER (GST_BASE_SINK_PAD (bsink)));
-        string = gst_caps_to_string (caps);
-        GST_DEBUG_OBJECT (sink, "Sending caps %s through GDP", string);
-        g_free (string);
-
-        if (!gst_tcp_gdp_write_caps (GST_ELEMENT (sink), sink->sock_fd.fd,
-                caps, TRUE, sink->host, sink->port))
-          goto gdp_write_error;
-
-        sink->caps_sent = TRUE;
-      }
-      break;
-    default:
-      g_warning ("Unhandled protocol type");
-      break;
-  }
-
   return TRUE;
-
-  /* ERRORS */
-gdp_write_error:
-  {
-    return FALSE;
-  }
 }
 
 static GstFlowReturn
@@ -248,20 +207,6 @@ gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_LOG_OBJECT (sink, "writing %d bytes for buffer data", size);
 
-  /* write the buffer header if we have one */
-  switch (sink->protocol) {
-    case GST_TCP_PROTOCOL_NONE:
-      break;
-    case GST_TCP_PROTOCOL_GDP:
-      GST_LOG_OBJECT (sink, "Sending buffer header through GDP");
-      if (!gst_tcp_gdp_write_buffer (GST_ELEMENT (sink), sink->sock_fd.fd, buf,
-              TRUE, sink->host, sink->port))
-        goto gdp_write_error;
-      break;
-    default:
-      break;
-  }
-
   /* write buffer data */
   wrote = gst_tcp_socket_write (sink->sock_fd.fd, GST_BUFFER_DATA (buf), size);
 
@@ -273,10 +218,6 @@ gst_tcp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 
   /* ERRORS */
-gdp_write_error:
-  {
-    return FALSE;
-  }
 write_error:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
@@ -308,9 +249,6 @@ gst_tcp_client_sink_set_property (GObject * object, guint prop_id,
     case ARG_PORT:
       tcpclientsink->port = g_value_get_int (value);
       break;
-    case ARG_PROTOCOL:
-      tcpclientsink->protocol = g_value_get_enum (value);
-      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -333,9 +271,6 @@ gst_tcp_client_sink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PORT:
       g_value_set_int (value, tcpclientsink->port);
-      break;
-    case ARG_PROTOCOL:
-      g_value_set_enum (value, tcpclientsink->protocol);
       break;
 
     default:

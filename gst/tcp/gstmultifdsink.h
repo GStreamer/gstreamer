@@ -153,8 +153,6 @@ typedef struct {
 
   gboolean discont;
 
-  GstTCPProtocol protocol;
-
   gboolean caps_sent;
   gboolean new_connection;
 
@@ -206,7 +204,6 @@ struct _GstMultiFdSink {
   GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
   gboolean previous_buffer_in_caps;
 
-  GstTCPProtocol protocol;
   guint mtu;
   gint qos_dscp;
   gboolean handle_read;

@@ -34,26 +34,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * GstTCPProtocol:
- * @GST_TCP_PROTOCOL_NONE: Raw data transmission
- * @GST_TCP_PROTOCOL_GDP: #GstBuffers are wrapped and sent/received using the
- *      GDP protocol.
- *
- * This enum is provided by the tcp/multifd elements to configure the format of
- * data transmission/reception.
- *
- * The GDP protocol wraps data buffers in a header that also carries format
- * information and timestamps. The None value indicates the data is
- * sent/received as-is. In that case, format information and timestamping
- * must be transmitted separately, or implicit in the bytestream itself.
- */
-typedef enum
-{
-  GST_TCP_PROTOCOL_NONE,
-  GST_TCP_PROTOCOL_GDP
-} GstTCPProtocol;
-
 gchar * gst_tcp_host_to_ip (GstElement *element, const gchar *host);
 
 gint gst_tcp_socket_write (int socket, const void *buf, size_t count);
@@ -64,12 +44,6 @@ GstFlowReturn gst_tcp_read_buffer (GstElement * this, int socket, GstPoll * fdse
 
 GstFlowReturn gst_tcp_gdp_read_buffer (GstElement * this, int socket, GstPoll * fdset, GstBuffer **buf);
 GstFlowReturn gst_tcp_gdp_read_caps (GstElement * this, int socket, GstPoll * fdset, GstCaps **caps);
-
-GstEvent * gst_tcp_gdp_read_event (GstElement *elem, int socket, GstPoll * fdset);
-
-gboolean gst_tcp_gdp_write_buffer (GstElement *elem, int socket, GstBuffer *buffer, gboolean fatal, const gchar *host, int port);
-gboolean gst_tcp_gdp_write_event (GstElement *elem, int socket, GstEvent *event, gboolean fatal, const gchar *host, int port);
-gboolean gst_tcp_gdp_write_caps (GstElement *elem, int socket, const GstCaps *caps, gboolean fatal, const gchar *host, int port);
 
 G_END_DECLS
 

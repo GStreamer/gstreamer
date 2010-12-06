@@ -153,7 +153,6 @@ enum
 
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_PROTOCOL                GST_TCP_PROTOCOL_NONE
 #define DEFAULT_MODE                    1
 #define DEFAULT_BUFFERS_MAX             -1
 #define DEFAULT_BUFFERS_SOFT_MAX        -1
@@ -178,7 +177,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_PROTOCOL,
   PROP_MODE,
   PROP_BUFFERS_QUEUED,
   PROP_BYTES_QUEUED,
@@ -379,12 +377,6 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   gobject_class->set_property = gst_multi_fd_sink_set_property;
   gobject_class->get_property = gst_multi_fd_sink_get_property;
   gobject_class->finalize = gst_multi_fd_sink_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_PROTOCOL,
-      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in"
-          ". GDP protocol here is deprecated. Please use gdppay element.",
-          GST_TYPE_TCP_PROTOCOL, DEFAULT_PROTOCOL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiFdSink::mode
@@ -691,7 +683,6 @@ gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
 {
   GST_OBJECT_FLAG_UNSET (this, GST_MULTI_FD_SINK_OPEN);
 
-  this->protocol = DEFAULT_PROTOCOL;
   this->mode = DEFAULT_MODE;
 
   CLIENTS_LOCK_INIT (this);
@@ -1279,60 +1270,6 @@ ioctl_failed:
   }
 }
 
-/* Queue raw data for this client, creating a new buffer.
- * This takes ownership of the data by
- * setting it as GST_BUFFER_MALLOCDATA() on the created buffer so
- * be sure to pass g_free()-able @data.
- */
-static gboolean
-gst_multi_fd_sink_client_queue_data (GstMultiFdSink * sink,
-    GstTCPClient * client, gchar * data, gint len)
-{
-  GstBuffer *buf;
-
-  buf = gst_buffer_new ();
-  GST_BUFFER_DATA (buf) = (guint8 *) data;
-  GST_BUFFER_MALLOCDATA (buf) = (guint8 *) data;
-  GST_BUFFER_SIZE (buf) = len;
-
-  GST_LOG_OBJECT (sink, "[fd %5d] queueing data of length %d",
-      client->fd.fd, len);
-
-  client->sending = g_slist_append (client->sending, buf);
-
-  return TRUE;
-}
-
-/* GDP-encode given caps and queue them for sending */
-static gboolean
-gst_multi_fd_sink_client_queue_caps (GstMultiFdSink * sink,
-    GstTCPClient * client, const GstCaps * caps)
-{
-  guint8 *header;
-  guint8 *payload;
-  guint length;
-  gchar *string;
-
-  g_return_val_if_fail (caps != NULL, FALSE);
-
-  string = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (sink, "[fd %5d] Queueing caps %s through GDP",
-      client->fd.fd, string);
-  g_free (string);
-
-  if (!gst_dp_packet_from_caps (caps, sink->header_flags, &length, &header,
-          &payload)) {
-    GST_DEBUG_OBJECT (sink, "Could not create GDP packet from caps");
-    return FALSE;
-  }
-  gst_multi_fd_sink_client_queue_data (sink, client, (gchar *) header, length);
-
-  length = gst_dp_header_payload_length (header);
-  gst_multi_fd_sink_client_queue_data (sink, client, (gchar *) payload, length);
-
-  return TRUE;
-}
-
 static gboolean
 is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
 {
@@ -1445,21 +1382,6 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
             client->fd.fd, GST_BUFFER_SIZE (buffer));
         gst_buffer_ref (buffer);
 
-        if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
-          guint8 *header;
-          guint len;
-
-          if (!gst_dp_header_from_buffer (buffer, sink->header_flags, &len,
-                  &header)) {
-            GST_DEBUG_OBJECT (sink,
-                "[fd %5d] could not create header, removing client",
-                client->fd.fd);
-            return FALSE;
-          }
-          gst_multi_fd_sink_client_queue_data (sink, client, (gchar *) header,
-              len);
-        }
-
         client->sending = g_slist_append (client->sending, buffer);
       }
     }
@@ -1467,18 +1389,6 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
 
   gst_caps_unref (caps);
   caps = NULL;
-  /* now we can send the buffer, possibly sending a GDP header first */
-  if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
-    guint8 *header;
-    guint len;
-
-    if (!gst_dp_header_from_buffer (buffer, sink->header_flags, &len, &header)) {
-      GST_DEBUG_OBJECT (sink,
-          "[fd %5d] could not create header, removing client", client->fd.fd);
-      return FALSE;
-    }
-    gst_multi_fd_sink_client_queue_data (sink, client, (gchar *) header, len);
-  }
 
   GST_LOG_OBJECT (sink, "[fd %5d] queueing buffer of length %d",
       client->fd.fd, GST_BUFFER_SIZE (buffer));
@@ -1979,7 +1889,6 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
 {
   int fd = client->fd.fd;
   gboolean more;
-  gboolean res;
   gboolean flushing;
   GstClockTime now;
   GTimeVal nowtv;
@@ -1988,39 +1897,6 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
   now = GST_TIMEVAL_TO_TIME (nowtv);
 
   flushing = client->status == GST_CLIENT_STATUS_FLUSHING;
-
-  /* when using GDP, first check if we have queued caps yet */
-  if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
-    /* don't need to do anything when the client is flushing */
-    if (!client->caps_sent && !flushing) {
-      GstPad *peer;
-      GstCaps *caps;
-
-      peer = gst_pad_get_peer (GST_BASE_SINK_PAD (sink));
-      if (!peer) {
-        GST_WARNING_OBJECT (sink, "pad has no peer");
-        return FALSE;
-      }
-      gst_object_unref (peer);
-
-      caps = gst_pad_get_negotiated_caps (GST_BASE_SINK_PAD (sink));
-      if (!caps) {
-        GST_WARNING_OBJECT (sink, "pad caps not yet negotiated");
-        return FALSE;
-      }
-
-      /* queue caps for sending */
-      res = gst_multi_fd_sink_client_queue_caps (sink, client, caps);
-
-      gst_caps_unref (caps);
-
-      if (!res) {
-        GST_DEBUG_OBJECT (sink, "Failed queueing caps, removing client");
-        return FALSE;
-      }
-      client->caps_sent = TRUE;
-    }
-  }
 
   more = TRUE;
   do {
@@ -2662,9 +2538,6 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
   multifdsink = GST_MULTI_FD_SINK (object);
 
   switch (prop_id) {
-    case PROP_PROTOCOL:
-      multifdsink->protocol = g_value_get_enum (value);
-      break;
     case PROP_MODE:
       multifdsink->mode = g_value_get_enum (value);
       break;
@@ -2733,9 +2606,6 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
   multifdsink = GST_MULTI_FD_SINK (object);
 
   switch (prop_id) {
-    case PROP_PROTOCOL:
-      g_value_set_enum (value, multifdsink->protocol);
-      break;
     case PROP_MODE:
       g_value_set_enum (value, multifdsink->mode);
       break;

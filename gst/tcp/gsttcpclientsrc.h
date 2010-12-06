@@ -67,7 +67,6 @@ struct _GstTCPClientSrc {
   GstPollFD sock_fd;
   GstPoll *fdset;
 
-  GstTCPProtocol protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
   GstCaps *caps;
 };

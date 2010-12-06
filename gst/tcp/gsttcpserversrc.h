@@ -74,7 +74,6 @@ struct _GstTCPServerSrc {
 
   GstPoll *fdset;
 
-  GstTCPProtocol protocol; /* protocol used for reading data */
   gboolean caps_received;      /* if we have received caps yet */
 };
 

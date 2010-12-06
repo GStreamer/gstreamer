@@ -63,8 +63,7 @@ enum
 {
   PROP_0,
   PROP_HOST,
-  PROP_PORT,
-  PROP_PROTOCOL
+  PROP_PORT
 };
 
 
@@ -122,10 +121,6 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
       g_param_spec_int ("port", "Port", "The port to listen to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_PROTOCOL,
-      g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
-          GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->start = gst_tcp_server_src_start;
   gstbasesrc_class->stop = gst_tcp_server_src_stop;
@@ -144,7 +139,6 @@ gst_tcp_server_src_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
   src->host = g_strdup (TCP_DEFAULT_HOST);
   src->server_sock_fd.fd = -1;
   src->client_sock_fd.fd = -1;
-  src->protocol = GST_TCP_PROTOCOL_NONE;
 
   GST_OBJECT_FLAG_UNSET (src, GST_TCP_SERVER_SRC_OPEN);
 }
@@ -205,47 +199,8 @@ restart:
 
   GST_LOG_OBJECT (src, "asked for a buffer");
 
-  switch (src->protocol) {
-    case GST_TCP_PROTOCOL_NONE:
-      ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd.fd,
-          src->fdset, outbuf);
-      break;
-
-    case GST_TCP_PROTOCOL_GDP:
-      if (!src->caps_received) {
-        GstCaps *caps;
-        gchar *string;
-
-        ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd.fd,
-            src->fdset, &caps);
-
-        if (ret == GST_FLOW_WRONG_STATE)
-          goto gdp_cancelled;
-
-        if (ret != GST_FLOW_OK)
-          goto gdp_caps_read_error;
-
-        src->caps_received = TRUE;
-        string = gst_caps_to_string (caps);
-        GST_DEBUG_OBJECT (src, "Received caps through GDP: %s", string);
-        g_free (string);
-
-        gst_pad_set_caps (GST_BASE_SRC_PAD (psrc), caps);
-      }
-
-      ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->client_sock_fd.fd,
-          src->fdset, outbuf);
-
-      if (ret == GST_FLOW_OK)
-        gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
-
-      break;
-
-    default:
-      /* need to assert as buf == NULL */
-      g_assert ("Unhandled protocol type");
-      break;
-  }
+  ret = gst_tcp_read_buffer (GST_ELEMENT (src), src->client_sock_fd.fd,
+      src->fdset, outbuf);
 
   if (ret == GST_FLOW_OK) {
     GST_LOG_OBJECT (src,
@@ -282,20 +237,6 @@ accept_error:
         ("Could not accept client on server socket: %s", g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
-gdp_cancelled:
-  {
-    GST_DEBUG_OBJECT (src, "reading gdp canceled");
-    return GST_FLOW_WRONG_STATE;
-  }
-gdp_caps_read_error:
-  {
-    /* if we did not get canceled, report an error */
-    if (ret != GST_FLOW_WRONG_STATE) {
-      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-          ("Could not read caps through GDP"));
-    }
-    return ret;
-  }
 }
 
 static void
@@ -316,9 +257,6 @@ gst_tcp_server_src_set_property (GObject * object, guint prop_id,
     case PROP_PORT:
       tcpserversrc->server_port = g_value_get_int (value);
       break;
-    case PROP_PROTOCOL:
-      tcpserversrc->protocol = g_value_get_enum (value);
-      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -338,9 +276,6 @@ gst_tcp_server_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PORT:
       g_value_set_int (value, tcpserversrc->server_port);
-      break;
-    case PROP_PROTOCOL:
-      g_value_set_enum (value, tcpserversrc->protocol);
       break;
 
     default:
