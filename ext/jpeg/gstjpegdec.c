@@ -368,8 +368,11 @@ gst_jpeg_dec_ensure_header (GstJpegDec * dec)
     return FALSE;
   }
 
+  if (offset > 0) {
+    GST_LOG_OBJECT (dec, "Skipping %u bytes.", offset);
+    gst_adapter_flush (dec->adapter, offset);
+  }
   GST_DEBUG_OBJECT (dec, "Found JPEG header");
-  gst_adapter_flush (dec->adapter, offset);
 
   return TRUE;
 }
